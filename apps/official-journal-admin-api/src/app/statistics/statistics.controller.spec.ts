@@ -1,3 +1,6 @@
+import { NotImplementedException } from '@nestjs/common'
+import { Test, TestingModule } from '@nestjs/testing'
+
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
 import { IUserService } from '@dmr.is/modules'
@@ -6,9 +9,6 @@ import {
   StatisticsOverviewQueryType,
   UserDto,
 } from '@dmr.is/shared/dto'
-
-import { NotImplementedException } from '@nestjs/common'
-import { Test, TestingModule } from '@nestjs/testing'
 
 import { StatisticsController } from './statistics.controller'
 import { IStatisticsService } from './statistics.service.interface'

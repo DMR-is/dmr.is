@@ -1,4 +1,5 @@
 import fetch from 'node-fetch'
+
 import promiseAll from '@hugsmidjan/qj/promiseAllObject'
 
 const getDictionaryFile = async (

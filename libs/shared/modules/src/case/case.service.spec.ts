@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Sequelize } from 'sequelize-typescript'
-import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
-import { PostApplicationBody } from '@dmr.is/shared/dto'
 
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
+
+import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
+import { PostApplicationBody } from '@dmr.is/shared/dto'
 
 import { IApplicationService } from '../application/application.service.interface'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
@@ -27,6 +29,7 @@ import { ICaseUpdateService } from './services/update/case-update.service.interf
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
 import {
+  CaseAdditionsModel,
   CaseChannelModel,
   CaseChannelsModel,
   CaseCommunicationStatusModel,
@@ -190,6 +193,10 @@ describe('CaseService', () => {
           useClass: jest.fn(() => ({})),
         },
         {
+          provide: getModelToken(CaseAdditionsModel),
+          useClass: jest.fn(() => ({})),
+        },
+        {
           provide: AdvertCategoryModel,
           useClass: jest.fn(() => ({})),
         },
@@ -200,6 +207,14 @@ describe('CaseService', () => {
             error: jest.fn(),
             warn: jest.fn(),
             debug: jest.fn(),
+          })),
+        },
+        {
+          provide: CACHE_MANAGER,
+          useClass: jest.fn(() => ({
+            get: jest.fn(),
+            set: jest.fn(),
+            del: jest.fn(),
           })),
         },
         {

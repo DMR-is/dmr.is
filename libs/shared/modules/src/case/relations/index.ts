@@ -12,8 +12,6 @@ import { UserModel } from '../../user/models/user.model'
 import { UserRoleModel } from '../../user/models/user-role.model'
 import { matchByIdTitleOrSlug } from '../mappers/case-parameters.mapper'
 import {
-  CaseAdditionModel,
-  CaseChannelModel,
   CaseCommunicationStatusModel,
   CaseStatusModel,
   CaseTagModel,
@@ -21,21 +19,15 @@ import {
 } from '../models'
 import { CaseHistoryModel } from '../models/case-history.model'
 
-export const casesDetailedIncludes = [
+export const casesDetailedIncludes: Includeable[] = [
   CaseTagModel,
   CaseStatusModel,
   CaseCommunicationStatusModel,
   AdvertDepartmentModel,
   AdvertTypeModel,
   AdvertCategoryModel,
-  CaseChannelModel,
   AdvertInvolvedPartyModel,
-  {
-    model: CaseAdditionModel,
-    through: {
-      attributes: ['order'],
-    },
-  },
+
   {
     model: UserModel,
     include: [{ model: UserRoleModel }, { model: AdvertInvolvedPartyModel }],
@@ -63,6 +55,7 @@ export const casesDetailedIncludes = [
       {
         model: UserModel,
         as: 'userReceiver',
+        attributes: ['id', 'displayName'],
       },
       {
         model: AdvertInvolvedPartyModel,
@@ -77,6 +70,9 @@ export const casesDetailedIncludes = [
   },
   {
     model: CaseHistoryModel,
+    separate: true,
+    limit: 1,
+    order: [['created', 'ASC']],
     include: [
       { model: CaseStatusModel, attributes: ['id', 'title', 'slug'] },
       { model: AdvertDepartmentModel, attributes: ['id', 'title', 'slug'] },

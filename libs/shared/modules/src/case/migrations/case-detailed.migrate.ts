@@ -40,7 +40,16 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
     requestedPublicationDate: model.requestedPublicationDate,
     advertTitle: model.advertTitle,
     advertDepartment: advertDepartmentMigrate(model.department),
-    advertType: model.advertType,
+    advertType: {
+      id: model.advertType.id,
+      title: model.advertType.title,
+      slug: model.advertType.slug,
+      mainType: {
+        id: model.advertType.mainType?.id ?? '',
+        title: model.advertType.mainType?.title ?? '',
+        slug: model.advertType.mainType?.slug ?? '',
+      },
+    },
     transaction: model.transaction
       ? caseTransactionMigrate(model.transaction)
       : undefined,

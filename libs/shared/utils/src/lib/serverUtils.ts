@@ -8,6 +8,13 @@ import {
   Transaction,
   ValidationError,
 } from 'sequelize'
+
+import {
+  FileTypeValidator,
+  HttpException,
+  MaxFileSizeValidator,
+} from '@nestjs/common'
+
 import {
   APPLICATION_FILES_BUCKET,
   DEFAULT_PAGE_NUMBER,
@@ -31,12 +38,6 @@ import {
   GetAdvertTemplateResponse,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-
-import {
-  FileTypeValidator,
-  HttpException,
-  MaxFileSizeValidator,
-} from '@nestjs/common'
 
 import { cleanupSingleEditorOutput } from '@island.is/regulations-tools/cleanupEditorOutput'
 import { HTMLText } from '@island.is/regulations-tools/types'

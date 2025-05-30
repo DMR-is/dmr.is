@@ -1,5 +1,6 @@
 import debounce from 'lodash/debounce'
 import { useCallback } from 'react'
+
 import { UpdateUserDto } from '@dmr.is/shared/dto'
 
 import {
@@ -15,7 +16,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { BaseEntity, UserDto } from '../../gen/fetch'
+import { Institution, UserDto, UserRoleDto } from '../../gen/fetch'
 import { useUserContext } from '../../hooks/useUserContext'
 import { formatDate } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
@@ -23,9 +24,9 @@ import { OJOISelect } from '../select/OJOISelect'
 
 type Props = {
   user: UserDto
-  availableInvoledParties: { label: string; value: BaseEntity }[]
+  availableInvoledParties: { label: string; value: Institution }[]
   isAdmin?: boolean
-  availableRoles: { label: string; value: BaseEntity }[]
+  availableRoles: { label: string; value: UserRoleDto }[]
 }
 
 export const UserDetailed = ({

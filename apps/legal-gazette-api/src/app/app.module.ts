@@ -1,19 +1,27 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
-import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
-import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 import { SequelizeModule } from '@nestjs/sequelize'
+
+import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
+import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middleware'
+import { LEGAL_GAZETTE_NAMESPACE } from '@dmr.is/legal-gazette/constants'
 import { LoggingModule } from '@dmr.is/logging'
-import { CaseTypeModule } from '@dmr.is/legal-gazette/modules/case-type'
+import { CLSMiddleware } from '@dmr.is/middleware'
+import { HealthModule } from '@dmr.is/modules'
 import {
   GlobalExceptionFilter,
   HttpExceptionFilter,
   SequelizeExceptionFilter,
 } from '@dmr.is/shared/filters'
-import { HealthModule } from '@dmr.is/modules'
-import { CLSMiddleware } from '@dmr.is/middleware'
-import { LEGAL_GAZETTE_NAMESPACE } from '@dmr.is/legal-gazette/constants'
-import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middleware'
+import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
+
+import { LegalGazetteApplicationModule } from '../modules/application/application.module'
+import { CaseCategoryModel } from '../modules/case-category/case-category.model'
+import { CaseCategoryModule } from '../modules/case-category/case-category.module'
+import { CaseStatusModel } from '../modules/case-status/case-status.model'
+import { CaseStatusModule } from '../modules/case-status/case-status.module'
+import { CaseTypeModel } from '../modules/case-type/case-type.model'
+import { CaseTypeModule } from '../modules/case-type/case-type.module'
 
 @Module({
   imports: [
@@ -25,8 +33,13 @@ import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middlewa
           host: process.env.DB_HOST || 'localhost',
           password: process.env.DB_PASS || 'dev_db',
           username: process.env.DB_USER || 'dev_db',
-          port: Number(process.env.DB_PORT) || Number(process.env.LEGAL_GAZETTE_DB_PORT) || 5434,
+          port:
+            Number(process.env.DB_PORT) ||
+            Number(process.env.LEGAL_GAZETTE_DB_PORT) ||
+            5434,
           clsNamespace: LEGAL_GAZETTE_NAMESPACE,
+          models: [CaseTypeModel, CaseCategoryModel, CaseStatusModel],
+          debugLog: true,
         }),
       ],
       useFactory: (configService: DMRSequelizeConfigService) =>
@@ -34,6 +47,9 @@ import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middlewa
       inject: [DMRSequelizeConfigService],
     }),
     CaseTypeModule,
+    CaseCategoryModule,
+    CaseStatusModule,
+    LegalGazetteApplicationModule,
     HealthModule,
   ],
   controllers: [],

@@ -1,5 +1,6 @@
-import cn from 'classnames'
 import { useSearchParams } from 'next/navigation'
+
+import cn from 'classnames'
 import { useEffect, useState } from 'react'
 
 import { Box, Icon, Table as T, Text } from '@island.is/island-ui/core'

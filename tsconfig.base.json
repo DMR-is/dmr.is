@@ -22,9 +22,6 @@
         "libs/legal-gazette/decorators/src/index.ts"
       ],
       "@dmr.is/legal-gazette/dto": ["libs/legal-gazette/dto/src/index.ts"],
-      "@dmr.is/legal-gazette/modules/case-type": [
-        "libs/legal-gazette/modules/case-type/src/index.ts"
-      ],
       "@dmr.is/logging": ["libs/logging/src/index.ts"],
       "@dmr.is/middleware": ["libs/shared/middleware/src/index.ts"],
       "@dmr.is/mocks": ["libs/mocks/src/index.ts"],
@@ -38,7 +35,12 @@
       "@dmr.is/types": ["libs/shared/types/types/src/index.ts"],
       "@dmr.is/ui/components/*": ["libs/shared/dmr-ui/src/lib/components/*"],
       "@dmr.is/ui/hooks/*": ["libs/shared/dmr-ui/src/lib/hooks/*"],
+      "@dmr.is/ui/utils/*": ["libs/shared/dmr-ui/src/lib/utils/*"],
       "@dmr.is/utils": ["libs/shared/utils/src/index.ts"],
+      "@dmr.is/utils/cache": ["libs/shared/utils/src/lib/cacheUtils.ts"],
+      "@dmr.is/utils/cache.provider": [
+        "libs/shared/utils/src/lib/cache.provider.ts"
+      ],
       "@dmr.is/utils/client": ["libs/shared/utils/src/client.ts"],
       "@island.is/island-ui/core": [
         "submodules/island.is/libs/island-ui/core/src/index.ts"

@@ -1,6 +1,8 @@
 import Head from 'next/head'
+
 import { IntlProvider } from 'react-intl'
 import { Provider } from 'reakit'
+
 import { Header } from '@dmr.is/ui/components/Header/Header'
 import { PageLoader } from '@dmr.is/ui/components/PageLoader/PageLoader'
 

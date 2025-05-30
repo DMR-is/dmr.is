@@ -1,11 +1,30 @@
-import format from 'date-fns/format'
-import is from 'date-fns/locale/is'
+import { Cache } from 'cache-manager'
 import Mail from 'nodemailer/lib/mailer'
-import { Op, Transaction } from 'sequelize'
+import { Op, OrderItem, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
+
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+import { InjectModel } from '@nestjs/sequelize'
+
 import { AttachmentTypeParam } from '@dmr.is/constants'
-import { LogAndHandle, Transactional } from '@dmr.is/decorators'
+import { Cacheable, LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AddCaseAdvertCorrection,
@@ -61,15 +80,6 @@ import {
   getS3Bucket,
 } from '@dmr.is/utils'
 
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
-
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import {
@@ -94,6 +104,8 @@ import { SignatureRecordModel } from '../signature/models/signature-record.model
 import { IUtilityService } from '../utility/utility.service.interface'
 import { caseParameters } from './mappers/case-parameters.mapper'
 import { caseMigrate } from './migrations/case.migrate'
+import { caseAdditionMigrate } from './migrations/case-addition.migrate'
+import { caseChannelMigrate } from './migrations/case-channel.migrate'
 import { caseCommunicationStatusMigrate } from './migrations/case-communication-status.migrate'
 import { caseDetailedMigrate } from './migrations/case-detailed.migrate'
 import { caseTagMigrate } from './migrations/case-tag.migrate'
@@ -121,6 +133,8 @@ const LOGGING_QUERY = 'CaseServiceQueryRunner'
 export class CaseService implements ICaseService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    // This is needed to be able to use the Cacheable and CacheEvict decorators
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache | undefined,
     @Inject(forwardRef(() => IJournalService))
     private readonly journalService: IJournalService,
     @Inject(ICaseCreateService)
@@ -166,6 +180,8 @@ export class CaseService implements ICaseService {
     private readonly caseChannelModel: typeof CaseChannelModel,
     @InjectModel(CaseChannelsModel)
     private readonly caseChannelsModel: typeof CaseChannelsModel,
+    @InjectModel(CaseAdditionsModel)
+    private readonly caseAdditionsModel: typeof CaseAdditionsModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.info('Using CaseService')
@@ -206,6 +222,11 @@ export class CaseService implements ICaseService {
       body,
       transaction,
     )
+    const keys = await this.cacheManager?.store.keys()
+    const keysWithCases = keys?.filter((key) => key.includes('cases-'))
+    keysWithCases?.forEach(async (key) => {
+      await this.cacheManager?.store.del(key)
+    })
 
     return results
   }
@@ -277,9 +298,11 @@ export class CaseService implements ICaseService {
 
   async getCasesSqlQuery(params: GetCasesQuery) {
     const whereParams = caseParameters(params)
-    const sortKeys: { [key: string]: string } = {
-      casePublishDate: 'requestedPublicationDate',
-      caseRegistrationDate: 'createdAt',
+    const sortKeys: { [key: string]: OrderItem } = {
+      caseRequestPublishDate: ['requestedPublicationDate', params.direction],
+      casePublishDate: ['publishedAt', params.direction],
+      caseRegistrationDate: ['createdAt', params.direction],
+      caseStatus: ['statusId', params.direction],
     }
     const sortBy = sortKeys[params.sortBy] || 'requestedPublicationDate'
     const { limit, offset } = getLimitAndOffset(params)
@@ -298,6 +321,7 @@ export class CaseService implements ICaseService {
         'fastTrack',
         'publishedAt',
         'publicationNumber',
+        'statusId',
       ],
       where: whereParams,
       include: casesIncludes({
@@ -307,7 +331,7 @@ export class CaseService implements ICaseService {
         institution: params?.institution,
         category: params?.category,
       }),
-      order: [[sortBy, params.direction]],
+      order: [sortBy],
       logging: (_, timing) => {
         this.logger.info(`getCasesSqlQuery executed in ${timing}ms`, {
           context: LOGGING_QUERY,
@@ -520,10 +544,11 @@ export class CaseService implements ICaseService {
   @LogAndHandle()
   @Transactional()
   updateCase(
+    caseId: string,
     body: UpdateCaseBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    return this.updateService.updateCase(body, transaction)
+    return this.updateService.updateCase(caseId, body, transaction)
   }
   @LogAndHandle()
   @Transactional()
@@ -914,7 +939,7 @@ export class CaseService implements ICaseService {
   private async createPdfAndUpload(
     caseId: string,
     fileName: string,
-    publishedAt?: string,
+    publishedAt?: string | Date,
     serial?: number,
   ): Promise<ResultWrapper> {
     const advertPdf = await this.pdfService.generatePdfByCaseId(
@@ -1048,12 +1073,7 @@ export class CaseService implements ICaseService {
       .toUpperCase()
     const pdfFileName = `${departmentPrefix}_nr_${serial}_${caseToPublish.year}.pdf`
 
-    await this.createPdfAndUpload(
-      caseId,
-      pdfFileName,
-      format(now, 'd. MMMM yyyy', { locale: is }),
-      serial,
-    )
+    await this.createPdfAndUpload(caseId, pdfFileName, now, serial)
 
     const publicationHtml = getPublicationTemplate(
       caseToPublish.department.title,
@@ -1127,13 +1147,16 @@ export class CaseService implements ICaseService {
       return [item.email]
     })
 
+    const publicationNumber =
+      advertCreateResult?.result.value.advert.publicationNumber?.full ?? ''
+
     const message: Mail.Options = {
       from: `Stjórnartíðindi <noreply@stjornartidindi.is>`,
       to: emails?.join(','),
       replyTo: 'noreply@stjornartidindi.is',
-      subject: `Mál ${caseToPublish?.caseNumber} - ${caseToPublish?.advertType.title} ${caseToPublish?.advertTitle} hefur verið útgefið`,
-      text: `Mál ${caseToPublish?.caseNumber} hefur verið útgefið`,
-      html: `<h2>Mál ${caseToPublish?.caseNumber} - ${caseToPublish?.advertType.title} ${caseToPublish?.advertTitle} hefur verið útgefið</h2><p><a href="https://island.is/stjornartidindi/nr/${caseToPublish?.id}" target="_blank">Skoða auglýsingu</a></p>`,
+      subject: `Mál ${publicationNumber} - ${caseToPublish?.advertType.title} ${caseToPublish?.advertTitle} hefur verið útgefið`,
+      text: `Mál ${publicationNumber} hefur verið útgefið`,
+      html: `<h2>Mál hefur verið útgefið:</h2><h3>${publicationNumber} - ${caseToPublish?.advertType.title} ${caseToPublish?.advertTitle}</h3><p><a href="https://island.is/stjornartidindi/nr/${advertCreateResult?.result.value.advert?.id}" target="_blank">Skoða auglýsingu</a></p>`,
     }
 
     if (caseToPublish.applicationId) {
@@ -1186,6 +1209,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
+  @Cacheable()
   async getCasesWithStatusCount(
     status: CaseStatusEnum,
     params: GetCasesWithStatusCountQuery,
@@ -1199,7 +1223,6 @@ export class CaseService implements ICaseService {
       CaseStatusEnum.Unpublished,
       CaseStatusEnum.Rejected,
     ]
-
     const whereParams = caseParameters(params)
 
     const counterResults = statusesToBeCounted.map((statusToBeCounted) => {
@@ -1245,14 +1268,16 @@ export class CaseService implements ICaseService {
       cases.count,
     )
 
-    return ResultWrapper.ok({
+    const results = {
       statuses: counter.map((c) => ({
         status: c.title,
         count: c.count,
       })),
       cases: mappedCases,
       paging,
-    })
+    }
+
+    return ResultWrapper.ok(results)
   }
 
   /**
@@ -1272,20 +1297,45 @@ export class CaseService implements ICaseService {
     return ResultWrapper.ok()
   }
 
+  @Cacheable()
   @LogAndHandle()
   async getCase(id: string): Promise<ResultWrapper<GetCaseResponse>> {
+    const channels = await this.caseChannelsModel.findAll({
+      include: [CaseChannelModel],
+      where: {
+        caseId: id,
+      },
+    })
+
+    const caseChannels = channels.map((c) => c.caseChannel)
+
+    const additions = await this.caseAdditionsModel.findAll({
+      where: {
+        caseId: id,
+      },
+      include: [
+        {
+          model: CaseAdditionModel,
+        },
+      ],
+      order: [['order', 'ASC']],
+    })
+
     const caseLookup = await this.caseModel.findByPk(id, {
       include: [
         ...casesDetailedIncludes,
         {
           model: AdvertModel,
-          include: [AdvertCorrectionModel],
+          include: [{ model: AdvertCorrectionModel, separate: true }],
         },
         {
           model: AdvertDepartmentModel,
         },
         {
           model: AdvertTypeModel,
+          include: [
+            { model: AdvertMainTypeModel, attributes: ['id', 'title', 'slug'] },
+          ],
         },
         {
           model: AdvertCategoryModel,
@@ -1344,22 +1394,28 @@ export class CaseService implements ICaseService {
           ],
         },
       ],
-      order: [
-        [
-          { model: CaseAdditionModel, as: 'additions' },
-          CaseAdditionsModel,
-          'order',
-          'ASC',
-        ],
-      ],
     })
 
     if (!caseLookup) {
       throw new NotFoundException(`Case<${id}> not found`)
     }
 
+    const caseAdditions = additions.map((a) => {
+      return a.caseAddition
+    }) as CaseAdditionModel[]
+
+    const returnableCase = {
+      ...caseDetailedMigrate(caseLookup),
+      channels: caseChannels
+        ? caseChannels.map((c) => caseChannelMigrate(c))
+        : [],
+      additions: caseAdditions
+        ? caseAdditions.map((add) => caseAdditionMigrate(add))
+        : [],
+    }
+
     return ResultWrapper.ok({
-      case: caseDetailedMigrate(caseLookup),
+      case: returnableCase,
     })
   }
 
@@ -1458,7 +1514,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  @Transactional()
+  @Cacheable()
   async getCases(
     params: GetCasesQuery,
   ): Promise<ResultWrapper<GetCasesReponse>> {
@@ -1556,6 +1612,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
+  @Cacheable()
   async getCasesWithDepartmentCount(
     department: DepartmentEnum,
     params: GetCasesWithDepartmentCountQuery,
@@ -1726,9 +1783,20 @@ export class CaseService implements ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<PresignedUrlResponse>> {
     // fetch the presigned url for the new attachment
+    const fileKey = incomingAttachment.fileLocation?.split('/')
+    const filePath = fileKey?.slice(0, fileKey.length - 1).join('/')
+    const fileName = fileKey?.slice(fileKey.length - 1).join('/')
+    const slugFileName = slugify(fileName ?? 'document.pdf', { lower: true })
+
+    const sluggedBody = {
+      ...incomingAttachment,
+      fileLocation: `${filePath}/${slugFileName}`,
+      originalFileName: fileName,
+      fileName: slugFileName,
+    }
 
     const signedUrl = (
-      await this.s3.getPresignedUrl(incomingAttachment.fileLocation)
+      await this.s3.getPresignedUrl(sluggedBody.fileLocation)
     ).unwrap()
 
     // fetch the old attachment
@@ -1762,7 +1830,7 @@ export class CaseService implements ICaseService {
           caseId,
           applicationId: attachment.applicationId,
           attachmentType: attachmentType,
-          body: incomingAttachment,
+          body: sluggedBody,
         },
         transaction,
       }),
@@ -1795,12 +1863,24 @@ export class CaseService implements ICaseService {
     body: PostApplicationAttachmentBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper<PresignedUrlResponse>> {
+    const fileKey = body.fileLocation?.split('/')
+    const filePath = fileKey?.slice(0, fileKey.length - 1).join('/')
+    const fileName = fileKey?.slice(fileKey.length - 1).join('/')
+    const slugFileName = slugify(fileName ?? 'document.pdf', { lower: true })
+
+    const sluggedBody = {
+      ...body,
+      fileLocation: `${filePath}/${slugFileName}`,
+      originalFileName: fileName,
+      fileName: slugFileName,
+    }
+
     const applicationAttachmentCreation = ResultWrapper.unwrap(
       await this.attachmentService.createAttachment({
         params: {
           applicationId: applicationId,
           attachmentType: type,
-          body: body,
+          body: sluggedBody,
         },
         transaction,
       }),
@@ -1813,7 +1893,7 @@ export class CaseService implements ICaseService {
     )
 
     const signedUrl = (
-      await this.s3.getPresignedUrl(body.fileLocation)
+      await this.s3.getPresignedUrl(sluggedBody.fileLocation)
     ).unwrap()
 
     return ResultWrapper.ok({

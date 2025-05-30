@@ -10,7 +10,7 @@ import {
 } from '@island.is/island-ui/core'
 
 import { useCaseContext } from '../../hooks/useCaseContext'
-import { formatDate } from '../../lib/utils'
+import { getMostRecentSignature } from '../../lib/utils'
 import * as styles from './AdvertDisplay.css'
 
 type Props = {
@@ -18,7 +18,7 @@ type Props = {
 }
 export const AdvertPreview = ({ disclosure }: Props) => {
   const { currentCase } = useCaseContext()
-  const { signatureDate, html: signatureHtml } = currentCase.signature
+  const { html: signatureHtml } = currentCase.signature
 
   return (
     <ModalBase baseId="myDialog" disclosure={disclosure}>
@@ -48,7 +48,7 @@ export const AdvertPreview = ({ disclosure }: Props) => {
                         Nr. {currentCase.caseNumber}
                       </Text>
                       <Text variant="eyebrow" color="purple400">
-                        {formatDate(signatureDate)}
+                        {getMostRecentSignature(currentCase.signature, true)}
                       </Text>
                     </Box>
                     <Box textAlign="center" marginBottom={[2, 3, 4]}>

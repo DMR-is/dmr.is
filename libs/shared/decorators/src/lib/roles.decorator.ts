@@ -1,6 +1,6 @@
-import { ROLES_KEY, UserRoleEnum } from '@dmr.is/constants'
-
 import { SetMetadata } from '@nestjs/common'
+
+import { ROLES_KEY, UserRoleEnum } from '@dmr.is/constants'
 
 /**
  * This decorator must be placed on controller **methods** not on the controller itself

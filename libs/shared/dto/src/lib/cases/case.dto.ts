@@ -15,13 +15,13 @@ import {
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
+import { CaseDetailAdvertType } from '../advert-type/case-detail-advert-type.dto'
 import { AdvertCorrection } from '../adverts/advert-correction.dto'
 import { ApplicationAttachment } from '../attachments'
 import { Category } from '../categories'
 import { CommentDto } from '../comments/comment.dto'
 import { CommunicationStatus } from '../communication-status'
 import { Department } from '../departments/department.dto'
-import { BaseEntity } from '../entity'
 import { Institution } from '../institutions'
 import { Paging } from '../paging'
 import { Signature } from '../signatures'
@@ -167,6 +167,7 @@ export class CaseDetailed {
     example: '2024-01-01T09:00:00Z',
     description:
       'Date the case was published. ISO 8601 date and time format in UTC.',
+    nullable: true,
   })
   @IsDateString()
   publishedAt!: string | null
@@ -197,10 +198,11 @@ export class CaseDetailed {
   advertDepartment!: Department
 
   @ApiProperty({
-    type: BaseEntity,
+    type: CaseDetailAdvertType,
     description: 'The advert type',
   })
-  advertType!: BaseEntity
+  @Type(() => CaseDetailAdvertType)
+  advertType!: CaseDetailAdvertType
 
   @ApiProperty({
     description: 'List of advert categories.',

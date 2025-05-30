@@ -1,6 +1,6 @@
-import { PAGING_MAXIMUM_PAGE_SIZE } from '@dmr.is/constants'
-
 import { ApiProperty } from '@nestjs/swagger'
+
+import { PAGING_MAXIMUM_PAGE_SIZE } from '@dmr.is/constants'
 
 export class Paging {
   @ApiProperty({ type: Number, example: 1 })

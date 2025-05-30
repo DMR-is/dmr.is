@@ -13,6 +13,7 @@ export enum QueryParams {
   PAGE_SIZE = 'pageSize',
   SORT_BY = 'sortBy',
   DIRECTION = 'direction',
+  DEPARTMENT = 'department',
 }
 
 export enum SortDirection {

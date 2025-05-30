@@ -1,7 +1,7 @@
+import { theme } from '@island.is/island-ui/theme'
+
 import { style } from '@vanilla-extract/css'
 import { recipe } from '@vanilla-extract/recipes'
-
-import { theme } from '@island.is/island-ui/theme'
 
 export const fixedCellWrapper = style({
   position: 'absolute',
@@ -27,12 +27,12 @@ export const typeTableCell = style({
 })
 export const titleTableCell = style({
   overflow: 'hidden',
-  maxWidth: '50ch',
+  maxWidth: '40ch',
 
   '@media': {
     [`screen and (min-width: ${theme.breakpoints.xl}px)`]: {
       width: '30vw',
-      maxWidth: '66ch',
+      maxWidth: '50ch',
     },
   },
 })

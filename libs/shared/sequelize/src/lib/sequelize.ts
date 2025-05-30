@@ -1,8 +1,9 @@
 import addSeconds from 'date-fns/addSeconds'
 import differenceInSeconds from 'date-fns/differenceInSeconds'
-import type { Logger } from '@dmr.is/logging'
 
 import { SequelizeModuleOptions } from '@nestjs/sequelize'
+
+import type { Logger } from '@dmr.is/logging'
 
 interface GetOptionsParams {
   logger?: Logger

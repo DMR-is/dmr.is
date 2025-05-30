@@ -1,5 +1,4 @@
 import { BindOrReplacements, QueryTypes } from 'sequelize';
-import promiseAll from '@hugsmidjan/qj/promiseAllObject';
 
 import { eliminateComments } from '@island.is/regulations-tools/textHelpers';
 
@@ -16,6 +15,8 @@ import {
 import { db } from '../utils/sequelize';
 import { getRegulationLawChapters } from './LawChapter';
 import { getMinistry } from './Ministry';
+
+import promiseAll from '@hugsmidjan/qj/promiseAllObject';
 
 export const PER_PAGE = 30;
 

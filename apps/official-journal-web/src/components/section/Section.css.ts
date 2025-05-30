@@ -1,8 +1,8 @@
-import { recipe } from '@vanilla-extract/recipes'
-
 import { theme } from '@island.is/island-ui/theme'
 
 import { BLEED_HEIGHT } from '../../lib/constants'
+
+import { recipe } from '@vanilla-extract/recipes'
 
 const sectionSpacing = theme.spacing[9]
 

@@ -1,7 +1,14 @@
+import { Cache } from 'cache-manager'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import { Inject, Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
 import { UserRoleEnum } from '@dmr.is/constants'
-import { LogAndHandle, Transactional } from '@dmr.is/decorators'
+import { CacheEvict, LogAndHandle, Transactional } from '@dmr.is/decorators'
+import { Cacheable } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CreateUserDto,
@@ -17,9 +24,6 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
-import { Inject, Injectable } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
-
 import { advertInvolvedPartyMigrate } from '../journal/migrations'
 import { AdvertInvolvedPartyModel } from '../journal/models'
 import {
@@ -31,7 +35,6 @@ import { UserModel } from './models/user.model'
 import { UserInvolvedPartiesModel } from './models/user-involved-parties.model'
 import { UserRoleModel } from './models/user-role.model'
 import { IUserService } from './user.service.interface'
-
 const LOGGING_CONTEXT = 'UserService'
 const LOGGING_CATEGORY = 'user-service'
 
@@ -39,6 +42,8 @@ const LOGGING_CATEGORY = 'user-service'
 export class UserService implements IUserService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    // This is needed to be able to use the Cacheable and CacheEvict decorators
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache | undefined,
     @InjectModel(UserModel) private readonly userModel: typeof UserModel,
     @InjectModel(UserRoleModel)
     private readonly userRoleModel: typeof UserRoleModel,
@@ -181,6 +186,7 @@ export class UserService implements IUserService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(0)
   async updateUser(
     userId: string,
     body: UpdateUserDto,
@@ -515,6 +521,7 @@ export class UserService implements IUserService {
    * @returns
    */
   @LogAndHandle()
+  @Cacheable()
   async getUserByNationalId(
     nationalId: string,
   ): Promise<ResultWrapper<GetUserResponse>> {

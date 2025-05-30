@@ -2,6 +2,15 @@ import Mail from 'nodemailer/lib/mailer'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
+
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -18,14 +27,6 @@ import {
   UpdateStatusCommentBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
 
 import { AdvertTypeModel } from '../../advert-type/models'
 import { IAWSService } from '../../aws/aws.service.interface'
@@ -500,7 +501,7 @@ export class CommentServiceV2 implements ICommentServiceV2 {
           as: 'createdCaseStatus',
         },
         { model: CaseActionModel, attributes: ['id', 'title', 'slug'] },
-        { model: UserModel, as: 'adminUserCreator' },
+        { model: UserModel, as: 'userCreator' },
         {
           model: CaseStatusModel,
           attributes: ['id', 'title', 'slug'],

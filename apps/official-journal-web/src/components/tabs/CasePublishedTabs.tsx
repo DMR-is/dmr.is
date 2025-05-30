@@ -1,7 +1,4 @@
-import { parseAsStringEnum, useQueryState } from 'next-usequerystate'
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
-
-import { SkeletonLoader } from '@island.is/island-ui/core'
 
 import { CaseStatusEnum, DepartmentEnum } from '../../gen/fetch'
 import { useCasesWithDepartmentCount } from '../../hooks/api'
@@ -9,43 +6,35 @@ import { CaseTableOverview } from '../tables/CaseTableOverview'
 import { Tabs } from './Tabs'
 
 export const CasePublishedTabs = () => {
-  const [department, setDepartment] = useQueryState(
-    'department',
-    parseAsStringEnum(Object.values(DepartmentEnum)).withDefault(
-      DepartmentEnum.ADeild,
-    ),
-  )
-  const { params } = useFilters()
+  const {
+    setParams,
+    params: { department, ...params },
+  } = useFilters()
 
-  const statuses = [
+  const allowedStatuses = [
     CaseStatusEnum.ÚTgefið,
     CaseStatusEnum.TekiðÚrBirtingu,
     CaseStatusEnum.BirtinguHafnað,
   ]
 
-  const { caseOverview, isLoading, isValidating, error } =
-    useCasesWithDepartmentCount({
-      params: {
-        department: department,
-        ...params,
-        status: statuses,
-      },
-    })
+  const statuses = allowedStatuses.filter((status) =>
+    params.status?.includes(status),
+  )
+
+  const { caseOverview } = useCasesWithDepartmentCount({
+    params: {
+      department: department[0] as DepartmentEnum,
+      ...params,
+      status: statuses.length > 0 ? statuses : allowedStatuses,
+    },
+  })
 
   const tabs = caseOverview?.departments.map((counter) => ({
     id: counter.department,
     label: `${counter.department} (${counter.count})`,
-    content: isLoading ? (
-      <SkeletonLoader
-        repeat={3}
-        height={44}
-        space={2}
-        borderRadius="standard"
-      />
-    ) : (
+    content: (
       <CaseTableOverview
         cases={caseOverview.cases}
-        isLoading={isValidating}
         paging={caseOverview.paging}
       />
     ),
@@ -53,9 +42,9 @@ export const CasePublishedTabs = () => {
 
   return (
     <Tabs
-      onTabChange={(id) => setDepartment(id as DepartmentEnum)}
+      onTabChange={(id) => setParams({ department: [id] })}
       tabs={tabs || []}
-      selectedTab={department ?? DepartmentEnum.ADeild}
+      selectedTab={department[0] ?? DepartmentEnum.ADeild}
       label="Heildaryfirlit"
     />
   )

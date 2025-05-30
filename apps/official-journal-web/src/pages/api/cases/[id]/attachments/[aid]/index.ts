@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
+
 import { z } from 'zod'
+
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { logger } from '@dmr.is/logging'
 import { isResponse } from '@dmr.is/utils/client'
 
 import {
@@ -24,7 +25,7 @@ class GetCaseAttachmentHandler extends RouteHandler {
       try {
         return void (await this.fetchAttachment(id, aid, req, res))
       } catch (e) {
-        logger.warn(`Failed to fetch attachment`, {
+        this.logger.warn(`Failed to fetch attachment`, {
           error: e,
           caseId: id,
           attachmentId: aid,
@@ -33,7 +34,7 @@ class GetCaseAttachmentHandler extends RouteHandler {
         if (isResponse(e)) {
           const json = await e.json()
 
-          logger.warn(`Failed to fetch attachment`, {
+          this.logger.warn(`Failed to fetch attachment`, {
             message: json.message,
           })
 
@@ -59,14 +60,14 @@ class GetCaseAttachmentHandler extends RouteHandler {
         if (isResponse(e)) {
           const json = await e.json()
 
-          logger.warn(`Failed to override attachment ${json.message}`)
+          this.logger.warn(`Failed to override attachment ${json.message}`)
 
           return void res
             .status(json.statusCode)
             .json({ message: json.message })
         }
 
-        logger.warn(`Failed to overwrite attachment`, {
+        this.logger.warn(`Failed to overwrite attachment`, {
           error: e,
           caseId: id,
           attachmentId: aid,

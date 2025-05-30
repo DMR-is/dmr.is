@@ -44,7 +44,7 @@ export const OJOISelect = <T,>({
         <Select
           size="sm"
           backgroundColor="blue"
-          isLoading={true}
+          isLoading={false}
           {...rest}
           filterConfig={{ matchFrom: 'start' }}
         />

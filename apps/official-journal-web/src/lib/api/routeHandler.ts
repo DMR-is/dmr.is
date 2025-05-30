@@ -1,12 +1,16 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 
+import { getLogger } from '@dmr.is/logging'
+
 import { getDmrClient } from './createClient'
 
 export class RouteHandler {
   public readonly client
+  public readonly logger
 
   constructor(token: string) {
     this.client = getDmrClient(token)
+    this.logger = getLogger(this.constructor.name)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

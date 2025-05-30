@@ -1,7 +1,8 @@
 import { Type } from 'class-transformer'
-import { ApplicationStates } from '@dmr.is/constants'
 
 import { ApiProperty } from '@nestjs/swagger'
+
+import { ApplicationStates } from '@dmr.is/constants'
 
 import { ApplicationAnswers } from './application-answers.dto'
 

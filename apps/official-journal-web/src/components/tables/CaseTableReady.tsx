@@ -3,7 +3,7 @@ import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/typ
 
 import { Checkbox, Text } from '@island.is/island-ui/core'
 
-import { Case } from '../../gen/fetch'
+import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { Routes } from '../../lib/constants'
 import { formatDate } from '../../lib/utils'
@@ -15,6 +15,7 @@ type Props = {
   cases?: Case[]
   selectedCaseIds: string[]
   isLoading?: boolean
+  paging?: Paging
   toggleAll: () => void
   toggle: (_case: Case, checked: boolean) => void
 }
@@ -22,6 +23,7 @@ type Props = {
 export const CaseTableReady = ({
   cases,
   selectedCaseIds,
+  paging,
   toggle,
   toggleAll,
   isLoading,
@@ -50,15 +52,15 @@ export const CaseTableReady = ({
       size: 'tiny',
     },
     {
-      field: 'casePublishDate',
+      field: 'caseRequestPublishDate',
       sortable: false,
       size: 'tiny',
-      children: formatMessage(messages.tables.ready.columns.title),
+      children: formatMessage(messages.tables.ready.columns.publicationDate),
     },
     {
       field: 'caseTitle',
       sortable: false,
-      children: formatMessage(messages.tables.ready.columns.publicationDate),
+      children: formatMessage(messages.tables.ready.columns.title),
     },
     {
       field: 'caseInstitution',
@@ -89,20 +91,21 @@ export const CaseTableReady = ({
             status={row.communicationStatus.title}
           />
         ),
-        caseAdvertType: (
-          <div className={styles.titleTableCell}>
-            <Text truncate variant="medium">
-              {row.advertType.title} {row.advertTitle}
-            </Text>
-          </div>
-        ),
-        casePublishDate: (
+        caseRequestPublishDate: (
           <Text variant="medium">
             {row.requestedPublicationDate
               ? formatDate(row.requestedPublicationDate)
               : null}
           </Text>
         ),
+        caseTitle: (
+          <div className={styles.titleTableCell}>
+            <Text truncate variant="medium">
+              {row.advertType.title} {row.advertTitle}
+            </Text>
+          </div>
+        ),
+
         caseInstitution: (
           <Text whiteSpace="nowrap" variant="medium">
             {row.involvedParty.title}
@@ -111,7 +114,14 @@ export const CaseTableReady = ({
       }
     }) ?? []
 
-  return <DataTable loading={isLoading} columns={columns} rows={rows} />
+  return (
+    <DataTable
+      paging={paging}
+      loading={isLoading}
+      columns={columns}
+      rows={rows}
+    />
+  )
 }
 
 export default CaseTableReady

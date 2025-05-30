@@ -1,4 +1,5 @@
 import { useSession } from 'next-auth/react'
+
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetCategoriesResponse } from '../../../gen/fetch'

@@ -21,4 +21,9 @@ export const messages = defineMessages({
     defaultMessage: 'Finna tegund',
     description: 'Search placeholder for case filters',
   },
+  searchByStatus: {
+    id: 'web.general:searchByStatus',
+    defaultMessage: 'Finna stöðu',
+    description: 'Search placeholder for case filters',
+  },
 })

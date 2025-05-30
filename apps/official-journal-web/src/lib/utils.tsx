@@ -3,11 +3,12 @@ import is from 'date-fns/locale/is'
 import { ParsedUrlQuery } from 'querystring'
 import { z } from 'zod'
 
+import { BaseEntity } from '@dmr.is/shared/dto'
+
 import { Stack, Text } from '@island.is/island-ui/core'
 import { EditorFileUploader } from '@island.is/regulations-tools/EditorFrame'
 
 import {
-  BaseEntity,
   CaseActionEnum,
   CaseDetailed,
   CaseStatusEnum,
@@ -16,6 +17,7 @@ import {
   GetCasesRequest,
   GetCasesWithDepartmentCountRequest,
   GetCasesWithStatusCountRequest,
+  Signature,
 } from '../gen/fetch'
 import { getDmrClient } from '../lib/api/createClient'
 import { DOCUMENT_ASSETS } from '../lib/constants'
@@ -130,7 +132,10 @@ export const imageTiers = [
   },
 ]
 
-export const convertDateToDaysAgo = (dateIso: string): string => {
+export const convertDateToDaysAgo = (
+  dateIso: string,
+  showDates?: boolean,
+): string => {
   try {
     const date = new Date(dateIso)
 
@@ -144,6 +149,10 @@ export const convertDateToDaysAgo = (dateIso: string): string => {
 
     if (diffDays === 1) {
       return 'í gær'
+    }
+
+    if (showDates) {
+      return formatDate(date)
     }
 
     return `f. ${diffDays} ${getIcelandicDative(diffDays)}`
@@ -348,6 +357,14 @@ export const getOverviewStatusColor = (status: string) => {
       return 'red'
     case CaseStatusEnum.TekiðÚrBirtingu:
       return 'rose'
+    case CaseStatusEnum.Tilbúið:
+      return 'mint'
+    case CaseStatusEnum.Yfirlestur:
+      return 'darkerBlue'
+    case CaseStatusEnum.Grunnvinnsla:
+      return 'yellow'
+    case CaseStatusEnum.Innsent:
+      return 'blue'
     default:
       return 'blue'
   }
@@ -670,4 +687,22 @@ export const amountFormat = (value?: number | string | null): string => {
     return ''
   }
   return typeof inputValue === 'number' ? numberFormat(inputValue) + ' kr.' : ''
+}
+
+export const getMostRecentSignature = (
+  signature: Signature,
+  formatted?: boolean,
+): string => {
+  const signatureDate =
+    signature.records
+      .map((item) => item.signatureDate)
+      .sort((a, b) => {
+        return new Date(b).getTime() - new Date(a).getTime()
+      })[0] ?? signature.signatureDate
+
+  if (formatted) {
+    return formatDate(signatureDate)
+  }
+
+  return signatureDate
 }

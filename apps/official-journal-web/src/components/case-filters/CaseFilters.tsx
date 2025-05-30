@@ -1,11 +1,7 @@
 import debounce from 'lodash/debounce'
-import {
-  parseAsArrayOf,
-  parseAsInteger,
-  parseAsString,
-  useQueryState,
-} from 'next-usequerystate'
 import { ChangeEvent, useCallback } from 'react'
+
+import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
 import {
   Box,
@@ -16,6 +12,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
+import { CaseStatusEnum } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { FilterPopover } from '../filter-popover/FilterPopover'
 import { Popover } from '../popover/Popover'
@@ -24,6 +21,7 @@ import * as styles from './CaseFilters.css'
 import { CategoriesFilter } from './CategoriesFilter'
 import { DepartmentsFilter } from './DepartmentsFilter'
 import { messages } from './messages'
+import { StatusFilter } from './StatusFilter'
 import { TypesFilter } from './TypesFilter'
 
 type Props = {
@@ -31,54 +29,38 @@ type Props = {
   enableDepartments: boolean
   enableTypes: boolean
   enableSearch?: boolean
+  statuses?: CaseStatusEnum[]
 }
 
 export const CaseFilters = ({
   enableCategories,
   enableDepartments,
   enableTypes,
+  statuses,
 }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const [search, setSearch] = useQueryState('search', parseAsString)
-  const [departments, setDepartments] = useQueryState(
-    'department',
-    parseAsArrayOf(parseAsString, ','),
-  )
-  const [categories, setCategories] = useQueryState(
-    'category',
-    parseAsArrayOf(parseAsString, ','),
-  )
-  const [types, setTypes] = useQueryState(
-    'type',
-    parseAsArrayOf(parseAsString, ','),
-  )
+  const { params, setParams, resetFilters } = useFilters()
+  const enableStatus = statuses && statuses.length > 0
 
-  const [_, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
   const allFilters = [
-    ...((enableDepartments && departments) || []),
-    ...((enableTypes && types) || []),
-    ...((enableCategories && categories) || []),
+    ...((enableDepartments && params.department) || []),
+    ...((enableTypes && params.type) || []),
+    ...((enableCategories && params.category) || []),
+    ...((enableStatus && params.status) || []),
   ]
-
-  const resetFilters = () => {
-    setSearch('')
-
-    enableCategories && setCategories([])
-    enableDepartments && setDepartments([])
-    enableTypes && setTypes([])
-  }
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     e.persist()
     const value = e.target.value
-    setSearch(value)
+    setParams({ search: value })
   }
 
   const debouncedHandleChange = useCallback(debounce(handleChange, 500), [])
-  const showFilters = enableCategories || enableDepartments || enableTypes
+  const showFilters =
+    enableCategories || enableDepartments || enableTypes || enableStatus
 
   return (
     <Stack space={[2, 2, 3]}>
@@ -88,7 +70,7 @@ export const CaseFilters = ({
           icon={{ name: 'search', type: 'outline' }}
           backgroundColor="blue"
           name="filter"
-          defaultValue={search ?? undefined}
+          defaultValue={params.search ?? undefined}
           onChange={debouncedHandleChange}
           placeholder={formatMessage(messages.general.searchPlaceholder)}
         />
@@ -105,6 +87,7 @@ export const CaseFilters = ({
               {enableTypes && <TypesFilter />}
               {enableDepartments && <DepartmentsFilter />}
               {enableCategories && <CategoriesFilter />}
+              {enableStatus && <StatusFilter statuses={statuses} />}
             </FilterPopover>
           </Popover>
         )}
@@ -114,39 +97,53 @@ export const CaseFilters = ({
           <Inline space={1} flexWrap="wrap">
             <Text whiteSpace="nowrap">Síun á lista:</Text>
             {enableDepartments &&
-              departments?.map((dep, i) => {
+              params.department?.map((dep, i) => {
                 return (
                   <ActiveFilterTag
                     key={i}
                     label={dep}
                     onClick={() => {
-                      setPage(1)
-                      setDepartments(departments.filter((d) => d !== dep))
+                      setParams({
+                        department: params.department.filter((d) => d !== dep),
+                      })
                     }}
                   />
                 )
               })}
             {enableTypes &&
-              types?.map((dep, i) => (
+              params.type?.map((dep, i) => (
                 <ActiveFilterTag
                   key={i}
                   label={dep}
                   variant="purple"
                   onClick={() => {
-                    setPage(1)
-                    setTypes(types.filter((d) => d !== dep))
+                    setParams({ type: params.type.filter((d) => d !== dep) })
                   }}
                 />
               ))}
             {enableCategories &&
-              categories?.map((dep, i) => (
+              params.category?.map((dep, i) => (
                 <ActiveFilterTag
                   key={i}
                   label={dep}
                   variant="mint"
                   onClick={() => {
-                    setPage(1)
-                    setCategories(categories.filter((d) => d !== dep))
+                    setParams({
+                      category: params.category.filter((d) => d !== dep),
+                    })
+                  }}
+                />
+              ))}
+            {enableStatus &&
+              params.status?.map((dep, i) => (
+                <ActiveFilterTag
+                  key={i}
+                  label={dep}
+                  variant="blueberry"
+                  onClick={() => {
+                    setParams({
+                      status: params.status.filter((d) => d !== dep),
+                    })
                   }}
                 />
               ))}
@@ -158,7 +155,6 @@ export const CaseFilters = ({
                 size="small"
                 icon="reload"
                 onClick={() => {
-                  setPage(1)
                   resetFilters()
                 }}
               >

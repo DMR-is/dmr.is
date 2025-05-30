@@ -2,9 +2,10 @@ import { getNamespace } from 'cls-hooked'
 import { NextFunction, Request, Response } from 'express'
 import { Sequelize } from 'sequelize-typescript'
 import { v4 } from 'uuid'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { Inject, Injectable, NestMiddleware } from '@nestjs/common'
+
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 @Injectable()
 export class CLSMiddleware implements NestMiddleware {

@@ -7,12 +7,17 @@ import {
   SequelizeOptionsFactory,
 } from '@nestjs/sequelize'
 
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+
 import { getOptions } from './sequelize'
 import { DMRSequelizeConfig, IDMRSequelizeConfig } from './sequelize.config'
+
+const LOGGING_CONTEXT = 'SequelizeConfigService'
 
 @Injectable()
 export class DMRSequelizeConfigService implements SequelizeOptionsFactory {
   constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IDMRSequelizeConfig)
     private readonly config: DMRSequelizeConfig,
   ) {}
@@ -30,6 +35,16 @@ export class DMRSequelizeConfigService implements SequelizeOptionsFactory {
       ...getOptions(),
       dialect: 'postgres',
       autoLoadModels: true,
+      logging: config.debugLog
+        ? (sql: string) => {
+            const query = sql.split(':')[1]
+            this.logger.debug(`Query executed`, {
+              sql: query,
+              context: LOGGING_CONTEXT,
+            })
+            this.logger.debug(query)
+          }
+        : false,
     }
   }
 }

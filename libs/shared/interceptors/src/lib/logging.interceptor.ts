@@ -1,6 +1,5 @@
 import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
-import { logger } from '@dmr.is/logging'
 
 import {
   CallHandler,
@@ -9,6 +8,8 @@ import {
   NestInterceptor,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
+
+import { logger } from '@dmr.is/logging'
 
 const LOGGING_CONTEXT = 'LoggingInterceptor'
 
@@ -41,15 +42,15 @@ export class LoggingInterceptor implements NestInterceptor {
           duration: `${duration}ms`,
         }
 
-        if (duration < 30) {
+        if (duration < 300) {
           logger.info(message, info)
         }
 
-        if (duration >= 30 && duration < 100) {
+        if (duration >= 300 && duration < 1000) {
           logger.warn(message, info)
         }
 
-        if (duration >= 100) {
+        if (duration >= 1000) {
           logger.error(message, info)
         }
 

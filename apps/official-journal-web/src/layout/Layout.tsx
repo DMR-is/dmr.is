@@ -1,4 +1,5 @@
 import Head from 'next/head'
+
 import { ComponentProps } from 'react'
 import { IntlProvider } from 'react-intl'
 import { Provider } from 'reakit'
@@ -33,6 +34,7 @@ export const Layout = ({
     enableCategories: false,
     enableDepartments: false,
     enableTypes: false,
+    statuses: [],
   },
 }: LayoutProps) => {
   const preloadedFonts = [
@@ -100,6 +102,7 @@ export const Layout = ({
                   imageColumnSpan={bannerProps.imageColumnSpan}
                   enableCategories={bannerProps.enableCategories}
                   enableDepartments={bannerProps.enableDepartments}
+                  statuses={bannerProps.statuses}
                   enableTypes={bannerProps.enableTypes}
                   enableSearch={bannerProps.enableSearch}
                 />

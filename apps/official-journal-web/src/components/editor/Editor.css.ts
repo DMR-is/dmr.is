@@ -1,6 +1,3 @@
-import { globalStyle, keyframes, style, StyleRule } from '@vanilla-extract/css'
-import { recipe } from '@vanilla-extract/recipes'
-
 import { spacing, theme } from '@island.is/island-ui/theme'
 import {
   diffStyling,
@@ -14,6 +11,9 @@ import {
   isImpact,
   readOnly,
 } from './EditorInput.css'
+
+import { globalStyle, keyframes, style, StyleRule } from '@vanilla-extract/css'
+import { recipe } from '@vanilla-extract/recipes'
 
 const { color, typography, border } = theme
 

@@ -1,5 +1,4 @@
 import { FastifyPluginCallback, FastifyReply, FastifyRequest } from 'fastify';
-import { FastifyRedis } from '@fastify/redis';
 
 import {
   ensureISODate,
@@ -18,6 +17,8 @@ import {
   RegulationDiff,
   RegulationRedirect,
 } from './types';
+
+import { FastifyRedis } from '@fastify/redis';
 
 const REGULATION_TTL = 0.1;
 const PDF_FILE_TTL = 1;

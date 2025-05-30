@@ -1,8 +1,21 @@
+import { Cache } from 'cache-manager'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
-import { LogAndHandle, Transactional } from '@dmr.is/decorators'
+
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  NotImplementedException,
+} from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
+import { Cacheable, LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertStatus,
@@ -33,16 +46,6 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils'
 
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-  NotImplementedException,
-} from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
-
 import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
 import { HTMLText } from '@island.is/regulations-tools/types'
 
@@ -72,14 +75,14 @@ import {
   AdvertModel,
   AdvertStatusModel,
 } from './models'
-
 const DEFAULT_PAGE_SIZE = 20
 const LOGGING_CATEGORY = 'journal-service'
 @Injectable()
 export class JournalService implements IJournalService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-
+    // This is needed to be able to use the Cacheable and CacheEvict decorators
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache | undefined,
     @InjectModel(AdvertModel)
     private advertModel: typeof AdvertModel,
 
@@ -803,6 +806,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
+  @Cacheable()
   async getCategories(
     params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetCategoriesResponse>> {
@@ -903,6 +907,7 @@ export class JournalService implements IJournalService {
     advertId: string,
     limit = 5,
   ): Promise<ResultWrapper<GetSimilarAdvertsResponse>> {
+    // TODO: We might not need the models here, and only get the ids
     const originalAdvert = await this.advertModel.findByPk(advertId, {
       include: [
         { model: AdvertDepartmentModel, as: 'department' },
@@ -979,6 +984,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
+  @Cacheable()
   async getAdverts(
     params?: GetAdvertsQueryParams,
   ): Promise<ResultWrapper<GetAdvertsResponse>> {

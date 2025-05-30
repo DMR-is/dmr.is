@@ -1,3 +1,6 @@
+import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
+import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertTypeQuery,
@@ -6,9 +9,6 @@ import {
   GetAdvertType,
   GetAdvertTypes,
 } from '@dmr.is/shared/dto'
-
-import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
-import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { IAdvertTypeService } from './advert-type.service.interface'
 import { AdvertTypeError } from './advert-type-error'

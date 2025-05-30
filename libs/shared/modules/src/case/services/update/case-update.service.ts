@@ -1,7 +1,13 @@
+import { Cache } from 'cache-manager'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
 import { ApplicationStates } from '@dmr.is/constants'
-import { LogAndHandle, Transactional } from '@dmr.is/decorators'
+import { CacheEvict, LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdditionType,
@@ -24,9 +30,6 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { getFastTrack, getNextStatus, getPreviousStatus } from '@dmr.is/utils'
-
-import { BadRequestException, Inject, Injectable } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
 
 import { IApplicationService } from '../../../application/application.service.interface'
 import { ICommentServiceV2 } from '../../../comment/v2'
@@ -54,7 +57,8 @@ export class CaseUpdateService implements ICaseUpdateService {
     private readonly applicationService: IApplicationService,
     @Inject(ICommentServiceV2)
     private readonly commentService: ICommentServiceV2,
-
+    // This is needed to be able to use the Cacheable and CacheEvict decorators
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache | undefined,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     @InjectModel(CaseAdditionModel)
     private readonly caseAdditionModel: typeof CaseAdditionModel,
@@ -69,6 +73,8 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     private readonly sequelize: Sequelize,
   ) {}
+
+  @CacheEvict(0)
   async updateFasttrack(
     caseId: string,
     body: UpdateFasttrackBody,
@@ -201,6 +207,7 @@ export class CaseUpdateService implements ICaseUpdateService {
   @LogAndHandle()
   @Transactional()
   async updateCase(
+    caseId: string,
     body: UpdateCaseBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
@@ -208,7 +215,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     await this.caseModel.update<CaseModel>(updateData, {
       where: {
-        id: body.caseId,
+        id: caseId,
       },
       returning: true,
       transaction: transaction,
@@ -218,7 +225,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
     if (body.categoryIds?.length) {
       this.updateCaseCategories(
-        body.caseId,
+        caseId,
         {
           categoryIds: body.categoryIds,
         },
@@ -231,6 +238,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(0)
   async updateCaseCommunicationStatus(
     caseId: string,
     body: UpdateCommunicationStatusBody,
@@ -261,6 +269,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(0)
   async updateCaseCommunicationStatusByStatus(
     caseId: string,
     status: CaseCommunicationStatus,
@@ -291,6 +300,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(0)
   async updateCaseStatus(
     id: string,
     body: UpdateCaseStatusBody,
@@ -323,6 +333,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(0)
   async updateCaseNextStatus(
     id: string,
     currentUser: UserDto,
@@ -384,6 +395,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(0)
   async updateCasePreviousStatus(
     id: string,
     currentUser: UserDto,
@@ -439,6 +451,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(0)
   async updateCasePrice(
     caseId: string,
     body: UpdateCasePriceBody,
@@ -459,6 +472,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(0)
   async updateCaseDepartment(
     caseId: string,
     body: UpdateCaseDepartmentBody,
@@ -509,6 +523,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(0)
   async updateCaseType(
     caseId: string,
     body: UpdateCaseTypeBody,
@@ -559,6 +574,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(0)
   async updateCaseCategories(
     caseId: string,
     body: UpdateCategoriesBody,
@@ -655,6 +671,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(0)
   async updateCaseRequestedPublishDate(
     caseId: string,
     body: UpdatePublishDateBody,
@@ -710,6 +727,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(0, ['getCases'])
   async updateCaseTitle(
     caseId: string,
     body: UpdateTitleBody,
@@ -761,6 +779,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(0)
   async updateCaseTag(
     caseId: string,
     body: UpdateTagBody,
@@ -783,6 +802,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(0)
   async updateCaseAddition(
     additionId: string,
     caseId: string,
@@ -884,6 +904,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(1)
   async deleteCaseAddition(
     additionId: string,
     caseId: string,
@@ -952,6 +973,7 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  @CacheEvict(0)
   async updateAdvert(
     caseId: string,
     body: UpdateAdvertHtmlBody,

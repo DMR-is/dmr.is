@@ -1,6 +1,6 @@
-import { logger } from '@dmr.is/logging'
-
 import { HttpException } from '@nestjs/common'
+
+import { logger } from '@dmr.is/logging'
 
 export type UserRoleTitle = 'Ritstjóri' | 'Fulltrúi' | 'Innsendandi'
 

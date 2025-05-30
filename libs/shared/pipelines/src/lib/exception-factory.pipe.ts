@@ -1,6 +1,6 @@
-import { logger } from '@dmr.is/logging'
-
 import { BadRequestException, ValidationPipe } from '@nestjs/common'
+
+import { logger } from '@dmr.is/logging'
 
 export const ExceptionFactoryPipe = (apiName?: string) =>
   new ValidationPipe({

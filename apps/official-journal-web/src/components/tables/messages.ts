@@ -222,7 +222,7 @@ export const messages = {
           description: 'Title column',
         },
         seeFile: {
-          id: 'web.components.tables:advert.columns.file',
+          id: 'web.components.tables:advert.columns.getFile',
           defaultMessage: 'Sækja skjal',
           description: 'Title column',
         },

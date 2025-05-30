@@ -1,4 +1,5 @@
 import { parseAsStringEnum, useQueryState } from 'next-usequerystate'
+
 import { useState } from 'react'
 
 import { Button, Inline, LinkV2, Stack, Text } from '@island.is/island-ui/core'
@@ -25,7 +26,7 @@ export const ReadyForPublicationTabs = () => {
     ).withDefault(DepartmentEnum.ADeild),
   )
 
-  const { caseOverview, isLoading } = useCasesWithDepartmentCount({
+  const { caseOverview, isLoading, paging } = useCasesWithDepartmentCount({
     params: {
       department: department,
       status: [CaseStatusEnum.Tilbúið],
@@ -60,6 +61,7 @@ export const ReadyForPublicationTabs = () => {
         <CaseTableReady
           cases={caseOverview.cases}
           selectedCaseIds={selectedCases.map((c) => c.id)}
+          paging={paging}
           toggleAll={() =>
             allSelected
               ? setSelectedCases([])

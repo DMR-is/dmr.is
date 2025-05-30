@@ -1,4 +1,5 @@
 import dynamic from 'next/dynamic'
+
 import { MessageDescriptor } from 'react-intl'
 
 import {
@@ -13,6 +14,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
+import { CaseStatusEnum } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { NOTIFICATION_PORTAL_ID } from '../../lib/constants'
 import { BannerCard, BannerCardList } from '../banner-card/BannerCardList'
@@ -38,6 +40,7 @@ type Props = {
   enableDepartments?: boolean
   enableTypes?: boolean
   enableSearch?: boolean
+  statuses?: CaseStatusEnum[]
 }
 
 const CaseFilters = dynamic(() => import('../case-filters/CaseFilters'), {
@@ -73,6 +76,7 @@ export const Banner = ({
   enableDepartments = false,
   enableTypes = false,
   enableSearch = false,
+  statuses = [],
 }: Props) => {
   const { formatMessage } = useFormatMessage()
 
@@ -115,6 +119,7 @@ export const Banner = ({
                 <div id={NOTIFICATION_PORTAL_ID} />
                 {showFilters && (
                   <CaseFilters
+                    statuses={statuses}
                     enableCategories={enableCategories}
                     enableDepartments={enableDepartments}
                     enableTypes={enableTypes}

@@ -1,8 +1,5 @@
 import esb from 'elastic-builder'
 import xss from 'xss'
-import range from '@hugsmidjan/qj/range'
-import zeroPad from '@hugsmidjan/qj/zeroPad'
-import { Client, errors } from '@opensearch-project/opensearch'
 
 import { ensureReasonableYear } from '@island.is/regulations-tools/utils'
 
@@ -15,6 +12,10 @@ import {
   RegulationListItem,
   RegulationSearchResults,
 } from '../routes/types'
+
+import range from '@hugsmidjan/qj/range'
+import zeroPad from '@hugsmidjan/qj/zeroPad'
+import { Client, errors } from '@opensearch-project/opensearch'
 // import { RegulationsIndexBody } from './populate';
 
 export type SearchQueryParams = {

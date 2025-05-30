@@ -1,4 +1,5 @@
 import { Op } from 'sequelize'
+
 import { GetAdvertTypesQueryParams } from '@dmr.is/shared/dto'
 
 type WhereClause = {

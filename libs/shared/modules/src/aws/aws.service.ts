@@ -1,5 +1,21 @@
 import nodemailer, { SentMessageInfo } from 'nodemailer'
 import Mail from 'nodemailer/lib/mailer'
+
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common'
+
+import { ONE_HOUR } from '@dmr.is/constants'
+import { LogAndHandle } from '@dmr.is/decorators'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { PresignedUrlResponse, S3UploadFileResponse } from '@dmr.is/shared/dto'
+import { ResultWrapper } from '@dmr.is/types'
+import { getS3Bucket } from '@dmr.is/utils'
+
+import { IAWSService } from './aws.service.interface'
+
 import {
   AbortMultipartUploadCommand,
   CompleteMultipartUploadCommand,
@@ -13,20 +29,6 @@ import {
 import { SendRawEmailCommand, SESClient } from '@aws-sdk/client-ses'
 import { fromIni } from '@aws-sdk/credential-providers'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { ONE_HOUR } from '@dmr.is/constants'
-import { LogAndHandle } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { PresignedUrlResponse, S3UploadFileResponse } from '@dmr.is/shared/dto'
-import { ResultWrapper } from '@dmr.is/types'
-import { getS3Bucket } from '@dmr.is/utils'
-
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common'
-
-import { IAWSService } from './aws.service.interface'
 
 const LOGGING_CATEGORY = 's3-service'
 

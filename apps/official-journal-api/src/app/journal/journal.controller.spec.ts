@@ -1,3 +1,5 @@
+import { Test, TestingModule } from '@nestjs/testing'
+
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CaseServiceMock,
@@ -5,8 +7,6 @@ import {
   IJournalService,
   MockJournalService,
 } from '@dmr.is/modules'
-
-import { Test, TestingModule } from '@nestjs/testing'
 
 import { JournalController } from './journal.controller'
 

@@ -1,18 +1,20 @@
-import { LoggingModule } from '@dmr.is/logging'
-import { CaseModel, UserModule } from '@dmr.is/modules'
-
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
+
+import { LoggingModule } from '@dmr.is/logging'
+import { CaseModel, UserModule } from '@dmr.is/modules'
+import { createRedisCacheOptions } from '@dmr.is/utils/cache'
 
 import { StatisticsController } from './statistics.controller'
 import { StatisticsService } from './statistics.service'
 import { IStatisticsService } from './statistics.service.interface'
 import { MockStatisticsService } from './statistics.service.mock'
-
 const MOCK_DATA = process.env.API_MOCK === 'true'
 
 @Module({
-  imports: [SequelizeModule.forFeature([CaseModel]), LoggingModule, UserModule],
+  imports: [
+    createRedisCacheOptions('ojoi-statistics'),
+    SequelizeModule.forFeature([CaseModel]), LoggingModule, UserModule],
   controllers: [StatisticsController],
   providers: [
     {

@@ -1,6 +1,7 @@
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { useSession } from 'next-auth/react'
+
 import { isResponse } from '@dmr.is/utils/client'
 
 import { CaseFields } from '../../components/case-update-fields/CaseFields'
@@ -96,42 +97,40 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
       title: messages.banner.title,
     },
   }
-
-  const casePromise = dmrClient.getCase({ id: caseId })
-
-  const departmentsPromise = dmrClient.getDepartments({})
-
-  const employeesPromise = dmrClient.getUsers({
-    role: 'ritstjori',
-    pageSize: 1000,
-    page: 1,
-  })
-
-  const categoriesPromise = dmrClient.getCategories({
-    page: 1,
-    pageSize: 1000,
-  })
-
-  const tagPromises = dmrClient.getTags()
-
-  const feeCodePromise = dmrClient.getFeeCodes()
-
   try {
-    const [caseResponse, departments, users, categories, tags, feeCodes] =
+    const caseResponse = await dmrClient.getCase({ id: caseId })
+
+    const departmentsPromise = dmrClient.getDepartments({})
+
+    const employeesPromise = dmrClient.getUsers({
+      role: 'ritstjori',
+      pageSize: 1000,
+      page: 1,
+    })
+
+    const categoriesPromise = dmrClient.getCategories({
+      page: 1,
+      pageSize: 1000,
+    })
+
+    const tagPromises = dmrClient.getTags()
+
+    const feeCodePromise = dmrClient.getFeeCodes()
+    const typesPromise = dmrClient.getTypes({
+      department: caseResponse._case.advertDepartment.id,
+      page: 1,
+      pageSize: 100,
+    })
+
+    const [types, departments, users, categories, tags, feeCodes] =
       await Promise.all([
-        casePromise,
+        typesPromise,
         departmentsPromise,
         employeesPromise,
         categoriesPromise,
         tagPromises,
         feeCodePromise,
       ])
-
-    const types = await dmrClient.getTypes({
-      department: caseResponse._case.advertDepartment.id,
-      page: 1,
-      pageSize: 100,
-    })
 
     return {
       props: deleteUndefined({
