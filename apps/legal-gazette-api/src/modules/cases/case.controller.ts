@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Post } from '@nestjs/common'
+import { Controller, Get, Inject } from '@nestjs/common'
 
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 
@@ -15,10 +15,5 @@ export class CaseController {
   @LGResponse({ operationId: 'getCases', type: GetCasesDto })
   getCases(): Promise<GetCasesDto> {
     return this.caseService.getCases()
-  }
-
-  @Post()
-  async create(@Body() body: any): Promise<void> {
-    return this.caseService.create(body)
   }
 }

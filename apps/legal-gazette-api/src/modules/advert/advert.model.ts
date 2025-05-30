@@ -28,7 +28,7 @@ type AdvertAttributes = {
 }
 
 export type AdvertCreateAttributes = {
-  html: string
+  html?: string
   scheduledAt: Date
   version?: AdvertVersion
   caseId?: string
@@ -132,6 +132,7 @@ export class AdvertModel extends BaseModel<
   @Column({
     type: DataType.TEXT,
     allowNull: false,
+    defaultValue: '',
   })
   html!: string
 

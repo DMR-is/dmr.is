@@ -1,5 +1,7 @@
-import { Type } from 'class-transformer'
+import { Transform, Type } from 'class-transformer'
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
   IsArray,
   IsDateString,
   IsOptional,
@@ -20,17 +22,23 @@ import { CreateCommunicationChannelDto } from '../../communication-channel/dto/c
 export class CreateCaseDto {
   @ApiProperty({ type: String })
   @IsUUID()
-  typeId!: string
-
-  @ApiProperty({ type: String })
-  @IsUUID()
   categoryId!: string
 
   @ApiProperty({ type: [CreateCommunicationChannelDto], required: false })
   @IsOptional()
   @IsArray()
   @Type(() => CreateCommunicationChannelDto)
-  communicationChannels?: CreateCommunicationChannelDto[]
+  channels?: CreateCommunicationChannelDto[]
+
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @Type(() => String)
+  @ArrayMinSize(0)
+  @ArrayMaxSize(3)
+  @Transform(({ value }: { value: string[] }) =>
+    value.sort((a, b) => new Date(a).getTime() - new Date(b).getTime()),
+  )
+  publishingDates!: string[]
 }
 
 export class CaseDto extends DetailedDto {

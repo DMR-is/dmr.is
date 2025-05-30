@@ -1,3 +1,4 @@
+import addDays from 'date-fns/addDays'
 import { Op, Sequelize } from 'sequelize'
 import {
   BeforeCreate,
@@ -12,6 +13,7 @@ import {
 
 import {
   CASE_STATUS_SUBMITTED_ID,
+  COMMON_APPLICATION_TYPE_ID,
   LegalGazetteModels,
 } from '@dmr.is/legal-gazette/constants'
 import {
@@ -20,6 +22,7 @@ import {
   BaseTable,
 } from '@dmr.is/shared/models/base'
 
+import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
 import { CaseCategoryModel } from '../case-category/case-category.model'
 import { CaseStatusModel } from '../case-status/case-status.model'
@@ -28,6 +31,7 @@ import {
   CommonCaseCreationAttributes,
   CommonCaseModel,
 } from '../common-case/common-case.model'
+import { CreateCommonCaseInternalDto } from '../common-case/dto/common-case.dto'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
@@ -54,7 +58,7 @@ type CaseCreateAttributes = {
   caseTitle: string
   applicationId?: string
   caseId?: string
-  communicationChannels?: CommunicationChannelCreateAttributes[]
+  communicationChannels: CommunicationChannelCreateAttributes[]
   adverts?: AdvertCreateAttributes[]
   commonCase?: CommonCaseCreationAttributes
 }
@@ -82,23 +86,14 @@ type CaseCreateAttributes = {
     'deletedAt',
   ],
   include: [
-    {
-      model: CaseTypeModel,
-      attributes: BASE_ENTITY_ATTRIBUTES,
-    },
-    {
-      model: CaseCategoryModel,
-      attributes: BASE_ENTITY_ATTRIBUTES,
-    },
-    {
-      model: CaseStatusModel,
-      attributes: BASE_ENTITY_ATTRIBUTES,
-    },
+    CaseTypeModel,
+    CaseCategoryModel,
+    CaseStatusModel,
     {
       model: CommunicationChannelModel,
     },
     {
-      model: AdvertModel,
+      model: AdvertModel.unscoped(),
       attributes: ['scheduledAt', 'publishedAt'],
     },
   ],
@@ -184,7 +179,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     const month = String(instance.createdAt.getMonth() + 1).padStart(2, '0')
     const day = String(instance.createdAt.getDate()).padStart(2, '0')
 
-    const count = await CaseModel.count({
+    const count = await CaseModel.unscoped().count({
       where: { caseNumber: { [Op.like]: `${year}%` } },
     })
 
@@ -192,5 +187,54 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
       3,
       '0',
     )}`
+  }
+
+  static async createCommonCase(body: CreateCommonCaseInternalDto) {
+    this.logger.info('Creating common case', { context: 'CaseModel' })
+
+    try {
+      await this.create(
+        {
+          applicationId: body.applicationId,
+          categoryId: body.categoryId,
+          typeId: COMMON_APPLICATION_TYPE_ID,
+          caseTitle: body.caption,
+          communicationChannels:
+            body.channels?.map((ch) => ({
+              email: ch.email,
+              name: ch?.name,
+              phone: ch?.phone,
+            })) ?? [],
+          commonCase: {
+            caption: body.caption,
+            signatureDate: new Date(body.signature.date),
+            signatureLocation: body.signature.location,
+            signatureName: body.signature.name,
+          },
+          adverts:
+            body.publishingDates.length > 0
+              ? body.publishingDates.map((date, i) => ({
+                  html: body.html,
+                  scheduledAt: new Date(date),
+                  version: mapIndexToVersion(i),
+                }))
+              : [
+                  {
+                    html: body.html,
+                    scheduledAt: addDays(new Date(), 14),
+                  },
+                ],
+        },
+        {
+          include: [CommunicationChannelModel, CommonCaseModel, AdvertModel],
+        },
+      )
+    } catch (error) {
+      this.logger.error('Error creating common case', {
+        context: 'CaseModel',
+        error,
+      })
+      throw error
+    }
   }
 }

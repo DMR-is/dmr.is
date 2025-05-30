@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { CommunicationChannelModel } from '../communication-channel/communication-channel.model'
 import { CaseDto, GetCasesDto } from './dto/case.dto'
 import { caseMigrate } from './dto/case.migrate'
 import { ICaseService } from './case.service.interface'
@@ -21,24 +20,15 @@ export class CaseService implements ICaseService {
       cases: migrated,
     }
   }
-  getCase(id: string): Promise<CaseDto> {
-    throw new Error('Method not implemented.')
-  }
+  async getCase(id: string): Promise<CaseDto> {
+    const caseModel = await this.caseModel.findByPk(id)
 
-  createCommonCase(body: any): void {
-    throw new Error('Method not implemented.')
-  }
+    if (!caseModel) {
+      throw new NotFoundException(`Case with id ${id} not found`)
+    }
 
-  async create(body: any): Promise<any> {
-    const randomCaseNumber = Math.floor(Math.random() * 1000000)
+    const migrated = caseMigrate(caseModel)
 
-    const model = await this.caseModel.create(
-      { ...body },
-      {
-        include: [CommunicationChannelModel],
-      },
-    )
-
-    return model
+    return migrated
   }
 }

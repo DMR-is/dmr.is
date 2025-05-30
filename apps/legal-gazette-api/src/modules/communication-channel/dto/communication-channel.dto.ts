@@ -1,4 +1,10 @@
-import { IsEmail, IsOptional, IsString } from 'class-validator'
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator'
 
 import { ApiProperty, IntersectionType } from '@nestjs/swagger'
 
@@ -17,6 +23,8 @@ export class CreateCommunicationChannelDto {
   })
   @IsOptional()
   @IsString()
+  @MinLength(1)
+  @MaxLength(255)
   name?: string
 
   @ApiProperty({
@@ -25,6 +33,8 @@ export class CreateCommunicationChannelDto {
   })
   @IsOptional()
   @IsString()
+  @MinLength(1)
+  @MaxLength(255)
   phone?: string
 }
 
