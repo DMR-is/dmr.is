@@ -72,6 +72,25 @@ jobs:
       - name: Run tests
         run: yarn run nx affected -t test
 
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ♻️ Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: 📥 Monorepo install
+        uses: ./.github/actions/yarn-install
+      - uses: nrwl/nx-set-shas@v4
+
+      - name: Run tests
+        run: yarn run nx affected -t typecheck
+
   build:
     runs-on: ubuntu-latest
     steps:
