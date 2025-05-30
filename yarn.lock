@@ -14271,7 +14271,7 @@ __metadata:
     jsonwebtoken: "npm:^9.0.2"
     jwks-rsa: "npm:^3.1.0"
     kennitala: "npm:^2.0.0-beta.3"
-    libphonenumber-js: "npm:1.7.53"
+    libphonenumber-js: "npm:^1.10.53"
     license-checker: "npm:^25.0.1"
     lodash: "npm:4.17.21"
     mime-types: "npm:^2.1.35"
@@ -19574,18 +19574,6 @@ __metadata:
     prelude-ls: "npm:^1.2.1"
     type-check: "npm:~0.4.0"
   checksum: 10c0/effb03cad7c89dfa5bd4f6989364bfc79994c2042ec5966cb9b95990e2edee5cd8969ddf42616a0373ac49fac1403437deaf6e9050fbbaa3546093a59b9ac94e
-  languageName: node
-  linkType: hard
-
-"libphonenumber-js@npm:1.7.53":
-  version: 1.7.53
-  resolution: "libphonenumber-js@npm:1.7.53"
-  dependencies:
-    minimist: "npm:^1.2.5"
-    xml2js: "npm:^0.4.17"
-  bin:
-    libphonenumber-generate-metadata: ./bin/update-metadata.js
-  checksum: 10c0/a6ea62cb7837074302e5ce15702b29d33693144665e3d5a5711cde1bf78e01b2aa1a3e77f58e664d5dcc8f7f915812d606326fd271de985874558f8d07a0a207
   languageName: node
   linkType: hard
 
@@ -28002,16 +27990,6 @@ __metadata:
     sax: "npm:>=0.6.0"
     xmlbuilder: "npm:~11.0.0"
   checksum: 10c0/e98a84e9c172c556ee2c5afa0fc7161b46919e8b53ab20de140eedea19903ed82f7cd5b1576fb345c84f0a18da1982ddf65908129b58fc3d7cbc658ae232108f
-  languageName: node
-  linkType: hard
-
-"xml2js@npm:^0.4.17":
-  version: 0.4.23
-  resolution: "xml2js@npm:0.4.23"
-  dependencies:
-    sax: "npm:>=0.6.0"
-    xmlbuilder: "npm:~11.0.0"
-  checksum: 10c0/a3f41c9afc46d5bd0bea4070e5108777b605fd5ce2ebb978a68fd4c75513978ad5939f8135664ffea6f1adb342f391b1ba1584ed7955123b036e9ab8a1d26566
   languageName: node
   linkType: hard
 
