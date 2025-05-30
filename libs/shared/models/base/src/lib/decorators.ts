@@ -1,11 +1,5 @@
 import { Op } from 'sequelize'
-import {
-  DefaultScope,
-  ScopeOptions,
-  Scopes,
-  Table,
-  TableOptions,
-} from 'sequelize-typescript'
+import { DefaultScope, Scopes, Table, TableOptions } from 'sequelize-typescript'
 
 import {
   BASE_ENTITY_ATTRIBUTES,
@@ -13,7 +7,7 @@ import {
   BASE_ENTITY_ORDER_ASC,
 } from './constants'
 
-export function BaseTableScopes(options: TableOptions = {}) {
+export function BaseEntityTable(options: TableOptions = {}) {
   return function (constructor: Function) {
     Table({
       timestamps: true,
@@ -46,5 +40,15 @@ export function BaseTableScopes(options: TableOptions = {}) {
         paranoid: false,
       },
     }))(constructor)
+  }
+}
+
+export function BaseTable(options: TableOptions = {}) {
+  return function (constructor: Function) {
+    Table({
+      timestamps: true,
+      paranoid: true,
+      ...options,
+    })(constructor)
   }
 }

@@ -1,15 +1,15 @@
 import {
-  GetCategoriesDetailedDto,
-  GetCategoriesDto,
-  GetCategoriesQueryDto,
+  GetCaseCategoriesDetailedDto,
+  GetCaseCategoriesDto,
+  GetCaseCategoriesQueryDto,
 } from './dto/case-category.dto'
 
 export interface ICaseCategoryService {
-  getCategories(query: GetCategoriesQueryDto): Promise<GetCategoriesDto>
+  getCategories(query: GetCaseCategoriesQueryDto): Promise<GetCaseCategoriesDto>
 
   getCategoriesDetailed(
-    query: GetCategoriesQueryDto,
-  ): Promise<GetCategoriesDetailedDto>
+    query: GetCaseCategoriesQueryDto,
+  ): Promise<GetCaseCategoriesDetailedDto>
 }
 
 export const ICaseCategoryService = Symbol('ICaseCategoryService')

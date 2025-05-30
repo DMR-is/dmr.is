@@ -4,23 +4,25 @@ import { ApiTags } from '@nestjs/swagger'
 import { LegalGazetteApiTags } from '@dmr.is/legal-gazette/constants'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 
-import { SubmitApplicationDto } from './dto/application.dto'
-import { ILegalGazetteApplicationService } from './application.service.interface'
+import { SubmitCommonApplicationDto } from './dto/common-application.dto'
+import { ICommonApplicationService } from './common-application.service.interface'
 
 @Controller({
   path: 'applications',
   version: '1',
 })
 @ApiTags(LegalGazetteApiTags.APPLICATION_API)
-export class LegalGazetteApplicationController {
+export class CommonApplicationController {
   constructor(
-    @Inject(ILegalGazetteApplicationService)
-    private readonly applicationService: ILegalGazetteApplicationService,
+    @Inject(ICommonApplicationService)
+    private readonly applicationService: ICommonApplicationService,
   ) {}
 
   @Post()
   @LGResponse({ operationId: 'submitApplication', status: 201 })
-  async submitApplication(@Body() body: SubmitApplicationDto): Promise<void> {
+  async submitApplication(
+    @Body() body: SubmitCommonApplicationDto,
+  ): Promise<void> {
     return this.applicationService.submitApplication(body)
   }
 }

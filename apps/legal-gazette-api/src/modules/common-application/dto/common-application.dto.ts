@@ -1,4 +1,4 @@
-import { Exclude, Expose, Transform, Type } from 'class-transformer'
+import { Expose, Transform, Type } from 'class-transformer'
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -29,6 +29,13 @@ export class CommunicationChannelDto {
   @IsString()
   @MinLength(1)
   @MaxLength(255)
+  name?: string
+
+  @ApiProperty({ type: String, nullable: true })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
   phone?: string
 }
 
@@ -51,7 +58,7 @@ export class SignatureDto {
   date!: string
 }
 
-export class SubmitApplicationDto {
+export class SubmitCommonApplicationDto {
   @ApiProperty({ type: String })
   @IsUUID()
   applicationId!: string
@@ -79,6 +86,7 @@ export class SubmitApplicationDto {
 
   @ApiProperty({ type: SignatureDto })
   @Type(() => SignatureDto)
+  @ValidateNested()
   signature!: SignatureDto
 
   @ApiProperty({ type: [CommunicationChannelDto] })
@@ -94,5 +102,8 @@ export class SubmitApplicationDto {
   @Type(() => String)
   @ArrayMinSize(0)
   @ArrayMaxSize(3)
+  @Transform(({ value }: { value: string[] }) =>
+    value.sort((a, b) => new Date(a).getTime() - new Date(b).getTime()),
+  )
   publishingDates!: string[]
 }

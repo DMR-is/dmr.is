@@ -5,9 +5,9 @@ import { LegalGazetteApiTags } from '@dmr.is/legal-gazette/constants'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 
 import {
-  GetCategoriesDetailedDto,
-  GetCategoriesDto,
-  GetCategoriesQueryDto,
+  GetCaseCategoriesDetailedDto,
+  GetCaseCategoriesDto,
+  GetCaseCategoriesQueryDto,
 } from './dto/case-category.dto'
 import { ICaseCategoryService } from './case-category.service.interface'
 
@@ -25,18 +25,18 @@ export class CaseCategoryController {
   @ApiTags(LegalGazetteApiTags.APPLICATION_API)
   @LGResponse({
     operationId: 'getCategories',
-    type: GetCategoriesDto,
+    type: GetCaseCategoriesDto,
   })
-  getCategories(@Query() query: GetCategoriesQueryDto) {
+  getCategories(@Query() query: GetCaseCategoriesQueryDto) {
     return this.categoryService.getCategories(query)
   }
 
   @Get('detailed')
   @LGResponse({
     operationId: 'getCategoriesDetailed',
-    type: GetCategoriesDetailedDto,
+    type: GetCaseCategoriesDetailedDto,
   })
-  getCategoriesDetailed(@Query() query: GetCategoriesQueryDto) {
+  getCategoriesDetailed(@Query() query: GetCaseCategoriesQueryDto) {
     return this.categoryService.getCategoriesDetailed(query)
   }
 }
