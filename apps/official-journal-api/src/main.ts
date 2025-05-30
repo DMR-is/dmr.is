@@ -34,7 +34,9 @@ async function bootstrap() {
     type: VersioningType.URI,
   })
 
-  const document = SwaggerModule.createDocument(app, openApi)
+  const document = SwaggerModule.createDocument(app, openApi, {
+    autoTagControllers: false,
+  })
   SwaggerModule.setup(swaggerPath, app, document)
 
   apmInit()
