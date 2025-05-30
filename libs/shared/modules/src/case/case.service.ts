@@ -13,14 +13,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { AttachmentTypeParam } from '@dmr.is/constants'
