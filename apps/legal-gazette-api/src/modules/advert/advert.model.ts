@@ -1,5 +1,4 @@
 import {
-  BeforeCreate,
   BelongsTo,
   Column,
   DataType,
@@ -24,6 +23,7 @@ type AdvertAttributes = {
 export type AdvertCreateAttributes = {
   html: string
   scheduledAt: Date
+  version?: AdvertVersion
   caseId?: string
 }
 
@@ -100,25 +100,4 @@ export class AdvertModel extends BaseModel<
 
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
   case!: CaseModel
-
-  @BeforeCreate
-  static async setVersion(advert: AdvertModel): Promise<void> {
-    const siblingCount = await AdvertModel.count({
-      where: { caseId: advert.caseId },
-    })
-
-    switch (siblingCount) {
-      case 0:
-        advert.version = AdvertVersion.A
-        break
-      case 1:
-        advert.version = AdvertVersion.B
-        break
-      case 2:
-        advert.version = AdvertVersion.C
-        break
-      default:
-        throw new Error('Too many adverts for the same case')
-    }
-  }
 }

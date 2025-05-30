@@ -102,5 +102,8 @@ export class SubmitCommonApplicationDto {
   @Type(() => String)
   @ArrayMinSize(0)
   @ArrayMaxSize(3)
+  @Transform(({ value }: { value: string[] }) =>
+    value.sort((a, b) => new Date(a).getTime() - new Date(b).getTime()),
+  )
   publishingDates!: string[]
 }

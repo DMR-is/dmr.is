@@ -1,3 +1,5 @@
+import addDays from 'date-fns/addDays'
+
 import { Inject, Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
@@ -8,6 +10,7 @@ import {
 } from '@dmr.is/legal-gazette/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertModel } from '../advert/advert.model'
 import { CaseModel } from '../cases/cases.model'
 import { CommonCaseModel } from '../common-case/common-case.model'
@@ -40,10 +43,19 @@ export class CommonApplicationService implements ICommonApplicationService {
           signatureLocation: body.signature.location,
           signatureName: body.signature.name,
         },
-        adverts: body.publishingDates.map((date) => ({
-          html: body.html,
-          scheduledAt: new Date(date),
-        })),
+        adverts:
+          body.publishingDates.length > 0
+            ? body.publishingDates.map((date, i) => ({
+                html: body.html,
+                scheduledAt: new Date(date),
+                version: mapIndexToVersion(i),
+              }))
+            : [
+                {
+                  html: body.html,
+                  scheduledAt: addDays(new Date(), 14),
+                },
+              ],
       },
       {
         include: [CommunicationChannelModel, CommonCaseModel, AdvertModel],
