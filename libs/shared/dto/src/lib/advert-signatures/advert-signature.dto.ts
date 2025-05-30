@@ -53,6 +53,7 @@ export class AdvertSignature {
 
   @ApiProperty({
     description: 'Type of the signature',
+    enumName: 'AdvertSignatureType',
     enum: AdvertSignatureType,
     example: AdvertSignatureType.Regular,
     type: AdvertSignatureType,

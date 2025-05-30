@@ -8,6 +8,7 @@ import { AdvertSignatureType } from './advert-signature-constants.dto'
 export class AdvertSignatureBody {
   @ApiProperty({
     description: 'Type of the signature',
+    enumName: 'AdvertSignatureType',
     enum: AdvertSignatureType,
     example: AdvertSignatureType.Regular,
     type: AdvertSignatureType,
