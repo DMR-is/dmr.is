@@ -1,12 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common'
+import { OnEvent } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { LegalGazetteEvents } from '@dmr.is/legal-gazette/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AuthService } from '@dmr.is/modules'
 
 import { CaseStatusIdEnum } from '../case-status/case-status.model'
 import { CaseModel } from '../cases/cases.model'
-import { SubmitCommonApplicationDto } from './dto/common-application.dto'
+import {
+  CommonApplicationUpdateStateEvent,
+  SubmitCommonApplicationDto,
+} from './dto/common-application.dto'
 import { ICommonApplicationService } from './common-application.service.interface'
 
 @Injectable()
@@ -37,16 +42,16 @@ export class CommonApplicationService implements ICommonApplicationService {
     )
   }
 
+  @OnEvent(LegalGazetteEvents.COMMON_APPLICATION_UPDATE)
   async updateApplicationState(
-    applicationId: string,
-    event: 'APPROVE' | 'REJECT',
+    body: CommonApplicationUpdateStateEvent,
   ): Promise<void> {
     await this.authService.xroadFetch(
-      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${applicationId}/submit`,
+      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${body.applicationId}/submit`,
       {
         method: 'PUT',
         body: new URLSearchParams({
-          event: event,
+          event: body.event,
         }),
       },
     )

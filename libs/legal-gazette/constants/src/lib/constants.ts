@@ -23,5 +23,5 @@ export enum LegalGazetteApplicationTypes {
 }
 
 export enum LegalGazetteEvents {
-  COMMON_APPLICATION_SUBMITTED = 'common-application.submitted',
+  COMMON_APPLICATION_UPDATE = 'common-application.update',
 }

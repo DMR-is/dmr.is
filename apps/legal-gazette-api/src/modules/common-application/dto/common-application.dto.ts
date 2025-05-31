@@ -5,6 +5,11 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { CreateCommonCaseDto } from '../../common-case/dto/common-case.dto'
 
+enum CommonApplicationEventsEnum {
+  APPROVE = 'APPROVE',
+  REJECT = 'REJECT',
+}
+
 export class SubmitCommonApplicationDto extends CreateCommonCaseDto {
   @ApiProperty({ type: String })
   @IsUUID()
@@ -20,4 +25,16 @@ export class SubmitCommonApplicationDto extends CreateCommonCaseDto {
     Buffer.from(obj.htmlBase64, 'base64').toString('utf-8'),
   )
   html!: string
+}
+
+export class CommonApplicationUpdateStateEvent {
+  @ApiProperty({ type: String })
+  @IsUUID()
+  applicationId!: string
+
+  @ApiProperty({
+    enum: CommonApplicationEventsEnum,
+    enumName: 'CommonApplicationEvents',
+  })
+  event!: CommonApplicationEventsEnum
 }
