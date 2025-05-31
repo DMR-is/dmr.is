@@ -1,4 +1,4 @@
-import { Body, Controller, Inject, Post } from '@nestjs/common'
+import { Body, Controller, Delete, Inject, Param, Post } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 
 import { LegalGazetteApiTags } from '@dmr.is/legal-gazette/constants'
@@ -11,7 +11,6 @@ import { ICommonApplicationService } from './common-application.service.interfac
   path: 'applications',
   version: '1',
 })
-@ApiTags(LegalGazetteApiTags.APPLICATION_API)
 export class CommonApplicationController {
   constructor(
     @Inject(ICommonApplicationService)
@@ -20,9 +19,17 @@ export class CommonApplicationController {
 
   @Post()
   @LGResponse({ operationId: 'submitApplication', status: 201 })
+  @ApiTags(LegalGazetteApiTags.APPLICATION_API)
   async submitApplication(
     @Body() body: SubmitCommonApplicationDto,
   ): Promise<void> {
     return this.applicationService.submitApplication(body)
+  }
+
+  @Delete(':id')
+  @LGResponse({ operationId: 'deleteApplication' })
+  @ApiTags(LegalGazetteApiTags.APPLICATION_API)
+  async deleteApplication(@Param('id') id: string): Promise<void> {
+    await this.applicationService.deleteApplication(id)
   }
 }

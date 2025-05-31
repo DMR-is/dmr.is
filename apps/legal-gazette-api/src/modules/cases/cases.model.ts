@@ -9,6 +9,7 @@ import {
   ForeignKey,
   HasMany,
   HasOne,
+  Scopes,
 } from 'sequelize-typescript'
 
 import {
@@ -25,7 +26,10 @@ import {
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
 import { CaseCategoryModel } from '../case-category/case-category.model'
-import { CaseStatusModel } from '../case-status/case-status.model'
+import {
+  CaseStatusIdEnum,
+  CaseStatusModel,
+} from '../case-status/case-status.model'
 import { CaseTypeModel } from '../case-type/case-type.model'
 import {
   CommonCaseCreationAttributes,
@@ -98,6 +102,12 @@ type CaseCreateAttributes = {
     },
   ],
   order: [['scheduledAt', 'ASC', 'NULLS LAST']],
+}))
+@Scopes(() => ({
+  byApplicationId: (applicationId: string) => ({
+    attributes: ['id', 'applicationId'],
+    where: { applicationId },
+  }),
 }))
 export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   @Column({
@@ -187,6 +197,24 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
       3,
       '0',
     )}`
+  }
+
+  static async setCaseStatus(id: string, status: CaseStatusIdEnum) {
+    this.logger.info('Setting case status', {
+      context: 'CaseModel',
+      id,
+      status,
+    })
+
+    try {
+      await this.update({ caseStatusId: status }, { where: { id } })
+    } catch (error) {
+      this.logger.error('Error setting case status', {
+        context: 'CaseModel',
+        error,
+      })
+      throw error
+    }
   }
 
   static async createCommonCase(body: CreateCommonCaseInternalDto) {
