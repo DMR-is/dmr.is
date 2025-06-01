@@ -1,7 +1,5 @@
 import { Controller, Get, Inject, Query } from '@nestjs/common'
-import { ApiTags } from '@nestjs/swagger'
 
-import { LegalGazetteApiTags } from '@dmr.is/legal-gazette/constants'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 
 import {
@@ -22,7 +20,6 @@ export class CaseCategoryController {
   ) {}
 
   @Get()
-  @ApiTags(LegalGazetteApiTags.APPLICATION_API)
   @LGResponse({
     operationId: 'getCategories',
     type: GetCaseCategoriesDto,
