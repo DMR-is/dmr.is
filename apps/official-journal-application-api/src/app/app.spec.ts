@@ -53,7 +53,9 @@ describe('Swagger documentation', () => {
       .setVersion('1.0')
       .build()
 
-    const document = SwaggerModule.createDocument(app, config)
+    const document = SwaggerModule.createDocument(app, config, {
+      autoTagControllers: false,
+    })
 
     if (!fs.existsSync(TMP_DIR)) {
       fs.mkdirSync(TMP_DIR, { recursive: true })

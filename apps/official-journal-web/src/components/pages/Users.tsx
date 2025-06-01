@@ -16,14 +16,14 @@ import {
 } from '@island.is/island-ui/core'
 
 import { UserProvider } from '../../context/userContext'
-import { BaseEntity } from '../../gen/fetch'
+import { UserRoleDto } from '../../gen/fetch'
 
 const UserTable = dynamic(() => import('../tables/UsersTable'))
 const InstitutionTable = dynamic(() => import('../tables/InstitutionTable'))
 
 type Props = {
   isAdmin: boolean
-  roleOptions: { label: string; value: BaseEntity }[]
+  roleOptions: { label: string; value: UserRoleDto }[]
 }
 
 export default function UsersPage({ isAdmin, roleOptions }: Props) {

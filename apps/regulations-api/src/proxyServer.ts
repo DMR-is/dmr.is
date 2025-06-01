@@ -1,11 +1,11 @@
 import { fastify as fast } from 'fastify';
-import proxy, { FastifyHttpProxyOptions } from 'fastify-http-proxy';
 import { Writable } from 'stream';
 
 import { cacheControl } from './utils/misc';
 import { serveRobotsTxt } from './utils/server-utils';
 import { API_URL, AWS_BUCKET_NAME, AWS_REGION_NAME } from './constants';
 
+import proxy, { FastifyHttpProxyOptions } from '@fastify/http-proxy';
 import fastifyRateLimiter from '@fastify/rate-limit';
 import { DAY, HOUR, SECOND } from '@hugsmidjan/qj/time';
 

@@ -371,6 +371,12 @@
       "value": "Alls"
     }
   ],
+  "web.components.steps.grunnvinnsla:attachmentFiles": [
+    {
+      "type": 0,
+      "value": "Fylgigögn"
+    }
+  ],
   "web.components.steps.grunnvinnsla:attachments": [
     {
       "type": 0,
@@ -419,6 +425,12 @@
       "value": "Sendandi"
     }
   ],
+  "web.components.steps.grunnvinnsla:mainType": [
+    {
+      "type": 0,
+      "value": "Tegund"
+    }
+  ],
   "web.components.steps.grunnvinnsla:message": [
     {
       "type": 0,
@@ -452,7 +464,7 @@
   "web.components.steps.grunnvinnsla:type": [
     {
       "type": 0,
-      "value": "Tegund"
+      "value": "Yfirheiti"
     }
   ],
   "web.components.steps.leidretting:errorFetching": [
@@ -519,6 +531,36 @@
     {
       "type": 0,
       "value": "Merking"
+    }
+  ],
+  "web.components.tables:advert.columns.change": [
+    {
+      "type": 0,
+      "value": "Yfirskrifa PDF"
+    }
+  ],
+  "web.components.tables:advert.columns.file": [
+    {
+      "type": 0,
+      "value": "Skjal"
+    }
+  ],
+  "web.components.tables:advert.columns.getFile": [
+    {
+      "type": 0,
+      "value": "Sækja skjal"
+    }
+  ],
+  "web.components.tables:advert.columns.publicationNumber": [
+    {
+      "type": 0,
+      "value": "Birtingarnúmer"
+    }
+  ],
+  "web.components.tables:advert.columns.title": [
+    {
+      "type": 0,
+      "value": "Heiti"
     }
   ],
   "web.components.tables:emptyTable": [
@@ -695,6 +737,12 @@
       "value": "Deild"
     }
   ],
+  "web.components.tables:submitted.columns.employee": [
+    {
+      "type": 0,
+      "value": "Starfs."
+    }
+  ],
   "web.components.tables:submitted.columns.publicationDate": [
     {
       "type": 0,
@@ -747,6 +795,12 @@
     {
       "type": 0,
       "value": "Finna deild"
+    }
+  ],
+  "web.general:searchByStatus": [
+    {
+      "type": 0,
+      "value": "Finna stöðu"
     }
   ],
   "web.general:searchByType": [

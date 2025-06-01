@@ -22,9 +22,14 @@ export const messages = {
       defaultMessage: 'Deild',
       description: '',
     },
+    mainType: {
+      id: 'web.components.steps.grunnvinnsla:mainType',
+      defaultMessage: 'Tegund',
+      description: '',
+    },
     type: {
       id: 'web.components.steps.grunnvinnsla:type',
-      defaultMessage: 'Tegund',
+      defaultMessage: 'Yfirheiti',
       description: '',
     },
     categories: {

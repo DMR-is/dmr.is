@@ -1,151 +1,31 @@
-import { parseAsStringEnum, useQueryState } from 'next-usequerystate'
-
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
-import { SkeletonLoader } from '@island.is/island-ui/core'
-
 import { CaseStatusEnum } from '../../gen/fetch'
-import { useCasesWithStatusCount } from '../../hooks/api'
-import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { messages } from '../../lib/messages/caseProcessingOverview'
-import { CaseTableInProgress } from '../tables/CaseTableInProgress'
-import { CaseTableInReview } from '../tables/CaseTableInReview'
-import { CaseTableSubmitted } from '../tables/CaseTableSubmitted'
-import { Tabs } from './Tabs'
+import { useCases } from '../../hooks/api'
+import { CaseTableRitstjorn } from '../tables/CaseTableRitstjorn'
 
 export const CaseOverviewTabs = () => {
-  const { formatMessage } = useFormatMessage()
-  const { params } = useFilters()
-
-  const [status, setStatus] = useQueryState(
-    'status',
-    parseAsStringEnum<CaseStatusEnum>(
-      Object.values(CaseStatusEnum),
-    ).withDefault(CaseStatusEnum.Innsent),
-  )
-
-  const { cases, statuses, paging } = useCasesWithStatusCount({
-    params: {
-      statuses: [
-        CaseStatusEnum.Innsent,
-        CaseStatusEnum.Grunnvinnsla,
-        CaseStatusEnum.Yfirlestur,
-        CaseStatusEnum.Tilbúið,
-      ],
-      ...params,
-      status: status,
-    },
+  const { params } = useFilters({
+    initialPageSize: 50,
   })
 
-  const loadingTabs = [
-    {
-      id: 'Innsent',
-      label: formatMessage(messages.tabs.submittedNoCount),
-      content: (
-        <SkeletonLoader
-          repeat={3}
-          height={44}
-          borderRadius="standard"
-          space={2}
-        />
-      ),
-    },
-    {
-      id: 'Grunnvinnsla',
-      label: formatMessage(messages.tabs.inProgressNoCount),
-      content: (
-        <SkeletonLoader
-          repeat={3}
-          height={44}
-          borderRadius="standard"
-          space={2}
-        />
-      ),
-    },
-    {
-      id: 'Yfirlestur',
-      label: formatMessage(messages.tabs.inReviewNoCount),
-      content: (
-        <SkeletonLoader
-          repeat={3}
-          height={44}
-          borderRadius="standard"
-          space={2}
-        />
-      ),
-    },
-    {
-      id: 'Tilbúið',
-      label: formatMessage(messages.tabs.readyNoCount),
-      content: (
-        <SkeletonLoader
-          repeat={3}
-          height={44}
-          borderRadius="standard"
-          space={2}
-        />
-      ),
-    },
+  const statuses = [
+    CaseStatusEnum.Innsent,
+    CaseStatusEnum.Grunnvinnsla,
+    CaseStatusEnum.Yfirlestur,
+    CaseStatusEnum.Tilbúið,
   ]
 
-  const dynamicTabs = statuses
-    ?.map((status) => {
-      let TabComponent
-      let label
-      let order = 0
-      switch (status.status) {
-        case CaseStatusEnum.Innsent:
-          order = 1
-          label = formatMessage(messages.tabs.submitted, {
-            count: status.count,
-          })
-          TabComponent = <CaseTableSubmitted cases={cases} paging={paging} />
-          break
-        case CaseStatusEnum.Grunnvinnsla:
-          order = 2
-          label = formatMessage(messages.tabs.inProgress, {
-            count: status.count,
-          })
-          TabComponent = <CaseTableInProgress cases={cases} paging={paging} />
-          break
-        case CaseStatusEnum.Yfirlestur:
-          order = 3
-          label = formatMessage(messages.tabs.inReview, {
-            count: status.count,
-          })
-          TabComponent = <CaseTableInReview cases={cases} paging={paging} />
-          break
-        case CaseStatusEnum.Tilbúið:
-          order = 4
-          label = formatMessage(messages.tabs.ready, {
-            count: status.count,
-          })
-          TabComponent = <CaseTableInProgress cases={cases} paging={paging} />
-          break
-      }
+  const paramsWithStatuses = {
+    ...params,
+    status: params.status.length > 0 ? params.status : statuses,
+  }
 
-      return {
-        id: status.status,
-        label: label,
-        content: TabComponent,
-        order: order,
-      }
-    })
-    .sort((a, b) => a.order - b.order)
+  const { data } = useCases({
+    params: paramsWithStatuses,
+  })
 
-  return (
-    <Tabs
-      onTabChange={(id) =>
-        setStatus(id as CaseStatusEnum, {
-          history: 'replace',
-          shallow: true,
-        })
-      }
-      selectedTab={status ?? CaseStatusEnum.Innsent}
-      tabs={dynamicTabs || loadingTabs}
-      label={formatMessage(messages.tabs.statuses)}
-    />
-  )
+  return <CaseTableRitstjorn cases={data?.cases} paging={data?.paging} />
 }
 
 export default CaseOverviewTabs

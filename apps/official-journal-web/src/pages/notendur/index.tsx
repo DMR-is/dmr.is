@@ -2,7 +2,7 @@ import { GetServerSideProps } from 'next'
 import dynamic from 'next/dynamic'
 import { getServerSession } from 'next-auth'
 
-import { BaseEntity } from '../../gen/fetch'
+import { UserRoleDto } from '../../gen/fetch'
 import { LayoutProps } from '../../layout/Layout'
 import { getDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
@@ -13,7 +13,7 @@ const DynamicUsersPage = dynamic(() => import('../../components/pages/Users'))
 
 type Props = {
   isAdmin: boolean
-  roleOptions: { label: string; value: BaseEntity }[]
+  roleOptions: { label: string; value: UserRoleDto }[]
 }
 
 export default function UsersPage({ isAdmin, roleOptions }: Props) {

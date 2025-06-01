@@ -9,14 +9,14 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { BaseEntity, CreateUserDto } from '../../gen/fetch'
+import { CreateUserDto,Institution, UserRoleDto } from '../../gen/fetch'
 import { useUserContext } from '../../hooks/useUserContext'
 import { OJOISelect } from '../select/OJOISelect'
 
 type Props = {
   isAdmin?: boolean
-  availableInvolvedParties: { label: string; value: BaseEntity }[]
-  availableRoles: { label: string; value: BaseEntity }[]
+  availableInvolvedParties: { label: string; value: Institution }[]
+  availableRoles: { label: string; value: UserRoleDto }[]
   onSuccess: () => void
 }
 
@@ -44,7 +44,7 @@ export const CreateUser = ({
         : [],
   })
 
-  const handleInvolvedPartiesChange = (value?: BaseEntity) => {
+  const handleInvolvedPartiesChange = (value?: Institution) => {
     if (!value)
       return setCreateUserState({
         ...createUserState,

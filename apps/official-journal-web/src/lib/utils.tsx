@@ -3,11 +3,12 @@ import is from 'date-fns/locale/is'
 import { ParsedUrlQuery } from 'querystring'
 import { z } from 'zod'
 
+import { BaseEntity } from '@dmr.is/shared/dto'
+
 import { Stack, Text } from '@island.is/island-ui/core'
 import { EditorFileUploader } from '@island.is/regulations-tools/EditorFrame'
 
 import {
-  BaseEntity,
   CaseActionEnum,
   CaseDetailed,
   CaseStatusEnum,
@@ -356,6 +357,14 @@ export const getOverviewStatusColor = (status: string) => {
       return 'red'
     case CaseStatusEnum.TekiðÚrBirtingu:
       return 'rose'
+    case CaseStatusEnum.Tilbúið:
+      return 'mint'
+    case CaseStatusEnum.Yfirlestur:
+      return 'darkerBlue'
+    case CaseStatusEnum.Grunnvinnsla:
+      return 'yellow'
+    case CaseStatusEnum.Innsent:
+      return 'blue'
     default:
       return 'blue'
   }
