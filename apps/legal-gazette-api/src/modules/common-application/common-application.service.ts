@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { LegalGazetteEvents } from '@dmr.is/legal-gazette/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { AuthService } from '@dmr.is/modules'
+import { AuthService, IAuthService } from '@dmr.is/modules'
 
 import { CaseStatusIdEnum } from '../case-status/case-status.model'
 import { CaseModel } from '../cases/cases.model'
@@ -18,7 +18,7 @@ import { ICommonApplicationService } from './common-application.service.interfac
 export class CommonApplicationService implements ICommonApplicationService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @Inject(AuthService) private readonly authService: AuthService,
+    @Inject(IAuthService) private readonly authService: AuthService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
   ) {}
 
