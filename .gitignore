@@ -100,3 +100,5 @@ apps/official-journal-api/sequelize.config.js
 docker/docker-compose.db.yml
 libs/shared/sequelize/src/lib/sequelize.config.js
 apps/official-journal-api-export/sql/*
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md

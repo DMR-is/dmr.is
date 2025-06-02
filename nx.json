@@ -1,7 +1,4 @@
 {
-  "affected": {
-    "defaultBase": "main"
-  },
   "tasksRunnerOptions": {
     "default": {
       "runner": "nx/tasks-runners/default",
@@ -195,5 +192,7 @@
         "dependentTasksOutputFiles": "**/api.graphql"
       }
     ]
-  }
+  },
+  "useInferencePlugins": false,
+  "defaultBase": "main"
 }
