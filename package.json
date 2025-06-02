@@ -32,7 +32,7 @@
     "compile-strings": "concurrently \"pnpm:compile-strings:*\"",
     "extract-strings": "formatjs extract 'apps/official-journal-web/src/**/*.{ts,tsx}' --ignore='**/*.d.ts' --out-file ./apps/official-journal-web/src/i18n/strings/is.json && yarn compile-strings",
     "build-projects": "nx run-many --target=build --projects=official-journal-web,official-journal-api,official-journal-admin-api,official-journal-application-api",
-    "ojoi-init": "nx run-many official-journal-api:dev-init,official-journal-web:codegen",
+    "ojoi-init": "nx run-many official-journal-api:dev-init, official-journal-web:codegen",
     "ojoi-web": "nx run-many --target=serve --parallel --projects=official-journal-web,official-journal-admin-api,official-journal-api",
     "lg:init": "nx run legal-gazette-api:dev-init",
     "lg:seed": "nx run legal-gazette-api:seed",
