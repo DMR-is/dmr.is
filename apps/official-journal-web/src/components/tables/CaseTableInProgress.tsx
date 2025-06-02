@@ -1,18 +1,18 @@
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable/DataTable'
 import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
 
-import { Tag, Text } from '@island.is/island-ui/core'
+import { Text } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { Routes } from '../../lib/constants'
-import { formatDate, getOverviewStatusColor } from '../../lib/utils'
+import { formatDate } from '../../lib/utils'
 import { CaseTag } from '../case-tag/CaseTag'
 import { CaseToolTips } from '../case-tooltips/CaseTooltips'
 import * as styles from './CaseTable.css'
 import { messages } from './messages'
 import { TableProps } from './types'
 
-export const CaseTableRitstjorn = ({ cases, paging }: TableProps) => {
+export const CaseTableInProgress = ({ cases, paging }: TableProps) => {
   const { formatMessage } = useFormatMessage()
 
   const columns: DataTableColumnProps[] = [
@@ -26,14 +26,6 @@ export const CaseTableRitstjorn = ({ cases, paging }: TableProps) => {
       sortable: true,
       size: 'tiny',
       children: formatMessage(messages.tables.inProgress.columns.publishDate),
-    },
-    {
-      field: 'caseRegistrationDate',
-      sortable: true,
-      size: 'tiny',
-      children: formatMessage(
-        messages.tables.submitted.columns.registrationDate,
-      ),
     },
     {
       field: 'caseDepartment',
@@ -51,12 +43,6 @@ export const CaseTableRitstjorn = ({ cases, paging }: TableProps) => {
       sortable: true,
       size: 'tiny',
       children: formatMessage(messages.tables.inProgress.columns.employee),
-    },
-    {
-      field: 'caseStatus',
-      sortable: true,
-      size: 'tiny',
-      children: formatMessage(messages.tables.overview.columns.status),
     },
     {
       field: 'caseTag',
@@ -80,9 +66,6 @@ export const CaseTableRitstjorn = ({ cases, paging }: TableProps) => {
       caseRequestPublishDate: (
         <Text variant="medium">{formatDate(row.requestedPublicationDate)}</Text>
       ),
-      caseRegistrationDate: (
-        <Text variant="medium">{formatDate(row.createdAt)}</Text>
-      ),
       caseDepartment: (
         <Text truncate variant="medium">
           {row.advertDepartment.title}
@@ -99,11 +82,6 @@ export const CaseTableRitstjorn = ({ cases, paging }: TableProps) => {
         <Text truncate variant="medium">
           {row.assignedTo?.displayName}
         </Text>
-      ),
-      caseStatus: (
-        <Tag variant={getOverviewStatusColor(row.status.title)}>
-          {row.status.title}
-        </Tag>
       ),
       caseTag: <CaseTag tag={row.tag?.title} />,
     }
