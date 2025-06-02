@@ -32,7 +32,7 @@ async function bootstrap() {
   })
 
   const document = SwaggerModule.createDocument(app, openApi, {
-    autoTagControllers: false,
+    // autoTagControllers: false,
   })
   SwaggerModule.setup(swaggerPath, app, document)
 
@@ -42,7 +42,7 @@ async function bootstrap() {
   await app.listen(port)
 
   Logger.log(
-    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}/${version}/`,
+    `🚀 Legal gazette API is running on: http://localhost:${port}/${globalPrefix}/${version}/`,
   )
 }
 

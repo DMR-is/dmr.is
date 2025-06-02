@@ -8,13 +8,11 @@ import { Route, Routes } from '../../lib/constants'
 import { MOCK_FILTERS } from '../../lib/mocks'
 import { routesToBreadcrumbs } from '../../lib/utils'
 
-const CaseFilters = dynamic(() =>
-  import('../../components/CaseFilters/CaseFilters'),
+const CaseFilters = dynamic(
+  () => import('../../components/CaseFilters/CaseFilters'),
 )
 
-const RitstjornTable = dynamic(() =>
-  import('../../components/Tables/RitstjornTable'),
-)
+const CaseTable = dynamic(() => import('../../components/Tables/CaseTable'))
 
 export default function Ritstjorn() {
   const breadcrumbs = routesToBreadcrumbs(Routes, Route.RITSTJORN)
@@ -36,7 +34,7 @@ export default function Ritstjorn() {
       <GridContainer>
         <GridRow>
           <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
-            <RitstjornTable />
+            <CaseTable />
           </GridColumn>
         </GridRow>
       </GridContainer>

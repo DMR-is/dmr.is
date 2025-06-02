@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
+import { EventEmitterModule } from '@nestjs/event-emitter'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
@@ -7,7 +8,7 @@ import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middlewa
 import { LEGAL_GAZETTE_NAMESPACE } from '@dmr.is/legal-gazette/constants'
 import { LoggingModule } from '@dmr.is/logging'
 import { CLSMiddleware } from '@dmr.is/middleware'
-import { HealthModule } from '@dmr.is/modules'
+import { AuthModule, HealthModule } from '@dmr.is/modules'
 import {
   GlobalExceptionFilter,
   HttpExceptionFilter,
@@ -15,17 +16,23 @@ import {
 } from '@dmr.is/shared/filters'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
-import { LegalGazetteApplicationModule } from '../modules/application/application.module'
+import { AdvertModel } from '../modules/advert/advert.model'
+import { AdvertModule } from '../modules/advert/advert.module'
 import { CaseCategoryModel } from '../modules/case-category/case-category.model'
 import { CaseCategoryModule } from '../modules/case-category/case-category.module'
 import { CaseStatusModel } from '../modules/case-status/case-status.model'
 import { CaseStatusModule } from '../modules/case-status/case-status.module'
 import { CaseTypeModel } from '../modules/case-type/case-type.model'
 import { CaseTypeModule } from '../modules/case-type/case-type.module'
-
+import { CaseModule } from '../modules/cases/case.module'
+import { CaseModel } from '../modules/cases/cases.model'
+import { CommonApplicationModule } from '../modules/common-application/common-application.module'
+import { CommonCaseModel } from '../modules/common-case/common-case.model'
+import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
 @Module({
   imports: [
     LoggingModule,
+    EventEmitterModule.forRoot(),
     SequelizeModule.forRootAsync({
       imports: [
         DMRSequelizeConfigModule.register({
@@ -38,8 +45,17 @@ import { CaseTypeModule } from '../modules/case-type/case-type.module'
             Number(process.env.LEGAL_GAZETTE_DB_PORT) ||
             5434,
           clsNamespace: LEGAL_GAZETTE_NAMESPACE,
-          models: [CaseTypeModel, CaseCategoryModel, CaseStatusModel],
           debugLog: true,
+          autoLoadModels: false,
+          models: [
+            CaseTypeModel,
+            CaseCategoryModel,
+            CaseStatusModel,
+            CommunicationChannelModel,
+            CaseModel,
+            CommonCaseModel,
+            AdvertModel,
+          ],
         }),
       ],
       useFactory: (configService: DMRSequelizeConfigService) =>
@@ -49,7 +65,13 @@ import { CaseTypeModule } from '../modules/case-type/case-type.module'
     CaseTypeModule,
     CaseCategoryModule,
     CaseStatusModule,
-    LegalGazetteApplicationModule,
+    CaseModule,
+    CommonApplicationModule,
+    AdvertModule,
+    {
+      module: AuthModule,
+      global: true,
+    },
     HealthModule,
   ],
   controllers: [],

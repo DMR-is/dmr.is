@@ -20,4 +20,9 @@ VALUES
     'f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
     'Hafnað',
     'hafnad'
+  ),
+  (
+    'e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
+    'Afturkallað',
+    'afturkallad'
   );

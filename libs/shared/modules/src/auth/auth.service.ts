@@ -1,5 +1,3 @@
-import { randomBytes } from 'crypto'
-
 import {
   Inject,
   Injectable,
@@ -8,7 +6,6 @@ import {
 
 import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ResultWrapper } from '@dmr.is/types'
 
 import { IAuthService, IdsToken } from './auth.service.interface'
 const LOGGING_CONTEXT = 'AuthService'
@@ -21,26 +18,6 @@ export class AuthService implements IAuthService {
 
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     this.logger.info('Using AuthService')
-  }
-  async getCodeVerification(): Promise<
-    ResultWrapper<{
-      codeChallenge: string
-      codeVerifier: string
-    }>
-  > {
-    const codeVerifier = randomBytes(32).toString('hex')
-
-    const encoder = new TextEncoder()
-    const data = encoder.encode(codeVerifier)
-
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(hashBuffer)))
-
-    return ResultWrapper.ok({
-      codeVerifier,
-      codeChallenge: base64,
-    })
   }
 
   async getAccessToken() {

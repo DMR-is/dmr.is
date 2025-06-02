@@ -1,13 +1,17 @@
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
+import { useCases } from '../../hooks/cases/useCases'
 import { useFilters } from '../../hooks/useFilters'
 
 // TODO add accept proper data
-export const RitstjornTable = () => {
+export const CaseTable = () => {
   const { params } = useFilters()
+
+  const { cases, error, isLoading } = useCases()
 
   return (
     <DataTable
+      loading={isLoading}
       columns={
         [
           {
@@ -51,4 +55,4 @@ export const RitstjornTable = () => {
   )
 }
 
-export default RitstjornTable
+export default CaseTable
