@@ -17,19 +17,38 @@ permissions:
   contents: read
 
 jobs:
+  get-affected-containers:
+    runs-on: ubuntu-latest
+    outputs:
+      containers: ${{ steps.set-containers.outputs.containers }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: nrwl/nx-set-shas@v4
+
+      - name: Get affected containers
+        id: set-containers
+        run: |
+          AFFECTED_PROJECTS=$(yarn nx show projects --affected --type=app)
+          AFFECTED_CONTAINERS=""
+
+          for project in $(echo "$AFFECTED_PROJECTS" | tr ' ' '\n'); do
+            if [ -z "$AFFECTED_CONTAINERS" ]; then
+              AFFECTED_CONTAINERS="\"$project\""
+            else
+              AFFECTED_CONTAINERS="$AFFECTED_CONTAINERS,\"$project\""
+            fi
+          done
+          echo "containers=[$AFFECTED_CONTAINERS]" >> $GITHUB_OUTPUT
+          echo "containers=$AFFECTED_CONTAINERS"
+
   build-and-push:
+    needs: get-affected-containers
     strategy:
       matrix:
-        container:
-          [
-            official-journal-api,
-            official-journal-admin-api,
-            official-journal-application-api,
-            official-journal-web,
-            regulations-api,
-            legal-gazette-web,
-            legal-gazette-api,
-          ]
+        container: ${{ fromJson(needs.get-affected-containers.outputs.containers) }}
     name: 'Build and push images: ${{ matrix.container }}'
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
@@ -108,20 +127,11 @@ jobs:
 
   deploy-to-dev:
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [get-affected-containers, build-and-push]
     environment: development
     strategy:
       matrix:
-        container:
-          [
-            official-journal-api,
-            official-journal-admin-api,
-            official-journal-application-api,
-            official-journal-web,
-            regulations-api,
-            legal-gazette-web,
-            legal-gazette-api,
-          ]
+        container: ${{ fromJson(needs.get-affected-containers.outputs.containers) }}
       fail-fast: false
     name: Deploy to ${{ matrix.container }} - dev
     steps:
