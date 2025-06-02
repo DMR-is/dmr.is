@@ -25,6 +25,7 @@ export const useCases = ({ caseId, query = {} }: UseCasesParams = {}) => {
     ['getCases', query],
     ([_key, q]) => swrFetcher({ func: () => client.getCases(q) }),
     {
+      keepPreviousData: true,
       refreshInterval: 0,
       revalidateOnFocus: false,
     },
@@ -33,6 +34,7 @@ export const useCases = ({ caseId, query = {} }: UseCasesParams = {}) => {
   return {
     case: data,
     cases: cases?.cases ?? [],
+    paging: cases?.paging,
     error: error || casesError,
     isLoading: isLoading || casesLoading,
     isValidating,

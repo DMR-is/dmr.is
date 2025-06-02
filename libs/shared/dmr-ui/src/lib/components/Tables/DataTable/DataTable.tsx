@@ -27,7 +27,6 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
     )
   }
 
-
   const hasExpandableRows = rows?.some((row) => !!row.isExpandable)
   const hasLinkRows = rows?.some((row) => !!row.hasLink)
 

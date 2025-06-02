@@ -18,6 +18,7 @@ export class CaseService implements ICaseService {
       page: query.page,
       pageSize: query.pageSize,
     })
+
     const { rows, count } = await this.caseModel.findAndCountAll({
       limit,
       offset,
@@ -25,7 +26,7 @@ export class CaseService implements ICaseService {
 
     const migrated = rows.map((model) => caseMigrate(model))
 
-    const paging = generatePaging(migrated, limit, offset, count)
+    const paging = generatePaging(migrated, query.page, query.pageSize, count)
 
     return {
       cases: migrated,

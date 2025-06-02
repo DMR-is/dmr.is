@@ -1,3 +1,5 @@
+import format from 'date-fns/format'
+
 import { Route } from './constants'
 import { QueryFilterParam, QueryFilterValue, RouteItem } from './types'
 
@@ -58,4 +60,21 @@ export const toggleArrayOption = (
   }
 
   return filter.filter((f) => f !== opt)
+}
+
+const dateFormats = ['dd.MM.yyyy'] as const
+
+export const formatDate = (
+  date: Date | string,
+  dateFormat: (typeof dateFormats)[number] = 'dd.MM.yyyy',
+) => {
+  if (typeof date === 'string') {
+    date = new Date(date)
+  }
+
+  if (date instanceof Date && !isNaN(date.getTime())) {
+    return format(date, dateFormat)
+  }
+
+  throw new Error(`Invalid date: ${date}`)
 }

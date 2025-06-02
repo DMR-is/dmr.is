@@ -76,6 +76,10 @@ export class CaseDto extends DetailedDto {
   @Type(() => CaseStatusDto)
   @ValidateNested()
   status!: CaseStatusDto
+
+  @ApiProperty({ type: String })
+  @IsString()
+  title!: string
 }
 
 export class GetCasesDto {

@@ -1539,7 +1539,8 @@
           "schedueledAt": { "type": "string", "nullable": true },
           "type": { "$ref": "#/components/schemas/CaseTypeDto" },
           "category": { "$ref": "#/components/schemas/CaseCategoryDto" },
-          "status": { "$ref": "#/components/schemas/CaseStatusDto" }
+          "status": { "$ref": "#/components/schemas/CaseStatusDto" },
+          "title": { "type": "string" }
         },
         "required": [
           "createdAt",
@@ -1549,7 +1550,8 @@
           "schedueledAt",
           "type",
           "category",
-          "status"
+          "status",
+          "title"
         ]
       },
       "Paging": {

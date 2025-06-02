@@ -2,12 +2,17 @@ import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { useCases } from '../../hooks/cases/useCases'
 import { useFilters } from '../../hooks/useFilters'
+import { formatDate } from '../../lib/utils'
 
-// TODO add accept proper data
 export const CaseTable = () => {
   const { params } = useFilters()
 
-  const { cases, error, isLoading } = useCases()
+  const { cases, paging, isLoading } = useCases({
+    query: {
+      page: params.page,
+      pageSize: params.pageSize,
+    },
+  })
 
   return (
     <DataTable
@@ -18,15 +23,23 @@ export const CaseTable = () => {
             field: 'birting',
             children: 'Birting',
             sortable: true,
+            size: 'tiny',
           },
           {
             field: 'skraning',
             children: 'Skráning',
+            size: 'tiny',
             sortable: true,
+          },
+          {
+            field: 'tegund',
+            children: 'Tegund',
+            width: '200px',
           },
           {
             field: 'flokkur',
             children: 'Flokkur',
+            size: 'small',
           },
           {
             field: 'efni',
@@ -35,22 +48,17 @@ export const CaseTable = () => {
           },
         ] as const
       }
-      rows={[
-        {
-          uniqueKey: '1',
-          hasLink: true,
-          birting: '2021-09-01',
-          skraning: '2021-09-01',
-          flokkur: 'Lög',
-          efni: 'Innköllun vegna skipta skv. lögum um skráningu raunverulegs eiganda nr. 82/2019. Innköllun vegna skipta skv. lögum um skráningu raunverulegs eiganda nr. 82/2019.',
-        },
-      ]}
-      paging={{
-        page: params.page,
-        pageSize: 10,
-        totalItems: 73,
-        totalPages: 8,
-      }}
+      rows={cases.map((c) => ({
+        id: c.id,
+        birting: c.schedueledAt
+          ? formatDate(c.schedueledAt)
+          : 'Engin birting framundan',
+        skraning: formatDate(c.createdAt),
+        tegund: c.type.title,
+        flokkur: c.category.title,
+        efni: c.title,
+      }))}
+      paging={paging}
     />
   )
 }

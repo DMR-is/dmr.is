@@ -11,6 +11,7 @@ export const caseMigrate = (model: CaseModel): CaseDto => ({
   category: caseCategoryMigrate(model.category),
   status: baseEntityMigrate(model.status),
   type: baseEntityMigrate(model.type),
+  title: model.caseTitle,
   schedueledAt: model.scheduledAt ? model.scheduledAt.toISOString() : null,
   createdAt: model.createdAt.toISOString(),
   updatedAt: model.updatedAt.toISOString(),
