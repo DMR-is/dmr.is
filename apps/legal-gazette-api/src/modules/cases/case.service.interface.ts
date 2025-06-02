@@ -1,7 +1,7 @@
-import { CaseDto, GetCasesDto } from './dto/case.dto'
+import { CaseDto, CaseQueryDto, GetCasesDto } from './dto/case.dto'
 
 export interface ICaseService {
-  getCases(): Promise<GetCasesDto>
+  getCases(query: CaseQueryDto): Promise<GetCasesDto>
 
   getCase(id: string): Promise<CaseDto>
 }

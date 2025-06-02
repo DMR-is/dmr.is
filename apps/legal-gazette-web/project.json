@@ -52,6 +52,31 @@
     "lint": {
       "executor": "@nx/eslint:lint"
     },
+    "clean": {
+      "executor": "@nx/workspace:run-commands",
+      "options": {
+        "cwd": "apps/legal-gazette-web",
+        "commands": ["rm -rf src/gen/fetch"]
+      }
+    },
+    "update-openapi-schema": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "curl http://localhost:4100/swagger-json > clientConfig.json",
+          "prettier --write clientConfig.json"
+        ],
+        "parallel": true,
+        "cwd": "apps/legal-gazette-web"
+      }
+    },
+    "codegen": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn openapi-generator -o apps/legal-gazette-web/src/gen/fetch -i apps/legal-gazette-web/clientConfig.json"
+      },
+      "outputs": ["{projectRoot}/gen/fetch"]
+    },
     "container": {
       "executor": "@nx-tools/nx-container:build",
       "dependsOn": ["build"],

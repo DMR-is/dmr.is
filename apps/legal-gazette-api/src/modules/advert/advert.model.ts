@@ -60,8 +60,8 @@ export enum AdvertVersion {
 @Scopes(() => ({
   inprogress: {
     where: {
-      published: {
-        [Op.ne]: null,
+      publishedAt: {
+        [Op.eq]: null,
       },
     },
     include: [
@@ -72,7 +72,7 @@ export enum AdvertVersion {
         required: true,
       },
     ],
-    order: [['scheduled_at', 'ASC']],
+    order: [['scheduledAt', 'ASC']],
   },
   detailed: {
     include: [

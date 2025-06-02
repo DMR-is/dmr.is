@@ -1,5 +1,5 @@
 import { Expose, Transform } from 'class-transformer'
-import { IsOptional } from 'class-validator'
+import { IsNumber, IsOptional } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -10,8 +10,10 @@ export class PagingQuery {
     required: false,
     type: Number,
     example: 1,
+    name: 'page',
   })
   @IsOptional()
+  @IsNumber()
   @Expose()
   @Transform(({ value }) => {
     const val = value ? parseInt(value) : DEFAULT_PAGE_NUMBER
@@ -27,8 +29,10 @@ export class PagingQuery {
     required: false,
     type: Number,
     example: 10,
+    name: 'pageSize',
   })
   @IsOptional()
+  @IsNumber()
   @Expose()
   @Transform(({ value }) => {
     const val = value ? parseInt(value) : DEFAULT_PAGE_SIZE

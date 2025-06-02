@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { CaseDto, GetCasesDto } from './dto/case.dto'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
+
+import { CaseDto, CaseQueryDto, GetCasesDto } from './dto/case.dto'
 import { caseMigrate } from './dto/case.migrate'
 import { ICaseService } from './case.service.interface'
 import { CaseModel } from './cases.model'
@@ -11,13 +13,23 @@ export class CaseService implements ICaseService {
   constructor(
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
   ) {}
-  async getCases(): Promise<GetCasesDto> {
-    const cases = await this.caseModel.findAll()
+  async getCases(query: CaseQueryDto): Promise<GetCasesDto> {
+    const { limit, offset } = getLimitAndOffset({
+      page: query.page,
+      pageSize: query.pageSize,
+    })
+    const { rows, count } = await this.caseModel.findAndCountAll({
+      limit,
+      offset,
+    })
 
-    const migrated = cases.map((model) => caseMigrate(model))
+    const migrated = rows.map((model) => caseMigrate(model))
+
+    const paging = generatePaging(migrated, limit, offset, count)
 
     return {
       cases: migrated,
+      paging,
     }
   }
   async getCase(id: string): Promise<CaseDto> {

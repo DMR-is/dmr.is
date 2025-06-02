@@ -109,7 +109,7 @@ module.exports = {
 
     CREATE INDEX idx_advert_caseid_scheduledat ON advert (case_id, scheduled_at);
 
-    CREATE INDEX idx_advert_published_at_desc ON ADVERT (PUBLISHED_AT DESC) WHERE PUBLISHED_AT IS NOT NULL;
+    CREATE INDEX idx_advert_case_scheduled_partial ON advert (case_id, scheduled_at) WHERE published_at IS NULL;
 
     COMMIT;
 

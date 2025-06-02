@@ -17,11 +17,7 @@ import {
   COMMON_APPLICATION_TYPE_ID,
   LegalGazetteModels,
 } from '@dmr.is/legal-gazette/constants'
-import {
-  BASE_ENTITY_ATTRIBUTES,
-  BaseModel,
-  BaseTable,
-} from '@dmr.is/shared/models/base'
+import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
@@ -72,10 +68,10 @@ type CaseCreateAttributes = {
   attributes: [
     [
       Sequelize.literal(`(
-      SELECT MIN(advert.scheduled_at)
-      FROM advert
-      WHERE advert.case_id = "CaseModel"."id" AND advert.published_at IS NULL
-    )`),
+        SELECT MIN(advert.scheduled_at)
+        FROM advert
+        WHERE advert.case_id = "CaseModel"."id" AND advert.published_at IS NULL
+      )`),
       'scheduledAt',
     ],
     'id',
@@ -93,15 +89,18 @@ type CaseCreateAttributes = {
     CaseTypeModel,
     CaseCategoryModel,
     CaseStatusModel,
-    {
-      model: CommunicationChannelModel,
-    },
-    {
-      model: AdvertModel.unscoped(),
-      attributes: ['scheduledAt', 'publishedAt'],
-    },
+    CommunicationChannelModel,
   ],
-  order: [['scheduledAt', 'ASC', 'NULLS LAST']],
+  order: [
+    [
+      Sequelize.literal(`(
+        SELECT MIN(advert.scheduled_at)
+        FROM advert
+        WHERE advert.case_id = "CaseModel"."id" AND advert.published_at IS NULL
+      )`),
+      'ASC NULLS LAST',
+    ],
+  ],
 }))
 @Scopes(() => ({
   byApplicationId: (applicationId: string) => ({

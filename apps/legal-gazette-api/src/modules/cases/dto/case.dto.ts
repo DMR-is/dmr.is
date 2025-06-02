@@ -13,11 +13,14 @@ import {
 import { ApiProperty } from '@nestjs/swagger'
 
 import { DetailedDto } from '@dmr.is/legal-gazette/dto'
+import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 import { CaseCategoryDto } from '../../case-category/dto/case-category.dto'
 import { CaseStatusDto } from '../../case-status/dto/case-status.dto'
 import { CaseTypeDto } from '../../case-type/dto/case-type.dto'
 import { CreateCommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
+
+export class CaseQueryDto extends PagingQuery {}
 
 export class CreateCaseDto {
   @ApiProperty({ type: String })
@@ -81,4 +84,9 @@ export class GetCasesDto {
   @Type(() => CaseDto)
   @ValidateNested({ each: true })
   cases!: CaseDto[]
+
+  @ApiProperty({ type: Paging })
+  @Type(() => Paging)
+  @ValidateNested()
+  paging!: Paging
 }
