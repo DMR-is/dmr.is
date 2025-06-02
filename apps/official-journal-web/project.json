@@ -116,7 +116,8 @@
         "engine": "docker",
         "metadata": {
           "load": true
-        }
+        },
+        "file": "apps/official-journal-web/Dockerfile"
       }
     }
   },
