@@ -16,10 +16,12 @@ export class AdvertService implements IAdvertService {
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     private readonly eventEmitter: EventEmitter2,
   ) {}
-  async getAdvertsInProgress(): Promise<GetAdvertsDto> {
-    const adverts = await this.advertModel.scope('inprogress').findAll()
+  async getAdvertsToBePublished(): Promise<GetAdvertsDto> {
+    const adverts = await this.advertModel
+      .scope('tobepublished')
+      .findAndCountAll()
 
-    const migrated = adverts.map((advert) => advertMigrate(advert))
+    const migrated = adverts.rows.map((advert) => advertMigrate(advert))
 
     return {
       adverts: migrated,

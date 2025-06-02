@@ -2,7 +2,15 @@ import dynamic from 'next/dynamic'
 
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 
-import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
+import {
+  Button,
+  Drawer,
+  GridColumn,
+  GridContainer,
+  GridRow,
+  Stack,
+  Tabs,
+} from '@island.is/island-ui/core'
 
 import { Route, Routes } from '../../lib/constants'
 import { MOCK_FILTERS } from '../../lib/mocks'
@@ -29,12 +37,39 @@ export default function Ritstjorn() {
           alt: 'Image alt',
         }}
       >
-        <CaseFilters filters={MOCK_FILTERS} />
+        <Stack space={2}>
+          <CaseFilters filters={MOCK_FILTERS} />
+          <Drawer
+            ariaLabel="Stofna auglýsingu"
+            baseId="create-case-drawer"
+            disclosure={
+              <Button variant="utility" icon="document" iconType="outline">
+                Stofna auglýsingu
+              </Button>
+            }
+          >
+            <h2>Hello</h2>
+          </Drawer>
+        </Stack>
       </Hero>
       <GridContainer>
         <GridRow>
           <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
-            <CaseTable />
+            <Tabs
+              contentBackground="white"
+              label="Ritstjórn"
+              tabs={[
+                {
+                  label: 'Innsendar',
+                  content: <CaseTable />,
+                },
+                {
+                  label: 'Á leið í útgáfu',
+                  content: 'Á leið í útgáfu',
+                },
+                { label: 'Yfirlit', content: 'Yfirlit' },
+              ]}
+            />
           </GridColumn>
         </GridRow>
       </GridContainer>

@@ -21,9 +21,9 @@ export class AdvertController {
   }
 
   @Get('inprogress')
-  @LGResponse({ operationId: 'getAdvertsInProgress', type: GetAdvertsDto })
-  getAdvertsInProgress() {
-    return this.advertService.getAdvertsInProgress()
+  @LGResponse({ operationId: 'getAdvertsToBePublished', type: GetAdvertsDto })
+  getAdvertsToBePublished() {
+    return this.advertService.getAdvertsToBePublished()
   }
 
   @Get(':id')

@@ -2,6 +2,7 @@ import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { useCases } from '../../hooks/cases/useCases'
 import { useFilters } from '../../hooks/useFilters'
+import { Route } from '../../lib/constants'
 import { formatDate } from '../../lib/utils'
 
 export const CaseTable = () => {
@@ -57,6 +58,8 @@ export const CaseTable = () => {
         tegund: c.type.title,
         flokkur: c.category.title,
         efni: c.title,
+        hasLink: true,
+        href: Route.RITSTJORN_ID.replace('[id]', c.id),
       }))}
       paging={paging}
     />

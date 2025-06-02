@@ -12,11 +12,7 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
-import {
-  CASE_STATUS_SUBMITTED_ID,
-  COMMON_APPLICATION_TYPE_ID,
-  LegalGazetteModels,
-} from '@dmr.is/legal-gazette/constants'
+import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { mapIndexToVersion } from '../../lib/utils'
@@ -26,7 +22,7 @@ import {
   CaseStatusIdEnum,
   CaseStatusModel,
 } from '../case-status/case-status.model'
-import { CaseTypeModel } from '../case-type/case-type.model'
+import { CaseTypeIdEnum, CaseTypeModel } from '../case-type/case-type.model'
 import {
   CommonCaseCreationAttributes,
   CommonCaseModel,
@@ -144,7 +140,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     type: DataType.UUID,
     allowNull: false,
     field: 'case_status_id',
-    defaultValue: CASE_STATUS_SUBMITTED_ID,
+    defaultValue: CaseStatusIdEnum.SUBMITTED,
   })
   @ForeignKey(() => CaseStatusModel)
   statusId!: string
@@ -224,7 +220,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
         {
           applicationId: body.applicationId,
           categoryId: body.categoryId,
-          typeId: COMMON_APPLICATION_TYPE_ID,
+          typeId: CaseTypeIdEnum.COMMON_APPLICATION,
           caseTitle: body.caption,
           communicationChannels:
             body.channels?.map((ch) => ({

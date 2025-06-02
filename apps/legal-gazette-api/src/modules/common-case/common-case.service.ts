@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { COMMON_APPLICATION_TYPE_ID } from '@dmr.is/legal-gazette/constants'
-
 import { mapIndexToVersion } from '../../lib/utils'
+import { CaseTypeIdEnum } from '../case-type/case-type.model'
 import { CaseModel } from '../cases/cases.model'
 import { CreateCommonCaseInternalDto } from './dto/common-case.dto'
 import { ICommonCaseService } from './common-case.service.interface'
@@ -16,7 +15,7 @@ export class CommonCaseService implements ICommonCaseService {
   ) {}
   async createCommonCase(body: CreateCommonCaseInternalDto): Promise<void> {
     await this.caseModel.create({
-      typeId: COMMON_APPLICATION_TYPE_ID,
+      typeId: CaseTypeIdEnum.COMMON_APPLICATION,
       caseTitle: body.caption,
       categoryId: body.categoryId,
       communicationChannels:

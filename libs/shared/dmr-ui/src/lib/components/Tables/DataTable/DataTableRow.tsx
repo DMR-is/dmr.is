@@ -26,7 +26,9 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
         onMouseOver={() => hasLink && setHovered(true)}
         onMouseLeave={() => hasLink && setHovered(false)}
         role={isExpandable ? 'button' : 'div'}
-        className={styles.dataTableRow({ expandable: !!isExpandable || hasLink })}
+        className={styles.dataTableRow({
+          expandable: !!isExpandable || hasLink,
+        })}
         onClick={() => isExpandable && setExpanded(!expanded)}
       >
         {columns.map((column) => {

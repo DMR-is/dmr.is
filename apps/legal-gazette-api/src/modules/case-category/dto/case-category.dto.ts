@@ -2,21 +2,21 @@ import { IsEnum, IsOptional, IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { LegalGazetteApplicationTypes } from '@dmr.is/legal-gazette/constants'
 import { BaseEntityDetailedDto, BaseEntityDto } from '@dmr.is/legal-gazette/dto'
 
+import { CaseTypeSlugEnum } from '../../case-type/case-type.model'
 import { CaseTypeDetailedDto } from '../../case-type/dto/case-type.dto'
 
 export class GetCaseCategoriesQueryDto {
   @ApiProperty({
-    enum: LegalGazetteApplicationTypes,
-    enumName: 'ApplicationType',
+    enum: CaseTypeSlugEnum,
+    enumName: 'CaseTypeSlugEnum',
     nullable: true,
     required: false,
   })
   @IsOptional()
-  @IsEnum(LegalGazetteApplicationTypes)
-  type?: LegalGazetteApplicationTypes
+  @IsEnum(CaseTypeSlugEnum)
+  type?: CaseTypeSlugEnum
 }
 
 export class CaseCategoryDto extends BaseEntityDto {}

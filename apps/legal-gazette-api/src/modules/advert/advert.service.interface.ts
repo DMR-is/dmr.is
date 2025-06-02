@@ -5,7 +5,7 @@ export interface IAdvertService {
 
   getAdvertById(id: string): Promise<AdvertDto>
 
-  getAdvertsInProgress(): Promise<GetAdvertsDto>
+  getAdvertsToBePublished(): Promise<GetAdvertsDto>
 }
 
 export const IAdvertService = Symbol('IAdvertService')

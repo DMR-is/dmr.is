@@ -14,6 +14,10 @@ import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { getLogger } from '@dmr.is/logging'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import {
+  CaseStatusIdEnum,
+  CaseStatusModel,
+} from '../case-status/case-status.model'
 import { CaseTypeModel } from '../case-type/case-type.model'
 import { CaseModel } from '../cases/cases.model'
 
@@ -58,7 +62,7 @@ export enum AdvertVersion {
   order: [['publishedAt', 'DESC']],
 }))
 @Scopes(() => ({
-  inprogress: {
+  tobepublished: {
     where: {
       publishedAt: {
         [Op.eq]: null,
@@ -70,6 +74,14 @@ export enum AdvertVersion {
         attributes: ['caseNumber'],
         include: [CaseTypeModel],
         required: true,
+      },
+      {
+        model: CaseStatusModel,
+        where: {
+          id: {
+            [Op.eq]: CaseStatusIdEnum.READY_FOR_PUBLICATION,
+          },
+        },
       },
     ],
     order: [['scheduledAt', 'ASC']],
