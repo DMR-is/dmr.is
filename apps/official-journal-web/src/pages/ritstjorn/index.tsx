@@ -86,6 +86,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 }) => {
   const session = await getServerSession(req, res, authOptions)
 
+
   if (!session) {
     return loginRedirect(resolvedUrl)
   }
