@@ -87,12 +87,12 @@ jobs:
       - name: 📥 Monorepo install
         uses: ./.github/actions/yarn-install
 
+      - name: Codegen application
+        run: yarn nx run ${{matrix.project}}:codegen
+
       - uses: nrwl/nx-set-shas@v4
       - name: Typecheck
         run: yarn run nx affected -t typecheck
-
-      - name: Codegen application
-        run: yarn nx run ${{matrix.project}}:codegen
 
       - name: Build application
         run: yarn nx run ${{matrix.project}}:build:production
