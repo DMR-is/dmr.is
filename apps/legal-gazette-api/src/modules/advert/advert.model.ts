@@ -15,10 +15,10 @@ import { getLogger } from '@dmr.is/logging'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import {
-  CaseStatusIdEnum,
-  CaseStatusModel,
-} from '../case-status/case-status.model'
-import { CaseTypeModel } from '../case-type/case-type.model'
+  AdvertStatusIdEnum,
+  AdvertStatusModel,
+} from '../advert-status/advert-status.model'
+import { AdvertTypeModel } from '../advert-type/advert-type.model'
 import { CaseModel } from '../cases/cases.model'
 
 const LOGGING_CATEGORY = 'advert-model'
@@ -50,7 +50,7 @@ export enum AdvertVersion {
     {
       model: CaseModel.unscoped(),
       attributes: ['caseNumber'],
-      include: [CaseTypeModel],
+      include: [AdvertTypeModel],
       required: true,
     },
   ],
@@ -72,14 +72,14 @@ export enum AdvertVersion {
       {
         model: CaseModel.unscoped(),
         attributes: ['caseNumber'],
-        include: [CaseTypeModel],
+        include: [AdvertTypeModel],
         required: true,
       },
       {
-        model: CaseStatusModel,
+        model: AdvertStatusModel,
         where: {
           id: {
-            [Op.eq]: CaseStatusIdEnum.READY_FOR_PUBLICATION,
+            [Op.eq]: AdvertStatusIdEnum.READY_FOR_PUBLICATION,
           },
         },
       },
@@ -91,7 +91,7 @@ export enum AdvertVersion {
       {
         model: CaseModel.unscoped(),
         attributes: ['caseNumber'],
-        include: [CaseTypeModel],
+        include: [AdvertTypeModel],
         required: true,
       },
     ],

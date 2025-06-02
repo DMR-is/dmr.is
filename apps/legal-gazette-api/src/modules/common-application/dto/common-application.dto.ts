@@ -3,14 +3,14 @@ import { IsBase64, IsString, IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CreateCommonCaseDto } from '../../common-case/dto/common-case.dto'
+import { CreateCommonAdvertDto } from '../../common-advert/dto/common-advert.dto'
 
 enum CommonApplicationEventsEnum {
   APPROVE = 'APPROVE',
   REJECT = 'REJECT',
 }
 
-export class SubmitCommonApplicationDto extends CreateCommonCaseDto {
+export class SubmitCommonApplicationDto extends CreateCommonAdvertDto {
   @ApiProperty({ type: String })
   @IsUUID()
   applicationId!: string

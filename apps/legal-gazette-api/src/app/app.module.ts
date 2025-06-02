@@ -18,16 +18,16 @@ import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { AdvertModel } from '../modules/advert/advert.model'
 import { AdvertModule } from '../modules/advert/advert.module'
-import { CaseCategoryModel } from '../modules/case-category/case-category.model'
-import { CaseCategoryModule } from '../modules/case-category/case-category.module'
-import { CaseStatusModel } from '../modules/case-status/case-status.model'
-import { CaseStatusModule } from '../modules/case-status/case-status.module'
-import { CaseTypeModel } from '../modules/case-type/case-type.model'
-import { CaseTypeModule } from '../modules/case-type/case-type.module'
+import { AdvertCategoryModel } from '../modules/advert-category/advert-category.model'
+import { AdvertCategoryModule } from '../modules/advert-category/advert-category.module'
+import { AdvertStatusModel } from '../modules/advert-status/advert-status.model'
+import { AdvertStatusModule } from '../modules/advert-status/advert-status.module'
+import { AdvertTypeModel } from '../modules/advert-type/advert-type.model'
+import { AdvertTypeModule } from '../modules/advert-type/advert-type.module'
 import { CaseModule } from '../modules/cases/case.module'
 import { CaseModel } from '../modules/cases/cases.model'
+import { CommonAdvertModel } from '../modules/common-advert/common-advert.model'
 import { CommonApplicationModule } from '../modules/common-application/common-application.module'
-import { CommonCaseModel } from '../modules/common-case/common-case.model'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
 @Module({
   imports: [
@@ -48,12 +48,12 @@ import { CommunicationChannelModel } from '../modules/communication-channel/comm
           debugLog: true,
           autoLoadModels: false,
           models: [
-            CaseTypeModel,
-            CaseCategoryModel,
-            CaseStatusModel,
+            AdvertTypeModel,
+            AdvertCategoryModel,
+            AdvertStatusModel,
             CommunicationChannelModel,
             CaseModel,
-            CommonCaseModel,
+            CommonAdvertModel,
             AdvertModel,
           ],
         }),
@@ -62,9 +62,9 @@ import { CommunicationChannelModel } from '../modules/communication-channel/comm
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    CaseTypeModule,
-    CaseCategoryModule,
-    CaseStatusModule,
+    AdvertTypeModule,
+    AdvertCategoryModule,
+    AdvertStatusModule,
     CaseModule,
     CommonApplicationModule,
     AdvertModule,

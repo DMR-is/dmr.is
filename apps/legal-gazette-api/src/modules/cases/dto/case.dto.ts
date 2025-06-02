@@ -15,9 +15,9 @@ import { ApiProperty } from '@nestjs/swagger'
 import { DetailedDto } from '@dmr.is/legal-gazette/dto'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
-import { CaseCategoryDto } from '../../case-category/dto/case-category.dto'
-import { CaseStatusDto } from '../../case-status/dto/case-status.dto'
-import { CaseTypeDto } from '../../case-type/dto/case-type.dto'
+import { AdvertCategoryDto } from '../../advert-category/dto/advert-category.dto'
+import { AdvertStatusDto } from '../../advert-status/dto/advert-status.dto'
+import { AdvertTypeDto } from '../../advert-type/dto/advert-type.dto'
 import { CreateCommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
 
 export class CaseQueryDto extends PagingQuery {}
@@ -62,20 +62,20 @@ export class CaseDto extends DetailedDto {
   @IsDateString()
   schedueledAt!: string | null
 
-  @ApiProperty({ type: CaseTypeDto })
-  @Type(() => CaseTypeDto)
+  @ApiProperty({ type: AdvertTypeDto })
+  @Type(() => AdvertTypeDto)
   @ValidateNested()
-  type!: CaseTypeDto
+  type!: AdvertTypeDto
 
-  @ApiProperty({ type: CaseCategoryDto })
-  @Type(() => CaseCategoryDto)
+  @ApiProperty({ type: AdvertCategoryDto })
+  @Type(() => AdvertCategoryDto)
   @ValidateNested()
-  category!: CaseCategoryDto
+  category!: AdvertCategoryDto
 
-  @ApiProperty({ type: CaseStatusDto })
-  @Type(() => CaseStatusDto)
+  @ApiProperty({ type: AdvertStatusDto })
+  @Type(() => AdvertStatusDto)
   @ValidateNested()
-  status!: CaseStatusDto
+  status!: AdvertStatusDto
 
   @ApiProperty({ type: String })
   @IsString()

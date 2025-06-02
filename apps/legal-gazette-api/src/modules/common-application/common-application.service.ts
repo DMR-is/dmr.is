@@ -6,7 +6,7 @@ import { LegalGazetteEvents } from '@dmr.is/legal-gazette/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AuthService, IAuthService } from '@dmr.is/modules'
 
-import { CaseStatusIdEnum } from '../case-status/case-status.model'
+import { AdvertStatusIdEnum } from '../advert-status/advert-status.model'
 import { CaseModel } from '../cases/cases.model'
 import {
   CommonApplicationUpdateStateEvent,
@@ -38,7 +38,7 @@ export class CommonApplicationService implements ICommonApplicationService {
 
     await this.caseModel.setCaseStatus(
       caseInstance.id,
-      CaseStatusIdEnum.WITHDRAWN,
+      AdvertStatusIdEnum.WITHDRAWN,
     )
   }
 

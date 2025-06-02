@@ -1,6 +1,6 @@
 import {
-  SubmitCommonApplicationDto,
   CommonApplicationUpdateStateEvent,
+  SubmitCommonApplicationDto,
 } from './dto/common-application.dto'
 
 export interface ICommonApplicationService {

@@ -17,17 +17,20 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
-import { CaseCategoryModel } from '../case-category/case-category.model'
+import { AdvertCategoryModel } from '../advert-category/advert-category.model'
 import {
-  CaseStatusIdEnum,
-  CaseStatusModel,
-} from '../case-status/case-status.model'
-import { CaseTypeIdEnum, CaseTypeModel } from '../case-type/case-type.model'
+  AdvertStatusIdEnum,
+  AdvertStatusModel,
+} from '../advert-status/advert-status.model'
 import {
-  CommonCaseCreationAttributes,
-  CommonCaseModel,
-} from '../common-case/common-case.model'
-import { CreateCommonCaseInternalDto } from '../common-case/dto/common-case.dto'
+  AdvertTypeIdEnum,
+  AdvertTypeModel,
+} from '../advert-type/advert-type.model'
+import {
+  CommonAdvertCreationAttributes,
+  CommonAdvertModel,
+} from '../common-advert/common-advert.model'
+import { CreateCommonAdvertInternalDto } from '../common-advert/dto/common-advert.dto'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
@@ -40,11 +43,11 @@ type CaseAttributes = {
   caseNumber: string
   caseTitle: string
   scheduledAt: Date | null
-  type: CaseTypeModel
-  category: CaseCategoryModel
-  status: CaseStatusModel
+  type: AdvertTypeModel
+  category: AdvertCategoryModel
+  status: AdvertStatusModel
   communicationChannels: CommunicationChannelModel[]
-  commonCase?: CommonCaseModel
+  commonCase?: CommonAdvertModel
   adverts?: AdvertModel[]
 }
 
@@ -56,10 +59,10 @@ type CaseCreateAttributes = {
   caseId?: string
   communicationChannels: CommunicationChannelCreateAttributes[]
   adverts?: AdvertCreateAttributes[]
-  commonCase?: CommonCaseCreationAttributes
+  commonCase?: CommonAdvertCreationAttributes
 }
 
-@BaseTable({ tableName: LegalGazetteModels.CASES })
+@BaseTable({ tableName: LegalGazetteModels.CASE })
 @DefaultScope(() => ({
   attributes: [
     [
@@ -82,9 +85,9 @@ type CaseCreateAttributes = {
     'deletedAt',
   ],
   include: [
-    CaseTypeModel,
-    CaseCategoryModel,
-    CaseStatusModel,
+    AdvertTypeModel,
+    AdvertCategoryModel,
+    AdvertStatusModel,
     CommunicationChannelModel,
   ],
   order: [
@@ -125,7 +128,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     allowNull: false,
     field: 'case_type_id',
   })
-  @ForeignKey(() => CaseTypeModel)
+  @ForeignKey(() => AdvertTypeModel)
   typeId!: string
 
   @Column({
@@ -133,16 +136,16 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     allowNull: false,
     field: 'case_category_id',
   })
-  @ForeignKey(() => CaseCategoryModel)
+  @ForeignKey(() => AdvertCategoryModel)
   categoryId!: string
 
   @Column({
     type: DataType.UUID,
     allowNull: false,
     field: 'case_status_id',
-    defaultValue: CaseStatusIdEnum.SUBMITTED,
+    defaultValue: AdvertStatusIdEnum.SUBMITTED,
   })
-  @ForeignKey(() => CaseStatusModel)
+  @ForeignKey(() => AdvertStatusModel)
   statusId!: string
 
   @Column({
@@ -160,14 +163,14 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   })
   caseTitle!: string
 
-  @BelongsTo(() => CaseTypeModel)
-  type!: CaseTypeModel
+  @BelongsTo(() => AdvertTypeModel)
+  type!: AdvertTypeModel
 
-  @BelongsTo(() => CaseCategoryModel)
-  category!: CaseCategoryModel
+  @BelongsTo(() => AdvertCategoryModel)
+  category!: AdvertCategoryModel
 
-  @BelongsTo(() => CaseStatusModel)
-  status!: CaseStatusModel
+  @BelongsTo(() => AdvertStatusModel)
+  status!: AdvertStatusModel
 
   @HasMany(() => CommunicationChannelModel)
   communicationChannels!: CommunicationChannelModel[]
@@ -175,8 +178,8 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   @HasMany(() => AdvertModel, 'caseId')
   adverts?: AdvertModel[]
 
-  @HasOne(() => CommonCaseModel, 'id')
-  commonCase?: CommonCaseModel
+  @HasOne(() => CommonAdvertModel, 'id')
+  commonCase?: CommonAdvertModel
 
   @BeforeCreate
   static async generateCaseNumber(instance: CaseModel) {
@@ -194,7 +197,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     )}`
   }
 
-  static async setCaseStatus(id: string, status: CaseStatusIdEnum) {
+  static async setCaseStatus(id: string, status: AdvertStatusIdEnum) {
     this.logger.info('Setting case status', {
       context: 'CaseModel',
       id,
@@ -212,7 +215,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     }
   }
 
-  static async createCommonCase(body: CreateCommonCaseInternalDto) {
+  static async createCommonCase(body: CreateCommonAdvertInternalDto) {
     this.logger.info('Creating common case', { context: 'CaseModel' })
 
     try {
@@ -220,7 +223,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
         {
           applicationId: body.applicationId,
           categoryId: body.categoryId,
-          typeId: CaseTypeIdEnum.COMMON_APPLICATION,
+          typeId: AdvertTypeIdEnum.COMMON_APPLICATION,
           caseTitle: body.caption,
           communicationChannels:
             body.channels?.map((ch) => ({
@@ -249,7 +252,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
                 ],
         },
         {
-          include: [CommunicationChannelModel, CommonCaseModel, AdvertModel],
+          include: [CommunicationChannelModel, CommonAdvertModel, AdvertModel],
         },
       )
     } catch (error) {
