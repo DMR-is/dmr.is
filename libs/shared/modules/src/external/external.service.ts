@@ -27,9 +27,9 @@ export class ExternalService implements IExternalService {
 
     const xHxmDate = format(new Date(), "yyyy-MM-dd HH':'mm':'ss")
 
-    const xHxmServiceKey = process.env.RegulationServiceKey
-    const xHxmAccessKey = process.env.RegulationAccessKey
-    const secretKey = process.env.RegulationSecretKey as string
+    const xHxmServiceKey = process.env.REGULATION_SERVICE_KEY
+    const xHxmAccessKey = process.env.REGULATION_ACCESS_KEY
+    const secretKey = process.env.REGULATION_SECRET_KEY as string
 
     const signatureInput =
       xHxmDate +
