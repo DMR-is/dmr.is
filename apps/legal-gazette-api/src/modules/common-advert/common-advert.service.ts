@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertTypeIdEnum } from '../advert-type/advert-type.model'
-import { CaseModel } from '../cases/cases.model'
+import { CaseModel } from '../case/case.model'
 import { CreateCommonAdvertInternalDto } from './dto/common-advert.dto'
 import { ICommonCaseService } from './common-advert.service.interface'
 

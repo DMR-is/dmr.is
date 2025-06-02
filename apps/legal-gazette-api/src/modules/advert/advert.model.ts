@@ -19,7 +19,7 @@ import {
   AdvertStatusModel,
 } from '../advert-status/advert-status.model'
 import { AdvertTypeModel } from '../advert-type/advert-type.model'
-import { CaseModel } from '../cases/cases.model'
+import { CaseModel } from '../case/case.model'
 
 const LOGGING_CATEGORY = 'advert-model'
 

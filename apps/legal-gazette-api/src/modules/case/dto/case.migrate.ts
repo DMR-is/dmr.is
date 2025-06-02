@@ -1,7 +1,7 @@
 import { baseEntityMigrate } from '@dmr.is/legal-gazette/dto'
 
 import { advertCategoryMigrate } from '../../advert-category/dto/advert-category.migrate'
-import { CaseModel } from '../cases.model'
+import { CaseModel } from '../case.model'
 import { CaseDto } from './case.dto'
 
 export const caseMigrate = (model: CaseModel): CaseDto => ({

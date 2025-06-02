@@ -7,7 +7,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AuthService, IAuthService } from '@dmr.is/modules'
 
 import { AdvertStatusIdEnum } from '../advert-status/advert-status.model'
-import { CaseModel } from '../cases/cases.model'
+import { CaseModel } from '../case/case.model'
 import {
   CommonApplicationUpdateStateEvent,
   SubmitCommonApplicationDto,

@@ -6,7 +6,7 @@ import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 import { CaseDto, CaseQueryDto, GetCasesDto } from './dto/case.dto'
 import { caseMigrate } from './dto/case.migrate'
 import { ICaseService } from './case.service.interface'
-import { CaseModel } from './cases.model'
+import { CaseModel } from './case.model'
 
 @Injectable()
 export class CaseService implements ICaseService {

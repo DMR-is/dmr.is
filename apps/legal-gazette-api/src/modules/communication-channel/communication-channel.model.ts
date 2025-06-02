@@ -9,7 +9,7 @@ import {
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { CaseModel } from '../cases/cases.model'
+import { CaseModel } from '../case/case.model'
 
 type CommunicationChannelAttributes = {
   caseId: string

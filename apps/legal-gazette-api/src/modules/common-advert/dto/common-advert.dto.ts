@@ -11,7 +11,7 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CreateCaseDto } from '../../cases/dto/case.dto'
+import { CreateCaseDto } from '../../case/dto/case.dto'
 
 export class CommonAdvertSignatureDto {
   @ApiProperty({ type: String })
