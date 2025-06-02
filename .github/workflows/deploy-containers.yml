@@ -31,14 +31,28 @@ jobs:
       - name: Get affected containers
         id: set-containers
         run: |
+          # Define the list of deployable containers
+          DEPLOYABLE_CONTAINERS=(
+            "official-journal-api"
+            "official-journal-admin-api"
+            "official-journal-application-api"
+            "official-journal-web"
+            "regulations-api"
+            "legal-gazette-web"
+            "legal-gazette-api"
+          )
+
           AFFECTED_PROJECTS=$(yarn nx show projects --affected --type=app)
           AFFECTED_CONTAINERS=""
 
           for project in $(echo "$AFFECTED_PROJECTS" | tr ' ' '\n'); do
-            if [ -z "$AFFECTED_CONTAINERS" ]; then
-              AFFECTED_CONTAINERS="\"$project\""
-            else
-              AFFECTED_CONTAINERS="$AFFECTED_CONTAINERS,\"$project\""
+            # Check if the project is in our deployable containers list
+            if [[ " ${DEPLOYABLE_CONTAINERS[@]} " =~ " ${project} " ]]; then
+              if [ -z "$AFFECTED_CONTAINERS" ]; then
+                AFFECTED_CONTAINERS="\"$project\""
+              else
+                AFFECTED_CONTAINERS="$AFFECTED_CONTAINERS,\"$project\""
+              fi
             fi
           done
           echo "containers=[$AFFECTED_CONTAINERS]" >> $GITHUB_OUTPUT
