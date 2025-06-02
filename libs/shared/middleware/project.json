@@ -13,6 +13,14 @@
       "options": {
         "jestConfig": "libs/shared/middleware/jest.config.ts"
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc -p tsconfig.lib.json --noEmit"],
+        "cwd": "libs/shared/middleware",
+        "forwardAllArgs": false
+      }
     }
   },
   "tags": []

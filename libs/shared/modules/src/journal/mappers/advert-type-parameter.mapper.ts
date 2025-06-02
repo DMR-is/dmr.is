@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 
-import { GetAdvertTypesQueryParams } from '@dmr.is/shared/dto'
+import { GetAdvertsQueryParams } from '@dmr.is/shared/dto'
 
 type WhereClause = {
   title?: { [Op.iLike]: string }
@@ -9,7 +9,7 @@ type WhereClause = {
 // Initialize the where clause object
 const whereClause: WhereClause = {}
 
-const typesParameters = (params?: GetAdvertTypesQueryParams) => {
+const typesParameters = (params?: GetAdvertsQueryParams) => {
   // Check and add each parameter to the where clause
   if (params?.search) {
     whereClause.title = {

@@ -71,7 +71,6 @@ jobs:
 
       - name: Run tests
         run: yarn run nx affected -t test
-
   build:
     runs-on: ubuntu-latest
     steps:
@@ -90,6 +89,10 @@ jobs:
 
       - name: Codegen application
         run: yarn nx run ${{matrix.project}}:codegen
+
+      - uses: nrwl/nx-set-shas@v4
+      - name: Typecheck
+        run: yarn run nx affected -t typecheck
 
       - name: Build application
         run: yarn nx run ${{matrix.project}}:build:production
