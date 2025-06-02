@@ -21,7 +21,7 @@ export function LGResponse({
 }: LGResponseParams) {
   return applyDecorators(
     ApiOperation({ operationId }),
-    type ? ApiResponse({ status, type }) : ApiNoContentResponse({ status }),
+    type ? ApiResponse({ status, type }) : ApiNoContentResponse(),
     ApiResponse({ status: 400, type: ApiErrorDto }),
     ApiResponse({ status: 401, type: ApiErrorDto }),
     ApiResponse({ status: 403, type: ApiErrorDto }),
