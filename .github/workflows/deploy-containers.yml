@@ -22,15 +22,24 @@ jobs:
     outputs:
       containers: ${{ steps.set-containers.outputs.containers }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: ♻️ Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: 📥 Monorepo install
+        uses: ./.github/actions/yarn-install
+
       - uses: nrwl/nx-set-shas@v4
 
       - name: Get affected containers
         id: set-containers
         run: |
+
           # Define the list of deployable containers
           DEPLOYABLE_CONTAINERS=(
             "official-journal-api"
@@ -70,44 +79,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: 'true'
 
-      - uses: actions/setup-node@v4
+      - name: ♻️ Use Node.js 20.x
+        uses: actions/setup-node@v4
         with:
-          node-version: '20.10.0'
+          node-version: 20.x
 
-      - name: Check node version
-        run: |
-          node -v
-          ls -l `which node`
-
-      - name: Setup yarn
-        run: |
-          sudo npm i -g corepack
-          corepack prepare yarn@4.0.2 --activate
-
-      - name: Calculate cache key for node_modules
-        id: calculate_node_modules_hash
-        run: |
-          PACKAGE_JSON_HASH=$(cat package.json | jq '{resolutions,dependencies,devDependencies}' | sha1sum -t | cut -f1 -d" ")
-          echo "PACKAGE_JSON_HASH: $PACKAGE_JSON_HASH"
-          export NODE_MODULES_HASH=${{ runner.os }}-${{ hashFiles('yarn.lock') }}-$PACKAGE_JSON_HASH
-          echo "NODE_MODULES_HASH: $NODE_MODULES_HASH"
-          echo "node-modules-hash=$NODE_MODULES_HASH" >> $GITHUB_OUTPUT
-
-      - name: Cache for NodeJS dependencies - host OS
-        id: node-modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ steps.calculate_node_modules_hash.outputs.node-modules-hash }}-yarn
-
-      - name: Checkout island-is submodules
-        run: |
-          ./.githooks/post-checkout
-
-      - name: Building NodeJS dependencies
-        if: steps.node-modules.outputs.cache-hit != 'true'
-        run: yarn install --immutable
+      - name: 📥 Monorepo install
+        uses: ./.github/actions/yarn-install
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
