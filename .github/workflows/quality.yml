@@ -71,7 +71,7 @@ jobs:
 
       - name: Run tests
         run: yarn run nx affected -t test
-  build:
+  typecheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -87,12 +87,11 @@ jobs:
       - name: 📥 Monorepo install
         uses: ./.github/actions/yarn-install
 
-      - name: Codegen application
-        run: yarn nx run ${{matrix.project}}:codegen
-
       - uses: nrwl/nx-set-shas@v4
+
       - name: Typecheck
         run: yarn run nx affected -t typecheck
 
-      - name: Build application
-        run: yarn nx run ${{matrix.project}}:build:production
+      # TODO: Removing build step for now, we will add again building all affected projects if needed
+      # - name: Build application
+      #   run: yarn nx run ${{matrix.project}}:build:production
