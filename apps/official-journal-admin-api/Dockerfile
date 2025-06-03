@@ -5,8 +5,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /usr/src/app
 COPY ./apps/official-journal-admin-api/dist/package.json ./
 RUN yarn add pg
-RUN yarn install --only=production
-
+RUN npm install --omit=dev --legacy-peer-deps
 # Production image, copy all the files and run nest
 FROM docker.io/node:lts-alpine as runner
 RUN apk add --no-cache \

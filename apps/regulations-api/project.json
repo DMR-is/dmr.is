@@ -99,7 +99,8 @@
         "engine": "docker",
         "metadata": {
           "load": true
-        }
+        },
+        "file": "apps/regulations-api/Dockerfile"
       }
     },
     "dev-services": {

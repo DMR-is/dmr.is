@@ -67,7 +67,8 @@
         "engine": "docker",
         "metadata": {
           "load": true
-        }
+        },
+        "file": "apps/legal-gazette-web/Dockerfile"
       }
     }
   },
