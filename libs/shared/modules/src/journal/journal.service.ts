@@ -921,6 +921,7 @@ export class JournalService implements IJournalService {
         await this.advertModel.update(
           {
             documentHtml: html,
+            documentLegacyHtml: advert.documentHtml,
             isLegacy: false,
           },
           {
