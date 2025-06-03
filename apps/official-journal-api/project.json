@@ -64,7 +64,8 @@
         "engine": "docker",
         "metadata": {
           "load": true
-        }
+        },
+        "file": "apps/official-journal-api/Dockerfile"
       }
     },
     "dev-services": {
