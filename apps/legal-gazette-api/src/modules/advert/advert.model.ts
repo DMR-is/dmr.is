@@ -9,7 +9,7 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
-import { NotFoundException } from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
@@ -25,6 +25,10 @@ import {
   CommonAdvertCreationAttributes,
   CommonAdvertModel,
 } from '../common-advert/common-advert.model'
+import {
+  AdvertStatusCounterItemDto,
+  GetAdvertsQueryDto,
+} from './dto/advert.dto'
 
 type AdvertAttributes = {
   caseId: string
@@ -77,6 +81,12 @@ export enum AdvertVersionEnum {
     },
   ],
   where: {
+    statusId: {
+      [Op.in]: [
+        AdvertStatusIdEnum.SUBMITTED,
+        AdvertStatusIdEnum.READY_FOR_PUBLICATION,
+      ],
+    },
     publishedAt: {
       [Op.eq]: null,
     },
@@ -96,11 +106,53 @@ export enum AdvertVersionEnum {
       },
     ],
     where: {
-      publishedAt: {
-        [Op.ne]: null,
-      },
+      publishedAt: { [Op.ne]: null },
+      statusId: AdvertStatusIdEnum.PUBLISHED,
     },
     order: [['publishedAt', 'DESC']],
+  },
+  completed: {
+    include: [
+      AdvertStatusModel,
+      AdvertCategoryModel,
+      AdvertTypeModel,
+      {
+        model: CaseModel.unscoped(),
+        attributes: ['caseNumber'],
+        required: true,
+      },
+    ],
+    order: [['updatedAt', 'ASC']],
+    where: {
+      statusId: {
+        [Op.in]: [
+          AdvertStatusIdEnum.PUBLISHED,
+          AdvertStatusIdEnum.REJECTED,
+          AdvertStatusIdEnum.WITHDRAWN,
+        ],
+      },
+    },
+  },
+  withQuery: (query?: GetAdvertsQueryDto) => {
+    const whereClause: Record<string, string | number> = {}
+
+    if (query?.statusId) {
+      Object.assign(whereClause, {
+        statusId: {
+          [Op.in]: query.statusId,
+        },
+      })
+    }
+
+    if (query?.categoryId) {
+      Object.assign(whereClause, {
+        categoryId: query.categoryId,
+      })
+    }
+
+    return {
+      where: whereClause,
+    }
   },
 }))
 export class AdvertModel extends BaseModel<
@@ -211,6 +263,42 @@ export class AdvertModel extends BaseModel<
     foreignKey: 'id',
   })
   commonAdvert?: CommonAdvertModel
+
+  static async countByStatus(
+    statusId: AdvertStatusIdEnum,
+  ): Promise<AdvertStatusCounterItemDto> {
+    this.logger.info(`Counting adverts with status ID: ${statusId}`, {
+      context: 'AdvertModel',
+    })
+
+    const whereClause: Record<string, any> = {
+      statusId,
+    }
+
+    const [status, count] = await Promise.all([
+      AdvertStatusModel.findByPk(statusId),
+      this.count({
+        where: whereClause,
+      }),
+    ])
+
+    if (!status) {
+      this.logger.error(`Advert status with ID ${statusId} not found`, {
+        context: 'AdvertModel',
+      })
+
+      throw new BadRequestException('Invalid advert status')
+    }
+
+    return {
+      status: {
+        id: status.id,
+        title: status.title,
+        slug: status.slug,
+      },
+      count,
+    }
+  }
 
   static async setStatus(advertId: string, statusId: AdvertStatusIdEnum) {
     const advert = await this.findByPk(advertId)

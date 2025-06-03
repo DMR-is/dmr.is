@@ -20,7 +20,9 @@ const CaseFilters = dynamic(
   () => import('../../components/CaseFilters/CaseFilters'),
 )
 
-const CaseTable = dynamic(() => import('../../components/Tables/CaseTable'))
+const AdvertsInProgressTable = dynamic(
+  () => import('../../components/Tables/AdvertsInProgress'),
+)
 
 export default function Ritstjorn() {
   const breadcrumbs = routesToBreadcrumbs(Routes, Route.RITSTJORN)
@@ -61,7 +63,7 @@ export default function Ritstjorn() {
               tabs={[
                 {
                   label: 'Innsendar',
-                  content: <CaseTable />,
+                  content: <AdvertsInProgressTable />,
                 },
                 {
                   label: 'Á leið í útgáfu',

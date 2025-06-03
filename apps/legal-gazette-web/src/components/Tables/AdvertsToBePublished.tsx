@@ -1,22 +1,32 @@
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
-import { useCases } from '../../hooks/cases/useCases'
+import { AdvertStatusIdEnum } from '../../gen/fetch'
+import { useAdvertsInProgress } from '../../hooks/adverts/useAdvertsInProgress'
 import { useFilters } from '../../hooks/useFilters'
-import { Route } from '../../lib/constants'
 import { formatDate } from '../../lib/utils'
 
-export const CaseTable = () => {
+export const AdvertsToBePublished = () => {
   const { params } = useFilters()
 
-  const { cases, paging, isLoading } = useCases({
-    query: {
+  const { adverts, isLoading, paging } = useAdvertsInProgress({
+    params: {
       page: params.page,
       pageSize: params.pageSize,
+      statusId: [AdvertStatusIdEnum.READY_FOR_PUBLICATION],
     },
   })
 
+  const rows = adverts.map((advert) => ({
+    birting: formatDate(advert.scheduledAt),
+    skraning: formatDate(advert.createdAt),
+    tegund: advert.type.title,
+    flokkur: advert.category.title,
+    efni: advert.title,
+  }))
+
   return (
     <DataTable
+      noDataMessage="Engar auglýsingar tilbúnar til útgáfu"
       loading={isLoading}
       columns={
         [
@@ -49,21 +59,10 @@ export const CaseTable = () => {
           },
         ] as const
       }
-      rows={cases.map((c) => ({
-        id: c.id,
-        birting: c.schedueledAt
-          ? formatDate(c.schedueledAt)
-          : 'Engin birting framundan',
-        skraning: formatDate(c.createdAt),
-        tegund: c.type.title,
-        flokkur: c.category.title,
-        efni: c.title,
-        hasLink: true,
-        href: Route.RITSTJORN_ID.replace('[id]', c.id),
-      }))}
+      rows={rows}
       paging={paging}
     />
   )
 }
 
-export default CaseTable
+export default AdvertsToBePublished

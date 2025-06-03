@@ -13,6 +13,16 @@ export class CaseService implements ICaseService {
   constructor(
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
   ) {}
+  async restoreCase(id: string): Promise<CaseDto> {
+    await this.caseModel.restore({ where: { id } })
+
+    return this.getCase(id)
+  }
+
+  async deleteCase(id: string): Promise<void> {
+    await this.caseModel.destroy({ where: { id }, individualHooks: true })
+  }
+
   async getCases(query: CaseQueryDto): Promise<GetCasesDto> {
     const { limit, offset } = getLimitAndOffset({
       page: query.page,

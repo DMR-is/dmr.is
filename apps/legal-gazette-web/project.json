@@ -64,7 +64,9 @@
       "options": {
         "commands": [
           "curl http://localhost:4100/swagger-json > clientConfig.json",
-          "prettier --write clientConfig.json"
+          "prettier --write clientConfig.json",
+          "node patch-enums.js",
+          "prettier --write clientConfig.patched.json"
         ],
         "parallel": true,
         "cwd": "apps/legal-gazette-web"
@@ -73,7 +75,10 @@
     "codegen": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "yarn openapi-generator -o apps/legal-gazette-web/src/gen/fetch -i apps/legal-gazette-web/clientConfig.json"
+        "commands": [
+          "rm -rf apps/legal-gazette-web/src/gen/fetch",
+          "yarn openapi-generator -o apps/legal-gazette-web/src/gen/fetch -i apps/legal-gazette-web/clientConfig.patched.json"
+        ]
       },
       "outputs": ["{projectRoot}/gen/fetch"]
     },

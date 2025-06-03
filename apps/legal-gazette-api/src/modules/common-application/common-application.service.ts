@@ -35,7 +35,10 @@ export class CommonApplicationService implements ICommonApplicationService {
       throw new NotFoundException(`No case found for application`)
     }
 
-    await this.caseModel.softDeleteCase(caseInstance.id)
+    await this.caseModel.destroy({
+      where: { id: caseInstance.id },
+      individualHooks: true,
+    })
   }
 
   @OnEvent(LegalGazetteEvents.COMMON_APPLICATION_UPDATE)

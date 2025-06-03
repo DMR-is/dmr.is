@@ -1,5 +1,12 @@
-import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
-import { ApiQuery } from '@nestjs/swagger'
+import {
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common'
 
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 
@@ -22,5 +29,17 @@ export class CaseController {
   @LGResponse({ operationId: 'getCase', type: CaseDto })
   getCase(@Param('id') id: string): Promise<CaseDto> {
     return this.caseService.getCase(id)
+  }
+
+  @Post(':id/restore')
+  @LGResponse({ operationId: 'restore', type: CaseDto })
+  restoreCase(@Param('id') id: string): Promise<CaseDto> {
+    return this.caseService.restoreCase(id)
+  }
+
+  @Delete(':id')
+  @LGResponse({ operationId: 'deleteCase' })
+  deleteCase(@Param('id') id: string): Promise<void> {
+    return this.caseService.deleteCase(id)
   }
 }

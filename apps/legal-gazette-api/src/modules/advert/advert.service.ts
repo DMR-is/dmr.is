@@ -6,7 +6,13 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared/dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
-import { AdvertDto, GetAdvertsDto } from './dto/advert.dto'
+import { AdvertStatusIdEnum } from '../advert-status/advert-status.model'
+import {
+  AdvertDto,
+  GetAdvertsDto,
+  GetAdvertsQueryDto,
+  GetAdvertsStatusCounterDto,
+} from './dto/advert.dto'
 import { advertMigrate } from './dto/advert.migrate'
 import { AdvertModel } from './advert.model'
 import { IAdvertService } from './advert.service.interface'
@@ -18,12 +24,51 @@ export class AdvertService implements IAdvertService {
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     private readonly eventEmitter: EventEmitter2,
   ) {}
-  async getAdvertsToBePublished(query: PagingQuery): Promise<GetAdvertsDto> {
+
+  async getAdvertsCount(): Promise<GetAdvertsStatusCounterDto> {
+    const submittedCount = this.advertModel
+      .unscoped()
+      .countByStatus(AdvertStatusIdEnum.SUBMITTED)
+    const readyForPublicationCount = this.advertModel
+      .unscoped()
+      .countByStatus(AdvertStatusIdEnum.READY_FOR_PUBLICATION)
+
+    const publishedCount = this.advertModel
+      .unscoped()
+      .countByStatus(AdvertStatusIdEnum.PUBLISHED)
+
+    const rejectedCount = this.advertModel
+      .unscoped()
+      .countByStatus(AdvertStatusIdEnum.REJECTED)
+
+    const withdrawnCount = this.advertModel
+      .unscoped()
+      .countByStatus(AdvertStatusIdEnum.WITHDRAWN)
+
+    const [submitted, readyForPublication, published, rejected, withdrawn] =
+      await Promise.all([
+        submittedCount,
+        readyForPublicationCount,
+        publishedCount,
+        rejectedCount,
+        withdrawnCount,
+      ])
+
+    return {
+      submitted,
+      readyForPublication,
+      rejected,
+      published,
+      withdrawn,
+    }
+  }
+
+  async getCompletedAdverts(query: PagingQuery): Promise<GetAdvertsDto> {
     const { limit, offset } = getLimitAndOffset({
       page: query.page,
       pageSize: query.pageSize,
     })
-    const adverts = await this.advertModel.findAndCountAll({
+    const adverts = await this.advertModel.scope('completed').findAndCountAll({
       limit,
       offset,
     })
@@ -42,16 +87,46 @@ export class AdvertService implements IAdvertService {
     }
   }
 
-  async getAdverts(query: PagingQuery): Promise<GetAdvertsDto> {
+  async getAdvertsInProgress(
+    query: GetAdvertsQueryDto,
+  ): Promise<GetAdvertsDto> {
+    const { limit, offset } = getLimitAndOffset({
+      page: query.page,
+      pageSize: query.pageSize,
+    })
+    const adverts = await this.advertModel
+      .scope(['defaultScope', { method: ['withQuery', query] }])
+      .findAndCountAll({
+        limit,
+        offset,
+      })
+
+    const migrated = adverts.rows.map((advert) => advertMigrate(advert))
+    const paging = generatePaging(
+      migrated,
+      query.page,
+      query.pageSize,
+      adverts.count,
+    )
+
+    return {
+      adverts: migrated,
+      paging,
+    }
+  }
+
+  async getAdverts(query: GetAdvertsQueryDto): Promise<GetAdvertsDto> {
     const { limit, offset } = getLimitAndOffset({
       page: query.page,
       pageSize: query.pageSize,
     })
 
-    const results = await this.advertModel.scope('published').findAndCountAll({
-      limit,
-      offset,
-    })
+    const results = await this.advertModel
+      .scope(['published', { method: ['withQuery', query] }])
+      .findAndCountAll({
+        limit,
+        offset,
+      })
 
     const migrated = results.rows.map((advert) => advertMigrate(advert))
     const paging = generatePaging(

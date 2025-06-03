@@ -1,6 +1,9 @@
-import { Type } from 'class-transformer'
+import { Transform, Type } from 'class-transformer'
 import {
+  IsArray,
   IsDateString,
+  IsEnum,
+  IsOptional,
   IsString,
   IsUUID,
   ValidateIf,
@@ -10,9 +13,10 @@ import {
 import { ApiProperty } from '@nestjs/swagger'
 
 import { DetailedDto } from '@dmr.is/legal-gazette/dto'
-import { Paging } from '@dmr.is/shared/dto'
+import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 import { AdvertCategoryDto } from '../../advert-category/dto/advert-category.dto'
+import { AdvertStatusIdEnum } from '../../advert-status/advert-status.model'
 import { AdvertStatusDto } from '../../advert-status/dto/advert-status.dto'
 import { AdvertTypeDto } from '../../advert-type/dto/advert-type.dto'
 import { AdvertVersionEnum } from '../advert.model'
@@ -50,9 +54,9 @@ export class AdvertDto extends DetailedDto {
   @IsDateString()
   publishedAt!: string | null
 
-  @ApiProperty({ type: String, nullable: true })
+  @ApiProperty({ type: String })
   @IsDateString()
-  scheduledAt!: string | null
+  scheduledAt!: string
 
   @ApiProperty({ type: AdvertTypeDto })
   @Type(() => AdvertTypeDto)
@@ -92,4 +96,84 @@ export class GetAdvertsDto {
     type: Paging,
   })
   paging!: Paging
+}
+
+export class GetAdvertsQueryDto extends PagingQuery {
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string
+
+  @ApiProperty({
+    enum: AdvertStatusIdEnum,
+    enumName: 'AdvertStatusIdEnum',
+    'x-enumNames': [
+      'Submitted',
+      'ReadyForPublication',
+      'Published',
+      'Rejected',
+      'Withdrawn',
+    ],
+    isArray: true,
+    required: false,
+  })
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
+  @IsOptional()
+  @IsArray()
+  @IsEnum(AdvertStatusIdEnum, { each: true })
+  statusId?: AdvertStatusIdEnum[]
+}
+
+export class AdvertStatusCounterItemDto {
+  @ApiProperty({
+    type: AdvertStatusDto,
+  })
+  @Type(() => AdvertStatusDto)
+  @ValidateNested()
+  status!: AdvertStatusDto
+
+  @ApiProperty({
+    type: Number,
+  })
+  count!: number
+}
+
+export class GetAdvertsStatusCounterDto {
+  @ApiProperty({
+    type: AdvertStatusCounterItemDto,
+  })
+  @Type(() => AdvertStatusCounterItemDto)
+  @ValidateNested()
+  submitted!: AdvertStatusCounterItemDto
+
+  @ApiProperty({
+    type: AdvertStatusCounterItemDto,
+  })
+  @Type(() => AdvertStatusCounterItemDto)
+  @ValidateNested()
+  readyForPublication!: AdvertStatusCounterItemDto
+
+  @ApiProperty({
+    type: AdvertStatusCounterItemDto,
+  })
+  @Type(() => AdvertStatusCounterItemDto)
+  @ValidateNested()
+  withdrawn!: AdvertStatusCounterItemDto
+
+  @ApiProperty({
+    type: AdvertStatusCounterItemDto,
+  })
+  @Type(() => AdvertStatusCounterItemDto)
+  @ValidateNested()
+  rejected!: AdvertStatusCounterItemDto
+
+  @ApiProperty({
+    type: AdvertStatusCounterItemDto,
+  })
+  @Type(() => AdvertStatusCounterItemDto)
+  @ValidateNested()
+  published!: AdvertStatusCounterItemDto
 }

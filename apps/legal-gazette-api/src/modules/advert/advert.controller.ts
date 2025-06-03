@@ -3,7 +3,7 @@ import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
-import { AdvertDto, GetAdvertsDto } from './dto/advert.dto'
+import { AdvertDto, GetAdvertsDto, GetAdvertsQueryDto } from './dto/advert.dto'
 import { IAdvertService } from './advert.service.interface'
 
 @Controller({
@@ -15,16 +15,28 @@ export class AdvertController {
     @Inject(IAdvertService) private readonly advertService: IAdvertService,
   ) {}
 
-  @Get()
-  @LGResponse({ operationId: 'getAdverts', type: GetAdvertsDto })
-  getAdverts(@Query() query: PagingQuery) {
-    return this.advertService.getAdverts(query)
+  @Get('count')
+  @LGResponse({ operationId: 'getAdvertsCount', type: GetAdvertsDto })
+  getAdvertsCount() {
+    return this.advertService.getAdvertsCount()
   }
 
   @Get('inprogress')
-  @LGResponse({ operationId: 'getAdvertsToBePublished', type: GetAdvertsDto })
-  getAdvertsToBePublished(@Query() query: PagingQuery) {
-    return this.advertService.getAdvertsToBePublished(query)
+  @LGResponse({ operationId: 'getAdvertsInProgress', type: GetAdvertsDto })
+  getAdvertsInProgress(@Query() query: GetAdvertsQueryDto) {
+    return this.advertService.getAdvertsInProgress(query)
+  }
+
+  @Get('/completed')
+  @LGResponse({ operationId: 'getCompletedAdverts', type: GetAdvertsDto })
+  getCompletedAdverts(@Query() query: PagingQuery) {
+    return this.advertService.getCompletedAdverts(query)
+  }
+
+  @Get()
+  @LGResponse({ operationId: 'getAdverts', type: GetAdvertsDto })
+  getAdverts(@Query() query: GetAdvertsQueryDto) {
+    return this.advertService.getAdverts(query)
   }
 
   @Get(':id')

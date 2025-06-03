@@ -10,7 +10,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertTypesDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/GetAdvertTypesDto"
+                }
               }
             }
           },
@@ -18,7 +20,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -26,7 +30,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -34,7 +40,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -42,7 +50,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -50,13 +60,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["AdvertType"]
+        "tags": [
+          "AdvertType"
+        ]
       },
       "post": {
         "operationId": "createType",
@@ -65,7 +79,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateAdvertType" }
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdvertType"
+              }
             }
           }
         },
@@ -74,7 +90,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertTypeDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/GetAdvertTypeDto"
+                }
               }
             }
           },
@@ -82,7 +100,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -90,7 +110,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -98,7 +120,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -106,7 +130,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -114,13 +140,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["AdvertType"]
+        "tags": [
+          "AdvertType"
+        ]
       }
     },
     "/api/v1/types/detailed": {
@@ -142,7 +172,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -150,7 +182,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -158,7 +192,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -166,7 +202,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -174,13 +212,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["AdvertType"]
+        "tags": [
+          "AdvertType"
+        ]
       }
     },
     "/api/v1/types/{id}": {
@@ -191,14 +233,18 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateAdvertType" }
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdvertType"
+              }
             }
           }
         },
@@ -207,7 +253,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertTypeDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/GetAdvertTypeDto"
+                }
               }
             }
           },
@@ -215,7 +263,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -223,7 +273,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -231,7 +283,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -239,7 +293,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -247,13 +303,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["AdvertType"]
+        "tags": [
+          "AdvertType"
+        ]
       },
       "delete": {
         "operationId": "deleteType",
@@ -262,7 +322,9 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -270,7 +332,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertTypeDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/GetAdvertTypeDto"
+                }
               }
             }
           },
@@ -278,7 +342,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -286,7 +352,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -294,7 +362,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -302,7 +372,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -310,13 +382,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["AdvertType"]
+        "tags": [
+          "AdvertType"
+        ]
       }
     },
     "/api/v1/categories": {
@@ -327,7 +403,9 @@
             "name": "type",
             "required": false,
             "in": "query",
-            "schema": { "$ref": "#/components/schemas/CaseTypeSlugEnum" }
+            "schema": {
+              "$ref": "#/components/schemas/CaseTypeSlugEnum"
+            }
           }
         ],
         "responses": {
@@ -345,7 +423,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -353,7 +433,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -361,7 +443,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -369,7 +453,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -377,13 +463,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["AdvertCategory"]
+        "tags": [
+          "AdvertCategory"
+        ]
       }
     },
     "/api/v1/categories/detailed": {
@@ -394,7 +484,9 @@
             "name": "type",
             "required": false,
             "in": "query",
-            "schema": { "$ref": "#/components/schemas/CaseTypeSlugEnum" }
+            "schema": {
+              "$ref": "#/components/schemas/CaseTypeSlugEnum"
+            }
           }
         ],
         "responses": {
@@ -412,7 +504,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -420,7 +514,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -428,7 +524,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -436,7 +534,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -444,13 +544,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["AdvertCategory"]
+        "tags": [
+          "AdvertCategory"
+        ]
       }
     },
     "/api/v1/statuses": {
@@ -472,7 +576,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -480,7 +586,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -488,7 +596,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -496,7 +606,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -504,13 +616,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["AdvertStatus"]
+        "tags": [
+          "AdvertStatus"
+        ]
       }
     },
     "/api/v1/statuses/detailed": {
@@ -532,7 +648,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -540,7 +658,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -548,7 +668,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -556,7 +678,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -564,13 +688,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["AdvertStatus"]
+        "tags": [
+          "AdvertStatus"
+        ]
       }
     },
     "/api/v1/statuses/{id}": {
@@ -581,7 +709,9 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -589,7 +719,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertStatusDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/AdvertStatusDto"
+                }
               }
             }
           },
@@ -597,7 +729,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -605,7 +739,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -613,7 +749,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -621,7 +759,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -629,13 +769,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["AdvertStatus"]
+        "tags": [
+          "AdvertStatus"
+        ]
       }
     },
     "/api/v1/statuses/{id}/detailed": {
@@ -646,7 +790,9 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -664,7 +810,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -672,7 +820,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -680,7 +830,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -688,7 +840,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -696,13 +850,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["AdvertStatus"]
+        "tags": [
+          "AdvertStatus"
+        ]
       }
     },
     "/api/v1/cases": {
@@ -713,13 +871,19 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "schema": { "example": 1, "type": "number" }
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "schema": { "example": 10, "type": "number" }
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
           }
         ],
         "responses": {
@@ -727,7 +891,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetCasesDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/GetCasesDto"
+                }
               }
             }
           },
@@ -735,7 +901,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -743,7 +911,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -751,7 +921,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -759,7 +931,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -767,13 +941,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["Case"]
+        "tags": [
+          "Case"
+        ]
       }
     },
     "/api/v1/cases/{id}": {
@@ -784,7 +962,9 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -792,7 +972,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/CaseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/CaseDto"
+                }
               }
             }
           },
@@ -800,7 +982,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -808,7 +992,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -816,7 +1002,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -824,7 +1012,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -832,13 +1022,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["Case"]
+        "tags": [
+          "Case"
+        ]
       },
       "delete": {
         "operationId": "deleteCase",
@@ -847,16 +1041,22 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "" },
+          "204": {
+            "description": ""
+          },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -864,7 +1064,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -872,7 +1074,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -880,7 +1084,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -888,13 +1094,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["Case"]
+        "tags": [
+          "Case"
+        ]
       }
     },
     "/api/v1/cases/{id}/restore": {
@@ -905,7 +1115,9 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -913,7 +1125,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/CaseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/CaseDto"
+                }
               }
             }
           },
@@ -921,7 +1135,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -929,7 +1145,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -937,7 +1155,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -945,7 +1165,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -953,13 +1175,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["Case"]
+        "tags": [
+          "Case"
+        ]
       }
     },
     "/api/v1/applications": {
@@ -977,12 +1203,16 @@
           }
         },
         "responses": {
-          "204": { "description": "" },
+          "204": {
+            "description": ""
+          },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -990,7 +1220,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -998,7 +1230,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1006,7 +1240,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1014,13 +1250,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["CommonApplication"]
+        "tags": [
+          "CommonApplication"
+        ]
       }
     },
     "/api/v1/applications/{id}": {
@@ -1031,16 +1271,22 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "204": { "description": "" },
+          "204": {
+            "description": ""
+          },
           "400": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1048,7 +1294,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1056,7 +1304,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1064,7 +1314,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1072,13 +1324,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["CommonApplication"]
+        "tags": [
+          "CommonApplication"
+        ]
       }
     },
     "/api/v1/adverts/count": {
@@ -1090,7 +1346,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertsDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/GetAdvertsDto"
+                }
               }
             }
           },
@@ -1098,7 +1356,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1106,7 +1366,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1114,7 +1376,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1122,7 +1386,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1130,13 +1396,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["Advert"]
+        "tags": [
+          "Advert"
+        ]
       }
     },
     "/api/v1/adverts/inprogress": {
@@ -1147,19 +1417,27 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "schema": { "example": 1, "type": "number" }
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "schema": { "example": 10, "type": "number" }
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
           },
           {
             "name": "categoryId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "statusId",
@@ -1167,7 +1445,9 @@
             "in": "query",
             "schema": {
               "type": "array",
-              "items": { "$ref": "#/components/schemas/AdvertStatusIdEnum" }
+              "items": {
+                "$ref": "#/components/schemas/AdvertStatusIdEnum"
+              }
             }
           }
         ],
@@ -1176,7 +1456,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertsDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/GetAdvertsDto"
+                }
               }
             }
           },
@@ -1184,7 +1466,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1192,7 +1476,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1200,7 +1486,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1208,7 +1496,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1216,13 +1506,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["Advert"]
+        "tags": [
+          "Advert"
+        ]
       }
     },
     "/api/v1/adverts/completed": {
@@ -1233,13 +1527,19 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "schema": { "example": 1, "type": "number" }
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "schema": { "example": 10, "type": "number" }
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
           }
         ],
         "responses": {
@@ -1247,7 +1547,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertsDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/GetAdvertsDto"
+                }
               }
             }
           },
@@ -1255,7 +1557,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1263,7 +1567,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1271,7 +1577,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1279,7 +1587,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1287,13 +1597,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["Advert"]
+        "tags": [
+          "Advert"
+        ]
       }
     },
     "/api/v1/adverts": {
@@ -1304,19 +1618,27 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "schema": { "example": 1, "type": "number" }
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "schema": { "example": 10, "type": "number" }
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
           },
           {
             "name": "categoryId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "statusId",
@@ -1324,7 +1646,9 @@
             "in": "query",
             "schema": {
               "type": "array",
-              "items": { "$ref": "#/components/schemas/AdvertStatusIdEnum" }
+              "items": {
+                "$ref": "#/components/schemas/AdvertStatusIdEnum"
+              }
             }
           }
         ],
@@ -1333,7 +1657,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertsDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/GetAdvertsDto"
+                }
               }
             }
           },
@@ -1341,7 +1667,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1349,7 +1677,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1357,7 +1687,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1365,7 +1697,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1373,13 +1707,17 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["Advert"]
+        "tags": [
+          "Advert"
+        ]
       }
     },
     "/api/v1/adverts/{id}": {
@@ -1390,7 +1728,9 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1398,7 +1738,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/AdvertDto"
+                }
               }
             }
           },
@@ -1406,7 +1748,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1414,7 +1758,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1422,7 +1768,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1430,7 +1778,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           },
@@ -1438,21 +1788,31 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
               }
             }
           }
         },
         "summary": "",
-        "tags": ["Advert"]
+        "tags": [
+          "Advert"
+        ]
       }
     },
     "/api/v1/health": {
       "get": {
         "operationId": "HealthController__v1",
         "parameters": [],
-        "responses": { "200": { "description": "Health check endpoint." } },
-        "tags": ["Health"]
+        "responses": {
+          "200": {
+            "description": "Health check endpoint."
+          }
+        },
+        "tags": [
+          "Health"
+        ]
       }
     }
   },
@@ -1485,23 +1845,35 @@
             "example": "base-entity"
           }
         },
-        "required": ["id", "title", "slug"]
+        "required": [
+          "id",
+          "title",
+          "slug"
+        ]
       },
       "GetAdvertTypesDto": {
         "type": "object",
         "properties": {
           "types": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertTypeDto" }
+            "items": {
+              "$ref": "#/components/schemas/AdvertTypeDto"
+            }
           }
         },
-        "required": ["types"]
+        "required": [
+          "types"
+        ]
       },
       "ApiErrorDto": {
         "type": "object",
         "properties": {
-          "statusCode": { "type": "number" },
-          "timestamp": { "type": "string" },
+          "statusCode": {
+            "type": "number"
+          },
+          "timestamp": {
+            "type": "string"
+          },
           "name": {
             "type": "string",
             "enum": [
@@ -1529,10 +1901,20 @@
               "UnknownError"
             ]
           },
-          "message": { "type": "string" },
-          "details": { "type": "array", "items": { "type": "string" } }
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         },
-        "required": ["statusCode", "timestamp"]
+        "required": [
+          "statusCode",
+          "timestamp"
+        ]
       },
       "AdvertTypeDetailedDto": {
         "type": "object",
@@ -1569,17 +1951,27 @@
             "nullable": true
           }
         },
-        "required": ["id", "title", "slug", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "title",
+          "slug",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "GetAdvertTypesDetailedDto": {
         "type": "object",
         "properties": {
           "types": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertTypeDetailedDto" }
+            "items": {
+              "$ref": "#/components/schemas/AdvertTypeDetailedDto"
+            }
           }
         },
-        "required": ["types"]
+        "required": [
+          "types"
+        ]
       },
       "CreateAdvertType": {
         "type": "object",
@@ -1590,14 +1982,20 @@
             "example": "Base entity"
           }
         },
-        "required": ["title"]
+        "required": [
+          "title"
+        ]
       },
       "GetAdvertTypeDto": {
         "type": "object",
         "properties": {
-          "type": { "$ref": "#/components/schemas/AdvertTypeDto" }
+          "type": {
+            "$ref": "#/components/schemas/AdvertTypeDto"
+          }
         },
-        "required": ["type"]
+        "required": [
+          "type"
+        ]
       },
       "UpdateAdvertType": {
         "type": "object",
@@ -1609,7 +2007,12 @@
           }
         }
       },
-      "CaseTypeSlugEnum": { "type": "string", "enum": ["almenn-auglysing"] },
+      "CaseTypeSlugEnum": {
+        "type": "string",
+        "enum": [
+          "almenn-auglysing"
+        ]
+      },
       "AdvertCategoryDto": {
         "type": "object",
         "properties": {
@@ -1629,17 +2032,25 @@
             "example": "base-entity"
           }
         },
-        "required": ["id", "title", "slug"]
+        "required": [
+          "id",
+          "title",
+          "slug"
+        ]
       },
       "GetAdvertCategoriesDto": {
         "type": "object",
         "properties": {
           "categories": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertCategoryDto" }
+            "items": {
+              "$ref": "#/components/schemas/AdvertCategoryDto"
+            }
           }
         },
-        "required": ["categories"]
+        "required": [
+          "categories"
+        ]
       },
       "AdvertCategoryDetailedDto": {
         "type": "object",
@@ -1675,8 +2086,12 @@
             "example": "2021-08-31T12:00:00.000Z",
             "nullable": true
           },
-          "typeId": { "type": "string" },
-          "type": { "$ref": "#/components/schemas/AdvertTypeDetailedDto" }
+          "typeId": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/AdvertTypeDetailedDto"
+          }
         },
         "required": [
           "id",
@@ -1698,7 +2113,9 @@
             }
           }
         },
-        "required": ["categories"]
+        "required": [
+          "categories"
+        ]
       },
       "BaseEntityDto": {
         "type": "object",
@@ -1719,17 +2136,25 @@
             "example": "base-entity"
           }
         },
-        "required": ["id", "title", "slug"]
+        "required": [
+          "id",
+          "title",
+          "slug"
+        ]
       },
       "GetAdvertStatusesDto": {
         "type": "object",
         "properties": {
           "statuses": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/BaseEntityDto" }
+            "items": {
+              "$ref": "#/components/schemas/BaseEntityDto"
+            }
           }
         },
-        "required": ["statuses"]
+        "required": [
+          "statuses"
+        ]
       },
       "BaseEntityDetailedDto": {
         "type": "object",
@@ -1766,17 +2191,27 @@
             "nullable": true
           }
         },
-        "required": ["id", "title", "slug", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "title",
+          "slug",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "GetAdvertStatusesDetailedDto": {
         "type": "object",
         "properties": {
           "statuses": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/BaseEntityDetailedDto" }
+            "items": {
+              "$ref": "#/components/schemas/BaseEntityDetailedDto"
+            }
           }
         },
-        "required": ["statuses"]
+        "required": [
+          "statuses"
+        ]
       },
       "AdvertStatusDto": {
         "type": "object",
@@ -1797,7 +2232,11 @@
             "example": "base-entity"
           }
         },
-        "required": ["id", "title", "slug"]
+        "required": [
+          "id",
+          "title",
+          "slug"
+        ]
       },
       "AdvertStatusDetailedDto": {
         "type": "object",
@@ -1834,7 +2273,13 @@
             "nullable": true
           }
         },
-        "required": ["id", "title", "slug", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "title",
+          "slug",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "CaseDto": {
         "type": "object",
@@ -1855,28 +2300,62 @@
             "example": "2021-08-31T12:00:00.000Z",
             "nullable": true
           },
-          "id": { "type": "string" },
-          "applicationId": { "type": "string" },
-          "caseNumber": { "type": "string" }
+          "id": {
+            "type": "string"
+          },
+          "applicationId": {
+            "type": "string"
+          },
+          "caseNumber": {
+            "type": "string"
+          }
         },
-        "required": ["createdAt", "updatedAt", "id", "caseNumber"]
+        "required": [
+          "createdAt",
+          "updatedAt",
+          "id",
+          "caseNumber"
+        ]
       },
       "Paging": {
         "type": "object",
         "properties": {
-          "page": { "type": "number", "example": 1 },
-          "totalPages": { "type": "number", "example": 10 },
-          "totalItems": { "type": "number", "example": 1000 },
-          "nextPage": { "type": "number", "example": 2, "nullable": true },
-          "previousPage": { "type": "number", "example": 1, "nullable": true },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "totalPages": {
+            "type": "number",
+            "example": 10
+          },
+          "totalItems": {
+            "type": "number",
+            "example": 1000
+          },
+          "nextPage": {
+            "type": "number",
+            "example": 2,
+            "nullable": true
+          },
+          "previousPage": {
+            "type": "number",
+            "example": 1,
+            "nullable": true
+          },
           "pageSize": {
             "type": "number",
             "example": 10,
             "minimum": 1,
             "maximum": 100
           },
-          "hasNextPage": { "type": "boolean", "example": true },
-          "hasPreviousPage": { "type": "boolean", "example": false }
+          "hasNextPage": {
+            "type": "boolean",
+            "example": true
+          },
+          "hasPreviousPage": {
+            "type": "boolean",
+            "example": false
+          }
         },
         "required": [
           "page",
@@ -1894,47 +2373,85 @@
         "properties": {
           "cases": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/CaseDto" }
+            "items": {
+              "$ref": "#/components/schemas/CaseDto"
+            }
           },
-          "paging": { "$ref": "#/components/schemas/Paging" }
+          "paging": {
+            "$ref": "#/components/schemas/Paging"
+          }
         },
-        "required": ["cases", "paging"]
+        "required": [
+          "cases",
+          "paging"
+        ]
       },
       "CreateCommunicationChannelDto": {
         "type": "object",
         "properties": {
-          "email": { "type": "string" },
-          "name": { "type": "string" },
-          "phone": { "type": "string" }
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          }
         },
-        "required": ["email"]
+        "required": [
+          "email"
+        ]
       },
       "CommonAdvertSignatureDto": {
         "type": "object",
         "properties": {
-          "name": { "type": "string" },
-          "location": { "type": "string" },
-          "date": { "type": "string" }
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          }
         },
-        "required": ["name", "location", "date"]
+        "required": [
+          "name",
+          "location",
+          "date"
+        ]
       },
       "SubmitCommonApplicationDto": {
         "type": "object",
         "properties": {
-          "categoryId": { "type": "string" },
+          "categoryId": {
+            "type": "string"
+          },
           "channels": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CreateCommunicationChannelDto"
             }
           },
-          "publishingDates": { "type": "array", "items": { "type": "string" } },
-          "caption": { "type": "string" },
+          "publishingDates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "caption": {
+            "type": "string"
+          },
           "signature": {
             "$ref": "#/components/schemas/CommonAdvertSignatureDto"
           },
-          "applicationId": { "type": "string" },
-          "htmlBase64": { "type": "string" }
+          "applicationId": {
+            "type": "string"
+          },
+          "htmlBase64": {
+            "type": "string"
+          }
         },
         "required": [
           "categoryId",
@@ -1945,7 +2462,14 @@
           "htmlBase64"
         ]
       },
-      "AdvertVersion": { "type": "string", "enum": ["A", "B", "C"] },
+      "AdvertVersion": {
+        "type": "string",
+        "enum": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
       "AdvertDto": {
         "type": "object",
         "properties": {
@@ -1965,19 +2489,44 @@
             "example": "2021-08-31T12:00:00.000Z",
             "nullable": true
           },
-          "id": { "type": "string" },
-          "caseId": { "type": "string" },
-          "publicationNumber": { "type": "string" },
-          "title": { "type": "string" },
-          "publishedAt": { "type": "string", "nullable": true },
-          "scheduledAt": { "type": "string" },
-          "type": { "$ref": "#/components/schemas/AdvertTypeDto" },
-          "category": { "$ref": "#/components/schemas/AdvertCategoryDto" },
-          "status": { "$ref": "#/components/schemas/AdvertStatusDto" },
-          "version": {
-            "allOf": [{ "$ref": "#/components/schemas/AdvertVersion" }]
+          "id": {
+            "type": "string"
           },
-          "html": { "type": "string" }
+          "caseId": {
+            "type": "string"
+          },
+          "publicationNumber": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "publishedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "scheduledAt": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/AdvertTypeDto"
+          },
+          "category": {
+            "$ref": "#/components/schemas/AdvertCategoryDto"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AdvertStatusDto"
+          },
+          "version": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdvertVersion"
+              }
+            ]
+          },
+          "html": {
+            "type": "string"
+          }
         },
         "required": [
           "createdAt",
@@ -2000,11 +2549,18 @@
         "properties": {
           "adverts": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertDto" }
+            "items": {
+              "$ref": "#/components/schemas/AdvertDto"
+            }
           },
-          "paging": { "$ref": "#/components/schemas/Paging" }
+          "paging": {
+            "$ref": "#/components/schemas/Paging"
+          }
         },
-        "required": ["adverts", "paging"]
+        "required": [
+          "adverts",
+          "paging"
+        ]
       },
       "AdvertStatusIdEnum": {
         "type": "string",
@@ -2015,12 +2571,12 @@
           "f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
           "e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c"
         ],
-        "x-enumNames": [
-          "Submitted",
-          "ReadyForPublication",
-          "Published",
-          "Rejected",
-          "Withdrawn"
+        "x-enum-varnames": [
+          "SUBMITTED",
+          "READY_FOR_PUBLICATION",
+          "PUBLISHED",
+          "REJECTED",
+          "WITHDRAWN"
         ]
       }
     }

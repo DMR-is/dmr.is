@@ -1,6 +1,7 @@
 import { Op } from 'sequelize'
 import {
   BeforeCreate,
+  BeforeDestroy,
   Column,
   DataType,
   DefaultScope,
@@ -13,6 +14,7 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
+import { AdvertStatusIdEnum } from '../advert-status/advert-status.model'
 import { AdvertTypeIdEnum } from '../advert-type/advert-type.model'
 import { CommonAdvertModel } from '../common-advert/common-advert.model'
 import { CreateCommonAdvertInternalDto } from '../common-advert/dto/common-advert.dto'
@@ -40,6 +42,14 @@ type CaseCreateAttributes = {
 
 @BaseTable({ tableName: LegalGazetteModels.CASE })
 @DefaultScope(() => ({
+  attributes: [
+    'id',
+    'applicationId',
+    'caseNumber',
+    'createdAt',
+    'updatedAt',
+    'deletedAt',
+  ],
   order: [['createdAt', 'DESC']],
 }))
 @Scopes(() => ({
@@ -79,38 +89,6 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   @HasMany(() => AdvertModel, 'caseId')
   adverts!: AdvertModel[]
 
-  static async softDeleteCase(caseId: string) {
-    this.logger.info('Marking case as deleted', {
-      caseId,
-      context: LOGGING_CONTEXT,
-    })
-
-    try {
-      const caseInstance = await this.findByPk(caseId)
-
-      if (!caseInstance) {
-        this.logger.warn('No case found for deletion', {
-          caseId,
-          context: LOGGING_CONTEXT,
-        })
-        return
-      }
-
-      await caseInstance.destroy()
-      this.logger.info('Case soft deleted successfully', {
-        caseId,
-        context: LOGGING_CONTEXT,
-      })
-    } catch (error) {
-      this.logger.error('Error soft deleting case', {
-        caseId,
-        context: LOGGING_CONTEXT,
-        error,
-      })
-      throw error
-    }
-  }
-
   static async createCommonAdvert(body: CreateCommonAdvertInternalDto) {
     this.logger.info('Creating common case', { context: LOGGING_CONTEXT })
 
@@ -145,6 +123,26 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
         ],
       },
     )
+  }
+
+  @BeforeDestroy
+  static async softDeleteCase(instance: CaseModel) {
+    const adverts = await AdvertModel.unscoped().findAll({
+      attributes: ['id'],
+      where: { caseId: instance.id },
+    })
+
+    const promises = adverts.map((advert) =>
+      advert.update({ statusId: AdvertStatusIdEnum.WITHDRAWN }),
+    )
+
+    await Promise.all(promises)
+
+    this.logger.info('Marked adverts as withdrawn', {
+      caseId: instance.id,
+      context: LOGGING_CONTEXT,
+      advertIds: adverts.map((advert) => advert.id),
+    })
   }
 
   @BeforeCreate
