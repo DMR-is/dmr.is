@@ -8,8 +8,7 @@ COPY ./apps/official-journal-api/migrations ./migrations
 COPY ./apps/official-journal-api/.sequelizerc ./
 COPY ./libs/shared/sequelize/src/lib/sequelize.config.js ./
 RUN yarn add pg
-RUN npm install --production
-
+RUN npm install --omit=dev --legacy-peer-deps
 # Production image, copy all the files and run nest
 FROM docker.io/node:lts-alpine as runner
 RUN apk add --no-cache \
