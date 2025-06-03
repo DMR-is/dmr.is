@@ -885,7 +885,14 @@ export class JournalService implements IJournalService {
 
         html = removeSubjectFromHtml(html, advert.subject)
         html = (await Promise.race([
-          Promise.resolve(dirtyClean(html as HTMLText)),
+          new Promise((resolve, reject) => {
+            try {
+              const cleaned = dirtyClean(html as HTMLText)
+              resolve(cleaned)
+            } catch (error) {
+              reject(error)
+            }
+          }),
           timeoutPromise,
         ])) as string
 
