@@ -4,7 +4,9 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /usr/src/app
 COPY ./apps/regulations-api/dist/package.json ./
 
-RUN npm install --omit=dev --legacy-peer-deps# Production image, copy all the files and run nest
+RUN npm install --omit=dev --legacy-peer-deps
+
+# Production image, copy all the files and run nest
 FROM docker.io/node:lts-alpine AS runner
 ENV NODE_ENV=production
 ENV PORT=3000
