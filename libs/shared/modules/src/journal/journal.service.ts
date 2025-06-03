@@ -879,22 +879,44 @@ export class JournalService implements IJournalService {
     let html = advert.documentHtml
     if (advert.isLegacy) {
       try {
+        const startTime = Date.now()
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => reject(new Error('HTML cleaning timed out')), 5000)
         })
 
         html = removeSubjectFromHtml(html, advert.subject)
-        html = (await Promise.race([
-          new Promise((resolve, reject) => {
-            try {
-              const cleaned = dirtyClean(html as HTMLText)
-              resolve(cleaned)
-            } catch (error) {
-              reject(error)
-            }
-          }),
-          timeoutPromise,
-        ])) as string
+        this.logger.info('Before dirtyClean', {
+          category: LOGGING_CATEGORY,
+          metadata: {
+            advertId: id,
+            htmlLength: html.length,
+            timeElapsed: Date.now() - startTime,
+            first100Chars: html.substring(0, 100)
+          },
+        })
+
+        const cleaningPromise = new Promise((resolve, reject) => {
+          const cleanStartTime = Date.now()
+          try {
+            const cleaned = dirtyClean(html as HTMLText)
+            const cleanTime = Date.now() - cleanStartTime
+            this.logger.info('After dirtyClean', {
+              category: LOGGING_CATEGORY,
+              metadata: {
+                advertId: id,
+                htmlLength: cleaned.length,
+                cleanTime,
+                totalTimeElapsed: Date.now() - startTime,
+                first100Chars: cleaned.substring(0, 100)
+              },
+            })
+            resolve(cleaned)
+          } catch (e) {
+            reject(e)
+          }
+        })
+
+        html = (await Promise.race([cleaningPromise, timeoutPromise])) as string
 
         await this.advertModel.update(
           {
@@ -906,7 +928,7 @@ export class JournalService implements IJournalService {
           },
         )
       } catch (e) {
-        this.logger.warn("Dirty clean failed for advert's HTML", {
+        this.logger.error("Dirty clean failed for advert's HTML", {
           category: LOGGING_CATEGORY,
           metadata: { advertId: id, error: e },
         })
