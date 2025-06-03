@@ -54,6 +54,7 @@ import { IAWSService } from '../aws/aws.service.interface'
 import { CaseCategoriesModel, CaseModel } from '../case/models'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
 import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
+import { removeAllHtmlComments } from './util/removeAllHtmlComments'
 import { removeSubjectFromHtml } from './util/removeSubjectFromHtml'
 import { IJournalService } from './journal.service.interface'
 import {
@@ -879,37 +880,16 @@ export class JournalService implements IJournalService {
     let html = advert.documentHtml
     if (advert.isLegacy) {
       try {
-        const startTime = Date.now()
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => reject(new Error('HTML cleaning timed out')), 5000)
         })
 
+        html = removeAllHtmlComments(html)
         html = removeSubjectFromHtml(html, advert.subject)
-        this.logger.info('Before dirtyClean', {
-          category: LOGGING_CATEGORY,
-          metadata: {
-            advertId: id,
-            htmlLength: html.length,
-            timeElapsed: Date.now() - startTime,
-            first100Chars: html.substring(0, 100)
-          },
-        })
 
         const cleaningPromise = new Promise((resolve, reject) => {
-          const cleanStartTime = Date.now()
           try {
             const cleaned = dirtyClean(html as HTMLText)
-            const cleanTime = Date.now() - cleanStartTime
-            this.logger.info('After dirtyClean', {
-              category: LOGGING_CATEGORY,
-              metadata: {
-                advertId: id,
-                htmlLength: cleaned.length,
-                cleanTime,
-                totalTimeElapsed: Date.now() - startTime,
-                first100Chars: cleaned.substring(0, 100)
-              },
-            })
             resolve(cleaned)
           } catch (e) {
             reject(e)
