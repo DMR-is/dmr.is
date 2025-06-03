@@ -77,6 +77,9 @@ export class AdvertModel extends Model {
   @Column({ field: 'document_html' })
   documentHtml!: string
 
+  @Column({ field: 'document_html_legacy' })
+  documentHtmlLegacy?: string
+
   @Column({ field: 'document_pdf_url' })
   documentPdfUrl!: string
 
