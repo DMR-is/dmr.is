@@ -884,8 +884,8 @@ export class JournalService implements IJournalService {
           setTimeout(() => reject(new Error('HTML cleaning timed out')), 5000)
         })
 
-        html = removeSubjectFromHtml(html, advert.subject)
         html = removeAllHtmlComments(html)
+        html = removeSubjectFromHtml(html, advert.subject)
 
         const cleaningPromise = new Promise((resolve, reject) => {
           try {
