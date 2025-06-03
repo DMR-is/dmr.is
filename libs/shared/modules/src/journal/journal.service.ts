@@ -879,12 +879,29 @@ export class JournalService implements IJournalService {
     let html = advert.documentHtml
     if (advert.isLegacy) {
       try {
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('HTML cleaning timed out')), 5000)
+        })
+
         html = removeSubjectFromHtml(html, advert.subject)
-        html = dirtyClean(html as HTMLText)
-      } catch {
+        html = (await Promise.race([
+          Promise.resolve(dirtyClean(html as HTMLText)),
+          timeoutPromise,
+        ])) as string
+
+        await this.advertModel.update(
+          {
+            documentHtml: html,
+            isLegacy: false,
+          },
+          {
+            where: { id },
+          },
+        )
+      } catch (e) {
         this.logger.warn("Dirty clean failed for advert's HTML", {
           category: LOGGING_CATEGORY,
-          metadata: { advertId: id },
+          metadata: { advertId: id, error: e },
         })
         html = advert.documentHtml
       }
