@@ -1,13 +1,13 @@
-import { AdvertVersion } from '../modules/advert/advert.model'
+import { AdvertVersionEnum } from '../modules/advert/advert.model'
 
-export const mapIndexToVersion = (index: number): AdvertVersion => {
+export const mapIndexToVersion = (index: number): AdvertVersionEnum => {
   switch (index) {
     case 0:
-      return AdvertVersion.A
+      return AdvertVersionEnum.A
     case 1:
-      return AdvertVersion.B
+      return AdvertVersionEnum.B
     case 2:
-      return AdvertVersion.C
+      return AdvertVersionEnum.C
     default:
       throw new Error(`Invalid index for advert version: ${index}`)
   }

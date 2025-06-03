@@ -45,6 +45,6 @@ export class BaseModel<
   deletedAt!: Date | null
 
   static get logger() {
-    return getLogger(this.constructor.name)
+    return getLogger(this.name)
   }
 }

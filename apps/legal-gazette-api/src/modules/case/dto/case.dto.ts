@@ -57,29 +57,6 @@ export class CaseDto extends DetailedDto {
   @ApiProperty({ type: String })
   @IsString()
   caseNumber!: string
-
-  @ApiProperty({ type: String, nullable: true })
-  @IsDateString()
-  schedueledAt!: string | null
-
-  @ApiProperty({ type: AdvertTypeDto })
-  @Type(() => AdvertTypeDto)
-  @ValidateNested()
-  type!: AdvertTypeDto
-
-  @ApiProperty({ type: AdvertCategoryDto })
-  @Type(() => AdvertCategoryDto)
-  @ValidateNested()
-  category!: AdvertCategoryDto
-
-  @ApiProperty({ type: AdvertStatusDto })
-  @Type(() => AdvertStatusDto)
-  @ValidateNested()
-  status!: AdvertStatusDto
-
-  @ApiProperty({ type: String })
-  @IsString()
-  title!: string
 }
 
 export class GetCasesDto {

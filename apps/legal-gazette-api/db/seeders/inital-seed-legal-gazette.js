@@ -28,6 +28,8 @@ module.exports = {
       BEGIN;
 
         ${advertTypeSeed}
+        ${advertCategoriesSeed}
+        ${advertStatusSeed}
 
       COMMIT;
       `

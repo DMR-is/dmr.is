@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -6,7 +6,6 @@ import { LegalGazetteEvents } from '@dmr.is/legal-gazette/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AuthService, IAuthService } from '@dmr.is/modules'
 
-import { AdvertStatusIdEnum } from '../advert-status/advert-status.model'
 import { CaseModel } from '../case/case.model'
 import {
   CommonApplicationUpdateStateEvent,
@@ -33,13 +32,10 @@ export class CommonApplicationService implements ICommonApplicationService {
         context: 'CommonApplicationService',
       })
 
-      return
+      throw new NotFoundException(`No case found for application`)
     }
 
-    await this.caseModel.setCaseStatus(
-      caseInstance.id,
-      AdvertStatusIdEnum.WITHDRAWN,
-    )
+    await this.caseModel.softDeleteCase(caseInstance.id)
   }
 
   @OnEvent(LegalGazetteEvents.COMMON_APPLICATION_UPDATE)
@@ -58,18 +54,14 @@ export class CommonApplicationService implements ICommonApplicationService {
   }
 
   async submitApplication(body: SubmitCommonApplicationDto): Promise<void> {
-    await this.caseModel.createCommonCase({
-      caption: body.caption,
+    await this.caseModel.createCommonAdvert({
       applicationId: body.applicationId,
+      caption: body.caption,
       categoryId: body.categoryId,
-      channels: body.channels,
       publishingDates: body.publishingDates,
+      signature: body.signature,
+      channels: body.channels,
       html: body.html,
-      signature: {
-        date: body.signature.date,
-        location: body.signature.location,
-        name: body.signature.name,
-      },
     })
   }
 }

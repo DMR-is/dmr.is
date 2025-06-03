@@ -1,8 +1,9 @@
 import { BelongsTo, Column, DataType, DefaultScope } from 'sequelize-typescript'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
-import { CaseModel } from '@dmr.is/modules'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
+
+import { AdvertModel } from '../advert/advert.model'
 
 type CommonAdvertAttributes = {
   caption: string
@@ -18,7 +19,6 @@ export type CommonAdvertCreationAttributes = CommonAdvertAttributes
   attributes: [
     'id',
     'caption',
-    'html',
     'signatureName',
     'signatureLocation',
     'signatureDate',
@@ -56,6 +56,6 @@ export class CommonAdvertModel extends BaseModel<
   })
   signatureDate!: Date
 
-  @BelongsTo(() => CaseModel, { foreignKey: 'id' })
-  case!: CaseModel
+  @BelongsTo(() => AdvertModel, { foreignKey: 'id' })
+  advert!: AdvertModel
 }

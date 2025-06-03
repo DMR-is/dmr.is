@@ -1,6 +1,7 @@
-import { Controller, Get, Inject, Param } from '@nestjs/common'
+import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
+import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { AdvertDto, GetAdvertsDto } from './dto/advert.dto'
 import { IAdvertService } from './advert.service.interface'
@@ -16,14 +17,14 @@ export class AdvertController {
 
   @Get()
   @LGResponse({ operationId: 'getAdverts', type: GetAdvertsDto })
-  getAdverts() {
-    return this.advertService.getAdverts()
+  getAdverts(@Query() query: PagingQuery) {
+    return this.advertService.getAdverts(query)
   }
 
   @Get('inprogress')
   @LGResponse({ operationId: 'getAdvertsToBePublished', type: GetAdvertsDto })
-  getAdvertsToBePublished() {
-    return this.advertService.getAdvertsToBePublished()
+  getAdvertsToBePublished(@Query() query: PagingQuery) {
+    return this.advertService.getAdvertsToBePublished(query)
   }
 
   @Get(':id')
