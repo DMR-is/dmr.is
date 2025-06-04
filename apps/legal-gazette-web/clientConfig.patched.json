@@ -949,7 +949,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CaseDto"
+                  "$ref": "#/components/schemas/CaseDetailedDto"
                 }
               }
             }
@@ -2277,6 +2277,101 @@
         },
         "required": ["cases", "paging"]
       },
+      "CommunicationChannelDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          }
+        },
+        "required": ["email"]
+      },
+      "AdvertVersion": {
+        "type": "string",
+        "enum": ["A", "B", "C"]
+      },
+      "CaseAdvertsDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "publishedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "scheduledAt": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AdvertStatusDto"
+          },
+          "version": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdvertVersion"
+              }
+            ]
+          }
+        },
+        "required": ["id", "publishedAt", "scheduledAt", "status", "version"]
+      },
+      "CaseDetailedDto": {
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "description": "ISO representation of the creation date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "ISO representation of the updated date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": "string",
+            "description": "ISO representation of the deletion date",
+            "example": "2021-08-31T12:00:00.000Z",
+            "nullable": true
+          },
+          "id": {
+            "type": "string"
+          },
+          "applicationId": {
+            "type": "string"
+          },
+          "caseNumber": {
+            "type": "string"
+          },
+          "communicationChannels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommunicationChannelDto"
+            }
+          },
+          "adverts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CaseAdvertsDto"
+            }
+          }
+        },
+        "required": [
+          "createdAt",
+          "updatedAt",
+          "id",
+          "caseNumber",
+          "communicationChannels",
+          "adverts"
+        ]
+      },
       "CreateCommunicationChannelDto": {
         "type": "object",
         "properties": {
@@ -2402,10 +2497,6 @@
           "REJECTED",
           "WITHDRAWN"
         ]
-      },
-      "AdvertVersion": {
-        "type": "string",
-        "enum": ["A", "B", "C"]
       },
       "AdvertDto": {
         "type": "object",

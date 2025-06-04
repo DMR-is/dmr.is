@@ -10,7 +10,12 @@ import {
 
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 
-import { CaseDto, CaseQueryDto, GetCasesDto } from './dto/case.dto'
+import {
+  CaseDetailedDto,
+  CaseDto,
+  CaseQueryDto,
+  GetCasesDto,
+} from './dto/case.dto'
 import { ICaseService } from './case.service.interface'
 
 @Controller({ path: 'cases', version: '1' })
@@ -26,8 +31,8 @@ export class CaseController {
   }
 
   @Get(':id')
-  @LGResponse({ operationId: 'getCase', type: CaseDto })
-  getCase(@Param('id') id: string): Promise<CaseDto> {
+  @LGResponse({ operationId: 'getCase', type: CaseDetailedDto })
+  getCase(@Param('id') id: string): Promise<CaseDetailedDto> {
     return this.caseService.getCase(id)
   }
 

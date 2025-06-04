@@ -53,6 +53,12 @@ type CaseCreateAttributes = {
   order: [['createdAt', 'DESC']],
 }))
 @Scopes(() => ({
+  detailed: {
+    include: [
+      { model: CommunicationChannelModel, separate: true, duplicating: false },
+      { model: AdvertModel, separate: true },
+    ],
+  },
   byApplicationId: (applicationId: string) => ({
     attributes: ['id', 'applicationId'],
     where: { applicationId },
@@ -83,7 +89,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   })
   caseNumber!: string
 
-  @HasMany(() => CommunicationChannelModel)
+  @HasMany(() => CommunicationChannelModel, 'caseId')
   communicationChannels!: CommunicationChannelModel[]
 
   @HasMany(() => AdvertModel, 'caseId')
@@ -92,9 +98,17 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   static async createCommonAdvert(body: CreateCommonAdvertInternalDto) {
     this.logger.info('Creating common case', { context: LOGGING_CONTEXT })
 
+    const channels =
+      body.channels?.map((ch) => ({
+        email: ch.email,
+        name: ch?.name,
+        phone: ch?.phone,
+      })) ?? []
+
     await this.create(
       {
         applicationId: body.applicationId,
+        communicationChannels: channels,
         adverts: body.publishingDates.map((date, i) => ({
           categoryId: body.categoryId,
           typeId: AdvertTypeIdEnum.COMMON_APPLICATION,
@@ -102,12 +116,6 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
           title: body.caption,
           html: body.html,
           version: mapIndexToVersion(i),
-          communicationChannels:
-            body.channels?.map((ch) => ({
-              email: ch.email,
-              name: ch?.name,
-              phone: ch?.phone,
-            })) ?? [],
           commonAdvert: {
             caption: body.caption,
             signatureDate: new Date(body.signature.date),

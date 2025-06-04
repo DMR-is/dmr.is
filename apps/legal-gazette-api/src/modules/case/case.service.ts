@@ -3,8 +3,13 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
-import { CaseDto, CaseQueryDto, GetCasesDto } from './dto/case.dto'
-import { caseMigrate } from './dto/case.migrate'
+import {
+  CaseDetailedDto,
+  CaseDto,
+  CaseQueryDto,
+  GetCasesDto,
+} from './dto/case.dto'
+import { caseDetailedMigrate, caseMigrate } from './dto/case.migrate'
 import { CaseModel } from './case.model'
 import { ICaseService } from './case.service.interface'
 
@@ -43,14 +48,14 @@ export class CaseService implements ICaseService {
       paging,
     }
   }
-  async getCase(id: string): Promise<CaseDto> {
-    const caseModel = await this.caseModel.findByPk(id)
+  async getCase(id: string): Promise<CaseDetailedDto> {
+    const caseModel = await this.caseModel.scope('detailed').findByPk(id)
 
     if (!caseModel) {
       throw new NotFoundException(`Case with id ${id} not found`)
     }
 
-    const migrated = caseMigrate(caseModel)
+    const migrated = caseDetailedMigrate(caseModel)
 
     return migrated
   }

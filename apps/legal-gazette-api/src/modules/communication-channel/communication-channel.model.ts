@@ -27,8 +27,8 @@ export type CommunicationChannelCreateAttributes = {
 
 @BaseTable({ tableName: LegalGazetteModels.COMMUNICATION_CHANNEL })
 @DefaultScope(() => ({
-  attributes: ['email', 'name', 'phone'],
-  order: [['createdAt', 'ASC']],
+  attributes: ['id', 'email', 'name', 'phone'],
+  order: [['name', 'ASC']],
 }))
 export class CommunicationChannelModel extends BaseModel<
   CommunicationChannelAttributes,
@@ -51,11 +51,12 @@ export class CommunicationChannelModel extends BaseModel<
   })
   phone!: string | null
 
+  @ForeignKey(() => CaseModel)
   @Column({
     type: DataType.UUID,
     allowNull: false,
+    field: 'case_id',
   })
-  @ForeignKey(() => CaseModel)
   caseId!: string
 
   @BelongsTo(() => CaseModel)
