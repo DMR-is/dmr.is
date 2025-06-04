@@ -69,3 +69,9 @@ export const Routes: RouteItem[] = [
     ],
   },
 ]
+
+export enum RitstjornTabs {
+  SUBMITTED = 'innsendar',
+  PUBLISHING = 'a-leid-i-utgafu',
+  COMPLETED = 'klaradar',
+}

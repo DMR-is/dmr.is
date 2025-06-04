@@ -15,6 +15,7 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
   paging,
   loading = false,
   layout = 'auto',
+  noDataMessage,
 }: DataTableProps<T>) => {
   if (loading) {
     return (
@@ -45,6 +46,7 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
         <DataTableBody
           rows={rows as DataTableRowProps<T>[]}
           columns={columns}
+          noDataMessage={noDataMessage}
         />
       </T.Table>
       {paging && <DataTablePagination paging={paging} />}

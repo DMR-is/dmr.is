@@ -68,9 +68,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "AdvertType"
-        ]
+        "tags": ["AdvertType"]
       },
       "post": {
         "operationId": "createType",
@@ -148,9 +146,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "AdvertType"
-        ]
+        "tags": ["AdvertType"]
       }
     },
     "/api/v1/types/detailed": {
@@ -220,9 +216,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "AdvertType"
-        ]
+        "tags": ["AdvertType"]
       }
     },
     "/api/v1/types/{id}": {
@@ -311,9 +305,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "AdvertType"
-        ]
+        "tags": ["AdvertType"]
       },
       "delete": {
         "operationId": "deleteType",
@@ -390,9 +382,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "AdvertType"
-        ]
+        "tags": ["AdvertType"]
       }
     },
     "/api/v1/categories": {
@@ -471,9 +461,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "AdvertCategory"
-        ]
+        "tags": ["AdvertCategory"]
       }
     },
     "/api/v1/categories/detailed": {
@@ -552,9 +540,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "AdvertCategory"
-        ]
+        "tags": ["AdvertCategory"]
       }
     },
     "/api/v1/statuses": {
@@ -624,9 +610,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "AdvertStatus"
-        ]
+        "tags": ["AdvertStatus"]
       }
     },
     "/api/v1/statuses/detailed": {
@@ -696,9 +680,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "AdvertStatus"
-        ]
+        "tags": ["AdvertStatus"]
       }
     },
     "/api/v1/statuses/{id}": {
@@ -777,9 +759,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "AdvertStatus"
-        ]
+        "tags": ["AdvertStatus"]
       }
     },
     "/api/v1/statuses/{id}/detailed": {
@@ -858,9 +838,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "AdvertStatus"
-        ]
+        "tags": ["AdvertStatus"]
       }
     },
     "/api/v1/cases": {
@@ -949,9 +927,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "Case"
-        ]
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}": {
@@ -1030,9 +1006,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "Case"
-        ]
+        "tags": ["Case"]
       },
       "delete": {
         "operationId": "deleteCase",
@@ -1102,9 +1076,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "Case"
-        ]
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/restore": {
@@ -1183,9 +1155,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "Case"
-        ]
+        "tags": ["Case"]
       }
     },
     "/api/v1/applications": {
@@ -1258,9 +1228,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "CommonApplication"
-        ]
+        "tags": ["CommonApplication"]
       }
     },
     "/api/v1/applications/{id}": {
@@ -1332,9 +1300,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "CommonApplication"
-        ]
+        "tags": ["CommonApplication"]
       }
     },
     "/api/v1/adverts/count": {
@@ -1347,7 +1313,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetAdvertsDto"
+                  "$ref": "#/components/schemas/GetAdvertsStatusCounterDto"
                 }
               }
             }
@@ -1404,9 +1370,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "Advert"
-        ]
+        "tags": ["Advert"]
       }
     },
     "/api/v1/adverts/inprogress": {
@@ -1514,9 +1478,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "Advert"
-        ]
+        "tags": ["Advert"]
       }
     },
     "/api/v1/adverts/completed": {
@@ -1605,9 +1567,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "Advert"
-        ]
+        "tags": ["Advert"]
       }
     },
     "/api/v1/adverts": {
@@ -1715,9 +1675,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "Advert"
-        ]
+        "tags": ["Advert"]
       }
     },
     "/api/v1/adverts/{id}": {
@@ -1796,9 +1754,7 @@
           }
         },
         "summary": "",
-        "tags": [
-          "Advert"
-        ]
+        "tags": ["Advert"]
       }
     },
     "/api/v1/health": {
@@ -1810,9 +1766,7 @@
             "description": "Health check endpoint."
           }
         },
-        "tags": [
-          "Health"
-        ]
+        "tags": ["Health"]
       }
     }
   },
@@ -1845,11 +1799,7 @@
             "example": "base-entity"
           }
         },
-        "required": [
-          "id",
-          "title",
-          "slug"
-        ]
+        "required": ["id", "title", "slug"]
       },
       "GetAdvertTypesDto": {
         "type": "object",
@@ -1861,9 +1811,7 @@
             }
           }
         },
-        "required": [
-          "types"
-        ]
+        "required": ["types"]
       },
       "ApiErrorDto": {
         "type": "object",
@@ -1911,10 +1859,7 @@
             }
           }
         },
-        "required": [
-          "statusCode",
-          "timestamp"
-        ]
+        "required": ["statusCode", "timestamp"]
       },
       "AdvertTypeDetailedDto": {
         "type": "object",
@@ -1951,13 +1896,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "id",
-          "title",
-          "slug",
-          "createdAt",
-          "updatedAt"
-        ]
+        "required": ["id", "title", "slug", "createdAt", "updatedAt"]
       },
       "GetAdvertTypesDetailedDto": {
         "type": "object",
@@ -1969,9 +1908,7 @@
             }
           }
         },
-        "required": [
-          "types"
-        ]
+        "required": ["types"]
       },
       "CreateAdvertType": {
         "type": "object",
@@ -1982,9 +1919,7 @@
             "example": "Base entity"
           }
         },
-        "required": [
-          "title"
-        ]
+        "required": ["title"]
       },
       "GetAdvertTypeDto": {
         "type": "object",
@@ -1993,9 +1928,7 @@
             "$ref": "#/components/schemas/AdvertTypeDto"
           }
         },
-        "required": [
-          "type"
-        ]
+        "required": ["type"]
       },
       "UpdateAdvertType": {
         "type": "object",
@@ -2009,9 +1942,7 @@
       },
       "CaseTypeSlugEnum": {
         "type": "string",
-        "enum": [
-          "almenn-auglysing"
-        ]
+        "enum": ["almenn-auglysing"]
       },
       "AdvertCategoryDto": {
         "type": "object",
@@ -2032,11 +1963,7 @@
             "example": "base-entity"
           }
         },
-        "required": [
-          "id",
-          "title",
-          "slug"
-        ]
+        "required": ["id", "title", "slug"]
       },
       "GetAdvertCategoriesDto": {
         "type": "object",
@@ -2048,9 +1975,7 @@
             }
           }
         },
-        "required": [
-          "categories"
-        ]
+        "required": ["categories"]
       },
       "AdvertCategoryDetailedDto": {
         "type": "object",
@@ -2113,9 +2038,7 @@
             }
           }
         },
-        "required": [
-          "categories"
-        ]
+        "required": ["categories"]
       },
       "BaseEntityDto": {
         "type": "object",
@@ -2136,11 +2059,7 @@
             "example": "base-entity"
           }
         },
-        "required": [
-          "id",
-          "title",
-          "slug"
-        ]
+        "required": ["id", "title", "slug"]
       },
       "GetAdvertStatusesDto": {
         "type": "object",
@@ -2152,9 +2071,7 @@
             }
           }
         },
-        "required": [
-          "statuses"
-        ]
+        "required": ["statuses"]
       },
       "BaseEntityDetailedDto": {
         "type": "object",
@@ -2191,13 +2108,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "id",
-          "title",
-          "slug",
-          "createdAt",
-          "updatedAt"
-        ]
+        "required": ["id", "title", "slug", "createdAt", "updatedAt"]
       },
       "GetAdvertStatusesDetailedDto": {
         "type": "object",
@@ -2209,9 +2120,7 @@
             }
           }
         },
-        "required": [
-          "statuses"
-        ]
+        "required": ["statuses"]
       },
       "AdvertStatusDto": {
         "type": "object",
@@ -2232,11 +2141,7 @@
             "example": "base-entity"
           }
         },
-        "required": [
-          "id",
-          "title",
-          "slug"
-        ]
+        "required": ["id", "title", "slug"]
       },
       "AdvertStatusDetailedDto": {
         "type": "object",
@@ -2273,13 +2178,7 @@
             "nullable": true
           }
         },
-        "required": [
-          "id",
-          "title",
-          "slug",
-          "createdAt",
-          "updatedAt"
-        ]
+        "required": ["id", "title", "slug", "createdAt", "updatedAt"]
       },
       "CaseDto": {
         "type": "object",
@@ -2310,12 +2209,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "createdAt",
-          "updatedAt",
-          "id",
-          "caseNumber"
-        ]
+        "required": ["createdAt", "updatedAt", "id", "caseNumber"]
       },
       "Paging": {
         "type": "object",
@@ -2381,10 +2275,7 @@
             "$ref": "#/components/schemas/Paging"
           }
         },
-        "required": [
-          "cases",
-          "paging"
-        ]
+        "required": ["cases", "paging"]
       },
       "CreateCommunicationChannelDto": {
         "type": "object",
@@ -2399,9 +2290,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "email"
-        ]
+        "required": ["email"]
       },
       "CommonAdvertSignatureDto": {
         "type": "object",
@@ -2416,11 +2305,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name",
-          "location",
-          "date"
-        ]
+        "required": ["name", "location", "date"]
       },
       "SubmitCommonApplicationDto": {
         "type": "object",
@@ -2462,13 +2347,65 @@
           "htmlBase64"
         ]
       },
-      "AdvertVersion": {
+      "AdvertStatusCounterItemDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/AdvertStatusDto"
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": ["status", "count"]
+      },
+      "GetAdvertsStatusCounterDto": {
+        "type": "object",
+        "properties": {
+          "submitted": {
+            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          },
+          "readyForPublication": {
+            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          },
+          "withdrawn": {
+            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          },
+          "rejected": {
+            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          },
+          "published": {
+            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          }
+        },
+        "required": [
+          "submitted",
+          "readyForPublication",
+          "withdrawn",
+          "rejected",
+          "published"
+        ]
+      },
+      "AdvertStatusIdEnum": {
         "type": "string",
         "enum": [
-          "A",
-          "B",
-          "C"
+          "cd3bf301-52a1-493e-8c80-a391c310c840",
+          "a2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
+          "bd835a1d-0ecb-4aa4-9910-b5e60c30dced",
+          "f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
+          "e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c"
+        ],
+        "x-enum-varnames": [
+          "SUBMITTED",
+          "READY_FOR_PUBLICATION",
+          "PUBLISHED",
+          "REJECTED",
+          "WITHDRAWN"
         ]
+      },
+      "AdvertVersion": {
+        "type": "string",
+        "enum": ["A", "B", "C"]
       },
       "AdvertDto": {
         "type": "object",
@@ -2557,27 +2494,7 @@
             "$ref": "#/components/schemas/Paging"
           }
         },
-        "required": [
-          "adverts",
-          "paging"
-        ]
-      },
-      "AdvertStatusIdEnum": {
-        "type": "string",
-        "enum": [
-          "cd3bf301-52a1-493e-8c80-a391c310c840",
-          "a2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
-          "bd835a1d-0ecb-4aa4-9910-b5e60c30dced",
-          "f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
-          "e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c"
-        ],
-        "x-enum-varnames": [
-          "SUBMITTED",
-          "READY_FOR_PUBLICATION",
-          "PUBLISHED",
-          "REJECTED",
-          "WITHDRAWN"
-        ]
+        "required": ["adverts", "paging"]
       }
     }
   }

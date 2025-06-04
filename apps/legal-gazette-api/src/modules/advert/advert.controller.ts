@@ -3,7 +3,12 @@ import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
-import { AdvertDto, GetAdvertsDto, GetAdvertsQueryDto } from './dto/advert.dto'
+import {
+  AdvertDto,
+  GetAdvertsDto,
+  GetAdvertsQueryDto,
+  GetAdvertsStatusCounterDto,
+} from './dto/advert.dto'
 import { IAdvertService } from './advert.service.interface'
 
 @Controller({
@@ -16,7 +21,10 @@ export class AdvertController {
   ) {}
 
   @Get('count')
-  @LGResponse({ operationId: 'getAdvertsCount', type: GetAdvertsDto })
+  @LGResponse({
+    operationId: 'getAdvertsCount',
+    type: GetAdvertsStatusCounterDto,
+  })
   getAdvertsCount() {
     return this.advertService.getAdvertsCount()
   }

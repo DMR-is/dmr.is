@@ -1,6 +1,6 @@
 import format from 'date-fns/format'
 
-import { Route } from './constants'
+import { RitstjornTabs, Route } from './constants'
 import { QueryFilterParam, QueryFilterValue, RouteItem } from './types'
 
 export const routesToBreadcrumbs = (
@@ -77,4 +77,18 @@ export const formatDate = (
   }
 
   throw new Error(`Invalid date: ${date}`)
+}
+
+export const mapQueryToRitstjornTabs = (
+  query: string | string[] | undefined,
+): RitstjornTabs => {
+  const values = Object.values(RitstjornTabs)
+
+  const found = values.find((tab) => {
+    if (Array.isArray(query)) {
+      return query.includes(tab)
+    }
+    return query === tab
+  })
+  return found ?? RitstjornTabs.SUBMITTED
 }

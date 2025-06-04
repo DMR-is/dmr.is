@@ -1090,7 +1090,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertsDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/GetAdvertsStatusCounterDto"
+                }
               }
             }
           },
@@ -1945,6 +1947,58 @@
           "htmlBase64"
         ]
       },
+      "AdvertStatusCounterItemDto": {
+        "type": "object",
+        "properties": {
+          "status": { "$ref": "#/components/schemas/AdvertStatusDto" },
+          "count": { "type": "number" }
+        },
+        "required": ["status", "count"]
+      },
+      "GetAdvertsStatusCounterDto": {
+        "type": "object",
+        "properties": {
+          "submitted": {
+            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          },
+          "readyForPublication": {
+            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          },
+          "withdrawn": {
+            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          },
+          "rejected": {
+            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          },
+          "published": {
+            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          }
+        },
+        "required": [
+          "submitted",
+          "readyForPublication",
+          "withdrawn",
+          "rejected",
+          "published"
+        ]
+      },
+      "AdvertStatusIdEnum": {
+        "type": "string",
+        "enum": [
+          "cd3bf301-52a1-493e-8c80-a391c310c840",
+          "a2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
+          "bd835a1d-0ecb-4aa4-9910-b5e60c30dced",
+          "f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
+          "e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c"
+        ],
+        "x-enumNames": [
+          "Submitted",
+          "ReadyForPublication",
+          "Published",
+          "Rejected",
+          "Withdrawn"
+        ]
+      },
       "AdvertVersion": { "type": "string", "enum": ["A", "B", "C"] },
       "AdvertDto": {
         "type": "object",
@@ -2005,23 +2059,6 @@
           "paging": { "$ref": "#/components/schemas/Paging" }
         },
         "required": ["adverts", "paging"]
-      },
-      "AdvertStatusIdEnum": {
-        "type": "string",
-        "enum": [
-          "cd3bf301-52a1-493e-8c80-a391c310c840",
-          "a2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
-          "bd835a1d-0ecb-4aa4-9910-b5e60c30dced",
-          "f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
-          "e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c"
-        ],
-        "x-enumNames": [
-          "Submitted",
-          "ReadyForPublication",
-          "Published",
-          "Rejected",
-          "Withdrawn"
-        ]
       }
     }
   }
