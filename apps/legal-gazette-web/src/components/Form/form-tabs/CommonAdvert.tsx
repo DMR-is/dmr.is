@@ -1,3 +1,6 @@
+import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
+import { Select } from '@dmr.is/ui/components/Inputs/Select'
+
 import {
   Accordion,
   AccordionItem,
@@ -8,29 +11,25 @@ import {
   GridContainer,
   GridRow,
   Input,
-  Select,
   Stack,
 } from '@island.is/island-ui/core'
 
-import {
-  AdvertDetailedDto,
-  CaseTypeSlugEnum,
-  CommonAdvertDto,
-} from '../../../gen/fetch'
+import { AdvertDetailedDto, CommonAdvertDto } from '../../../gen/fetch'
+import { useAdvertCategories } from '../../../hooks/advert-categories/useAdvertCategories'
 import * as styles from '../Form.css'
 type Props = {
   advert: Omit<AdvertDetailedDto, 'commonAdvert'>
   commonAdvert?: CommonAdvertDto | null
 }
 
-import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
-
-import { useAdvertCategories } from '../../../hooks/advert-categories/useAdvertCategories'
-
 export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
-  const { categoryOptions } = useAdvertCategories({
-    query: { type: advert.type.slug as CaseTypeSlugEnum },
+  const { categoryOptions, isLoading } = useAdvertCategories({
+    query: { type: advert.type.id },
   })
+
+  const defaultCategoryOption = categoryOptions.find(
+    (opt) => opt.value === advert.category.id,
+  )
 
   if (!commonAdvert) {
     return (
@@ -59,8 +58,8 @@ export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
                   label="Yfirskrift auglýsingar"
                   backgroundColor="blue"
                   size="sm"
-                  name=""
-                  defaultValue={commonAdvert.caption}
+                  name={`${advert.id}-caption`}
+                  defaultValue="Stofnun X"
                 />
               </GridColumn>
               <GridColumn span={['12/12', '12/12', '6/12']}>
@@ -80,20 +79,19 @@ export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
                   label="Tegund auglýsingar"
                   backgroundColor="blue"
                   size="sm"
-                  name=""
+                  name={`${advert.id}-type`}
                   defaultValue={advert.type.title}
                 />
               </GridColumn>
               <GridColumn span={['12/12', '12/12', '6/12']}>
                 <Select
+                  isLoading={isLoading}
                   label="Flokkur auglýsingar"
                   backgroundColor="blue"
                   size="sm"
-                  name=""
+                  name={`${advert.id}-category`}
                   options={categoryOptions}
-                  defaultValue={categoryOptions.find(
-                    (opt) => opt.value === advert.category.id,
-                  )}
+                  defaultValue={defaultCategoryOption}
                 />
               </GridColumn>
             </GridRow>
@@ -103,10 +101,10 @@ export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
           <Stack space={2}>
             <Input
               name="caption"
-              label="Sendandi"
+              label="Yfirskrift"
               backgroundColor="blue"
               size="sm"
-              defaultValue="Stofnun X"
+              defaultValue={commonAdvert.caption}
             />
             <Box border="standard" borderRadius="large">
               <HTMLEditor
@@ -116,19 +114,14 @@ export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
             </Box>
           </Stack>
         </AccordionItem>
-        <AccordionItem
-          id="signature"
-          label="Undirritun"
-          labelVariant="h4"
-          startExpanded={true}
-        >
+        <AccordionItem id="signature" label="Undirritun" labelVariant="h4">
           <GridRow rowGap={3}>
             <GridColumn span={['12/12', '12/12', '6/12']}>
               <Input
                 label="Nafn undirritunar"
                 backgroundColor="blue"
                 size="sm"
-                name=""
+                name={`${advert.id}-signature-name`}
                 defaultValue={commonAdvert.signature.name}
               />
             </GridColumn>
@@ -137,7 +130,7 @@ export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
                 label="Staðsetning undirritunar"
                 backgroundColor="blue"
                 size="sm"
-                name=""
+                name={`${advert.id}-signature-location`}
                 defaultValue={commonAdvert.signature.location}
               />
             </GridColumn>

@@ -3,7 +3,6 @@ import { Controller, Get, Inject, Query } from '@nestjs/common'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 
 import {
-  GetAdvertCategoriesDetailedDto,
   GetAdvertCategoriesDto,
   GetAdvertCategoriesQueryDto,
 } from './dto/advert-category.dto'
@@ -26,14 +25,5 @@ export class AdvertCategoryController {
   })
   getCategories(@Query() query: GetAdvertCategoriesQueryDto) {
     return this.categoryService.getCategories(query)
-  }
-
-  @Get('detailed')
-  @LGResponse({
-    operationId: 'getCategoriesDetailed',
-    type: GetAdvertCategoriesDetailedDto,
-  })
-  getCategoriesDetailed(@Query() query: GetAdvertCategoriesQueryDto) {
-    return this.categoryService.getCategoriesDetailed(query)
   }
 }

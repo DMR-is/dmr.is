@@ -394,7 +394,8 @@
             "required": false,
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/CaseTypeSlugEnum"
+              "nullable": true,
+              "type": "string"
             }
           }
         ],
@@ -405,85 +406,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GetAdvertCategoriesDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["AdvertCategory"]
-      }
-    },
-    "/api/v1/categories/detailed": {
-      "get": {
-        "operationId": "getCategoriesDetailed",
-        "parameters": [
-          {
-            "name": "type",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/CaseTypeSlugEnum"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetAdvertCategoriesDetailedDto"
                 }
               }
             }
@@ -1960,10 +1882,6 @@
           }
         }
       },
-      "CaseTypeSlugEnum": {
-        "type": "string",
-        "enum": ["almenn-auglysing"]
-      },
       "AdvertCategoryDto": {
         "type": "object",
         "properties": {
@@ -1992,69 +1910,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AdvertCategoryDto"
-            }
-          }
-        },
-        "required": ["categories"]
-      },
-      "AdvertCategoryDetailedDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the entity",
-            "example": "Base entity"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "deletedAt": {
-            "type": "string",
-            "description": "ISO representation of the deletion date",
-            "example": "2021-08-31T12:00:00.000Z",
-            "nullable": true
-          },
-          "typeId": {
-            "type": "string"
-          },
-          "type": {
-            "$ref": "#/components/schemas/AdvertTypeDetailedDto"
-          }
-        },
-        "required": [
-          "id",
-          "title",
-          "slug",
-          "createdAt",
-          "updatedAt",
-          "typeId",
-          "type"
-        ]
-      },
-      "GetAdvertCategoriesDetailedDto": {
-        "type": "object",
-        "properties": {
-          "categories": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AdvertCategoryDetailedDto"
             }
           }
         },

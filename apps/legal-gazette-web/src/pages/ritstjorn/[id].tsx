@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next'
+import dynamic from 'next/dynamic'
 
-import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 import { Route } from '@dmr.is/ui/hooks/constants'
 import { deleteUndefined } from '@dmr.is/utils/client'
 
@@ -13,6 +13,11 @@ import { CaseDetailedDto } from '../../gen/fetch'
 import { getLegalGazetteClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
 import { routesToBreadcrumbs } from '../../lib/utils'
+
+// we need this if we replace the breadcrumbs items so they match the server-side
+const HeroNoSRR = dynamic(() => import('@dmr.is/ui/components/Hero/Hero'), {
+  ssr: false,
+})
 
 type Props = {
   currentCase: CaseDetailedDto
@@ -40,7 +45,7 @@ export default function SingleCase({ currentCase }: Props) {
     <FormShell>
       <Form>
         <Stack space={4}>
-          <Hero
+          <HeroNoSRR
             noImageFullWidth={true}
             withOffset={false}
             variant="small"

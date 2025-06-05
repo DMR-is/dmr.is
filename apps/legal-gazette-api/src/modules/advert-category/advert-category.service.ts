@@ -1,16 +1,10 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import {
-  baseEntityDetailedMigrate,
-  baseEntityMigrate,
-  migrate,
-} from '@dmr.is/legal-gazette/dto'
+import { baseEntityMigrate } from '@dmr.is/legal-gazette/dto'
 
+import { AdvertTypeModel } from '../advert-type/advert-type.model'
 import {
-  AdvertCategoryDetailedDto,
-  AdvertCategoryDto,
-  GetAdvertCategoriesDetailedDto,
   GetAdvertCategoriesDto,
   GetAdvertCategoriesQueryDto,
 } from './dto/advert-category.dto'
@@ -27,39 +21,17 @@ export class AdvertCategoryService implements IAdvertCategoryService {
   async getCategories(
     query: GetAdvertCategoriesQueryDto,
   ): Promise<GetAdvertCategoriesDto> {
-    const categories = await this.advertCategoryModel
-      .scope({ method: ['byType', query.type] })
-      .scope('defaultScope')
-      .findAll()
+    const categories = await this.advertCategoryModel.findAll({
+      include: [
+        {
+          model: AdvertTypeModel,
+          where: query.type ? { id: query.type } : undefined,
+        },
+      ],
+    })
 
     return {
-      categories: categories.map((c) =>
-        migrate<AdvertCategoryDto>({
-          model: c,
-          defaultMigration: baseEntityMigrate,
-          additionalProps: [['typeId'], ['type', baseEntityMigrate]],
-        }),
-      ),
-    }
-  }
-  async getCategoriesDetailed(
-    query: GetAdvertCategoriesQueryDto,
-  ): Promise<GetAdvertCategoriesDetailedDto> {
-    const categories = await this.advertCategoryModel
-      .scope({ method: ['byType', query.type] })
-      .scope('detailed')
-      .findAll()
-
-    const migrated = categories.map((c) =>
-      migrate<AdvertCategoryDetailedDto>({
-        model: c,
-        defaultMigration: baseEntityDetailedMigrate,
-        additionalProps: [['typeId'], ['type', baseEntityDetailedMigrate]],
-      }),
-    )
-
-    return {
-      categories: migrated,
+      categories: categories.map((c) => baseEntityMigrate(c)),
     }
   }
 }

@@ -94,3 +94,5 @@ export const Hero = ({
     </GridContainer>
   )
 }
+
+export default Hero
