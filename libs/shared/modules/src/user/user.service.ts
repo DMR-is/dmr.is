@@ -374,7 +374,7 @@ export class UserService implements IUserService {
 
     if (isAdmin) {
       results = await this.advertInvolvedPartyModel.findAll({
-        attributes: ['id', 'title', 'slug'],
+        attributes: ['id', 'title', 'slug', 'nationalId'],
       })
     } else {
       const userInvolvedParties = await this.userInvolvedPartiesModel.findAll({
