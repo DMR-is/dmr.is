@@ -3,14 +3,17 @@ import {
   SkeletonLoader,
 } from '@island.is/island-ui/core'
 
-type Props = React.ComponentProps<typeof IslandSelect> & {
-  isLoading?: boolean
-}
+type Props = Omit<
+  React.ComponentProps<typeof IslandSelect> & {
+    isLoading?: boolean
+  },
+  'size'
+>
 
 export const Select = ({ isLoading = false, ...props }: Props) => {
   return isLoading ? (
     <SkeletonLoader height={64} borderRadius="large" />
   ) : (
-    <IslandSelect {...props} />
+    <IslandSelect size="sm" {...props} />
   )
 }
