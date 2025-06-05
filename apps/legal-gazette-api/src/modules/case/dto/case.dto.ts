@@ -14,7 +14,7 @@ import { ApiProperty, PickType } from '@nestjs/swagger'
 import { DetailedDto } from '@dmr.is/legal-gazette/dto'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
-import { AdvertDto } from '../../advert/dto/advert.dto'
+import { AdvertDetailedDto, AdvertDto } from '../../advert/dto/advert.dto'
 import {
   CommunicationChannelDto,
   CreateCommunicationChannelDto,
@@ -72,14 +72,6 @@ export class GetCasesDto {
   paging!: Paging
 }
 
-export class CaseAdvertsDto extends PickType(AdvertDto, [
-  'id',
-  'scheduledAt',
-  'publishedAt',
-  'status',
-  'version',
-]) {}
-
 export class CaseDetailedDto extends CaseDto {
   @ApiProperty({ type: [CommunicationChannelDto] })
   @IsArray()
@@ -87,9 +79,9 @@ export class CaseDetailedDto extends CaseDto {
   @ValidateNested({ each: true })
   communicationChannels!: CommunicationChannelDto[]
 
-  @ApiProperty({ type: [CaseAdvertsDto] })
+  @ApiProperty({ type: [AdvertDetailedDto] })
   @IsArray()
-  @Type(() => CaseAdvertsDto)
+  @Type(() => AdvertDetailedDto)
   @ValidateNested({ each: true })
-  adverts!: CaseAdvertsDto[]
+  adverts!: AdvertDetailedDto[]
 }

@@ -3,10 +3,7 @@ import slugify from 'slugify'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import {
-  baseEntityDetailedMigrate,
-  baseEntityMigrate,
-} from '@dmr.is/legal-gazette/dto'
+import { baseEntityDetailedMigrate } from '@dmr.is/legal-gazette/dto'
 
 import {
   CreateAdvertType,
@@ -15,6 +12,7 @@ import {
   GetAdvertTypesDto,
   UpdateAdvertType,
 } from './dto/advert-type.dto'
+import { advertTypeMigrate } from './dto/advert-type.migrate'
 import { AdvertTypeModel } from './advert-type.model'
 import { IAdvertTypeService } from './advert-type.service.interface'
 
@@ -35,7 +33,7 @@ export class AdvertTypeService implements IAdvertTypeService {
     )
 
     return {
-      type: baseEntityMigrate(newType),
+      type: advertTypeMigrate(newType),
     }
   }
 
@@ -43,7 +41,7 @@ export class AdvertTypeService implements IAdvertTypeService {
     const advertType = await this.advertTypeModel.findAll()
 
     return {
-      types: advertType.map((advertType) => baseEntityMigrate(advertType)),
+      types: advertType.map((advertType) => advertTypeMigrate(advertType)),
     }
   }
 
@@ -69,7 +67,7 @@ export class AdvertTypeService implements IAdvertTypeService {
 
     if (!body.title) {
       return {
-        type: baseEntityMigrate(found),
+        type: advertTypeMigrate(found),
       }
     }
 
@@ -87,7 +85,7 @@ export class AdvertTypeService implements IAdvertTypeService {
     const theType = updatedType[1][0]
 
     return {
-      type: baseEntityMigrate(theType),
+      type: advertTypeMigrate(theType),
     }
   }
   async deleteAdvertType(id: string): Promise<GetAdvertTypeDto> {
@@ -100,7 +98,7 @@ export class AdvertTypeService implements IAdvertTypeService {
     await this.advertTypeModel.destroy({ where: { id } })
 
     return {
-      type: baseEntityMigrate(found),
+      type: advertTypeMigrate(found),
     }
   }
 }

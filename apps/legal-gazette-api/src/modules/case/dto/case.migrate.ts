@@ -1,3 +1,4 @@
+import { advertDetailedMigrate } from '../../advert/dto/advert.migrate'
 import { CaseModel } from '../case.model'
 import { CaseDetailedDto, CaseDto } from './case.dto'
 
@@ -17,13 +18,7 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailedDto => ({
   createdAt: model.createdAt.toISOString(),
   updatedAt: model.updatedAt.toISOString(),
   deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
-  adverts: model.adverts.map((advert) => ({
-    id: advert.id,
-    scheduledAt: advert.scheduledAt.toISOString(),
-    publishedAt: advert.publishedAt ? advert.publishedAt.toISOString() : null,
-    status: advert.status,
-    version: advert.version,
-  })),
+  adverts: model.adverts.map((advert) => advertDetailedMigrate(advert)),
   communicationChannels: model.communicationChannels.map((channel) => ({
     email: channel.email,
     phone: channel.phone ? channel.phone : undefined,

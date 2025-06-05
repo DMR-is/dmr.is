@@ -2,19 +2,19 @@ import { config } from '@dmr.is/api-client/createClient'
 
 import {
   AdvertApi,
+  AdvertCategoryApi,
+  AdvertStatusApi,
+  AdvertTypeApi,
   CaseApi,
-  CaseCategoryApi,
-  CaseStatusApi,
-  CaseTypeApi,
   Configuration,
 } from '../../gen/fetch'
 
 const apis = [
   'AdvertApi',
   'CaseApi',
-  'CaseCategoryApi',
-  'CaseStatusApi',
-  'CaseTypeApi',
+  'AdvertCategoryApi',
+  'AdvertStatusApi',
+  'AdvertTypeApi',
 ] as const
 
 type ApiKey = (typeof apis)[number]
@@ -22,9 +22,9 @@ type ApiKey = (typeof apis)[number]
 type ApiClientMap = {
   AdvertApi: AdvertApi
   CaseApi: CaseApi
-  CaseCategoryApi: CaseCategoryApi
-  CaseStatusApi: CaseStatusApi
-  CaseTypeApi: CaseTypeApi
+  AdvertCategoryApi: AdvertCategoryApi
+  AdvertStatusApi: AdvertStatusApi
+  AdvertTypeApi: AdvertTypeApi
 }
 
 const ApiConstructors: {
@@ -32,9 +32,9 @@ const ApiConstructors: {
 } = {
   AdvertApi,
   CaseApi,
-  CaseCategoryApi,
-  CaseStatusApi,
-  CaseTypeApi,
+  AdvertCategoryApi,
+  AdvertStatusApi,
+  AdvertTypeApi,
 }
 
 const apiClients: Partial<{

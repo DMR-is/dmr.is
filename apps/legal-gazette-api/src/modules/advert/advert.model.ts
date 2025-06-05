@@ -74,6 +74,7 @@ export enum AdvertVersionEnum {
     AdvertStatusModel,
     AdvertCategoryModel,
     AdvertTypeModel,
+    CommonAdvertModel,
     {
       model: CaseModel.unscoped(),
       attributes: ['caseNumber'],

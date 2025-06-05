@@ -7,10 +7,12 @@ import { Layout } from '../layout/Layout'
 globalStyles()
 
 function CustomApp({ Component, pageProps }: NextAppProps) {
+  const layoutProps = pageProps.layoutProps || {}
+
   return (
     <>
       <main className="app">
-        <Layout>
+        <Layout {...layoutProps}>
           <Component {...pageProps} />
         </Layout>
       </main>

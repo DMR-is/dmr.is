@@ -1468,6 +1468,7 @@
   "servers": [],
   "components": {
     "schemas": {
+      "AdvertTypeEnum": { "type": "string", "enum": ["Almenn auglýsing"] },
       "AdvertTypeDto": {
         "type": "object",
         "properties": {
@@ -1477,9 +1478,10 @@
             "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
           },
           "title": {
-            "type": "string",
             "description": "Title of the entity",
-            "example": "Base entity"
+            "example": "Base entity",
+            "x-enumNames": ["CommonAdvert"],
+            "allOf": [{ "$ref": "#/components/schemas/AdvertTypeEnum" }]
           },
           "slug": {
             "type": "string",
@@ -1587,9 +1589,10 @@
         "type": "object",
         "properties": {
           "title": {
-            "type": "string",
             "description": "Title of the entity",
-            "example": "Base entity"
+            "example": "Base entity",
+            "x-enumNames": ["CommonAdvert"],
+            "allOf": [{ "$ref": "#/components/schemas/AdvertTypeEnum" }]
           }
         },
         "required": ["title"]
@@ -1605,9 +1608,10 @@
         "type": "object",
         "properties": {
           "title": {
-            "type": "string",
             "description": "Title of the entity",
-            "example": "Base entity"
+            "example": "Base entity",
+            "x-enumNames": ["CommonAdvert"],
+            "allOf": [{ "$ref": "#/components/schemas/AdvertTypeEnum" }]
           }
         }
       },
@@ -1912,18 +1916,78 @@
         "required": ["email"]
       },
       "AdvertVersion": { "type": "string", "enum": ["A", "B", "C"] },
-      "CaseAdvertsDto": {
+      "CommonAdvertSignatureDto": {
         "type": "object",
         "properties": {
+          "name": { "type": "string" },
+          "location": { "type": "string" },
+          "date": { "type": "string" }
+        },
+        "required": ["name", "location", "date"]
+      },
+      "CommonAdvertDto": {
+        "type": "object",
+        "properties": {
+          "caption": { "type": "string" },
+          "signature": {
+            "$ref": "#/components/schemas/CommonAdvertSignatureDto"
+          }
+        },
+        "required": ["caption", "signature"]
+      },
+      "AdvertDetailedDto": {
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "description": "ISO representation of the creation date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "ISO representation of the updated date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": "string",
+            "description": "ISO representation of the deletion date",
+            "example": "2021-08-31T12:00:00.000Z",
+            "nullable": true
+          },
           "id": { "type": "string" },
+          "caseId": { "type": "string" },
+          "publicationNumber": { "type": "string" },
+          "title": { "type": "string" },
           "publishedAt": { "type": "string", "nullable": true },
           "scheduledAt": { "type": "string" },
+          "type": { "$ref": "#/components/schemas/AdvertTypeDto" },
+          "category": { "$ref": "#/components/schemas/AdvertCategoryDto" },
           "status": { "$ref": "#/components/schemas/AdvertStatusDto" },
           "version": {
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersion" }]
+          },
+          "html": { "type": "string" },
+          "commonAdvert": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CommonAdvertDto" }]
           }
         },
-        "required": ["id", "publishedAt", "scheduledAt", "status", "version"]
+        "required": [
+          "createdAt",
+          "updatedAt",
+          "id",
+          "caseId",
+          "publicationNumber",
+          "title",
+          "publishedAt",
+          "scheduledAt",
+          "type",
+          "category",
+          "status",
+          "version",
+          "html",
+          "commonAdvert"
+        ]
       },
       "CaseDetailedDto": {
         "type": "object",
@@ -1953,7 +2017,7 @@
           },
           "adverts": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/CaseAdvertsDto" }
+            "items": { "$ref": "#/components/schemas/AdvertDetailedDto" }
           }
         },
         "required": [
@@ -1974,7 +2038,7 @@
         },
         "required": ["email"]
       },
-      "CommonAdvertSignatureDto": {
+      "CreateCommonAdvertSignatureDto": {
         "type": "object",
         "properties": {
           "name": { "type": "string" },
@@ -1996,7 +2060,7 @@
           "publishingDates": { "type": "array", "items": { "type": "string" } },
           "caption": { "type": "string" },
           "signature": {
-            "$ref": "#/components/schemas/CommonAdvertSignatureDto"
+            "$ref": "#/components/schemas/CreateCommonAdvertSignatureDto"
           },
           "applicationId": { "type": "string" },
           "htmlBase64": { "type": "string" }

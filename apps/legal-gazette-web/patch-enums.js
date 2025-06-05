@@ -11,7 +11,9 @@ const enumMappings = {
     REJECTED: 'f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
     WITHDRAWN: 'e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
   },
-  // Add more enums as needed...
+  AdvertTypeEnum: {
+    COMMON_ADVERT: 'Almenn auglýsing',
+  },
 }
 
 // ✅ 2. Paths

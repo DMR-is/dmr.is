@@ -3,7 +3,7 @@ import { IsBase64, IsString, IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CreateCommonAdvertDto } from '../../common-advert/dto/common-advert.dto'
+import { CreateCommonAdvertDto } from '../../common-advert/dto/create-common-advert.dto'
 
 enum CommonApplicationEventsEnum {
   APPROVE = 'APPROVE',

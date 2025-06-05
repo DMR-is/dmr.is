@@ -19,6 +19,7 @@ import { AdvertCategoryDto } from '../../advert-category/dto/advert-category.dto
 import { AdvertStatusIdEnum } from '../../advert-status/advert-status.model'
 import { AdvertStatusDto } from '../../advert-status/dto/advert-status.dto'
 import { AdvertTypeDto } from '../../advert-type/dto/advert-type.dto'
+import { CommonAdvertDto } from '../../common-advert/dto/common-advert.dto'
 import { AdvertVersionEnum } from '../advert.model'
 
 export class AdvertDto extends DetailedDto {
@@ -176,4 +177,16 @@ export class GetAdvertsStatusCounterDto {
   @Type(() => AdvertStatusCounterItemDto)
   @ValidateNested()
   published!: AdvertStatusCounterItemDto
+}
+
+export class AdvertDetailedDto extends AdvertDto {
+  @ApiProperty({
+    type: CommonAdvertDto,
+    nullable: true,
+  })
+  @IsOptional()
+  @ValidateIf((o) => o.commonAdvert !== null)
+  @Type(() => CommonAdvertDto)
+  @ValidateNested()
+  commonAdvert?: CommonAdvertDto
 }

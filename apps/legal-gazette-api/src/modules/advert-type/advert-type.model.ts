@@ -1,4 +1,4 @@
-import { HasMany } from 'sequelize-typescript'
+import { Column, DataType, HasMany } from 'sequelize-typescript'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
@@ -13,8 +13,19 @@ export enum AdvertTypeSlugEnum {
   COMMON_APPLICATION = 'almenn-auglysing',
 }
 
+export enum AdvertTypeEnum {
+  COMMON_APPLICATION = 'Almenn auglýsing',
+}
+
 @BaseEntityTable({ tableName: LegalGazetteModels.ADVERT_TYPE })
 export class AdvertTypeModel extends BaseEntityModel {
   @HasMany(() => AdvertCategoryModel)
   categories!: AdvertCategoryModel[]
+
+  @Column({
+    type: DataType.ENUM(...Object.values(AdvertTypeEnum)),
+    field: 'title',
+    allowNull: false,
+  })
+  title!: AdvertTypeEnum
 }

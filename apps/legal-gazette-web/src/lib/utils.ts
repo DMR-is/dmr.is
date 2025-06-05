@@ -6,6 +6,7 @@ import { QueryFilterParam, QueryFilterValue, RouteItem } from './types'
 export const routesToBreadcrumbs = (
   routes: RouteItem[],
   currentPath: Route,
+  pathNameReplace?: string,
 ) => {
   const breadcrumbs: RouteItem[] = []
 
@@ -14,6 +15,13 @@ export const routesToBreadcrumbs = (
       const newPath = [...path, route] // Keep track of breadcrumb trail
 
       if (route.path === currentPath) {
+        // check if there are replacements for the current route
+        if (pathNameReplace) {
+          newPath[newPath.length - 1].pathName = pathNameReplace
+        }
+
+        route.isCurrentPage = true // Mark the current route
+
         breadcrumbs.push(...newPath) // Push all breadcrumb items into the array
         return // Stop searching when a match is found
       }
@@ -26,9 +34,11 @@ export const routesToBreadcrumbs = (
   }
 
   findRoute(routes)
+
   return breadcrumbs.map((r) => ({
     href: r.path,
     title: r.pathName,
+    isCurrentPage: r.isCurrentPage || false,
   }))
 }
 

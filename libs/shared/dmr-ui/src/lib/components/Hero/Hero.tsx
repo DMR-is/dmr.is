@@ -17,9 +17,13 @@ export type HeroProps = {
   image?: ImageProps
   children?: React.ReactNode
   variant?: 'default' | 'small'
+  noImageFullWidth?: boolean
+  withOffset?: boolean
 }
 
 export const BANNER_PORTAL_ID = 'banner-portal'
+
+type SpanType = React.ComponentProps<typeof GridColumn>['span']
 
 export const Hero = ({
   breadcrumbs,
@@ -28,29 +32,32 @@ export const Hero = ({
   image,
   children,
   variant = 'default',
+  noImageFullWidth = false,
+  withOffset = true,
 }: HeroProps) => {
   const hasTitleOrDescription = !!(title || description || breadcrumbs)
   const hasImage = !!(image && image.src)
   const hasChildren = !!children
   const isDefault = variant === 'default'
 
-  const columnSpan: Record<
-    string,
-    React.ComponentProps<typeof GridColumn>['span']
-  > = {
-    content: ['12/12', '12/12', '12/12', '6/12'],
+  const columnSpan: Record<string, SpanType> = {
+    content: [
+      '12/12',
+      '12/12',
+      '12/12',
+      !hasImage && noImageFullWidth ? '12/12' : '6/12',
+    ],
     image: ['12/12', '12/12', '12/12', '4/12'],
   }
+
+  const offset: SpanType = ['0', '0', '0', withOffset ? '1/12' : '0']
 
   return (
     <GridContainer>
       <Stack space={4}>
         <GridRow>
           {hasTitleOrDescription && (
-            <GridColumn
-              offset={['0', '0', '0', '1/12']}
-              span={columnSpan.content}
-            >
+            <GridColumn offset={offset} span={columnSpan.content}>
               <Box
                 dataTestId="hello-world"
                 height="full"

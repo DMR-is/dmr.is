@@ -49,7 +49,7 @@ export const Routes: RouteItem[] = [
         children: [
           {
             path: Route.RITSTJORN_ID,
-            pathName: 'Ritstjórn',
+            pathName: 'Stakt mál',
             showInNavigation: false,
           },
         ],

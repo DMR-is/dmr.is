@@ -2,7 +2,16 @@ import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
 
 import { BaseEntityDetailedDto, BaseEntityDto } from '@dmr.is/legal-gazette/dto'
 
-export class AdvertTypeDto extends BaseEntityDto {}
+import { AdvertTypeEnum } from '../advert-type.model'
+
+export class AdvertTypeDto extends BaseEntityDto {
+  @ApiProperty({
+    enum: AdvertTypeEnum,
+    enumName: 'AdvertTypeEnum',
+    'x-enumNames': ['CommonAdvert'],
+  })
+  title!: AdvertTypeEnum
+}
 
 export class AdvertTypeDetailedDto extends BaseEntityDetailedDto {}
 

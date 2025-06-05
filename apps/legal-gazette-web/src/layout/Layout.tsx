@@ -12,10 +12,15 @@ import { Routes } from '../lib/constants'
 
 export type LayoutProps = {
   showFooter?: boolean
+  headerVariant?: 'blue' | 'white'
   children?: React.ReactNode
 }
 
-export const Layout = ({ children, showFooter = false }: LayoutProps) => {
+export const Layout = ({
+  children,
+  showFooter = false,
+  headerVariant = 'blue',
+}: LayoutProps) => {
   const preloadedFonts = [
     '/fonts/ibm-plex-sans-v7-latin-300.woff2',
     '/fonts/ibm-plex-sans-v7-latin-regular.woff2',
@@ -60,6 +65,7 @@ export const Layout = ({ children, showFooter = false }: LayoutProps) => {
             })}
           </Head>
           <Header
+            variant={headerVariant}
             controlPanel={{
               title: 'Lögbirtingarblaðið',
               paths: Routes,

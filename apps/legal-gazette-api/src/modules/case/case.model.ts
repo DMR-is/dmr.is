@@ -17,7 +17,7 @@ import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
 import { AdvertStatusIdEnum } from '../advert-status/advert-status.model'
 import { AdvertTypeIdEnum } from '../advert-type/advert-type.model'
 import { CommonAdvertModel } from '../common-advert/common-advert.model'
-import { CreateCommonAdvertInternalDto } from '../common-advert/dto/common-advert.dto'
+import { CreateCommonAdvertInternalDto } from '../common-advert/dto/create-common-advert.dto'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
@@ -56,7 +56,11 @@ type CaseCreateAttributes = {
   detailed: {
     include: [
       { model: CommunicationChannelModel, separate: true, duplicating: false },
-      { model: AdvertModel, separate: true },
+      {
+        model: AdvertModel,
+        separate: true,
+        include: [{ model: CommonAdvertModel }],
+      },
     ],
   },
   byApplicationId: (applicationId: string) => ({

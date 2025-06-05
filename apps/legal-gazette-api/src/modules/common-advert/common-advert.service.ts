@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { CaseModel } from '../case/case.model'
-import { CreateCommonAdvertInternalDto } from './dto/common-advert.dto'
+import { CreateCommonAdvertInternalDto } from './dto/create-common-advert.dto'
 import { ICommonCaseService } from './common-advert.service.interface'
 
 @Injectable()
