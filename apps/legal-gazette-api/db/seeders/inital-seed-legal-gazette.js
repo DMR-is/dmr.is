@@ -24,12 +24,18 @@ module.exports = {
       'utf8',
     )
 
+    const usersSeed = await readFile(
+      './src/modules/users/users.seed.sql',
+      'utf8',
+    )
+
     const seed = `
       BEGIN;
 
         ${advertTypeSeed}
         ${advertCategoriesSeed}
         ${advertStatusSeed}
+        ${usersSeed}
 
       COMMIT;
       `

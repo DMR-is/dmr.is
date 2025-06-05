@@ -1,6 +1,10 @@
 export const LEGAL_GAZETTE_NAMESPACE = 'legal-gazette'
 
 export enum LegalGazetteModels {
+  USER_ROLES = 'LEGAL_GAZETTE_USER_ROLES',
+  INSTITUTIONS = 'LEGAL_GAZETTE_INSTITUTIONS',
+  USERS = 'LEGAL_GAZETTE_USERS',
+  USER_INSTITUTIONS = 'LEGAL_GAZETTE_USER_INSTITUTIONS',
   ADVERT_TYPE = 'advert_type',
   ADVERT_CATEGORY = 'advert_category',
   ADVERT_STATUS = 'advert_status',

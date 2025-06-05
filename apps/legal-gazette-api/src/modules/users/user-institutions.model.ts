@@ -1,0 +1,51 @@
+import {
+  Column,
+  DataType,
+  ForeignKey,
+  HasOne,
+  Model,
+} from 'sequelize-typescript'
+
+import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
+import { BaseTable } from '@dmr.is/shared/models/base'
+
+import { InstitutionModel } from '../institution/institution.model'
+import { UserModel } from './users.model'
+
+export type UserInstitutionAttributes = {
+  userId: string
+  institutionId: string
+}
+
+export type UserInstitutionCreateAttributes = {
+  userId: string
+  institutionId: string
+}
+
+@BaseTable({ tableName: LegalGazetteModels.USER_INSTITUTIONS })
+export class UserInstitutionModel extends Model<
+  UserInstitutionAttributes,
+  UserInstitutionCreateAttributes
+> {
+  @ForeignKey(() => UserModel)
+  @Column({
+    type: DataType.TEXT,
+    allowNull: false,
+    field: 'user_id',
+  })
+  userId!: string
+
+  @ForeignKey(() => InstitutionModel)
+  @Column({
+    type: DataType.TEXT,
+    allowNull: false,
+    field: 'institution_id',
+  })
+  institutionId!: string
+
+  @HasOne(() => UserModel, { foreignKey: 'userId' })
+  user!: UserModel
+
+  @HasOne(() => InstitutionModel, { foreignKey: 'institutionId' })
+  institution!: InstitutionModel
+}
