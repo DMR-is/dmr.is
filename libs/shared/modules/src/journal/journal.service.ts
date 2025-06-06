@@ -880,9 +880,34 @@ export class JournalService implements IJournalService {
     let html = advert.documentHtml
     if (advert.isLegacy) {
       try {
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('HTML cleaning timed out')), 5000)
+        })
+
         html = removeAllHtmlComments(html)
         html = removeSubjectFromHtml(html, advert.subject)
-        html = dirtyClean(html as HTMLText)
+
+        const cleaningPromise = new Promise((resolve, reject) => {
+          try {
+            const cleaned = dirtyClean(html as HTMLText)
+            resolve(cleaned)
+          } catch (e) {
+            reject(e)
+          }
+        })
+
+        html = (await Promise.race([cleaningPromise, timeoutPromise])) as string
+
+        await this.advertModel.update(
+          {
+            documentHtml: html,
+            documentLegacyHtml: advert.documentHtml,
+            isLegacy: false,
+          },
+          {
+            where: { id },
+          },
+        )
       } catch (e) {
         this.logger.error("Dirty clean failed for advert's HTML", {
           category: LOGGING_CATEGORY,
@@ -890,18 +915,6 @@ export class JournalService implements IJournalService {
         })
         html = advert.documentHtml
       }
-    }
-    if (advert.isLegacy) {
-      await this.advertModel.update(
-        {
-          documentHtml: html,
-          documentLegacyHtml: advert.documentHtml,
-          isLegacy: false,
-        },
-        {
-          where: { id },
-        },
-      )
     }
 
     return ResultWrapper.ok({
