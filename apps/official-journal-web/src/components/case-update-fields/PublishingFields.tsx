@@ -1,5 +1,3 @@
-import addYears from 'date-fns/addYears'
-import subYears from 'date-fns/subYears'
 
 import {
   AccordionItem,
@@ -19,7 +17,7 @@ import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../form-steps/messages'
 import { PriceCalculator } from '../price/calculator'
-import { getExcludedDates } from './utils'
+
 
 type Props = {
   toggle: boolean
@@ -33,8 +31,6 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
     useCaseContext()
 
   const createdAt = new Date(currentCase.createdAt)
-  const minDate = subYears(createdAt, 5)
-  const maxEndDate = addYears(createdAt, 5)
 
   const { md } = useBreakpoint()
 
@@ -104,9 +100,7 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
               locale="is"
               size="sm"
               backgroundColor="blue"
-              minDate={minDate}
-              maxDate={maxEndDate}
-              excludeDates={getExcludedDates(minDate, maxEndDate)}
+              minDate={new Date()}
               placeholderText="Dagsetning birtingar"
               selected={new Date(currentCase.requestedPublicationDate)}
               label={formatMessage(messages.grunnvinnsla.publicationDate)}
