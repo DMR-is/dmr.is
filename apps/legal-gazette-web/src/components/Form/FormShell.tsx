@@ -1,4 +1,4 @@
-import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
+import dynamic from 'next/dynamic'
 
 import {
   Box,
@@ -8,14 +8,17 @@ import {
   Stack,
 } from '@island.is/island-ui/core'
 
-import * as styles from './Form.css'
+const TextInput = dynamic(() =>
+  import('@dmr.is/ui/components/Inputs/TextInput').then((mod) => mod),
+)
+
 type FormShellProps = {
   children?: React.ReactNode
 }
 
 export const FormShell = ({ children }: FormShellProps) => {
   return (
-    <Box className={styles.formShellStyles}>
+    <Box padding={6} background="purple100">
       <GridContainer>
         <GridRow>
           <GridColumn span={['12/12', '12/12', '9/12', '9/12']}>

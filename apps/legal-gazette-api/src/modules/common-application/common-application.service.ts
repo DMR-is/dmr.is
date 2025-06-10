@@ -7,6 +7,9 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AuthService, IAuthService } from '@dmr.is/modules'
 
 import { CaseModel } from '../case/case.model'
+import { InstitutionModel } from '../institution/institution.model'
+import { UserInstitutionModel } from '../users/user-institutions.model'
+import { UserModel } from '../users/users.model'
 import {
   CommonApplicationUpdateStateEvent,
   SubmitCommonApplicationDto,
@@ -19,6 +22,11 @@ export class CommonApplicationService implements ICommonApplicationService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IAuthService) private readonly authService: AuthService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
+    @InjectModel(UserModel) private readonly userModel: typeof UserModel,
+    @InjectModel(InstitutionModel)
+    private readonly institutionModel: typeof InstitutionModel,
+    @InjectModel(UserInstitutionModel)
+    private readonly userInstitutionModel: typeof UserInstitutionModel,
   ) {}
 
   async deleteApplication(applicationId: string): Promise<void> {
@@ -57,6 +65,54 @@ export class CommonApplicationService implements ICommonApplicationService {
   }
 
   async submitApplication(body: SubmitCommonApplicationDto): Promise<void> {
+    const actorNationalId = '0000000000'
+    const institutionNationalId = '0101010101'
+
+    const [institution] = body.institution
+      ? await this.institutionModel.upsert(
+          {
+            nationalId: institutionNationalId,
+            title: body.institution.title,
+          },
+          {
+            conflictWhere: { nationalId: institutionNationalId },
+            returning: ['id'],
+            hooks: true,
+          },
+        )
+      : [null]
+
+    const [user] = await this.userModel.upsert(
+      {
+        email: body.actor.email,
+        firstName: body.actor.firstName,
+        lastName: body.actor.lastName,
+        nationalId: actorNationalId,
+        phone: body.actor.phone,
+        lastSubmissionDate: new Date(),
+      },
+      {
+        conflictWhere: { nationalId: actorNationalId },
+        returning: ['id'],
+      },
+    )
+
+    if (institution?.id && user?.id) {
+      await this.userInstitutionModel.upsert(
+        {
+          userId: user.id,
+          institutionId: institution.id,
+        },
+        {
+          conflictWhere: {
+            userId: user.id,
+            institutionId: institution.id,
+          },
+          returning: false,
+        },
+      )
+    }
+
     await this.caseModel.createCommonAdvert({
       applicationId: body.applicationId,
       caption: body.caption,

@@ -5,9 +5,13 @@ import { CommonAdvertTab } from './form-tabs/CommonAdvert'
 
 type CommonAdvertFormProps = {
   adverts: AdvertDetailedDto[]
+  onAdvertSelect?: (id: string) => void
 }
 
-export const AdvertForm = ({ adverts }: CommonAdvertFormProps) => {
+export const AdvertForm = ({
+  adverts,
+  onAdvertSelect,
+}: CommonAdvertFormProps) => {
   const tabs: TabType[] = adverts.map((advert) => {
     switch (advert.type.title) {
       case AdvertTypeEnum.COMMON_ADVERT: {
@@ -30,5 +34,12 @@ export const AdvertForm = ({ adverts }: CommonAdvertFormProps) => {
     }
   })
 
-  return <Tabs contentBackground="white" tabs={tabs} label="Auglýsingar" />
+  return (
+    <Tabs
+      onChange={onAdvertSelect}
+      contentBackground="white"
+      tabs={tabs}
+      label="Auglýsingar"
+    />
+  )
 }

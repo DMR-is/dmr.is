@@ -9,8 +9,11 @@ import {
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseTable } from '@dmr.is/shared/models/base'
 
-import { InstitutionModel } from '../institution/institution.model'
-import { UserModel } from './users.model'
+import {
+  InstitutionCreateAttributes,
+  InstitutionModel,
+} from '../institution/institution.model'
+import { UserCreateAttributes, UserModel } from './users.model'
 
 export type UserInstitutionAttributes = {
   userId: string
@@ -18,8 +21,10 @@ export type UserInstitutionAttributes = {
 }
 
 export type UserInstitutionCreateAttributes = {
-  userId: string
-  institutionId: string
+  userId?: string
+  institutionId?: string
+  user?: UserCreateAttributes
+  institution?: InstitutionCreateAttributes
 }
 
 @BaseTable({ tableName: LegalGazetteModels.USER_INSTITUTIONS })

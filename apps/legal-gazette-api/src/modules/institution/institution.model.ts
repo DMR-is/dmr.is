@@ -21,7 +21,6 @@ type InstitutionAttributes = {
 
 export type InstitutionCreateAttributes = {
   title: string
-  slug: string
   nationalId: string
 }
 
@@ -61,7 +60,9 @@ export class InstitutionModel extends BaseModel<
   users!: UserModel[]
 
   @BeforeCreate
-  slugit(instance: InstitutionModel) {
-    instance.slug = slugify(instance.slug, { lower: true })
+  static slugit(instance: InstitutionModel) {
+    const slug = slugify(instance.title, { lower: true })
+    this.logger.debug('Slugifying institution title', instance.title, slug)
+    instance.slug = slugify(instance.title, { lower: true })
   }
 }

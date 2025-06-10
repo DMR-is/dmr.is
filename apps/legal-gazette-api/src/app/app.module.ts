@@ -29,6 +29,10 @@ import { CaseModule } from '../modules/case/case.module'
 import { CommonAdvertModel } from '../modules/common-advert/common-advert.model'
 import { CommonApplicationModule } from '../modules/common-application/common-application.module'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
+import { InstitutionModel } from '../modules/institution/institution.model'
+import { UserInstitutionModel } from '../modules/users/user-institutions.model'
+import { UserRoleModel } from '../modules/users/user-roles.model'
+import { UserModel } from '../modules/users/users.model'
 @Module({
   imports: [
     LoggingModule,
@@ -55,6 +59,10 @@ import { CommunicationChannelModel } from '../modules/communication-channel/comm
             CaseModel,
             CommonAdvertModel,
             AdvertModel,
+            UserRoleModel,
+            UserModel,
+            InstitutionModel,
+            UserInstitutionModel,
           ],
         }),
       ],

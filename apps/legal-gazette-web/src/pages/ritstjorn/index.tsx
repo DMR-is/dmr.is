@@ -4,8 +4,6 @@ import { useRouter } from 'next/router'
 
 import { useState } from 'react'
 
-import { Hero } from '@dmr.is/ui/components/Hero/Hero'
-
 import {
   Button,
   Drawer,
@@ -20,6 +18,10 @@ import { useAdvertsCount } from '../../hooks/adverts/useAdvertsCount'
 import { RitstjornTabs, Route, Routes } from '../../lib/constants'
 import { MOCK_FILTERS } from '../../lib/mocks'
 import { mapQueryToRitstjornTabs, routesToBreadcrumbs } from '../../lib/utils'
+
+const Hero = dynamic(() => import('@dmr.is/ui/components/Hero/Hero'), {
+  ssr: false,
+})
 
 const CaseFilters = dynamic(
   () => import('../../components/CaseFilters/CaseFilters'),
