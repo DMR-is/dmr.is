@@ -2,19 +2,8 @@ import { Controller, Get, NotFoundException, Param } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
-import {
-  BaseEntityDetailedDto,
-  baseEntityDetailedMigrate,
-  BaseEntityDto,
-  migrate,
-} from '@dmr.is/legal-gazette/dto'
 
-import {
-  AdvertStatusDetailedDto,
-  AdvertStatusDto,
-  GetAdvertStatusesDetailedDto,
-  GetAdvertStatusesDto,
-} from './dto/advert-status.dto'
+import { AdvertStatusDto, GetAdvertStatusesDto } from './dto/advert-status.dto'
 import { AdvertStatusModel } from './advert-status.model'
 
 @Controller({
@@ -29,34 +18,14 @@ export class AdvertStatusController {
 
   @Get('/')
   @LGResponse({ operationId: 'getAdvertStatuses', type: GetAdvertStatusesDto })
-  async getCasesStatuses(): Promise<GetAdvertStatusesDto> {
+  async getStatuses(): Promise<GetAdvertStatusesDto> {
     const statuses = await this.advertStatusModel.findAll()
 
-    const migrated = statuses.map((status) =>
-      migrate<BaseEntityDto>({
-        model: status,
-      }),
-    )
-
-    return {
-      statuses: migrated,
-    }
-  }
-
-  @Get('/detailed')
-  @LGResponse({
-    operationId: 'getAdvertStatusesDetailed',
-    type: GetAdvertStatusesDetailedDto,
-  })
-  async getCasesStatusesDetailed(): Promise<GetAdvertStatusesDetailedDto> {
-    const statuses = await this.advertStatusModel.scope('detailed').findAll()
-
-    const migrated = statuses.map((status) =>
-      migrate<BaseEntityDetailedDto>({
-        model: status,
-        defaultMigration: baseEntityDetailedMigrate,
-      }),
-    )
+    const migrated = statuses.map((status) => ({
+      id: status.id,
+      title: status.title,
+      slug: status.slug,
+    }))
 
     return {
       statuses: migrated,
@@ -72,32 +41,10 @@ export class AdvertStatusController {
       throw new NotFoundException(`Advert status with id ${id} not found`)
     }
 
-    const migrated = migrate<BaseEntityDto>({
-      model: status,
-    })
-
-    return migrated
-  }
-
-  @Get(':id/detailed')
-  @LGResponse({
-    operationId: 'getAdvertStatusDetailed',
-    type: AdvertStatusDetailedDto,
-  })
-  async getStatusDetailedById(
-    @Param('id') id: string,
-  ): Promise<AdvertStatusDetailedDto> {
-    const status = await this.advertStatusModel.scope('detailed').findByPk(id)
-
-    if (!status) {
-      throw new NotFoundException(`Advert status with id ${id} not found`)
+    return {
+      id: status.id,
+      title: status.title,
+      slug: status.slug,
     }
-
-    const migrated = migrate<BaseEntityDetailedDto>({
-      model: status,
-      defaultMigration: baseEntityDetailedMigrate,
-    })
-
-    return migrated
   }
 }

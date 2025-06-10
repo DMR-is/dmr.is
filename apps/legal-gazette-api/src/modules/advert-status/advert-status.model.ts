@@ -1,5 +1,9 @@
+import { HasMany } from 'sequelize-typescript'
+
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
+
+import { AdvertModel } from '../advert/advert.model'
 
 export enum AdvertStatusIdEnum {
   SUBMITTED = 'cd3bf301-52a1-493e-8c80-a391c310c840',
@@ -10,4 +14,13 @@ export enum AdvertStatusIdEnum {
 }
 
 @BaseEntityTable({ tableName: LegalGazetteModels.ADVERT_STATUS })
-export class AdvertStatusModel extends BaseEntityModel {}
+export class AdvertStatusModel extends BaseEntityModel {
+  @HasMany(() => AdvertModel, {
+    foreignKey: 'statusId',
+  })
+  adverts!: AdvertModel[]
+
+  static setAdvertStatus(advertId: string, statusId: AdvertStatusIdEnum) {
+    return AdvertModel.update({ statusId }, { where: { id: advertId } })
+  }
+}

@@ -446,66 +446,6 @@
         "tags": ["AdvertStatus"]
       }
     },
-    "/api/v1/statuses/detailed": {
-      "get": {
-        "operationId": "getAdvertStatusesDetailed",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetAdvertStatusesDetailedDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["AdvertStatus"]
-      }
-    },
     "/api/v1/statuses/{id}": {
       "get": {
         "operationId": "getAdvertStatus",
@@ -523,73 +463,6 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/AdvertStatusDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["AdvertStatus"]
-      }
-    },
-    "/api/v1/statuses/{id}/detailed": {
-      "get": {
-        "operationId": "getAdvertStatusDetailed",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdvertStatusDetailedDto"
-                }
               }
             }
           },
@@ -1382,6 +1255,86 @@
         "tags": ["Advert"]
       }
     },
+    "/api/v1/adverts/{id}/status/{statusId}": {
+      "put": {
+        "operationId": "updateAdvertStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "statusId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "cd3bf301-52a1-493e-8c80-a391c310c840",
+                "a2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
+                "bd835a1d-0ecb-4aa4-9910-b5e60c30dced",
+                "f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
+                "e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Advert"]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "HealthController__v1",
@@ -1610,53 +1563,6 @@
         },
         "required": ["statuses"]
       },
-      "BaseEntityDetailedDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the entity",
-            "example": "Base entity"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "deletedAt": {
-            "type": "string",
-            "description": "ISO representation of the deletion date",
-            "example": "2021-08-31T12:00:00.000Z",
-            "nullable": true
-          }
-        },
-        "required": ["id", "title", "slug", "createdAt", "updatedAt"]
-      },
-      "GetAdvertStatusesDetailedDto": {
-        "type": "object",
-        "properties": {
-          "statuses": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/BaseEntityDetailedDto" }
-          }
-        },
-        "required": ["statuses"]
-      },
       "AdvertStatusDto": {
         "type": "object",
         "properties": {
@@ -1677,43 +1583,6 @@
           }
         },
         "required": ["id", "title", "slug"]
-      },
-      "AdvertStatusDetailedDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the entity",
-            "example": "Base entity"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "deletedAt": {
-            "type": "string",
-            "description": "ISO representation of the deletion date",
-            "example": "2021-08-31T12:00:00.000Z",
-            "nullable": true
-          }
-        },
-        "required": ["id", "title", "slug", "createdAt", "updatedAt"]
       },
       "CaseDto": {
         "type": "object",
@@ -1920,6 +1789,21 @@
         },
         "required": ["name", "location", "date"]
       },
+      "SubmitCommonApplicationActorDto": {
+        "type": "object",
+        "properties": {
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" }
+        },
+        "required": ["firstName", "lastName", "email"]
+      },
+      "SubmitCommonApplicationInstitutionDto": {
+        "type": "object",
+        "properties": { "title": { "type": "string" } },
+        "required": ["title"]
+      },
       "SubmitCommonApplicationDto": {
         "type": "object",
         "properties": {
@@ -1936,7 +1820,13 @@
             "$ref": "#/components/schemas/CreateCommonAdvertSignatureDto"
           },
           "applicationId": { "type": "string" },
-          "htmlBase64": { "type": "string" }
+          "htmlBase64": { "type": "string" },
+          "actor": {
+            "$ref": "#/components/schemas/SubmitCommonApplicationActorDto"
+          },
+          "institution": {
+            "$ref": "#/components/schemas/SubmitCommonApplicationInstitutionDto"
+          }
         },
         "required": [
           "categoryId",
@@ -1944,7 +1834,8 @@
           "caption",
           "signature",
           "applicationId",
-          "htmlBase64"
+          "htmlBase64",
+          "actor"
         ]
       },
       "AdvertStatusCounterItemDto": {

@@ -98,34 +98,3 @@ export const baseEntityDetailedMigrate = <T extends Model>(
       }
     : defaultModel
 }
-
-type AdditionalProp = [key: string, migrationFn?: (value: any) => any]
-
-interface MigrationProps {
-  model: Model
-  defaultMigration?: typeof baseEntityMigrate | typeof baseEntityDetailedMigrate
-  additionalProps?: AdditionalProp[]
-}
-
-export const migrate = <R = Record<string, any>>({
-  model,
-  defaultMigration = baseEntityMigrate,
-  additionalProps,
-}: MigrationProps): R => {
-  const additional: Record<string, any> = {}
-
-  additionalProps?.forEach(([key, migrationFn]) => {
-    additional[key] = migrationFn
-      ? migrationFn(model.getDataValue(key))
-      : model.getDataValue(key)
-  })
-
-  if (defaultMigration) {
-    return {
-      ...defaultMigration(model),
-      ...additional,
-    } as R
-  }
-
-  return additional as R
-}

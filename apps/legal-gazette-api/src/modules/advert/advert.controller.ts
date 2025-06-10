@@ -1,8 +1,15 @@
-import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
+import { Controller, Get, Inject, Param, Put, Query } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+import { ApiParam } from '@nestjs/swagger'
 
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
+import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
+import {
+  AdvertStatusIdEnum,
+  AdvertStatusModel,
+} from '../advert-status/advert-status.model'
 import {
   AdvertDto,
   GetAdvertsDto,
@@ -18,6 +25,8 @@ import { IAdvertService } from './advert.service.interface'
 export class AdvertController {
   constructor(
     @Inject(IAdvertService) private readonly advertService: IAdvertService,
+    @InjectModel(AdvertStatusModel)
+    private readonly advertStatusModel: typeof AdvertStatusModel,
   ) {}
 
   @Get('count')
@@ -51,5 +60,16 @@ export class AdvertController {
   @LGResponse({ operationId: 'getAdvertById', type: AdvertDto })
   getAdvertById(@Param('id') id: string) {
     return this.advertService.getAdvertById(id)
+  }
+
+  @Put(':id/status/:statusId')
+  @ApiParam({ enum: AdvertStatusIdEnum, name: 'statusId' })
+  @LGResponse({ operationId: 'updateAdvertStatus', type: AdvertDto })
+  async updateAdvertStatus(
+    @Param('id') id: string,
+    @Param('statusId', new EnumValidationPipe(AdvertStatusIdEnum))
+    statusId: AdvertStatusIdEnum,
+  ): Promise<void> {
+    await this.advertStatusModel.setAdvertStatus(id, statusId)
   }
 }
