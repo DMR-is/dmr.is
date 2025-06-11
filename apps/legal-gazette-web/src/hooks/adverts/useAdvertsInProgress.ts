@@ -2,7 +2,7 @@ import useSWR from 'swr'
 
 import { GetAdvertsInProgressRequest } from '../../gen/fetch'
 import { getLegalGazetteClient } from '../../lib/api/createClient'
-import { swrFetcher } from '../../lib/api/fetcher'
+import { fetcher } from '../../lib/api/fetchers'
 
 type UseAdvertProps = {
   params?: GetAdvertsInProgressRequest
@@ -14,7 +14,7 @@ export const useAdvertsInProgress = ({ params = {} }: UseAdvertProps = {}) => {
   const { data, isLoading, error, isValidating, mutate } = useSWR(
     ['getAdverts', params],
     ([_key, params]) =>
-      swrFetcher({ func: () => client.getAdvertsInProgress(params) }),
+      fetcher({ func: () => client.getAdvertsInProgress(params) }),
     {
       keepPreviousData: true,
       refreshInterval: 0,

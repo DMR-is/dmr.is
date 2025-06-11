@@ -4,14 +4,8 @@ import useSWRMutation from 'swr/mutation'
 
 import { Button, Stack, toast } from '@island.is/island-ui/core'
 
-import {
-  AdvertStatusDto,
-  AdvertStatusIdEnum,
-  DeleteCaseRequest,
-  UpdateAdvertStatusRequest,
-} from '../../gen/fetch'
-import { getLegalGazetteClient } from '../../lib/api/createClient'
-import { swrFetcher } from '../../lib/api/fetcher'
+import { StatusDto, StatusIdEnum } from '../../gen/fetch'
+import { rejectCase, setAdvertStatus } from '../../lib/api/fetchers'
 
 const TextInput = dynamic(() =>
   import('@dmr.is/ui/components/Inputs/TextInput').then((mod) => mod.TextInput),
@@ -20,7 +14,7 @@ const TextInput = dynamic(() =>
 type Props = {
   advertId: string
   caseId: string
-  status: AdvertStatusDto
+  status: StatusDto
   onStatusChange?: () => void
 }
 
@@ -30,17 +24,12 @@ export const FormStatusButton = ({
   status,
   onStatusChange,
 }: Props) => {
-  const advertClient = getLegalGazetteClient('AdvertApi', 'todo:add-token')
-  const caseClient = getLegalGazetteClient('CaseApi', 'todo:add-token')
   const { trigger: updateStatusTrigger } = useSWRMutation(
     'updateAdvertStatus',
-    (_key: string, { arg }: { arg: UpdateAdvertStatusRequest }) =>
-      swrFetcher({
-        func: () => advertClient.updateAdvertStatus(arg),
-      }),
+    setAdvertStatus,
     {
       onSuccess: () => {
-        toast.success('Staða auglýsingar var uppfærð.', {
+        toast.success('Staða auglýsingar uppfærð.', {
           toastId: 'update-advert-status-success',
         })
 
@@ -56,13 +45,10 @@ export const FormStatusButton = ({
 
   const { trigger: rejectCaseTrigger } = useSWRMutation(
     'rejectAdvert',
-    (_key: string, { arg }: { arg: DeleteCaseRequest }) =>
-      swrFetcher({
-        func: () => caseClient.deleteCase(arg),
-      }),
+    rejectCase,
     {
       onSuccess: () => {
-        toast.success('Auglýsingu var hafnað.', {
+        toast.success('Auglýsingu hafnað.', {
           toastId: 'reject-advert-success',
         })
 
@@ -77,8 +63,8 @@ export const FormStatusButton = ({
   )
 
   const canReject =
-    status.id === AdvertStatusIdEnum.SUBMITTED ||
-    status.id === AdvertStatusIdEnum.READY_FOR_PUBLICATION
+    status.id === StatusIdEnum.SUBMITTED ||
+    status.id === StatusIdEnum.READY_FOR_PUBLICATION
 
   return (
     <Stack space={2}>
@@ -88,12 +74,12 @@ export const FormStatusButton = ({
         label="Staða"
         disabled
       />
-      {status.id === AdvertStatusIdEnum.SUBMITTED ? (
+      {status.id === StatusIdEnum.SUBMITTED ? (
         <Button
           onClick={() =>
             updateStatusTrigger({
               id: advertId,
-              statusId: AdvertStatusIdEnum.READY_FOR_PUBLICATION,
+              statusId: StatusIdEnum.READY_FOR_PUBLICATION,
             })
           }
           size="small"
@@ -102,12 +88,12 @@ export const FormStatusButton = ({
         >
           Færa mál í útgáfu
         </Button>
-      ) : status.id === AdvertStatusIdEnum.READY_FOR_PUBLICATION ? (
+      ) : status.id === StatusIdEnum.READY_FOR_PUBLICATION ? (
         <Button
           onClick={() =>
             updateStatusTrigger({
               id: advertId,
-              statusId: AdvertStatusIdEnum.SUBMITTED,
+              statusId: StatusIdEnum.SUBMITTED,
             })
           }
           variant="ghost"
@@ -117,7 +103,7 @@ export const FormStatusButton = ({
         >
           Færa mál í Innsent
         </Button>
-      ) : status.id === AdvertStatusIdEnum.WITHDRAWN ? (
+      ) : status.id === StatusIdEnum.WITHDRAWN ? (
         <Button
           disabled
           variant="ghost"
@@ -127,7 +113,7 @@ export const FormStatusButton = ({
         >
           Mál dregið til baka
         </Button>
-      ) : status.id === AdvertStatusIdEnum.REJECTED ? (
+      ) : status.id === StatusIdEnum.REJECTED ? (
         <Button disabled size="small" colorScheme="destructive" fluid>
           Mál hafnað
         </Button>

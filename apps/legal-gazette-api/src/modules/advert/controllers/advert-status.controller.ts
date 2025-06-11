@@ -16,7 +16,7 @@ export class AdvertStatusController {
     private readonly statusModel: typeof StatusModel,
   ) {}
 
-  @Patch()
+  @Patch(':statusId')
   @ApiParam({
     enum: StatusIdEnum,
     name: 'statusId',

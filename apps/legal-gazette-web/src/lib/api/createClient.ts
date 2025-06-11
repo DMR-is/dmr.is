@@ -4,37 +4,45 @@ import {
   AdvertApi,
   AdvertCategoryApi,
   AdvertStatusApi,
-  AdvertTypeApi,
   CaseApi,
+  CategoryApi,
   Configuration,
+  StatusApi,
+  TypeApi,
 } from '../../gen/fetch'
 
 const apis = [
   'AdvertApi',
-  'CaseApi',
-  'AdvertCategoryApi',
   'AdvertStatusApi',
-  'AdvertTypeApi',
+  'AdvertCategoryApi',
+  'CaseApi',
+  'CategoryApi',
+  'StatusApi',
+  'TypeApi',
 ] as const
 
 type ApiKey = (typeof apis)[number]
 
 type ApiClientMap = {
   AdvertApi: AdvertApi
-  CaseApi: CaseApi
-  AdvertCategoryApi: AdvertCategoryApi
   AdvertStatusApi: AdvertStatusApi
-  AdvertTypeApi: AdvertTypeApi
+  AdvertCategoryApi: AdvertCategoryApi
+  CaseApi: CaseApi
+  CategoryApi: CategoryApi
+  StatusApi: StatusApi
+  TypeApi: TypeApi
 }
 
 const ApiConstructors: {
   [K in ApiKey]: new (config: Configuration) => ApiClientMap[K]
 } = {
   AdvertApi,
-  CaseApi,
-  AdvertCategoryApi,
   AdvertStatusApi,
-  AdvertTypeApi,
+  AdvertCategoryApi,
+  CaseApi,
+  CategoryApi,
+  StatusApi,
+  TypeApi,
 }
 
 const apiClients: Partial<{

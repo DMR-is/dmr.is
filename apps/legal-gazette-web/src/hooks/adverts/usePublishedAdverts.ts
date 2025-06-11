@@ -2,7 +2,7 @@ import useSWR from 'swr'
 
 import { GetAdvertsRequest } from '../../gen/fetch'
 import { getLegalGazetteClient } from '../../lib/api/createClient'
-import { swrFetcher } from '../../lib/api/fetcher'
+import { fetcher } from '../../lib/api/fetchers'
 
 type UseAdvertProps = {
   query?: GetAdvertsRequest
@@ -13,7 +13,7 @@ export const usePublishedAdverts = ({ query = {} }: UseAdvertProps = {}) => {
 
   const { data, isLoading, error, isValidating, mutate } = useSWR(
     ['getAdverts', query],
-    ([_key, q]) => swrFetcher({ func: () => client.getAdverts(q) }),
+    ([_key, q]) => fetcher({ func: () => client.getAdverts(q) }),
     {
       keepPreviousData: true,
       refreshInterval: 0,

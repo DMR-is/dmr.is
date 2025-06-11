@@ -1216,7 +1216,7 @@
         "tags": ["Advert"]
       }
     },
-    "/api/advert{id}/category": {
+    "/api/advert{id}/category/{categoryId}": {
       "patch": {
         "operationId": "updateAdvertCategory",
         "parameters": [
@@ -1296,7 +1296,7 @@
         "tags": ["AdvertCategory"]
       }
     },
-    "/api/advert{id}/status": {
+    "/api/advert{id}/status/{statusId}": {
       "patch": {
         "operationId": "updateAdvertStatus",
         "parameters": [

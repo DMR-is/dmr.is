@@ -1,5 +1,7 @@
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
+import { NotFoundException } from '@nestjs/common'
+
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
@@ -18,6 +20,15 @@ export class CategoryModel extends BaseEntityModel {
   type!: TypeModel
 
   static async setAdvertCategory(advertId: string, categoryId: string) {
-    await AdvertModel.update({ categoryId }, { where: { id: advertId } })
+    const advert = await AdvertModel.unscoped().findByPk(advertId, {
+      attributes: ['id'],
+    })
+
+    if (!advert) {
+      throw new NotFoundException(`Advert not found`)
+    }
+
+    advert.categoryId = categoryId
+    await advert.save()
   }
 }

@@ -1,14 +1,14 @@
 import useSWR from 'swr'
 
 import { getLegalGazetteClient } from '../../lib/api/createClient'
-import { swrFetcher } from '../../lib/api/fetcher'
+import { fetcher } from '../../lib/api/fetchers'
 
 export const useAdvertsCount = () => {
   const client = getLegalGazetteClient('AdvertApi', 'todo:add-token')
 
   const { data, isLoading, error, isValidating, mutate } = useSWR(
     ['getAdvert'],
-    ([_key]) => swrFetcher({ func: () => client.getAdvertsCount() }),
+    ([_key]) => fetcher({ func: () => client.getAdvertsCount() }),
     {
       keepPreviousData: true,
       refreshInterval: 0,

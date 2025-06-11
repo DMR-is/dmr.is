@@ -2,21 +2,19 @@ import useSWR from 'swr'
 
 import { GetCategoriesRequest } from '../../gen/fetch'
 import { getLegalGazetteClient } from '../../lib/api/createClient'
-import { swrFetcher } from '../../lib/api/fetcher'
+import { fetcher } from '../../lib/api/fetchers'
 
 type UseAdvertCategoriesParams = {
   query?: GetCategoriesRequest
 }
 
-export const useAdvertCategories = ({
-  query = {},
-}: UseAdvertCategoriesParams) => {
-  const client = getLegalGazetteClient('AdvertCategoryApi', 'todo:add-token')
+export const useCategories = ({ query = {} }: UseAdvertCategoriesParams) => {
+  const client = getLegalGazetteClient('CategoryApi', 'todo:add-token')
 
   const { data, isLoading, error, isValidating, mutate } = useSWR(
     ['getCategories', query],
     ([_key, q]) =>
-      swrFetcher({
+      fetcher({
         func: () => client.getCategories(q),
       }),
   )

@@ -1,3 +1,5 @@
+import useSWRMutation from 'swr/mutation'
+
 import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
 import { Select } from '@dmr.is/ui/components/Inputs/Select'
 
@@ -12,10 +14,12 @@ import {
   GridRow,
   Input,
   Stack,
+  toast,
 } from '@island.is/island-ui/core'
 
 import { AdvertDetailedDto, CommonAdvertDto } from '../../../gen/fetch'
-import { useAdvertCategories } from '../../../hooks/advert-categories/useAdvertCategories'
+import { useCategories } from '../../../hooks/categories/useCategories'
+import { setAdvertCategory } from '../../../lib/api/fetchers'
 import * as styles from '../Form.css'
 type Props = {
   advert: Omit<AdvertDetailedDto, 'commonAdvert'>
@@ -23,12 +27,29 @@ type Props = {
 }
 
 export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
-  const { categoryOptions, isLoading } = useAdvertCategories({
+  const { categoryOptions, isLoading } = useCategories({
     query: { type: advert.type.id },
   })
 
   const defaultCategoryOption = categoryOptions.find(
     (opt) => opt.value === advert.category.id,
+  )
+
+  const { trigger: updateCategoryTrigger } = useSWRMutation(
+    'updateCategory',
+    setAdvertCategory,
+    {
+      onSuccess: () => {
+        toast.success('Flokkur auglýsingar uppfærður.', {
+          toastId: 'update-advert-category-success',
+        })
+      },
+      onError: () => {
+        toast.error('Villa kom upp við að breyta flokki.', {
+          toastId: 'update-advert-category-error',
+        })
+      },
+    },
   )
 
   if (!commonAdvert) {
@@ -85,13 +106,22 @@ export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
               </GridColumn>
               <GridColumn span={['12/12', '12/12', '6/12']}>
                 <Select
+                  value={categoryOptions.find(
+                    (cat) => cat.value === advert.category.id,
+                  )}
                   isLoading={isLoading}
                   label="Flokkur auglýsingar"
                   backgroundColor="blue"
-                  size="sm"
                   name={`${advert.id}-category`}
                   options={categoryOptions}
                   defaultValue={defaultCategoryOption}
+                  onChange={(opt) => {
+                    if (!opt?.value) return
+                    updateCategoryTrigger({
+                      id: advert.id,
+                      categoryId: opt?.value,
+                    })
+                  }}
                 />
               </GridColumn>
             </GridRow>

@@ -2,7 +2,7 @@ import useSWR from 'swr'
 
 import { GetCasesRequest } from '../../gen/fetch'
 import { getLegalGazetteClient } from '../../lib/api/createClient'
-import { swrFetcher } from '../../lib/api/fetcher'
+import { fetcher } from '../../lib/api/fetchers'
 
 type UseCasesParams = {
   caseId?: string
@@ -23,7 +23,7 @@ export const useCases = ({ caseId, query = {} }: UseCasesParams = {}) => {
     isLoading: casesLoading,
   } = useSWR(
     ['getCases', query],
-    ([_key, q]) => swrFetcher({ func: () => client.getCases(q) }),
+    ([_key, q]) => fetcher({ func: () => client.getCases(q) }),
     {
       keepPreviousData: true,
       refreshInterval: 0,
