@@ -3,6 +3,7 @@ import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
+import { AdvertModel } from '../advert/advert.model'
 import { AdvertTypeModel } from '../advert-type/advert-type.model'
 
 @BaseEntityTable({
@@ -15,4 +16,8 @@ export class AdvertCategoryModel extends BaseEntityModel {
 
   @BelongsTo(() => AdvertTypeModel)
   type!: AdvertTypeModel
+
+  static async setAdvertCategory(advertId: string, categoryId: string) {
+    await AdvertModel.update({ categoryId }, { where: { id: advertId } })
+  }
 }
