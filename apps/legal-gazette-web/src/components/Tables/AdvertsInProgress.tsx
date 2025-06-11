@@ -1,6 +1,6 @@
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
-import { AdvertStatusIdEnum } from '../../gen/fetch'
+import { StatusIdEnum } from '../../gen/fetch'
 import { useAdvertsInProgress } from '../../hooks/adverts/useAdvertsInProgress'
 import { useFilters } from '../../hooks/useFilters'
 import { formatDate } from '../../lib/utils'
@@ -12,7 +12,7 @@ export const AdvertsInProgress = () => {
     params: {
       page: params.page,
       pageSize: params.pageSize,
-      statusId: [AdvertStatusIdEnum.SUBMITTED],
+      statusId: [StatusIdEnum.SUBMITTED],
     },
   })
 

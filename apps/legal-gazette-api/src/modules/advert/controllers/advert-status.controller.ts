@@ -13,14 +13,14 @@ import { StatusIdEnum, StatusModel } from '../../status/status.model'
 export class AdvertStatusController {
   constructor(
     @InjectModel(StatusModel)
-    private readonly advertStatusModel: typeof StatusModel,
+    private readonly statusModel: typeof StatusModel,
   ) {}
 
   @Patch()
   @ApiParam({
     enum: StatusIdEnum,
     name: 'statusId',
-    enumName: 'AdvertStatusIdEnum',
+    enumName: 'StatusIdEnum',
   })
   @LGResponse({ operationId: 'updateAdvertStatus' })
   async updateAdvertStatus(
@@ -28,6 +28,6 @@ export class AdvertStatusController {
     @Param('statusId', new EnumValidationPipe(StatusIdEnum))
     statusId: StatusIdEnum,
   ): Promise<void> {
-    await this.advertStatusModel.setAdvertStatus(id, statusId)
+    await this.statusModel.setAdvertStatus(id, statusId)
   }
 }

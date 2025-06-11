@@ -10,7 +10,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertTypesDto" }
+                "schema": { "$ref": "#/components/schemas/GetTypesDto" }
               }
             }
           },
@@ -56,267 +56,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertType"]
-      },
-      "post": {
-        "operationId": "createType",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateAdvertType" }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertTypeDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["AdvertType"]
-      }
-    },
-    "/api/v1/types/detailed": {
-      "get": {
-        "operationId": "getTypesDetailed",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetAdvertTypesDetailedDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["AdvertType"]
-      }
-    },
-    "/api/v1/types/{id}": {
-      "put": {
-        "operationId": "updateType",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateAdvertType" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertTypeDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["AdvertType"]
-      },
-      "delete": {
-        "operationId": "deleteType",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertTypeDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["AdvertType"]
+        "tags": ["Type"]
       }
     },
     "/api/v1/categories": {
@@ -335,9 +75,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetAdvertCategoriesDto"
-                }
+                "schema": { "$ref": "#/components/schemas/GetCategoriesDto" }
               }
             }
           },
@@ -383,21 +121,19 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertCategory"]
+        "tags": ["Category"]
       }
     },
     "/api/v1/statuses": {
       "get": {
-        "operationId": "getAdvertStatuses",
+        "operationId": "getStatuses",
         "parameters": [],
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetAdvertStatusesDto"
-                }
+                "schema": { "$ref": "#/components/schemas/GetStatusesDto" }
               }
             }
           },
@@ -443,12 +179,12 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertStatus"]
+        "tags": ["Status"]
       }
     },
     "/api/v1/statuses/{id}": {
       "get": {
-        "operationId": "getAdvertStatus",
+        "operationId": "getStatus",
         "parameters": [
           {
             "name": "id",
@@ -462,7 +198,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertStatusDto" }
+                "schema": { "$ref": "#/components/schemas/StatusDto" }
               }
             }
           },
@@ -508,7 +244,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertStatus"]
+        "tags": ["Status"]
       }
     },
     "/api/v1/cases": {
@@ -975,7 +711,7 @@
             "in": "query",
             "schema": {
               "type": "array",
-              "items": { "$ref": "#/components/schemas/AdvertStatusIdEnum" }
+              "items": { "$ref": "#/components/schemas/StatusIdEnum" }
             }
           }
         ],
@@ -1132,7 +868,7 @@
             "in": "query",
             "schema": {
               "type": "array",
-              "items": { "$ref": "#/components/schemas/AdvertStatusIdEnum" }
+              "items": { "$ref": "#/components/schemas/StatusIdEnum" }
             }
           }
         ],
@@ -1255,9 +991,9 @@
         "tags": ["Advert"]
       }
     },
-    "/api/v1/adverts/{id}/status/{statusId}": {
-      "put": {
-        "operationId": "updateAdvertStatus",
+    "/api/advert{id}/category": {
+      "patch": {
+        "operationId": "updateAdvertCategory",
         "parameters": [
           {
             "name": "id",
@@ -1266,10 +1002,10 @@
             "schema": { "type": "string" }
           },
           {
-            "name": "statusId",
+            "name": "categoryId",
             "required": true,
             "in": "path",
-            "schema": { "$ref": "#/components/schemas/AdvertStatusIdEnum" }
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -1316,7 +1052,71 @@
           }
         },
         "summary": "",
-        "tags": ["Advert"]
+        "tags": ["AdvertCategory"]
+      }
+    },
+    "/api/advert{id}/status": {
+      "patch": {
+        "operationId": "updateAdvertStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "statusId",
+            "required": true,
+            "in": "path",
+            "schema": { "$ref": "#/components/schemas/StatusIdEnum" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["AdvertStatus"]
       }
     },
     "/api/v1/health": {
@@ -1338,8 +1138,8 @@
   "servers": [],
   "components": {
     "schemas": {
-      "AdvertTypeEnum": { "type": "string", "enum": ["Almenn auglýsing"] },
-      "AdvertTypeDto": {
+      "TypeEnum": { "type": "string", "enum": ["Almenn auglýsing"] },
+      "TypeDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -1351,7 +1151,7 @@
             "description": "Title of the entity",
             "example": "Base entity",
             "x-enumNames": ["CommonAdvert"],
-            "allOf": [{ "$ref": "#/components/schemas/AdvertTypeEnum" }]
+            "allOf": [{ "$ref": "#/components/schemas/TypeEnum" }]
           },
           "slug": {
             "type": "string",
@@ -1361,12 +1161,12 @@
         },
         "required": ["id", "title", "slug"]
       },
-      "GetAdvertTypesDto": {
+      "GetTypesDto": {
         "type": "object",
         "properties": {
           "types": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertTypeDto" }
+            "items": { "$ref": "#/components/schemas/TypeDto" }
           }
         },
         "required": ["types"]
@@ -1408,84 +1208,7 @@
         },
         "required": ["statusCode", "timestamp"]
       },
-      "AdvertTypeDetailedDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the entity",
-            "example": "Base entity"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "deletedAt": {
-            "type": "string",
-            "description": "ISO representation of the deletion date",
-            "example": "2021-08-31T12:00:00.000Z",
-            "nullable": true
-          }
-        },
-        "required": ["id", "title", "slug", "createdAt", "updatedAt"]
-      },
-      "GetAdvertTypesDetailedDto": {
-        "type": "object",
-        "properties": {
-          "types": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertTypeDetailedDto" }
-          }
-        },
-        "required": ["types"]
-      },
-      "CreateAdvertType": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "description": "Title of the entity",
-            "example": "Base entity",
-            "x-enumNames": ["CommonAdvert"],
-            "allOf": [{ "$ref": "#/components/schemas/AdvertTypeEnum" }]
-          }
-        },
-        "required": ["title"]
-      },
-      "GetAdvertTypeDto": {
-        "type": "object",
-        "properties": {
-          "type": { "$ref": "#/components/schemas/AdvertTypeDto" }
-        },
-        "required": ["type"]
-      },
-      "UpdateAdvertType": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "description": "Title of the entity",
-            "example": "Base entity",
-            "x-enumNames": ["CommonAdvert"],
-            "allOf": [{ "$ref": "#/components/schemas/AdvertTypeEnum" }]
-          }
-        }
-      },
-      "AdvertCategoryDto": {
+      "CategoryDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -1506,12 +1229,12 @@
         },
         "required": ["id", "title", "slug"]
       },
-      "GetAdvertCategoriesDto": {
+      "GetCategoriesDto": {
         "type": "object",
         "properties": {
           "categories": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertCategoryDto" }
+            "items": { "$ref": "#/components/schemas/CategoryDto" }
           }
         },
         "required": ["categories"]
@@ -1537,7 +1260,7 @@
         },
         "required": ["id", "title", "slug"]
       },
-      "GetAdvertStatusesDto": {
+      "GetStatusesDto": {
         "type": "object",
         "properties": {
           "statuses": {
@@ -1547,7 +1270,7 @@
         },
         "required": ["statuses"]
       },
-      "AdvertStatusDto": {
+      "StatusDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -1686,9 +1409,9 @@
           "title": { "type": "string" },
           "publishedAt": { "type": "string", "nullable": true },
           "scheduledAt": { "type": "string" },
-          "type": { "$ref": "#/components/schemas/AdvertTypeDto" },
-          "category": { "$ref": "#/components/schemas/AdvertCategoryDto" },
-          "status": { "$ref": "#/components/schemas/AdvertStatusDto" },
+          "type": { "$ref": "#/components/schemas/TypeDto" },
+          "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "status": { "$ref": "#/components/schemas/StatusDto" },
           "version": {
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersion" }]
           },
@@ -1825,7 +1548,7 @@
       "AdvertStatusCounterItemDto": {
         "type": "object",
         "properties": {
-          "status": { "$ref": "#/components/schemas/AdvertStatusDto" },
+          "status": { "$ref": "#/components/schemas/StatusDto" },
           "count": { "type": "number" }
         },
         "required": ["status", "count"]
@@ -1857,7 +1580,7 @@
           "published"
         ]
       },
-      "AdvertStatusIdEnum": {
+      "StatusIdEnum": {
         "type": "string",
         "enum": [
           "cd3bf301-52a1-493e-8c80-a391c310c840",
@@ -1899,9 +1622,9 @@
           "title": { "type": "string" },
           "publishedAt": { "type": "string", "nullable": true },
           "scheduledAt": { "type": "string" },
-          "type": { "$ref": "#/components/schemas/AdvertTypeDto" },
-          "category": { "$ref": "#/components/schemas/AdvertCategoryDto" },
-          "status": { "$ref": "#/components/schemas/AdvertStatusDto" },
+          "type": { "$ref": "#/components/schemas/TypeDto" },
+          "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "status": { "$ref": "#/components/schemas/StatusDto" },
           "version": {
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersion" }]
           },

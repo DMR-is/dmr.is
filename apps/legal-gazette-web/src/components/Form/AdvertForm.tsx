@@ -1,6 +1,6 @@
 import { AlertMessage, Tabs, TabType } from '@island.is/island-ui/core'
 
-import { AdvertDetailedDto, AdvertTypeEnum } from '../../gen/fetch'
+import { AdvertDetailedDto, TypeEnum } from '../../gen/fetch'
 import { CommonAdvertTab } from './form-tabs/CommonAdvert'
 
 type CommonAdvertFormProps = {
@@ -16,7 +16,7 @@ export const AdvertForm = ({
 }: CommonAdvertFormProps) => {
   const tabs: TabType[] = adverts.map((advert) => {
     switch (advert.type.title) {
-      case AdvertTypeEnum.COMMON_ADVERT: {
+      case TypeEnum.COMMON_ADVERT: {
         const { commonAdvert, ...rest } = advert
         return {
           id: advert.id,

@@ -16,10 +16,10 @@ import { DetailedDto } from '@dmr.is/legal-gazette/dto'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 import { CategoryDto } from '../../category/dto/category.dto'
-import { StatusIdEnum } from '../../status/status.model'
-import { StatusDto } from '../../status/dto/status.dto'
-import { TypeDto } from '../../type/dto/type.dto'
 import { CommonAdvertDto } from '../../common-advert/dto/common-advert.dto'
+import { StatusDto } from '../../status/dto/status.dto'
+import { StatusIdEnum } from '../../status/status.model'
+import { TypeDto } from '../../type/dto/type.dto'
 import { AdvertVersionEnum } from '../advert.model'
 
 export class AdvertDto extends DetailedDto {
@@ -110,7 +110,7 @@ export class GetAdvertsQueryDto extends PagingQuery {
 
   @ApiProperty({
     enum: StatusIdEnum,
-    enumName: 'AdvertStatusIdEnum',
+    enumName: 'StatusIdEnum',
     'x-enumNames': [
       'Submitted',
       'ReadyForPublication',
