@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
-import { AdvertStatusModel } from '../../advert-status/advert-status.model'
+import { StatusModel } from '../../status/status.model'
 import { IAdvertService } from '../advert.service.interface'
 import {
   AdvertDto,
@@ -20,8 +20,8 @@ import {
 export class AdvertController {
   constructor(
     @Inject(IAdvertService) private readonly advertService: IAdvertService,
-    @InjectModel(AdvertStatusModel)
-    private readonly advertStatusModel: typeof AdvertStatusModel,
+    @InjectModel(StatusModel)
+    private readonly advertStatusModel: typeof StatusModel,
   ) {}
 
   @Get('count')

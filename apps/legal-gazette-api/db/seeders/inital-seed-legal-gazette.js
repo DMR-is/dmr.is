@@ -9,18 +9,15 @@ module.exports = {
     // eslint-disable-next-line no-console
     console.log(cwd())
 
-    const advertTypeSeed = await readFile(
-      './src/modules/advert-type/advert-type.seed.sql',
+    const typeSeed = await readFile('./src/modules/type/type.seed.sql', 'utf8')
+
+    const categoriesSeed = await readFile(
+      './src/modules/category/category.seed.sql',
       'utf8',
     )
 
-    const advertCategoriesSeed = await readFile(
-      './src/modules/advert-category/advert-category.seed.sql',
-      'utf8',
-    )
-
-    const advertStatusSeed = await readFile(
-      './src/modules/advert-status/advert-status.seed.sql',
+    const statusSeed = await readFile(
+      './src/modules/status/status.seed.sql',
       'utf8',
     )
 
@@ -32,9 +29,9 @@ module.exports = {
     const seed = `
       BEGIN;
 
-        ${advertTypeSeed}
-        ${advertCategoriesSeed}
-        ${advertStatusSeed}
+        ${typeSeed}
+        ${categoriesSeed}
+        ${statusSeed}
         ${usersSeed}
 
       COMMIT;

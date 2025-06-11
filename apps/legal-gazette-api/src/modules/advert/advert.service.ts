@@ -6,7 +6,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared/dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
-import { AdvertStatusIdEnum } from '../advert-status/advert-status.model'
+import { StatusIdEnum } from '../status/status.model'
 import {
   AdvertDto,
   GetAdvertsDto,
@@ -28,22 +28,22 @@ export class AdvertService implements IAdvertService {
   async getAdvertsCount(): Promise<GetAdvertsStatusCounterDto> {
     const submittedCount = this.advertModel
       .unscoped()
-      .countByStatus(AdvertStatusIdEnum.SUBMITTED)
+      .countByStatus(StatusIdEnum.SUBMITTED)
     const readyForPublicationCount = this.advertModel
       .unscoped()
-      .countByStatus(AdvertStatusIdEnum.READY_FOR_PUBLICATION)
+      .countByStatus(StatusIdEnum.READY_FOR_PUBLICATION)
 
     const publishedCount = this.advertModel
       .unscoped()
-      .countByStatus(AdvertStatusIdEnum.PUBLISHED)
+      .countByStatus(StatusIdEnum.PUBLISHED)
 
     const rejectedCount = this.advertModel
       .unscoped()
-      .countByStatus(AdvertStatusIdEnum.REJECTED)
+      .countByStatus(StatusIdEnum.REJECTED)
 
     const withdrawnCount = this.advertModel
       .unscoped()
-      .countByStatus(AdvertStatusIdEnum.WITHDRAWN)
+      .countByStatus(StatusIdEnum.WITHDRAWN)
 
     const [submitted, readyForPublication, published, rejected, withdrawn] =
       await Promise.all([

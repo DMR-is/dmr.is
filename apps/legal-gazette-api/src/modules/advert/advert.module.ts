@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { AdvertCategoryModel } from '../advert-category/advert-category.model'
-import { AdvertStatusModel } from '../advert-status/advert-status.model'
+import { CategoryModel } from '../category/category.model'
+import { StatusModel } from '../status/status.model'
 import { AdvertController } from './controllers/advert.controller'
 import { AdvertCategoryController } from './controllers/advert-category.controller'
 import { AdvertStatusController } from './controllers/advert-status.controller'
@@ -12,11 +12,7 @@ import { IAdvertService } from './advert.service.interface'
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([
-      AdvertModel,
-      AdvertStatusModel,
-      AdvertCategoryModel,
-    ]),
+    SequelizeModule.forFeature([AdvertModel, StatusModel, CategoryModel]),
   ],
   controllers: [
     AdvertController,

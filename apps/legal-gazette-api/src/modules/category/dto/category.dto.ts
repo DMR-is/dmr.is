@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { BaseEntityDto } from '@dmr.is/legal-gazette/dto'
 
-export class GetAdvertCategoriesQueryDto {
+export class GetCategoriesQueryDto {
   @ApiProperty({
     type: String,
     nullable: true,
@@ -15,11 +15,11 @@ export class GetAdvertCategoriesQueryDto {
   type?: string
 }
 
-export class AdvertCategoryDto extends BaseEntityDto {}
+export class CategoryDto extends BaseEntityDto {}
 
-export class GetAdvertCategoriesDto {
+export class GetCategoriesDto {
   @ApiProperty({
-    type: [AdvertCategoryDto],
+    type: [CategoryDto],
   })
-  categories!: AdvertCategoryDto[]
+  categories!: CategoryDto[]
 }

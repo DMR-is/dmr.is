@@ -15,10 +15,10 @@ import { ApiProperty } from '@nestjs/swagger'
 import { DetailedDto } from '@dmr.is/legal-gazette/dto'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
-import { AdvertCategoryDto } from '../../advert-category/dto/advert-category.dto'
-import { AdvertStatusIdEnum } from '../../advert-status/advert-status.model'
-import { AdvertStatusDto } from '../../advert-status/dto/advert-status.dto'
-import { AdvertTypeDto } from '../../advert-type/dto/advert-type.dto'
+import { CategoryDto } from '../../category/dto/category.dto'
+import { StatusIdEnum } from '../../status/status.model'
+import { StatusDto } from '../../status/dto/status.dto'
+import { TypeDto } from '../../type/dto/type.dto'
 import { CommonAdvertDto } from '../../common-advert/dto/common-advert.dto'
 import { AdvertVersionEnum } from '../advert.model'
 
@@ -59,20 +59,20 @@ export class AdvertDto extends DetailedDto {
   @IsDateString()
   scheduledAt!: string
 
-  @ApiProperty({ type: AdvertTypeDto })
-  @Type(() => AdvertTypeDto)
+  @ApiProperty({ type: TypeDto })
+  @Type(() => TypeDto)
   @ValidateNested()
-  type!: AdvertTypeDto
+  type!: TypeDto
 
-  @ApiProperty({ type: AdvertCategoryDto })
-  @Type(() => AdvertCategoryDto)
+  @ApiProperty({ type: CategoryDto })
+  @Type(() => CategoryDto)
   @ValidateNested()
-  category!: AdvertCategoryDto
+  category!: CategoryDto
 
-  @ApiProperty({ type: AdvertStatusDto })
-  @Type(() => AdvertStatusDto)
+  @ApiProperty({ type: StatusDto })
+  @Type(() => StatusDto)
   @ValidateNested()
-  status!: AdvertStatusDto
+  status!: StatusDto
 
   @ApiProperty({
     enum: AdvertVersionEnum,
@@ -109,7 +109,7 @@ export class GetAdvertsQueryDto extends PagingQuery {
   categoryId?: string
 
   @ApiProperty({
-    enum: AdvertStatusIdEnum,
+    enum: StatusIdEnum,
     enumName: 'AdvertStatusIdEnum',
     'x-enumNames': [
       'Submitted',
@@ -124,17 +124,17 @@ export class GetAdvertsQueryDto extends PagingQuery {
   @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
   @IsOptional()
   @IsArray()
-  @IsEnum(AdvertStatusIdEnum, { each: true })
-  statusId?: AdvertStatusIdEnum[]
+  @IsEnum(StatusIdEnum, { each: true })
+  statusId?: StatusIdEnum[]
 }
 
 export class AdvertStatusCounterItemDto {
   @ApiProperty({
-    type: AdvertStatusDto,
+    type: StatusDto,
   })
-  @Type(() => AdvertStatusDto)
+  @Type(() => StatusDto)
   @ValidateNested()
-  status!: AdvertStatusDto
+  status!: StatusDto
 
   @ApiProperty({
     type: Number,

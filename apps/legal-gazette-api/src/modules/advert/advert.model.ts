@@ -14,12 +14,9 @@ import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { AdvertCategoryModel } from '../advert-category/advert-category.model'
-import {
-  AdvertStatusIdEnum,
-  AdvertStatusModel,
-} from '../advert-status/advert-status.model'
-import { AdvertTypeModel } from '../advert-type/advert-type.model'
+import { CategoryModel } from '../category/category.model'
+import { StatusIdEnum, StatusModel } from '../status/status.model'
+import { TypeModel } from '../type/type.model'
 import { CaseModel } from '../case/case.model'
 import {
   CommonAdvertCreationAttributes,
@@ -42,9 +39,9 @@ type AdvertAttributes = {
   categoryId: string
   statusId: string
   paid: boolean
-  type: AdvertTypeModel
-  category: AdvertCategoryModel
-  status: AdvertStatusModel
+  type: TypeModel
+  category: CategoryModel
+  status: StatusModel
   case: CaseModel
 }
 
@@ -71,9 +68,9 @@ export enum AdvertVersionEnum {
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
 @DefaultScope(() => ({
   include: [
-    AdvertStatusModel,
-    AdvertCategoryModel,
-    AdvertTypeModel,
+    StatusModel,
+    CategoryModel,
+    TypeModel,
     CommonAdvertModel,
     {
       model: CaseModel.unscoped(),
@@ -83,10 +80,7 @@ export enum AdvertVersionEnum {
   ],
   where: {
     statusId: {
-      [Op.in]: [
-        AdvertStatusIdEnum.SUBMITTED,
-        AdvertStatusIdEnum.READY_FOR_PUBLICATION,
-      ],
+      [Op.in]: [StatusIdEnum.SUBMITTED, StatusIdEnum.READY_FOR_PUBLICATION],
     },
     publishedAt: {
       [Op.eq]: null,
@@ -97,9 +91,9 @@ export enum AdvertVersionEnum {
 @Scopes(() => ({
   published: {
     include: [
-      AdvertStatusModel,
-      AdvertCategoryModel,
-      AdvertTypeModel,
+      StatusModel,
+      CategoryModel,
+      TypeModel,
       {
         model: CaseModel.unscoped(),
         attributes: ['caseNumber'],
@@ -108,15 +102,15 @@ export enum AdvertVersionEnum {
     ],
     where: {
       publishedAt: { [Op.ne]: null },
-      statusId: AdvertStatusIdEnum.PUBLISHED,
+      statusId: StatusIdEnum.PUBLISHED,
     },
     order: [['publishedAt', 'DESC']],
   },
   completed: {
     include: [
-      AdvertStatusModel,
-      AdvertCategoryModel,
-      AdvertTypeModel,
+      StatusModel,
+      CategoryModel,
+      TypeModel,
       {
         model: CaseModel.unscoped(),
         attributes: ['caseNumber'],
@@ -128,9 +122,9 @@ export enum AdvertVersionEnum {
     where: {
       statusId: {
         [Op.in]: [
-          AdvertStatusIdEnum.PUBLISHED,
-          AdvertStatusIdEnum.REJECTED,
-          AdvertStatusIdEnum.WITHDRAWN,
+          StatusIdEnum.PUBLISHED,
+          StatusIdEnum.REJECTED,
+          StatusIdEnum.WITHDRAWN,
         ],
       },
     },
@@ -174,7 +168,7 @@ export class AdvertModel extends BaseModel<
     allowNull: false,
     field: 'advert_type_id',
   })
-  @ForeignKey(() => AdvertTypeModel)
+  @ForeignKey(() => TypeModel)
   typeId!: string
 
   @Column({
@@ -182,16 +176,16 @@ export class AdvertModel extends BaseModel<
     allowNull: false,
     field: 'advert_category_id',
   })
-  @ForeignKey(() => AdvertCategoryModel)
+  @ForeignKey(() => CategoryModel)
   categoryId!: string
 
   @Column({
     type: DataType.UUID,
     allowNull: false,
     field: 'advert_status_id',
-    defaultValue: AdvertStatusIdEnum.SUBMITTED,
+    defaultValue: StatusIdEnum.SUBMITTED,
   })
-  @ForeignKey(() => AdvertStatusModel)
+  @ForeignKey(() => StatusModel)
   statusId!: string
 
   @Column({
@@ -252,14 +246,14 @@ export class AdvertModel extends BaseModel<
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
   case!: CaseModel
 
-  @BelongsTo(() => AdvertTypeModel)
-  type!: AdvertTypeModel
+  @BelongsTo(() => TypeModel)
+  type!: TypeModel
 
-  @BelongsTo(() => AdvertCategoryModel)
-  category!: AdvertCategoryModel
+  @BelongsTo(() => CategoryModel)
+  category!: CategoryModel
 
-  @BelongsTo(() => AdvertStatusModel)
-  status!: AdvertStatusModel
+  @BelongsTo(() => StatusModel)
+  status!: StatusModel
 
   @HasOne(() => CommonAdvertModel, {
     foreignKey: 'id',
@@ -267,7 +261,7 @@ export class AdvertModel extends BaseModel<
   commonAdvert?: CommonAdvertModel
 
   static async countByStatus(
-    statusId: AdvertStatusIdEnum,
+    statusId: StatusIdEnum,
   ): Promise<AdvertStatusCounterItemDto> {
     this.logger.info(`Counting adverts with status ID: ${statusId}`, {
       context: 'AdvertModel',
@@ -278,7 +272,7 @@ export class AdvertModel extends BaseModel<
     }
 
     const [status, count] = await Promise.all([
-      AdvertStatusModel.findByPk(statusId),
+      StatusModel.findByPk(statusId),
       this.count({
         where: whereClause,
       }),
@@ -302,7 +296,7 @@ export class AdvertModel extends BaseModel<
     }
   }
 
-  static async setStatus(advertId: string, statusId: AdvertStatusIdEnum) {
+  static async setStatus(advertId: string, statusId: StatusIdEnum) {
     const advert = await this.findByPk(advertId)
 
     if (!advert) {
@@ -341,7 +335,7 @@ export class AdvertModel extends BaseModel<
 
     await advert.update({
       publishedAt: now,
-      statusId: AdvertStatusIdEnum.PUBLISHED,
+      statusId: StatusIdEnum.PUBLISHED,
     })
   }
 }

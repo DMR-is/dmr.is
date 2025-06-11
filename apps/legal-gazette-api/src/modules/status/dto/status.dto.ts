@@ -2,11 +2,11 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { BaseEntityDto } from '@dmr.is/legal-gazette/dto'
 
-export class GetAdvertStatusesDto {
+export class GetStatusesDto {
   @ApiProperty({
     type: [BaseEntityDto],
   })
   statuses!: BaseEntityDto[]
 }
 
-export class AdvertStatusDto extends BaseEntityDto {}
+export class StatusDto extends BaseEntityDto {}

@@ -14,8 +14,8 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
-import { AdvertStatusIdEnum } from '../advert-status/advert-status.model'
-import { AdvertTypeIdEnum } from '../advert-type/advert-type.model'
+import { StatusIdEnum } from '../status/status.model'
+import { TypeIdEnum } from '../type/type.model'
 import { CommonAdvertModel } from '../common-advert/common-advert.model'
 import { CreateCommonAdvertInternalDto } from '../common-advert/dto/create-common-advert.dto'
 import {
@@ -115,7 +115,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
         communicationChannels: channels,
         adverts: body.publishingDates.map((date, i) => ({
           categoryId: body.categoryId,
-          typeId: AdvertTypeIdEnum.COMMON_APPLICATION,
+          typeId: TypeIdEnum.COMMON_APPLICATION,
           scheduledAt: new Date(date),
           title: body.caption,
           html: body.html,
@@ -145,7 +145,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     })
 
     const promises = adverts.map((advert) =>
-      advert.update({ statusId: AdvertStatusIdEnum.WITHDRAWN }),
+      advert.update({ statusId: StatusIdEnum.WITHDRAWN }),
     )
 
     await Promise.all(promises)

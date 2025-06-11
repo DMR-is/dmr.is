@@ -55,12 +55,14 @@ export class BaseEntityDetailedDto extends IntersectionType(
   DetailedDto,
 ) {}
 
-export const baseEntityMigrate = <T extends Model>(model: T): BaseEntityDto => {
+export const baseEntityMigrate = <T extends Model, D extends BaseEntityDto>(
+  model: T,
+): D => {
   return {
     id: model.getDataValue('id'),
     title: model.getDataValue('title'),
     slug: model.getDataValue('slug'),
-  }
+  } as D
 }
 
 export const baseEntityDetailedMigrate = <T extends Model>(

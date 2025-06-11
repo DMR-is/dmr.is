@@ -18,18 +18,18 @@ import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { AdvertModel } from '../modules/advert/advert.model'
 import { AdvertModule } from '../modules/advert/advert.module'
-import { AdvertCategoryModel } from '../modules/advert-category/advert-category.model'
-import { AdvertCategoryModule } from '../modules/advert-category/advert-category.module'
-import { AdvertStatusModel } from '../modules/advert-status/advert-status.model'
-import { AdvertStatusModule } from '../modules/advert-status/advert-status.module'
-import { AdvertTypeModel } from '../modules/advert-type/advert-type.model'
-import { AdvertTypeModule } from '../modules/advert-type/advert-type.module'
 import { CaseModel } from '../modules/case/case.model'
 import { CaseModule } from '../modules/case/case.module'
+import { CategoryModel } from '../modules/category/category.model'
+import { CategoryModule } from '../modules/category/category.module'
 import { CommonAdvertModel } from '../modules/common-advert/common-advert.model'
 import { CommonApplicationModule } from '../modules/common-application/common-application.module'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
 import { InstitutionModel } from '../modules/institution/institution.model'
+import { StatusModel } from '../modules/status/status.model'
+import { StatusModule } from '../modules/status/status.module'
+import { TypeModel } from '../modules/type/type.model'
+import { TypeModule } from '../modules/type/type.module'
 import { UserInstitutionModel } from '../modules/users/user-institutions.model'
 import { UserRoleModel } from '../modules/users/user-roles.model'
 import { UserModel } from '../modules/users/users.model'
@@ -52,9 +52,9 @@ import { UserModel } from '../modules/users/users.model'
           debugLog: true,
           autoLoadModels: false,
           models: [
-            AdvertTypeModel,
-            AdvertCategoryModel,
-            AdvertStatusModel,
+            TypeModel,
+            CategoryModel,
+            StatusModel,
             CommunicationChannelModel,
             CaseModel,
             CommonAdvertModel,
@@ -70,9 +70,9 @@ import { UserModel } from '../modules/users/users.model'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    AdvertTypeModule,
-    AdvertCategoryModule,
-    AdvertStatusModule,
+    TypeModule,
+    CategoryModule,
+    StatusModule,
     CaseModule,
     CommonApplicationModule,
     AdvertModule,

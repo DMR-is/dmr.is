@@ -4,15 +4,15 @@ import { InjectModel } from '@nestjs/sequelize'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
-import { AdvertCategoryModel } from '../../advert-category/advert-category.model'
+import { CategoryModel } from '../../category/category.model'
 
 @Controller({
   path: 'advert:id/category',
 })
 export class AdvertCategoryController {
   constructor(
-    @InjectModel(AdvertCategoryModel)
-    private readonly advertCategoryModel: typeof AdvertCategoryModel,
+    @InjectModel(CategoryModel)
+    private readonly advertCategoryModel: typeof CategoryModel,
   ) {}
 
   @Patch()
