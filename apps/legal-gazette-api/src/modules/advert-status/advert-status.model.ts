@@ -1,5 +1,7 @@
 import { HasMany } from 'sequelize-typescript'
 
+import { NotFoundException } from '@nestjs/common'
+
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
@@ -20,7 +22,16 @@ export class AdvertStatusModel extends BaseEntityModel {
   })
   adverts!: AdvertModel[]
 
-  static setAdvertStatus(advertId: string, statusId: AdvertStatusIdEnum) {
-    return AdvertModel.update({ statusId }, { where: { id: advertId } })
+  static async setAdvertStatus(advertId: string, statusId: AdvertStatusIdEnum) {
+    const advert = await AdvertModel.unscoped().findByPk(advertId, {
+      attributes: ['id'],
+    })
+
+    if (!advert) {
+      throw new NotFoundException(`Advert not found`)
+    }
+
+    advert.statusId = statusId
+    await advert.save()
   }
 }

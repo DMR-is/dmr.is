@@ -5,11 +5,13 @@ import { CommonAdvertTab } from './form-tabs/CommonAdvert'
 
 type CommonAdvertFormProps = {
   adverts: AdvertDetailedDto[]
+  selected?: string
   onAdvertSelect?: (id: string) => void
 }
 
 export const AdvertForm = ({
   adverts,
+  selected,
   onAdvertSelect,
 }: CommonAdvertFormProps) => {
   const tabs: TabType[] = adverts.map((advert) => {
@@ -17,6 +19,7 @@ export const AdvertForm = ({
       case AdvertTypeEnum.COMMON_ADVERT: {
         const { commonAdvert, ...rest } = advert
         return {
+          id: advert.id,
           label: `Birting ${advert.version}`,
           content: (
             <CommonAdvertTab advert={rest} commonAdvert={commonAdvert} />
@@ -25,6 +28,7 @@ export const AdvertForm = ({
       }
       default: {
         return {
+          id: advert.id,
           label: 'Óþekkt tegund',
           content: (
             <AlertMessage type="warning" title="Óþekkt tegund auglýsingar" />
@@ -36,8 +40,9 @@ export const AdvertForm = ({
 
   return (
     <Tabs
-      onChange={onAdvertSelect}
+      onChange={(id) => onAdvertSelect?.(id)}
       contentBackground="white"
+      selected={selected}
       tabs={tabs}
       label="Auglýsingar"
     />

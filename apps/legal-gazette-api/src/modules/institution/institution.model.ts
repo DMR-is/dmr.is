@@ -1,5 +1,6 @@
 import {
   BeforeCreate,
+  BeforeUpsert,
   BelongsToMany,
   Column,
   DataType,
@@ -22,6 +23,7 @@ type InstitutionAttributes = {
 export type InstitutionCreateAttributes = {
   title: string
   nationalId: string
+  slug?: string
 }
 
 @BaseTable({ tableName: LegalGazetteModels.INSTITUTIONS })
@@ -59,10 +61,11 @@ export class InstitutionModel extends BaseModel<
   @BelongsToMany(() => UserModel, () => UserInstitutionModel)
   users!: UserModel[]
 
+  @BeforeUpsert
   @BeforeCreate
-  static slugit(instance: InstitutionModel) {
+  static async slugit(instance: InstitutionModel) {
     const slug = slugify(instance.title, { lower: true })
     this.logger.debug('Slugifying institution title', instance.title, slug)
-    instance.slug = slugify(instance.title, { lower: true })
+    instance.slug = slug
   }
 }

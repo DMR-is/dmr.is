@@ -34,6 +34,7 @@ export class DMRSequelizeConfigService implements SequelizeOptionsFactory {
       ...config,
       ...getOptions(),
       dialect: 'postgres',
+      logQueryParameters: config.debugLog ? true : false,
       autoLoadModels: config.autoLoadModels ?? true,
       logging: config.debugLog
         ? (sql: string) => {

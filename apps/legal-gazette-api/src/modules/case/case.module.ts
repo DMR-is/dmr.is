@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CaseController } from './case.controller'
+import { CaseModel } from './case.model'
 import { CaseService } from './case.service'
 import { ICaseService } from './case.service.interface'
-import { CaseModel } from './case.model'
 
 @Module({
   imports: [SequelizeModule.forFeature([CaseModel])],

@@ -1,13 +1,7 @@
-import {
-  Column,
-  DataType,
-  ForeignKey,
-  HasOne,
-  Model,
-} from 'sequelize-typescript'
+import { Column, DataType, ForeignKey, HasOne } from 'sequelize-typescript'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
-import { BaseTable } from '@dmr.is/shared/models/base'
+import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import {
   InstitutionCreateAttributes,
@@ -28,7 +22,7 @@ export type UserInstitutionCreateAttributes = {
 }
 
 @BaseTable({ tableName: LegalGazetteModels.USER_INSTITUTIONS })
-export class UserInstitutionModel extends Model<
+export class UserInstitutionModel extends BaseModel<
   UserInstitutionAttributes,
   UserInstitutionCreateAttributes
 > {

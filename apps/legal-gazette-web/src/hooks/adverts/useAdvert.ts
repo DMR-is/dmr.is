@@ -8,11 +8,11 @@ type UseAdvertProps = {
   params?: GetAdvertByIdRequest
 }
 
-export const useAdvert = ({ params }: UseAdvertProps) => {
+export const useAdvert = ({ params }: UseAdvertProps = {}) => {
   const client = getLegalGazetteClient('AdvertApi', 'todo:add-token')
 
   const { data, isLoading, error, isValidating, mutate } = useSWR(
-    params ? ['getAdvertById', params] : null,
+    params?.id ? ['getAdvertById', params] : null,
     ([_key, params]) =>
       swrFetcher({ func: () => client.getAdvertById(params) }),
     {

@@ -121,6 +121,7 @@ export enum AdvertVersionEnum {
         model: CaseModel.unscoped(),
         attributes: ['caseNumber'],
         required: true,
+        paranoid: false,
       },
     ],
     order: [['updatedAt', 'ASC']],

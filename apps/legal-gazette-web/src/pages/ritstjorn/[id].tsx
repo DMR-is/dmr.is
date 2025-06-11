@@ -26,20 +26,16 @@ const HeroNoSRR = dynamic(() => import('@dmr.is/ui/components/Hero/Hero'), {
   ssr: false,
 })
 
-const TextInput = dynamic(() =>
-  import('@dmr.is/ui/components/Inputs/TextInput').then((mod) => mod),
-)
-
 type Props = {
-  currentCase: CaseDetailedDto
+  initalCase: CaseDetailedDto
 }
 
-export default function SingleCase({ currentCase }: Props) {
+export default function SingleCase({ initalCase }: Props) {
   const updatedRoutes = Routes.flatMap((route) => {
     if (route.path === Route.RITSTJORN_ID) {
       return {
         ...route,
-        pathName: `Mál nr. ${currentCase.caseNumber}`,
+        // pathName: `Mál nr. ${initalCase.caseNumber}`,
       }
     }
 
@@ -49,10 +45,10 @@ export default function SingleCase({ currentCase }: Props) {
   const breadcrumbs = routesToBreadcrumbs(
     updatedRoutes,
     Route.RITSTJORN_ID,
-    `Mál nr. ${currentCase.caseNumber}`,
+    // `Mál nr. ${initalCase.caseNumber}`,
   )
 
-  const [selectedAdvert, setSelectedAdvert] = useState(currentCase.adverts[0])
+  const [selectedAdvert, setSelectedAdvert] = useState(initalCase.adverts[0])
 
   return (
     <Box padding={6} background="purple100">
@@ -70,19 +66,20 @@ export default function SingleCase({ currentCase }: Props) {
                   description="Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
                 />
                 <AdvertForm
+                  selected={selectedAdvert.id}
                   onAdvertSelect={(id) =>
                     setSelectedAdvert(
-                      currentCase.adverts.find((ad) => ad.id === id) ??
-                        currentCase.adverts[0],
+                      initalCase.adverts.find((ad) => ad.id === id) ??
+                        initalCase.adverts[0],
                     )
                   }
-                  adverts={currentCase.adverts}
+                  adverts={initalCase.adverts}
                 />
               </Stack>
             </Form>
           </GridColumn>
           <GridColumn span={['12/12', '12/12', '3/12', '3/12']}>
-            <AdvertSidebar advert={selectedAdvert} />
+            <AdvertSidebar advertId={selectedAdvert.id} />
           </GridColumn>
         </GridRow>
       </GridContainer>
@@ -95,7 +92,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
 
   if (!params?.id) return { notFound: true }
 
-  const currentCase = await client.getCase({
+  const initalCase = await client.getCase({
     id: Array.isArray(params.id) ? params.id[0] : params.id,
   })
 
@@ -104,7 +101,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
       layoutProps: {
         headerVariant: 'white',
       },
-      currentCase: deleteUndefined(currentCase),
+      initalCase: deleteUndefined(initalCase),
     },
   }
 }

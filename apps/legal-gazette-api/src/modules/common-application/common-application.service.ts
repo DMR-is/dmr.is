@@ -1,3 +1,6 @@
+import { Sequelize } from 'sequelize'
+import slugify from 'slugify'
+
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
@@ -67,22 +70,27 @@ export class CommonApplicationService implements ICommonApplicationService {
   async submitApplication(body: SubmitCommonApplicationDto): Promise<void> {
     const actorNationalId = '0000000000'
     const institutionNationalId = '0101010101'
+    let institutionId: string | null = null
 
-    const [institution] = body.institution
-      ? await this.institutionModel.upsert(
-          {
-            nationalId: institutionNationalId,
-            title: body.institution.title,
-          },
-          {
-            conflictWhere: { nationalId: institutionNationalId },
-            returning: ['id'],
-            hooks: true,
-          },
-        )
-      : [null]
+    if (body.institution) {
+      const returnedInstitution = await this.institutionModel.upsert(
+        {
+          nationalId: institutionNationalId,
+          title: body.institution.title,
+          slug: slugify(body.institution.title, { lower: true }),
+        },
+        {
+          conflictWhere: Sequelize.literal(
+            `"national_id" = '${institutionNationalId}'`,
+          ),
+          returning: ['id'],
+          hooks: true,
+        },
+      )
+      institutionId = returnedInstitution[0].id
+    }
 
-    const [user] = await this.userModel.upsert(
+    const user = await this.userModel.upsert(
       {
         email: body.actor.email,
         firstName: body.actor.firstName,
@@ -92,22 +100,25 @@ export class CommonApplicationService implements ICommonApplicationService {
         lastSubmissionDate: new Date(),
       },
       {
-        conflictWhere: { nationalId: actorNationalId },
+        conflictWhere: Sequelize.literal(
+          `"national_id" = '${actorNationalId}'`,
+        ),
         returning: ['id'],
       },
     )
 
-    if (institution?.id && user?.id) {
+    const userId = user[0].id
+
+    if (institutionId && userId) {
       await this.userInstitutionModel.upsert(
         {
-          userId: user.id,
-          institutionId: institution.id,
+          userId,
+          institutionId,
         },
         {
-          conflictWhere: {
-            userId: user.id,
-            institutionId: institution.id,
-          },
+          conflictWhere: Sequelize.literal(
+            `"user_id" = '${userId}' AND "institution_id" = '${institutionId}'`,
+          ),
           returning: false,
         },
       )

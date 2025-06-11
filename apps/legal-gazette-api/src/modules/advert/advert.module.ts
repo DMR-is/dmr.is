@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { AdvertStatusModel } from '@dmr.is/modules'
-
+import { AdvertStatusModel } from '../advert-status/advert-status.model'
 import { AdvertController } from './advert.controller'
 import { AdvertModel } from './advert.model'
 import { AdvertService } from './advert.service'

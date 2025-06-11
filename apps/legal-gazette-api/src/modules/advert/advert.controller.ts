@@ -63,8 +63,12 @@ export class AdvertController {
   }
 
   @Put(':id/status/:statusId')
-  @ApiParam({ enum: AdvertStatusIdEnum, name: 'statusId' })
-  @LGResponse({ operationId: 'updateAdvertStatus', type: AdvertDto })
+  @ApiParam({
+    enum: AdvertStatusIdEnum,
+    name: 'statusId',
+    enumName: 'AdvertStatusIdEnum',
+  })
+  @LGResponse({ operationId: 'updateAdvertStatus' })
   async updateAdvertStatus(
     @Param('id') id: string,
     @Param('statusId', new EnumValidationPipe(AdvertStatusIdEnum))

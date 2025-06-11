@@ -1,8 +1,8 @@
 import dynamic from 'next/dynamic'
 
-import { Stack } from '@island.is/island-ui/core'
+import { AlertMessage, SkeletonLoader, Stack } from '@island.is/island-ui/core'
 
-import { AdvertDetailedDto } from '../../gen/fetch'
+import { useAdvert } from '../../hooks/adverts/useAdvert'
 import { FormStatusButton } from './FormStatusButton'
 
 const TextInput = dynamic(() =>
@@ -10,10 +10,34 @@ const TextInput = dynamic(() =>
 )
 
 type Props = {
-  advert: AdvertDetailedDto
+  advertId: string
 }
 
-export const AdvertSidebar = ({ advert }: Props) => {
+export const AdvertSidebar = ({ advertId }: Props) => {
+  const {
+    advert,
+    isLoading,
+    mutate: refetch,
+  } = useAdvert({
+    params: { id: advertId },
+  })
+
+  if (isLoading) {
+    return (
+      <SkeletonLoader space={2} height={64} repeat={3} borderRadius="large" />
+    )
+  }
+
+  if (!advert) {
+    return (
+      <AlertMessage
+        type="error"
+        title="Villa kom upp"
+        message="Ekki tóskt að sækja auglýsingu"
+      />
+    )
+  }
+
   return (
     <Stack space={2}>
       <TextInput
@@ -21,14 +45,13 @@ export const AdvertSidebar = ({ advert }: Props) => {
         defaultValue="Ármann Árni"
         label="Starfsmaður"
       />
-      <TextInput
-        name="advert-status"
-        value={advert.status.title}
-        label="Staða"
-        disabled
-      />
 
-      <FormStatusButton advertId={advert.id} status={advert.status} />
+      <FormStatusButton
+        advertId={advert.id}
+        caseId={advert.caseId}
+        status={advert.status}
+        onStatusChange={refetch}
+      />
     </Stack>
   )
 }
