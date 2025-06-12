@@ -1,3 +1,5 @@
+import { useRouter } from 'next/router'
+
 import { AlertMessage, Tabs, TabType } from '@island.is/island-ui/core'
 
 import { TypeEnum } from '../../gen/fetch'
@@ -6,8 +8,18 @@ import { CommonAdvertTab } from './form-tabs/CommonAdvert'
 
 export const AdvertForm = () => {
   const { case: theCase, selectedAdvert, setSelectedAdvert } = useCaseContext()
+  const router = useRouter()
 
   const adverts = theCase.adverts
+
+  const handleTabChange = (id: string) => {
+    const advert = adverts.find((advert) => advert.id === id)
+    if (advert) {
+      setSelectedAdvert(id)
+      router.query.tab = id
+      router.push(router, undefined, { shallow: true })
+    }
+  }
 
   const tabs: TabType[] = adverts.map((advert) => {
     switch (advert.type.title) {
@@ -32,7 +44,7 @@ export const AdvertForm = () => {
 
   return (
     <Tabs
-      onChange={(id) => setSelectedAdvert(id)}
+      onChange={handleTabChange}
       contentBackground="white"
       selected={selectedAdvert.id}
       tabs={tabs}

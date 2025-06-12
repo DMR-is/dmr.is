@@ -22,13 +22,19 @@ export const CaseContext = createContext<CaseContextState>({
 
 type CaseProviderProps = {
   initalCase: CaseDetailedDto
+  intialAdvertId?: string
   children: React.ReactNode
 }
 
-export const CaseProvider = ({ children, initalCase }: CaseProviderProps) => {
+export const CaseProvider = ({
+  children,
+  initalCase,
+  intialAdvertId,
+}: CaseProviderProps) => {
   const [currentCase, setCurrentCase] = useState<CaseDetailedDto>(initalCase)
   const [selectedAdvert, setSelectedAdvert] = useState<AdvertDetailedDto>(
-    initalCase.adverts[0],
+    initalCase.adverts.find((ad) => ad.id === intialAdvertId) ||
+      initalCase.adverts[0],
   )
 
   const handleSelectedAdvert = (id: string) => {
@@ -51,19 +57,10 @@ export const CaseProvider = ({ children, initalCase }: CaseProviderProps) => {
       fallbackData: currentCase,
       onSuccess: (data) => {
         setCurrentCase(data)
-
-        const selectedAdvert = data.adverts.find(
-          (advert) => advert.id === initalCase.adverts[0].id,
+        setSelectedAdvert(
+          data.adverts.find((ad) => ad.id === selectedAdvert.id) ||
+            data.adverts[0],
         )
-
-        if (!selectedAdvert) {
-          toast.error('Auglýsing fannst ekki', {
-            toastId: 'case-context-advert-not-found',
-          })
-          return
-        }
-
-        setSelectedAdvert(selectedAdvert)
       },
       onError: (_error) => {
         toast.error('Ekki tókst að sækja mál', {

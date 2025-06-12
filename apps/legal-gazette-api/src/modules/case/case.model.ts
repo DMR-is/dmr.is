@@ -14,14 +14,14 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
-import { StatusIdEnum } from '../status/status.model'
-import { TypeIdEnum } from '../type/type.model'
 import { CommonAdvertModel } from '../common-advert/common-advert.model'
 import { CreateCommonAdvertInternalDto } from '../common-advert/dto/create-common-advert.dto'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
 } from '../communication-channel/communication-channel.model'
+import { StatusIdEnum } from '../status/status.model'
+import { TypeIdEnum } from '../type/type.model'
 
 const LOGGING_CONTEXT = 'CaseModel'
 
@@ -100,7 +100,9 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   adverts!: AdvertModel[]
 
   static async createCommonAdvert(body: CreateCommonAdvertInternalDto) {
-    this.logger.info('Creating common case', { context: LOGGING_CONTEXT })
+    this.logger.info('Creating case for common advert', {
+      context: LOGGING_CONTEXT,
+    })
 
     const channels =
       body.channels?.map((ch) => ({
@@ -138,7 +140,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   }
 
   @BeforeDestroy
-  static async softDeleteCase(instance: CaseModel) {
+  static async markAdvertsAsWithdrawn(instance: CaseModel) {
     const adverts = await AdvertModel.unscoped().findAll({
       attributes: ['id'],
       where: { caseId: instance.id },

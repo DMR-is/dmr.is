@@ -27,9 +27,10 @@ const HeroNoSRR = dynamic(() => import('@dmr.is/ui/components/Hero/Hero'), {
 
 type Props = {
   initalCase: CaseDetailedDto
+  intialAdvertId: string
 }
 
-export default function SingleCase({ initalCase }: Props) {
+export default function SingleCase({ initalCase, intialAdvertId }: Props) {
   const updatedRoutes = Routes.flatMap((route) => {
     if (route.path === Route.RITSTJORN_ID) {
       return {
@@ -48,7 +49,7 @@ export default function SingleCase({ initalCase }: Props) {
   )
 
   return (
-    <CaseProvider initalCase={initalCase}>
+    <CaseProvider initalCase={initalCase} intialAdvertId={intialAdvertId}>
       <Box padding={6} background="purple100">
         <GridContainer>
           <GridRow>
@@ -77,7 +78,10 @@ export default function SingleCase({ initalCase }: Props) {
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+export const getServerSideProps: GetServerSideProps = async ({
+  params,
+  query,
+}) => {
   const client = getLegalGazetteClient('CaseApi', 'todo:add-token')
 
   if (!params?.id) return { notFound: true }
@@ -86,12 +90,27 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     id: Array.isArray(params.id) ? params.id[0] : params.id,
   })
 
+  if (!query.tab) {
+    const advertId = initalCase.adverts[0]?.id
+    return {
+      redirect: {
+        destination: `/ritstjorn/${initalCase.id}?tab=${advertId}`,
+        permanent: false,
+      },
+    }
+  }
+
   return {
     props: {
       layoutProps: {
         headerVariant: 'white',
       },
       initalCase: deleteUndefined(initalCase),
+      intialAdvertId: query.tab
+        ? Array.isArray(query.tab)
+          ? query.tab[0]
+          : query.tab
+        : initalCase.adverts[0].id,
     },
   }
 }

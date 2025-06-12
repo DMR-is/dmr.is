@@ -22,7 +22,7 @@ export const AdvertsInProgress = () => {
     tegund: advert.type.title,
     flokkur: advert.category.title,
     efni: advert.title,
-    href: `/ritstjorn/${advert.caseId}`,
+    href: `/ritstjorn/${advert.caseId}?tab=${advert.id}`,
     hasLink: true,
   }))
 

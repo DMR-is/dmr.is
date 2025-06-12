@@ -4,6 +4,7 @@ import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { AdvertModel } from '../advert/advert.model'
+import { CommonAdvertDto } from './dto/common-advert.dto'
 
 type CommonAdvertAttributes = {
   caption: string
@@ -58,4 +59,15 @@ export class CommonAdvertModel extends BaseModel<
 
   @BelongsTo(() => AdvertModel, { foreignKey: 'id' })
   advert!: AdvertModel
+
+  static fromModel(model: CommonAdvertModel): CommonAdvertDto {
+    return {
+      caption: model.caption,
+      signature: {
+        name: model.signatureName,
+        location: model.signatureLocation,
+        date: model.signatureDate.toISOString(),
+      },
+    }
+  }
 }

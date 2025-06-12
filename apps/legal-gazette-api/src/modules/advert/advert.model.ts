@@ -14,14 +14,14 @@ import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { CategoryModel } from '../category/category.model'
-import { StatusIdEnum, StatusModel } from '../status/status.model'
-import { TypeModel } from '../type/type.model'
 import { CaseModel } from '../case/case.model'
+import { CategoryModel } from '../category/category.model'
 import {
   CommonAdvertCreationAttributes,
   CommonAdvertModel,
 } from '../common-advert/common-advert.model'
+import { StatusIdEnum, StatusModel } from '../status/status.model'
+import { TypeModel } from '../type/type.model'
 import {
   AdvertStatusCounterItemDto,
   GetAdvertsQueryDto,

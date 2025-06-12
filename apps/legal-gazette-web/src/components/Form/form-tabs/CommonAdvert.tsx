@@ -64,6 +64,9 @@ export const CommonAdvertTab = () => {
     },
   )
 
+  console.log('selectedAdvert.id', selectedAdvert.id)
+  console.log('selectedAdvert.category', selectedAdvert.category.title)
+
   if (!selectedAdvert.commonAdvert) {
     return (
       <AlertMessage
@@ -84,58 +87,72 @@ export const CommonAdvertTab = () => {
           startExpanded={true}
         >
           <GridContainer>
-            <GridRow rowGap={3}>
-              <GridColumn span={['12/12', '12/12', '6/12']}>
-                <Input
-                  disabled
-                  label="Yfirskrift auglýsingar"
-                  backgroundColor="blue"
-                  size="sm"
-                  name={`${selectedAdvert.id}-caption`}
-                  defaultValue="Stofnun X"
-                />
-              </GridColumn>
-              <GridColumn span={['12/12', '12/12', '6/12']}>
-                <DatePicker
-                  disabled
-                  locale="is"
-                  placeholderText={undefined}
-                  label="Dagsetning innsendingar"
-                  backgroundColor="blue"
-                  size="sm"
-                  selected={new Date(selectedAdvert.createdAt)}
-                />
-              </GridColumn>
-              <GridColumn span={['12/12', '12/12', '6/12']}>
-                <Input
-                  disabled
-                  label="Tegund auglýsingar"
-                  backgroundColor="blue"
-                  size="sm"
-                  name={`${selectedAdvert.id}-type`}
-                  defaultValue={selectedAdvert.type.title}
-                />
-              </GridColumn>
-              <GridColumn span={['12/12', '12/12', '6/12']}>
-                <Select
-                  defaultValue={{
-                    value: selectedAdvert.category.id,
-                    label: selectedAdvert.category.title,
-                  }}
-                  isLoading={isLoading || isValidating}
-                  label="Flokkur auglýsingar"
-                  backgroundColor="blue"
-                  options={categoryOptions}
-                  onChange={(opt) => {
-                    if (!opt?.value) return
-                    updateCategoryTrigger({
-                      id: selectedAdvert.id,
-                      categoryId: opt?.value,
-                    })
-                  }}
-                />
-              </GridColumn>
-            </GridRow>
+            <Stack space={3}>
+              <GridRow>
+                <GridColumn span="12/12">
+                  <Input
+                    name="advert-id"
+                    readOnly
+                    label="Auðkenni auglýsingar"
+                    backgroundColor="blue"
+                    size="sm"
+                    value={selectedAdvert.id}
+                  />
+                </GridColumn>
+              </GridRow>
+              <GridRow rowGap={3}>
+                <GridColumn span={['12/12', '12/12', '6/12']}>
+                  <Input
+                    disabled
+                    label="Yfirskrift auglýsingar"
+                    backgroundColor="blue"
+                    size="sm"
+                    name={`${selectedAdvert.id}-caption`}
+                    defaultValue="Stofnun X"
+                  />
+                </GridColumn>
+                <GridColumn span={['12/12', '12/12', '6/12']}>
+                  <DatePicker
+                    disabled
+                    locale="is"
+                    placeholderText={undefined}
+                    label="Dagsetning innsendingar"
+                    backgroundColor="blue"
+                    size="sm"
+                    selected={new Date(selectedAdvert.createdAt)}
+                  />
+                </GridColumn>
+                <GridColumn span={['12/12', '12/12', '6/12']}>
+                  <Input
+                    disabled
+                    label="Tegund auglýsingar"
+                    backgroundColor="blue"
+                    size="sm"
+                    name={`${selectedAdvert.id}-type`}
+                    defaultValue={selectedAdvert.type.title}
+                  />
+                </GridColumn>
+                <GridColumn span={['12/12', '12/12', '6/12']}>
+                  <Select
+                    value={{
+                      value: selectedAdvert.category.id,
+                      label: selectedAdvert.category.title,
+                    }}
+                    isLoading={isLoading || isValidating}
+                    label="Flokkur auglýsingar"
+                    backgroundColor="blue"
+                    options={categoryOptions}
+                    onChange={(opt) => {
+                      if (!opt?.value) return
+                      updateCategoryTrigger({
+                        id: selectedAdvert.id,
+                        categoryId: opt?.value,
+                      })
+                    }}
+                  />
+                </GridColumn>
+              </GridRow>
+            </Stack>
           </GridContainer>
         </AccordionItem>
         <AccordionItem id="content" label="Meginmál" labelVariant="h4">
