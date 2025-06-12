@@ -33,7 +33,7 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
 
   return (
     <Stack space={4}>
-      <T.Table style={{ tableLayout: layout }}>
+      <T.Table style={{ tableLayout: layout, width: '100%' }}>
         <T.Head>
           <T.Row>
             {columns.map((column, i) => (

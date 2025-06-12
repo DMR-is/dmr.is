@@ -23,6 +23,8 @@ import {
 import { StatusIdEnum, StatusModel } from '../status/status.model'
 import { TypeModel } from '../type/type.model'
 import {
+  AdvertDetailedDto,
+  AdvertDto,
   AdvertStatusCounterItemDto,
   GetAdvertsQueryDto,
 } from './dto/advert.dto'
@@ -337,5 +339,73 @@ export class AdvertModel extends BaseModel<
       publishedAt: now,
       statusId: StatusIdEnum.PUBLISHED,
     })
+  }
+
+  static fromModel(model: AdvertModel): AdvertDto {
+    try {
+      if (!model) {
+        throw new NotFoundException('Advert not found')
+      }
+
+      return {
+        id: model.id,
+        caseId: model.caseId,
+        title: model.title,
+        html: model.html,
+        publicationNumber: model.publicationNumber,
+        scheduledAt: model.scheduledAt.toISOString(),
+        publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
+        version: model.version,
+        category: model.category.fromModel(),
+        status: model.status.fromModel(),
+        type: model.type.fromModel(),
+        createdAt: model.createdAt.toISOString(),
+        updatedAt: model.updatedAt.toISOString(),
+        deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+      }
+    } catch (error) {
+      this.logger.debug(
+        `fromModel failed for AdvertModel, did you include everything?`,
+      )
+      throw error
+    }
+  }
+
+  fromModel(): AdvertDto {
+    return AdvertModel.fromModel(this)
+  }
+
+  static fromModelDetailed(model: AdvertModel): AdvertDetailedDto {
+    try {
+      return {
+        id: model.id,
+        caseId: model.caseId,
+        title: model.title,
+        html: model.html,
+        publicationNumber: model.publicationNumber,
+        scheduledAt: model.scheduledAt.toISOString(),
+        publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
+        version: model.version,
+        category: model.category.fromModel(),
+        status: model.status.fromModel(),
+        type: model.type.fromModel(),
+        createdAt: model.createdAt.toISOString(),
+        updatedAt: model.updatedAt.toISOString(),
+        deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+        commonAdvert: model.commonAdvert
+          ? model.commonAdvert.fromModel()
+          : undefined,
+      }
+    } catch (error) {
+      this.logger.debug(
+        `fromModelDetailed failed for AdvertModel, did you include everything?`,
+        { context: 'AdvertModel' },
+      )
+      throw error
+    }
+  }
+
+  fromModelDetailed(): AdvertDetailedDto {
+    return AdvertModel.fromModelDetailed(this)
   }
 }

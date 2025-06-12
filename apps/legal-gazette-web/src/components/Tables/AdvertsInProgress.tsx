@@ -20,7 +20,8 @@ export const AdvertsInProgress = () => {
     birting: formatDate(advert.scheduledAt),
     skraning: formatDate(advert.createdAt),
     tegund: advert.type.title,
-    flokkur: advert.category.title,
+    utgafunumer: advert.publicationNumber,
+    // flokkur: advert.category.title,
     efni: advert.title,
     href: `/ritstjorn/${advert.caseId}?tab=${advert.id}`,
     hasLink: true,
@@ -30,6 +31,7 @@ export const AdvertsInProgress = () => {
     <DataTable
       noDataMessage="Engar auglýsingar í vinnslu"
       loading={isLoading}
+      layout="auto"
       columns={
         [
           {
@@ -45,18 +47,22 @@ export const AdvertsInProgress = () => {
             sortable: true,
           },
           {
+            field: 'utgafunumer',
+            children: 'Útgáfunúmer',
+            size: 'tiny',
+          },
+          {
             field: 'tegund',
             children: 'Tegund',
-            width: '200px',
+            size: 'tiny',
           },
-          {
-            field: 'flokkur',
-            children: 'Flokkur',
-            size: 'small',
-          },
+          // {
+          //   field: 'flokkur',
+          //   children: 'Flokkur',
+          //   size: 'small',
+          // },
           {
             field: 'efni',
-            fluid: true,
             children: 'Efni',
           },
         ] as const

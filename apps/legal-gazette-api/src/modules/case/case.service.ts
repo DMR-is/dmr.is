@@ -9,7 +9,6 @@ import {
   CaseQueryDto,
   GetCasesDto,
 } from './dto/case.dto'
-import { caseDetailedMigrate, caseMigrate } from './dto/case.migrate'
 import { CaseModel } from './case.model'
 import { ICaseService } from './case.service.interface'
 
@@ -39,7 +38,7 @@ export class CaseService implements ICaseService {
       offset,
     })
 
-    const migrated = rows.map((model) => caseMigrate(model))
+    const migrated = rows.map((model) => model.fromModel())
 
     const paging = generatePaging(migrated, query.page, query.pageSize, count)
 
@@ -55,8 +54,6 @@ export class CaseService implements ICaseService {
       throw new NotFoundException(`Case with id ${id} not found`)
     }
 
-    const migrated = caseDetailedMigrate(caseModel)
-
-    return migrated
+    return caseModel.fromModelDetailed()
   }
 }

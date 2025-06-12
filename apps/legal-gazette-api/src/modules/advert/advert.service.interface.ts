@@ -5,6 +5,7 @@ import {
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
+  UpdateAdvertDto,
 } from './dto/advert.dto'
 
 export interface IAdvertService {
@@ -17,6 +18,8 @@ export interface IAdvertService {
   getAdvertById(id: string): Promise<AdvertDto>
 
   getAdvertsCount(): Promise<GetAdvertsStatusCounterDto>
+
+  updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDto>
 }
 
 export const IAdvertService = Symbol('IAdvertService')

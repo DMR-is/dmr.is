@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { baseEntityMigrate } from '@dmr.is/legal-gazette/dto'
-
 import { TypeModel } from '../type/type.model'
 import { GetCategoriesDto, GetCategoriesQueryDto } from './dto/category.dto'
 import { CategoryModel } from './category.model'
@@ -26,7 +24,7 @@ export class CategoryService implements ICategoryService {
     })
 
     return {
-      categories: categories.map((c) => baseEntityMigrate(c)),
+      categories: this.categoryModel.fromModels(categories),
     }
   }
 }

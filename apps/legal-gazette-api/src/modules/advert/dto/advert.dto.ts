@@ -6,6 +6,8 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  MaxLength,
+  MinLength,
   ValidateIf,
   ValidateNested,
 } from 'class-validator'
@@ -189,4 +191,53 @@ export class AdvertDetailedDto extends AdvertDto {
   @Type(() => CommonAdvertDto)
   @ValidateNested()
   commonAdvert?: CommonAdvertDto
+}
+
+export class UpdateAdvertDto {
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsUUID()
+  statusId!: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsUUID()
+  typeId!: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsUUID()
+  categoryId!: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  scheduledAt?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  title?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  html?: string
 }

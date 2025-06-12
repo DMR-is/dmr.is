@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { baseEntityMigrate } from '@dmr.is/legal-gazette/dto'
-
-import { GetTypesDto, TypeDto } from './dto/type.dto'
+import { GetTypesDto } from './dto/type.dto'
 import { TypeModel } from './type.model'
 import { ITypeService } from './type.service.interface'
 
@@ -15,11 +13,9 @@ export class TypeService implements ITypeService {
   ) {}
 
   async getTypes(): Promise<GetTypesDto> {
-    const type = await this.typeModel.findAll()
+    const types = await this.typeModel.findAll()
 
-    const migrated = type.map((advertType) =>
-      baseEntityMigrate<TypeModel, TypeDto>(advertType),
-    )
+    const migrated = types.map((type) => this.typeModel.fromModel(type))
 
     return {
       types: migrated,

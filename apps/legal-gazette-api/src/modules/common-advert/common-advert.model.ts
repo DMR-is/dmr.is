@@ -61,13 +61,27 @@ export class CommonAdvertModel extends BaseModel<
   advert!: AdvertModel
 
   static fromModel(model: CommonAdvertModel): CommonAdvertDto {
-    return {
-      caption: model.caption,
-      signature: {
-        name: model.signatureName,
-        location: model.signatureLocation,
-        date: model.signatureDate.toISOString(),
-      },
+    try {
+      return {
+        caption: model.caption,
+        signature: {
+          name: model.signatureName,
+          location: model.signatureLocation,
+          date: model.signatureDate.toISOString(),
+        },
+      }
+    } catch (error) {
+      this.logger.warn(
+        'fromModel failed for CommonAdvertModel, did you include everything?',
+        {
+          context: 'CommonAdvertModel.fromModel',
+        },
+      )
+      throw error
     }
+  }
+
+  fromModel(): CommonAdvertDto {
+    return CommonAdvertModel.fromModel(this)
   }
 }

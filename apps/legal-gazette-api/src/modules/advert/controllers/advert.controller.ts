@@ -1,16 +1,23 @@
-import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Patch,
+  Query,
+} from '@nestjs/common'
 
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
-import { StatusModel } from '../../status/status.model'
 import { IAdvertService } from '../advert.service.interface'
 import {
   AdvertDto,
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
+  UpdateAdvertDto,
 } from '../dto/advert.dto'
 
 @Controller({
@@ -20,8 +27,6 @@ import {
 export class AdvertController {
   constructor(
     @Inject(IAdvertService) private readonly advertService: IAdvertService,
-    @InjectModel(StatusModel)
-    private readonly advertStatusModel: typeof StatusModel,
   ) {}
 
   @Get('count')
@@ -55,5 +60,14 @@ export class AdvertController {
   @LGResponse({ operationId: 'getAdvertById', type: AdvertDto })
   getAdvertById(@Param('id') id: string) {
     return this.advertService.getAdvertById(id)
+  }
+
+  @Patch(':id')
+  @LGResponse({ operationId: 'updateAdvert', type: AdvertDto })
+  updateAdvert(
+    @Param('id') id: string,
+    @Body() advertUpdateDto: UpdateAdvertDto,
+  ) {
+    return this.advertService.updateAdvert(id, advertUpdateDto)
   }
 }

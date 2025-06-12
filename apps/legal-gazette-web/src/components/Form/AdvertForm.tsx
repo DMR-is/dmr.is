@@ -17,7 +17,7 @@ export const AdvertForm = () => {
     if (advert) {
       setSelectedAdvert(id)
       router.query.tab = id
-      router.push(router, undefined, { shallow: true })
+      router.replace(router, undefined, { shallow: true })
     }
   }
 

@@ -21,11 +21,7 @@ export class StatusController {
   async getStatuses(): Promise<GetStatusesDto> {
     const statuses = await this.statusModel.findAll()
 
-    const migrated = statuses.map((status) => ({
-      id: status.id,
-      title: status.title,
-      slug: status.slug,
-    }))
+    const migrated = this.statusModel.fromModels(statuses)
 
     return {
       statuses: migrated,

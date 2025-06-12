@@ -6,6 +6,7 @@ import {
   AdvertStatusApi,
   CaseApi,
   CategoryApi,
+  CommonAdvertApi,
   Configuration,
   StatusApi,
   TypeApi,
@@ -17,6 +18,7 @@ const apis = [
   'AdvertCategoryApi',
   'CaseApi',
   'CategoryApi',
+  'CommonAdvertApi',
   'StatusApi',
   'TypeApi',
 ] as const
@@ -29,6 +31,7 @@ type ApiClientMap = {
   AdvertCategoryApi: AdvertCategoryApi
   CaseApi: CaseApi
   CategoryApi: CategoryApi
+  CommonAdvertApi: CommonAdvertApi
   StatusApi: StatusApi
   TypeApi: TypeApi
 }
@@ -41,6 +44,7 @@ const ApiConstructors: {
   AdvertCategoryApi,
   CaseApi,
   CategoryApi,
+  CommonAdvertApi,
   StatusApi,
   TypeApi,
 }

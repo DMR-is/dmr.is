@@ -22,6 +22,7 @@ import {
 } from '../communication-channel/communication-channel.model'
 import { StatusIdEnum } from '../status/status.model'
 import { TypeIdEnum } from '../type/type.model'
+import { CaseDetailedDto, CaseDto } from './dto/case.dto'
 
 const LOGGING_CONTEXT = 'CaseModel'
 
@@ -173,5 +174,63 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
       3,
       '0',
     )}`
+  }
+
+  static fromModel(model: CaseModel): CaseDto {
+    try {
+      if (!model) {
+        throw new Error('Case model is undefined or null')
+      }
+
+      return {
+        id: model.id,
+        applicationId:
+          model.applicationId === null ? undefined : model.applicationId,
+        caseNumber: model.caseNumber,
+        createdAt: model.createdAt.toISOString(),
+        updatedAt: model.updatedAt.toISOString(),
+        deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+      }
+    } catch (error) {
+      this.logger.debug(
+        `fromModel failed for CaseModel, did you include everything?`,
+        { context: LOGGING_CONTEXT },
+      )
+      throw error
+    }
+  }
+
+  fromModel(): CaseDto {
+    return CaseModel.fromModel(this)
+  }
+
+  static fromModelDetailed(model: CaseModel): CaseDetailedDto {
+    try {
+      return {
+        id: model.id,
+        applicationId:
+          model.applicationId === null ? undefined : model.applicationId,
+        caseNumber: model.caseNumber,
+        createdAt: model.createdAt.toISOString(),
+        updatedAt: model.updatedAt.toISOString(),
+        deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+        adverts: model.adverts.map((advert) => advert.fromModelDetailed()),
+        communicationChannels: model.communicationChannels.map((channel) => ({
+          email: channel.email,
+          phone: channel.phone ? channel.phone : undefined,
+          name: channel.name ? channel.name : undefined,
+        })),
+      }
+    } catch (error) {
+      this.logger.debug(
+        `fromModelDetailed failed for CaseModel, did you include everything?`,
+        { context: LOGGING_CONTEXT },
+      )
+      throw error
+    }
+  }
+
+  fromModelDetailed(): CaseDetailedDto {
+    return CaseModel.fromModelDetailed(this)
   }
 }

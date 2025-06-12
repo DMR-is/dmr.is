@@ -3,6 +3,7 @@ import {
   GetCategoriesRequest,
   UpdateAdvertCategoryRequest,
   UpdateAdvertStatusRequest,
+  UpdateCommonAdvertRequest,
 } from '../../gen/fetch'
 import { getLegalGazetteClient } from './createClient'
 
@@ -68,4 +69,13 @@ export const rejectCase = async (
   const client = getLegalGazetteClient('CaseApi', 'todo:add-token')
 
   await client.deleteCase(arg)
+}
+
+export const updateCommonAdvert = async (
+  _url: string,
+  { arg }: { arg: UpdateCommonAdvertRequest },
+) => {
+  const client = getLegalGazetteClient('CommonAdvertApi', 'todo:add-token')
+
+  await client.updateCommonAdvert(arg)
 }

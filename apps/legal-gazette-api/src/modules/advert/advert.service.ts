@@ -12,8 +12,8 @@ import {
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
+  UpdateAdvertDto,
 } from './dto/advert.dto'
-import { advertMigrate } from './dto/advert.migrate'
 import { AdvertModel } from './advert.model'
 import { IAdvertService } from './advert.service.interface'
 
@@ -24,6 +24,20 @@ export class AdvertService implements IAdvertService {
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     private readonly eventEmitter: EventEmitter2,
   ) {}
+  async updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDto> {
+    const advert = await this.advertModel.findByPk(id)
+
+    if (!advert) {
+      throw new NotFoundException(`Advert not found`)
+    }
+
+    const updated = await advert.update({
+      ...body,
+      scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : undefined,
+    })
+
+    return updated.fromModel()
+  }
 
   async getAdvertsCount(): Promise<GetAdvertsStatusCounterDto> {
     const submittedCount = this.advertModel
@@ -73,7 +87,7 @@ export class AdvertService implements IAdvertService {
       offset,
     })
 
-    const migrated = adverts.rows.map((advert) => advertMigrate(advert))
+    const migrated = adverts.rows.map((advert) => advert.fromModel())
     const paging = generatePaging(
       migrated,
       query.page,
@@ -101,7 +115,7 @@ export class AdvertService implements IAdvertService {
         offset,
       })
 
-    const migrated = adverts.rows.map((advert) => advertMigrate(advert))
+    const migrated = adverts.rows.map((advert) => advert.fromModel())
     const paging = generatePaging(
       migrated,
       query.page,
@@ -128,7 +142,7 @@ export class AdvertService implements IAdvertService {
         offset,
       })
 
-    const migrated = results.rows.map((advert) => advertMigrate(advert))
+    const migrated = results.rows.map((advert) => advert.fromModel())
     const paging = generatePaging(
       migrated,
       query.page,
@@ -149,6 +163,6 @@ export class AdvertService implements IAdvertService {
       throw new NotFoundException(`Advert with id ${id} not found`)
     }
 
-    return advertMigrate(advert)
+    return advert.fromModel()
   }
 }

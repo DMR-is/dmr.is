@@ -1,4 +1,6 @@
-import { useMemo } from 'react'
+import subDays from 'date-fns/subDays'
+import debounce from 'lodash/debounce'
+import { useCallback, useMemo } from 'react'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
 
@@ -19,12 +21,46 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
+import { AdvertVersion } from '../../../gen/fetch'
 import { useCaseContext } from '../../../hooks/cases/useCase'
-import { fetchCategories, setAdvertCategory } from '../../../lib/api/fetchers'
+import {
+  fetchCategories,
+  setAdvertCategory,
+  updateCommonAdvert,
+} from '../../../lib/api/fetchers'
+import { formatDate } from '../../../lib/utils'
 import * as styles from '../Form.css'
 
 export const CommonAdvertTab = () => {
-  const { refetch, selectedAdvert } = useCaseContext()
+  const { refetch, selectedAdvert, case: theCase } = useCaseContext()
+
+  const maxPublishingDate = useMemo(() => {
+    switch (selectedAdvert.version) {
+      case AdvertVersion.A: {
+        const hasVersionB = theCase.adverts.find(
+          (ad) => ad.version === AdvertVersion.B,
+        )
+
+        if (hasVersionB) {
+          return subDays(new Date(hasVersionB.scheduledAt), 1)
+        }
+        break
+      }
+      case AdvertVersion.B: {
+        const hasVersionC = theCase.adverts.find(
+          (ad) => ad.version === AdvertVersion.C,
+        )
+
+        if (hasVersionC) {
+          return subDays(new Date(hasVersionC.scheduledAt), 1)
+        }
+        break
+      }
+      default: {
+        return undefined
+      }
+    }
+  }, [selectedAdvert])
 
   const { data, isLoading, isValidating } = useSWR(
     ['getCategories', { type: selectedAdvert.type.id }],
@@ -64,8 +100,29 @@ export const CommonAdvertTab = () => {
     },
   )
 
-  console.log('selectedAdvert.id', selectedAdvert.id)
-  console.log('selectedAdvert.category', selectedAdvert.category.title)
+  const { trigger: updateCommonAdvertTrigger } = useSWRMutation(
+    'updateCommonAdvert',
+    updateCommonAdvert,
+    {
+      onSuccess: () => {
+        toast.success('Auglýsing uppfærð.', {
+          toastId: 'update-common-advert-success',
+        })
+
+        refetch()
+      },
+      onError: () => {
+        toast.error('Villa kom upp við að uppfæra auglýsingu.', {
+          toastId: 'update-common-advert-error',
+        })
+      },
+    },
+  )
+
+  const onUpdateHandler = useCallback(
+    debounce(updateCommonAdvertTrigger, 500),
+    [],
+  )
 
   if (!selectedAdvert.commonAdvert) {
     return (
@@ -79,7 +136,7 @@ export const CommonAdvertTab = () => {
 
   return (
     <Box className={styles.formTabStyle}>
-      <Accordion dividerOnBottom={false}>
+      <Accordion dividerOnBottom={false} singleExpand={false}>
         <AccordionItem
           id="information"
           label="Grunnupplýsingar"
@@ -155,6 +212,35 @@ export const CommonAdvertTab = () => {
             </Stack>
           </GridContainer>
         </AccordionItem>
+        <AccordionItem id="publishing" label="Birting" labelVariant="h4">
+          <GridRow>
+            <GridColumn span={['12/12', '12/12', '6/12']}>
+              <DatePicker
+                label="Birtingardagur"
+                locale="is"
+                placeholderText=""
+                size="sm"
+                backgroundColor="blue"
+                maxDate={maxPublishingDate}
+                selected={new Date(selectedAdvert.scheduledAt)}
+              />
+            </GridColumn>
+            <GridColumn span={['12/12', '12/12', '6/12']}>
+              <Input
+                size="sm"
+                backgroundColor="blue"
+                name="published_at"
+                label="Útgáfudagur"
+                readOnly
+                value={
+                  selectedAdvert.publishedAt
+                    ? formatDate(selectedAdvert.publishedAt)
+                    : 'Óútgefið'
+                }
+              />
+            </GridColumn>
+          </GridRow>
+        </AccordionItem>
         <AccordionItem id="content" label="Meginmál" labelVariant="h4">
           <Stack space={2}>
             <Input
@@ -163,11 +249,27 @@ export const CommonAdvertTab = () => {
               backgroundColor="blue"
               size="sm"
               defaultValue={selectedAdvert.commonAdvert.caption}
+              onChange={(e) =>
+                onUpdateHandler({
+                  id: selectedAdvert.id,
+                  updateCommonAdvertDto: {
+                    caption: e.target.value,
+                  },
+                })
+              }
             />
             <Box border="standard" borderRadius="large">
               <HTMLEditor
                 handleUpload={() => new Error('not impl')}
                 defaultValue={selectedAdvert.html}
+                onChange={(value) => {
+                  onUpdateHandler({
+                    id: selectedAdvert.id,
+                    updateCommonAdvertDto: {
+                      html: value,
+                    },
+                  })
+                }}
               />
             </Box>
           </Stack>
@@ -181,6 +283,16 @@ export const CommonAdvertTab = () => {
                 size="sm"
                 name={`${selectedAdvert.id}-signature-name`}
                 defaultValue={selectedAdvert.commonAdvert.signature.name}
+                onChange={(e) =>
+                  onUpdateHandler({
+                    id: selectedAdvert.id,
+                    updateCommonAdvertDto: {
+                      signature: {
+                        name: e.target.value,
+                      },
+                    },
+                  })
+                }
               />
             </GridColumn>
             <GridColumn span={['12/12', '12/12', '6/12']}>
@@ -190,6 +302,16 @@ export const CommonAdvertTab = () => {
                 size="sm"
                 name={`${selectedAdvert.id}-signature-location`}
                 defaultValue={selectedAdvert.commonAdvert.signature.location}
+                onChange={(e) =>
+                  onUpdateHandler({
+                    id: selectedAdvert.id,
+                    updateCommonAdvertDto: {
+                      signature: {
+                        location: e.target.value,
+                      },
+                    },
+                  })
+                }
               />
             </GridColumn>
             <GridColumn span={['12/12', '12/12', '6/12']}>
@@ -200,6 +322,16 @@ export const CommonAdvertTab = () => {
                 backgroundColor="blue"
                 size="sm"
                 selected={new Date(selectedAdvert.commonAdvert.signature.date)}
+                handleChange={(date) =>
+                  updateCommonAdvertTrigger({
+                    id: selectedAdvert.id,
+                    updateCommonAdvertDto: {
+                      signature: {
+                        date: date ? date.toISOString() : undefined,
+                      },
+                    },
+                  })
+                }
               />
             </GridColumn>
           </GridRow>

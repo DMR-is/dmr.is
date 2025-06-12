@@ -11,6 +11,7 @@ import { ApiProperty } from '@nestjs/swagger'
 export class UpdateCommonAdvertSignatureDto {
   @ApiProperty({
     type: String,
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -20,6 +21,7 @@ export class UpdateCommonAdvertSignatureDto {
 
   @ApiProperty({
     type: String,
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -29,6 +31,7 @@ export class UpdateCommonAdvertSignatureDto {
 
   @ApiProperty({
     type: String,
+    required: false,
   })
   @IsOptional()
   @IsDateString()
@@ -38,6 +41,7 @@ export class UpdateCommonAdvertSignatureDto {
 export class UpdateCommonAdvertDto {
   @ApiProperty({
     type: String,
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -47,6 +51,7 @@ export class UpdateCommonAdvertDto {
 
   @ApiProperty({
     type: String,
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -54,6 +59,7 @@ export class UpdateCommonAdvertDto {
 
   @ApiProperty({
     type: UpdateCommonAdvertSignatureDto,
+    required: false,
   })
   @IsOptional()
   signature?: UpdateCommonAdvertSignatureDto
