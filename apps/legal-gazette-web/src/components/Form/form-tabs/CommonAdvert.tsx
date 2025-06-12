@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
@@ -17,23 +19,31 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
-import { AdvertDetailedDto, CommonAdvertDto } from '../../../gen/fetch'
-import { useCategories } from '../../../hooks/categories/useCategories'
-import { setAdvertCategory } from '../../../lib/api/fetchers'
+import { useCaseContext } from '../../../hooks/cases/useCase'
+import { fetchCategories, setAdvertCategory } from '../../../lib/api/fetchers'
 import * as styles from '../Form.css'
-type Props = {
-  advert: Omit<AdvertDetailedDto, 'commonAdvert'>
-  commonAdvert?: CommonAdvertDto | null
-}
 
-export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
-  const { categoryOptions, isLoading } = useCategories({
-    query: { type: advert.type.id },
-  })
+export const CommonAdvertTab = () => {
+  const { refetch, selectedAdvert } = useCaseContext()
 
-  const defaultCategoryOption = categoryOptions.find(
-    (opt) => opt.value === advert.category.id,
+  const { data, isLoading, isValidating } = useSWR(
+    ['getCategories', { type: selectedAdvert.type.id }],
+    ([key, params]) => fetchCategories(key, params),
+    {
+      keepPreviousData: true,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    },
   )
+
+  const categoryOptions = useMemo(() => {
+    if (!data) return []
+
+    return data.categories.map((category) => ({
+      value: category.id,
+      label: category.title,
+    }))
+  }, [data])
 
   const { trigger: updateCategoryTrigger } = useSWRMutation(
     'updateCategory',
@@ -43,6 +53,8 @@ export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
         toast.success('Flokkur auglýsingar uppfærður.', {
           toastId: 'update-advert-category-success',
         })
+
+        refetch()
       },
       onError: () => {
         toast.error('Villa kom upp við að breyta flokki.', {
@@ -52,7 +64,7 @@ export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
     },
   )
 
-  if (!commonAdvert) {
+  if (!selectedAdvert.commonAdvert) {
     return (
       <AlertMessage
         type="warning"
@@ -79,7 +91,7 @@ export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
                   label="Yfirskrift auglýsingar"
                   backgroundColor="blue"
                   size="sm"
-                  name={`${advert.id}-caption`}
+                  name={`${selectedAdvert.id}-caption`}
                   defaultValue="Stofnun X"
                 />
               </GridColumn>
@@ -91,7 +103,7 @@ export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
                   label="Dagsetning innsendingar"
                   backgroundColor="blue"
                   size="sm"
-                  selected={new Date(advert.createdAt)}
+                  selected={new Date(selectedAdvert.createdAt)}
                 />
               </GridColumn>
               <GridColumn span={['12/12', '12/12', '6/12']}>
@@ -100,25 +112,24 @@ export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
                   label="Tegund auglýsingar"
                   backgroundColor="blue"
                   size="sm"
-                  name={`${advert.id}-type`}
-                  defaultValue={advert.type.title}
+                  name={`${selectedAdvert.id}-type`}
+                  defaultValue={selectedAdvert.type.title}
                 />
               </GridColumn>
               <GridColumn span={['12/12', '12/12', '6/12']}>
                 <Select
-                  value={categoryOptions.find(
-                    (cat) => cat.value === advert.category.id,
-                  )}
-                  isLoading={isLoading}
+                  defaultValue={{
+                    value: selectedAdvert.category.id,
+                    label: selectedAdvert.category.title,
+                  }}
+                  isLoading={isLoading || isValidating}
                   label="Flokkur auglýsingar"
                   backgroundColor="blue"
-                  name={`${advert.id}-category`}
                   options={categoryOptions}
-                  defaultValue={defaultCategoryOption}
                   onChange={(opt) => {
                     if (!opt?.value) return
                     updateCategoryTrigger({
-                      id: advert.id,
+                      id: selectedAdvert.id,
                       categoryId: opt?.value,
                     })
                   }}
@@ -134,12 +145,12 @@ export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
               label="Yfirskrift"
               backgroundColor="blue"
               size="sm"
-              defaultValue={commonAdvert.caption}
+              defaultValue={selectedAdvert.commonAdvert.caption}
             />
             <Box border="standard" borderRadius="large">
               <HTMLEditor
                 handleUpload={() => new Error('not impl')}
-                defaultValue={advert.html}
+                defaultValue={selectedAdvert.html}
               />
             </Box>
           </Stack>
@@ -151,8 +162,8 @@ export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
                 label="Nafn undirritunar"
                 backgroundColor="blue"
                 size="sm"
-                name={`${advert.id}-signature-name`}
-                defaultValue={commonAdvert.signature.name}
+                name={`${selectedAdvert.id}-signature-name`}
+                defaultValue={selectedAdvert.commonAdvert.signature.name}
               />
             </GridColumn>
             <GridColumn span={['12/12', '12/12', '6/12']}>
@@ -160,8 +171,8 @@ export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
                 label="Staðsetning undirritunar"
                 backgroundColor="blue"
                 size="sm"
-                name={`${advert.id}-signature-location`}
-                defaultValue={commonAdvert.signature.location}
+                name={`${selectedAdvert.id}-signature-location`}
+                defaultValue={selectedAdvert.commonAdvert.signature.location}
               />
             </GridColumn>
             <GridColumn span={['12/12', '12/12', '6/12']}>
@@ -171,7 +182,7 @@ export const CommonAdvertTab = ({ advert, commonAdvert }: Props) => {
                 label="Dagsetning undirritunar"
                 backgroundColor="blue"
                 size="sm"
-                selected={new Date(commonAdvert.signature.date)}
+                selected={new Date(selectedAdvert.commonAdvert.signature.date)}
               />
             </GridColumn>
           </GridRow>

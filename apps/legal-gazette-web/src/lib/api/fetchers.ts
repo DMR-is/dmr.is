@@ -1,5 +1,6 @@
 import {
   DeleteCaseRequest,
+  GetCategoriesRequest,
   UpdateAdvertCategoryRequest,
   UpdateAdvertStatusRequest,
 } from '../../gen/fetch'
@@ -13,6 +14,21 @@ export const fetcher = async <T>({ func }: SWRFetcherArgs<T>): Promise<T> => {
   const res = await func()
 
   return res
+}
+
+export const fetchCategories = async (
+  _url: string,
+  params: GetCategoriesRequest = {},
+) => {
+  const client = getLegalGazetteClient('CategoryApi', 'todo:add-token')
+
+  return await client.getCategories(params)
+}
+
+export const fetchCase = async (_url: string, id: string) => {
+  const client = getLegalGazetteClient('CaseApi', 'todo:add-token')
+
+  return await client.getCase({ id })
 }
 
 export const setAdvertCategory = async (

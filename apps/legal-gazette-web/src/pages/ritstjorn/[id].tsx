@@ -1,8 +1,6 @@
 import { GetServerSideProps } from 'next'
 import dynamic from 'next/dynamic'
 
-import { useState } from 'react'
-
 import { deleteUndefined } from '@dmr.is/utils/client'
 
 import {
@@ -16,6 +14,7 @@ import {
 import { AdvertForm } from '../../components/Form/AdvertForm'
 import { Form } from '../../components/Form/Form'
 import { AdvertSidebar } from '../../components/Form/FormSidebar'
+import { CaseProvider } from '../../context/case-context'
 import { CaseDetailedDto } from '../../gen/fetch'
 import { getLegalGazetteClient } from '../../lib/api/createClient'
 import { Route, Routes } from '../../lib/constants'
@@ -48,42 +47,33 @@ export default function SingleCase({ initalCase }: Props) {
     // `Mál nr. ${initalCase.caseNumber}`,
   )
 
-  const [selectedAdvert, setSelectedAdvert] = useState(initalCase.adverts[0])
-
   return (
-    <Box padding={6} background="purple100">
-      <GridContainer>
-        <GridRow>
-          <GridColumn span={['12/12', '12/12', '9/12', '9/12']}>
-            <Form>
-              <Stack space={4}>
-                <HeroNoSRR
-                  noImageFullWidth={true}
-                  withOffset={false}
-                  variant="small"
-                  breadcrumbs={{ items: breadcrumbs }}
-                  title="Vinnslusvæði Lögbirtingablaðs"
-                  description="Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
-                />
-                <AdvertForm
-                  selected={selectedAdvert.id}
-                  onAdvertSelect={(id) =>
-                    setSelectedAdvert(
-                      initalCase.adverts.find((ad) => ad.id === id) ??
-                        initalCase.adverts[0],
-                    )
-                  }
-                  adverts={initalCase.adverts}
-                />
-              </Stack>
-            </Form>
-          </GridColumn>
-          <GridColumn span={['12/12', '12/12', '3/12', '3/12']}>
-            <AdvertSidebar advertId={selectedAdvert.id} />
-          </GridColumn>
-        </GridRow>
-      </GridContainer>
-    </Box>
+    <CaseProvider initalCase={initalCase}>
+      <Box padding={6} background="purple100">
+        <GridContainer>
+          <GridRow>
+            <GridColumn span={['12/12', '12/12', '9/12', '9/12']}>
+              <Form>
+                <Stack space={4}>
+                  <HeroNoSRR
+                    noImageFullWidth={true}
+                    withOffset={false}
+                    variant="small"
+                    breadcrumbs={{ items: breadcrumbs }}
+                    title="Vinnslusvæði Lögbirtingablaðs"
+                    description="Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
+                  />
+                  <AdvertForm />
+                </Stack>
+              </Form>
+            </GridColumn>
+            <GridColumn span={['12/12', '12/12', '3/12', '3/12']}>
+              <AdvertSidebar />
+            </GridColumn>
+          </GridRow>
+        </GridContainer>
+      </Box>
+    </CaseProvider>
   )
 }
 

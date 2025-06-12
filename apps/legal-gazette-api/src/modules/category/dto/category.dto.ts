@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator'
+import { IsOptional, IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -11,7 +11,7 @@ export class GetCategoriesQueryDto {
     required: false,
   })
   @IsOptional()
-  @IsString()
+  @IsUUID()
   type?: string
 }
 

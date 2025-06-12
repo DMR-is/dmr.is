@@ -1,29 +1,21 @@
 import { AlertMessage, Tabs, TabType } from '@island.is/island-ui/core'
 
-import { AdvertDetailedDto, TypeEnum } from '../../gen/fetch'
+import { TypeEnum } from '../../gen/fetch'
+import { useCaseContext } from '../../hooks/cases/useCase'
 import { CommonAdvertTab } from './form-tabs/CommonAdvert'
 
-type CommonAdvertFormProps = {
-  adverts: AdvertDetailedDto[]
-  selected?: string
-  onAdvertSelect?: (id: string) => void
-}
+export const AdvertForm = () => {
+  const { case: theCase, selectedAdvert, setSelectedAdvert } = useCaseContext()
 
-export const AdvertForm = ({
-  adverts,
-  selected,
-  onAdvertSelect,
-}: CommonAdvertFormProps) => {
+  const adverts = theCase.adverts
+
   const tabs: TabType[] = adverts.map((advert) => {
     switch (advert.type.title) {
       case TypeEnum.COMMON_ADVERT: {
-        const { commonAdvert, ...rest } = advert
         return {
           id: advert.id,
           label: `Birting ${advert.version}`,
-          content: (
-            <CommonAdvertTab advert={rest} commonAdvert={commonAdvert} />
-          ),
+          content: <CommonAdvertTab />,
         }
       }
       default: {
@@ -40,9 +32,9 @@ export const AdvertForm = ({
 
   return (
     <Tabs
-      onChange={(id) => onAdvertSelect?.(id)}
+      onChange={(id) => setSelectedAdvert(id)}
       contentBackground="white"
-      selected={selected}
+      selected={selectedAdvert.id}
       tabs={tabs}
       label="Auglýsingar"
     />
