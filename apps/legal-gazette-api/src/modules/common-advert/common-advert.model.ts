@@ -1,4 +1,10 @@
-import { BelongsTo, Column, DataType, DefaultScope } from 'sequelize-typescript'
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  DefaultScope,
+  ForeignKey,
+} from 'sequelize-typescript'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
@@ -7,18 +13,26 @@ import { AdvertModel } from '../advert/advert.model'
 import { CommonAdvertDto } from './dto/common-advert.dto'
 
 type CommonAdvertAttributes = {
+  advertId: string
   caption: string
   signatureName: string
   signatureLocation: string
   signatureDate: Date
 }
 
-export type CommonAdvertCreationAttributes = CommonAdvertAttributes
+export type CommonAdvertCreationAttributes = {
+  advertId?: string
+  caption: string
+  signatureName: string
+  signatureLocation: string
+  signatureDate: Date
+}
 
 @BaseTable({ tableName: LegalGazetteModels.COMMON_ADVERT })
 @DefaultScope(() => ({
   attributes: [
     'id',
+    'advertId',
     'caption',
     'signatureName',
     'signatureLocation',
@@ -29,6 +43,14 @@ export class CommonAdvertModel extends BaseModel<
   CommonAdvertAttributes,
   CommonAdvertCreationAttributes
 > {
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    field: 'advert_id',
+  })
+  @ForeignKey(() => AdvertModel)
+  advertId!: string
+
   @Column({
     type: DataType.TEXT,
     allowNull: false,
@@ -57,7 +79,7 @@ export class CommonAdvertModel extends BaseModel<
   })
   signatureDate!: Date
 
-  @BelongsTo(() => AdvertModel, { foreignKey: 'id' })
+  @BelongsTo(() => AdvertModel, { foreignKey: 'advertId' })
   advert!: AdvertModel
 
   static fromModel(model: CommonAdvertModel): CommonAdvertDto {

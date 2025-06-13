@@ -39,10 +39,10 @@ export class DMRSequelizeConfigService implements SequelizeOptionsFactory {
       logging: config.debugLog
         ? (sql: string) => {
             const query = sql.split(':')[1]
-            this.logger.debug(`Query executed`, {
-              sql: query,
-              context: LOGGING_CONTEXT,
-            })
+            // this.logger.debug(`Query executed`, {
+            //   sql: query,
+            //   context: LOGGING_CONTEXT,
+            // })
             this.logger.debug(query)
           }
         : false,

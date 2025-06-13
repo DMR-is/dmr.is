@@ -57,6 +57,12 @@ export class AdvertDto extends DetailedDto {
   @IsDateString()
   publishedAt!: string | null
 
+  @ApiProperty({
+    type: String,
+  })
+  @IsString()
+  owner!: string
+
   @ApiProperty({ type: String })
   @IsDateString()
   scheduledAt!: string

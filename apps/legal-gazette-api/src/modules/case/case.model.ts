@@ -117,6 +117,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
         applicationId: body.applicationId,
         communicationChannels: channels,
         adverts: body.publishingDates.map((date, i) => ({
+          userId: body.actorId,
           categoryId: body.categoryId,
           typeId: TypeIdEnum.COMMON_APPLICATION,
           scheduledAt: new Date(date),

@@ -14,6 +14,7 @@ import {
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { InstitutionModel } from '../institution/institution.model'
+import { UserDto } from './dto/user.dto'
 import { UserInstitutionModel } from './user-institutions.model'
 import { UserRoleModel } from './user-roles.model'
 
@@ -79,7 +80,7 @@ export class UserModel extends BaseModel<UserAttributes, UserCreateAttributes> {
     allowNull: true,
     defaultValue: null,
   })
-  phone!: string
+  phone!: string | null
 
   @Column({
     type: DataType.DATE,
@@ -103,4 +104,18 @@ export class UserModel extends BaseModel<UserAttributes, UserCreateAttributes> {
 
   @BelongsToMany(() => InstitutionModel, () => UserInstitutionModel)
   institutions!: InstitutionModel[]
+
+  static fromModel(model: UserModel): UserDto {
+    return {
+      id: model.id,
+      nationalId: model.nationalId,
+      name: `${model.firstName} ${model.lastName}`,
+      email: model.email,
+      phone: model.phone,
+    }
+  }
+
+  fromModel() {
+    return UserModel.fromModel(this)
+  }
 }

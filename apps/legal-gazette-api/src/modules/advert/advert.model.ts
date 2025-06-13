@@ -23,6 +23,7 @@ import {
 import { InstitutionModel } from '../institution/institution.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
 import { TypeModel } from '../type/type.model'
+import { UserModel } from '../users/users.model'
 import {
   AdvertDetailedDto,
   AdvertDto,
@@ -41,15 +42,19 @@ type AdvertAttributes = {
   typeId: string
   categoryId: string
   statusId: string
+  institutionId: string | null
   paid: boolean
   type: TypeModel
   category: CategoryModel
   status: StatusModel
+  institution?: InstitutionModel
+  user: UserModel
   case: CaseModel
 }
 
 export type AdvertCreateAttributes = {
   title: string
+  userId: string
   institutionId?: string
   caseId?: string
   html?: string
@@ -76,6 +81,8 @@ export enum AdvertVersionEnum {
     CategoryModel,
     TypeModel,
     CommonAdvertModel,
+    InstitutionModel,
+    UserModel,
     {
       model: CaseModel.unscoped(),
       attributes: ['caseNumber'],
@@ -194,6 +201,14 @@ export class AdvertModel extends BaseModel<
 
   @Column({
     type: DataType.UUID,
+    allowNull: false,
+    field: 'user_id',
+  })
+  @ForeignKey(() => UserModel)
+  userId!: string
+
+  @Column({
+    type: DataType.UUID,
     allowNull: true,
     field: 'institution_id',
     defaultValue: null,
@@ -271,10 +286,19 @@ export class AdvertModel extends BaseModel<
   @BelongsTo(() => InstitutionModel)
   institution?: InstitutionModel
 
-  @HasOne(() => CommonAdvertModel, {
-    foreignKey: 'id',
-  })
+  @BelongsTo(() => UserModel)
+  user!: UserModel
+
+  @HasOne(() => CommonAdvertModel, { foreignKey: 'advertId' })
   commonAdvert?: CommonAdvertModel
+
+  private getOwner() {
+    if (this.institution) {
+      return this.institution.fromModel().title
+    }
+
+    return this.user.fromModel().name
+  }
 
   static async countByStatus(
     statusId: StatusIdEnum,
@@ -312,26 +336,6 @@ export class AdvertModel extends BaseModel<
     }
   }
 
-  static async setStatus(advertId: string, statusId: StatusIdEnum) {
-    const advert = await this.findByPk(advertId)
-
-    if (!advert) {
-      this.logger.error(`Advert with ID ${advertId} not found`, {
-        context: 'AdvertModel',
-      })
-
-      throw new NotFoundException('Advert not found')
-    }
-
-    this.logger.info(`Setting status for advert with ID: ${advertId}`, {
-      context: 'AdvertModel',
-    })
-
-    await advert.update({
-      statusId,
-    })
-  }
-
   static async publish(advertId: string) {
     const now = new Date()
 
@@ -366,6 +370,7 @@ export class AdvertModel extends BaseModel<
         caseId: model.caseId,
         title: model.title,
         html: model.html,
+        owner: model.getOwner(),
         publicationNumber: model.publicationNumber,
         scheduledAt: model.scheduledAt.toISOString(),
         publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
@@ -397,6 +402,7 @@ export class AdvertModel extends BaseModel<
         caseId: model.caseId,
         title: model.title,
         html: model.html,
+        owner: model.getOwner(),
         publicationNumber: model.publicationNumber,
         scheduledAt: model.scheduledAt.toISOString(),
         publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,

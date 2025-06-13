@@ -1865,6 +1865,28 @@
         },
         "required": ["email"]
       },
+      "InstitutionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Id of the entity"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the entity"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the entity"
+          },
+          "nationalId": {
+            "type": "string",
+            "description": "National ID of the institution"
+          }
+        },
+        "required": ["id", "title", "slug", "nationalId"]
+      },
       "AdvertVersion": {
         "type": "string",
         "enum": ["A", "B", "C"]
@@ -1931,6 +1953,9 @@
             "type": "string",
             "nullable": true
           },
+          "owner": {
+            "type": "string"
+          },
           "scheduledAt": {
             "type": "string"
           },
@@ -1942,6 +1967,14 @@
           },
           "status": {
             "$ref": "#/components/schemas/StatusDto"
+          },
+          "institution": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/InstitutionDto"
+              }
+            ]
           },
           "version": {
             "allOf": [
@@ -1970,10 +2003,12 @@
           "publicationNumber",
           "title",
           "publishedAt",
+          "owner",
           "scheduledAt",
           "type",
           "category",
           "status",
+          "institution",
           "version",
           "html",
           "commonAdvert"
@@ -2252,6 +2287,9 @@
             "type": "string",
             "nullable": true
           },
+          "owner": {
+            "type": "string"
+          },
           "scheduledAt": {
             "type": "string"
           },
@@ -2263,6 +2301,14 @@
           },
           "status": {
             "$ref": "#/components/schemas/StatusDto"
+          },
+          "institution": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/InstitutionDto"
+              }
+            ]
           },
           "version": {
             "allOf": [
@@ -2283,10 +2329,12 @@
           "publicationNumber",
           "title",
           "publishedAt",
+          "owner",
           "scheduledAt",
           "type",
           "category",
           "status",
+          "institution",
           "version",
           "html"
         ]

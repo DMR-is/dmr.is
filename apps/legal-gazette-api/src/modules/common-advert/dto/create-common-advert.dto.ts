@@ -51,6 +51,10 @@ export class CreateCommonAdvertDto extends CreateCaseDto {
 
 export class CreateCommonAdvertInternalDto extends CreateCommonAdvertDto {
   @ApiProperty({ type: String })
+  @IsUUID()
+  actorId!: string
+
+  @ApiProperty({ type: String })
   @IsOptional()
   @IsString()
   html?: string

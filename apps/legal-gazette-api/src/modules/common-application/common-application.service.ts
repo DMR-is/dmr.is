@@ -70,7 +70,7 @@ export class CommonApplicationService implements ICommonApplicationService {
   async submitApplication(body: SubmitCommonApplicationDto): Promise<void> {
     const actorNationalId = '0000000000'
     const institutionNationalId = '0101010101'
-    let institutionId: string | null = null
+    let institutionId: string | undefined = undefined
 
     if (body.institution) {
       const returnedInstitution = await this.institutionModel.upsert(
@@ -107,17 +107,17 @@ export class CommonApplicationService implements ICommonApplicationService {
       },
     )
 
-    const userId = user[0].id
+    const actorId = user[0].id
 
-    if (institutionId && userId) {
+    if (institutionId && actorId) {
       await this.userInstitutionModel.upsert(
         {
-          userId,
+          userId: actorId,
           institutionId,
         },
         {
           conflictWhere: Sequelize.literal(
-            `"user_id" = '${userId}' AND "institution_id" = '${institutionId}'`,
+            `"user_id" = '${actorId}' AND "institution_id" = '${institutionId}'`,
           ),
           returning: false,
         },
@@ -125,6 +125,7 @@ export class CommonApplicationService implements ICommonApplicationService {
     }
 
     await this.caseModel.createCommonAdvert({
+      actorId: actorId,
       applicationId: body.applicationId,
       caption: body.caption,
       categoryId: body.categoryId,
@@ -132,7 +133,7 @@ export class CommonApplicationService implements ICommonApplicationService {
       signature: body.signature,
       channels: body.channels,
       html: body.html,
-      institutionId: institutionId ? institutionId : undefined,
+      institutionId: institutionId,
     })
   }
 }
