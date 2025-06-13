@@ -1,5 +1,7 @@
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
+import { Checkbox } from '@island.is/island-ui/core'
+
 import { StatusIdEnum } from '../../gen/fetch'
 import { useAdvertsInProgress } from '../../hooks/adverts/useAdvertsInProgress'
 import { useFilters } from '../../hooks/useFilters'
@@ -17,11 +19,11 @@ export const AdvertsToBePublished = () => {
   })
 
   const rows = adverts.map((advert) => ({
-    birting: formatDate(advert.scheduledAt),
-    skraning: formatDate(advert.createdAt),
-    tegund: advert.type.title,
+    checkbox: <Checkbox />,
     flokkur: advert.category.title,
     efni: advert.title,
+    utgafudagur: formatDate(advert.scheduledAt),
+    stofnun: 'Stofnun',
   }))
 
   return (
@@ -31,21 +33,9 @@ export const AdvertsToBePublished = () => {
       columns={
         [
           {
-            field: 'birting',
-            children: 'Birting',
-            sortable: true,
+            field: 'checkbox',
+            children: '',
             size: 'tiny',
-          },
-          {
-            field: 'skraning',
-            children: 'Skráning',
-            size: 'tiny',
-            sortable: true,
-          },
-          {
-            field: 'tegund',
-            children: 'Tegund',
-            width: '200px',
           },
           {
             field: 'flokkur',
@@ -54,8 +44,17 @@ export const AdvertsToBePublished = () => {
           },
           {
             field: 'efni',
-            fluid: true,
             children: 'Efni',
+          },
+          {
+            field: 'utgafudagur',
+            children: 'Útgáfudagur',
+            size: 'small',
+          },
+          {
+            field: 'stofnun',
+            children: 'Stofnun',
+            size: 'small',
           },
         ] as const
       }

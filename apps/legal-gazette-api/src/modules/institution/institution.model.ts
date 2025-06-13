@@ -13,6 +13,7 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { UserInstitutionModel } from '../users/user-institutions.model'
 import { UserModel } from '../users/users.model'
+import { InstitutionDto } from './dto/institution.dto'
 
 type InstitutionAttributes = {
   title: string
@@ -67,5 +68,25 @@ export class InstitutionModel extends BaseModel<
     const slug = slugify(instance.title, { lower: true })
     this.logger.debug('Slugifying institution title', instance.title, slug)
     instance.slug = slug
+  }
+
+  static fromModel(model: InstitutionModel): InstitutionDto {
+    try {
+      return {
+        id: model.id,
+        title: model.title,
+        nationalId: model.nationalId,
+        slug: model.slug,
+      }
+    } catch (error) {
+      this.logger.error('fromModel failed for Institution model', {
+        context: 'InstitutionModel',
+      })
+      throw error
+    }
+  }
+
+  fromModel() {
+    return InstitutionModel.fromModel(this)
   }
 }

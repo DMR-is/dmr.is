@@ -15,7 +15,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger'
 
 import { DetailedDto } from '@dmr.is/legal-gazette/dto'
-import { Paging, PagingQuery } from '@dmr.is/shared/dto'
+import { InstitutionDto, Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 import { CategoryDto } from '../../category/dto/category.dto'
 import { CommonAdvertDto } from '../../common-advert/dto/common-advert.dto'
@@ -75,6 +75,12 @@ export class AdvertDto extends DetailedDto {
   @Type(() => StatusDto)
   @ValidateNested()
   status!: StatusDto
+
+  @ApiProperty({ type: InstitutionDto, nullable: true })
+  @IsOptional()
+  @Type(() => InstitutionDto)
+  @ValidateNested()
+  institution!: InstitutionDto | null
 
   @ApiProperty({
     enum: AdvertVersionEnum,

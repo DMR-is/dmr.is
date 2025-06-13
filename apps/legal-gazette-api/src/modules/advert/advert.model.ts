@@ -20,6 +20,7 @@ import {
   CommonAdvertCreationAttributes,
   CommonAdvertModel,
 } from '../common-advert/common-advert.model'
+import { InstitutionModel } from '../institution/institution.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
 import { TypeModel } from '../type/type.model'
 import {
@@ -49,6 +50,7 @@ type AdvertAttributes = {
 
 export type AdvertCreateAttributes = {
   title: string
+  institutionId?: string
   caseId?: string
   html?: string
   typeId: string
@@ -191,6 +193,15 @@ export class AdvertModel extends BaseModel<
   statusId!: string
 
   @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    field: 'institution_id',
+    defaultValue: null,
+  })
+  @ForeignKey(() => InstitutionModel)
+  institutionId!: string | null
+
+  @Column({
     type: DataType.DATE,
     allowNull: true,
     field: 'scheduled_at',
@@ -256,6 +267,9 @@ export class AdvertModel extends BaseModel<
 
   @BelongsTo(() => StatusModel)
   status!: StatusModel
+
+  @BelongsTo(() => InstitutionModel)
+  institution?: InstitutionModel
 
   @HasOne(() => CommonAdvertModel, {
     foreignKey: 'id',
@@ -356,6 +370,7 @@ export class AdvertModel extends BaseModel<
         scheduledAt: model.scheduledAt.toISOString(),
         publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
         version: model.version,
+        institution: model.institution?.fromModel() ?? null,
         category: model.category.fromModel(),
         status: model.status.fromModel(),
         type: model.type.fromModel(),
@@ -389,6 +404,7 @@ export class AdvertModel extends BaseModel<
         category: model.category.fromModel(),
         status: model.status.fromModel(),
         type: model.type.fromModel(),
+        institution: model.institution?.fromModel() ?? null,
         createdAt: model.createdAt.toISOString(),
         updatedAt: model.updatedAt.toISOString(),
         deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,

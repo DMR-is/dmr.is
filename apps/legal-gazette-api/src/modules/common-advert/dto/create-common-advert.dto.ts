@@ -59,4 +59,9 @@ export class CreateCommonAdvertInternalDto extends CreateCommonAdvertDto {
   @IsOptional()
   @IsUUID()
   applicationId?: string
+
+  @ApiProperty({ type: String })
+  @IsOptional()
+  @IsUUID()
+  institutionId?: string
 }

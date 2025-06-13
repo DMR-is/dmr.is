@@ -9,12 +9,12 @@ import {
   ValidateNested,
 } from 'class-validator'
 
-import { ApiProperty, PickType } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 
 import { DetailedDto } from '@dmr.is/legal-gazette/dto'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
-import { AdvertDetailedDto, AdvertDto } from '../../advert/dto/advert.dto'
+import { AdvertDetailedDto } from '../../advert/dto/advert.dto'
 import {
   CommunicationChannelDto,
   CreateCommunicationChannelDto,

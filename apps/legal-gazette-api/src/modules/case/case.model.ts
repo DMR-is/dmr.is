@@ -123,6 +123,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
           title: body.caption,
           html: body.html,
           version: mapIndexToVersion(i),
+          institutionId: body.institutionId,
           commonAdvert: {
             caption: body.caption,
             signatureDate: new Date(body.signature.date),

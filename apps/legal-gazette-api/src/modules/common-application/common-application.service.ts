@@ -132,6 +132,7 @@ export class CommonApplicationService implements ICommonApplicationService {
       signature: body.signature,
       channels: body.channels,
       html: body.html,
+      institutionId: institutionId ? institutionId : undefined,
     })
   }
 }
