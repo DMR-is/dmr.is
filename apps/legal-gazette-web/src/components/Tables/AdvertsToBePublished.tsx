@@ -23,7 +23,8 @@ export const AdvertsToBePublished = () => {
     flokkur: advert.category.title,
     efni: advert.title,
     utgafudagur: formatDate(advert.scheduledAt),
-    stofnun: 'Stofnun',
+    utgafunumer: advert.publicationNumber,
+    owner: advert.owner,
   }))
 
   return (
@@ -52,8 +53,13 @@ export const AdvertsToBePublished = () => {
             size: 'small',
           },
           {
-            field: 'stofnun',
-            children: 'Stofnun',
+            field: 'utgafunumer',
+            children: 'Útgáfunúmer',
+            size: 'small',
+          },
+          {
+            field: 'owner',
+            children: 'Eigandi',
             size: 'small',
           },
         ] as const
