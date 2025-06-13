@@ -198,27 +198,6 @@ export class UpdateAdvertDto {
     type: String,
     required: false,
   })
-  @IsUUID()
-  statusId!: string
-
-  @ApiProperty({
-    type: String,
-    required: false,
-  })
-  @IsUUID()
-  typeId!: string
-
-  @ApiProperty({
-    type: String,
-    required: false,
-  })
-  @IsUUID()
-  categoryId!: string
-
-  @ApiProperty({
-    type: String,
-    required: false,
-  })
   @IsOptional()
   @IsDateString()
   scheduledAt?: string

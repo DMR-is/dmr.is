@@ -1,11 +1,12 @@
+import { Op } from 'sequelize'
 import { HasMany } from 'sequelize-typescript'
 
-import { NotFoundException } from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
-import { AdvertModel } from '../advert/advert.model'
+import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
 
 export enum StatusIdEnum {
   SUBMITTED = 'cd3bf301-52a1-493e-8c80-a391c310c840',
@@ -24,14 +25,135 @@ export class StatusModel extends BaseEntityModel {
 
   static async setAdvertStatus(advertId: string, statusId: StatusIdEnum) {
     const advert = await AdvertModel.unscoped().findByPk(advertId, {
-      attributes: ['id'],
+      attributes: ['id', 'caseId', 'version', 'statusId'],
     })
 
     if (!advert) {
       throw new NotFoundException(`Advert not found`)
     }
 
-    advert.statusId = statusId
-    await advert.save()
+    const siblings = await AdvertModel.unscoped().findAll({
+      attributes: ['id', 'caseId', 'version', 'statusId'],
+      where: {
+        caseId: advert?.caseId,
+      },
+    })
+
+    if (statusId === StatusIdEnum.SUBMITTED && siblings.length > 0) {
+      switch (advert.version) {
+        case AdvertVersionEnum.A: {
+          // mark all as submitted
+          await AdvertModel.unscoped().update(
+            { statusId: StatusIdEnum.SUBMITTED },
+            {
+              where: {
+                caseId: advert.caseId,
+              },
+            },
+          )
+          break
+        }
+        case AdvertVersionEnum.B: {
+          // mark all as submitted except A
+          await AdvertModel.unscoped().update(
+            { statusId: StatusIdEnum.SUBMITTED },
+            {
+              where: {
+                caseId: advert.caseId,
+                version: {
+                  [Op.ne]: AdvertVersionEnum.A,
+                },
+              },
+            },
+          )
+          break
+        }
+      }
+    }
+
+    if (statusId === StatusIdEnum.READY_FOR_PUBLICATION) {
+      // is previous sibling ready for publication or published?
+      switch (advert.version) {
+        case AdvertVersionEnum.A: {
+          await advert.update({
+            statusId: StatusIdEnum.READY_FOR_PUBLICATION,
+          })
+          break
+        }
+
+        case AdvertVersionEnum.B: {
+          const canProceed = siblings.find(
+            (sibling) =>
+              (sibling.version === AdvertVersionEnum.A &&
+                sibling.statusId === StatusIdEnum.PUBLISHED) ||
+              sibling.statusId === StatusIdEnum.READY_FOR_PUBLICATION,
+          )
+
+          if (!canProceed) {
+            this.logger.warn(
+              `Advert cannot be set to READY_FOR_PUBLICATION because previous version A is not published or ready for publication.`,
+              {
+                advertId: advert.id,
+                caseId: advert.caseId,
+                version: advert.version,
+                statusId: advert.statusId,
+              },
+            )
+            throw new BadRequestException(
+              `Advert cannot be set to READY_FOR_PUBLICATION because previous version A is not published or ready for publication.`,
+            )
+          }
+
+          if (canProceed) {
+            await AdvertModel.unscoped().update(
+              { statusId: StatusIdEnum.READY_FOR_PUBLICATION },
+              {
+                where: {
+                  id: advert.id,
+                },
+              },
+            )
+          }
+
+          break
+        }
+        case AdvertVersionEnum.C: {
+          const canProceed = siblings.find(
+            (sibling) =>
+              (sibling.version === AdvertVersionEnum.B &&
+                sibling.statusId === StatusIdEnum.PUBLISHED) ||
+              sibling.statusId === StatusIdEnum.READY_FOR_PUBLICATION,
+          )
+
+          if (!canProceed) {
+            this.logger.warn(
+              `Advert cannot be set to READY_FOR_PUBLICATION because previous version B is not published or ready for publication.`,
+              {
+                advertId: advert.id,
+                caseId: advert.caseId,
+                version: advert.version,
+                statusId: advert.statusId,
+              },
+            )
+            throw new BadRequestException(
+              `Advert cannot be set to READY_FOR_PUBLICATION because previous version B is not published or ready for publication.`,
+            )
+          }
+
+          if (canProceed) {
+            await AdvertModel.unscoped().update(
+              { statusId: StatusIdEnum.READY_FOR_PUBLICATION },
+              {
+                where: {
+                  id: advert.id,
+                },
+              },
+            )
+          }
+
+          break
+        }
+      }
+    }
   }
 }

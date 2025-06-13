@@ -15,6 +15,7 @@ type Props = {
   advertId: string
   caseId: string
   status: StatusDto
+  publishable?: boolean
   onStatusChange?: () => void
 }
 
@@ -22,6 +23,7 @@ export const FormStatusButton = ({
   advertId,
   caseId,
   status,
+  publishable = false,
   onStatusChange,
 }: Props) => {
   const { trigger: updateStatusTrigger } = useSWRMutation(
@@ -76,6 +78,7 @@ export const FormStatusButton = ({
       />
       {status.id === StatusIdEnum.SUBMITTED ? (
         <Button
+          disabled={!publishable}
           onClick={() =>
             updateStatusTrigger({
               id: advertId,

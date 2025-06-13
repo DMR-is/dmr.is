@@ -1,3 +1,4 @@
+import addDays from 'date-fns/addDays'
 import subDays from 'date-fns/subDays'
 import debounce from 'lodash/debounce'
 import { useCallback, useMemo } from 'react'
@@ -26,6 +27,7 @@ import { useCaseContext } from '../../../hooks/cases/useCase'
 import {
   fetchCategories,
   setAdvertCategory,
+  updateAdvert,
   updateCommonAdvert,
 } from '../../../lib/api/fetchers'
 import { formatDate } from '../../../lib/utils'
@@ -33,6 +35,35 @@ import * as styles from '../Form.css'
 
 export const CommonAdvertTab = () => {
   const { refetch, selectedAdvert, case: theCase } = useCaseContext()
+
+  const minPublishingDate = useMemo(() => {
+    switch (selectedAdvert.version) {
+      case AdvertVersion.A: {
+        return new Date()
+      }
+      case AdvertVersion.B: {
+        const versionA = theCase.adverts.find(
+          (ad) => ad.version === AdvertVersion.A,
+        )
+        if (versionA) {
+          return addDays(new Date(versionA.scheduledAt), 1)
+        }
+
+        return new Date()
+      }
+      case AdvertVersion.C: {
+        const versionB = theCase.adverts.find(
+          (ad) => ad.version === AdvertVersion.B,
+        )
+
+        if (versionB) {
+          return addDays(new Date(versionB.scheduledAt), 1)
+        }
+
+        return new Date()
+      }
+    }
+  }, [selectedAdvert, theCase.adverts])
 
   const maxPublishingDate = useMemo(() => {
     switch (selectedAdvert.version) {
@@ -60,7 +91,7 @@ export const CommonAdvertTab = () => {
         return undefined
       }
     }
-  }, [selectedAdvert])
+  }, [selectedAdvert, theCase.adverts])
 
   const { data, isLoading, isValidating } = useSWR(
     ['getCategories', { type: selectedAdvert.type.id }],
@@ -80,6 +111,24 @@ export const CommonAdvertTab = () => {
       label: category.title,
     }))
   }, [data])
+
+  const { trigger: updateAdvertTrigger } = useSWRMutation(
+    'updateAdvert',
+    updateAdvert,
+    {
+      onSuccess: () => {
+        toast.success('Auglýsing uppfærð.', {
+          toastId: 'update-advert-success',
+        })
+        refetch()
+      },
+      onError: () => {
+        toast.error('Villa kom upp við að uppfæra auglýsingu.', {
+          toastId: 'update-advert-error',
+        })
+      },
+    },
+  )
 
   const { trigger: updateCategoryTrigger } = useSWRMutation(
     'updateCategory',
@@ -221,8 +270,17 @@ export const CommonAdvertTab = () => {
                 placeholderText=""
                 size="sm"
                 backgroundColor="blue"
+                minDate={minPublishingDate}
                 maxDate={maxPublishingDate}
                 selected={new Date(selectedAdvert.scheduledAt)}
+                handleChange={(date) =>
+                  updateAdvertTrigger({
+                    id: selectedAdvert.id,
+                    updateAdvertDto: {
+                      scheduledAt: date ? date.toISOString() : undefined,
+                    },
+                  })
+                }
               />
             </GridColumn>
             <GridColumn span={['12/12', '12/12', '6/12']}>
