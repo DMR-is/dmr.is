@@ -100,6 +100,47 @@ export enum AdvertVersionEnum {
   order: [['scheduledAt', 'ASC']],
 }))
 @Scopes(() => ({
+  readyForPublication: {
+    include: [
+      StatusModel,
+      CategoryModel,
+      TypeModel,
+      CommonAdvertModel,
+      InstitutionModel,
+      UserModel,
+      {
+        model: CaseModel.unscoped(),
+        attributes: ['caseNumber'],
+        required: true,
+      },
+    ],
+    where: {
+      statusId: StatusIdEnum.READY_FOR_PUBLICATION,
+      publishedAt: { [Op.eq]: null },
+    },
+    order: [['scheduledAt', 'ASC']],
+  },
+  toBePublished: {
+    include: [
+      StatusModel,
+      CategoryModel,
+      TypeModel,
+      CommonAdvertModel,
+      InstitutionModel,
+      UserModel,
+      {
+        model: CaseModel.unscoped(),
+        attributes: ['caseNumber'],
+        required: true,
+      },
+    ],
+    where: {
+      paid: true,
+      statusId: StatusIdEnum.READY_FOR_PUBLICATION,
+      publishedAt: { [Op.eq]: null },
+    },
+    order: [['scheduledAt', 'ASC']],
+  },
   published: {
     include: [
       StatusModel,
@@ -336,27 +377,20 @@ export class AdvertModel extends BaseModel<
     }
   }
 
-  static async publish(advertId: string) {
-    const now = new Date()
-
-    const advert = await this.scope('tobepublished').findByPk(advertId)
-
-    if (!advert) {
-      this.logger.warn(`Advert with ID ${advertId} not found`, {
-        context: 'AdvertModel',
-      })
-
-      throw new NotFoundException('Advert not found')
-    }
-
-    this.logger.info(`Publishing advert with ID: ${advertId}`, {
+  static async publish(model: AdvertModel) {
+    this.logger.info(`Publishing advert`, {
       context: 'AdvertModel',
+      advertId: model.id,
     })
 
-    await advert.update({
-      publishedAt: now,
+    await model.update({
+      publishedAt: new Date(),
       statusId: StatusIdEnum.PUBLISHED,
     })
+  }
+
+  publish(): Promise<void> {
+    return AdvertModel.publish(this)
   }
 
   static fromModel(model: AdvertModel): AdvertDto {

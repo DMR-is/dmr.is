@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { PublishingService } from '../../services/publishing.service'
 import { CategoryModel } from '../category/category.model'
 import { StatusModel } from '../status/status.model'
 import { AdvertController } from './controllers/advert.controller'
@@ -22,6 +23,7 @@ import { IAdvertService } from './advert.service.interface'
     AdvertController,
   ],
   providers: [
+    PublishingService,
     {
       provide: IAdvertService,
       useClass: AdvertService,

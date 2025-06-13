@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { EventEmitterModule } from '@nestjs/event-emitter'
+import { ScheduleModule } from '@nestjs/schedule'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
@@ -33,9 +34,11 @@ import { TypeModule } from '../modules/type/type.module'
 import { UserInstitutionModel } from '../modules/users/user-institutions.model'
 import { UserRoleModel } from '../modules/users/user-roles.model'
 import { UserModel } from '../modules/users/users.model'
+
 @Module({
   imports: [
     LoggingModule,
+    ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     SequelizeModule.forRootAsync({
       imports: [
