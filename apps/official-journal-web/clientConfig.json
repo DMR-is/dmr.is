@@ -1936,7 +1936,7 @@
             "required": true,
             "in": "path",
             "schema": {
-              "enum": ["frumrit", "fylgiskjol", "assets"],
+              "enum": ["frumrit", "fylgiskjol", "fylgigogn", "assets"],
               "type": "string"
             }
           }
@@ -4962,7 +4962,7 @@
           },
           "title": {
             "type": "string",
-            "enum": ["Frumrit", "Fylgiskjöl"],
+            "enum": ["Frumrit", "Fylgiskjöl", "Fylgigögn"],
             "description": "Title of the attachment type"
           },
           "slug": {

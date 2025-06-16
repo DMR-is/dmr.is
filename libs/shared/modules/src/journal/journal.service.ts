@@ -51,6 +51,7 @@ import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAWSService } from '../aws/aws.service.interface'
+import { caseAdditionMigrate } from '../case/migrations/case-addition.migrate'
 import { CaseCategoriesModel, CaseModel } from '../case/models'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
 import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
@@ -859,7 +860,7 @@ export class JournalService implements IJournalService {
     if (!id) {
       throw new BadRequestException()
     }
-    const advert = await this.advertModel.findByPk(id, {
+    const advert = await this.advertModel.scope('withAdditions').findByPk(id, {
       include: [
         { model: AdvertTypeModel, include: [AdvertDepartmentModel] },
         AdvertDepartmentModel,
@@ -920,6 +921,9 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({
       advert: {
         ...ad,
+        additions: advert.case?.additions
+          ? advert.case.additions.map((item) => caseAdditionMigrate(item))
+          : undefined,
         document: {
           isLegacy: advert.isLegacy,
           html,
