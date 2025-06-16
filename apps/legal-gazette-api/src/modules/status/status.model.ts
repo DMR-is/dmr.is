@@ -43,29 +43,21 @@ export class StatusModel extends BaseEntityModel {
       switch (advert.version) {
         case AdvertVersionEnum.A: {
           // mark all as submitted
-          await AdvertModel.unscoped().update(
-            { statusId: StatusIdEnum.SUBMITTED },
-            {
-              where: {
-                caseId: advert.caseId,
-              },
-            },
-          )
+          siblings.forEach(async (sibling) => {
+            await sibling.update({
+              statusId: StatusIdEnum.SUBMITTED,
+            })
+          })
           break
         }
         case AdvertVersionEnum.B: {
-          // mark all as submitted except A
-          await AdvertModel.unscoped().update(
-            { statusId: StatusIdEnum.SUBMITTED },
-            {
-              where: {
-                caseId: advert.caseId,
-                version: {
-                  [Op.ne]: AdvertVersionEnum.A,
-                },
-              },
-            },
-          )
+          siblings.forEach(async (sibling) => {
+            if (sibling.version !== AdvertVersionEnum.A) {
+              await sibling.update({
+                statusId: StatusIdEnum.SUBMITTED,
+              })
+            }
+          })
           break
         }
       }
@@ -80,7 +72,6 @@ export class StatusModel extends BaseEntityModel {
           })
           break
         }
-
         case AdvertVersionEnum.B: {
           const canProceed = siblings.find(
             (sibling) =>
@@ -104,16 +95,7 @@ export class StatusModel extends BaseEntityModel {
             )
           }
 
-          if (canProceed) {
-            await AdvertModel.unscoped().update(
-              { statusId: StatusIdEnum.READY_FOR_PUBLICATION },
-              {
-                where: {
-                  id: advert.id,
-                },
-              },
-            )
-          }
+          await advert.update({ statusId: StatusIdEnum.READY_FOR_PUBLICATION })
 
           break
         }
@@ -140,16 +122,12 @@ export class StatusModel extends BaseEntityModel {
             )
           }
 
-          if (canProceed) {
-            await AdvertModel.unscoped().update(
-              { statusId: StatusIdEnum.READY_FOR_PUBLICATION },
-              {
-                where: {
-                  id: advert.id,
-                },
-              },
-            )
-          }
+          await advert.update(
+            { statusId: StatusIdEnum.READY_FOR_PUBLICATION },
+            {
+              returning: false,
+            },
+          )
 
           break
         }

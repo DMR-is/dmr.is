@@ -2,9 +2,10 @@ import dynamic from 'next/dynamic'
 
 import useSWRMutation from 'swr/mutation'
 
-import { Button, Stack, toast } from '@island.is/island-ui/core'
+import { AlertMessage, Button, Stack, toast } from '@island.is/island-ui/core'
 
 import { StatusDto, StatusIdEnum } from '../../gen/fetch'
+import { useCaseContext } from '../../hooks/cases/useCase'
 import { rejectCase, setAdvertStatus } from '../../lib/api/fetchers'
 
 const TextInput = dynamic(() =>
@@ -26,6 +27,7 @@ export const FormStatusButton = ({
   publishable = false,
   onStatusChange,
 }: Props) => {
+  const { case: theCase } = useCaseContext()
   const { trigger: updateStatusTrigger } = useSWRMutation(
     'updateAdvertStatus',
     setAdvertStatus,
@@ -64,9 +66,17 @@ export const FormStatusButton = ({
     },
   )
 
+  const hasSiblingBeenPublished = theCase.adverts.some(
+    (advert) =>
+      advert.id !== advertId &&
+      advert.status.id === StatusIdEnum.PUBLISHED &&
+      advert.publishedAt !== null,
+  )
+
   const canReject =
-    status.id === StatusIdEnum.SUBMITTED ||
-    status.id === StatusIdEnum.READY_FOR_PUBLICATION
+    (status.id === StatusIdEnum.SUBMITTED ||
+      status.id === StatusIdEnum.READY_FOR_PUBLICATION) &&
+    !hasSiblingBeenPublished
 
   return (
     <Stack space={2}>
@@ -107,29 +117,11 @@ export const FormStatusButton = ({
           Færa mál í Innsent
         </Button>
       ) : status.id === StatusIdEnum.WITHDRAWN ? (
-        <Button
-          disabled
-          variant="ghost"
-          size="small"
-          preTextIcon="arrowBack"
-          fluid
-        >
-          Mál dregið til baka
-        </Button>
+        <AlertMessage title="Mál dregið tilbaka" type="info" />
       ) : status.id === StatusIdEnum.REJECTED ? (
-        <Button disabled size="small" colorScheme="destructive" fluid>
-          Mál hafnað
-        </Button>
+        <AlertMessage title="Mál hafnað" type="error" />
       ) : (
-        <Button
-          disabled
-          variant="ghost"
-          size="small"
-          preTextIcon="arrowBack"
-          fluid
-        >
-          Mál útgefið
-        </Button>
+        <AlertMessage title="Mál útgefið" type="success" />
       )}
 
       {canReject && (

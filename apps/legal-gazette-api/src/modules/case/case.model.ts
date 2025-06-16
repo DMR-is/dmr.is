@@ -14,14 +14,17 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
+import { CategoryModel } from '../category/category.model'
 import { CommonAdvertModel } from '../common-advert/common-advert.model'
 import { CreateCommonAdvertInternalDto } from '../common-advert/dto/create-common-advert.dto'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
 } from '../communication-channel/communication-channel.model'
-import { StatusIdEnum } from '../status/status.model'
-import { TypeIdEnum } from '../type/type.model'
+import { InstitutionModel } from '../institution/institution.model'
+import { StatusIdEnum, StatusModel } from '../status/status.model'
+import { TypeIdEnum, TypeModel } from '../type/type.model'
+import { UserModel } from '../users/users.model'
 import { CaseDetailedDto, CaseDto } from './dto/case.dto'
 
 const LOGGING_CONTEXT = 'CaseModel'
@@ -58,9 +61,19 @@ type CaseCreateAttributes = {
     include: [
       { model: CommunicationChannelModel, separate: true, duplicating: false },
       {
-        model: AdvertModel,
+        model: AdvertModel.unscoped(),
+        scope: 'all',
+        duplicating: false,
         separate: true,
-        include: [{ model: CommonAdvertModel }],
+        order: [['version', 'ASC']],
+        include: [
+          StatusModel,
+          CategoryModel,
+          TypeModel,
+          CommonAdvertModel,
+          InstitutionModel,
+          UserModel,
+        ],
       },
     ],
   },
@@ -216,7 +229,9 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
         createdAt: model.createdAt.toISOString(),
         updatedAt: model.updatedAt.toISOString(),
         deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
-        adverts: model.adverts.map((advert) => advert.fromModelDetailed()),
+        adverts: model.adverts.map((advert) =>
+          AdvertModel.fromModelDetailed(advert),
+        ),
         communicationChannels: model.communicationChannels.map((channel) => ({
           email: channel.email,
           phone: channel.phone ? channel.phone : undefined,

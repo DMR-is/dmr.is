@@ -1,6 +1,7 @@
 import { Transform, Type } from 'class-transformer'
 import {
   IsArray,
+  IsBoolean,
   IsDateString,
   IsEnum,
   IsOptional,
@@ -99,6 +100,12 @@ export class AdvertDto extends DetailedDto {
   })
   @IsString()
   html!: string
+
+  @ApiProperty({
+    type: Boolean,
+  })
+  @IsBoolean()
+  paid!: boolean
 }
 
 export class GetAdvertsDto {
@@ -231,4 +238,13 @@ export class UpdateAdvertDto {
   @IsOptional()
   @IsString()
   html?: string
+}
+
+export class PublishAdvertsBody {
+  @ApiProperty({
+    type: [String],
+  })
+  @IsArray()
+  @IsUUID(undefined, { each: true })
+  advertIds!: string[]
 }

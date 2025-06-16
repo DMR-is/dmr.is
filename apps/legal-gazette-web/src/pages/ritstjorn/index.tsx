@@ -31,8 +31,8 @@ const AdvertsInProgressTable = dynamic(
   () => import('../../components/Tables/AdvertsInProgress'),
 )
 
-const AdvertsToBePublished = dynamic(
-  () => import('../../components/Tables/AdvertsToBePublished'),
+const PublishingTab = dynamic(
+  () => import('../../components/PublishingTab/PublishingTab'),
 )
 
 const AdvertsCompleted = dynamic(
@@ -58,7 +58,7 @@ export default function Ritstjorn() {
       label: `Á leið í útgáfu${
         isLoading ? '' : ` (${statuses?.readyForPublication.count})`
       }`,
-      content: <AdvertsToBePublished />,
+      content: <PublishingTab />,
     },
     {
       id: RitstjornTabs.COMPLETED,

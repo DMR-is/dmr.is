@@ -1,36 +1,45 @@
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
-import { Checkbox } from '@island.is/island-ui/core'
+import { Checkbox, Tag } from '@island.is/island-ui/core'
 
-import { StatusIdEnum } from '../../gen/fetch'
-import { useAdvertsInProgress } from '../../hooks/adverts/useAdvertsInProgress'
-import { useFilters } from '../../hooks/useFilters'
+import { AdvertDto } from '../../gen/fetch'
 import { formatDate } from '../../lib/utils'
 
-export const AdvertsToBePublished = () => {
-  const { params } = useFilters()
+type Props = {
+  selectedAdvertIds?: string[]
+  onToggle?: (advertId: string) => void
+  adverts: AdvertDto[]
+}
 
-  const { adverts, isLoading, paging } = useAdvertsInProgress({
-    params: {
-      page: params.page,
-      pageSize: params.pageSize,
-      statusId: [StatusIdEnum.READY_FOR_PUBLICATION],
-    },
-  })
-
+export const AdvertsToBePublished = ({
+  adverts = [],
+  selectedAdvertIds = [],
+  onToggle,
+}: Props) => {
   const rows = adverts.map((advert) => ({
-    checkbox: <Checkbox />,
+    checkbox: (
+      <Checkbox
+        checked={selectedAdvertIds.includes(advert.id)}
+        disabled={!advert.paid}
+        onChange={() => onToggle?.(advert.id)}
+      />
+    ),
     flokkur: advert.category.title,
+    greitt: (
+      <Tag variant={advert.paid ? 'mint' : 'rose'}>
+        {advert.paid ? 'Greitt' : 'Beðið eftir greiðslu'}
+      </Tag>
+    ),
     efni: advert.title,
     utgafudagur: formatDate(advert.scheduledAt),
     utgafunumer: advert.publicationNumber,
+    utgafuTegund: advert.version,
     owner: advert.owner,
   }))
 
   return (
     <DataTable
       noDataMessage="Engar auglýsingar tilbúnar til útgáfu"
-      loading={isLoading}
       columns={
         [
           {
@@ -41,6 +50,11 @@ export const AdvertsToBePublished = () => {
           {
             field: 'flokkur',
             children: 'Flokkur',
+            size: 'small',
+          },
+          {
+            field: 'greitt',
+            children: 'Staða greiðslu',
             size: 'small',
           },
           {
@@ -58,6 +72,12 @@ export const AdvertsToBePublished = () => {
             size: 'small',
           },
           {
+            field: 'utgafuTegund',
+            children: 'Birting',
+            size: 'small',
+            align: 'center',
+          },
+          {
             field: 'owner',
             children: 'Eigandi',
             size: 'small',
@@ -65,7 +85,6 @@ export const AdvertsToBePublished = () => {
         ] as const
       }
       rows={rows}
-      paging={paging}
     />
   )
 }

@@ -1,6 +1,7 @@
 import {
   DeleteCaseRequest,
   GetCategoriesRequest,
+  PublishAdvertsRequest,
   UpdateAdvertCategoryRequest,
   UpdateAdvertRequest,
   UpdateAdvertStatusRequest,
@@ -88,4 +89,13 @@ export const updateAdvert = async (
   const client = getLegalGazetteClient('AdvertApi', 'todo:add-token')
 
   await client.updateAdvert(arg)
+}
+
+export const publishAdverts = async (
+  _url: string,
+  { arg }: { arg: PublishAdvertsRequest },
+) => {
+  const client = getLegalGazetteClient('AdvertPublishApi', 'todo:add-token')
+
+  await client.publishAdverts(arg)
 }

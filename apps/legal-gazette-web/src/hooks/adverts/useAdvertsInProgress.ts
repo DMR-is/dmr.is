@@ -17,8 +17,6 @@ export const useAdvertsInProgress = ({ params = {} }: UseAdvertProps = {}) => {
       fetcher({ func: () => client.getAdvertsInProgress(params) }),
     {
       keepPreviousData: true,
-      refreshInterval: 0,
-      revalidateOnFocus: false,
     },
   )
 

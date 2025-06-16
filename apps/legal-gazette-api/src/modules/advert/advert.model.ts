@@ -146,6 +146,9 @@ export enum AdvertVersionEnum {
       StatusModel,
       CategoryModel,
       TypeModel,
+      CommonAdvertModel,
+      InstitutionModel,
+      UserModel,
       {
         model: CaseModel.unscoped(),
         attributes: ['caseNumber'],
@@ -163,6 +166,9 @@ export enum AdvertVersionEnum {
       StatusModel,
       CategoryModel,
       TypeModel,
+      CommonAdvertModel,
+      InstitutionModel,
+      UserModel,
       {
         model: CaseModel.unscoped(),
         attributes: ['caseNumber'],
@@ -170,7 +176,7 @@ export enum AdvertVersionEnum {
         paranoid: false,
       },
     ],
-    order: [['updatedAt', 'ASC']],
+    order: [['scheduledAt', 'ASC']],
     where: {
       statusId: {
         [Op.in]: [
@@ -180,6 +186,24 @@ export enum AdvertVersionEnum {
         ],
       },
     },
+  },
+  all: {
+    include: [
+      StatusModel,
+      CategoryModel,
+      TypeModel,
+      CommonAdvertModel,
+      InstitutionModel,
+      UserModel,
+      {
+        model: CaseModel.unscoped(),
+        duplicating: false,
+        attributes: ['caseNumber'],
+        required: true,
+      },
+    ],
+    where: {},
+    order: [['version', 'ASC']],
   },
   withQuery: (query?: GetAdvertsQueryDto) => {
     const whereClause: Record<string, string | number> = {}
@@ -298,7 +322,7 @@ export class AdvertModel extends BaseModel<
   @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
-    defaultValue: false,
+    defaultValue: true, // TODO: Change to false when adverts are not paid by default
     field: 'paid',
   })
   paid!: boolean
@@ -333,12 +357,11 @@ export class AdvertModel extends BaseModel<
   @HasOne(() => CommonAdvertModel, { foreignKey: 'advertId' })
   commonAdvert?: CommonAdvertModel
 
-  private getOwner() {
-    if (this.institution) {
-      return this.institution.fromModel().title
+  static getOwner(model: AdvertModel): string {
+    if (model.institution) {
+      return model.institution.title
     }
-
-    return this.user.fromModel().name
+    return `${model.user.firstName} ${model.user.lastName}`
   }
 
   static async countByStatus(
@@ -389,7 +412,7 @@ export class AdvertModel extends BaseModel<
     })
   }
 
-  publish(): Promise<void> {
+  publishAdvert(): Promise<void> {
     return AdvertModel.publish(this)
   }
 
@@ -404,7 +427,7 @@ export class AdvertModel extends BaseModel<
         caseId: model.caseId,
         title: model.title,
         html: model.html,
-        owner: model.getOwner(),
+        owner: AdvertModel.getOwner(model),
         publicationNumber: model.publicationNumber,
         scheduledAt: model.scheduledAt.toISOString(),
         publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
@@ -416,6 +439,7 @@ export class AdvertModel extends BaseModel<
         createdAt: model.createdAt.toISOString(),
         updatedAt: model.updatedAt.toISOString(),
         deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+        paid: model.paid,
       }
     } catch (error) {
       this.logger.debug(
@@ -436,7 +460,7 @@ export class AdvertModel extends BaseModel<
         caseId: model.caseId,
         title: model.title,
         html: model.html,
-        owner: model.getOwner(),
+        owner: AdvertModel.getOwner(model),
         publicationNumber: model.publicationNumber,
         scheduledAt: model.scheduledAt.toISOString(),
         publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
@@ -448,15 +472,16 @@ export class AdvertModel extends BaseModel<
         createdAt: model.createdAt.toISOString(),
         updatedAt: model.updatedAt.toISOString(),
         deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+        paid: model.paid,
         commonAdvert: model.commonAdvert
           ? model.commonAdvert.fromModel()
           : undefined,
       }
-    } catch (error) {
-      this.logger.debug(
-        `fromModelDetailed failed for AdvertModel, did you include everything?`,
-        { context: 'AdvertModel' },
-      )
+    } catch (error: any) {
+      this.logger.debug(`fromModelDetailed failed for AdvertModel`, {
+        context: 'AdvertModel',
+      })
+
       throw error
     }
   }

@@ -1263,6 +1263,123 @@
         "tags": ["Advert"]
       }
     },
+    "/api/v1/adverts/publish": {
+      "post": {
+        "operationId": "publishAdverts",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PublishAdvertsBody" }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["AdvertPublish"]
+      }
+    },
+    "/api/v1/adverts/{id}/publish": {
+      "post": {
+        "operationId": "publishAdvert",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["AdvertPublish"]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "HealthController__v1",
@@ -1578,6 +1695,7 @@
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersion" }]
           },
           "html": { "type": "string" },
+          "paid": { "type": "boolean" },
           "commonAdvert": {
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/CommonAdvertDto" }]
@@ -1599,6 +1717,7 @@
           "institution",
           "version",
           "html",
+          "paid",
           "commonAdvert"
         ]
       },
@@ -1808,7 +1927,8 @@
           "version": {
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersion" }]
           },
-          "html": { "type": "string" }
+          "html": { "type": "string" },
+          "paid": { "type": "boolean" }
         },
         "required": [
           "createdAt",
@@ -1825,7 +1945,8 @@
           "status",
           "institution",
           "version",
-          "html"
+          "html",
+          "paid"
         ]
       },
       "GetAdvertsDto": {
@@ -1846,6 +1967,13 @@
           "title": { "type": "string" },
           "html": { "type": "string" }
         }
+      },
+      "PublishAdvertsBody": {
+        "type": "object",
+        "properties": {
+          "advertIds": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["advertIds"]
       }
     }
   }

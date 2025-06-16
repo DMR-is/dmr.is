@@ -37,7 +37,7 @@ export class PublishingService {
     }
 
     advertToBePublished.forEach(async (advert) => {
-      await advert.publish()
+      await advert.publishAdvert()
     })
   }
 }
