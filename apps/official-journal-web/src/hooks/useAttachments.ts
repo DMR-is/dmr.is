@@ -18,6 +18,7 @@ type FetchAttachmentParams = {
 type UploadAttachmentParams = {
   caseId: string
   file: File
+  type?: AddApplicationAttachmentTypeEnum
 }
 
 export const useAttachments = () => {
@@ -34,18 +35,24 @@ export const useAttachments = () => {
     return await dmrClient.getCaseAttachment({ caseId, attachmentId })
   }
 
-  const uploadAttachment = async ({ caseId, file }: UploadAttachmentParams) => {
+  const uploadAttachment = async ({
+    caseId,
+    file,
+    type,
+  }: UploadAttachmentParams) => {
     setLoading(true)
     setError(null)
 
     try {
       const fileExtension = file.name.split('.').pop()
+      const attachmentType =
+        type ?? (ADDITIONAL_DOCUMENTS as AddApplicationAttachmentTypeEnum)
 
       if (!fileExtension) {
         throw new Error('File extension not found')
       }
 
-      const key = `applications/${caseId}/${ADDITIONAL_DOCUMENTS}/${file.name}`
+      const key = `applications/${caseId}/${attachmentType}/${file.name}`
 
       const res = await dmrClient.addApplicationAttachment({
         postApplicationAttachmentBody: {
@@ -57,7 +64,7 @@ export const useAttachments = () => {
           originalFileName: file.name,
         },
         id: caseId,
-        type: ADDITIONAL_DOCUMENTS as AddApplicationAttachmentTypeEnum,
+        type: attachmentType,
       })
 
       const didUpload = await fetch(res.url, {

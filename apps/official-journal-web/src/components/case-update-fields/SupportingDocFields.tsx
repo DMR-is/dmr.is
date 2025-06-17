@@ -9,7 +9,7 @@ type Props = {
   onToggle: () => void
 }
 
-export const AttachmentFields = ({ toggle, onToggle }: Props) => {
+export const SupportingDocs = ({ toggle, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
 
   return (
