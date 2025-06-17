@@ -9,13 +9,20 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { ApplicationAttachmentTypeTitleEnum } from '../../gen/fetch'
+import {
+  AddApplicationAttachmentTypeEnum,
+  ApplicationAttachmentTypeTitleEnum,
+} from '../../gen/fetch'
 import { useAttachments } from '../../hooks/useAttachments'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from './messages'
 
-export const Attachments = () => {
+export const Attachments = ({
+  displayExternal,
+}: {
+  displayExternal?: boolean
+}) => {
   const { formatMessage } = useFormatMessage()
   const { currentCase, refetch, canEdit } = useCaseContext()
 
@@ -54,6 +61,9 @@ export const Attachments = () => {
     await uploadAttachment({
       caseId: currentCase.id,
       file,
+      type: displayExternal
+        ? AddApplicationAttachmentTypeEnum.Fylgiskjol
+        : AddApplicationAttachmentTypeEnum.Fylgigogn,
     })
     refetch()
   }
@@ -89,10 +99,17 @@ export const Attachments = () => {
   if (currentCase.attachments.length === 0) {
     return (
       <>
-        <AlertMessage
-          type="warning"
-          title={formatMessage(messages.attachments.noAttachments)}
-        />
+        {displayExternal ? (
+          <Text variant="small">
+            {formatMessage(messages.attachments.noAttachments)}
+          </Text>
+        ) : (
+          <AlertMessage
+            type="warning"
+            title={formatMessage(messages.attachments.noSupportingAttachments)}
+          />
+        )}
+
         <Box marginTop={2}>
           <input
             type="file"
@@ -110,7 +127,9 @@ export const Attachments = () => {
             size="small"
             onClick={onOpenUploadAttachment}
           >
-            Hlaða upp fylgiskjali
+            {displayExternal
+              ? 'Hlaða upp fylgiskjali'
+              : 'Hlaða upp fylgigögnum'}
           </Button>
         </Box>
       </>
@@ -133,83 +152,93 @@ export const Attachments = () => {
         borderColor="blue200"
       >
         <Stack space={2}>
-          {currentCase.attachments.map((a, i) => {
-            return (
-              <Box
-                key={i}
-                display="flex"
-                justifyContent="spaceBetween"
-                alignItems="center"
-                padding={1}
-                paddingRight={2}
-                paddingLeft={2}
-                borderWidth="standard"
-                borderColor="blue200"
-                background="blue100"
-                borderRadius="large"
-              >
-                <Box display="flex" columnGap={2}>
-                  <Icon
-                    icon={
-                      a.type.title ===
-                      ApplicationAttachmentTypeTitleEnum.Frumrit
-                        ? 'pencil'
-                        : 'attach'
-                    }
-                    color="blue400"
-                  />
-                  <Text>{a.fileName}</Text>
-                </Box>
+          {currentCase.attachments
+            .filter((item) =>
+              displayExternal
+                ? item.type.title ===
+                  ApplicationAttachmentTypeTitleEnum.Fylgiskjöl
+                : item.type.title ===
+                    ApplicationAttachmentTypeTitleEnum.Frumrit ||
+                  item.type.title ===
+                    ApplicationAttachmentTypeTitleEnum.Fylgigögn,
+            )
+            .map((a, i) => {
+              return (
+                <Box
+                  key={i}
+                  display="flex"
+                  justifyContent="spaceBetween"
+                  alignItems="center"
+                  padding={1}
+                  paddingRight={2}
+                  paddingLeft={2}
+                  borderWidth="standard"
+                  borderColor="blue200"
+                  background="blue100"
+                  borderRadius="large"
+                >
+                  <Box display="flex" columnGap={2}>
+                    <Icon
+                      icon={
+                        a.type.title ===
+                        ApplicationAttachmentTypeTitleEnum.Frumrit
+                          ? 'pencil'
+                          : 'attach'
+                      }
+                      color="blue400"
+                    />
+                    <Text>{a.fileName}</Text>
+                  </Box>
 
-                <Box display="flex" alignItems="center" columnGap={2}>
-                  {a.type.title ===
-                    ApplicationAttachmentTypeTitleEnum.Fylgiskjöl && (
-                    <>
-                      <input
-                        type="file"
-                        ref={(el) => {
-                          fileReUploadRefs.current[a.id] = el
-                        }}
-                        id={`file-re-upload-${a.id}`}
-                        style={{ display: 'none' }}
-                        accept={['.pdf', '.doc', '.docx'].join(',')}
-                        onChange={(e) => onFileReUpload(a.id, e)}
-                        name="file-re-upload"
-                      />
+                  <Box display="flex" alignItems="center" columnGap={2}>
+                    {a.type.title ===
+                      ApplicationAttachmentTypeTitleEnum.Fylgiskjöl && (
+                      <>
+                        <input
+                          type="file"
+                          ref={(el) => {
+                            fileReUploadRefs.current[a.id] = el
+                          }}
+                          id={`file-re-upload-${a.id}`}
+                          style={{ display: 'none' }}
+                          accept={['.pdf', '.doc', '.docx'].join(',')}
+                          onChange={(e) => onFileReUpload(a.id, e)}
+                          name="file-re-upload"
+                        />
+                        <Button
+                          disabled={!canEdit}
+                          variant="text"
+                          icon="share"
+                          iconType="outline"
+                          size="small"
+                          onClick={() => onOpenOverwriteAttachment(a.id)}
+                        >
+                          {formatMessage(messages.attachments.overwrite)}
+                        </Button>
+                      </>
+                    )}
+                    <Box>
                       <Button
                         disabled={!canEdit}
                         variant="text"
-                        icon="share"
+                        icon="download"
                         iconType="outline"
                         size="small"
-                        onClick={() => onOpenOverwriteAttachment(a.id)}
+                        loading={loading}
+                        onClick={() =>
+                          downloadAttachment({
+                            caseId: currentCase.id,
+                            attachmentId: a.id,
+                          })
+                        }
                       >
-                        {formatMessage(messages.attachments.overwrite)}
+                        {formatMessage(messages.attachments.fetchFile)}
                       </Button>
-                    </>
-                  )}
-                  <Box>
-                    <Button
-                      disabled={!canEdit}
-                      variant="text"
-                      icon="download"
-                      iconType="outline"
-                      size="small"
-                      loading={loading}
-                      onClick={() =>
-                        downloadAttachment({
-                          caseId: currentCase.id,
-                          attachmentId: a.id,
-                        })
-                      }
-                    >
-                      {formatMessage(messages.attachments.fetchFile)}
-                    </Button>
+                    </Box>
                   </Box>
                 </Box>
-              </Box>
-            )
-          })}
+              )
+            })}
         </Stack>
       </Box>
       <Box marginTop={2}>
@@ -229,7 +258,7 @@ export const Attachments = () => {
           size="small"
           onClick={onOpenUploadAttachment}
         >
-          Hlaða upp fylgiskjali
+          {displayExternal ? 'Hlaða upp fylgiskjali' : 'Hlaða upp fylgigögnum'}
         </Button>
       </Box>
     </Box>
