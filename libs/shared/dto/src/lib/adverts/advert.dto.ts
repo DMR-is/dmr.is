@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { AdvertSignature } from '../advert-signatures/advert-signature.dto'
 import { AdvertSignatureBody } from '../advert-signatures/advert-signature-body.dto'
 import { AdvertType } from '../advert-type'
+import { CaseAddition } from '../cases/case-addition.dto'
 import { Category } from '../categories/category.dto'
 import { Department } from '../departments/department.dto'
 import { Institution } from '../institutions/institution.dto'
@@ -151,6 +152,13 @@ export class Advert {
     required: true,
   })
   readonly attachments!: AdvertAttachment[]
+
+  @ApiProperty({
+    type: [CaseAddition],
+    description: 'Additions for the advert.',
+    required: false,
+  })
+  readonly additions?: CaseAddition[]
 
   @ApiProperty({
     type: [AdvertCorrection],

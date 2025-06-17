@@ -4,11 +4,14 @@ import {
   Column,
   DataType,
   HasMany,
+  HasOne,
   Model,
+  Scopes,
   Table,
 } from 'sequelize-typescript'
 
 import { AdvertTypeModel } from '../../advert-type/models'
+import { CaseAdditionModel, CaseModel } from '../../case/models'
 import { AdvertAttachmentsModel } from './advert-attachments.model'
 import { AdvertCategoriesModel } from './advert-categories.model'
 import { AdvertCategoryModel } from './advert-category.model'
@@ -18,6 +21,18 @@ import { AdvertInvolvedPartyModel } from './advert-involved-party.model'
 import { AdvertStatusModel } from './advert-status.model'
 
 @Table({ tableName: 'advert', timestamps: false })
+@Scopes(() => ({
+  withAdditions: {
+    include: [
+      {
+        model: CaseModel,
+        required: false,
+        attributes: ['id'],
+        include: [{ model: CaseAdditionModel, required: false }],
+      },
+    ],
+  },
+}))
 export class AdvertModel extends Model {
   @Column({
     type: DataType.UUID,
@@ -94,4 +109,7 @@ export class AdvertModel extends Model {
 
   @HasMany(() => AdvertCorrectionModel, 'advert_id')
   corrections?: AdvertCorrectionModel[]
+
+  @HasOne(() => CaseModel)
+  case?: CaseModel
 }
