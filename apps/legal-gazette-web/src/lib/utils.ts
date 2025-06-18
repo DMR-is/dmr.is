@@ -102,3 +102,22 @@ export const mapQueryToRitstjornTabs = (
   })
   return found ?? RitstjornTabs.SUBMITTED
 }
+
+export const flattenMessages = (
+  messages: Record<string, any>,
+): Record<string, string> => {
+  return Object.entries(messages).reduce(
+    (acc, [key, value]) => {
+      if (value.id && value.defaultMessage) {
+        // Leaf message
+        acc[value.id] = value.defaultMessage
+      } else if (typeof value === 'object') {
+        // Recurse
+        Object.assign(acc, flattenMessages(value))
+      }
+
+      return acc
+    },
+    {} as Record<string, string>,
+  )
+}

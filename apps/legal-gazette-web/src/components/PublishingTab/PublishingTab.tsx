@@ -7,7 +7,7 @@ import { Button, Inline, Stack, toast } from '@island.is/island-ui/core'
 import { StatusIdEnum } from '../../gen/fetch'
 import { useAdvertsInProgress } from '../../hooks/adverts/useAdvertsInProgress'
 import { publishAdverts, setAdvertStatus } from '../../lib/api/fetchers'
-import { ritstjornTables } from '../../lib/messages/ritstjorn/tables'
+import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
 import { toastMessages } from '../../lib/messages/toast/messages'
 import AdvertsToBePublished from '../Tables/AdvertsToBePublished'
 
@@ -80,7 +80,9 @@ export const PublishingTab = () => {
             })
           }
         >
-          {formatMessage(ritstjornTables.publishing.removeFromPublishingQueue)}
+          {formatMessage(
+            ritstjornTableMessages.publishing.removeFromPublishingQueue,
+          )}
         </Button>
         <Button
           onClick={() =>
@@ -91,7 +93,7 @@ export const PublishingTab = () => {
           disabled={selectedAdvertIds.length === 0}
           icon="arrowForward"
         >
-          {formatMessage(ritstjornTables.publishing.publish)}
+          {formatMessage(ritstjornTableMessages.publishing.publish)}
         </Button>
       </Inline>
     </Stack>

@@ -31,9 +31,9 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
         })}
         onClick={() => isExpandable && setExpanded(!expanded)}
       >
-        {columns.map((column) => {
+        {columns.map((column, i) => {
           const children = row[column.field as keyof typeof row]
-          return <DataTableCell key={column.field}>{children}</DataTableCell>
+          return <DataTableCell key={i}>{children}</DataTableCell>
         })}
         {hasLink && row.href && (
           <td align="center" className={styles.linkTableCell}>

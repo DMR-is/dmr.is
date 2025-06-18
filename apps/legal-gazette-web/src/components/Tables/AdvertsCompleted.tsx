@@ -4,7 +4,7 @@ import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { useCompletedAdverts } from '../../hooks/adverts/useCompletedAdverts'
 import { useFilters } from '../../hooks/useFilters'
-import { ritstjornTables } from '../../lib/messages/ritstjorn/tables'
+import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
 import { formatDate } from '../../lib/utils'
 
 export const AdvertsCompleted = () => {
@@ -28,35 +28,37 @@ export const AdvertsCompleted = () => {
 
   return (
     <DataTable
-      noDataMessage={formatMessage(ritstjornTables.general.noDataMessage)}
+      noDataMessage={formatMessage(
+        ritstjornTableMessages.general.noDataMessage,
+      )}
       loading={isLoading}
       columns={
         [
           {
             field: 'birting',
-            children: formatMessage(ritstjornTables.columns.scheduledAt),
+            children: formatMessage(ritstjornTableMessages.columns.scheduledAt),
             sortable: true,
             size: 'tiny',
           },
           {
             field: 'skraning',
-            children: formatMessage(ritstjornTables.columns.createdAt),
+            children: formatMessage(ritstjornTableMessages.columns.createdAt),
             size: 'tiny',
             sortable: true,
           },
           {
             field: 'tegund',
-            children: formatMessage(ritstjornTables.columns.type),
+            children: formatMessage(ritstjornTableMessages.columns.type),
             width: '200px',
           },
           {
             field: 'flokkur',
-            children: formatMessage(ritstjornTables.columns.category),
+            children: formatMessage(ritstjornTableMessages.columns.category),
             size: 'small',
           },
           {
             field: 'efni',
-            children: formatMessage(ritstjornTables.columns.content),
+            children: formatMessage(ritstjornTableMessages.columns.content),
             fluid: true,
           },
         ] as const

@@ -6,7 +6,7 @@ import { Checkbox, Tag } from '@island.is/island-ui/core'
 
 import { AdvertDto } from '../../gen/fetch'
 import { messages } from '../../lib/messages/messages'
-import { ritstjornTables } from '../../lib/messages/ritstjorn/tables'
+import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
 import { formatDate } from '../../lib/utils'
 
 type Props = {
@@ -56,37 +56,43 @@ export const AdvertsToBePublished = ({
           },
           {
             field: 'flokkur',
-            children: formatMessage(ritstjornTables.columns.category),
+            children: formatMessage(ritstjornTableMessages.columns.category),
             size: 'small',
           },
           {
             field: 'greitt',
-            children: formatMessage(ritstjornTables.columns.paymentStatus),
+            children: formatMessage(
+              ritstjornTableMessages.columns.paymentStatus,
+            ),
             size: 'small',
           },
           {
             field: 'efni',
-            children: formatMessage(ritstjornTables.columns.content),
+            children: formatMessage(ritstjornTableMessages.columns.content),
           },
           {
             field: 'utgafudagur',
-            children: formatMessage(ritstjornTables.columns.publishingDate),
+            children: formatMessage(
+              ritstjornTableMessages.columns.publishingDate,
+            ),
             size: 'small',
           },
           {
             field: 'utgafunumer',
-            children: formatMessage(ritstjornTables.columns.publishingNumber),
+            children: formatMessage(
+              ritstjornTableMessages.columns.publishingNumber,
+            ),
             size: 'small',
           },
           {
             field: 'utgafuTegund',
-            children: formatMessage(ritstjornTables.columns.version),
+            children: formatMessage(ritstjornTableMessages.columns.version),
             size: 'small',
             align: 'center',
           },
           {
             field: 'owner',
-            children: formatMessage(ritstjornTables.columns.owner),
+            children: formatMessage(ritstjornTableMessages.columns.owner),
             size: 'small',
           },
         ] as const

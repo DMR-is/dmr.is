@@ -9,6 +9,8 @@ import { PageLoader } from '@dmr.is/ui/components/PageLoader/PageLoader'
 import { Footer, Page, ToastContainer } from '@island.is/island-ui/core'
 
 import { Routes } from '../lib/constants'
+import { allMessages } from '../lib/messages'
+import { flattenMessages } from '../lib/utils'
 
 export type LayoutProps = {
   showFooter?: boolean
@@ -33,7 +35,7 @@ export const Layout = ({
     <IntlProvider
       locale="is"
       defaultLocale="is"
-      messages={{}}
+      messages={flattenMessages(allMessages)}
       onError={(err) => {
         // Chrome only ships with 'en' formatters for NumberFormat and DateTimeFormat.
         // Ignore these errors since we're not using these formatters.

@@ -1,6 +1,6 @@
 import { defineMessages } from 'react-intl'
 
-export const ritstjornTables = {
+export const ritstjornTableMessages = {
   general: defineMessages({
     noDataMessage: {
       id: 'lg.web:ritstjorn-tables.general.noDataMessage',
