@@ -8,7 +8,7 @@ import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { StatusIdEnum, StatusModel } from '../../status/status.model'
 
 @Controller({
-  path: 'advert:id/status',
+  path: 'advert/:id/status',
 })
 export class AdvertStatusController {
   constructor(

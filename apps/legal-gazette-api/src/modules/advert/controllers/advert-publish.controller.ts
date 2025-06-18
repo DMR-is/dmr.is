@@ -26,11 +26,13 @@ export class AdvertPublishController {
   @Post('publish')
   @LGResponse({ operationId: 'publishAdverts' })
   async publishAdverts(@Body() body: PublishAdvertsBody) {
-    body.advertIds.forEach(async (advertId) => {
+    for (const advertId of body.advertIds) {
       const advert = await this.advertModel.findByPk(advertId)
 
       if (!advert) throw new NotFoundException('Advert not found')
-    })
+
+      await advert.publishAdvert()
+    }
   }
 
   @Post(':id/publish')

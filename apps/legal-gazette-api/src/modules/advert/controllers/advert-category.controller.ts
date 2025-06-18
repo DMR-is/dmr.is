@@ -8,7 +8,7 @@ import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { CategoryModel } from '../../category/category.model'
 
 @Controller({
-  path: 'advert:id/category',
+  path: 'advert/:id/category',
 })
 export class AdvertCategoryController {
   constructor(
