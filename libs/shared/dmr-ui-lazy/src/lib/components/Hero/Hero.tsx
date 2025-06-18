@@ -1,3 +1,5 @@
+import { ImageProps } from '@dmr.is/ui/components/Image/Image'
+
 import {
   Box,
   Breadcrumbs,
@@ -7,8 +9,6 @@ import {
   Stack,
   Text,
 } from '@island.is/island-ui/core'
-
-import { ImageProps } from '../Image/Image'
 
 export type HeroProps = {
   title?: string
