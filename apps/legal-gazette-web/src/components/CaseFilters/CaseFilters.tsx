@@ -1,11 +1,13 @@
 import debounce from 'lodash/debounce'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useIntl } from 'react-intl'
 
 import { ActiveFilters } from '@dmr.is/ui/components/ActiveFilters/ActiveFilters'
 
 import { Inline, Input, Stack } from '@island.is/island-ui/core'
 
 import { useFilters } from '../../hooks/useFilters'
+import { messages } from '../../lib/messages/messages'
 import { QueryFilterValue } from '../../lib/types'
 import { toggleArrayOption } from '../../lib/utils'
 import FilterMenu, { FilterMenuProps } from '../FilterMenu/FilterMenu'
@@ -17,6 +19,8 @@ type CaseFiltersProps = {
 export const CaseFilters = ({ filters }: CaseFiltersProps) => {
   const { params, setParams, activeFilters } = useFilters()
   const [localSearch, setLocalSearch] = useState(params.search)
+
+  const { formatMessage } = useIntl()
 
   const handleSearch = useCallback(
     debounce((value: string) => {
@@ -70,7 +74,7 @@ export const CaseFilters = ({ filters }: CaseFiltersProps) => {
           name="search"
           size="sm"
           backgroundColor="blue"
-          placeholder="Sláðu inn leitarorð"
+          placeholder={formatMessage(messages.search)}
           onChange={(e) => {
             setLocalSearch(e.target.value)
             handleSearch(e.target.value)
@@ -84,7 +88,7 @@ export const CaseFilters = ({ filters }: CaseFiltersProps) => {
         <FilterMenu filters={filters} />
       </Inline>
       <ActiveFilters
-        onClearLabel="Hreinsa"
+        onClearLabel={formatMessage(messages.clear)}
         onClear={() =>
           setParams(
             activeFilters.reduce((acc, [key]) => ({ ...acc, [key]: [] }), {}),

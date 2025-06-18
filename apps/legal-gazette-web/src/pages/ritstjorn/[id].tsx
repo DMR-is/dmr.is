@@ -38,7 +38,7 @@ export default function SingleCase({ initalCase, intialAdvertId }: Props) {
     if (route.path === Route.RITSTJORN_ID) {
       return {
         ...route,
-        // pathName: `Mál nr. ${initalCase.caseNumber}`,
+        pathName: `Mál nr. ${initalCase.caseNumber}`,
       }
     }
 
@@ -48,7 +48,7 @@ export default function SingleCase({ initalCase, intialAdvertId }: Props) {
   const breadcrumbs = routesToBreadcrumbs(
     updatedRoutes,
     Route.RITSTJORN_ID,
-    // `Mál nr. ${initalCase.caseNumber}`,
+    `Mál nr. ${initalCase.caseNumber}`,
   )
 
   return (

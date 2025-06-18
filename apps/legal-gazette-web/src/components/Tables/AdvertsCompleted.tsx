@@ -1,11 +1,15 @@
+import { useIntl } from 'react-intl'
+
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { useCompletedAdverts } from '../../hooks/adverts/useCompletedAdverts'
 import { useFilters } from '../../hooks/useFilters'
+import { ritstjornTables } from '../../lib/messages/ritstjorn/tables'
 import { formatDate } from '../../lib/utils'
 
 export const AdvertsCompleted = () => {
   const { params } = useFilters()
+  const { formatMessage } = useIntl()
 
   const { adverts, isLoading, paging } = useCompletedAdverts({
     query: {
@@ -24,36 +28,36 @@ export const AdvertsCompleted = () => {
 
   return (
     <DataTable
-      noDataMessage="Engar kláraðar auglýsingar"
+      noDataMessage={formatMessage(ritstjornTables.general.noDataMessage)}
       loading={isLoading}
       columns={
         [
           {
             field: 'birting',
-            children: 'Birting',
+            children: formatMessage(ritstjornTables.columns.scheduledAt),
             sortable: true,
             size: 'tiny',
           },
           {
             field: 'skraning',
-            children: 'Skráning',
+            children: formatMessage(ritstjornTables.columns.createdAt),
             size: 'tiny',
             sortable: true,
           },
           {
             field: 'tegund',
-            children: 'Tegund',
+            children: formatMessage(ritstjornTables.columns.type),
             width: '200px',
           },
           {
             field: 'flokkur',
-            children: 'Flokkur',
+            children: formatMessage(ritstjornTables.columns.category),
             size: 'small',
           },
           {
             field: 'efni',
+            children: formatMessage(ritstjornTables.columns.content),
             fluid: true,
-            children: 'Efni',
           },
         ] as const
       }

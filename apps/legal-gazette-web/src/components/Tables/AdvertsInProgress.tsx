@@ -1,12 +1,17 @@
+import { useIntl } from 'react-intl'
+
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { StatusIdEnum } from '../../gen/fetch'
 import { useAdvertsInProgress } from '../../hooks/adverts/useAdvertsInProgress'
 import { useFilters } from '../../hooks/useFilters'
+import { ritstjornTables } from '../../lib/messages/ritstjorn/tables'
 import { formatDate } from '../../lib/utils'
 
 export const AdvertsInProgress = () => {
   const { params } = useFilters()
+
+  const { formatMessage } = useIntl()
 
   const { adverts, isLoading, paging } = useAdvertsInProgress({
     params: {
@@ -29,41 +34,36 @@ export const AdvertsInProgress = () => {
 
   return (
     <DataTable
-      noDataMessage="Engar auglýsingar í vinnslu"
+      noDataMessage={formatMessage(ritstjornTables.general.noDataMessage)}
       loading={isLoading}
       layout="auto"
       columns={
         [
           {
             field: 'birting',
-            children: 'Birting',
+            children: formatMessage(ritstjornTables.columns.scheduledAt),
             sortable: true,
             size: 'tiny',
           },
           {
             field: 'skraning',
-            children: 'Skráning',
+            children: formatMessage(ritstjornTables.columns.createdAt),
             size: 'tiny',
             sortable: true,
           },
           {
             field: 'utgafunumer',
-            children: 'Útgáfunúmer',
+            children: formatMessage(ritstjornTables.columns.createdAt),
             size: 'tiny',
           },
           {
             field: 'tegund',
-            children: 'Tegund',
+            children: formatMessage(ritstjornTables.columns.type),
             size: 'tiny',
           },
-          // {
-          //   field: 'flokkur',
-          //   children: 'Flokkur',
-          //   size: 'small',
-          // },
           {
             field: 'efni',
-            children: 'Efni',
+            children: formatMessage(ritstjornTables.columns.content),
           },
         ] as const
       }

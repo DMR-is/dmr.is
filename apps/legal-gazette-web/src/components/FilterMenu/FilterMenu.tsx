@@ -1,3 +1,4 @@
+import { useIntl } from 'react-intl'
 import { Popover, PopoverDisclosure, usePopoverState } from 'reakit'
 
 import {
@@ -12,6 +13,7 @@ import {
 
 import { useFilters } from '../../hooks/useFilters'
 import { QueryParams } from '../../lib/constants'
+import { messages } from '../../lib/messages/messages'
 import { OptionType, QueryFilterValue } from '../../lib/types'
 import { isArrayOptionSelected, toggleArrayOption } from '../../lib/utils'
 import * as styles from './FilterMenu.css'
@@ -45,6 +47,7 @@ export type FilterMenuProps<T> = {
 export const FilterMenu = <T extends QueryFilterValue>({
   filters,
 }: FilterMenuProps<T>) => {
+  const { formatMessage } = useIntl()
   const { params, setParams } = useFilters()
   const popover = usePopoverState({
     placement: 'bottom-start',
@@ -55,7 +58,7 @@ export const FilterMenu = <T extends QueryFilterValue>({
       {filters.length > 0 && (
         <PopoverDisclosure as="div" role="button" {...popover}>
           <Button variant="utility" icon="filter" iconType="outline">
-            Opna síu
+            {formatMessage(messages.openFilterMenu)}
           </Button>
         </PopoverDisclosure>
       )}
@@ -110,7 +113,7 @@ export const FilterMenu = <T extends QueryFilterValue>({
                           })
                         }
                       >
-                        Hreinsa val
+                        {formatMessage(messages.clearFilter)}
                       </Button>
                     </Inline>
                   </Stack>
@@ -126,7 +129,7 @@ export const FilterMenu = <T extends QueryFilterValue>({
             variant="text"
             icon="reload"
           >
-            Hreinsa allar síur
+            {formatMessage(messages.clearFilters)}
           </Button>
         </Box>
       </Popover>

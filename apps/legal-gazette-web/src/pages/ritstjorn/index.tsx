@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 
 import { useState } from 'react'
+import { useIntl } from 'react-intl'
 
 import {
   Button,
@@ -16,6 +17,8 @@ import {
 
 import { useAdvertsCount } from '../../hooks/adverts/useAdvertsCount'
 import { RitstjornTabs, Route, Routes } from '../../lib/constants'
+import { ritstjornMessages } from '../../lib/messages/ritstjorn/messages'
+import { ritstjornTabMessages } from '../../lib/messages/ritstjorn/tabs'
 import { MOCK_FILTERS } from '../../lib/mocks'
 import { mapQueryToRitstjornTabs, routesToBreadcrumbs } from '../../lib/utils'
 
@@ -42,31 +45,33 @@ const AdvertsCompleted = dynamic(
 export default function Ritstjorn() {
   const router = useRouter()
   const breadcrumbs = routesToBreadcrumbs(Routes, Route.RITSTJORN)
-  const { statuses, isLoading } = useAdvertsCount()
+  const { statuses } = useAdvertsCount()
   const [activeTab, setActiveTab] = useState(
     mapQueryToRitstjornTabs(router.query.tab),
   )
 
+  const { formatMessage } = useIntl()
+
   const tabs = [
     {
       id: RitstjornTabs.SUBMITTED,
-      label: `Innsendar${isLoading ? '' : ` (${statuses?.submitted.count})`}`,
+      label: formatMessage(ritstjornTabMessages.submitted.title, {
+        count: statuses?.submitted.count,
+      }),
       content: <AdvertsInProgressTable />,
     },
     {
       id: RitstjornTabs.PUBLISHING,
-      label: `Á leið í útgáfu${
-        isLoading ? '' : ` (${statuses?.readyForPublication.count})`
-      }`,
+      label: formatMessage(ritstjornTabMessages.tobepublished.title, {
+        count: statuses?.readyForPublication.count,
+      }),
       content: <PublishingTab />,
     },
     {
       id: RitstjornTabs.COMPLETED,
-      label: `Yfirlit${
-        isLoading
-          ? ''
-          : ` (${(statuses?.published?.count ?? 0) + (statuses?.rejected?.count ?? 0) + (statuses?.withdrawn?.count ?? 0)})`
-      }`,
+      label: formatMessage(ritstjornTabMessages.overview.title, {
+        count: statuses?.published.count,
+      }),
       content: <AdvertsCompleted />,
     },
   ]
@@ -102,12 +107,10 @@ export default function Ritstjorn() {
             baseId="create-case-drawer"
             disclosure={
               <Button variant="utility" icon="document" iconType="outline">
-                Stofna auglýsingu
+                {formatMessage(ritstjornMessages.createAdvert)}
               </Button>
             }
-          >
-            <h2>Hello</h2>
-          </Drawer>
+          ></Drawer>
         </Stack>
       </Hero>
       <GridContainer>
@@ -116,7 +119,7 @@ export default function Ritstjorn() {
             <Tabs
               contentBackground="white"
               onChange={handleTabChange}
-              label="Ritstjórn"
+              label=""
               tabs={tabs}
               selected={activeTab}
             />

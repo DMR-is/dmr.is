@@ -1,8 +1,12 @@
+import { useIntl } from 'react-intl'
+
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { Checkbox, Tag } from '@island.is/island-ui/core'
 
 import { AdvertDto } from '../../gen/fetch'
+import { messages } from '../../lib/messages/messages'
+import { ritstjornTables } from '../../lib/messages/ritstjorn/tables'
 import { formatDate } from '../../lib/utils'
 
 type Props = {
@@ -16,6 +20,8 @@ export const AdvertsToBePublished = ({
   selectedAdvertIds = [],
   onToggle,
 }: Props) => {
+  const { formatMessage } = useIntl()
+
   const rows = adverts.map((advert) => ({
     checkbox: (
       <Checkbox
@@ -27,7 +33,9 @@ export const AdvertsToBePublished = ({
     flokkur: advert.category.title,
     greitt: (
       <Tag variant={advert.paid ? 'mint' : 'rose'}>
-        {advert.paid ? 'Greitt' : 'Beðið eftir greiðslu'}
+        {formatMessage(
+          advert.paid ? messages.paymentCompleted : messages.waitingForPayment,
+        )}
       </Tag>
     ),
     efni: advert.title,
@@ -39,7 +47,6 @@ export const AdvertsToBePublished = ({
 
   return (
     <DataTable
-      noDataMessage="Engar auglýsingar tilbúnar til útgáfu"
       columns={
         [
           {
@@ -49,37 +56,37 @@ export const AdvertsToBePublished = ({
           },
           {
             field: 'flokkur',
-            children: 'Flokkur',
+            children: formatMessage(ritstjornTables.columns.category),
             size: 'small',
           },
           {
             field: 'greitt',
-            children: 'Staða greiðslu',
+            children: formatMessage(ritstjornTables.columns.paymentStatus),
             size: 'small',
           },
           {
             field: 'efni',
-            children: 'Efni',
+            children: formatMessage(ritstjornTables.columns.content),
           },
           {
             field: 'utgafudagur',
-            children: 'Útgáfudagur',
+            children: formatMessage(ritstjornTables.columns.publishingDate),
             size: 'small',
           },
           {
             field: 'utgafunumer',
-            children: 'Útgáfunúmer',
+            children: formatMessage(ritstjornTables.columns.publishingNumber),
             size: 'small',
           },
           {
             field: 'utgafuTegund',
-            children: 'Birting',
+            children: formatMessage(ritstjornTables.columns.version),
             size: 'small',
             align: 'center',
           },
           {
             field: 'owner',
-            children: 'Eigandi',
+            children: formatMessage(ritstjornTables.columns.owner),
             size: 'small',
           },
         ] as const

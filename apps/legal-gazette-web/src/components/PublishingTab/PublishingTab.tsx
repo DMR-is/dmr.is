@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useIntl } from 'react-intl'
 import useSWRMutation from 'swr/mutation'
 
 import { Button, Inline, Stack } from '@island.is/island-ui/core'
@@ -6,10 +7,13 @@ import { Button, Inline, Stack } from '@island.is/island-ui/core'
 import { StatusIdEnum } from '../../gen/fetch'
 import { useAdvertsInProgress } from '../../hooks/adverts/useAdvertsInProgress'
 import { publishAdverts, setAdvertStatus } from '../../lib/api/fetchers'
+import { ritstjornTables } from '../../lib/messages/ritstjorn/tables'
 import AdvertsToBePublished from '../Tables/AdvertsToBePublished'
 
 export const PublishingTab = () => {
   const [selectedAdvertIds, setSelectedAdvertIds] = useState<string[]>([])
+
+  const { formatMessage } = useIntl()
 
   const { adverts, mutate: refetchAdvertsInProgress } = useAdvertsInProgress({
     params: {
@@ -71,7 +75,7 @@ export const PublishingTab = () => {
             })
           }
         >
-          Taka úr útgáfu
+          {formatMessage(ritstjornTables.publishing.removeFromPublishingQueue)}
         </Button>
         <Button
           onClick={() =>
@@ -82,7 +86,7 @@ export const PublishingTab = () => {
           disabled={selectedAdvertIds.length === 0}
           icon="arrowForward"
         >
-          Gefa út mál
+          {formatMessage(ritstjornTables.publishing.publish)}
         </Button>
       </Inline>
     </Stack>
