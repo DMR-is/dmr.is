@@ -1,16 +1,12 @@
-import dynamic from 'next/dynamic'
-
 import { useMemo } from 'react'
+
+import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 
 import { Stack } from '@island.is/island-ui/core'
 
 import { AdvertVersion, StatusIdEnum } from '../../gen/fetch'
 import { useCaseContext } from '../../hooks/cases/useCase'
 import { FormStatusButton } from './FormStatusButton'
-
-const TextInput = dynamic(() =>
-  import('@dmr.is/ui/components/Inputs/TextInput').then((mod) => mod.TextInput),
-)
 
 export const AdvertSidebar = () => {
   const { case: theCase, selectedAdvert, refetch } = useCaseContext()

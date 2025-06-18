@@ -14,4 +14,3 @@ export const TextInput = ({ isLoading = false, ...props }: Props) => {
     <Input size="sm" backgroundColor="blue" {...props} />
   )
 }
-export default TextInput

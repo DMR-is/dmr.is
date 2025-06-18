@@ -1,4 +1,4 @@
-import dynamic from 'next/dynamic'
+import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 
 import {
   Box,
@@ -7,10 +7,6 @@ import {
   GridRow,
   Stack,
 } from '@island.is/island-ui/core'
-
-const TextInput = dynamic(() =>
-  import('@dmr.is/ui/components/Inputs/TextInput').then((mod) => mod),
-)
 
 type FormShellProps = {
   children?: React.ReactNode

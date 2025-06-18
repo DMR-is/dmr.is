@@ -21,9 +21,12 @@ import { Route, Routes } from '../../lib/constants'
 import { routesToBreadcrumbs } from '../../lib/utils'
 
 // we need this if we replace the breadcrumbs items so they match the server-side
-const HeroNoSRR = dynamic(() => import('@dmr.is/ui/components/Hero/Hero'), {
-  ssr: false,
-})
+const HeroNoSRR = dynamic(
+  () => import('@dmr.is/ui/lazy/components/Hero/Hero'),
+  {
+    ssr: false,
+  },
+)
 
 type Props = {
   initalCase: CaseDetailedDto

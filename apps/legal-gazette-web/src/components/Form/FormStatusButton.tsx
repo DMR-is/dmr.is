@@ -1,16 +1,12 @@
-import dynamic from 'next/dynamic'
-
 import useSWRMutation from 'swr/mutation'
+
+import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 
 import { AlertMessage, Button, Stack, toast } from '@island.is/island-ui/core'
 
 import { StatusDto, StatusIdEnum } from '../../gen/fetch'
 import { useCaseContext } from '../../hooks/cases/useCase'
 import { rejectCase, setAdvertStatus } from '../../lib/api/fetchers'
-
-const TextInput = dynamic(() =>
-  import('@dmr.is/ui/components/Inputs/TextInput').then((mod) => mod.TextInput),
-)
 
 type Props = {
   advertId: string

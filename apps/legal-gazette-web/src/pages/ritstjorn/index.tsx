@@ -19,7 +19,7 @@ import { RitstjornTabs, Route, Routes } from '../../lib/constants'
 import { MOCK_FILTERS } from '../../lib/mocks'
 import { mapQueryToRitstjornTabs, routesToBreadcrumbs } from '../../lib/utils'
 
-const Hero = dynamic(() => import('@dmr.is/ui/components/Hero/Hero'), {
+const Hero = dynamic(() => import('@dmr.is/ui/lazy/components/Hero/Hero'), {
   ssr: false,
 })
 
