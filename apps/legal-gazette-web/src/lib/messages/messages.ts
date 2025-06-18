@@ -43,4 +43,22 @@ export const messages = defineMessages({
     description:
       'Status indicating payment has been completed in the legal gazette',
   },
+  advertWithdrawn: {
+    id: 'lg.web:common.advertWithdrawn',
+    defaultMessage: 'Auglýsing afturkölluð',
+    description:
+      'Status indicating an advert has been withdrawn in the legal gazette',
+  },
+  advertRejected: {
+    id: 'lg.web:common.advertRejected',
+    defaultMessage: 'Auglýsing hafnað',
+    description:
+      'Status indicating an advert has been rejected in the legal gazette',
+  },
+  advertPublished: {
+    id: 'lg.web:common.advertPublished',
+    defaultMessage: 'Auglýsing útgefin',
+    description:
+      'Status indicating an advert has been published in the legal gazette',
+  },
 })

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useIntl } from 'react-intl'
 
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 
@@ -6,10 +7,12 @@ import { Stack } from '@island.is/island-ui/core'
 
 import { AdvertVersion, StatusIdEnum } from '../../gen/fetch'
 import { useCaseContext } from '../../hooks/cases/useCase'
+import { ritstjornSingleMessages } from '../../lib/messages/ritstjorn/single'
 import { FormStatusButton } from './FormStatusButton'
 
 export const AdvertSidebar = () => {
   const { case: theCase, selectedAdvert, refetch } = useCaseContext()
+  const { formatMessage } = useIntl()
 
   const isCasePublishable = useMemo(() => {
     if (
@@ -53,7 +56,9 @@ export const AdvertSidebar = () => {
       <TextInput
         name="assigned-employee"
         defaultValue="Ármann Árni"
-        label="Starfsmaður"
+        label={formatMessage(
+          ritstjornSingleMessages.formSidebar.employee.label,
+        )}
       />
 
       <FormStatusButton

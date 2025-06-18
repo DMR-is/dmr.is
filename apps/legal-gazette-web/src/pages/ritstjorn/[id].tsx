@@ -1,6 +1,8 @@
 import { GetServerSideProps } from 'next'
 import dynamic from 'next/dynamic'
 
+import { useIntl } from 'react-intl'
+
 import { deleteUndefined } from '@dmr.is/utils/client'
 
 import {
@@ -18,6 +20,7 @@ import { CaseProvider } from '../../context/case-context'
 import { CaseDetailedDto } from '../../gen/fetch'
 import { getLegalGazetteClient } from '../../lib/api/createClient'
 import { Route, Routes } from '../../lib/constants'
+import { ritstjornSingleMessages } from '../../lib/messages/ritstjorn/single'
 import { routesToBreadcrumbs } from '../../lib/utils'
 
 // we need this if we replace the breadcrumbs items so they match the server-side
@@ -34,11 +37,14 @@ type Props = {
 }
 
 export default function SingleCase({ initalCase, intialAdvertId }: Props) {
+  const { formatMessage } = useIntl()
   const updatedRoutes = Routes.flatMap((route) => {
     if (route.path === Route.RITSTJORN_ID) {
       return {
         ...route,
-        pathName: `Mál nr. ${initalCase.caseNumber}`,
+        pathName: formatMessage(ritstjornSingleMessages.common.caseNumber, {
+          caseNumber: initalCase.caseNumber,
+        }),
       }
     }
 
@@ -48,7 +54,9 @@ export default function SingleCase({ initalCase, intialAdvertId }: Props) {
   const breadcrumbs = routesToBreadcrumbs(
     updatedRoutes,
     Route.RITSTJORN_ID,
-    `Mál nr. ${initalCase.caseNumber}`,
+    formatMessage(ritstjornSingleMessages.common.caseNumber, {
+      caseNumber: initalCase.caseNumber,
+    }),
   )
 
   return (
@@ -64,8 +72,10 @@ export default function SingleCase({ initalCase, intialAdvertId }: Props) {
                     withOffset={false}
                     variant="small"
                     breadcrumbs={{ items: breadcrumbs }}
-                    title="Vinnslusvæði Lögbirtingablaðs"
-                    description="Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
+                    title={formatMessage(ritstjornSingleMessages.common.title)}
+                    description={formatMessage(
+                      ritstjornSingleMessages.common.intro,
+                    )}
                   />
                   <AdvertForm />
                 </Stack>

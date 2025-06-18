@@ -1,3 +1,4 @@
+import { useIntl } from 'react-intl'
 import useSWRMutation from 'swr/mutation'
 
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
@@ -7,6 +8,9 @@ import { AlertMessage, Button, Stack, toast } from '@island.is/island-ui/core'
 import { StatusDto, StatusIdEnum } from '../../gen/fetch'
 import { useCaseContext } from '../../hooks/cases/useCase'
 import { rejectCase, setAdvertStatus } from '../../lib/api/fetchers'
+import { messages } from '../../lib/messages/messages'
+import { ritstjornSingleMessages } from '../../lib/messages/ritstjorn/single'
+import { toastMessages } from '../../lib/messages/toast/messages'
 
 type Props = {
   advertId: string
@@ -24,19 +28,20 @@ export const FormStatusButton = ({
   onStatusChange,
 }: Props) => {
   const { case: theCase } = useCaseContext()
+  const { formatMessage } = useIntl()
   const { trigger: updateStatusTrigger } = useSWRMutation(
     'updateAdvertStatus',
     setAdvertStatus,
     {
       onSuccess: () => {
-        toast.success('Staða auglýsingar uppfærð.', {
+        toast.success(formatMessage(toastMessages.updateStatus.success), {
           toastId: 'update-advert-status-success',
         })
 
         onStatusChange?.()
       },
       onError: () => {
-        toast.error('Villa kom upp við að uppfæra stöðu auglýsingar.', {
+        toast.error(formatMessage(toastMessages.updateStatus.failure), {
           toastId: 'update-advert-status-error',
         })
       },
@@ -48,14 +53,14 @@ export const FormStatusButton = ({
     rejectCase,
     {
       onSuccess: () => {
-        toast.success('Auglýsingu hafnað.', {
+        toast.success(formatMessage(toastMessages.rejectAdvert.success), {
           toastId: 'reject-advert-success',
         })
 
         onStatusChange?.()
       },
       onError: () => {
-        toast.error('Villa kom upp við að hafna auglýsingu.', {
+        toast.error(formatMessage(toastMessages.rejectAdvert.failure), {
           toastId: 'reject-advert-error',
         })
       },
@@ -79,7 +84,7 @@ export const FormStatusButton = ({
       <TextInput
         name="advert-status"
         value={status.title}
-        label="Staða"
+        label={formatMessage(ritstjornSingleMessages.formSidebar.status.label)}
         disabled
       />
       {status.id === StatusIdEnum.SUBMITTED ? (
@@ -95,7 +100,9 @@ export const FormStatusButton = ({
           icon="arrowForward"
           fluid
         >
-          Færa mál í útgáfu
+          {formatMessage(
+            ritstjornSingleMessages.formSidebar.buttons.moveToPublishing,
+          )}
         </Button>
       ) : status.id === StatusIdEnum.READY_FOR_PUBLICATION ? (
         <Button
@@ -110,14 +117,25 @@ export const FormStatusButton = ({
           preTextIcon="arrowBack"
           fluid
         >
-          Færa mál í Innsent
+          {formatMessage(
+            ritstjornSingleMessages.formSidebar.buttons.moveToSubmitted,
+          )}
         </Button>
       ) : status.id === StatusIdEnum.WITHDRAWN ? (
-        <AlertMessage title="Mál dregið tilbaka" type="info" />
+        <AlertMessage
+          title={formatMessage(messages.advertWithdrawn)}
+          type="info"
+        />
       ) : status.id === StatusIdEnum.REJECTED ? (
-        <AlertMessage title="Mál hafnað" type="error" />
+        <AlertMessage
+          title={formatMessage(messages.advertRejected)}
+          type="error"
+        />
       ) : (
-        <AlertMessage title="Mál útgefið" type="success" />
+        <AlertMessage
+          title={formatMessage(messages.advertPublished)}
+          type="success"
+        />
       )}
 
       {canReject && (
@@ -128,7 +146,9 @@ export const FormStatusButton = ({
           icon="close"
           fluid
         >
-          Hafna máli
+          {formatMessage(
+            ritstjornSingleMessages.formSidebar.buttons.rejectCase,
+          )}
         </Button>
       )}
     </Stack>

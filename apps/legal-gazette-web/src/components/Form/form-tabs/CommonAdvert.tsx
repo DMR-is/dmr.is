@@ -2,6 +2,7 @@ import addDays from 'date-fns/addDays'
 import subDays from 'date-fns/subDays'
 import debounce from 'lodash/debounce'
 import { useCallback, useMemo } from 'react'
+import { useIntl } from 'react-intl'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
 
@@ -30,11 +31,15 @@ import {
   updateAdvert,
   updateCommonAdvert,
 } from '../../../lib/api/fetchers'
+import { errorMessages } from '../../../lib/messages/errors/messages'
+import { ritstjornSingleMessages } from '../../../lib/messages/ritstjorn/single'
+import { toastMessages } from '../../../lib/messages/toast/messages'
 import { formatDate } from '../../../lib/utils'
 import * as styles from '../Form.css'
 
 export const CommonAdvertTab = () => {
   const { refetch, selectedAdvert, case: theCase } = useCaseContext()
+  const { formatMessage } = useIntl()
 
   const minPublishingDate = useMemo(() => {
     switch (selectedAdvert.version) {
@@ -117,13 +122,13 @@ export const CommonAdvertTab = () => {
     updateAdvert,
     {
       onSuccess: () => {
-        toast.success('Auglýsing uppfærð.', {
+        toast.success(formatMessage(toastMessages.updateAdvert.success), {
           toastId: 'update-advert-success',
         })
         refetch()
       },
       onError: () => {
-        toast.error('Villa kom upp við að uppfæra auglýsingu.', {
+        toast.error(formatMessage(toastMessages.updateAdvert.failure), {
           toastId: 'update-advert-error',
         })
       },
@@ -135,14 +140,14 @@ export const CommonAdvertTab = () => {
     setAdvertCategory,
     {
       onSuccess: () => {
-        toast.success('Flokkur auglýsingar uppfærður.', {
+        toast.success(formatMessage(toastMessages.updateCategory.success), {
           toastId: 'update-advert-category-success',
         })
 
         refetch()
       },
       onError: () => {
-        toast.error('Villa kom upp við að breyta flokki.', {
+        toast.error(formatMessage(toastMessages.updateCategory.failure), {
           toastId: 'update-advert-category-error',
         })
       },
@@ -154,14 +159,14 @@ export const CommonAdvertTab = () => {
     updateCommonAdvert,
     {
       onSuccess: () => {
-        toast.success('Auglýsing uppfærð.', {
+        toast.success(formatMessage(toastMessages.updateAdvert.success), {
           toastId: 'update-common-advert-success',
         })
 
         refetch()
       },
       onError: () => {
-        toast.error('Villa kom upp við að uppfæra auglýsingu.', {
+        toast.error(formatMessage(toastMessages.updateAdvert.failure), {
           toastId: 'update-common-advert-error',
         })
       },
@@ -177,8 +182,10 @@ export const CommonAdvertTab = () => {
     return (
       <AlertMessage
         type="warning"
-        title="Auglýsing fannst ekki"
-        message="Engin almenn auglýsing fannst undir þessu máli"
+        title={formatMessage(errorMessages.advertNotFound)}
+        message={formatMessage(errorMessages.advertNotFoundMessage, {
+          advertId: selectedAdvert.id,
+        })}
       />
     )
   }
@@ -188,7 +195,9 @@ export const CommonAdvertTab = () => {
       <Accordion dividerOnBottom={false} singleExpand={false}>
         <AccordionItem
           id="information"
-          label="Grunnupplýsingar"
+          label={formatMessage(
+            ritstjornSingleMessages.accordionItems.basicInformation,
+          )}
           labelVariant="h4"
           startExpanded={true}
         >
@@ -199,7 +208,9 @@ export const CommonAdvertTab = () => {
                   <Input
                     name="advert-id"
                     readOnly
-                    label="Auðkenni auglýsingar"
+                    label={formatMessage(
+                      ritstjornSingleMessages.inputs.advertId.label,
+                    )}
                     backgroundColor="blue"
                     size="sm"
                     value={selectedAdvert.id}
@@ -210,7 +221,9 @@ export const CommonAdvertTab = () => {
                 <GridColumn span={['12/12', '12/12', '6/12']}>
                   <Input
                     disabled
-                    label="Yfirskrift auglýsingar"
+                    label={formatMessage(
+                      ritstjornSingleMessages.inputs.institutution.label,
+                    )}
                     backgroundColor="blue"
                     size="sm"
                     name={`${selectedAdvert.id}-caption`}
@@ -222,7 +235,9 @@ export const CommonAdvertTab = () => {
                     disabled
                     locale="is"
                     placeholderText={undefined}
-                    label="Dagsetning innsendingar"
+                    label={formatMessage(
+                      ritstjornSingleMessages.inputs.submittedDate.label,
+                    )}
                     backgroundColor="blue"
                     size="sm"
                     selected={new Date(selectedAdvert.createdAt)}
@@ -231,7 +246,9 @@ export const CommonAdvertTab = () => {
                 <GridColumn span={['12/12', '12/12', '6/12']}>
                   <Input
                     disabled
-                    label="Tegund auglýsingar"
+                    label={formatMessage(
+                      ritstjornSingleMessages.inputs.type.label,
+                    )}
                     backgroundColor="blue"
                     size="sm"
                     name={`${selectedAdvert.id}-type`}
@@ -245,7 +262,9 @@ export const CommonAdvertTab = () => {
                       label: selectedAdvert.category.title,
                     }}
                     isLoading={isLoading || isValidating}
-                    label="Flokkur auglýsingar"
+                    label={formatMessage(
+                      ritstjornSingleMessages.inputs.category.label,
+                    )}
                     backgroundColor="blue"
                     options={categoryOptions}
                     onChange={(opt) => {
@@ -261,11 +280,19 @@ export const CommonAdvertTab = () => {
             </Stack>
           </GridContainer>
         </AccordionItem>
-        <AccordionItem id="publishing" label="Birting" labelVariant="h4">
+        <AccordionItem
+          id="publishing"
+          label={formatMessage(
+            ritstjornSingleMessages.accordionItems.publishing,
+          )}
+          labelVariant="h4"
+        >
           <GridRow>
             <GridColumn span={['12/12', '12/12', '6/12']}>
               <DatePicker
-                label="Birtingardagur"
+                label={formatMessage(
+                  ritstjornSingleMessages.inputs.scheduledPublishingDate.label,
+                )}
                 locale="is"
                 placeholderText=""
                 size="sm"
@@ -288,7 +315,9 @@ export const CommonAdvertTab = () => {
                 size="sm"
                 backgroundColor="blue"
                 name="published_at"
-                label="Útgáfudagur"
+                label={formatMessage(
+                  ritstjornSingleMessages.inputs.publishingDate.label,
+                )}
                 readOnly
                 value={
                   selectedAdvert.publishedAt
@@ -299,11 +328,19 @@ export const CommonAdvertTab = () => {
             </GridColumn>
           </GridRow>
         </AccordionItem>
-        <AccordionItem id="content" label="Meginmál" labelVariant="h4">
+        <AccordionItem
+          id="content"
+          label={formatMessage(
+            ritstjornSingleMessages.accordionItems.mainContent,
+          )}
+          labelVariant="h4"
+        >
           <Stack space={2}>
             <Input
               name="caption"
-              label="Yfirskrift"
+              label={formatMessage(
+                ritstjornSingleMessages.inputs.caption.label,
+              )}
               backgroundColor="blue"
               size="sm"
               defaultValue={selectedAdvert.commonAdvert.caption}
@@ -332,11 +369,19 @@ export const CommonAdvertTab = () => {
             </Box>
           </Stack>
         </AccordionItem>
-        <AccordionItem id="signature" label="Undirritun" labelVariant="h4">
+        <AccordionItem
+          id="signature"
+          label={formatMessage(
+            ritstjornSingleMessages.accordionItems.signature,
+          )}
+          labelVariant="h4"
+        >
           <GridRow rowGap={3}>
             <GridColumn span={['12/12', '12/12', '6/12']}>
               <Input
-                label="Nafn undirritunar"
+                label={formatMessage(
+                  ritstjornSingleMessages.inputs.signature.name,
+                )}
                 backgroundColor="blue"
                 size="sm"
                 name={`${selectedAdvert.id}-signature-name`}
@@ -355,7 +400,9 @@ export const CommonAdvertTab = () => {
             </GridColumn>
             <GridColumn span={['12/12', '12/12', '6/12']}>
               <Input
-                label="Staðsetning undirritunar"
+                label={formatMessage(
+                  ritstjornSingleMessages.inputs.signature.location,
+                )}
                 backgroundColor="blue"
                 size="sm"
                 name={`${selectedAdvert.id}-signature-location`}
@@ -376,7 +423,9 @@ export const CommonAdvertTab = () => {
               <DatePicker
                 locale="is"
                 placeholderText={undefined}
-                label="Dagsetning undirritunar"
+                label={formatMessage(
+                  ritstjornSingleMessages.inputs.signature.date,
+                )}
                 backgroundColor="blue"
                 size="sm"
                 selected={new Date(selectedAdvert.commonAdvert.signature.date)}

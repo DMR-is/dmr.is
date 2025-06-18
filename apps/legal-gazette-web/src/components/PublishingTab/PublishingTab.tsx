@@ -2,12 +2,13 @@ import { useState } from 'react'
 import { useIntl } from 'react-intl'
 import useSWRMutation from 'swr/mutation'
 
-import { Button, Inline, Stack } from '@island.is/island-ui/core'
+import { Button, Inline, Stack, toast } from '@island.is/island-ui/core'
 
 import { StatusIdEnum } from '../../gen/fetch'
 import { useAdvertsInProgress } from '../../hooks/adverts/useAdvertsInProgress'
 import { publishAdverts, setAdvertStatus } from '../../lib/api/fetchers'
 import { ritstjornTables } from '../../lib/messages/ritstjorn/tables'
+import { toastMessages } from '../../lib/messages/toast/messages'
 import AdvertsToBePublished from '../Tables/AdvertsToBePublished'
 
 export const PublishingTab = () => {
@@ -38,6 +39,10 @@ export const PublishingTab = () => {
       onSuccess: () => {
         refetchAdvertsInProgress()
         setSelectedAdvertIds([])
+        toast.success(formatMessage(toastMessages.publishAdverts.success))
+      },
+      onError: () => {
+        toast.error(formatMessage(toastMessages.publishAdverts.failure))
       },
     },
   )
