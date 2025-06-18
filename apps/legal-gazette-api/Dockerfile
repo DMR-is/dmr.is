@@ -7,9 +7,8 @@ COPY ./apps/legal-gazette-api/dist/package.json ./
 COPY ./apps/legal-gazette-api/db/migrations ./db/migrations
 COPY ./apps/legal-gazette-api/.sequelizerc ./
 COPY ./libs/shared/sequelize/src/lib/sequelize.config.js ./
-RUN yarn add pg
-RUN yarn install --only=production
-
+RUN npm install pg
+RUN npm install --omit=dev --legacy-peer-deps
 # Production image, copy all the files and run nest
 FROM docker.io/node:lts-alpine as runner
 RUN apk add --no-cache \

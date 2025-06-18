@@ -79,6 +79,7 @@ import {
   ApplicationAttachmentTypeModel,
 } from '../attachments/models'
 import { IAWSService } from '../aws/aws.service.interface'
+import { IExternalService } from '../external/external.service.interface'
 import { IJournalService } from '../journal'
 import {
   AdvertCategoryModel,
@@ -153,8 +154,14 @@ export class CaseService implements ICaseService {
     @InjectModel(AdvertCorrectionModel)
     private advertCorrectionModel: typeof AdvertCorrectionModel,
 
+    @InjectModel(AdvertMainTypeModel)
+    private readonly advertMainTypeModel: typeof AdvertMainTypeModel,
+
     @Inject(IPriceService)
     private readonly priceService: IPriceService,
+
+    @Inject(IExternalService)
+    private readonly externalService: IExternalService,
 
     @InjectModel(CasePublishedAdvertsModel)
     private readonly casePublishedAdvertsModel: typeof CasePublishedAdvertsModel,
@@ -1148,6 +1155,37 @@ export class CaseService implements ICaseService {
       await this.utilityService.approveApplication(caseToPublish.applicationId)
     }
     await this.s3.sendMail(message)
+    const maintypes = await this.advertMainTypeModel.findAll({
+      where: {
+        slug: {
+          [Op.in]: [
+            'a-deild-reglugerd',
+            'b-deild-reglugerd',
+            'c-deild-reglugerd',
+          ],
+        },
+      },
+      include: [AdvertTypeModel],
+    })
+
+    //here we are going to post directly to regulations if the advert is in the correct category.
+    const flatTypes = maintypes.flatMap((type) => {
+      return type.types?.map((t) => t.slug) ?? []
+    })
+
+    if (flatTypes.includes(caseToPublish.advertType.slug)) {
+      try {
+        await this.externalService.publishRegulation(
+          advertCreateResult.result.value.advert,
+        )
+      } catch (error) {
+        this.logger.error('Failed to create regulation', {
+          error,
+          category: LOGGING_CATEGORY,
+        })
+      }
+    }
+
     return ResultWrapper.ok()
   }
 

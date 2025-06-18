@@ -4,6 +4,15 @@
   "sourceRoot": "apps/official-journal-web",
   "projectType": "application",
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["codegen"],
+      "options": {
+        "commands": ["tsc -p tsconfig.json --noEmit"],
+        "cwd": "apps/official-journal-web",
+        "forwardAllArgs": false
+      }
+    },
     "build": {
       "executor": "@nx/next:build",
       "outputs": ["{options.outputPath}"],
@@ -108,7 +117,8 @@
         "engine": "docker",
         "metadata": {
           "load": true
-        }
+        },
+        "file": "apps/official-journal-web/Dockerfile"
       }
     }
   },

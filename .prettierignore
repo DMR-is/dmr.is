@@ -16,3 +16,5 @@
 **/.next/
 /.nx/cache
 apps/official-journal-api-export/src/lib/inserts.ts
+
+/.nx/workspace-data

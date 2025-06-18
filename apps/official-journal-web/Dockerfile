@@ -3,7 +3,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /usr/src/app
 COPY ./apps/official-journal-web/dist/package.json ./
 
-RUN yarn install --only=production
+RUN npm install --omit=dev --legacy-peer-deps
 
 FROM public.ecr.aws/docker/library/node:22-alpine AS runner
 WORKDIR /usr/src/app

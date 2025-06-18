@@ -4,6 +4,14 @@
   "sourceRoot": "libs/shared/pipelines/src",
   "projectType": "library",
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc -p tsconfig.lib.json --noEmit"],
+        "cwd": "libs/shared/pipelines",
+        "forwardAllArgs": false
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint"
     },

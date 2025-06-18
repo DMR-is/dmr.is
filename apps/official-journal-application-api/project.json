@@ -4,6 +4,14 @@
   "sourceRoot": "apps/official-journal-application-api/src",
   "projectType": "application",
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc -p tsconfig.app.json --noEmit"],
+        "cwd": "apps/official-journal-application-api",
+        "forwardAllArgs": false
+      }
+    },
     "build": {
       "executor": "@nx/webpack:webpack",
       "outputs": [
@@ -66,9 +74,10 @@
         "engine": "docker",
         "metadata": {
           "load": true
-        }
+        },
+        "file": "apps/official-journal-application-api/Dockerfile"
       }
-    },
+    }
   },
   "tags": []
 }

@@ -4,6 +4,14 @@
   "sourceRoot": "apps/legal-gazette-api/src",
   "projectType": "application",
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc -p tsconfig.app.json --noEmit"],
+        "cwd": "apps/legal-gazette-api",
+        "forwardAllArgs": false
+      }
+    },
     "build": {
       "executor": "@nx/webpack:webpack",
       "outputs": ["{options.outputPath}"],
@@ -55,7 +63,8 @@
         "engine": "docker",
         "metadata": {
           "load": true
-        }
+        },
+        "file": "apps/legal-gazette-api/Dockerfile"
       }
     },
     "dev-services": {

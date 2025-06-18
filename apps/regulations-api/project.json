@@ -4,6 +4,14 @@
   "sourceRoot": "apps/regulations-api/src",
   "projectType": "application",
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc -p tsconfig.app.json --noEmit"],
+        "cwd": "apps/regulations-api",
+        "forwardAllArgs": false
+      }
+    },
     "build": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
@@ -91,7 +99,8 @@
         "engine": "docker",
         "metadata": {
           "load": true
-        }
+        },
+        "file": "apps/regulations-api/Dockerfile"
       }
     },
     "dev-services": {

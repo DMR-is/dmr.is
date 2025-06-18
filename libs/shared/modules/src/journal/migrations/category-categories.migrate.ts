@@ -23,6 +23,7 @@ export const categoryCategoriesMigrate = (
         id: model.mainCategory.id,
         slug: model.mainCategory.slug,
         title: model.mainCategory.title,
+        departmentId: model.mainCategory.departmentId,
         description: model.mainCategory.description,
         categories: [
           {

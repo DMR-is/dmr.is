@@ -51,9 +51,11 @@ import { HTMLText } from '@island.is/regulations-tools/types'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAWSService } from '../aws/aws.service.interface'
+import { caseAdditionMigrate } from '../case/migrations/case-addition.migrate'
 import { CaseCategoriesModel, CaseModel } from '../case/models'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
 import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
+import { removeAllHtmlComments } from './util/removeAllHtmlComments'
 import { removeSubjectFromHtml } from './util/removeSubjectFromHtml'
 import { IJournalService } from './journal.service.interface'
 import {
@@ -858,7 +860,7 @@ export class JournalService implements IJournalService {
     if (!id) {
       throw new BadRequestException()
     }
-    const advert = await this.advertModel.findByPk(id, {
+    const advert = await this.advertModel.scope('withAdditions').findByPk(id, {
       include: [
         { model: AdvertTypeModel, include: [AdvertDepartmentModel] },
         AdvertDepartmentModel,
@@ -879,12 +881,38 @@ export class JournalService implements IJournalService {
     let html = advert.documentHtml
     if (advert.isLegacy) {
       try {
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('HTML cleaning timed out')), 5000)
+        })
+
+        html = removeAllHtmlComments(html)
         html = removeSubjectFromHtml(html, advert.subject)
-        html = dirtyClean(html as HTMLText)
-      } catch {
-        this.logger.warn("Dirty clean failed for advert's HTML", {
+
+        const cleaningPromise = new Promise((resolve, reject) => {
+          try {
+            const cleaned = dirtyClean(html as HTMLText)
+            resolve(cleaned)
+          } catch (e) {
+            reject(e)
+          }
+        })
+
+        html = (await Promise.race([cleaningPromise, timeoutPromise])) as string
+
+        await this.advertModel.update(
+          {
+            documentHtml: html,
+            documentLegacyHtml: advert.documentHtml,
+            isLegacy: false,
+          },
+          {
+            where: { id },
+          },
+        )
+      } catch (e) {
+        this.logger.error("Dirty clean failed for advert's HTML", {
           category: LOGGING_CATEGORY,
-          metadata: { advertId: id },
+          metadata: { advertId: id, error: e },
         })
         html = advert.documentHtml
       }
@@ -893,6 +921,9 @@ export class JournalService implements IJournalService {
     return ResultWrapper.ok({
       advert: {
         ...ad,
+        additions: advert.case?.additions
+          ? advert.case.additions.map((item) => caseAdditionMigrate(item))
+          : undefined,
         document: {
           isLegacy: advert.isLegacy,
           html,

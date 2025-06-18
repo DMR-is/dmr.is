@@ -59,15 +59,15 @@ export enum SignatureTypeSlug {
 export enum AttachmentTypeParam {
   OriginalDocument = 'frumrit',
   AdditonalDocument = 'fylgiskjol',
+  SupportingDocument = 'fylgigogn',
   Assets = 'assets',
 }
 
 export enum AttachmentTypeEnum {
   OriginalDocument = 'Frumrit',
   AdditonalDocument = 'Fylgiskjöl',
+  SupportingDocument = 'Fylgigögn',
 }
-
-export const DEFAULT_PRICE = 17000
 
 export enum ApplicationStates {
   REQUIREMENTS = 'requirements',
