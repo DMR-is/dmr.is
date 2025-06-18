@@ -1,6 +1,16 @@
-import { Body, Controller, Delete, Inject, Param, Post } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Inject,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common'
+import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
+import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { SubmitCommonApplicationDto } from './dto/common-application.dto'
 import { ICommonApplicationService } from './common-application.service.interface'
@@ -9,6 +19,8 @@ import { ICommonApplicationService } from './common-application.service.interfac
   path: 'applications',
   version: '1',
 })
+@ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard)
 export class CommonApplicationController {
   constructor(
     @Inject(ICommonApplicationService)
