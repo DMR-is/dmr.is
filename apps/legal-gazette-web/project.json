@@ -16,6 +16,8 @@
     "build": {
       "executor": "@nx/next:build",
       "outputs": ["{options.outputPath}"],
+      "dependsOn": ["codegen"],
+
       "defaultConfiguration": "production",
       "options": {
         "outputPath": "apps/legal-gazette-web/dist"
