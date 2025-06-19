@@ -57,13 +57,16 @@ export const useFilters = () => {
     setFilters(incomingParams)
   }
 
-  const activeFilters = Object.entries(filters).reduce((acc, [key, value]) => {
-    if (!FILTERS_TO_SHOW.includes(key as QueryParams)) {
+  const activeFilters = Object.entries(filters).reduce(
+    (acc, [key, value]) => {
+      if (!FILTERS_TO_SHOW.includes(key as QueryParams)) {
+        return acc
+      }
+      acc.push([key as QueryParams, value as string[]])
       return acc
-    }
-    acc.push([key as QueryParams, value as string[]])
-    return acc
-  }, [] as [QueryParams, string[]][])
+    },
+    [] as [QueryParams, string[]][],
+  )
 
   return {
     params: filters,

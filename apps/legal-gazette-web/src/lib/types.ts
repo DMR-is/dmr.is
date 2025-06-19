@@ -20,6 +20,7 @@ export type RouteItem = {
   path: Route
   pathName: string
   showInNavigation?: boolean
+  isCurrentPage?: boolean
   children?: RouteItem[]
 }
 

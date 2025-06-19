@@ -1,7 +1,7 @@
 import { Column, DataType } from 'sequelize-typescript'
 
 import { BaseModel, BaseModelWithAttributes } from './base.model'
-import { BaseTableScopes } from './decorators'
+import { BaseEntityTable } from './decorators'
 
 type BaseEntityModelCreateAttributes = {
   title: string
@@ -18,7 +18,7 @@ export type BaseEntityAttributes = Pick<
 
 export type BaseEntityAttributesDetailed = BaseEntityModelAttributes
 
-@BaseTableScopes()
+@BaseEntityTable()
 export class BaseEntityModel extends BaseModel<
   BaseEntityModelAttributes,
   BaseEntityModelCreateAttributes
@@ -34,4 +34,28 @@ export class BaseEntityModel extends BaseModel<
     allowNull: false,
   })
   slug!: string
+
+  static fromModel(model: BaseEntityModel): BaseEntityAttributes {
+    try {
+      return {
+        id: model.id,
+        title: model.title,
+        slug: model.slug,
+      }
+    } catch (error) {
+      this.logger.debug(
+        `fromModel failed from model ${this.constructor.name}`,
+        error,
+      )
+      throw error
+    }
+  }
+
+  fromModel(): BaseEntityAttributes {
+    return BaseEntityModel.fromModel(this)
+  }
+
+  static fromModels(models: BaseEntityModel[]): BaseEntityAttributes[] {
+    return models.map((model) => BaseEntityModel.fromModel(model))
+  }
 }

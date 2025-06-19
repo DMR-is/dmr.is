@@ -15,6 +15,7 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
   paging,
   loading = false,
   layout = 'auto',
+  noDataMessage,
 }: DataTableProps<T>) => {
   if (loading) {
     return (
@@ -27,13 +28,12 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
     )
   }
 
-
   const hasExpandableRows = rows?.some((row) => !!row.isExpandable)
   const hasLinkRows = rows?.some((row) => !!row.hasLink)
 
   return (
     <Stack space={4}>
-      <T.Table style={{ tableLayout: layout }}>
+      <T.Table style={{ tableLayout: layout, width: '100%' }}>
         <T.Head>
           <T.Row>
             {columns.map((column, i) => (
@@ -46,6 +46,7 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
         <DataTableBody
           rows={rows as DataTableRowProps<T>[]}
           columns={columns}
+          noDataMessage={noDataMessage}
         />
       </T.Table>
       {paging && <DataTablePagination paging={paging} />}

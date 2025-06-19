@@ -1,4 +1,4 @@
-import { Table as T } from '@island.is/island-ui/core'
+import { Table as T, Text } from '@island.is/island-ui/core'
 
 import { DataTableCellProps } from './types'
 
@@ -12,7 +12,9 @@ export const DataTableCell = ({ children }: DataTableCellProps) => {
         paddingBottom: [1, 2],
       }}
     >
-      {children}
+      <Text variant="small" whiteSpace="nowrap">
+        {children}
+      </Text>
     </T.Data>
   )
 }

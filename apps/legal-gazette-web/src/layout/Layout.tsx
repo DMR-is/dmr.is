@@ -9,13 +9,20 @@ import { PageLoader } from '@dmr.is/ui/components/PageLoader/PageLoader'
 import { Footer, Page, ToastContainer } from '@island.is/island-ui/core'
 
 import { Routes } from '../lib/constants'
+import { allMessages } from '../lib/messages'
+import { flattenMessages } from '../lib/utils'
 
 export type LayoutProps = {
   showFooter?: boolean
+  headerVariant?: 'blue' | 'white'
   children?: React.ReactNode
 }
 
-export const Layout = ({ children, showFooter = false }: LayoutProps) => {
+export const Layout = ({
+  children,
+  showFooter = false,
+  headerVariant = 'blue',
+}: LayoutProps) => {
   const preloadedFonts = [
     '/fonts/ibm-plex-sans-v7-latin-300.woff2',
     '/fonts/ibm-plex-sans-v7-latin-regular.woff2',
@@ -28,7 +35,7 @@ export const Layout = ({ children, showFooter = false }: LayoutProps) => {
     <IntlProvider
       locale="is"
       defaultLocale="is"
-      messages={{}}
+      messages={flattenMessages(allMessages)}
       onError={(err) => {
         // Chrome only ships with 'en' formatters for NumberFormat and DateTimeFormat.
         // Ignore these errors since we're not using these formatters.
@@ -60,6 +67,7 @@ export const Layout = ({ children, showFooter = false }: LayoutProps) => {
             })}
           </Head>
           <Header
+            variant={headerVariant}
             controlPanel={{
               title: 'Lögbirtingarblaðið',
               paths: Routes,

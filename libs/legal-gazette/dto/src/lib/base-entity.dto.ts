@@ -1,6 +1,6 @@
 import { Model } from 'sequelize-typescript'
 
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, IntersectionType } from '@nestjs/swagger'
 
 export class BaseEntityDto {
   @ApiProperty({
@@ -25,7 +25,7 @@ export class BaseEntityDto {
   slug!: string
 }
 
-export class BaseEntityDetailedDto extends BaseEntityDto {
+export class DetailedDto {
   @ApiProperty({
     type: String,
     description: 'ISO representation of the creation date',
@@ -50,12 +50,19 @@ export class BaseEntityDetailedDto extends BaseEntityDto {
   readonly deletedAt!: string | null
 }
 
-export const baseEntityMigrate = <T extends Model>(model: T): BaseEntityDto => {
+export class BaseEntityDetailedDto extends IntersectionType(
+  BaseEntityDto,
+  DetailedDto,
+) {}
+
+export const baseEntityMigrate = <T extends Model, D extends BaseEntityDto>(
+  model: T,
+): D => {
   return {
     id: model.getDataValue('id'),
     title: model.getDataValue('title'),
     slug: model.getDataValue('slug'),
-  }
+  } as D
 }
 
 export const baseEntityDetailedMigrate = <T extends Model>(
@@ -92,35 +99,4 @@ export const baseEntityDetailedMigrate = <T extends Model>(
         ...addtional,
       }
     : defaultModel
-}
-
-type AdditionalProp = [key: string, migrationFn?: (value: any) => any]
-
-interface MigrationProps {
-  model: Model
-  defaultMigration?: typeof baseEntityMigrate | typeof baseEntityDetailedMigrate
-  additionalProps?: AdditionalProp[]
-}
-
-export const migrate = <R = Record<string, any>>({
-  model,
-  defaultMigration = baseEntityMigrate,
-  additionalProps,
-}: MigrationProps): R => {
-  const additional: Record<string, any> = {}
-
-  additionalProps?.forEach(([key, migrationFn]) => {
-    additional[key] = migrationFn
-      ? migrationFn(model.getDataValue(key))
-      : model.getDataValue(key)
-  })
-
-  if (defaultMigration) {
-    return {
-      ...defaultMigration(model),
-      ...additional,
-    } as R
-  }
-
-  return additional as R
 }

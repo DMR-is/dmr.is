@@ -2,7 +2,7 @@ import { createEnhancedFetch } from './createEnhancedFetch'
 
 const getPath = () => {
   if (process.env.NODE_ENV !== 'production') {
-    return 'http://localhost:4000'
+    return 'http://localhost:4100'
   }
 
   if (typeof window === 'undefined') {

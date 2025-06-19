@@ -1,9 +1,12 @@
-import { Route } from './constants'
+import format from 'date-fns/format'
+
+import { RitstjornTabs, Route } from './constants'
 import { QueryFilterParam, QueryFilterValue, RouteItem } from './types'
 
 export const routesToBreadcrumbs = (
   routes: RouteItem[],
   currentPath: Route,
+  pathNameReplace?: string,
 ) => {
   const breadcrumbs: RouteItem[] = []
 
@@ -12,6 +15,13 @@ export const routesToBreadcrumbs = (
       const newPath = [...path, route] // Keep track of breadcrumb trail
 
       if (route.path === currentPath) {
+        // check if there are replacements for the current route
+        if (pathNameReplace) {
+          newPath[newPath.length - 1].pathName = pathNameReplace
+        }
+
+        route.isCurrentPage = true // Mark the current route
+
         breadcrumbs.push(...newPath) // Push all breadcrumb items into the array
         return // Stop searching when a match is found
       }
@@ -24,9 +34,11 @@ export const routesToBreadcrumbs = (
   }
 
   findRoute(routes)
+
   return breadcrumbs.map((r) => ({
     href: r.path,
     title: r.pathName,
+    isCurrentPage: r.isCurrentPage || false,
   }))
 }
 
@@ -58,4 +70,54 @@ export const toggleArrayOption = (
   }
 
   return filter.filter((f) => f !== opt)
+}
+
+const dateFormats = ['dd.MM.yyyy'] as const
+
+export const formatDate = (
+  date: Date | string,
+  dateFormat: (typeof dateFormats)[number] = 'dd.MM.yyyy',
+) => {
+  if (typeof date === 'string') {
+    date = new Date(date)
+  }
+
+  if (date instanceof Date && !isNaN(date.getTime())) {
+    return format(date, dateFormat)
+  }
+
+  throw new Error(`Invalid date: ${date}`)
+}
+
+export const mapQueryToRitstjornTabs = (
+  query: string | string[] | undefined,
+): RitstjornTabs => {
+  const values = Object.values(RitstjornTabs)
+
+  const found = values.find((tab) => {
+    if (Array.isArray(query)) {
+      return query.includes(tab)
+    }
+    return query === tab
+  })
+  return found ?? RitstjornTabs.SUBMITTED
+}
+
+export const flattenMessages = (
+  messages: Record<string, any>,
+): Record<string, string> => {
+  return Object.entries(messages).reduce(
+    (acc, [key, value]) => {
+      if (value.id && value.defaultMessage) {
+        // Leaf message
+        acc[value.id] = value.defaultMessage
+      } else if (typeof value === 'object') {
+        // Recurse
+        Object.assign(acc, flattenMessages(value))
+      }
+
+      return acc
+    },
+    {} as Record<string, string>,
+  )
 }

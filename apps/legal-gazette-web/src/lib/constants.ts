@@ -49,7 +49,7 @@ export const Routes: RouteItem[] = [
         children: [
           {
             path: Route.RITSTJORN_ID,
-            pathName: 'Ritstjórn',
+            pathName: 'Stakt mál',
             showInNavigation: false,
           },
         ],
@@ -69,3 +69,9 @@ export const Routes: RouteItem[] = [
     ],
   },
 ]
+
+export enum RitstjornTabs {
+  SUBMITTED = 'innsendar',
+  PUBLISHING = 'a-leid-i-utgafu',
+  COMPLETED = 'klaradar',
+}

@@ -34,14 +34,15 @@ export class DMRSequelizeConfigService implements SequelizeOptionsFactory {
       ...config,
       ...getOptions(),
       dialect: 'postgres',
-      autoLoadModels: true,
+      logQueryParameters: config.debugLog ? true : false,
+      autoLoadModels: config.autoLoadModels ?? true,
       logging: config.debugLog
         ? (sql: string) => {
             const query = sql.split(':')[1]
-            this.logger.debug(`Query executed`, {
-              sql: query,
-              context: LOGGING_CONTEXT,
-            })
+            // this.logger.debug(`Query executed`, {
+            //   sql: query,
+            //   context: LOGGING_CONTEXT,
+            // })
             this.logger.debug(query)
           }
         : false,

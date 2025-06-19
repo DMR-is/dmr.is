@@ -1,5 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
+import { EventEmitterModule } from '@nestjs/event-emitter'
+import { ScheduleModule } from '@nestjs/schedule'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
@@ -7,7 +9,7 @@ import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middlewa
 import { LEGAL_GAZETTE_NAMESPACE } from '@dmr.is/legal-gazette/constants'
 import { LoggingModule } from '@dmr.is/logging'
 import { CLSMiddleware } from '@dmr.is/middleware'
-import { HealthModule } from '@dmr.is/modules'
+import { AuthModule, HealthModule } from '@dmr.is/modules'
 import {
   GlobalExceptionFilter,
   HttpExceptionFilter,
@@ -15,17 +17,29 @@ import {
 } from '@dmr.is/shared/filters'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
-import { LegalGazetteApplicationModule } from '../modules/application/application.module'
-import { CaseCategoryModel } from '../modules/case-category/case-category.model'
-import { CaseCategoryModule } from '../modules/case-category/case-category.module'
-import { CaseStatusModel } from '../modules/case-status/case-status.model'
-import { CaseStatusModule } from '../modules/case-status/case-status.module'
-import { CaseTypeModel } from '../modules/case-type/case-type.model'
-import { CaseTypeModule } from '../modules/case-type/case-type.module'
+import { AdvertModel } from '../modules/advert/advert.model'
+import { AdvertModule } from '../modules/advert/advert.module'
+import { CaseModel } from '../modules/case/case.model'
+import { CaseModule } from '../modules/case/case.module'
+import { CategoryModel } from '../modules/category/category.model'
+import { CategoryModule } from '../modules/category/category.module'
+import { CommonAdvertModel } from '../modules/common-advert/common-advert.model'
+import { CommonApplicationModule } from '../modules/common-application/common-application.module'
+import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
+import { InstitutionModel } from '../modules/institution/institution.model'
+import { StatusModel } from '../modules/status/status.model'
+import { StatusModule } from '../modules/status/status.module'
+import { TypeModel } from '../modules/type/type.model'
+import { TypeModule } from '../modules/type/type.module'
+import { UserInstitutionModel } from '../modules/users/user-institutions.model'
+import { UserRoleModel } from '../modules/users/user-roles.model'
+import { UserModel } from '../modules/users/users.model'
 
 @Module({
   imports: [
     LoggingModule,
+    ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
     SequelizeModule.forRootAsync({
       imports: [
         DMRSequelizeConfigModule.register({
@@ -38,18 +52,37 @@ import { CaseTypeModule } from '../modules/case-type/case-type.module'
             Number(process.env.LEGAL_GAZETTE_DB_PORT) ||
             5434,
           clsNamespace: LEGAL_GAZETTE_NAMESPACE,
-          models: [CaseTypeModel, CaseCategoryModel, CaseStatusModel],
           debugLog: true,
+          autoLoadModels: false,
+          models: [
+            TypeModel,
+            CategoryModel,
+            StatusModel,
+            CommunicationChannelModel,
+            CaseModel,
+            CommonAdvertModel,
+            AdvertModel,
+            UserRoleModel,
+            UserModel,
+            InstitutionModel,
+            UserInstitutionModel,
+          ],
         }),
       ],
       useFactory: (configService: DMRSequelizeConfigService) =>
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    CaseTypeModule,
-    CaseCategoryModule,
-    CaseStatusModule,
-    LegalGazetteApplicationModule,
+    TypeModule,
+    CategoryModule,
+    StatusModule,
+    CaseModule,
+    CommonApplicationModule,
+    AdvertModule,
+    {
+      module: AuthModule,
+      global: true,
+    },
     HealthModule,
   ],
   controllers: [],

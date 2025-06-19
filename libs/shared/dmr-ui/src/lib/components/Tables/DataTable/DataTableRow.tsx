@@ -26,12 +26,14 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
         onMouseOver={() => hasLink && setHovered(true)}
         onMouseLeave={() => hasLink && setHovered(false)}
         role={isExpandable ? 'button' : 'div'}
-        className={styles.dataTableRow({ expandable: !!isExpandable || hasLink })}
+        className={styles.dataTableRow({
+          expandable: !!isExpandable || hasLink,
+        })}
         onClick={() => isExpandable && setExpanded(!expanded)}
       >
-        {columns.map((column) => {
+        {columns.map((column, i) => {
           const children = row[column.field as keyof typeof row]
-          return <DataTableCell key={column.field}>{children}</DataTableCell>
+          return <DataTableCell key={i}>{children}</DataTableCell>
         })}
         {hasLink && row.href && (
           <td align="center" className={styles.linkTableCell}>

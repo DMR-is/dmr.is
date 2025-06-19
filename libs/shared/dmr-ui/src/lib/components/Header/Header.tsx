@@ -13,14 +13,15 @@ import * as styles from './Header.css'
 
 export type HeaderProps = {
   controlPanel?: ControlPanelProps
+  variant?: 'blue' | 'white'
 }
 
-export const Header = ({ controlPanel }: HeaderProps) => {
+export const Header = ({ controlPanel, variant = 'blue' }: HeaderProps) => {
   const { lg } = useBreakpoint()
 
   return (
     <Hidden print={true}>
-      <header className={styles.header}>
+      <header className={styles.header({ variant })}>
         <GridContainer>
           <GridRow>
             <GridColumn span="12/12">

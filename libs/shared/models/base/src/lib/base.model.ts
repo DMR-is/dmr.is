@@ -8,6 +8,8 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript'
 
+import { getLogger } from '@dmr.is/logging'
+
 type BaseModelCreateAttributes = {}
 
 type BaseModelAttributes = {
@@ -20,7 +22,7 @@ type BaseModelAttributes = {
 export type BaseModelWithAttributes<T> = T & BaseModelAttributes
 
 export class BaseModel<
-  ModelAttributes extends BaseModelAttributes,
+  ModelAttributes,
   ModelCreateAttributes extends BaseModelCreateAttributes,
 > extends Model<
   BaseModelWithAttributes<ModelAttributes>,
@@ -41,4 +43,8 @@ export class BaseModel<
 
   @DeletedAt
   deletedAt!: Date | null
+
+  static get logger() {
+    return getLogger(this.name)
+  }
 }

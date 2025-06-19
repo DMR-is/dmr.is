@@ -19,6 +19,18 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       name: ApiErrorName.UnknownError,
     }
 
+    if (exception instanceof TypeError) {
+      const culprit = exception.stack?.split('at self.')[1].split('(')[0].trim()
+
+      if (culprit) {
+        logger.debug(`READ UNDEFINED PROPERTY = "${culprit}"`, {
+          context: LOGGING_CONTEXT,
+        })
+      }
+
+      return response.status(status).json(err)
+    }
+
     logger.error(`An unknown error occurred`, {
       context: LOGGING_CONTEXT,
       exception:
