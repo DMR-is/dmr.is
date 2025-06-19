@@ -231,6 +231,6 @@
   "resolutions": {
     "node-fetch": "2.6.7",
     "lodash": "4.17.21",
-    "tar-fs": "3.0.8"
+    "tar-fs": "3.0.9"
   }
 }
