@@ -2,9 +2,11 @@ import { Op } from 'sequelize'
 import {
   BeforeCreate,
   BeforeDestroy,
+  BelongsTo,
   Column,
   DataType,
   DefaultScope,
+  ForeignKey,
   HasMany,
   Scopes,
 } from 'sequelize-typescript'
@@ -21,7 +23,6 @@ import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
 } from '../communication-channel/communication-channel.model'
-import { InstitutionModel } from '../institution/institution.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
 import { TypeIdEnum, TypeModel } from '../type/type.model'
 import { UserModel } from '../users/users.model'
@@ -66,15 +67,9 @@ type CaseCreateAttributes = {
         duplicating: false,
         separate: true,
         order: [['version', 'ASC']],
-        include: [
-          StatusModel,
-          CategoryModel,
-          TypeModel,
-          CommonAdvertModel,
-          InstitutionModel,
-          UserModel,
-        ],
+        include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
       },
+      { model: UserModel },
     ],
   },
   byApplicationId: (applicationId: string) => ({
@@ -97,6 +92,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     field: 'assigned_user_id',
     defaultValue: null,
   })
+  @ForeignKey(() => UserModel)
   assignedUserId!: string | null
 
   @Column({
@@ -112,6 +108,9 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
 
   @HasMany(() => AdvertModel, 'caseId')
   adverts!: AdvertModel[]
+
+  @BelongsTo(() => UserModel, 'assignedUserId')
+  assignedUser?: UserModel
 
   static async createCommonAdvert(body: CreateCommonAdvertInternalDto) {
     this.logger.info('Creating case for common advert', {
@@ -130,14 +129,13 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
         applicationId: body.applicationId,
         communicationChannels: channels,
         adverts: body.publishingDates.map((date, i) => ({
-          userId: body.actorId,
           categoryId: body.categoryId,
           typeId: TypeIdEnum.COMMON_APPLICATION,
           scheduledAt: new Date(date),
           title: body.caption,
           html: body.html,
           version: mapIndexToVersion(i),
-          institutionId: body.institutionId,
+          submittedBy: body.submittedBy,
           commonAdvert: {
             caption: body.caption,
             signatureDate: new Date(body.signature.date),

@@ -686,6 +686,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["CommonApplication"]
       }
@@ -758,11 +763,16 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["CommonApplication"]
       }
     },
-    "/api/advert{id}/category/{categoryId}": {
+    "/api/advert/{id}/category/{categoryId}": {
       "patch": {
         "operationId": "updateAdvertCategory",
         "parameters": [
@@ -842,7 +852,7 @@
         "tags": ["AdvertCategory"]
       }
     },
-    "/api/advert{id}/status/{statusId}": {
+    "/api/advert/{id}/status/{statusId}": {
       "patch": {
         "operationId": "updateAdvertStatus",
         "parameters": [
@@ -2010,28 +2020,6 @@
         },
         "required": ["email"]
       },
-      "InstitutionDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Id of the entity"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the entity"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity"
-          },
-          "nationalId": {
-            "type": "string",
-            "description": "National ID of the institution"
-          }
-        },
-        "required": ["id", "title", "slug", "nationalId"]
-      },
       "AdvertVersion": {
         "type": "string",
         "enum": ["A", "B", "C"]
@@ -2113,14 +2101,6 @@
           "status": {
             "$ref": "#/components/schemas/StatusDto"
           },
-          "institution": {
-            "nullable": true,
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/InstitutionDto"
-              }
-            ]
-          },
           "version": {
             "allOf": [
               {
@@ -2156,7 +2136,6 @@
           "type",
           "category",
           "status",
-          "institution",
           "version",
           "html",
           "paid",
@@ -2243,32 +2222,17 @@
         },
         "required": ["name", "location", "date"]
       },
-      "SubmitCommonApplicationActorDto": {
+      "SubmitCommonApplicationOwnerDto": {
         "type": "object",
         "properties": {
-          "firstName": {
+          "name": {
             "type": "string"
           },
-          "lastName": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "phone": {
+          "nationalId": {
             "type": "string"
           }
         },
-        "required": ["firstName", "lastName", "email"]
-      },
-      "SubmitCommonApplicationInstitutionDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string"
-          }
-        },
-        "required": ["title"]
+        "required": ["name"]
       },
       "SubmitCommonApplicationDto": {
         "type": "object",
@@ -2301,10 +2265,10 @@
             "type": "string"
           },
           "actor": {
-            "$ref": "#/components/schemas/SubmitCommonApplicationActorDto"
+            "$ref": "#/components/schemas/SubmitCommonApplicationOwnerDto"
           },
           "institution": {
-            "$ref": "#/components/schemas/SubmitCommonApplicationInstitutionDto"
+            "$ref": "#/components/schemas/SubmitCommonApplicationOwnerDto"
           }
         },
         "required": [
@@ -2451,14 +2415,6 @@
           "status": {
             "$ref": "#/components/schemas/StatusDto"
           },
-          "institution": {
-            "nullable": true,
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/InstitutionDto"
-              }
-            ]
-          },
           "version": {
             "allOf": [
               {
@@ -2486,7 +2442,6 @@
           "type",
           "category",
           "status",
-          "institution",
           "version",
           "html",
           "paid"

@@ -1,22 +1,9 @@
-import {
-  BelongsToMany,
-  Column,
-  DataType,
-  DefaultScope,
-  ForeignKey,
-  HasOne,
-} from 'sequelize-typescript'
+import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
-import {
-  LEGAL_GAZETTE_DEFAULT_ROLE_ID,
-  LegalGazetteModels,
-} from '@dmr.is/legal-gazette/constants'
+import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { InstitutionModel } from '../institution/institution.model'
 import { UserDto } from './dto/user.dto'
-import { UserInstitutionModel } from './user-institutions.model'
-import { UserRoleModel } from './user-roles.model'
 
 export type UserAttributes = {
   id: string
@@ -25,7 +12,6 @@ export type UserAttributes = {
   lastName: string
   email: string
   phone: string
-  lastSubmissionDate?: Date | null
 }
 
 export type UserCreateAttributes = {
@@ -35,8 +21,6 @@ export type UserCreateAttributes = {
   lastName: string
   email: string
   phone?: string | null
-  roleId?: string
-  lastSubmissionDate?: Date | null
 }
 
 @BaseTable({ tableName: LegalGazetteModels.USERS })
@@ -81,29 +65,6 @@ export class UserModel extends BaseModel<UserAttributes, UserCreateAttributes> {
     defaultValue: null,
   })
   phone!: string | null
-
-  @Column({
-    type: DataType.DATE,
-    allowNull: true,
-    defaultValue: null,
-    field: 'last_submission_date',
-  })
-  lastSubmissionDate!: Date | null
-
-  @ForeignKey(() => UserRoleModel)
-  @Column({
-    type: DataType.UUID,
-    allowNull: false,
-    field: 'user_role_id',
-    defaultValue: LEGAL_GAZETTE_DEFAULT_ROLE_ID,
-  })
-  roleId!: string
-
-  @HasOne(() => UserRoleModel, { foreignKey: 'id' })
-  role!: UserRoleModel
-
-  @BelongsToMany(() => InstitutionModel, () => UserInstitutionModel)
-  institutions!: InstitutionModel[]
 
   static fromModel(model: UserModel): UserDto {
     return {

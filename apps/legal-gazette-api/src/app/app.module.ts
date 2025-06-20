@@ -26,13 +26,10 @@ import { CategoryModule } from '../modules/category/category.module'
 import { CommonAdvertModel } from '../modules/common-advert/common-advert.model'
 import { CommonApplicationModule } from '../modules/common-application/common-application.module'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
-import { InstitutionModel } from '../modules/institution/institution.model'
 import { StatusModel } from '../modules/status/status.model'
 import { StatusModule } from '../modules/status/status.module'
 import { TypeModel } from '../modules/type/type.model'
 import { TypeModule } from '../modules/type/type.module'
-import { UserInstitutionModel } from '../modules/users/user-institutions.model'
-import { UserRoleModel } from '../modules/users/user-roles.model'
 import { UserModel } from '../modules/users/users.model'
 
 @Module({
@@ -55,6 +52,7 @@ import { UserModel } from '../modules/users/users.model'
           debugLog: true,
           autoLoadModels: false,
           models: [
+            UserModel,
             TypeModel,
             CategoryModel,
             StatusModel,
@@ -62,10 +60,6 @@ import { UserModel } from '../modules/users/users.model'
             CaseModel,
             CommonAdvertModel,
             AdvertModel,
-            UserRoleModel,
-            UserModel,
-            InstitutionModel,
-            UserInstitutionModel,
           ],
         }),
       ],
