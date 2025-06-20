@@ -18,29 +18,14 @@ enum CommonApplicationEventsEnum {
   REJECT = 'REJECT',
 }
 
-export class SubmitCommonApplicationActorDto {
+export class SubmitCommonApplicationOwnerDto {
   @ApiProperty({ type: String })
   @IsString()
-  firstName!: string
-
-  @ApiProperty({ type: String })
-  @IsString()
-  lastName!: string
-
-  @ApiProperty({ type: String })
-  @IsEmail()
-  email!: string
+  name!: string
 
   @ApiProperty({ type: String, required: false })
-  @IsOptional()
   @IsString()
-  phone?: string
-}
-
-export class SubmitCommonApplicationInstitutionDto {
-  @ApiProperty({ type: String })
-  @IsString()
-  title!: string
+  nationalId!: string
 }
 
 export class SubmitCommonApplicationDto extends CreateCommonAdvertDto {
@@ -59,17 +44,17 @@ export class SubmitCommonApplicationDto extends CreateCommonAdvertDto {
   )
   html!: string
 
-  @ApiProperty({ type: SubmitCommonApplicationActorDto, required: true })
+  @ApiProperty({ type: SubmitCommonApplicationOwnerDto, required: true })
   @IsDefined()
   @ValidateNested({ each: true })
-  @Type(() => SubmitCommonApplicationActorDto)
-  actor!: SubmitCommonApplicationActorDto
+  @Type(() => SubmitCommonApplicationOwnerDto)
+  actor!: SubmitCommonApplicationOwnerDto
 
-  @ApiProperty({ type: SubmitCommonApplicationInstitutionDto, required: false })
+  @ApiProperty({ type: SubmitCommonApplicationOwnerDto, required: false })
   @IsOptional()
   @ValidateNested({ each: true })
-  @Type(() => SubmitCommonApplicationInstitutionDto)
-  institution?: SubmitCommonApplicationInstitutionDto
+  @Type(() => SubmitCommonApplicationOwnerDto)
+  institution?: SubmitCommonApplicationOwnerDto
 }
 
 export class CommonApplicationUpdateStateEvent {

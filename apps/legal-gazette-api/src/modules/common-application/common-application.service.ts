@@ -1,6 +1,3 @@
-import { Sequelize } from 'sequelize'
-import slugify from 'slugify'
-
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
@@ -10,9 +7,6 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AuthService, IAuthService } from '@dmr.is/modules'
 
 import { CaseModel } from '../case/case.model'
-import { InstitutionModel } from '../institution/institution.model'
-import { UserInstitutionModel } from '../users/user-institutions.model'
-import { UserModel } from '../users/users.model'
 import {
   CommonApplicationUpdateStateEvent,
   SubmitCommonApplicationDto,
@@ -25,11 +19,6 @@ export class CommonApplicationService implements ICommonApplicationService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IAuthService) private readonly authService: AuthService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
-    @InjectModel(UserModel) private readonly userModel: typeof UserModel,
-    @InjectModel(InstitutionModel)
-    private readonly institutionModel: typeof InstitutionModel,
-    @InjectModel(UserInstitutionModel)
-    private readonly userInstitutionModel: typeof UserInstitutionModel,
   ) {}
 
   async deleteApplication(applicationId: string): Promise<void> {
@@ -68,64 +57,11 @@ export class CommonApplicationService implements ICommonApplicationService {
   }
 
   async submitApplication(body: SubmitCommonApplicationDto): Promise<void> {
-    const actorNationalId = '0000000000'
-    const institutionNationalId = '0101010101'
-    let institutionId: string | undefined = undefined
-
-    if (body.institution) {
-      const returnedInstitution = await this.institutionModel.upsert(
-        {
-          nationalId: institutionNationalId,
-          title: body.institution.title,
-          slug: slugify(body.institution.title, { lower: true }),
-        },
-        {
-          conflictWhere: Sequelize.literal(
-            `"national_id" = '${institutionNationalId}'`,
-          ),
-          returning: ['id'],
-          hooks: true,
-        },
-      )
-      institutionId = returnedInstitution[0].id
-    }
-
-    const user = await this.userModel.upsert(
-      {
-        email: body.actor.email,
-        firstName: body.actor.firstName,
-        lastName: body.actor.lastName,
-        nationalId: actorNationalId,
-        phone: body.actor.phone,
-        lastSubmissionDate: new Date(),
-      },
-      {
-        conflictWhere: Sequelize.literal(
-          `"national_id" = '${actorNationalId}'`,
-        ),
-        returning: ['id'],
-      },
-    )
-
-    const actorId = user[0].id
-
-    if (institutionId && actorId) {
-      await this.userInstitutionModel.upsert(
-        {
-          userId: actorId,
-          institutionId,
-        },
-        {
-          conflictWhere: Sequelize.literal(
-            `"user_id" = '${actorId}' AND "institution_id" = '${institutionId}'`,
-          ),
-          returning: false,
-        },
-      )
-    }
+    const submittedBy = body.institution
+      ? `${body.institution.name} (${body.actor.name})`
+      : `${body.actor.name}`
 
     await this.caseModel.createCommonAdvert({
-      actorId: actorId,
       applicationId: body.applicationId,
       caption: body.caption,
       categoryId: body.categoryId,
@@ -133,7 +69,7 @@ export class CommonApplicationService implements ICommonApplicationService {
       signature: body.signature,
       channels: body.channels,
       html: body.html,
-      institutionId: institutionId,
+      submittedBy: submittedBy,
     })
   }
 }

@@ -20,10 +20,8 @@ import {
   CommonAdvertCreationAttributes,
   CommonAdvertModel,
 } from '../common-advert/common-advert.model'
-import { InstitutionModel } from '../institution/institution.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
 import { TypeModel } from '../type/type.model'
-import { UserModel } from '../users/users.model'
 import {
   AdvertDetailedDto,
   AdvertDto,
@@ -35,6 +33,7 @@ type AdvertAttributes = {
   caseId: string
   title: string
   html: string
+  submittedBy: string
   publicationNumber: string
   publishedAt: Date | null
   scheduledAt: Date
@@ -42,20 +41,16 @@ type AdvertAttributes = {
   typeId: string
   categoryId: string
   statusId: string
-  institutionId: string | null
   paid: boolean
   type: TypeModel
   category: CategoryModel
   status: StatusModel
-  institution?: InstitutionModel
-  user: UserModel
   case: CaseModel
 }
 
 export type AdvertCreateAttributes = {
   title: string
-  userId: string
-  institutionId?: string
+  submittedBy: string
   caseId?: string
   html?: string
   typeId: string
@@ -81,8 +76,6 @@ export enum AdvertVersionEnum {
     CategoryModel,
     TypeModel,
     CommonAdvertModel,
-    InstitutionModel,
-    UserModel,
     {
       model: CaseModel.unscoped(),
       attributes: ['caseNumber'],
@@ -106,8 +99,6 @@ export enum AdvertVersionEnum {
       CategoryModel,
       TypeModel,
       CommonAdvertModel,
-      InstitutionModel,
-      UserModel,
       {
         model: CaseModel.unscoped(),
         attributes: ['caseNumber'],
@@ -126,8 +117,6 @@ export enum AdvertVersionEnum {
       CategoryModel,
       TypeModel,
       CommonAdvertModel,
-      InstitutionModel,
-      UserModel,
       {
         model: CaseModel.unscoped(),
         attributes: ['caseNumber'],
@@ -147,8 +136,6 @@ export enum AdvertVersionEnum {
       CategoryModel,
       TypeModel,
       CommonAdvertModel,
-      InstitutionModel,
-      UserModel,
       {
         model: CaseModel.unscoped(),
         attributes: ['caseNumber'],
@@ -167,8 +154,6 @@ export enum AdvertVersionEnum {
       CategoryModel,
       TypeModel,
       CommonAdvertModel,
-      InstitutionModel,
-      UserModel,
       {
         model: CaseModel.unscoped(),
         attributes: ['caseNumber'],
@@ -193,8 +178,6 @@ export enum AdvertVersionEnum {
       CategoryModel,
       TypeModel,
       CommonAdvertModel,
-      InstitutionModel,
-      UserModel,
       {
         model: CaseModel.unscoped(),
         duplicating: false,
@@ -265,23 +248,6 @@ export class AdvertModel extends BaseModel<
   statusId!: string
 
   @Column({
-    type: DataType.UUID,
-    allowNull: false,
-    field: 'user_id',
-  })
-  @ForeignKey(() => UserModel)
-  userId!: string
-
-  @Column({
-    type: DataType.UUID,
-    allowNull: true,
-    field: 'institution_id',
-    defaultValue: null,
-  })
-  @ForeignKey(() => InstitutionModel)
-  institutionId!: string | null
-
-  @Column({
     type: DataType.DATE,
     allowNull: true,
     field: 'scheduled_at',
@@ -328,6 +294,13 @@ export class AdvertModel extends BaseModel<
   paid!: boolean
 
   @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    field: 'submitted_by',
+  })
+  submittedBy!: string
+
+  @Column({
     type: DataType.VIRTUAL,
   })
   get publicationNumber(): string {
@@ -348,21 +321,8 @@ export class AdvertModel extends BaseModel<
   @BelongsTo(() => StatusModel)
   status!: StatusModel
 
-  @BelongsTo(() => InstitutionModel)
-  institution?: InstitutionModel
-
-  @BelongsTo(() => UserModel)
-  user!: UserModel
-
   @HasOne(() => CommonAdvertModel, { foreignKey: 'advertId' })
   commonAdvert?: CommonAdvertModel
-
-  static getOwner(model: AdvertModel): string {
-    if (model.institution) {
-      return model.institution.title
-    }
-    return `${model.user.firstName} ${model.user.lastName}`
-  }
 
   static async countByStatus(
     statusId: StatusIdEnum,
@@ -427,12 +387,11 @@ export class AdvertModel extends BaseModel<
         caseId: model.caseId,
         title: model.title,
         html: model.html,
-        owner: AdvertModel.getOwner(model),
+        owner: model.submittedBy,
         publicationNumber: model.publicationNumber,
         scheduledAt: model.scheduledAt.toISOString(),
         publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
         version: model.version,
-        institution: model.institution?.fromModel() ?? null,
         category: model.category.fromModel(),
         status: model.status.fromModel(),
         type: model.type.fromModel(),
@@ -460,7 +419,7 @@ export class AdvertModel extends BaseModel<
         caseId: model.caseId,
         title: model.title,
         html: model.html,
-        owner: AdvertModel.getOwner(model),
+        owner: model.submittedBy,
         publicationNumber: model.publicationNumber,
         scheduledAt: model.scheduledAt.toISOString(),
         publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
@@ -468,7 +427,6 @@ export class AdvertModel extends BaseModel<
         category: model.category.fromModel(),
         status: model.status.fromModel(),
         type: model.type.fromModel(),
-        institution: model.institution?.fromModel() ?? null,
         createdAt: model.createdAt.toISOString(),
         updatedAt: model.updatedAt.toISOString(),
         deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
@@ -477,7 +435,7 @@ export class AdvertModel extends BaseModel<
           ? model.commonAdvert.fromModel()
           : undefined,
       }
-    } catch (error: any) {
+    } catch (error) {
       this.logger.debug(`fromModelDetailed failed for AdvertModel`, {
         context: 'AdvertModel',
       })
