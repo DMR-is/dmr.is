@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Controller, Get, NotFoundException, Param } from '@nestjs/common'
+import { Controller, NotFoundException, Param } from '@nestjs/common'
 
 import { BaseEntityModel } from '@dmr.is/shared/models/base'
 
@@ -8,14 +8,12 @@ import { BaseEntityModel } from '@dmr.is/shared/models/base'
 export class BaseEntityController<Model extends typeof BaseEntityModel> {
   constructor(protected readonly model: Model) {}
 
-  @Get()
   async findAll(options?: any): Promise<any> {
-    const categories = await this.model.findAll(options)
+    const entities = await this.model.findAll(options)
 
-    return categories.map((entity) => entity.fromModel())
+    return entities.map((entity) => entity.fromModel())
   }
 
-  @Get(':id')
   async findById(@Param('id') id: string): Promise<any> {
     const entity = await this.model.findByPk(id)
     if (!entity) {
