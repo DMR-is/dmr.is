@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { AdvertModel } from '../modules/advert/advert.model'
+import { AdvertModel, AdvertModelScopes } from '../modules/advert/advert.model'
 
 const LOGGER_CONTEXT = 'PublishingService'
 
@@ -15,7 +15,7 @@ export class PublishingService {
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
   ) {}
 
-  @Cron(CronExpression.EVERY_10_MINUTES)
+  @Cron(CronExpression.EVERY_DAY_AT_11PM)
   async publishAdverts() {
     const now = new Date()
 
@@ -25,7 +25,7 @@ export class PublishingService {
     })
 
     const advertToBePublished = await this.advertModel
-      .scope('toBePublished')
+      .scope(AdvertModelScopes.TO_BE_PUBLISHED)
       .findAll()
 
     if (advertToBePublished.length === 0) {
