@@ -4,7 +4,10 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { AdvertModel, AdvertModelScopes } from '../modules/advert/advert.model'
+import {
+  AdvertModel,
+  AdvertModelScopes,
+} from '../../modules/advert/advert.model'
 
 const LOGGER_CONTEXT = 'PublishingService'
 
