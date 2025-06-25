@@ -35,7 +35,9 @@
       "@dmr.is/types": ["libs/shared/types/types/src/index.ts"],
       "@dmr.is/ui/components/*": ["libs/shared/dmr-ui/src/lib/components/*"],
       "@dmr.is/ui/hooks/*": ["libs/shared/dmr-ui/src/lib/hooks/*"],
-      "@dmr.is/ui/lazy/components/*": ["libs/shared/dmr-ui-lazy/src/lib/components/*"],
+      "@dmr.is/ui/lazy/components/*": [
+        "libs/shared/dmr-ui-lazy/src/lib/components/*"
+      ],
       "@dmr.is/ui/utils/*": ["libs/shared/dmr-ui/src/lib/utils/*"],
       "@dmr.is/utils": ["libs/shared/utils/src/index.ts"],
       "@dmr.is/utils/cache": ["libs/shared/utils/src/lib/cacheUtils.ts"],

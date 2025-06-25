@@ -1,0 +1,44 @@
+{
+  "name": "legal-gazette-public-web",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/legal-gazette-public-web",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/legal-gazette-public-web"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "apps/legal-gazette-public-web"
+        },
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "legal-gazette-public-web:build",
+        "dev": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "legal-gazette-public-web:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "legal-gazette-public-web:build:production",
+          "dev": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
