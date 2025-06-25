@@ -69,6 +69,16 @@ export enum AdvertVersionEnum {
   C = 'C',
 }
 
+export enum AdvertModelScopes {
+  DEFAULT = 'defaultScope',
+  READY_FOR_PUBLICATION = 'readyForPublication',
+  TO_BE_PUBLISHED = 'toBePublished',
+  PUBLISHED = 'published',
+  COMPLETED = 'completed',
+  ALL = 'all',
+  WITH_QUERY = 'withQuery',
+}
+
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
 @DefaultScope(() => ({
   include: [

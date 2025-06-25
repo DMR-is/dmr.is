@@ -7,6 +7,7 @@ import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
 import { AdvertModel } from '../advert/advert.model'
 import { TypeModel } from '../type/type.model'
+import { CategoryDto } from './dto/category.dto'
 
 @BaseEntityTable({
   tableName: LegalGazetteModels.ADVERT_CATEGORY,
@@ -18,6 +19,22 @@ export class CategoryModel extends BaseEntityModel {
 
   @BelongsTo(() => TypeModel)
   type!: TypeModel
+
+  fromModel(): CategoryDto {
+    return {
+      id: this.id,
+      title: this.title,
+      slug: this.slug,
+    }
+  }
+
+  static fromModel(model: CategoryModel): CategoryDto {
+    return {
+      id: model.id,
+      title: model.title,
+      slug: model.slug,
+    }
+  }
 
   static async setAdvertCategory(advertId: string, categoryId: string) {
     const advert = await AdvertModel.unscoped().findByPk(advertId, {
