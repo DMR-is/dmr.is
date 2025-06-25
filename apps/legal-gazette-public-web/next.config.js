@@ -1,20 +1,38 @@
-//@ts-check
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { composePlugins, withNx } = require('@nx/next')
+const { createVanillaExtractPlugin } = require('@vanilla-extract/next-plugin')
+const withVanillaExtract = createVanillaExtractPlugin()
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 
 /**
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
-  // Use this to set Nx-specific options
-  // See: https://nx.dev/recipes/next/next-config-setup
-  nx: {},
+  output: 'standalone',
+  webpack: (config, { isServer }) => {
+    config.resolve.alias.canvas = false
+
+    if (process.env.ANALYZE === 'true' && !isServer) {
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'static',
+          reportFilename: isServer
+            ? '../analyze/server.html'
+            : './analyze/client.html',
+        }),
+      )
+    }
+
+    return config
+  },
+  env: {
+    API_MOCKS: process.env.API_MOCKS || '',
+  },
 }
 
 const plugins = [
   // Add more Next.js plugins to this list if needed.
   withNx,
+  withVanillaExtract,
 ]
 
 module.exports = composePlugins(...plugins)(nextConfig)
