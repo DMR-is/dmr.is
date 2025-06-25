@@ -1,65 +1,64 @@
-import { FastifyPluginCallback, FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyPluginCallback, FastifyReply, FastifyRequest } from 'fastify'
 
 import {
   ensureISODate,
   ensureNameSlug,
   slugToName,
-} from '@island.is/regulations-tools/utils';
+} from '@island.is/regulations-tools/utils'
 
-import { getRegulation } from '../db/Regulation';
-import { makeDraftPdf, makePublishedPdf } from '../db/RegulationPdf';
-import { get, set } from '../utils/cache';
-import { cacheControl, Pms, QStr } from '../utils/misc';
+import { getRegulation } from '../db/Regulation'
+import { makeDraftPdf, makePublishedPdf } from '../db/RegulationPdf'
+import { get, set } from '../utils/cache'
+import { cacheControl, Pms, QStr } from '../utils/misc'
 import {
   ISODate,
   RegQueryName,
   Regulation,
   RegulationDiff,
   RegulationRedirect,
-} from './types';
+} from './types'
 
-import { FastifyRedis } from '@fastify/redis';
+import { FastifyRedis } from '@fastify/redis'
 
-const REGULATION_TTL = 0.1;
-const PDF_FILE_TTL = 1;
-const REGULATION_REDIS_TTL = REGULATION_TTL * 60 * 60;
+const REGULATION_TTL = 0.1
+const PDF_FILE_TTL = 1
+const REGULATION_REDIS_TTL = REGULATION_TTL * 60 * 60
 
 // ---------------------------------------------------------------------------
 
-type EarlierDate = ISODate | 'original';
+type EarlierDate = ISODate | 'original'
 
 type RegHandlerOpts<N extends string = RegQueryName> = {
-  name?: RegQueryName | N;
-  date?: ISODate | 'current';
-  diff?: boolean;
-  earlierDate?: EarlierDate;
-  onDate?: boolean;
-  current?: true;
-};
+  name?: RegQueryName | N
+  date?: ISODate | 'current'
+  diff?: boolean
+  earlierDate?: EarlierDate
+  onDate?: boolean
+  current?: true
+}
 type RefinedRegHandlerOpts<N extends string = RegQueryName> = {
-  name: RegQueryName | N;
-  current: boolean;
-  date?: Date | 'current';
-  onDate?: boolean;
+  name: RegQueryName | N
+  current: boolean
+  date?: Date | 'current'
+  onDate?: boolean
 } & (
   | {
-      diff: true;
-      earlierDate?: Date | 'original';
+      diff: true
+      earlierDate?: Date | 'original'
     }
   | {
-      diff?: false;
-      earlierDate?: undefined;
+      diff?: false
+      earlierDate?: undefined
     }
-);
+)
 
 // ===========================================================================
 
 const ensureEarlierDate = (maybeEDate?: string): EarlierDate | undefined =>
-  maybeEDate === 'original' ? 'original' : ensureISODate(maybeEDate);
+  maybeEDate === 'original' ? 'original' : ensureISODate(maybeEDate)
 
 // ---------------------------------------------------------------------------
 
- 
 const handleRequest = async <N extends string = RegQueryName>(
   req: FastifyRequest,
   res: FastifyReply,
@@ -70,20 +69,20 @@ const handleRequest = async <N extends string = RegQueryName>(
     routePath: string,
   ) => Promise<{ success: boolean; error?: string }>,
 ) => {
-  const { name, date, diff, onDate, earlierDate, current = false } = opts;
-  const dateMissing = 'date' in opts && !date;
+  const { name, date, diff, onDate, earlierDate, current = false } = opts
+  const dateMissing = 'date' in opts && !date
   const validEarlierDate =
     !date ||
     !diff ||
     !earlierDate ||
     earlierDate === 'original' ||
-    earlierDate <= date;
+    earlierDate <= date
 
   if (name && !dateMissing && validEarlierDate) {
     const earlierDateDate =
       earlierDate === 'original'
         ? 'original'
-        : earlierDate && new Date(earlierDate);
+        : earlierDate && new Date(earlierDate)
 
     const handlerOpts: RefinedRegHandlerOpts<N> = {
       name,
@@ -93,7 +92,7 @@ const handleRequest = async <N extends string = RegQueryName>(
         : { diff }),
       current,
       onDate,
-    };
+    }
 
     // NOTE: Is there a better/cleaner/more robust way to
     // provide this info?
@@ -101,14 +100,14 @@ const handleRequest = async <N extends string = RegQueryName>(
     const routePath = req.url
       .replace(/^\/api\/v[0-9]+\/regulation\//, '')
       .split('?')[0]! // remove any potential query strings
-      .replace(/\/pdf$/, ''); // and chop off pdf suffixes, if present
+      .replace(/\/pdf$/, '') // and chop off pdf suffixes, if present
 
-    const { success, error } = await handler(res, handlerOpts, routePath);
+    const { success, error } = await handler(res, handlerOpts, routePath)
 
     if (!success) {
       return res
         .code(error ? 500 : 404)
-        .send({ error: error || 'Regulation not found!' });
+        .send({ error: error || 'Regulation not found!' })
     }
   } else {
     return res
@@ -117,13 +116,13 @@ const handleRequest = async <N extends string = RegQueryName>(
         !name
           ? 'Invalid Regulation name'
           : dateMissing
-          ? 'Invalid historic date'
-          : !validEarlierDate
-          ? 'Invalid diffing date'
-          : undefined,
-      );
+            ? 'Invalid historic date'
+            : !validEarlierDate
+              ? 'Invalid diffing date'
+              : undefined,
+      )
   }
-};
+}
 
 // ===========================================================================
 
@@ -134,14 +133,14 @@ const handleDataRequest = (
   opts: RegHandlerOpts,
 ) =>
   handleRequest(req, res, opts, async (res, opts, routePath) => {
-    const { name, date, onDate, diff, earlierDate } = opts;
+    const { name, date, onDate, diff, earlierDate } = opts
 
-    const cacheKey = routePath;
+    const cacheKey = routePath
 
     let result =
       (await get<
         RegulationRedirect | Regulation | RegulationDiff | string | null
-      >(redis, cacheKey)) || undefined;
+      >(redis, cacheKey)) || undefined
 
     if (result == null) {
       const { error, regulation } = await getRegulation(
@@ -153,44 +152,44 @@ const handleDataRequest = (
           onDate,
         },
         routePath,
-      );
+      )
 
       if (error === 'ARGH') {
-        return res.status(500).send();
+        return res.status(500).send()
       }
-      result = error || regulation;
+      result = error || regulation
 
       if (!result) {
         // Shorter cache TTL for "NOT_FOUND" results
-        set(redis, cacheKey, 'NOT_FOUND', 0.2 * REGULATION_REDIS_TTL);
+        set(redis, cacheKey, 'NOT_FOUND', 0.2 * REGULATION_REDIS_TTL)
       } else {
-        set(redis, cacheKey, result, REGULATION_REDIS_TTL);
+        set(redis, cacheKey, result, REGULATION_REDIS_TTL)
       }
     }
 
     if (!result || result === 'NOT_FOUND') {
-      return { success: false };
+      return { success: false }
     }
     if (typeof result === 'string') {
-      return { success: false, error: result };
+      return { success: false, error: result }
     }
-    cacheControl(res, REGULATION_TTL);
-    res.send(result);
-    return { success: true };
-  });
+    cacheControl(res, REGULATION_TTL)
+    res.send(result)
+    return { success: true }
+  })
 
 // ===========================================================================
 
-type PdfResponseType = 'binary' | 'base64';
+type PdfResponseType = 'binary' | 'base64'
 
 function parsePdfResponseType(input: unknown): PdfResponseType | undefined {
   if (input === 'binary') {
-    return 'binary';
+    return 'binary'
   }
   if (input === 'base64') {
-    return 'base64';
+    return 'base64'
   }
-  return undefined;
+  return undefined
 }
 
 const handlePdfRequest = (
@@ -209,21 +208,21 @@ const handlePdfRequest = (
             opts,
           )
         : body
-        ? makeDraftPdf(body)
-        : undefined;
+          ? makeDraftPdf(body)
+          : undefined
 
     // TODO: return 304 when possible for conditional (If-Modified-Since:) request.
 
-    const { fileName, pdfContents, error } = (await job) || {};
+    const { fileName, pdfContents, error } = (await job) || {}
 
     if (!fileName || !pdfContents) {
-      return { success: false, error };
+      return { success: false, error }
     }
 
-    cacheControl(res, PDF_FILE_TTL);
+    cacheControl(res, PDF_FILE_TTL)
 
     if (!opts.current) {
-      res.header('X-Robots-Tag', 'noindex');
+      res.header('X-Robots-Tag', 'noindex')
     }
 
     if (responseType === 'base64') {
@@ -231,8 +230,8 @@ const handlePdfRequest = (
         fileName,
         mimeType: 'application/pdf',
         data: pdfContents.toString('base64'),
-      });
-      return { success: true };
+      })
+      return { success: true }
     }
 
     res
@@ -243,9 +242,9 @@ const handlePdfRequest = (
         `inline; filename="${encodeURI(fileName)}.pdf"`,
       )
       .type('application/pdf')
-      .send(pdfContents);
-    return { success: true };
-  });
+      .send(pdfContents)
+    return { success: true }
+  })
 
 // ===========================================================================
 
@@ -266,8 +265,8 @@ export const regulationRoutes: FastifyPluginCallback = (
   fastify.get<Pms<'name'>>('/regulation/:name/original', opts, (req, res) => {
     handleDataRequest(req, res, fastify.redis, {
       name: ensureNameSlug(req.params.name),
-    });
-  });
+    })
+  })
   /**
    * Returns original version of a regulation in PDF format
    * @param {string} name - Name of the Regulation to fetch (`nnnn-yyyyy`)
@@ -279,9 +278,9 @@ export const regulationRoutes: FastifyPluginCallback = (
     (req, res) => {
       handlePdfRequest(req, res, {
         name: ensureNameSlug(req.params.name),
-      });
+      })
     },
-  );
+  )
 
   /**
    * Returns current version of a regulation with all changes applied
@@ -293,8 +292,8 @@ export const regulationRoutes: FastifyPluginCallback = (
       name: ensureNameSlug(req.params.name),
       date: 'current',
       current: true,
-    });
-  });
+    })
+  })
   /**
    * Returns current version of a regulation with all changes applied in PDF format
    * @param {string} name - Name of the Regulation to fetch (`nnnn-yyyyy`)
@@ -308,9 +307,9 @@ export const regulationRoutes: FastifyPluginCallback = (
         name: ensureNameSlug(req.params.name),
         date: 'current',
         current: true,
-      });
+      })
     },
-  );
+  )
 
   /**
    * Returns current version of a regulation with all changes applied, showing
@@ -324,8 +323,8 @@ export const regulationRoutes: FastifyPluginCallback = (
       date: 'current',
       diff: true,
       earlierDate: 'original',
-    });
-  });
+    })
+  })
   /**
    * Returns current version of a regulation with all changes applied, showing
    * the total changes the "original" verion in PDF format
@@ -338,8 +337,8 @@ export const regulationRoutes: FastifyPluginCallback = (
       date: 'current',
       diff: true,
       earlierDate: 'original',
-    });
-  });
+    })
+  })
 
   /**
    * Returns a version of a regulation as it was on a specific valid timeline date
@@ -354,9 +353,9 @@ export const regulationRoutes: FastifyPluginCallback = (
       handleDataRequest(req, res, fastify.redis, {
         name: ensureNameSlug(req.params.name),
         date: ensureISODate(req.params.date),
-      });
+      })
     },
-  );
+  )
 
   /**
    * Returns a version of a regulation as it will be on any specific date
@@ -372,9 +371,9 @@ export const regulationRoutes: FastifyPluginCallback = (
         name: ensureNameSlug(req.params.name),
         date: ensureISODate(req.params.date),
         onDate: true,
-      });
+      })
     },
-  );
+  )
 
   /**
    * Returns a version of a regulation as it was on a specific date in PDF format
@@ -389,9 +388,9 @@ export const regulationRoutes: FastifyPluginCallback = (
       handlePdfRequest(req, res, {
         name: ensureNameSlug(req.params.name),
         date: ensureISODate(req.params.date),
-      });
+      })
     },
-  );
+  )
 
   /**
    * Returns a version of a regulation as it was on a specific date, showing the changes
@@ -408,9 +407,9 @@ export const regulationRoutes: FastifyPluginCallback = (
         name: ensureNameSlug(req.params.name),
         date: ensureISODate(req.params.date),
         diff: true,
-      });
+      })
     },
-  );
+  )
   /**
    * Returns a version of a regulation as it was on a specific date, showing the changes
    * that occurred on that date in PDF format
@@ -426,9 +425,9 @@ export const regulationRoutes: FastifyPluginCallback = (
         name: ensureNameSlug(req.params.name),
         date: ensureISODate(req.params.date),
         diff: true,
-      });
+      })
     },
-  );
+  )
 
   /**
    * Returns a version of a regulation as it was on a specific date, showing the changes
@@ -447,9 +446,9 @@ export const regulationRoutes: FastifyPluginCallback = (
         date: ensureISODate(req.params.date),
         diff: true,
         earlierDate: ensureEarlierDate(req.params.earlierDate),
-      });
+      })
     },
-  );
+  )
   /**
    * Returns a version of a regulation as it was on a specific date, showing the changes
    * that occurred on that date in PDF format
@@ -467,9 +466,9 @@ export const regulationRoutes: FastifyPluginCallback = (
         date: ensureISODate(req.params.date),
         diff: true,
         earlierDate: ensureEarlierDate(req.params.earlierDate),
-      });
+      })
     },
-  );
+  )
 
   // ---------------------------------------------------------------------------
 
@@ -484,11 +483,11 @@ export const regulationRoutes: FastifyPluginCallback = (
     opts,
     (req, res) => {
       const responseType =
-        parsePdfResponseType(req.query.responseType) ?? 'binary';
+        parsePdfResponseType(req.query.responseType) ?? 'binary'
 
-      handlePdfRequest(req, res, { name: 'new' }, req.body, responseType);
+      handlePdfRequest(req, res, { name: 'new' }, req.body, responseType)
     },
-  );
+  )
 
-  done();
-};
+  done()
+}

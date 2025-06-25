@@ -1,8 +1,8 @@
-import { BindOrReplacements, QueryTypes } from 'sequelize';
+import { BindOrReplacements, QueryTypes } from 'sequelize'
 
-import { eliminateComments } from '@island.is/regulations-tools/textHelpers';
+import { eliminateComments } from '@island.is/regulations-tools/textHelpers'
 
-import { DB_Regulation, DB_Task } from '../models';
+import { DB_Regulation, DB_Task } from '../models'
 import {
   ISODate,
   LawChapter,
@@ -11,18 +11,18 @@ import {
   RegulationOptionList,
   RegulationYears,
   Year,
-} from '../routes/types';
-import { db } from '../utils/sequelize';
-import { getRegulationLawChapters } from './LawChapter';
-import { getMinistry } from './Ministry';
+} from '../routes/types'
+import { db } from '../utils/sequelize'
+import { getRegulationLawChapters } from './LawChapter'
+import { getMinistry } from './Ministry'
 
-import promiseAll from '@hugsmidjan/qj/promiseAllObject';
+import promiseAll from '@hugsmidjan/qj/promiseAllObject'
 
-export const PER_PAGE = 30;
+export const PER_PAGE = 30
 
 export async function getRegulationsCount() {
-  const regulationsCount = await DB_Regulation.count();
-  return regulationsCount;
+  const regulationsCount = await DB_Regulation.count()
+  return regulationsCount
 }
 
 export async function getRegulationsYears(): Promise<RegulationYears> {
@@ -31,13 +31,13 @@ export async function getRegulationsYears(): Promise<RegulationYears> {
       FROM regulation
       ORDER BY year DESC`,
     { type: QueryTypes.SELECT },
-  );
+  )
   return (
     years
       .map((y) => y.year)
       // filter out bad years cruft (0008 et. al.)
       .filter((y) => y > 1800)
-  );
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -53,35 +53,35 @@ type SQLRegulationsItem = Pick<
   | 'effectiveDate'
   | 'repealedBeacuseReasons'
 > & {
-  repealedDate?: ISODate | null;
-  text?: DB_Regulation['text'];
-  migrated?: DB_Task['done'];
-};
+  repealedDate?: ISODate | null
+  text?: DB_Regulation['text']
+  migrated?: DB_Task['done']
+}
 
-export type SQLRegulationsList = ReadonlyArray<SQLRegulationsItem>;
+export type SQLRegulationsList = ReadonlyArray<SQLRegulationsItem>
 
 export type RegulationListItemFull = Omit<RegulationListItem, 'ministry'> & {
-  type: 'amending' | 'base';
-  ministry?: RegulationListItem['ministry'];
-  text?: DB_Regulation['text'];
-  effectiveDate: ISODate;
-  repealedDate?: ISODate | null;
-  repealed?: boolean | null;
-  lawChapters?: ReadonlyArray<LawChapter>;
-};
+  type: 'amending' | 'base'
+  ministry?: RegulationListItem['ministry']
+  text?: DB_Regulation['text']
+  effectiveDate: ISODate
+  repealedDate?: ISODate | null
+  repealed?: boolean | null
+  lawChapters?: ReadonlyArray<LawChapter>
+}
 
 const augmentRegulationList = async (
   regulations: SQLRegulationsList,
   opts: { text?: boolean; lawChapters?: boolean; ministry?: boolean } = {},
 ) => {
-  const chunkSize = 200;
-  const augmentedRegulations: Array<RegulationListItemFull> = [];
-  const today = new Date();
+  const chunkSize = 200
+  const augmentedRegulations: Array<RegulationListItemFull> = []
+  const today = new Date()
 
   for (let i = 0; i < regulations.length; i += chunkSize) {
     // eslint-disable-next-line no-console
-    console.info(`- Augmenting chunk ${i} - ${i + chunkSize}`);
-    const regChunk = regulations.slice(i, i + chunkSize);
+    console.info(`- Augmenting chunk ${i} - ${i + chunkSize}`)
+    const regChunk = regulations.slice(i, i + chunkSize)
 
     const regProms = regChunk.map(async (reg) => {
       const {
@@ -94,23 +94,23 @@ const augmentRegulationList = async (
         effectiveDate,
         repealedDate,
         repealedBeacuseReasons,
-      } = reg;
+      } = reg
 
       const { ministry, lawChapters } = await promiseAll({
         ministry: opts.ministry ? await getMinistry(reg.ministryId) : undefined,
         lawChapters: opts.lawChapters
           ? await getRegulationLawChapters(reg.id)
           : undefined,
-      });
+      })
 
       const textWithoutComments =
         !opts.text || !text
           ? undefined
           : migrated
-          ? eliminateComments(text)
-          : // Pass through bare+dirty text from unmigrated regulations.
-            // people need the text to be searchable even if it isn't perfect
-            text;
+            ? eliminateComments(text)
+            : // Pass through bare+dirty text from unmigrated regulations.
+              // people need the text to be searchable even if it isn't perfect
+              text
 
       const itm: RegulationListItemFull = {
         type,
@@ -125,26 +125,25 @@ const augmentRegulationList = async (
           : !!repealedBeacuseReasons,
         ministry,
         lawChapters,
-      };
-      return itm;
-    });
+      }
+      return itm
+    })
 
+    const augmentedChunk = await Promise.all(regProms)
 
-    const augmentedChunk = await Promise.all(regProms);
-
-    augmentedRegulations.push(...augmentedChunk);
+    augmentedRegulations.push(...augmentedChunk)
   }
 
-  return augmentedRegulations;
-};
+  return augmentedRegulations
+}
 
 // ---------------------------------------------------------------------------
 
 export async function getNewestRegulations(opts: {
-  skip?: number;
-  take?: number;
+  skip?: number
+  take?: number
 }) {
-  const { skip = 0, take = PER_PAGE } = opts;
+  const { skip = 0, take = PER_PAGE } = opts
 
   const regulations = await DB_Regulation.findAll({
     // NOTE: This is leaky - as both title and ministryId might have changed
@@ -163,9 +162,9 @@ export async function getNewestRegulations(opts: {
     ],
     offset: skip,
     limit: take,
-  });
+  })
 
-  return await augmentRegulationList(regulations, { ministry: true });
+  return await augmentRegulationList(regulations, { ministry: true })
 }
 
 const selectChangeColumn = (col: string) => `
@@ -186,7 +185,7 @@ COALESCE(
   ),
   r.${col}
 )
-`;
+`
 
 /**
  * Returns all base regulations
@@ -196,23 +195,23 @@ COALESCE(
  * @returns {SQLRegulationsList | RegulationListItemFull[]}
  */
 export async function getAllRegulations(opts?: {
-  full?: boolean;
-  extra?: boolean;
-  includeRepealed?: boolean;
-  nameFilter?: Array<RegName>;
+  full?: boolean
+  extra?: boolean
+  includeRepealed?: boolean
+  nameFilter?: Array<RegName>
 }) {
-  const { full, extra, includeRepealed, nameFilter } = opts || {};
+  const { full, extra, includeRepealed, nameFilter } = opts || {}
 
-  const whereConds: Array<string> = [];
-  const replacements: BindOrReplacements = {};
+  const whereConds: Array<string> = []
+  const replacements: BindOrReplacements = {}
 
   if (!includeRepealed) {
-    whereConds.push(`r.repealedBeacuseReasons = FALSE`);
-    whereConds.push(`(c.id is null or now() < c.date)`);
+    whereConds.push(`r.repealedBeacuseReasons = FALSE`)
+    whereConds.push(`(c.id is null or now() < c.date)`)
   }
   if (nameFilter) {
-    whereConds.push(`r.name IN (:nameFilter)`);
-    replacements.nameFilter = nameFilter;
+    whereConds.push(`r.name IN (:nameFilter)`)
+    replacements.nameFilter = nameFilter
   }
 
   const sql = `
@@ -236,31 +235,31 @@ export async function getAllRegulations(opts?: {
     left join Task as t on t.regulationId = r.id
     ${whereConds.length ? 'where ' + whereConds.join(' and ') : ''}
     order by r.publishedDate DESC, r.id DESC
-  ;`;
+  ;`
 
   let regulations = await db.query<SQLRegulationsItem>(sql, {
     replacements,
     type: QueryTypes.SELECT,
-  });
+  })
 
   // FIXME: Remove this block once the Reglugerðagrunnur has been cleaned up
   // so that RegulationCancel.regulationId values are unique
   // (i.e. only one cancellation per regulation).
   if (includeRepealed) {
-    const found: Record<string, true | undefined> = {};
+    const found: Record<string, true | undefined> = {}
     regulations = regulations.filter((item) => {
       if (!found[item.name]) {
-        found[item.name] = true;
-        return true;
+        found[item.name] = true
+        return true
       }
-    });
+    })
   }
 
   return await augmentRegulationList(regulations, {
     text: full || extra,
     ministry: full || extra,
     lawChapters: extra,
-  });
+  })
 }
 
 /**
@@ -283,9 +282,9 @@ export async function getRegulationsOptionsList(
     left join RegulationCancel as ch on ch.regulationId = r.id
     left join Task as t on t.regulationId = r.id
     where r.name IN (:nameFilter)
-  ;`;
+  ;`
 
-  const today = new Date();
+  const today = new Date()
 
   const regulationsOptions = await db.query<
     Pick<
@@ -301,7 +300,7 @@ export async function getRegulationsOptionsList(
   >(sql, {
     replacements: { nameFilter },
     type: QueryTypes.SELECT,
-  });
+  })
 
   const opts = regulationsOptions.map(async (opt) => {
     return {
@@ -316,10 +315,10 @@ export async function getRegulationsOptionsList(
           : undefined,
       // LawChapters used for suggesting chapters in admin
       lawChapters: await getRegulationLawChapters(opt.id),
-    };
-  });
+    }
+  })
 
-  const augmentedOpts: RegulationOptionList = await Promise.all(opts);
+  const augmentedOpts: RegulationOptionList = await Promise.all(opts)
 
-  return augmentedOpts;
+  return augmentedOpts
 }

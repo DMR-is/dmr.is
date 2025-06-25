@@ -1,9 +1,9 @@
-import { FastifyPluginCallback } from 'fastify';
+import { FastifyPluginCallback } from 'fastify'
 
-import { getRegulationsYears } from '../db/Regulations';
-import { cacheControl } from '../utils/misc';
+import { getRegulationsYears } from '../db/Regulations'
+import { cacheControl } from '../utils/misc'
 
-const YEARS_TTL = 1;
+const YEARS_TTL = 1
 
 export const yearsRoutes: FastifyPluginCallback = (fastify, opts, done) => {
   /**
@@ -11,10 +11,10 @@ export const yearsRoutes: FastifyPluginCallback = (fastify, opts, done) => {
    * @returns {Array<number>}
    */
   fastify.get('/years', opts, async (request, reply) => {
-    const data = await getRegulationsYears();
-    cacheControl(reply, YEARS_TTL);
-    return reply.send(data);
-  });
+    const data = await getRegulationsYears()
+    cacheControl(reply, YEARS_TTL)
+    return reply.send(data)
+  })
 
-  done();
-};
+  done()
+}
