@@ -5,7 +5,7 @@ function CustomApp({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>Lögbirtingarblaðið - Umsóknarvefur</title>
+        <title>Lögbirtingarblaðið</title>
       </Head>
       <main className="app">
         <Component {...pageProps} />
