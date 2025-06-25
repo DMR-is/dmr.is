@@ -1,6 +1,136 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/types/slug/{slug}": {
+      "get": {
+        "operationId": "getTypeBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TypeModel" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Type"]
+      }
+    },
+    "/api/v1/types/{id}": {
+      "get": {
+        "operationId": "getType",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TypeModel" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Type"]
+      }
+    },
     "/api/v1/types": {
       "get": {
         "operationId": "getTypes",
@@ -57,6 +187,136 @@
         },
         "summary": "",
         "tags": ["Type"]
+      }
+    },
+    "/api/v1/categories/slug/{slug}": {
+      "get": {
+        "operationId": "getCategoryBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategoryDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Category"]
+      }
+    },
+    "/api/v1/categories/{id}": {
+      "get": {
+        "operationId": "getCategory",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategoryDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Category"]
       }
     },
     "/api/v1/categories": {
@@ -188,6 +448,71 @@
         "parameters": [
           {
             "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StatusDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Status"]
+      }
+    },
+    "/api/v1/statuses/slug/{slug}": {
+      "get": {
+        "operationId": "getStatusBySlug",
+        "parameters": [
+          {
+            "name": "slug",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
@@ -686,7 +1011,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertCategory"]
+        "tags": ["AdvertUpdate"]
       }
     },
     "/api/advert/{id}/status/{statusId}": {
@@ -750,7 +1075,105 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertStatus"]
+        "tags": ["AdvertUpdate"]
+      }
+    },
+    "/api/advert/{id}": {
+      "patch": {
+        "operationId": "updateAdvert",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateAdvertDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["AdvertUpdate"]
+      }
+    },
+    "/api/v1/adverts/pdf/{id}": {
+      "get": {
+        "operationId": "getAdvertPdf",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the generated pdf as a binary.",
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["AdvertPdf"]
       }
     },
     "/api/v1/adverts/common/{id}": {
@@ -1192,77 +1615,6 @@
         },
         "summary": "",
         "tags": ["Advert"]
-      },
-      "patch": {
-        "operationId": "updateAdvert",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateAdvertDto" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Advert"]
       }
     },
     "/api/v1/adverts/publish": {
@@ -1401,39 +1753,7 @@
   "servers": [],
   "components": {
     "schemas": {
-      "TypeEnum": { "type": "string", "enum": ["Almenn auglýsing"] },
-      "TypeDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
-          },
-          "title": {
-            "description": "Title of the entity",
-            "example": "Base entity",
-            "x-enumNames": ["CommonAdvert"],
-            "allOf": [{ "$ref": "#/components/schemas/TypeEnum" }]
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "GetTypesDto": {
-        "type": "object",
-        "properties": {
-          "types": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/TypeDto" }
-          }
-        },
-        "required": ["types"]
-      },
+      "TypeModel": { "type": "object", "properties": {} },
       "ApiErrorDto": {
         "type": "object",
         "properties": {
@@ -1470,6 +1790,39 @@
           "details": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["statusCode", "timestamp"]
+      },
+      "TypeEnum": { "type": "string", "enum": ["Almenn auglýsing"] },
+      "TypeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUIDV4 of the entity",
+            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
+          },
+          "title": {
+            "description": "Title of the entity",
+            "example": "Base entity",
+            "x-enumNames": ["CommonAdvert"],
+            "allOf": [{ "$ref": "#/components/schemas/TypeEnum" }]
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the entity",
+            "example": "base-entity"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "GetTypesDto": {
+        "type": "object",
+        "properties": {
+          "types": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TypeDto" }
+          }
+        },
+        "required": ["types"]
       },
       "CategoryDto": {
         "type": "object",
@@ -1815,58 +2168,13 @@
           "e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c"
         ]
       },
-      "UpdateCommonAdvertSignatureDto": {
+      "UpdateAdvertDto": {
         "type": "object",
         "properties": {
-          "name": { "type": "string" },
-          "location": { "type": "string" },
-          "date": { "type": "string" }
+          "scheduledAt": { "type": "string" },
+          "title": { "type": "string" },
+          "html": { "type": "string" }
         }
-      },
-      "UpdateCommonAdvertDto": {
-        "type": "object",
-        "properties": {
-          "caption": { "type": "string" },
-          "html": { "type": "string" },
-          "signature": {
-            "$ref": "#/components/schemas/UpdateCommonAdvertSignatureDto"
-          }
-        }
-      },
-      "AdvertStatusCounterItemDto": {
-        "type": "object",
-        "properties": {
-          "status": { "$ref": "#/components/schemas/StatusDto" },
-          "count": { "type": "number" }
-        },
-        "required": ["status", "count"]
-      },
-      "GetAdvertsStatusCounterDto": {
-        "type": "object",
-        "properties": {
-          "submitted": {
-            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
-          },
-          "readyForPublication": {
-            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
-          },
-          "withdrawn": {
-            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
-          },
-          "rejected": {
-            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
-          },
-          "published": {
-            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
-          }
-        },
-        "required": [
-          "submitted",
-          "readyForPublication",
-          "withdrawn",
-          "rejected",
-          "published"
-        ]
       },
       "AdvertDto": {
         "type": "object",
@@ -1921,6 +2229,59 @@
           "paid"
         ]
       },
+      "UpdateCommonAdvertSignatureDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "location": { "type": "string" },
+          "date": { "type": "string" }
+        }
+      },
+      "UpdateCommonAdvertDto": {
+        "type": "object",
+        "properties": {
+          "caption": { "type": "string" },
+          "html": { "type": "string" },
+          "signature": {
+            "$ref": "#/components/schemas/UpdateCommonAdvertSignatureDto"
+          }
+        }
+      },
+      "AdvertStatusCounterItemDto": {
+        "type": "object",
+        "properties": {
+          "status": { "$ref": "#/components/schemas/StatusDto" },
+          "count": { "type": "number" }
+        },
+        "required": ["status", "count"]
+      },
+      "GetAdvertsStatusCounterDto": {
+        "type": "object",
+        "properties": {
+          "submitted": {
+            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          },
+          "readyForPublication": {
+            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          },
+          "withdrawn": {
+            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          },
+          "rejected": {
+            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          },
+          "published": {
+            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          }
+        },
+        "required": [
+          "submitted",
+          "readyForPublication",
+          "withdrawn",
+          "rejected",
+          "published"
+        ]
+      },
       "GetAdvertsDto": {
         "type": "object",
         "properties": {
@@ -1931,14 +2292,6 @@
           "paging": { "$ref": "#/components/schemas/Paging" }
         },
         "required": ["adverts", "paging"]
-      },
-      "UpdateAdvertDto": {
-        "type": "object",
-        "properties": {
-          "scheduledAt": { "type": "string" },
-          "title": { "type": "string" },
-          "html": { "type": "string" }
-        }
       },
       "PublishAdvertsBody": {
         "type": "object",

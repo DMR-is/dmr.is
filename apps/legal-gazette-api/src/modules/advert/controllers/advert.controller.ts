@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Inject,
-  Param,
-  Patch,
-  Query,
-} from '@nestjs/common'
+import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { PagingQuery } from '@dmr.is/shared/dto'
@@ -17,7 +9,6 @@ import {
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
-  UpdateAdvertDto,
 } from '../dto/advert.dto'
 
 @Controller({
@@ -66,14 +57,5 @@ export class AdvertController {
   @LGResponse({ operationId: 'getAdvertById', type: AdvertDto })
   getAdvertById(@Param('id') id: string) {
     return this.advertService.getAdvertById(id)
-  }
-
-  @Patch(':id')
-  @LGResponse({ operationId: 'updateAdvert', type: AdvertDto })
-  updateAdvert(
-    @Param('id') id: string,
-    @Body() advertUpdateDto: UpdateAdvertDto,
-  ) {
-    return this.advertService.updateAdvert(id, advertUpdateDto)
   }
 }
