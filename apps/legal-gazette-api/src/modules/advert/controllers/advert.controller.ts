@@ -57,6 +57,12 @@ export class AdvertController {
   }
 
   @Get(':id')
+  @LGResponse({ operationId: 'getAdvertPdf', type: AdvertDto })
+  getAdvertPdf(@Param('id') id: string) {
+    return this.advertService.getAdvertById(id)
+  }
+
+  @Get(':id')
   @LGResponse({ operationId: 'getAdvertById', type: AdvertDto })
   getAdvertById(@Param('id') id: string) {
     return this.advertService.getAdvertById(id)
