@@ -1,4 +1,4 @@
-import { Controller, Get, Inject } from '@nestjs/common'
+import { Controller, Get, Param } from '@nestjs/common'
 
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 
@@ -14,13 +14,13 @@ export class TypeController extends BaseEntityController<typeof TypeModel> {
 
   @Get('slug/:slug')
   @LGResponse({ operationId: 'getTypeBySlug', type: TypeModel })
-  async findBySlug(@Inject('slug') slug: string): Promise<TypeModel> {
+  async findBySlug(@Param('slug') slug: string): Promise<TypeModel> {
     return super.findBySlug(slug)
   }
 
   @Get(':id')
   @LGResponse({ operationId: 'getType', type: TypeModel })
-  async findById(@Inject('id') id: string): Promise<TypeModel> {
+  async findById(@Param('id') id: string): Promise<TypeModel> {
     return super.findById(id)
   }
 

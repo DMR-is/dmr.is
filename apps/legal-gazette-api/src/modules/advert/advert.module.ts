@@ -6,11 +6,10 @@ import { CategoryModel } from '../category/category.model'
 import { PdfService } from '../pdf/pdf.service'
 import { StatusModel } from '../status/status.model'
 import { AdvertController } from './controllers/advert.controller'
-import { AdvertCategoryController } from './controllers/advert-category.controller'
 import { CommonAdvertController } from './controllers/advert-common.controller'
 import { AdvertPdfController } from './controllers/advert-pdf.controller'
 import { AdvertPublishController } from './controllers/advert-publish.controller'
-import { AdvertStatusController } from './controllers/advert-status.controller'
+import { AdvertUpdateController } from './controllers/advert-update.controller'
 import { AdvertModel } from './advert.model'
 import { AdvertService } from './advert.service'
 import { IAdvertService } from './advert.service.interface'
@@ -20,8 +19,7 @@ import { IAdvertService } from './advert.service.interface'
     SequelizeModule.forFeature([AdvertModel, StatusModel, CategoryModel]),
   ],
   controllers: [
-    AdvertCategoryController,
-    AdvertStatusController,
+    AdvertUpdateController,
     AdvertPdfController,
     CommonAdvertController,
     AdvertController,

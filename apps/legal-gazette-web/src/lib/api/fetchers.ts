@@ -42,7 +42,7 @@ export const setAdvertCategory = async (
     arg: UpdateAdvertCategoryRequest
   },
 ) => {
-  const client = getLegalGazetteClient('AdvertCategoryApi', 'todo:add-token')
+  const client = getLegalGazetteClient('AdvertUpdateApi', 'todo:add-token')
 
   await client.updateAdvertCategory(arg)
 }
@@ -55,7 +55,7 @@ export const setAdvertStatus = async (
     arg: UpdateAdvertStatusRequest
   },
 ) => {
-  const client = getLegalGazetteClient('AdvertStatusApi', 'todo:add-token')
+  const client = getLegalGazetteClient('AdvertUpdateApi', 'todo:add-token')
 
   await client.updateAdvertStatus(arg)
 }
@@ -86,7 +86,7 @@ export const updateAdvert = async (
   _url: string,
   { arg }: { arg: UpdateAdvertRequest },
 ) => {
-  const client = getLegalGazetteClient('AdvertApi', 'todo:add-token')
+  const client = getLegalGazetteClient('AdvertUpdateApi', 'todo:add-token')
 
   await client.updateAdvert(arg)
 }

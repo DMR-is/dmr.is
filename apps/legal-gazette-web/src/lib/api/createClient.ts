@@ -2,9 +2,8 @@ import { config } from '@dmr.is/api-client/createClient'
 
 import {
   AdvertApi,
-  AdvertCategoryApi,
   AdvertPublishApi,
-  AdvertStatusApi,
+  AdvertUpdateApi,
   CaseApi,
   CategoryApi,
   CommonAdvertApi,
@@ -16,8 +15,7 @@ import {
 const apis = [
   'AdvertApi',
   'AdvertPublishApi',
-  'AdvertStatusApi',
-  'AdvertCategoryApi',
+  'AdvertUpdateApi',
   'CaseApi',
   'CategoryApi',
   'CommonAdvertApi',
@@ -30,8 +28,7 @@ type ApiKey = (typeof apis)[number]
 type ApiClientMap = {
   AdvertApi: AdvertApi
   AdvertPublishApi: AdvertPublishApi
-  AdvertStatusApi: AdvertStatusApi
-  AdvertCategoryApi: AdvertCategoryApi
+  AdvertUpdateApi: AdvertUpdateApi
   CaseApi: CaseApi
   CategoryApi: CategoryApi
   CommonAdvertApi: CommonAdvertApi
@@ -44,8 +41,7 @@ const ApiConstructors: {
 } = {
   AdvertApi,
   AdvertPublishApi,
-  AdvertStatusApi,
-  AdvertCategoryApi,
+  AdvertUpdateApi,
   CaseApi,
   CategoryApi,
   CommonAdvertApi,
