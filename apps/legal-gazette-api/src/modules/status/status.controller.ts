@@ -1,8 +1,8 @@
-import { Controller, Get, NotFoundException, Param } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
+import { Controller, Get, Param } from '@nestjs/common'
 
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 
+import { BaseEntityController } from '../base-entity/base-entity.controller'
 import { GetStatusesDto, StatusDto } from './dto/status.dto'
 import { StatusModel } from './status.model'
 
@@ -10,37 +10,30 @@ import { StatusModel } from './status.model'
   path: 'statuses',
   version: '1',
 })
-export class StatusController {
-  constructor(
-    @InjectModel(StatusModel)
-    private readonly statusModel: typeof StatusModel,
-  ) {}
+export class StatusController extends BaseEntityController<typeof StatusModel> {
+  constructor() {
+    super(StatusModel)
+  }
 
   @Get('/')
   @LGResponse({ operationId: 'getStatuses', type: GetStatusesDto })
-  async getStatuses(): Promise<GetStatusesDto> {
-    const statuses = await this.statusModel.findAll()
-
-    const migrated = this.statusModel.fromModels(statuses)
+  async findAll(): Promise<GetStatusesDto> {
+    const statuses = await super.findAll()
 
     return {
-      statuses: migrated,
+      statuses: statuses,
     }
   }
 
   @Get(':id')
   @LGResponse({ operationId: 'getStatus', type: StatusDto })
-  async getStatusById(@Param('id') id: string): Promise<StatusDto> {
-    const status = await this.statusModel.findByPk(id)
+  async findById(@Param('id') id: string): Promise<StatusDto> {
+    return super.findById(id)
+  }
 
-    if (!status) {
-      throw new NotFoundException(`Status not found`)
-    }
-
-    return {
-      id: status.id,
-      title: status.title,
-      slug: status.slug,
-    }
+  @Get('slug/:slug')
+  @LGResponse({ operationId: 'getStatusBySlug', type: StatusDto })
+  async findBySlug(@Param('slug') slug: string): Promise<StatusDto> {
+    return super.findBySlug(slug)
   }
 }

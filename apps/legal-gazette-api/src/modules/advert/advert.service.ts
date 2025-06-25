@@ -14,7 +14,7 @@ import {
   GetAdvertsStatusCounterDto,
   UpdateAdvertDto,
 } from './dto/advert.dto'
-import { AdvertModel } from './advert.model'
+import { AdvertModel, AdvertModelScopes } from './advert.model'
 import { IAdvertService } from './advert.service.interface'
 
 @Injectable()
@@ -82,10 +82,12 @@ export class AdvertService implements IAdvertService {
       page: query.page,
       pageSize: query.pageSize,
     })
-    const adverts = await this.advertModel.scope('completed').findAndCountAll({
-      limit,
-      offset,
-    })
+    const adverts = await this.advertModel
+      .scope(AdvertModelScopes.COMPLETED)
+      .findAndCountAll({
+        limit,
+        offset,
+      })
 
     const migrated = adverts.rows.map((advert) => advert.fromModel())
     const paging = generatePaging(
@@ -109,7 +111,7 @@ export class AdvertService implements IAdvertService {
       pageSize: query.pageSize,
     })
     const adverts = await this.advertModel
-      .scope(['defaultScope', { method: ['withQuery', query] }])
+      .scope([AdvertModelScopes.DEFAULT, { method: ['withQuery', query] }])
       .findAndCountAll({
         limit,
         offset,
@@ -136,7 +138,7 @@ export class AdvertService implements IAdvertService {
     })
 
     const results = await this.advertModel
-      .scope(['published', { method: ['withQuery', query] }])
+      .scope([AdvertModelScopes.PUBLISHED, { method: ['withQuery', query] }])
       .findAndCountAll({
         limit,
         offset,

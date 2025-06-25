@@ -1,6 +1,4 @@
-import { Model } from 'sequelize-typescript'
-
-import { ApiProperty, IntersectionType } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 
 export class BaseEntityDto {
   @ApiProperty({
@@ -48,55 +46,4 @@ export class DetailedDto {
     nullable: true,
   })
   readonly deletedAt!: string | null
-}
-
-export class BaseEntityDetailedDto extends IntersectionType(
-  BaseEntityDto,
-  DetailedDto,
-) {}
-
-export const baseEntityMigrate = <T extends Model, D extends BaseEntityDto>(
-  model: T,
-): D => {
-  return {
-    id: model.getDataValue('id'),
-    title: model.getDataValue('title'),
-    slug: model.getDataValue('slug'),
-  } as D
-}
-
-export const baseEntityDetailedMigrate = <T extends Model>(
-  model: T,
-  addtionalProps?: string | string[],
-) => {
-  const hasAdditionalProps = addtionalProps !== undefined
-  const addtional: Record<string, any> = {}
-
-  if (addtionalProps) {
-    const isArr = Array.isArray(addtionalProps)
-
-    if (isArr) {
-      addtionalProps.forEach((prop) => {
-        addtional[prop] = model.getDataValue(prop)
-      })
-    }
-  }
-
-  const defaultModel = {
-    id: model.getDataValue('id'),
-    title: model.getDataValue('title'),
-    slug: model.getDataValue('slug'),
-    createdAt: model.getDataValue('createdAt').toISOString(),
-    updatedAt: model.getDataValue('updatedAt').toISOString(),
-    deletedAt: model.getDataValue('deletedAt')
-      ? model.getDataValue('deletedAt').toISOString()
-      : null,
-  }
-
-  return hasAdditionalProps
-    ? {
-        ...defaultModel,
-        ...addtional,
-      }
-    : defaultModel
 }
