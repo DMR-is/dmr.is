@@ -7,7 +7,7 @@
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
-      "dependsOn": ["codegen"],
+
       "options": {
         "commands": ["tsc -p tsconfig.json --noEmit"],
         "cwd": "apps/legal-gazette-public-web",
