@@ -27,7 +27,9 @@ export async function getRegulationsCount() {
 
 export async function getRegulationsYears(): Promise<RegulationYears> {
   const years = await db.query<{ year: Year }>(
-    'SELECT DISTINCT YEAR(publishedDate) AS `year` FROM Regulation ORDER BY `year` DESC',
+    `SELECT DISTINCT EXTRACT(YEAR FROM publishedDate) AS year
+      FROM regulation
+      ORDER BY year DESC`,
     { type: QueryTypes.SELECT },
   );
   return (

@@ -244,10 +244,8 @@ const pdfTmplate = (
         ({ title, text: aptext }) => `
     <section class="appendix">
       <h2 class="appendix__title${fylgiskjalClass(title)}">${
-          regulation.showingDiff
-            ? title
-            : sanitizeTextContent(title as PlainText)
-        }</h2>
+        regulation.showingDiff ? title : sanitizeTextContent(title as PlainText)
+      }</h2>
       <div class="appendix__text">
         ${aptext}
       </div>
@@ -410,7 +408,7 @@ const fetchPdf = (fileKey: string) =>
           toISODateTime(res.headers.get('Last-Modified')) || ('' as const),
       }))
     })
-    .catch(() => ({ contents: false, modifiedDate: '' } as const))
+    .catch(() => ({ contents: false, modifiedDate: '' }) as const)
 
 const s3 = new S3({ region: AWS_REGION_NAME })
 const doLog = !!MEDIA_BUCKET_FOLDER
@@ -453,8 +451,8 @@ const getPrettyPdfFilename = (
   const earlierDateTxt = !earlierDate
     ? ''
     : earlierDate === 'original'
-    ? ' frá upphafi'
-    : ` síðan ${toISODate(earlierDate)}`
+      ? ' frá upphafi'
+      : ` síðan ${toISODate(earlierDate)}`
 
   return `Reglugerð ${nameTxt} (${dateTxt + diffTxt + earlierDateTxt})`
 }

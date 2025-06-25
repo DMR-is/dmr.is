@@ -47,7 +47,7 @@ export const lawChapterRoutes: FastifyPluginCallback = (
     }
 
     cacheControl(res, LAWCHAPTER_TTL);
-    res.send(lawChapters);
+    return res.send(lawChapters);
   });
 
   /**
@@ -76,7 +76,7 @@ export const lawChapterRoutes: FastifyPluginCallback = (
     }
 
     cacheControl(res, LAWCHAPTER_TTL);
-    res.send(lawChapterTree);
+    return res.send(lawChapterTree);
   });
 
   done();

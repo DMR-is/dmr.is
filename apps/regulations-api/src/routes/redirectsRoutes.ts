@@ -14,11 +14,11 @@ export const redirectsRoutes: FastifyPluginCallback = (fastify, opts, done) => {
     try {
       const data = await getRegulationsRedirects();
       cacheControl(res, REDIRECTS_TTL);
-      res.send(data);
+      return res.send(data);
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error('unable to get redirects', e);
-      res.status(500).send();
+      return res.status(500).send();
     }
   });
 

@@ -1,4 +1,4 @@
-@media print {
+export const css = `
   :root {
     --font-family: 'Times New Roman', serif;
     --font-family--monospaced: 'Courier New', monospace;
@@ -83,26 +83,6 @@
 
   /* ======================================================================= */
 
-  @page {
-    size: A4;
-    margin: 2cm calc(2cm - 0.33em); /* --table-padding--h */
-    margin-bottom: 1.5cm;
-
-    @top-left {
-      content: element(regName);
-    }
-    @top-right {
-      content: element(statusBox);
-    }
-    @bottom-left {
-      content: element(footerInfo);
-    }
-    /* @bottom-right {
-      content: 'Bls. ' counter(page) ' af ' counter(pages);
-      font-size: 10pt;
-      font-style: italic;
-    } */
-  }
 
   * {
     font-size: inherit;
@@ -416,6 +396,7 @@
     margin-bottom: 0;
   }
 
+
   /* ======================================================================= */
 
   del {
@@ -487,8 +468,7 @@
     margin-bottom: 1.5em;
   }
 
-  .regulation__text > p:not([align]),
-  .appendix__text > p:not([align]) {
+  .regulation__text > p:not([align]), .appendix__text > p:not([align]) {
     text-indent: 2em;
     text-align: justify;
   }
@@ -519,7 +499,7 @@
   }
 
   /* ======================================================================= */
-
+  
   .signature {
     text-align: center;
     margin-top: 2em;
@@ -546,4 +526,5 @@
   }
   .disclaimer__text {
   }
-}
+
+`

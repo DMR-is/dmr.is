@@ -13,7 +13,7 @@ export const yearsRoutes: FastifyPluginCallback = (fastify, opts, done) => {
   fastify.get('/years', opts, async (request, reply) => {
     const data = await getRegulationsYears();
     cacheControl(reply, YEARS_TTL);
-    reply.send(data);
+    return reply.send(data);
   });
 
   done();

@@ -77,7 +77,7 @@ export const fileUploadRoutes: FastifyPluginCallback = (
         (fileObj.transforms as Array<MulterS3StorageFile> | undefined)?.[0] ||
         fileObj;
 
-      reply.send({ location: FILE_SERVER + '/' + uploadInfo.key });
+      return reply.send({ location: FILE_SERVER + '/' + uploadInfo.key });
     },
   );
 

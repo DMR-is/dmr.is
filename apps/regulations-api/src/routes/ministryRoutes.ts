@@ -47,7 +47,7 @@ export const ministryRoutes: FastifyPluginCallback = (fastify, opts, done) => {
       return ministry;
     });
     cacheControl(res, MINISTRY_TTL);
-    res.send(ministries);
+    return res.send(ministries);
   });
 
   done();

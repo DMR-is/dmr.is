@@ -91,7 +91,7 @@ export const regulationsRoutes: FastifyPluginCallback = (
     const totalPages = Math.ceil(totalItems / PER_PAGE);
 
     cacheControl(res, NEWEST_TTL);
-    res.send({
+    return res.send({
       page,
       perPage: PER_PAGE,
       totalPages,
@@ -103,9 +103,9 @@ export const regulationsRoutes: FastifyPluginCallback = (
   // ---------------------------------------------------------------------------
 
   // Use-case: Fetch "gildandi stofnreglugerðir" full text
-  // for Ísland.is's general-purpo site search index.
+  // for Ísland.is's general-purpose site search index.
   fastify.get('/regulations/all/current/full', opts, async (req, res) => {
-    let data = loadData('backup-json/all-current-full.json');
+    let data = await loadData('backup-json/all-current-full.json');
     if (!data) {
       console.info('Fetching data from db');
       try {
@@ -118,7 +118,7 @@ export const regulationsRoutes: FastifyPluginCallback = (
     } else {
       console.info('Returning all-current-full data from file');
     }
-    res.send(data);
+    return res.send(data);
   });
 
   // Use-case Fetch *all* regluations, full text to feed into
@@ -146,7 +146,7 @@ export const regulationsRoutes: FastifyPluginCallback = (
       } else {
         console.info('Returning all-extra data from file');
       }
-      res.send(data);
+      return res.send(data);
     },
   );
 
@@ -166,7 +166,7 @@ export const regulationsRoutes: FastifyPluginCallback = (
     } else {
       console.info('Returning all-current-minimal data from file');
     }
-    res.send(data);
+    return res.send(data);
   });
 
   /**
@@ -209,7 +209,7 @@ export const regulationsRoutes: FastifyPluginCallback = (
       }
 
       cacheControl(res, OPTIONSLIST_TTL);
-      res.send(optionsList);
+      return res.send(optionsList);
     },
   );
 
