@@ -81,7 +81,7 @@ export const AdvertDisplay = ({ disclosure }: Props) => {
                       }}
                     >
                       <strong>
-                        {currentCase.advertDepartment.title} - Útgáfud.:{' '}
+                        {currentCase.advertDepartment.title} - Útgáfudagur:{' '}
                         {formatDate(new Date(), 'd. MMMM yyyy')}
                       </strong>
                     </p>
