@@ -27,7 +27,7 @@ const apis = [
 
 type ApiKey = (typeof apis)[number]
 
-type ApiClientMap = {
+export type ApiClientMap = {
   AdvertApi: AdvertApi
   AdvertPublishApi: AdvertPublishApi
   AdvertUpdateApi: AdvertUpdateApi
@@ -65,7 +65,7 @@ export const getLegalGazetteClient = <T extends ApiKey>(
 
   if (typeof window === 'undefined' || !cached || cached.token !== token) {
     const ClientClass = ApiConstructors[key]
-    const client = new ClientClass(config(Configuration, token))
+    const client = new ClientClass(config(Configuration, token, 'LGAdmin'))
 
     //@ts-expect-error - TypeScript doesn't know about the dynamic nature of ApiClientMap
     apiClients[key] = { client, token }
