@@ -2,14 +2,8 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
-const protectedRoutes = [
-  '/',
-  '/yfirflokkar',
-  '/tegundir',
-  '/ritstjorn',
-  '/utgafa',
-  '/heildaryfirlit',
-]
+import { Route } from './lib/constants'
+import { getLoginRedirectUrl } from './lib/utils'
 
 export default async function middleware(req: NextRequest) {
   const token = await getToken({ req })
@@ -18,12 +12,11 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  const isProtectedRoute = protectedRoutes.includes(req.nextUrl.pathname)
-  if (!isProtectedRoute) {
-    return NextResponse.next()
+  const isProtectedRoute = Route.LOGIN !== req.nextUrl.pathname
+  if (isProtectedRoute && !token) {
+    const fullUrl = getLoginRedirectUrl(req.nextUrl.pathname)
+    return NextResponse.redirect(new URL(fullUrl, req.url))
   }
-
-  const isAdmin = token?.role?.slug === 'ritstjori'
 
   return NextResponse.next()
 }

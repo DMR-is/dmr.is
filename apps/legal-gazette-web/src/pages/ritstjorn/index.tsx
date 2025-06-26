@@ -6,6 +6,8 @@ import { getServerSession } from 'next-auth'
 import { useState } from 'react'
 import { useIntl } from 'react-intl'
 
+import { deleteUndefined } from '@dmr.is/utils/client'
+
 import {
   Button,
   Drawer,
@@ -21,7 +23,11 @@ import { RitstjornTabs, Route, Routes } from '../../lib/constants'
 import { ritstjornMessages } from '../../lib/messages/ritstjorn/messages'
 import { ritstjornTabMessages } from '../../lib/messages/ritstjorn/tabs'
 import { MOCK_FILTERS } from '../../lib/mocks'
-import { loginRedirect, mapQueryToRitstjornTabs, routesToBreadcrumbs } from '../../lib/utils'
+import {
+  loginRedirect,
+  mapQueryToRitstjornTabs,
+  routesToBreadcrumbs,
+} from '../../lib/utils'
 import { authOptions } from '../api/auth/[...nextauth]'
 
 const Hero = dynamic(() => import('@dmr.is/ui/lazy/components/Hero/Hero'), {
@@ -171,6 +177,8 @@ export const getServerSideProps: GetServerSideProps = async ({
   }
 
   return {
-    props: {},
+    props: deleteUndefined({
+      session,
+    }),
   }
 }
