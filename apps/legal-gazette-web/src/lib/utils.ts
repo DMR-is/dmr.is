@@ -123,12 +123,12 @@ export const flattenMessages = (
 }
 
 export const loginRedirect = (callbackUrl?: string) => {
-  let fullUrl: string = Route.Login
+  let fullUrl: string = Route.LOGIN
 
   const isRelativeUrl = callbackUrl && callbackUrl.startsWith('/')
 
   if (callbackUrl && isRelativeUrl && callbackUrl !== '/') {
-    fullUrl = `${Route.Login}?callbackUrl=${callbackUrl}`
+    fullUrl = `${Route.LOGIN}?callbackUrl=${callbackUrl}`
   }
 
   return {
