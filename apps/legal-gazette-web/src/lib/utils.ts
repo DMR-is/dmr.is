@@ -127,13 +127,9 @@ export const loginRedirect = (callbackUrl?: string) => {
 
   const isRelativeUrl = callbackUrl && callbackUrl.startsWith('/')
 
-
   if (callbackUrl && isRelativeUrl && callbackUrl !== '/') {
     fullUrl = `${Route.Login}?callbackUrl=${callbackUrl}`
   }
-
-  console.log('fullUrl', fullUrl)
-
 
   return {
     redirect: {
