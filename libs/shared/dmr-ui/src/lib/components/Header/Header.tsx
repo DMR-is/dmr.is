@@ -1,4 +1,13 @@
+import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+
+import { useEffect } from 'react'
+
+import { forceLogin, useLogOut } from '@dmr.is/auth/useLogOut'
+
 import {
+  Box,
+  DropdownMenu,
   GridColumn,
   GridContainer,
   GridRow,
@@ -18,7 +27,18 @@ export type HeaderProps = {
 
 export const Header = ({ controlPanel, variant = 'blue' }: HeaderProps) => {
   const { lg } = useBreakpoint()
+  const { data: session, status } = useSession()
+  const logOut = useLogOut()
+  const pathName = usePathname()
 
+  useEffect(() => {
+    if (session?.invalid === true && status === 'authenticated') {
+      // Make sure to log out if the session is invalid
+      // This is just a front-end logout for the user's convenience
+      // The session is invalidated on the server side
+      forceLogin(pathName ?? '/innskraning')
+    }
+  }, [session?.invalid, status, pathName])
   return (
     <Hidden print={true}>
       <header className={styles.header({ variant })}>
@@ -39,6 +59,29 @@ export const Header = ({ controlPanel, variant = 'blue' }: HeaderProps) => {
 
                   {controlPanel && <ControlPanel {...controlPanel} />}
                 </Inline>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="flexEnd"
+                  width="full"
+                >
+                  {session?.user ? (
+                    <DropdownMenu
+                      title={session.user.name ?? ''}
+                      icon="chevronDown"
+                      menuLabel={'Notandi'}
+                      items={[
+                        {
+                          title: 'Útskrá',
+                          onClick: (e) => {
+                            e.preventDefault()
+                            logOut()
+                          },
+                        },
+                      ]}
+                    />
+                  ) : null}
+                </Box>
               </Inline>
             </GridColumn>
           </GridRow>

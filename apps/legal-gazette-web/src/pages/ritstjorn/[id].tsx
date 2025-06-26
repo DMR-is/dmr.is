@@ -1,5 +1,6 @@
 import { GetServerSideProps } from 'next'
 import dynamic from 'next/dynamic'
+import { getServerSession } from 'next-auth'
 
 import { useIntl } from 'react-intl'
 
@@ -21,7 +22,8 @@ import { CaseDetailedDto } from '../../gen/fetch'
 import { getLegalGazetteClient } from '../../lib/api/createClient'
 import { Route, Routes } from '../../lib/constants'
 import { ritstjornSingleMessages } from '../../lib/messages/ritstjorn/single'
-import { routesToBreadcrumbs } from '../../lib/utils'
+import { loginRedirect, routesToBreadcrumbs } from '../../lib/utils'
+import { authOptions } from '../api/auth/[...nextauth]'
 
 // we need this if we replace the breadcrumbs items so they match the server-side
 const HeroNoSRR = dynamic(
@@ -92,16 +94,29 @@ export default function SingleCase({ initalCase, intialAdvertId }: Props) {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({
+  req,
+  res,
+  resolvedUrl,
   params,
   query,
 }) => {
-  const client = getLegalGazetteClient('CaseApi', 'todo:add-token')
+  const session = await getServerSession(req, res, authOptions)
+
+  if (!session) {
+    return loginRedirect(resolvedUrl)
+  }
+
+  const client = getLegalGazetteClient('CaseApi', session.idToken)
 
   if (!params?.id) return { notFound: true }
 
   const initalCase = await client.getCase({
     id: Array.isArray(params.id) ? params.id[0] : params.id,
   })
+
+  if (!initalCase) {
+    return { notFound: true }
+  }
 
   if (!query.tab) {
     const advertId = initalCase.adverts[0]?.id
@@ -114,7 +129,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   }
 
   return {
-    props: {
+    props: deleteUndefined({
       layoutProps: {
         headerVariant: 'white',
       },
@@ -124,6 +139,7 @@ export const getServerSideProps: GetServerSideProps = async ({
           ? query.tab[0]
           : query.tab
         : initalCase.adverts[0].id,
-    },
+      session,
+    }),
   }
 }

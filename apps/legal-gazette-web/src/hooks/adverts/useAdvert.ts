@@ -1,7 +1,6 @@
 import useSWR from 'swr'
 
 import { GetAdvertByIdRequest } from '../../gen/fetch'
-import { getLegalGazetteClient } from '../../lib/api/createClient'
 import { fetcher } from '../../lib/api/fetchers'
 
 type UseAdvertProps = {
@@ -9,11 +8,9 @@ type UseAdvertProps = {
 }
 
 export const useAdvert = ({ params }: UseAdvertProps = {}) => {
-  const client = getLegalGazetteClient('AdvertApi', 'todo:add-token')
-
   const { data, isLoading, error, isValidating, mutate } = useSWR(
     params?.id ? ['getAdvertById', params] : null,
-    ([_key, params]) => fetcher({ func: () => client.getAdvertById(params) }),
+    ([_key, params]) => fetcher((client) => client.getAdvertById(params), 'AdvertApi'),
     {
       keepPreviousData: true,
       refreshInterval: 0,

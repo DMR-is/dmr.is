@@ -10,6 +10,7 @@ import {
   Configuration,
   StatusApi,
   TypeApi,
+  UsersApi,
 } from '../../gen/fetch'
 
 const apis = [
@@ -21,11 +22,12 @@ const apis = [
   'CommonAdvertApi',
   'StatusApi',
   'TypeApi',
+  'UsersApi',
 ] as const
 
 type ApiKey = (typeof apis)[number]
 
-type ApiClientMap = {
+export type ApiClientMap = {
   AdvertApi: AdvertApi
   AdvertPublishApi: AdvertPublishApi
   AdvertUpdateApi: AdvertUpdateApi
@@ -34,6 +36,7 @@ type ApiClientMap = {
   CommonAdvertApi: CommonAdvertApi
   StatusApi: StatusApi
   TypeApi: TypeApi
+  UsersApi: UsersApi
 }
 
 const ApiConstructors: {
@@ -47,6 +50,7 @@ const ApiConstructors: {
   CommonAdvertApi,
   StatusApi,
   TypeApi,
+  UsersApi,
 }
 
 const apiClients: Partial<{
@@ -61,7 +65,8 @@ export const getLegalGazetteClient = <T extends ApiKey>(
 
   if (typeof window === 'undefined' || !cached || cached.token !== token) {
     const ClientClass = ApiConstructors[key]
-    const client = new ClientClass(config(Configuration, token))
+    const client = new ClientClass(config(Configuration, token, 'LGAdmin'))
+
     //@ts-expect-error - TypeScript doesn't know about the dynamic nature of ApiClientMap
     apiClients[key] = { client, token }
     return client
