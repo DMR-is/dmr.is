@@ -19,7 +19,7 @@ export class UsersService implements IUsersService {
 
     if (!user) {
       throw new NotFoundException(
-        `User with nationalId ${nationalId} not found`,
+        `User not found`,
       )
     }
 
