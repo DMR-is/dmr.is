@@ -20,6 +20,7 @@ import { AdvertSidebar } from '../../components/Form/FormSidebar'
 import { CaseProvider } from '../../context/case-context'
 import { CaseDetailedDto } from '../../gen/fetch'
 import { getLegalGazetteClient } from '../../lib/api/createClient'
+import { serverFetcher } from '../../lib/api/fetchers'
 import { Route, Routes } from '../../lib/constants'
 import { ritstjornSingleMessages } from '../../lib/messages/ritstjorn/single'
 import { loginRedirect, routesToBreadcrumbs } from '../../lib/utils'
@@ -110,9 +111,11 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   if (!params?.id) return { notFound: true }
 
-  const initalCase = await client.getCase({
-    id: Array.isArray(params.id) ? params.id[0] : params.id,
-  })
+  const { data: initalCase } = await serverFetcher(() =>
+    client.getCase({
+      id: Array.isArray(params.id) ? params.id[0] : (params.id as string),
+    }),
+  )
 
   if (!initalCase) {
     return { notFound: true }

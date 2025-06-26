@@ -1,6 +1,7 @@
 import { getSession } from 'next-auth/react'
 
 import {
+  ApiErrorDto,
   DeleteCaseRequest,
   GetCategoriesRequest,
   PublishAdvertsRequest,
@@ -10,6 +11,34 @@ import {
   UpdateCommonAdvertRequest,
 } from '../../gen/fetch'
 import { ApiClientMap, getLegalGazetteClient } from './createClient'
+
+type SafeReturnType<T> =
+  | {
+      data: T
+      error: null
+    }
+  | {
+      data: null
+      error: ApiErrorDto
+    }
+
+export const serverFetcher = async <T>(
+  func: () => Promise<T>,
+): Promise<SafeReturnType<T>> => {
+  try {
+    const res = await func()
+    return {
+      data: res,
+      error: null,
+    }
+  } catch (error) {
+    const err = await (error as Response).json()
+    return {
+      data: null,
+      error: err as ApiErrorDto,
+    }
+  }
+}
 
 type SWRFetcherArgs<T extends keyof ApiClientMap, ReturnType> = (
   client: ApiClientMap[T],

@@ -8,8 +8,8 @@ import { identityServerConfig } from '@dmr.is/auth/identityServerConfig'
 import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
 import { getLogger } from '@dmr.is/logging'
 
-import { UserDto } from '../../../gen/fetch'
 import { getLegalGazetteClient } from '../../../lib/api/createClient'
+import { serverFetcher } from '../../../lib/api/fetchers'
 
 type ErrorWithPotentialReqRes = Error & {
   request?: unknown
@@ -31,12 +31,20 @@ async function authorize(nationalId?: string, idToken?: string) {
   const dmrClient = getLegalGazetteClient('UsersApi', idToken)
 
   try {
-    const member = await dmrClient.getMyUser()
+    const { data: member, error } = await serverFetcher(() =>
+      dmrClient.getMyUser(),
+    )
     if (!member) {
+      const logger = getLogger('authorize')
+
+      logger.error('Failure authenticating', {
+        error: error,
+        category: LOGGING_CATEGORY,
+      })
       throw new Error('Member not found')
     }
 
-    return member as UserDto
+    return member
   } catch (e) {
     const error = e as ErrorWithPotentialReqRes
 
@@ -47,12 +55,6 @@ async function authorize(nationalId?: string, idToken?: string) {
     if (error.response) {
       delete error.response
     }
-
-    const logger = getLogger('authorize')
-    logger.error('Failure authenticating', {
-      error: error as Error,
-      category: LOGGING_CATEGORY,
-    })
 
     return null
   }
