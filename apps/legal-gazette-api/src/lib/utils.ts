@@ -21,18 +21,24 @@ export const mapIndexToVersion = (index: number): AdvertVersionEnum => {
   }
 }
 
-export const isToday = (
-  firstDate: Date | string,
-  secondDate: Date | string,
-): boolean => {
-  const first = new Date(firstDate)
-  const second = new Date(secondDate)
+export const isToday = (dateToCheck: Date | string): boolean => {
+  const first = new Date(dateToCheck)
+  const today = new Date()
 
-  return (
-    first.getFullYear() === second.getFullYear() &&
-    first.getMonth() === second.getMonth() &&
-    first.getDate() === second.getDate()
-  )
+  first.setHours(0, 0, 0, 0) // Reset time to midnight for comparison
+  today.setHours(0, 0, 0, 0) // Reset time
+
+  return first.getTime() === today.getTime()
+}
+
+export const isTodayOrInThePast = (dateToCheck: Date | string): boolean => {
+  const date = new Date(dateToCheck)
+  const today = new Date()
+
+  today.setHours(0, 0, 0, 0) // Reset time to midnight for comparison
+  date.setHours(0, 0, 0, 0) // Reset time to midnight for comparison
+
+  return date <= today
 }
 
 export const validateAdvertStatus = (instance: AdvertModel): void => {
