@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { isToday } from '../../lib/utils'
 import {
   AdvertModel,
   AdvertModelScopes,
@@ -39,8 +40,27 @@ export class PublishingService {
       return
     }
 
+    let numberOfSkippedAdverts = 0
+    let numberOfPublishedAdverts = 0
     advertToBePublished.forEach(async (advert) => {
-      await advert.publishAdvert()
+      const scheduledDate = new Date(advert.scheduledAt)
+      const today = new Date()
+      if (!isToday(scheduledDate, today)) {
+        numberOfSkippedAdverts++
+        return
+      }
+
+      numberOfPublishedAdverts++
     })
+
+    this.logger.info(
+      `Publishing task completed: ${numberOfPublishedAdverts} adverts published, ${numberOfSkippedAdverts} adverts skipped`,
+      {
+        skipped: numberOfSkippedAdverts,
+        published: numberOfPublishedAdverts,
+        context: LOGGER_CONTEXT,
+        timestamp: new Date().toISOString(),
+      },
+    )
   }
 }
