@@ -1,5 +1,7 @@
 import { Op } from 'sequelize'
 import {
+  BeforeBulkUpdate,
+  BeforeUpdate,
   BelongsTo,
   Column,
   DataType,
@@ -255,7 +257,7 @@ export class AdvertModel extends BaseModel<
     defaultValue: StatusIdEnum.SUBMITTED,
   })
   @ForeignKey(() => StatusModel)
-  statusId!: string
+  statusId!: StatusIdEnum
 
   @Column({
     type: DataType.DATE,
@@ -333,6 +335,28 @@ export class AdvertModel extends BaseModel<
 
   @HasOne(() => CommonAdvertModel, { foreignKey: 'advertId' })
   commonAdvert?: CommonAdvertModel
+
+  @BeforeUpdate
+  @BeforeBulkUpdate
+  static async validateUpdate(instance: AdvertModel): Promise<void> {
+    const allowedStatuses = [
+      StatusIdEnum.SUBMITTED,
+      StatusIdEnum.READY_FOR_PUBLICATION,
+    ]
+
+    if (allowedStatuses.includes(instance.statusId)) {
+      return
+    }
+
+    this.logger.error(
+      `Invalid status update for advert ID ${instance.id}. Status ID: ${instance.statusId}`,
+      {
+        context: 'AdvertModel',
+      },
+    )
+
+    throw new BadRequestException('Advert cannot be updated in this status')
+  }
 
   static async countByStatus(
     statusId: StatusIdEnum,
