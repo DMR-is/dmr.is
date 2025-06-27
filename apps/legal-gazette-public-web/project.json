@@ -7,7 +7,7 @@
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
-
+      "dependsOn": ["codegen"],
       "options": {
         "commands": ["tsc -p tsconfig.json --noEmit"],
         "cwd": "apps/legal-gazette-public-web",
@@ -50,7 +50,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "curl http://localhost:4100/swagger-json > clientConfig.json",
+          "curl http://localhost:4100/public-swagger/json > clientConfig.json",
           "prettier --write clientConfig.json"
         ],
         "parallel": true,
@@ -62,7 +62,7 @@
       "options": {
         "commands": [
           "rm -rf apps/legal-gazette-public-web/src/gen/fetch",
-          "yarn openapi-generator -o apps/legal-gazette-public-web/src/gen/fetch -i apps/legal-gazette-public-web/clientConfig.patched.json"
+          "yarn openapi-generator -o apps/legal-gazette-public-web/src/gen/fetch -i apps/legal-gazette-public-web/clientConfig.json"
         ]
       },
       "outputs": ["{projectRoot}/gen/fetch"]

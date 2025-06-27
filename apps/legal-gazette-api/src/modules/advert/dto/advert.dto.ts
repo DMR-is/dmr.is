@@ -141,6 +141,40 @@ export class GetAdvertsQueryDto extends PagingQuery {
   @IsArray()
   @IsEnum(StatusIdEnum, { each: true })
   statusId?: StatusIdEnum[]
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  typeId?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  @Transform(({ value }) => (value ? new Date(value).toISOString() : null))
+  dateFrom?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  @Transform(({ value }) => (value ? new Date(value).toISOString() : null))
+  dateTo?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  search?: string
 }
 
 export class AdvertStatusCounterItemDto {
