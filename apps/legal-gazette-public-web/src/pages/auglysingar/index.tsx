@@ -21,6 +21,14 @@ const SearchSidebar = dynamic(
   },
 )
 
+const AdvertSearchResults = dynamic(
+  () => import('../../components/advert-search-results/AdvertSearchResults'),
+  {
+    ssr: false,
+    loading: () => <SkeletonLoader repeat={5} height={64} space={3} />,
+  },
+)
+
 type Props = {
   typeOptions: { value: string; label: string }[]
   categoryOptions: { value: string; label: string }[]
@@ -55,6 +63,7 @@ export function AuglysingarPage({ typeOptions, categoryOptions }: Props) {
               Um útgáfu Lögbirtingablað gilda lög um Stjórnartíðindi og
               Lögbirtingablað nr. 15/2005.
             </Text>
+            <AdvertSearchResults />
           </Stack>
         </GridColumn>
       </GridRow>
