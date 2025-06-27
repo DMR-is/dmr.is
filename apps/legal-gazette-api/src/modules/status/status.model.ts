@@ -1,4 +1,3 @@
-import { Op } from 'sequelize'
 import { HasMany } from 'sequelize-typescript'
 
 import { BadRequestException, NotFoundException } from '@nestjs/common'

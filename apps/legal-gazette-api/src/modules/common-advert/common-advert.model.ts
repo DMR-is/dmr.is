@@ -1,4 +1,5 @@
 import {
+  BeforeUpdate,
   BelongsTo,
   Column,
   DataType,
@@ -6,9 +7,12 @@ import {
   ForeignKey,
 } from 'sequelize-typescript'
 
+import { BadRequestException } from '@nestjs/common'
+
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { validateAdvertStatus } from '../../lib/utils'
 import { AdvertModel } from '../advert/advert.model'
 import { CommonAdvertDto } from './dto/common-advert.dto'
 
@@ -80,7 +84,18 @@ export class CommonAdvertModel extends BaseModel<
   signatureDate!: Date
 
   @BelongsTo(() => AdvertModel, { foreignKey: 'advertId' })
-  advert!: AdvertModel
+  advert?: AdvertModel
+
+  @BeforeUpdate
+  static validateAdvertStatus(instance: CommonAdvertModel): void {
+    if (!instance.advert?.statusId) {
+      this.logger.warn('Cannot update common advert without advert status id')
+
+      throw new BadRequestException('Cannot update advert in this status')
+    }
+
+    validateAdvertStatus(instance.advert)
+  }
 
   static fromModel(model: CommonAdvertModel): CommonAdvertDto {
     try {
@@ -95,9 +110,6 @@ export class CommonAdvertModel extends BaseModel<
     } catch (error) {
       this.logger.warn(
         'fromModel failed for CommonAdvertModel, did you include everything?',
-        {
-          context: 'CommonAdvertModel.fromModel',
-        },
       )
       throw error
     }

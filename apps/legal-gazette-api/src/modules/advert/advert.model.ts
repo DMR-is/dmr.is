@@ -1,5 +1,7 @@
-import { Op } from 'sequelize'
+import { Op, UpdateOptions } from 'sequelize'
 import {
+  BeforeBulkUpdate,
+  BeforeUpdate,
   BelongsTo,
   Column,
   DataType,
@@ -9,11 +11,16 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
-import { BadRequestException, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { validateAdvertStatus } from '../../lib/utils'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
 import {
@@ -255,7 +262,7 @@ export class AdvertModel extends BaseModel<
     defaultValue: StatusIdEnum.SUBMITTED,
   })
   @ForeignKey(() => StatusModel)
-  statusId!: string
+  statusId!: StatusIdEnum
 
   @Column({
     type: DataType.DATE,
@@ -334,6 +341,11 @@ export class AdvertModel extends BaseModel<
   @HasOne(() => CommonAdvertModel, { foreignKey: 'advertId' })
   commonAdvert?: CommonAdvertModel
 
+  @BeforeUpdate
+  static validateUpdate(instance: AdvertModel) {
+    validateAdvertStatus(instance)
+  }
+
   static async countByStatus(
     statusId: StatusIdEnum,
   ): Promise<AdvertStatusCounterItemDto> {
@@ -371,9 +383,11 @@ export class AdvertModel extends BaseModel<
   }
 
   static async publish(model: AdvertModel) {
-    this.logger.info(`Publishing advert`, {
+    const now = new Date().toISOString()
+    this.logger.info(`Publishing advert at ${now}`, {
       context: 'AdvertModel',
       advertId: model.id,
+      timestamp: now,
     })
 
     await model.update({

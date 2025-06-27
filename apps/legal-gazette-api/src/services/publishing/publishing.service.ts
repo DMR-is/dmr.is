@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { isTodayOrInThePast } from '../../lib/utils'
 import {
   AdvertModel,
   AdvertModelScopes,
@@ -19,7 +20,7 @@ export class PublishingService {
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_11PM)
-  async publishAdverts() {
+  async publishTask() {
     const now = new Date()
 
     this.logger.info(`Running publishing task at ${now.toISOString()}`, {
@@ -39,8 +40,26 @@ export class PublishingService {
       return
     }
 
+    let numberOfSkippedAdverts = 0
+    let numberOfPublishedAdverts = 0
     advertToBePublished.forEach(async (advert) => {
+      if (!isTodayOrInThePast(advert.scheduledAt)) {
+        numberOfSkippedAdverts++
+        return
+      }
+
       await advert.publishAdvert()
+      numberOfPublishedAdverts++
     })
+
+    this.logger.info(
+      `Publishing task completed: ${numberOfPublishedAdverts} adverts published, ${numberOfSkippedAdverts} adverts skipped`,
+      {
+        skipped: numberOfSkippedAdverts,
+        published: numberOfPublishedAdverts,
+        context: LOGGER_CONTEXT,
+        timestamp: new Date().toISOString(),
+      },
+    )
   }
 }

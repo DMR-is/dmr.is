@@ -38,7 +38,7 @@ export class CategoryModel extends BaseEntityModel {
 
   static async setAdvertCategory(advertId: string, categoryId: string) {
     const advert = await AdvertModel.unscoped().findByPk(advertId, {
-      attributes: ['id'],
+      attributes: ['id', 'statusId'],
     })
 
     if (!advert) {
