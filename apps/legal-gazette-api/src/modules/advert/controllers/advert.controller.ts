@@ -1,6 +1,7 @@
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { IAdvertService } from '../advert.service.interface'
@@ -47,9 +48,9 @@ export class AdvertController {
     return this.advertService.getAdverts(query)
   }
 
-  @Get(':id')
+  @Get(':id/pdf')
   @LGResponse({ operationId: 'getAdvertPdf', type: AdvertDto })
-  getAdvertPdf(@Param('id') id: string) {
+  getAdvertPdf(@Param('id', new UUIDValidationPipe()) id: string) {
     return this.advertService.getAdvertById(id)
   }
 

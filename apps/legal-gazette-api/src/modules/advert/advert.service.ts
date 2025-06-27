@@ -159,7 +159,9 @@ export class AdvertService implements IAdvertService {
   }
 
   async getAdvertById(id: string): Promise<AdvertDto> {
-    const advert = await this.advertModel.findByPk(id)
+    const advert = await this.advertModel
+      .scope(AdvertModelScopes.ALL)
+      .findByPk(id)
 
     if (!advert) {
       throw new NotFoundException(`Advert with id ${id} not found`)
