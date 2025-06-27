@@ -1,9 +1,12 @@
 import { GetServerSideProps } from 'next'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
+import { getServerSession } from 'next-auth'
 
 import { useState } from 'react'
 import { useIntl } from 'react-intl'
+
+import { deleteUndefined } from '@dmr.is/utils/client'
 
 import {
   Button,
@@ -20,7 +23,12 @@ import { RitstjornTabs, Route, Routes } from '../../lib/constants'
 import { ritstjornMessages } from '../../lib/messages/ritstjorn/messages'
 import { ritstjornTabMessages } from '../../lib/messages/ritstjorn/tabs'
 import { MOCK_FILTERS } from '../../lib/mocks'
-import { mapQueryToRitstjornTabs, routesToBreadcrumbs } from '../../lib/utils'
+import {
+  loginRedirect,
+  mapQueryToRitstjornTabs,
+  routesToBreadcrumbs,
+} from '../../lib/utils'
+import { authOptions } from '../api/auth/[...nextauth]'
 
 const Hero = dynamic(() => import('@dmr.is/ui/lazy/components/Hero/Hero'), {
   ssr: false,
@@ -130,7 +138,18 @@ export default function Ritstjorn() {
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ query }) => {
+export const getServerSideProps: GetServerSideProps = async ({
+  req,
+  res,
+  resolvedUrl,
+  query,
+}) => {
+  const session = await getServerSession(req, res, authOptions)
+
+  if (!session) {
+    return loginRedirect(resolvedUrl)
+  }
+
   const selectedTab = query.tab
   const allowedTabs = Object.values(RitstjornTabs)
 
@@ -158,6 +177,8 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   }
 
   return {
-    props: {},
+    props: deleteUndefined({
+      session,
+    }),
   }
 }

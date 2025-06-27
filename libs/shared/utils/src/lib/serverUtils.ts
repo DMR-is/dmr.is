@@ -640,5 +640,5 @@ export const getPublicationTemplate = (
     locale: is,
   })
 
-  return `<p align="center" style="margin-top: 1.5em;"><strong>${department} - Útgáfud.: ${formatted}</strong></p>`
+  return `<p align="center" style="margin-top: 1.5em;"><strong>${department} — Útgáfudagur: ${formatted}</strong></p>`
 }

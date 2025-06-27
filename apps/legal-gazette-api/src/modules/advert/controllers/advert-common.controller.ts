@@ -4,12 +4,14 @@ import {
   NotFoundException,
   Param,
   Patch,
+  UseGuards,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
+import { AdvertUpdateGuard } from '../../../guards/advert-update.guard'
 import { CommonAdvertModel } from '../../common-advert/common-advert.model'
 import { CommonAdvertDto } from '../../common-advert/dto/common-advert.dto'
 import { UpdateCommonAdvertDto } from '../../common-advert/dto/update-common-advert.dto'
@@ -19,6 +21,7 @@ import { AdvertModel } from '../advert.model'
   path: 'adverts/common',
   version: '1',
 })
+@UseGuards(AdvertUpdateGuard)
 export class CommonAdvertController {
   constructor(
     @InjectModel(AdvertModel)

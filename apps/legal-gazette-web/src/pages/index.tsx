@@ -1,10 +1,14 @@
+import { GetServerSideProps } from 'next'
+import { getServerSession } from 'next-auth'
+
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 import { ImagePanel } from '@dmr.is/ui/components/ImagePanel/ImagePanel'
 import { LinkCard } from '@dmr.is/ui/components/LinkCard/LinkCard'
-import {PieChart} from '@dmr.is/ui/components/PieChart/PieChart'
+import { PieChart } from '@dmr.is/ui/components/PieChart/PieChart'
 import { Section } from '@dmr.is/ui/components/Section/Section'
-import {TrackerTable} from '@dmr.is/ui/components/Tables/TrackerTable'
-import {Wrapper} from '@dmr.is/ui/components/Wrapper/Wrapper'
+import { TrackerTable } from '@dmr.is/ui/components/Tables/TrackerTable'
+import { Wrapper } from '@dmr.is/ui/components/Wrapper/Wrapper'
+import { deleteUndefined } from '@dmr.is/utils/client'
 
 import {
   GridColumn,
@@ -14,6 +18,8 @@ import {
 } from '@island.is/island-ui/core'
 
 import { Route } from '../lib/constants'
+import { loginRedirect } from '../lib/utils'
+import { authOptions } from './api/auth/[...nextauth]'
 
 export default function PlayGroundPage() {
   return (
@@ -159,4 +165,22 @@ export default function PlayGroundPage() {
       </Section>
     </>
   )
+}
+
+export const getServerSideProps: GetServerSideProps = async ({
+  req,
+  res,
+  resolvedUrl,
+}) => {
+  const session = await getServerSession(req, res, authOptions)
+
+  if (!session) {
+    return loginRedirect(resolvedUrl)
+  }
+
+  return {
+    props: deleteUndefined({
+      session,
+    }),
+  }
 }

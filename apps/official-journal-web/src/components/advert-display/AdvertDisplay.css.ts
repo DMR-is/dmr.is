@@ -10,6 +10,11 @@ export const bodyText = style({})
 regulationContentStyling(bodyText)
 regulationTitleStyling(bodyText)
 
+export const departmentDate = style({
+  marginTop: '3.5em',
+  textAlign: 'center',
+})
+
 export const modalBackground = style({
   height: '100vh',
   display: 'grid',

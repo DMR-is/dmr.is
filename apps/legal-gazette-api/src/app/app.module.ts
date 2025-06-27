@@ -31,6 +31,7 @@ import { StatusModule } from '../modules/status/status.module'
 import { TypeModel } from '../modules/type/type.model'
 import { TypeModule } from '../modules/type/type.module'
 import { UserModel } from '../modules/users/users.model'
+import { UsersModule } from '../modules/users/users.module'
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { UserModel } from '../modules/users/users.model'
     CaseModule,
     CommonApplicationModule,
     AdvertModule,
+    UsersModule,
     {
       module: AuthModule,
       global: true,

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { AdvertUpdateGuard } from '../../guards/advert-update.guard'
 import { PublishingService } from '../../services/publishing/publishing.service'
 import { CategoryModel } from '../category/category.model'
 import { PdfService } from '../pdf/pdf.service'
@@ -26,6 +27,7 @@ import { IAdvertService } from './advert.service.interface'
     AdvertPublishController,
   ],
   providers: [
+    AdvertUpdateGuard,
     PublishingService,
     PdfService,
     {

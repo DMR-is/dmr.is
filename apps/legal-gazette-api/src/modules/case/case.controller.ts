@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common'
 
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import {
   CaseDetailedDto,
@@ -32,7 +33,9 @@ export class CaseController {
 
   @Get(':id')
   @LGResponse({ operationId: 'getCase', type: CaseDetailedDto })
-  getCase(@Param('id') id: string): Promise<CaseDetailedDto> {
+  getCase(
+    @Param('id', new UUIDValidationPipe()) id: string,
+  ): Promise<CaseDetailedDto> {
     return this.caseService.getCase(id)
   }
 
