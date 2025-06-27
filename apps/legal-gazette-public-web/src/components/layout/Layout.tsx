@@ -3,7 +3,7 @@ import Head from 'next/head'
 import { IntlProvider } from 'react-intl'
 import { Provider } from 'reakit'
 
-import { Header } from '@dmr.is/ui/components/Header/Header'
+import { HeaderNoAuth } from '@dmr.is/ui/components/HeaderNoAuth/HeaderNoAuth'
 import { PageLoader } from '@dmr.is/ui/components/PageLoader/PageLoader'
 
 import { Footer, Page, ToastContainer } from '@island.is/island-ui/core'
@@ -58,7 +58,7 @@ export const Layout = ({ children, showFooter = false }: LayoutProps) => {
               )
             })}
           </Head>
-          <Header variant="white" />
+          <HeaderNoAuth variant="white" />
           <main>
             {children}
             <ToastContainer />
