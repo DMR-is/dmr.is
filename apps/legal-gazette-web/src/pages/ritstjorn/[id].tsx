@@ -1,6 +1,7 @@
 import { GetServerSideProps } from 'next'
 import dynamic from 'next/dynamic'
 import { getServerSession } from 'next-auth'
+import { parseAsString } from 'next-usequerystate'
 
 import { useIntl } from 'react-intl'
 
@@ -20,6 +21,7 @@ import { AdvertSidebar } from '../../components/Form/FormSidebar'
 import { CaseProvider } from '../../context/case-context'
 import { CaseDetailedDto } from '../../gen/fetch'
 import { getLegalGazetteClient } from '../../lib/api/createClient'
+import { serverFetcher } from '../../lib/api/fetchers'
 import { Route, Routes } from '../../lib/constants'
 import { ritstjornSingleMessages } from '../../lib/messages/ritstjorn/single'
 import { loginRedirect, routesToBreadcrumbs } from '../../lib/utils'
@@ -108,11 +110,15 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const client = getLegalGazetteClient('CaseApi', session.idToken)
 
-  if (!params?.id) return { notFound: true }
+  const caseId = parseAsString.parseServerSide(params?.id)
 
-  const initalCase = await client.getCase({
-    id: Array.isArray(params.id) ? params.id[0] : params.id,
-  })
+  if (!caseId) return { notFound: true }
+
+  const { data: initalCase } = await serverFetcher(() =>
+    client.getCase({
+      id: caseId,
+    }),
+  )
 
   if (!initalCase) {
     return { notFound: true }
