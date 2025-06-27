@@ -1,7 +1,7 @@
 import { parseAsString, useQueryState } from 'next-usequerystate'
 
 import debounce from 'lodash/debounce'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 
 import {
   Box,
@@ -37,12 +37,16 @@ export const SearchSidebar = ({ categoryOptions, typeOptions }: Props) => {
   const [startDate, setStartDate] = useQueryState('startDate', parseAsString)
   const [endDate, setEndDate] = useQueryState('endDate', parseAsString)
 
+  const [timestamp, setTimestamp] = useState(new Date().toISOString())
+
   const clearFilters = () => {
     setSearchTerm('')
     setType('')
     setCategory('')
     setStartDate('')
     setEndDate('')
+
+    setTimestamp(new Date().toISOString())
   }
 
   const debouncedSetSearchTerm = useCallback(
@@ -64,6 +68,7 @@ export const SearchSidebar = ({ categoryOptions, typeOptions }: Props) => {
           <Stack space={2}>
             <Text variant="h5">Leit</Text>
             <Input
+              key={timestamp + 'search'}
               max={255}
               name="search"
               placeholder="Leit í lögbirtingablaðinu"
@@ -72,7 +77,7 @@ export const SearchSidebar = ({ categoryOptions, typeOptions }: Props) => {
             />
           </Stack>
         </Box>
-        <Box padding={3}>
+        <Box padding={3} key={timestamp}>
           <Stack space={2}>
             <Box marginBottom={1}>
               <Inline justifyContent="spaceBetween">

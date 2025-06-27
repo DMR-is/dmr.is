@@ -10,7 +10,6 @@ import {
   AlertMessage,
   SkeletonLoader,
   Stack,
-  Text,
   toast,
 } from '@island.is/island-ui/core'
 
@@ -22,6 +21,8 @@ export const AdvertSearchResults = () => {
     type: parseAsString,
     category: parseAsString,
     search: parseAsString,
+    startDate: parseAsString,
+    endDate: parseAsString,
     page: parseAsInteger,
     pageSize: parseAsInteger,
   })
@@ -31,8 +32,11 @@ export const AdvertSearchResults = () => {
     () =>
       getAdverts({
         categoryId: searchParams.category ? searchParams.category : undefined,
+        typeId: searchParams.type ? searchParams.type : undefined,
         page: searchParams.page ? searchParams.page : 1,
         pageSize: searchParams.pageSize ? searchParams.pageSize : 10,
+        dateFrom: searchParams.startDate ? searchParams.startDate : undefined,
+        dateTo: searchParams.endDate ? searchParams.endDate : undefined,
       }),
     {
       onError: () => toast.error('Ekki tókst að sækja auglýsingar'),

@@ -214,6 +214,46 @@ export enum AdvertModelScopes {
         categoryId: query.categoryId,
       })
     }
+
+    if (query?.typeId) {
+      Object.assign(whereClause, {
+        typeId: query.typeId,
+      })
+    }
+
+    if (query?.dateFrom && !query?.dateTo) {
+      Object.assign(whereClause, {
+        publishedAt: {
+          [Op.gte]: new Date(query.dateFrom),
+        },
+      })
+    }
+
+    if (query?.dateTo && !query?.dateFrom) {
+      Object.assign(whereClause, {
+        publishedAt: {
+          [Op.lte]: new Date(query.dateTo),
+        },
+      })
+    }
+
+    if (query?.dateFrom && query?.dateTo) {
+      Object.assign(whereClause, {
+        publishedAt: {
+          [Op.between]: [new Date(query.dateFrom), new Date(query.dateTo)],
+        },
+      })
+    }
+
+    if (query?.search) {
+      Object.assign(whereClause, {
+        [Op.or]: [
+          { title: { [Op.iLike]: `%${query.search}%` } },
+          { publicationNumber: { [Op.iLike]: `%${query.search}%` } },
+        ],
+      })
+    }
+
     return {
       include: [
         StatusModel,
