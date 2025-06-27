@@ -36,6 +36,11 @@ export const SearchSidebar = ({ categoryOptions, typeOptions }: Props) => {
   const [category, setCategory] = useQueryState('category', parseAsString)
   const [startDate, setStartDate] = useQueryState('startDate', parseAsString)
   const [endDate, setEndDate] = useQueryState('endDate', parseAsString)
+  const [_page, setPage] = useQueryState('page', parseAsString.withDefault('1'))
+  const [_pageSize, setPageSize] = useQueryState(
+    'pageSize',
+    parseAsString.withDefault('10'),
+  )
 
   const [timestamp, setTimestamp] = useState(new Date().toISOString())
 
@@ -45,6 +50,8 @@ export const SearchSidebar = ({ categoryOptions, typeOptions }: Props) => {
     setCategory('')
     setStartDate('')
     setEndDate('')
+    setPage('1')
+    setPageSize('10')
 
     setTimestamp(new Date().toISOString())
   }

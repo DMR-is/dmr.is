@@ -8,6 +8,7 @@ import useSWR from 'swr'
 
 import {
   AlertMessage,
+  Pagination,
   SkeletonLoader,
   Stack,
   toast,
@@ -17,7 +18,7 @@ import { getAdverts } from '../../lib/fetchers'
 import { AdvertCard } from '../cards/AdvertCard'
 
 export const AdvertSearchResults = () => {
-  const [searchParams, _setSearchParams] = useQueryStates({
+  const [searchParams, setSearchParams] = useQueryStates({
     type: parseAsString,
     category: parseAsString,
     search: parseAsString,
@@ -63,7 +64,27 @@ export const AdvertSearchResults = () => {
       {data && data.adverts.length > 0 ? (
         data.adverts.map((advert, i) => <AdvertCard advert={advert} key={i} />)
       ) : (
-        <Stack space={2}>Engar auglýsingar fundust</Stack>
+        <AlertMessage
+          type="info"
+          title="Engar auglýsingar fundust"
+          message="Kannski þarf að breyta síun"
+        />
+      )}
+      {data && data.paging && data.paging.totalItems > 0 && (
+        <Pagination
+          page={data.paging.page}
+          itemsPerPage={data.paging.pageSize}
+          totalItems={data.paging.totalItems}
+          totalPages={data.paging.totalPages}
+          renderLink={(page, className, children) => (
+            <button
+              className={className}
+              onClick={() => setSearchParams({ page })}
+            >
+              {children}
+            </button>
+          )}
+        />
       )}
     </Stack>
   )

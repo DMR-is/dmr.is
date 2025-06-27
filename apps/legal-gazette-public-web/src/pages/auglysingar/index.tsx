@@ -55,7 +55,7 @@ export function AuglysingarPage({ typeOptions, categoryOptions }: Props) {
             typeOptions={typeOptions}
           />
         </GridColumn>
-        <GridColumn span={['12/12', '12/12', '9/12']}>
+        <GridColumn span={['12/12', '12/12', '8/12']}>
           <Stack space={2}>
             <Breadcrumbs items={breadcrumbItems} />
             <Text variant="h2">Lögbirtingablaðið</Text>
