@@ -1,6 +1,7 @@
 import { GetServerSideProps } from 'next'
 import dynamic from 'next/dynamic'
 import { getServerSession } from 'next-auth'
+import { parseAsString } from 'next-usequerystate'
 
 import { useIntl } from 'react-intl'
 
@@ -109,11 +110,13 @@ export const getServerSideProps: GetServerSideProps = async ({
 
   const client = getLegalGazetteClient('CaseApi', session.idToken)
 
-  if (!params?.id) return { notFound: true }
+  const caseId = parseAsString.parseServerSide(params?.id)
+
+  if (!caseId) return { notFound: true }
 
   const { data: initalCase } = await serverFetcher(() =>
     client.getCase({
-      id: Array.isArray(params.id) ? params.id[0] : (params.id as string),
+      id: caseId,
     }),
   )
 
