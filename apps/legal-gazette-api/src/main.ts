@@ -12,6 +12,7 @@ import { AdvertModule } from './modules/advert/advert.module'
 import { AdvertController } from './modules/advert/controllers/advert.controller'
 import { CategoryModule } from './modules/category/category.module'
 import { CommonApplicationModule } from './modules/common-application/common-application.module'
+import { TypeModule } from './modules/type/type.module'
 import { openApi } from './openApi'
 
 async function bootstrap() {
@@ -64,7 +65,7 @@ async function bootstrap() {
   })
 
   const publicDocument = SwaggerModule.createDocument(app, openApi, {
-    include: [AdvertModule],
+    include: [AdvertModule, CategoryModule, TypeModule],
     deepScanRoutes: true,
     autoTagControllers: false,
   })

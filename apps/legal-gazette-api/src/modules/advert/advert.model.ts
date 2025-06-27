@@ -214,9 +214,20 @@ export enum AdvertModelScopes {
         categoryId: query.categoryId,
       })
     }
-
     return {
+      include: [
+        StatusModel,
+        CategoryModel,
+        TypeModel,
+        CommonAdvertModel,
+        {
+          model: CaseModel.unscoped(),
+          attributes: ['caseNumber'],
+          required: true,
+        },
+      ],
       where: whereClause,
+      order: [['scheduledAt', 'ASC']],
     }
   },
 }))

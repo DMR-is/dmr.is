@@ -17,6 +17,8 @@ export interface IAdvertService {
 
   getAdvertById(id: string): Promise<AdvertDto>
 
+  getPublishedAdvertById(id: string): Promise<AdvertDto>
+
   getAdvertsCount(): Promise<GetAdvertsStatusCounterDto>
 
   updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDto>
