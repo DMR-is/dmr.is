@@ -6,7 +6,7 @@ import { LegalGazetteEvents } from '@dmr.is/legal-gazette/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AuthService, IAuthService } from '@dmr.is/modules'
 
-import { CaseModel } from '../case/case.model'
+import { CaseModel } from '../../case/case.model'
 import {
   CommonApplicationUpdateStateEvent,
   SubmitCommonApplicationDto,

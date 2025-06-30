@@ -11,7 +11,7 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CreateCommonAdvertDto } from '../../common-advert/dto/create-common-advert.dto'
+import { CreateCommonAdvertDto } from '../../../common-advert/dto/create-common-advert.dto'
 
 enum CommonApplicationEventsEnum {
   APPROVE = 'APPROVE',
