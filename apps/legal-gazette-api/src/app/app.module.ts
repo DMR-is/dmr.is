@@ -28,6 +28,8 @@ import { CommonApplicationModule } from '../modules/common-application/common-ap
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
 import { StatusModel } from '../modules/status/status.model'
 import { StatusModule } from '../modules/status/status.module'
+import { SubscriberModel } from '../modules/subscribers/subscriber.model'
+import { SubscriberModule } from '../modules/subscribers/subscriber.module'
 import { TypeModel } from '../modules/type/type.model'
 import { TypeModule } from '../modules/type/type.module'
 import { UserModel } from '../modules/users/users.model'
@@ -61,6 +63,7 @@ import { UsersModule } from '../modules/users/users.module'
             CaseModel,
             CommonAdvertModel,
             AdvertModel,
+            SubscriberModel,
           ],
         }),
       ],
@@ -74,6 +77,7 @@ import { UsersModule } from '../modules/users/users.module'
     CaseModule,
     CommonApplicationModule,
     AdvertModule,
+    SubscriberModule,
     UsersModule,
     {
       module: AuthModule,

@@ -3,5 +3,10 @@ import { getDmrClient as getDmrClientFromLib } from '@dmr.is/api-client/createCl
 import { Configuration, LegalGazettePublicAPIApi } from '../gen/fetch'
 
 export const getClient = (idToken: string) => {
-  return getDmrClientFromLib(LegalGazettePublicAPIApi, Configuration, idToken)
+  return getDmrClientFromLib(
+    LegalGazettePublicAPIApi,
+    Configuration,
+    idToken,
+    'LGWeb',
+  )
 }
