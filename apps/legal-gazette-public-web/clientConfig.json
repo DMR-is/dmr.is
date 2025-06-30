@@ -384,7 +384,7 @@
         "tags": ["Legal gazette - public API"]
       }
     },
-    "/api/advert/{id}/category/{categoryId}": {
+    "/api/v1/adverts/{id}/category/{categoryId}": {
       "patch": {
         "operationId": "updateAdvertCategory",
         "parameters": [
@@ -448,7 +448,7 @@
         "tags": ["Legal gazette - public API"]
       }
     },
-    "/api/advert/{id}/status/{statusId}": {
+    "/api/v1/adverts/{id}/status/{statusId}": {
       "patch": {
         "operationId": "updateAdvertStatus",
         "parameters": [
@@ -512,7 +512,7 @@
         "tags": ["Legal gazette - public API"]
       }
     },
-    "/api/advert/{id}": {
+    "/api/v1/adverts/{id}": {
       "patch": {
         "operationId": "updateAdvert",
         "parameters": [
@@ -531,6 +531,69 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Legal gazette - public API"]
+      },
+      "get": {
+        "operationId": "getAdvertById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -1099,71 +1162,6 @@
         "tags": ["Legal gazette - public API"]
       }
     },
-    "/api/v1/adverts/{id}": {
-      "get": {
-        "operationId": "getAdvertById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
     "/api/v1/adverts/publish": {
       "post": {
         "operationId": "publishAdverts",
@@ -1280,6 +1278,65 @@
         "summary": "",
         "tags": ["Legal gazette - public API"]
       }
+    },
+    "/api/v1/subscribers/me": {
+      "get": {
+        "operationId": "getMySubscriber",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SubscriberDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - public API"]
+      }
     }
   },
   "info": {
@@ -1291,6 +1348,9 @@
   "tags": [{ "name": "Legal gazette - public API" }],
   "servers": [],
   "components": {
+    "securitySchemes": {
+      "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
+    },
     "schemas": {
       "TypeModel": { "type": "object", "properties": {} },
       "ApiErrorDto": {
@@ -1595,6 +1655,15 @@
           "advertIds": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["advertIds"]
+      },
+      "SubscriberDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "isActive": { "type": "boolean" }
+        },
+        "required": ["id", "nationalId", "isActive"]
       }
     }
   }
