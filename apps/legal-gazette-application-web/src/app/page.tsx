@@ -1,3 +1,7 @@
-export default function Index() {
-  return <h2>Umsóknarvefur Lögbirtingablaðins</h2>
+import { redirect } from 'next/navigation'
+
+import { PageRoutes } from '../lib/constants'
+
+export default function Frontpage() {
+  return redirect(PageRoutes.APPLICATIONS)
 }
