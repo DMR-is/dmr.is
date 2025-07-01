@@ -15,6 +15,15 @@ export class CLSMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
+    if (req.method === 'GET') {
+      this.logger.debug('Skipping transaction for GET request', {
+        context: 'CLSMiddleware',
+        method: req.method,
+      })
+      // Skip transaction for GET and HEAD requests
+      return next()
+    }
+
     const nameSpaceHeader = req.headers['x-namespace']
 
     if (!nameSpaceHeader) {
