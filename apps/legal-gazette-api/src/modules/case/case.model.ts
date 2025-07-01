@@ -28,8 +28,6 @@ import { TypeIdEnum, TypeModel } from '../type/type.model'
 import { UserModel } from '../users/users.model'
 import { CaseDetailedDto, CaseDto } from './dto/case.dto'
 
-const LOGGING_CONTEXT = 'CaseModel'
-
 type CaseAttributes = {
   caseNumber: string
   applicationId: string | null
@@ -113,9 +111,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   assignedUser?: UserModel
 
   static async createCommonAdvert(body: CreateCommonAdvertInternalDto) {
-    this.logger.info('Creating case for common advert', {
-      context: LOGGING_CONTEXT,
-    })
+    this.logger.info('Creating case for common advert')
 
     const channels =
       body.channels?.map((ch) => ({
@@ -168,7 +164,6 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
 
     this.logger.info('Marked adverts as withdrawn', {
       caseId: instance.id,
-      context: LOGGING_CONTEXT,
       advertIds: adverts.map((advert) => advert.id),
     })
   }
@@ -207,7 +202,6 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     } catch (error) {
       this.logger.debug(
         `fromModel failed for CaseModel, did you include everything?`,
-        { context: LOGGING_CONTEXT },
       )
       throw error
     }
@@ -239,7 +233,6 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     } catch (error) {
       this.logger.debug(
         `fromModelDetailed failed for CaseModel, did you include everything?`,
-        { context: LOGGING_CONTEXT },
       )
       throw error
     }

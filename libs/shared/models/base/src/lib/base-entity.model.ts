@@ -37,22 +37,6 @@ export class BaseEntityModel<
   })
   slug!: string
 
-  // static fromModel(model: BaseEntityModel): ReturnDtoType {
-  //   try {
-  //     return {
-  //       id: model.id,
-  //       title: model.title,
-  //       slug: model.slug,
-  //     }
-  //   } catch (error) {
-  //     this.logger.debug(
-  //       `fromModel failed from model ${this.constructor.name}`,
-  //       error,
-  //     )
-  //     throw error
-  //   }
-  // }
-
   fromModel(): ReturnDtoType {
     return {
       id: this.id,

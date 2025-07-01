@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
@@ -105,7 +110,23 @@ import { UsersModule } from '../modules/users/users.module'
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LegalGazetteNamespaceMiddleware).forRoutes('*')
-    consumer.apply(CLSMiddleware).forRoutes('*')
+    consumer
+      .apply(LegalGazetteNamespaceMiddleware)
+      .exclude({ path: '*', method: RequestMethod.GET })
+      .forRoutes(
+        { path: '*', method: RequestMethod.POST },
+        { path: '*', method: RequestMethod.DELETE },
+        { path: '*', method: RequestMethod.PATCH },
+        { path: '*', method: RequestMethod.PUT },
+      )
+    consumer
+      .apply(CLSMiddleware)
+      .exclude({ path: '*', method: RequestMethod.GET })
+      .forRoutes(
+        { path: '*', method: RequestMethod.POST },
+        { path: '*', method: RequestMethod.DELETE },
+        { path: '*', method: RequestMethod.PATCH },
+        { path: '*', method: RequestMethod.PUT },
+      )
   }
 }
