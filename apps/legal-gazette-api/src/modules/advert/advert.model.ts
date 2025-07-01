@@ -1,6 +1,5 @@
-import { Op, UpdateOptions } from 'sequelize'
+import { Op } from 'sequelize'
 import {
-  BeforeBulkUpdate,
   BeforeUpdate,
   BelongsTo,
   Column,
@@ -11,11 +10,7 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
-import {
-  BadRequestException,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
