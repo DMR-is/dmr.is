@@ -19,17 +19,16 @@ import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { AdvertModel } from '../modules/advert/advert.model'
 import { AdvertModule } from '../modules/advert/advert.module'
+import { CommonApplicationModule } from '../modules/applications/common/common-application.module'
+import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
 import { CaseModel } from '../modules/case/case.model'
 import { CaseModule } from '../modules/case/case.module'
 import { CategoryModel } from '../modules/category/category.model'
-import { CategoryModule } from '../modules/category/category.module'
 import { CommonAdvertModel } from '../modules/common-advert/common-advert.model'
-import { CommonApplicationModule } from '../modules/applications/common/common-application.module'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
+import { CourtDistrictModel } from '../modules/court-district/court-district.model'
 import { StatusModel } from '../modules/status/status.model'
-import { StatusModule } from '../modules/status/status.module'
 import { TypeModel } from '../modules/type/type.model'
-import { TypeModule } from '../modules/type/type.module'
 import { UserModel } from '../modules/users/users.model'
 import { UsersModule } from '../modules/users/users.module'
 
@@ -56,6 +55,7 @@ import { UsersModule } from '../modules/users/users.module'
             UserModel,
             TypeModel,
             CategoryModel,
+            CourtDistrictModel,
             StatusModel,
             CommunicationChannelModel,
             CaseModel,
@@ -68,9 +68,7 @@ import { UsersModule } from '../modules/users/users.module'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    TypeModule,
-    CategoryModule,
-    StatusModule,
+    BaseEntityModule,
     CaseModule,
     CommonApplicationModule,
     AdvertModule,

@@ -10,6 +10,7 @@ export enum LegalGazetteModels {
   COMMUNICATION_CHANNEL = 'communication_channel',
   ADVERT = 'advert',
   COMMON_ADVERT = 'common_advert',
+  COURT_DISTRICT = 'court_district',
 }
 
 export enum LegalGazetteEvents {
