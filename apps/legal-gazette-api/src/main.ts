@@ -9,9 +9,8 @@ import { logger } from '@dmr.is/logging'
 
 import { AppModule } from './app/app.module'
 import { AdvertModule } from './modules/advert/advert.module'
-import { AdvertController } from './modules/advert/controllers/advert.controller'
+import { CommonApplicationModule } from './modules/applications/common/common-application.module'
 import { CategoryModule } from './modules/category/category.module'
-import { CommonApplicationModule } from './modules/applications/common-application/common-application.module'
 import { TypeModule } from './modules/type/type.module'
 import { openApi } from './openApi'
 
