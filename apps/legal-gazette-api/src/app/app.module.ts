@@ -20,6 +20,8 @@ import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 import { AdvertModel } from '../modules/advert/advert.model'
 import { AdvertModule } from '../modules/advert/advert.module'
 import { CommonApplicationModule } from '../modules/applications/common/common-application.module'
+import { BankruptcyAdvertModel } from '../modules/bankruptcy-advert/models/bankruptcy-advert.model'
+import { BankruptcyLocationModel } from '../modules/bankruptcy-advert/models/bankruptcy-location.model'
 import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
 import { CaseModel } from '../modules/case/case.model'
 import { CaseModule } from '../modules/case/case.module'
@@ -61,6 +63,8 @@ import { UsersModule } from '../modules/users/users.module'
             CaseModel,
             CommonAdvertModel,
             AdvertModel,
+            BankruptcyLocationModel,
+            BankruptcyAdvertModel,
           ],
         }),
       ],
