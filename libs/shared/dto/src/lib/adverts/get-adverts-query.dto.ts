@@ -52,6 +52,16 @@ export class GetAdvertsQueryParams {
   department?: string | string[]
 
   @ApiProperty({
+    name: 'year',
+    description: 'One or more year (signature year) to filter by.',
+    type: [String],
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  year?: string | string[]
+
+  @ApiProperty({
     name: 'type',
     description: 'One or more types (by `slug`) to filter on.',
     type: [String],
