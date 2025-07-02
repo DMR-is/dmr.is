@@ -9,9 +9,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
-import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middleware'
-import { LEGAL_GAZETTE_NAMESPACE } from '@dmr.is/legal-gazette/constants'
 import { LoggingModule } from '@dmr.is/logging'
 import { CLSMiddleware } from '@dmr.is/middleware'
 import { AuthModule, HealthModule } from '@dmr.is/modules'
@@ -55,7 +54,7 @@ import { UsersModule } from '../modules/users/users.module'
             Number(process.env.DB_PORT) ||
             Number(process.env.LEGAL_GAZETTE_DB_PORT) ||
             5434,
-          clsNamespace: LEGAL_GAZETTE_NAMESPACE,
+          clsNamespace: CLS_NAMESPACE,
           debugLog: true,
           autoLoadModels: false,
           models: [
@@ -109,24 +108,7 @@ import { UsersModule } from '../modules/users/users.module'
   ],
 })
 export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(LegalGazetteNamespaceMiddleware)
-      .exclude({ path: '*', method: RequestMethod.GET })
-      .forRoutes(
-        { path: '*', method: RequestMethod.POST },
-        { path: '*', method: RequestMethod.DELETE },
-        { path: '*', method: RequestMethod.PATCH },
-        { path: '*', method: RequestMethod.PUT },
-      )
-    consumer
-      .apply(CLSMiddleware)
-      .exclude({ path: '*', method: RequestMethod.GET })
-      .forRoutes(
-        { path: '*', method: RequestMethod.POST },
-        { path: '*', method: RequestMethod.DELETE },
-        { path: '*', method: RequestMethod.PATCH },
-        { path: '*', method: RequestMethod.PUT },
-      )
+  async configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CLSMiddleware).forRoutes('*')
   }
 }

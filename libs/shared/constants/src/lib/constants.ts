@@ -1,3 +1,4 @@
+export const CLS_NAMESPACE = 'dmr.is:transaction'
 export const DEFAULT_PAGE_SIZE = 10
 
 export const DEFAULT_PAGE_NUMBER = 1
