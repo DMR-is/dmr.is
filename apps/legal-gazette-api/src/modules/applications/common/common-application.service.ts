@@ -63,6 +63,9 @@ export class CommonApplicationService implements ICommonApplicationService {
 
     await this.caseModel.createCommonAdvert({
       applicationId: body.applicationId,
+      involvedPartyNationalId: body.institution
+        ? body.institution.nationalId
+        : body.actor.nationalId,
       caption: body.caption,
       categoryId: body.categoryId,
       publishingDates: body.publishingDates,

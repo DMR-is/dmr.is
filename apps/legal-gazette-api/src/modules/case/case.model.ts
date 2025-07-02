@@ -37,6 +37,7 @@ type CaseAttributes = {
 }
 
 type CaseCreateAttributes = {
+  involvedPartyNationalId: string
   applicationId?: string
   caseId?: string
   communicationChannels?: CommunicationChannelCreateAttributes[]
@@ -101,6 +102,13 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   })
   caseNumber!: string
 
+  @Column({
+    type: DataType.TEXT,
+    field: 'involved_party_national_id',
+    allowNull: false,
+  })
+  involvedPartyNationalId!: string
+
   @HasMany(() => CommunicationChannelModel, 'caseId')
   communicationChannels!: CommunicationChannelModel[]
 
@@ -124,6 +132,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
       {
         applicationId: body.applicationId,
         communicationChannels: channels,
+        involvedPartyNationalId: body.involvedPartyNationalId,
         adverts: body.publishingDates.map((date, i) => ({
           categoryId: body.categoryId,
           typeId: TypeIdEnum.COMMON_APPLICATION,
