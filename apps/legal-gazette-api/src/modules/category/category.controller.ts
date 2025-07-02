@@ -15,7 +15,8 @@ import { CategoryModel } from './category.model'
   version: '1',
 })
 export class CategoryController extends BaseEntityController<
-  typeof CategoryModel
+  typeof CategoryModel,
+  CategoryDto
 > {
   constructor() {
     super(CategoryModel)

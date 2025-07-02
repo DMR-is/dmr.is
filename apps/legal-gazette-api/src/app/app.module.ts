@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
@@ -19,17 +24,18 @@ import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { AdvertModel } from '../modules/advert/advert.model'
 import { AdvertModule } from '../modules/advert/advert.module'
+import { CommonApplicationModule } from '../modules/applications/common/common-application.module'
+import { BankruptcyAdvertModel } from '../modules/bankruptcy-advert/models/bankruptcy-advert.model'
+import { BankruptcyLocationModel } from '../modules/bankruptcy-advert/models/bankruptcy-location.model'
+import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
 import { CaseModel } from '../modules/case/case.model'
 import { CaseModule } from '../modules/case/case.module'
 import { CategoryModel } from '../modules/category/category.model'
-import { CategoryModule } from '../modules/category/category.module'
 import { CommonAdvertModel } from '../modules/common-advert/common-advert.model'
-import { CommonApplicationModule } from '../modules/common-application/common-application.module'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
+import { CourtDistrictModel } from '../modules/court-district/court-district.model'
 import { StatusModel } from '../modules/status/status.model'
-import { StatusModule } from '../modules/status/status.module'
 import { TypeModel } from '../modules/type/type.model'
-import { TypeModule } from '../modules/type/type.module'
 import { UserModel } from '../modules/users/users.model'
 import { UsersModule } from '../modules/users/users.module'
 
@@ -56,11 +62,14 @@ import { UsersModule } from '../modules/users/users.module'
             UserModel,
             TypeModel,
             CategoryModel,
+            CourtDistrictModel,
             StatusModel,
             CommunicationChannelModel,
             CaseModel,
             CommonAdvertModel,
             AdvertModel,
+            BankruptcyLocationModel,
+            BankruptcyAdvertModel,
           ],
         }),
       ],
@@ -68,9 +77,7 @@ import { UsersModule } from '../modules/users/users.module'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    TypeModule,
-    CategoryModule,
-    StatusModule,
+    BaseEntityModule,
     CaseModule,
     CommonApplicationModule,
     AdvertModule,
@@ -103,7 +110,23 @@ import { UsersModule } from '../modules/users/users.module'
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LegalGazetteNamespaceMiddleware).forRoutes('*')
-    consumer.apply(CLSMiddleware).forRoutes('*')
+    consumer
+      .apply(LegalGazetteNamespaceMiddleware)
+      .exclude({ path: '*', method: RequestMethod.GET })
+      .forRoutes(
+        { path: '*', method: RequestMethod.POST },
+        { path: '*', method: RequestMethod.DELETE },
+        { path: '*', method: RequestMethod.PATCH },
+        { path: '*', method: RequestMethod.PUT },
+      )
+    consumer
+      .apply(CLSMiddleware)
+      .exclude({ path: '*', method: RequestMethod.GET })
+      .forRoutes(
+        { path: '*', method: RequestMethod.POST },
+        { path: '*', method: RequestMethod.DELETE },
+        { path: '*', method: RequestMethod.PATCH },
+        { path: '*', method: RequestMethod.PUT },
+      )
   }
 }

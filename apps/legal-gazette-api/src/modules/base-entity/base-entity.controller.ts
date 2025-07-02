@@ -5,7 +5,7 @@ import { Controller, NotFoundException, Param } from '@nestjs/common'
 import { BaseEntityModel } from '@dmr.is/shared/models/base'
 
 @Controller()
-export class BaseEntityController<Model extends typeof BaseEntityModel> {
+export class BaseEntityController<Model extends typeof BaseEntityModel<T>, T> {
   constructor(protected readonly model: Model) {}
 
   async findAll(options?: any): Promise<any> {

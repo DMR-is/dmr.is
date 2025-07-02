@@ -10,7 +10,10 @@ import { StatusModel } from './status.model'
   path: 'statuses',
   version: '1',
 })
-export class StatusController extends BaseEntityController<typeof StatusModel> {
+export class StatusController extends BaseEntityController<
+  typeof StatusModel,
+  StatusDto
+> {
   constructor() {
     super(StatusModel)
   }

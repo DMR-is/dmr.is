@@ -25,6 +25,10 @@ module.exports = {
       './src/modules/users/users.seed.sql',
       'utf8',
     )
+    const courtDistrictSeed = await readFile(
+      './src/modules/court-district/court-district.seed.sql',
+      'utf8',
+    )
 
     const seed = `
       BEGIN;
@@ -33,6 +37,7 @@ module.exports = {
         ${categoriesSeed}
         ${statusSeed}
         ${usersSeed}
+        ${courtDistrictSeed}
 
       COMMIT;
       `

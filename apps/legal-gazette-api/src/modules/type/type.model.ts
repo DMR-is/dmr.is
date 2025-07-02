@@ -15,7 +15,7 @@ export enum TypeEnum {
 }
 
 @BaseEntityTable({ tableName: LegalGazetteModels.ADVERT_TYPE })
-export class TypeModel extends BaseEntityModel {
+export class TypeModel extends BaseEntityModel<TypeDto> {
   @HasMany(() => CategoryModel)
   categories!: CategoryModel[]
 
@@ -25,16 +25,4 @@ export class TypeModel extends BaseEntityModel {
     allowNull: false,
   })
   title!: TypeEnum
-
-  static fromModel(model: TypeModel): TypeDto {
-    return {
-      id: model.id,
-      title: model.title,
-      slug: model.slug,
-    }
-  }
-
-  fromModel(): TypeDto {
-    return TypeModel.fromModel(this)
-  }
 }
