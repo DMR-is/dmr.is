@@ -1092,6 +1092,14 @@ export class JournalService implements IJournalService {
       })
     }
 
+    if (params?.year) {
+      Object.assign(whereParams, {
+        publicationYear: {
+          [Op.eq]: params.year,
+        },
+      })
+    }
+
     if (params?.dateTo && params?.dateFrom) {
       Object.assign(whereParams, {
         publicationDate: {
