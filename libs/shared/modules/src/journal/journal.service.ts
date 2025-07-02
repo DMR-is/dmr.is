@@ -1193,10 +1193,15 @@ export class JournalService implements IJournalService {
   ): Promise<ResultWrapper<S3UploadFileResponse>> {
     const advert = ResultWrapper.unwrap(await this.getAdvert(advertId)).advert
     //create advert url from
-    const key = `adverts/${advert.department?.title[0]}_nr_${advert.publicationNumber?.number}_${advert.publicationNumber?.year}.pdf`
+    const filename = `${advert.department?.title[0]}_nr_${advert.publicationNumber?.number}_${advert.publicationNumber?.year}.pdf`
+    const key = `adverts/${filename}`
     const uploadedFile = (
       await this.s3Service.replaceAdvertPdf(key, file)
     ).unwrap()
+
+    await this.updateAdvert(advertId, {
+      documentPdfUrl: `${uploadedFile.url}/${filename}`,
+    })
 
     return ResultWrapper.ok({
       ...uploadedFile,
