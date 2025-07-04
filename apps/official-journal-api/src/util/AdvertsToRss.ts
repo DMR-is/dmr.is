@@ -1,4 +1,5 @@
 import { Advert } from '@dmr.is/shared/dto'
+import { formatAnyDate } from '@dmr.is/utils'
 
 export const AdvertsToRss = (
   adverts: Array<Advert>,
@@ -7,14 +8,13 @@ export const AdvertsToRss = (
   const items = adverts.map((advert) => {
     return `
       <item>
-        <title>${advert.title}</title>
-        <link>https://www.island.is/stjornartidindi/nr/${advert.id}</link>
-        <description>${advert.subject}</description>
-        <guid>https://www.island.is/stjornartidindi/nr/${advert.id}</guid>
+        <title>${advert.department?.title ?? ''} ${advert.publicationNumber?.full}</title>
+        <description>${advert.title}</description>
         <pubDate>${
-          advert.publicationDate &&
-          new Date(advert.publicationDate).toUTCString()
+          advert.publicationDate ? formatAnyDate(advert.publicationDate) : ''
         }</pubDate>
+        <link>https://www.island.is/stjornartidindi/nr/${advert.id}</link>
+        <guid>https://www.island.is/stjornartidindi/nr/${advert.id}</guid>
       </item>
     `
   })
