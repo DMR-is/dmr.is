@@ -53,7 +53,7 @@ export class GetAdvertsQueryParams {
 
   @ApiProperty({
     name: 'year',
-    description: 'Year (signature year) to filter by.',
+    description: 'Year (signature year) to filter by',
     type: String,
     required: false,
   })
