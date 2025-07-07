@@ -1,5 +1,5 @@
 import { Cache } from 'cache-manager'
-import { Op, Transaction } from 'sequelize'
+import { Op, Transaction, WhereOptions } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
@@ -1021,7 +1021,6 @@ export class JournalService implements IJournalService {
   ): Promise<ResultWrapper<GetAdvertsResponse>> {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
-    const searchCondition = params?.search ? `%${params.search}%` : undefined
 
     try {
       // Check if the search is for an internal case number
@@ -1075,7 +1074,7 @@ export class JournalService implements IJournalService {
       // do nothing, just continue.
     }
 
-    const whereParams = {}
+    const whereParams: WhereOptions = {}
     if (params?.dateFrom) {
       Object.assign(whereParams, {
         publicationDate: {
@@ -1108,20 +1107,45 @@ export class JournalService implements IJournalService {
       })
     }
 
+    const attributes: { include: any[] } = {
+      include: [
+        [
+          Sequelize.literal(`CONCAT(serial_number, '/', publication_year)`),
+          'document_id',
+        ],
+      ],
+    }
+
+    let rankExpr = null
+
     if (params?.search) {
-      Object.assign(whereParams, {
+      const escapedSearch = this.sequelize.escape(params.search)
+      const tsQuery = `plainto_tsquery('simple', ${escapedSearch})`
+      const docIdExpr = `CONCAT(serial_number, '/', publication_year)`
+
+      // Boost document_id match
+      rankExpr = this.sequelize.literal(`
+      CASE
+        WHEN ${docIdExpr} = ${escapedSearch} THEN 1000
+        ELSE ts_rank(tsv, ${tsQuery})
+      END
+    `)
+
+      // Full-text search condition
+      const tsvCondition = Sequelize.where(this.sequelize.literal('tsv'), {
+        [Op.match]: this.sequelize.literal(tsQuery),
+      })
+
+      // Add OR logic for document_id exact match or full-text match
+      Object.assign(whereParams as any, {
         [Op.or]: [
-          {
-            subject: { [Op.iLike]: searchCondition },
-          },
-          [
-            Sequelize.where(
-              Sequelize.literal(`CONCAT(serial_number, '/', publication_year)`),
-              { [Op.iLike]: searchCondition },
-            ),
-          ],
+          Sequelize.where(this.sequelize.literal(docIdExpr), params.search),
+          tsvCondition,
         ],
       })
+
+      // Include the rank in the returned attributes
+      attributes.include.push([rankExpr, 'rank'])
     }
 
     const adverts = await this.advertModel.findAndCountAll({
@@ -1133,6 +1157,7 @@ export class JournalService implements IJournalService {
         include: [
           ['publication_date', 'customPublicationDate'],
           ['serial_number', 'customSerialNumber'],
+          ...attributes.include,
         ],
       },
       include: [
@@ -1178,10 +1203,12 @@ export class JournalService implements IJournalService {
             : undefined,
         },
       ],
-      order: [
-        [Sequelize.literal('"customPublicationDate"'), 'DESC'],
-        [Sequelize.literal('"customSerialNumber"'), 'DESC'],
-      ],
+      order: rankExpr
+        ? [[rankExpr, 'DESC']]
+        : [
+            [Sequelize.literal('"customPublicationDate"'), 'DESC'],
+            [Sequelize.literal('"customSerialNumber"'), 'DESC'],
+          ],
     })
 
     const mapped = adverts.rows.map((item) => advertMigrate(item))
