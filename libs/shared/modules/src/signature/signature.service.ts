@@ -16,6 +16,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { CaseModel } from '../case/models'
 import { MemberTypeEnum } from './lib/types'
 import { signatureMigrate } from './migrations/signature.migrate'
 import { SignatureModel } from './models/signature.model'
@@ -36,6 +37,7 @@ export class SignatureService implements ISignatureService {
     private readonly signatureMemberModel: typeof SignatureMemberModel,
     @InjectModel(SignatureRecordModel)
     private readonly signatureRecordModel: typeof SignatureRecordModel,
+    @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     private readonly sequelize: Sequelize,
   ) {}
@@ -107,20 +109,25 @@ export class SignatureService implements ISignatureService {
       .map((record) => signatureTemplate(record))
       .join('')
 
-    const signatureDate = signature.records.reduce((acc, record) => {
-      const recordDate = new Date(record.signatureDate)
+    const signatureDates = signature.records
+      .map((record) => new Date(record.signatureDate))
+      .filter((date) => !isNaN(date.getTime()))
 
-      if (recordDate > acc) {
-        acc = recordDate
-      }
+    const signatureDate =
+      signatureDates.length > 0
+        ? signatureDates.reduce(
+            (latest, date) => (date > latest ? date : latest),
+            signatureDates[0],
+          )
+        : new Date()
 
-      return acc
-    }, new Date())
+    const fullYear = signatureDate.getFullYear().toString()
 
     const updated = await signature.update(
       { html, signatureDate: signatureDate.toISOString() },
       { transaction },
     )
+    await this.updateCaseYearBySignature(signatureId, fullYear, transaction)
 
     return ResultWrapper.ok(updated)
   }
@@ -160,6 +167,34 @@ export class SignatureService implements ISignatureService {
     await this._updateSignature(signatureId, transaction)
 
     return ResultWrapper.ok()
+  }
+
+  private async updateCaseYearBySignature(
+    signatureId: string,
+    newYear: string,
+    transaction?: Transaction,
+  ): Promise<void> {
+    const signature = await this._getSignature(signatureId, transaction)
+
+    if (!signature) {
+      this.logger.warn('Signature not found', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        signature_id: signatureId,
+      })
+
+      throw new NotFoundException('Signature not found')
+    }
+
+    const caseId = signature.caseId
+
+    if (caseId) {
+      const caseModel = await this.caseModel.findByPk(caseId, { transaction })
+
+      if (caseModel) {
+        await caseModel.update({ year: newYear }, { transaction })
+      }
+    }
   }
 
   async updateSignatureMember(
