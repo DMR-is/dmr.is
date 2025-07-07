@@ -3,6 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { LoggingModule } from '@dmr.is/logging'
 
+import { CaseModel } from '../case/models'
 import { SignatureModel } from './models/signature.model'
 import { SignatureMemberModel } from './models/signature-member.model'
 import { SignatureRecordModel } from './models/signature-record.model'
@@ -17,6 +18,7 @@ export { SignatureController } from './signature.controller'
       SignatureModel,
       SignatureRecordModel,
       SignatureMemberModel,
+      CaseModel,
     ]),
     LoggingModule,
   ],
