@@ -30,5 +30,6 @@ export const applicationCaseMigrate = (model: CaseModel): ApplicationCase => {
       model.communicationStatus,
     ),
     html: fullHtml,
+    expectedPublishDate: model.requestedPublicationDate,
   }
 }
