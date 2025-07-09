@@ -47,5 +47,10 @@ export const messages = {
       defaultMessage: 'Engin fylgiskjöl fundust á þessu máli',
       description: '',
     },
+    noSupportingAttachments: {
+      id: 'web.components.comments:noSupportingAttachments',
+      defaultMessage: 'Engin fylgigögn fundust á þessu máli',
+      description: '',
+    },
   }),
 }
