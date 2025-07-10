@@ -16,6 +16,7 @@ import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { validateAdvertStatus } from '../../lib/utils'
+import { BankruptcyAdvertCreationAttributes } from '../bankruptcy-advert/models/bankruptcy-advert.model'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
 import {
@@ -53,16 +54,17 @@ type AdvertAttributes = {
 export type AdvertCreateAttributes = {
   title: string
   submittedBy: string
-  caseId?: string
-  html?: string
   typeId: string
   categoryId: string
+  scheduledAt: Date
+  caseId?: string
+  html?: string
   statusId?: string
   paid?: boolean
   publishedAt?: Date | null
-  scheduledAt: Date
   version?: AdvertVersionEnum
   commonAdvert?: CommonAdvertCreationAttributes
+  bankruptcyAdvert?: BankruptcyAdvertCreationAttributes
 }
 
 export enum AdvertVersionEnum {

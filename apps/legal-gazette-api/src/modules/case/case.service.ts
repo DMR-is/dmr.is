@@ -7,6 +7,7 @@ import {
   CaseDetailedDto,
   CaseDto,
   CaseQueryDto,
+  CreateCaseDto,
   GetCasesDto,
 } from './dto/case.dto'
 import { CaseModel } from './case.model'
@@ -17,10 +18,24 @@ export class CaseService implements ICaseService {
   constructor(
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
   ) {}
+
   async restoreCase(id: string): Promise<CaseDto> {
     await this.caseModel.restore({ where: { id } })
 
     return this.getCase(id)
+  }
+
+  async createCase(body: CreateCaseDto): Promise<CaseDto> {
+    const newCase = await this.caseModel.create(
+      {
+        involvedPartyNationalId: body.involvedPartyNationalId,
+      },
+      {
+        returning: true,
+      },
+    )
+
+    return newCase.fromModel()
   }
 
   async deleteCase(id: string): Promise<void> {

@@ -6,10 +6,15 @@ import {
   Param,
   Post,
   Query,
+  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common'
 
+import { CurrentUser } from '@dmr.is/decorators'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
+
+import { Auth } from '@island.is/auth-nest-tools'
 
 import {
   CaseDetailedDto,
@@ -19,6 +24,7 @@ import {
 } from './dto/case.dto'
 import { ICaseService } from './case.service.interface'
 
+// @UseGuards(TokenJwtAuthGuard)
 @Controller({ path: 'cases', version: '1' })
 export class CaseController {
   constructor(
@@ -29,6 +35,18 @@ export class CaseController {
   @LGResponse({ operationId: 'getCases', type: GetCasesDto })
   getCases(@Query() query: CaseQueryDto): Promise<GetCasesDto> {
     return this.caseService.getCases(query)
+  }
+
+  @Post()
+  @LGResponse({ operationId: 'createCase', type: CaseDto })
+  createCase(@CurrentUser() currentUser: Auth): Promise<CaseDto> {
+    // if (!currentUser || !currentUser.nationalId) {
+    //   throw new UnauthorizedException()
+    // }
+
+    return this.caseService.createCase({
+      involvedPartyNationalId: '0101302399',
+    })
   }
 
   @Get(':id')

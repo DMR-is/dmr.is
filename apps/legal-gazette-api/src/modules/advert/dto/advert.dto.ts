@@ -276,3 +276,29 @@ export class PublishAdvertsBody {
   @IsUUID(undefined, { each: true })
   advertIds!: string[]
 }
+
+export class CreateAdvertDto {
+  @ApiProperty({
+    type: String,
+  })
+  @IsString()
+  title!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  @IsUUID()
+  typeId!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  @IsUUID()
+  categoryId!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  @IsDateString()
+  scheduledAt!: string
+}

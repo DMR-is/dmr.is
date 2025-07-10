@@ -7,11 +7,13 @@ import { CategoryModel } from '../category/category.model'
 import { TypeDto } from './dto/type.dto'
 
 export enum TypeIdEnum {
-  COMMON_APPLICATION = 'a58fe2a8-b0a9-47bd-b424-4b9cece0e622',
+  COMMON_ADVERT = 'a58fe2a8-b0a9-47bd-b424-4b9cece0e622',
+  BANKRUPTCY_ADVERT = '67cd8559-ea7a-45ae-8de1-e87005c35531',
 }
 
 export enum TypeEnum {
   COMMON_APPLICATION = 'Almenn auglýsing',
+  BANKRUPTCY_ADVERT = 'Innköllun þrotabús',
 }
 
 @BaseEntityTable({ tableName: LegalGazetteModels.ADVERT_TYPE })

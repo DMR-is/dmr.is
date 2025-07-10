@@ -1,5 +1,8 @@
 import { Transform, Type } from 'class-transformer'
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
   IsDateString,
   IsOptional,
   IsString,
@@ -11,7 +14,7 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CreateCaseDto } from '../../case/dto/case.dto'
+import { CreateCommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
 
 export class CreateCommonAdvertSignatureDto {
   @ApiProperty({ type: String })
@@ -32,12 +35,18 @@ export class CreateCommonAdvertSignatureDto {
   date!: string
 }
 
-export class CreateCommonAdvertDto extends CreateCaseDto {
+export class CreateCommonAdvertDto {
   @ApiProperty({ type: String })
   @IsString()
   @MinLength(1)
   @MaxLength(255)
   caption!: string
+
+  @ApiProperty({ type: [CreateCommunicationChannelDto], required: false })
+  @IsOptional()
+  @IsArray()
+  @Type(() => CreateCommunicationChannelDto)
+  channels?: CreateCommunicationChannelDto[]
 
   @ApiProperty({ type: String })
   @IsUUID()
@@ -47,6 +56,16 @@ export class CreateCommonAdvertDto extends CreateCaseDto {
   @ValidateNested()
   @Type(() => CreateCommonAdvertSignatureDto)
   signature!: CreateCommonAdvertSignatureDto
+
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @Type(() => String)
+  @ArrayMinSize(0)
+  @ArrayMaxSize(3)
+  @Transform(({ value }: { value: string[] }) =>
+    value.sort((a, b) => new Date(a).getTime() - new Date(b).getTime()),
+  )
+  publishingDates!: string[]
 }
 
 export class CreateCommonAdvertInternalDto extends CreateCommonAdvertDto {

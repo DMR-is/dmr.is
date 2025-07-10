@@ -1,6 +1,8 @@
 import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator'
 
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, PickType } from '@nestjs/swagger'
+
+import { CreateAdvertDto } from '../../advert/dto/advert.dto'
 
 export class BankruptcyAdvertDto {
   @ApiProperty({
@@ -31,7 +33,7 @@ export class BankruptcyAdvertDto {
     description: 'The entity to which claims were sent',
   })
   @IsString()
-  signatureClaimsSentTo!: string
+  claimsSentTo!: string
 
   @ApiProperty({
     type: String,
@@ -70,4 +72,73 @@ export class BankruptcyAdvertDto {
   })
   @IsString()
   courtDistrictName!: string
+}
+
+/*
+
+JSON Object of create
+{
+    "judgmentDate": "2025-07-02T11:48:04.016Z",
+    "claimsSentTo": "",
+    "signatureLocation": "",
+    "signatureDate": "2025-07-02T11:48:04.016Z",
+    "signatureName": "",
+    "additionalText": "",
+    "advertId": "",
+    "courtDistrictId": "",
+    "signatureOnBehalfOf": ""
+}
+*/
+
+class CreateBankruptcyAdvertAttributesDto {
+  @ApiProperty({ type: String })
+  @IsDateString()
+  judgmentDate!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  claimsSentTo!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  signatureLocation!: string
+
+  @ApiProperty({ type: String })
+  @IsDateString()
+  signatureDate!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  signatureName!: string
+
+  @ApiProperty({ type: String, required: false, nullable: true })
+  @IsOptional()
+  @IsString()
+  additionalText?: string | null
+
+  @ApiProperty({ type: String })
+  @IsUUID()
+  courtDistrictId!: string
+
+  @ApiProperty({ type: String, required: false, nullable: true })
+  @IsOptional()
+  @IsString()
+  signatureOnBehalfOf?: string | null
+}
+
+export class CreateBankruptcyAdvertDto extends PickType(CreateAdvertDto, [
+  'scheduledAt',
+] as const) {
+  @ApiProperty({
+    type: String,
+    description: 'The case ID associated with the bankruptcy advert',
+  })
+  @IsUUID()
+  caseId!: string
+
+  @ApiProperty({
+    type: CreateBankruptcyAdvertAttributesDto,
+    description: 'Attributes for creating a bankruptcy advert',
+  })
+  bankruptcyAdvert!: CreateBankruptcyAdvertAttributesDto
 }

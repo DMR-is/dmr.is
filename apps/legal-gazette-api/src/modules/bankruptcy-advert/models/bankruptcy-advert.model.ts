@@ -13,11 +13,11 @@ import { AdvertModel } from '../../advert/advert.model'
 import { CourtDistrictModel } from '../../court-district/court-district.model'
 import { BankruptcyAdvertDto } from '../dto/bankruptcy-advert.dto'
 
-type BankruptcyAdvertAttributes = {
+export type BankruptcyAdvertAttributes = {
   id: string
   additionalText: string | null
   judgmentDate: Date
-  signatureClaimsSentTo: string
+  claimsSentTo: string
   signatureLocation: string
   signatureDate: Date
   signatureName: string
@@ -28,10 +28,10 @@ type BankruptcyAdvertAttributes = {
   courtDistrict: CourtDistrictModel
   advert: AdvertModel
 }
-type BankruptcyAdvertCreationAttributes = {
+export type BankruptcyAdvertCreationAttributes = {
   additionalText?: string | null
   judgmentDate: Date
-  signatureClaimsSentTo: string
+  claimsSentTo: string
   signatureLocation: string
   signatureDate: Date
   signatureName: string
@@ -45,7 +45,7 @@ type BankruptcyAdvertCreationAttributes = {
     'id',
     'additionalText',
     'judgmentDate',
-    'signatureClaimsSentTo',
+    'claimsSentTo',
     'signatureLocation',
     'signatureDate',
     'signatureName',
@@ -78,7 +78,7 @@ export class BankruptcyAdvertModel extends BaseModel<
     type: DataType.TEXT,
     allowNull: false,
   })
-  signatureClaimsSentTo!: string
+  claimsSentTo!: string
 
   @Column({
     field: 'signature_location',
@@ -140,7 +140,7 @@ export class BankruptcyAdvertModel extends BaseModel<
       id: model.id,
       additionalText: model.additionalText,
       judgmentDate: model.judgmentDate.toISOString(),
-      signatureClaimsSentTo: model.signatureClaimsSentTo,
+      claimsSentTo: model.claimsSentTo,
       signatureLocation: model.signatureLocation,
       signatureDate: model.signatureDate.toISOString(),
       signatureName: model.signatureName,
