@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator'
+import { IsDateString, IsString } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -25,8 +25,9 @@ export class BankruptcyLocationDto {
   address!: string
 
   @ApiProperty({
-    type: Date,
+    type: String,
     description: 'Deadline for the bankruptcy location',
   })
-  deadline!: Date
+  @IsDateString()
+  deadline!: string
 }

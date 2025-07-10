@@ -6,7 +6,8 @@ import {
   ForeignKey,
 } from 'sequelize-typescript'
 
-import { BaseModel } from '@dmr.is/shared/models/base'
+import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
+import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { BankruptcyLocationDto } from '../dto/bankruptcy-location.dto'
 import { BankruptcyAdvertModel } from './bankruptcy-advert.model'
@@ -19,7 +20,7 @@ type BankruptcyLocationAttributes = {
   bankruptcyAdvertId: string
 }
 
-type BankruptcyLocationCreationAttributes = {
+export type BankruptcyLocationCreationAttributes = {
   name: string
   nationalId: string
   address: string
@@ -31,6 +32,7 @@ type BankruptcyLocationCreationAttributes = {
   attributes: ['id', 'name', 'nationalId', 'address', 'deadline'],
   order: [['deadline', 'ASC']],
 }))
+@BaseTable({ tableName: LegalGazetteModels.BANKRUPTCY_LOCATION })
 export class BankruptcyLocationModel extends BaseModel<
   BankruptcyLocationAttributes,
   BankruptcyLocationCreationAttributes
@@ -79,11 +81,11 @@ export class BankruptcyLocationModel extends BaseModel<
       name: model.name,
       nationalId: model.nationalId,
       address: model.address,
-      deadline: model.deadline,
+      deadline: model.deadline.toISOString(),
     }
   }
 
-  fromModel(model: BankruptcyLocationModel): BankruptcyLocationDto {
-    return BankruptcyLocationModel.fromModel(model)
+  fromModel(): BankruptcyLocationDto {
+    return BankruptcyLocationModel.fromModel(this)
   }
 }

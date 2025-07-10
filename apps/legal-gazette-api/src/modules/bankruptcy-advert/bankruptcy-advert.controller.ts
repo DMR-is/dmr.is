@@ -18,7 +18,7 @@ import {
 } from '../advert/advert.model'
 import { CategoryDefaultIdEnum } from '../category/category.model'
 import { TypeEnum, TypeIdEnum } from '../type/type.model'
-import { CreateBankruptcyAdvertDto } from './dto/bankruptcy-advert.dto'
+import { CreateBankruptcyAdvertDto } from './dto/create-bankruptcy-advert.dto'
 import { BankruptcyAdvertModel } from './models/bankruptcy-advert.model'
 
 @Controller({
@@ -52,6 +52,10 @@ export class BankruptcyAdvertController {
         additionalText: body.bankruptcyAdvert.additionalText,
         courtDistrictId: body.bankruptcyAdvert.courtDistrictId,
         signatureOnBehalfOf: body.bankruptcyAdvert.signatureOnBehalfOf,
+        location: {
+          ...body.bankruptcyAdvert.location,
+          deadline: new Date(body.bankruptcyAdvert.location.deadline),
+        },
       },
     }
 
@@ -61,13 +65,13 @@ export class BankruptcyAdvertController {
     })
 
     const advert = await this.advertModel
-      .scope(AdvertModelScopes.ALL)
+      .scope(AdvertModelScopes.BANKRUPTCY_ADVERT)
       .findByPk(newAdvert.id)
 
     if (!advert) {
       throw new InternalServerErrorException()
     }
 
-    return advert?.fromModel()
+    return advert.fromModelDetailed()
   }
 }

@@ -27,7 +27,7 @@ import {
   CommonAdvertModel,
 } from '../common-advert/common-advert.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
-import { TypeModel } from '../type/type.model'
+import { TypeIdEnum, TypeModel } from '../type/type.model'
 import {
   AdvertDetailedDto,
   AdvertDto,
@@ -82,6 +82,7 @@ export enum AdvertModelScopes {
   TO_BE_PUBLISHED = 'toBePublished',
   PUBLISHED = 'published',
   COMPLETED = 'completed',
+  BANKRUPTCY_ADVERT = 'bankruptcyAdvert',
   ALL = 'all',
   WITH_QUERY = 'withQuery',
 }
@@ -204,6 +205,25 @@ export enum AdvertModelScopes {
     ],
     where: {},
     order: [['version', 'ASC']],
+  },
+  bankruptcyAdvert: {
+    include: [
+      StatusModel,
+      CategoryModel,
+      TypeModel,
+      CommonAdvertModel,
+      {
+        model: CaseModel.unscoped(),
+        attributes: ['caseNumber'],
+        required: true,
+      },
+      BankruptcyAdvertModel,
+    ],
+    where: {
+      typeId: {
+        [Op.eq]: TypeIdEnum.BANKRUPTCY_ADVERT,
+      },
+    },
   },
   withQuery: (query?: GetAdvertsQueryDto) => {
     const whereClause: Record<string, string | number> = {}
@@ -513,6 +533,9 @@ export class AdvertModel extends BaseModel<
         paid: model.paid,
         commonAdvert: model.commonAdvert
           ? model.commonAdvert.fromModel()
+          : undefined,
+        bankruptcyAdvert: model.bankruptcyAdvert
+          ? model.bankruptcyAdvert.fromModel()
           : undefined,
       }
     } catch (error) {

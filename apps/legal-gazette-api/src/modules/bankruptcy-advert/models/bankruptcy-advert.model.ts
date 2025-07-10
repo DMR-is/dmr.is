@@ -4,6 +4,8 @@ import {
   DataType,
   DefaultScope,
   ForeignKey,
+  HasMany,
+  HasOne,
 } from 'sequelize-typescript'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
@@ -12,6 +14,10 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { AdvertModel } from '../../advert/advert.model'
 import { CourtDistrictModel } from '../../court-district/court-district.model'
 import { BankruptcyAdvertDto } from '../dto/bankruptcy-advert.dto'
+import {
+  BankruptcyLocationCreationAttributes,
+  BankruptcyLocationModel,
+} from './bankruptcy-location.model'
 
 export type BankruptcyAdvertAttributes = {
   id: string
@@ -37,6 +43,7 @@ export type BankruptcyAdvertCreationAttributes = {
   signatureOnBehalfOf?: string | null
   courtDistrictId?: string
   advertId?: string
+  location?: BankruptcyLocationCreationAttributes
 }
 
 @DefaultScope(() => ({
@@ -50,7 +57,12 @@ export type BankruptcyAdvertCreationAttributes = {
     'signatureName',
     'signatureOnBehalfOf',
   ],
-  include: [{ model: CourtDistrictModel, attributes: ['id', 'title'] }],
+  include: [
+    { model: CourtDistrictModel, attributes: ['id', 'title'] },
+    {
+      model: BankruptcyLocationModel,
+    },
+  ],
 }))
 @BaseTable({ tableName: LegalGazetteModels.BANKRUPTCY_ADVERT })
 export class BankruptcyAdvertModel extends BaseModel<
@@ -134,6 +146,9 @@ export class BankruptcyAdvertModel extends BaseModel<
   })
   advert!: AdvertModel
 
+  @HasOne(() => BankruptcyLocationModel)
+  location!: BankruptcyLocationModel
+
   static fromModel(model: BankruptcyAdvertModel): BankruptcyAdvertDto {
     return {
       id: model.id,
@@ -145,6 +160,7 @@ export class BankruptcyAdvertModel extends BaseModel<
       signatureName: model.signatureName,
       signatureOnBehalfOf: model.signatureOnBehalfOf,
       courtDistrictName: model.courtDistrict.title,
+      location: model.location.fromModel(),
     }
   }
 
