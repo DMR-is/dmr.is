@@ -1247,7 +1247,7 @@ export class JournalService implements IJournalService {
 
   @LogAndHandle()
   async handleLegacyPdfUrl(
-    id: string,
+    id?: string,
   ): Promise<ResultWrapper<{ url: string }>> {
     if (!id) {
       return ResultWrapper.err({

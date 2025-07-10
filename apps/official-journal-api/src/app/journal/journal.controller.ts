@@ -220,9 +220,9 @@ export class JournalController {
     },
   })
   async getLegacyPdfPath(
-    @Param('id') paramId: string,
     @Query() query: Record<string, string>,
     @Res() res: Response,
+    @Param('id') paramId?: string,
   ) {
     // Need to normalize the query parameters to lowercase
     // because the legacy URL parameters were not case-sensitive.
