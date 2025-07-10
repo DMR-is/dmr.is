@@ -24,7 +24,6 @@ export type BankruptcyAdvertAttributes = {
   signatureOnBehalfOf: string | null
   courtDistrictId: string
   advertId: string
-
   courtDistrict: CourtDistrictModel
   advert: AdvertModel
 }
@@ -74,7 +73,7 @@ export class BankruptcyAdvertModel extends BaseModel<
   judgmentDate!: Date
 
   @Column({
-    field: 'signature_claims_sent_to',
+    field: 'claims_sent_to',
     type: DataType.TEXT,
     allowNull: false,
   })

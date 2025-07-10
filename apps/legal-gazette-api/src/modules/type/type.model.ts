@@ -12,8 +12,9 @@ export enum TypeIdEnum {
 }
 
 export enum TypeEnum {
-  COMMON_APPLICATION = 'Almenn auglýsing',
+  COMMON_ADVERT = 'Almenn auglýsing',
   BANKRUPTCY_ADVERT = 'Innköllun þrotabús',
+  DECEASED_ADVERT = 'Innköllun dánarbús',
 }
 
 @BaseEntityTable({ tableName: LegalGazetteModels.ADVERT_TYPE })

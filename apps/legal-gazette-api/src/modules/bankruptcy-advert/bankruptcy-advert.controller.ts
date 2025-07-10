@@ -1,4 +1,9 @@
-import { Body, Controller, Post } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  InternalServerErrorException,
+  Post,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { CurrentUser } from '@dmr.is/decorators'
@@ -6,9 +11,13 @@ import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
-import { AdvertName } from '../../lib/constants'
-import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
-import { TypeIdEnum } from '../type/type.model'
+import {
+  AdvertCreateAttributes,
+  AdvertModel,
+  AdvertModelScopes,
+} from '../advert/advert.model'
+import { CategoryDefaultIdEnum } from '../category/category.model'
+import { TypeEnum, TypeIdEnum } from '../type/type.model'
 import { CreateBankruptcyAdvertDto } from './dto/bankruptcy-advert.dto'
 import { BankruptcyAdvertModel } from './models/bankruptcy-advert.model'
 
@@ -28,10 +37,10 @@ export class BankruptcyAdvertController {
     @Body() body: CreateBankruptcyAdvertDto,
   ) {
     const args: AdvertCreateAttributes = {
-      title: AdvertName.BANKRUPTCY_ADVERT,
+      title: TypeEnum.BANKRUPTCY_ADVERT,
       submittedBy: 'Testing 123', // TODO: Use user information
       typeId: TypeIdEnum.BANKRUPTCY_ADVERT,
-      categoryId: '67cd8559-ea7a-45ae-8de1-e87005c35531', // TODO: make this default if this type?
+      categoryId: CategoryDefaultIdEnum.BANKRUPTCY_ADVERT,
       scheduledAt: new Date(body.scheduledAt),
       caseId: body.caseId,
       bankruptcyAdvert: {
@@ -46,11 +55,19 @@ export class BankruptcyAdvertController {
       },
     }
 
-    const advert = await this.advertModel.create(args, {
+    const newAdvert = await this.advertModel.create(args, {
       returning: true,
       include: [BankruptcyAdvertModel],
     })
 
-    return advert.fromModel()
+    const advert = await this.advertModel
+      .scope(AdvertModelScopes.ALL)
+      .findByPk(newAdvert.id)
+
+    if (!advert) {
+      throw new InternalServerErrorException()
+    }
+
+    return advert?.fromModel()
   }
 }

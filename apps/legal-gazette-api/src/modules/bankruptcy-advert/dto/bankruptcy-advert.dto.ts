@@ -1,4 +1,11 @@
-import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator'
+import { Type } from 'class-transformer'
+import {
+  IsDateString,
+  IsOptional,
+  IsString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator'
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
@@ -140,5 +147,7 @@ export class CreateBankruptcyAdvertDto extends PickType(CreateAdvertDto, [
     type: CreateBankruptcyAdvertAttributesDto,
     description: 'Attributes for creating a bankruptcy advert',
   })
+  @ValidateNested()
+  @Type(() => CreateBankruptcyAdvertAttributesDto)
   bankruptcyAdvert!: CreateBankruptcyAdvertAttributesDto
 }

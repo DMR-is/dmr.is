@@ -16,7 +16,10 @@ import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { validateAdvertStatus } from '../../lib/utils'
-import { BankruptcyAdvertCreationAttributes } from '../bankruptcy-advert/models/bankruptcy-advert.model'
+import {
+  BankruptcyAdvertCreationAttributes,
+  BankruptcyAdvertModel,
+} from '../bankruptcy-advert/models/bankruptcy-advert.model'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
 import {
@@ -388,6 +391,11 @@ export class AdvertModel extends BaseModel<
 
   @HasOne(() => CommonAdvertModel, { foreignKey: 'advertId' })
   commonAdvert?: CommonAdvertModel
+
+  @HasOne(() => BankruptcyAdvertModel, {
+    foreignKey: 'advertId',
+  })
+  bankruptcyAdvert?: BankruptcyAdvertModel
 
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {

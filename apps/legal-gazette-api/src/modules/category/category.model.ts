@@ -9,6 +9,11 @@ import { AdvertModel } from '../advert/advert.model'
 import { TypeModel } from '../type/type.model'
 import { CategoryDto } from './dto/category.dto'
 
+export enum CategoryDefaultIdEnum {
+  BANKRUPTCY_ADVERT = '30452623-789d-4bc8-b068-ff44b706ba8e',
+  DECEASED_ADVERT = 'todo:replace-with-deceased-advert-id',
+}
+
 @BaseEntityTable({
   tableName: LegalGazetteModels.ADVERT_CATEGORY,
 })
