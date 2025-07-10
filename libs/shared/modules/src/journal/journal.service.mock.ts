@@ -145,6 +145,9 @@ export class MockJournalService implements IJournalService {
   ): Promise<ResultWrapper<S3UploadFileResponse>> {
     throw new Error('Method not implemented.')
   }
+  handleLegacyPdfUrl(id: string): Promise<ResultWrapper<S3UploadFileResponse>> {
+    throw new Error('Method not implemented.')
+  }
 
   getAdvert(id: string): Promise<ResultWrapper<GetAdvertResponse>> {
     this.logger.info('getAdvert', {

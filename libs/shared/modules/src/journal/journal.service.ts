@@ -1244,4 +1244,33 @@ export class JournalService implements IJournalService {
       file: uploadedFile,
     })
   }
+
+  @LogAndHandle()
+  async handleLegacyPdfUrl(
+    id: string,
+  ): Promise<ResultWrapper<{ url: string }>> {
+    if (!id) {
+      return ResultWrapper.err({
+        message: 'No legacyPdfId or legacyAdvertId provided',
+        code: 400,
+      })
+    }
+    let advert: AdvertModel | null = null
+
+    // Try finding by legacyPdfId first
+    advert = await this.advertModel.findOne({
+      where: { documentPdfLegacy: id },
+    })
+
+    // If not found, try treating it as a legacyAdvertId
+    if (!advert) {
+      advert = await this.advertModel.findOne({
+        where: { id },
+      })
+    }
+
+    return ResultWrapper.ok({
+      url: advert?.documentPdfUrl ?? 'https://stjornartidindi.is/',
+    })
+  }
 }
