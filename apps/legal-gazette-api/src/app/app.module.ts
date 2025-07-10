@@ -1,9 +1,4 @@
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common'
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
@@ -35,6 +30,8 @@ import { CommonAdvertModel } from '../modules/common-advert/common-advert.model'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
 import { CourtDistrictModel } from '../modules/court-district/court-district.model'
 import { StatusModel } from '../modules/status/status.model'
+import { SubscriberModel } from '../modules/subscribers/subscriber.model'
+import { SubscriberModule } from '../modules/subscribers/subscriber.module'
 import { TypeModel } from '../modules/type/type.model'
 import { UserModel } from '../modules/users/users.model'
 import { UsersModule } from '../modules/users/users.module'
@@ -70,6 +67,7 @@ import { UsersModule } from '../modules/users/users.module'
             AdvertModel,
             BankruptcyAdvertModel,
             BankruptcyLocationModel,
+            SubscriberModel,
           ],
         }),
       ],
@@ -81,6 +79,7 @@ import { UsersModule } from '../modules/users/users.module'
     CaseModule,
     CommonApplicationModule,
     AdvertModule,
+    SubscriberModule,
     UsersModule,
     BankruptcyAdvertModule,
     {

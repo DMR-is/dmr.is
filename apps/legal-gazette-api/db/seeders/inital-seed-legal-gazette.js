@@ -30,6 +30,11 @@ module.exports = {
       'utf8',
     )
 
+    const subscribersSeed = await readFile(
+      './src/modules/subscribers/subscriber.seed.sql',
+      'utf8',
+    )
+
     const seed = `
       BEGIN;
 
@@ -38,6 +43,7 @@ module.exports = {
         ${statusSeed}
         ${usersSeed}
         ${courtDistrictSeed}
+        ${subscribersSeed}
 
       COMMIT;
       `

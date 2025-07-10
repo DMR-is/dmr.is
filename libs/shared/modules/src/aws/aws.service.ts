@@ -242,6 +242,7 @@ export class AWSService implements IAWSService {
 
     return ResultWrapper.ok({
       ...uploadResult.unwrap(),
+      url: `${process.env.ADVERTS_CDN_URL}`,
       filename: key,
     })
   }

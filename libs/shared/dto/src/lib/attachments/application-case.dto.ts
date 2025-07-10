@@ -1,3 +1,5 @@
+import { IsOptional } from 'class-validator'
+
 import { ApiProperty } from '@nestjs/swagger'
 
 import { AdvertType } from '../advert-type'
@@ -37,4 +39,11 @@ export class ApplicationCase {
     type: String,
   })
   html!: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  expectedPublishDate?: string
 }

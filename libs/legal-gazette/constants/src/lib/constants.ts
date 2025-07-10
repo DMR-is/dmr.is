@@ -13,6 +13,7 @@ export enum LegalGazetteModels {
   COURT_DISTRICT = 'court_district',
   BANKRUPTCY_ADVERT = 'bankruptcy_advert',
   BANKRUPTCY_LOCATION = 'bankruptcy_location',
+  SUBSCRIBER = 'legal_gazette_subscribers',
 }
 
 export enum LegalGazetteEvents {
