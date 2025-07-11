@@ -859,6 +859,10 @@ export class CaseService implements ICaseService {
         },
         transaction,
       ),
+      this.updatePublishedAdvertByHtml(caseId, {
+        advertHtml,
+        documentPdfUrl: pdfUrl,
+      }),
     ])
 
     ResultWrapper.unwrap(updateAdvertCheck)
@@ -869,31 +873,17 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async updateAdvertByHtml(
+  private async updatePublishedAdvertByHtml(
     caseId: string,
     body: UpdateAdvertHtmlBody,
-    transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    const [updatedCaseResult, hasAdvertResult] = await Promise.all([
-      this.updateService.updateAdvert(caseId, body, transaction),
+    const [hasAdvertResult] = await Promise.all([
       this.casePublishedAdvertsModel.findOne({
         where: {
           caseId: caseId,
         },
       }),
     ])
-
-    if (!updatedCaseResult.result.ok) {
-      this.logger.error(`Failed to update html on case<${caseId}>`, {
-        error: updatedCaseResult.result.error,
-        category: LOGGING_CATEGORY,
-      })
-
-      return ResultWrapper.err({
-        code: 500,
-        message: 'Failed to update case',
-      })
-    }
 
     if (!hasAdvertResult) {
       return ResultWrapper.ok()
@@ -903,7 +893,6 @@ export class CaseService implements ICaseService {
       hasAdvertResult.advertId,
       {
         documentHtml: body.advertHtml,
-        ...(body.documentPdfUrl && { documentPdfUrl: body.documentPdfUrl }),
       },
     )
 
@@ -921,6 +910,32 @@ export class CaseService implements ICaseService {
       return ResultWrapper.err({
         code: 500,
         message: 'Failed to update advert',
+      })
+    }
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateAdvertByHtml(
+    caseId: string,
+    body: UpdateAdvertHtmlBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const [updatedCaseResult] = await Promise.all([
+      this.updateService.updateAdvert(caseId, body, transaction),
+    ])
+
+    if (!updatedCaseResult.result.ok) {
+      this.logger.error(`Failed to update html on case<${caseId}>`, {
+        error: updatedCaseResult.result.error,
+        category: LOGGING_CATEGORY,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to update case',
       })
     }
 
