@@ -821,7 +821,7 @@ export class CaseService implements ICaseService {
       })
     }
 
-    const now = new Date().toISOString()
+    const postfix = `leidrett_${Date.now()}`
     const keyFallback = `${caseId}.pdf` // Fallback to caseId if no url. Highly unlikely, but just in case.
 
     const docUrl = activeCase?.advert?.documentPdfUrl ?? keyFallback
@@ -840,10 +840,18 @@ export class CaseService implements ICaseService {
       )
     }
 
-    const pdfUrl = docUrl.replace('.pdf', `_${now}.pdf`)
-    const pdfName = docName.replace('.pdf', `_${now}.pdf`)
+    const pdfUrl = docUrl.replace('.pdf', `_${postfix}.pdf`)
+    const pdfName = docName.replace('.pdf', `_${postfix}.pdf`)
 
-    ResultWrapper.unwrap(await this.createPdfAndUpload(caseId, pdfName))
+    ResultWrapper.unwrap(
+      await this.createPdfAndUpload(
+        caseId,
+        pdfName,
+        undefined,
+        undefined,
+        new Date(),
+      ),
+    )
     const [updateAdvertCheck, postCaseCorrectionCheck] = await Promise.all([
       this.updateAdvertByHtml(
         caseId,
@@ -874,13 +882,9 @@ export class CaseService implements ICaseService {
     body: UpdateAdvertHtmlBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    const [updatedCaseResult, hasAdvertResult] = await Promise.all([
+    const [updatedCaseResult, advertResult] = await Promise.all([
       this.updateService.updateAdvert(caseId, body, transaction),
-      this.casePublishedAdvertsModel.findOne({
-        where: {
-          caseId: caseId,
-        },
-      }),
+      this.caseModel.findByPk(caseId),
     ])
 
     if (!updatedCaseResult.result.ok) {
@@ -895,12 +899,12 @@ export class CaseService implements ICaseService {
       })
     }
 
-    if (!hasAdvertResult) {
+    if (!advertResult?.advertId) {
       return ResultWrapper.ok()
     }
 
     const updateResult = await this.journalService.updateAdvert(
-      hasAdvertResult.advertId,
+      advertResult.advertId,
       {
         documentHtml: body.advertHtml,
         ...(body.documentPdfUrl && { documentPdfUrl: body.documentPdfUrl }),
@@ -909,10 +913,10 @@ export class CaseService implements ICaseService {
 
     if (!updateResult.result.ok) {
       this.logger.error(
-        `Failed to update advert<${hasAdvertResult.advertId}>, when updating case<${caseId}.html`,
+        `Failed to update advert<${advertResult.advertId}>, when updating case<${caseId}.html`,
         {
           caseId: caseId,
-          advertId: hasAdvertResult.advertId,
+          advertId: advertResult.advertId,
           error: updateResult.result.error,
           category: LOGGING_CATEGORY,
         },
@@ -933,11 +937,13 @@ export class CaseService implements ICaseService {
     fileName: string,
     publishedAt?: string | Date,
     serial?: number,
+    correctionDate?: string | Date,
   ): Promise<ResultWrapper> {
     const advertPdf = await this.pdfService.generatePdfByCaseId(
       caseId,
       publishedAt,
       serial,
+      correctionDate,
     )
 
     if (!advertPdf.result.ok) {
