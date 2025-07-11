@@ -2,7 +2,6 @@ import { Expose, Transform, Type } from 'class-transformer'
 import {
   IsBase64,
   IsDefined,
-  IsEmail,
   IsOptional,
   IsString,
   IsUUID,

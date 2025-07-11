@@ -6,8 +6,6 @@ import {
   Param,
   Post,
   Query,
-  UnauthorizedException,
-  UseGuards,
 } from '@nestjs/common'
 
 import { CurrentUser } from '@dmr.is/decorators'
@@ -39,7 +37,7 @@ export class CaseController {
 
   @Post()
   @LGResponse({ operationId: 'createCase', type: CaseDto })
-  createCase(@CurrentUser() currentUser: Auth): Promise<CaseDto> {
+  createCase(@CurrentUser() _currentUser: Auth): Promise<CaseDto> {
     // if (!currentUser || !currentUser.nationalId) {
     //   throw new UnauthorizedException()
     // }

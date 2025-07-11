@@ -1,4 +1,4 @@
-import { Op } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import {
   BeforeUpdate,
   BelongsTo,
@@ -429,7 +429,7 @@ export class AdvertModel extends BaseModel<
       context: 'AdvertModel',
     })
 
-    const whereClause: Record<string, any> = {
+    const whereClause: WhereOptions = {
       statusId,
     }
 
