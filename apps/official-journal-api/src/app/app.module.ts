@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common'
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { HealthModule } from '@dmr.is/modules'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
+import { LogRequestMiddleware } from '@dmr.is/shared/middleware'
 
 import { JournalModule } from './journal/journal.module'
 
@@ -34,4 +35,8 @@ import { JournalModule } from './journal/journal.module'
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LogRequestMiddleware).forRoutes('*')
+  }
+}
