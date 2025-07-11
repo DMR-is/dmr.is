@@ -1,6 +1,5 @@
-import { Op, UpdateOptions } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import {
-  BeforeBulkUpdate,
   BeforeUpdate,
   BelongsTo,
   Column,
@@ -11,16 +10,16 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
-import {
-  BadRequestException,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { validateAdvertStatus } from '../../lib/utils'
+import {
+  BankruptcyAdvertCreationAttributes,
+  BankruptcyAdvertModel,
+} from '../bankruptcy-advert/models/bankruptcy-advert.model'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
 import {
@@ -28,7 +27,7 @@ import {
   CommonAdvertModel,
 } from '../common-advert/common-advert.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
-import { TypeModel } from '../type/type.model'
+import { TypeIdEnum, TypeModel } from '../type/type.model'
 import {
   AdvertDetailedDto,
   AdvertDto,
@@ -58,16 +57,17 @@ type AdvertAttributes = {
 export type AdvertCreateAttributes = {
   title: string
   submittedBy: string
-  caseId?: string
-  html?: string
   typeId: string
   categoryId: string
+  scheduledAt: Date
+  caseId?: string
+  html?: string
   statusId?: string
   paid?: boolean
   publishedAt?: Date | null
-  scheduledAt: Date
   version?: AdvertVersionEnum
   commonAdvert?: CommonAdvertCreationAttributes
+  bankruptcyAdvert?: BankruptcyAdvertCreationAttributes
 }
 
 export enum AdvertVersionEnum {
@@ -82,6 +82,7 @@ export enum AdvertModelScopes {
   TO_BE_PUBLISHED = 'toBePublished',
   PUBLISHED = 'published',
   COMPLETED = 'completed',
+  BANKRUPTCY_ADVERT = 'bankruptcyAdvert',
   ALL = 'all',
   WITH_QUERY = 'withQuery',
 }
@@ -204,6 +205,25 @@ export enum AdvertModelScopes {
     ],
     where: {},
     order: [['version', 'ASC']],
+  },
+  bankruptcyAdvert: {
+    include: [
+      StatusModel,
+      CategoryModel,
+      TypeModel,
+      CommonAdvertModel,
+      {
+        model: CaseModel.unscoped(),
+        attributes: ['caseNumber'],
+        required: true,
+      },
+      BankruptcyAdvertModel,
+    ],
+    where: {
+      typeId: {
+        [Op.eq]: TypeIdEnum.BANKRUPTCY_ADVERT,
+      },
+    },
   },
   withQuery: (query?: GetAdvertsQueryDto) => {
     const whereClause: Record<string, string | number> = {}
@@ -392,6 +412,11 @@ export class AdvertModel extends BaseModel<
   @HasOne(() => CommonAdvertModel, { foreignKey: 'advertId' })
   commonAdvert?: CommonAdvertModel
 
+  @HasOne(() => BankruptcyAdvertModel, {
+    foreignKey: 'advertId',
+  })
+  bankruptcyAdvert?: BankruptcyAdvertModel
+
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
     validateAdvertStatus(instance)
@@ -404,7 +429,7 @@ export class AdvertModel extends BaseModel<
       context: 'AdvertModel',
     })
 
-    const whereClause: Record<string, any> = {
+    const whereClause: WhereOptions = {
       statusId,
     }
 
@@ -508,6 +533,9 @@ export class AdvertModel extends BaseModel<
         paid: model.paid,
         commonAdvert: model.commonAdvert
           ? model.commonAdvert.fromModel()
+          : undefined,
+        bankruptcyAdvert: model.bankruptcyAdvert
+          ? model.bankruptcyAdvert.fromModel()
           : undefined,
       }
     } catch (error) {

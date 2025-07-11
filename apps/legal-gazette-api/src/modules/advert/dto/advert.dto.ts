@@ -18,6 +18,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { DetailedDto } from '@dmr.is/legal-gazette/dto'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
+import { BankruptcyAdvertDto } from '../../bankruptcy-advert/dto/bankruptcy-advert.dto'
 import { CategoryDto } from '../../category/dto/category.dto'
 import { CommonAdvertDto } from '../../common-advert/dto/common-advert.dto'
 import { StatusDto } from '../../status/dto/status.dto'
@@ -232,12 +233,24 @@ export class AdvertDetailedDto extends AdvertDto {
   @ApiProperty({
     type: CommonAdvertDto,
     nullable: true,
+    required: false,
   })
   @IsOptional()
   @ValidateIf((o) => o.commonAdvert !== null)
   @Type(() => CommonAdvertDto)
   @ValidateNested()
   commonAdvert?: CommonAdvertDto
+
+  @ApiProperty({
+    type: BankruptcyAdvertDto,
+    nullable: true,
+    required: false,
+  })
+  @IsOptional()
+  @ValidateIf((o) => o.bankruptcyAdvert !== null)
+  @Type(() => BankruptcyAdvertDto)
+  @ValidateNested()
+  bankruptcyAdvert?: BankruptcyAdvertDto
 }
 
 export class UpdateAdvertDto {
@@ -275,4 +288,30 @@ export class PublishAdvertsBody {
   @IsArray()
   @IsUUID(undefined, { each: true })
   advertIds!: string[]
+}
+
+export class CreateAdvertDto {
+  @ApiProperty({
+    type: String,
+  })
+  @IsString()
+  title!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  @IsUUID()
+  typeId!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  @IsUUID()
+  categoryId!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  @IsDateString()
+  scheduledAt!: string
 }

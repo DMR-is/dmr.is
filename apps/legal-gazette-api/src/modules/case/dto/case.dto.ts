@@ -1,7 +1,5 @@
-import { Transform, Type } from 'class-transformer'
+import { Type } from 'class-transformer'
 import {
-  ArrayMaxSize,
-  ArrayMinSize,
   IsArray,
   IsOptional,
   IsString,
@@ -15,33 +13,14 @@ import { DetailedDto } from '@dmr.is/legal-gazette/dto'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 import { AdvertDetailedDto } from '../../advert/dto/advert.dto'
-import {
-  CommunicationChannelDto,
-  CreateCommunicationChannelDto,
-} from '../../communication-channel/dto/communication-channel.dto'
+import { CommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
 
 export class CaseQueryDto extends PagingQuery {}
 
 export class CreateCaseDto {
   @ApiProperty({ type: String })
-  @IsUUID()
-  categoryId!: string
-
-  @ApiProperty({ type: [CreateCommunicationChannelDto], required: false })
-  @IsOptional()
-  @IsArray()
-  @Type(() => CreateCommunicationChannelDto)
-  channels?: CreateCommunicationChannelDto[]
-
-  @ApiProperty({ type: [String] })
-  @IsArray()
-  @Type(() => String)
-  @ArrayMinSize(0)
-  @ArrayMaxSize(3)
-  @Transform(({ value }: { value: string[] }) =>
-    value.sort((a, b) => new Date(a).getTime() - new Date(b).getTime()),
-  )
-  publishingDates!: string[]
+  @IsString()
+  involvedPartyNationalId!: string
 }
 
 export class CaseDto extends DetailedDto {

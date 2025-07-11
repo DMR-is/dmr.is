@@ -12,7 +12,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { getOptions } from './sequelize'
 import { DMRSequelizeConfig, IDMRSequelizeConfig } from './sequelize.config'
 
-const LOGGING_CONTEXT = 'SequelizeConfigService'
+const LOGGING_CONTEXT = 'SequelizeService'
 
 @Injectable()
 export class DMRSequelizeConfigService implements SequelizeOptionsFactory {
@@ -39,11 +39,9 @@ export class DMRSequelizeConfigService implements SequelizeOptionsFactory {
       logging: config.debugLog
         ? (sql: string) => {
             const query = sql.split(':')[1]
-            // this.logger.debug(`Query executed`, {
-            //   sql: query,
-            //   context: LOGGING_CONTEXT,
-            // })
-            this.logger.debug(query)
+            this.logger.debug(query, {
+              context: LOGGING_CONTEXT,
+            })
           }
         : false,
     }

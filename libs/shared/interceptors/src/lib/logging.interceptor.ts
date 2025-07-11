@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs'
-import { tap } from 'rxjs/operators'
+import { catchError, tap } from 'rxjs/operators'
 
 import {
   CallHandler,
@@ -55,6 +55,19 @@ export class LoggingInterceptor implements NestInterceptor {
         }
 
         return
+      }),
+      catchError((error: unknown) => {
+        const end = Date.now()
+        const duration = end - startTime
+
+        logger.warn(`${controller}.${method} failed after ${duration}ms:`, {
+          context: LOGGING_CONTEXT,
+          controller,
+          method,
+          duration: `${duration}ms`,
+        })
+
+        throw error
       }),
     )
   }

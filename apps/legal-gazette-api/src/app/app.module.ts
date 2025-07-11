@@ -4,9 +4,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
-import { LegalGazetteNamespaceMiddleware } from '@dmr.is/legal-gazette/ middleware'
-import { LEGAL_GAZETTE_NAMESPACE } from '@dmr.is/legal-gazette/constants'
 import { LoggingModule } from '@dmr.is/logging'
 import { CLSMiddleware } from '@dmr.is/middleware'
 import { AuthModule, HealthModule } from '@dmr.is/modules'
@@ -19,19 +18,21 @@ import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { AdvertModel } from '../modules/advert/advert.model'
 import { AdvertModule } from '../modules/advert/advert.module'
+import { CommonApplicationModule } from '../modules/applications/common/common-application.module'
+import { BankruptcyAdvertModule } from '../modules/bankruptcy-advert/bankruptcy-advert.module'
+import { BankruptcyAdvertModel } from '../modules/bankruptcy-advert/models/bankruptcy-advert.model'
+import { BankruptcyLocationModel } from '../modules/bankruptcy-advert/models/bankruptcy-location.model'
+import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
 import { CaseModel } from '../modules/case/case.model'
 import { CaseModule } from '../modules/case/case.module'
 import { CategoryModel } from '../modules/category/category.model'
-import { CategoryModule } from '../modules/category/category.module'
 import { CommonAdvertModel } from '../modules/common-advert/common-advert.model'
-import { CommonApplicationModule } from '../modules/common-application/common-application.module'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
+import { CourtDistrictModel } from '../modules/court-district/court-district.model'
 import { StatusModel } from '../modules/status/status.model'
-import { StatusModule } from '../modules/status/status.module'
 import { SubscriberModel } from '../modules/subscribers/subscriber.model'
 import { SubscriberModule } from '../modules/subscribers/subscriber.module'
 import { TypeModel } from '../modules/type/type.model'
-import { TypeModule } from '../modules/type/type.module'
 import { UserModel } from '../modules/users/users.model'
 import { UsersModule } from '../modules/users/users.module'
 
@@ -51,18 +52,21 @@ import { UsersModule } from '../modules/users/users.module'
             Number(process.env.DB_PORT) ||
             Number(process.env.LEGAL_GAZETTE_DB_PORT) ||
             5434,
-          clsNamespace: LEGAL_GAZETTE_NAMESPACE,
+          clsNamespace: CLS_NAMESPACE,
           debugLog: true,
           autoLoadModels: false,
           models: [
             UserModel,
             TypeModel,
             CategoryModel,
+            CourtDistrictModel,
             StatusModel,
             CommunicationChannelModel,
             CaseModel,
             CommonAdvertModel,
             AdvertModel,
+            BankruptcyAdvertModel,
+            BankruptcyLocationModel,
             SubscriberModel,
           ],
         }),
@@ -71,14 +75,13 @@ import { UsersModule } from '../modules/users/users.module'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    TypeModule,
-    CategoryModule,
-    StatusModule,
+    BaseEntityModule,
     CaseModule,
     CommonApplicationModule,
     AdvertModule,
     SubscriberModule,
     UsersModule,
+    BankruptcyAdvertModule,
     {
       module: AuthModule,
       global: true,
@@ -106,8 +109,7 @@ import { UsersModule } from '../modules/users/users.module'
   ],
 })
 export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LegalGazetteNamespaceMiddleware).forRoutes('*')
+  async configure(consumer: MiddlewareConsumer) {
     consumer.apply(CLSMiddleware).forRoutes('*')
   }
 }

@@ -38,5 +38,6 @@ export const logger = createLogger({
 export const getLogger = (category: string) => {
   return logger.child({
     category: category,
+    context: category,
   })
 }

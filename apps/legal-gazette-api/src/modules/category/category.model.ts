@@ -9,32 +9,21 @@ import { AdvertModel } from '../advert/advert.model'
 import { TypeModel } from '../type/type.model'
 import { CategoryDto } from './dto/category.dto'
 
+export enum CategoryDefaultIdEnum {
+  BANKRUPTCY_ADVERT = '30452623-789d-4bc8-b068-ff44b706ba8e',
+  DECEASED_ADVERT = 'todo:replace-with-deceased-advert-id',
+}
+
 @BaseEntityTable({
   tableName: LegalGazetteModels.ADVERT_CATEGORY,
 })
-export class CategoryModel extends BaseEntityModel {
+export class CategoryModel extends BaseEntityModel<CategoryDto> {
   @ForeignKey(() => TypeModel)
   @Column({ type: DataType.UUID, field: 'advert_type_id' })
   typeId!: string
 
   @BelongsTo(() => TypeModel)
   type!: TypeModel
-
-  fromModel(): CategoryDto {
-    return {
-      id: this.id,
-      title: this.title,
-      slug: this.slug,
-    }
-  }
-
-  static fromModel(model: CategoryModel): CategoryDto {
-    return {
-      id: model.id,
-      title: model.title,
-      slug: model.slug,
-    }
-  }
 
   static async setAdvertCategory(advertId: string, categoryId: string) {
     const advert = await AdvertModel.unscoped().findByPk(advertId, {

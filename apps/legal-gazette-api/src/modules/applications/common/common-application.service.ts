@@ -6,7 +6,7 @@ import { LegalGazetteEvents } from '@dmr.is/legal-gazette/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AuthService, IAuthService } from '@dmr.is/modules'
 
-import { CaseModel } from '../case/case.model'
+import { CaseModel } from '../../case/case.model'
 import {
   CommonApplicationUpdateStateEvent,
   SubmitCommonApplicationDto,
@@ -63,6 +63,9 @@ export class CommonApplicationService implements ICommonApplicationService {
 
     await this.caseModel.createCommonAdvert({
       applicationId: body.applicationId,
+      involvedPartyNationalId: body.institution
+        ? body.institution.nationalId
+        : body.actor.nationalId,
       caption: body.caption,
       categoryId: body.categoryId,
       publishingDates: body.publishingDates,

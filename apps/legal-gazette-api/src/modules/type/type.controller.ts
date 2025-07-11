@@ -3,11 +3,14 @@ import { Controller, Get, Param } from '@nestjs/common'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 
 import { BaseEntityController } from '../base-entity/base-entity.controller'
-import { GetTypesDto } from './dto/type.dto'
+import { GetTypesDto, TypeDto } from './dto/type.dto'
 import { TypeModel } from './type.model'
 
 @Controller({ path: 'types', version: '1' })
-export class TypeController extends BaseEntityController<typeof TypeModel> {
+export class TypeController extends BaseEntityController<
+  typeof TypeModel,
+  TypeDto
+> {
   constructor() {
     super(TypeModel)
   }
