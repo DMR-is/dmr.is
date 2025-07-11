@@ -197,6 +197,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     caseId: string,
     publishedAt?: string,
     serial?: number,
+    correctionDate?: string | Date,
   ): Promise<ResultWrapper<Buffer>> {
     const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
     const activeCase = caseDetailedMigrate(caseLookup)
@@ -216,6 +217,9 @@ export class PdfService implements OnModuleDestroy, IPdfService {
         activeCase.publishedAt && activeCase.advertDepartment.title
           ? `<div class="sub_signature">${activeCase.advertDepartment.title} - Útgáfudagur: ${formatAnyDate(activeCase.publishedAt)}</div>`
           : undefined,
+      correction: correctionDate
+        ? `<div class="correction"><p>Leiðrétt skjal: ${formatAnyDate(correctionDate)}</p></div>`
+        : undefined,
     })
 
     const signatureRecords = activeCase.signature.records
