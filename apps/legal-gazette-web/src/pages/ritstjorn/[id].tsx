@@ -5,6 +5,7 @@ import { parseAsString } from 'next-usequerystate'
 
 import { useIntl } from 'react-intl'
 
+import { serverFetcher } from '@dmr.is/api-client/fetchers'
 import { deleteUndefined } from '@dmr.is/utils/client'
 
 import {
@@ -21,7 +22,6 @@ import { AdvertSidebar } from '../../components/Form/FormSidebar'
 import { CaseProvider } from '../../context/case-context'
 import { CaseDetailedDto } from '../../gen/fetch'
 import { getLegalGazetteClient } from '../../lib/api/createClient'
-import { serverFetcher } from '../../lib/api/fetchers'
 import { Route, Routes } from '../../lib/constants'
 import { ritstjornSingleMessages } from '../../lib/messages/ritstjorn/single'
 import { loginRedirect, routesToBreadcrumbs } from '../../lib/utils'
