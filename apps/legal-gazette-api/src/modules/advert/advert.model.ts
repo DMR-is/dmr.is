@@ -389,13 +389,13 @@ export class AdvertModel extends BaseModel<
   submittedBy!: string
 
   @Column({
-    type: DataType.VIRTUAL,
+    type: DataType.TEXT,
+    field: 'publication_number',
+    unique: true,
+    allowNull: true,
+    defaultValue: null,
   })
-  get publicationNumber(): string {
-    const advertCase = this.getDataValue('case')
-
-    return advertCase.caseNumber
-  }
+  publicationNumber!: string | null
 
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
   case!: CaseModel
@@ -459,14 +459,55 @@ export class AdvertModel extends BaseModel<
   }
 
   static async publish(model: AdvertModel) {
-    const now = new Date().toISOString()
+    const now = new Date()
     this.logger.info(`Publishing advert at ${now}`, {
       context: 'AdvertModel',
       advertId: model.id,
       timestamp: now,
     })
 
+    if (model.statusId !== StatusIdEnum.READY_FOR_PUBLICATION) {
+      this.logger.error(
+        `Advert with ID ${model.id} is not ready for publication`,
+        {
+          context: 'AdvertModel',
+        },
+      )
+      throw new BadRequestException('Advert is not ready for publication')
+    }
+
+    if (model.publishedAt !== null) {
+      this.logger.error(`Advert with ID ${model.id} is already published`, {
+        context: 'AdvertModel',
+      })
+      throw new BadRequestException('Advert is already published')
+    }
+
+    const startDate = now.setHours(0, 0, 0, 0)
+    const endDate = now.setHours(23, 59, 59, 999)
+
+    const year = now.getFullYear()
+    const month = (now.getMonth() + 1).toString().padStart(2, '0')
+    const day = now.getDate().toString().padStart(2, '0')
+
+    const count = await AdvertModel.count({
+      where: {
+        publishedAt: {
+          [Op.and]: [
+            { [Op.ne]: null },
+            { [Op.gte]: startDate },
+            { [Op.lt]: endDate },
+          ],
+        },
+      },
+    })
+
+    const padded = (count + 1).toString().padStart(3, '0')
+
+    const publicationNumber = `${year}${month}${day}${padded}`
+
     await model.update({
+      publicationNumber: publicationNumber,
       publishedAt: new Date(),
       statusId: StatusIdEnum.PUBLISHED,
     })
