@@ -852,24 +852,30 @@ export class CaseService implements ICaseService {
         new Date(),
       ),
     )
-    const [updateAdvertCheck, postCaseCorrectionCheck] = await Promise.all([
-      this.updateAdvertByHtml(
-        caseId,
-        { advertHtml, documentPdfUrl: pdfUrl },
-        transaction,
-      ),
-      this.postCaseCorrection(
-        caseId,
-        {
-          ...rest,
-          documentHtml: advertHtml,
+    const [updateAdvertCheck, updatePublishedCheck, postCaseCorrectionCheck] =
+      await Promise.all([
+        this.updateAdvertByHtml(
+          caseId,
+          { advertHtml, documentPdfUrl: pdfUrl },
+          transaction,
+        ),
+        this.updatePublishedAdvertByHtml(caseId, {
+          advertHtml,
           documentPdfUrl: pdfUrl,
-        },
-        transaction,
-      ),
-    ])
+        }),
+        this.postCaseCorrection(
+          caseId,
+          {
+            ...rest,
+            documentHtml: advertHtml,
+            documentPdfUrl: pdfUrl,
+          },
+          transaction,
+        ),
+      ])
 
     ResultWrapper.unwrap(updateAdvertCheck)
+    ResultWrapper.unwrap(updatePublishedCheck)
     ResultWrapper.unwrap(postCaseCorrectionCheck)
 
     return ResultWrapper.ok()
@@ -877,27 +883,11 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
-  async updateAdvertByHtml(
+  private async updatePublishedAdvertByHtml(
     caseId: string,
     body: UpdateAdvertHtmlBody,
-    transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    const [updatedCaseResult, advertResult] = await Promise.all([
-      this.updateService.updateAdvert(caseId, body, transaction),
-      this.caseModel.findByPk(caseId),
-    ])
-
-    if (!updatedCaseResult.result.ok) {
-      this.logger.error(`Failed to update html on case<${caseId}>`, {
-        error: updatedCaseResult.result.error,
-        category: LOGGING_CATEGORY,
-      })
-
-      return ResultWrapper.err({
-        code: 500,
-        message: 'Failed to update case',
-      })
-    }
+    const [advertResult] = await Promise.all([this.caseModel.findByPk(caseId)])
 
     if (!advertResult?.advertId) {
       return ResultWrapper.ok()
@@ -907,7 +897,6 @@ export class CaseService implements ICaseService {
       advertResult.advertId,
       {
         documentHtml: body.advertHtml,
-        ...(body.documentPdfUrl && { documentPdfUrl: body.documentPdfUrl }),
       },
     )
 
@@ -925,6 +914,32 @@ export class CaseService implements ICaseService {
       return ResultWrapper.err({
         code: 500,
         message: 'Failed to update advert',
+      })
+    }
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateAdvertByHtml(
+    caseId: string,
+    body: UpdateAdvertHtmlBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const [updatedCaseResult] = await Promise.all([
+      this.updateService.updateAdvert(caseId, body, transaction),
+    ])
+
+    if (!updatedCaseResult.result.ok) {
+      this.logger.error(`Failed to update html on case<${caseId}>`, {
+        error: updatedCaseResult.result.error,
+        category: LOGGING_CATEGORY,
+      })
+
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to update case',
       })
     }
 
