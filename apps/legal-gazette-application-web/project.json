@@ -41,7 +41,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "curl http://localhost:4100/public-swagger/json > clientConfig.json",
+          "curl http://localhost:4100/application-web-swagger/json > clientConfig.json",
           "prettier --write clientConfig.json"
         ],
         "parallel": true,

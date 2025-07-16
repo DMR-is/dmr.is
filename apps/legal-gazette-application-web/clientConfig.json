@@ -1,333 +1,21 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/api/v1/types/slug/{slug}": {
+    "/api/v1/cases": {
       "get": {
-        "operationId": "getTypeBySlug",
+        "operationId": "getCases",
         "parameters": [
           {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/TypeModel" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/types/{id}": {
-      "get": {
-        "operationId": "getType",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/TypeModel" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/types": {
-      "get": {
-        "operationId": "getTypes",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetTypesDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/categories/slug/{slug}": {
-      "get": {
-        "operationId": "getCategoryBySlug",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CategoryDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/categories/{id}": {
-      "get": {
-        "operationId": "getCategory",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CategoryDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/categories": {
-      "get": {
-        "operationId": "getCategories",
-        "parameters": [
-          {
-            "name": "type",
+            "name": "page",
             "required": false,
             "in": "query",
-            "schema": { "nullable": true, "type": "string" }
+            "schema": { "example": 1, "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": { "example": 10, "type": "number" }
           }
         ],
         "responses": {
@@ -335,7 +23,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetCategoriesDto" }
+                "schema": { "$ref": "#/components/schemas/GetCasesDto" }
               }
             }
           },
@@ -381,383 +69,17 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/adverts/{id}/category/{categoryId}": {
-      "patch": {
-        "operationId": "updateAdvertCategory",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "categoryId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/adverts/{id}/status/{statusId}": {
-      "patch": {
-        "operationId": "updateAdvertStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "statusId",
-            "required": true,
-            "in": "path",
-            "schema": { "$ref": "#/components/schemas/StatusIdEnum" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/adverts/{id}": {
-      "patch": {
-        "operationId": "updateAdvert",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateAdvertDto" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
+        "tags": ["Legal gazette - application web API"]
       },
-      "get": {
-        "operationId": "getAdvertById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/adverts/pdf/{id}": {
-      "get": {
-        "operationId": "getAdvertPdf",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the generated pdf as a binary.",
-            "content": {
-              "application/pdf": {
-                "schema": { "type": "string", "format": "binary" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/adverts/common/{id}": {
-      "patch": {
-        "operationId": "updateCommonAdvert",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateCommonAdvertDto" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CommonAdvertDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/adverts/count": {
-      "get": {
-        "operationId": "getAdvertsCount",
+      "post": {
+        "operationId": "createCase",
         "parameters": [],
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetAdvertsStatusCounterDto"
-                }
+                "schema": { "$ref": "#/components/schemas/CaseDto" }
               }
             }
           },
@@ -803,303 +125,12 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - public API"]
+        "tags": ["Legal gazette - application web API"]
       }
     },
-    "/api/v1/adverts/inprogress": {
+    "/api/v1/cases/{id}": {
       "get": {
-        "operationId": "getAdvertsInProgress",
-        "parameters": [
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "schema": { "example": 1, "type": "number" }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "schema": { "example": 10, "type": "number" }
-          },
-          {
-            "name": "categoryId",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "statusId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/components/schemas/StatusIdEnum" }
-            }
-          },
-          {
-            "name": "typeId",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateFrom",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateTo",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertsDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/adverts/completed": {
-      "get": {
-        "operationId": "getCompletedAdverts",
-        "parameters": [
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "schema": { "example": 1, "type": "number" }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "schema": { "example": 10, "type": "number" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertsDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/adverts": {
-      "get": {
-        "operationId": "getAdverts",
-        "parameters": [
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "schema": { "example": 1, "type": "number" }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "schema": { "example": 10, "type": "number" }
-          },
-          {
-            "name": "categoryId",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "statusId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/components/schemas/StatusIdEnum" }
-            }
-          },
-          {
-            "name": "typeId",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateFrom",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateTo",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetAdvertsDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/adverts/{id}/published": {
-      "get": {
-        "operationId": "getAdvertPublished",
+        "operationId": "getCase",
         "parameters": [
           {
             "name": "id",
@@ -1113,7 +144,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertDto" }
+                "schema": { "$ref": "#/components/schemas/CaseDetailedDto" }
               }
             }
           },
@@ -1159,71 +190,10 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/adverts/publish": {
-      "post": {
-        "operationId": "publishAdverts",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/PublishAdvertsBody" }
-            }
-          }
-        },
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/adverts/{id}/publish": {
-      "post": {
-        "operationId": "publishAdvert",
+        "tags": ["Legal gazette - application web API"]
+      },
+      "delete": {
+        "operationId": "deleteCase",
         "parameters": [
           {
             "name": "id",
@@ -1276,19 +246,26 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - public API"]
+        "tags": ["Legal gazette - application web API"]
       }
     },
-    "/api/v1/subscribers/me": {
-      "get": {
-        "operationId": "getMySubscriber",
-        "parameters": [],
+    "/api/v1/cases/{id}/restore": {
+      "post": {
+        "operationId": "restore",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SubscriberDto" }
+                "schema": { "$ref": "#/components/schemas/CaseDto" }
               }
             }
           },
@@ -1333,9 +310,8 @@
             }
           }
         },
-        "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - public API"]
+        "tags": ["Legal gazette - application web API"]
       }
     }
   },
@@ -1345,14 +321,77 @@
     "version": "1.0",
     "contact": {}
   },
-  "tags": [{ "name": "Legal gazette - public API" }],
+  "tags": [{ "name": "Legal gazette - application web API" }],
   "servers": [],
   "components": {
     "securitySchemes": {
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
-      "TypeModel": { "type": "object", "properties": {} },
+      "CaseDto": {
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "description": "ISO representation of the creation date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "ISO representation of the updated date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": "string",
+            "description": "ISO representation of the deletion date",
+            "example": "2021-08-31T12:00:00.000Z",
+            "nullable": true
+          },
+          "id": { "type": "string" },
+          "applicationId": { "type": "string" },
+          "caseNumber": { "type": "string" }
+        },
+        "required": ["createdAt", "updatedAt", "id", "caseNumber"]
+      },
+      "Paging": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "number", "example": 1 },
+          "totalPages": { "type": "number", "example": 10 },
+          "totalItems": { "type": "number", "example": 1000 },
+          "nextPage": { "type": "number", "example": 2, "nullable": true },
+          "previousPage": { "type": "number", "example": 1, "nullable": true },
+          "pageSize": {
+            "type": "number",
+            "example": 10,
+            "minimum": 1,
+            "maximum": 100
+          },
+          "hasNextPage": { "type": "boolean", "example": true },
+          "hasPreviousPage": { "type": "boolean", "example": false }
+        },
+        "required": [
+          "page",
+          "totalPages",
+          "totalItems",
+          "nextPage",
+          "previousPage",
+          "pageSize",
+          "hasNextPage",
+          "hasPreviousPage"
+        ]
+      },
+      "GetCasesDto": {
+        "type": "object",
+        "properties": {
+          "cases": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseDto" }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["cases", "paging"]
+      },
       "ApiErrorDto": {
         "type": "object",
         "properties": {
@@ -1390,7 +429,19 @@
         },
         "required": ["statusCode", "timestamp"]
       },
-      "TypeEnum": { "type": "string", "enum": ["Almenn auglýsing"] },
+      "CommunicationChannelDto": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "phone": { "type": "string" }
+        },
+        "required": ["email"]
+      },
+      "TypeEnum": {
+        "type": "string",
+        "enum": ["Almenn auglýsing", "Innköllun þrotabús", "Innköllun dánarbús"]
+      },
       "TypeDto": {
         "type": "object",
         "properties": {
@@ -1413,16 +464,6 @@
         },
         "required": ["id", "title", "slug"]
       },
-      "GetTypesDto": {
-        "type": "object",
-        "properties": {
-          "types": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/TypeDto" }
-          }
-        },
-        "required": ["types"]
-      },
       "CategoryDto": {
         "type": "object",
         "properties": {
@@ -1443,25 +484,6 @@
           }
         },
         "required": ["id", "title", "slug"]
-      },
-      "GetCategoriesDto": {
-        "type": "object",
-        "properties": {
-          "categories": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CategoryDto" }
-          }
-        },
-        "required": ["categories"]
-      },
-      "StatusIdEnum": { "type": "string" },
-      "UpdateAdvertDto": {
-        "type": "object",
-        "properties": {
-          "scheduledAt": { "type": "string" },
-          "title": { "type": "string" },
-          "html": { "type": "string" }
-        }
       },
       "StatusDto": {
         "type": "object",
@@ -1485,7 +507,104 @@
         "required": ["id", "title", "slug"]
       },
       "AdvertVersion": { "type": "string", "enum": ["A", "B", "C"] },
-      "AdvertDto": {
+      "CommonAdvertSignatureDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "location": { "type": "string" },
+          "date": { "type": "string" }
+        },
+        "required": ["name", "location", "date"]
+      },
+      "CommonAdvertDto": {
+        "type": "object",
+        "properties": {
+          "caption": { "type": "string" },
+          "signature": {
+            "$ref": "#/components/schemas/CommonAdvertSignatureDto"
+          }
+        },
+        "required": ["caption", "signature"]
+      },
+      "BankruptcyLocationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the bankruptcy location"
+          },
+          "nationalId": {
+            "type": "string",
+            "description": "National ID of the bankruptcy location"
+          },
+          "address": {
+            "type": "string",
+            "description": "Address of the bankruptcy location"
+          },
+          "deadline": {
+            "type": "string",
+            "description": "Deadline for the bankruptcy location"
+          }
+        },
+        "required": ["name", "nationalId", "address", "deadline"]
+      },
+      "BankruptcyAdvertDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the bankruptcy advert"
+          },
+          "additionalText": {
+            "type": "string",
+            "description": "The additional text for the bankruptcy advert",
+            "nullable": true
+          },
+          "judgmentDate": {
+            "type": "string",
+            "description": "The date of the judgment related to the bankruptcy advert"
+          },
+          "claimsSentTo": {
+            "type": "string",
+            "description": "The entity to which claims were sent"
+          },
+          "signatureLocation": {
+            "type": "string",
+            "description": "The location of the signature for the bankruptcy advert"
+          },
+          "signatureDate": {
+            "type": "string",
+            "description": "The date of the signature for the bankruptcy advert"
+          },
+          "signatureName": {
+            "type": "string",
+            "description": "The name of the person who signed the bankruptcy advert"
+          },
+          "signatureOnBehalfOf": {
+            "type": "string",
+            "description": "The name of the person on behalf of whom the signature was made",
+            "nullable": true
+          },
+          "courtDistrictName": {
+            "type": "string",
+            "description": "Court district name"
+          },
+          "location": { "$ref": "#/components/schemas/BankruptcyLocationDto" }
+        },
+        "required": [
+          "id",
+          "additionalText",
+          "judgmentDate",
+          "claimsSentTo",
+          "signatureLocation",
+          "signatureDate",
+          "signatureName",
+          "signatureOnBehalfOf",
+          "courtDistrictName",
+          "location"
+        ]
+      },
+      "AdvertDetailedDto": {
         "type": "object",
         "properties": {
           "createdAt": {
@@ -1506,7 +625,7 @@
           },
           "id": { "type": "string" },
           "caseId": { "type": "string" },
-          "publicationNumber": { "type": "string" },
+          "publicationNumber": { "type": "string", "nullable": true },
           "title": { "type": "string" },
           "publishedAt": { "type": "string", "nullable": true },
           "owner": { "type": "string" },
@@ -1518,7 +637,15 @@
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersion" }]
           },
           "html": { "type": "string" },
-          "paid": { "type": "boolean" }
+          "paid": { "type": "boolean" },
+          "commonAdvert": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CommonAdvertDto" }]
+          },
+          "bankruptcyAdvert": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/BankruptcyAdvertDto" }]
+          }
         },
         "required": [
           "createdAt",
@@ -1538,132 +665,45 @@
           "paid"
         ]
       },
-      "UpdateCommonAdvertSignatureDto": {
+      "CaseDetailedDto": {
         "type": "object",
         "properties": {
-          "name": { "type": "string" },
-          "location": { "type": "string" },
-          "date": { "type": "string" }
-        }
-      },
-      "UpdateCommonAdvertDto": {
-        "type": "object",
-        "properties": {
-          "caption": { "type": "string" },
-          "html": { "type": "string" },
-          "signature": {
-            "$ref": "#/components/schemas/UpdateCommonAdvertSignatureDto"
-          }
-        }
-      },
-      "CommonAdvertSignatureDto": {
-        "type": "object",
-        "properties": {
-          "name": { "type": "string" },
-          "location": { "type": "string" },
-          "date": { "type": "string" }
-        },
-        "required": ["name", "location", "date"]
-      },
-      "CommonAdvertDto": {
-        "type": "object",
-        "properties": {
-          "caption": { "type": "string" },
-          "signature": {
-            "$ref": "#/components/schemas/CommonAdvertSignatureDto"
-          }
-        },
-        "required": ["caption", "signature"]
-      },
-      "AdvertStatusCounterItemDto": {
-        "type": "object",
-        "properties": {
-          "status": { "$ref": "#/components/schemas/StatusDto" },
-          "count": { "type": "number" }
-        },
-        "required": ["status", "count"]
-      },
-      "GetAdvertsStatusCounterDto": {
-        "type": "object",
-        "properties": {
-          "submitted": {
-            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          "createdAt": {
+            "type": "string",
+            "description": "ISO representation of the creation date",
+            "example": "2021-08-31T12:00:00.000Z"
           },
-          "readyForPublication": {
-            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          "updatedAt": {
+            "type": "string",
+            "description": "ISO representation of the updated date",
+            "example": "2021-08-31T12:00:00.000Z"
           },
-          "withdrawn": {
-            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          "deletedAt": {
+            "type": "string",
+            "description": "ISO representation of the deletion date",
+            "example": "2021-08-31T12:00:00.000Z",
+            "nullable": true
           },
-          "rejected": {
-            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          "id": { "type": "string" },
+          "applicationId": { "type": "string" },
+          "caseNumber": { "type": "string" },
+          "communicationChannels": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
           },
-          "published": {
-            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
-          }
-        },
-        "required": [
-          "submitted",
-          "readyForPublication",
-          "withdrawn",
-          "rejected",
-          "published"
-        ]
-      },
-      "Paging": {
-        "type": "object",
-        "properties": {
-          "page": { "type": "number", "example": 1 },
-          "totalPages": { "type": "number", "example": 10 },
-          "totalItems": { "type": "number", "example": 1000 },
-          "nextPage": { "type": "number", "example": 2, "nullable": true },
-          "previousPage": { "type": "number", "example": 1, "nullable": true },
-          "pageSize": {
-            "type": "number",
-            "example": 10,
-            "minimum": 1,
-            "maximum": 100
-          },
-          "hasNextPage": { "type": "boolean", "example": true },
-          "hasPreviousPage": { "type": "boolean", "example": false }
-        },
-        "required": [
-          "page",
-          "totalPages",
-          "totalItems",
-          "nextPage",
-          "previousPage",
-          "pageSize",
-          "hasNextPage",
-          "hasPreviousPage"
-        ]
-      },
-      "GetAdvertsDto": {
-        "type": "object",
-        "properties": {
           "adverts": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertDto" }
-          },
-          "paging": { "$ref": "#/components/schemas/Paging" }
+            "items": { "$ref": "#/components/schemas/AdvertDetailedDto" }
+          }
         },
-        "required": ["adverts", "paging"]
-      },
-      "PublishAdvertsBody": {
-        "type": "object",
-        "properties": {
-          "advertIds": { "type": "array", "items": { "type": "string" } }
-        },
-        "required": ["advertIds"]
-      },
-      "SubscriberDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "nationalId": { "type": "string" },
-          "isActive": { "type": "boolean" }
-        },
-        "required": ["id", "nationalId", "isActive"]
+        "required": [
+          "createdAt",
+          "updatedAt",
+          "id",
+          "caseNumber",
+          "communicationChannels",
+          "adverts"
+        ]
       }
     }
   }
