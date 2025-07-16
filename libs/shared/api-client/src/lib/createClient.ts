@@ -1,6 +1,6 @@
 import { createEnhancedFetch } from './createEnhancedFetch'
 
-type WebClient = 'LGAdmin' | 'OJOIAdmin' | 'LGWeb'
+type WebClient = 'LGAdmin' | 'OJOIAdmin' | 'LGWeb' | 'LGApplicationWeb'
 
 const getPath = (client: WebClient) => {
   if (process.env.NODE_ENV !== 'production') {
@@ -36,7 +36,7 @@ export const config = <Configuration>(
   Configuration: new (config?: CParameters) => Configuration,
   token: string,
   client: WebClient,
-  ) => {
+) => {
   const fetchWithCookie = createEnhancedFetch()
 
   return new Configuration({
