@@ -48,8 +48,18 @@ export class PublishingService {
         return
       }
 
-      await advert.publishAdvert()
-      numberOfPublishedAdverts++
+      try {
+        await advert.publishAdvert()
+        numberOfPublishedAdverts++
+      } catch (error) {
+        this.logger.error(`Failed to publish advert with ID ${advert.id}`, {
+          context: LOGGER_CONTEXT,
+          error: error,
+          advertId: advert.id,
+          timestamp: new Date().toISOString(),
+        })
+        numberOfSkippedAdverts++
+      }
     })
 
     this.logger.info(

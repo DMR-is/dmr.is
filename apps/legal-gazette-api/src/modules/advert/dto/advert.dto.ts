@@ -41,9 +41,10 @@ export class AdvertDto extends DetailedDto {
 
   @ApiProperty({
     type: String,
+    nullable: true,
   })
   @IsUUID()
-  publicationNumber!: string
+  publicationNumber!: string | null
 
   @ApiProperty({
     type: String,
