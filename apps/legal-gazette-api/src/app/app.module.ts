@@ -32,6 +32,7 @@ import { CourtDistrictModel } from '../modules/court-district/court-district.mod
 import { StatusModel } from '../modules/status/status.model'
 import { SubscriberModel } from '../modules/subscribers/subscriber.model'
 import { SubscriberModule } from '../modules/subscribers/subscriber.module'
+import { ApplicationWebModule } from '../modules/swagger/application-web.module'
 import { TypeModel } from '../modules/type/type.model'
 import { UserModel } from '../modules/users/users.model'
 import { UsersModule } from '../modules/users/users.module'
@@ -87,6 +88,7 @@ import { UsersModule } from '../modules/users/users.module'
       global: true,
     },
     HealthModule,
+    ApplicationWebModule,
   ],
   controllers: [],
   providers: [

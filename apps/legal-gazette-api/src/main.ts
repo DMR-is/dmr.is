@@ -12,6 +12,7 @@ import { AdvertModule } from './modules/advert/advert.module'
 import { CommonApplicationModule } from './modules/applications/common/common-application.module'
 import { BaseEntityModule } from './modules/base-entity/base-entity.module'
 import { SubscriberModule } from './modules/subscribers/subscriber.module'
+import { ApplicationWebModule } from './modules/swagger/application-web.module'
 import { openApi } from './openApi'
 
 async function bootstrap() {
@@ -22,6 +23,8 @@ async function bootstrap() {
   const islandApiTag = 'Legal gazette - common application'
   const publicSwaggerPath = 'public-swagger'
   const publicApiTag = 'Legal gazette - public API'
+  const applicationWebSwaggerPath = 'application-web-swagger'
+  const applicationWebApiTag = 'Legal gazette - application web API'
 
   const app = await NestFactory.create(AppModule, {
     logger: WinstonModule.createLogger({ instance: logger }),
@@ -82,6 +85,27 @@ async function bootstrap() {
   SwaggerModule.setup(publicSwaggerPath, app, publicDocument, {
     customSiteTitle: 'Legal Gazette Public API',
     jsonDocumentUrl: `/${publicSwaggerPath}/json`,
+  })
+
+  const applicationWebDocument = SwaggerModule.createDocument(app, openApi, {
+    include: [ApplicationWebModule],
+    deepScanRoutes: true,
+    autoTagControllers: false,
+  })
+
+  // replace the default tag with 'Legal gazette - application web API'
+  applicationWebDocument.tags = [{ name: applicationWebApiTag }]
+
+  // tag routes
+  Object.values(applicationWebDocument.paths).forEach((path) => {
+    for (const method of Object.values(path)) {
+      method.tags = [applicationWebApiTag]
+    }
+  })
+
+  SwaggerModule.setup(applicationWebSwaggerPath, app, applicationWebDocument, {
+    customSiteTitle: 'Legal Gazette Application Web API',
+    jsonDocumentUrl: `/${applicationWebSwaggerPath}/json`,
   })
 
   apmInit()
