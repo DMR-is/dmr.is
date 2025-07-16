@@ -4,12 +4,12 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 
 import { decode } from 'jsonwebtoken'
 
+import { serverFetcher } from '@dmr.is/api-client/fetchers'
 import { identityServerConfig } from '@dmr.is/auth/identityServerConfig'
 import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
 import { getLogger } from '@dmr.is/logging'
 
 import { getLegalGazetteClient } from '../../../lib/api/createClient'
-import { serverFetcher } from '../../../lib/api/fetchers'
 
 type ErrorWithPotentialReqRes = Error & {
   request?: unknown
