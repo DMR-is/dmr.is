@@ -21,6 +21,7 @@ import { AdvertModule } from '../modules/advert/advert.module'
 import { CommonApplicationModule } from '../modules/applications/common/common-application.module'
 import { BankruptcyAdvertModule } from '../modules/bankruptcy-advert/bankruptcy-advert.module'
 import { BankruptcyAdvertModel } from '../modules/bankruptcy-advert/models/bankruptcy-advert.model'
+import { BankruptcyApplicationModel } from '../modules/bankruptcy-advert/models/bankruptcy-application.model'
 import { BankruptcyLocationModel } from '../modules/bankruptcy-advert/models/bankruptcy-location.model'
 import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
 import { CaseModel } from '../modules/case/case.model'
@@ -68,6 +69,7 @@ import { UsersModule } from '../modules/users/users.module'
             AdvertModel,
             BankruptcyAdvertModel,
             BankruptcyLocationModel,
+            BankruptcyApplicationModel,
             SubscriberModel,
           ],
         }),
