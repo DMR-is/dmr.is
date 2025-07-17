@@ -8,6 +8,7 @@ import {
   DefaultScope,
   ForeignKey,
   HasMany,
+  HasOne,
   Scopes,
 } from 'sequelize-typescript'
 
@@ -16,6 +17,7 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
+import { BankruptcyApplicationModel } from '../bankruptcy-advert/models/bankruptcy-application.model'
 import { CategoryModel } from '../category/category.model'
 import { CommonAdvertModel } from '../common-advert/common-advert.model'
 import { CreateCommonAdvertInternalDto } from '../common-advert/dto/create-common-advert.dto'
@@ -117,6 +119,11 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
 
   @BelongsTo(() => UserModel, 'assignedUserId')
   assignedUser?: UserModel
+
+  @HasOne(() => BankruptcyApplicationModel, {
+    foreignKey: 'caseId',
+  })
+  bankruptcyApplication?: BankruptcyApplicationModel
 
   static async createCommonAdvert(body: CreateCommonAdvertInternalDto) {
     this.logger.info('Creating case for common advert')
