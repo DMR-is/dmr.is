@@ -1,13 +1,16 @@
 import {
   Body,
   Controller,
+  Inject,
   InternalServerErrorException,
   Post,
+  UnauthorizedException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { CurrentUser } from '@dmr.is/decorators'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
@@ -17,6 +20,7 @@ import {
   AdvertModelScopes,
 } from '../advert/advert.model'
 import { CategoryDefaultIdEnum } from '../category/category.model'
+import { StatusIdEnum } from '../status/status.model'
 import { TypeEnum, TypeIdEnum } from '../type/type.model'
 import { CreateBankruptcyAdvertDto } from './dto/create-bankruptcy-advert.dto'
 import { BankruptcyAdvertModel } from './models/bankruptcy-advert.model'
@@ -27,8 +31,30 @@ import { BankruptcyAdvertModel } from './models/bankruptcy-advert.model'
 })
 export class BankruptcyAdvertController {
   constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
   ) {}
+
+  @Post('draft')
+  @LGResponse({ operationId: 'createDraftBankruptcyAdvert', status: 201 })
+  async createDraftBankruptcyAdvert(@CurrentUser() user: Auth) {
+    if (!user?.nationalId) {
+      this.logger.warn('Unauthorized access attempt to create draft advert', {
+        context: 'BankruptcyAdvertController',
+        user,
+      })
+
+      throw new UnauthorizedException()
+    }
+
+    await this.advertModel.create({
+      statusId: StatusIdEnum.DRAFT,
+      typeId: TypeIdEnum.BANKRUPTCY_ADVERT,
+      categoryId: CategoryDefaultIdEnum.BANKRUPTCY_ADVERT,
+      submittedBy: user.nationalId,
+      title: TypeEnum.BANKRUPTCY_ADVERT,
+    })
+  }
 
   @Post('')
   @LGResponse({ operationId: 'createBankruptcyAdvert', status: 201 })

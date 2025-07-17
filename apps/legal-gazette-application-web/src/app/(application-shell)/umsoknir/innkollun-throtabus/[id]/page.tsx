@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth'
 
-import { CaseDetailedDto } from '../../../../../gen/fetch'
 import { getClient } from '../../../../../lib/createClient'
+import { safeCall } from '../../../../../lib/serverUtils'
 import { authOptions } from '../../../../api/auth/[...nextauth]/route'
 
 export default async function UmsoknirThrotabusPage({
@@ -23,22 +23,14 @@ export default async function UmsoknirThrotabusPage({
   }
 
   const client = getClient(session.idToken)
-  let theCase: CaseDetailedDto | null = null
+  const theCase = await safeCall(() => client.getCase({ id: params.id }))
 
-  try {
-    theCase = await client.getCase({ id: params.id })
-  } catch (error) {
-    console.log('Error fetching case:', error)
-  }
-
-  console.log(theCase)
-
-  if (!theCase) {
+  if (!theCase.data) {
     return (
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-4">Mál fannst ekki</h1>
         <p className="mb-4">
-          Eitthvað fór úrskeiðis við að sækja mál með ID: {params.id}.
+          Eitthvað fór úrskeiðis við að sækja mál með auðkenni: {params.id}.
         </p>
       </div>
     )
