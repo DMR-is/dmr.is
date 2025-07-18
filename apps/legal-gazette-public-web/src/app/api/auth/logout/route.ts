@@ -1,8 +1,11 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
+export const dynamic = 'force-dynamic'
 
-function handler(req: NextApiRequest, res: NextApiResponse) {
-  res.redirect(
-    `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/endsession?id_token_hint=${req.query.id_token}&post_logout_redirect_uri=${process.env.IDENTITY_SERVER_LOGOUT_URL}`,
+function handler(request: Request) {
+  const url = new URL(request.url)
+  const idToken = url.searchParams.get('id_token')
+
+  return Response.redirect(
+    `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/endsession?id_token_hint=${idToken}&post_logout_redirect_uri=${process.env.IDENTITY_SERVER_LOGOUT_URL}`,
   )
 }
 
