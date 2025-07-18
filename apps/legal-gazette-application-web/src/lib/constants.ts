@@ -1,4 +1,5 @@
 export enum PageRoutes {
+  LOGIN = '/innskraning',
   FRONTPAGE = '/',
   APPLICATIONS = '/umsoknir',
   APPLICATION_THROTABU = '/umsoknir/innkollun-throtabus',

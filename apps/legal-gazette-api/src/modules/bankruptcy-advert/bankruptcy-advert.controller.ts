@@ -1,30 +1,26 @@
-import {
-  Body,
-  Controller,
-  InternalServerErrorException,
-  Post,
-} from '@nestjs/common'
+import { Body, Controller, Post, UseGuards } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
+import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
+import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
-import {
-  AdvertCreateAttributes,
-  AdvertModel,
-  AdvertModelScopes,
-} from '../advert/advert.model'
+import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
 import { CategoryDefaultIdEnum } from '../category/category.model'
 import { TypeEnum, TypeIdEnum } from '../type/type.model'
 import { CreateBankruptcyAdvertDto } from './dto/create-bankruptcy-advert.dto'
 import { BankruptcyAdvertModel } from './models/bankruptcy-advert.model'
+import { BankruptcyLocationModel } from './models/bankruptcy-location.model'
 
 @Controller({
   path: 'adverts/bankruptcy',
   version: '1',
 })
+@ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard)
 export class BankruptcyAdvertController {
   constructor(
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
@@ -38,7 +34,7 @@ export class BankruptcyAdvertController {
   ) {
     const args: AdvertCreateAttributes = {
       title: TypeEnum.BANKRUPTCY_ADVERT,
-      submittedBy: 'Testing 123', // TODO: Use user information
+      submittedBy: user.nationalId as string,
       typeId: TypeIdEnum.BANKRUPTCY_ADVERT,
       categoryId: CategoryDefaultIdEnum.BANKRUPTCY_ADVERT,
       scheduledAt: new Date(body.scheduledAt),
@@ -61,17 +57,14 @@ export class BankruptcyAdvertController {
 
     const newAdvert = await this.advertModel.create(args, {
       returning: true,
-      include: [BankruptcyAdvertModel],
+      include: [
+        {
+          model: BankruptcyAdvertModel,
+          include: [{ model: BankruptcyLocationModel }],
+        },
+      ],
     })
 
-    const advert = await this.advertModel
-      .scope(AdvertModelScopes.BANKRUPTCY_ADVERT)
-      .findByPk(newAdvert.id)
-
-    if (!advert) {
-      throw new InternalServerErrorException()
-    }
-
-    return advert.fromModelDetailed()
+    return newAdvert.fromModelDetailed()
   }
 }

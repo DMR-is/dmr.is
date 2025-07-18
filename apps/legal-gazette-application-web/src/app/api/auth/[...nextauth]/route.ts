@@ -4,70 +4,10 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 
 import { decode } from 'jsonwebtoken'
 
-import { serverFetcher } from '@dmr.is/api-client/fetchers'
 import { identityServerConfig } from '@dmr.is/auth/identityServerConfig'
 import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
-import { getLogger } from '@dmr.is/logging'
 
-import { getClient } from '../../../../lib/createClient'
-
-type ErrorWithPotentialReqRes = Error & {
-  request?: unknown
-  response?: unknown
-}
-
-const NODE_ENV = process.env.NODE_ENV
 const SESION_TIMEOUT = 60 * 60 // 1 hour
-
-const secure = NODE_ENV === 'production' ? '__Secure-' : ''
-
-const LOGGING_CATEGORY = 'next-auth'
-
-async function authorize(nationalId?: string, idToken?: string) {
-  if (!idToken || !nationalId) {
-    return null
-  }
-
-  const dmrClient = getClient(idToken)
-
-  try {
-    const { data: member, error } = await serverFetcher(() =>
-      dmrClient.getMySubscriber(),
-    )
-    if (!member) {
-      const logger = getLogger('authorize')
-
-      logger.error('Failure authenticating', {
-        error: error,
-        category: LOGGING_CATEGORY,
-      })
-      throw new Error('Member not found')
-    }
-
-    if (!member.isActive) {
-      const logger = getLogger('authorize')
-      logger.error('Subscriber is not active', {
-        nationalId,
-        category: LOGGING_CATEGORY,
-      })
-      throw new Error('Subscriber is not active')
-    }
-
-    return member
-  } catch (e) {
-    const error = e as ErrorWithPotentialReqRes
-
-    if (error.request) {
-      delete error.request
-    }
-
-    if (error.response) {
-      delete error.response
-    }
-
-    return null
-  }
-}
 
 export const authOptions: AuthOptions = {
   pages: {
@@ -84,7 +24,7 @@ export const authOptions: AuthOptions = {
         // On first sign-in, user will be available
         return {
           ...token,
-          nationalId: user.nationalId,
+          nationalId: account.nationalId,
           name: user.name ?? 'unknown',
           accessToken: account.access_token,
           refreshToken: account.refresh_token,
@@ -132,16 +72,10 @@ export const authOptions: AuthOptions = {
           return false
         }
         const decodedAccessToken = decode(account?.id_token) as JWT
-        const nationalId = decodedAccessToken?.nationalId
-        const authMember = await authorize(nationalId, account?.id_token)
-        // Return false if no user is found
-        if (!authMember) {
-          return false
-        }
-        // Mutate user object to include roles, nationalId and displayName
 
-        user.nationalId = authMember.nationalId
-        user.id = authMember.id
+        user.nationalId = decodedAccessToken.nationalId as string
+        user.name = decodedAccessToken.name as string
+
         return true
       }
 

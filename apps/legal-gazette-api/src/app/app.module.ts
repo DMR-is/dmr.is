@@ -7,7 +7,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { LoggingModule } from '@dmr.is/logging'
-import { CLSMiddleware } from '@dmr.is/middleware'
+import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/middleware'
 import { AuthModule, HealthModule } from '@dmr.is/modules'
 import {
   GlobalExceptionFilter,
@@ -21,6 +21,7 @@ import { AdvertModule } from '../modules/advert/advert.module'
 import { CommonApplicationModule } from '../modules/applications/common/common-application.module'
 import { BankruptcyAdvertModule } from '../modules/bankruptcy-advert/bankruptcy-advert.module'
 import { BankruptcyAdvertModel } from '../modules/bankruptcy-advert/models/bankruptcy-advert.model'
+import { BankruptcyApplicationModel } from '../modules/applications/bankruptcy/models/bankruptcy-application.model'
 import { BankruptcyLocationModel } from '../modules/bankruptcy-advert/models/bankruptcy-location.model'
 import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
 import { CaseModel } from '../modules/case/case.model'
@@ -32,6 +33,7 @@ import { CourtDistrictModel } from '../modules/court-district/court-district.mod
 import { StatusModel } from '../modules/status/status.model'
 import { SubscriberModel } from '../modules/subscribers/subscriber.model'
 import { SubscriberModule } from '../modules/subscribers/subscriber.module'
+import { ApplicationWebModule } from '../modules/swagger/application-web.module'
 import { TypeModel } from '../modules/type/type.model'
 import { UserModel } from '../modules/users/users.model'
 import { UsersModule } from '../modules/users/users.module'
@@ -67,6 +69,7 @@ import { UsersModule } from '../modules/users/users.module'
             AdvertModel,
             BankruptcyAdvertModel,
             BankruptcyLocationModel,
+            BankruptcyApplicationModel,
             SubscriberModel,
           ],
         }),
@@ -87,6 +90,7 @@ import { UsersModule } from '../modules/users/users.module'
       global: true,
     },
     HealthModule,
+    ApplicationWebModule,
   ],
   controllers: [],
   providers: [
@@ -111,5 +115,6 @@ import { UsersModule } from '../modules/users/users.module'
 export class AppModule implements NestModule {
   async configure(consumer: MiddlewareConsumer) {
     consumer.apply(CLSMiddleware).forRoutes('*')
+    consumer.apply(LogRequestMiddleware).forRoutes('*')
   }
 }

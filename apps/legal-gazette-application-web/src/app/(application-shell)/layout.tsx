@@ -20,10 +20,12 @@ export default function ApplicationShellLayout({
       <GridContainer>
         <GridRow>
           <GridColumn span={['12/12', '12/12', '9/12']}>
-            <Box className={styles.formWrapper}>{children}</Box>
+            <Box padding={4} background="white">
+              {children}
+            </Box>
           </GridColumn>
           <GridColumn span={['12/12', '12/12', '3/12']}>
-            <Box paddingY={6}>
+            <Box paddingY={4}>
               <Text variant="h4">Texti hér</Text>
             </Box>
           </GridColumn>

@@ -10,12 +10,13 @@ export class LogRequestMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     const now = new Date()
     const { protocol, method, originalUrl } = req
-    const host = req.get('host')
-    const fullUrl = `${protocol}://${host}${originalUrl}`
+    const fullUrl = `${originalUrl}`
 
-    this.logger.info(`${method} request: ${fullUrl}`, {
+    this.logger.info(`[${method}]: ${fullUrl}`, {
+      context: 'LoggingMiddleware',
       request: {
         method,
+        protocol,
         url: fullUrl,
         body: req.body,
         params: req.params,

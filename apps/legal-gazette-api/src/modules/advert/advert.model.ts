@@ -89,17 +89,7 @@ export enum AdvertModelScopes {
 
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
 @DefaultScope(() => ({
-  include: [
-    StatusModel,
-    CategoryModel,
-    TypeModel,
-    CommonAdvertModel,
-    {
-      model: CaseModel.unscoped(),
-      attributes: ['caseNumber'],
-      required: true,
-    },
-  ],
+  include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
   where: {
     statusId: {
       [Op.in]: [StatusIdEnum.SUBMITTED, StatusIdEnum.READY_FOR_PUBLICATION],
@@ -112,17 +102,7 @@ export enum AdvertModelScopes {
 }))
 @Scopes(() => ({
   readyForPublication: {
-    include: [
-      StatusModel,
-      CategoryModel,
-      TypeModel,
-      CommonAdvertModel,
-      {
-        model: CaseModel.unscoped(),
-        attributes: ['caseNumber'],
-        required: true,
-      },
-    ],
+    include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
     where: {
       statusId: StatusIdEnum.READY_FOR_PUBLICATION,
       publishedAt: { [Op.eq]: null },
@@ -130,17 +110,7 @@ export enum AdvertModelScopes {
     order: [['scheduledAt', 'ASC']],
   },
   toBePublished: {
-    include: [
-      StatusModel,
-      CategoryModel,
-      TypeModel,
-      CommonAdvertModel,
-      {
-        model: CaseModel.unscoped(),
-        attributes: ['caseNumber'],
-        required: true,
-      },
-    ],
+    include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
     where: {
       paid: true,
       statusId: StatusIdEnum.READY_FOR_PUBLICATION,
@@ -149,17 +119,7 @@ export enum AdvertModelScopes {
     order: [['scheduledAt', 'ASC']],
   },
   published: {
-    include: [
-      StatusModel,
-      CategoryModel,
-      TypeModel,
-      CommonAdvertModel,
-      {
-        model: CaseModel.unscoped(),
-        attributes: ['caseNumber'],
-        required: true,
-      },
-    ],
+    include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
     where: {
       publishedAt: { [Op.ne]: null },
       statusId: StatusIdEnum.PUBLISHED,
@@ -167,18 +127,7 @@ export enum AdvertModelScopes {
     order: [['publishedAt', 'DESC']],
   },
   completed: {
-    include: [
-      StatusModel,
-      CategoryModel,
-      TypeModel,
-      CommonAdvertModel,
-      {
-        model: CaseModel.unscoped(),
-        attributes: ['caseNumber'],
-        required: true,
-        paranoid: false,
-      },
-    ],
+    include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
     order: [['scheduledAt', 'ASC']],
     where: {
       statusId: {
@@ -191,18 +140,7 @@ export enum AdvertModelScopes {
     },
   },
   all: {
-    include: [
-      StatusModel,
-      CategoryModel,
-      TypeModel,
-      CommonAdvertModel,
-      {
-        model: CaseModel.unscoped(),
-        duplicating: false,
-        attributes: ['caseNumber'],
-        required: true,
-      },
-    ],
+    include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
     where: {},
     order: [['version', 'ASC']],
   },
@@ -212,11 +150,6 @@ export enum AdvertModelScopes {
       CategoryModel,
       TypeModel,
       CommonAdvertModel,
-      {
-        model: CaseModel.unscoped(),
-        attributes: ['caseNumber'],
-        required: true,
-      },
       BankruptcyAdvertModel,
     ],
     where: {
@@ -282,17 +215,7 @@ export enum AdvertModelScopes {
     }
 
     return {
-      include: [
-        StatusModel,
-        CategoryModel,
-        TypeModel,
-        CommonAdvertModel,
-        {
-          model: CaseModel.unscoped(),
-          attributes: ['caseNumber'],
-          required: true,
-        },
-      ],
+      include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
       where: whereClause,
       order: [['scheduledAt', 'ASC']],
     }
@@ -337,7 +260,7 @@ export class AdvertModel extends BaseModel<
 
   @Column({
     type: DataType.DATE,
-    allowNull: true,
+    allowNull: false,
     field: 'scheduled_at',
   })
   scheduledAt!: Date
