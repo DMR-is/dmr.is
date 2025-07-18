@@ -1660,8 +1660,9 @@
       "BankruptcyApplicationDto": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "nullable": true },
+          "id": { "type": "string" },
           "additionalText": { "type": "string", "nullable": true },
+          "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
           "judgmentDate": {
             "format": "date-time",
             "type": "string",

@@ -6,8 +6,6 @@ import {
   ForeignKey,
 } from 'sequelize-typescript'
 
-import { NotFoundException } from '@nestjs/common'
-
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
@@ -15,6 +13,11 @@ import { CaseModel } from '../../../case/case.model'
 import { CourtDistrictModel } from '../../../court-district/court-district.model'
 import { BankruptcyApplicationDto } from '../dto/bankruptcy-application.dto'
 import { UpdateBankruptcyApplicationDto } from '../dto/update-bankruptcy-application.dto'
+
+export enum BankruptcyApplicationStatusEnum {
+  DRAFT = 'DRAFT',
+  SUBMITTED = 'SUBMITTED',
+}
 
 type BankruptcyApplicationAttributes = {
   additionalText?: string | null
@@ -56,6 +59,14 @@ export class BankruptcyApplicationModel extends BaseModel<
     defaultValue: null,
   })
   additionalText!: string | null
+
+  @Column({
+    type: DataType.ENUM(...Object.values(BankruptcyApplicationStatusEnum)),
+    allowNull: false,
+    defaultValue: BankruptcyApplicationStatusEnum.DRAFT,
+    field: 'status',
+  })
+  status!: BankruptcyApplicationStatusEnum
 
   @Column({
     type: DataType.DATE,
@@ -213,6 +224,7 @@ export class BankruptcyApplicationModel extends BaseModel<
   ): BankruptcyApplicationDto {
     return {
       id: model.id,
+      status: model.status,
       additionalText: model.additionalText,
       judgmentDate: model.judgmentDate,
       claimsSentTo: model.claimsSentTo,

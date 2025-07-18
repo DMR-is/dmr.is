@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 
+import { getLogger } from '@dmr.is/logging'
+
 import { BankruptcyApplicationScreen } from '../../../../../components/client-components/application/BankruptcyApplicationScreen'
 import { getClient } from '../../../../../lib/createClient'
 import { safeCall } from '../../../../../lib/serverUtils'
@@ -12,6 +14,7 @@ export default async function UmsoknirThrotabusPage({
   params: { id: string }
 }) {
   const session = await getServerSession(authOptions)
+  const logger = getLogger('LegalGazetteApplicationWeb')
 
   if (!session || !session.idToken) {
     return (
@@ -25,15 +28,30 @@ export default async function UmsoknirThrotabusPage({
   }
 
   const client = getClient(session.idToken)
-  const applicationResults = await safeCall(() =>
+  const { courtDistricts } = await client.getCourtDistricts()
+  const application = await safeCall(() =>
     client.findOrCreateApplication({
       caseId: params.id,
     }),
   )
 
-  if (applicationResults.error) {
-    return notFound()
+  if (application.error) {
+    logger.error('Error fetching bankruptcy application', {
+      error: application.error,
+      context: 'UmsoknirThrotabusPage',
+    })
+
+    if (application.error.statusCode === 404) {
+      return notFound()
+    }
+
+    throw new Error()
   }
 
-  return <BankruptcyApplicationScreen application={applicationResults.data} />
+  return (
+    <BankruptcyApplicationScreen
+      locations={courtDistricts}
+      application={application.data}
+    />
+  )
 }
