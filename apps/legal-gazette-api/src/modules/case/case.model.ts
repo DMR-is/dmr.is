@@ -17,7 +17,7 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
-import { BankruptcyApplicationModel } from '../bankruptcy-advert/models/bankruptcy-application.model'
+import { BankruptcyApplicationModel } from '../applications/bankruptcy/models/bankruptcy-application.model'
 import { CategoryModel } from '../category/category.model'
 import { CommonAdvertModel } from '../common-advert/common-advert.model'
 import { CreateCommonAdvertInternalDto } from '../common-advert/dto/create-common-advert.dto'
@@ -71,6 +71,10 @@ type CaseCreateAttributes = {
         include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
       },
       { model: UserModel },
+      {
+        model: BankruptcyApplicationModel,
+        required: false,
+      },
     ],
   },
   byApplicationId: (applicationId: string) => ({
@@ -246,6 +250,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
           phone: channel.phone ? channel.phone : undefined,
           name: channel.name ? channel.name : undefined,
         })),
+        bankruptcyApplication: model.bankruptcyApplication?.fromModel(),
       }
     } catch (error) {
       this.logger.debug(

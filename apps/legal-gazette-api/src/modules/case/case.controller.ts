@@ -9,6 +9,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common'
+import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
@@ -25,6 +26,7 @@ import {
 } from './dto/case.dto'
 import { ICaseService } from './case.service.interface'
 
+@ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard)
 @Controller({ path: 'cases', version: '1' })
 export class CaseController {

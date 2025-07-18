@@ -68,6 +68,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       },
@@ -124,6 +125,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -189,6 +191,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       },
@@ -245,6 +248,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -310,116 +314,7 @@
             }
           }
         },
-        "summary": "",
-        "tags": ["Legal gazette - application web API"]
-      }
-    },
-    "/api/v1/adverts/bankruptcy/application": {
-      "post": {
-        "operationId": "createBankruptcyApplication",
-        "parameters": [],
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - application web API"]
-      },
-      "patch": {
-        "operationId": "updateBankruptcyApplication",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateBankruptcyApplicationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -481,6 +376,150 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/applications/bankruptcy/{caseId}": {
+      "post": {
+        "operationId": "findOrCreateApplication",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankruptcyApplicationDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/applications/bankruptcy/{caseId}/{applicationId}": {
+      "patch": {
+        "operationId": "updateBankruptcyApplication",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBankruptcyApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1597,6 +1636,63 @@
           "paid"
         ]
       },
+      "CourtDistrictDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUIDV4 of the entity",
+            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the entity",
+            "example": "Base entity"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the entity",
+            "example": "base-entity"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "BankruptcyApplicationDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "nullable": true },
+          "additionalText": { "type": "string", "nullable": true },
+          "judgmentDate": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "claimsSentTo": { "type": "string", "nullable": true },
+          "signatureLocation": { "type": "string", "nullable": true },
+          "signatureDate": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "signatureName": { "type": "string", "nullable": true },
+          "signatureOnBehalfOf": { "type": "string", "nullable": true },
+          "publishingDates": {
+            "nullable": true,
+            "type": "array",
+            "items": { "format": "date-time", "type": "string" }
+          },
+          "locationName": { "type": "string", "nullable": true },
+          "locationDeadline": { "type": "string", "nullable": true },
+          "locationAddress": { "type": "string", "nullable": true },
+          "locationNationalId": { "type": "string", "nullable": true },
+          "caseId": { "type": "string" },
+          "courtDistrict": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CourtDistrictDto" }]
+          }
+        },
+        "required": ["caseId"]
+      },
       "CaseDetailedDto": {
         "type": "object",
         "properties": {
@@ -1626,6 +1722,9 @@
           "adverts": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/AdvertDetailedDto" }
+          },
+          "bankruptcyApplication": {
+            "$ref": "#/components/schemas/BankruptcyApplicationDto"
           }
         },
         "required": [
@@ -1636,25 +1735,6 @@
           "communicationChannels",
           "adverts"
         ]
-      },
-      "UpdateBankruptcyApplicationDto": {
-        "type": "object",
-        "properties": {
-          "additionalText": { "type": "string" },
-          "judgmentDate": { "type": "string" },
-          "claimsSentTo": { "type": "string" },
-          "signatureLocation": { "type": "string" },
-          "signatureDate": { "type": "string" },
-          "signatureName": { "type": "string" },
-          "signatureOnBehalfOf": { "type": "string" },
-          "publishingDates": { "type": "array", "items": { "type": "string" } },
-          "locationName": { "type": "string" },
-          "locationAddress": { "type": "string" },
-          "locationNationalId": { "type": "string" },
-          "locationDeadline": { "type": "string" },
-          "courtDistrictId": { "type": "string" },
-          "caseId": { "type": "string" }
-        }
       },
       "CreateBankruptcyAdvertAttributesDto": {
         "type": "object",
@@ -1700,6 +1780,24 @@
           }
         },
         "required": ["scheduledAt", "caseId", "bankruptcyAdvert"]
+      },
+      "UpdateBankruptcyApplicationDto": {
+        "type": "object",
+        "properties": {
+          "additionalText": { "type": "string" },
+          "judgmentDate": { "type": "string" },
+          "claimsSentTo": { "type": "string" },
+          "signatureLocation": { "type": "string" },
+          "signatureDate": { "type": "string" },
+          "signatureName": { "type": "string" },
+          "signatureOnBehalfOf": { "type": "string" },
+          "publishingDates": { "type": "array", "items": { "type": "string" } },
+          "locationName": { "type": "string" },
+          "locationAddress": { "type": "string" },
+          "locationNationalId": { "type": "string" },
+          "locationDeadline": { "type": "string" },
+          "courtDistrictId": { "type": "string" }
+        }
       },
       "TypeModel": { "type": "object", "properties": {} },
       "GetTypesDto": {
@@ -1752,27 +1850,6 @@
           }
         },
         "required": ["statuses"]
-      },
-      "CourtDistrictDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the entity",
-            "example": "Base entity"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
-          }
-        },
-        "required": ["id", "title", "slug"]
       },
       "GetCourtDistrictsDto": {
         "type": "object",

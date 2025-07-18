@@ -12,7 +12,7 @@ async function handler(req: NextRequest) {
     return NextResponse.redirect(PageRoutes.LOGIN)
   }
 
-  const client = getClient('LgApplicationWeb')
+  const client = getClient(session.idToken)
 
   const newCase = await client.createCase()
 

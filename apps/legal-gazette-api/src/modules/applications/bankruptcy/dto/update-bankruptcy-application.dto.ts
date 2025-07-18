@@ -115,12 +115,4 @@ export class UpdateBankruptcyApplicationDto {
   @IsOptional()
   @IsUUID()
   courtDistrictId?: string
-
-  @ApiProperty({
-    type: String,
-    required: false,
-  })
-  @IsOptional()
-  @IsUUID()
-  caseId!: string
 }

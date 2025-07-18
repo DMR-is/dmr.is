@@ -11,8 +11,8 @@ import { NotFoundException } from '@nestjs/common'
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { CaseModel } from '../../case/case.model'
-import { CourtDistrictModel } from '../../court-district/court-district.model'
+import { CaseModel } from '../../../case/case.model'
+import { CourtDistrictModel } from '../../../court-district/court-district.model'
 import { BankruptcyApplicationDto } from '../dto/bankruptcy-application.dto'
 import { UpdateBankruptcyApplicationDto } from '../dto/update-bankruptcy-application.dto'
 
@@ -36,22 +36,6 @@ type BankruptcyApplicationAttributes = {
 type BankruptcyApplicationCreationAttributes = BankruptcyApplicationAttributes
 
 @DefaultScope(() => ({
-  attributes: [
-    'additionalText',
-    'judgmentDate',
-    'claimsSentTo',
-    'signatureLocation',
-    'signatureDate',
-    'signatureName',
-    'signatureOnBehalfOf',
-    'locationName',
-    'locationDeadline',
-    'locationAddress',
-    'locationNationalId',
-    'publishingDates',
-    'courtDistrictId',
-    'caseId',
-  ],
   include: [
     {
       model: CourtDistrictModel,
@@ -139,7 +123,7 @@ export class BankruptcyApplicationModel extends BaseModel<
 
   @Column({
     type: DataType.STRING,
-    field: 'location_deadline',
+    field: 'location_deadline_date',
     allowNull: true,
     defaultValue: null,
   })
@@ -184,41 +168,51 @@ export class BankruptcyApplicationModel extends BaseModel<
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
   case!: CaseModel
 
+  /**
+   *
+   * @param caseId
+   * @param applicationId
+   * @param dto
+   * @returns
+   */
   static async updateFromDto(
     caseId: string,
+    applicationId: string,
     dto: UpdateBankruptcyApplicationDto,
   ): Promise<BankruptcyApplicationModel> {
-    const model = await BankruptcyApplicationModel.findOne({
-      where: { caseId },
-    })
+    const [_count, rows] = await BankruptcyApplicationModel.update(
+      {
+        additionalText: dto.additionalText,
+        judgmentDate: dto.judgmentDate ? new Date(dto.judgmentDate) : null,
+        claimsSentTo: dto.claimsSentTo,
+        signatureLocation: dto.signatureLocation,
+        signatureDate: dto.signatureDate ? new Date(dto.signatureDate) : null,
+        signatureName: dto.signatureName,
+        signatureOnBehalfOf: dto.signatureOnBehalfOf,
+        publishingDates: dto.publishingDates?.map((date) => new Date(date)),
+        locationName: dto.locationName,
+        locationDeadline: dto.locationDeadline,
+        locationAddress: dto.locationAddress,
+        locationNationalId: dto.locationNationalId,
+        courtDistrictId: dto.courtDistrictId,
+      },
+      {
+        returning: true,
+        where: {
+          id: applicationId,
+          caseId,
+        },
+      },
+    )
 
-    if (!model) {
-      throw new NotFoundException(
-        `Bankruptcy application with caseId ${caseId} not found`,
-      )
-    }
-
-    return model.update({
-      additionalText: dto.additionalText,
-      judgmentDate: dto.judgmentDate ? new Date(dto.judgmentDate) : null,
-      claimsSentTo: dto.claimsSentTo,
-      signatureLocation: dto.signatureLocation,
-      signatureDate: dto.signatureDate ? new Date(dto.signatureDate) : null,
-      signatureName: dto.signatureName,
-      signatureOnBehalfOf: dto.signatureOnBehalfOf,
-      publishingDates: dto.publishingDates?.map((date) => new Date(date)),
-      locationName: dto.locationName,
-      locationDeadline: dto.locationDeadline,
-      locationAddress: dto.locationAddress,
-      locationNationalId: dto.locationNationalId,
-      courtDistrictId: dto.courtDistrictId,
-    })
+    return rows[0]
   }
 
   static fromModel(
     model: BankruptcyApplicationModel,
   ): BankruptcyApplicationDto {
     return {
+      id: model.id,
       additionalText: model.additionalText,
       judgmentDate: model.judgmentDate,
       claimsSentTo: model.claimsSentTo,

@@ -1,5 +1,7 @@
+import { notFound } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 
+import { BankruptcyApplicationScreen } from '../../../../../components/client-components/application/BankruptcyApplicationScreen'
 import { getClient } from '../../../../../lib/createClient'
 import { safeCall } from '../../../../../lib/serverUtils'
 import { authOptions } from '../../../../api/auth/[...nextauth]/route'
@@ -23,29 +25,15 @@ export default async function UmsoknirThrotabusPage({
   }
 
   const client = getClient(session.idToken)
-  const theCase = await safeCall(() => client.getCase({ id: params.id }))
+  const applicationResults = await safeCall(() =>
+    client.findOrCreateApplication({
+      caseId: params.id,
+    }),
+  )
 
-  if (!theCase.data) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-4">Mál fannst ekki</h1>
-        <p className="mb-4">
-          Eitthvað fór úrskeiðis við að sækja mál með auðkenni: {params.id}.
-        </p>
-      </div>
-    )
+  if (applicationResults.error) {
+    return notFound()
   }
 
-  return (
-    <>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-4">Innkollun þrotabús</h1>
-        <p className="mb-4">
-          Hér getur þú sótt um innkollun þrotabús. Vinsamlegast fylgdu
-          leiðbeiningunum hér að neðan.
-        </p>
-        {/* Add your form or content here */}
-      </div>
-    </>
-  )
+  return <BankruptcyApplicationScreen application={applicationResults.data} />
 }

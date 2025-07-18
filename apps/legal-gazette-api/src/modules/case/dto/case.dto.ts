@@ -13,6 +13,7 @@ import { DetailedDto } from '@dmr.is/legal-gazette/dto'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 import { AdvertDetailedDto } from '../../advert/dto/advert.dto'
+import { BankruptcyApplicationDto } from '../../applications/bankruptcy/dto/bankruptcy-application.dto'
 import { CommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
 
 export class CaseQueryDto extends PagingQuery {}
@@ -63,4 +64,10 @@ export class CaseDetailedDto extends CaseDto {
   @Type(() => AdvertDetailedDto)
   @ValidateNested({ each: true })
   adverts!: AdvertDetailedDto[]
+
+  @ApiProperty({ type: BankruptcyApplicationDto, required: false })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => BankruptcyApplicationDto)
+  bankruptcyApplication?: BankruptcyApplicationDto
 }
