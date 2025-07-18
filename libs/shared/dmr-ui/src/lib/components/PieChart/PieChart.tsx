@@ -1,12 +1,11 @@
-import dynamic from 'next/dynamic'
+'use client'
 
-import { Pie } from 'recharts'
+import * as Recharts from 'recharts'
 
 import {
   Box,
   Inline,
   ResponsiveSpace,
-  SkeletonLoader,
   Stack,
   Table as T,
   Text,
@@ -28,22 +27,6 @@ export type PieChartProps = {
 
 const DEFAULT_PIE_DIMENSION = 240
 
-const RechartsPieChart = dynamic(
-  () => import('recharts').then((recharts) => recharts.PieChart),
-  {
-    loading: () => (
-      <Box display="flex" justifyContent="center">
-        <SkeletonLoader
-          borderRadius="full"
-          height={DEFAULT_PIE_DIMENSION}
-          width={DEFAULT_PIE_DIMENSION}
-        />
-      </Box>
-    ),
-    ssr: false,
-  },
-)
-
 const TABLE_CELL_STYLE: Record<string, ResponsiveSpace> = {
   paddingTop: 1,
   paddingBottom: 1,
@@ -60,8 +43,8 @@ export const PieChart = ({
     <Stack space={0}>
       {intro && <Text>{intro}</Text>}
       <Inline align="center">
-        <RechartsPieChart width={dimension} height={dimension}>
-          <Pie
+        <Recharts.PieChart width={dimension} height={dimension}>
+          <Recharts.Pie
             innerRadius={50}
             activeShape={{}}
             data={items.map((item) => ({
@@ -72,7 +55,7 @@ export const PieChart = ({
             }))}
             dataKey="count"
           />
-        </RechartsPieChart>
+        </Recharts.PieChart>
       </Inline>
       <T.Table>
         <T.Body>

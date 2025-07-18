@@ -1,3 +1,4 @@
+'use client'
 import { Table as T, Text } from '@island.is/island-ui/core'
 
 export type TrackerTableItem = {
