@@ -35,6 +35,7 @@
       "@dmr.is/shared/models/base": ["libs/shared/models/base/src/index.ts"],
       "@dmr.is/types": ["libs/shared/types/types/src/index.ts"],
       "@dmr.is/ui/components/*": ["libs/shared/dmr-ui/src/lib/components/*"],
+      "@dmr.is/ui/components/island-is": ["libs/shared/dmr-ui/src/lib/island-is/index.ts"],
       "@dmr.is/ui/hooks/*": ["libs/shared/dmr-ui/src/lib/hooks/*"],
       "@dmr.is/ui/lazy/components/*": [
         "libs/shared/dmr-ui-lazy/src/lib/components/*"
