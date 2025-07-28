@@ -1,17 +1,25 @@
-import { Header } from '../components/client-components/header/Header'
+import { getServerSession } from 'next-auth'
+
+import { Header } from '@dmr.is/ui/components/Header/Header'
+
+import { Providers } from '../components/client-components/providers/Providers'
 
 import '../styles/global.css'
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const session = await getServerSession()
+
   return (
     <html lang="is">
       <body>
-        <Header variant="white" />
-        {children}
+        <Providers session={session}>
+          <Header variant="white" />
+          {children}
+        </Providers>
       </body>
     </html>
   )
