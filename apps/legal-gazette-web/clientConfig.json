@@ -572,6 +572,196 @@
         "tags": ["Status"]
       }
     },
+    "/api/v1/court-districts": {
+      "get": {
+        "operationId": "getCourtDistricts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCourtDistrictsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["CourtDistrict"]
+      }
+    },
+    "/api/v1/court-districts/{id}": {
+      "get": {
+        "operationId": "getCourtDistrictById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CourtDistrictDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["CourtDistrict"]
+      }
+    },
+    "/api/v1/court-districts/slug/{slug}": {
+      "get": {
+        "operationId": "getCourtDistrictBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CourtDistrictDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["CourtDistrict"]
+      }
+    },
     "/api/v1/cases": {
       "get": {
         "operationId": "getCases",
@@ -639,6 +829,64 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Case"]
+      },
+      "post": {
+        "operationId": "createCase",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CaseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Case"]
       }
@@ -704,6 +952,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Case"]
       },
@@ -760,6 +1009,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Case"]
       }
@@ -825,6 +1075,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Case"]
       }
@@ -893,7 +1144,7 @@
     },
     "/api/v1/applications/{id}": {
       "delete": {
-        "operationId": "deleteApplication",
+        "operationId": "deleteCommonApplication",
         "parameters": [
           {
             "name": "id",
@@ -950,7 +1201,7 @@
         "tags": ["CommonApplication"]
       }
     },
-    "/api/advert/{id}/category/{categoryId}": {
+    "/api/v1/adverts/{id}/category/{categoryId}": {
       "patch": {
         "operationId": "updateAdvertCategory",
         "parameters": [
@@ -1014,7 +1265,7 @@
         "tags": ["AdvertUpdate"]
       }
     },
-    "/api/advert/{id}/status/{statusId}": {
+    "/api/v1/adverts/{id}/status/{statusId}": {
       "patch": {
         "operationId": "updateAdvertStatus",
         "parameters": [
@@ -1078,7 +1329,7 @@
         "tags": ["AdvertUpdate"]
       }
     },
-    "/api/advert/{id}": {
+    "/api/v1/adverts/{id}": {
       "patch": {
         "operationId": "updateAdvert",
         "parameters": [
@@ -1149,6 +1400,69 @@
         },
         "summary": "",
         "tags": ["AdvertUpdate"]
+      },
+      "get": {
+        "operationId": "getAdvertById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Advert"]
       }
     },
     "/api/v1/adverts/pdf/{id}": {
@@ -1339,6 +1653,30 @@
               "type": "array",
               "items": { "$ref": "#/components/schemas/StatusIdEnum" }
             }
+          },
+          {
+            "name": "typeId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -1496,6 +1834,30 @@
               "type": "array",
               "items": { "$ref": "#/components/schemas/StatusIdEnum" }
             }
+          },
+          {
+            "name": "typeId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -1552,9 +1914,9 @@
         "tags": ["Advert"]
       }
     },
-    "/api/v1/adverts/{id}": {
+    "/api/v1/adverts/{id}/published": {
       "get": {
-        "operationId": "getAdvertById",
+        "operationId": "getAdvertPublished",
         "parameters": [
           {
             "name": "id",
@@ -1734,6 +2096,65 @@
         "tags": ["AdvertPublish"]
       }
     },
+    "/api/v1/subscribers/me": {
+      "get": {
+        "operationId": "getMySubscriber",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SubscriberDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Subscriber"]
+      }
+    },
     "/api/v1/users/me": {
       "get": {
         "operationId": "getMyUser",
@@ -1793,12 +2214,335 @@
         "tags": ["Users"]
       }
     },
+    "/api/v1/adverts/bankruptcy": {
+      "post": {
+        "operationId": "createBankruptcyAdvert",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBankruptcyAdvertDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["BankruptcyAdvert"]
+      }
+    },
+    "/api/v1/applications/getMyApplications": {
+      "get": {
+        "operationId": "getMyApplications",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApplicationsDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Application"]
+      }
+    },
+    "/api/v1/applications/{applicationId}": {
+      "delete": {
+        "operationId": "deleteApplication",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Application"]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "HealthController__v1",
         "parameters": [],
         "responses": { "200": { "description": "Health check endpoint." } },
         "tags": ["Health"]
+      }
+    },
+    "/api/v1/applications/bankruptcy/{caseId}": {
+      "post": {
+        "operationId": "findOrCreateApplication",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankruptcyApplicationDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["BankruptcyApplication"]
+      }
+    },
+    "/api/v1/applications/bankruptcy/{caseId}/{applicationId}": {
+      "patch": {
+        "operationId": "updateBankruptcyApplication",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBankruptcyApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["BankruptcyApplication"]
       }
     }
   },
@@ -1853,7 +2597,10 @@
         },
         "required": ["statusCode", "timestamp"]
       },
-      "TypeEnum": { "type": "string", "enum": ["Almenn auglýsing"] },
+      "TypeEnum": {
+        "type": "string",
+        "enum": ["Almenn auglýsing", "Innköllun þrotabús", "Innköllun dánarbús"]
+      },
       "TypeDto": {
         "type": "object",
         "properties": {
@@ -1969,6 +2716,37 @@
         },
         "required": ["id", "title", "slug"]
       },
+      "CourtDistrictDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUIDV4 of the entity",
+            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the entity",
+            "example": "Base entity"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the entity",
+            "example": "base-entity"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "GetCourtDistrictsDto": {
+        "type": "object",
+        "properties": {
+          "courtDistricts": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CourtDistrictDto" }
+          }
+        },
+        "required": ["courtDistricts"]
+      },
       "CaseDto": {
         "type": "object",
         "properties": {
@@ -2062,6 +2840,84 @@
         },
         "required": ["caption", "signature"]
       },
+      "BankruptcyLocationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the bankruptcy location"
+          },
+          "nationalId": {
+            "type": "string",
+            "description": "National ID of the bankruptcy location"
+          },
+          "address": {
+            "type": "string",
+            "description": "Address of the bankruptcy location"
+          },
+          "deadline": {
+            "type": "string",
+            "description": "Deadline for the bankruptcy location"
+          }
+        },
+        "required": ["name", "nationalId", "address", "deadline"]
+      },
+      "BankruptcyAdvertDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the bankruptcy advert"
+          },
+          "additionalText": {
+            "type": "string",
+            "description": "The additional text for the bankruptcy advert",
+            "nullable": true
+          },
+          "judgmentDate": {
+            "type": "string",
+            "description": "The date of the judgment related to the bankruptcy advert"
+          },
+          "claimsSentTo": {
+            "type": "string",
+            "description": "The entity to which claims were sent"
+          },
+          "signatureLocation": {
+            "type": "string",
+            "description": "The location of the signature for the bankruptcy advert"
+          },
+          "signatureDate": {
+            "type": "string",
+            "description": "The date of the signature for the bankruptcy advert"
+          },
+          "signatureName": {
+            "type": "string",
+            "description": "The name of the person who signed the bankruptcy advert"
+          },
+          "signatureOnBehalfOf": {
+            "type": "string",
+            "description": "The name of the person on behalf of whom the signature was made",
+            "nullable": true
+          },
+          "courtDistrictName": {
+            "type": "string",
+            "description": "Court district name"
+          },
+          "location": { "$ref": "#/components/schemas/BankruptcyLocationDto" }
+        },
+        "required": [
+          "id",
+          "additionalText",
+          "judgmentDate",
+          "claimsSentTo",
+          "signatureLocation",
+          "signatureDate",
+          "signatureName",
+          "signatureOnBehalfOf",
+          "courtDistrictName",
+          "location"
+        ]
+      },
       "AdvertDetailedDto": {
         "type": "object",
         "properties": {
@@ -2083,7 +2939,7 @@
           },
           "id": { "type": "string" },
           "caseId": { "type": "string" },
-          "publicationNumber": { "type": "string" },
+          "publicationNumber": { "type": "string", "nullable": true },
           "title": { "type": "string" },
           "publishedAt": { "type": "string", "nullable": true },
           "owner": { "type": "string" },
@@ -2099,6 +2955,10 @@
           "commonAdvert": {
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/CommonAdvertDto" }]
+          },
+          "bankruptcyAdvert": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/BankruptcyAdvertDto" }]
           }
         },
         "required": [
@@ -2116,9 +2976,45 @@
           "status",
           "version",
           "html",
-          "paid",
-          "commonAdvert"
+          "paid"
         ]
+      },
+      "BankruptcyApplicationDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "additionalText": { "type": "string", "nullable": true },
+          "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
+          "judgmentDate": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "claimsSentTo": { "type": "string", "nullable": true },
+          "signatureLocation": { "type": "string", "nullable": true },
+          "signatureDate": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "signatureName": { "type": "string", "nullable": true },
+          "signatureOnBehalfOf": { "type": "string", "nullable": true },
+          "publishingDates": {
+            "nullable": true,
+            "type": "array",
+            "items": { "format": "date-time", "type": "string" }
+          },
+          "locationName": { "type": "string", "nullable": true },
+          "locationDeadline": { "type": "string", "nullable": true },
+          "locationAddress": { "type": "string", "nullable": true },
+          "locationNationalId": { "type": "string", "nullable": true },
+          "caseId": { "type": "string" },
+          "courtDistrict": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CourtDistrictDto" }]
+          }
+        },
+        "required": ["caseId"]
       },
       "CaseDetailedDto": {
         "type": "object",
@@ -2149,6 +3045,9 @@
           "adverts": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/AdvertDetailedDto" }
+          },
+          "bankruptcyApplication": {
+            "$ref": "#/components/schemas/BankruptcyApplicationDto"
           }
         },
         "required": [
@@ -2189,18 +3088,18 @@
       "SubmitCommonApplicationDto": {
         "type": "object",
         "properties": {
-          "categoryId": { "type": "string" },
+          "caption": { "type": "string" },
           "channels": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CreateCommunicationChannelDto"
             }
           },
-          "publishingDates": { "type": "array", "items": { "type": "string" } },
-          "caption": { "type": "string" },
+          "categoryId": { "type": "string" },
           "signature": {
             "$ref": "#/components/schemas/CreateCommonAdvertSignatureDto"
           },
+          "publishingDates": { "type": "array", "items": { "type": "string" } },
           "applicationId": { "type": "string" },
           "htmlBase64": { "type": "string" },
           "actor": {
@@ -2211,10 +3110,10 @@
           }
         },
         "required": [
-          "categoryId",
-          "publishingDates",
           "caption",
+          "categoryId",
           "signature",
+          "publishingDates",
           "applicationId",
           "htmlBase64",
           "actor"
@@ -2223,6 +3122,7 @@
       "StatusIdEnum": {
         "type": "string",
         "enum": [
+          "63726fce-edcf-412d-85e8-087e99c592f2",
           "cd3bf301-52a1-493e-8c80-a391c310c840",
           "a2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
           "bd835a1d-0ecb-4aa4-9910-b5e60c30dced",
@@ -2259,7 +3159,7 @@
           },
           "id": { "type": "string" },
           "caseId": { "type": "string" },
-          "publicationNumber": { "type": "string" },
+          "publicationNumber": { "type": "string", "nullable": true },
           "title": { "type": "string" },
           "publishedAt": { "type": "string", "nullable": true },
           "owner": { "type": "string" },
@@ -2362,6 +3262,15 @@
         },
         "required": ["advertIds"]
       },
+      "SubscriberDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "isActive": { "type": "boolean" }
+        },
+        "required": ["id", "nationalId", "isActive"]
+      },
       "UserDto": {
         "type": "object",
         "properties": {
@@ -2372,6 +3281,98 @@
           "phone": { "type": "string" }
         },
         "required": ["id", "nationalId", "name", "email"]
+      },
+      "CreateBankruptcyAdvertAttributesDto": {
+        "type": "object",
+        "properties": {
+          "judgmentDate": { "type": "string" },
+          "claimsSentTo": { "type": "string" },
+          "signatureLocation": { "type": "string" },
+          "signatureDate": { "type": "string" },
+          "signatureName": { "type": "string" },
+          "additionalText": { "type": "string", "nullable": true },
+          "courtDistrictId": { "type": "string" },
+          "signatureOnBehalfOf": { "type": "string", "nullable": true },
+          "location": {
+            "description": "Locations associated with the bankruptcy advert",
+            "allOf": [{ "$ref": "#/components/schemas/BankruptcyLocationDto" }]
+          }
+        },
+        "required": [
+          "judgmentDate",
+          "claimsSentTo",
+          "signatureLocation",
+          "signatureDate",
+          "signatureName",
+          "courtDistrictId",
+          "location"
+        ]
+      },
+      "CreateBankruptcyAdvertDto": {
+        "type": "object",
+        "properties": {
+          "scheduledAt": { "type": "string" },
+          "caseId": {
+            "type": "string",
+            "description": "The case ID associated with the bankruptcy advert"
+          },
+          "bankruptcyAdvert": {
+            "description": "Attributes for creating a bankruptcy advert",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreateBankruptcyAdvertAttributesDto"
+              }
+            ]
+          }
+        },
+        "required": ["scheduledAt", "caseId", "bankruptcyAdvert"]
+      },
+      "ApplicationDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "caseId": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
+          "type": {
+            "type": "string",
+            "enum": [
+              "Almenn auglýsing",
+              "Innköllun þrotabús",
+              "Innköllun dánarbús"
+            ]
+          },
+          "title": { "type": "string" }
+        },
+        "required": ["id", "caseId", "nationalId", "status", "type", "title"]
+      },
+      "ApplicationsDto": {
+        "type": "object",
+        "properties": {
+          "applications": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ApplicationDto" }
+          }
+        },
+        "required": ["applications"]
+      },
+      "UpdateBankruptcyApplicationDto": {
+        "type": "object",
+        "properties": {
+          "additionalText": { "type": "string" },
+          "judgmentDate": { "type": "string" },
+          "claimsSentTo": { "type": "string" },
+          "signatureLocation": { "type": "string" },
+          "signatureDate": { "type": "string" },
+          "signatureName": { "type": "string" },
+          "signatureOnBehalfOf": { "type": "string" },
+          "publishingDates": { "type": "array", "items": { "type": "string" } },
+          "locationName": { "type": "string" },
+          "locationAddress": { "type": "string" },
+          "locationNationalId": { "type": "string" },
+          "locationDeadline": { "type": "string" },
+          "courtDistrictId": { "type": "string" }
+        }
       }
     }
   }

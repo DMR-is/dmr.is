@@ -2,6 +2,7 @@
 
 import { Box } from '@island.is/island-ui/core'
 
+import { ApplicationTypes } from '../application/ApplicationTypes'
 import { Hero } from './Hero'
 
 export const UmsoknirHero = () => {
@@ -16,7 +17,9 @@ export const UmsoknirHero = () => {
           src: '/images/banner-small-image.svg',
           alt: 'Skraut mynd',
         }}
-      />
+      >
+        <ApplicationTypes />
+      </Hero>
     </Box>
   )
 }

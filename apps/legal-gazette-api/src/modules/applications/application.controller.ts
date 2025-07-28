@@ -18,7 +18,7 @@ import { Auth } from '@island.is/auth-nest-tools'
 
 import { CaseModel } from '../case/case.model'
 import { BankruptcyApplicationModel } from './bankruptcy/models/bankruptcy-application.model'
-import { ApplicationsDto } from './dto/ApplicationDto'
+import { ApplicationsDto } from './dto/application.dto'
 
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard)

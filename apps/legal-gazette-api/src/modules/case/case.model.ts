@@ -197,14 +197,28 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     const month = String(instance.createdAt.getMonth() + 1).padStart(2, '0')
     const day = String(instance.createdAt.getDate()).padStart(2, '0')
 
-    const count = await CaseModel.unscoped().count({
-      where: { caseNumber: { [Op.like]: `${year}%` } },
+    const datePrefix = `${year}${month}${day}`
+
+    // Get the latest (max) case number for the day
+    const latestCase = await CaseModel.unscoped().findOne({
+      where: {
+        caseNumber: {
+          [Op.like]: `${datePrefix}%`,
+        },
+      },
+      order: [['caseNumber', 'DESC']],
+      paranoid: false, // include soft-deleted cases to avoid reuse
     })
 
-    instance.caseNumber = `${year}${month}${day}${String(count + 1).padStart(
-      3,
-      '0',
-    )}`
+    let nextSequence = 1
+
+    if (latestCase && latestCase.caseNumber) {
+      const lastSequence = parseInt(latestCase.caseNumber.slice(8)) // last 3 digits
+      nextSequence = lastSequence + 1
+    }
+
+    // Construct new case number
+    instance.caseNumber = `${datePrefix}${String(nextSequence).padStart(3, '0')}`
   }
 
   static fromModel(model: CaseModel): CaseDto {

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 
+import { TypeEnum } from '../../type/type.model'
 import { ApplicationStatusEnum } from '../contants'
 
 export class ApplicationDto {
@@ -7,10 +8,16 @@ export class ApplicationDto {
   id!: string
 
   @ApiProperty({ type: String })
+  caseId!: string
+
+  @ApiProperty({ type: String })
   nationalId!: string
 
   @ApiProperty({ enum: ApplicationStatusEnum })
   status!: ApplicationStatusEnum
+
+  @ApiProperty({ enum: TypeEnum })
+  type!: TypeEnum
 
   @ApiProperty({ type: String })
   title!: string

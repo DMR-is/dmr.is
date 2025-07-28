@@ -17,9 +17,6 @@ export const BankruptcyApplicationScreen = ({
   return (
     <Stack space={4}>
       <BankruptcyApplication locations={locations} initalState={application} />
-      <ul>
-        <li>Here should our adverts go when they have been created</li>
-      </ul>
     </Stack>
   )
 }

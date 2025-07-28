@@ -15,7 +15,7 @@ import { CaseModel } from '../../../case/case.model'
 import { CourtDistrictModel } from '../../../court-district/court-district.model'
 import { TypeEnum } from '../../../type/type.model'
 import { ApplicationStatusEnum } from '../../contants'
-import { ApplicationDto } from '../../dto/ApplicationDto'
+import { ApplicationDto } from '../../dto/application.dto'
 import { BankruptcyApplicationDto } from '../dto/bankruptcy-application.dto'
 import { UpdateBankruptcyApplicationDto } from '../dto/update-bankruptcy-application.dto'
 
@@ -48,6 +48,7 @@ type BankruptcyApplicationCreationAttributes = BankruptcyApplicationAttributes
       attributes: ['id', 'title', 'slug'],
     },
   ],
+  order: [['updatedAt', 'DESC']],
 }))
 @BaseTable({ tableName: LegalGazetteModels.BANKRUPTCY_APPLICATION })
 export class BankruptcyApplicationModel extends BaseModel<
@@ -260,9 +261,11 @@ export class BankruptcyApplicationModel extends BaseModel<
   ): ApplicationDto {
     return {
       id: model.id,
+      caseId: model.caseId,
       nationalId: model.involvedPartyNationalId,
       status: model.status,
       title: `${TypeEnum.BANKRUPTCY_ADVERT}${model.locationAddress ? ` - ${model.locationAddress}` : ''}`,
+      type: TypeEnum.BANKRUPTCY_ADVERT,
     }
   }
 
@@ -279,7 +282,7 @@ export class BankruptcyApplicationModel extends BaseModel<
       )
     }
 
-    await model.destroy()
+    await model.destroy({ force: true })
     await CaseModel.destroy({ where: { id: model.caseId }, force: true })
   }
 
