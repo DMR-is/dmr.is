@@ -22,7 +22,10 @@ import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
+import { CreateBankruptcyAdvertDto } from '../../bankruptcy-advert/dto/create-bankruptcy-advert.dto'
+import { BankruptcyAdvertModel } from '../../bankruptcy-advert/models/bankruptcy-advert.model'
 import { CaseModel } from '../../case/case.model'
+import { ApplicationStatusEnum } from '../contants'
 import { BankruptcyApplicationDto } from './dto/bankruptcy-application.dto'
 import { UpdateBankruptcyApplicationDto } from './dto/update-bankruptcy-application.dto'
 import { BankruptcyApplicationModel } from './models/bankruptcy-application.model'
@@ -39,6 +42,8 @@ export class BankruptcyApplicationController {
     @InjectModel(BankruptcyApplicationModel)
     private readonly bankruptcyApplicationModel: typeof BankruptcyApplicationModel,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
+    @InjectModel(BankruptcyAdvertModel)
+    private readonly bankruptcyAdvertModel: typeof BankruptcyAdvertModel,
   ) {}
 
   @Post(':caseId')
@@ -93,6 +98,42 @@ export class BankruptcyApplicationController {
     await this.bankruptcyApplicationModel.updateFromDto(
       caseId,
       applicationId,
+      body,
+    )
+  }
+
+  @Post(':caseId/:applicationId/submit')
+  @LGResponse({ operationId: 'submitBankruptcyApplication', status: 200 })
+  async submit(
+    @Param('caseId') caseId: string,
+    @Param('applicationId') applicationId: string,
+    @Body() body: CreateBankruptcyAdvertDto,
+    @CurrentUser() user: Auth,
+  ) {
+    if (!user?.nationalId) {
+      throw new UnauthorizedException('User not authenticated')
+    }
+
+    const application = await this.bankruptcyApplicationModel.findOne({
+      where: {
+        id: applicationId,
+        caseId,
+        involvedPartyNationalId: user.nationalId,
+      },
+    })
+
+    if (!application) {
+      throw new NotFoundException('Application not found')
+    }
+
+    await application.update({ status: ApplicationStatusEnum.SUBMITTED })
+
+    application.publishingDates?.map((date) => {
+      console.log(date)
+    })
+
+    await this.bankruptcyAdvertModel.createBankruptcyAdvert(
+      user.nationalId,
       body,
     )
   }

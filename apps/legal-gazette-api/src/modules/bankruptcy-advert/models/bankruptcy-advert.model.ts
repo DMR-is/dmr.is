@@ -10,9 +10,12 @@ import {
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { AdvertModel } from '../../advert/advert.model'
+import { AdvertCreateAttributes, AdvertModel } from '../../advert/advert.model'
+import { CategoryDefaultIdEnum } from '../../category/category.model'
 import { CourtDistrictModel } from '../../court-district/court-district.model'
+import { TypeEnum, TypeIdEnum } from '../../type/type.model'
 import { BankruptcyAdvertDto } from '../dto/bankruptcy-advert.dto'
+import { CreateBankruptcyAdvertDto } from '../dto/create-bankruptcy-advert.dto'
 import {
   BankruptcyLocationCreationAttributes,
   BankruptcyLocationModel,
@@ -147,6 +150,46 @@ export class BankruptcyAdvertModel extends BaseModel<
 
   @HasOne(() => BankruptcyLocationModel)
   location!: BankruptcyLocationModel
+
+  static async createBankruptcyAdvert(
+    nationalId: string,
+    body: CreateBankruptcyAdvertDto,
+  ) {
+    const args: AdvertCreateAttributes = {
+      title: TypeEnum.BANKRUPTCY_ADVERT,
+      submittedBy: nationalId,
+      typeId: TypeIdEnum.BANKRUPTCY_ADVERT,
+      categoryId: CategoryDefaultIdEnum.BANKRUPTCY_ADVERT,
+      scheduledAt: new Date(body.scheduledAt),
+      caseId: body.caseId,
+      bankruptcyAdvert: {
+        judgmentDate: new Date(body.bankruptcyAdvert.judgmentDate),
+        claimsSentTo: body.bankruptcyAdvert.claimsSentTo,
+        signatureLocation: body.bankruptcyAdvert.signatureLocation,
+        signatureDate: new Date(body.bankruptcyAdvert.signatureDate),
+        signatureName: body.bankruptcyAdvert.signatureName,
+        additionalText: body.bankruptcyAdvert.additionalText,
+        courtDistrictId: body.bankruptcyAdvert.courtDistrictId,
+        signatureOnBehalfOf: body.bankruptcyAdvert.signatureOnBehalfOf,
+        location: {
+          ...body.bankruptcyAdvert.location,
+          deadline: new Date(body.bankruptcyAdvert.location.deadline),
+        },
+      },
+    }
+
+    const newAdvert = await AdvertModel.create(args, {
+      returning: true,
+      include: [
+        {
+          model: BankruptcyAdvertModel,
+          include: [{ model: BankruptcyLocationModel }],
+        },
+      ],
+    })
+
+    return newAdvert.fromModelDetailed()
+  }
 
   static fromModel(model: BankruptcyAdvertModel): BankruptcyAdvertDto {
     return {

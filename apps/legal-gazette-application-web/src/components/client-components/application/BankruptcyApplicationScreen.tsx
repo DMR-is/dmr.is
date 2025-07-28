@@ -1,7 +1,5 @@
 'use client'
 
-import { Stack } from '@island.is/island-ui/core'
-
 import { BankruptcyApplicationDto, CourtDistrictDto } from '../../../gen/fetch'
 import { BankruptcyApplication } from './BankruptcyApplication'
 
@@ -15,8 +13,6 @@ export const BankruptcyApplicationScreen = ({
   locations,
 }: Props) => {
   return (
-    <Stack space={4}>
-      <BankruptcyApplication locations={locations} initalState={application} />
-    </Stack>
+    <BankruptcyApplication locations={locations} initalState={application} />
   )
 }

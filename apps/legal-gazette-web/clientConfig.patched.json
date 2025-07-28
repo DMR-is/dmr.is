@@ -1333,7 +1333,7 @@
         "tags": ["Case"]
       }
     },
-    "/api/v1/applications": {
+    "/api/v1/common-applications": {
       "post": {
         "operationId": "submitApplication",
         "parameters": [],
@@ -1411,7 +1411,7 @@
         "tags": ["CommonApplication"]
       }
     },
-    "/api/v1/applications/{id}": {
+    "/api/v1/common-applications/{id}": {
       "delete": {
         "operationId": "deleteCommonApplication",
         "parameters": [
@@ -3166,6 +3166,101 @@
         "summary": "",
         "tags": ["BankruptcyApplication"]
       }
+    },
+    "/api/v1/applications/bankruptcy/{caseId}/{applicationId}/submit": {
+      "post": {
+        "operationId": "submitBankruptcyApplication",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBankruptcyAdvertDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "",
+        "tags": ["BankruptcyApplication"]
+      }
     }
   },
   "info": {
@@ -3736,7 +3831,6 @@
             "enum": ["DRAFT", "SUBMITTED"]
           },
           "judgmentDate": {
-            "format": "date-time",
             "type": "string",
             "nullable": true
           },
@@ -3749,7 +3843,6 @@
             "nullable": true
           },
           "signatureDate": {
-            "format": "date-time",
             "type": "string",
             "nullable": true
           },
@@ -3765,7 +3858,6 @@
             "nullable": true,
             "type": "array",
             "items": {
-              "format": "date-time",
               "type": "string"
             }
           },

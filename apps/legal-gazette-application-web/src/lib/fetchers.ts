@@ -15,7 +15,7 @@ export async function updateBankruptcyApplication(
   return client.updateBankruptcyApplication(arg)
 }
 
-export async function createBankruptcyApplication(
+export async function submitBankruptcyApplication(
   arg: CreateBankruptcyAdvertRequest,
 ) {
   const session = await getSession()

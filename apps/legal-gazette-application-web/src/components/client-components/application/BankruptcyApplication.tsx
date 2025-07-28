@@ -4,7 +4,6 @@ import { useState } from 'react'
 import useSWRMutation from 'swr/mutation'
 
 import {
-  Box,
   DatePicker,
   GridColumn,
   GridContainer,
@@ -22,6 +21,7 @@ import {
   UpdateBankruptcyApplicationDto,
 } from '../../../gen/fetch'
 import { updateBankruptcyApplication } from '../../../lib/fetchers'
+import { ApplicationPublishingDates } from './ApplicationPublishingDates'
 
 type Props = {
   initalState: BankruptcyApplicationDto
@@ -33,18 +33,19 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
     useState<UpdateBankruptcyApplicationDto>({
       additionalText: initalState.additionalText ?? undefined,
       courtDistrictId: initalState.courtDistrict?.id,
-      judgmentDate: initalState?.judgmentDate?.toISOString() ?? undefined,
+      judgmentDate: initalState?.judgmentDate ?? undefined,
       claimsSentTo: initalState.claimsSentTo ?? undefined,
       locationAddress: initalState.locationAddress ?? undefined,
       locationNationalId: initalState.locationNationalId ?? undefined,
       locationName: initalState.locationName ?? undefined,
       locationDeadline: initalState?.locationDeadline ?? undefined,
-      signatureDate: initalState?.signatureDate?.toISOString() ?? undefined,
+      signatureDate: initalState?.signatureDate ?? undefined,
       signatureLocation: initalState.signatureLocation ?? undefined,
       signatureName: initalState.signatureName ?? undefined,
       signatureOnBehalfOf: initalState.signatureOnBehalfOf ?? undefined,
-      publishingDates:
-        initalState?.publishingDates?.map((d) => d.toISOString()) ?? undefined,
+      publishingDates: initalState?.publishingDates?.map((d) => d) ?? [
+        new Date().toISOString(),
+      ],
     })
 
   const locationOptions = locations.map((location) => ({
@@ -93,25 +94,6 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
             <Text variant="h3">Grunnupplýsingar</Text>
           </GridColumn>
           <GridColumn span={['12/12', '6/12', '6/12']}>
-            <Input
-              backgroundColor="blue"
-              name="name"
-              size="sm"
-              label="Nafn"
-              disabled
-            />
-          </GridColumn>
-          <GridColumn span={['12/12', '6/12', '6/12']}>
-            <Input
-              backgroundColor="blue"
-              name="caption"
-              size="sm"
-              label="Yfirskrift"
-              // onChange={(e) => setUpdateState({ caption: e.target.value })}
-              disabled
-            />
-          </GridColumn>
-          <GridColumn span={['12/12', '6/12', '6/12']}>
             <Select
               backgroundColor="blue"
               name="location"
@@ -148,8 +130,6 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
                   ...prev,
                   judgmentDate: date ? date.toISOString() : undefined,
                 }))
-
-                trigger()
               }}
             />
           </GridColumn>
@@ -242,6 +222,26 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
                 }))
 
                 trigger()
+              }}
+            />
+          </GridColumn>
+        </GridRow>
+        <GridRow rowGap={3}>
+          <GridColumn span="12/12">
+            <Text variant="h3">Birting</Text>
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12', '6/12']}>
+            <ApplicationPublishingDates
+              publishingDates={updateState.publishingDates as string[]}
+              onDateChange={(dates) => {
+                setUpdateState((prev) => ({
+                  ...prev,
+                  publishingDates: dates,
+                }))
+
+                setTimeout(() => {
+                  trigger()
+                }, 100)
               }}
             />
           </GridColumn>

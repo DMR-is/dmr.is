@@ -72,7 +72,7 @@ export class UpdateBankruptcyApplicationDto {
   })
   @IsOptional()
   @IsArray()
-  @IsDateString()
+  @IsDateString(undefined, { each: true })
   @ArrayMaxSize(3)
   publishingDates?: string[]
 

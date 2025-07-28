@@ -13,8 +13,8 @@ export class BankruptcyApplicationDto {
   @ApiProperty({ enum: ApplicationStatusEnum, required: false })
   status?: ApplicationStatusEnum
 
-  @ApiProperty({ type: Date, nullable: true, required: false })
-  judgmentDate?: Date | null
+  @ApiProperty({ type: String, nullable: true, required: false })
+  judgmentDate?: string | null
 
   @ApiProperty({ type: String, nullable: true, required: false })
   claimsSentTo?: string | null
@@ -22,8 +22,8 @@ export class BankruptcyApplicationDto {
   @ApiProperty({ type: String, nullable: true, required: false })
   signatureLocation?: string | null
 
-  @ApiProperty({ type: Date, nullable: true, required: false })
-  signatureDate?: Date | null
+  @ApiProperty({ type: String, nullable: true, required: false })
+  signatureDate?: string | null
 
   @ApiProperty({ type: String, nullable: true, required: false })
   signatureName?: string | null
@@ -31,8 +31,8 @@ export class BankruptcyApplicationDto {
   @ApiProperty({ type: String, nullable: true, required: false })
   signatureOnBehalfOf?: string | null
 
-  @ApiProperty({ type: [Date], nullable: true, required: false })
-  publishingDates?: Date[] | null
+  @ApiProperty({ type: [String], nullable: true, required: false })
+  publishingDates?: string[] | null
 
   @ApiProperty({ type: String, nullable: true, required: false })
   locationName?: string | null
