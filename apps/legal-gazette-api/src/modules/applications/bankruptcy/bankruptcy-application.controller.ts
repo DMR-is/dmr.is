@@ -1,6 +1,9 @@
+import { Op } from 'sequelize'
+
 import {
   Body,
   Controller,
+  Get,
   Inject,
   NotFoundException,
   Param,
@@ -64,7 +67,9 @@ export class BankruptcyApplicationController {
     }
 
     const [model, _created] =
-      await this.bankruptcyApplicationModel.findOrCreate({ where: { caseId } })
+      await this.bankruptcyApplicationModel.findOrCreate({
+        where: { caseId, involvedPartyNationalId: user.nationalId },
+      })
 
     return model.fromModel()
   }

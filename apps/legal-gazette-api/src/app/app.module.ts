@@ -18,6 +18,7 @@ import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { AdvertModel } from '../modules/advert/advert.model'
 import { AdvertModule } from '../modules/advert/advert.module'
+import { ApplicationModule } from '../modules/applications/application.module'
 import { BankruptcyApplicationModel } from '../modules/applications/bankruptcy/models/bankruptcy-application.model'
 import { CommonApplicationModule } from '../modules/applications/common/common-application.module'
 import { BankruptcyAdvertModule } from '../modules/bankruptcy-advert/bankruptcy-advert.module'
@@ -85,6 +86,7 @@ import { UsersModule } from '../modules/users/users.module'
     SubscriberModule,
     UsersModule,
     BankruptcyAdvertModule,
+    ApplicationModule,
     {
       module: AuthModule,
       global: true,

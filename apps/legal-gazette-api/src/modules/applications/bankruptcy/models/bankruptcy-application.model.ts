@@ -6,20 +6,22 @@ import {
   ForeignKey,
 } from 'sequelize-typescript'
 
+import { BadRequestException } from '@nestjs/common'
+
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { CaseModel } from '../../../case/case.model'
 import { CourtDistrictModel } from '../../../court-district/court-district.model'
+import { TypeEnum } from '../../../type/type.model'
+import { ApplicationStatusEnum } from '../../contants'
+import { ApplicationDto } from '../../dto/ApplicationDto'
 import { BankruptcyApplicationDto } from '../dto/bankruptcy-application.dto'
 import { UpdateBankruptcyApplicationDto } from '../dto/update-bankruptcy-application.dto'
 
-export enum BankruptcyApplicationStatusEnum {
-  DRAFT = 'DRAFT',
-  SUBMITTED = 'SUBMITTED',
-}
-
 type BankruptcyApplicationAttributes = {
+  involvedPartyNationalId: string
+  status: ApplicationStatusEnum
   additionalText?: string | null
   judgmentDate?: Date | null
   claimsSentTo?: string | null
@@ -53,6 +55,13 @@ export class BankruptcyApplicationModel extends BaseModel<
   BankruptcyApplicationCreationAttributes
 > {
   @Column({
+    type: DataType.STRING,
+    field: 'involved_party_national_id',
+    allowNull: false,
+  })
+  involvedPartyNationalId!: string
+
+  @Column({
     type: DataType.TEXT,
     field: 'additional_text',
     allowNull: true,
@@ -61,12 +70,12 @@ export class BankruptcyApplicationModel extends BaseModel<
   additionalText!: string | null
 
   @Column({
-    type: DataType.ENUM(...Object.values(BankruptcyApplicationStatusEnum)),
+    type: DataType.ENUM(...Object.values(ApplicationStatusEnum)),
     allowNull: false,
-    defaultValue: BankruptcyApplicationStatusEnum.DRAFT,
+    defaultValue: ApplicationStatusEnum.DRAFT,
     field: 'status',
   })
-  status!: BankruptcyApplicationStatusEnum
+  status!: ApplicationStatusEnum
 
   @Column({
     type: DataType.DATE,
@@ -244,5 +253,37 @@ export class BankruptcyApplicationModel extends BaseModel<
 
   fromModel(): BankruptcyApplicationDto {
     return BankruptcyApplicationModel.fromModel(this)
+  }
+
+  static fromModelToApplicationDto(
+    model: BankruptcyApplicationModel,
+  ): ApplicationDto {
+    return {
+      id: model.id,
+      nationalId: model.involvedPartyNationalId,
+      status: model.status,
+      title: `${TypeEnum.BANKRUPTCY_ADVERT}${model.locationAddress ? ` - ${model.locationAddress}` : ''}`,
+    }
+  }
+
+  fromModelToApplicationDto(): ApplicationDto {
+    return BankruptcyApplicationModel.fromModelToApplicationDto(this)
+  }
+
+  static async deleteApplication(
+    model: BankruptcyApplicationModel,
+  ): Promise<void> {
+    if (model.status !== ApplicationStatusEnum.DRAFT) {
+      throw new BadRequestException(
+        'Cannot delete application that is not in draft status',
+      )
+    }
+
+    await model.destroy()
+    await CaseModel.destroy({ where: { id: model.caseId }, force: true })
+  }
+
+  deleteApplication(): Promise<void> {
+    return BankruptcyApplicationModel.deleteApplication(this)
   }
 }

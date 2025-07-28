@@ -34,6 +34,7 @@ type CaseAttributes = {
   caseNumber: string
   applicationId: string | null
   assignedUserId: string | null
+  involvedPartyNationalId: string
   communicationChannels: CommunicationChannelModel[]
   adverts: AdvertModel[]
 }
@@ -42,6 +43,7 @@ type CaseCreateAttributes = {
   involvedPartyNationalId: string
   applicationId?: string
   caseId?: string
+  assignedUserId?: string | null
   communicationChannels?: CommunicationChannelCreateAttributes[]
   adverts?: AdvertCreateAttributes[]
 }
