@@ -77,6 +77,7 @@ export class BankruptcyDivisionAdvertModel extends BaseModel<
     model: BankruptcyDivisionAdvertModel,
   ): BankruptcyDivisionAdvertDto {
     return {
+      id: model.id,
       meetingDate: model.meetingDate.toISOString(),
       meetingLocation: model.meetingLocation,
       settlement: model.settlement.fromModel(),

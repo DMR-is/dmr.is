@@ -4,6 +4,7 @@ import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { BankruptcyAdvertModel } from '../bankruptcy/advert/bankruptcy-advert.model'
+import { BankruptcyDivisionAdvertModel } from '../bankruptcy/division-advert/bankruptcy-division-advert.model'
 import { SettlementDto } from './dto/settlement.dto'
 
 type SettlementAttributes = {
@@ -74,7 +75,12 @@ export class SettlementModel extends BaseModel<
   settlementDeadline!: Date
 
   @HasMany(() => BankruptcyAdvertModel)
-  bankruptcyAdvert?: BankruptcyAdvertModel
+  bankruptcyAdverts!: BankruptcyAdvertModel
+
+  @HasMany(() => BankruptcyDivisionAdvertModel, {
+    foreignKey: 'settlementId',
+  })
+  bankruptcyDivisionAdverts!: BankruptcyDivisionAdvertModel[]
 
   static fromModel(model: SettlementModel): SettlementDto {
     return {

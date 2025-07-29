@@ -14,6 +14,10 @@ import { SettlementDto } from '../../../settlement/dto/settlement.dto'
 
 export class BankruptcyDivisionAdvertDto {
   @ApiProperty({ type: String, required: true })
+  @IsUUID()
+  id!: string
+
+  @ApiProperty({ type: String, required: true })
   @IsDateString()
   meetingDate!: string
 

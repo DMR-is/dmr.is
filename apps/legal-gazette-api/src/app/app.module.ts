@@ -21,9 +21,8 @@ import { AdvertModule } from '../modules/advert/advert.module'
 import { ApplicationModule } from '../modules/applications/application.module'
 import { BankruptcyApplicationModel } from '../modules/applications/bankruptcy/models/bankruptcy-application.model'
 import { CommonApplicationModule } from '../modules/applications/common/common-application.module'
-import { BankruptcyAdvertModule } from '../modules/bankruptcy/advert/bankruptcy-advert.module'
 import { BankruptcyAdvertModel } from '../modules/bankruptcy/advert/bankruptcy-advert.model'
-import { BankruptcyLocationModel } from '../modules/bankruptcy/advert/models/bankruptcy-location.model'
+import { BankruptcyDivisionAdvertModel } from '../modules/bankruptcy/division-advert/bankruptcy-division-advert.model'
 import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
 import { CaseModel } from '../modules/case/case.model'
 import { CaseModule } from '../modules/case/case.module'
@@ -31,6 +30,7 @@ import { CategoryModel } from '../modules/category/category.model'
 import { CommonAdvertModel } from '../modules/common-advert/common-advert.model'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
 import { CourtDistrictModel } from '../modules/court-district/court-district.model'
+import { SettlementModel } from '../modules/settlement/settlement.model'
 import { StatusModel } from '../modules/status/status.model'
 import { SubscriberModel } from '../modules/subscribers/subscriber.model'
 import { SubscriberModule } from '../modules/subscribers/subscriber.module'
@@ -69,7 +69,8 @@ import { UsersModule } from '../modules/users/users.module'
             CommonAdvertModel,
             AdvertModel,
             BankruptcyAdvertModel,
-            BankruptcyLocationModel,
+            SettlementModel,
+            BankruptcyDivisionAdvertModel,
             BankruptcyApplicationModel,
             SubscriberModel,
           ],
@@ -85,7 +86,6 @@ import { UsersModule } from '../modules/users/users.module'
     AdvertModule,
     SubscriberModule,
     UsersModule,
-    BankruptcyAdvertModule,
     ApplicationModule,
     {
       module: AuthModule,

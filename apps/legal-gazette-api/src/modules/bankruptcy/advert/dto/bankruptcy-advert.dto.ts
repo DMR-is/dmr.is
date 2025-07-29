@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer'
 import {
   IsDateString,
+  IsDefined,
   IsOptional,
   IsString,
   IsUUID,
@@ -9,81 +10,40 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { BankruptcyLocationDto } from './bankruptcy-location.dto'
+import { CourtDistrictDto } from '../../../court-district/dto/court-district.dto'
+import { SettlementDto } from '../../../settlement/dto/settlement.dto'
 
 export class BankruptcyAdvertDto {
-  @ApiProperty({
-    type: String,
-    description: 'Unique identifier for the bankruptcy advert',
-  })
+  @ApiProperty({ type: String, required: true })
   @IsUUID()
   id!: string
 
-  @ApiProperty({
-    type: String,
-    description: 'The additional text for the bankruptcy advert',
-    nullable: true,
-  })
+  @ApiProperty({ type: String, required: false })
   @IsOptional()
   @IsString()
-  additionalText?: string | null
+  additionalText?: string
 
-  @ApiProperty({
-    type: String,
-    description: 'The date of the judgment related to the bankruptcy advert',
-  })
+  @ApiProperty({ type: String, required: true })
   @IsDateString()
   judgmentDate!: string
 
-  @ApiProperty({
-    type: String,
-    description: 'The entity to which claims were sent',
-  })
-  @IsString()
-  claimsSentTo!: string
-
-  @ApiProperty({
-    type: String,
-    description: 'The location of the signature for the bankruptcy advert',
-  })
+  @ApiProperty({ type: String, required: true })
   @IsString()
   signatureLocation!: string
 
-  @ApiProperty({
-    type: String,
-    description: 'The date of the signature for the bankruptcy advert',
-  })
+  @ApiProperty({ type: String, required: true })
   @IsDateString()
   signatureDate!: string
 
-  @ApiProperty({
-    type: String,
-    description: 'The name of the person who signed the bankruptcy advert',
-  })
-  @IsString()
-  signatureName!: string
-
-  @ApiProperty({
-    type: String,
-    description:
-      'The name of the person on behalf of whom the signature was made',
-    nullable: true,
-  })
-  @IsOptional()
-  @IsString()
-  signatureOnBehalfOf?: string | null
-
-  @ApiProperty({
-    type: String,
-    description: 'Court district name',
-  })
-  @IsString()
-  courtDistrictName!: string
-
-  @ApiProperty({
-    type: BankruptcyLocationDto,
-  })
+  @ApiProperty({ type: SettlementDto, required: true })
   @ValidateNested()
-  @Type(() => BankruptcyLocationDto)
-  location!: BankruptcyLocationDto
+  @Type(() => SettlementDto)
+  @IsDefined()
+  settlement!: SettlementDto
+
+  @ApiProperty({ type: CourtDistrictDto, required: true })
+  @ValidateNested()
+  @Type(() => CourtDistrictDto)
+  @IsDefined()
+  courtDistrict!: CourtDistrictDto
 }
