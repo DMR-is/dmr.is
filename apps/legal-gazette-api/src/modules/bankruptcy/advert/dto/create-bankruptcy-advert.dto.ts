@@ -10,8 +10,7 @@ import {
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
-import { CreateAdvertDto } from '../../advert/dto/advert.dto'
-import { BankruptcyLocationDto } from './bankruptcy-location.dto'
+import { CreateAdvertDto } from '../../../advert/dto/advert.dto'
 
 class CreateBankruptcyAdvertAttributesDto {
   @ApiProperty({ type: String })
@@ -47,15 +46,6 @@ class CreateBankruptcyAdvertAttributesDto {
   @IsOptional()
   @IsString()
   signatureOnBehalfOf?: string | null
-
-  @ApiProperty({
-    type: BankruptcyLocationDto,
-    description: 'Locations associated with the bankruptcy advert',
-  })
-  @IsDefined({ message: 'Location is required' })
-  @ValidateNested()
-  @Type(() => BankruptcyLocationDto)
-  location!: BankruptcyLocationDto
 }
 
 export class CreateBankruptcyAdvertDto extends PickType(CreateAdvertDto, [

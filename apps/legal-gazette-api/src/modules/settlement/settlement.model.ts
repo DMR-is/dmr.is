@@ -1,0 +1,94 @@
+import { Column, DataType, HasMany } from 'sequelize-typescript'
+
+import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
+import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
+
+import { BankruptcyAdvertModel } from '../bankruptcy/advert/bankruptcy-advert.model'
+import { SettlementDto } from './dto/settlement.dto'
+
+type SettlementAttributes = {
+  liquidatorName: string
+  liquidatorLocation: string
+  liquidatorOnBehalfOf?: string
+
+  settlementName: string
+  settlementNationalId: string
+  settlementAddress: string
+  settlementDeadline: Date
+}
+
+type SettlementCreationAttributes = SettlementAttributes
+
+@BaseTable({ tableName: LegalGazetteModels.SETTLEMENT })
+export class SettlementModel extends BaseModel<
+  SettlementAttributes,
+  SettlementCreationAttributes
+> {
+  @Column({
+    type: DataType.TEXT,
+    allowNull: false,
+    field: 'liquidator_name',
+  })
+  liquidatorName!: string
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: false,
+    field: 'liquidator_location',
+  })
+  liquidatorLocation!: string
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    field: 'liquidator_on_behalf_of',
+  })
+  liquidatorOnBehalfOf?: string
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: false,
+    field: 'settlement_name',
+  })
+  settlementName!: string
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: false,
+    field: 'settlement_national_id',
+  })
+  settlementNationalId!: string
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: false,
+    field: 'settlement_address',
+  })
+  settlementAddress!: string
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: false,
+    field: 'settlement_deadline',
+  })
+  settlementDeadline!: Date
+
+  @HasMany(() => BankruptcyAdvertModel)
+  bankruptcyAdvert?: BankruptcyAdvertModel
+
+  static fromModel(model: SettlementModel): SettlementDto {
+    return {
+      liquidatorName: model.liquidatorName,
+      liquidatorLocation: model.liquidatorLocation,
+      liquidatorOnBehalfOf: model.liquidatorOnBehalfOf,
+      settlementName: model.settlementName,
+      settlementNationalId: model.settlementNationalId,
+      settlementAddress: model.settlementAddress,
+      settlementDeadline: model.settlementDeadline,
+    }
+  }
+
+  fromModel(): SettlementDto {
+    return SettlementModel.fromModel(this)
+  }
+}

@@ -19,7 +19,7 @@ import { validateAdvertStatus } from '../../lib/utils'
 import {
   BankruptcyAdvertCreationAttributes,
   BankruptcyAdvertModel,
-} from '../bankruptcy-advert/models/bankruptcy-advert.model'
+} from '../bankruptcy/advert/bankruptcy-advert.model'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
 import {

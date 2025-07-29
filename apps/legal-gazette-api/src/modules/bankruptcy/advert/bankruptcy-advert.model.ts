@@ -14,8 +14,8 @@ import { AdvertCreateAttributes, AdvertModel } from '../../advert/advert.model'
 import { CategoryDefaultIdEnum } from '../../category/category.model'
 import { CourtDistrictModel } from '../../court-district/court-district.model'
 import { TypeEnum, TypeIdEnum } from '../../type/type.model'
-import { BankruptcyAdvertDto } from '../dto/bankruptcy-advert.dto'
-import { CreateBankruptcyAdvertDto } from '../dto/create-bankruptcy-advert.dto'
+import { BankruptcyAdvertDto } from './dto/bankruptcy-advert.dto'
+import { CreateBankruptcyAdvertDto } from './dto/create-bankruptcy-advert.dto'
 import {
   BankruptcyLocationCreationAttributes,
   BankruptcyLocationModel,

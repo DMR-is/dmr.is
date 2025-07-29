@@ -22,11 +22,12 @@ import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
-import { CreateBankruptcyAdvertDto } from '../../bankruptcy-advert/dto/create-bankruptcy-advert.dto'
-import { BankruptcyAdvertModel } from '../../bankruptcy-advert/models/bankruptcy-advert.model'
+import { BankruptcyAdvertModel } from '../../bankruptcy/advert/bankruptcy-advert.model'
+import { CreateBankruptcyAdvertDto } from '../../bankruptcy/advert/dto/create-bankruptcy-advert.dto'
 import { CaseModel } from '../../case/case.model'
 import { ApplicationStatusEnum } from '../contants'
 import { BankruptcyApplicationDto } from './dto/bankruptcy-application.dto'
+import { SubmitBankruptcyApplicationDto } from './dto/submit-bankruptcy-application.dto'
 import { UpdateBankruptcyApplicationDto } from './dto/update-bankruptcy-application.dto'
 import { BankruptcyApplicationModel } from './models/bankruptcy-application.model'
 
@@ -107,7 +108,7 @@ export class BankruptcyApplicationController {
   async submit(
     @Param('caseId') caseId: string,
     @Param('applicationId') applicationId: string,
-    @Body() body: CreateBankruptcyAdvertDto,
+    @Body() body: SubmitBankruptcyApplicationDto,
     @CurrentUser() user: Auth,
   ) {
     if (!user?.nationalId) {
@@ -127,14 +128,5 @@ export class BankruptcyApplicationController {
     }
 
     await application.update({ status: ApplicationStatusEnum.SUBMITTED })
-
-    application.publishingDates?.map((date) => {
-      console.log(date)
-    })
-
-    await this.bankruptcyAdvertModel.createBankruptcyAdvert(
-      user.nationalId,
-      body,
-    )
   }
 }
