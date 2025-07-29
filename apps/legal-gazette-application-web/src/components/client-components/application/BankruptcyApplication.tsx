@@ -18,6 +18,7 @@ import {
 import {
   BankruptcyApplicationDto,
   CourtDistrictDto,
+  TypeEnum,
   UpdateBankruptcyApplicationDto,
 } from '../../../gen/fetch'
 import { updateBankruptcyApplication } from '../../../lib/fetchers'
@@ -81,6 +82,11 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
 
   return (
     <GridContainer>
+      <input
+        type="hidden"
+        name="application-type"
+        value={TypeEnum.InnköllunÞrotabús}
+      />
       <Stack space={4}>
         <GridRow>
           <GridColumn span="12/12">
@@ -230,7 +236,7 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
           <GridColumn span="12/12">
             <Text variant="h3">Birting</Text>
           </GridColumn>
-          <GridColumn span={['12/12', '6/12', '6/12']}>
+          <GridColumn span="12/12">
             <ApplicationPublishingDates
               publishingDates={updateState.publishingDates as string[]}
               onDateChange={(dates) => {

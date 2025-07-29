@@ -2,7 +2,13 @@
 
 import { useState } from 'react'
 
-import { Button, DatePicker, Inline, Stack } from '@island.is/island-ui/core'
+import {
+  Box,
+  Button,
+  DatePicker,
+  Inline,
+  Stack,
+} from '@island.is/island-ui/core'
 
 type Props = {
   publishingDates: string[]
