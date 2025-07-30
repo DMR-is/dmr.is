@@ -1,4 +1,5 @@
 import { Column, DataType, HasMany } from 'sequelize-typescript'
+import { z } from 'zod'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
@@ -19,6 +20,16 @@ type SettlementAttributes = {
 }
 
 type SettlementCreationAttributes = SettlementAttributes
+
+export const settlementSchema = z.object({
+  liquidatorName: z.string(),
+  liquidatorLocation: z.string(),
+  liquidatorOnBehalfOf: z.string().optional(),
+  settlementName: z.string(),
+  settlementNationalId: z.string(),
+  settlementAddress: z.string(),
+  settlementDeadline: z.string().transform((iso) => new Date(iso)),
+})
 
 @BaseTable({ tableName: LegalGazetteModels.SETTLEMENT })
 export class SettlementModel extends BaseModel<

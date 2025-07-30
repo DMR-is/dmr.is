@@ -6,6 +6,7 @@ import {
   ForeignKey,
   Scopes,
 } from 'sequelize-typescript'
+import { z } from 'zod'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
@@ -14,15 +15,26 @@ import { AdvertModel } from '../../advert/advert.model'
 import { SettlementModel } from '../../settlement/settlement.model'
 import { BankruptcyDivisionAdvertDto } from './dto/bankruptcy-division-advert.dto'
 
+export const bankruptcyDivisionAdvertSchema = z.object({
+  meetingDate: z.string().datetime(),
+  meetingLocation: z.string(),
+  settlementId: z.string().uuid(),
+  advertId: z.string().uuid().optional(),
+})
+
 type BankruptcyDivisionAdvertAttributes = {
-  meetingDate: Date
+  meetingDate: string
   meetingLocation: string
   settlementId: string
   advertId: string
 }
 
-export type BankruptcyDivisionAdvertCreationAttributes =
-  BankruptcyDivisionAdvertAttributes
+export type BankruptcyDivisionAdvertCreationAttributes = {
+  meetingDate: string
+  meetingLocation: string
+  settlementId: string
+  advertId?: string
+}
 
 @DefaultScope(() => ({
   include: [{ model: SettlementModel }],

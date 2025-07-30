@@ -6,6 +6,7 @@ import {
   ForeignKey,
   Scopes,
 } from 'sequelize-typescript'
+import { z } from 'zod'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
@@ -14,6 +15,16 @@ import { AdvertModel } from '../../advert/advert.model'
 import { CourtDistrictModel } from '../../court-district/court-district.model'
 import { SettlementModel } from '../../settlement/settlement.model'
 import { BankruptcyAdvertDto } from './dto/bankruptcy-advert.dto'
+
+export const bankruptcyAdvertSchema = z.object({
+  additionalText: z.string().optional(),
+  judgmentDate: z.string().transform((iso) => new Date(iso)),
+  signatureLocation: z.string(),
+  signatureDate: z.string().transform((iso) => new Date(iso)),
+  settlementId: z.string(),
+  courtDistrictId: z.string(),
+  advertId: z.string().optional(),
+})
 
 export type BankruptcyAdvertAttributes = {
   additionalText?: string
@@ -24,7 +35,15 @@ export type BankruptcyAdvertAttributes = {
   courtDistrictId: string
   advertId: string
 }
-export type BankruptcyAdvertCreationAttributes = BankruptcyAdvertAttributes
+export type BankruptcyAdvertCreationAttributes = {
+  additionalText?: string
+  judgmentDate: Date
+  signatureLocation: string
+  signatureDate: Date
+  settlementId: string
+  courtDistrictId: string
+  advertId?: string
+}
 
 @DefaultScope(() => ({
   attributes: [

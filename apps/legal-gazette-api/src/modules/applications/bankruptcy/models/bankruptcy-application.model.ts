@@ -20,34 +20,29 @@ import { BankruptcyApplicationDto } from '../dto/bankruptcy-application.dto'
 import { UpdateBankruptcyApplicationDto } from '../dto/update-bankruptcy-application.dto'
 
 type BankruptcyApplicationAttributes = {
-  involvedPartyNationalId: string
-  status: ApplicationStatusEnum
-  additionalText?: string | null
-  judgmentDate?: Date | null
-  claimsSentTo?: string | null
-  signatureLocation?: string | null
-  signatureDate?: Date | null
-  signatureName?: string | null
-  signatureOnBehalfOf?: string | null
-  locationName?: string | null
-  locationDeadline?: string | null
-  locationAddress?: string | null
-  locationNationalId?: string | null
-  publishingDates?: Date[] | null
-  courtDistrictId?: string | null
   caseId: string
+  status: ApplicationStatusEnum
+  involvedPartyNationalId: string
+  courtDistrictId?: string
+
+  additionalText?: string
+  judgmentDate?: Date
+
+  signatureLocation?: string
+  signatureDate?: Date
+
+  settlementName?: string
+  settlementDeadline?: string
+  settlementAddress?: string
+  settlementNationalId?: string
+
+  publishingDates?: Date[]
 }
 
 type BankruptcyApplicationCreationAttributes = BankruptcyApplicationAttributes
 
 @DefaultScope(() => ({
-  include: [
-    {
-      model: CourtDistrictModel,
-      as: 'courtDistrict',
-      attributes: ['id', 'title', 'slug'],
-    },
-  ],
+  include: [{ model: CourtDistrictModel }],
   order: [['updatedAt', 'DESC']],
 }))
 @BaseTable({ tableName: LegalGazetteModels.BANKRUPTCY_APPLICATION })
@@ -57,18 +52,11 @@ export class BankruptcyApplicationModel extends BaseModel<
 > {
   @Column({
     type: DataType.STRING,
-    field: 'involved_party_national_id',
+    field: 'case_id',
     allowNull: false,
   })
-  involvedPartyNationalId!: string
-
-  @Column({
-    type: DataType.TEXT,
-    field: 'additional_text',
-    allowNull: true,
-    defaultValue: null,
-  })
-  additionalText!: string | null
+  @ForeignKey(() => CaseModel)
+  caseId!: string
 
   @Column({
     type: DataType.ENUM(...Object.values(ApplicationStatusEnum)),
@@ -79,109 +67,84 @@ export class BankruptcyApplicationModel extends BaseModel<
   status!: ApplicationStatusEnum
 
   @Column({
-    type: DataType.DATE,
-    field: 'judgment_date',
-    allowNull: true,
-    defaultValue: null,
+    type: DataType.STRING,
+    field: 'involved_party_national_id',
+    allowNull: false,
   })
-  judgmentDate!: Date | null
+  involvedPartyNationalId!: string
 
   @Column({
-    type: DataType.STRING,
-    field: 'claims_sent_to',
-    allowNull: true,
-    defaultValue: null,
+    type: DataType.TEXT,
+    field: 'additional_text',
   })
-  claimsSentTo!: string | null
+  additionalText?: string
+
+  @Column({
+    type: DataType.DATE,
+    field: 'judgment_date',
+  })
+  judgmentDate?: Date
 
   @Column({
     type: DataType.STRING,
     field: 'signature_location',
-    allowNull: true,
-    defaultValue: null,
   })
-  signatureLocation!: string | null
+  signatureLocation?: string
 
   @Column({
     type: DataType.DATE,
     field: 'signature_date',
-    allowNull: true,
-    defaultValue: null,
   })
-  signatureDate!: Date | null
+  signatureDate?: Date
 
   @Column({
     type: DataType.STRING,
-    field: 'signature_name',
-    allowNull: true,
-    defaultValue: null,
+    field: 'settlement_name',
   })
-  signatureName!: string | null
+  settlementName?: string
 
   @Column({
     type: DataType.STRING,
-    field: 'signature_on_behalf_of',
-    allowNull: true,
-    defaultValue: null,
+    field: 'settlement_national_id',
   })
-  signatureOnBehalfOf!: string | null
+  settlementNationalId?: string
+
+  @Column({
+    type: DataType.STRING,
+    field: 'settlement_address',
+  })
+  settlementAddress?: string
+
+  @Column({
+    type: DataType.STRING,
+    field: 'settlement_deadline_date',
+  })
+  settlementDeadline?: string
+
+  @Column({
+    type: DataType.STRING,
+    field: 'settlement_meeting_location',
+  })
+  settlementMeetingLocation?: string
+
+  @Column({
+    type: DataType.DATE,
+    field: 'settlement_meeting_date',
+  })
+  settlementMeetingDate?: Date
 
   @Column({
     type: DataType.ARRAY(DataType.DATE),
     field: 'publishing_dates',
-    allowNull: true,
-    defaultValue: null,
   })
-  publishingDates!: Date[] | null
-
-  @Column({
-    type: DataType.STRING,
-    field: 'location_name',
-    allowNull: true,
-    defaultValue: null,
-  })
-  locationName!: string | null
-
-  @Column({
-    type: DataType.STRING,
-    field: 'location_deadline_date',
-    allowNull: true,
-    defaultValue: null,
-  })
-  locationDeadline!: string | null
-
-  @Column({
-    type: DataType.STRING,
-    field: 'location_address',
-    allowNull: true,
-    defaultValue: null,
-  })
-  locationAddress!: string | null
-
-  @Column({
-    type: DataType.STRING,
-    field: 'location_national_id',
-    allowNull: true,
-    defaultValue: null,
-  })
-  locationNationalId!: string | null
+  publishingDates?: Date[]
 
   @Column({
     type: DataType.STRING,
     field: 'court_district_id',
-    allowNull: true,
-    defaultValue: null,
   })
   @ForeignKey(() => CourtDistrictModel)
-  courtDistrictId!: string | null
-
-  @Column({
-    type: DataType.STRING,
-    field: 'case_id',
-    allowNull: false,
-  })
-  @ForeignKey(() => CaseModel)
-  caseId!: string
+  courtDistrictId?: string
 
   @BelongsTo(() => CourtDistrictModel, { foreignKey: 'courtDistrictId' })
   courtDistrict?: CourtDistrictModel
@@ -204,17 +167,16 @@ export class BankruptcyApplicationModel extends BaseModel<
     const [_count, rows] = await BankruptcyApplicationModel.update(
       {
         additionalText: dto.additionalText,
-        judgmentDate: dto.judgmentDate ? new Date(dto.judgmentDate) : null,
-        claimsSentTo: dto.claimsSentTo,
+        judgmentDate: dto.judgmentDate ? new Date(dto.judgmentDate) : undefined,
         signatureLocation: dto.signatureLocation,
-        signatureDate: dto.signatureDate ? new Date(dto.signatureDate) : null,
-        signatureName: dto.signatureName,
-        signatureOnBehalfOf: dto.signatureOnBehalfOf,
+        signatureDate: dto.signatureDate
+          ? new Date(dto.signatureDate)
+          : undefined,
         publishingDates: dto.publishingDates?.map((date) => new Date(date)),
-        locationName: dto.locationName,
-        locationDeadline: dto.locationDeadline,
-        locationAddress: dto.locationAddress,
-        locationNationalId: dto.locationNationalId,
+        settlementName: dto.settlementName,
+        settlementDeadline: dto.settlementDeadline,
+        settlementAddress: dto.settlementAddress,
+        settlementNationalId: dto.settlementNationalId,
         courtDistrictId: dto.courtDistrictId,
       },
       {
@@ -237,16 +199,15 @@ export class BankruptcyApplicationModel extends BaseModel<
       status: model.status,
       additionalText: model.additionalText,
       judgmentDate: model.judgmentDate?.toISOString(),
-      claimsSentTo: model.claimsSentTo,
       signatureLocation: model.signatureLocation,
       signatureDate: model.signatureDate?.toISOString(),
-      signatureName: model.signatureName,
-      signatureOnBehalfOf: model.signatureOnBehalfOf,
       publishingDates: model.publishingDates?.map((d) => d.toISOString()),
-      locationName: model.locationName,
-      locationDeadline: model.locationDeadline,
-      locationAddress: model.locationAddress,
-      locationNationalId: model.locationNationalId,
+      settlementName: model.settlementName,
+      settlementDeadline: model.settlementDeadline,
+      settlementAddress: model.settlementAddress,
+      settlementNationalId: model.settlementNationalId,
+      settlementMeetingDate: model.settlementMeetingDate?.toISOString(),
+      settlementMeetingLocation: model.settlementMeetingLocation,
       courtDistrict: model?.courtDistrict?.fromModel(),
       caseId: model.caseId,
     }
@@ -264,7 +225,7 @@ export class BankruptcyApplicationModel extends BaseModel<
       caseId: model.caseId,
       nationalId: model.involvedPartyNationalId,
       status: model.status,
-      title: `${TypeEnum.BANKRUPTCY_ADVERT}${model.locationAddress ? ` - ${model.locationAddress}` : ''}`,
+      title: `${TypeEnum.BANKRUPTCY_ADVERT}${model.settlementAddress ? ` - ${model.settlementAddress}` : ''}`,
       type: TypeEnum.BANKRUPTCY_ADVERT,
     }
   }

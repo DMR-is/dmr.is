@@ -15,13 +15,20 @@ import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { validateAdvertStatus } from '../../lib/utils'
+import { mapIndexToVersion, validateAdvertStatus } from '../../lib/utils'
 import {
   BankruptcyAdvertCreationAttributes,
   BankruptcyAdvertModel,
 } from '../bankruptcy/advert/bankruptcy-advert.model'
+import {
+  BankruptcyDivisionAdvertCreationAttributes,
+  BankruptcyDivisionAdvertModel,
+} from '../bankruptcy/division-advert/bankruptcy-division-advert.model'
 import { CaseModel } from '../case/case.model'
-import { CategoryModel } from '../category/category.model'
+import {
+  CategoryDefaultIdEnum,
+  CategoryModel,
+} from '../category/category.model'
 import {
   CommonAdvertCreationAttributes,
   CommonAdvertModel,
@@ -52,6 +59,9 @@ type AdvertAttributes = {
   category: CategoryModel
   status: StatusModel
   case: CaseModel
+  commonAdvert?: CommonAdvertModel
+  bankruptcyAdvert?: BankruptcyAdvertModel
+  bankruptcyDivisionAdvert?: BankruptcyDivisionAdvertModel
 }
 
 export type AdvertCreateAttributes = {
@@ -68,7 +78,23 @@ export type AdvertCreateAttributes = {
   version?: AdvertVersionEnum
   commonAdvert?: CommonAdvertCreationAttributes
   bankruptcyAdvert?: BankruptcyAdvertCreationAttributes
+  bankruptcyDivisionAdvert?: BankruptcyDivisionAdvertCreationAttributes
 }
+
+export type CreateCommonAdvertParams = Omit<
+  AdvertCreateAttributes,
+  'typeId' | 'bankruptcyAdvert' | 'bankruptcyDivisionAdvert'
+>
+
+export type CreateBankruptcyAdvertParams = Omit<
+  AdvertCreateAttributes,
+  'typeId' | 'categoryId' | 'commonAdvert' | 'bankruptcyDivisionAdvert'
+>
+
+export type CreateBankruptcyDivisionAdvertParams = Omit<
+  AdvertCreateAttributes,
+  'typeId' | 'categoryId' | 'commonAdvert' | 'bankruptcyAdvert'
+>
 
 export enum AdvertVersionEnum {
   A = 'A',
@@ -343,6 +369,134 @@ export class AdvertModel extends BaseModel<
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
     validateAdvertStatus(instance)
+  }
+
+  static async createCommonAdvert(
+    params: CreateCommonAdvertParams,
+  ): Promise<AdvertModel> {
+    try {
+      this.logger.info(`Creating common advert`, {
+        caseId: params.caseId,
+      })
+      return this.create(
+        {
+          ...params,
+          typeId: TypeIdEnum.COMMON_ADVERT,
+          version: params.version ? params.version : AdvertVersionEnum.A,
+          commonAdvert: params.commonAdvert,
+        },
+        {
+          include: [CommonAdvertModel],
+        },
+      )
+    } catch (error) {
+      this.logger.error(`Failed to create common advert`, {
+        caseId: params.caseId,
+        error: error,
+      })
+
+      throw error
+    }
+  }
+  static async createCommonAdverts(
+    params: CreateCommonAdvertParams[],
+  ): Promise<AdvertModel[]> {
+    const adverts: AdvertModel[] = []
+    params.forEach(async (param, i) => {
+      const newAdvert = await this.createCommonAdvert({
+        ...param,
+        version: mapIndexToVersion(i),
+      })
+      adverts.push(newAdvert)
+    })
+
+    return adverts
+  }
+  static async createBankruptcyAdvert(params: CreateBankruptcyAdvertParams) {
+    try {
+      this.logger.info(`Creating bankruptcy advert`, {
+        caseId: params.caseId,
+      })
+
+      const advert = await this.create(
+        {
+          ...params,
+          typeId: TypeIdEnum.BANKRUPTCY_ADVERT,
+          categoryId: CategoryDefaultIdEnum.BANKRUPTCY_ADVERT,
+          version: params.version ? params.version : AdvertVersionEnum.A,
+          bankruptcyAdvert: params.bankruptcyAdvert,
+        },
+        {
+          include: [BankruptcyAdvertModel],
+        },
+      )
+
+      return advert
+    } catch (error) {
+      this.logger.error(`Failed to create bankruptcy advert`, {
+        caseId: params.caseId,
+        error: error,
+      })
+
+      throw error
+    }
+  }
+  static async createBankruptcyAdverts(params: CreateBankruptcyAdvertParams[]) {
+    const adverts: AdvertModel[] = []
+    params.forEach(async (param, i) => {
+      const newAdvert = await this.createBankruptcyAdvert({
+        ...param,
+        version: mapIndexToVersion(i),
+      })
+      adverts.push(newAdvert)
+    })
+
+    return adverts
+  }
+  static async createBankruptcyDivisionAdvert(
+    params: CreateBankruptcyDivisionAdvertParams,
+  ) {
+    try {
+      this.logger.info(`Creating bankruptcy division advert`, {
+        caseId: params.caseId,
+      })
+
+      const advert = await this.create(
+        {
+          ...params,
+          typeId: TypeIdEnum.BANKRUPTCY_DIVISION_ADVERT,
+          categoryId: CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_ADVERT,
+          version: params.version ? params.version : AdvertVersionEnum.A,
+          bankruptcyDivisionAdvert: params.bankruptcyDivisionAdvert,
+        },
+        {
+          include: [BankruptcyDivisionAdvertModel],
+        },
+      )
+
+      return advert
+    } catch (error) {
+      this.logger.error(`Failed to create bankruptcy division advert`, {
+        caseId: params.caseId,
+        error: error,
+      })
+
+      throw error
+    }
+  }
+  static async createBankruptcyDivisionAdverts(
+    params: CreateBankruptcyDivisionAdvertParams[],
+  ) {
+    const adverts: AdvertModel[] = []
+    params.forEach(async (param, i) => {
+      const newAdvert = await this.createBankruptcyDivisionAdvert({
+        ...param,
+        version: mapIndexToVersion(i),
+      })
+      adverts.push(newAdvert)
+    })
+
+    return adverts
   }
 
   static async countByStatus(
