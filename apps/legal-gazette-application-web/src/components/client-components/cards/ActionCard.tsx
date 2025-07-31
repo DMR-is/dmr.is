@@ -1,8 +1,13 @@
 'use client'
 
-import Link from 'next/link'
-
-import { Box, Button, Inline, Stack, Text } from '@island.is/island-ui/core'
+import {
+  Box,
+  Button,
+  Inline,
+  LinkV2,
+  Stack,
+  Text,
+} from '@island.is/island-ui/core'
 
 type Props = {
   title: string
@@ -23,9 +28,9 @@ export const ActionCard = ({ title, description, link, children }: Props) => {
           {description && <Text>{description}</Text>}
         </Stack>
         {link && (
-          <Link href={link.href}>
+          <LinkV2 href={link.href}>
             <Button icon="arrowForward">{link.label}</Button>
-          </Link>
+          </LinkV2>
         )}
         {children}
       </Inline>

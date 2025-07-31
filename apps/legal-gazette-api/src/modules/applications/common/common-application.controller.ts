@@ -16,7 +16,7 @@ import { SubmitCommonApplicationDto } from './dto/common-application.dto'
 import { ICommonApplicationService } from './common-application.service.interface'
 
 @Controller({
-  path: 'applications',
+  path: 'common-applications',
   version: '1',
 })
 @ApiBearerAuth()
@@ -36,7 +36,7 @@ export class CommonApplicationController {
   }
 
   @Delete(':id')
-  @LGResponse({ operationId: 'deleteApplication' })
+  @LGResponse({ operationId: 'deleteCommonApplication' })
   async deleteApplication(@Param('id') id: string): Promise<void> {
     await this.applicationService.deleteApplication(id)
   }

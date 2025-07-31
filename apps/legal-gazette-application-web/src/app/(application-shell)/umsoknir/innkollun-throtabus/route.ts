@@ -5,6 +5,8 @@ import { PageRoutes } from '../../../../lib/constants'
 import { getClient } from '../../../../lib/createClient'
 import { authOptions } from '../../../api/auth/[...nextauth]/route'
 
+export const dynamic = 'force-dynamic'
+
 async function handler(req: NextRequest) {
   const session = await getServerSession(authOptions)
 

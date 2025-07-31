@@ -16,13 +16,13 @@ import {
   Stack,
 } from '@island.is/island-ui/core'
 
-import { authOptions } from '../../../app/api/auth/[...nextauth]/route'
 import { AdvertForm } from '../../../components/client-components/Form/AdvertForm'
 import { Form } from '../../../components/client-components/Form/Form'
 import { AdvertSidebar } from '../../../components/client-components/Form/FormSidebar'
 import { CaseProvider } from '../../../context/case-context'
 import { CaseDetailedDto } from '../../../gen/fetch'
 import { getLegalGazetteClient } from '../../../lib/api/createClient'
+import { authOptions } from '../../../lib/auth/authOptions'
 import { Route, Routes } from '../../../lib/constants'
 import { ritstjornSingleMessages } from '../../../lib/messages/ritstjorn/single'
 import { loginRedirect, routesToBreadcrumbs } from '../../../lib/utils'

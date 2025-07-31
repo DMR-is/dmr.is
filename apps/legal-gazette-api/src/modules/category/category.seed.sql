@@ -166,4 +166,10 @@ VALUES
     'Innköllun þrotabús',
     'innkollun-throtabus',
     '67cd8559-ea7a-45ae-8de1-e87005c35531'
+  ),
+  (
+    '5b3dded4-e6c2-411e-a9e0-213bea06af17',
+    'Skiptafundur þrotabús',
+    'skiptafundur-throtabus',
+    '7c2db6e3-9aa9-49bf-8044-b072cfc82d8a'
   );
