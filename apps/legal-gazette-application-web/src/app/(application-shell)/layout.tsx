@@ -34,8 +34,7 @@ export default function ApplicationShellLayout({
           toastId: 'submit-bankruptcy-application-success',
         })
       },
-      onError: (error) => {
-        console.log('Error submitting application:', error)
+      onError: () => {
         toast.error(
           'Ekki tókst að senda inn umsókn. Vinsamlegast reyndu aftur síðar.',
           {
@@ -66,7 +65,9 @@ export default function ApplicationShellLayout({
         break
       }
       case TypeEnum.InnköllunDánarbús:
-        console.log('ye 2')
+        toast.error(
+          'Ekki er hægt að senda inn umsókn af þessari gerð. Vinsamlegega reyndu aftur síðar.',
+        )
         break
       default:
         toast.error(

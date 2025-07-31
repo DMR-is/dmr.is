@@ -16,11 +16,6 @@ export class CLSMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
-    // Skip transaction for GET requests to avoid unnecessary overhead
-    if (req.method === 'GET') {
-      return next()
-    }
-
     const transactionNamespace = getNamespace(CLS_NAMESPACE)
 
     if (!transactionNamespace) {
