@@ -35,7 +35,6 @@ for (const [schemaName, schema] of Object.entries(schemas)) {
   if (!mapping) continue
 
   const expectedValues = Object.values(mapping)
-  console.log(`🔍 Patching ${schemaName} with expected values:`, expectedValues)
   if (
     Array.isArray(schema.enum) &&
     schema.enum.length === expectedValues.length &&
