@@ -5,6 +5,15 @@
   "projectType": "application",
   "tags": [],
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["codegen"],
+      "options": {
+        "commands": ["tsc -p tsconfig.json --noEmit"],
+        "cwd": "apps/legal-gazette-application-web",
+        "forwardAllArgs": false
+      }
+    },
     "build": {
       "executor": "@nx/next:build",
       "outputs": ["{options.outputPath}"],
