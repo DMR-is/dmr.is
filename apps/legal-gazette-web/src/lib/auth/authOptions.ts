@@ -11,7 +11,7 @@ import { getLogger } from '@dmr.is/logging'
 
 import { getLegalGazetteClient } from '../api/createClient'
 
-const SESION_TIMEOUT = 60 * 60 // 1 hour
+const SESSION_TIMEOUT = 60 * 60 // 1 hour
 const LOGGING_CATEGORY = 'next-auth'
 
 type ErrorWithPotentialReqRes = Error & {
@@ -63,7 +63,7 @@ export const authOptions: AuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: SESION_TIMEOUT,
+    maxAge: SESSION_TIMEOUT,
   },
   callbacks: {
     jwt: async ({ token, user, account }) => {
