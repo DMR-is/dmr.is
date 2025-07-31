@@ -13,6 +13,9 @@ export const BankruptcyApplicationScreen = ({
   locations,
 }: Props) => {
   return (
-    <BankruptcyApplication locations={locations} initalState={application} />
+    <BankruptcyApplication
+      locations={locations}
+      initalApplication={application}
+    />
   )
 }

@@ -2,16 +2,10 @@
 
 import { useState } from 'react'
 
-import {
-  Box,
-  Button,
-  DatePicker,
-  Inline,
-  Stack,
-} from '@island.is/island-ui/core'
+import { Button, DatePicker, Inline, Stack } from '@island.is/island-ui/core'
 
 type Props = {
-  publishingDates: string[]
+  publishingDates?: string[]
   onDateChange: (dates: string[]) => void
 }
 
@@ -20,7 +14,9 @@ export const ApplicationPublishingDates = ({
   onDateChange,
 }: Props) => {
   const [dates, setDates] = useState<string[]>(
-    publishingDates.length > 0 ? publishingDates : [new Date().toISOString()],
+    publishingDates && publishingDates.length > 0
+      ? publishingDates
+      : [new Date().toISOString()],
   )
 
   const handleAddDate = () => {
@@ -51,6 +47,7 @@ export const ApplicationPublishingDates = ({
       {dates.map((d, i) => (
         <Inline alignY="center" space={2} key={i}>
           <DatePicker
+            backgroundColor="blue"
             size="sm"
             selected={new Date(d)}
             minDate={findMinDate(i)}

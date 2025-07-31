@@ -74,12 +74,14 @@ export class UpdateBankruptcyApplicationDto {
   @IsDateString()
   settlementDeadline?: string
 
-  @ApiProperty({ type: String, required: true })
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
   @IsString()
   @MaxLength(255)
   settlementMeetingLocation?: string
 
-  @ApiProperty({ type: String, required: true })
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
   @IsDateString()
   settlementMeetingDate?: string
 

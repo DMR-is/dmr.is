@@ -123,13 +123,13 @@ export class BankruptcyApplicationModel extends BaseModel<
 
   @Column({
     type: DataType.STRING,
-    field: 'settlement_meeting_location',
+    field: 'division_meeting_location',
   })
   settlementMeetingLocation?: string
 
   @Column({
     type: DataType.DATE,
-    field: 'settlement_meeting_date',
+    field: 'division_meeting_date',
   })
   settlementMeetingDate?: Date
 

@@ -1,27 +1,15 @@
 import { getSession } from 'next-auth/react'
 
-import {
-  CreateBankruptcyAdvertRequest,
-  UpdateBankruptcyApplicationRequest,
-} from '../gen/fetch'
+import { UpdateBankruptcyApplicationRequest } from '../gen/fetch'
 import { getClient } from './createClient'
 
 export async function updateBankruptcyApplication(
-  arg: UpdateBankruptcyApplicationRequest,
+  args: UpdateBankruptcyApplicationRequest,
 ) {
   const session = await getSession()
   const client = getClient(session?.idToken as string)
 
-  return client.updateBankruptcyApplication(arg)
-}
-
-export async function submitBankruptcyApplication(
-  arg: CreateBankruptcyAdvertRequest,
-) {
-  const session = await getSession()
-  const client = getClient(session?.idToken as string)
-
-  return client.createBankruptcyAdvert(arg)
+  return client.updateBankruptcyApplication(args)
 }
 
 export async function deleteApplication(applicationId: string) {

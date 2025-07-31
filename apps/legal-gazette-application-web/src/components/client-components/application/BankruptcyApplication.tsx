@@ -1,6 +1,8 @@
 'use client'
 
+import isEqual from 'lodash/isEqual'
 import { useState } from 'react'
+import { Key } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import {
@@ -16,37 +18,42 @@ import {
 } from '@island.is/island-ui/core'
 
 import {
+  ApiErrorDto,
   BankruptcyApplicationDto,
   CourtDistrictDto,
   TypeEnum,
   UpdateBankruptcyApplicationDto,
+  UpdateBankruptcyApplicationRequest,
 } from '../../../gen/fetch'
 import { updateBankruptcyApplication } from '../../../lib/fetchers'
 import { ApplicationPublishingDates } from './ApplicationPublishingDates'
 
 type Props = {
-  initalState: BankruptcyApplicationDto
+  initalApplication: BankruptcyApplicationDto
   locations: CourtDistrictDto[]
 }
 
-export const BankruptcyApplication = ({ initalState, locations }: Props) => {
+export const BankruptcyApplication = ({
+  initalApplication,
+  locations,
+}: Props) => {
   const [updateState, setUpdateState] =
     useState<UpdateBankruptcyApplicationDto>({
-      additionalText: initalState.additionalText ?? undefined,
-      courtDistrictId: initalState.courtDistrict?.id,
-      judgmentDate: initalState?.judgmentDate ?? undefined,
-      claimsSentTo: initalState.claimsSentTo ?? undefined,
-      locationAddress: initalState.locationAddress ?? undefined,
-      locationNationalId: initalState.locationNationalId ?? undefined,
-      locationName: initalState.locationName ?? undefined,
-      locationDeadline: initalState?.locationDeadline ?? undefined,
-      signatureDate: initalState?.signatureDate ?? undefined,
-      signatureLocation: initalState.signatureLocation ?? undefined,
-      signatureName: initalState.signatureName ?? undefined,
-      signatureOnBehalfOf: initalState.signatureOnBehalfOf ?? undefined,
-      publishingDates: initalState?.publishingDates?.map((d) => d) ?? [
-        new Date().toISOString(),
-      ],
+      additionalText: initalApplication.additionalText,
+      courtDistrictId: initalApplication.courtDistrict?.id,
+      judgmentDate: initalApplication.judgmentDate,
+      settlementName: initalApplication.settlementName,
+      settlementNationalId: initalApplication.settlementNationalId,
+      settlementAddress: initalApplication.settlementAddress,
+      settlementDeadline: initalApplication.settlementDeadline,
+      publishingDates: initalApplication.publishingDates,
+      liquidator: initalApplication.liquidator,
+      liquidatorLocation: initalApplication.liquidatorLocation,
+      liquidatorOnBehalfOf: initalApplication.liquidatorOnBehalfOf,
+      settlementMeetingDate: initalApplication.settlementMeetingDate,
+      settlementMeetingLocation: initalApplication.settlementMeetingLocation,
+      signatureDate: initalApplication.signatureDate,
+      signatureLocation: initalApplication.signatureLocation,
     })
 
   const locationOptions = locations.map((location) => ({
@@ -54,18 +61,15 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
     label: location.title,
   }))
 
-  const { trigger } = useSWRMutation(
-    ['updateApplication', updateState],
-    ([_key, args]) => {
-      const { caseId, id } = initalState
-      return updateBankruptcyApplication({
-        applicationId: id as string,
-        caseId: caseId,
-        updateBankruptcyApplicationDto: {
-          ...args,
-        },
-      })
-    },
+  const { trigger: updateApplicationTrigger } = useSWRMutation<
+    void,
+    ApiErrorDto,
+    Key,
+    UpdateBankruptcyApplicationRequest
+  >(
+    'updateApplication',
+    (_key: string, { arg }: { arg: UpdateBankruptcyApplicationRequest }) =>
+      updateBankruptcyApplication(arg),
     {
       onSuccess: () => {
         toast.success('Umsókn vistuð', {
@@ -80,6 +84,23 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
     },
   )
 
+  const trigger = (args: UpdateBankruptcyApplicationDto) => {
+    // check args are the same as the current state
+    if (isEqual(args, updateState)) {
+      return
+    }
+
+    setUpdateState((prev) => ({
+      ...prev,
+      ...args,
+    }))
+    updateApplicationTrigger({
+      applicationId: initalApplication.id,
+      caseId: initalApplication.caseId,
+      updateBankruptcyApplicationDto: args,
+    })
+  }
+
   return (
     <GridContainer>
       <input
@@ -90,14 +111,20 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
       <Stack space={4}>
         <GridRow>
           <GridColumn span="12/12">
-            <Text marginBottom={2} variant="h2">
-              Innköllun þrotabús
-            </Text>
+            <Stack space={1}>
+              <Text variant="h2">Innköllun þrotabús</Text>
+              <Text marginBottom={2}>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+                enim ad minim veniam, quis nostrud exercitation ullamco laboris
+                nisi ut aliquip ex ea commodo consequat.
+              </Text>
+            </Stack>
           </GridColumn>
         </GridRow>
         <GridRow rowGap={3}>
           <GridColumn span="12/12">
-            <Text variant="h3">Grunnupplýsingar</Text>
+            <Text variant="h4">Grunnupplýsingar</Text>
           </GridColumn>
           <GridColumn span={['12/12', '6/12', '6/12']}>
             <Select
@@ -110,16 +137,13 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
               )}
               options={locationOptions}
               onChange={(opt) =>
-                setUpdateState((prev) => ({
-                  ...prev,
-                  courtDistrictId: opt?.value,
-                }))
+                trigger({ ...updateState, courtDistrictId: opt?.value })
               }
-              onBlur={() => trigger()}
             />
           </GridColumn>
           <GridColumn span={['12/12', '6/12', '6/12']}>
             <DatePicker
+              backgroundColor="blue"
               placeholderText=""
               size="sm"
               name="judgementDate"
@@ -131,12 +155,12 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
                   ? new Date(updateState.judgmentDate)
                   : undefined
               }
-              handleChange={(date) => {
-                setUpdateState((prev) => ({
-                  ...prev,
+              handleChange={(date) =>
+                trigger({
+                  ...updateState,
                   judgmentDate: date ? date.toISOString() : undefined,
-                }))
-              }}
+                })
+              }
             />
           </GridColumn>
           <GridColumn span="12/12">
@@ -145,20 +169,19 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
               size="sm"
               label="Frjáls texti"
               name="addtional-text"
-              defaultValue={initalState?.additionalText ?? undefined}
-              onChange={(e) =>
-                setUpdateState((prev) => ({
-                  ...prev,
+              defaultValue={initalApplication?.additionalText ?? undefined}
+              onBlur={(e) =>
+                trigger({
+                  ...updateState,
                   additionalText: e.target.value,
-                }))
+                })
               }
-              onBlur={() => trigger()}
             />
           </GridColumn>
         </GridRow>
         <GridRow rowGap={3}>
           <GridColumn span="12/12">
-            <Text variant="h3">Upplýsingar um þrotabúið</Text>
+            <Text variant="h4">Upplýsingar um þrotabúið</Text>
           </GridColumn>
           <GridColumn span={['12/12', '6/12', '6/12']}>
             <Input
@@ -166,14 +189,10 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
               size="sm"
               label="Nafn bús"
               name="locationName"
-              defaultValue={initalState?.locationName ?? undefined}
-              onChange={(e) =>
-                setUpdateState((prev) => ({
-                  ...prev,
-                  locationName: e.target.value,
-                }))
+              defaultValue={initalApplication?.settlementName ?? undefined}
+              onBlur={(e) =>
+                trigger({ ...updateState, settlementName: e.target.value })
               }
-              onBlur={() => trigger()}
             />
           </GridColumn>
           <GridColumn span={['12/12', '6/12', '6/12']}>
@@ -182,14 +201,15 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
               size="sm"
               label="Kennitala bús"
               name="locationNationalId"
-              defaultValue={initalState?.locationNationalId ?? undefined}
-              onChange={(e) =>
-                setUpdateState((prev) => ({
-                  ...prev,
-                  locationNationalId: e.target.value,
-                }))
+              defaultValue={
+                initalApplication?.settlementNationalId ?? undefined
               }
-              onBlur={() => trigger()}
+              onBlur={(e) =>
+                trigger({
+                  ...updateState,
+                  settlementNationalId: e.target.value,
+                })
+              }
             />
           </GridColumn>
           <GridColumn span={['12/12', '6/12', '6/12']}>
@@ -198,18 +218,15 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
               size="sm"
               label="Heimilisfang"
               name="locationAddress"
-              defaultValue={initalState?.locationAddress ?? undefined}
-              onChange={(e) =>
-                setUpdateState((prev) => ({
-                  ...prev,
-                  locationAddress: e.target.value,
-                }))
+              defaultValue={initalApplication?.settlementAddress ?? undefined}
+              onBlur={(e) =>
+                trigger({ ...updateState, settlementAddress: e.target.value })
               }
-              onBlur={() => trigger()}
             />
           </GridColumn>
           <GridColumn span={['12/12', '6/12', '6/12']}>
             <DatePicker
+              backgroundColor="blue"
               placeholderText=""
               size="sm"
               name="locationDeadline"
@@ -217,38 +234,158 @@ export const BankruptcyApplication = ({ initalState, locations }: Props) => {
               locale="is"
               minDate={new Date()}
               selected={
-                updateState.locationDeadline
-                  ? new Date(updateState.locationDeadline)
+                updateState.settlementDeadline
+                  ? new Date(updateState.settlementDeadline)
                   : undefined
               }
-              handleChange={(date) => {
-                setUpdateState((prev) => ({
-                  ...prev,
-                  locationDeadline: date ? date.toISOString() : undefined,
-                }))
-
-                trigger()
-              }}
+              handleChange={(date) =>
+                trigger({
+                  ...updateState,
+                  settlementDeadline: date ? date.toISOString() : undefined,
+                })
+              }
             />
           </GridColumn>
         </GridRow>
         <GridRow rowGap={3}>
           <GridColumn span="12/12">
-            <Text variant="h3">Birting</Text>
+            <Text variant="h4">Upplýsingar um skiptastjóra</Text>
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12', '6/12']}>
+            <Input
+              backgroundColor="blue"
+              size="sm"
+              label="Skiptastjóri"
+              name="liquidator"
+              defaultValue={initalApplication?.liquidator ?? undefined}
+              onBlur={(e) =>
+                trigger({ ...updateState, liquidator: e.target.value })
+              }
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12', '6/12']}>
+            <Input
+              backgroundColor="blue"
+              size="sm"
+              label="Staðsetning skiptastjóra"
+              name="liquidatorLocation"
+              defaultValue={initalApplication?.liquidatorLocation ?? undefined}
+              onBlur={(e) =>
+                trigger({ ...updateState, liquidatorLocation: e.target.value })
+              }
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12', '6/12']}>
+            <Input
+              backgroundColor="blue"
+              size="sm"
+              label="f.h. skiptastjóra"
+              name="liquidatorOnBehalfOf"
+              defaultValue={
+                initalApplication?.liquidatorOnBehalfOf ?? undefined
+              }
+              onBlur={(e) =>
+                trigger({
+                  ...updateState,
+                  liquidatorOnBehalfOf: e.target.value,
+                })
+              }
+            />
+          </GridColumn>
+        </GridRow>
+        <GridRow rowGap={3}>
+          <GridColumn span="12/12">
+            <Text variant="h4">Upplýsingar um skiptafund</Text>
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12', '6/12']}>
+            <DatePicker
+              placeholderText=""
+              backgroundColor="blue"
+              size="sm"
+              name="settlementMeetingDate"
+              label="Dagsetning skiptafundar"
+              locale="is"
+              minDate={new Date()}
+              selected={
+                updateState.settlementMeetingDate
+                  ? new Date(updateState.settlementMeetingDate)
+                  : undefined
+              }
+              handleChange={(date) =>
+                trigger({
+                  ...updateState,
+                  settlementMeetingDate: date ? date.toISOString() : undefined,
+                })
+              }
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12', '6/12']}>
+            <Input
+              backgroundColor="blue"
+              size="sm"
+              label="Staðsetning skiptafundar"
+              name="settlementMeetingLocation"
+              defaultValue={
+                initalApplication?.settlementMeetingLocation ?? undefined
+              }
+              onBlur={(e) =>
+                trigger({
+                  ...updateState,
+                  settlementMeetingLocation: e.target.value,
+                })
+              }
+            />
+          </GridColumn>
+        </GridRow>
+        <GridRow rowGap={3}>
+          <GridColumn span="12/12">
+            <Text variant="h4">Undirritun</Text>
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12', '6/12']}>
+            <DatePicker
+              backgroundColor="blue"
+              placeholderText=""
+              size="sm"
+              name="signatureDate"
+              label="Dagsetning undirritunar"
+              locale="is"
+              minDate={new Date()}
+              selected={
+                updateState.signatureDate
+                  ? new Date(updateState.signatureDate)
+                  : undefined
+              }
+              handleChange={(date) =>
+                trigger({
+                  ...updateState,
+                  signatureDate: date ? date.toISOString() : undefined,
+                })
+              }
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12', '6/12']}>
+            <Input
+              backgroundColor="blue"
+              size="sm"
+              label="Staðsetning undirritunar"
+              name="signatureLocation"
+              defaultValue={initalApplication?.signatureLocation ?? undefined}
+              onBlur={(e) =>
+                trigger({ ...updateState, signatureLocation: e.target.value })
+              }
+            />
+          </GridColumn>
+        </GridRow>
+        <GridRow rowGap={3}>
+          <GridColumn span="12/12">
+            <Text variant="h4">Birting</Text>
           </GridColumn>
           <GridColumn span="12/12">
             <ApplicationPublishingDates
               publishingDates={updateState.publishingDates as string[]}
-              onDateChange={(dates) => {
-                setUpdateState((prev) => ({
-                  ...prev,
-                  publishingDates: dates,
-                }))
-
-                setTimeout(() => {
-                  trigger()
-                }, 100)
-              }}
+              onDateChange={(dates) =>
+                trigger({ ...updateState, publishingDates: dates })
+              }
             />
           </GridColumn>
         </GridRow>
