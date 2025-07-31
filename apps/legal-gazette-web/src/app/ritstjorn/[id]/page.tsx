@@ -11,13 +11,13 @@ import {
   Stack,
 } from '@dmr.is/ui/components/island-is'
 
-import { authOptions } from '../../../app/api/auth/[...nextauth]/route'
 import { AdvertForm } from '../../../components/client-components/Form/AdvertForm'
 import { Form } from '../../../components/client-components/Form/Form'
 import { AdvertSidebar } from '../../../components/client-components/Form/FormSidebar'
 import { HeroNoSSRWrapper } from '../../../components/client-components/Messages/HeroNoSSRWrapper'
 import { CaseProvider } from '../../../context/case-context'
 import { getLegalGazetteClient } from '../../../lib/api/createClient'
+import { authOptions } from '../../../lib/auth/authOptions'
 // import { ritstjornSingleMessages } from '../../../lib/messages/ritstjorn/single'
 
 type Props = {

@@ -5,6 +5,7 @@ const path = require('path')
 // ✅ 1. Define enum mappings here
 const enumMappings = {
   StatusIdEnum: {
+    DRAFT: '63726fce-edcf-412d-85e8-087e99c592f2',
     SUBMITTED: 'cd3bf301-52a1-493e-8c80-a391c310c840',
     READY_FOR_PUBLICATION: 'a2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
     PUBLISHED: 'bd835a1d-0ecb-4aa4-9910-b5e60c30dced',
@@ -13,6 +14,9 @@ const enumMappings = {
   },
   TypeEnum: {
     COMMON_ADVERT: 'Almenn auglýsing',
+    BANKRUPTCY_ADVERT: 'Innköllun þrotabús',
+    BANKRUPTCY_DIVISION_ADVERT: 'Skiptafundur þrotabús',
+    DECEASED_ADVERT: 'Innköllun dánarbús',
   },
 }
 
@@ -31,6 +35,7 @@ for (const [schemaName, schema] of Object.entries(schemas)) {
   if (!mapping) continue
 
   const expectedValues = Object.values(mapping)
+  console.log(`🔍 Patching ${schemaName} with expected values:`, expectedValues)
   if (
     Array.isArray(schema.enum) &&
     schema.enum.length === expectedValues.length &&

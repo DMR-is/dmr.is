@@ -25,7 +25,6 @@ export async function submitBankruptcyApplication(
   const results = await safeCall(() => client.submitBankruptcyApplication(args))
 
   if (results.error) {
-    console.log(results.error)
     throw new Error(
       'Ekki tókst að senda inn umsókn. Vinsamlegast reyndu aftur síðar.',
     )

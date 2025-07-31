@@ -2214,68 +2214,6 @@
         "tags": ["Users"]
       }
     },
-    "/api/v1/adverts/bankruptcy": {
-      "post": {
-        "operationId": "createBankruptcyAdvert",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateBankruptcyAdvertDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["BankruptcyAdvert"]
-      }
-    },
     "/api/v1/applications/getMyApplications": {
       "get": {
         "operationId": "getMyApplications",
@@ -2562,16 +2500,6 @@
             "schema": { "type": "string" }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateBankruptcyAdvertDto"
-              }
-            }
-          }
-        },
         "responses": {
           "204": { "description": "" },
           "400": {
@@ -2674,7 +2602,12 @@
       },
       "TypeEnum": {
         "type": "string",
-        "enum": ["Almenn auglýsing", "Innköllun þrotabús", "Innköllun dánarbús"]
+        "enum": [
+          "Almenn auglýsing",
+          "Innköllun þrotabús",
+          "Skiptafundur þrotabús",
+          "Innköllun dánarbús"
+        ]
       },
       "TypeDto": {
         "type": "object",
@@ -2687,7 +2620,12 @@
           "title": {
             "description": "Title of the entity",
             "example": "Base entity",
-            "x-enumNames": ["CommonAdvert"],
+            "x-enumNames": [
+              "CommonAdvert",
+              "BankruptcyAdvert",
+              "BankruptcyDivisionAdvert",
+              "DeceasedAdvert"
+            ],
             "allOf": [{ "$ref": "#/components/schemas/TypeEnum" }]
           },
           "slug": {
@@ -2915,82 +2853,44 @@
         },
         "required": ["caption", "signature"]
       },
-      "BankruptcyLocationDto": {
+      "SettlementDto": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name of the bankruptcy location"
-          },
-          "nationalId": {
-            "type": "string",
-            "description": "National ID of the bankruptcy location"
-          },
-          "address": {
-            "type": "string",
-            "description": "Address of the bankruptcy location"
-          },
-          "deadline": {
-            "type": "string",
-            "description": "Deadline for the bankruptcy location"
-          }
+          "liquidatorName": { "type": "string" },
+          "liquidatorLocation": { "type": "string" },
+          "liquidatorOnBehalfOf": { "type": "string" },
+          "settlementName": { "type": "string" },
+          "settlementNationalId": { "type": "string" },
+          "settlementAddress": { "type": "string" },
+          "settlementDeadline": { "type": "string" }
         },
-        "required": ["name", "nationalId", "address", "deadline"]
+        "required": [
+          "liquidatorName",
+          "liquidatorLocation",
+          "settlementName",
+          "settlementNationalId",
+          "settlementAddress",
+          "settlementDeadline"
+        ]
       },
       "BankruptcyAdvertDto": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier for the bankruptcy advert"
-          },
-          "additionalText": {
-            "type": "string",
-            "description": "The additional text for the bankruptcy advert",
-            "nullable": true
-          },
-          "judgmentDate": {
-            "type": "string",
-            "description": "The date of the judgment related to the bankruptcy advert"
-          },
-          "claimsSentTo": {
-            "type": "string",
-            "description": "The entity to which claims were sent"
-          },
-          "signatureLocation": {
-            "type": "string",
-            "description": "The location of the signature for the bankruptcy advert"
-          },
-          "signatureDate": {
-            "type": "string",
-            "description": "The date of the signature for the bankruptcy advert"
-          },
-          "signatureName": {
-            "type": "string",
-            "description": "The name of the person who signed the bankruptcy advert"
-          },
-          "signatureOnBehalfOf": {
-            "type": "string",
-            "description": "The name of the person on behalf of whom the signature was made",
-            "nullable": true
-          },
-          "courtDistrictName": {
-            "type": "string",
-            "description": "Court district name"
-          },
-          "location": { "$ref": "#/components/schemas/BankruptcyLocationDto" }
+          "id": { "type": "string" },
+          "additionalText": { "type": "string" },
+          "judgmentDate": { "type": "string" },
+          "signatureLocation": { "type": "string" },
+          "signatureDate": { "type": "string" },
+          "settlement": { "$ref": "#/components/schemas/SettlementDto" },
+          "courtDistrict": { "$ref": "#/components/schemas/CourtDistrictDto" }
         },
         "required": [
           "id",
-          "additionalText",
           "judgmentDate",
-          "claimsSentTo",
           "signatureLocation",
           "signatureDate",
-          "signatureName",
-          "signatureOnBehalfOf",
-          "courtDistrictName",
-          "location"
+          "settlement",
+          "courtDistrict"
         ]
       },
       "AdvertDetailedDto": {
@@ -3058,30 +2958,25 @@
         "type": "object",
         "properties": {
           "id": { "type": "string" },
-          "additionalText": { "type": "string", "nullable": true },
-          "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
-          "judgmentDate": { "type": "string", "nullable": true },
-          "claimsSentTo": { "type": "string", "nullable": true },
-          "signatureLocation": { "type": "string", "nullable": true },
-          "signatureDate": { "type": "string", "nullable": true },
-          "signatureName": { "type": "string", "nullable": true },
-          "signatureOnBehalfOf": { "type": "string", "nullable": true },
-          "publishingDates": {
-            "nullable": true,
-            "type": "array",
-            "items": { "type": "string" }
-          },
-          "locationName": { "type": "string", "nullable": true },
-          "locationDeadline": { "type": "string", "nullable": true },
-          "locationAddress": { "type": "string", "nullable": true },
-          "locationNationalId": { "type": "string", "nullable": true },
           "caseId": { "type": "string" },
-          "courtDistrict": {
-            "nullable": true,
-            "allOf": [{ "$ref": "#/components/schemas/CourtDistrictDto" }]
-          }
+          "additionalText": { "type": "string" },
+          "judgmentDate": { "type": "string" },
+          "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
+          "signatureLocation": { "type": "string" },
+          "signatureDate": { "type": "string" },
+          "liquidator": { "type": "string" },
+          "liquidatorLocation": { "type": "string" },
+          "liquidatorOnBehalfOf": { "type": "string" },
+          "settlementName": { "type": "string" },
+          "settlementDeadline": { "type": "string" },
+          "settlementAddress": { "type": "string" },
+          "settlementNationalId": { "type": "string" },
+          "settlementMeetingLocation": { "type": "string" },
+          "settlementMeetingDate": { "type": "string" },
+          "courtDistrict": { "$ref": "#/components/schemas/CourtDistrictDto" },
+          "publishingDates": { "type": "array", "items": { "type": "string" } }
         },
-        "required": ["caseId"]
+        "required": ["id", "caseId", "status"]
       },
       "CaseDetailedDto": {
         "type": "object",
@@ -3349,51 +3244,6 @@
         },
         "required": ["id", "nationalId", "name", "email"]
       },
-      "CreateBankruptcyAdvertAttributesDto": {
-        "type": "object",
-        "properties": {
-          "judgmentDate": { "type": "string" },
-          "claimsSentTo": { "type": "string" },
-          "signatureLocation": { "type": "string" },
-          "signatureDate": { "type": "string" },
-          "signatureName": { "type": "string" },
-          "additionalText": { "type": "string", "nullable": true },
-          "courtDistrictId": { "type": "string" },
-          "signatureOnBehalfOf": { "type": "string", "nullable": true },
-          "location": {
-            "description": "Locations associated with the bankruptcy advert",
-            "allOf": [{ "$ref": "#/components/schemas/BankruptcyLocationDto" }]
-          }
-        },
-        "required": [
-          "judgmentDate",
-          "claimsSentTo",
-          "signatureLocation",
-          "signatureDate",
-          "signatureName",
-          "courtDistrictId",
-          "location"
-        ]
-      },
-      "CreateBankruptcyAdvertDto": {
-        "type": "object",
-        "properties": {
-          "scheduledAt": { "type": "string" },
-          "caseId": {
-            "type": "string",
-            "description": "The case ID associated with the bankruptcy advert"
-          },
-          "bankruptcyAdvert": {
-            "description": "Attributes for creating a bankruptcy advert",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/CreateBankruptcyAdvertAttributesDto"
-              }
-            ]
-          }
-        },
-        "required": ["scheduledAt", "caseId", "bankruptcyAdvert"]
-      },
       "ApplicationDto": {
         "type": "object",
         "properties": {
@@ -3402,12 +3252,13 @@
           "nationalId": { "type": "string" },
           "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
           "type": {
-            "type": "string",
-            "enum": [
-              "Almenn auglýsing",
-              "Innköllun þrotabús",
-              "Innköllun dánarbús"
-            ]
+            "x-enumNames": [
+              "CommonAdvert",
+              "BankruptcyAdvert",
+              "BankruptcyDivisionAdvert",
+              "DeceasedAdvert"
+            ],
+            "allOf": [{ "$ref": "#/components/schemas/TypeEnum" }]
           },
           "title": { "type": "string" }
         },
@@ -3428,17 +3279,19 @@
         "properties": {
           "additionalText": { "type": "string" },
           "judgmentDate": { "type": "string" },
-          "claimsSentTo": { "type": "string" },
           "signatureLocation": { "type": "string" },
+          "liquidator": { "type": "string" },
+          "liquidatorLocation": { "type": "string" },
+          "liquidatorOnBehalfOf": { "type": "string" },
           "signatureDate": { "type": "string" },
-          "signatureName": { "type": "string" },
-          "signatureOnBehalfOf": { "type": "string" },
-          "publishingDates": { "type": "array", "items": { "type": "string" } },
-          "locationName": { "type": "string" },
-          "locationAddress": { "type": "string" },
-          "locationNationalId": { "type": "string" },
-          "locationDeadline": { "type": "string" },
-          "courtDistrictId": { "type": "string" }
+          "settlementName": { "type": "string" },
+          "settlementAddress": { "type": "string" },
+          "settlementNationalId": { "type": "string" },
+          "settlementDeadline": { "type": "string" },
+          "settlementMeetingLocation": { "type": "string" },
+          "settlementMeetingDate": { "type": "string" },
+          "courtDistrictId": { "type": "string" },
+          "publishingDates": { "type": "array", "items": { "type": "string" } }
         }
       }
     }

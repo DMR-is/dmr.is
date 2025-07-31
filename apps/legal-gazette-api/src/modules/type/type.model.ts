@@ -16,6 +16,7 @@ export enum TypeIdEnum {
 export enum TypeEnum {
   COMMON_ADVERT = 'Almenn auglýsing',
   BANKRUPTCY_ADVERT = 'Innköllun þrotabús',
+  BANKRUPTCY_DIVISION_ADVERT = 'Skiptafundur þrotabús',
   DECEASED_ADVERT = 'Innköllun dánarbús',
 }
 

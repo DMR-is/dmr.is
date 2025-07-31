@@ -16,7 +16,16 @@ export class ApplicationDto {
   @ApiProperty({ enum: ApplicationStatusEnum })
   status!: ApplicationStatusEnum
 
-  @ApiProperty({ enum: TypeEnum })
+  @ApiProperty({
+    enum: TypeEnum,
+    enumName: 'TypeEnum',
+    'x-enumNames': [
+      'CommonAdvert',
+      'BankruptcyAdvert',
+      'BankruptcyDivisionAdvert',
+      'DeceasedAdvert',
+    ],
+  })
   type!: TypeEnum
 
   @ApiProperty({ type: String })
