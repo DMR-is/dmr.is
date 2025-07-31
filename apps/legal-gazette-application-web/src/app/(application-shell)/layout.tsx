@@ -1,5 +1,7 @@
 'use client'
 
+import useSWRMutation from 'swr/mutation'
+
 import {
   Box,
   Button,
@@ -12,8 +14,9 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
-import { TypeEnum } from '../../gen/fetch'
+import { SubmitBankruptcyApplicationRequest, TypeEnum } from '../../gen/fetch'
 import { PageRoutes } from '../../lib/constants'
+import { submitBankruptcyApplication } from '../../lib/fetchers'
 import * as styles from './application-shell.css'
 
 export default function ApplicationShellLayout({
@@ -21,6 +24,28 @@ export default function ApplicationShellLayout({
 }: {
   children: React.ReactNode
 }) {
+  const { trigger: submitBankruptcyApplicationTrigger } = useSWRMutation(
+    'submitBankruptcyApplication',
+    (_key: string, { arg }: { arg: SubmitBankruptcyApplicationRequest }) =>
+      submitBankruptcyApplication(arg),
+    {
+      onSuccess: () => {
+        toast.success('Umsókn hefur verið send til birtingar.', {
+          toastId: 'submit-bankruptcy-application-success',
+        })
+      },
+      onError: (error) => {
+        console.log('Error submitting application:', error)
+        toast.error(
+          'Ekki tókst að senda inn umsókn. Vinsamlegast reyndu aftur síðar.',
+          {
+            toastId: 'submit-bankruptcy-application-error',
+          },
+        )
+      },
+    },
+  )
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
 
@@ -29,9 +54,17 @@ export default function ApplicationShellLayout({
     const applicationType = formData.get('application-type')
 
     switch (applicationType) {
-      case TypeEnum.InnköllunÞrotabús:
-        console.log('ye')
+      case TypeEnum.InnköllunÞrotabús: {
+        const applicationId = formData.get('application-id') as string
+        const caseId = formData.get('case-id') as string
+
+        submitBankruptcyApplicationTrigger({
+          applicationId,
+          caseId,
+        })
+
         break
+      }
       case TypeEnum.InnköllunDánarbús:
         console.log('ye 2')
         break

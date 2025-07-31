@@ -76,8 +76,8 @@ export const BankruptcyApplication = ({
           toastId: 'update-application-success',
         })
       },
-      onError: (error) => {
-        toast.error(`Villa við að vista umsókn: ${error}`, {
+      onError: () => {
+        toast.error(`Villa við að vista umsókn`, {
           toastId: 'update-application-error',
         })
       },
@@ -85,8 +85,12 @@ export const BankruptcyApplication = ({
   )
 
   const trigger = (args: UpdateBankruptcyApplicationDto) => {
+    const incomingChanges = { ...updateState, ...args }
+
+    const hasChanges = !isEqual(incomingChanges, updateState)
+
     // check args are the same as the current state
-    if (isEqual(args, updateState)) {
+    if (!hasChanges) {
       return
     }
 
@@ -94,6 +98,7 @@ export const BankruptcyApplication = ({
       ...prev,
       ...args,
     }))
+
     updateApplicationTrigger({
       applicationId: initalApplication.id,
       caseId: initalApplication.caseId,
@@ -108,6 +113,8 @@ export const BankruptcyApplication = ({
         name="application-type"
         value={TypeEnum.InnköllunÞrotabús}
       />
+      <input type="hidden" name="application-id" value={initalApplication.id} />
+      <input type="hidden" name="case-id" value={initalApplication.caseId} />
       <Stack space={4}>
         <GridRow>
           <GridColumn span="12/12">
@@ -136,9 +143,7 @@ export const BankruptcyApplication = ({
                 (loc) => loc.value === updateState.courtDistrictId,
               )}
               options={locationOptions}
-              onChange={(opt) =>
-                trigger({ ...updateState, courtDistrictId: opt?.value })
-              }
+              onChange={(opt) => trigger({ courtDistrictId: opt?.value })}
             />
           </GridColumn>
           <GridColumn span={['12/12', '6/12', '6/12']}>
@@ -157,7 +162,6 @@ export const BankruptcyApplication = ({
               }
               handleChange={(date) =>
                 trigger({
-                  ...updateState,
                   judgmentDate: date ? date.toISOString() : undefined,
                 })
               }
@@ -172,7 +176,6 @@ export const BankruptcyApplication = ({
               defaultValue={initalApplication?.additionalText ?? undefined}
               onBlur={(e) =>
                 trigger({
-                  ...updateState,
                   additionalText: e.target.value,
                 })
               }
@@ -190,9 +193,7 @@ export const BankruptcyApplication = ({
               label="Nafn bús"
               name="locationName"
               defaultValue={initalApplication?.settlementName ?? undefined}
-              onBlur={(e) =>
-                trigger({ ...updateState, settlementName: e.target.value })
-              }
+              onBlur={(e) => trigger({ settlementName: e.target.value })}
             />
           </GridColumn>
           <GridColumn span={['12/12', '6/12', '6/12']}>
@@ -206,7 +207,6 @@ export const BankruptcyApplication = ({
               }
               onBlur={(e) =>
                 trigger({
-                  ...updateState,
                   settlementNationalId: e.target.value,
                 })
               }
@@ -219,9 +219,7 @@ export const BankruptcyApplication = ({
               label="Heimilisfang"
               name="locationAddress"
               defaultValue={initalApplication?.settlementAddress ?? undefined}
-              onBlur={(e) =>
-                trigger({ ...updateState, settlementAddress: e.target.value })
-              }
+              onBlur={(e) => trigger({ settlementAddress: e.target.value })}
             />
           </GridColumn>
           <GridColumn span={['12/12', '6/12', '6/12']}>
@@ -240,7 +238,6 @@ export const BankruptcyApplication = ({
               }
               handleChange={(date) =>
                 trigger({
-                  ...updateState,
                   settlementDeadline: date ? date.toISOString() : undefined,
                 })
               }
@@ -258,9 +255,7 @@ export const BankruptcyApplication = ({
               label="Skiptastjóri"
               name="liquidator"
               defaultValue={initalApplication?.liquidator ?? undefined}
-              onBlur={(e) =>
-                trigger({ ...updateState, liquidator: e.target.value })
-              }
+              onBlur={(e) => trigger({ liquidator: e.target.value })}
             />
           </GridColumn>
           <GridColumn span={['12/12', '6/12', '6/12']}>
@@ -270,9 +265,7 @@ export const BankruptcyApplication = ({
               label="Staðsetning skiptastjóra"
               name="liquidatorLocation"
               defaultValue={initalApplication?.liquidatorLocation ?? undefined}
-              onBlur={(e) =>
-                trigger({ ...updateState, liquidatorLocation: e.target.value })
-              }
+              onBlur={(e) => trigger({ liquidatorLocation: e.target.value })}
             />
           </GridColumn>
           <GridColumn span={['12/12', '6/12', '6/12']}>
@@ -286,7 +279,6 @@ export const BankruptcyApplication = ({
               }
               onBlur={(e) =>
                 trigger({
-                  ...updateState,
                   liquidatorOnBehalfOf: e.target.value,
                 })
               }
@@ -313,7 +305,6 @@ export const BankruptcyApplication = ({
               }
               handleChange={(date) =>
                 trigger({
-                  ...updateState,
                   settlementMeetingDate: date ? date.toISOString() : undefined,
                 })
               }
@@ -330,7 +321,6 @@ export const BankruptcyApplication = ({
               }
               onBlur={(e) =>
                 trigger({
-                  ...updateState,
                   settlementMeetingLocation: e.target.value,
                 })
               }
@@ -357,7 +347,6 @@ export const BankruptcyApplication = ({
               }
               handleChange={(date) =>
                 trigger({
-                  ...updateState,
                   signatureDate: date ? date.toISOString() : undefined,
                 })
               }
@@ -370,9 +359,7 @@ export const BankruptcyApplication = ({
               label="Staðsetning undirritunar"
               name="signatureLocation"
               defaultValue={initalApplication?.signatureLocation ?? undefined}
-              onBlur={(e) =>
-                trigger({ ...updateState, signatureLocation: e.target.value })
-              }
+              onBlur={(e) => trigger({ signatureLocation: e.target.value })}
             />
           </GridColumn>
         </GridRow>
@@ -383,9 +370,7 @@ export const BankruptcyApplication = ({
           <GridColumn span="12/12">
             <ApplicationPublishingDates
               publishingDates={updateState.publishingDates as string[]}
-              onDateChange={(dates) =>
-                trigger({ ...updateState, publishingDates: dates })
-              }
+              onDateChange={(dates) => trigger({ publishingDates: dates })}
             />
           </GridColumn>
         </GridRow>

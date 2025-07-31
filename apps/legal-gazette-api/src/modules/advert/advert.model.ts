@@ -366,6 +366,11 @@ export class AdvertModel extends BaseModel<
   })
   bankruptcyAdvert?: BankruptcyAdvertModel
 
+  @HasOne(() => BankruptcyDivisionAdvertModel, {
+    foreignKey: 'advertId',
+  })
+  bankruptcyDivisionAdvert?: BankruptcyDivisionAdvertModel
+
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
     validateAdvertStatus(instance)

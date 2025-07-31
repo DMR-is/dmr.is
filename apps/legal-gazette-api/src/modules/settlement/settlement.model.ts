@@ -52,8 +52,7 @@ export class SettlementModel extends BaseModel<
 
   @Column({
     type: DataType.TEXT,
-    allowNull: true,
-    field: 'liquidator_on_behalf_of',
+    field: 'on_behalf_of_liquidator',
   })
   liquidatorOnBehalfOf?: string
 
@@ -81,7 +80,7 @@ export class SettlementModel extends BaseModel<
   @Column({
     type: DataType.DATE,
     allowNull: false,
-    field: 'settlement_deadline',
+    field: 'settlement_deadline_date',
   })
   settlementDeadline!: Date
 

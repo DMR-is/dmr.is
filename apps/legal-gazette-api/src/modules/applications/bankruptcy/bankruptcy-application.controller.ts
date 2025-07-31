@@ -161,6 +161,7 @@ export class BankruptcyApplicationController {
     if (!settlementCheck.success) {
       this.logger.debug(
         'Invalid settlement data provided for bankruptcy advert',
+        { error: settlementCheck.error },
       )
       throw new BadRequestException()
     }

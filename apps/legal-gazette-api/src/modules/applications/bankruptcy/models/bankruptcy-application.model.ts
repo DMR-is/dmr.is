@@ -31,10 +31,17 @@ type BankruptcyApplicationAttributes = {
   signatureLocation?: string
   signatureDate?: Date
 
+  liquidator?: string
+  liquidatorLocation?: string
+  liquidatorOnBehalfOf?: string
+
   settlementName?: string
   settlementDeadline?: string
   settlementAddress?: string
   settlementNationalId?: string
+
+  settlementMeetingLocation?: string
+  settlementMeetingDate?: Date
 
   publishingDates?: Date[]
 }
@@ -99,6 +106,24 @@ export class BankruptcyApplicationModel extends BaseModel<
 
   @Column({
     type: DataType.STRING,
+    field: 'liquidator_name',
+  })
+  liquidator?: string
+
+  @Column({
+    type: DataType.STRING,
+    field: 'liquidator_location',
+  })
+  liquidatorLocation?: string
+
+  @Column({
+    type: DataType.STRING,
+    field: 'on_behalf_of_liquidator',
+  })
+  liquidatorOnBehalfOf?: string
+
+  @Column({
+    type: DataType.STRING,
     field: 'settlement_name',
   })
   settlementName?: string
@@ -119,7 +144,7 @@ export class BankruptcyApplicationModel extends BaseModel<
     type: DataType.STRING,
     field: 'settlement_deadline_date',
   })
-  settlementDeadline?: string
+  settlementDeadline?: Date
 
   @Column({
     type: DataType.STRING,
@@ -177,6 +202,13 @@ export class BankruptcyApplicationModel extends BaseModel<
         settlementDeadline: dto.settlementDeadline,
         settlementAddress: dto.settlementAddress,
         settlementNationalId: dto.settlementNationalId,
+        settlementMeetingDate: dto.settlementMeetingDate
+          ? new Date(dto.settlementMeetingDate)
+          : undefined,
+        settlementMeetingLocation: dto.settlementMeetingLocation,
+        liquidator: dto.liquidator,
+        liquidatorLocation: dto.liquidatorLocation,
+        liquidatorOnBehalfOf: dto.liquidatorOnBehalfOf,
         courtDistrictId: dto.courtDistrictId,
       },
       {
@@ -203,11 +235,14 @@ export class BankruptcyApplicationModel extends BaseModel<
       signatureDate: model.signatureDate?.toISOString(),
       publishingDates: model.publishingDates?.map((d) => d.toISOString()),
       settlementName: model.settlementName,
-      settlementDeadline: model.settlementDeadline,
+      settlementDeadline: model.settlementDeadline?.toISOString(),
       settlementAddress: model.settlementAddress,
       settlementNationalId: model.settlementNationalId,
       settlementMeetingDate: model.settlementMeetingDate?.toISOString(),
       settlementMeetingLocation: model.settlementMeetingLocation,
+      liquidator: model.liquidator,
+      liquidatorLocation: model.liquidatorLocation,
+      liquidatorOnBehalfOf: model.liquidatorOnBehalfOf,
       courtDistrict: model?.courtDistrict?.fromModel(),
       caseId: model.caseId,
     }
