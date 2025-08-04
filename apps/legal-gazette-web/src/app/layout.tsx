@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { Header } from '@dmr.is/ui/components/client-components/Header/Header'
 
 import { Providers } from '../components/providers/Providers'
-import { authOptions } from './api/auth/[...nextauth]/route'
+import { authOptions } from '../lib/auth/authOptions'
 
 import '../styles/global.css'
 

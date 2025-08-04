@@ -11,6 +11,7 @@ import { CategoryDto } from './dto/category.dto'
 
 export enum CategoryDefaultIdEnum {
   BANKRUPTCY_ADVERT = '30452623-789d-4bc8-b068-ff44b706ba8e',
+  BANKRUPTCY_DIVISION_ADVERT = '5b3dded4-e6c2-411e-a9e0-213bea06af17',
   DECEASED_ADVERT = 'todo:replace-with-deceased-advert-id',
 }
 
