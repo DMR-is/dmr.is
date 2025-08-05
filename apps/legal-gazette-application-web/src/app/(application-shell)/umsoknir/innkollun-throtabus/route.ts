@@ -25,6 +25,10 @@ async function handler(req: NextRequest) {
     )
   }
 
+  await client.createBankruptcyApplication({
+    caseId: newCase.id,
+  })
+
   const { origin } = req.nextUrl
 
   return NextResponse.redirect(

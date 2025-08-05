@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Inject,
   NotFoundException,
   Param,
@@ -55,10 +56,10 @@ export class BankruptcyApplicationController {
 
   @Post(':caseId')
   @LGResponse({
-    operationId: 'findOrCreateApplication',
+    operationId: 'createBankruptcyApplication',
     type: BankruptcyApplicationDto,
   })
-  async findOrCreate(
+  async createBankruptcyApplication(
     @Param('caseId') caseId: string,
     @CurrentUser() user: Auth,
   ) {
@@ -78,10 +79,10 @@ export class BankruptcyApplicationController {
       throw new NotFoundException('Case not found')
     }
 
-    const [model, _created] =
-      await this.bankruptcyApplicationModel.findOrCreate({
-        where: { caseId, involvedPartyNationalId: user.nationalId },
-      })
+    const model = await this.bankruptcyApplicationModel.create({
+      caseId: caseId,
+      involvedPartyNationalId: user.nationalId,
+    })
 
     return model.fromModel()
   }
@@ -233,5 +234,39 @@ export class BankruptcyApplicationController {
     })
 
     await application.update({ status: ApplicationStatusEnum.SUBMITTED })
+  }
+
+  @Get(':caseId')
+  @LGResponse({
+    operationId: 'getBankruptcyApplicationByCaseId',
+    type: BankruptcyApplicationDto,
+  })
+  async getBankruptcyApplicationByCaseId(
+    @Param('caseId') caseId: string,
+    @CurrentUser() user: Auth,
+  ): Promise<BankruptcyApplicationDto> {
+    const nationalId = user?.nationalId
+    if (!nationalId) {
+      this.logger.debug(
+        'Unauthorized access attempt to get bankruptcy application',
+      )
+      throw new UnauthorizedException()
+    }
+
+    const application = await this.bankruptcyApplicationModel.findOne({
+      where: {
+        caseId: caseId,
+        involvedPartyNationalId: nationalId,
+      },
+    })
+
+    if (!application) {
+      this.logger.debug(
+        `Application with case id ${caseId} not found for case ${caseId}`,
+      )
+      throw new NotFoundException('Application not found')
+    }
+
+    return application.fromModel()
   }
 }

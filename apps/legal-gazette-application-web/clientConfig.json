@@ -321,7 +321,73 @@
     },
     "/api/v1/applications/bankruptcy/{caseId}": {
       "post": {
-        "operationId": "findOrCreateApplication",
+        "operationId": "createBankruptcyApplication",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankruptcyApplicationDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      },
+      "get": {
+        "operationId": "getBankruptcyApplicationByCaseId",
         "parameters": [
           {
             "name": "caseId",
@@ -1532,7 +1598,12 @@
       },
       "TypeEnum": {
         "type": "string",
-        "enum": ["Almenn auglýsing", "Innköllun þrotabús", "Innköllun dánarbús"]
+        "enum": [
+          "Almenn auglýsing",
+          "Innköllun þrotabús",
+          "Skiptafundur þrotabús",
+          "Innköllun dánarbús"
+        ]
       },
       "TypeDto": {
         "type": "object",
@@ -1545,7 +1616,12 @@
           "title": {
             "description": "Title of the entity",
             "example": "Base entity",
-            "x-enumNames": ["CommonAdvert"],
+            "x-enumNames": [
+              "CommonAdvert",
+              "BankruptcyAdvert",
+              "BankruptcyDivisionAdvert",
+              "DeceasedAdvert"
+            ],
             "allOf": [{ "$ref": "#/components/schemas/TypeEnum" }]
           },
           "slug": {
@@ -1897,12 +1973,13 @@
           "nationalId": { "type": "string" },
           "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
           "type": {
-            "type": "string",
-            "enum": [
-              "Almenn auglýsing",
-              "Innköllun þrotabús",
-              "Innköllun dánarbús"
-            ]
+            "x-enumNames": [
+              "CommonAdvert",
+              "BankruptcyAdvert",
+              "BankruptcyDivisionAdvert",
+              "DeceasedAdvert"
+            ],
+            "allOf": [{ "$ref": "#/components/schemas/TypeEnum" }]
           },
           "title": { "type": "string" }
         },

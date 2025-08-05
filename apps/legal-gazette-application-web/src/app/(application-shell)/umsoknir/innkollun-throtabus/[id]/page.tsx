@@ -30,7 +30,7 @@ export default async function UmsoknirThrotabusPage({
   const client = getClient(session.idToken)
   const { courtDistricts } = await client.getCourtDistricts()
   const application = await safeCall(() =>
-    client.findOrCreateApplication({
+    client.getBankruptcyApplicationByCaseId({
       caseId: params.id,
     }),
   )
