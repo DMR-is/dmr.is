@@ -10,6 +10,7 @@ import { forceLogin, useLogOut } from '@dmr.is/auth/useLogOut'
 import {
   Box,
   DropdownMenu,
+  FocusableBox,
   GridColumn,
   GridContainer,
   GridRow,
@@ -53,12 +54,13 @@ export const Header = ({ controlPanel, variant = 'blue' }: HeaderProps) => {
                   justifyContent="flexStart"
                   space={[2, 2, 4]}
                 >
-                  <Logo
-                    id="header-logo"
-                    width={lg ? 160 : 30}
-                    iconOnly={lg ? false : true}
-                  />
-
+                  <FocusableBox href={'/'} data-testid="link-back-home">
+                    <Logo
+                      id="header-logo"
+                      width={lg ? 160 : 30}
+                      iconOnly={lg ? false : true}
+                    />
+                  </FocusableBox>
                   {controlPanel && <ControlPanel {...controlPanel} />}
                 </Inline>
                 <Box
