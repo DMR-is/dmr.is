@@ -242,7 +242,7 @@ export class BankruptcyApplicationModel extends BaseModel<
       settlementMeetingLocation: model.settlementMeetingLocation,
       liquidator: model.liquidator,
       liquidatorLocation: model.liquidatorLocation,
-      liquidatorOnBehalfOf: model.liquidatorOnBehalfOf,
+      liquidatorOnBehalfOf: model.liquidatorOnBehalfOf ?? undefined,
       courtDistrict: model?.courtDistrict?.fromModel(),
       caseId: model.caseId,
     }
