@@ -261,9 +261,6 @@ export class BankruptcyApplicationController {
     })
 
     if (!application) {
-      this.logger.debug(
-        `Application with case id ${caseId} not found for case ${caseId}`,
-      )
       throw new NotFoundException('Application not found')
     }
 

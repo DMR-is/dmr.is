@@ -18,6 +18,7 @@ import { CommonAdvertDto } from './dto/common-advert.dto'
 
 type CommonAdvertAttributes = {
   advertId: string
+  islandIsApplicationId: string
   caption: string
   signatureName: string
   signatureLocation: string
@@ -26,6 +27,7 @@ type CommonAdvertAttributes = {
 
 export type CommonAdvertCreationAttributes = {
   advertId?: string
+  islandIsApplicationId?: string
   caption: string
   signatureName: string
   signatureLocation: string
@@ -54,6 +56,14 @@ export class CommonAdvertModel extends BaseModel<
   })
   @ForeignKey(() => AdvertModel)
   advertId!: string
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+    field: 'island_is_application_id',
+    primaryKey: true,
+  })
+  island_is_application_id!: string
 
   @Column({
     type: DataType.TEXT,

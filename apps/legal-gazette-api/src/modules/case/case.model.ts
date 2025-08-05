@@ -143,7 +143,6 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
 
     await this.create(
       {
-        bankruptcyApplicationId: body.applicationId,
         communicationChannels: channels,
         involvedPartyNationalId: body.involvedPartyNationalId,
         adverts: body.publishingDates.map((date, i) => ({
@@ -156,6 +155,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
           version: mapIndexToVersion(i),
           submittedBy: body.submittedBy,
           commonAdvert: {
+            islandIsApplicationId: body.applicationId,
             caption: body.caption,
             signatureDate: new Date(body.signature.date),
             signatureLocation: body.signature.location,
