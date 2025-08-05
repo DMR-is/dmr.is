@@ -27,7 +27,9 @@ async function bootstrap() {
   const applicationWebApiTag = 'Legal gazette - application web API'
 
   const app = await NestFactory.create(AppModule, {
-    logger: WinstonModule.createLogger({ instance: logger }),
+    logger: WinstonModule.createLogger({
+      instance: logger,
+    }),
   })
 
   app.useGlobalPipes(
@@ -113,7 +115,9 @@ async function bootstrap() {
   const port = process.env.LEGAL_GAZETTE_API_PORT || 4100
   await app.listen(port)
 
-  Logger.log(
+  const tmpLogger = new Logger('LegalGazetteAPI')
+
+  tmpLogger.log(
     `🚀 Legal gazette API is running on: http://localhost:${port}/${globalPrefix}/${version}/`,
   )
 }

@@ -4,9 +4,9 @@ import { getServerSession } from 'next-auth'
 import { getLogger } from '@dmr.is/logging'
 
 import { BankruptcyApplicationScreen } from '../../../../../components/client-components/application/BankruptcyApplicationScreen'
+import { authOptions } from '../../../../../lib/authOptions'
 import { getClient } from '../../../../../lib/createClient'
 import { safeCall } from '../../../../../lib/serverUtils'
-import { authOptions } from '../../../../api/auth/[...nextauth]/route'
 
 export default async function UmsoknirThrotabusPage({
   params,
@@ -30,7 +30,7 @@ export default async function UmsoknirThrotabusPage({
   const client = getClient(session.idToken)
   const { courtDistricts } = await client.getCourtDistricts()
   const application = await safeCall(() =>
-    client.findOrCreateApplication({
+    client.getBankruptcyApplicationByCaseId({
       caseId: params.id,
     }),
   )

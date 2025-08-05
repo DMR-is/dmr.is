@@ -2,8 +2,8 @@ import { getServerSession } from 'next-auth'
 
 import { ApplicationList } from '../../components/client-components/application/ApplicationList'
 import { UmsoknirHero } from '../../components/client-components/hero/UmsoknirHero'
+import { authOptions } from '../../lib/authOptions'
 import { getClient } from '../../lib/createClient'
-import { authOptions } from '../api/auth/[...nextauth]/route'
 
 export default async function UmsoknirPage() {
   const session = await getServerSession(authOptions)

@@ -32,7 +32,7 @@ import { CaseDetailedDto, CaseDto } from './dto/case.dto'
 
 type CaseAttributes = {
   caseNumber: string
-  applicationId: string | null
+  bankruptcyApplicationId: string | null
   assignedUserId: string | null
   involvedPartyNationalId: string
   communicationChannels: CommunicationChannelModel[]
@@ -41,7 +41,7 @@ type CaseAttributes = {
 
 type CaseCreateAttributes = {
   involvedPartyNationalId: string
-  applicationId?: string
+  bankruptcyApplicationId?: string
   caseId?: string
   assignedUserId?: string | null
   communicationChannels?: CommunicationChannelCreateAttributes[]
@@ -52,7 +52,7 @@ type CaseCreateAttributes = {
 @DefaultScope(() => ({
   attributes: [
     'id',
-    'applicationId',
+    'bankruptcyApplicationId',
     'caseNumber',
     'createdAt',
     'updatedAt',
@@ -79,19 +79,19 @@ type CaseCreateAttributes = {
       },
     ],
   },
-  byApplicationId: (applicationId: string) => ({
-    attributes: ['id', 'applicationId'],
-    where: { applicationId },
+  bybankruptcyApplicationId: (bankruptcyApplicationId: string) => ({
+    attributes: ['id', 'bankruptcyApplicationId'],
+    where: { bankruptcyApplicationId },
   }),
 }))
 export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   @Column({
     type: DataType.UUID,
     allowNull: true,
-    field: 'application_id',
+    field: 'bankruptcy_application_id',
     defaultValue: null,
   })
-  applicationId!: string | null
+  bankruptcyApplicationId!: string | null
 
   @Column({
     type: DataType.UUID,
@@ -143,7 +143,6 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
 
     await this.create(
       {
-        applicationId: body.applicationId,
         communicationChannels: channels,
         involvedPartyNationalId: body.involvedPartyNationalId,
         adverts: body.publishingDates.map((date, i) => ({
@@ -156,6 +155,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
           version: mapIndexToVersion(i),
           submittedBy: body.submittedBy,
           commonAdvert: {
+            islandIsApplicationId: body.applicationId,
             caption: body.caption,
             signatureDate: new Date(body.signature.date),
             signatureLocation: body.signature.location,
@@ -230,7 +230,9 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
       return {
         id: model.id,
         applicationId:
-          model.applicationId === null ? undefined : model.applicationId,
+          model.bankruptcyApplicationId === null
+            ? undefined
+            : model.bankruptcyApplicationId,
         caseNumber: model.caseNumber,
         createdAt: model.createdAt.toISOString(),
         updatedAt: model.updatedAt.toISOString(),
@@ -253,7 +255,9 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
       return {
         id: model.id,
         applicationId:
-          model.applicationId === null ? undefined : model.applicationId,
+          model.bankruptcyApplicationId === null
+            ? undefined
+            : model.bankruptcyApplicationId,
         caseNumber: model.caseNumber,
         createdAt: model.createdAt.toISOString(),
         updatedAt: model.updatedAt.toISOString(),

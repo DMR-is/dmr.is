@@ -21,8 +21,8 @@ import { UpdateBankruptcyApplicationDto } from '../dto/update-bankruptcy-applica
 
 type BankruptcyApplicationAttributes = {
   caseId: string
-  status: ApplicationStatusEnum
   involvedPartyNationalId: string
+  status?: ApplicationStatusEnum
   courtDistrictId?: string
 
   additionalText?: string

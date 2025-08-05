@@ -18,7 +18,7 @@ import {
 import {
   ApplicationDto,
   ApplicationDtoStatusEnum,
-  ApplicationDtoTypeEnum,
+  TypeEnum,
 } from '../../../gen/fetch'
 import { PageRoutes } from '../../../lib/constants'
 import { deleteApplication } from '../../../lib/fetchers'
@@ -50,7 +50,7 @@ export const ApplicationCard = ({ application }: Props) => {
       : 'Innsend'
 
   const applicationUrl =
-    application.type === ApplicationDtoTypeEnum.InnköllunÞrotabús
+    application.type === TypeEnum.InnköllunÞrotabús
       ? `${PageRoutes.APPLICATION_THROTABU}/${application.caseId}`
       : ``
 
