@@ -4,26 +4,26 @@ import useSWRMutation from 'swr/mutation'
 
 import {
   Box,
-  Button,
   GridColumn,
   GridContainer,
   GridRow,
-  Inline,
-  LinkV2,
   Text,
   toast,
 } from '@island.is/island-ui/core'
 
+import { ApplicationFooter } from '../../components/client-components/application/footer/ApplicationFooter'
 import { SubmitBankruptcyApplicationRequest, TypeEnum } from '../../gen/fetch'
-import { PageRoutes } from '../../lib/constants'
 import { submitBankruptcyApplication } from '../../lib/fetchers'
 import * as styles from './application-shell.css'
 
-export default function ApplicationShellLayout({
-  children,
-}: {
+type ApplicationShellLayoutProps = {
   children: React.ReactNode
-}) {
+  footer: React.ReactNode
+}
+
+export default function ApplicationShellLayout(
+  props: ApplicationShellLayoutProps,
+) {
   const { trigger: submitBankruptcyApplicationTrigger } = useSWRMutation(
     'submitBankruptcyApplication',
     (_key: string, { arg }: { arg: SubmitBankruptcyApplicationRequest }) =>
@@ -95,27 +95,9 @@ export default function ApplicationShellLayout({
               paddingX={[9, 12]}
               background="white"
             >
-              {children}
+              {props.children}
             </Box>
-            <Box
-              paddingY={[3, 5]}
-              paddingX={[9, 12]}
-              background="white"
-              borderTopWidth="standard"
-              borderColor="purple100"
-              className={styles.shellFooter}
-            >
-              <Inline justifyContent="spaceBetween" alignY="center">
-                <LinkV2 href={PageRoutes.APPLICATIONS}>
-                  <Button preTextIcon="arrowBack" variant="ghost">
-                    Yfirlit
-                  </Button>
-                </LinkV2>
-                <Button type="submit" icon="arrowForward">
-                  Senda til birtingar
-                </Button>
-              </Inline>
-            </Box>
+            <ApplicationFooter />
           </GridColumn>
           <GridColumn span={['12/12', '12/12', '3/12']}>
             <Box paddingY={[2, 4]}>

@@ -24,9 +24,9 @@ import {
   TypeEnum,
   UpdateBankruptcyApplicationDto,
   UpdateBankruptcyApplicationRequest,
-} from '../../../gen/fetch'
-import { updateBankruptcyApplication } from '../../../lib/fetchers'
-import { ApplicationPublishingDates } from './ApplicationPublishingDates'
+} from '../../../../gen/fetch'
+import { updateBankruptcyApplication } from '../../../../lib/fetchers'
+import { ApplicationPublishingDates } from '../ApplicationPublishingDates'
 
 type Props = {
   initalApplication: BankruptcyApplicationDto
