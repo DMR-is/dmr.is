@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
+import { authOptions } from '../../../../lib/authOptions'
 import { PageRoutes } from '../../../../lib/constants'
 import { getClient } from '../../../../lib/createClient'
-import { authOptions } from '../../../api/auth/[...nextauth]/route'
 
 export const dynamic = 'force-dynamic'
 
