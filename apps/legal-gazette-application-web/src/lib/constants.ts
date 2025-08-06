@@ -6,3 +6,8 @@ export enum PageRoutes {
   APPLICATION_DANARBU = '/umsoknir/innkollun-danarbus',
   ISLAND_IS_COMMONA_APPLICATION = 'https://island.is/umsoknir/logbirtingarblad',
 }
+
+export enum DateFormats {
+  DEFAULT = 'dd.MM.yyyy',
+  LONG = 'dd. MMMM yyyy',
+}

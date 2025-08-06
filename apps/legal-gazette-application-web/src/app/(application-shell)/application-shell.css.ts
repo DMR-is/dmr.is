@@ -10,8 +10,3 @@ export const shellContent = style({
   borderTopLeftRadius: theme.border.radius.large,
   borderTopRightRadius: theme.border.radius.large,
 })
-
-export const shellFooter = style({
-  borderBottomLeftRadius: theme.border.radius.large,
-  borderBottomRightRadius: theme.border.radius.large,
-})

@@ -18,17 +18,18 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
 import { BankruptcyApplicationModel } from '../applications/bankruptcy/models/bankruptcy-application.model'
-import { CategoryModel } from '../category/category.model'
+import { BankruptcyAdvertModel } from '../bankruptcy/advert/bankruptcy-advert.model'
+import { BankruptcyDivisionAdvertModel } from '../bankruptcy/division-advert/bankruptcy-division-advert.model'
 import { CommonAdvertModel } from '../common-advert/common-advert.model'
 import { CreateCommonAdvertInternalDto } from '../common-advert/dto/create-common-advert.dto'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
 } from '../communication-channel/communication-channel.model'
-import { StatusIdEnum, StatusModel } from '../status/status.model'
-import { TypeIdEnum, TypeModel } from '../type/type.model'
+import { StatusIdEnum } from '../status/status.model'
+import { TypeIdEnum } from '../type/type.model'
 import { UserModel } from '../users/users.model'
-import { CaseDetailedDto, CaseDto } from './dto/case.dto'
+import { CaseDto } from './dto/case.dto'
 
 type CaseAttributes = {
   caseNumber: string
@@ -61,24 +62,6 @@ type CaseCreateAttributes = {
   order: [['createdAt', 'DESC']],
 }))
 @Scopes(() => ({
-  detailed: {
-    include: [
-      { model: CommunicationChannelModel, separate: true, duplicating: false },
-      {
-        model: AdvertModel.unscoped(),
-        scope: 'all',
-        duplicating: false,
-        separate: true,
-        order: [['version', 'ASC']],
-        include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
-      },
-      { model: UserModel },
-      {
-        model: BankruptcyApplicationModel,
-        required: false,
-      },
-    ],
-  },
   bybankruptcyApplicationId: (bankruptcyApplicationId: string) => ({
     attributes: ['id', 'bankruptcyApplicationId'],
     where: { bankruptcyApplicationId },
@@ -248,39 +231,5 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
 
   fromModel(): CaseDto {
     return CaseModel.fromModel(this)
-  }
-
-  static fromModelDetailed(model: CaseModel): CaseDetailedDto {
-    try {
-      return {
-        id: model.id,
-        applicationId:
-          model.bankruptcyApplicationId === null
-            ? undefined
-            : model.bankruptcyApplicationId,
-        caseNumber: model.caseNumber,
-        createdAt: model.createdAt.toISOString(),
-        updatedAt: model.updatedAt.toISOString(),
-        deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
-        adverts: model.adverts.map((advert) =>
-          AdvertModel.fromModelDetailed(advert),
-        ),
-        communicationChannels: model.communicationChannels.map((channel) => ({
-          email: channel.email,
-          phone: channel.phone ? channel.phone : undefined,
-          name: channel.name ? channel.name : undefined,
-        })),
-        bankruptcyApplication: model.bankruptcyApplication?.fromModel(),
-      }
-    } catch (error) {
-      this.logger.debug(
-        `fromModelDetailed failed for CaseModel, did you include everything?`,
-      )
-      throw error
-    }
-  }
-
-  fromModelDetailed(): CaseDetailedDto {
-    return CaseModel.fromModelDetailed(this)
   }
 }

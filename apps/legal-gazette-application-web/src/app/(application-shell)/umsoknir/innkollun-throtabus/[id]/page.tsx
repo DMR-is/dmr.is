@@ -3,7 +3,9 @@ import { getServerSession } from 'next-auth'
 
 import { getLogger } from '@dmr.is/logging'
 
-import { BankruptcyApplicationScreen } from '../../../../../components/client-components/application/BankruptcyApplicationScreen'
+import { BankruptcyApplication } from '../../../../../components/client-components/application/bankruptcy/BankruptcyApplication'
+import { BankruptcyCase } from '../../../../../components/client-components/case/BankruptcyCase'
+import { BankruptcyApplicationDtoStatusEnum } from '../../../../../gen/fetch'
 import { authOptions } from '../../../../../lib/authOptions'
 import { getClient } from '../../../../../lib/createClient'
 import { safeCall } from '../../../../../lib/serverUtils'
@@ -48,10 +50,29 @@ export default async function UmsoknirThrotabusPage({
     throw new Error()
   }
 
-  return (
-    <BankruptcyApplicationScreen
-      locations={courtDistricts}
-      application={application.data}
-    />
+  if (application.data.status === BankruptcyApplicationDtoStatusEnum.DRAFT) {
+    return (
+      <BankruptcyApplication
+        initalApplication={application.data}
+        locations={courtDistricts}
+      />
+    )
+  }
+
+  const adverts = await safeCall(() =>
+    client.getAdvertsByCaseId({
+      caseId: params.id,
+    }),
   )
+
+  if (adverts.error) {
+    logger.error('Error fetching adverts for bankruptcy case', {
+      error: adverts.error,
+      context: 'UmsoknirThrotabusPage',
+    })
+
+    throw new Error('Error fetching adverts for bankruptcy case')
+  }
+
+  return <BankruptcyCase adverts={adverts.data.adverts} />
 }

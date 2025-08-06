@@ -1,8 +1,6 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
-import { EventEmitter2 } from '@nestjs/event-emitter'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared/dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
@@ -20,10 +18,23 @@ import { IAdvertService } from './advert.service.interface'
 @Injectable()
 export class AdvertService implements IAdvertService {
   constructor(
-    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
-    private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  async getAdvertsByCaseId(caseId: string): Promise<GetAdvertsDto> {
+    const adverts = await this.advertModel
+      .scope(AdvertModelScopes.ALL)
+      .findAll({
+        where: { caseId },
+      })
+
+    const mapped = adverts.map((advert) => advert.fromModel())
+
+    return {
+      adverts: mapped,
+      paging: generatePaging(mapped, 1, mapped.length, mapped.length),
+    }
+  }
 
   async updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDto> {
     const advert = await this.advertModel.findByPk(id)

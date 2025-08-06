@@ -1,7 +1,7 @@
 'use client'
 
 import isEqual from 'lodash/isEqual'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Key } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
@@ -17,6 +17,7 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
+import { useApplicationContext } from '../../../../context/ApplicationContext'
 import {
   ApiErrorDto,
   BankruptcyApplicationDto,
@@ -24,9 +25,9 @@ import {
   TypeEnum,
   UpdateBankruptcyApplicationDto,
   UpdateBankruptcyApplicationRequest,
-} from '../../../gen/fetch'
-import { updateBankruptcyApplication } from '../../../lib/fetchers'
-import { ApplicationPublishingDates } from './ApplicationPublishingDates'
+} from '../../../../gen/fetch'
+import { updateBankruptcyApplication } from '../../../../lib/fetchers'
+import { ApplicationPublishingDates } from '../ApplicationPublishingDates'
 
 type Props = {
   initalApplication: BankruptcyApplicationDto
@@ -37,6 +38,14 @@ export const BankruptcyApplication = ({
   initalApplication,
   locations,
 }: Props) => {
+  const { setApplicationId, setCaseId, setStatus } = useApplicationContext()
+
+  useEffect(() => {
+    setApplicationId(initalApplication.id)
+    setCaseId(initalApplication.caseId)
+    setStatus(initalApplication.status)
+  }, [])
+
   const [updateState, setUpdateState] =
     useState<UpdateBankruptcyApplicationDto>({
       additionalText: initalApplication.additionalText,
