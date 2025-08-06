@@ -1,4 +1,6 @@
 'use client'
+import { useRouter } from 'next/navigation'
+
 import useSWRMutation from 'swr/mutation'
 
 import { Button, Inline, LinkV2, toast } from '@island.is/island-ui/core'
@@ -9,7 +11,8 @@ import { PageRoutes } from '../../../../lib/constants'
 import { submitBankruptcyApplication } from '../../../../lib/fetchers'
 
 export const BankruptcyFooter = () => {
-  const { caseId, applicationId, setStatus } = useApplicationContext()
+  const { caseId, applicationId } = useApplicationContext()
+  const router = useRouter()
 
   const { trigger: submitBankruptcyApplicationTrigger } = useSWRMutation(
     'submitBankruptcyApplication',
@@ -21,7 +24,7 @@ export const BankruptcyFooter = () => {
           toastId: 'submit-bankruptcy-application-success',
         })
 
-        setStatus('SUBMITTED')
+        router.refresh()
       },
       onError: () => {
         toast.error(

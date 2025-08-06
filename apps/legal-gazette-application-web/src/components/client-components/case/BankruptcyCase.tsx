@@ -78,6 +78,9 @@ export const BankruptcyCase = ({ adverts }: Props) => {
                   iconType="outline"
                   items={[
                     {
+                      title: 'Bæta við innköllun',
+                    },
+                    {
                       title: 'Bæta við skiptafundi',
                     },
                     {
