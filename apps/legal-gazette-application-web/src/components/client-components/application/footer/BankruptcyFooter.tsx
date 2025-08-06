@@ -3,11 +3,14 @@ import useSWRMutation from 'swr/mutation'
 
 import { Button, Inline, LinkV2, toast } from '@island.is/island-ui/core'
 
+import { useApplicationContext } from '../../../../context/ApplicationContext'
 import { SubmitBankruptcyApplicationRequest } from '../../../../gen/fetch'
 import { PageRoutes } from '../../../../lib/constants'
 import { submitBankruptcyApplication } from '../../../../lib/fetchers'
 
 export const BankruptcyFooter = () => {
+  const { caseId, applicationId } = useApplicationContext()
+
   const { trigger: submitBankruptcyApplicationTrigger } = useSWRMutation(
     'submitBankruptcyApplication',
     (_key: string, { arg }: { arg: SubmitBankruptcyApplicationRequest }) =>
@@ -39,8 +42,8 @@ export const BankruptcyFooter = () => {
       <Button
         onClick={() =>
           submitBankruptcyApplicationTrigger({
-            applicationId: '123',
-            caseId: '123',
+            applicationId: applicationId,
+            caseId: caseId,
           })
         }
         icon="arrowForward"

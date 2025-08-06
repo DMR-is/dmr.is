@@ -50,14 +50,14 @@ export default async function UmsoknirThrotabusPage({
     throw new Error()
   }
 
-  if (application.data.status === BankruptcyApplicationDtoStatusEnum.DRAFT) {
-    return (
-      <BankruptcyApplication
-        initalApplication={application.data}
-        locations={courtDistricts}
-      />
-    )
-  }
+  // if (application.data.status === BankruptcyApplicationDtoStatusEnum.DRAFT) {
+  return (
+    <BankruptcyApplication
+      initalApplication={application.data}
+      locations={courtDistricts}
+    />
+  )
+  // }
 
   return <BankruptcyCase />
 }
