@@ -4,7 +4,6 @@ import { InjectModel } from '@nestjs/sequelize'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import {
-  CaseDetailedDto,
   CaseDto,
   CaseQueryDto,
   CreateCaseDto,
@@ -18,11 +17,20 @@ export class CaseService implements ICaseService {
   constructor(
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
   ) {}
+  getBankruptcyCase(id: string): Promise<CaseDto> {
+    throw new Error('Method not implemented.')
+  }
 
   async restoreCase(id: string): Promise<CaseDto> {
     await this.caseModel.restore({ where: { id } })
 
-    return this.getCase(id)
+    const restoredCase = await this.caseModel.findByPk(id)
+
+    if (!restoredCase) {
+      throw new NotFoundException()
+    }
+
+    return restoredCase.fromModel()
   }
 
   async createCase(body: CreateCaseDto): Promise<CaseDto> {
@@ -61,14 +69,5 @@ export class CaseService implements ICaseService {
       cases: migrated,
       paging,
     }
-  }
-  async getCase(id: string): Promise<CaseDetailedDto> {
-    const caseModel = await this.caseModel.scope('detailed').findByPk(id)
-
-    if (!caseModel) {
-      throw new NotFoundException(`Case with id ${id} not found`)
-    }
-
-    return caseModel.fromModelDetailed()
   }
 }

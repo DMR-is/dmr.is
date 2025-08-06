@@ -22,6 +22,8 @@ export interface IAdvertService {
   getAdvertsCount(): Promise<GetAdvertsStatusCounterDto>
 
   updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDto>
+
+  getAdvertsByCaseId(caseId: string): Promise<GetAdvertsDto>
 }
 
 export const IAdvertService = Symbol('IAdvertService')

@@ -50,14 +50,29 @@ export default async function UmsoknirThrotabusPage({
     throw new Error()
   }
 
-  // if (application.data.status === BankruptcyApplicationDtoStatusEnum.DRAFT) {
-  return (
-    <BankruptcyApplication
-      initalApplication={application.data}
-      locations={courtDistricts}
-    />
-  )
-  // }
+  if (application.data.status === BankruptcyApplicationDtoStatusEnum.DRAFT) {
+    return (
+      <BankruptcyApplication
+        initalApplication={application.data}
+        locations={courtDistricts}
+      />
+    )
+  }
 
-  return <BankruptcyCase />
+  const adverts = await safeCall(() =>
+    client.getAdvertsByCaseId({
+      caseId: params.id,
+    }),
+  )
+
+  if (adverts.error) {
+    logger.error('Error fetching adverts for bankruptcy case', {
+      error: adverts.error,
+      context: 'UmsoknirThrotabusPage',
+    })
+
+    throw new Error('Error fetching adverts for bankruptcy case')
+  }
+
+  return <BankruptcyCase adverts={adverts.data.adverts} />
 }

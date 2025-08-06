@@ -223,7 +223,7 @@ export class BankruptcyApplicationController {
       caseId: caseId,
       scheduledAt: new Date(bankruptcyDivisionAdvertCheck.data.meetingDate),
       submittedBy: nationalId,
-      title: `${settlementCheck.data.settlementName}`,
+      title: `Skiptafundur ${settlementCheck.data.settlementName}`,
       html: '<div>TODO: insert html</div>',
       paid: false,
       bankruptcyDivisionAdvert: {

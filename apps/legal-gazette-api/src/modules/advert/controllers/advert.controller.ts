@@ -59,4 +59,10 @@ export class AdvertController {
   getAdvertById(@Param('id') id: string) {
     return this.advertService.getAdvertById(id)
   }
+
+  @Get('byCaseId/:caseId')
+  @LGResponse({ operationId: 'getAdvertsByCaseId', type: GetAdvertsDto })
+  getAdvertByCaseId(@Param('caseId', new UUIDValidationPipe()) caseId: string) {
+    return this.advertService.getAdvertsByCaseId(caseId)
+  }
 }

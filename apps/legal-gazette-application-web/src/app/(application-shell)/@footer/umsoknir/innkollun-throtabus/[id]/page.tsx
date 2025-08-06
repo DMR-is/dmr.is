@@ -1,7 +1,7 @@
 'use client'
 
+import { BankruptcyFooter } from '../../../../../../components/client-components/application/bankruptcy/BankruptcyFooter'
 import { ApplicationFooter } from '../../../../../../components/client-components/application/footer/ApplicationFooter'
-import { BankruptcyFooter } from '../../../../../../components/client-components/application/footer/BankruptcyFooter'
 import { useApplicationContext } from '../../../../../../context/ApplicationContext'
 
 export default function ThrotabusFooter() {

@@ -9,7 +9,7 @@ import { PageRoutes } from '../../../../lib/constants'
 import { submitBankruptcyApplication } from '../../../../lib/fetchers'
 
 export const BankruptcyFooter = () => {
-  const { caseId, applicationId } = useApplicationContext()
+  const { caseId, applicationId, setStatus } = useApplicationContext()
 
   const { trigger: submitBankruptcyApplicationTrigger } = useSWRMutation(
     'submitBankruptcyApplication',
@@ -20,6 +20,8 @@ export const BankruptcyFooter = () => {
         toast.success('Umsókn hefur verið send til birtingar.', {
           toastId: 'submit-bankruptcy-application-success',
         })
+
+        setStatus('SUBMITTED')
       },
       onError: () => {
         toast.error(
