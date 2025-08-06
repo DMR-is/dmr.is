@@ -5,6 +5,9 @@ import { useState } from 'react'
 import {
   ActionCard,
   Button,
+  DropdownMenu,
+  GridColumn,
+  GridRow,
   Inline,
   LinkV2,
   Stack,
@@ -59,10 +62,32 @@ export const BankruptcyCase = ({ adverts }: Props) => {
               </Button>
             </LinkV2>
           </Inline>
-          <Text>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua.
-          </Text>
+          <GridRow>
+            <GridColumn span={['12/12', '9/12']}>
+              <Text>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+                eiusmod tempor incididunt ut labore et dolore magna aliqua.
+              </Text>
+            </GridColumn>
+            <GridColumn span={['12/12', '3/12']}>
+              <Inline align="right">
+                <DropdownMenu
+                  title="Valmynd"
+                  openOnHover
+                  icon="hammer"
+                  iconType="outline"
+                  items={[
+                    {
+                      title: 'Bæta við skiptafundi',
+                    },
+                    {
+                      title: 'Bæta við skiptalokum',
+                    },
+                  ]}
+                />
+              </Inline>
+            </GridColumn>
+          </GridRow>
         </Stack>
 
         <Stack space={[2, 3, 4]}>
