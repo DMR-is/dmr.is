@@ -17,7 +17,6 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
-import { useApplicationContext } from '../../../../context/ApplicationContext'
 import {
   ApiErrorDto,
   BankruptcyApplicationDto,
@@ -38,14 +37,6 @@ export const BankruptcyApplication = ({
   initalApplication,
   locations,
 }: Props) => {
-  const { setApplicationId, setCaseId, setStatus } = useApplicationContext()
-
-  useEffect(() => {
-    setApplicationId(initalApplication.id)
-    setCaseId(initalApplication.caseId)
-    setStatus(initalApplication.status)
-  }, [])
-
   const [updateState, setUpdateState] =
     useState<UpdateBankruptcyApplicationDto>({
       additionalText: initalApplication.additionalText,

@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 
 import { getLogger } from '@dmr.is/logging'
 
-import { BankruptcyApplication } from '../../../../../components/client-components/application/bankruptcy/BankruptcyApplication'
+import { BankruptcyForm } from '../../../../../components/client-components/application/bankruptcy/BankruptcyForm'
 import { BankruptcyCase } from '../../../../../components/client-components/case/BankruptcyCase'
 import { BankruptcyApplicationDtoStatusEnum } from '../../../../../gen/fetch'
 import { authOptions } from '../../../../../lib/authOptions'
@@ -30,7 +30,6 @@ export default async function UmsoknirThrotabusPage({
   }
 
   const client = getClient(session.idToken)
-  const { courtDistricts } = await client.getCourtDistricts()
   const application = await safeCall(() =>
     client.getBankruptcyApplicationByCaseId({
       caseId: params.id,
@@ -51,10 +50,17 @@ export default async function UmsoknirThrotabusPage({
   }
 
   if (application.data.status === BankruptcyApplicationDtoStatusEnum.DRAFT) {
+    const { courtDistricts } = await client.getCourtDistricts()
+
     return (
-      <BankruptcyApplication
-        initalApplication={application.data}
-        locations={courtDistricts}
+      <BankruptcyForm
+        applicationId={application.data.id}
+        caseId={params.id}
+        application={application.data}
+        courtOptions={courtDistricts.map((c) => ({
+          label: c.title,
+          value: c.id,
+        }))}
       />
     )
   }
