@@ -19,7 +19,7 @@ import {
   BankruptcyFormFields,
 } from '../../../../../lib/schemas'
 import { getNextWeekday, getWeekendDays } from '../../../../../lib/utils'
-import { DatePickerController } from '../../../controllers/DatePickerController'
+import { DatePickerController } from '../../controllers/DatePickerController'
 
 export const BankruptcyPublishingFields = () => {
   const { getValues, setValue } = useFormContext<BankruptcyFormSchema>()

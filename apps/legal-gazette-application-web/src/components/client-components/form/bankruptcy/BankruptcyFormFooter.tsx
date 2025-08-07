@@ -4,7 +4,7 @@ import { Button, Inline, LinkV2 } from '@island.is/island-ui/core'
 
 import { PageRoutes } from '../../../../lib/constants'
 
-export const BankruptcyFooter = () => {
+export const BankruptcyFormFooter = () => {
   return (
     <Inline justifyContent="spaceBetween" alignY="center">
       <LinkV2 href={PageRoutes.APPLICATIONS}>

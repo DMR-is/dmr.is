@@ -7,8 +7,8 @@ import {
   BankruptcyFormFields,
   BankruptcyFormSchema,
 } from '../../../../../lib/schemas'
-import { DatePickerController } from '../../../controllers/DatePickerController'
-import { InputController } from '../../../controllers/InputController'
+import { DatePickerController } from '../../controllers/DatePickerController'
+import { InputController } from '../../controllers/InputController'
 
 export const BankruptcySignatureFields = () => {
   const { getValues } = useFormContext<BankruptcyFormSchema>()

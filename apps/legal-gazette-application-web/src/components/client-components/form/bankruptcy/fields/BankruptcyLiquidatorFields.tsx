@@ -7,7 +7,7 @@ import {
   BankruptcyFormSchema,
   BankruptcyFormFields,
 } from '../../../../../lib/schemas'
-import { InputController } from '../../../controllers/InputController'
+import { InputController } from '../../controllers/InputController'
 
 export const BankruptcyLiquidatorFields = () => {
   const { caseId, applicationId } =
