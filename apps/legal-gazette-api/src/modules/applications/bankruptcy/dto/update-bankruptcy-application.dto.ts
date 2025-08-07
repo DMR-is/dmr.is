@@ -11,89 +11,89 @@ import {
 import { ApiProperty } from '@nestjs/swagger'
 
 export class UpdateBankruptcyApplicationDto {
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  additionalText?: string
+  additionalText?: string | null
 
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsDateString()
-  judgmentDate?: string
+  judgmentDate?: string | null
 
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  signatureLocation?: string
+  signatureLocation?: string | null
 
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  liquidator?: string
+  liquidator?: string | null
 
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  liquidatorLocation?: string
+  liquidatorLocation?: string | null
 
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  liquidatorOnBehalfOf?: string
+  liquidatorOnBehalfOf?: string | null
 
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsDateString()
-  signatureDate?: string
+  signatureDate?: string | null
 
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  settlementName?: string
+  settlementName?: string | null
 
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  settlementAddress?: string
+  settlementAddress?: string | null
 
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  settlementNationalId?: string
+  settlementNationalId?: string | null
 
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsDateString()
-  settlementDeadline?: string
+  settlementDeadline?: string | null
 
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  settlementMeetingLocation?: string
+  settlementMeetingLocation?: string | null
 
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsDateString()
-  settlementMeetingDate?: string
+  settlementMeetingDate?: string | null
 
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsUUID()
-  courtDistrictId?: string
+  courtDistrictId?: string | null
 
-  @ApiProperty({ type: [String], required: false })
+  @ApiProperty({ type: [String], required: false, nullable: true })
   @IsOptional()
   @IsArray()
   @IsDateString(undefined, { each: true })
   @ArrayMaxSize(3)
-  publishingDates?: string[]
+  publishingDates?: string[] | null
 }

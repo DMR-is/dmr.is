@@ -2768,21 +2768,25 @@
       "UpdateBankruptcyApplicationDto": {
         "type": "object",
         "properties": {
-          "additionalText": { "type": "string" },
-          "judgmentDate": { "type": "string" },
-          "signatureLocation": { "type": "string" },
-          "liquidator": { "type": "string" },
-          "liquidatorLocation": { "type": "string" },
-          "liquidatorOnBehalfOf": { "type": "string" },
-          "signatureDate": { "type": "string" },
-          "settlementName": { "type": "string" },
-          "settlementAddress": { "type": "string" },
-          "settlementNationalId": { "type": "string" },
-          "settlementDeadline": { "type": "string" },
-          "settlementMeetingLocation": { "type": "string" },
-          "settlementMeetingDate": { "type": "string" },
-          "courtDistrictId": { "type": "string" },
-          "publishingDates": { "type": "array", "items": { "type": "string" } }
+          "additionalText": { "type": "string", "nullable": true },
+          "judgmentDate": { "type": "string", "nullable": true },
+          "signatureLocation": { "type": "string", "nullable": true },
+          "liquidator": { "type": "string", "nullable": true },
+          "liquidatorLocation": { "type": "string", "nullable": true },
+          "liquidatorOnBehalfOf": { "type": "string", "nullable": true },
+          "signatureDate": { "type": "string", "nullable": true },
+          "settlementName": { "type": "string", "nullable": true },
+          "settlementAddress": { "type": "string", "nullable": true },
+          "settlementNationalId": { "type": "string", "nullable": true },
+          "settlementDeadline": { "type": "string", "nullable": true },
+          "settlementMeetingLocation": { "type": "string", "nullable": true },
+          "settlementMeetingDate": { "type": "string", "nullable": true },
+          "courtDistrictId": { "type": "string", "nullable": true },
+          "publishingDates": {
+            "nullable": true,
+            "type": "array",
+            "items": { "type": "string" }
+          }
         }
       },
       "TypeModel": { "type": "object", "properties": {} },
