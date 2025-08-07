@@ -5,14 +5,12 @@ import {
   NotFoundException,
   Param,
   UnauthorizedException,
-  UseGuards,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
@@ -21,7 +19,6 @@ import { BankruptcyApplicationModel } from './bankruptcy/models/bankruptcy-appli
 import { ApplicationsDto } from './dto/application.dto'
 
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
 @Controller({
   path: 'applications',
   version: '1',

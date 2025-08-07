@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import {
+  CaseDetailedDto,
   CaseDto,
   CaseQueryDto,
   CreateCaseDto,
@@ -70,4 +71,14 @@ export class CaseService implements ICaseService {
       paging,
     }
   }
+  async getCase(id: string): Promise<CaseDetailedDto> {
+    const caseModel = await this.caseModel.scope('detailed').findByPk(id)
+
+    if (!caseModel) {
+      throw new NotFoundException(`Case with id ${id} not found`)
+    }
+
+    return caseModel.fromModelDetailed()
+  }
+
 }

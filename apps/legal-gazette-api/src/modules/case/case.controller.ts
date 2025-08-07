@@ -14,10 +14,11 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 import { CurrentUser } from '@dmr.is/decorators'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
-import { CaseDto, CaseQueryDto, GetCasesDto } from './dto/case.dto'
+import { CaseDetailedDto, CaseDto, CaseQueryDto, GetCasesDto } from './dto/case.dto'
 import { ICaseService } from './case.service.interface'
 
 @ApiBearerAuth()
@@ -27,6 +28,16 @@ export class CaseController {
   constructor(
     @Inject(ICaseService) private readonly caseService: ICaseService,
   ) {}
+
+
+  @Get(':id')
+  @LGResponse({ operationId: 'getCase', type: CaseDetailedDto })
+  getCase(
+    @Param('id', new UUIDValidationPipe()) id: string,
+  ): Promise<CaseDetailedDto> {
+    return this.caseService.getCase(id)
+  }
+
 
   @Get()
   @LGResponse({ operationId: 'getCases', type: GetCasesDto })

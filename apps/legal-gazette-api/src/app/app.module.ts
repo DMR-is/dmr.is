@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
 import { SequelizeModule } from '@nestjs/sequelize'
@@ -8,7 +8,7 @@ import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { LoggingModule } from '@dmr.is/logging'
 import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/middleware'
-import { AuthModule, HealthModule } from '@dmr.is/modules'
+import { AuthModule, HealthModule, TokenJwtAuthGuard } from '@dmr.is/modules'
 import {
   GlobalExceptionFilter,
   HttpExceptionFilter,
@@ -35,6 +35,7 @@ import { StatusModel } from '../modules/status/status.model'
 import { SubscriberModel } from '../modules/subscribers/subscriber.model'
 import { SubscriberModule } from '../modules/subscribers/subscriber.module'
 import { ApplicationWebModule } from '../modules/swagger/application-web.module'
+import { PublicWebModule } from '../modules/swagger/public-web.module'
 import { TypeModel } from '../modules/type/type.model'
 import { UserModel } from '../modules/users/users.model'
 import { UsersModule } from '../modules/users/users.module'
@@ -93,6 +94,7 @@ import { UsersModule } from '../modules/users/users.module'
     },
     HealthModule,
     ApplicationWebModule,
+    PublicWebModule
   ],
   controllers: [],
   providers: [
@@ -111,6 +113,10 @@ import { UsersModule } from '../modules/users/users.module'
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: TokenJwtAuthGuard,
     },
   ],
 })

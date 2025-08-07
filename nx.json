@@ -195,6 +195,5 @@
     ]
   },
   "useInferencePlugins": false,
-  "defaultBase": "main",
-  "plugins": ["./tools/nextjs-port-inference"]
+  "defaultBase": "main"
 }

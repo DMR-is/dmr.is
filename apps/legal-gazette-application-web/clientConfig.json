@@ -1,6 +1,129 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/cases/{id}": {
+      "get": {
+        "operationId": "getCase",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CaseDetailedDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      },
+      "delete": {
+        "operationId": "deleteCase",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
     "/api/v1/cases": {
       "get": {
         "operationId": "getCases",
@@ -150,65 +273,6 @@
               }
             }
           },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Legal gazette - application web API"]
-      }
-    },
-    "/api/v1/cases/{id}": {
-      "delete": {
-        "operationId": "deleteCase",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
@@ -1557,6 +1621,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1622,6 +1687,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1680,6 +1746,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1745,6 +1812,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1810,6 +1878,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1875,6 +1944,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -2389,6 +2459,349 @@
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
+      "CommunicationChannelDto": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "phone": { "type": "string" }
+        },
+        "required": ["email"]
+      },
+      "TypeEnum": {
+        "type": "string",
+        "enum": [
+          "Almenn auglýsing",
+          "Innköllun þrotabús",
+          "Skiptafundur þrotabús",
+          "Innköllun dánarbús"
+        ]
+      },
+      "TypeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUIDV4 of the entity",
+            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
+          },
+          "title": {
+            "description": "Title of the entity",
+            "example": "Base entity",
+            "x-enumNames": [
+              "CommonAdvert",
+              "BankruptcyAdvert",
+              "BankruptcyDivisionAdvert",
+              "DeceasedAdvert"
+            ],
+            "allOf": [{ "$ref": "#/components/schemas/TypeEnum" }]
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the entity",
+            "example": "base-entity"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "CategoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUIDV4 of the entity",
+            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the entity",
+            "example": "Base entity"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the entity",
+            "example": "base-entity"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "StatusIdEnum": {
+        "type": "string",
+        "enum": [
+          "63726fce-edcf-412d-85e8-087e99c592f2",
+          "cd3bf301-52a1-493e-8c80-a391c310c840",
+          "a2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
+          "bd835a1d-0ecb-4aa4-9910-b5e60c30dced",
+          "f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
+          "e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c"
+        ]
+      },
+      "StatusEnum": {
+        "type": "string",
+        "enum": [
+          "Drög",
+          "Innsent",
+          "Tilbúið til útgáfu",
+          "Útgefið",
+          "Hafnað",
+          "Afturkallað"
+        ]
+      },
+      "StatusDto": {
+        "type": "object",
+        "properties": {
+          "id": { "allOf": [{ "$ref": "#/components/schemas/StatusIdEnum" }] },
+          "title": { "allOf": [{ "$ref": "#/components/schemas/StatusEnum" }] },
+          "slug": { "type": "string" }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "AdvertVersion": { "type": "string", "enum": ["A", "B", "C"] },
+      "CommonAdvertSignatureDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "location": { "type": "string" },
+          "date": { "type": "string" }
+        },
+        "required": ["name", "location", "date"]
+      },
+      "CommonAdvertDto": {
+        "type": "object",
+        "properties": {
+          "caption": { "type": "string" },
+          "signature": {
+            "$ref": "#/components/schemas/CommonAdvertSignatureDto"
+          }
+        },
+        "required": ["caption", "signature"]
+      },
+      "SettlementDto": {
+        "type": "object",
+        "properties": {
+          "liquidatorName": { "type": "string" },
+          "liquidatorLocation": { "type": "string" },
+          "liquidatorOnBehalfOf": { "type": "string" },
+          "settlementName": { "type": "string" },
+          "settlementNationalId": { "type": "string" },
+          "settlementAddress": { "type": "string" },
+          "settlementDeadline": { "type": "string" }
+        },
+        "required": [
+          "liquidatorName",
+          "liquidatorLocation",
+          "settlementName",
+          "settlementNationalId",
+          "settlementAddress",
+          "settlementDeadline"
+        ]
+      },
+      "CourtDistrictDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUIDV4 of the entity",
+            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the entity",
+            "example": "Base entity"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the entity",
+            "example": "base-entity"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "BankruptcyAdvertDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "additionalText": { "type": "string" },
+          "judgmentDate": { "type": "string" },
+          "signatureLocation": { "type": "string" },
+          "signatureDate": { "type": "string" },
+          "settlement": { "$ref": "#/components/schemas/SettlementDto" },
+          "courtDistrict": { "$ref": "#/components/schemas/CourtDistrictDto" }
+        },
+        "required": [
+          "id",
+          "judgmentDate",
+          "signatureLocation",
+          "signatureDate",
+          "settlement",
+          "courtDistrict"
+        ]
+      },
+      "AdvertDetailedDto": {
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "description": "ISO representation of the creation date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "ISO representation of the updated date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": "string",
+            "description": "ISO representation of the deletion date",
+            "example": "2021-08-31T12:00:00.000Z",
+            "nullable": true
+          },
+          "id": { "type": "string" },
+          "caseId": { "type": "string" },
+          "publicationNumber": { "type": "string", "nullable": true },
+          "title": { "type": "string" },
+          "publishedAt": { "type": "string", "nullable": true },
+          "owner": { "type": "string" },
+          "scheduledAt": { "type": "string" },
+          "type": { "$ref": "#/components/schemas/TypeDto" },
+          "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "status": { "$ref": "#/components/schemas/StatusDto" },
+          "version": {
+            "allOf": [{ "$ref": "#/components/schemas/AdvertVersion" }]
+          },
+          "html": { "type": "string" },
+          "paid": { "type": "boolean" },
+          "commonAdvert": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CommonAdvertDto" }]
+          },
+          "bankruptcyAdvert": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/BankruptcyAdvertDto" }]
+          }
+        },
+        "required": [
+          "createdAt",
+          "updatedAt",
+          "id",
+          "caseId",
+          "publicationNumber",
+          "title",
+          "publishedAt",
+          "owner",
+          "scheduledAt",
+          "type",
+          "category",
+          "status",
+          "version",
+          "html",
+          "paid"
+        ]
+      },
+      "BankruptcyApplicationDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "caseId": { "type": "string" },
+          "additionalText": { "type": "string" },
+          "judgmentDate": { "type": "string" },
+          "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
+          "signatureLocation": { "type": "string" },
+          "signatureDate": { "type": "string" },
+          "liquidator": { "type": "string" },
+          "liquidatorLocation": { "type": "string" },
+          "liquidatorOnBehalfOf": { "type": "string" },
+          "settlementName": { "type": "string" },
+          "settlementDeadline": { "type": "string" },
+          "settlementAddress": { "type": "string" },
+          "settlementNationalId": { "type": "string" },
+          "settlementMeetingLocation": { "type": "string" },
+          "settlementMeetingDate": { "type": "string" },
+          "courtDistrict": { "$ref": "#/components/schemas/CourtDistrictDto" },
+          "publishingDates": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["id", "caseId", "status"]
+      },
+      "CaseDetailedDto": {
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "description": "ISO representation of the creation date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "ISO representation of the updated date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": "string",
+            "description": "ISO representation of the deletion date",
+            "example": "2021-08-31T12:00:00.000Z",
+            "nullable": true
+          },
+          "id": { "type": "string" },
+          "applicationId": { "type": "string" },
+          "caseNumber": { "type": "string" },
+          "communicationChannels": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
+          },
+          "adverts": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdvertDetailedDto" }
+          },
+          "bankruptcyApplication": {
+            "$ref": "#/components/schemas/BankruptcyApplicationDto"
+          }
+        },
+        "required": [
+          "createdAt",
+          "updatedAt",
+          "id",
+          "caseNumber",
+          "communicationChannels",
+          "adverts"
+        ]
+      },
+      "ApiErrorDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": { "type": "number" },
+          "timestamp": { "type": "string" },
+          "name": {
+            "type": "string",
+            "enum": [
+              "NotFound",
+              "ValidationError",
+              "ForeignKeyConstraintError",
+              "UniqueConstraintError",
+              "TimeoutError",
+              "Unauthorized",
+              "Forbidden",
+              "BadRequest",
+              "InternalServerError",
+              "UnknownError"
+            ],
+            "example": [
+              "NotFound",
+              "ValidationError",
+              "ForeignKeyConstraintError",
+              "UniqueConstraintError",
+              "TimeoutError",
+              "Unauthorized",
+              "Forbidden",
+              "BadRequest",
+              "InternalServerError",
+              "UnknownError"
+            ]
+          },
+          "message": { "type": "string" },
+          "details": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["statusCode", "timestamp"]
+      },
       "CaseDto": {
         "type": "object",
         "properties": {
@@ -2453,44 +2866,6 @@
         },
         "required": ["cases", "paging"]
       },
-      "ApiErrorDto": {
-        "type": "object",
-        "properties": {
-          "statusCode": { "type": "number" },
-          "timestamp": { "type": "string" },
-          "name": {
-            "type": "string",
-            "enum": [
-              "NotFound",
-              "ValidationError",
-              "ForeignKeyConstraintError",
-              "UniqueConstraintError",
-              "TimeoutError",
-              "Unauthorized",
-              "Forbidden",
-              "BadRequest",
-              "InternalServerError",
-              "UnknownError"
-            ],
-            "example": [
-              "NotFound",
-              "ValidationError",
-              "ForeignKeyConstraintError",
-              "UniqueConstraintError",
-              "TimeoutError",
-              "Unauthorized",
-              "Forbidden",
-              "BadRequest",
-              "InternalServerError",
-              "UnknownError"
-            ]
-          },
-          "message": { "type": "string" },
-          "details": { "type": "array", "items": { "type": "string" } }
-        },
-        "required": ["statusCode", "timestamp"]
-      },
-      "StatusIdEnum": { "type": "string" },
       "UpdateAdvertDto": {
         "type": "object",
         "properties": {
@@ -2499,84 +2874,6 @@
           "html": { "type": "string" }
         }
       },
-      "TypeEnum": {
-        "type": "string",
-        "enum": [
-          "Almenn auglýsing",
-          "Innköllun þrotabús",
-          "Skiptafundur þrotabús",
-          "Innköllun dánarbús"
-        ]
-      },
-      "TypeDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
-          },
-          "title": {
-            "description": "Title of the entity",
-            "example": "Base entity",
-            "x-enumNames": [
-              "CommonAdvert",
-              "BankruptcyAdvert",
-              "BankruptcyDivisionAdvert",
-              "DeceasedAdvert"
-            ],
-            "allOf": [{ "$ref": "#/components/schemas/TypeEnum" }]
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "CategoryDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the entity",
-            "example": "Base entity"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "StatusEnum": {
-        "type": "string",
-        "enum": [
-          "Drög",
-          "Innsent",
-          "Tilbúið til útgáfu",
-          "Útgefið",
-          "Hafnað",
-          "Afturkallað"
-        ]
-      },
-      "StatusDto": {
-        "type": "object",
-        "properties": {
-          "id": { "allOf": [{ "$ref": "#/components/schemas/StatusIdEnum" }] },
-          "title": { "allOf": [{ "$ref": "#/components/schemas/StatusEnum" }] },
-          "slug": { "type": "string" }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "AdvertVersion": { "type": "string", "enum": ["A", "B", "C"] },
       "AdvertDto": {
         "type": "object",
         "properties": {
@@ -2648,25 +2945,6 @@
           }
         }
       },
-      "CommonAdvertSignatureDto": {
-        "type": "object",
-        "properties": {
-          "name": { "type": "string" },
-          "location": { "type": "string" },
-          "date": { "type": "string" }
-        },
-        "required": ["name", "location", "date"]
-      },
-      "CommonAdvertDto": {
-        "type": "object",
-        "properties": {
-          "caption": { "type": "string" },
-          "signature": {
-            "$ref": "#/components/schemas/CommonAdvertSignatureDto"
-          }
-        },
-        "required": ["caption", "signature"]
-      },
       "AdvertStatusCounterItemDto": {
         "type": "object",
         "properties": {
@@ -2719,51 +2997,6 @@
           "advertIds": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["advertIds"]
-      },
-      "CourtDistrictDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the entity",
-            "example": "Base entity"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "BankruptcyApplicationDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "caseId": { "type": "string" },
-          "additionalText": { "type": "string" },
-          "judgmentDate": { "type": "string" },
-          "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
-          "signatureLocation": { "type": "string" },
-          "signatureDate": { "type": "string" },
-          "liquidator": { "type": "string" },
-          "liquidatorLocation": { "type": "string" },
-          "liquidatorOnBehalfOf": { "type": "string" },
-          "settlementName": { "type": "string" },
-          "settlementDeadline": { "type": "string" },
-          "settlementAddress": { "type": "string" },
-          "settlementNationalId": { "type": "string" },
-          "settlementMeetingLocation": { "type": "string" },
-          "settlementMeetingDate": { "type": "string" },
-          "courtDistrict": { "$ref": "#/components/schemas/CourtDistrictDto" },
-          "publishingDates": { "type": "array", "items": { "type": "string" } }
-        },
-        "required": ["id", "caseId", "status"]
       },
       "UpdateBankruptcyApplicationDto": {
         "type": "object",

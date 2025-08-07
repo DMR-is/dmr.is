@@ -8,13 +8,19 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common'
+import { Reflector } from '@nestjs/core'
 
 import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { IS_PUBLIC_KEY } from './public.decorator'
+
 @Injectable()
 export class TokenJwtAuthGuard implements CanActivate {
-  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {}
+  constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    private reflector: Reflector,
+  ) {}
   private jwksClient = jwksRsa({
     jwksUri: `https://${process.env.IDENTITY_SERVER_DOMAIN}/.well-known/openid-configuration/jwks`,
     cache: true,
@@ -23,6 +29,15 @@ export class TokenJwtAuthGuard implements CanActivate {
 
   @LogMethod(false)
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ])
+
+    if (isPublic) {
+      return true
+    }
+
     const request = context.switchToHttp().getRequest()
     const authHeader = request.headers.authorization
 
