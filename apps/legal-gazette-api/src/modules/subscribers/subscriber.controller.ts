@@ -1,15 +1,13 @@
-import { Controller, Get, Inject, UseGuards } from '@nestjs/common'
+import { Controller, Get, Inject } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
 import { LGResponse } from '@dmr.is/legal-gazette/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { SubscriberDto } from './dto/subscriber.dto'
 import { ISubscriberService } from './subscriber.service.interface'
 
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
 @Controller({
   path: 'subscribers',
   version: '1',

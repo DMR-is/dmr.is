@@ -1,5 +1,6 @@
 import { GetServerSideProps } from 'next'
 import dynamic from 'next/dynamic'
+import { getServerSession, Session } from 'next-auth'
 
 import {
   Breadcrumbs,
@@ -11,6 +12,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
+import { authOptions } from '../../lib/auth/authOptions'
 import { getClient } from '../../lib/createClient'
 
 const SearchSidebar = dynamic(
@@ -71,8 +73,9 @@ export function AuglysingarPage({ typeOptions, categoryOptions }: Props) {
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async () => {
-  const client = getClient('todo:add-token')
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  const session = (await getServerSession(req, res, authOptions)) as Session
+  const client = getClient(session.idToken)
 
   const categoriesPromise = client.getCategories({})
   const typesPromise = client.getTypes()

@@ -8,11 +8,10 @@ import { apmInit } from '@dmr.is/apm'
 import { logger } from '@dmr.is/logging'
 
 import { AppModule } from './app/app.module'
-import { AdvertModule } from './modules/advert/advert.module'
 import { CommonApplicationModule } from './modules/applications/common/common-application.module'
 import { BaseEntityModule } from './modules/base-entity/base-entity.module'
-import { SubscriberModule } from './modules/subscribers/subscriber.module'
 import { ApplicationWebModule } from './modules/swagger/application-web.module'
+import { PublicWebModule } from './modules/swagger/public-web.module'
 import { openApi } from './openApi'
 
 async function bootstrap() {
@@ -69,7 +68,7 @@ async function bootstrap() {
   })
 
   const publicDocument = SwaggerModule.createDocument(app, openApi, {
-    include: [AdvertModule, BaseEntityModule, SubscriberModule],
+    include: [PublicWebModule],
     deepScanRoutes: true,
     autoTagControllers: false,
   })

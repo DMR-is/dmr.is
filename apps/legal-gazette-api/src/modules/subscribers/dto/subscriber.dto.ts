@@ -1,6 +1,8 @@
-import { IsBoolean, IsString, IsUUID } from 'class-validator'
+import { IsString, IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
+
+import { Subscription } from '../../../guards/subscriber/subscriber.enum'
 
 export class SubscriberDto {
   @ApiProperty({
@@ -16,8 +18,7 @@ export class SubscriberDto {
   nationalId!: string
 
   @ApiProperty({
-    type: Boolean,
+    enum: Subscription,
   })
-  @IsBoolean()
-  isActive!: boolean
+  role!: Subscription
 }

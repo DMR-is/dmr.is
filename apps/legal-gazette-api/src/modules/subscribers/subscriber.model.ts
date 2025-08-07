@@ -3,6 +3,7 @@ import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { Subscription } from '../../guards/subscriber/subscriber.enum'
 import { SubscriberDto } from './dto/subscriber.dto'
 
 export type SubscriberAttributes = {
@@ -51,7 +52,7 @@ export class SubscriberModel extends BaseModel<
     return {
       id: model.id,
       nationalId: model.nationalId,
-      isActive: model.isActive,
+      role: model.isActive ? Subscription.ACTIVE : Subscription.INACTIVE,
     }
   }
 

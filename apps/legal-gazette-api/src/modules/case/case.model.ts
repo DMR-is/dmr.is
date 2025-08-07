@@ -29,7 +29,7 @@ import {
 import { StatusIdEnum } from '../status/status.model'
 import { TypeIdEnum } from '../type/type.model'
 import { UserModel } from '../users/users.model'
-import { CaseDto } from './dto/case.dto'
+import { CaseDetailedDto, CaseDto } from './dto/case.dto'
 
 type CaseAttributes = {
   caseNumber: string
@@ -232,4 +232,39 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   fromModel(): CaseDto {
     return CaseModel.fromModel(this)
   }
+
+  static fromModelDetailed(model: CaseModel): CaseDetailedDto {
+    try {
+      return {
+        id: model.id,
+        applicationId:
+          model.bankruptcyApplicationId === null
+            ? undefined
+            : model.bankruptcyApplicationId,
+        caseNumber: model.caseNumber,
+        createdAt: model.createdAt.toISOString(),
+        updatedAt: model.updatedAt.toISOString(),
+        deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+        adverts: model.adverts.map((advert) =>
+          AdvertModel.fromModelDetailed(advert),
+        ),
+        communicationChannels: model.communicationChannels.map((channel) => ({
+          email: channel.email,
+          phone: channel.phone ? channel.phone : undefined,
+          name: channel.name ? channel.name : undefined,
+        })),
+        bankruptcyApplication: model.bankruptcyApplication?.fromModel(),
+      }
+    } catch (error) {
+      this.logger.debug(
+        `fromModelDetailed failed for CaseModel, did you include everything?`,
+      )
+      throw error
+    }
+  }
+
+  fromModelDetailed(): CaseDetailedDto {
+    return CaseModel.fromModelDetailed(this)
+  }
+
 }

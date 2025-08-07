@@ -1,4 +1,5 @@
 import { GetServerSideProps } from 'next'
+import { getServerSession, Session } from 'next-auth'
 import { parseAsString } from 'next-usequerystate'
 
 import { deleteUndefined } from '@dmr.is/utils/client'
@@ -16,6 +17,7 @@ import {
 import { AdvertDisplay } from '../../components/advert-display/AdvertDisplay'
 import { AdvertInfo } from '../../components/advert-info/AdvertInfo'
 import { AdvertDto } from '../../gen/fetch'
+import { authOptions } from '../../lib/auth/authOptions'
 import { PageRoutes } from '../../lib/constants'
 import { getClient } from '../../lib/createClient'
 import { safeCall } from '../../lib/utils'
@@ -57,9 +59,13 @@ export default function SingleAdvertPage({ advert }: SinglPageProps) {
 }
 
 export const getServerSideProps: GetServerSideProps<SinglPageProps> = async ({
+  req,
+  res,
   params,
 }) => {
-  const client = getClient('hello')
+  const session = (await getServerSession(req, res, authOptions)) as Session
+
+  const client = getClient(session.idToken)
 
   const idParam = parseAsString.parseServerSide(params?.id)
 

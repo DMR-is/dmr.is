@@ -1,4 +1,5 @@
 import {
+  CaseDetailedDto,
   CaseDto,
   CaseQueryDto,
   CreateCaseDto,
@@ -7,6 +8,10 @@ import {
 
 export interface ICaseService {
   getCases(query: CaseQueryDto): Promise<GetCasesDto>
+
+
+  getCase(id: string): Promise<CaseDetailedDto>
+
 
   createCase(body: CreateCaseDto): Promise<CaseDto>
 

@@ -76,6 +76,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Type"]
       }
@@ -155,6 +160,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Type"]
       }
@@ -225,6 +235,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Type"]
       }
@@ -304,6 +319,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Category"]
       }
@@ -383,6 +403,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Category"]
       }
@@ -463,6 +488,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Category"]
       }
@@ -923,6 +953,165 @@
         "tags": ["CourtDistrict"]
       }
     },
+    "/api/v1/cases/{id}": {
+      "get": {
+        "operationId": "getCase",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseDetailedDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "",
+        "tags": ["Case"]
+      },
+      "delete": {
+        "operationId": "deleteCase",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "",
+        "tags": ["Case"]
+      }
+    },
     "/api/v1/cases": {
       "get": {
         "operationId": "getCases",
@@ -1029,165 +1218,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "",
-        "tags": ["Case"]
-      }
-    },
-    "/api/v1/cases/{id}": {
-      "get": {
-        "operationId": "getCase",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CaseDetailedDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "",
-        "tags": ["Case"]
-      },
-      "delete": {
-        "operationId": "deleteCase",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
           },
           "400": {
             "description": "",
@@ -1810,6 +1840,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Advert"]
       }
@@ -1999,6 +2034,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Advert"]
       }
@@ -2139,6 +2179,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Advert"]
       }
@@ -2228,6 +2273,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Advert"]
       }
@@ -2368,6 +2418,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Advert"]
       }
@@ -2447,6 +2502,95 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "",
+        "tags": ["Advert"]
+      }
+    },
+    "/api/v1/adverts/byCaseId/{caseId}": {
+      "get": {
+        "operationId": "getAdvertsByCaseId",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetAdvertsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Advert"]
       }
@@ -2912,7 +3056,89 @@
     },
     "/api/v1/applications/bankruptcy/{caseId}": {
       "post": {
-        "operationId": "findOrCreateApplication",
+        "operationId": "createBankruptcyApplication",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankruptcyApplicationDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "",
+        "tags": ["BankruptcyApplication"]
+      },
+      "get": {
+        "operationId": "getBankruptcyApplicationByCaseId",
         "parameters": [
           {
             "name": "caseId",
@@ -3368,23 +3594,55 @@
         },
         "required": ["statuses"]
       },
+      "StatusIdEnum": {
+        "type": "string",
+        "enum": [
+          "63726fce-edcf-412d-85e8-087e99c592f2",
+          "cd3bf301-52a1-493e-8c80-a391c310c840",
+          "a2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
+          "bd835a1d-0ecb-4aa4-9910-b5e60c30dced",
+          "f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
+          "e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c"
+        ],
+        "x-enum-varnames": [
+          "DRAFT",
+          "SUBMITTED",
+          "READY_FOR_PUBLICATION",
+          "PUBLISHED",
+          "REJECTED",
+          "WITHDRAWN"
+        ]
+      },
+      "StatusEnum": {
+        "type": "string",
+        "enum": [
+          "Drög",
+          "Innsent",
+          "Tilbúið til útgáfu",
+          "Útgefið",
+          "Hafnað",
+          "Afturkallað"
+        ]
+      },
       "StatusDto": {
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StatusIdEnum"
+              }
+            ]
           },
           "title": {
-            "type": "string",
-            "description": "Title of the entity",
-            "example": "Base entity"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StatusEnum"
+              }
+            ]
           },
           "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
+            "type": "string"
           }
         },
         "required": ["id", "title", "slug"]
@@ -3421,103 +3679,6 @@
           }
         },
         "required": ["courtDistricts"]
-      },
-      "CaseDto": {
-        "type": "object",
-        "properties": {
-          "createdAt": {
-            "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "deletedAt": {
-            "type": "string",
-            "description": "ISO representation of the deletion date",
-            "example": "2021-08-31T12:00:00.000Z",
-            "nullable": true
-          },
-          "id": {
-            "type": "string"
-          },
-          "applicationId": {
-            "type": "string"
-          },
-          "caseNumber": {
-            "type": "string"
-          }
-        },
-        "required": ["createdAt", "updatedAt", "id", "caseNumber"]
-      },
-      "Paging": {
-        "type": "object",
-        "properties": {
-          "page": {
-            "type": "number",
-            "example": 1
-          },
-          "totalPages": {
-            "type": "number",
-            "example": 10
-          },
-          "totalItems": {
-            "type": "number",
-            "example": 1000
-          },
-          "nextPage": {
-            "type": "number",
-            "example": 2,
-            "nullable": true
-          },
-          "previousPage": {
-            "type": "number",
-            "example": 1,
-            "nullable": true
-          },
-          "pageSize": {
-            "type": "number",
-            "example": 10,
-            "minimum": 1,
-            "maximum": 100
-          },
-          "hasNextPage": {
-            "type": "boolean",
-            "example": true
-          },
-          "hasPreviousPage": {
-            "type": "boolean",
-            "example": false
-          }
-        },
-        "required": [
-          "page",
-          "totalPages",
-          "totalItems",
-          "nextPage",
-          "previousPage",
-          "pageSize",
-          "hasNextPage",
-          "hasPreviousPage"
-        ]
-      },
-      "GetCasesDto": {
-        "type": "object",
-        "properties": {
-          "cases": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CaseDto"
-            }
-          },
-          "paging": {
-            "$ref": "#/components/schemas/Paging"
-          }
-        },
-        "required": ["cases", "paging"]
       },
       "CommunicationChannelDto": {
         "type": "object",
@@ -3849,6 +4010,103 @@
           "adverts"
         ]
       },
+      "CaseDto": {
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "description": "ISO representation of the creation date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "ISO representation of the updated date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": "string",
+            "description": "ISO representation of the deletion date",
+            "example": "2021-08-31T12:00:00.000Z",
+            "nullable": true
+          },
+          "id": {
+            "type": "string"
+          },
+          "applicationId": {
+            "type": "string"
+          },
+          "caseNumber": {
+            "type": "string"
+          }
+        },
+        "required": ["createdAt", "updatedAt", "id", "caseNumber"]
+      },
+      "Paging": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "totalPages": {
+            "type": "number",
+            "example": 10
+          },
+          "totalItems": {
+            "type": "number",
+            "example": 1000
+          },
+          "nextPage": {
+            "type": "number",
+            "example": 2,
+            "nullable": true
+          },
+          "previousPage": {
+            "type": "number",
+            "example": 1,
+            "nullable": true
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 10,
+            "minimum": 1,
+            "maximum": 100
+          },
+          "hasNextPage": {
+            "type": "boolean",
+            "example": true
+          },
+          "hasPreviousPage": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "page",
+          "totalPages",
+          "totalItems",
+          "nextPage",
+          "previousPage",
+          "pageSize",
+          "hasNextPage",
+          "hasPreviousPage"
+        ]
+      },
+      "GetCasesDto": {
+        "type": "object",
+        "properties": {
+          "cases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CaseDto"
+            }
+          },
+          "paging": {
+            "$ref": "#/components/schemas/Paging"
+          }
+        },
+        "required": ["cases", "paging"]
+      },
       "CreateCommunicationChannelDto": {
         "type": "object",
         "properties": {
@@ -3936,25 +4194,6 @@
           "applicationId",
           "htmlBase64",
           "actor"
-        ]
-      },
-      "StatusIdEnum": {
-        "type": "string",
-        "enum": [
-          "63726fce-edcf-412d-85e8-087e99c592f2",
-          "cd3bf301-52a1-493e-8c80-a391c310c840",
-          "a2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
-          "bd835a1d-0ecb-4aa4-9910-b5e60c30dced",
-          "f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
-          "e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c"
-        ],
-        "x-enum-varnames": [
-          "DRAFT",
-          "SUBMITTED",
-          "READY_FOR_PUBLICATION",
-          "PUBLISHED",
-          "REJECTED",
-          "WITHDRAWN"
         ]
       },
       "UpdateAdvertDto": {
@@ -4157,11 +4396,12 @@
           "nationalId": {
             "type": "string"
           },
-          "isActive": {
-            "type": "boolean"
+          "role": {
+            "type": "string",
+            "enum": ["active", "inactive"]
           }
         },
-        "required": ["id", "nationalId", "isActive"]
+        "required": ["id", "nationalId", "role"]
       },
       "UserDto": {
         "type": "object",
