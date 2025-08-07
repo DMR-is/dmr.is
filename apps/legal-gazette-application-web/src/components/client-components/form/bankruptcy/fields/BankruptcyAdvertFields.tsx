@@ -6,8 +6,8 @@ import { GridColumn, GridRow, Stack, Text } from '@island.is/island-ui/core'
 
 import { useUpdateBankruptcyApplication } from '../../../../../hooks/useUpdateBankruptcyApplication'
 import {
-  BankruptcyFormSchema,
   BankruptcyFormFields,
+  BankruptcyFormSchema,
 } from '../../../../../lib/schemas'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'

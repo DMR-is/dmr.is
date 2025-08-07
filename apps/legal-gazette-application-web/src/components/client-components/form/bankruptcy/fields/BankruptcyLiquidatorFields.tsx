@@ -4,8 +4,8 @@ import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
 import { useUpdateBankruptcyApplication } from '../../../../../hooks/useUpdateBankruptcyApplication'
 import {
-  BankruptcyFormSchema,
   BankruptcyFormFields,
+  BankruptcyFormSchema,
 } from '../../../../../lib/schemas'
 import { InputController } from '../../controllers/InputController'
 

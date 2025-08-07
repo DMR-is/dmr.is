@@ -8,8 +8,8 @@ import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 import { useUpdateBankruptcyApplication } from '../../../../../hooks/useUpdateBankruptcyApplication'
 import { TWO_WEEKS } from '../../../../../lib/constants'
 import {
-  BankruptcyFormSchema,
   BankruptcyFormFields,
+  BankruptcyFormSchema,
 } from '../../../../../lib/schemas'
 import { getNextWeekday, getWeekendDays } from '../../../../../lib/utils'
 import { DatePickerController } from '../../controllers/DatePickerController'

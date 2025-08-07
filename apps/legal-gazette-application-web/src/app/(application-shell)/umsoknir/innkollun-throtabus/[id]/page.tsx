@@ -3,8 +3,8 @@ import { getServerSession } from 'next-auth'
 
 import { getLogger } from '@dmr.is/logging'
 
-import { BankruptcyForm } from '../../../../../components/client-components/form/bankruptcy/BankruptcyForm'
 import { BankruptcyCase } from '../../../../../components/client-components/case/BankruptcyCase'
+import { BankruptcyForm } from '../../../../../components/client-components/form/bankruptcy/BankruptcyForm'
 import { BankruptcyApplicationDtoStatusEnum } from '../../../../../gen/fetch'
 import { authOptions } from '../../../../../lib/authOptions'
 import { getClient } from '../../../../../lib/createClient'
