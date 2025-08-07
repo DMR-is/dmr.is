@@ -1,25 +1,12 @@
 'use client'
 
 import { useFormContext } from 'react-hook-form'
-import { Key } from 'swr'
-import useSWRMutation from 'swr/mutation'
 
-import {
-  GridColumn,
-  GridRow,
-  Stack,
-  Text,
-  toast,
-} from '@island.is/island-ui/core'
+import { GridColumn, GridRow, Stack, Text } from '@island.is/island-ui/core'
 
+import { useUpdateBankruptcyApplication } from '../../../../../hooks/useUpdateBankruptcyApplication'
 import {
-  ApiErrorDto,
-  UpdateBankruptcyApplicationDto,
-  UpdateBankruptcyApplicationRequest,
-} from '../../../../../gen/fetch'
-import { updateBankruptcyApplication } from '../../../../../lib/fetchers'
-import {
-  BankruptcyApplicationSchema,
+  BankruptcyFormSchema,
   BankruptcyFormFields,
 } from '../../../../../lib/schemas'
 import { DatePickerController } from '../../../controllers/DatePickerController'
@@ -27,42 +14,14 @@ import { InputController } from '../../../controllers/InputController'
 import { SelectController } from '../../../controllers/SelectController'
 
 export const BankruptcyAdvertFields = () => {
-  const { getValues } = useFormContext<BankruptcyApplicationSchema>()
+  const { getValues } = useFormContext<BankruptcyFormSchema>()
 
-  const applicationMeta = getValues('meta')
+  const { caseId, applicationId, courtOptions } = getValues('meta')
 
-  const { trigger: updateApplicationTrigger } = useSWRMutation<
-    void,
-    ApiErrorDto,
-    Key,
-    UpdateBankruptcyApplicationRequest
-  >(
-    'updateBankruptcyAdvertFields',
-    (_key: string, { arg }: { arg: UpdateBankruptcyApplicationRequest }) =>
-      updateBankruptcyApplication(arg),
-  )
-
-  const trigger = (data: UpdateBankruptcyApplicationDto) => {
-    updateApplicationTrigger(
-      {
-        applicationId: applicationMeta.applicationId,
-        caseId: applicationMeta.caseId,
-        updateBankruptcyApplicationDto: data,
-      },
-      {
-        onSuccess: () => {
-          toast.success('Umsókn vistuð', {
-            toastId: 'bankruptcyAdvertFieldsSuccess',
-          })
-        },
-        onError: (_error) => {
-          toast.error('Ekki tóskt að visa umsókn', {
-            toastId: 'bankruptcyAdvertFieldsError',
-          })
-        },
-      },
-    )
-  }
+  const { trigger } = useUpdateBankruptcyApplication({
+    caseId: caseId,
+    applicationId: applicationId,
+  })
 
   return (
     <Stack space={[1, 2]}>
@@ -70,7 +29,7 @@ export const BankruptcyAdvertFields = () => {
       <GridRow rowGap={[2, 3]}>
         <GridColumn span={['12/12', '6/12']}>
           <SelectController
-            options={applicationMeta.courtOptions}
+            options={courtOptions}
             name={BankruptcyFormFields.ADVERT_COURT_ID}
             label="Dómstóll"
             required

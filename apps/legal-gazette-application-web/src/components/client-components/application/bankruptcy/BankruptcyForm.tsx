@@ -1,6 +1,7 @@
 'use client'
 import { useRouter } from 'next/navigation'
 
+import addDays from 'date-fns/addDays'
 import { FormProvider, useForm } from 'react-hook-form'
 import useSWRMutation from 'swr/mutation'
 
@@ -12,10 +13,15 @@ import {
 } from '../../../../gen/fetch'
 import { submitBankruptcyApplication } from '../../../../lib/fetchers'
 import {
-  BankruptcyApplicationSchema,
   bankruptcyApplicationSchema,
+  BankruptcyFormSchema,
 } from '../../../../lib/schemas'
 import { BankruptcyAdvertFields } from './fields/BankruptcyAdvertFields'
+import { BankruptcyDivisionFields } from './fields/BankruptcyDivisionFields'
+import { BankruptcyLiquidatorFields } from './fields/BankruptcyLiquidatorFields'
+import { BankruptcyPublishingFields } from './fields/BankruptcyPublishingFields'
+import { BankruptcySettlementFields } from './fields/BankruptcySettlementFields'
+import { BankruptcySignatureFields } from './fields/BankruptcySignatureFields'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 
@@ -33,7 +39,7 @@ export const BankruptcyForm = ({
   courtOptions,
 }: Props) => {
   const router = useRouter()
-  const methods = useForm<BankruptcyApplicationSchema>({
+  const methods = useForm<BankruptcyFormSchema>({
     mode: 'onChange',
     resolver: zodResolver(bankruptcyApplicationSchema),
     defaultValues: {
@@ -76,7 +82,7 @@ export const BankruptcyForm = ({
       },
       publishing: application.publishingDates
         ? application.publishingDates.map((date) => new Date(date))
-        : [],
+        : [addDays(new Date(), 14)],
     },
   })
 
@@ -103,7 +109,7 @@ export const BankruptcyForm = ({
     },
   )
 
-  const onValidSubmit = (_data: BankruptcyApplicationSchema) => {
+  const onValidSubmit = (_data: BankruptcyFormSchema) => {
     submitBankruptcyApplicationTrigger({ applicationId, caseId })
   }
 
@@ -129,7 +135,12 @@ export const BankruptcyForm = ({
               nisi ut aliquip ex ea commodo consequat.
             </Text>
           </Stack>
-          <BankruptcyAdvertFields courtOptions={courtOptions} />
+          <BankruptcyAdvertFields />
+          <BankruptcySettlementFields />
+          <BankruptcyLiquidatorFields />
+          <BankruptcyPublishingFields />
+          <BankruptcyDivisionFields />
+          <BankruptcySignatureFields />
         </Stack>
       </form>
     </FormProvider>

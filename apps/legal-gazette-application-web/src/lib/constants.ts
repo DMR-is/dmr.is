@@ -11,3 +11,7 @@ export enum DateFormats {
   DEFAULT = 'dd.MM.yyyy',
   LONG = 'dd. MMMM yyyy',
 }
+
+export const ONE_DAY = 1
+export const ONE_WEEK = 7 * ONE_DAY
+export const TWO_WEEKS = 14 * ONE_DAY

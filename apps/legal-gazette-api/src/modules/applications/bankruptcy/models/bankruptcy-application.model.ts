@@ -189,28 +189,31 @@ export class BankruptcyApplicationModel extends BaseModel<
     applicationId: string,
     dto: UpdateBankruptcyApplicationDto,
   ): Promise<BankruptcyApplicationModel> {
+    const onlyValuesThatArePassed = Object.fromEntries(
+      Object.entries(dto).filter(([_, value]) => value !== undefined),
+    )
+
+    if (onlyValuesThatArePassed.publishingDates) {
+      onlyValuesThatArePassed.publishingDates =
+        onlyValuesThatArePassed.publishingDates.map(
+          (date: string) => new Date(date),
+        )
+    }
+
+    if (onlyValuesThatArePassed.judgmentDate) {
+      onlyValuesThatArePassed.judgmentDate = new Date(
+        onlyValuesThatArePassed.judgmentDate,
+      )
+    }
+
+    if (onlyValuesThatArePassed.settlementMeetingDate) {
+      onlyValuesThatArePassed.settlementMeetingDate = new Date(
+        onlyValuesThatArePassed.settlementMeetingDate,
+      )
+    }
+
     const [_count, rows] = await BankruptcyApplicationModel.update(
-      {
-        additionalText: dto.additionalText,
-        judgmentDate: dto.judgmentDate ? new Date(dto.judgmentDate) : undefined,
-        signatureLocation: dto.signatureLocation,
-        signatureDate: dto.signatureDate
-          ? new Date(dto.signatureDate)
-          : undefined,
-        publishingDates: dto.publishingDates?.map((date) => new Date(date)),
-        settlementName: dto.settlementName,
-        settlementDeadline: dto.settlementDeadline,
-        settlementAddress: dto.settlementAddress,
-        settlementNationalId: dto.settlementNationalId,
-        settlementMeetingDate: dto.settlementMeetingDate
-          ? new Date(dto.settlementMeetingDate)
-          : undefined,
-        settlementMeetingLocation: dto.settlementMeetingLocation,
-        liquidator: dto.liquidator,
-        liquidatorLocation: dto.liquidatorLocation,
-        liquidatorOnBehalfOf: dto.liquidatorOnBehalfOf,
-        courtDistrictId: dto.courtDistrictId,
-      },
+      onlyValuesThatArePassed,
       {
         returning: true,
         where: {

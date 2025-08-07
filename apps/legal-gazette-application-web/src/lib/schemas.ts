@@ -31,7 +31,12 @@ export const liquidatorSchema = z.object({
 })
 
 export const bankruptcyDivisionMeetingsSchema = z.object({
-  date: z.date('Dagsetning skiptafundar er nauðsynleg'),
+  date: z
+    .date()
+    .optional()
+    .refine((date) => date !== undefined, {
+      message: 'Dagsetning skiptafundar er nauðsynleg',
+    }),
   location: z.string('Staðsetning skiptafundar er nauðsynleg'),
 })
 
@@ -74,9 +79,7 @@ export type BankruptcySignatureSchema = z.infer<
 export type BankruptcyPublishingSchema = z.infer<
   typeof bankruptcyPublishingSchema
 >
-export type BankruptcyApplicationSchema = z.infer<
-  typeof bankruptcyApplicationSchema
->
+export type BankruptcyFormSchema = z.infer<typeof bankruptcyApplicationSchema>
 
 export enum BankruptcyFormFields {
   META_CASE_ID = 'meta.caseId',
