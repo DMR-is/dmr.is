@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const bankruptcyApplicationMetaSchema = z.object({
+export const bankruptcyFormMetaSchema = z.object({
   caseId: z.string('Case ID is required'),
   applicationId: z.string('Application ID is required'),
   courtOptions: z.array(
@@ -52,8 +52,8 @@ export const bankruptcyPublishingSchema = z
     'Að minnsta kosti ein dagsetning fyrir birtingu er nauðsynleg',
   )
 
-export const bankruptcyApplicationSchema = z.object({
-  meta: bankruptcyApplicationMetaSchema,
+export const bankruptcyFormSchema = z.object({
+  meta: bankruptcyFormMetaSchema,
   advert: bankruptcyAdvertSchema,
   settlement: bankruptcySettlementSchema,
   liquidator: liquidatorSchema,
@@ -63,9 +63,7 @@ export const bankruptcyApplicationSchema = z.object({
 })
 
 export type BankruptcyAdvertSchema = z.infer<typeof bankruptcyAdvertSchema>
-export type BankruptcyApplicationMetaSchema = z.infer<
-  typeof bankruptcyApplicationMetaSchema
->
+export type BankruptcyFormMetaSchema = z.infer<typeof bankruptcyFormMetaSchema>
 export type BankruptcySettlementSchema = z.infer<
   typeof bankruptcySettlementSchema
 >
@@ -79,7 +77,7 @@ export type BankruptcySignatureSchema = z.infer<
 export type BankruptcyPublishingSchema = z.infer<
   typeof bankruptcyPublishingSchema
 >
-export type BankruptcyFormSchema = z.infer<typeof bankruptcyApplicationSchema>
+export type BankruptcyFormSchema = z.infer<typeof bankruptcyFormSchema>
 
 export enum BankruptcyFormFields {
   META_CASE_ID = 'meta.caseId',

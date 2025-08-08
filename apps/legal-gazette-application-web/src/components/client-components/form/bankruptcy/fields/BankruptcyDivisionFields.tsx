@@ -10,7 +10,7 @@ import { TWO_WEEKS } from '../../../../../lib/constants'
 import {
   BankruptcyFormFields,
   BankruptcyFormSchema,
-} from '../../../../../lib/schemas'
+} from '../../../../../lib/forms/schemas/bankruptcy-schema'
 import { getNextWeekday, getWeekendDays } from '../../../../../lib/utils'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'

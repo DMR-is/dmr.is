@@ -1,5 +1,7 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
+
 import {
   Box,
   GridColumn,
@@ -8,12 +10,19 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
+import { FormTypes } from '../../lib/constants'
 import * as styles from './application-shell.css'
 
-export default function ApplicationShellLayout(props: {
+export default function ApplicationShellLayout({
+  children,
+  footer,
+}: {
   children: React.ReactNode
   footer: React.ReactNode
 }) {
+  const pathname = usePathname()
+
+  const formToUse = pathname.includes(FormTypes.BANKRUPTCY)
   return (
     <Box background="purple100" paddingY={6} className={styles.shellWrapper}>
       <GridContainer>
@@ -26,9 +35,9 @@ export default function ApplicationShellLayout(props: {
               paddingX={[9, 12]}
               background="white"
             >
-              {props.children}
+              {children}
             </Box>
-            {props.footer}
+            {footer}
           </GridColumn>
           <GridColumn span={['12/12', '12/12', '3/12']}>
             <Box paddingY={[2, 4]}>

@@ -1,7 +1,6 @@
 'use client'
 import { useRouter } from 'next/navigation'
 
-import addDays from 'date-fns/addDays'
 import { FormProvider, useForm } from 'react-hook-form'
 import useSWRMutation from 'swr/mutation'
 
@@ -12,18 +11,14 @@ import {
   SubmitBankruptcyApplicationRequest,
 } from '../../../../gen/fetch'
 import { submitBankruptcyApplication } from '../../../../lib/fetchers'
-import {
-  bankruptcyApplicationSchema,
-  BankruptcyFormSchema,
-} from '../../../../lib/schemas'
+import { bankruptcyForm } from '../../../../lib/forms/bankruptcy-form'
+import { BankruptcyFormSchema } from '../../../../lib/forms/schemas/bankruptcy-schema'
 import { BankruptcyAdvertFields } from './fields/BankruptcyAdvertFields'
 import { BankruptcyDivisionFields } from './fields/BankruptcyDivisionFields'
 import { BankruptcyLiquidatorFields } from './fields/BankruptcyLiquidatorFields'
 import { BankruptcyPublishingFields } from './fields/BankruptcyPublishingFields'
 import { BankruptcySettlementFields } from './fields/BankruptcySettlementFields'
 import { BankruptcySignatureFields } from './fields/BankruptcySignatureFields'
-
-import { zodResolver } from '@hookform/resolvers/zod'
 
 type Props = {
   caseId: string
@@ -39,52 +34,10 @@ export const BankruptcyForm = ({
   courtOptions,
 }: Props) => {
   const router = useRouter()
-  const methods = useForm<BankruptcyFormSchema>({
-    mode: 'onChange',
-    resolver: zodResolver(bankruptcyApplicationSchema),
-    defaultValues: {
-      meta: {
-        caseId,
-        applicationId,
-        courtOptions,
-      },
-      advert: {
-        courtId: application.courtDistrict?.id,
-        additionalText: application.additionalText,
-        judgementDate: application.judgmentDate
-          ? new Date(application.judgmentDate)
-          : undefined,
-      },
-      divisionMeeting: {
-        date: application.settlementMeetingDate
-          ? new Date(application.settlementMeetingDate)
-          : undefined,
-        location: application.settlementMeetingLocation,
-      },
-      liquidator: {
-        name: application.liquidator,
-        location: application.liquidatorLocation,
-        onBehalfOf: application.liquidatorOnBehalfOf,
-      },
-      settlement: {
-        name: application.settlementName,
-        nationalId: application.settlementNationalId,
-        address: application.settlementAddress,
-        deadline: application.settlementDeadline
-          ? new Date(application.settlementDeadline)
-          : undefined,
-      },
-      signature: {
-        date: application.signatureDate
-          ? new Date(application.signatureDate)
-          : undefined,
-        location: application.signatureLocation,
-      },
-      publishing: application.publishingDates
-        ? application.publishingDates.map((date) => new Date(date))
-        : [addDays(new Date(), 14)],
-    },
-  })
+
+  const methods = useForm<BankruptcyFormSchema>(
+    bankruptcyForm({ caseId, applicationId, application, courtOptions }),
+  )
 
   const { trigger: submitBankruptcyApplicationTrigger } = useSWRMutation(
     'submitBankruptcyApplication',
