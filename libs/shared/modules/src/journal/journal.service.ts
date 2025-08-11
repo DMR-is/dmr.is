@@ -1,4 +1,6 @@
 import { Cache } from 'cache-manager'
+import endOfDay from 'date-fns/endOfDay'
+import startOfDay from 'date-fns/startOfDay'
 import { Op, Transaction, WhereOptions } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import slugify from 'slugify'
@@ -1078,7 +1080,7 @@ export class JournalService implements IJournalService {
     if (params?.dateFrom) {
       Object.assign(whereParams, {
         publicationDate: {
-          [Op.gte]: params.dateFrom,
+          [Op.gte]: startOfDay(new Date(params.dateFrom)),
         },
       })
     }
@@ -1086,7 +1088,7 @@ export class JournalService implements IJournalService {
     if (params?.dateTo) {
       Object.assign(whereParams, {
         publicationDate: {
-          [Op.lte]: params.dateTo,
+          [Op.lte]: endOfDay(new Date(params.dateTo)),
         },
       })
     }
@@ -1102,7 +1104,10 @@ export class JournalService implements IJournalService {
     if (params?.dateTo && params?.dateFrom) {
       Object.assign(whereParams, {
         publicationDate: {
-          [Op.between]: [params.dateFrom, params.dateTo],
+          [Op.between]: [
+            startOfDay(new Date(params.dateFrom)),
+            endOfDay(new Date(params.dateTo)),
+          ],
         },
       })
     }
