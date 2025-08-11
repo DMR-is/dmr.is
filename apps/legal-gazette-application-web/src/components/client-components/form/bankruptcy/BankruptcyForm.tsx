@@ -13,12 +13,15 @@ import {
 import { submitBankruptcyApplication } from '../../../../lib/fetchers'
 import { bankruptcyForm } from '../../../../lib/forms/bankruptcy-form'
 import { BankruptcyFormSchema } from '../../../../lib/forms/schemas/bankruptcy-schema'
+import { ApplicationShell } from '../../application/ApplicationShell'
+import { ApplicationFooter } from '../../application/footer/ApplicationFooter'
 import { BankruptcyAdvertFields } from './fields/BankruptcyAdvertFields'
 import { BankruptcyDivisionFields } from './fields/BankruptcyDivisionFields'
 import { BankruptcyLiquidatorFields } from './fields/BankruptcyLiquidatorFields'
 import { BankruptcyPublishingFields } from './fields/BankruptcyPublishingFields'
 import { BankruptcySettlementFields } from './fields/BankruptcySettlementFields'
 import { BankruptcySignatureFields } from './fields/BankruptcySignatureFields'
+import { BankruptcyFormFooter } from './BankruptcyFormFooter'
 
 type Props = {
   caseId: string
@@ -78,23 +81,32 @@ export const BankruptcyForm = ({
         id="bankruptcy"
         onSubmit={methods.handleSubmit(onValidSubmit, onInvalidSubmit)}
       >
-        <Stack space={[2, 3, 4]}>
-          <Stack space={[1, 2]}>
-            <Text variant="h2">Innköllun þrotabús</Text>
-            <Text>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-              enim ad minim veniam, quis nostrud exercitation ullamco laboris
-              nisi ut aliquip ex ea commodo consequat.
-            </Text>
+        <ApplicationShell
+          sidebar={<Text variant="h4">Texti hér</Text>}
+          footer={
+            <ApplicationFooter>
+              <BankruptcyFormFooter />
+            </ApplicationFooter>
+          }
+        >
+          <Stack space={[2, 3, 4]}>
+            <Stack space={[1, 2]}>
+              <Text variant="h2">Innköllun þrotabús</Text>
+              <Text>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+                enim ad minim veniam, quis nostrud exercitation ullamco laboris
+                nisi ut aliquip ex ea commodo consequat.
+              </Text>
+            </Stack>
+            <BankruptcyAdvertFields />
+            <BankruptcySettlementFields />
+            <BankruptcyLiquidatorFields />
+            <BankruptcyPublishingFields />
+            <BankruptcyDivisionFields />
+            <BankruptcySignatureFields />
           </Stack>
-          <BankruptcyAdvertFields />
-          <BankruptcySettlementFields />
-          <BankruptcyLiquidatorFields />
-          <BankruptcyPublishingFields />
-          <BankruptcyDivisionFields />
-          <BankruptcySignatureFields />
-        </Stack>
+        </ApplicationShell>
       </form>
     </FormProvider>
   )

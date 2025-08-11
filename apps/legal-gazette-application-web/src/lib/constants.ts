@@ -21,3 +21,5 @@ export enum FormTypes {
   DECEASED = 'innkollun-danarbus',
   COMMON = 'almenn-umsokn',
 }
+
+export const ALLOWED_FORM_TYPES = Object.values(FormTypes)

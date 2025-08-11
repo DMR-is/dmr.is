@@ -24,7 +24,7 @@ type Props = {
   adverts: AdvertDto[]
 }
 
-export const BankruptcyCase = ({ adverts }: Props) => {
+export const AdvertList = ({ adverts }: Props) => {
   const tagVariant = (status: string): TagVariant => {
     switch (status) {
       case StatusEnum.Innsent:

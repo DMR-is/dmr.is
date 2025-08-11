@@ -16,21 +16,27 @@ import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
 export const BankruptcyDivisionFields = () => {
-  const { getValues, setValue, watch } = useFormContext<BankruptcyFormSchema>()
+  const {
+    getValues,
+    setValue,
+    watch,
+    formState: { isReady, dirtyFields },
+  } = useFormContext<BankruptcyFormSchema>()
   const { caseId, applicationId } = getValues('meta')
 
   const recallDates = watch(BankruptcyFormFields.PUBLISHING_DATES)
 
   useEffect(() => {
-    // we need to reset the division meeting date if the recall dates change
-    setValue(
-      BankruptcyFormFields.DIVISION_MEETING_DATE,
-      undefined as unknown as Date,
-    )
-    trigger({
-      settlementMeetingDate: null,
-    })
-  }, [recallDates])
+    if (isReady && dirtyFields.publishing) {
+      setValue(
+        BankruptcyFormFields.DIVISION_MEETING_DATE,
+        undefined as unknown as Date,
+      )
+      trigger({
+        settlementMeetingDate: null,
+      })
+    }
+  }, [recallDates, isReady, dirtyFields])
 
   const { trigger } = useUpdateBankruptcyApplication({
     caseId,

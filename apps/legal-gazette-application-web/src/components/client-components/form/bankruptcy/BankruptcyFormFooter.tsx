@@ -12,7 +12,7 @@ export const BankruptcyFormFooter = () => {
           Yfirlit
         </Button>
       </LinkV2>
-      <button type="submit" form="bankruptcy">
+      <button type="submit">
         <Button as="div" icon="arrowForward">
           Senda til birtingar
         </Button>
