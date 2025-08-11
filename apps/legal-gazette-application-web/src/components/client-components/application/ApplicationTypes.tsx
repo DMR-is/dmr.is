@@ -1,38 +1,49 @@
 'use client'
 
-import { LinkCard } from '@dmr.is/ui/components/LinkCard/LinkCard'
+import { useRouter } from 'next/navigation'
 
-import { GridColumn, GridRow } from '@island.is/island-ui/core'
+import useSWRMutation from 'swr/mutation'
+
+import { DropdownMenu, toast } from '@island.is/island-ui/core'
 
 import { PageRoutes } from '../../../lib/constants'
-
+import { createBankruptcyCaseAndApplication } from '../../../lib/fetchers'
 export const ApplicationTypes = () => {
+  const router = useRouter()
+
+  const { trigger: createBankruptcyTrigger, isMutating } = useSWRMutation(
+    'createBankruptcyCaseAndApplication',
+    createBankruptcyCaseAndApplication,
+    {
+      onSuccess: ({ id }) => {
+        router.push(`${PageRoutes.APPLICATION_THROTABU}/${id}`)
+      },
+      onError: (_error) => {
+        toast.error(
+          'Ekki tókst að stofna umsókn. Vinsamlegast reyndu aftur síðar.',
+          {
+            toastId: 'createBankruptcyCaseAndApplicationError',
+          },
+        )
+      },
+    },
+  )
+
   return (
-    <GridRow>
-      <GridColumn
-        span={['12/12', '5/12']}
-        offset={['0', '1/12']}
-        paddingBottom={[2, 0]}
-      >
-        <LinkCard
-          href={PageRoutes.APPLICATION_THROTABU}
-          title="Innköllun þrotabús"
-          description="Stofna umsókn um innköllun þrotabús."
-          image={{
-            src: '/assets/ritstjorn-image.svg',
-          }}
-        />
-      </GridColumn>
-      <GridColumn span={['12/12', '5/12']} paddingBottom={[2, 0]}>
-        <LinkCard
-          href={PageRoutes.APPLICATION_DANARBU}
-          title="Innköllun dánarbús"
-          description="Stofna umsókn um dánarbú."
-          image={{
-            src: '/assets/utgafa-image.svg',
-          }}
-        />
-      </GridColumn>
-    </GridRow>
+    <DropdownMenu
+      title="Stofna umsókn"
+      icon="hammer"
+      loading={isMutating}
+      items={[
+        {
+          title: 'Innköllun þrotabús',
+          onClick: () => createBankruptcyTrigger(),
+        },
+        {
+          title: 'Innköllun dánarbús',
+          href: PageRoutes.APPLICATION_DANARBU,
+        },
+      ]}
+    />
   )
 }

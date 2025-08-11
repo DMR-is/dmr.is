@@ -2,7 +2,7 @@ import addYears from 'date-fns/addYears'
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
-import { DateFormats } from './constants'
+import { DateFormats, FormTypes } from './constants'
 
 export const formatDate = (date: string | Date): string => {
   const dateToUse = typeof date === 'string' ? new Date(date) : date
@@ -45,4 +45,9 @@ export const getWeekendDays = (
   }
 
   return dates
+}
+
+export const isValidFormType = (type?: string): boolean => {
+  const validTypes = Object.values(FormTypes)
+  return validTypes.includes(type as FormTypes)
 }

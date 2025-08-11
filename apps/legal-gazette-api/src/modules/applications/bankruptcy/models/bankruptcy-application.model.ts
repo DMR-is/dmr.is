@@ -46,7 +46,12 @@ type BankruptcyApplicationAttributes = {
   publishingDates?: Date[]
 }
 
-type BankruptcyApplicationCreationAttributes = BankruptcyApplicationAttributes
+export type BankruptcyApplicationCreateAttributes = Omit<
+  BankruptcyApplicationAttributes,
+  'caseId'
+> & {
+  caseId?: string
+}
 
 @DefaultScope(() => ({
   include: [{ model: CourtDistrictModel }],
@@ -55,7 +60,7 @@ type BankruptcyApplicationCreationAttributes = BankruptcyApplicationAttributes
 @BaseTable({ tableName: LegalGazetteModels.BANKRUPTCY_APPLICATION })
 export class BankruptcyApplicationModel extends BaseModel<
   BankruptcyApplicationAttributes,
-  BankruptcyApplicationCreationAttributes
+  BankruptcyApplicationCreateAttributes
 > {
   @Column({
     type: DataType.STRING,

@@ -15,3 +15,11 @@ export enum DateFormats {
 export const ONE_DAY = 1
 export const ONE_WEEK = 7 * ONE_DAY
 export const TWO_WEEKS = 14 * ONE_DAY
+
+export enum FormTypes {
+  BANKRUPTCY = 'innkollun-throtabus',
+  DECEASED = 'innkollun-danarbus',
+  COMMON = 'almenn-umsokn',
+}
+
+export const ALLOWED_FORM_TYPES = Object.values(FormTypes)

@@ -8,7 +8,7 @@ import { useUpdateBankruptcyApplication } from '../../../../../hooks/useUpdateBa
 import {
   BankruptcyFormFields,
   BankruptcyFormSchema,
-} from '../../../../../lib/schemas'
+} from '../../../../../lib/forms/schemas/bankruptcy-schema'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'

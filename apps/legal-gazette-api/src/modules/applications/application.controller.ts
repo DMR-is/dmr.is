@@ -4,6 +4,7 @@ import {
   Get,
   NotFoundException,
   Param,
+  Post,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common'
@@ -17,6 +18,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/modules'
 import { Auth } from '@island.is/auth-nest-tools'
 
 import { CaseModel } from '../case/case.model'
+import { CaseDto } from '../case/dto/case.dto'
 import { BankruptcyApplicationModel } from './bankruptcy/models/bankruptcy-application.model'
 import { ApplicationsDto } from './dto/application.dto'
 
@@ -80,5 +82,33 @@ export class ApplicationController {
     }
 
     await application.deleteApplication()
+  }
+
+  @Post('createBankruptcyCaseAndApplication')
+  @LGResponse({
+    operationId: 'createBankruptcyCaseAndApplication',
+    type: CaseDto,
+  })
+  async createBankruptcyCaseAndApplication(
+    @CurrentUser() user: Auth,
+  ): Promise<CaseDto> {
+    if (!user?.nationalId) {
+      throw new UnauthorizedException()
+    }
+
+    const results = await this.caseModel.create(
+      {
+        involvedPartyNationalId: user.nationalId,
+        bankruptcyApplication: {
+          involvedPartyNationalId: user.nationalId,
+        },
+      },
+      {
+        include: [{ model: BankruptcyApplicationModel }],
+        returning: true,
+      },
+    )
+
+    return results.fromModel()
   }
 }
