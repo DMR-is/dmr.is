@@ -27,7 +27,7 @@ export const BankruptcyDivisionFields = () => {
   const recallDates = watch(BankruptcyFormFields.PUBLISHING_DATES)
 
   useEffect(() => {
-    if (isReady && dirtyFields.publishing) {
+    if (isReady && dirtyFields?.publishing) {
       setValue(
         BankruptcyFormFields.DIVISION_MEETING_DATE,
         undefined as unknown as Date,
