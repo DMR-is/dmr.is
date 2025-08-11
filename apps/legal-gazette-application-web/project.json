@@ -19,7 +19,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/legal-gazette-application-web"
+        "outputPath": "apps/legal-gazette-application-web/dist"
       },
       "configurations": {
         "development": {
