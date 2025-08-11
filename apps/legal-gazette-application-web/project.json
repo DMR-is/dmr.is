@@ -17,6 +17,7 @@
     "build": {
       "executor": "@nx/next:build",
       "outputs": ["{options.outputPath}"],
+      "dependsOn": ["codegen"],
       "defaultConfiguration": "production",
       "options": {
         "outputPath": "apps/legal-gazette-application-web/dist"
@@ -66,6 +67,17 @@
         ]
       },
       "outputs": ["{projectRoot}/gen/fetch"]
+    },
+      "container": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": ["build"],
+      "options": {
+        "engine": "docker",
+        "metadata": {
+          "load": true
+        },
+        "file": "apps/legal-gazette-application-web/Dockerfile"
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint"
