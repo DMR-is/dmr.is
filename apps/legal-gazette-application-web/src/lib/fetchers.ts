@@ -46,3 +46,10 @@ export async function getMyApplications() {
 
   return client.getMyApplications()
 }
+
+export async function createBankruptcyCaseAndApplication() {
+  const session = await getSession()
+  const client = getClient(session?.idToken as string)
+
+  return await client.createBankruptcyCaseAndApplication()
+}

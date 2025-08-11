@@ -9,6 +9,7 @@ export const UmsoknirHero = () => {
   return (
     <Box paddingY={[3, 4, 5, 6]}>
       <Hero
+        variant="small"
         title="Umsóknir Lögbirtingablaðsins"
         description="Hér getur þú valið um hverskonar umsókn þú vilt senda inn til Lögbirtingablaðsins."
         contentSpan={['12/12', '8/12']}

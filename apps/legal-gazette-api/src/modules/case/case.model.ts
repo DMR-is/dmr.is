@@ -17,9 +17,10 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
-import { BankruptcyApplicationModel } from '../applications/bankruptcy/models/bankruptcy-application.model'
-import { BankruptcyAdvertModel } from '../bankruptcy/advert/bankruptcy-advert.model'
-import { BankruptcyDivisionAdvertModel } from '../bankruptcy/division-advert/bankruptcy-division-advert.model'
+import {
+  BankruptcyApplicationCreateAttributes,
+  BankruptcyApplicationModel,
+} from '../applications/bankruptcy/models/bankruptcy-application.model'
 import { CommonAdvertModel } from '../common-advert/common-advert.model'
 import { CreateCommonAdvertInternalDto } from '../common-advert/dto/create-common-advert.dto'
 import {
@@ -47,6 +48,7 @@ type CaseCreateAttributes = {
   assignedUserId?: string | null
   communicationChannels?: CommunicationChannelCreateAttributes[]
   adverts?: AdvertCreateAttributes[]
+  bankruptcyApplication?: BankruptcyApplicationCreateAttributes
 }
 
 @BaseTable({ tableName: LegalGazetteModels.CASE })
