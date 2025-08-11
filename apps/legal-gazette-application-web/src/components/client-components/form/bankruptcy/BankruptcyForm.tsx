@@ -21,7 +21,6 @@ import { BankruptcyLiquidatorFields } from './fields/BankruptcyLiquidatorFields'
 import { BankruptcyPublishingFields } from './fields/BankruptcyPublishingFields'
 import { BankruptcySettlementFields } from './fields/BankruptcySettlementFields'
 import { BankruptcySignatureFields } from './fields/BankruptcySignatureFields'
-import { BankruptcyFormFooter } from './BankruptcyFormFooter'
 
 type Props = {
   caseId: string
@@ -81,14 +80,7 @@ export const BankruptcyForm = ({
         id="bankruptcy"
         onSubmit={methods.handleSubmit(onValidSubmit, onInvalidSubmit)}
       >
-        <ApplicationShell
-          sidebar={<Text variant="h4">Texti hér</Text>}
-          footer={
-            <ApplicationFooter>
-              <BankruptcyFormFooter />
-            </ApplicationFooter>
-          }
-        >
+        <ApplicationShell sidebar={<Text variant="h4">Texti hér</Text>}>
           <Stack space={[2, 3, 4]}>
             <Stack space={[1, 2]}>
               <Text variant="h2">Innköllun þrotabús</Text>

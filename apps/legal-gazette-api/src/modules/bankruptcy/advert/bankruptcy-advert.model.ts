@@ -17,7 +17,7 @@ import { SettlementModel } from '../../settlement/settlement.model'
 import { BankruptcyAdvertDto } from './dto/bankruptcy-advert.dto'
 
 export const bankruptcyAdvertSchema = z.object({
-  additionalText: z.string().optional(),
+  additionalText: z.string().optional().nullable(),
   judgmentDate: z.string().transform((iso) => new Date(iso)),
   signatureLocation: z.string(),
   signatureDate: z.string().transform((iso) => new Date(iso)),
@@ -27,7 +27,7 @@ export const bankruptcyAdvertSchema = z.object({
 })
 
 export type BankruptcyAdvertAttributes = {
-  additionalText?: string
+  additionalText?: string | null
   judgmentDate: Date
   signatureLocation: string
   signatureDate: Date
@@ -36,7 +36,7 @@ export type BankruptcyAdvertAttributes = {
   advertId: string
 }
 export type BankruptcyAdvertCreationAttributes = {
-  additionalText?: string
+  additionalText?: string | null
   judgmentDate: Date
   signatureLocation: string
   signatureDate: Date

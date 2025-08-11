@@ -7,15 +7,14 @@ import {
   GridRow,
 } from '@island.is/island-ui/core'
 
+import { ApplicationFooter } from './footer/ApplicationFooter'
 import * as styles from './application.css'
 
 export const ApplicationShell = ({
   children,
-  footer,
   sidebar,
 }: {
   children: React.ReactNode
-  footer?: React.ReactNode
   sidebar?: React.ReactNode
 }) => {
   return (
@@ -31,7 +30,7 @@ export const ApplicationShell = ({
           >
             {children}
           </Box>
-          {footer}
+          <ApplicationFooter />
         </GridColumn>
         {sidebar && (
           <GridColumn span={['12/12', '12/12', '3/12']}>

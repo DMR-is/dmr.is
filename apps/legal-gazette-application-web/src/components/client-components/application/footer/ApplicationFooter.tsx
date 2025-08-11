@@ -1,14 +1,17 @@
 'use client'
 
-import { Box } from '@island.is/island-ui/core'
+import { useFormContext } from 'react-hook-form'
 
+import { Box, Button, Inline, LinkV2 } from '@island.is/island-ui/core'
+
+import { PageRoutes } from '../../../../lib/constants'
 import * as styles from './application-footer.css'
 
-type Props = {
-  children?: React.ReactNode
-}
+export const ApplicationFooter = () => {
+  const {
+    formState: { isValid },
+  } = useFormContext()
 
-export const ApplicationFooter = ({ children }: Props) => {
   return (
     <Box
       paddingY={[3, 5]}
@@ -18,7 +21,16 @@ export const ApplicationFooter = ({ children }: Props) => {
       borderColor="purple100"
       className={styles.shellFooter}
     >
-      {children}
+      <Inline justifyContent="spaceBetween" alignY="center">
+        <LinkV2 href={PageRoutes.APPLICATIONS}>
+          <Button preTextIcon="arrowBack" variant="ghost">
+            Yfirlit
+          </Button>
+        </LinkV2>
+        <Button type="submit" icon="arrowForward" disabled={!isValid}>
+          Senda til birtingar
+        </Button>
+      </Inline>
     </Box>
   )
 }

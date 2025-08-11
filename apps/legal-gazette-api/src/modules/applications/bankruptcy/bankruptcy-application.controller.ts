@@ -190,6 +190,9 @@ export class BankruptcyApplicationController {
     })
 
     if (!advertCheck.success) {
+      this.logger.debug(
+        `Invalid advert data provided for bankruptcy advert: ${advertCheck.error}`,
+      )
       throw new BadRequestException('Invalid advert data')
     }
 

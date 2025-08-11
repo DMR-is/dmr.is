@@ -1,12 +1,12 @@
 import { z } from 'zod'
 
 export const bankruptcyFormMetaSchema = z.object({
-  caseId: z.string('Case ID is required'),
-  applicationId: z.string('Application ID is required'),
+  caseId: z.string().min(1, 'Case ID is required'),
+  applicationId: z.string().min(1, 'Application ID is required'),
   courtOptions: z.array(
     z.object({
-      label: z.string('Court label is required'),
-      value: z.string('Court value is required'),
+      label: z.string().min(1, 'Court label is required'),
+      value: z.string().min(1, 'Court value is required'),
     }),
   ),
 })
@@ -18,15 +18,15 @@ export const bankruptcyAdvertSchema = z.object({
 })
 
 export const bankruptcySettlementSchema = z.object({
-  name: z.string('Nafn bús er nauðsynlegt'),
-  nationalId: z.string('Kennitala bús er nauðsynleg'),
-  address: z.string('Heimilisfang bús er nauðsynlegt'),
+  name: z.string().min(1, 'Nafn bús er nauðsynlegt'),
+  nationalId: z.string().min(1, 'Kennitala bús er nauðsynleg'),
+  address: z.string().min(1, 'Heimilisfang bús er nauðsynlegt'),
   deadline: z.date('Frestdagur bús er nauðsynlegur'),
 })
 
 export const liquidatorSchema = z.object({
-  name: z.string('Nafn skiptastjóra er nauðsynlegt'),
-  location: z.string('Staðsetning skiptastjóra er nauðsynleg'),
+  name: z.string().min(1, 'Nafn skiptastjóra er nauðsynlegt'),
+  location: z.string().min(1, 'Staðsetning skiptastjóra er nauðsynleg'),
   onBehalfOf: z.string().optional(),
 })
 
@@ -37,12 +37,12 @@ export const bankruptcyDivisionMeetingsSchema = z.object({
     .refine((date) => date !== undefined, {
       message: 'Dagsetning skiptafundar er nauðsynleg',
     }),
-  location: z.string('Staðsetning skiptafundar er nauðsynleg'),
+  location: z.string().min(1, 'Staðsetning skiptafundar er nauðsynleg'),
 })
 
 export const bankruptcySignatureSchema = z.object({
   date: z.date('Dagsetning undirritunar er nauðsynleg'),
-  location: z.string('Staðsetning undirritunar er nauðsynleg'),
+  location: z.string().min(1, 'Staðsetning undirritunar er nauðsynleg'),
 })
 
 export const bankruptcyPublishingSchema = z
