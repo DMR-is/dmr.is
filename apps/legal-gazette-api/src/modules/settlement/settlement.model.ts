@@ -17,6 +17,7 @@ type SettlementAttributes = {
   settlementNationalId: string
   settlementAddress: string
   settlementDeadline: Date
+  settlementDateOfDeath: Date | null
 }
 
 type SettlementCreationAttributes = SettlementAttributes
@@ -29,6 +30,10 @@ export const settlementSchema = z.object({
   settlementNationalId: z.string(),
   settlementAddress: z.string(),
   settlementDeadline: z.string().transform((iso) => new Date(iso)),
+  settlementDateOfDeath: z
+    .string()
+    .transform((iso) => new Date(iso))
+    .nullable(),
 })
 
 @BaseTable({ tableName: LegalGazetteModels.SETTLEMENT })
@@ -83,6 +88,13 @@ export class SettlementModel extends BaseModel<
     field: 'settlement_deadline_date',
   })
   settlementDeadline!: Date
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    field: 'settlement_date_of_death',
+  })
+  settlementDateOfDeath!: Date | null
 
   @HasMany(() => BankruptcyAdvertModel)
   bankruptcyAdverts!: BankruptcyAdvertModel

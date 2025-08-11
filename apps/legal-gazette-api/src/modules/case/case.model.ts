@@ -35,6 +35,7 @@ import { CaseDto } from './dto/case.dto'
 type CaseAttributes = {
   caseNumber: string
   bankruptcyApplicationId: string | null
+  deceasedApplicationId: string | null
   assignedUserId: string | null
   involvedPartyNationalId: string
   communicationChannels: CommunicationChannelModel[]
@@ -77,6 +78,14 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     defaultValue: null,
   })
   bankruptcyApplicationId!: string | null
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    field: 'deceased_application_id',
+    defaultValue: null,
+  })
+  deceasedApplicationId!: string | null
 
   @Column({
     type: DataType.UUID,
