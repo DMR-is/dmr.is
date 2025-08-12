@@ -9,9 +9,9 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { DetailedDto } from '@dmr.is/legal-gazette/dto'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
+import { DetailedDto } from '../../../dto/detailed.dto'
 import { AdvertDetailedDto } from '../../advert/dto/advert.dto'
 import { BankruptcyApplicationDto } from '../../applications/bankruptcy/dto/bankruptcy-application.dto'
 import { CommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'

@@ -12,11 +12,13 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { LegalGazetteModels } from '../../lib/constants'
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
+import { CommonAdvertModel } from '../advert/common/common-advert.model'
+import { CreateCommonAdvertInternalDto } from '../advert/common/dto/create-common-advert.dto'
 import {
   BankruptcyApplicationCreateAttributes,
   BankruptcyApplicationModel,
@@ -25,8 +27,6 @@ import {
   DeceasedApplicationCreateAttributes,
   DeceasedApplicationModel,
 } from '../applications/deceased/deceased-application.model'
-import { CommonAdvertModel } from '../advert/common/common-advert.model'
-import { CreateCommonAdvertInternalDto } from '../advert/common/dto/create-common-advert.dto'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,

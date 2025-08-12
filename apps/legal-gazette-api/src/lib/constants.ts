@@ -12,11 +12,10 @@ export enum LegalGazetteModels {
   COMMON_ADVERT = 'common_advert',
   COURT_DISTRICT = 'court_district',
   SETTLEMENT = 'settlement',
-  BANKRUPTCY_ADVERT = 'bankruptcy_advert',
+  RECALL_ADVERT = 'recall_advert',
   DIVISION_MEETING_ADVERT = 'division_meeting_advert',
   DIVISION_ENDING_ADVERT = 'division_ending_advert',
-  BANKRUPTCY_APPLICATION = 'bankruptcy_application',
-  DECEASED_APPLICATION = 'deceased_application',
+  RECALL_APPLICATION = 'recall_application',
   SUBSCRIBER = 'legal_gazette_subscribers',
 }
 

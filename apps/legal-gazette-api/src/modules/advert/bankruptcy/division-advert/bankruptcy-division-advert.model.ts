@@ -8,11 +8,11 @@ import {
 } from 'sequelize-typescript'
 import { z } from 'zod'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { AdvertModel } from '../../advert.model'
+import { LegalGazetteModels } from '../../../../lib/constants'
 import { SettlementModel } from '../../../settlement/settlement.model'
+import { AdvertModel } from '../../advert.model'
 import { BankruptcyDivisionAdvertDto } from './dto/bankruptcy-division-advert.dto'
 
 export const bankruptcyDivisionAdvertSchema = z.object({

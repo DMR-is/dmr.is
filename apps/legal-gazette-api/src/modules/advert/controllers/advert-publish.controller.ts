@@ -8,9 +8,9 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 import { ApiParam } from '@nestjs/swagger'
 
-import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
+import { LGResponse } from '../../../decorators/lg-response.decorator'
 import { AdvertModel } from '../advert.model'
 import { PublishAdvertsBody } from '../dto/advert.dto'
 

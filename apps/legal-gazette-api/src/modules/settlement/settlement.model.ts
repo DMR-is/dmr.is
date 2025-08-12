@@ -1,9 +1,9 @@
 import { Column, DataType, HasMany } from 'sequelize-typescript'
 import { z } from 'zod'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { LegalGazetteModels } from '../../lib/constants'
 import { BankruptcyAdvertModel } from '../advert/bankruptcy/advert/bankruptcy-advert.model'
 import { BankruptcyDivisionAdvertModel } from '../advert/bankruptcy/division-advert/bankruptcy-division-advert.model'
 import { SettlementDto } from './dto/settlement.dto'

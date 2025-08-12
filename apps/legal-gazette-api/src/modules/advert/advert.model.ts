@@ -12,10 +12,17 @@ import {
 
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { LegalGazetteModels } from '../../lib/constants'
 import { mapIndexToVersion, validateAdvertStatus } from '../../lib/utils'
+import { CaseModel } from '../case/case.model'
+import {
+  CategoryDefaultIdEnum,
+  CategoryModel,
+} from '../category/category.model'
+import { StatusIdEnum, StatusModel } from '../status/status.model'
+import { TypeIdEnum, TypeModel } from '../type/type.model'
 import {
   BankruptcyAdvertCreationAttributes,
   BankruptcyAdvertModel,
@@ -24,17 +31,10 @@ import {
   BankruptcyDivisionAdvertCreationAttributes,
   BankruptcyDivisionAdvertModel,
 } from './bankruptcy/division-advert/bankruptcy-division-advert.model'
-import { CaseModel } from '../case/case.model'
-import {
-  CategoryDefaultIdEnum,
-  CategoryModel,
-} from '../category/category.model'
 import {
   CommonAdvertCreationAttributes,
   CommonAdvertModel,
 } from './common/common-advert.model'
-import { StatusIdEnum, StatusModel } from '../status/status.model'
-import { TypeIdEnum, TypeModel } from '../type/type.model'
 import {
   AdvertDetailedDto,
   AdvertDto,

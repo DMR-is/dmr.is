@@ -15,16 +15,16 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { DetailedDto } from '@dmr.is/legal-gazette/dto'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
-import { BankruptcyAdvertDto } from '../bankruptcy/advert/dto/bankruptcy-advert.dto'
+import { DetailedDto } from '../../../dto/detailed.dto'
 import { CategoryDto } from '../../category/dto/category.dto'
-import { CommonAdvertDto } from '../common/dto/common-advert.dto'
 import { StatusDto } from '../../status/dto/status.dto'
 import { StatusIdEnum } from '../../status/status.model'
 import { TypeDto } from '../../type/dto/type.dto'
 import { AdvertVersionEnum } from '../advert.model'
+import { BankruptcyAdvertDto } from '../bankruptcy/advert/dto/bankruptcy-advert.dto'
+import { CommonAdvertDto } from '../common/dto/common-advert.dto'
 
 export class AdvertDto extends DetailedDto {
   @ApiProperty({

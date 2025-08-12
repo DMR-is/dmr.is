@@ -8,11 +8,11 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
+import { LGResponse } from '../../../decorators/lg-response.decorator'
 import { IAdvertService } from '../advert.service.interface'
 import {
   AdvertDto,

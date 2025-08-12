@@ -16,13 +16,13 @@ import { InjectModel } from '@nestjs/sequelize'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
-import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
+import { LGResponse } from '../../../decorators/lg-response.decorator'
 import { mapIndexToVersion } from '../../../lib/utils'
 import { AdvertModel } from '../../advert/advert.model'
 import { bankruptcyAdvertSchema } from '../../advert/bankruptcy/advert/bankruptcy-advert.model'

@@ -2,10 +2,10 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { LegalGazetteEvents } from '@dmr.is/legal-gazette/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AuthService, IAuthService } from '@dmr.is/modules'
 
+import { LegalGazetteEvents } from '../../../lib/constants'
 import { CaseModel } from '../../case/case.model'
 import {
   CommonApplicationUpdateStateEvent,

@@ -2,9 +2,9 @@ import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { NotFoundException } from '@nestjs/common'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
+import { LegalGazetteModels } from '../../lib/constants'
 import { AdvertModel } from '../advert/advert.model'
 import { TypeModel } from '../type/type.model'
 import { CategoryDto } from './dto/category.dto'

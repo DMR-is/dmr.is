@@ -5,11 +5,11 @@ import { InjectModel } from '@nestjs/sequelize'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
-import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
+import { LGResponse } from '../../decorators/lg-response.decorator'
 import { CaseModel } from '../case/case.model'
 import { ApplicationsDto } from './dto/application.dto'
 

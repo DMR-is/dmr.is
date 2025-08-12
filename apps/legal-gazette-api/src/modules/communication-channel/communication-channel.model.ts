@@ -6,9 +6,9 @@ import {
   ForeignKey,
 } from 'sequelize-typescript'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { LegalGazetteModels } from '../../lib/constants'
 import { CaseModel } from '../case/case.model'
 
 type CommunicationChannelAttributes = {

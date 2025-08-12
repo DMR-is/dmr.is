@@ -1,8 +1,8 @@
 import { Column, DataType, HasMany } from 'sequelize-typescript'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
+import { LegalGazetteModels } from '../../lib/constants'
 import { CategoryModel } from '../category/category.model'
 import { TypeDto } from './dto/type.dto'
 
