@@ -10,7 +10,7 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { SettlementDto } from '../../../settlement/dto/settlement.dto'
+import { SettlementDto } from '../../../../settlement/dto/settlement.dto'
 
 export class BankruptcyDivisionAdvertDto {
   @ApiProperty({ type: String, required: true })

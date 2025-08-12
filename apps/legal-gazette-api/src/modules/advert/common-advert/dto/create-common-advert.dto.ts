@@ -14,7 +14,7 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CreateCommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
+import { CreateCommunicationChannelDto } from '../../../communication-channel/dto/communication-channel.dto'
 
 export class CreateCommonAdvertSignatureDto {
   @ApiProperty({ type: String })

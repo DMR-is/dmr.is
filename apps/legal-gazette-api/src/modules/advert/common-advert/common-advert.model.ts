@@ -12,8 +12,8 @@ import { BadRequestException } from '@nestjs/common'
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { validateAdvertStatus } from '../../lib/utils'
-import { AdvertModel } from '../advert/advert.model'
+import { validateAdvertStatus } from '../../../lib/utils'
+import { AdvertModel } from '../advert.model'
 import { CommonAdvertDto } from './dto/common-advert.dto'
 
 type CommonAdvertAttributes = {

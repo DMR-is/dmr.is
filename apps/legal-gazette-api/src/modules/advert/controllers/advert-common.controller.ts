@@ -12,9 +12,9 @@ import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { AdvertUpdateGuard } from '../../../guards/advert-update.guard'
-import { CommonAdvertModel } from '../../common-advert/common-advert.model'
-import { CommonAdvertDto } from '../../common-advert/dto/common-advert.dto'
-import { UpdateCommonAdvertDto } from '../../common-advert/dto/update-common-advert.dto'
+import { CommonAdvertModel } from '../common-advert/common-advert.model'
+import { CommonAdvertDto } from '../common-advert/dto/common-advert.dto'
+import { UpdateCommonAdvertDto } from '../common-advert/dto/update-common-advert.dto'
 import { AdvertModel } from '../advert.model'
 
 @Controller({

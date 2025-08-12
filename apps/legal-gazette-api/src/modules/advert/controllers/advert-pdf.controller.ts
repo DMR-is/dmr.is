@@ -11,7 +11,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
-import { CommonAdvertModel } from '../../common-advert/common-advert.model'
+import { CommonAdvertModel } from '../common-advert/common-advert.model'
 import { commonAdvertTemplate } from '../../pdf/lib/templates'
 import { PdfService } from '../../pdf/pdf.service'
 import { AdvertModel } from '../advert.model'

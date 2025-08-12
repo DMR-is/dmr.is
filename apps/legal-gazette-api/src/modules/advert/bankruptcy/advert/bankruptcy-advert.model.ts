@@ -11,9 +11,9 @@ import { z } from 'zod'
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { AdvertModel } from '../../advert/advert.model'
-import { CourtDistrictModel } from '../../court-district/court-district.model'
-import { SettlementModel } from '../../settlement/settlement.model'
+import { AdvertModel } from '../../advert.model'
+import { CourtDistrictModel } from '../../../court-district/court-district.model'
+import { SettlementModel } from '../../../settlement/settlement.model'
 import { BankruptcyAdvertDto } from './dto/bankruptcy-advert.dto'
 
 export const bankruptcyAdvertSchema = z.object({

@@ -19,11 +19,11 @@ import { mapIndexToVersion, validateAdvertStatus } from '../../lib/utils'
 import {
   BankruptcyAdvertCreationAttributes,
   BankruptcyAdvertModel,
-} from '../bankruptcy/advert/bankruptcy-advert.model'
+} from './bankruptcy/advert/bankruptcy-advert.model'
 import {
   BankruptcyDivisionAdvertCreationAttributes,
   BankruptcyDivisionAdvertModel,
-} from '../bankruptcy/division-advert/bankruptcy-division-advert.model'
+} from './bankruptcy/division-advert/bankruptcy-division-advert.model'
 import { CaseModel } from '../case/case.model'
 import {
   CategoryDefaultIdEnum,
@@ -32,7 +32,7 @@ import {
 import {
   CommonAdvertCreationAttributes,
   CommonAdvertModel,
-} from '../common-advert/common-advert.model'
+} from './common-advert/common-advert.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
 import { TypeIdEnum, TypeModel } from '../type/type.model'
 import {
