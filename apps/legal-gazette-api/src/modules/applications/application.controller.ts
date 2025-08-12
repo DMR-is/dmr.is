@@ -17,7 +17,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
-import { CaseModel } from '../case/case.model'
+import { CaseModel } from '../case/case.mode./bankruptcy/bankruptcy-application.model
 import { CaseDto } from '../case/dto/case.dto'
 import { BankruptcyApplicationModel } from './bankruptcy/models/bankruptcy-application.model'
 import { ApplicationsDto } from './dto/application.dto'

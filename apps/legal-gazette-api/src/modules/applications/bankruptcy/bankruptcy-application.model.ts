@@ -11,13 +11,13 @@ import { BadRequestException } from '@nestjs/common'
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { CaseModel } from '../../../case/case.model'
-import { CourtDistrictModel } from '../../../court-district/court-district.model'
-import { TypeEnum } from '../../../type/type.model'
-import { ApplicationStatusEnum } from '../../contants'
-import { ApplicationDto } from '../../dto/application.dto'
-import { BankruptcyApplicationDto } from '../dto/bankruptcy-application.dto'
-import { UpdateBankruptcyApplicationDto } from '../dto/update-bankruptcy-application.dto'
+import { CaseModel } from '../../case/case.model'
+import { CourtDistrictModel } from '../../court-district/court-district.model'
+import { TypeEnum } from '../../type/type.model'
+import { ApplicationStatusEnum } from '../contants'
+import { ApplicationDto } from '../dto/application.dto'
+import { BankruptcyApplicationDto } from './dto/bankruptcy-application.dto'
+import { UpdateBankruptcyApplicationDto } from './dto/update-bankruptcy-application.dto'
 
 type BankruptcyApplicationAttributes = {
   caseId: string

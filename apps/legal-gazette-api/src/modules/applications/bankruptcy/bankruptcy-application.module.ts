@@ -6,8 +6,8 @@ import { BankruptcyAdvertModel } from '../../bankruptcy/advert/bankruptcy-advert
 import { BankruptcyDivisionAdvertModel } from '../../bankruptcy/division-advert/bankruptcy-division-advert.model'
 import { CaseModel } from '../../case/case.model'
 import { SettlementModel } from '../../settlement/settlement.model'
-import { BankruptcyApplicationModel } from './models/bankruptcy-application.model'
 import { BankruptcyApplicationController } from './bankruptcy-application.controller'
+import { BankruptcyApplicationModel } from './bankruptcy-application.model'
 
 @Module({
   imports: [

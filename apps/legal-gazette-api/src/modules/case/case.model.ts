@@ -20,7 +20,7 @@ import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
 import {
   BankruptcyApplicationCreateAttributes,
   BankruptcyApplicationModel,
-} from '../applications/bankruptcy/models/bankruptcy-application.model'
+} from '../applications/bankruptcy/bankruptcy-application.model'
 import { CommonAdvertModel } from '../common-advert/common-advert.model'
 import { CreateCommonAdvertInternalDto } from '../common-advert/dto/create-common-advert.dto'
 import {

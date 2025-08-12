@@ -36,7 +36,7 @@ import { TypeEnum, TypeIdEnum } from '../../type/type.model'
 import { ApplicationStatusEnum } from '../contants'
 import { BankruptcyApplicationDto } from './dto/bankruptcy-application.dto'
 import { UpdateBankruptcyApplicationDto } from './dto/update-bankruptcy-application.dto'
-import { BankruptcyApplicationModel } from './models/bankruptcy-application.model'
+import { BankruptcyApplicationModel } from './bankruptcy-application.model'
 
 @Controller({
   version: '1',
