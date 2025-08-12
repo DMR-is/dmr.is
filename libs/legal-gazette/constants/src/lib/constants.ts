@@ -15,6 +15,7 @@ export enum LegalGazetteModels {
   BANKRUPTCY_ADVERT = 'bankruptcy_advert',
   BANKRUPTCY_DIVISION_ADVERT = 'bankruptcy_division_advert',
   BANKRUPTCY_APPLICATION = 'bankruptcy_application',
+  DECEASED_APPLICATION = 'deceased_application',
   SUBSCRIBER = 'legal_gazette_subscribers',
 }
 
