@@ -25,8 +25,8 @@ import {
   DeceasedApplicationCreateAttributes,
   DeceasedApplicationModel,
 } from '../applications/deceased/deceased-application.model'
-import { CommonAdvertModel } from '../advert/common-advert/common-advert.model'
-import { CreateCommonAdvertInternalDto } from '../advert/common-advert/dto/create-common-advert.dto'
+import { CommonAdvertModel } from '../advert/common/common-advert.model'
+import { CreateCommonAdvertInternalDto } from '../advert/common/dto/create-common-advert.dto'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,

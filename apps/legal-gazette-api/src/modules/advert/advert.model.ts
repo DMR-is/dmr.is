@@ -32,7 +32,7 @@ import {
 import {
   CommonAdvertCreationAttributes,
   CommonAdvertModel,
-} from './common-advert/common-advert.model'
+} from './common/common-advert.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
 import { TypeIdEnum, TypeModel } from '../type/type.model'
 import {

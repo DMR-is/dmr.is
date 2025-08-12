@@ -84,14 +84,16 @@ export class SettlementModel extends BaseModel<
 
   @Column({
     type: DataType.DATE,
-    allowNull: false,
+    allowNull: true,
+    defaultValue: null,
     field: 'settlement_deadline_date',
   })
-  settlementDeadline!: Date
+  settlementDeadline!: Date | null
 
   @Column({
     type: DataType.DATE,
     allowNull: true,
+    defaultValue: null,
     field: 'settlement_date_of_death',
   })
   settlementDateOfDeath!: Date | null
@@ -112,7 +114,12 @@ export class SettlementModel extends BaseModel<
       settlementName: model.settlementName,
       settlementNationalId: model.settlementNationalId,
       settlementAddress: model.settlementAddress,
-      settlementDeadline: model.settlementDeadline,
+      settlementDeadline: model.settlementDeadline
+        ? model.settlementDeadline.toISOString()
+        : null,
+      settlementDateOfDeath: model.settlementDateOfDeath
+        ? model.settlementDateOfDeath.toISOString()
+        : null,
     }
   }
 

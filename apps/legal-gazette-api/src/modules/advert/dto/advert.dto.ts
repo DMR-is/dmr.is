@@ -20,7 +20,7 @@ import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 import { BankruptcyAdvertDto } from '../bankruptcy/advert/dto/bankruptcy-advert.dto'
 import { CategoryDto } from '../../category/dto/category.dto'
-import { CommonAdvertDto } from '../common-advert/dto/common-advert.dto'
+import { CommonAdvertDto } from '../common/dto/common-advert.dto'
 import { StatusDto } from '../../status/dto/status.dto'
 import { StatusIdEnum } from '../../status/status.model'
 import { TypeDto } from '../../type/dto/type.dto'

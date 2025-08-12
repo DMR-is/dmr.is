@@ -44,7 +44,7 @@ export type BankruptcyDivisionAdvertCreationAttributes = {
     include: [{ model: AdvertModel }],
   },
 }))
-@BaseTable({ tableName: LegalGazetteModels.BANKRUPTCY_DIVISION_ADVERT })
+@BaseTable({ tableName: LegalGazetteModels.DIVISION_MEETING_ADVERT })
 export class BankruptcyDivisionAdvertModel extends BaseModel<
   BankruptcyDivisionAdvertAttributes,
   BankruptcyDivisionAdvertCreationAttributes
