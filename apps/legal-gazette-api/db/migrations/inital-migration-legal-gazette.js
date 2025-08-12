@@ -268,6 +268,16 @@ module.exports = {
       DELETED_AT TIMESTAMPTZ
     );
 
+    ALTER TABLE CASES
+      ADD CONSTRAINT fk_bankruptcy_application
+      FOREIGN KEY (BANKRUPTCY_APPLICATION_ID)
+      REFERENCES BANKRUPTCY_APPLICATION(ID);
+
+    ALTER TABLE CASES
+      ADD CONSTRAINT fk_deceased_application
+      FOREIGN KEY (DECEASED_APPLICATION_ID)
+      REFERENCES DECEASED_APPLICATION(ID);
+
     CREATE INDEX idx_advert_type_title_asc ON ADVERT_TYPE (TITLE ASC);
 
     CREATE INDEX idx_advert_category_title_asc ON ADVERT_CATEGORY (TITLE ASC);

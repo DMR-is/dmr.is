@@ -1,4 +1,10 @@
-import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  DefaultScope,
+  ForeignKey,
+} from 'sequelize-typescript'
 
 import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
@@ -7,8 +13,9 @@ import { CourtDistrictModel } from '../../court-district/court-district.model'
 import { TypeEnum } from '../../type/type.model'
 import { ApplicationStatusEnum } from '../contants'
 import { ApplicationDto } from '../dto/application.dto'
+import { DeceasedApplicationDto } from './dto/deceased-application.dto'
 
-type DeceasedApplicationAttributes = {
+export type DeceasedApplicationAttributes = {
   caseId: string
   status: ApplicationStatusEnum
   involvedPartyNationalId: string
@@ -16,6 +23,7 @@ type DeceasedApplicationAttributes = {
   additionalText?: string | null
   liquidatorName?: string | null
   liquidatorLocation?: string | null
+  liquidatorOnBehalfOf?: string | null
   settlementName?: string | null
   settlementNationalId?: string | null
   settlementAddress?: string | null
@@ -28,9 +36,13 @@ type DeceasedApplicationAttributes = {
   courtDistrictId?: string | null
 }
 
-type DeceasedApplicationCreateAttributes =
+export type DeceasedApplicationCreateAttributes =
   Partial<DeceasedApplicationAttributes>
 
+@DefaultScope(() => ({
+  include: [CourtDistrictModel],
+  order: [['updatedAt', 'DESC']],
+}))
 @BaseTable({ tableName: LegalGazetteModels.DECEASED_APPLICATION })
 export class DeceasedApplicationModel extends BaseModel<
   DeceasedApplicationAttributes,
@@ -84,6 +96,13 @@ export class DeceasedApplicationModel extends BaseModel<
     field: 'liquidator_location',
   })
   liquidatorLocation?: string | null
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'on_behalf_of_liquidator',
+  })
+  liquidatorOnBehalfOf?: string | null
 
   @Column({
     type: DataType.STRING,
@@ -172,5 +191,37 @@ export class DeceasedApplicationModel extends BaseModel<
       title: `${TypeEnum.DECEASED_ADVERT}${model.settlementAddress ? ` - ${model.settlementAddress}` : ''}`,
       type: TypeEnum.DECEASED_ADVERT,
     }
+  }
+
+  fromModelToApplicationDto(): ApplicationDto {
+    return DeceasedApplicationModel.fromModelToApplicationDto(this)
+  }
+
+  static fromModel(model: DeceasedApplicationModel): DeceasedApplicationDto {
+    return {
+      id: model.id,
+      caseId: model.caseId,
+      judgmentDate: model.judgmentDate?.toISOString(),
+      additionalText: model.additionalText ?? undefined,
+      status: model.status,
+      courtDistrict: model.courtDistrict?.fromModel(),
+      liquidator: model.liquidatorName ?? undefined,
+      liquidatorLocation: model.liquidatorLocation ?? undefined,
+      liquidatorOnBehalfOf: model.settlementName ?? undefined,
+      settlementName: model.settlementName ?? undefined,
+      settlementNationalId: model.settlementNationalId ?? undefined,
+      settlementAddress: model.settlementAddress ?? undefined,
+      settlementDateOfDeath: model.settlementDateOfDeath?.toISOString(),
+      settlementMeetingDate: model.divisionMeetingDate?.toISOString(),
+      settlementMeetingLocation: model.divisionMeetingLocation ?? undefined,
+      publishingDates:
+        model.publishingDates?.map((date) => date.toISOString()) ?? undefined,
+      signatureDate: model.signatureDate?.toISOString(),
+      signatureLocation: model.signatureLocation ?? undefined,
+    }
+  }
+
+  fromModel(): DeceasedApplicationDto {
+    return DeceasedApplicationModel.fromModel(this)
   }
 }

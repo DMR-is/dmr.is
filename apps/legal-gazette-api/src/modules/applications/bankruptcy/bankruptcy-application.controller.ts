@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Inject,
   NotFoundException,
@@ -27,6 +28,7 @@ import { AdvertModel } from '../../advert/advert.model'
 import { bankruptcyAdvertSchema } from '../../bankruptcy/advert/bankruptcy-advert.model'
 import { bankruptcyDivisionAdvertSchema } from '../../bankruptcy/division-advert/bankruptcy-division-advert.model'
 import { CaseModel } from '../../case/case.model'
+import { CaseDto } from '../../case/dto/case.dto'
 import { CategoryDefaultIdEnum } from '../../category/category.model'
 import {
   SettlementModel,
@@ -55,42 +57,37 @@ export class BankruptcyApplicationController {
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
   ) {}
 
-  @Post(':caseId')
+  @Post('')
   @LGResponse({
-    operationId: 'createBankruptcyApplication',
-    type: BankruptcyApplicationDto,
+    operationId: 'createBankruptcyCaseAndApplication',
+    type: CaseDto,
   })
-  async createBankruptcyApplication(
-    @Param('caseId') caseId: string,
+  async createBankruptcyCaseAndApplication(
     @CurrentUser() user: Auth,
-  ) {
+  ): Promise<CaseDto> {
     if (!user?.nationalId) {
-      this.logger.warn('Unauthorized access attempt to create draft advert', {
-        context: 'BankruptcyApplicationController',
-      })
-
-      throw new UnauthorizedException('User not authenticated')
+      throw new UnauthorizedException()
     }
 
-    const caseExists = await this.caseModel
-      .unscoped()
-      .findByPk(caseId, { attributes: ['id'] })
+    const results = await this.caseModel.create(
+      {
+        involvedPartyNationalId: user.nationalId,
+        bankruptcyApplication: {
+          involvedPartyNationalId: user.nationalId,
+        },
+      },
+      {
+        include: [{ model: BankruptcyApplicationModel }],
+        returning: true,
+      },
+    )
 
-    if (!caseExists) {
-      throw new NotFoundException('Case not found')
-    }
-
-    const model = await this.bankruptcyApplicationModel.create({
-      caseId: caseId,
-      involvedPartyNationalId: user.nationalId,
-    })
-
-    return model.fromModel()
+    return results.fromModel()
   }
 
   @Patch(':caseId/:applicationId')
   @LGResponse({ operationId: 'updateBankruptcyApplication', status: 200 })
-  async update(
+  async updateBankruptcyApplication(
     @Param('caseId') caseId: string,
     @Param('applicationId') applicationId: string,
     @CurrentUser() user: Auth,
@@ -269,5 +266,31 @@ export class BankruptcyApplicationController {
     }
 
     return application.fromModel()
+  }
+
+  @Delete(':applicationId')
+  @LGResponse({ operationId: 'deleteBankruptcyApplication' })
+  async deleteBankruptcyApplication(
+    @CurrentUser() user: Auth,
+    @Param('applicationId') applicationId: string,
+  ): Promise<void> {
+    if (!user?.nationalId) {
+      throw new UnauthorizedException()
+    }
+
+    const application = await this.bankruptcyApplicationModel
+      .unscoped()
+      .findOne({
+        where: {
+          id: applicationId,
+          involvedPartyNationalId: user.nationalId,
+        },
+      })
+
+    if (!application) {
+      throw new NotFoundException('Application not found')
+    }
+
+    await application.deleteApplication()
   }
 }

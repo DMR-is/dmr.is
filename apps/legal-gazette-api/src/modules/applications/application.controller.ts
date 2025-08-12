@@ -1,13 +1,6 @@
-import {
-  Controller,
-  Delete,
-  Get,
-  NotFoundException,
-  Param,
-  Post,
-  UnauthorizedException,
-  UseGuards,
-} from '@nestjs/common'
+import { isDefined } from 'class-validator'
+
+import { Controller, Get, UseGuards } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
@@ -17,9 +10,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
-import { CaseModel } from '../case/case.mode./bankruptcy/bankruptcy-application.model
-import { CaseDto } from '../case/dto/case.dto'
-import { BankruptcyApplicationModel } from './bankruptcy/models/bankruptcy-application.model'
+import { CaseModel } from '../case/case.model'
 import { ApplicationsDto } from './dto/application.dto'
 
 @ApiBearerAuth()
@@ -31,84 +22,27 @@ import { ApplicationsDto } from './dto/application.dto'
 export class ApplicationController {
   constructor(
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
-    @InjectModel(BankruptcyApplicationModel)
-    private readonly bankruptcyApplicationModel: typeof BankruptcyApplicationModel,
   ) {}
 
   @Get('getMyApplications')
   @LGResponse({ operationId: 'getMyApplications', type: ApplicationsDto })
   async getMyApplications(@CurrentUser() user: Auth): Promise<ApplicationsDto> {
-    if (!user?.nationalId) {
-      throw new UnauthorizedException()
-    }
+    const cases = await this.caseModel
+      .scope('applications')
+      .findAll({ where: { involvedPartyNationalId: user.nationalId } })
 
-    const bankruptcyApplications =
-      await this.bankruptcyApplicationModel.findAll({
-        where: {
-          involvedPartyNationalId: user.nationalId,
-        },
+    const applications = cases
+      .map((c) => {
+        if (c.bankruptcyApplication) {
+          return c.bankruptcyApplication.fromModelToApplicationDto()
+        }
+
+        if (c.deceasedApplication) {
+          return c.deceasedApplication.fromModelToApplicationDto()
+        }
       })
+      .filter(isDefined)
 
-    // TODO: add deceased applications here
-
-    const mapped = bankruptcyApplications.map((model) =>
-      model.fromModelToApplicationDto(),
-    )
-
-    return { applications: mapped }
-  }
-
-  @Delete(':applicationId')
-  @LGResponse({ operationId: 'deleteApplication' })
-  async deleteApplication(
-    @CurrentUser() user: Auth,
-    @Param('applicationId') applicationId: string,
-  ): Promise<void> {
-    if (!user?.nationalId) {
-      throw new UnauthorizedException()
-    }
-
-    const application = await this.bankruptcyApplicationModel
-      .unscoped()
-      .findOne({
-        where: {
-          id: applicationId,
-          involvedPartyNationalId: user.nationalId,
-        },
-      })
-
-    if (!application) {
-      throw new NotFoundException('Application not found')
-    }
-
-    await application.deleteApplication()
-  }
-
-  @Post('createBankruptcyCaseAndApplication')
-  @LGResponse({
-    operationId: 'createBankruptcyCaseAndApplication',
-    type: CaseDto,
-  })
-  async createBankruptcyCaseAndApplication(
-    @CurrentUser() user: Auth,
-  ): Promise<CaseDto> {
-    if (!user?.nationalId) {
-      throw new UnauthorizedException()
-    }
-
-    const results = await this.caseModel.create(
-      {
-        involvedPartyNationalId: user.nationalId,
-        bankruptcyApplication: {
-          involvedPartyNationalId: user.nationalId,
-        },
-      },
-      {
-        include: [{ model: BankruptcyApplicationModel }],
-        returning: true,
-      },
-    )
-
-    return results.fromModel()
+    return { applications }
   }
 }

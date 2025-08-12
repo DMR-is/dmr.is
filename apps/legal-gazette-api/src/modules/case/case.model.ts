@@ -21,6 +21,10 @@ import {
   BankruptcyApplicationCreateAttributes,
   BankruptcyApplicationModel,
 } from '../applications/bankruptcy/bankruptcy-application.model'
+import {
+  DeceasedApplicationCreateAttributes,
+  DeceasedApplicationModel,
+} from '../applications/deceased/deceased-application.model'
 import { CommonAdvertModel } from '../common-advert/common-advert.model'
 import { CreateCommonAdvertInternalDto } from '../common-advert/dto/create-common-advert.dto'
 import {
@@ -50,6 +54,7 @@ type CaseCreateAttributes = {
   communicationChannels?: CommunicationChannelCreateAttributes[]
   adverts?: AdvertCreateAttributes[]
   bankruptcyApplication?: BankruptcyApplicationCreateAttributes
+  deceasedApplication?: DeceasedApplicationCreateAttributes
 }
 
 @BaseTable({ tableName: LegalGazetteModels.CASE })
@@ -69,6 +74,15 @@ type CaseCreateAttributes = {
     attributes: ['id', 'bankruptcyApplicationId'],
     where: { bankruptcyApplicationId },
   }),
+  applications: {
+    where: {
+      [Op.or]: [
+        { bankruptcyApplicationId: { [Op.not]: null } },
+        { deceasedApplicationId: { [Op.not]: null } },
+      ],
+    },
+    include: [BankruptcyApplicationModel, DeceasedApplicationModel],
+  },
 }))
 export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   @Column({
@@ -124,6 +138,11 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     foreignKey: 'caseId',
   })
   bankruptcyApplication?: BankruptcyApplicationModel
+
+  @HasOne(() => DeceasedApplicationModel, {
+    foreignKey: 'caseId',
+  })
+  deceasedApplication?: DeceasedApplicationModel
 
   static async createCommonAdvert(body: CreateCommonAdvertInternalDto) {
     this.logger.info('Creating case for common advert')
