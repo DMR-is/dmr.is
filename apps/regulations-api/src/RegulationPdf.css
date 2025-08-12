@@ -416,7 +416,6 @@
     margin-bottom: 0;
   }
 
-
   /* ======================================================================= */
 
   del {
@@ -488,7 +487,8 @@
     margin-bottom: 1.5em;
   }
 
-  .regulation__text > p:not([align]), .appendix__text > p:not([align]) {
+  .regulation__text > p:not([align]),
+  .appendix__text > p:not([align]) {
     text-indent: 2em;
     text-align: justify;
   }
@@ -519,7 +519,7 @@
   }
 
   /* ======================================================================= */
-  
+
   .signature {
     text-align: center;
     margin-top: 2em;

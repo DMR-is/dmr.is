@@ -1,15 +1,15 @@
 /* eslint-disable no-console */
-import { FastifyPluginCallback } from 'fastify';
+import { FastifyPluginCallback } from 'fastify'
 
 import {
   IntPositive,
   RegulationOptionList,
-} from '@island.is/regulations-tools/types';
+} from '@island.is/regulations-tools/types'
 import {
   ensurePosInt,
   ensureRegName,
   isNonNull,
-} from '@island.is/regulations-tools/utils';
+} from '@island.is/regulations-tools/utils'
 
 import {
   getAllRegulations,
@@ -18,17 +18,17 @@ import {
   getRegulationsOptionsList,
   PER_PAGE,
   RegulationListItemFull,
-} from '../db/Regulations';
-import { get, set } from '../utils/cache';
-import { cacheControl, loadData, QStr, storeData } from '../utils/misc';
+} from '../db/Regulations'
+import { get, set } from '../utils/cache'
+import { cacheControl, loadData, QStr, storeData } from '../utils/misc'
 
-import { DAY, SECOND } from '@hugsmidjan/qj/time';
+import { DAY, SECOND } from '@hugsmidjan/qj/time'
 
-const NEWEST_TTL = 0.5;
-const NEWEST_REDIS_TTL = NEWEST_TTL * 60 * 60;
+const NEWEST_TTL = 0.5
+const NEWEST_REDIS_TTL = NEWEST_TTL * 60 * 60
 
-const OPTIONSLIST_TTL = 24;
-const OPTIONSLIST_REDIS_TTL = 1 * (DAY / SECOND);
+const OPTIONSLIST_TTL = 24
+const OPTIONSLIST_REDIS_TTL = 1 * (DAY / SECOND)
 
 export const regulationsRoutes: FastifyPluginCallback = (
   fastify,
@@ -40,86 +40,83 @@ export const regulationsRoutes: FastifyPluginCallback = (
    * @returns {Array<DB_Regulation>}
    */
   fastify.get<QStr<'page'>>('/regulations/newest', opts, async (req, res) => {
-    const { redis } = fastify;
+    const { redis } = fastify
 
-    const page = ensurePosInt(req.query.page || '') || (1 as IntPositive);
+    const page = ensurePosInt(req.query.page || '') || (1 as IntPositive)
 
-    const cacheKey = `regulations-newest-page-${page}`;
+    const cacheKey = `regulations-newest-page-${page}`
     const cached = await get<Array<RegulationListItemFull> | null>(
       redis,
       cacheKey,
-    );
+    )
 
-    let data: Array<RegulationListItemFull>;
+    let data: Array<RegulationListItemFull>
 
     if (cached) {
-      data = cached;
+      data = cached
     } else {
       try {
         data = await getNewestRegulations({
           skip: (page - 1) * PER_PAGE,
           take: PER_PAGE,
-        });
+        })
       } catch (e) {
-        console.error('unable to get newest regulations', e);
-        return res.status(500).send();
+        console.error('unable to get newest regulations', e)
+        return res.status(500).send()
       }
-      set(redis, cacheKey, data, NEWEST_REDIS_TTL);
+      set(redis, cacheKey, data, NEWEST_REDIS_TTL)
     }
 
-    let totalItems: number;
+    let totalItems: number
 
-    const cacheKeyTotalItems = `regulations-total-items`;
-    const cachedTotalItems = await get<number | null>(
-      redis,
-      cacheKeyTotalItems,
-    );
+    const cacheKeyTotalItems = `regulations-total-items`
+    const cachedTotalItems = await get<number | null>(redis, cacheKeyTotalItems)
 
     if (cachedTotalItems) {
-      totalItems = cachedTotalItems;
+      totalItems = cachedTotalItems
     } else {
       try {
-        totalItems = await getRegulationsCount();
-        set(redis, cacheKeyTotalItems, totalItems, NEWEST_REDIS_TTL);
+        totalItems = await getRegulationsCount()
+        set(redis, cacheKeyTotalItems, totalItems, NEWEST_REDIS_TTL)
       } catch (e) {
-        console.error('unable to get regulationsCount', e);
+        console.error('unable to get regulationsCount', e)
         // recoverable, set the totalItems to something large...
-        totalItems = 1000;
+        totalItems = 1000
       }
     }
 
-    const totalPages = Math.ceil(totalItems / PER_PAGE);
+    const totalPages = Math.ceil(totalItems / PER_PAGE)
 
-    cacheControl(res, NEWEST_TTL);
-    res.send({
+    cacheControl(res, NEWEST_TTL)
+    return res.send({
       page,
       perPage: PER_PAGE,
       totalPages,
       totalItems,
       data,
-    });
-  });
+    })
+  })
 
   // ---------------------------------------------------------------------------
 
   // Use-case: Fetch "gildandi stofnreglugerðir" full text
-  // for Ísland.is's general-purpo site search index.
+  // for Ísland.is's general-purpose site search index.
   fastify.get('/regulations/all/current/full', opts, async (req, res) => {
-    let data = loadData('backup-json/all-current-full.json');
+    let data = await loadData('backup-json/all-current-full.json')
     if (!data) {
-      console.info('Fetching data from db');
+      console.info('Fetching data from db')
       try {
-        data = await getAllRegulations({ full: true });
+        data = await getAllRegulations({ full: true })
       } catch (e) {
-        console.error('unable to get all regulations full', e);
-        return res.status(500).send();
+        console.error('unable to get all regulations full', e)
+        return res.status(500).send()
       }
-      storeData(data, 'backup-json/all-current-full.json');
+      storeData(data, 'backup-json/all-current-full.json')
     } else {
-      console.info('Returning all-current-full data from file');
+      console.info('Returning all-current-full data from file')
     }
-    res.send(data);
-  });
+    return res.send(data)
+  })
 
   // Use-case Fetch *all* regluations, full text to feed into
   // Reglugerðasafn's special purpose search-engine
@@ -129,45 +126,45 @@ export const regulationsRoutes: FastifyPluginCallback = (
       onRequest: fastify.basicAuth,
     }),
     async function (req, res) {
-      let data = loadData('backup-json/all-extra.json');
+      let data = loadData('backup-json/all-extra.json')
       if (!data) {
-        console.info('Fetching data from db');
+        console.info('Fetching data from db')
 
         try {
           data = await getAllRegulations({
             extra: true,
             includeRepealed: true,
-          });
-          storeData(data, 'backup-json/all-extra.json');
+          })
+          storeData(data, 'backup-json/all-extra.json')
         } catch (e) {
-          console.error('unable to get all regulations extra', e);
-          return res.status(500).send();
+          console.error('unable to get all regulations extra', e)
+          return res.status(500).send()
         }
       } else {
-        console.info('Returning all-extra data from file');
+        console.info('Returning all-extra data from file')
       }
-      res.send(data);
+      return res.send(data)
     },
-  );
+  )
 
   // Use-case: Fetch all base regulations with minimal data
   // for Ísland.is's regulation admin editor impacts registration
   fastify.get('/regulations/all/current/minimal', opts, async (req, res) => {
-    let data = loadData('backup-json/all-current-minimal.json');
+    let data = loadData('backup-json/all-current-minimal.json')
     if (!data) {
-      console.info('Fetching data from db');
+      console.info('Fetching data from db')
       try {
-        data = await getAllRegulations();
-        storeData(data, 'backup-json/all-current-minimal.json');
+        data = await getAllRegulations()
+        storeData(data, 'backup-json/all-current-minimal.json')
       } catch (e) {
-        console.error('unable to get all regulations current minimal', e);
-        return res.status(500).send();
+        console.error('unable to get all regulations current minimal', e)
+        return res.status(500).send()
       }
     } else {
-      console.info('Returning all-current-minimal data from file');
+      console.info('Returning all-current-minimal data from file')
     }
-    res.send(data);
-  });
+    return res.send(data)
+  })
 
   /**
    * Use-case: Fetch RegulationOption[] by list of regName[]
@@ -179,39 +176,39 @@ export const regulationsRoutes: FastifyPluginCallback = (
     '/regulations/optionsList',
     opts,
     async (req, res) => {
-      const { redis } = fastify;
+      const { redis } = fastify
 
-      const names = req.query.names ? req.query.names.split(',') : [];
+      const names = req.query.names ? req.query.names.split(',') : []
 
       const regNames = names
         .map((maybeName) => ensureRegName(maybeName))
-        .filter(isNonNull);
+        .filter(isNonNull)
 
       if (!regNames.length) {
-        return [];
+        return []
       }
 
-      const cacheKey = `regulationsOptionsList-${regNames.join(',')}`;
-      const cached = await get<RegulationOptionList | null>(redis, cacheKey);
+      const cacheKey = `regulationsOptionsList-${regNames.join(',')}`
+      const cached = await get<RegulationOptionList | null>(redis, cacheKey)
 
-      let optionsList;
+      let optionsList
 
       if (cached) {
-        optionsList = cached;
+        optionsList = cached
       } else {
         try {
-          optionsList = await getRegulationsOptionsList(regNames);
+          optionsList = await getRegulationsOptionsList(regNames)
         } catch (e) {
-          console.error('unable to get regulations optionsList', names, e);
-          return res.status(500).send();
+          console.error('unable to get regulations optionsList', names, e)
+          return res.status(500).send()
         }
-        set(redis, cacheKey, optionsList, OPTIONSLIST_REDIS_TTL);
+        set(redis, cacheKey, optionsList, OPTIONSLIST_REDIS_TTL)
       }
 
-      cacheControl(res, OPTIONSLIST_TTL);
-      res.send(optionsList);
+      cacheControl(res, OPTIONSLIST_TTL)
+      return res.send(optionsList)
     },
-  );
+  )
 
-  done();
-};
+  done()
+}
