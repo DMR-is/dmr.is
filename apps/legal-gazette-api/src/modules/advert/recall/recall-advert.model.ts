@@ -10,13 +10,13 @@ import { z } from 'zod'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../../../lib/constants'
-import { CourtDistrictModel } from '../../../court-district/court-district.model'
-import { SettlementModel } from '../../../settlement/settlement.model'
-import { AdvertModel } from '../../advert.model'
-import { BankruptcyAdvertDto } from './dto/bankruptcy-advert.dto'
+import { DivisionTypeEnum, LegalGazetteModels } from '../../../lib/constants'
+import { CourtDistrictModel } from '../../court-district/court-district.model'
+import { SettlementModel } from '../../settlement/settlement.model'
+import { AdvertModel } from '../advert.model'
+import { RecallAdvertDto } from './dto/recall-advert.dto'
 
-export const bankruptcyAdvertSchema = z.object({
+export const recallAdvertSchema = z.object({
   additionalText: z.string().optional().nullable(),
   judgmentDate: z.string().transform((iso) => new Date(iso)),
   signatureLocation: z.string(),
@@ -26,7 +26,7 @@ export const bankruptcyAdvertSchema = z.object({
   advertId: z.string().optional(),
 })
 
-export type BankruptcyAdvertAttributes = {
+export type RecallAdvertAttributes = {
   additionalText?: string | null
   judgmentDate: Date
   signatureLocation: string
@@ -35,7 +35,7 @@ export type BankruptcyAdvertAttributes = {
   courtDistrictId: string
   advertId: string
 }
-export type BankruptcyAdvertCreationAttributes = {
+export type RecallAdvertCreateAttributes = {
   additionalText?: string | null
   judgmentDate: Date
   signatureLocation: string
@@ -63,11 +63,17 @@ export type BankruptcyAdvertCreationAttributes = {
     include: [{ model: AdvertModel }],
   },
 }))
-@BaseTable({ tableName: LegalGazetteModels.BANKRUPTCY_ADVERT })
-export class BankruptcyAdvertModel extends BaseModel<
-  BankruptcyAdvertAttributes,
-  BankruptcyAdvertCreationAttributes
+@BaseTable({ tableName: LegalGazetteModels.RECALL_ADVERT })
+export class RecallAdvertModel extends BaseModel<
+  RecallAdvertAttributes,
+  RecallAdvertCreateAttributes
 > {
+  @Column({
+    type: DataType.ENUM(...Object.values(DivisionTypeEnum)),
+    allowNull: false,
+  })
+  type!: DivisionTypeEnum
+
   @Column({
     type: DataType.TEXT,
     field: 'additional_text',
@@ -134,9 +140,10 @@ export class BankruptcyAdvertModel extends BaseModel<
   })
   advert!: AdvertModel
 
-  static fromModel(model: BankruptcyAdvertModel): BankruptcyAdvertDto {
+  static fromModel(model: RecallAdvertModel): RecallAdvertDto {
     return {
       id: model.id,
+      type: model.type,
       additionalText: model.additionalText,
       judgmentDate: model.judgmentDate.toISOString(),
       signatureLocation: model.signatureLocation,
@@ -146,7 +153,7 @@ export class BankruptcyAdvertModel extends BaseModel<
     }
   }
 
-  fromModel(): BankruptcyAdvertDto {
-    return BankruptcyAdvertModel.fromModel(this)
+  fromModel(): RecallAdvertDto {
+    return RecallAdvertModel.fromModel(this)
   }
 }

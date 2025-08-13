@@ -1,13 +1,19 @@
-import { Column, DataType, HasMany } from 'sequelize-typescript'
+import {
+  Column,
+  DataType,
+  DefaultScope,
+  HasMany,
+  HasOne,
+} from 'sequelize-typescript'
 import { z } from 'zod'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
-import { BankruptcyAdvertModel } from '../advert/bankruptcy/advert/bankruptcy-advert.model'
-import { BankruptcyDivisionAdvertModel } from '../advert/bankruptcy/division-advert/bankruptcy-division-advert.model'
+import { DivisionEndingAdvertModel } from '../advert/division/models/division-ending-advert.model'
+import { DivisionMeetingAdvertModel } from '../advert/division/models/division-meeting-advert.model'
+import { RecallAdvertModel } from '../advert/recall/recall-advert.model'
 import { SettlementDto } from './dto/settlement.dto'
-
 type SettlementAttributes = {
   liquidatorName: string
   liquidatorLocation: string
@@ -36,6 +42,19 @@ export const settlementSchema = z.object({
     .nullable(),
 })
 
+@DefaultScope(() => ({
+  attributes: [
+    'id',
+    'liquidatorName',
+    'liquidatorLocation',
+    'liquidatorOnBehalfOf',
+    'settlementName',
+    'settlementNationalId',
+    'settlementAddress',
+    'settlementDeadline',
+    'settlementDateOfDeath',
+  ],
+}))
 @BaseTable({ tableName: LegalGazetteModels.SETTLEMENT })
 export class SettlementModel extends BaseModel<
   SettlementAttributes,
@@ -98,13 +117,14 @@ export class SettlementModel extends BaseModel<
   })
   settlementDateOfDeath!: Date | null
 
-  @HasMany(() => BankruptcyAdvertModel)
-  bankruptcyAdverts!: BankruptcyAdvertModel
+  @HasMany(() => RecallAdvertModel)
+  recallAdverts!: RecallAdvertModel[]
 
-  @HasMany(() => BankruptcyDivisionAdvertModel, {
-    foreignKey: 'settlementId',
-  })
-  bankruptcyDivisionAdverts!: BankruptcyDivisionAdvertModel[]
+  @HasMany(() => DivisionMeetingAdvertModel)
+  divisionMeetingAdverts?: DivisionMeetingAdvertModel[]
+
+  @HasOne(() => DivisionEndingAdvertModel)
+  divisionEndingAdvert?: DivisionEndingAdvertModel
 
   static fromModel(model: SettlementModel): SettlementDto {
     return {

@@ -2,6 +2,7 @@ import { Type } from 'class-transformer'
 import {
   IsDateString,
   IsDefined,
+  IsEnum,
   IsOptional,
   IsString,
   IsUUID,
@@ -10,13 +11,18 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CourtDistrictDto } from '../../../../court-district/dto/court-district.dto'
-import { SettlementDto } from '../../../../settlement/dto/settlement.dto'
+import { DivisionTypeEnum } from '../../../../lib/constants'
+import { CourtDistrictDto } from '../../../court-district/dto/court-district.dto'
+import { SettlementDto } from '../../../settlement/dto/settlement.dto'
 
-export class BankruptcyAdvertDto {
+export class RecallAdvertDto {
   @ApiProperty({ type: String, required: true })
   @IsUUID()
   id!: string
+
+  @ApiProperty({ enum: DivisionTypeEnum })
+  @IsEnum(DivisionTypeEnum)
+  type!: DivisionTypeEnum
 
   @ApiProperty({ type: String, required: false })
   @IsOptional()
