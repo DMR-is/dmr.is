@@ -17,10 +17,7 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { LegalGazetteModels } from '../../lib/constants'
 import { mapIndexToVersion, validateAdvertStatus } from '../../lib/utils'
 import { CaseModel } from '../case/case.model'
-import {
-  CategoryDefaultIdEnum,
-  CategoryModel,
-} from '../category/category.model'
+import { CategoryModel } from '../category/category.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
 import { TypeIdEnum, TypeModel } from '../type/type.model'
 import {
@@ -374,132 +371,6 @@ export class AdvertModel extends BaseModel<
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
     validateAdvertStatus(instance)
-  }
-
-  static async createCommonAdvert(
-    params: CreateCommonAdvertParams,
-  ): Promise<AdvertModel> {
-    try {
-      this.logger.info(`Creating common advert`, {
-        caseId: params.caseId,
-      })
-      return this.create(
-        {
-          ...params,
-          typeId: TypeIdEnum.COMMON_ADVERT,
-          version: params.version ? params.version : AdvertVersionEnum.A,
-          commonAdvert: params.commonAdvert,
-        },
-        {
-          include: [CommonAdvertModel],
-        },
-      )
-    } catch (error) {
-      this.logger.error(`Failed to create common advert`, {
-        caseId: params.caseId,
-        error: error,
-      })
-
-      throw error
-    }
-  }
-  static async createCommonAdverts(
-    params: CreateCommonAdvertParams[],
-  ): Promise<AdvertModel[]> {
-    const adverts: AdvertModel[] = []
-    params.forEach(async (param, i) => {
-      const newAdvert = await this.createCommonAdvert({
-        ...param,
-        version: mapIndexToVersion(i),
-      })
-      adverts.push(newAdvert)
-    })
-
-    return adverts
-  }
-  static async createRecallAdvert(params: CreateRecallAdvertParams) {
-    try {
-      this.logger.info(`Creating recall advert`, {
-        caseId: params.caseId,
-      })
-
-      const advert = await this.create(
-        {
-          ...params,
-          typeId: TypeIdEnum.RECALL,
-          version: params.version ? params.version : AdvertVersionEnum.A,
-          recallAdvert: params.recallAdvert,
-        },
-        {
-          include: [RecallAdvertModel],
-        },
-      )
-
-      return advert
-    } catch (error) {
-      this.logger.error(`Failed to create bankruptcy advert`, {
-        caseId: params.caseId,
-        error: error,
-      })
-
-      throw error
-    }
-  }
-  static async createBankruptcyAdverts(params: CreateRecallAdvertParams[]) {
-    const adverts: AdvertModel[] = []
-    params.forEach(async (param, i) => {
-      const newAdvert = await this.createRecallAdvert({
-        ...param,
-        version: mapIndexToVersion(i),
-      })
-      adverts.push(newAdvert)
-    })
-
-    return adverts
-  }
-  static async createDivisionMeetingAdvert(
-    params: CreateDivisionMeetingAdvertParams,
-  ) {
-    try {
-      this.logger.info(`Creating division meeting advert`, {
-        caseId: params.caseId,
-      })
-
-      const advert = await this.create(
-        {
-          ...params,
-          typeId: TypeIdEnum.DIVISION_MEETING,
-          version: params.version ? params.version : AdvertVersionEnum.A,
-          divisionMeetingAdvert: params.divisionMeetingAdvert,
-        },
-        {
-          include: [DivisionMeetingAdvertModel],
-        },
-      )
-
-      return advert
-    } catch (error) {
-      this.logger.error(`Failed to create division meeting advert`, {
-        caseId: params.caseId,
-        error: error,
-      })
-
-      throw error
-    }
-  }
-  static async createDivisionMeetingAdverts(
-    params: CreateDivisionMeetingAdvertParams[],
-  ) {
-    const adverts: AdvertModel[] = []
-    params.forEach(async (param, i) => {
-      const newAdvert = await this.createDivisionMeetingAdvert({
-        ...param,
-        version: mapIndexToVersion(i),
-      })
-      adverts.push(newAdvert)
-    })
-
-    return adverts
   }
 
   static async countByStatus(

@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer'
 import {
   ArrayMaxSize,
   IsArray,
@@ -20,7 +21,10 @@ export class UpdateRecallApplicationDto {
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsDateString()
-  judgmentDate?: string | null
+  @Transform(({ value }) =>
+    typeof value === 'string' ? new Date(value) : value,
+  )
+  judgmentDate?: Date | null
 
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
@@ -49,7 +53,10 @@ export class UpdateRecallApplicationDto {
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsDateString()
-  signatureDate?: string | null
+  @Transform(({ value }) =>
+    typeof value === 'string' ? new Date(value) : value,
+  )
+  signatureDate?: Date | null
 
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
@@ -72,7 +79,10 @@ export class UpdateRecallApplicationDto {
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsDateString()
-  settlementDeadline?: string | null
+  @Transform(({ value }) =>
+    typeof value === 'string' ? new Date(value) : value,
+  )
+  settlementDeadline?: Date | null
 
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
@@ -83,12 +93,18 @@ export class UpdateRecallApplicationDto {
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsDateString()
-  settlementMeetingDate?: string | null
+  @Transform(({ value }) =>
+    typeof value === 'string' ? new Date(value) : value,
+  )
+  settlementMeetingDate?: Date | null
 
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsDateString()
-  settlementDateOfDeath?: string | null
+  @Transform(({ value }) =>
+    typeof value === 'string' ? new Date(value) : value,
+  )
+  settlementDateOfDeath?: Date | null
 
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
@@ -100,5 +116,8 @@ export class UpdateRecallApplicationDto {
   @IsArray()
   @IsDateString(undefined, { each: true })
   @ArrayMaxSize(3)
-  publishingDates?: string[] | null
+  @Transform(({ value }) =>
+    Array.isArray(value) ? value.map((d) => new Date(d)) : value,
+  )
+  publishingDates?: Date[] | null
 }

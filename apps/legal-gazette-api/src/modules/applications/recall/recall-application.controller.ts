@@ -18,22 +18,25 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 import { CurrentUser } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
-import { UUIDValidationPipe } from '@dmr.is/pipelines'
+import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
 import { ApplicationTypeEnum } from '../../../lib/constants'
+import {
+  bankruptcyRecallApplicationSchema,
+  deceasedRecallApplicationSchema,
+  settlementSchema,
+} from '../../../lib/schemas'
 import { mapIndexToVersion } from '../../../lib/utils'
 import { AdvertModel } from '../../advert/advert.model'
-import { recallAdvertSchema } from '../../advert/recall/recall-advert.model'
+import { DivisionMeetingAdvertModel } from '../../advert/division/models/division-meeting-advert.model'
+import { RecallAdvertModel } from '../../advert/recall/recall-advert.model'
 import { CaseModel } from '../../case/case.model'
 import { CaseDto } from '../../case/dto/case.dto'
 import { CategoryDefaultIdEnum } from '../../category/category.model'
-import {
-  SettlementModel,
-  settlementSchema,
-} from '../../settlement/settlement.model'
+import { SettlementModel } from '../../settlement/settlement.model'
 import { TypeIdEnum } from '../../type/type.model'
 import { ApplicationStatusEnum } from '../contants'
 import { RecallApplicationDto } from './dto/recall-application.dto'
@@ -57,13 +60,15 @@ export class BankruptcyApplicationController {
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
   ) {}
 
-  @Post('')
+  @Post(':type')
   @LGResponse({
-    operationId: 'createBankruptcyCaseAndApplication',
+    operationId: 'createRecallCaseAndApplication',
     type: CaseDto,
   })
-  async createBankruptcyCaseAndApplication(
+  async createRecallCaseAndApplication(
     @CurrentUser() user: Auth,
+    @Param('type', new EnumValidationPipe(ApplicationTypeEnum))
+    type: ApplicationTypeEnum,
   ): Promise<CaseDto> {
     if (!user?.nationalId) {
       throw new UnauthorizedException()
@@ -73,7 +78,7 @@ export class BankruptcyApplicationController {
       {
         involvedPartyNationalId: user.nationalId,
         recallApplication: {
-          type: ApplicationTypeEnum.BANKRUPTCY,
+          type: type,
           involvedPartyNationalId: user.nationalId,
         },
       },
@@ -87,8 +92,8 @@ export class BankruptcyApplicationController {
   }
 
   @Patch(':caseId/:applicationId')
-  @LGResponse({ operationId: 'updateBankruptcyApplication', status: 200 })
-  async updateBankruptcyApplication(
+  @LGResponse({ operationId: 'updateRecallApplication', status: 200 })
+  async updateRecallApplication(
     @Param('caseId') caseId: string,
     @Param('applicationId') applicationId: string,
     @CurrentUser() user: Auth,
@@ -96,18 +101,44 @@ export class BankruptcyApplicationController {
   ) {
     if (!user?.nationalId) {
       this.logger.warn('Unauthorized access attempt to update draft advert', {
-        context: 'BankruptcyApplicationController',
+        context: 'RecallApplicationController',
       })
 
       throw new UnauthorizedException('User not authenticated')
     }
 
-    // todo: implement update
+    await this.recallApplicationModel.update(
+      {
+        courtDistrictId: body.courtDistrictId,
+        additionalText: body.additionalText,
+        judgmentDate: body.judgmentDate,
+        signatureLocation: body.signatureLocation,
+        signatureDate: body.signatureDate,
+        liquidator: body.liquidator,
+        liquidatorLocation: body.liquidatorLocation,
+        liquidatorOnBehalfOf: body.liquidatorOnBehalfOf,
+        settlementName: body.settlementName,
+        settlementDeadline: body.settlementDeadline,
+        settlementAddress: body.settlementAddress,
+        settlementNationalId: body.settlementNationalId,
+        settlementMeetingLocation: body.settlementMeetingLocation,
+        settlementMeetingDate: body.settlementMeetingDate,
+        settlementDateOfDeath: body.settlementDateOfDeath,
+        publishingDates: body.publishingDates,
+      },
+      {
+        where: {
+          id: applicationId,
+          caseId: caseId,
+          involvedPartyNationalId: user.nationalId,
+        },
+      },
+    )
   }
 
   @Post(':caseId/:applicationId/submit')
-  @LGResponse({ operationId: 'submitBankruptcyApplication' })
-  async submit(
+  @LGResponse({ operationId: 'submitRecallApplication' })
+  async submitRecallApplication(
     @Param('caseId') caseId: string,
     @Param('applicationId') applicationId: string,
     @CurrentUser() user: Auth,
@@ -152,13 +183,13 @@ export class BankruptcyApplicationController {
       settlementNationalId: dto.settlementNationalId,
       settlementAddress: dto.settlementAddress,
       settlementDeadline: dto.settlementDeadline,
+      settlementDateOfDeath: dto.settlementDateOfDeath,
     })
 
     if (!settlementCheck.success) {
-      this.logger.debug(
-        'Invalid settlement data provided for bankruptcy advert',
-        { error: settlementCheck.error },
-      )
+      this.logger.debug('Invalid settlement data provided', {
+        error: settlementCheck.error,
+      })
       throw new BadRequestException()
     }
 
@@ -169,71 +200,75 @@ export class BankruptcyApplicationController {
       },
     )
 
-    if (!dto.publishingDates || dto.publishingDates.length === 0) {
-      this.logger.debug('No publishing dates provided for bankruptcy advert')
-      throw new BadRequestException()
-    }
-
-    const advertCheck = recallAdvertSchema.safeParse({
+    const toParse = {
+      applicationType: dto.type,
+      additionalText: dto.additionalText,
       judgmentDate: dto.judgmentDate,
       signatureLocation: dto.signatureLocation,
       signatureDate: dto.signatureDate,
-      additionalText: dto.additionalText,
-      settlementId: settlementModel.id,
       courtDistrictId: dto.courtDistrict?.id,
-    })
-
-    if (!advertCheck.success) {
-      this.logger.debug(
-        `Invalid advert data provided for bankruptcy advert: ${advertCheck.error}`,
-      )
-      throw new BadRequestException('Invalid advert data')
+      liquidatorName: dto.liquidator,
+      liquidatorLocation: dto.liquidatorLocation,
+      liquidatorOnBehalfOf: dto.liquidatorOnBehalfOf,
+      settlementId: settlementModel.id,
+      meetingDate: dto.settlementMeetingDate,
+      meetingLocation: dto.settlementMeetingLocation,
+      publishingDates: dto.publishingDates,
     }
 
-    await this.advertModel.createBankruptcyAdverts(
-      dto.publishingDates.map((scheduledAtDate, i) => ({
-        categoryId: CategoryDefaultIdEnum.BANKRUPTCY_RECALL,
+    const parsedApplication =
+      dto.type === ApplicationTypeEnum.BANKRUPTCY
+        ? bankruptcyRecallApplicationSchema.safeParse({
+            ...toParse,
+            settlementDeadline: dto.settlementDeadline,
+          })
+        : deceasedRecallApplicationSchema.safeParse({
+            ...toParse,
+            settlementDateOfDeath: dto.settlementDateOfDeath,
+          })
+
+    if (parsedApplication.success === false) {
+      this.logger.debug('Invalid application data provided', {
+        error: parsedApplication.error,
+      })
+      throw new BadRequestException('Invalid application data')
+    }
+
+    await this.advertModel.bulkCreate(
+      parsedApplication.data.publishingDates.map((scheduledAtDate, i) => ({
+        categoryId:
+          dto.type === ApplicationTypeEnum.BANKRUPTCY
+            ? CategoryDefaultIdEnum.BANKRUPTCY_RECALL
+            : CategoryDefaultIdEnum.DECEASED_RECALL,
         caseId: caseId,
         typeId: TypeIdEnum.RECALL,
         scheduledAt: new Date(scheduledAtDate),
         submittedBy: nationalId,
-        title: `todo:fix ${settlementCheck.data.settlementName}`,
+        title: `Innköllun ${
+          dto.type === ApplicationTypeEnum.BANKRUPTCY ? 'þrotabús' : 'dánarbús'
+        } ${settlementCheck.data.settlementName}`,
         html: '<div>TODO: insert html</div>',
         paid: false,
         version: mapIndexToVersion(i),
-        bankruptcyAdvert: advertCheck.data,
+        recallAdvert: {
+          courtDistrictId: parsedApplication.data.courtDistrictId,
+          additionalText: parsedApplication.data.additionalText,
+          signatureLocation: parsedApplication.data.signatureLocation,
+          signatureDate: parsedApplication.data.signatureDate,
+          settlementId: parsedApplication.data.settlementId,
+          type: parsedApplication.data.applicationType,
+        },
+        divisionMeetingAdvert: {
+          meetingDate: parsedApplication.data.meetingDate,
+          meetingLocation: parsedApplication.data.meetingLocation,
+          settlementId: parsedApplication.data.settlementId,
+          type: parsedApplication.data.applicationType,
+        },
       })),
+      {
+        include: [RecallAdvertModel, DivisionMeetingAdvertModel],
+      },
     )
-
-    // const recallDivisionAdvertCheck = recallDivisionAdvertSchema.safeParse({
-    //   meetingDate: dto.settlementMeetingDate,
-    //   meetingLocation: dto.settlementMeetingLocation,
-    //   settlementId: settlementModel.id,
-    // })
-
-    // if (!bankruptcyDivisionAdvertCheck.success) {
-    //   this.logger.debug('Invalid bankruptcy division advert data provided')
-    //   throw new BadRequestException('Invalid bankruptcy division advert data')
-    // }
-
-    // await this.advertModel.createDivisionMeetingAdvert({
-    //   caseId: caseId,
-    //   scheduledAt: new Date(bankruptcyDivisionAdvertCheck.data.meetingDate),
-    //   submittedBy: nationalId,
-    //   title: `Skiptafundur ${settlementCheck.data.settlementName}`,
-    //   html: '<div>TODO: insert html</div>',
-    //   paid: false,
-    //   categoryId:
-    //     dto.type === ApplicationTypeEnum.BANKRUPTCY
-    //       ? CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING
-    //       : CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING,
-    //   divisionMeetingAdvert: {
-    //     meetingDate: bankruptcyDivisionAdvertCheck.data.meetingDate,
-    //     meetingLocation: bankruptcyDivisionAdvertCheck.data.meetingLocation,
-    //     settlementId: settlementModel.id,
-    //     type: dto.type,
-    //   },
-    // })
 
     await application.update({ status: ApplicationStatusEnum.SUBMITTED })
   }

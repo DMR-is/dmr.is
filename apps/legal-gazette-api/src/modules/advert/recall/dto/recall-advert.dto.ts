@@ -30,10 +30,6 @@ export class RecallAdvertDto {
   additionalText?: string
 
   @ApiProperty({ type: String, required: true })
-  @IsDateString()
-  judgmentDate!: string
-
-  @ApiProperty({ type: String, required: true })
   @IsString()
   signatureLocation!: string
 

@@ -6,7 +6,6 @@ import {
   ForeignKey,
   Scopes,
 } from 'sequelize-typescript'
-import { z } from 'zod'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
@@ -16,19 +15,9 @@ import { SettlementModel } from '../../settlement/settlement.model'
 import { AdvertModel } from '../advert.model'
 import { RecallAdvertDto } from './dto/recall-advert.dto'
 
-export const recallAdvertSchema = z.object({
-  additionalText: z.string().optional().nullable(),
-  judgmentDate: z.string().transform((iso) => new Date(iso)),
-  signatureLocation: z.string(),
-  signatureDate: z.string().transform((iso) => new Date(iso)),
-  settlementId: z.string(),
-  courtDistrictId: z.string(),
-  advertId: z.string().optional(),
-})
-
 export type RecallAdvertAttributes = {
+  type: ApplicationTypeEnum
   additionalText?: string | null
-  judgmentDate: Date
   signatureLocation: string
   signatureDate: Date
   settlementId: string
@@ -36,8 +25,8 @@ export type RecallAdvertAttributes = {
   advertId: string
 }
 export type RecallAdvertCreateAttributes = {
+  type: ApplicationTypeEnum
   additionalText?: string | null
-  judgmentDate: Date
   signatureLocation: string
   signatureDate: Date
   settlementId: string
@@ -49,12 +38,9 @@ export type RecallAdvertCreateAttributes = {
   attributes: [
     'id',
     'additionalText',
-    'judgmentDate',
-    'claimsSentTo',
     'signatureLocation',
     'signatureDate',
     'signatureName',
-    'signatureOnBehalfOf',
   ],
   include: [{ model: CourtDistrictModel }, { model: SettlementModel }],
 }))
@@ -79,13 +65,6 @@ export class RecallAdvertModel extends BaseModel<
     field: 'additional_text',
   })
   additionalText?: string
-
-  @Column({
-    type: DataType.DATE,
-    field: 'judgment_date',
-    allowNull: false,
-  })
-  judgmentDate!: Date
 
   @Column({
     field: 'signature_location',
@@ -145,7 +124,6 @@ export class RecallAdvertModel extends BaseModel<
       id: model.id,
       type: model.type,
       additionalText: model.additionalText,
-      judgmentDate: model.judgmentDate.toISOString(),
       signatureLocation: model.signatureLocation,
       signatureDate: model.signatureDate.toISOString(),
       settlement: model.settlement.fromModel(),

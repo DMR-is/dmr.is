@@ -1,7 +1,9 @@
 import { DestroyOptions } from 'sequelize'
 import {
   BeforeBulkDestroy,
+  BeforeBulkUpdate,
   BeforeDestroy,
+  BeforeUpdate,
   BelongsTo,
   Column,
   DataType,
@@ -24,23 +26,23 @@ type RecallApplicationAttributes = {
   caseId: string
   type: ApplicationTypeEnum
   involvedPartyNationalId: string
-  status?: ApplicationStatusEnum
-  courtDistrictId?: string
-  additionalText?: string
-  judgmentDate?: Date
-  signatureLocation?: string
-  signatureDate?: Date
-  liquidator?: string
-  liquidatorLocation?: string
-  liquidatorOnBehalfOf?: string
-  settlementName?: string
-  settlementDeadline?: string
-  settlementAddress?: string
-  settlementNationalId?: string
-  settlementMeetingLocation?: string
-  settlementMeetingDate?: Date
-  settlementDateOfDeath?: Date
-  publishingDates?: Date[]
+  status?: ApplicationStatusEnum | null
+  courtDistrictId?: string | null
+  additionalText?: string | null
+  judgmentDate?: Date | null
+  signatureLocation?: string | null
+  signatureDate?: Date | null
+  liquidator?: string | null
+  liquidatorLocation?: string | null
+  liquidatorOnBehalfOf?: string | null
+  settlementName?: string | null
+  settlementDeadline?: Date | null
+  settlementAddress?: string | null
+  settlementNationalId?: string | null
+  settlementMeetingLocation?: string | null
+  settlementMeetingDate?: Date | null
+  settlementDateOfDeath?: Date | null
+  publishingDates?: Date[] | null
 }
 
 export type RecallApplicationCreateAttributes = Omit<
@@ -245,6 +247,22 @@ export class RecallApplicationModel extends BaseModel<
 
   fromModelToApplicationDto(): ApplicationDto {
     return RecallApplicationModel.fromModelToApplicationDto(this)
+  }
+
+  @BeforeUpdate
+  static async validateUpdate(model: RecallApplicationModel) {
+    if (model.status !== ApplicationStatusEnum.DRAFT) {
+      throw new BadRequestException(
+        'Cannot update application that is not in draft status',
+      )
+    }
+  }
+
+  @BeforeBulkUpdate
+  static async validateBulkUpdate(options: DestroyOptions) {
+    options.individualHooks = true
+
+    return options
   }
 
   @BeforeDestroy
