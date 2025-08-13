@@ -2,7 +2,8 @@ import { useFormContext } from 'react-hook-form'
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
-import { useUpdateBankruptcyApplication } from '../../../../../hooks/useUpdateBankruptcyApplication'
+import { ApplicationTypeEnum } from '../../../../../gen/fetch'
+import { useUpdateRecallApplication } from '../../../../../hooks/useUpdateRecallApplication'
 import {
   BankruptcyFormFields,
   BankruptcyFormSchema,
@@ -10,11 +11,15 @@ import {
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
-export const BankruptcySettlementFields = () => {
+type Props = {
+  applicationType: ApplicationTypeEnum
+}
+
+export const RecallSettlementFields = ({ applicationType }: Props) => {
   const { caseId, applicationId } =
     useFormContext<BankruptcyFormSchema>().getValues('meta')
 
-  const { trigger } = useUpdateBankruptcyApplication({ caseId, applicationId })
+  const { trigger } = useUpdateRecallApplication({ caseId, applicationId })
 
   return (
     <GridRow rowGap={[2, 3]}>

@@ -14,7 +14,7 @@ type Props = {
   applicationId: string
 }
 
-export const useUpdateBankruptcyApplication = ({
+export const useUpdateRecallApplication = ({
   caseId,
   applicationId,
 }: Props) => {
@@ -24,7 +24,7 @@ export const useUpdateBankruptcyApplication = ({
     Key,
     UpdateRecallApplicationRequest
   >(
-    'updateBankruptcyApplication',
+    'updateRecallApplication',
     (_key: string, { arg }: { arg: UpdateRecallApplicationRequest }) =>
       updateRecallApplication(arg),
   )

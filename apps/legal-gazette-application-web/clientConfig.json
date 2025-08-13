@@ -2772,7 +2772,9 @@
         "properties": {
           "id": { "type": "string" },
           "caseId": { "type": "string" },
-          "type": { "type": "string" },
+          "type": {
+            "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
+          },
           "additionalText": { "type": "string" },
           "judgmentDate": { "type": "string" },
           "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
@@ -2791,7 +2793,7 @@
           "courtDistrict": { "$ref": "#/components/schemas/CourtDistrictDto" },
           "publishingDates": { "type": "array", "items": { "type": "string" } }
         },
-        "required": ["id", "caseId", "status"]
+        "required": ["id", "caseId", "type", "status"]
       },
       "TypeModel": { "type": "object", "properties": {} },
       "GetTypesDto": {

@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 
 import { AdvertList } from '../../../../../components/client-components/adverts/AdvertList'
-import { BankruptcyForm } from '../../../../../components/client-components/form/bankruptcy/BankruptcyForm'
+import { BankruptcyForm } from '../../../../../components/client-components/form/recall/BankruptcyForm'
 import { RecallApplicationDtoStatusEnum } from '../../../../../gen/fetch'
 import { authOptions } from '../../../../../lib/authOptions'
 import {

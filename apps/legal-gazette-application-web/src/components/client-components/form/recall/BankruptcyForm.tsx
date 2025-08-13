@@ -2,24 +2,20 @@
 import { useRouter } from 'next/navigation'
 
 import { FormProvider, useForm } from 'react-hook-form'
-import useSWRMutation from 'swr/mutation'
 
 import { Stack, Text, toast } from '@island.is/island-ui/core'
 
-import {
-  RecallApplicationDto,
-  SubmitRecallApplicationRequest,
-} from '../../../../gen/fetch'
-import { submitRecallApplication } from '../../../../lib/fetchers'
+import { RecallApplicationDto } from '../../../../gen/fetch'
+import { useSubmitRecallApplication } from '../../../../hooks/useSubmitRecallApplication'
 import { bankruptcyForm } from '../../../../lib/forms/bankruptcy-form'
 import { BankruptcyFormSchema } from '../../../../lib/forms/schemas/bankruptcy-schema'
 import { ApplicationShell } from '../../application/ApplicationShell'
-import { BankruptcyAdvertFields } from './fields/BankruptcyAdvertFields'
-import { BankruptcyDivisionFields } from './fields/BankruptcyDivisionFields'
-import { BankruptcyLiquidatorFields } from './fields/BankruptcyLiquidatorFields'
-import { BankruptcyPublishingFields } from './fields/BankruptcyPublishingFields'
-import { BankruptcySettlementFields } from './fields/BankruptcySettlementFields'
-import { BankruptcySignatureFields } from './fields/BankruptcySignatureFields'
+import { RecallAdvertFields } from './fields/RecallAdvertFields'
+import { RecallDivisionFields } from './fields/RecallDivisionFields'
+import { RecallLiquidatorFields } from './fields/RecallLiquidatorFields'
+import { RecallPublishingFields } from './fields/RecallPublishingFields'
+import { RecallSettlementFields } from './fields/RecallSettlementFields'
+import { RecallSignatureFields } from './fields/RecallSignatureFields'
 
 type Props = {
   caseId: string
@@ -40,31 +36,13 @@ export const BankruptcyForm = ({
     bankruptcyForm({ caseId, applicationId, application, courtOptions }),
   )
 
-  const { trigger: submitBankruptcyApplicationTrigger } = useSWRMutation(
-    'submitBankruptcyApplication',
-    (_key: string, { arg }: { arg: SubmitRecallApplicationRequest }) =>
-      submitRecallApplication(arg),
-    {
-      onSuccess: () => {
-        toast.success('Umsókn hefur verið send til birtingar.', {
-          toastId: 'submit-bankruptcy-application-success',
-        })
-
-        router.refresh()
-      },
-      onError: () => {
-        toast.error(
-          'Ekki tókst að senda inn umsókn. Vinsamlegast reyndu aftur síðar.',
-          {
-            toastId: 'submit-bankruptcy-application-error',
-          },
-        )
-      },
-    },
-  )
+  const { trigger: submitRecallApplicationTrigger } =
+    useSubmitRecallApplication({
+      onSuccess: () => router.refresh(),
+    })
 
   const onValidSubmit = (_data: BankruptcyFormSchema) => {
-    submitBankruptcyApplicationTrigger({ applicationId, caseId })
+    submitRecallApplicationTrigger({ applicationId, caseId })
   }
 
   const onInvalidSubmit = (_errors: unknown) => {
@@ -90,12 +68,12 @@ export const BankruptcyForm = ({
                 nisi ut aliquip ex ea commodo consequat.
               </Text>
             </Stack>
-            <BankruptcyAdvertFields />
-            <BankruptcySettlementFields />
-            <BankruptcyLiquidatorFields />
-            <BankruptcyPublishingFields />
-            <BankruptcyDivisionFields />
-            <BankruptcySignatureFields />
+            <RecallAdvertFields />
+            <RecallSettlementFields applicationType={application.type} />
+            <RecallLiquidatorFields />
+            <RecallPublishingFields />
+            <RecallDivisionFields />
+            <RecallSignatureFields />
           </Stack>
         </ApplicationShell>
       </form>

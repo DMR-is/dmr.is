@@ -5,7 +5,7 @@ import { useFormContext } from 'react-hook-form'
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
-import { useUpdateBankruptcyApplication } from '../../../../../hooks/useUpdateBankruptcyApplication'
+import { useUpdateRecallApplication } from '../../../../../hooks/useUpdateRecallApplication'
 import { TWO_WEEKS } from '../../../../../lib/constants'
 import {
   BankruptcyFormFields,
@@ -15,7 +15,7 @@ import { getNextWeekday, getWeekendDays } from '../../../../../lib/utils'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
-export const BankruptcyDivisionFields = () => {
+export const RecallDivisionFields = () => {
   const {
     getValues,
     setValue,
@@ -38,7 +38,7 @@ export const BankruptcyDivisionFields = () => {
     }
   }, [recallDates, isReady, dirtyFields])
 
-  const { trigger } = useUpdateBankruptcyApplication({
+  const { trigger } = useUpdateRecallApplication({
     caseId,
     applicationId,
   })

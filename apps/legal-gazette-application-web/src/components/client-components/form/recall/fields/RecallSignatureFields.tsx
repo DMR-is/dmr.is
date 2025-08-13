@@ -2,7 +2,7 @@ import { useFormContext } from 'react-hook-form'
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
-import { useUpdateBankruptcyApplication } from '../../../../../hooks/useUpdateBankruptcyApplication'
+import { useUpdateRecallApplication } from '../../../../../hooks/useUpdateRecallApplication'
 import {
   BankruptcyFormFields,
   BankruptcyFormSchema,
@@ -10,11 +10,11 @@ import {
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
-export const BankruptcySignatureFields = () => {
+export const RecallSignatureFields = () => {
   const { getValues } = useFormContext<BankruptcyFormSchema>()
 
   const { caseId, applicationId } = getValues('meta')
-  const { trigger } = useUpdateBankruptcyApplication({ applicationId, caseId })
+  const { trigger } = useUpdateRecallApplication({ applicationId, caseId })
 
   return (
     <GridRow rowGap={[2, 3]}>

@@ -2,17 +2,17 @@ import { useFormContext } from 'react-hook-form'
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
-import { useUpdateBankruptcyApplication } from '../../../../../hooks/useUpdateBankruptcyApplication'
+import { useUpdateRecallApplication } from '../../../../../hooks/useUpdateRecallApplication'
 import {
   BankruptcyFormFields,
   BankruptcyFormSchema,
 } from '../../../../../lib/forms/schemas/bankruptcy-schema'
 import { InputController } from '../../controllers/InputController'
 
-export const BankruptcyLiquidatorFields = () => {
+export const RecallLiquidatorFields = () => {
   const { caseId, applicationId } =
     useFormContext<BankruptcyFormSchema>().getValues('meta')
-  const { trigger } = useUpdateBankruptcyApplication({ applicationId, caseId })
+  const { trigger } = useUpdateRecallApplication({ applicationId, caseId })
 
   return (
     <GridRow rowGap={[2, 3]}>

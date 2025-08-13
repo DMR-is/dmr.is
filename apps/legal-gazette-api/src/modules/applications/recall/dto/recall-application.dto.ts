@@ -11,7 +11,10 @@ export class RecallApplicationDto {
   @ApiProperty({ type: String })
   caseId!: string
 
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({
+    enum: ApplicationTypeEnum,
+    enumName: 'ApplicationTypeEnum',
+  })
   type!: ApplicationTypeEnum
 
   @ApiProperty({ type: String, required: false })
