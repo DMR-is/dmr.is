@@ -18,16 +18,17 @@ import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { AdvertModel } from '../modules/advert/advert.model'
 import { AdvertModule } from '../modules/advert/advert.module'
+import { CommonAdvertModel } from '../modules/advert/common/common-advert.model'
+import { DivisionEndingAdvertModel } from '../modules/advert/division/models/division-ending-advert.model'
+import { DivisionMeetingAdvertModel } from '../modules/advert/division/models/division-meeting-advert.model'
+import { RecallAdvertModel } from '../modules/advert/recall/recall-advert.model'
 import { ApplicationModule } from '../modules/applications/application.module'
-import { BankruptcyApplicationModel } from '../modules/applications/bankruptcy/bankruptcy-application.model'
 import { CommonApplicationModule } from '../modules/applications/common/common-application.module'
-import { BankruptcyAdvertModel } from '../modules/advert/bankruptcy/advert/bankruptcy-advert.model'
-import { BankruptcyDivisionAdvertModel } from '../modules/advert/bankruptcy/division-advert/bankruptcy-division-advert.model'
+import { RecallApplicationModel } from '../modules/applications/recall/recall-application.model'
 import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
 import { CaseModel } from '../modules/case/case.model'
 import { CaseModule } from '../modules/case/case.module'
 import { CategoryModel } from '../modules/category/category.model'
-import { CommonAdvertModel } from '../modules/advert/common/common-advert.model'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
 import { CourtDistrictModel } from '../modules/court-district/court-district.model'
 import { SettlementModel } from '../modules/settlement/settlement.model'
@@ -68,10 +69,11 @@ import { UsersModule } from '../modules/users/users.module'
             CaseModel,
             CommonAdvertModel,
             AdvertModel,
-            BankruptcyAdvertModel,
             SettlementModel,
-            BankruptcyDivisionAdvertModel,
-            BankruptcyApplicationModel,
+            RecallAdvertModel,
+            DivisionMeetingAdvertModel,
+            DivisionEndingAdvertModel,
+            RecallApplicationModel,
             SubscriberModel,
           ],
         }),

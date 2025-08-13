@@ -23,8 +23,8 @@ import { StatusDto } from '../../status/dto/status.dto'
 import { StatusIdEnum } from '../../status/status.model'
 import { TypeDto } from '../../type/dto/type.dto'
 import { AdvertVersionEnum } from '../advert.model'
-import { BankruptcyAdvertDto } from '../bankruptcy/advert/dto/bankruptcy-advert.dto'
 import { CommonAdvertDto } from '../common/dto/common-advert.dto'
+import { RecallAdvertDto } from '../recall/dto/recall-advert.dto'
 
 export class AdvertDto extends DetailedDto {
   @ApiProperty({
@@ -243,15 +243,15 @@ export class AdvertDetailedDto extends AdvertDto {
   commonAdvert?: CommonAdvertDto
 
   @ApiProperty({
-    type: BankruptcyAdvertDto,
+    type: RecallAdvertDto,
     nullable: true,
     required: false,
   })
   @IsOptional()
   @ValidateIf((o) => o.bankruptcyAdvert !== null)
-  @Type(() => BankruptcyAdvertDto)
+  @Type(() => RecallAdvertDto)
   @ValidateNested()
-  bankruptcyAdvert?: BankruptcyAdvertDto
+  recallAdvert?: RecallAdvertDto
 }
 
 export class UpdateAdvertDto {

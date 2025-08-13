@@ -8,16 +8,16 @@ VALUES
   ),
   (
     '67cd8559-ea7a-45ae-8de1-e87005c35531',
-    'Innköllun þrotabús',
-    'innkollun-throtabus'
+    'Innköllun',
+    'innkollun'
   ),
   (
-    '7c2db6e3-9aa9-49bf-8044-b072cfc82d8a',
-    'Skiptafundur þrotabús',
-    'skiptafundur-throtabus'
+    '5b3dded4-e6c2-411e-a9e0-213bea06af17',
+    'Skiptafundur',
+    'skiptafundur'
   ),
   (
-    'f6f0b9e8-f32b-459a-b3b9-32eb4d211ea2',
-    'Skiptafundur dánarbús',
-    'skiptafundur-danabus'
+    '8819e35e-89ef-4110-bf18-905df2ae122c',
+    'Skiptalok',
+    'skiptalok'
   );

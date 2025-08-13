@@ -10,9 +10,11 @@ import { TypeModel } from '../type/type.model'
 import { CategoryDto } from './dto/category.dto'
 
 export enum CategoryDefaultIdEnum {
-  BANKRUPTCY_ADVERT = '30452623-789d-4bc8-b068-ff44b706ba8e',
-  BANKRUPTCY_DIVISION_ADVERT = '5b3dded4-e6c2-411e-a9e0-213bea06af17',
-  DECEASED_ADVERT = 'todo:replace-with-deceased-advert-id',
+  BANKRUPTCY_RECALL = '30452623-789d-4bc8-b068-ff44b706ba8e',
+  DECEASED_RECALL = 'b0c8f1d2-3c4e-4f5a-8b6c-7d8e9f0a1b2c',
+  BANKRUPTCY_DIVISION_MEETING = '23064adc-db71-48ad-aeae-6044f0567ff9',
+  DECEASED_DIVISION_MEETING = '6b7ccba1-afd9-4eaf-adb5-297fe1cc163c',
+  DIVISION_ENDING = '7cd93ede-27e9-46ac-bf43-2259ce6dd8ff',
 }
 
 @BaseEntityTable({

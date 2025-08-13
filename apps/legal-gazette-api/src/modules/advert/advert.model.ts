@@ -24,23 +24,23 @@ import {
 import { StatusIdEnum, StatusModel } from '../status/status.model'
 import { TypeIdEnum, TypeModel } from '../type/type.model'
 import {
-  BankruptcyAdvertCreationAttributes,
-  BankruptcyAdvertModel,
-} from './bankruptcy/advert/bankruptcy-advert.model'
-import {
-  BankruptcyDivisionAdvertCreationAttributes,
-  BankruptcyDivisionAdvertModel,
-} from './bankruptcy/division-advert/bankruptcy-division-advert.model'
-import {
-  CommonAdvertCreationAttributes,
+  CommonAdvertCreateAttributes,
   CommonAdvertModel,
 } from './common/common-advert.model'
+import {
+  DivisionMeetingAdvertCreateAttributes,
+  DivisionMeetingAdvertModel,
+} from './division/models/division-meeting-advert.model'
 import {
   AdvertDetailedDto,
   AdvertDto,
   AdvertStatusCounterItemDto,
   GetAdvertsQueryDto,
 } from './dto/advert.dto'
+import {
+  RecallAdvertCreateAttributes,
+  RecallAdvertModel,
+} from './recall/recall-advert.model'
 
 type AdvertAttributes = {
   caseId: string
@@ -60,8 +60,8 @@ type AdvertAttributes = {
   status: StatusModel
   case: CaseModel
   commonAdvert?: CommonAdvertModel
-  bankruptcyAdvert?: BankruptcyAdvertModel
-  bankruptcyDivisionAdvert?: BankruptcyDivisionAdvertModel
+  recallAdvert?: RecallAdvertModel
+  divisionMeetingAdvert?: DivisionMeetingAdvertModel
 }
 
 export type AdvertCreateAttributes = {
@@ -76,24 +76,24 @@ export type AdvertCreateAttributes = {
   paid?: boolean
   publishedAt?: Date | null
   version?: AdvertVersionEnum
-  commonAdvert?: CommonAdvertCreationAttributes
-  bankruptcyAdvert?: BankruptcyAdvertCreationAttributes
-  bankruptcyDivisionAdvert?: BankruptcyDivisionAdvertCreationAttributes
+  commonAdvert?: CommonAdvertCreateAttributes
+  recallAdvert?: RecallAdvertCreateAttributes
+  divisionMeetingAdvert?: DivisionMeetingAdvertCreateAttributes
 }
 
 export type CreateCommonAdvertParams = Omit<
   AdvertCreateAttributes,
-  'typeId' | 'bankruptcyAdvert' | 'bankruptcyDivisionAdvert'
+  'typeId' | 'recallAdvert' | 'divisionMeetingAdvert'
 >
 
-export type CreateBankruptcyAdvertParams = Omit<
+export type CreateRecallAdvertParams = Omit<
   AdvertCreateAttributes,
-  'typeId' | 'categoryId' | 'commonAdvert' | 'bankruptcyDivisionAdvert'
+  'typeId' | 'commonAdvert' | 'divisionMeetingAdvert'
 >
 
-export type CreateBankruptcyDivisionAdvertParams = Omit<
+export type CreateDivisionMeetingAdvertParams = Omit<
   AdvertCreateAttributes,
-  'typeId' | 'categoryId' | 'commonAdvert' | 'bankruptcyAdvert'
+  'typeId' | 'commonAdvert' | 'recallAdvert'
 >
 
 export enum AdvertVersionEnum {
@@ -108,7 +108,7 @@ export enum AdvertModelScopes {
   TO_BE_PUBLISHED = 'toBePublished',
   PUBLISHED = 'published',
   COMPLETED = 'completed',
-  BANKRUPTCY_ADVERT = 'bankruptcyAdvert',
+  RECALL_ADVERT = 'recallAdvert',
   ALL = 'all',
   WITH_QUERY = 'withQuery',
 }
@@ -170,17 +170,17 @@ export enum AdvertModelScopes {
     where: {},
     order: [['version', 'ASC']],
   },
-  bankruptcyAdvert: {
+  recallAdvert: {
     include: [
       StatusModel,
       CategoryModel,
       TypeModel,
       CommonAdvertModel,
-      BankruptcyAdvertModel,
+      RecallAdvertModel,
     ],
     where: {
       typeId: {
-        [Op.eq]: TypeIdEnum.BANKRUPTCY_ADVERT,
+        [Op.eq]: TypeIdEnum.RECALL,
       },
     },
   },
@@ -361,15 +361,15 @@ export class AdvertModel extends BaseModel<
   @HasOne(() => CommonAdvertModel, { foreignKey: 'advertId' })
   commonAdvert?: CommonAdvertModel
 
-  @HasOne(() => BankruptcyAdvertModel, {
+  @HasOne(() => RecallAdvertModel, {
     foreignKey: 'advertId',
   })
-  bankruptcyAdvert?: BankruptcyAdvertModel
+  recallAdvert?: RecallAdvertModel
 
-  @HasOne(() => BankruptcyDivisionAdvertModel, {
+  @HasOne(() => DivisionMeetingAdvertModel, {
     foreignKey: 'advertId',
   })
-  bankruptcyDivisionAdvert?: BankruptcyDivisionAdvertModel
+  divisionMeetingAdvert?: DivisionMeetingAdvertModel
 
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
@@ -417,22 +417,21 @@ export class AdvertModel extends BaseModel<
 
     return adverts
   }
-  static async createBankruptcyAdvert(params: CreateBankruptcyAdvertParams) {
+  static async createRecallAdvert(params: CreateRecallAdvertParams) {
     try {
-      this.logger.info(`Creating bankruptcy advert`, {
+      this.logger.info(`Creating recall advert`, {
         caseId: params.caseId,
       })
 
       const advert = await this.create(
         {
           ...params,
-          typeId: TypeIdEnum.BANKRUPTCY_ADVERT,
-          categoryId: CategoryDefaultIdEnum.BANKRUPTCY_ADVERT,
+          typeId: TypeIdEnum.RECALL,
           version: params.version ? params.version : AdvertVersionEnum.A,
-          bankruptcyAdvert: params.bankruptcyAdvert,
+          recallAdvert: params.recallAdvert,
         },
         {
-          include: [BankruptcyAdvertModel],
+          include: [RecallAdvertModel],
         },
       )
 
@@ -446,10 +445,10 @@ export class AdvertModel extends BaseModel<
       throw error
     }
   }
-  static async createBankruptcyAdverts(params: CreateBankruptcyAdvertParams[]) {
+  static async createBankruptcyAdverts(params: CreateRecallAdvertParams[]) {
     const adverts: AdvertModel[] = []
     params.forEach(async (param, i) => {
-      const newAdvert = await this.createBankruptcyAdvert({
+      const newAdvert = await this.createRecallAdvert({
         ...param,
         version: mapIndexToVersion(i),
       })
@@ -458,30 +457,29 @@ export class AdvertModel extends BaseModel<
 
     return adverts
   }
-  static async createBankruptcyDivisionAdvert(
-    params: CreateBankruptcyDivisionAdvertParams,
+  static async createDivisionMeetingAdvert(
+    params: CreateDivisionMeetingAdvertParams,
   ) {
     try {
-      this.logger.info(`Creating bankruptcy division advert`, {
+      this.logger.info(`Creating division meeting advert`, {
         caseId: params.caseId,
       })
 
       const advert = await this.create(
         {
           ...params,
-          typeId: TypeIdEnum.BANKRUPTCY_DIVISION_ADVERT,
-          categoryId: CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_ADVERT,
+          typeId: TypeIdEnum.DIVISION_MEETING,
           version: params.version ? params.version : AdvertVersionEnum.A,
-          bankruptcyDivisionAdvert: params.bankruptcyDivisionAdvert,
+          divisionMeetingAdvert: params.divisionMeetingAdvert,
         },
         {
-          include: [BankruptcyDivisionAdvertModel],
+          include: [DivisionMeetingAdvertModel],
         },
       )
 
       return advert
     } catch (error) {
-      this.logger.error(`Failed to create bankruptcy division advert`, {
+      this.logger.error(`Failed to create division meeting advert`, {
         caseId: params.caseId,
         error: error,
       })
@@ -489,12 +487,12 @@ export class AdvertModel extends BaseModel<
       throw error
     }
   }
-  static async createBankruptcyDivisionAdverts(
-    params: CreateBankruptcyDivisionAdvertParams[],
+  static async createDivisionMeetingAdverts(
+    params: CreateDivisionMeetingAdvertParams[],
   ) {
     const adverts: AdvertModel[] = []
     params.forEach(async (param, i) => {
-      const newAdvert = await this.createBankruptcyDivisionAdvert({
+      const newAdvert = await this.createDivisionMeetingAdvert({
         ...param,
         version: mapIndexToVersion(i),
       })
@@ -657,8 +655,8 @@ export class AdvertModel extends BaseModel<
         commonAdvert: model.commonAdvert
           ? model.commonAdvert.fromModel()
           : undefined,
-        bankruptcyAdvert: model.bankruptcyAdvert
-          ? model.bankruptcyAdvert.fromModel()
+        recallAdvert: model.recallAdvert
+          ? model.recallAdvert.fromModel()
           : undefined,
       }
     } catch (error) {

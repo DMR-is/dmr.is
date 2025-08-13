@@ -2,13 +2,16 @@ import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { DivisionTypeEnum, LegalGazetteModels } from '../../../../lib/constants'
+import {
+  ApplicationTypeEnum,
+  LegalGazetteModels,
+} from '../../../../lib/constants'
 import { SettlementModel } from '../../../settlement/settlement.model'
 import { AdvertModel } from '../../advert.model'
 import { DivisionEndingAdvertDto } from '../dto/division.dto'
 
 export type DivisionEndingAdvertAttributes = {
-  type: DivisionTypeEnum
+  type: ApplicationTypeEnum
   meetingDate: Date
   meetingLocation: string
   settlementId: string
@@ -16,7 +19,7 @@ export type DivisionEndingAdvertAttributes = {
 }
 
 export type DivisionEndingAdvertCreateAttributes = {
-  type: DivisionTypeEnum
+  type: ApplicationTypeEnum
   meetingDate: Date
   meetingLocation: string
   settlementId: string
@@ -29,10 +32,10 @@ export class DivisionEndingAdvertModel extends BaseModel<
   DivisionEndingAdvertCreateAttributes
 > {
   @Column({
-    type: DataType.ENUM(...Object.values(DivisionTypeEnum)),
+    type: DataType.ENUM(...Object.values(ApplicationTypeEnum)),
     allowNull: false,
   })
-  type!: DivisionTypeEnum
+  type!: ApplicationTypeEnum
 
   @Column({
     type: DataType.DATE,

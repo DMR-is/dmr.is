@@ -7,12 +7,7 @@ export class TypeDto extends BaseEntityDto {
   @ApiProperty({
     enum: TypeEnum,
     enumName: 'TypeEnum',
-    'x-enumNames': [
-      'CommonAdvert',
-      'BankruptcyAdvert',
-      'BankruptcyDivisionAdvert',
-      'DeceasedAdvert',
-    ],
+    'x-enumNames': ['Common', 'Recall', 'DivisionMeeting', 'DivisionEnding'],
   })
   title!: TypeEnum
 }

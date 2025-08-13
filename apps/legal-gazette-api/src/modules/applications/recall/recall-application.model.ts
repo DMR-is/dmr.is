@@ -1,4 +1,7 @@
+import { DestroyOptions } from 'sequelize'
 import {
+  BeforeBulkDestroy,
+  BeforeDestroy,
   BelongsTo,
   Column,
   DataType,
@@ -10,44 +13,38 @@ import { BadRequestException } from '@nestjs/common'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../../lib/constants'
+import { ApplicationTypeEnum, LegalGazetteModels } from '../../../lib/constants'
 import { CaseModel } from '../../case/case.model'
 import { CourtDistrictModel } from '../../court-district/court-district.model'
-import { TypeEnum } from '../../type/type.model'
 import { ApplicationStatusEnum } from '../contants'
 import { ApplicationDto } from '../dto/application.dto'
-import { BankruptcyApplicationDto } from './dto/bankruptcy-application.dto'
-import { UpdateBankruptcyApplicationDto } from './dto/update-bankruptcy-application.dto'
+import { RecallApplicationDto } from './dto/recall-application.dto'
 
-type BankruptcyApplicationAttributes = {
+type RecallApplicationAttributes = {
   caseId: string
+  type: ApplicationTypeEnum
   involvedPartyNationalId: string
   status?: ApplicationStatusEnum
   courtDistrictId?: string
-
   additionalText?: string
   judgmentDate?: Date
-
   signatureLocation?: string
   signatureDate?: Date
-
   liquidator?: string
   liquidatorLocation?: string
   liquidatorOnBehalfOf?: string
-
   settlementName?: string
   settlementDeadline?: string
   settlementAddress?: string
   settlementNationalId?: string
-
   settlementMeetingLocation?: string
   settlementMeetingDate?: Date
-
+  settlementDateOfDeath?: Date
   publishingDates?: Date[]
 }
 
-export type BankruptcyApplicationCreateAttributes = Omit<
-  BankruptcyApplicationAttributes,
+export type RecallApplicationCreateAttributes = Omit<
+  RecallApplicationAttributes,
   'caseId'
 > & {
   caseId?: string
@@ -57,10 +54,10 @@ export type BankruptcyApplicationCreateAttributes = Omit<
   include: [{ model: CourtDistrictModel }],
   order: [['updatedAt', 'DESC']],
 }))
-@BaseTable({ tableName: LegalGazetteModels.BANKRUPTCY_APPLICATION })
-export class BankruptcyApplicationModel extends BaseModel<
-  BankruptcyApplicationAttributes,
-  BankruptcyApplicationCreateAttributes
+@BaseTable({ tableName: LegalGazetteModels.RECALL_APPLICATION })
+export class RecallApplicationModel extends BaseModel<
+  RecallApplicationAttributes,
+  RecallApplicationCreateAttributes
 > {
   @Column({
     type: DataType.STRING,
@@ -69,6 +66,12 @@ export class BankruptcyApplicationModel extends BaseModel<
   })
   @ForeignKey(() => CaseModel)
   caseId!: string
+
+  @Column({
+    type: DataType.ENUM(...Object.values(ApplicationTypeEnum)),
+    allowNull: false,
+  })
+  type!: ApplicationTypeEnum
 
   @Column({
     type: DataType.ENUM(...Object.values(ApplicationStatusEnum)),
@@ -164,6 +167,12 @@ export class BankruptcyApplicationModel extends BaseModel<
   settlementMeetingDate?: Date
 
   @Column({
+    type: DataType.DATE,
+    field: 'settlement_date_of_death',
+  })
+  settlementDateOfDeath?: Date
+
+  @Column({
     type: DataType.ARRAY(DataType.DATE),
     field: 'publishing_dates',
   })
@@ -182,61 +191,21 @@ export class BankruptcyApplicationModel extends BaseModel<
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
   case!: CaseModel
 
-  /**
-   *
-   * @param caseId
-   * @param applicationId
-   * @param dto
-   * @returns
-   */
-  static async updateFromDto(
-    caseId: string,
-    applicationId: string,
-    dto: UpdateBankruptcyApplicationDto,
-  ): Promise<BankruptcyApplicationModel> {
-    const onlyValuesThatArePassed = Object.fromEntries(
-      Object.entries(dto).filter(([_, value]) => value !== undefined),
-    )
+  get title(): string {
+    const settlementAddress = this.getDataValue('settlementAddress')
+    const prefix =
+      this.type === ApplicationTypeEnum.BANKRUPTCY
+        ? 'Innköllun þrotabús'
+        : 'Innköllun dánarbús'
 
-    if (onlyValuesThatArePassed.publishingDates) {
-      onlyValuesThatArePassed.publishingDates =
-        onlyValuesThatArePassed.publishingDates.map(
-          (date: string) => new Date(date),
-        )
-    }
-
-    if (onlyValuesThatArePassed.judgmentDate) {
-      onlyValuesThatArePassed.judgmentDate = new Date(
-        onlyValuesThatArePassed.judgmentDate,
-      )
-    }
-
-    if (onlyValuesThatArePassed.settlementMeetingDate) {
-      onlyValuesThatArePassed.settlementMeetingDate = new Date(
-        onlyValuesThatArePassed.settlementMeetingDate,
-      )
-    }
-
-    const [_count, rows] = await BankruptcyApplicationModel.update(
-      onlyValuesThatArePassed,
-      {
-        returning: true,
-        where: {
-          id: applicationId,
-          caseId,
-        },
-      },
-    )
-
-    return rows[0]
+    return `${prefix}${settlementAddress ? ` - ${settlementAddress}` : ''}`.trim()
   }
 
-  static fromModel(
-    model: BankruptcyApplicationModel,
-  ): BankruptcyApplicationDto {
+  static fromModel(model: RecallApplicationModel): RecallApplicationDto {
     return {
       id: model.id,
       status: model.status,
+      type: model.type,
       additionalText: model.additionalText,
       judgmentDate: model.judgmentDate?.toISOString(),
       signatureLocation: model.signatureLocation,
@@ -251,46 +220,46 @@ export class BankruptcyApplicationModel extends BaseModel<
       liquidator: model.liquidator,
       liquidatorLocation: model.liquidatorLocation,
       liquidatorOnBehalfOf: model.liquidatorOnBehalfOf ?? undefined,
+      settlementDateOfDeath: model.settlementDateOfDeath?.toISOString(),
       courtDistrict: model?.courtDistrict?.fromModel(),
       caseId: model.caseId,
     }
   }
 
-  fromModel(): BankruptcyApplicationDto {
-    return BankruptcyApplicationModel.fromModel(this)
+  fromModel(): RecallApplicationDto {
+    return RecallApplicationModel.fromModel(this)
   }
 
   static fromModelToApplicationDto(
-    model: BankruptcyApplicationModel,
+    model: RecallApplicationModel,
   ): ApplicationDto {
     return {
       id: model.id,
       caseId: model.caseId,
       nationalId: model.involvedPartyNationalId,
       status: model.status,
-      title: `${TypeEnum.BANKRUPTCY_ADVERT}${model.settlementAddress ? ` - ${model.settlementAddress}` : ''}`,
-      type: TypeEnum.BANKRUPTCY_ADVERT,
+      type: model.type,
+      title: model.title,
     }
   }
 
   fromModelToApplicationDto(): ApplicationDto {
-    return BankruptcyApplicationModel.fromModelToApplicationDto(this)
+    return RecallApplicationModel.fromModelToApplicationDto(this)
   }
 
-  static async deleteApplication(
-    model: BankruptcyApplicationModel,
-  ): Promise<void> {
+  @BeforeDestroy
+  static async deleteApplication(model: RecallApplicationModel) {
     if (model.status !== ApplicationStatusEnum.DRAFT) {
       throw new BadRequestException(
         'Cannot delete application that is not in draft status',
       )
     }
-
-    await model.destroy({ force: true })
-    await CaseModel.destroy({ where: { id: model.caseId }, force: true })
   }
 
-  deleteApplication(): Promise<void> {
-    return BankruptcyApplicationModel.deleteApplication(this)
+  @BeforeBulkDestroy
+  static async deleteApplications(options: DestroyOptions) {
+    options.individualHooks = true
+
+    return options
   }
 }

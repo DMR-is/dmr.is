@@ -20,13 +20,9 @@ import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
 import { CommonAdvertModel } from '../advert/common/common-advert.model'
 import { CreateCommonAdvertInternalDto } from '../advert/common/dto/create-common-advert.dto'
 import {
-  BankruptcyApplicationCreateAttributes,
-  BankruptcyApplicationModel,
-} from '../applications/bankruptcy/bankruptcy-application.model'
-import {
-  DeceasedApplicationCreateAttributes,
-  DeceasedApplicationModel,
-} from '../applications/deceased/deceased-application.model'
+  RecallApplicationCreateAttributes,
+  RecallApplicationModel,
+} from '../applications/recall/recall-application.model'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
@@ -39,7 +35,6 @@ import { CaseDto } from './dto/case.dto'
 type CaseAttributes = {
   caseNumber: string
   bankruptcyApplicationId: string | null
-  deceasedApplicationId: string | null
   assignedUserId: string | null
   involvedPartyNationalId: string
   communicationChannels: CommunicationChannelModel[]
@@ -48,20 +43,19 @@ type CaseAttributes = {
 
 type CaseCreateAttributes = {
   involvedPartyNationalId: string
-  bankruptcyApplicationId?: string
+  recallApplicationId?: string
   caseId?: string
   assignedUserId?: string | null
   communicationChannels?: CommunicationChannelCreateAttributes[]
   adverts?: AdvertCreateAttributes[]
-  bankruptcyApplication?: BankruptcyApplicationCreateAttributes
-  deceasedApplication?: DeceasedApplicationCreateAttributes
+  recallApplication?: RecallApplicationCreateAttributes
 }
 
 @BaseTable({ tableName: LegalGazetteModels.CASE })
 @DefaultScope(() => ({
   attributes: [
     'id',
-    'bankruptcyApplicationId',
+    'recallApplicationId',
     'caseNumber',
     'createdAt',
     'updatedAt',
@@ -70,18 +64,15 @@ type CaseCreateAttributes = {
   order: [['createdAt', 'DESC']],
 }))
 @Scopes(() => ({
-  bybankruptcyApplicationId: (bankruptcyApplicationId: string) => ({
-    attributes: ['id', 'bankruptcyApplicationId'],
-    where: { bankruptcyApplicationId },
+  byRecallApplicationId: (recallApplicationId: string) => ({
+    attributes: ['id', 'recallApplicationId'],
+    where: { recallApplicationId },
   }),
   applications: {
     where: {
-      [Op.or]: [
-        { bankruptcyApplicationId: { [Op.not]: null } },
-        { deceasedApplicationId: { [Op.not]: null } },
-      ],
+      [Op.or]: [{ recallApplicationId: { [Op.not]: null } }],
     },
-    include: [BankruptcyApplicationModel, DeceasedApplicationModel],
+    include: [RecallApplicationModel],
   },
 }))
 export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
@@ -91,15 +82,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     field: 'bankruptcy_application_id',
     defaultValue: null,
   })
-  bankruptcyApplicationId!: string | null
-
-  @Column({
-    type: DataType.UUID,
-    allowNull: true,
-    field: 'deceased_application_id',
-    defaultValue: null,
-  })
-  deceasedApplicationId!: string | null
+  recallApplicationId!: string | null
 
   @Column({
     type: DataType.UUID,
@@ -134,15 +117,10 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   @BelongsTo(() => UserModel, 'assignedUserId')
   assignedUser?: UserModel
 
-  @HasOne(() => BankruptcyApplicationModel, {
+  @HasOne(() => RecallApplicationModel, {
     foreignKey: 'caseId',
   })
-  bankruptcyApplication?: BankruptcyApplicationModel
-
-  @HasOne(() => DeceasedApplicationModel, {
-    foreignKey: 'caseId',
-  })
-  deceasedApplication?: DeceasedApplicationModel
+  recallApplication?: RecallApplicationModel
 
   static async createCommonAdvert(body: CreateCommonAdvertInternalDto) {
     this.logger.info('Creating case for common advert')
@@ -243,9 +221,9 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
       return {
         id: model.id,
         applicationId:
-          model.bankruptcyApplicationId === null
+          model.recallApplicationId === null
             ? undefined
-            : model.bankruptcyApplicationId,
+            : model.recallApplicationId,
         caseNumber: model.caseNumber,
         createdAt: model.createdAt.toISOString(),
         updatedAt: model.updatedAt.toISOString(),

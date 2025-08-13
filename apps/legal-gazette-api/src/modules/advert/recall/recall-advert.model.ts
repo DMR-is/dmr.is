@@ -10,7 +10,7 @@ import { z } from 'zod'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { DivisionTypeEnum, LegalGazetteModels } from '../../../lib/constants'
+import { ApplicationTypeEnum, LegalGazetteModels } from '../../../lib/constants'
 import { CourtDistrictModel } from '../../court-district/court-district.model'
 import { SettlementModel } from '../../settlement/settlement.model'
 import { AdvertModel } from '../advert.model'
@@ -69,10 +69,10 @@ export class RecallAdvertModel extends BaseModel<
   RecallAdvertCreateAttributes
 > {
   @Column({
-    type: DataType.ENUM(...Object.values(DivisionTypeEnum)),
+    type: DataType.ENUM(...Object.values(ApplicationTypeEnum)),
     allowNull: false,
   })
-  type!: DivisionTypeEnum
+  type!: ApplicationTypeEnum
 
   @Column({
     type: DataType.TEXT,

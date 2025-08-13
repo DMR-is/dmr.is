@@ -8,22 +8,29 @@ import {
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { DivisionTypeEnum, LegalGazetteModels } from '../../../../lib/constants'
+import {
+  ApplicationTypeEnum,
+  LegalGazetteModels,
+} from '../../../../lib/constants'
 import { SettlementModel } from '../../../settlement/settlement.model'
 import { AdvertModel } from '../../advert.model'
 import { DivisionMeetingAdvertDto } from '../dto/division.dto'
 
 export type DivisionMeetingAdvertAttributes = {
-  type: DivisionTypeEnum
+  type: ApplicationTypeEnum
   meetingDate: Date
   meetingLocation: string
-  meetingTime: string
   settlementId: string
   advertId: string
 }
 
-export type DivisionMeetingAdvertCreationAttributes =
-  DivisionMeetingAdvertAttributes
+export type DivisionMeetingAdvertCreateAttributes = {
+  type: ApplicationTypeEnum
+  meetingDate: Date
+  meetingLocation: string
+  settlementId: string
+  advertId?: string
+}
 
 @DefaultScope(() => ({
   include: [{ model: SettlementModel }],
@@ -31,13 +38,13 @@ export type DivisionMeetingAdvertCreationAttributes =
 @BaseTable({ tableName: LegalGazetteModels.DIVISION_MEETING_ADVERT })
 export class DivisionMeetingAdvertModel extends BaseModel<
   DivisionMeetingAdvertAttributes,
-  DivisionMeetingAdvertCreationAttributes
+  DivisionMeetingAdvertCreateAttributes
 > {
   @Column({
-    type: DataType.ENUM(...Object.values(DivisionTypeEnum)),
+    type: DataType.ENUM(...Object.values(ApplicationTypeEnum)),
     allowNull: false,
   })
-  type!: DivisionTypeEnum
+  type!: ApplicationTypeEnum
 
   @Column({
     type: DataType.DATE,
@@ -85,7 +92,9 @@ export class DivisionMeetingAdvertModel extends BaseModel<
   })
   advert!: AdvertModel
 
-  static fromModel(model: DivisionMeetingAdvert): DivisionMeetingAdvertDto {
+  static fromModel(
+    model: DivisionMeetingAdvertModel,
+  ): DivisionMeetingAdvertDto {
     return {
       id: model.id,
       advertId: model.advertId,
@@ -98,6 +107,6 @@ export class DivisionMeetingAdvertModel extends BaseModel<
   }
 
   fromModel(): DivisionMeetingAdvertDto {
-    return DivisionMeetingAdvert.fromModel(this)
+    return DivisionMeetingAdvertModel.fromModel(this)
   }
 }

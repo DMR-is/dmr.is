@@ -11,7 +11,7 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { DivisionTypeEnum } from '../../../../lib/constants'
+import { ApplicationTypeEnum } from '../../../../lib/constants'
 import { CourtDistrictDto } from '../../../court-district/dto/court-district.dto'
 import { SettlementDto } from '../../../settlement/dto/settlement.dto'
 
@@ -20,9 +20,9 @@ export class RecallAdvertDto {
   @IsUUID()
   id!: string
 
-  @ApiProperty({ enum: DivisionTypeEnum })
-  @IsEnum(DivisionTypeEnum)
-  type!: DivisionTypeEnum
+  @ApiProperty({ enum: ApplicationTypeEnum })
+  @IsEnum(ApplicationTypeEnum)
+  type!: ApplicationTypeEnum
 
   @ApiProperty({ type: String, required: false })
   @IsOptional()

@@ -23,10 +23,10 @@ import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { Auth } from '@island.is/auth-nest-tools'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { ApplicationTypeEnum } from '../../../lib/constants'
 import { mapIndexToVersion } from '../../../lib/utils'
 import { AdvertModel } from '../../advert/advert.model'
-import { bankruptcyAdvertSchema } from '../../advert/bankruptcy/advert/bankruptcy-advert.model'
-import { bankruptcyDivisionAdvertSchema } from '../../advert/bankruptcy/division-advert/bankruptcy-division-advert.model'
+import { recallAdvertSchema } from '../../advert/recall/recall-advert.model'
 import { CaseModel } from '../../case/case.model'
 import { CaseDto } from '../../case/dto/case.dto'
 import { CategoryDefaultIdEnum } from '../../category/category.model'
@@ -34,11 +34,11 @@ import {
   SettlementModel,
   settlementSchema,
 } from '../../settlement/settlement.model'
-import { TypeEnum, TypeIdEnum } from '../../type/type.model'
+import { TypeIdEnum } from '../../type/type.model'
 import { ApplicationStatusEnum } from '../contants'
-import { BankruptcyApplicationDto } from './dto/bankruptcy-application.dto'
-import { UpdateBankruptcyApplicationDto } from './dto/update-bankruptcy-application.dto'
-import { BankruptcyApplicationModel } from './bankruptcy-application.model'
+import { RecallApplicationDto } from './dto/recall-application.dto'
+import { UpdateRecallApplicationDto } from './dto/update-recall-application.dto'
+import { RecallApplicationModel } from './recall-application.model'
 
 @Controller({
   version: '1',
@@ -49,8 +49,8 @@ import { BankruptcyApplicationModel } from './bankruptcy-application.model'
 export class BankruptcyApplicationController {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @InjectModel(BankruptcyApplicationModel)
-    private readonly bankruptcyApplicationModel: typeof BankruptcyApplicationModel,
+    @InjectModel(RecallApplicationModel)
+    private readonly recallApplicationModel: typeof RecallApplicationModel,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     @InjectModel(SettlementModel)
     private readonly settlementModel: typeof SettlementModel,
@@ -72,12 +72,13 @@ export class BankruptcyApplicationController {
     const results = await this.caseModel.create(
       {
         involvedPartyNationalId: user.nationalId,
-        bankruptcyApplication: {
+        recallApplication: {
+          type: ApplicationTypeEnum.BANKRUPTCY,
           involvedPartyNationalId: user.nationalId,
         },
       },
       {
-        include: [{ model: BankruptcyApplicationModel }],
+        include: [{ model: RecallApplicationModel }],
         returning: true,
       },
     )
@@ -91,7 +92,7 @@ export class BankruptcyApplicationController {
     @Param('caseId') caseId: string,
     @Param('applicationId') applicationId: string,
     @CurrentUser() user: Auth,
-    @Body() body: UpdateBankruptcyApplicationDto,
+    @Body() body: UpdateRecallApplicationDto,
   ) {
     if (!user?.nationalId) {
       this.logger.warn('Unauthorized access attempt to update draft advert', {
@@ -101,11 +102,7 @@ export class BankruptcyApplicationController {
       throw new UnauthorizedException('User not authenticated')
     }
 
-    await this.bankruptcyApplicationModel.updateFromDto(
-      caseId,
-      applicationId,
-      body,
-    )
+    // todo: implement update
   }
 
   @Post(':caseId/:applicationId/submit')
@@ -123,7 +120,7 @@ export class BankruptcyApplicationController {
       throw new UnauthorizedException()
     }
 
-    const application = await this.bankruptcyApplicationModel.findOne({
+    const application = await this.recallApplicationModel.findOne({
       where: {
         id: applicationId,
         caseId: caseId,
@@ -177,7 +174,7 @@ export class BankruptcyApplicationController {
       throw new BadRequestException()
     }
 
-    const advertCheck = bankruptcyAdvertSchema.safeParse({
+    const advertCheck = recallAdvertSchema.safeParse({
       judgmentDate: dto.judgmentDate,
       signatureLocation: dto.signatureLocation,
       signatureDate: dto.signatureDate,
@@ -195,12 +192,12 @@ export class BankruptcyApplicationController {
 
     await this.advertModel.createBankruptcyAdverts(
       dto.publishingDates.map((scheduledAtDate, i) => ({
-        categoryId: CategoryDefaultIdEnum.BANKRUPTCY_ADVERT,
+        categoryId: CategoryDefaultIdEnum.BANKRUPTCY_RECALL,
         caseId: caseId,
-        typeId: TypeIdEnum.BANKRUPTCY_ADVERT,
+        typeId: TypeIdEnum.RECALL,
         scheduledAt: new Date(scheduledAtDate),
         submittedBy: nationalId,
-        title: `${TypeEnum.BANKRUPTCY_ADVERT} ${settlementCheck.data.settlementName}`,
+        title: `todo:fix ${settlementCheck.data.settlementName}`,
         html: '<div>TODO: insert html</div>',
         paid: false,
         version: mapIndexToVersion(i),
@@ -208,31 +205,35 @@ export class BankruptcyApplicationController {
       })),
     )
 
-    const bankruptcyDivisionAdvertCheck =
-      bankruptcyDivisionAdvertSchema.safeParse({
-        meetingDate: dto.settlementMeetingDate,
-        meetingLocation: dto.settlementMeetingLocation,
-        settlementId: settlementModel.id,
-      })
+    // const recallDivisionAdvertCheck = recallDivisionAdvertSchema.safeParse({
+    //   meetingDate: dto.settlementMeetingDate,
+    //   meetingLocation: dto.settlementMeetingLocation,
+    //   settlementId: settlementModel.id,
+    // })
 
-    if (!bankruptcyDivisionAdvertCheck.success) {
-      this.logger.debug('Invalid bankruptcy division advert data provided')
-      throw new BadRequestException('Invalid bankruptcy division advert data')
-    }
+    // if (!bankruptcyDivisionAdvertCheck.success) {
+    //   this.logger.debug('Invalid bankruptcy division advert data provided')
+    //   throw new BadRequestException('Invalid bankruptcy division advert data')
+    // }
 
-    await this.advertModel.createBankruptcyDivisionAdvert({
-      caseId: caseId,
-      scheduledAt: new Date(bankruptcyDivisionAdvertCheck.data.meetingDate),
-      submittedBy: nationalId,
-      title: `Skiptafundur ${settlementCheck.data.settlementName}`,
-      html: '<div>TODO: insert html</div>',
-      paid: false,
-      bankruptcyDivisionAdvert: {
-        meetingDate: bankruptcyDivisionAdvertCheck.data.meetingDate,
-        meetingLocation: bankruptcyDivisionAdvertCheck.data.meetingLocation,
-        settlementId: settlementModel.id,
-      },
-    })
+    // await this.advertModel.createDivisionMeetingAdvert({
+    //   caseId: caseId,
+    //   scheduledAt: new Date(bankruptcyDivisionAdvertCheck.data.meetingDate),
+    //   submittedBy: nationalId,
+    //   title: `Skiptafundur ${settlementCheck.data.settlementName}`,
+    //   html: '<div>TODO: insert html</div>',
+    //   paid: false,
+    //   categoryId:
+    //     dto.type === ApplicationTypeEnum.BANKRUPTCY
+    //       ? CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING
+    //       : CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING,
+    //   divisionMeetingAdvert: {
+    //     meetingDate: bankruptcyDivisionAdvertCheck.data.meetingDate,
+    //     meetingLocation: bankruptcyDivisionAdvertCheck.data.meetingLocation,
+    //     settlementId: settlementModel.id,
+    //     type: dto.type,
+    //   },
+    // })
 
     await application.update({ status: ApplicationStatusEnum.SUBMITTED })
   }
@@ -240,12 +241,12 @@ export class BankruptcyApplicationController {
   @Get(':caseId')
   @LGResponse({
     operationId: 'getBankruptcyApplicationByCaseId',
-    type: BankruptcyApplicationDto,
+    type: RecallApplicationDto,
   })
   async getBankruptcyApplicationByCaseId(
     @Param('caseId', new UUIDValidationPipe()) caseId: string,
     @CurrentUser() user: Auth,
-  ): Promise<BankruptcyApplicationDto> {
+  ): Promise<RecallApplicationDto> {
     const nationalId = user?.nationalId
     if (!nationalId) {
       this.logger.debug(
@@ -254,7 +255,7 @@ export class BankruptcyApplicationController {
       throw new UnauthorizedException()
     }
 
-    const application = await this.bankruptcyApplicationModel.findOne({
+    const application = await this.recallApplicationModel.findOne({
       where: {
         caseId: caseId,
         involvedPartyNationalId: nationalId,
@@ -269,8 +270,8 @@ export class BankruptcyApplicationController {
   }
 
   @Delete(':applicationId')
-  @LGResponse({ operationId: 'deleteBankruptcyApplication' })
-  async deleteBankruptcyApplication(
+  @LGResponse({ operationId: 'deleteRecallApplication' })
+  async deleteRecallApplication(
     @CurrentUser() user: Auth,
     @Param('applicationId') applicationId: string,
   ): Promise<void> {
@@ -278,19 +279,11 @@ export class BankruptcyApplicationController {
       throw new UnauthorizedException()
     }
 
-    const application = await this.bankruptcyApplicationModel
-      .unscoped()
-      .findOne({
-        where: {
-          id: applicationId,
-          involvedPartyNationalId: user.nationalId,
-        },
-      })
-
-    if (!application) {
-      throw new NotFoundException('Application not found')
-    }
-
-    await application.deleteApplication()
+    await this.recallApplicationModel.destroy({
+      where: {
+        id: applicationId,
+        involvedPartyNationalId: user.nationalId,
+      },
+    })
   }
 }

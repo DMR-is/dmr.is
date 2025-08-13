@@ -25,7 +25,7 @@ type CommonAdvertAttributes = {
   signatureDate: Date
 }
 
-export type CommonAdvertCreationAttributes = {
+export type CommonAdvertCreateAttributes = {
   advertId?: string
   islandIsApplicationId?: string
   caption: string
@@ -47,7 +47,7 @@ export type CommonAdvertCreationAttributes = {
 }))
 export class CommonAdvertModel extends BaseModel<
   CommonAdvertAttributes,
-  CommonAdvertCreationAttributes
+  CommonAdvertCreateAttributes
 > {
   @Column({
     type: DataType.STRING,

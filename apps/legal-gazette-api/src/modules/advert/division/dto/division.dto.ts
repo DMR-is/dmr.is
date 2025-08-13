@@ -2,7 +2,7 @@ import { IsDateString, IsEnum, IsString, IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { DivisionTypeEnum } from '../../../../lib/constants'
+import { ApplicationTypeEnum } from '../../../../lib/constants'
 import { SettlementDto } from '../../../settlement/dto/settlement.dto'
 
 export class DivisionAdvertDto {
@@ -14,9 +14,9 @@ export class DivisionAdvertDto {
   @IsUUID()
   advertId!: string
 
-  @ApiProperty({ enum: DivisionTypeEnum, required: true, nullable: false })
-  @IsEnum(DivisionTypeEnum)
-  type!: DivisionTypeEnum
+  @ApiProperty({ enum: ApplicationTypeEnum, required: true, nullable: false })
+  @IsEnum(ApplicationTypeEnum)
+  type!: ApplicationTypeEnum
 
   @ApiProperty({ required: true, nullable: false })
   @IsDateString()

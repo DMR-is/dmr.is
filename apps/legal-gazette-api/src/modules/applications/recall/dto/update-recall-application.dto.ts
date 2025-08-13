@@ -10,7 +10,7 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-export class UpdateBankruptcyApplicationDto {
+export class UpdateRecallApplicationDto {
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsString()
@@ -84,6 +84,11 @@ export class UpdateBankruptcyApplicationDto {
   @IsOptional()
   @IsDateString()
   settlementMeetingDate?: string | null
+
+  @ApiProperty({ type: String, required: false, nullable: true })
+  @IsOptional()
+  @IsDateString()
+  settlementDateOfDeath?: string | null
 
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()

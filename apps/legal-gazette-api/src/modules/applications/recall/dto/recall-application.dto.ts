@@ -1,14 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger'
 
+import { ApplicationTypeEnum } from '../../../../lib/constants'
 import { CourtDistrictDto } from '../../../court-district/dto/court-district.dto'
 import { ApplicationStatusEnum } from '../../contants'
 
-export class BankruptcyApplicationDto {
+export class RecallApplicationDto {
   @ApiProperty({ type: String })
   id!: string
 
   @ApiProperty({ type: String })
   caseId!: string
+
+  @ApiProperty({ type: String, required: false })
+  type!: ApplicationTypeEnum
 
   @ApiProperty({ type: String, required: false })
   additionalText?: string
@@ -51,6 +55,9 @@ export class BankruptcyApplicationDto {
 
   @ApiProperty({ type: String, required: false })
   settlementMeetingDate?: string
+
+  @ApiProperty({ type: String, required: false })
+  settlementDateOfDeath?: string
 
   @ApiProperty({ type: CourtDistrictDto, required: false })
   courtDistrict?: CourtDistrictDto
