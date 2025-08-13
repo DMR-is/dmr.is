@@ -49,10 +49,7 @@ export const ApplicationCard = ({ application }: Props) => {
       ? 'Í vinnslu'
       : 'Innsend'
 
-  const applicationUrl =
-    application.type === ApplicationTypeEnum.BANKRUPTCY
-      ? `${PageRoutes.APPLICATION_THROTABU}/${application.caseId}`
-      : `${PageRoutes.APPLICATION_DANARBU}/${application.id}`
+  const applicationUrl = `${application.type === ApplicationTypeEnum.BANKRUPTCY ? PageRoutes.APPLICATION_THROTABU : PageRoutes.APPLICATION_DANARBU}/${application.caseId}`
 
   return (
     <Box borderRadius="large" border="standard" padding={3} background="white">

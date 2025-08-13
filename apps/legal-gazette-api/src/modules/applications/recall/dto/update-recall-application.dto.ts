@@ -2,7 +2,7 @@ import { Transform } from 'class-transformer'
 import {
   ArrayMaxSize,
   IsArray,
-  IsDateString,
+  IsDate,
   IsOptional,
   IsString,
   IsUUID,
@@ -20,7 +20,7 @@ export class UpdateRecallApplicationDto {
 
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
-  @IsDateString()
+  @IsDate()
   @Transform(({ value }) =>
     typeof value === 'string' ? new Date(value) : value,
   )
@@ -52,7 +52,7 @@ export class UpdateRecallApplicationDto {
 
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
-  @IsDateString()
+  @IsDate()
   @Transform(({ value }) =>
     typeof value === 'string' ? new Date(value) : value,
   )
@@ -78,7 +78,7 @@ export class UpdateRecallApplicationDto {
 
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
-  @IsDateString()
+  @IsDate()
   @Transform(({ value }) =>
     typeof value === 'string' ? new Date(value) : value,
   )
@@ -92,7 +92,7 @@ export class UpdateRecallApplicationDto {
 
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
-  @IsDateString()
+  @IsDate()
   @Transform(({ value }) =>
     typeof value === 'string' ? new Date(value) : value,
   )
@@ -100,10 +100,10 @@ export class UpdateRecallApplicationDto {
 
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
-  @IsDateString()
-  @Transform(({ value }) =>
-    typeof value === 'string' ? new Date(value) : value,
-  )
+  @IsDate()
+  @Transform(({ value }) => {
+    return typeof value === 'string' ? new Date(value) : value
+  })
   settlementDateOfDeath?: Date | null
 
   @ApiProperty({ type: String, required: false, nullable: true })
@@ -114,7 +114,7 @@ export class UpdateRecallApplicationDto {
   @ApiProperty({ type: [String], required: false, nullable: true })
   @IsOptional()
   @IsArray()
-  @IsDateString(undefined, { each: true })
+  @IsDate({ each: true })
   @ArrayMaxSize(3)
   @Transform(({ value }) =>
     Array.isArray(value) ? value.map((d) => new Date(d)) : value,

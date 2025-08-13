@@ -219,10 +219,10 @@ export class RecallApplicationModel extends BaseModel<
       settlementNationalId: model.settlementNationalId,
       settlementMeetingDate: model.settlementMeetingDate?.toISOString(),
       settlementMeetingLocation: model.settlementMeetingLocation,
+      settlementDateOfDeath: model.settlementDateOfDeath?.toISOString(),
       liquidator: model.liquidator,
       liquidatorLocation: model.liquidatorLocation,
       liquidatorOnBehalfOf: model.liquidatorOnBehalfOf ?? undefined,
-      settlementDateOfDeath: model.settlementDateOfDeath?.toISOString(),
       courtDistrict: model?.courtDistrict?.fromModel(),
       caseId: model.caseId,
     }

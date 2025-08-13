@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 
 import { AdvertList } from '../../../../../components/client-components/adverts/AdvertList'
-import { BankruptcyForm } from '../../../../../components/client-components/form/recall/BankruptcyForm'
+import { RecallForm } from '../../../../../components/client-components/form/recall/RecallForm'
 import { RecallApplicationDtoStatusEnum } from '../../../../../gen/fetch'
 import { authOptions } from '../../../../../lib/authOptions'
 import {
@@ -30,7 +30,10 @@ export default async function UmsoknirThrotabusPage({
 
   const client = getClient(session.idToken)
 
-  if (params.type === FormTypes.BANKRUPTCY) {
+  if (
+    params.type === FormTypes.BANKRUPTCY ||
+    params.type === FormTypes.DECEASED
+  ) {
     const applicationRes = await safeCall(() =>
       client.getRecallApplicationByCaseId({ caseId: params.id }),
     )
@@ -52,7 +55,7 @@ export default async function UmsoknirThrotabusPage({
       const { courtDistricts } = await client.getCourtDistricts()
 
       return (
-        <BankruptcyForm
+        <RecallForm
           applicationId={application.id}
           caseId={params.id}
           application={application}
@@ -63,10 +66,6 @@ export default async function UmsoknirThrotabusPage({
         />
       )
     }
-  }
-
-  if (params.type === FormTypes.DECEASED) {
-    throw new Error('Umsókn fyrir innkallanir dánarbús er í vinnslu')
   }
 
   if (params.type === FormTypes.COMMON) {

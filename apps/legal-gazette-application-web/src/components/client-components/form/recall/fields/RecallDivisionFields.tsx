@@ -69,6 +69,7 @@ export const RecallDivisionFields = () => {
       <GridColumn span="6/12">
         <DatePickerController
           required
+          withTime={true}
           name={BankruptcyFormFields.DIVISION_MEETING_DATE}
           label="Dagsetning skiptafundar"
           minDate={minDate ? getNextWeekday(minDate) : undefined}
