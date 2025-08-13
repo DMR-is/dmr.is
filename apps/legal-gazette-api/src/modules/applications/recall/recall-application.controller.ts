@@ -13,7 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
-import { ApiBearerAuth } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -45,7 +45,7 @@ import { RecallApplicationModel } from './recall-application.model'
 
 @Controller({
   version: '1',
-  path: 'applications/bankruptcy',
+  path: 'applications/recalls',
 })
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard)
@@ -64,6 +64,11 @@ export class BankruptcyApplicationController {
   @LGResponse({
     operationId: 'createRecallCaseAndApplication',
     type: CaseDto,
+  })
+  @ApiParam({
+    enum: ApplicationTypeEnum,
+    name: 'type',
+    enumName: 'ApplicationTypeEnum',
   })
   async createRecallCaseAndApplication(
     @CurrentUser() user: Auth,
@@ -275,10 +280,10 @@ export class BankruptcyApplicationController {
 
   @Get(':caseId')
   @LGResponse({
-    operationId: 'getBankruptcyApplicationByCaseId',
+    operationId: 'getRecallApplicationByCaseId',
     type: RecallApplicationDto,
   })
-  async getBankruptcyApplicationByCaseId(
+  async getRecallApplicationByCaseId(
     @Param('caseId', new UUIDValidationPipe()) caseId: string,
     @CurrentUser() user: Auth,
   ): Promise<RecallApplicationDto> {

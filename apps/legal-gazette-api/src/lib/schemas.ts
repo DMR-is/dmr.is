@@ -31,7 +31,7 @@ export const settlementSchema = z
   })
 
 export const recallApplicationSchema = z.object({
-  applicationType: z.enum(Object.values(ApplicationTypeEnum)),
+  applicationType: z.enum(ApplicationTypeEnum),
   additionalText: z.string().optional().nullable(),
   judgmentDate: z.date(),
   signatureLocation: z.string(),
@@ -54,8 +54,10 @@ const deceasedSchema = z.object({
   settlementDateOfDeath: z.date(),
 })
 
-export const bankruptcyRecallApplicationSchema =
-  recallApplicationSchema.extend(bankruptcySchema)
+export const bankruptcyRecallApplicationSchema = recallApplicationSchema.extend(
+  bankruptcySchema.shape,
+)
 
-export const deceasedRecallApplicationSchema =
-  recallApplicationSchema.extend(deceasedSchema)
+export const deceasedRecallApplicationSchema = recallApplicationSchema.extend(
+  deceasedSchema.shape,
+)

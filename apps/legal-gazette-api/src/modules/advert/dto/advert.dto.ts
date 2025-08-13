@@ -248,7 +248,7 @@ export class AdvertDetailedDto extends AdvertDto {
     required: false,
   })
   @IsOptional()
-  @ValidateIf((o) => o.bankruptcyAdvert !== null)
+  @ValidateIf((o) => o.recallAdvert !== null)
   @Type(() => RecallAdvertDto)
   @ValidateNested()
   recallAdvert?: RecallAdvertDto
