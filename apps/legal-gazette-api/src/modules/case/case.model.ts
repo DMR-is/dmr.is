@@ -14,11 +14,8 @@ import {
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { mapIndexToVersion } from '../../lib/utils'
+import { ApplicationTypeEnum, LegalGazetteModels } from '../../lib/constants'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
-import { CommonAdvertModel } from '../advert/common/common-advert.model'
-import { CreateCommonAdvertInternalDto } from '../advert/common/dto/create-common-advert.dto'
 import {
   RecallApplicationCreateAttributes,
   RecallApplicationModel,
@@ -28,13 +25,11 @@ import {
   CommunicationChannelModel,
 } from '../communication-channel/communication-channel.model'
 import { StatusIdEnum } from '../status/status.model'
-import { TypeIdEnum } from '../type/type.model'
 import { UserModel } from '../users/users.model'
 import { CaseDto } from './dto/case.dto'
 
 type CaseAttributes = {
   caseNumber: string
-  bankruptcyApplicationId: string | null
   assignedUserId: string | null
   involvedPartyNationalId: string
   communicationChannels: CommunicationChannelModel[]
@@ -43,7 +38,6 @@ type CaseAttributes = {
 
 type CaseCreateAttributes = {
   involvedPartyNationalId: string
-  recallApplicationId?: string
   caseId?: string
   assignedUserId?: string | null
   communicationChannels?: CommunicationChannelCreateAttributes[]
@@ -53,37 +47,19 @@ type CaseCreateAttributes = {
 
 @BaseTable({ tableName: LegalGazetteModels.CASE })
 @DefaultScope(() => ({
-  attributes: [
-    'id',
-    'recallApplicationId',
-    'caseNumber',
-    'createdAt',
-    'updatedAt',
-    'deletedAt',
-  ],
+  attributes: ['id', 'caseNumber', 'createdAt', 'updatedAt', 'deletedAt'],
   order: [['createdAt', 'DESC']],
 }))
 @Scopes(() => ({
-  byRecallApplicationId: (recallApplicationId: string) => ({
-    attributes: ['id', 'recallApplicationId'],
-    where: { recallApplicationId },
-  }),
   applications: {
-    where: {
-      [Op.or]: [{ recallApplicationId: { [Op.not]: null } }],
-    },
-    include: [RecallApplicationModel],
+    include: [
+      {
+        model: RecallApplicationModel,
+      },
+    ],
   },
 }))
 export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
-  @Column({
-    type: DataType.UUID,
-    allowNull: true,
-    field: 'bankruptcy_application_id',
-    defaultValue: null,
-  })
-  recallApplicationId!: string | null
-
   @Column({
     type: DataType.UUID,
     allowNull: true,
@@ -122,45 +98,8 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   })
   recallApplication?: RecallApplicationModel
 
-  static async createCommonAdvert(body: CreateCommonAdvertInternalDto) {
-    this.logger.info('Creating case for common advert')
-
-    const channels =
-      body.channels?.map((ch) => ({
-        email: ch.email,
-        name: ch?.name,
-        phone: ch?.phone,
-      })) ?? []
-
-    await this.create(
-      {
-        communicationChannels: channels,
-        involvedPartyNationalId: body.involvedPartyNationalId,
-        adverts: body.publishingDates.map((date, i) => ({
-          categoryId: body.categoryId,
-          statusId: StatusIdEnum.SUBMITTED,
-          typeId: TypeIdEnum.COMMON_ADVERT,
-          scheduledAt: new Date(date),
-          title: body.caption,
-          html: body.html,
-          version: mapIndexToVersion(i),
-          submittedBy: body.submittedBy,
-          commonAdvert: {
-            islandIsApplicationId: body.applicationId,
-            caption: body.caption,
-            signatureDate: new Date(body.signature.date),
-            signatureLocation: body.signature.location,
-            signatureName: body.signature.name,
-          },
-        })),
-      },
-      {
-        include: [
-          { model: CommunicationChannelModel },
-          { model: AdvertModel, include: [{ model: CommonAdvertModel }] },
-        ],
-      },
-    )
+  get applicationType(): ApplicationTypeEnum | undefined {
+    return this.recallApplication?.type
   }
 
   @BeforeDestroy
@@ -213,27 +152,13 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   }
 
   static fromModel(model: CaseModel): CaseDto {
-    try {
-      if (!model) {
-        throw new Error('Case model is undefined or null')
-      }
-
-      return {
-        id: model.id,
-        applicationId:
-          model.recallApplicationId === null
-            ? undefined
-            : model.recallApplicationId,
-        caseNumber: model.caseNumber,
-        createdAt: model.createdAt.toISOString(),
-        updatedAt: model.updatedAt.toISOString(),
-        deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
-      }
-    } catch (error) {
-      this.logger.debug(
-        `fromModel failed for CaseModel, did you include everything?`,
-      )
-      throw error
+    return {
+      id: model.id,
+      caseNumber: model.caseNumber,
+      createdAt: model.createdAt.toISOString(),
+      updatedAt: model.updatedAt.toISOString(),
+      deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+      applicationType: model.applicationType,
     }
   }
 

@@ -3,10 +3,15 @@ import { OnEvent } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { AuthService, IAuthService } from '@dmr.is/modules'
+import { AdvertModel, AuthService, IAuthService } from '@dmr.is/modules'
 
 import { LegalGazetteEvents } from '../../../lib/constants'
+import { mapIndexToVersion } from '../../../lib/utils'
+import { CommonAdvertModel } from '../../advert/common/common-advert.model'
 import { CaseModel } from '../../case/case.model'
+import { CommunicationChannelModel } from '../../communication-channel/communication-channel.model'
+import { StatusIdEnum } from '../../status/status.model'
+import { TypeIdEnum } from '../../type/type.model'
 import {
   CommonApplicationUpdateStateEvent,
   SubmitCommonApplicationDto,
@@ -61,18 +66,43 @@ export class CommonApplicationService implements ICommonApplicationService {
       ? `${body.institution.name} (${body.actor.name})`
       : `${body.actor.name}`
 
-    await this.caseModel.createCommonAdvert({
-      applicationId: body.applicationId,
-      involvedPartyNationalId: body.institution
-        ? body.institution.nationalId
-        : body.actor.nationalId,
-      caption: body.caption,
-      categoryId: body.categoryId,
-      publishingDates: body.publishingDates,
-      signature: body.signature,
-      channels: body.channels,
-      html: body.html,
-      submittedBy: submittedBy,
-    })
+    const channels =
+      body.channels?.map((ch) => ({
+        email: ch.email,
+        name: ch?.name,
+        phone: ch?.phone,
+      })) ?? []
+
+    await this.caseModel.create(
+      {
+        communicationChannels: channels,
+        involvedPartyNationalId: body.institution
+          ? body.institution.nationalId
+          : body.actor.nationalId,
+        adverts: body.publishingDates.map((date, i) => ({
+          categoryId: body.categoryId,
+          statusId: StatusIdEnum.SUBMITTED,
+          typeId: TypeIdEnum.COMMON_ADVERT,
+          scheduledAt: new Date(date),
+          title: body.caption,
+          html: body.html,
+          version: mapIndexToVersion(i),
+          submittedBy: submittedBy,
+          commonAdvert: {
+            islandIsApplicationId: body.applicationId,
+            caption: body.caption,
+            signatureDate: new Date(body.signature.date),
+            signatureLocation: body.signature.location,
+            signatureName: body.signature.name,
+          },
+        })),
+      },
+      {
+        include: [
+          { model: CommunicationChannelModel },
+          { model: AdvertModel, include: [{ model: CommonAdvertModel }] },
+        ],
+      },
+    )
   }
 }

@@ -2389,6 +2389,10 @@
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
+      "ApplicationTypeEnum": {
+        "type": "string",
+        "enum": ["BANKRUPTCY", "DECEASED"]
+      },
       "CaseDto": {
         "type": "object",
         "properties": {
@@ -2409,8 +2413,10 @@
             "nullable": true
           },
           "id": { "type": "string" },
-          "applicationId": { "type": "string" },
-          "caseNumber": { "type": "string" }
+          "caseNumber": { "type": "string" },
+          "applicationType": {
+            "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
+          }
         },
         "required": ["createdAt", "updatedAt", "id", "caseNumber"]
       },
@@ -2715,7 +2721,6 @@
         },
         "required": ["advertIds"]
       },
-      "ApplicationTypeEnum": { "type": "string" },
       "UpdateRecallApplicationDto": {
         "type": "object",
         "properties": {
@@ -2857,7 +2862,9 @@
           "caseId": { "type": "string" },
           "nationalId": { "type": "string" },
           "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
-          "type": { "type": "string", "enum": ["BANKRUPTCY", "DIVISION"] },
+          "type": {
+            "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
+          },
           "title": { "type": "string" }
         },
         "required": ["id", "caseId", "nationalId", "status", "type", "title"]

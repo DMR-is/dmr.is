@@ -1,32 +1,33 @@
 import { getSession } from 'next-auth/react'
 
 import {
-  SubmitBankruptcyApplicationRequest,
-  UpdateBankruptcyApplicationRequest,
+  CreateRecallCaseAndApplicationRequest,
+  SubmitRecallApplicationRequest,
+  UpdateRecallApplicationRequest,
 } from '../gen/fetch'
 import { getClient } from './createClient'
 import { safeCall } from './serverUtils'
 
-const getClientOrServerClient = async () => {
+const getClientWithSession = async () => {
   const session = await getSession()
 
   return getClient(session?.idToken as string)
 }
 
-export async function updateBankruptcyApplication(
-  args: UpdateBankruptcyApplicationRequest,
+export async function updateRecallApplication(
+  args: UpdateRecallApplicationRequest,
 ) {
-  const client = await getClientOrServerClient()
+  const client = await getClientWithSession()
 
-  return client.updateBankruptcyApplication(args)
+  return client.updateRecallApplication(args)
 }
 
-export async function submitBankruptcyApplication(
-  args: SubmitBankruptcyApplicationRequest,
+export async function submitRecallApplication(
+  args: SubmitRecallApplicationRequest,
 ) {
-  const client = await getClientOrServerClient()
+  const client = await getClientWithSession()
 
-  const results = await safeCall(() => client.submitBankruptcyApplication(args))
+  const results = await safeCall(() => client.submitRecallApplication(args))
 
   if (results.error) {
     throw new Error(
@@ -38,37 +39,39 @@ export async function submitBankruptcyApplication(
 }
 
 export async function deleteApplication(applicationId: string) {
-  const client = await getClientOrServerClient()
+  const client = await getClientWithSession()
 
-  return client.deleteApplication({ applicationId: applicationId })
+  return client.deleteRecallApplication({ applicationId: applicationId })
 }
 
 export async function getMyApplications() {
-  const client = await getClientOrServerClient()
+  const client = await getClientWithSession()
 
   return client.getMyApplications()
 }
 
-export async function createBankruptcyCaseAndApplication() {
-  const client = await getClientOrServerClient()
+export async function createRecallCaseAndApplication(
+  args: CreateRecallCaseAndApplicationRequest,
+) {
+  const client = await getClientWithSession()
 
-  return await client.createBankruptcyCaseAndApplication()
+  return await client.createRecallCaseAndApplication(args)
 }
 
-export async function getBankruptcyApplicationByCaseId(caseId: string) {
-  const client = await getClientOrServerClient()
+export async function getRecallApplicationByCaseId(caseId: string) {
+  const client = await getClientWithSession()
 
-  return await client.getBankruptcyApplicationByCaseId({ caseId })
+  return await client.getRecallApplicationByCaseId({ caseId })
 }
 
 export async function getCourtDistricts() {
-  const client = await getClientOrServerClient()
+  const client = await getClientWithSession()
 
   return await client.getCourtDistricts()
 }
 
 export const getAdvertsByCaseId = async (caseId: string) => {
-  const client = await getClientOrServerClient()
+  const client = await getClientWithSession()
 
   return await client.getAdvertsByCaseId({ caseId })
 }

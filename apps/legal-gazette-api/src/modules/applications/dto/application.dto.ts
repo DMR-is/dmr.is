@@ -16,7 +16,7 @@ export class ApplicationDto {
   @ApiProperty({ enum: ApplicationStatusEnum })
   status!: ApplicationStatusEnum
 
-  @ApiProperty({ enum: ApplicationTypeEnum })
+  @ApiProperty({ enum: ApplicationTypeEnum, enumName: 'ApplicationTypeEnum' })
   type!: ApplicationTypeEnum
 
   @ApiProperty({ type: String })

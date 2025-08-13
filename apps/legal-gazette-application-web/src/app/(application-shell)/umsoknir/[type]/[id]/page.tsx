@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 
 import { AdvertList } from '../../../../../components/client-components/adverts/AdvertList'
 import { BankruptcyForm } from '../../../../../components/client-components/form/bankruptcy/BankruptcyForm'
-import { BankruptcyApplicationDtoStatusEnum } from '../../../../../gen/fetch'
+import { RecallApplicationDtoStatusEnum } from '../../../../../gen/fetch'
 import { authOptions } from '../../../../../lib/authOptions'
 import {
   ALLOWED_FORM_TYPES,
@@ -32,7 +32,7 @@ export default async function UmsoknirThrotabusPage({
 
   if (params.type === FormTypes.BANKRUPTCY) {
     const applicationRes = await safeCall(() =>
-      client.getBankruptcyApplicationByCaseId({ caseId: params.id }),
+      client.getRecallApplicationByCaseId({ caseId: params.id }),
     )
 
     if (applicationRes.error) {
@@ -48,7 +48,7 @@ export default async function UmsoknirThrotabusPage({
 
     const application = applicationRes.data
 
-    if (application.status === BankruptcyApplicationDtoStatusEnum.DRAFT) {
+    if (application.status === RecallApplicationDtoStatusEnum.DRAFT) {
       const { courtDistricts } = await client.getCourtDistricts()
 
       return (

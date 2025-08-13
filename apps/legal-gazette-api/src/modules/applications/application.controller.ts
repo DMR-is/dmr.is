@@ -31,19 +31,10 @@ export class ApplicationController {
       .scope('applications')
       .findAll({ where: { involvedPartyNationalId: user.nationalId } })
 
-    // TODO: Implement THIS
-    // const applications = cases
-    //   .map((c) => {
-    //     if (c.recallApplication) {
-    //       return c.recallApplication.fromModelToApplicationDto()
-    //     }
+    const applications = cases.map((caseModel) =>
+      caseModel.recallApplication?.fromModelToApplicationDto(),
+    )
 
-    //     if (c.deceasedApplication) {
-    //       return c.deceasedApplication.fromModelToApplicationDto()
-    //     }
-    //   })
-    //   .filter(isDefined)
-
-    return { applications: [] }
+    return { applications: applications.filter(isDefined) }
   }
 }

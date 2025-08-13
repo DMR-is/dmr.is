@@ -12,6 +12,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 import { DetailedDto } from '../../../dto/detailed.dto'
+import { ApplicationTypeEnum } from '../../../lib/constants'
 import { AdvertDetailedDto } from '../../advert/dto/advert.dto'
 import { RecallApplicationDto } from '../../applications/recall/dto/recall-application.dto'
 import { CommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
@@ -29,14 +30,16 @@ export class CaseDto extends DetailedDto {
   @IsUUID()
   id!: string
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsUUID()
-  applicationId?: string
-
   @ApiProperty({ type: String })
   @IsString()
   caseNumber!: string
+
+  @ApiProperty({
+    enum: ApplicationTypeEnum,
+    required: false,
+    enumName: 'ApplicationTypeEnum',
+  })
+  applicationType?: ApplicationTypeEnum
 }
 
 export class GetCasesDto {

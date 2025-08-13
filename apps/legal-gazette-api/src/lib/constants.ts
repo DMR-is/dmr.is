@@ -2,7 +2,7 @@ export const LEGAL_GAZETTE_NAMESPACE = 'legal-gazette'
 
 export enum ApplicationTypeEnum {
   BANKRUPTCY = 'BANKRUPTCY',
-  DIVISION = 'DIVISION',
+  DECEASED = 'DECEASED',
 }
 
 export enum LegalGazetteModels {

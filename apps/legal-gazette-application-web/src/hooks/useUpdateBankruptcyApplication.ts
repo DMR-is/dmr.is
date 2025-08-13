@@ -4,10 +4,10 @@ import useSWRMutation from 'swr/mutation'
 
 import {
   ApiErrorDto,
-  UpdateBankruptcyApplicationDto,
-  UpdateBankruptcyApplicationRequest,
+  UpdateRecallApplicationDto,
+  UpdateRecallApplicationRequest,
 } from '../gen/fetch'
-import { updateBankruptcyApplication } from '../lib/fetchers'
+import { updateRecallApplication } from '../lib/fetchers'
 
 type Props = {
   caseId: string
@@ -22,19 +22,19 @@ export const useUpdateBankruptcyApplication = ({
     void,
     ApiErrorDto,
     Key,
-    UpdateBankruptcyApplicationRequest
+    UpdateRecallApplicationRequest
   >(
     'updateBankruptcyApplication',
-    (_key: string, { arg }: { arg: UpdateBankruptcyApplicationRequest }) =>
-      updateBankruptcyApplication(arg),
+    (_key: string, { arg }: { arg: UpdateRecallApplicationRequest }) =>
+      updateRecallApplication(arg),
   )
 
-  const trigger = (data: UpdateBankruptcyApplicationDto) => {
+  const trigger = (data: UpdateRecallApplicationDto) => {
     updateApplicationTrigger(
       {
         applicationId: applicationId,
         caseId: caseId,
-        updateBankruptcyApplicationDto: data,
+        updateRecallApplicationDto: data,
       },
       {
         onSuccess: () => {

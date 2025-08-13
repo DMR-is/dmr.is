@@ -24,6 +24,13 @@ export const bankruptcySettlementSchema = z.object({
   deadline: z.date('Frestdagur bús er nauðsynlegur'),
 })
 
+export const deceasedSettlementSchema = z.object({
+  name: z.string().min(1, 'Nafn dánarbús er nauðsynlegt'),
+  nationalId: z.string().min(1, 'Kennitala dánarbús er nauðsynleg'),
+  address: z.string().min(1, 'Heimilisfang dánarbús er nauðsynlegt'),
+  dateOfDeath: z.date('Dánardagur dánarbús er nauðsynlegur'),
+})
+
 export const liquidatorSchema = z.object({
   name: z.string().min(1, 'Nafn skiptastjóra er nauðsynlegt'),
   location: z.string().min(1, 'Staðsetning skiptastjóra er nauðsynleg'),

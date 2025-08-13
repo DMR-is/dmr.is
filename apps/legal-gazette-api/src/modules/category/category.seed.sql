@@ -190,4 +190,4 @@ VALUES
     'Skiptalok',
     'skiptalok',
     '8819e35e-89ef-4110-bf18-905df2ae122c'
-  )
+  );

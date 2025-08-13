@@ -7,14 +7,13 @@ import useSWRMutation from 'swr/mutation'
 import { Stack, Text, toast } from '@island.is/island-ui/core'
 
 import {
-  BankruptcyApplicationDto,
-  SubmitBankruptcyApplicationRequest,
+  RecallApplicationDto,
+  SubmitRecallApplicationRequest,
 } from '../../../../gen/fetch'
-import { submitBankruptcyApplication } from '../../../../lib/fetchers'
+import { submitRecallApplication } from '../../../../lib/fetchers'
 import { bankruptcyForm } from '../../../../lib/forms/bankruptcy-form'
 import { BankruptcyFormSchema } from '../../../../lib/forms/schemas/bankruptcy-schema'
 import { ApplicationShell } from '../../application/ApplicationShell'
-import { ApplicationFooter } from '../../application/footer/ApplicationFooter'
 import { BankruptcyAdvertFields } from './fields/BankruptcyAdvertFields'
 import { BankruptcyDivisionFields } from './fields/BankruptcyDivisionFields'
 import { BankruptcyLiquidatorFields } from './fields/BankruptcyLiquidatorFields'
@@ -25,7 +24,7 @@ import { BankruptcySignatureFields } from './fields/BankruptcySignatureFields'
 type Props = {
   caseId: string
   applicationId: string
-  application: BankruptcyApplicationDto
+  application: RecallApplicationDto
   courtOptions: { label: string; value: string }[]
 }
 
@@ -43,8 +42,8 @@ export const BankruptcyForm = ({
 
   const { trigger: submitBankruptcyApplicationTrigger } = useSWRMutation(
     'submitBankruptcyApplication',
-    (_key: string, { arg }: { arg: SubmitBankruptcyApplicationRequest }) =>
-      submitBankruptcyApplication(arg),
+    (_key: string, { arg }: { arg: SubmitRecallApplicationRequest }) =>
+      submitRecallApplication(arg),
     {
       onSuccess: () => {
         toast.success('Umsókn hefur verið send til birtingar.', {
