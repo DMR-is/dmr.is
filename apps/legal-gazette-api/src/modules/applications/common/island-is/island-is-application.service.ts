@@ -1,32 +1,34 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
-import { OnEvent } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AdvertModel, AuthService, IAuthService } from '@dmr.is/modules'
 
-import { LegalGazetteEvents } from '../../../lib/constants'
-import { mapIndexToVersion } from '../../../lib/utils'
-import { CommonAdvertModel } from '../../advert/common/common-advert.model'
-import { CaseModel } from '../../case/case.model'
-import { CommunicationChannelModel } from '../../communication-channel/communication-channel.model'
-import { StatusIdEnum } from '../../status/status.model'
-import { TypeIdEnum } from '../../type/type.model'
+import { mapIndexToVersion } from '../../../../lib/utils'
+import { CommonAdvertModel } from '../../../advert/common/common-advert.model'
+import { CaseModel } from '../../../case/case.model'
+import { CommunicationChannelModel } from '../../../communication-channel/communication-channel.model'
+import { StatusIdEnum } from '../../../status/status.model'
+import { TypeIdEnum } from '../../../type/type.model'
 import {
+  CommonApplicationEventsEnum,
   CommonApplicationUpdateStateEvent,
   SubmitCommonApplicationDto,
-} from './dto/common-application.dto'
-import { ICommonApplicationService } from './common-application.service.interface'
+} from './dto/island-is-application.dto'
+import { IIslandIsCommonApplicationService } from './island-is-application.service.interface'
 
 @Injectable()
-export class CommonApplicationService implements ICommonApplicationService {
+export class IslandIsCommonApplicationService
+  implements IIslandIsCommonApplicationService
+{
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IAuthService) private readonly authService: AuthService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
   ) {}
 
-  async deleteApplication(applicationId: string): Promise<void> {
+  async deleteApplication(applicationId: string, user: DMRUser): Promise<void> {
     const caseInstance = await this.caseModel
       .scope(['byApplicationId', applicationId])
       .findOne()
@@ -46,7 +48,6 @@ export class CommonApplicationService implements ICommonApplicationService {
     })
   }
 
-  @OnEvent(LegalGazetteEvents.COMMON_APPLICATION_UPDATE)
   async updateApplicationState(
     body: CommonApplicationUpdateStateEvent,
   ): Promise<void> {
@@ -61,24 +62,20 @@ export class CommonApplicationService implements ICommonApplicationService {
     )
   }
 
-  async submitApplication(body: SubmitCommonApplicationDto): Promise<void> {
-    const submittedBy = body.institution
-      ? `${body.institution.name} (${body.actor.name})`
-      : `${body.actor.name}`
-
-    const channels =
-      body.channels?.map((ch) => ({
-        email: ch.email,
-        name: ch?.name,
-        phone: ch?.phone,
-      })) ?? []
+  async submitApplication(
+    body: SubmitCommonApplicationDto,
+    user: DMRUser,
+  ): Promise<void> {
+    const submittedBy = `${user.name}${user.actor ? ` ( ${user.actor.name})` : ''}`
 
     await this.caseModel.create(
       {
-        communicationChannels: channels,
-        involvedPartyNationalId: body.institution
-          ? body.institution.nationalId
-          : body.actor.nationalId,
+        communicationChannels: body.channels?.map((ch) => ({
+          email: ch.email,
+          name: ch.name,
+          phone: ch.phone,
+        })),
+        involvedPartyNationalId: user.nationalId,
         adverts: body.publishingDates.map((date, i) => ({
           categoryId: body.categoryId,
           statusId: StatusIdEnum.SUBMITTED,
@@ -104,5 +101,10 @@ export class CommonApplicationService implements ICommonApplicationService {
         ],
       },
     )
+
+    await this.updateApplicationState({
+      applicationId: body.applicationId,
+      event: CommonApplicationEventsEnum.APPROVE,
+    })
   }
 }
