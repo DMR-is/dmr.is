@@ -15,7 +15,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
-import { mapIndexToVersion, validateAdvertStatus } from '../../lib/utils'
+import { validateAdvertStatus } from '../../lib/utils'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'

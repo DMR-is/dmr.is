@@ -1,8 +1,14 @@
 export const LEGAL_GAZETTE_NAMESPACE = 'legal-gazette'
 
-export enum ApplicationTypeEnum {
+export enum RecallTypeEnum {
   BANKRUPTCY = 'BANKRUPTCY',
   DECEASED = 'DECEASED',
+}
+
+export enum ApplicationTypeEnum {
+  BANKRUPTCY = RecallTypeEnum.BANKRUPTCY,
+  DECEASED = RecallTypeEnum.DECEASED,
+  COMMON = 'COMMON',
 }
 
 export enum LegalGazetteModels {

@@ -2,16 +2,13 @@ import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import {
-  ApplicationTypeEnum,
-  LegalGazetteModels,
-} from '../../../../lib/constants'
+import { LegalGazetteModels, RecallTypeEnum } from '../../../../lib/constants'
 import { SettlementModel } from '../../../settlement/settlement.model'
 import { AdvertModel } from '../../advert.model'
 import { DivisionEndingAdvertDto } from '../dto/division.dto'
 
 export type DivisionEndingAdvertAttributes = {
-  type: ApplicationTypeEnum
+  type: RecallTypeEnum
   meetingDate: Date
   meetingLocation: string
   settlementId: string
@@ -19,7 +16,7 @@ export type DivisionEndingAdvertAttributes = {
 }
 
 export type DivisionEndingAdvertCreateAttributes = {
-  type: ApplicationTypeEnum
+  type: RecallTypeEnum
   meetingDate: Date
   meetingLocation: string
   settlementId: string
@@ -32,10 +29,11 @@ export class DivisionEndingAdvertModel extends BaseModel<
   DivisionEndingAdvertCreateAttributes
 > {
   @Column({
-    type: DataType.ENUM(...Object.values(ApplicationTypeEnum)),
+    type: DataType.ENUM(...Object.values(RecallTypeEnum)),
     allowNull: false,
+    field: 'recall_type',
   })
-  type!: ApplicationTypeEnum
+  recallType!: RecallTypeEnum
 
   @Column({
     type: DataType.DATE,
@@ -87,7 +85,7 @@ export class DivisionEndingAdvertModel extends BaseModel<
     return {
       id: model.id,
       advertId: model.advertId,
-      type: model.type,
+      recallType: model.recallType,
       meetingDate: model.meetingDate,
       meetingLocation: model.meetingLocation,
       meetingTime: model.meetingTime,

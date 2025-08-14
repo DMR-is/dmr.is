@@ -8,6 +8,7 @@ import { Stack, Text, toast } from '@island.is/island-ui/core'
 import {
   ApplicationTypeEnum,
   RecallApplicationDto,
+  RecallTypeEnum,
 } from '../../../../gen/fetch'
 import { useSubmitRecallApplication } from '../../../../hooks/useSubmitRecallApplication'
 import { recallForm } from '../../../../lib/forms/bankruptcy-form'
@@ -60,7 +61,7 @@ export const RecallForm = ({
         <ApplicationShell sidebar={<Text variant="h4">Texti hér</Text>}>
           <Stack space={[2, 3, 4]}>
             <Stack space={[1, 2]}>
-              <Text variant="h2">{`Innköllun ${application.type === ApplicationTypeEnum.BANKRUPTCY ? 'þrotabús' : 'dánarbús'}`}</Text>
+              <Text variant="h2">{`Innköllun ${application.recallType === RecallTypeEnum.BANKRUPTCY ? 'þrotabús' : 'dánarbús'}`}</Text>
               <Text>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
                 eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
@@ -69,7 +70,7 @@ export const RecallForm = ({
               </Text>
             </Stack>
             <RecallAdvertFields />
-            <RecallSettlementFields applicationType={application.type} />
+            <RecallSettlementFields applicationType={application.recallType} />
             <RecallLiquidatorFields />
             <RecallPublishingFields />
             <RecallDivisionFields />

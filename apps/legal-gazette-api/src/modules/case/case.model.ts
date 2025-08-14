@@ -14,7 +14,7 @@ import {
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { ApplicationTypeEnum, LegalGazetteModels } from '../../lib/constants'
+import { LegalGazetteModels, RecallTypeEnum } from '../../lib/constants'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
 import {
   RecallApplicationCreateAttributes,
@@ -98,8 +98,8 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   })
   recallApplication?: RecallApplicationModel
 
-  get applicationType(): ApplicationTypeEnum | undefined {
-    return this.recallApplication?.type
+  get applicationType(): RecallTypeEnum | undefined {
+    return this.recallApplication?.recallType
   }
 
   @BeforeDestroy

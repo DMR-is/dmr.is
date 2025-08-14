@@ -6,7 +6,7 @@ import useSWRMutation from 'swr/mutation'
 
 import { DropdownMenu, toast } from '@island.is/island-ui/core'
 
-import { ApplicationTypeEnum } from '../../../gen/fetch'
+import { RecallTypeEnum } from '../../../gen/fetch'
 import { PageRoutes } from '../../../lib/constants'
 import { createRecallCaseAndApplication } from '../../../lib/fetchers'
 export const CreateApplication = () => {
@@ -14,12 +14,22 @@ export const CreateApplication = () => {
 
   const { trigger, isMutating } = useSWRMutation(
     'createRecallCaseAndApplication',
-    (_key: string, { arg }: { arg: { type: ApplicationTypeEnum } }) =>
-      createRecallCaseAndApplication({ type: arg.type }),
+    (_key: string, { arg }: { arg: { recallType: RecallTypeEnum } }) =>
+      createRecallCaseAndApplication({ recallType: arg.recallType }),
     {
       onSuccess: (data) => {
+        if (!data.applicationType) {
+          toast.error(
+            'Umsóknartegund vantar. Vinsamlegast reyndu aftur síðar.',
+            {
+              toastId: 'createRecallCaseAndApplicationError',
+            },
+          )
+          return
+        }
+
         const routeToTake =
-          data.applicationType === ApplicationTypeEnum.BANKRUPTCY
+          data.applicationType === RecallTypeEnum.BANKRUPTCY
             ? PageRoutes.APPLICATION_THROTABU
             : PageRoutes.APPLICATION_DANARBU
 
@@ -44,11 +54,11 @@ export const CreateApplication = () => {
       items={[
         {
           title: 'Innköllun þrotabús',
-          onClick: () => trigger({ type: ApplicationTypeEnum.BANKRUPTCY }),
+          onClick: () => trigger({ recallType: RecallTypeEnum.BANKRUPTCY }),
         },
         {
           title: 'Innköllun dánarbús',
-          onClick: () => trigger({ type: ApplicationTypeEnum.DECEASED }),
+          onClick: () => trigger({ recallType: RecallTypeEnum.DECEASED }),
         },
       ]}
     />

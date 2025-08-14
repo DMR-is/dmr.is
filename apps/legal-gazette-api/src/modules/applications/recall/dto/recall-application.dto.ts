@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { ApplicationTypeEnum } from '../../../../lib/constants'
+import { RecallTypeEnum } from '../../../../lib/constants'
 import { CourtDistrictDto } from '../../../court-district/dto/court-district.dto'
 import { ApplicationStatusEnum } from '../../contants'
 
@@ -12,10 +12,10 @@ export class RecallApplicationDto {
   caseId!: string
 
   @ApiProperty({
-    enum: ApplicationTypeEnum,
-    enumName: 'ApplicationTypeEnum',
+    enum: RecallTypeEnum,
+    enumName: 'RecallTypeEnum',
   })
-  type!: ApplicationTypeEnum
+  recallType!: RecallTypeEnum
 
   @ApiProperty({ type: String, required: false })
   additionalText?: string

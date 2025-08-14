@@ -11,9 +11,9 @@ import { CategoryDto } from './dto/category.dto'
 
 export enum CategoryDefaultIdEnum {
   BANKRUPTCY_RECALL = '30452623-789d-4bc8-b068-ff44b706ba8e',
-  DECEASED_RECALL = 'b0c8f1d2-3c4e-4f5a-8b6c-7d8e9f0a1b2c',
+  DECEASED_RECALL = '6b7ccba1-afd9-4eaf-adb5-297fe1cc163c',
   BANKRUPTCY_DIVISION_MEETING = '23064adc-db71-48ad-aeae-6044f0567ff9',
-  DECEASED_DIVISION_MEETING = '6b7ccba1-afd9-4eaf-adb5-297fe1cc163c',
+  DECEASED_DIVISION_MEETING = '94effe96-d167-4edb-b776-99eb9f92d7da',
   DIVISION_ENDING = '7cd93ede-27e9-46ac-bf43-2259ce6dd8ff',
 }
 

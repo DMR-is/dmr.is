@@ -1222,15 +1222,15 @@
         "tags": ["Legal gazette - application web API"]
       }
     },
-    "/api/v1/applications/recalls/{type}": {
+    "/api/v1/applications/recalls/{recallType}": {
       "post": {
         "operationId": "createRecallCaseAndApplication",
         "parameters": [
           {
-            "name": "type",
+            "name": "recallType",
             "required": true,
             "in": "path",
-            "schema": { "$ref": "#/components/schemas/ApplicationTypeEnum" }
+            "schema": { "$ref": "#/components/schemas/RecallTypeEnum" }
           }
         ],
         "responses": {
@@ -2389,7 +2389,7 @@
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
-      "ApplicationTypeEnum": {
+      "RecallTypeEnum": {
         "type": "string",
         "enum": ["BANKRUPTCY", "DECEASED"]
       },
@@ -2415,7 +2415,7 @@
           "id": { "type": "string" },
           "caseNumber": { "type": "string" },
           "applicationType": {
-            "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
+            "allOf": [{ "$ref": "#/components/schemas/RecallTypeEnum" }]
           }
         },
         "required": ["createdAt", "updatedAt", "id", "caseNumber"]
@@ -2772,8 +2772,8 @@
         "properties": {
           "id": { "type": "string" },
           "caseId": { "type": "string" },
-          "type": {
-            "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
+          "recallType": {
+            "allOf": [{ "$ref": "#/components/schemas/RecallTypeEnum" }]
           },
           "additionalText": { "type": "string" },
           "judgmentDate": { "type": "string" },
@@ -2793,7 +2793,7 @@
           "courtDistrict": { "$ref": "#/components/schemas/CourtDistrictDto" },
           "publishingDates": { "type": "array", "items": { "type": "string" } }
         },
-        "required": ["id", "caseId", "type", "status"]
+        "required": ["id", "caseId", "recallType", "status"]
       },
       "TypeModel": { "type": "object", "properties": {} },
       "GetTypesDto": {
@@ -2857,6 +2857,10 @@
         },
         "required": ["courtDistricts"]
       },
+      "ApplicationTypeEnum": {
+        "type": "string",
+        "enum": ["BANKRUPTCY", "DECEASED", "COMMON"]
+      },
       "ApplicationDto": {
         "type": "object",
         "properties": {
@@ -2864,12 +2868,19 @@
           "caseId": { "type": "string" },
           "nationalId": { "type": "string" },
           "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
-          "type": {
+          "applicationType": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           },
           "title": { "type": "string" }
         },
-        "required": ["id", "caseId", "nationalId", "status", "type", "title"]
+        "required": [
+          "id",
+          "caseId",
+          "nationalId",
+          "status",
+          "applicationType",
+          "title"
+        ]
       },
       "ApplicationsDto": {
         "type": "object",

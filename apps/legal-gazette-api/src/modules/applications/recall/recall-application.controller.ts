@@ -1,3 +1,5 @@
+import addDays from 'date-fns/addDays'
+
 import {
   BadRequestException,
   Body,
@@ -23,7 +25,7 @@ import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import { Auth } from '@island.is/auth-nest-tools'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
-import { ApplicationTypeEnum } from '../../../lib/constants'
+import { RecallTypeEnum } from '../../../lib/constants'
 import {
   bankruptcyRecallApplicationSchema,
   deceasedRecallApplicationSchema,
@@ -60,20 +62,20 @@ export class BankruptcyApplicationController {
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
   ) {}
 
-  @Post(':type')
+  @Post(':recallType')
   @LGResponse({
     operationId: 'createRecallCaseAndApplication',
     type: CaseDto,
   })
   @ApiParam({
-    enum: ApplicationTypeEnum,
-    name: 'type',
-    enumName: 'ApplicationTypeEnum',
+    enum: RecallTypeEnum,
+    name: 'recallType',
+    enumName: 'RecallTypeEnum',
   })
   async createRecallCaseAndApplication(
     @CurrentUser() user: Auth,
-    @Param('type', new EnumValidationPipe(ApplicationTypeEnum))
-    type: ApplicationTypeEnum,
+    @Param('recallType', new EnumValidationPipe(RecallTypeEnum))
+    recallType: RecallTypeEnum,
   ): Promise<CaseDto> {
     if (!user?.nationalId) {
       throw new UnauthorizedException()
@@ -83,8 +85,9 @@ export class BankruptcyApplicationController {
       {
         involvedPartyNationalId: user.nationalId,
         recallApplication: {
-          type: type,
+          recallType: recallType,
           involvedPartyNationalId: user.nationalId,
+          publishingDates: [addDays(new Date(), 14)],
         },
       },
       {
@@ -206,7 +209,7 @@ export class BankruptcyApplicationController {
     )
 
     const toParse = {
-      applicationType: dto.type,
+      applicationType: dto.recallType,
       additionalText: dto.additionalText,
       judgmentDate: dto.judgmentDate,
       signatureLocation: dto.signatureLocation,
@@ -222,7 +225,7 @@ export class BankruptcyApplicationController {
     }
 
     const parsedApplication =
-      dto.type === ApplicationTypeEnum.BANKRUPTCY
+      dto.recallType === RecallTypeEnum.BANKRUPTCY
         ? bankruptcyRecallApplicationSchema.safeParse({
             ...toParse,
             settlementDeadline: dto.settlementDeadline,
@@ -242,7 +245,7 @@ export class BankruptcyApplicationController {
     await this.advertModel.bulkCreate(
       parsedApplication.data.publishingDates.map((scheduledAtDate, i) => ({
         categoryId:
-          dto.type === ApplicationTypeEnum.BANKRUPTCY
+          dto.recallType === RecallTypeEnum.BANKRUPTCY
             ? CategoryDefaultIdEnum.BANKRUPTCY_RECALL
             : CategoryDefaultIdEnum.DECEASED_RECALL,
         caseId: caseId,
@@ -250,7 +253,7 @@ export class BankruptcyApplicationController {
         scheduledAt: new Date(scheduledAtDate),
         submittedBy: nationalId,
         title: `Innköllun ${
-          dto.type === ApplicationTypeEnum.BANKRUPTCY ? 'þrotabús' : 'dánarbús'
+          dto.recallType === RecallTypeEnum.BANKRUPTCY ? 'þrotabús' : 'dánarbús'
         } ${settlementCheck.data.settlementName}`,
         html: '<div>TODO: insert html</div>',
         paid: false,
@@ -271,7 +274,16 @@ export class BankruptcyApplicationController {
         },
       })),
       {
-        include: [RecallAdvertModel, DivisionMeetingAdvertModel],
+        include: [
+          {
+            model: RecallAdvertModel,
+            as: 'recallAdvert',
+          },
+          {
+            model: DivisionMeetingAdvertModel,
+            as: 'divisionMeetingAdvert',
+          },
+        ],
       },
     )
 

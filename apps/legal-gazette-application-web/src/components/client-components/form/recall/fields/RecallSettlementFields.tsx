@@ -2,7 +2,7 @@ import { useFormContext } from 'react-hook-form'
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
-import { ApplicationTypeEnum } from '../../../../../gen/fetch'
+import { RecallTypeEnum } from '../../../../../gen/fetch'
 import { useUpdateRecallApplication } from '../../../../../hooks/useUpdateRecallApplication'
 import {
   BankruptcyFormFields,
@@ -12,7 +12,7 @@ import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
 type Props = {
-  applicationType: ApplicationTypeEnum
+  applicationType: RecallTypeEnum
 }
 
 export const RecallSettlementFields = ({ applicationType }: Props) => {
@@ -20,12 +20,12 @@ export const RecallSettlementFields = ({ applicationType }: Props) => {
     useFormContext<BankruptcyFormSchema>().getValues('meta')
 
   const title =
-    applicationType === ApplicationTypeEnum.BANKRUPTCY
+    applicationType === RecallTypeEnum.BANKRUPTCY
       ? 'Upplýsingar um þrotabúið'
       : 'Upplýsingar um dánarbúið'
 
   const type =
-    applicationType === ApplicationTypeEnum.BANKRUPTCY ? 'þrotabús' : 'dánarbús'
+    applicationType === RecallTypeEnum.BANKRUPTCY ? 'þrotabús' : 'dánarbús'
 
   const { trigger } = useUpdateRecallApplication({ caseId, applicationId })
 
@@ -54,7 +54,7 @@ export const RecallSettlementFields = ({ applicationType }: Props) => {
         <InputController
           name={BankruptcyFormFields.SETTLEMENT_ADDRESS}
           label={
-            applicationType === ApplicationTypeEnum.BANKRUPTCY
+            applicationType === RecallTypeEnum.BANKRUPTCY
               ? 'Heimilisfang þrotabús'
               : 'Síðasta heimilisfang'
           }
@@ -65,18 +65,18 @@ export const RecallSettlementFields = ({ applicationType }: Props) => {
       <GridColumn span={['12/12', '6/12']}>
         <DatePickerController
           name={
-            applicationType === ApplicationTypeEnum.BANKRUPTCY
+            applicationType === RecallTypeEnum.BANKRUPTCY
               ? BankruptcyFormFields.SETTLEMENT_DEADLINE
               : BankruptcyFormFields.SETTLEMENT_DATE_OF_DEATH
           }
           label={
-            applicationType === ApplicationTypeEnum.BANKRUPTCY
+            applicationType === RecallTypeEnum.BANKRUPTCY
               ? 'Frestdagur þrotabús'
               : 'Dánardagur'
           }
           required
           onChange={(val) => {
-            if (applicationType === ApplicationTypeEnum.BANKRUPTCY) {
+            if (applicationType === RecallTypeEnum.BANKRUPTCY) {
               return trigger({
                 settlementDeadline: val ? val.toISOString() : '',
               })

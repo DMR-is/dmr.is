@@ -15,7 +15,11 @@ import { BadRequestException } from '@nestjs/common'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { ApplicationTypeEnum, LegalGazetteModels } from '../../../lib/constants'
+import {
+  ApplicationTypeEnum,
+  LegalGazetteModels,
+  RecallTypeEnum,
+} from '../../../lib/constants'
 import { CaseModel } from '../../case/case.model'
 import { CourtDistrictModel } from '../../court-district/court-district.model'
 import { ApplicationStatusEnum } from '../contants'
@@ -24,7 +28,7 @@ import { RecallApplicationDto } from './dto/recall-application.dto'
 
 type RecallApplicationAttributes = {
   caseId: string
-  type: ApplicationTypeEnum
+  recallType: RecallTypeEnum
   involvedPartyNationalId: string
   status?: ApplicationStatusEnum | null
   courtDistrictId?: string | null
@@ -70,10 +74,11 @@ export class RecallApplicationModel extends BaseModel<
   caseId!: string
 
   @Column({
-    type: DataType.ENUM(...Object.values(ApplicationTypeEnum)),
+    type: DataType.ENUM(...Object.values(RecallTypeEnum)),
     allowNull: false,
+    field: 'recall_type',
   })
-  type!: ApplicationTypeEnum
+  recallType!: RecallTypeEnum
 
   @Column({
     type: DataType.ENUM(...Object.values(ApplicationStatusEnum)),
@@ -196,7 +201,7 @@ export class RecallApplicationModel extends BaseModel<
   get title(): string {
     const settlementAddress = this.getDataValue('settlementAddress')
     const prefix =
-      this.type === ApplicationTypeEnum.BANKRUPTCY
+      this.recallType === RecallTypeEnum.BANKRUPTCY
         ? 'Innköllun þrotabús'
         : 'Innköllun dánarbús'
 
@@ -207,7 +212,7 @@ export class RecallApplicationModel extends BaseModel<
     return {
       id: model.id,
       status: model.status,
-      type: model.type,
+      recallType: model.recallType,
       additionalText: model.additionalText,
       judgmentDate: model.judgmentDate?.toISOString(),
       signatureLocation: model.signatureLocation,
@@ -240,7 +245,10 @@ export class RecallApplicationModel extends BaseModel<
       caseId: model.caseId,
       nationalId: model.involvedPartyNationalId,
       status: model.status,
-      type: model.type,
+      applicationType:
+        model.recallType === RecallTypeEnum.BANKRUPTCY
+          ? ApplicationTypeEnum.BANKRUPTCY
+          : ApplicationTypeEnum.DECEASED,
       title: model.title,
     }
   }

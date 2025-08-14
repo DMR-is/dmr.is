@@ -9,14 +9,14 @@ import {
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { ApplicationTypeEnum, LegalGazetteModels } from '../../../lib/constants'
+import { LegalGazetteModels, RecallTypeEnum } from '../../../lib/constants'
 import { CourtDistrictModel } from '../../court-district/court-district.model'
 import { SettlementModel } from '../../settlement/settlement.model'
 import { AdvertModel } from '../advert.model'
 import { RecallAdvertDto } from './dto/recall-advert.dto'
 
 export type RecallAdvertAttributes = {
-  type: ApplicationTypeEnum
+  type: RecallTypeEnum
   additionalText?: string | null
   signatureLocation: string
   signatureDate: Date
@@ -25,7 +25,7 @@ export type RecallAdvertAttributes = {
   advertId: string
 }
 export type RecallAdvertCreateAttributes = {
-  type: ApplicationTypeEnum
+  type: RecallTypeEnum
   additionalText?: string | null
   signatureLocation: string
   signatureDate: Date
@@ -37,6 +37,7 @@ export type RecallAdvertCreateAttributes = {
 @DefaultScope(() => ({
   attributes: [
     'id',
+    'type',
     'additionalText',
     'signatureLocation',
     'signatureDate',
@@ -55,10 +56,11 @@ export class RecallAdvertModel extends BaseModel<
   RecallAdvertCreateAttributes
 > {
   @Column({
-    type: DataType.ENUM(...Object.values(ApplicationTypeEnum)),
+    type: DataType.ENUM(...Object.values(RecallTypeEnum)),
     allowNull: false,
+    field: 'recall_type',
   })
-  type!: ApplicationTypeEnum
+  recallType!: RecallTypeEnum
 
   @Column({
     type: DataType.TEXT,
@@ -122,7 +124,7 @@ export class RecallAdvertModel extends BaseModel<
   static fromModel(model: RecallAdvertModel): RecallAdvertDto {
     return {
       id: model.id,
-      type: model.type,
+      recallType: model.recallType,
       additionalText: model.additionalText,
       signatureLocation: model.signatureLocation,
       signatureDate: model.signatureDate.toISOString(),
