@@ -156,7 +156,7 @@ export class RecallApplicationModel extends BaseModel<
   settlementAddress?: string
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.DATE,
     field: 'settlement_deadline_date',
   })
   settlementDeadline?: Date
@@ -259,7 +259,7 @@ export class RecallApplicationModel extends BaseModel<
 
   @BeforeUpdate
   static async validateUpdate(model: RecallApplicationModel) {
-    if (model.status !== ApplicationStatusEnum.DRAFT) {
+    if (model.previous('status') !== ApplicationStatusEnum.DRAFT) {
       throw new BadRequestException(
         'Cannot update application that is not in draft status',
       )

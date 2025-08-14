@@ -78,21 +78,6 @@ export type AdvertCreateAttributes = {
   divisionMeetingAdvert?: DivisionMeetingAdvertCreateAttributes
 }
 
-export type CreateCommonAdvertParams = Omit<
-  AdvertCreateAttributes,
-  'typeId' | 'recallAdvert' | 'divisionMeetingAdvert'
->
-
-export type CreateRecallAdvertParams = Omit<
-  AdvertCreateAttributes,
-  'typeId' | 'commonAdvert' | 'divisionMeetingAdvert'
->
-
-export type CreateDivisionMeetingAdvertParams = Omit<
-  AdvertCreateAttributes,
-  'typeId' | 'commonAdvert' | 'recallAdvert'
->
-
 export enum AdvertVersionEnum {
   A = 'A',
   B = 'B',

@@ -14,7 +14,7 @@ import { AdvertModel } from '../../advert.model'
 import { DivisionMeetingAdvertDto } from '../dto/division.dto'
 
 export type DivisionMeetingAdvertAttributes = {
-  type: RecallTypeEnum
+  recallType: RecallTypeEnum
   meetingDate: Date
   meetingLocation: string
   settlementId: string
@@ -22,7 +22,7 @@ export type DivisionMeetingAdvertAttributes = {
 }
 
 export type DivisionMeetingAdvertCreateAttributes = {
-  type: RecallTypeEnum
+  recallType: RecallTypeEnum
   meetingDate: Date
   meetingLocation: string
   settlementId: string

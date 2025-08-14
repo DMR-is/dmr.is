@@ -10,16 +10,8 @@ export const settlementSchema = z
     settlementName: z.string(),
     settlementNationalId: z.string(),
     settlementAddress: z.string(),
-    settlementDeadline: z
-      .string()
-      .transform((iso) => new Date(iso))
-      .nullable()
-      .optional(),
-    settlementDateOfDeath: z
-      .string()
-      .transform((iso) => new Date(iso))
-      .nullable()
-      .optional(),
+    settlementDeadline: z.date().nullable().optional(),
+    settlementDateOfDeath: z.date().nullable().optional(),
   })
   .refine((settlement) => {
     // deadline or date of death must be provided
@@ -31,29 +23,27 @@ export const settlementSchema = z
   })
 
 export const recallApplicationSchema = z.object({
-  applicationType: z.enum(RecallTypeEnum),
+  recallType: z.enum(RecallTypeEnum),
   additionalText: z.string().optional().nullable(),
-  judgmentDate: z.iso.datetime().transform((date) => new Date(date)),
+  judgmentDate: z.date(),
   signatureLocation: z.string(),
-  signatureDate: z.iso.datetime().transform((date) => new Date(date)),
+  signatureDate: z.date(),
   courtDistrictId: z.string(),
   liquidatorName: z.string(),
   liquidatorLocation: z.string(),
   liquidatorOnBehalfOf: z.string().optional(),
   settlementId: z.string(),
-  meetingDate: z.iso.datetime().transform((date) => new Date(date)),
+  meetingDate: z.date(),
   meetingLocation: z.string(),
-  publishingDates: z
-    .array(z.iso.datetime().transform((date) => new Date(date)))
-    .refine((dates) => dates.length > 0),
+  publishingDates: z.array(z.date()).refine((dates) => dates.length > 0),
 })
 
 const bankruptcySchema = z.object({
-  settlementDeadline: z.iso.datetime().transform((date) => new Date(date)),
+  settlementDeadline: z.date(),
 })
 
 const deceasedSchema = z.object({
-  settlementDateOfDeath: z.iso.datetime().transform((date) => new Date(date)),
+  settlementDateOfDeath: z.date(),
 })
 
 export const bankruptcyRecallApplicationSchema = recallApplicationSchema.extend(
@@ -63,3 +53,11 @@ export const bankruptcyRecallApplicationSchema = recallApplicationSchema.extend(
 export const deceasedRecallApplicationSchema = recallApplicationSchema.extend(
   deceasedSchema.shape,
 )
+
+export type RecallApplication = z.infer<typeof recallApplicationSchema>
+export type BankruptcyRecallApplication = z.infer<
+  typeof bankruptcyRecallApplicationSchema
+>
+export type DeceasedRecallApplication = z.infer<
+  typeof deceasedRecallApplicationSchema
+>

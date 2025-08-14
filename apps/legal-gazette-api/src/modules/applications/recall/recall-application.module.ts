@@ -7,7 +7,7 @@ import { DivisionEndingAdvertModel } from '../../advert/division/models/division
 import { RecallAdvertModel } from '../../advert/recall/recall-advert.model'
 import { CaseModel } from '../../case/case.model'
 import { SettlementModel } from '../../settlement/settlement.model'
-import { BankruptcyApplicationController } from './recall-application.controller'
+import { RecallApplicationtroller } from './recall-application.controller'
 import { RecallApplicationModel } from './recall-application.model'
 
 @Module({
@@ -22,7 +22,7 @@ import { RecallApplicationModel } from './recall-application.model'
       SettlementModel,
     ]),
   ],
-  controllers: [BankruptcyApplicationController],
+  controllers: [RecallApplicationtroller],
   providers: [],
   exports: [],
 })

@@ -16,7 +16,7 @@ import { AdvertModel } from '../advert.model'
 import { RecallAdvertDto } from './dto/recall-advert.dto'
 
 export type RecallAdvertAttributes = {
-  type: RecallTypeEnum
+  recallType: RecallTypeEnum
   additionalText?: string | null
   signatureLocation: string
   signatureDate: Date
@@ -25,7 +25,7 @@ export type RecallAdvertAttributes = {
   advertId: string
 }
 export type RecallAdvertCreateAttributes = {
-  type: RecallTypeEnum
+  recallType: RecallTypeEnum
   additionalText?: string | null
   signatureLocation: string
   signatureDate: Date
@@ -37,7 +37,10 @@ export type RecallAdvertCreateAttributes = {
 @DefaultScope(() => ({
   attributes: [
     'id',
-    'type',
+    'recallType',
+    'advertId',
+    'courtDistrictId',
+    'settlementId',
     'additionalText',
     'signatureLocation',
     'signatureDate',

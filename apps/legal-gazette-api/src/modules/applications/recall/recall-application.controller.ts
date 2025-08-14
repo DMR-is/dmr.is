@@ -29,6 +29,7 @@ import { RecallTypeEnum } from '../../../lib/constants'
 import {
   bankruptcyRecallApplicationSchema,
   deceasedRecallApplicationSchema,
+  RecallApplication,
   settlementSchema,
 } from '../../../lib/schemas'
 import { mapIndexToVersion } from '../../../lib/utils'
@@ -51,7 +52,7 @@ import { RecallApplicationModel } from './recall-application.model'
 })
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard)
-export class BankruptcyApplicationController {
+export class RecallApplicationtroller {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(RecallApplicationModel)
@@ -190,8 +191,12 @@ export class BankruptcyApplicationController {
       settlementName: dto.settlementName,
       settlementNationalId: dto.settlementNationalId,
       settlementAddress: dto.settlementAddress,
-      settlementDeadline: dto.settlementDeadline,
-      settlementDateOfDeath: dto.settlementDateOfDeath,
+      settlementDeadline: dto.settlementDeadline
+        ? new Date(dto.settlementDeadline)
+        : undefined,
+      settlementDateOfDeath: dto.settlementDateOfDeath
+        ? new Date(dto.settlementDateOfDeath)
+        : undefined,
     })
 
     if (!settlementCheck.success) {
@@ -208,31 +213,39 @@ export class BankruptcyApplicationController {
       },
     )
 
-    const toParse = {
-      applicationType: dto.recallType,
+    const toParse: Partial<RecallApplication> = {
+      recallType: dto.recallType,
       additionalText: dto.additionalText,
-      judgmentDate: dto.judgmentDate,
+      judgmentDate: dto.judgmentDate ? new Date(dto.judgmentDate) : undefined,
       signatureLocation: dto.signatureLocation,
-      signatureDate: dto.signatureDate,
+      signatureDate: dto.signatureDate
+        ? new Date(dto.signatureDate)
+        : undefined,
       courtDistrictId: dto.courtDistrict?.id,
       liquidatorName: dto.liquidator,
       liquidatorLocation: dto.liquidatorLocation,
       liquidatorOnBehalfOf: dto.liquidatorOnBehalfOf,
       settlementId: settlementModel.id,
-      meetingDate: dto.settlementMeetingDate,
+      meetingDate: dto.settlementMeetingDate
+        ? new Date(dto.settlementMeetingDate)
+        : undefined,
       meetingLocation: dto.settlementMeetingLocation,
-      publishingDates: dto.publishingDates,
+      publishingDates: dto.publishingDates?.map((d) => new Date(d)),
     }
 
     const parsedApplication =
       dto.recallType === RecallTypeEnum.BANKRUPTCY
         ? bankruptcyRecallApplicationSchema.safeParse({
             ...toParse,
-            settlementDeadline: dto.settlementDeadline,
+            settlementDeadline: dto.settlementDeadline
+              ? new Date(dto.settlementDeadline)
+              : undefined,
           })
         : deceasedRecallApplicationSchema.safeParse({
             ...toParse,
-            settlementDateOfDeath: dto.settlementDateOfDeath,
+            settlementDateOfDeath: dto.settlementDateOfDeath
+              ? new Date(dto.settlementDateOfDeath)
+              : undefined,
           })
 
     if (parsedApplication.success === false) {
@@ -264,13 +277,13 @@ export class BankruptcyApplicationController {
           signatureLocation: parsedApplication.data.signatureLocation,
           signatureDate: parsedApplication.data.signatureDate,
           settlementId: parsedApplication.data.settlementId,
-          type: parsedApplication.data.applicationType,
+          recallType: parsedApplication.data.recallType,
         },
         divisionMeetingAdvert: {
           meetingDate: parsedApplication.data.meetingDate,
           meetingLocation: parsedApplication.data.meetingLocation,
           settlementId: parsedApplication.data.settlementId,
-          type: parsedApplication.data.applicationType,
+          recallType: parsedApplication.data.recallType,
         },
       })),
       {
