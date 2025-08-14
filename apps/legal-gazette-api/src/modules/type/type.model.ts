@@ -9,7 +9,7 @@ import { TypeDto } from './dto/type.dto'
 export enum TypeIdEnum {
   COMMON_ADVERT = 'a58fe2a8-b0a9-47bd-b424-4b9cece0e622',
   RECALL = '67cd8559-ea7a-45ae-8de1-e87005c35531',
-  DIVISION_MEETING = 'f6f0b9e8-f32b-459a-b3b9-32eb4d211ea2',
+  DIVISION_MEETING = '5b3dded4-e6c2-411e-a9e0-213bea06af17',
   DIVISION_ENDING = '8819e35e-89ef-4110-bf18-905df2ae122c',
 }
 

@@ -279,12 +279,6 @@ export class RecallApplicationtroller {
           settlementId: parsedApplication.data.settlementId,
           recallType: parsedApplication.data.recallType,
         },
-        divisionMeetingAdvert: {
-          meetingDate: parsedApplication.data.meetingDate,
-          meetingLocation: parsedApplication.data.meetingLocation,
-          settlementId: parsedApplication.data.settlementId,
-          recallType: parsedApplication.data.recallType,
-        },
       })),
       {
         include: [
@@ -292,10 +286,33 @@ export class RecallApplicationtroller {
             model: RecallAdvertModel,
             as: 'recallAdvert',
           },
-          {
-            model: DivisionMeetingAdvertModel,
-            as: 'divisionMeetingAdvert',
-          },
+        ],
+      },
+    )
+
+    await this.advertModel.create(
+      {
+        categoryId:
+          dto.recallType === RecallTypeEnum.BANKRUPTCY
+            ? CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING
+            : CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING,
+        caseId: caseId,
+        typeId: TypeIdEnum.DIVISION_MEETING,
+        scheduledAt: parsedApplication.data.meetingDate,
+        title: 'Skiptafundur',
+        html: '<div>TODO: insert html</div>',
+        submittedBy: nationalId,
+        paid: false,
+        divisionMeetingAdvert: {
+          meetingDate: parsedApplication.data.meetingDate,
+          meetingLocation: parsedApplication.data.meetingLocation,
+          settlementId: parsedApplication.data.settlementId,
+          recallType: parsedApplication.data.recallType,
+        },
+      },
+      {
+        include: [
+          { model: DivisionMeetingAdvertModel, as: 'divisionMeetingAdvert' },
         ],
       },
     )
