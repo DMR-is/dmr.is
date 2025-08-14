@@ -52,7 +52,7 @@ import { RecallApplicationModel } from './recall-application.model'
 })
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard)
-export class RecallApplicationtroller {
+export class RecallApplicationController {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(RecallApplicationModel)

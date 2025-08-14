@@ -2,12 +2,9 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AdvertModel } from '../../advert/advert.model'
-import { DivisionMeetingAdvertDto } from '../../advert/division/dto/division.dto'
-import { DivisionEndingAdvertModel } from '../../advert/division/models/division-ending-advert.model'
-import { RecallAdvertModel } from '../../advert/recall/recall-advert.model'
 import { CaseModel } from '../../case/case.model'
 import { SettlementModel } from '../../settlement/settlement.model'
-import { RecallApplicationtroller } from './recall-application.controller'
+import { RecallApplicationController } from './recall-application.controller'
 import { RecallApplicationModel } from './recall-application.model'
 
 @Module({
@@ -16,13 +13,10 @@ import { RecallApplicationModel } from './recall-application.model'
       RecallApplicationModel,
       CaseModel,
       AdvertModel,
-      RecallAdvertModel,
-      DivisionMeetingAdvertDto,
-      DivisionEndingAdvertModel,
       SettlementModel,
     ]),
   ],
-  controllers: [RecallApplicationtroller],
+  controllers: [RecallApplicationController],
   providers: [],
   exports: [],
 })
