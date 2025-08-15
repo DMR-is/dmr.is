@@ -26,4 +26,4 @@ import { RecallApplicationModel } from './recall-application.model'
   providers: [],
   exports: [],
 })
-export class BankruptcyApplicationModule {}
+export class RecallApplicationModule {}

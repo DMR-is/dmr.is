@@ -24,7 +24,7 @@ import { IIslandIsCommonApplicationService } from './island-is-application.servi
 })
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard)
-export class CommonApplicationController {
+export class IslandIsApplicationController {
   constructor(
     @Inject(IIslandIsCommonApplicationService)
     private readonly applicationService: IslandIsCommonApplicationService,

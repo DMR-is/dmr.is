@@ -64,14 +64,13 @@ export class RecallApplicationtroller {
   ) {}
 
   @Post(':recallType')
+  @ApiParam({
+    name: 'recallType',
+    enum: RecallTypeEnum,
+  })
   @LGResponse({
     operationId: 'createRecallCaseAndApplication',
     type: CaseDto,
-  })
-  @ApiParam({
-    enum: RecallTypeEnum,
-    name: 'recallType',
-    enumName: 'RecallTypeEnum',
   })
   async createRecallCaseAndApplication(
     @CurrentUser() user: Auth,

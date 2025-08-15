@@ -20,7 +20,11 @@ export class RecallAdvertDto {
   @IsUUID()
   id!: string
 
-  @ApiProperty({ enum: RecallTypeEnum })
+  @ApiProperty({
+    enum: RecallTypeEnum,
+    enumName: 'RecallTypeEnum',
+    required: true,
+  })
   @IsEnum(RecallTypeEnum)
   recallType!: RecallTypeEnum
 

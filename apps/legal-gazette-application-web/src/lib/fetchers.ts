@@ -58,6 +58,12 @@ export async function createRecallCaseAndApplication(
   return await client.createRecallCaseAndApplication(args)
 }
 
+export async function createCommonCaseAndApplication() {
+  const client = await getClientWithSession()
+
+  return await client.createCommonCaseAndApplication()
+}
+
 export async function getRecallApplicationByCaseId(caseId: string) {
   const client = await getClientWithSession()
 

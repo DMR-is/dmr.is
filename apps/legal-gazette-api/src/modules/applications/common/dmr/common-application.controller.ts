@@ -8,7 +8,10 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
+import { LGResponse } from '../../../../decorators/lg-response.decorator'
 import { CaseModel } from '../../../case/case.model'
+import { CaseDto } from '../../../case/dto/case.dto'
+import { CommonApplicationModel } from './common-application.model'
 
 @Controller({
   path: 'applications/common',
@@ -22,13 +25,21 @@ export class CommonApplicationController {
   ) {}
 
   @Post('createCommonCaseAndApplication')
+  @LGResponse({ operationId: 'createCommonCaseAndApplication', type: CaseDto })
   async createCommonCaseAndApplication(@CurrentUser() user: DMRUser) {
-    await this.caseModel.create({
-      involvedPartyNationalId: user.nationalId,
-      commonApplication: {
+    const caseModel = await this.caseModel.create(
+      {
         involvedPartyNationalId: user.nationalId,
-        publishingDates: [addDays(new Date(), 14)],
+        commonApplication: {
+          involvedPartyNationalId: user.nationalId,
+          publishingDates: [addDays(new Date(), 14)],
+        },
       },
-    })
+      {
+        include: [CommonApplicationModel],
+      },
+    )
+
+    return caseModel.fromModel()
   }
 }

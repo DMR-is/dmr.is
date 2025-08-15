@@ -14,7 +14,11 @@ import {
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels, RecallTypeEnum } from '../../lib/constants'
+import {
+  ApplicationTypeEnum,
+  LegalGazetteModels,
+  RecallTypeEnum,
+} from '../../lib/constants'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
 import {
   CommonApplicationCreateAttributes,
@@ -129,8 +133,17 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   })
   commonApplication?: CommonApplicationModel
 
-  get applicationType(): RecallTypeEnum | undefined {
-    return this.recallApplication?.recallType
+  get applicationType(): ApplicationTypeEnum {
+    if (this.recallApplication) {
+      return this.recallApplication.recallType === RecallTypeEnum.BANKRUPTCY
+        ? ApplicationTypeEnum.BANKRUPTCY
+        : ApplicationTypeEnum.DECEASED
+    }
+    if (this.commonApplication) {
+      return ApplicationTypeEnum.COMMON
+    }
+
+    throw new Error('Case does not have any applications')
   }
 
   @BeforeDestroy
