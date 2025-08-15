@@ -5,12 +5,12 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { CreateCommonAdvertDto } from '../../../../advert/common/dto/create-common-advert.dto'
 
-export enum CommonApplicationEventsEnum {
+export enum IslandIsCommonApplicationEventsEnum {
   APPROVE = 'APPROVE',
   REJECT = 'REJECT',
 }
 
-export class SubmitCommonApplicationDto extends CreateCommonAdvertDto {
+export class IslandIsSubmitCommonApplicationDto extends CreateCommonAdvertDto {
   @ApiProperty({ type: String, required: true })
   @IsUUID()
   applicationId!: string
@@ -27,14 +27,14 @@ export class SubmitCommonApplicationDto extends CreateCommonAdvertDto {
   html!: string
 }
 
-export class CommonApplicationUpdateStateEvent {
+export class IslandIsCommonApplicationUpdateStateEventDto {
   @ApiProperty({ type: String })
   @IsUUID()
   applicationId!: string
 
   @ApiProperty({
-    enum: CommonApplicationEventsEnum,
+    enum: IslandIsCommonApplicationEventsEnum,
     enumName: 'CommonApplicationEvents',
   })
-  event!: CommonApplicationEventsEnum
+  event!: IslandIsCommonApplicationEventsEnum
 }

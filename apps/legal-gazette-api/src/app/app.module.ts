@@ -23,6 +23,7 @@ import { DivisionEndingAdvertModel } from '../modules/advert/division/models/div
 import { DivisionMeetingAdvertModel } from '../modules/advert/division/models/division-meeting-advert.model'
 import { RecallAdvertModel } from '../modules/advert/recall/recall-advert.model'
 import { ApplicationModule } from '../modules/applications/application.module'
+import { CommonApplicationModel } from '../modules/applications/common/dmr/common-application.model'
 import { CommonApplicationModule } from '../modules/applications/common/dmr/common-application.module'
 import { RecallApplicationModel } from '../modules/applications/recall/recall-application.model'
 import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
@@ -74,6 +75,7 @@ import { UsersModule } from '../modules/users/users.module'
             DivisionMeetingAdvertModel,
             DivisionEndingAdvertModel,
             RecallApplicationModel,
+            CommonApplicationModel,
             SubscriberModel,
           ],
         }),

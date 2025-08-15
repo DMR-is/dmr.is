@@ -12,9 +12,9 @@ import { CommunicationChannelModel } from '../../../communication-channel/commun
 import { StatusIdEnum } from '../../../status/status.model'
 import { TypeIdEnum } from '../../../type/type.model'
 import {
-  CommonApplicationEventsEnum,
-  CommonApplicationUpdateStateEvent,
-  SubmitCommonApplicationDto,
+  IslandIsCommonApplicationEventsEnum,
+  IslandIsCommonApplicationUpdateStateEventDto,
+  IslandIsSubmitCommonApplicationDto,
 } from './dto/island-is-application.dto'
 import { IIslandIsCommonApplicationService } from './island-is-application.service.interface'
 
@@ -49,7 +49,7 @@ export class IslandIsCommonApplicationService
   }
 
   async updateApplicationState(
-    body: CommonApplicationUpdateStateEvent,
+    body: IslandIsCommonApplicationUpdateStateEventDto,
   ): Promise<void> {
     await this.authService.xroadFetch(
       `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${body.applicationId}/submit`,
@@ -63,7 +63,7 @@ export class IslandIsCommonApplicationService
   }
 
   async submitApplication(
-    body: SubmitCommonApplicationDto,
+    body: IslandIsSubmitCommonApplicationDto,
     user: DMRUser,
   ): Promise<void> {
     const submittedBy = `${user.name}${user.actor ? ` ( ${user.actor.name})` : ''}`
@@ -104,7 +104,7 @@ export class IslandIsCommonApplicationService
 
     await this.updateApplicationState({
       applicationId: body.applicationId,
-      event: CommonApplicationEventsEnum.APPROVE,
+      event: IslandIsCommonApplicationEventsEnum.APPROVE,
     })
   }
 }

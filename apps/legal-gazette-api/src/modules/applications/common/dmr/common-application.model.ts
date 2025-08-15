@@ -1,4 +1,10 @@
-import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  DefaultScope,
+  ForeignKey,
+} from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
@@ -6,6 +12,7 @@ import {
   ApplicationTypeEnum,
   LegalGazetteModels,
 } from '../../../../lib/constants'
+import { CaseModel } from '../../../case/case.model'
 import { CategoryModel } from '../../../category/category.model'
 import { ApplicationStatusEnum } from '../../contants'
 import { ApplicationDto } from '../../dto/application.dto'
@@ -23,7 +30,7 @@ export type CommonApplicationAttributes = {
   publishingDates?: Date[]
 }
 
-export type CommonApplicationCreationAttributes = Omit<
+export type CommonApplicationCreateAttributes = Omit<
   CommonApplicationAttributes,
   'caseId' | 'status'
 > & {
@@ -31,10 +38,22 @@ export type CommonApplicationCreationAttributes = Omit<
   status?: ApplicationStatusEnum
 }
 
+@DefaultScope(() => ({
+  include: [
+    {
+      model: CategoryModel,
+      required: false,
+    },
+  ],
+  order: [
+    ['status', 'ASC'],
+    ['updatedAt', 'DESC'],
+  ],
+}))
 @BaseTable({ tableName: LegalGazetteModels.COMMON_APPLICATION })
 export class CommonApplicationModel extends BaseModel<
   CommonApplicationAttributes,
-  CommonApplicationCreationAttributes
+  CommonApplicationCreateAttributes
 > {
   @Column({
     type: DataType.UUID,
@@ -113,6 +132,11 @@ export class CommonApplicationModel extends BaseModel<
     foreignKey: 'categoryId',
   })
   category?: CategoryModel
+
+  @BelongsTo(() => CaseModel, {
+    foreignKey: 'caseId',
+  })
+  case?: CaseModel
 
   static fromModelToApplicationDto(
     model: CommonApplicationModel,

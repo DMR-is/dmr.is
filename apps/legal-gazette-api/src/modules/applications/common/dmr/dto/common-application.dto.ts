@@ -1,0 +1,33 @@
+import { ApiProperty } from '@nestjs/swagger'
+
+export class CommonApplicationDto {
+  @ApiProperty({ type: String, required: true, nullable: false })
+  id!: string
+
+  @ApiProperty({ type: String, required: true, nullable: false })
+  caseId!: string
+
+  @ApiProperty({ type: String, required: true, nullable: false })
+  involvedPartyNationalId!: string
+
+  @ApiProperty({ type: String, required: true, nullable: false })
+  title!: string
+
+  @ApiProperty({ type: String, required: false, nullable: true })
+  caption?: string | null
+
+  @ApiProperty({ type: String, required: false, nullable: true })
+  signatureName?: string | null
+
+  @ApiProperty({ type: String, required: false, nullable: true })
+  signatureLocation?: string | null
+
+  @ApiProperty({ type: String, required: true, nullable: false })
+  status!: string
+
+  @ApiProperty({ type: String, required: false, nullable: true })
+  html?: string | null
+
+  @ApiProperty({ type: String, required: false, nullable: true })
+  categoryId?: string | null
+}

@@ -58,7 +58,10 @@ export type RecallApplicationCreateAttributes = Omit<
 
 @DefaultScope(() => ({
   include: [{ model: CourtDistrictModel }],
-  order: [['updatedAt', 'DESC']],
+  order: [
+    ['status', 'ASC'],
+    ['updatedAt', 'DESC'],
+  ],
 }))
 @BaseTable({ tableName: LegalGazetteModels.RECALL_APPLICATION })
 export class RecallApplicationModel extends BaseModel<

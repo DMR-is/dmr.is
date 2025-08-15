@@ -1,9 +1,14 @@
-import { Controller, Inject, UseGuards } from '@nestjs/common'
+import addDays from 'date-fns/addDays'
+
+import { Controller, Post, UseGuards } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
+import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
-import { CommonApplicationService } from './common-application.service'
+import { CaseModel } from '../../../case/case.model'
 
 @Controller({
   path: 'applications/common',
@@ -13,7 +18,17 @@ import { CommonApplicationService } from './common-application.service'
 @UseGuards(TokenJwtAuthGuard)
 export class CommonApplicationController {
   constructor(
-    @Inject(CommonApplicationService)
-    private readonly applicationService: CommonApplicationService,
+    @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
   ) {}
+
+  @Post('createCommonCaseAndApplication')
+  async createCommonCaseAndApplication(@CurrentUser() user: DMRUser) {
+    await this.caseModel.create({
+      involvedPartyNationalId: user.nationalId,
+      commonApplication: {
+        involvedPartyNationalId: user.nationalId,
+        publishingDates: [addDays(new Date(), 14)],
+      },
+    })
+  }
 }

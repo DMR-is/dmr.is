@@ -1,17 +1,19 @@
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 
 import {
-  CommonApplicationUpdateStateEvent,
-  SubmitCommonApplicationDto,
+  IslandIsCommonApplicationUpdateStateEventDto,
+  IslandIsSubmitCommonApplicationDto,
 } from './dto/island-is-application.dto'
 
 export interface IIslandIsCommonApplicationService {
   submitApplication(
-    body: SubmitCommonApplicationDto,
+    body: IslandIsSubmitCommonApplicationDto,
     user: DMRUser,
   ): Promise<void>
 
-  updateApplicationState(body: CommonApplicationUpdateStateEvent): Promise<void>
+  updateApplicationState(
+    body: IslandIsCommonApplicationUpdateStateEventDto,
+  ): Promise<void>
 
   deleteApplication(id: string, user: DMRUser): Promise<void>
 }

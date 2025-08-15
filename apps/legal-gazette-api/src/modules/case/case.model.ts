@@ -17,6 +17,10 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { LegalGazetteModels, RecallTypeEnum } from '../../lib/constants'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
 import {
+  CommonApplicationCreateAttributes,
+  CommonApplicationModel,
+} from '../applications/common/dmr/common-application.model'
+import {
   RecallApplicationCreateAttributes,
   RecallApplicationModel,
 } from '../applications/recall/recall-application.model'
@@ -36,14 +40,23 @@ type CaseAttributes = {
   adverts: AdvertModel[]
 }
 
-type CaseCreateAttributes = {
-  involvedPartyNationalId: string
-  caseId?: string
-  assignedUserId?: string | null
-  communicationChannels?: CommunicationChannelCreateAttributes[]
-  adverts?: AdvertCreateAttributes[]
-  recallApplication?: RecallApplicationCreateAttributes
-}
+type CaseCreateAttributes =
+  | {
+      involvedPartyNationalId: string
+      caseId?: string
+      assignedUserId?: string | null
+      communicationChannels?: CommunicationChannelCreateAttributes[]
+      adverts?: AdvertCreateAttributes[]
+      recallApplication?: RecallApplicationCreateAttributes
+    }
+  | {
+      involvedPartyNationalId: string
+      caseId?: string
+      assignedUserId?: string | null
+      communicationChannels?: CommunicationChannelCreateAttributes[]
+      adverts?: AdvertCreateAttributes[]
+      commonApplication?: CommonApplicationCreateAttributes
+    }
 
 @BaseTable({ tableName: LegalGazetteModels.CASE })
 @DefaultScope(() => ({
@@ -55,8 +68,21 @@ type CaseCreateAttributes = {
     include: [
       {
         model: RecallApplicationModel,
+        required: false,
+        as: 'recallApplication',
+      },
+      {
+        model: CommonApplicationModel,
+        required: false,
+        as: 'commonApplication',
       },
     ],
+    where: {
+      [Op.or]: [
+        { '$recallApplication.id$': { [Op.ne]: null } },
+        { '$commonApplication.id$': { [Op.ne]: null } },
+      ],
+    },
   },
 }))
 export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
@@ -97,6 +123,11 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     foreignKey: 'caseId',
   })
   recallApplication?: RecallApplicationModel
+
+  @HasOne(() => CommonApplicationModel, {
+    foreignKey: 'caseId',
+  })
+  commonApplication?: CommonApplicationModel
 
   get applicationType(): RecallTypeEnum | undefined {
     return this.recallApplication?.recallType

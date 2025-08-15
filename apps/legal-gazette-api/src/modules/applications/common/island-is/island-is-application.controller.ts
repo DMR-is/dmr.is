@@ -14,7 +14,7 @@ import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { LGResponse } from '../../../../decorators/lg-response.decorator'
-import { SubmitCommonApplicationDto } from './dto/island-is-application.dto'
+import { IslandIsSubmitCommonApplicationDto } from './dto/island-is-application.dto'
 import { IslandIsCommonApplicationService } from './island-is-application.service'
 import { IIslandIsCommonApplicationService } from './island-is-application.service.interface'
 
@@ -34,7 +34,7 @@ export class CommonApplicationController {
   @Post('submitIslandIsApplication')
   @LGResponse({ operationId: 'submitIslandIsApplication', status: 201 })
   async submitApplication(
-    @Body() body: SubmitCommonApplicationDto,
+    @Body() body: IslandIsSubmitCommonApplicationDto,
     @CurrentUser() user: DMRUser,
   ): Promise<void> {
     return this.applicationService.submitApplication(body, user)
