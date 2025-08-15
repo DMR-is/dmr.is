@@ -2,7 +2,7 @@ import { HttpStatus } from '@nestjs/common'
 import { ApiProperty, ApiResponse } from '@nestjs/swagger'
 
 import { Paging } from '../paging/paging.dto'
-import { Advert } from './advert.dto'
+import { Advert, AdvertLean } from './advert.dto'
 import { AdvertSimilar } from './advert-similar.dto'
 
 @ApiResponse({
@@ -34,6 +34,22 @@ export class GetAdvertsResponse {
     type: [Advert],
   })
   readonly adverts!: Array<Advert>
+
+  @ApiProperty({
+    description: 'Paging info',
+    required: true,
+    type: Paging,
+  })
+  readonly paging!: Paging
+}
+
+export class GetLeanAdvertsResponse {
+  @ApiProperty({
+    description: 'List of adverts where minimal data is returned',
+    required: true,
+    type: [AdvertLean],
+  })
+  readonly adverts!: Array<AdvertLean>
 
   @ApiProperty({
     description: 'Paging info',

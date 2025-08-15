@@ -54,3 +54,30 @@ export function advertMigrate(model: AdvertModel): Advert {
   }
   return advert
 }
+
+export function advertMigrateLean(model: AdvertModel): any {
+  return {
+    id: model.id ?? '',
+    title: `${model.type?.title ?? ''} ${model.subject ?? ''}`.trim(),
+    department: model.department
+      ? advertDepartmentMigrate(model.department)
+      : null,
+    type: model.type
+      ? {
+          id: model.type.id,
+          title: model.type.title,
+        }
+      : null,
+    subject: model.subject ?? '',
+    status: model.status ? advertStatusMigrate(model.status) : null,
+    publicationNumber: {
+      full: `${model.serialNumber}/${model.publicationYear}`,
+      number: model.serialNumber,
+      year: model.publicationYear,
+    },
+    publicationDate: model.publicationDate.toISOString(),
+    categories: model.categories
+      ? model.categories.map((item) => advertCategoryMigrate(item))
+      : [],
+  }
+}
