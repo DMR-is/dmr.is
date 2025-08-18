@@ -76,6 +76,7 @@ export function advertMigrateLean(model: AdvertModel): any {
       year: model.publicationYear,
     },
     publicationDate: model.publicationDate.toISOString(),
+    involvedParty: model.involvedParty?.title ?? '',
     categories: model.categories
       ? model.categories.map((item) => advertCategoryMigrate(item))
       : [],
