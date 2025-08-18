@@ -3,6 +3,7 @@ import { getSession } from 'next-auth/react'
 import {
   CreateRecallCaseAndApplicationRequest,
   SubmitRecallApplicationRequest,
+  UpdateCommonApplicationRequest,
   UpdateRecallApplicationRequest,
 } from '../gen/fetch'
 import { getClient } from './createClient'
@@ -20,6 +21,14 @@ export async function updateRecallApplication(
   const client = await getClientWithSession()
 
   return client.updateRecallApplication(args)
+}
+
+export async function updateCommonApplication(
+  args: UpdateCommonApplicationRequest,
+) {
+  const client = await getClientWithSession()
+
+  return client.updateCommonApplication(args)
 }
 
 export async function submitRecallApplication(

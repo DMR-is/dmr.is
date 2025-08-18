@@ -10,6 +10,7 @@ type Props = {
   onChange?: (value: HTMLText) => void
   readonly?: boolean
   handleUpload: EditorFileUploader
+  config?: React.ComponentProps<typeof Editor>['config']
 }
 
 export const HTMLEditor = ({
@@ -17,6 +18,7 @@ export const HTMLEditor = ({
   readonly = false,
   onChange,
   handleUpload,
+  config,
 }: Props) => {
   const valueRef = useRef(() => defaultValue as HTMLText)
 
@@ -31,7 +33,7 @@ export const HTMLEditor = ({
       fileUploader={handleUpload}
       classes={classes}
       key={readonly ? 'readonly' : 'editable'}
-      config={readonly ? { toolbar: `` } : {}}
+      config={readonly ? { toolbar: `` } : config}
       /**
        * Delayed onChange to prevent the editor from reading the value before it has been updated
        */

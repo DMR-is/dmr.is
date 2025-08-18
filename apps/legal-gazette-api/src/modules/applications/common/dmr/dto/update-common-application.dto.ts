@@ -11,8 +11,14 @@ export class UpdateCommonApplicationDto {
   signatureLocation?: string | null
 
   @ApiProperty({ type: String, required: false, nullable: true })
+  signatureDate?: string | null
+
+  @ApiProperty({ type: String, required: false, nullable: true })
   html?: string | null
 
   @ApiProperty({ type: String, required: false, nullable: true })
   categoryId?: string | null
+
+  @ApiProperty({ type: [String], required: false, nullable: true })
+  publishingDates?: string[] | null
 }

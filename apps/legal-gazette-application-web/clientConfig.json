@@ -2101,6 +2101,158 @@
         "tags": ["Legal gazette - application web API"]
       }
     },
+    "/api/v1/applications/common/{caseId}": {
+      "get": {
+        "operationId": "getCommonApplicationByCaseId",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommonApplicationDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/applications/common/{caseId}/{applicationId}": {
+      "patch": {
+        "operationId": "updateCommonApplication",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommonApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommonApplicationDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
     "/api/v1/applications/recalls/{recallType}": {
       "post": {
         "operationId": "createRecallCaseAndApplication",
@@ -2904,6 +3056,53 @@
         },
         "required": ["applications"]
       },
+      "ApplicationStatusEnum": {
+        "type": "string",
+        "enum": ["DRAFT", "SUBMITTED"]
+      },
+      "CommonApplicationDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "nullable": false },
+          "caseId": { "type": "string", "nullable": false },
+          "involvedPartyNationalId": { "type": "string", "nullable": false },
+          "title": { "type": "string", "nullable": false },
+          "caption": { "type": "string", "nullable": true },
+          "signatureName": { "type": "string", "nullable": true },
+          "signatureLocation": { "type": "string", "nullable": true },
+          "signatureDate": { "type": "string", "nullable": true },
+          "status": {
+            "nullable": false,
+            "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
+          },
+          "html": { "type": "string", "nullable": true },
+          "categoryId": { "type": "string", "nullable": true },
+          "publishingDates": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [
+          "id",
+          "caseId",
+          "involvedPartyNationalId",
+          "title",
+          "status"
+        ]
+      },
+      "UpdateCommonApplicationDto": {
+        "type": "object",
+        "properties": {
+          "caption": { "type": "string", "nullable": true },
+          "signatureName": { "type": "string", "nullable": true },
+          "signatureLocation": { "type": "string", "nullable": true },
+          "signatureDate": { "type": "string", "nullable": true },
+          "html": { "type": "string", "nullable": true },
+          "categoryId": { "type": "string", "nullable": true },
+          "publishingDates": {
+            "nullable": true,
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
       "UpdateRecallApplicationDto": {
         "type": "object",
         "properties": {
@@ -2943,7 +3142,10 @@
           },
           "additionalText": { "type": "string" },
           "judgmentDate": { "type": "string" },
-          "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
+          "status": {
+            "nullable": false,
+            "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
+          },
           "signatureLocation": { "type": "string" },
           "signatureDate": { "type": "string" },
           "liquidator": { "type": "string" },

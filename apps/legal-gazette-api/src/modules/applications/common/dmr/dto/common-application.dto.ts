@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
+import { ApplicationStatusEnum } from '../../../contants'
+
 export class CommonApplicationDto {
   @ApiProperty({ type: String, required: true, nullable: false })
   id!: string
@@ -22,12 +24,23 @@ export class CommonApplicationDto {
   @ApiProperty({ type: String, required: false, nullable: true })
   signatureLocation?: string | null
 
-  @ApiProperty({ type: String, required: true, nullable: false })
-  status!: string
+  @ApiProperty({ type: String, required: false, nullable: true })
+  signatureDate?: string | null
+
+  @ApiProperty({
+    enum: ApplicationStatusEnum,
+    enumName: 'ApplicationStatusEnum',
+    required: true,
+    nullable: false,
+  })
+  status!: ApplicationStatusEnum
 
   @ApiProperty({ type: String, required: false, nullable: true })
   html?: string | null
 
   @ApiProperty({ type: String, required: false, nullable: true })
   categoryId?: string | null
+
+  @ApiProperty({ type: [String], required: false })
+  publishingDates?: string[]
 }

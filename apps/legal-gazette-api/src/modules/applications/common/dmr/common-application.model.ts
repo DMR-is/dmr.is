@@ -16,6 +16,7 @@ import { CaseModel } from '../../../case/case.model'
 import { CategoryModel } from '../../../category/category.model'
 import { ApplicationStatusEnum } from '../../contants'
 import { ApplicationDto } from '../../dto/application.dto'
+import { CommonApplicationDto } from './dto/common-application.dto'
 
 export type CommonApplicationAttributes = {
   caseId: string
@@ -60,6 +61,7 @@ export class CommonApplicationModel extends BaseModel<
     allowNull: false,
     field: 'case_id',
   })
+  @ForeignKey(() => CaseModel)
   caseId!: string
 
   @Column({
@@ -137,6 +139,26 @@ export class CommonApplicationModel extends BaseModel<
     foreignKey: 'caseId',
   })
   case?: CaseModel
+
+  static fromModel(model: CommonApplicationModel): CommonApplicationDto {
+    return {
+      id: model.id,
+      caseId: model.caseId,
+      title: model.title,
+      involvedPartyNationalId: model.involvedPartyNationalId,
+      status: model.status,
+      categoryId: model.categoryId,
+      caption: model.caption,
+      html: model.html,
+      signatureName: model.signatureName,
+      signatureLocation: model.signatureLocation,
+      publishingDates: model.publishingDates?.map((date) => date.toISOString()),
+    }
+  }
+
+  fromModel(): CommonApplicationDto {
+    return CommonApplicationModel.fromModel(this)
+  }
 
   static fromModelToApplicationDto(
     model: CommonApplicationModel,

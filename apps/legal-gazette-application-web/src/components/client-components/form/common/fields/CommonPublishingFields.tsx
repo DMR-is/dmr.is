@@ -12,22 +12,19 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { useUpdateRecallApplication } from '../../../../../hooks/useUpdateRecallApplication'
+import { useUpdateCommonApplication } from '../../../../../hooks/useUpdateCommonApplication'
 import { ONE_DAY, TWO_WEEKS } from '../../../../../lib/constants'
-import {
-  BankruptcyFormFields,
-  BankruptcyFormSchema,
-} from '../../../../../lib/forms/schemas/recall-schema'
+import { CommonFormSchema } from '../../../../../lib/forms/schemas/common-schema'
+import {} from '../../../../../lib/forms/schemas/recall-schema'
 import { getNextWeekday, getWeekendDays } from '../../../../../lib/utils'
 import { DatePickerController } from '../../controllers/DatePickerController'
 
-export const RecallPublishingFields = () => {
-  const { getValues, setValue } = useFormContext<BankruptcyFormSchema>()
+export const CommonPublishingFields = () => {
+  const { getValues, setValue } = useFormContext<CommonFormSchema>()
   const { caseId, applicationId } = getValues('meta')
-  const { trigger } = useUpdateRecallApplication({ applicationId, caseId })
+  const { trigger } = useUpdateCommonApplication({ applicationId, caseId })
 
-  const currentDates = getValues('publishing')
-  const divisionMeetingDate = getValues('divisionMeeting.date')
+  const currentDates = getValues('fields.publishingDates')
 
   const [dateState, setDateState] = useState<Date[]>(currentDates)
 
@@ -39,7 +36,7 @@ export const RecallPublishingFields = () => {
     const newDate = getNextWeekday(addDays(lastDate, TWO_WEEKS))
     const newDates = [...dateState, newDate]
     setDateState(newDates)
-    setValue(BankruptcyFormFields.PUBLISHING_DATES, newDates)
+    setValue('fields.publishingDates', newDates)
     trigger({
       publishingDates: newDates.map((date) => new Date(date).toISOString()),
     })
@@ -47,7 +44,7 @@ export const RecallPublishingFields = () => {
 
   const removeDate = (index: number) => {
     const newDates = dateState.filter((_, i) => i !== index)
-    setValue(BankruptcyFormFields.PUBLISHING_DATES, newDates)
+    setValue('fields.publishingDates', newDates)
     setDateState(newDates)
     trigger({
       publishingDates: newDates.map((date) => new Date(date).toISOString()),
@@ -58,7 +55,7 @@ export const RecallPublishingFields = () => {
     const newDates = [...dateState]
     newDates[index] = date
     setDateState(newDates)
-    setValue(BankruptcyFormFields.PUBLISHING_DATES, newDates)
+    setValue('fields.publishingDates', newDates)
     trigger({
       publishingDates: newDates.map((d) => new Date(d).toISOString()),
     })
@@ -67,15 +64,13 @@ export const RecallPublishingFields = () => {
   return (
     <GridRow rowGap={[2, 3]}>
       <GridColumn span="12/12">
-        <Text variant="h3">Birting innköllunar</Text>
+        <Text variant="h3">Birting</Text>
       </GridColumn>
       <GridColumn span="12/12">
         <Stack space={[2, 3]}>
           {currentDates.map((date, index) => {
             const prevDate = index === 0 ? null : currentDates[index - 1]
-            const maxDate = divisionMeetingDate
-              ? new Date(divisionMeetingDate)
-              : addYears(new Date(), ONE_DAY)
+            const maxDate = addYears(new Date(), ONE_DAY)
 
             const minDate =
               index === 0
@@ -98,7 +93,7 @@ export const RecallPublishingFields = () => {
                 <DatePickerController
                   maxDate={getNextWeekday(maxDate)}
                   label={`Birtingardagur ${index + 1}`}
-                  name={`${BankruptcyFormFields.PUBLISHING_DATES}.${index}`}
+                  name={`fields.publishingDates.${index}`}
                   required={index === 0}
                   defaultValue={date}
                   minDate={getNextWeekday(minDate)}

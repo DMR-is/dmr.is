@@ -23,8 +23,13 @@ export class RecallApplicationDto {
   @ApiProperty({ type: String, required: false })
   judgmentDate?: string
 
-  @ApiProperty({ enum: ApplicationStatusEnum, required: true })
-  status?: ApplicationStatusEnum
+  @ApiProperty({
+    enum: ApplicationStatusEnum,
+    enumName: 'ApplicationStatusEnum',
+    required: true,
+    nullable: false,
+  })
+  status!: ApplicationStatusEnum
 
   @ApiProperty({ type: String, required: false })
   signatureLocation?: string

@@ -6,7 +6,7 @@ import { useUpdateRecallApplication } from '../../../../../hooks/useUpdateRecall
 import {
   BankruptcyFormFields,
   BankruptcyFormSchema,
-} from '../../../../../lib/forms/schemas/bankruptcy-schema'
+} from '../../../../../lib/forms/schemas/recall-schema'
 import { InputController } from '../../controllers/InputController'
 
 export const RecallLiquidatorFields = () => {

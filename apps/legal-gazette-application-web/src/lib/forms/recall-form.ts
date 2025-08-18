@@ -5,7 +5,7 @@ import { RecallApplicationDto } from '../../gen/fetch'
 import {
   BankruptcyFormSchema,
   bankruptcyFormSchema,
-} from './schemas/bankruptcy-schema'
+} from './schemas/recall-schema'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 

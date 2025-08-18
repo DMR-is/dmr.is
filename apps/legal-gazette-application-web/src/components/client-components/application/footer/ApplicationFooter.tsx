@@ -9,8 +9,11 @@ import * as styles from './application-footer.css'
 
 export const ApplicationFooter = () => {
   const {
+    getValues,
     formState: { isValid },
   } = useFormContext()
+
+  const values = getValues()
 
   return (
     <Box

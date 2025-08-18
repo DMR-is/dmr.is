@@ -3,10 +3,35 @@ import { z } from 'zod'
 export const commonFormMetaSchema = z.object({
   caseId: z.string(),
   applicationId: z.string(),
+  categoryOptions: z.array(
+    z.object({
+      label: z.string(),
+      value: z.string(),
+    }),
+  ),
+})
+
+export const commonFormFieldsSchema = z.object({
+  category: z.string().min(1, 'Flokkur er nauðsynlegur'),
+  caption: z.string().min(1, 'Yfirskrift er nauðsynleg'),
+  html: z.string().min(1, 'Meginmál er nauðsynlegt'),
+  signatureName: z.string().min(1, 'Undirskrift er nauðsynleg'),
+  signatureLocation: z
+    .string()
+    .min(1, 'Staðsetning undirskriftar er nauðsynleg'),
+  signatureDate: z.date('Dagsetning undirskriftar er nauðsynleg'),
+  involvedPartyNationalId: z.string().min(1, 'Kennitala er nauðsynleg'),
+  publishingDates: z
+    .array(z.date('Dagsetning fyrir birtingu er nauðsynleg'))
+    .refine(
+      (dates) => dates.length > 0,
+      'Að minnsta kosti ein dagsetning fyrir birtingu er nauðsynleg',
+    ),
 })
 
 export const commonFormSchema = z.object({
   meta: commonFormMetaSchema,
+  fields: commonFormFieldsSchema,
 })
 
 export type CommonFormMetaSchema = z.infer<typeof commonFormMetaSchema>
