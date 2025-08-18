@@ -7,16 +7,18 @@ import { classes } from './Editor.css'
 
 type Props = {
   defaultValue?: HTMLText | string
-  onChange?: (value: HTMLText) => void
   readonly?: boolean
   handleUpload: EditorFileUploader
   config?: React.ComponentProps<typeof Editor>['config']
+  onChange?: (value: HTMLText) => void
+  onBlur?: (value: HTMLText) => void
 }
 
 export const HTMLEditor = ({
   defaultValue = '',
   readonly = false,
   onChange,
+  onBlur,
   handleUpload,
   config,
 }: Props) => {
@@ -38,6 +40,7 @@ export const HTMLEditor = ({
        * Delayed onChange to prevent the editor from reading the value before it has been updated
        */
       onChange={() => setTimeout(() => handleChange(valueRef.current()), 100)}
+      onBlur={() => onBlur?.(valueRef.current())}
     />
   )
 }

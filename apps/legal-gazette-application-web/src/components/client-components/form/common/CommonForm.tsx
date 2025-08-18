@@ -34,8 +34,6 @@ export const CommonForm = ({
     }),
   )
 
-  console.log(application)
-
   const onValidSubmit = (data: CommonFormSchema) => {
     console.log('Form submitted successfully:', data)
   }

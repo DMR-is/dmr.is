@@ -20,7 +20,6 @@ export const commonFormFieldsSchema = z.object({
     .string()
     .min(1, 'Staðsetning undirskriftar er nauðsynleg'),
   signatureDate: z.date('Dagsetning undirskriftar er nauðsynleg'),
-  involvedPartyNationalId: z.string().min(1, 'Kennitala er nauðsynleg'),
   publishingDates: z
     .array(z.date('Dagsetning fyrir birtingu er nauðsynleg'))
     .refine(
@@ -37,3 +36,13 @@ export const commonFormSchema = z.object({
 export type CommonFormMetaSchema = z.infer<typeof commonFormMetaSchema>
 
 export type CommonFormSchema = z.infer<typeof commonFormSchema>
+
+export enum CommonFormFields {
+  CATEGORY = 'fields.category',
+  CAPTION = 'fields.caption',
+  HTML = 'fields.html',
+  SIGNATURE_NAME = 'fields.signatureName',
+  SIGNATURE_LOCATION = 'fields.signatureLocation',
+  SIGNATURE_DATE = 'fields.signatureDate',
+  PUBLISHING_DATES = 'fields.publishingDates',
+}

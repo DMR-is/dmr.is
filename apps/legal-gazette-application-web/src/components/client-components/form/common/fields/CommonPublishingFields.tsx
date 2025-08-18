@@ -14,7 +14,10 @@ import {
 
 import { useUpdateCommonApplication } from '../../../../../hooks/useUpdateCommonApplication'
 import { ONE_DAY, TWO_WEEKS } from '../../../../../lib/constants'
-import { CommonFormSchema } from '../../../../../lib/forms/schemas/common-schema'
+import {
+  CommonFormFields,
+  CommonFormSchema,
+} from '../../../../../lib/forms/schemas/common-schema'
 import {} from '../../../../../lib/forms/schemas/recall-schema'
 import { getNextWeekday, getWeekendDays } from '../../../../../lib/utils'
 import { DatePickerController } from '../../controllers/DatePickerController'
@@ -36,7 +39,7 @@ export const CommonPublishingFields = () => {
     const newDate = getNextWeekday(addDays(lastDate, TWO_WEEKS))
     const newDates = [...dateState, newDate]
     setDateState(newDates)
-    setValue('fields.publishingDates', newDates)
+    setValue(CommonFormFields.PUBLISHING_DATES, newDates)
     trigger({
       publishingDates: newDates.map((date) => new Date(date).toISOString()),
     })
@@ -44,7 +47,7 @@ export const CommonPublishingFields = () => {
 
   const removeDate = (index: number) => {
     const newDates = dateState.filter((_, i) => i !== index)
-    setValue('fields.publishingDates', newDates)
+    setValue(CommonFormFields.PUBLISHING_DATES, newDates)
     setDateState(newDates)
     trigger({
       publishingDates: newDates.map((date) => new Date(date).toISOString()),
@@ -55,7 +58,7 @@ export const CommonPublishingFields = () => {
     const newDates = [...dateState]
     newDates[index] = date
     setDateState(newDates)
-    setValue('fields.publishingDates', newDates)
+    setValue(CommonFormFields.PUBLISHING_DATES, newDates)
     trigger({
       publishingDates: newDates.map((d) => new Date(d).toISOString()),
     })
@@ -93,7 +96,7 @@ export const CommonPublishingFields = () => {
                 <DatePickerController
                   maxDate={getNextWeekday(maxDate)}
                   label={`Birtingardagur ${index + 1}`}
-                  name={`fields.publishingDates.${index}`}
+                  name={`${CommonFormFields.PUBLISHING_DATES}.${index}`}
                   required={index === 0}
                   defaultValue={date}
                   minDate={getNextWeekday(minDate)}

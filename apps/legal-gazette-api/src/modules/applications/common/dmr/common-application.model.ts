@@ -152,6 +152,9 @@ export class CommonApplicationModel extends BaseModel<
       html: model.html,
       signatureName: model.signatureName,
       signatureLocation: model.signatureLocation,
+      signatureDate: model.signatureDate
+        ? model.signatureDate.toISOString()
+        : model.signatureDate,
       publishingDates: model.publishingDates?.map((date) => date.toISOString()),
     }
   }
