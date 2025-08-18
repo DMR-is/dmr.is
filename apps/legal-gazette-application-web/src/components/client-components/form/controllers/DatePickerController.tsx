@@ -8,6 +8,7 @@ type Props = UseControllerProps & {
   maxDate?: Date
   minDate?: Date
   excludeDates?: Date[]
+  withTime?: boolean
   onChange?: (date: Date) => void
 }
 
@@ -33,6 +34,7 @@ export const DatePickerController = (props: Props) => {
       label={label}
       backgroundColor="blue"
       size="sm"
+      showTimeInput={props.withTime}
       errorMessage={error ? error.message : undefined}
       required={required}
       locale="is"

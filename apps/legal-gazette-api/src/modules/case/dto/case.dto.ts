@@ -9,11 +9,12 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { DetailedDto } from '@dmr.is/legal-gazette/dto'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
+import { DetailedDto } from '../../../dto/detailed.dto'
+import { RecallTypeEnum } from '../../../lib/constants'
 import { AdvertDetailedDto } from '../../advert/dto/advert.dto'
-import { BankruptcyApplicationDto } from '../../applications/bankruptcy/dto/bankruptcy-application.dto'
+import { RecallApplicationDto } from '../../applications/recall/dto/recall-application.dto'
 import { CommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
 
 export class CaseQueryDto extends PagingQuery {}
@@ -29,14 +30,16 @@ export class CaseDto extends DetailedDto {
   @IsUUID()
   id!: string
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsUUID()
-  applicationId?: string
-
   @ApiProperty({ type: String })
   @IsString()
   caseNumber!: string
+
+  @ApiProperty({
+    enum: RecallTypeEnum,
+    required: false,
+    enumName: 'RecallTypeEnum',
+  })
+  applicationType?: RecallTypeEnum
 }
 
 export class GetCasesDto {
@@ -65,9 +68,9 @@ export class CaseDetailedDto extends CaseDto {
   @ValidateNested({ each: true })
   adverts!: AdvertDetailedDto[]
 
-  @ApiProperty({ type: BankruptcyApplicationDto, required: false })
+  @ApiProperty({ type: RecallApplicationDto, required: false })
   @IsOptional()
   @ValidateNested()
-  @Type(() => BankruptcyApplicationDto)
-  bankruptcyApplication?: BankruptcyApplicationDto
+  @Type(() => RecallApplicationDto)
+  bankruptcyApplication?: RecallApplicationDto
 }

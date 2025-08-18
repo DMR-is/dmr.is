@@ -12,35 +12,32 @@ import {
 
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { mapIndexToVersion, validateAdvertStatus } from '../../lib/utils'
-import {
-  BankruptcyAdvertCreationAttributes,
-  BankruptcyAdvertModel,
-} from '../bankruptcy/advert/bankruptcy-advert.model'
-import {
-  BankruptcyDivisionAdvertCreationAttributes,
-  BankruptcyDivisionAdvertModel,
-} from '../bankruptcy/division-advert/bankruptcy-division-advert.model'
+import { LegalGazetteModels } from '../../lib/constants'
+import { validateAdvertStatus } from '../../lib/utils'
 import { CaseModel } from '../case/case.model'
-import {
-  CategoryDefaultIdEnum,
-  CategoryModel,
-} from '../category/category.model'
-import {
-  CommonAdvertCreationAttributes,
-  CommonAdvertModel,
-} from '../common-advert/common-advert.model'
+import { CategoryModel } from '../category/category.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
 import { TypeIdEnum, TypeModel } from '../type/type.model'
+import {
+  CommonAdvertCreateAttributes,
+  CommonAdvertModel,
+} from './common/common-advert.model'
+import {
+  DivisionMeetingAdvertCreateAttributes,
+  DivisionMeetingAdvertModel,
+} from './division/models/division-meeting-advert.model'
 import {
   AdvertDetailedDto,
   AdvertDto,
   AdvertStatusCounterItemDto,
   GetAdvertsQueryDto,
 } from './dto/advert.dto'
+import {
+  RecallAdvertCreateAttributes,
+  RecallAdvertModel,
+} from './recall/recall-advert.model'
 
 type AdvertAttributes = {
   caseId: string
@@ -60,8 +57,8 @@ type AdvertAttributes = {
   status: StatusModel
   case: CaseModel
   commonAdvert?: CommonAdvertModel
-  bankruptcyAdvert?: BankruptcyAdvertModel
-  bankruptcyDivisionAdvert?: BankruptcyDivisionAdvertModel
+  recallAdvert?: RecallAdvertModel
+  divisionMeetingAdvert?: DivisionMeetingAdvertModel
 }
 
 export type AdvertCreateAttributes = {
@@ -76,25 +73,10 @@ export type AdvertCreateAttributes = {
   paid?: boolean
   publishedAt?: Date | null
   version?: AdvertVersionEnum
-  commonAdvert?: CommonAdvertCreationAttributes
-  bankruptcyAdvert?: BankruptcyAdvertCreationAttributes
-  bankruptcyDivisionAdvert?: BankruptcyDivisionAdvertCreationAttributes
+  commonAdvert?: CommonAdvertCreateAttributes
+  recallAdvert?: RecallAdvertCreateAttributes
+  divisionMeetingAdvert?: DivisionMeetingAdvertCreateAttributes
 }
-
-export type CreateCommonAdvertParams = Omit<
-  AdvertCreateAttributes,
-  'typeId' | 'bankruptcyAdvert' | 'bankruptcyDivisionAdvert'
->
-
-export type CreateBankruptcyAdvertParams = Omit<
-  AdvertCreateAttributes,
-  'typeId' | 'categoryId' | 'commonAdvert' | 'bankruptcyDivisionAdvert'
->
-
-export type CreateBankruptcyDivisionAdvertParams = Omit<
-  AdvertCreateAttributes,
-  'typeId' | 'categoryId' | 'commonAdvert' | 'bankruptcyAdvert'
->
 
 export enum AdvertVersionEnum {
   A = 'A',
@@ -108,7 +90,7 @@ export enum AdvertModelScopes {
   TO_BE_PUBLISHED = 'toBePublished',
   PUBLISHED = 'published',
   COMPLETED = 'completed',
-  BANKRUPTCY_ADVERT = 'bankruptcyAdvert',
+  RECALL_ADVERT = 'recallAdvert',
   ALL = 'all',
   WITH_QUERY = 'withQuery',
 }
@@ -170,17 +152,17 @@ export enum AdvertModelScopes {
     where: {},
     order: [['version', 'ASC']],
   },
-  bankruptcyAdvert: {
+  recallAdvert: {
     include: [
       StatusModel,
       CategoryModel,
       TypeModel,
       CommonAdvertModel,
-      BankruptcyAdvertModel,
+      RecallAdvertModel,
     ],
     where: {
       typeId: {
-        [Op.eq]: TypeIdEnum.BANKRUPTCY_ADVERT,
+        [Op.eq]: TypeIdEnum.RECALL,
       },
     },
   },
@@ -361,147 +343,19 @@ export class AdvertModel extends BaseModel<
   @HasOne(() => CommonAdvertModel, { foreignKey: 'advertId' })
   commonAdvert?: CommonAdvertModel
 
-  @HasOne(() => BankruptcyAdvertModel, {
+  @HasOne(() => RecallAdvertModel, {
     foreignKey: 'advertId',
   })
-  bankruptcyAdvert?: BankruptcyAdvertModel
+  recallAdvert?: RecallAdvertModel
 
-  @HasOne(() => BankruptcyDivisionAdvertModel, {
+  @HasOne(() => DivisionMeetingAdvertModel, {
     foreignKey: 'advertId',
   })
-  bankruptcyDivisionAdvert?: BankruptcyDivisionAdvertModel
+  divisionMeetingAdvert?: DivisionMeetingAdvertModel
 
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
     validateAdvertStatus(instance)
-  }
-
-  static async createCommonAdvert(
-    params: CreateCommonAdvertParams,
-  ): Promise<AdvertModel> {
-    try {
-      this.logger.info(`Creating common advert`, {
-        caseId: params.caseId,
-      })
-      return this.create(
-        {
-          ...params,
-          typeId: TypeIdEnum.COMMON_ADVERT,
-          version: params.version ? params.version : AdvertVersionEnum.A,
-          commonAdvert: params.commonAdvert,
-        },
-        {
-          include: [CommonAdvertModel],
-        },
-      )
-    } catch (error) {
-      this.logger.error(`Failed to create common advert`, {
-        caseId: params.caseId,
-        error: error,
-      })
-
-      throw error
-    }
-  }
-  static async createCommonAdverts(
-    params: CreateCommonAdvertParams[],
-  ): Promise<AdvertModel[]> {
-    const adverts: AdvertModel[] = []
-    params.forEach(async (param, i) => {
-      const newAdvert = await this.createCommonAdvert({
-        ...param,
-        version: mapIndexToVersion(i),
-      })
-      adverts.push(newAdvert)
-    })
-
-    return adverts
-  }
-  static async createBankruptcyAdvert(params: CreateBankruptcyAdvertParams) {
-    try {
-      this.logger.info(`Creating bankruptcy advert`, {
-        caseId: params.caseId,
-      })
-
-      const advert = await this.create(
-        {
-          ...params,
-          typeId: TypeIdEnum.BANKRUPTCY_ADVERT,
-          categoryId: CategoryDefaultIdEnum.BANKRUPTCY_ADVERT,
-          version: params.version ? params.version : AdvertVersionEnum.A,
-          bankruptcyAdvert: params.bankruptcyAdvert,
-        },
-        {
-          include: [BankruptcyAdvertModel],
-        },
-      )
-
-      return advert
-    } catch (error) {
-      this.logger.error(`Failed to create bankruptcy advert`, {
-        caseId: params.caseId,
-        error: error,
-      })
-
-      throw error
-    }
-  }
-  static async createBankruptcyAdverts(params: CreateBankruptcyAdvertParams[]) {
-    const adverts: AdvertModel[] = []
-    params.forEach(async (param, i) => {
-      const newAdvert = await this.createBankruptcyAdvert({
-        ...param,
-        version: mapIndexToVersion(i),
-      })
-      adverts.push(newAdvert)
-    })
-
-    return adverts
-  }
-  static async createBankruptcyDivisionAdvert(
-    params: CreateBankruptcyDivisionAdvertParams,
-  ) {
-    try {
-      this.logger.info(`Creating bankruptcy division advert`, {
-        caseId: params.caseId,
-      })
-
-      const advert = await this.create(
-        {
-          ...params,
-          typeId: TypeIdEnum.BANKRUPTCY_DIVISION_ADVERT,
-          categoryId: CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_ADVERT,
-          version: params.version ? params.version : AdvertVersionEnum.A,
-          bankruptcyDivisionAdvert: params.bankruptcyDivisionAdvert,
-        },
-        {
-          include: [BankruptcyDivisionAdvertModel],
-        },
-      )
-
-      return advert
-    } catch (error) {
-      this.logger.error(`Failed to create bankruptcy division advert`, {
-        caseId: params.caseId,
-        error: error,
-      })
-
-      throw error
-    }
-  }
-  static async createBankruptcyDivisionAdverts(
-    params: CreateBankruptcyDivisionAdvertParams[],
-  ) {
-    const adverts: AdvertModel[] = []
-    params.forEach(async (param, i) => {
-      const newAdvert = await this.createBankruptcyDivisionAdvert({
-        ...param,
-        version: mapIndexToVersion(i),
-      })
-      adverts.push(newAdvert)
-    })
-
-    return adverts
   }
 
   static async countByStatus(
@@ -657,8 +511,8 @@ export class AdvertModel extends BaseModel<
         commonAdvert: model.commonAdvert
           ? model.commonAdvert.fromModel()
           : undefined,
-        bankruptcyAdvert: model.bankruptcyAdvert
-          ? model.bankruptcyAdvert.fromModel()
+        recallAdvert: model.recallAdvert
+          ? model.recallAdvert.fromModel()
           : undefined,
       }
     } catch (error) {

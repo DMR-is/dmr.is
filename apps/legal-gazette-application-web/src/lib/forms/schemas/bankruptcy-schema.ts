@@ -17,12 +17,20 @@ export const bankruptcyAdvertSchema = z.object({
   additionalText: z.string().optional(),
 })
 
-export const bankruptcySettlementSchema = z.object({
-  name: z.string().min(1, 'Nafn bús er nauðsynlegt'),
-  nationalId: z.string().min(1, 'Kennitala bús er nauðsynleg'),
-  address: z.string().min(1, 'Heimilisfang bús er nauðsynlegt'),
-  deadline: z.date('Frestdagur bús er nauðsynlegur'),
-})
+export const bankruptcySettlementSchema = z
+  .object({
+    name: z.string().min(1, 'Nafn bús er nauðsynlegt'),
+    nationalId: z.string().min(1, 'Kennitala bús er nauðsynleg'),
+    address: z.string().min(1, 'Heimilisfang bús er nauðsynlegt'),
+    deadline: z.date('Frestdagur bús er nauðsynlegur').optional(),
+    dateOfDeath: z.date('Dánardagur dánarbús er nauðsynlegur').optional(),
+  })
+  .refine((data) => {
+    if (!data.deadline && !data.dateOfDeath) {
+      return false
+    }
+    return true
+  })
 
 export const liquidatorSchema = z.object({
   name: z.string().min(1, 'Nafn skiptastjóra er nauðsynlegt'),
@@ -90,6 +98,7 @@ export enum BankruptcyFormFields {
   SETTLEMENT_NATIONAL_ID = 'settlement.nationalId',
   SETTLEMENT_ADDRESS = 'settlement.address',
   SETTLEMENT_DEADLINE = 'settlement.deadline',
+  SETTLEMENT_DATE_OF_DEATH = 'settlement.dateOfDeath',
   LIQUIDATOR_NAME = 'liquidator.name',
   LIQUIDATOR_LOCATION = 'liquidator.location',
   LIQUIDATOR_ON_BEHALF_OF = 'liquidator.onBehalfOf',

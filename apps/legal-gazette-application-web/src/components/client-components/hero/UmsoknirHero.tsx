@@ -2,7 +2,7 @@
 
 import { Box } from '@island.is/island-ui/core'
 
-import { ApplicationTypes } from '../application/ApplicationTypes'
+import { CreateApplication } from '../application/CreateApplication'
 import { Hero } from './Hero'
 
 export const UmsoknirHero = () => {
@@ -19,7 +19,7 @@ export const UmsoknirHero = () => {
           alt: 'Skraut mynd',
         }}
       >
-        <ApplicationTypes />
+        <CreateApplication />
       </Hero>
     </Box>
   )

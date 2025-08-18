@@ -1,8 +1,8 @@
 import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { LegalGazetteModels } from '../../lib/constants'
 import { SubscriberDto } from './dto/subscriber.dto'
 
 export type SubscriberAttributes = {

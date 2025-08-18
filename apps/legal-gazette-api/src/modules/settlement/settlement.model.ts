@@ -1,13 +1,18 @@
-import { Column, DataType, HasMany } from 'sequelize-typescript'
-import { z } from 'zod'
+import {
+  Column,
+  DataType,
+  DefaultScope,
+  HasMany,
+  HasOne,
+} from 'sequelize-typescript'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { BankruptcyAdvertModel } from '../bankruptcy/advert/bankruptcy-advert.model'
-import { BankruptcyDivisionAdvertModel } from '../bankruptcy/division-advert/bankruptcy-division-advert.model'
+import { LegalGazetteModels } from '../../lib/constants'
+import { DivisionEndingAdvertModel } from '../advert/division/models/division-ending-advert.model'
+import { DivisionMeetingAdvertModel } from '../advert/division/models/division-meeting-advert.model'
+import { RecallAdvertModel } from '../advert/recall/recall-advert.model'
 import { SettlementDto } from './dto/settlement.dto'
-
 type SettlementAttributes = {
   liquidatorName: string
   liquidatorLocation: string
@@ -16,21 +21,25 @@ type SettlementAttributes = {
   settlementName: string
   settlementNationalId: string
   settlementAddress: string
-  settlementDeadline: Date
+  settlementDeadline: Date | null
+  settlementDateOfDeath: Date | null
 }
 
 type SettlementCreationAttributes = SettlementAttributes
 
-export const settlementSchema = z.object({
-  liquidatorName: z.string(),
-  liquidatorLocation: z.string(),
-  liquidatorOnBehalfOf: z.string().optional(),
-  settlementName: z.string(),
-  settlementNationalId: z.string(),
-  settlementAddress: z.string(),
-  settlementDeadline: z.string().transform((iso) => new Date(iso)),
-})
-
+@DefaultScope(() => ({
+  attributes: [
+    'id',
+    'liquidatorName',
+    'liquidatorLocation',
+    'liquidatorOnBehalfOf',
+    'settlementName',
+    'settlementNationalId',
+    'settlementAddress',
+    'settlementDeadline',
+    'settlementDateOfDeath',
+  ],
+}))
 @BaseTable({ tableName: LegalGazetteModels.SETTLEMENT })
 export class SettlementModel extends BaseModel<
   SettlementAttributes,
@@ -79,18 +88,28 @@ export class SettlementModel extends BaseModel<
 
   @Column({
     type: DataType.DATE,
-    allowNull: false,
+    allowNull: true,
+    defaultValue: null,
     field: 'settlement_deadline_date',
   })
-  settlementDeadline!: Date
+  settlementDeadline!: Date | null
 
-  @HasMany(() => BankruptcyAdvertModel)
-  bankruptcyAdverts!: BankruptcyAdvertModel
-
-  @HasMany(() => BankruptcyDivisionAdvertModel, {
-    foreignKey: 'settlementId',
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    defaultValue: null,
+    field: 'settlement_date_of_death',
   })
-  bankruptcyDivisionAdverts!: BankruptcyDivisionAdvertModel[]
+  settlementDateOfDeath!: Date | null
+
+  @HasMany(() => RecallAdvertModel)
+  recallAdverts!: RecallAdvertModel[]
+
+  @HasMany(() => DivisionMeetingAdvertModel)
+  divisionMeetingAdverts?: DivisionMeetingAdvertModel[]
+
+  @HasOne(() => DivisionEndingAdvertModel)
+  divisionEndingAdvert?: DivisionEndingAdvertModel
 
   static fromModel(model: SettlementModel): SettlementDto {
     return {
@@ -100,7 +119,12 @@ export class SettlementModel extends BaseModel<
       settlementName: model.settlementName,
       settlementNationalId: model.settlementNationalId,
       settlementAddress: model.settlementAddress,
-      settlementDeadline: model.settlementDeadline,
+      settlementDeadline: model.settlementDeadline
+        ? model.settlementDeadline.toISOString()
+        : null,
+      settlementDateOfDeath: model.settlementDateOfDeath
+        ? model.settlementDateOfDeath.toISOString()
+        : null,
     }
   }
 

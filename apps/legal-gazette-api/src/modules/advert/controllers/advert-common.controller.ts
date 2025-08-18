@@ -8,14 +8,14 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
+import { LGResponse } from '../../../decorators/lg-response.decorator'
 import { AdvertUpdateGuard } from '../../../guards/advert-update.guard'
-import { CommonAdvertModel } from '../../common-advert/common-advert.model'
-import { CommonAdvertDto } from '../../common-advert/dto/common-advert.dto'
-import { UpdateCommonAdvertDto } from '../../common-advert/dto/update-common-advert.dto'
 import { AdvertModel } from '../advert.model'
+import { CommonAdvertModel } from '../common/common-advert.model'
+import { CommonAdvertDto } from '../common/dto/common-advert.dto'
+import { UpdateCommonAdvertDto } from '../common/dto/update-common-advert.dto'
 
 @Controller({
   path: 'adverts/common',

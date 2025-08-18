@@ -1,7 +1,6 @@
 import { Controller, Get, Param, Query } from '@nestjs/common'
 
-import { LGResponse } from '@dmr.is/legal-gazette/decorators'
-
+import { LGResponse } from '../../decorators/lg-response.decorator'
 import { BaseEntityController } from '../base-entity/base-entity.controller'
 import {
   CategoryDto,

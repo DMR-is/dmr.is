@@ -2,9 +2,9 @@ import { Column, DataType, HasMany } from 'sequelize-typescript'
 
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { LegalGazetteModels } from '../../lib/constants'
 import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
 import { StatusDto } from './dto/status.dto'
 

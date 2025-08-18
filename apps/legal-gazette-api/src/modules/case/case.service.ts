@@ -17,9 +17,6 @@ export class CaseService implements ICaseService {
   constructor(
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
   ) {}
-  getBankruptcyCase(id: string): Promise<CaseDto> {
-    throw new Error('Method not implemented.')
-  }
 
   async restoreCase(id: string): Promise<CaseDto> {
     await this.caseModel.restore({ where: { id } })
