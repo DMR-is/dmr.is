@@ -11,7 +11,6 @@ import { getClient } from './createClient'
 import { safeCall } from './serverUtils'
 
 const getClientWithSession = async () => {
-const getClientWithSession = async () => {
   const session = await getSession()
 
   return getClient(session?.idToken as string)
