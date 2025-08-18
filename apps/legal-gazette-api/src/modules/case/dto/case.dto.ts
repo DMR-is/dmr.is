@@ -15,6 +15,7 @@ import { DetailedDto } from '../../../dto/detailed.dto'
 import { ApplicationTypeEnum } from '../../../lib/constants'
 import { AdvertDetailedDto } from '../../advert/dto/advert.dto'
 import { RecallApplicationDto } from '../../applications/recall/dto/recall-application.dto'
+import { RecallApplicationDto } from '../../applications/recall/dto/recall-application.dto'
 import { CommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
 
 export class CaseQueryDto extends PagingQuery {}
@@ -69,8 +70,11 @@ export class CaseDetailedDto extends CaseDto {
   adverts!: AdvertDetailedDto[]
 
   @ApiProperty({ type: RecallApplicationDto, required: false })
+  @ApiProperty({ type: RecallApplicationDto, required: false })
   @IsOptional()
   @ValidateNested()
+  @Type(() => RecallApplicationDto)
+  bankruptcyApplication?: RecallApplicationDto
   @Type(() => RecallApplicationDto)
   bankruptcyApplication?: RecallApplicationDto
 }

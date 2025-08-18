@@ -28,6 +28,8 @@ jobs:
             official-journal-web,
             regulations-api,
             legal-gazette-web,
+            legal-gazette-public-web,
+            legal-gazette-application-web,
             legal-gazette-api,
           ]
     name: 'Build and push images: ${{ matrix.container }}'
@@ -91,6 +93,8 @@ jobs:
             official-journal-web,
             regulations-api,
             legal-gazette-web,
+            legal-gazette-public-web,
+            legal-gazette-application-web,
             legal-gazette-api,
           ]
       fail-fast: false

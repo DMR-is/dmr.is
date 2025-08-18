@@ -36,6 +36,7 @@ import {
   GetDepartmentsQueryParams,
   GetDepartmentsResponse,
   GetInstitutionsResponse,
+  GetLeanAdvertsResponse,
   GetMainCategoriesResponse,
   GetSimilarAdvertsResponse,
 } from '@dmr.is/shared/dto'
@@ -78,6 +79,17 @@ export class JournalController {
     @Query() params?: GetAdvertsQueryParams,
   ): Promise<GetAdvertsResponse> {
     return ResultWrapper.unwrap(await this.journalService.getAdverts(params))
+  }
+
+  @Get('/adverts-lean')
+  @ApiOperation({ operationId: 'getAdvertsLean' })
+  @ApiResponse({ status: 200, type: GetLeanAdvertsResponse })
+  async advertsLean(
+    @Query() params?: GetAdvertsQueryParams,
+  ): Promise<GetLeanAdvertsResponse> {
+    return ResultWrapper.unwrap(
+      await this.journalService.getAdvertsLean(params),
+    )
   }
 
   @Get('/departments/:id')
@@ -197,7 +209,7 @@ export class JournalController {
   @Header('Content-Type', 'text/rss+xml')
   async getRssFeed(@Param('id') id: string) {
     const adverts = ResultWrapper.unwrap(
-      await this.journalService.getAdverts({
+      await this.journalService.getAdvertsLean({
         department: id?.toLowerCase(),
         pageSize: 100,
       }),

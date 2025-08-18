@@ -1,6 +1,9 @@
 import { isDefined } from 'class-validator'
 
 import { Controller, Get, UseGuards } from '@nestjs/common'
+import { isDefined } from 'class-validator'
+
+import { Controller, Get, UseGuards } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
@@ -9,6 +12,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
+import { LGResponse } from '../../decorators/lg-response.decorator'
 import { LGResponse } from '../../decorators/lg-response.decorator'
 import { CaseModel } from '../case/case.model'
 import { ApplicationsDto } from './dto/application.dto'

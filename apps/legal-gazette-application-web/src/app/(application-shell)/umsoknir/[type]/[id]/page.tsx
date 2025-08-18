@@ -38,7 +38,12 @@ export default async function UmsoknirThrotabusPage({
     params.type === FormTypes.BANKRUPTCY ||
     params.type === FormTypes.DECEASED
   ) {
+  if (
+    params.type === FormTypes.BANKRUPTCY ||
+    params.type === FormTypes.DECEASED
+  ) {
     const applicationRes = await safeCall(() =>
+      client.getRecallApplicationByCaseId({ caseId: params.id }),
       client.getRecallApplicationByCaseId({ caseId: params.id }),
     )
 
@@ -59,6 +64,7 @@ export default async function UmsoknirThrotabusPage({
       const { courtDistricts } = await client.getCourtDistricts()
 
       return (
+        <RecallForm
         <RecallForm
           applicationId={application.id}
           caseId={params.id}
