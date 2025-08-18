@@ -381,17 +381,17 @@ export class RecallApplicationtroller {
     const recallAdvert = await this.recallAdvertModel.findOne({
       include: [
         {
-          required: true,
           model: AdvertModel,
+          required: true,
           attributes: ['id'],
           where: {
             caseId: caseId,
           },
           include: [
             {
+              model: CaseModel,
               required: true,
               attributes: ['id'],
-              model: CaseModel,
               where: { id: caseId, involvedPartyNationalId: user.nationalId },
               include: [
                 {
