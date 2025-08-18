@@ -1,10 +1,18 @@
+import { plainToInstance } from 'class-transformer'
+import { DestroyOptions } from 'sequelize'
 import {
+  BeforeBulkDestroy,
+  BeforeBulkUpdate,
+  BeforeDestroy,
+  BeforeUpdate,
   BelongsTo,
   Column,
   DataType,
   DefaultScope,
   ForeignKey,
 } from 'sequelize-typescript'
+
+import { BadRequestException } from '@nestjs/common'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
@@ -141,7 +149,7 @@ export class CommonApplicationModel extends BaseModel<
   case?: CaseModel
 
   static fromModel(model: CommonApplicationModel): CommonApplicationDto {
-    return {
+    const dto = {
       id: model.id,
       caseId: model.caseId,
       title: model.title,
@@ -157,6 +165,10 @@ export class CommonApplicationModel extends BaseModel<
         : model.signatureDate,
       publishingDates: model.publishingDates?.map((date) => date.toISOString()),
     }
+
+    const transformed = plainToInstance(CommonApplicationDto, dto)
+
+    return transformed
   }
 
   fromModel(): CommonApplicationDto {
@@ -178,5 +190,37 @@ export class CommonApplicationModel extends BaseModel<
 
   fromModelToApplicationDto(): ApplicationDto {
     return CommonApplicationModel.fromModelToApplicationDto(this)
+  }
+
+  @BeforeUpdate
+  static async validateUpdate(model: CommonApplicationModel) {
+    if (model.previous('status') !== ApplicationStatusEnum.DRAFT) {
+      throw new BadRequestException(
+        'Cannot update application that is not in draft status',
+      )
+    }
+  }
+
+  @BeforeBulkUpdate
+  static async validateBulkUpdate(options: DestroyOptions) {
+    options.individualHooks = true
+
+    return options
+  }
+
+  @BeforeDestroy
+  static async deleteApplication(model: CommonApplicationModel) {
+    if (model.status !== ApplicationStatusEnum.DRAFT) {
+      throw new BadRequestException(
+        'Cannot delete application that is not in draft status',
+      )
+    }
+  }
+
+  @BeforeBulkDestroy
+  static async deleteApplications(options: DestroyOptions) {
+    options.individualHooks = true
+
+    return options
   }
 }

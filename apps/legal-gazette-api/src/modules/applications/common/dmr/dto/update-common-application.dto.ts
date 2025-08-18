@@ -33,18 +33,15 @@ export class UpdateCommonApplicationDto {
   @ApiProperty({ type: String, required: false, nullable: true })
   @IsOptional()
   @IsString()
-  @Transform(
-    ({ value }) => {
-      if (!value) {
-        return value
-      }
+  @Transform(({ value }) => {
+    if (!value) {
+      return value
+    }
 
-      const html = Buffer.from(value, 'base64').toString('utf-8')
+    const html = Buffer.from(value, 'base64').toString('utf-8')
 
-      return html
-    },
-    { toClassOnly: true },
-  )
+    return html
+  })
   html?: string | null
 
   @ApiProperty({ type: String, required: false, nullable: true })

@@ -4,7 +4,10 @@ import { getServerSession } from 'next-auth'
 import { AdvertList } from '../../../../../components/client-components/adverts/AdvertList'
 import { CommonForm } from '../../../../../components/client-components/form/common/CommonForm'
 import { RecallForm } from '../../../../../components/client-components/form/recall/RecallForm'
-import { ApplicationStatusEnum } from '../../../../../gen/fetch'
+import {
+  ApplicationStatusEnum,
+  CommonApplicationDto,
+} from '../../../../../gen/fetch'
 import { authOptions } from '../../../../../lib/authOptions'
 import {
   ALLOWED_FORM_TYPES,
@@ -82,6 +85,11 @@ export default async function UmsoknirThrotabusPage({
       const { categories } = await client.getCategories({
         type: 'a58fe2a8-b0a9-47bd-b424-4b9cece0e622',
       })
+
+      application.data.html = Buffer.from(
+        application.data.html ?? '',
+        'base64',
+      ).toString('utf-8')
 
       return (
         <CommonForm

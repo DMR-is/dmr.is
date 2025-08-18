@@ -1,3 +1,5 @@
+import { Transform } from 'class-transformer'
+
 import { ApiProperty } from '@nestjs/swagger'
 
 import { ApplicationStatusEnum } from '../../../contants'
@@ -36,6 +38,15 @@ export class CommonApplicationDto {
   status!: ApplicationStatusEnum
 
   @ApiProperty({ type: String, required: false, nullable: true })
+  @Transform(({ value }) => {
+    if (!value) {
+      return value
+    }
+
+    const base64 = Buffer.from(value, 'utf-8').toString('base64')
+
+    return base64
+  })
   html?: string | null
 
   @ApiProperty({ type: String, required: false, nullable: true })

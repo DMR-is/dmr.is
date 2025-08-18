@@ -61,3 +61,13 @@ export type BankruptcyRecallApplication = z.infer<
 export type DeceasedRecallApplication = z.infer<
   typeof deceasedRecallApplicationSchema
 >
+
+export const commonFormSchema = z.object({
+  categoryId: z.string(),
+  caption: z.string(),
+  html: z.string(),
+  signatureDate: z.date(),
+  signatureLocation: z.string(),
+  signatureName: z.string(),
+  publishingDates: z.array(z.date()).refine((dates) => dates.length > 0),
+})
