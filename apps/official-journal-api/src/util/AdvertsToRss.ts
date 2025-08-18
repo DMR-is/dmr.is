@@ -1,8 +1,8 @@
-import { Advert } from '@dmr.is/shared/dto'
+import { AdvertLean } from '@dmr.is/shared/dto'
 import { formatAnyDate } from '@dmr.is/utils'
 
 export const AdvertsToRss = (
-  adverts: Array<Advert>,
+  adverts: Array<AdvertLean>,
   department?: string,
 ): string => {
   const items = adverts.map((advert) => {

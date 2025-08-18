@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import { AdvertSignature } from '../advert-signatures/advert-signature.dto'
 import { AdvertSignatureBody } from '../advert-signatures/advert-signature-body.dto'
@@ -167,6 +167,18 @@ export class Advert {
   })
   readonly corrections?: AdvertCorrection[]
 }
+
+export class AdvertLean extends PickType(Advert, [
+  'id',
+  'title',
+  'department',
+  'type',
+  'subject',
+  'status',
+  'publicationNumber',
+  'publicationDate',
+  'categories',
+] as const) {}
 
 export class CreateAdvert {
   @ApiProperty({

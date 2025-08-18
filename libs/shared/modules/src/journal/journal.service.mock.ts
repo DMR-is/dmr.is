@@ -32,6 +32,7 @@ import {
   GetInstitutionResponse,
   GetInstitutionsQueryParams,
   GetInstitutionsResponse,
+  GetLeanAdvertsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetMainCategoryResponse,
@@ -109,6 +110,11 @@ export class MockJournalService implements IJournalService {
     throw new Error('Method not implemented.')
   }
   insertCategory(title: string): Promise<ResultWrapper<GetCategoryResponse>> {
+    throw new Error('Method not implemented.')
+  }
+  getAdvertsLean(
+    params?: GetAdvertsQueryParams,
+  ): Promise<ResultWrapper<GetLeanAdvertsResponse>> {
     throw new Error('Method not implemented.')
   }
   updateCategory(
