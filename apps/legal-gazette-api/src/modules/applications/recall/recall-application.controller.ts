@@ -61,6 +61,9 @@ export class RecallApplicationtroller {
     @InjectModel(SettlementModel)
     private readonly settlementModel: typeof SettlementModel,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+
+    @InjectModel(RecallAdvertModel)
+    private readonly recallAdvertModel: typeof RecallAdvertModel,
   ) {}
 
   @Post(':recallType')
@@ -367,4 +370,54 @@ export class RecallApplicationtroller {
       },
     })
   }
+
+  @Post(':caseId/:applicationId/division-meeting')
+  @LGResponse({ operationId: 'createDivisionMeetingAdvert' })
+  async createDivisionMeetingAdvert(
+    @Param('caseId') caseId: string,
+    @Param('applicationId') applicationId: string,
+    @CurrentUser() user: Auth,
+  ): Promise<void> {
+    const recallAdvert = await this.recallAdvertModel.findOne({
+      include: [
+        {
+          required: true,
+          model: AdvertModel,
+          attributes: ['id'],
+          where: {
+            caseId: caseId,
+          },
+          include: [
+            {
+              required: true,
+              attributes: ['id'],
+              model: CaseModel,
+              where: { id: caseId, involvedPartyNationalId: user.nationalId },
+              include: [
+                {
+                  model: RecallApplicationModel,
+                  where: { id: applicationId },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+
+    if (!recallAdvert) {
+      this.logger.debug(`Recall advert not found for case ${caseId}`)
+      throw new NotFoundException('Recall advert not found')
+    }
+
+    const settlement = recallAdvert.settlement.id
+  }
+
+  @Post(':caseId/:applicationId/division-ending')
+  @LGResponse({ operationId: 'createDivisionEndingAdvert' })
+  async createDivisionEndingAdvert(
+    @Param('caseId') caseId: string,
+    @Param('applicationId') applicationId: string,
+    @CurrentUser() user: Auth,
+  ): Promise<void> {}
 }
