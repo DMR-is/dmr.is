@@ -1152,7 +1152,7 @@
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": { "$ref": "#/components/schemas/RecallTypeEnum" }
+            "schema": { "type": "string" }
           }
         ],
         "requestBody": {
@@ -2706,7 +2706,6 @@
       "TypeEnum": {
         "type": "string",
         "enum": ["Almenn auglýsing", "Innköllun", "Skiptafundur", "Skiptalok"]
-        "enum": ["Almenn auglýsing", "Innköllun", "Skiptafundur", "Skiptalok"]
       },
       "TypeDto": {
         "type": "object",
@@ -2720,10 +2719,6 @@
             "description": "Title of the entity",
             "example": "Base entity",
             "x-enumNames": [
-              "Common",
-              "Recall",
-              "DivisionMeeting",
-              "DivisionEnding"
               "Common",
               "Recall",
               "DivisionMeeting",

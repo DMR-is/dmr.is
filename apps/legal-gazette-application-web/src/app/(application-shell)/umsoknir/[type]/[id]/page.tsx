@@ -4,10 +4,7 @@ import { getServerSession } from 'next-auth'
 import { AdvertList } from '../../../../../components/client-components/adverts/AdvertList'
 import { CommonForm } from '../../../../../components/client-components/form/common/CommonForm'
 import { RecallForm } from '../../../../../components/client-components/form/recall/RecallForm'
-import {
-  ApplicationStatusEnum,
-  CommonApplicationDto,
-} from '../../../../../gen/fetch'
+import { ApplicationStatusEnum } from '../../../../../gen/fetch'
 import { authOptions } from '../../../../../lib/authOptions'
 import {
   ALLOWED_FORM_TYPES,
@@ -38,12 +35,7 @@ export default async function UmsoknirThrotabusPage({
     params.type === FormTypes.BANKRUPTCY ||
     params.type === FormTypes.DECEASED
   ) {
-  if (
-    params.type === FormTypes.BANKRUPTCY ||
-    params.type === FormTypes.DECEASED
-  ) {
     const applicationRes = await safeCall(() =>
-      client.getRecallApplicationByCaseId({ caseId: params.id }),
       client.getRecallApplicationByCaseId({ caseId: params.id }),
     )
 
@@ -64,7 +56,6 @@ export default async function UmsoknirThrotabusPage({
       const { courtDistricts } = await client.getCourtDistricts()
 
       return (
-        <RecallForm
         <RecallForm
           applicationId={application.id}
           caseId={params.id}
@@ -102,7 +93,10 @@ export default async function UmsoknirThrotabusPage({
           application={application.data}
           applicationId={application.data.id}
           caseId={params.id}
-          categories={categories.map((c) => ({ label: c.title, value: c.id }))}
+          categories={categories.map((c) => ({
+            label: c.title,
+            value: c.id,
+          }))}
         />
       )
     }

@@ -65,7 +65,6 @@ type CaseCreateAttributes =
 @BaseTable({ tableName: LegalGazetteModels.CASE })
 @DefaultScope(() => ({
   attributes: ['id', 'caseNumber', 'createdAt', 'updatedAt', 'deletedAt'],
-  attributes: ['id', 'caseNumber', 'createdAt', 'updatedAt', 'deletedAt'],
   order: [['createdAt', 'DESC']],
 }))
 @Scopes(() => ({
@@ -124,7 +123,6 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   @BelongsTo(() => UserModel, 'assignedUserId')
   assignedUser?: UserModel
 
-  @HasOne(() => RecallApplicationModel, {
   @HasOne(() => RecallApplicationModel, {
     foreignKey: 'caseId',
   })
@@ -198,13 +196,6 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   }
 
   static fromModel(model: CaseModel): CaseDto {
-    return {
-      id: model.id,
-      caseNumber: model.caseNumber,
-      createdAt: model.createdAt.toISOString(),
-      updatedAt: model.updatedAt.toISOString(),
-      deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
-      applicationType: model.applicationType,
     return {
       id: model.id,
       caseNumber: model.caseNumber,

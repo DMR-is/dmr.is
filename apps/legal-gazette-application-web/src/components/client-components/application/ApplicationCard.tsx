@@ -19,7 +19,6 @@ import {
   ApplicationDto,
   ApplicationDtoStatusEnum,
   ApplicationTypeEnum,
-  ApplicationTypeEnum,
 } from '../../../gen/fetch'
 import { PageRoutes } from '../../../lib/constants'
 import { deleteApplication } from '../../../lib/fetchers'
