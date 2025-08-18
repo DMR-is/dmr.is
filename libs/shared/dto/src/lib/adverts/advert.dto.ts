@@ -178,6 +178,7 @@ export class AdvertLean extends PickType(Advert, [
   'publicationNumber',
   'publicationDate',
   'categories',
+  'involvedParty',
 ] as const) {}
 
 export class CreateAdvert {
