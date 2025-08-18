@@ -12,29 +12,24 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { mapIndexToVersion } from '../../lib/utils'
+import { LegalGazetteModels, RecallTypeEnum } from '../../lib/constants'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
 import {
-  BankruptcyApplicationCreateAttributes,
-  BankruptcyApplicationModel,
-} from '../applications/bankruptcy/models/bankruptcy-application.model'
-import { CommonAdvertModel } from '../common-advert/common-advert.model'
-import { CreateCommonAdvertInternalDto } from '../common-advert/dto/create-common-advert.dto'
+  RecallApplicationCreateAttributes,
+  RecallApplicationModel,
+} from '../applications/recall/recall-application.model'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
 } from '../communication-channel/communication-channel.model'
 import { StatusIdEnum } from '../status/status.model'
-import { TypeIdEnum } from '../type/type.model'
 import { UserModel } from '../users/users.model'
 import { CaseDto } from './dto/case.dto'
 
 type CaseAttributes = {
   caseNumber: string
-  bankruptcyApplicationId: string | null
   assignedUserId: string | null
   involvedPartyNationalId: string
   communicationChannels: CommunicationChannelModel[]
@@ -43,41 +38,28 @@ type CaseAttributes = {
 
 type CaseCreateAttributes = {
   involvedPartyNationalId: string
-  bankruptcyApplicationId?: string
   caseId?: string
   assignedUserId?: string | null
   communicationChannels?: CommunicationChannelCreateAttributes[]
   adverts?: AdvertCreateAttributes[]
-  bankruptcyApplication?: BankruptcyApplicationCreateAttributes
+  recallApplication?: RecallApplicationCreateAttributes
 }
 
 @BaseTable({ tableName: LegalGazetteModels.CASE })
 @DefaultScope(() => ({
-  attributes: [
-    'id',
-    'bankruptcyApplicationId',
-    'caseNumber',
-    'createdAt',
-    'updatedAt',
-    'deletedAt',
-  ],
+  attributes: ['id', 'caseNumber', 'createdAt', 'updatedAt', 'deletedAt'],
   order: [['createdAt', 'DESC']],
 }))
 @Scopes(() => ({
-  bybankruptcyApplicationId: (bankruptcyApplicationId: string) => ({
-    attributes: ['id', 'bankruptcyApplicationId'],
-    where: { bankruptcyApplicationId },
-  }),
+  applications: {
+    include: [
+      {
+        model: RecallApplicationModel,
+      },
+    ],
+  },
 }))
 export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
-  @Column({
-    type: DataType.UUID,
-    allowNull: true,
-    field: 'bankruptcy_application_id',
-    defaultValue: null,
-  })
-  bankruptcyApplicationId!: string | null
-
   @Column({
     type: DataType.UUID,
     allowNull: true,
@@ -111,50 +93,13 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   @BelongsTo(() => UserModel, 'assignedUserId')
   assignedUser?: UserModel
 
-  @HasOne(() => BankruptcyApplicationModel, {
+  @HasOne(() => RecallApplicationModel, {
     foreignKey: 'caseId',
   })
-  bankruptcyApplication?: BankruptcyApplicationModel
+  recallApplication?: RecallApplicationModel
 
-  static async createCommonAdvert(body: CreateCommonAdvertInternalDto) {
-    this.logger.info('Creating case for common advert')
-
-    const channels =
-      body.channels?.map((ch) => ({
-        email: ch.email,
-        name: ch?.name,
-        phone: ch?.phone,
-      })) ?? []
-
-    await this.create(
-      {
-        communicationChannels: channels,
-        involvedPartyNationalId: body.involvedPartyNationalId,
-        adverts: body.publishingDates.map((date, i) => ({
-          categoryId: body.categoryId,
-          statusId: StatusIdEnum.SUBMITTED,
-          typeId: TypeIdEnum.COMMON_ADVERT,
-          scheduledAt: new Date(date),
-          title: body.caption,
-          html: body.html,
-          version: mapIndexToVersion(i),
-          submittedBy: body.submittedBy,
-          commonAdvert: {
-            islandIsApplicationId: body.applicationId,
-            caption: body.caption,
-            signatureDate: new Date(body.signature.date),
-            signatureLocation: body.signature.location,
-            signatureName: body.signature.name,
-          },
-        })),
-      },
-      {
-        include: [
-          { model: CommunicationChannelModel },
-          { model: AdvertModel, include: [{ model: CommonAdvertModel }] },
-        ],
-      },
-    )
+  get applicationType(): RecallTypeEnum | undefined {
+    return this.recallApplication?.recallType
   }
 
   @BeforeDestroy
@@ -207,27 +152,13 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   }
 
   static fromModel(model: CaseModel): CaseDto {
-    try {
-      if (!model) {
-        throw new Error('Case model is undefined or null')
-      }
-
-      return {
-        id: model.id,
-        applicationId:
-          model.bankruptcyApplicationId === null
-            ? undefined
-            : model.bankruptcyApplicationId,
-        caseNumber: model.caseNumber,
-        createdAt: model.createdAt.toISOString(),
-        updatedAt: model.updatedAt.toISOString(),
-        deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
-      }
-    } catch (error) {
-      this.logger.debug(
-        `fromModel failed for CaseModel, did you include everything?`,
-      )
-      throw error
+    return {
+      id: model.id,
+      caseNumber: model.caseNumber,
+      createdAt: model.createdAt.toISOString(),
+      updatedAt: model.updatedAt.toISOString(),
+      deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+      applicationType: model.applicationType,
     }
   }
 

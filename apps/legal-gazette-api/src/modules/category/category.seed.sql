@@ -168,8 +168,26 @@ VALUES
     '67cd8559-ea7a-45ae-8de1-e87005c35531'
   ),
   (
-    '5b3dded4-e6c2-411e-a9e0-213bea06af17',
+    '6b7ccba1-afd9-4eaf-adb5-297fe1cc163c',
+    'Innköllun dánarbús',
+    'innkollun-danabus',
+    '67cd8559-ea7a-45ae-8de1-e87005c35531'
+  ),
+  (
+    '23064adc-db71-48ad-aeae-6044f0567ff9',
     'Skiptafundur þrotabús',
     'skiptafundur-throtabus',
-    '7c2db6e3-9aa9-49bf-8044-b072cfc82d8a'
+    '5b3dded4-e6c2-411e-a9e0-213bea06af17'
+  ),
+  (
+    '94effe96-d167-4edb-b776-99eb9f92d7da',
+    'Skiptafundur dánarbús',
+    'skiptafundur-danabus',
+    '5b3dded4-e6c2-411e-a9e0-213bea06af17'
+  ),
+  (
+    '7cd93ede-27e9-46ac-bf43-2259ce6dd8ff',
+    'Skiptalok',
+    'skiptalok',
+    '8819e35e-89ef-4110-bf18-905df2ae122c'
   );

@@ -2,7 +2,7 @@ import { IsOptional, IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { BaseEntityDto } from '@dmr.is/legal-gazette/dto'
+import { BaseEntityDto } from '../../../dto/base-entity.dto'
 
 export class GetCategoriesQueryDto {
   @ApiProperty({

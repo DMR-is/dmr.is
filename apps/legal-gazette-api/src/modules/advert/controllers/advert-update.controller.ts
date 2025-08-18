@@ -9,9 +9,9 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 import { ApiParam } from '@nestjs/swagger'
 
-import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 
+import { LGResponse } from '../../../decorators/lg-response.decorator'
 import { AdvertUpdateGuard } from '../../../guards/advert-update.guard'
 import { CategoryModel } from '../../category/category.model'
 import { StatusIdEnum, StatusModel } from '../../status/status.model'

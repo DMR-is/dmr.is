@@ -2,9 +2,9 @@ import { Controller, Get, Inject, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
-import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
+import { LGResponse } from '../../decorators/lg-response.decorator'
 import { SubscriberDto } from './dto/subscriber.dto'
 import { ISubscriberService } from './subscriber.service.interface'
 

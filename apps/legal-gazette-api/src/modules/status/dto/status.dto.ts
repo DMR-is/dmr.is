@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { BaseEntityDto } from '@dmr.is/legal-gazette/dto'
-
+import { BaseEntityDto } from '../../../dto/base-entity.dto'
 import { StatusEnum, StatusIdEnum } from '../status.model'
 
 export class GetStatusesDto {

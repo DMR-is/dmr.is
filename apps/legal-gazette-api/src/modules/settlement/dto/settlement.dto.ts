@@ -1,4 +1,10 @@
-import { IsDateString, IsOptional, IsString, MaxLength } from 'class-validator'
+import {
+  IsDateString,
+  IsOptional,
+  IsString,
+  MaxLength,
+  ValidateIf,
+} from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -34,7 +40,13 @@ export class SettlementDto {
   @MaxLength(255)
   settlementAddress!: string
 
-  @ApiProperty({ type: String, required: true })
+  @ApiProperty({ type: String, required: true, nullable: true })
+  @ValidateIf((o) => o.settlementDeadline !== null)
   @IsDateString()
-  settlementDeadline!: Date
+  settlementDeadline!: string | null
+
+  @ApiProperty({ type: String, required: false, nullable: true })
+  @ValidateIf((o) => o.settlementDateOfDeath !== null)
+  @IsDateString()
+  settlementDateOfDeath!: string | null
 }

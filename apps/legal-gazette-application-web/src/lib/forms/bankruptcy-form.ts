@@ -1,7 +1,7 @@
 import addDays from 'date-fns/addDays'
 import { UseFormProps } from 'react-hook-form'
 
-import { BankruptcyApplicationDto } from '../../gen/fetch'
+import { RecallApplicationDto } from '../../gen/fetch'
 import {
   BankruptcyFormSchema,
   bankruptcyFormSchema,
@@ -13,10 +13,10 @@ type Params = {
   caseId: string
   applicationId: string
   courtOptions: { label: string; value: string }[]
-  application: BankruptcyApplicationDto
+  application: RecallApplicationDto
 }
 
-export const bankruptcyForm = ({
+export const recallForm = ({
   caseId,
   applicationId,
   courtOptions,
@@ -54,6 +54,9 @@ export const bankruptcyForm = ({
       address: application.settlementAddress,
       deadline: application.settlementDeadline
         ? new Date(application.settlementDeadline)
+        : undefined,
+      dateOfDeath: application.settlementDateOfDeath
+        ? new Date(application.settlementDateOfDeath)
         : undefined,
     },
     signature: {
