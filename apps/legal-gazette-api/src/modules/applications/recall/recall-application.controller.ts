@@ -254,7 +254,7 @@ export class RecallApplicationtroller {
 
     if (parsedApplication.success === false) {
       this.logger.debug('Invalid application data provided', {
-        error: parsedApplication.error,
+        error: JSON.parse(JSON.stringify(parsedApplication.error)),
       })
       throw new BadRequestException('Invalid application data')
     }
@@ -275,11 +275,12 @@ export class RecallApplicationtroller {
         html: '<div>TODO: insert html</div>',
         paid: false,
         version: mapIndexToVersion(i),
+        signatureName: parsedApplication.data.liquidatorName,
+        signatureLocation: parsedApplication.data.signatureLocation,
+        signatureDate: parsedApplication.data.signatureDate,
         recallAdvert: {
           courtDistrictId: parsedApplication.data.courtDistrictId,
           additionalText: parsedApplication.data.additionalText,
-          signatureLocation: parsedApplication.data.signatureLocation,
-          signatureDate: parsedApplication.data.signatureDate,
           settlementId: parsedApplication.data.settlementId,
           recallType: parsedApplication.data.recallType,
         },
@@ -306,6 +307,9 @@ export class RecallApplicationtroller {
         html: '<div>TODO: insert html</div>',
         submittedBy: nationalId,
         paid: false,
+        signatureDate: parsedApplication.data.signatureDate,
+        signatureLocation: parsedApplication.data.signatureLocation,
+        signatureName: parsedApplication.data.liquidatorName,
         divisionMeetingAdvert: {
           meetingDate: parsedApplication.data.meetingDate,
           meetingLocation: parsedApplication.data.meetingLocation,
@@ -401,19 +405,27 @@ export class RecallApplicationtroller {
       )
     }
 
-    const divsionMeetings =
+    const divisionMeetings =
       theCase?.adverts?.filter(
         (ad) => ad.typeId === TypeIdEnum.DIVISION_MEETING,
       ) ?? []
 
-    if (divsionMeetings.length >= 3) {
+    if (divisionMeetings.length >= 3) {
       throw new BadRequestException(
         'A maximum of 3 division meetings can be created for a recall application.',
       )
     }
 
-    if (divsionMeetings.length > 0) {
-      const lastDivisionAdvert = divsionMeetings[divsionMeetings.length - 1]
+    if (divisionMeetings.length > 0) {
+      const lastDivisionAdvert = divisionMeetings.reduce(
+        (youngest, current) => {
+          return new Date(current.scheduledAt) > new Date(youngest.scheduledAt)
+            ? current
+            : youngest
+        },
+        divisionMeetings[0],
+      )
+
       const divisionMeetingAdvert = lastDivisionAdvert.divisionMeetingAdvert
 
       if (!divisionMeetingAdvert) {
@@ -422,7 +434,13 @@ export class RecallApplicationtroller {
         )
       }
 
-      const newMeeting = await this.advertModel.create(
+      if (lastDivisionAdvert.scheduledAt > new Date(body.meetingDate)) {
+        throw new BadRequestException(
+          'New division meeting date must be after the last division meeting date.',
+        )
+      }
+
+      await this.advertModel.create(
         {
           caseId: caseId,
           typeId: TypeIdEnum.DIVISION_MEETING,
@@ -435,6 +453,10 @@ export class RecallApplicationtroller {
           html: '<div>TODO: insert html</div>',
           submittedBy: `${user.name}${user.actor ? ` (${user.actor})` : ''}`,
           paid: false,
+          version: mapIndexToVersion(divisionMeetings.length),
+          signatureName: lastDivisionAdvert.signatureName,
+          signatureLocation: lastDivisionAdvert.signatureLocation,
+          signatureDate: lastDivisionAdvert.signatureDate,
           divisionMeetingAdvert: {
             meetingDate: new Date(body.meetingDate),
             meetingLocation: body.meetingLocation,
@@ -449,71 +471,47 @@ export class RecallApplicationtroller {
         },
       )
 
-      throw new Error(
-        'Todo: Implement logic to handle new division meeting advert creation',
+      return
+    }
+
+    // If no division meetings exist, create the first one
+    const advert = recallAdverts[0]
+    const firstRecallAdvert = advert?.recallAdvert
+
+    if (!firstRecallAdvert) {
+      throw new BadRequestException(
+        'No recall advert found for this case. Please create a recall application first.',
       )
     }
 
-    // const recallAdvert = await this.recallAdvertModel.findOne({
-    //   include: [
-    //     {
-    //       model: AdvertModel,
-    //       required: true,
-    //       where: {
-    //         caseId: caseId,
-    //       },
-    //       include: [
-    //         {
-    //           model: CaseModel,
-    //           required: true,
-    //           where: { id: caseId, involvedPartyNationalId: user.nationalId },
-    //         },
-    //       ],
-    //     },
-    //   ],
-    // })
-
-    // if (!recallAdvert) {
-    //   this.logger.debug(`Recall advert not found for case ${caseId}`)
-    //   throw new NotFoundException('Recall advert not found')
-    // }
-
-    // // check how many division meetings already exist for this application
-    // const totalDivisionMeetings = await this.advertModel.count({
-    //   where: { type: TypeIdEnum.DIVISION_MEETING, caseId },
-    // })
-
-    // if (totalDivisionMeetings >= 3) {
-    //   this.logger.debug('Attempt to create more than 3 division meetings', {
-    //     caseId,
-    //   })
-    //   throw new BadRequestException(
-    //     'A maximum of 3 division meetings can be created for a recall application.',
-    //   )
-    // }
-
-    // const settlement = recallAdvert.settlement
-    // const submittedBy = `${user.name}${user.actor ? ` (${user.actor})` : ''}`
-
-    // await this.advertModel.create({
-    //   caseId,
-    //   typeId: TypeIdEnum.DIVISION_MEETING,
-    //   categoryId:
-    //     recallAdvert.recallType === RecallTypeEnum.BANKRUPTCY
-    //       ? CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING
-    //       : CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING,
-    //   scheduledAt: new Date(body.meetingDate),
-    //   title: 'Skiptafundur',
-    //   html: '<div>TODO: insert html</div>',
-    //   submittedBy: submittedBy,
-    //   paid: false,
-    //   divisionMeetingAdvert: {
-    //     recallType: recallAdvert.recallType,
-    //     settlementId: settlement.id,
-    //     meetingLocation: body.meetingLocation,
-    //     meetingDate: new Date(body.meetingDate),
-    //   },
-    // })
+    await this.advertModel.create(
+      {
+        caseId: caseId,
+        typeId: TypeIdEnum.DIVISION_MEETING,
+        categoryId:
+          firstRecallAdvert.recallType === RecallTypeEnum.BANKRUPTCY
+            ? CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING
+            : CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING,
+        scheduledAt: new Date(body.meetingDate),
+        html: '<div>TODO: insert html</div>',
+        submittedBy: `${user.name}${user.actor ? ` (${user.actor})` : ''}`,
+        paid: false,
+        signatureName: advert.signatureName,
+        signatureLocation: advert.signatureLocation,
+        signatureDate: advert.signatureDate,
+        divisionMeetingAdvert: {
+          meetingDate: new Date(body.meetingDate),
+          meetingLocation: body.meetingLocation,
+          recallType: firstRecallAdvert.recallType,
+          settlementId: firstRecallAdvert.settlementId,
+        },
+      },
+      {
+        include: [
+          { model: DivisionMeetingAdvertModel, as: 'divisionMeetingAdvert' },
+        ],
+      },
+    )
   }
 
   @Post(':caseId/:applicationId/division-ending')

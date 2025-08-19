@@ -18,8 +18,6 @@ import { RecallAdvertDto } from './dto/recall-advert.dto'
 export type RecallAdvertAttributes = {
   recallType: RecallTypeEnum
   additionalText?: string | null
-  signatureLocation: string
-  signatureDate: Date
   settlementId: string
   courtDistrictId: string
   advertId: string
@@ -27,8 +25,6 @@ export type RecallAdvertAttributes = {
 export type RecallAdvertCreateAttributes = {
   recallType: RecallTypeEnum
   additionalText?: string | null
-  signatureLocation: string
-  signatureDate: Date
   settlementId: string
   courtDistrictId: string
   advertId?: string
@@ -42,9 +38,6 @@ export type RecallAdvertCreateAttributes = {
     'courtDistrictId',
     'settlementId',
     'additionalText',
-    'signatureLocation',
-    'signatureDate',
-    'signatureName',
   ],
   include: [{ model: CourtDistrictModel }, { model: SettlementModel }],
 }))

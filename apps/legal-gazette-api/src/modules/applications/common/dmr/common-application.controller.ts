@@ -130,10 +130,10 @@ export class CommonApplicationController {
         caseId: caseId,
         paid: false,
         version: mapIndexToVersion(i),
+        signatureDate: form.data.signatureDate,
+        signatureLocation: form.data.signatureLocation,
+        signatureName: form.data.signatureName,
         commonAdvert: {
-          signatureDate: form.data.signatureDate,
-          signatureLocation: form.data.signatureLocation,
-          signatureName: form.data.signatureName,
           caption: form.data.caption,
         },
       })),

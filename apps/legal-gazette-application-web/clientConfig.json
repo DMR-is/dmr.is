@@ -3114,7 +3114,10 @@
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersion" }]
           },
           "html": { "type": "string" },
-          "paid": { "type": "boolean" }
+          "paid": { "type": "boolean" },
+          "signatureName": { "type": "string" },
+          "signatureLocation": { "type": "string" },
+          "signatureDate": { "type": "string" }
         },
         "required": [
           "createdAt",
@@ -3131,7 +3134,10 @@
           "status",
           "version",
           "html",
-          "paid"
+          "paid",
+          "signatureName",
+          "signatureLocation",
+          "signatureDate"
         ]
       },
       "UpdateCommonAdvertSignatureDto": {
@@ -3152,24 +3158,10 @@
           }
         }
       },
-      "CommonAdvertSignatureDto": {
-        "type": "object",
-        "properties": {
-          "name": { "type": "string" },
-          "location": { "type": "string" },
-          "date": { "type": "string" }
-        },
-        "required": ["name", "location", "date"]
-      },
       "CommonAdvertDto": {
         "type": "object",
-        "properties": {
-          "caption": { "type": "string" },
-          "signature": {
-            "$ref": "#/components/schemas/CommonAdvertSignatureDto"
-          }
-        },
-        "required": ["caption", "signature"]
+        "properties": { "caption": { "type": "string" } },
+        "required": ["caption"]
       },
       "AdvertStatusCounterItemDto": {
         "type": "object",

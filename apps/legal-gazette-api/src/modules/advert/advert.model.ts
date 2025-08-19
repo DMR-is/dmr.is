@@ -68,6 +68,9 @@ export type AdvertCreateAttributes = {
   typeId: string
   categoryId: string
   scheduledAt: Date
+  signatureName: string
+  signatureLocation: string
+  signatureDate: Date
   caseId?: string
   html?: string
   statusId?: string
