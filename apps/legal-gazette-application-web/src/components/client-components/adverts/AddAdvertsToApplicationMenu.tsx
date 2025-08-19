@@ -1,61 +1,53 @@
 'use client'
 
-import useSWRMutation from 'swr/mutation'
+import { useState } from 'react'
 
-import { DropdownMenu, toast } from '@island.is/island-ui/core'
+import { DropdownMenu } from '@island.is/island-ui/core'
 
-import { CreateDivisionMeetingForApplicationDto } from '../../../gen/fetch'
-import { createDivisionMeetingForApplication } from '../../../lib/fetchers'
+import { AddDivisionMeeting } from './AddDivisionMeeting'
 
 type Props = {
   caseId: string
 }
 
 export const AddAdvertsToApplicationMenu = ({ caseId }: Props) => {
-  const { trigger: createDivisionMeetingAdvertTrigger } = useSWRMutation(
-    'createDivisionMeetingAdvertForApplication',
-    (_key, { arg }: { arg: CreateDivisionMeetingForApplicationDto }) =>
-      createDivisionMeetingForApplication({
-        caseId,
-        createDivisionMeetingForApplicationDto: arg,
-      }),
-  )
+  const [divisionMeetingModalVisible, setDivisionMeetingModalVisible] =
+    useState(false)
+  const [recallModalVisible, setRecallModalVisible] = useState(false)
+  const [divisionEndingModalVisible, setDivisionEndingModalVisible] =
+    useState(false)
+
+  const handleVisibilityChange = (isVisible: boolean) => {
+    setDivisionMeetingModalVisible(isVisible)
+  }
 
   return (
-    <DropdownMenu
-      title="Bæta við"
-      icon="hammer"
-      iconType="outline"
-      items={[
-        {
-          title: 'Innköllun',
-          onClick: () => console.log('Creating recall advert'),
-        },
-        {
-          title: 'Skiptafundi',
-          onClick: () => {
-            return createDivisionMeetingAdvertTrigger(
-              {
-                meetingDate: new Date().toISOString(),
-                meetingLocation: 'Reykjavík',
-              },
-              {
-                onSuccess: () => {
-                  toast.success('Skiptafundi auglýsingu bætt við umsókn')
-                },
-                onError: () => {
-                  toast.error(
-                    'Villa kom upp við að bæta við skiptafundi auglýsingu',
-                  )
-                },
-              },
-            )
+    <>
+      <DropdownMenu
+        title="Bæta við"
+        icon="hammer"
+        iconType="outline"
+        items={[
+          {
+            title: 'Innköllun',
+            onClick: () => console.log('Creating recall advert'),
           },
-        },
-        {
-          title: 'Skiptalokum',
-        },
-      ]}
-    />
+          {
+            title: 'Skiptafundi',
+            onClick: () => {
+              setDivisionMeetingModalVisible(true)
+            },
+          },
+          {
+            title: 'Skiptalokum',
+          },
+        ]}
+      />
+      <AddDivisionMeeting
+        caseId={caseId}
+        isVisible={divisionMeetingModalVisible}
+        onVisibilityChange={handleVisibilityChange}
+      />
+    </>
   )
 }

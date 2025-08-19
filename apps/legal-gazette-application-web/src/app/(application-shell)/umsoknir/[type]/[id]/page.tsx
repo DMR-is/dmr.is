@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 
-import { AdvertList } from '../../../../../components/client-components/adverts/AdvertList'
 import { ApplicationSubmitted } from '../../../../../components/client-components/application/ApplicationSubmitted'
 import { CommonForm } from '../../../../../components/client-components/form/common/CommonForm'
 import { RecallForm } from '../../../../../components/client-components/form/recall/RecallForm'

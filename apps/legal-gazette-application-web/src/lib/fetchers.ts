@@ -22,7 +22,17 @@ export async function createDivisionMeetingForApplication(
 ) {
   const client = await getClientWithSession()
 
-  return client.createDivisionMeetingForApplication(args)
+  const results = await safeCall(() =>
+    client.createDivisionMeetingForApplication(args),
+  )
+
+  if (results.error) {
+    throw new Error(
+      'Ekki tókst að búa til skiptafundi. Vinsamlegast reyndu aftur síðar.',
+    )
+  }
+
+  return results.data
 }
 
 export async function updateRecallApplication(
@@ -30,7 +40,13 @@ export async function updateRecallApplication(
 ) {
   const client = await getClientWithSession()
 
-  return client.updateRecallApplication(args)
+  const results = await safeCall(() => client.updateRecallApplication(args))
+
+  if (results.error) {
+    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
+  }
+
+  return results.data
 }
 
 export async function updateCommonApplication(
@@ -38,7 +54,13 @@ export async function updateCommonApplication(
 ) {
   const client = await getClientWithSession()
 
-  return client.updateCommonApplication(args)
+  const results = await safeCall(() => client.updateCommonApplication(args))
+
+  if (results.error) {
+    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
+  }
+
+  return results.data
 }
 
 export async function submitCommonApplication(
@@ -46,7 +68,13 @@ export async function submitCommonApplication(
 ) {
   const client = await getClientWithSession()
 
-  return client.submitCommonApplication(args)
+  const results = await safeCall(() => client.submitCommonApplication(args))
+
+  if (results.error) {
+    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
+  }
+
+  return results.data
 }
 
 export async function submitRecallApplication(
@@ -68,13 +96,27 @@ export async function submitRecallApplication(
 export async function deleteApplication(applicationId: string) {
   const client = await getClientWithSession()
 
-  return client.deleteRecallApplication({ applicationId: applicationId })
+  const results = await safeCall(() =>
+    client.deleteRecallApplication({ applicationId: applicationId }),
+  )
+
+  if (results.error) {
+    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
+  }
+
+  return results.data
 }
 
 export async function getMyApplications() {
   const client = await getClientWithSession()
 
-  return client.getMyApplications()
+  const results = await safeCall(() => client.getMyApplications())
+
+  if (results.error) {
+    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
+  }
+
+  return results.data
 }
 
 export async function createRecallCaseAndApplication(
@@ -82,29 +124,63 @@ export async function createRecallCaseAndApplication(
 ) {
   const client = await getClientWithSession()
 
-  return await client.createRecallCaseAndApplication(args)
+  const results = await safeCall(() =>
+    client.createRecallCaseAndApplication(args),
+  )
+
+  if (results.error) {
+    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
+  }
+
+  return results.data
 }
 
 export async function createCommonCaseAndApplication() {
   const client = await getClientWithSession()
 
-  return await client.createCommonCaseAndApplication()
+  const results = await safeCall(() => client.createCommonCaseAndApplication())
+
+  if (results.error) {
+    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
+  }
+
+  return results.data
 }
 
 export async function getRecallApplicationByCaseId(caseId: string) {
   const client = await getClientWithSession()
 
-  return await client.getRecallApplicationByCaseId({ caseId })
+  const results = await safeCall(() =>
+    client.getRecallApplicationByCaseId({ caseId }),
+  )
+
+  if (results.error) {
+    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
+  }
+
+  return results.data
 }
 
 export async function getCourtDistricts() {
   const client = await getClientWithSession()
 
-  return await client.getCourtDistricts()
+  const results = await safeCall(() => client.getCourtDistricts())
+
+  if (results.error) {
+    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
+  }
+
+  return results.data
 }
 
 export const getAdvertsByCaseId = async (caseId: string) => {
   const client = await getClientWithSession()
 
-  return await client.getAdvertsByCaseId({ caseId })
+  const results = await safeCall(() => client.getAdvertsByCaseId({ caseId }))
+
+  if (results.error) {
+    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
+  }
+
+  return results.data
 }
