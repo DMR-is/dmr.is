@@ -43,7 +43,10 @@ import { CategoryDefaultIdEnum } from '../../category/category.model'
 import { SettlementModel } from '../../settlement/settlement.model'
 import { TypeIdEnum } from '../../type/type.model'
 import { ApplicationStatusEnum } from '../contants'
-import { CreateDivisionMeetingForApplicationDto } from './dto/create-division-meeting-for-application.dto'
+import {
+  CreateDivisionEndingMeetingForApplicationDto,
+  CreateDivisionMeetingForApplicationDto,
+} from './dto/create-division-meeting-for-application.dto'
 import { RecallApplicationDto } from './dto/recall-application.dto'
 import { UpdateRecallApplicationDto } from './dto/update-recall-application.dto'
 import { RecallApplicationModel } from './recall-application.model'
@@ -289,7 +292,6 @@ export class RecallApplicationtroller {
         include: [
           {
             model: RecallAdvertModel,
-            as: 'recallAdvert',
           },
         ],
       },
@@ -318,9 +320,7 @@ export class RecallApplicationtroller {
         },
       },
       {
-        include: [
-          { model: DivisionMeetingAdvertModel, as: 'divisionMeetingAdvert' },
-        ],
+        include: [{ model: DivisionMeetingAdvertModel }],
       },
     )
 
@@ -465,9 +465,7 @@ export class RecallApplicationtroller {
           },
         },
         {
-          include: [
-            { model: DivisionMeetingAdvertModel, as: 'divisionMeetingAdvert' },
-          ],
+          include: [{ model: DivisionMeetingAdvertModel }],
         },
       )
 
@@ -507,18 +505,78 @@ export class RecallApplicationtroller {
         },
       },
       {
-        include: [
-          { model: DivisionMeetingAdvertModel, as: 'divisionMeetingAdvert' },
-        ],
+        include: [{ model: DivisionMeetingAdvertModel }],
       },
     )
   }
 
-  @Post(':caseId/:applicationId/division-ending')
-  @LGResponse({ operationId: 'createDivisionEndingAdvert' })
-  async createDivisionEndingAdvert(
+  @Post(':caseId/division-ending')
+  @LGResponse({ operationId: 'createDivisionEndingForApplication' })
+  async createDivisionEndingForApplication(
     @Param('caseId') caseId: string,
-    @Param('applicationId') applicationId: string,
-    @CurrentUser() user: Auth,
-  ): Promise<void> {}
+    @Body() body: CreateDivisionEndingMeetingForApplicationDto,
+    @CurrentUser() user: DMRUser,
+  ): Promise<void> {
+    // check if there already exists a division ending advert for this application
+
+    const existingAdverts = await this.advertModel.findAll({
+      where: {
+        caseId: caseId,
+      },
+      include: [{ model: DivisionMeetingAdvertModel }],
+    })
+
+    const existingDivisionEnding = existingAdverts.find(
+      (ad) => ad.typeId === TypeIdEnum.DIVISION_ENDING,
+    )
+
+    if (existingDivisionEnding) {
+      throw new BadRequestException(
+        'Division ending advert already exists for this application',
+      )
+    }
+
+    const divisionMeetings = existingAdverts.filter(
+      (ad) => ad.typeId === TypeIdEnum.DIVISION_MEETING,
+    )
+    const existingDivisionMeeting = divisionMeetings.reduce(
+      (youngest, current) => {
+        return new Date(current.scheduledAt) > new Date(youngest.scheduledAt)
+          ? current
+          : youngest
+      },
+      divisionMeetings[0],
+    )
+
+    if (
+      !existingDivisionMeeting ||
+      !existingDivisionMeeting.divisionMeetingAdvert
+    ) {
+      throw new BadRequestException(
+        'No division meeting advert found for this application. Please create a division meeting first.',
+      )
+    }
+
+    const submittedBy = `${user.name}${user.actor ? ` (${user.actor})` : ''}`
+
+    await this.advertModel.create({
+      caseId: caseId,
+      typeId: TypeIdEnum.DIVISION_ENDING,
+      categoryId: CategoryDefaultIdEnum.DIVISION_ENDING,
+      scheduledAt: new Date(body.meetingDate),
+      html: '<div>TODO: insert html</div>',
+      submittedBy: submittedBy,
+      paid: false,
+      signatureDate: existingDivisionMeeting.signatureDate,
+      signatureLocation: existingDivisionMeeting.signatureLocation,
+      signatureName: existingDivisionMeeting.signatureName,
+      divisionEndingAdvert: {
+        meetingDate: new Date(body.meetingDate),
+        meetingLocation: body.meetingLocation,
+        settlementId:
+          existingDivisionMeeting.divisionMeetingAdvert?.settlementId,
+        recallType: existingDivisionMeeting.divisionMeetingAdvert?.recallType,
+      },
+    })
+  }
 }

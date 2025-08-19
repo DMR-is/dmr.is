@@ -1,6 +1,7 @@
 import { getSession } from 'next-auth/react'
 
 import {
+  CreateDivisionEndingForApplicationRequest,
   CreateDivisionMeetingForApplicationRequest,
   CreateRecallCaseAndApplicationRequest,
   SubmitCommonApplicationRequest,
@@ -17,6 +18,24 @@ const getClientWithSession = async () => {
   return getClient(session?.idToken as string)
 }
 
+export async function createDivisionEndingForApplication(
+  args: CreateDivisionEndingForApplicationRequest,
+) {
+  const client = await getClientWithSession()
+
+  const results = await safeCall(() =>
+    client.createDivisionEndingForApplication(args),
+  )
+
+  if (results.error) {
+    throw new Error(
+      'Ekki tókst að búa til skiptalok. Vinsamlegast reyndu aftur síðar.',
+    )
+  }
+
+  return results.data
+}
+
 export async function createDivisionMeetingForApplication(
   args: CreateDivisionMeetingForApplicationRequest,
 ) {
@@ -28,7 +47,7 @@ export async function createDivisionMeetingForApplication(
 
   if (results.error) {
     throw new Error(
-      'Ekki tókst að búa til skiptafundi. Vinsamlegast reyndu aftur síðar.',
+      'Ekki tókst að búa til skiptafund. Vinsamlegast reyndu aftur síðar.',
     )
   }
 

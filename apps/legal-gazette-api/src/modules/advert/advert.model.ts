@@ -25,6 +25,10 @@ import {
   CommonAdvertModel,
 } from './common/common-advert.model'
 import {
+  DivisionEndingAdvertCreateAttributes,
+  DivisionEndingAdvertModel,
+} from './division/models/division-ending-advert.model'
+import {
   DivisionMeetingAdvertCreateAttributes,
   DivisionMeetingAdvertModel,
 } from './division/models/division-meeting-advert.model'
@@ -61,6 +65,7 @@ type AdvertAttributes = {
   commonAdvert?: CommonAdvertModel
   recallAdvert?: RecallAdvertModel
   divisionMeetingAdvert?: DivisionMeetingAdvertModel
+  divisionEndingAdvert?: DivisionEndingAdvertModel
 }
 
 export type AdvertCreateAttributes = {
@@ -80,6 +85,7 @@ export type AdvertCreateAttributes = {
   commonAdvert?: CommonAdvertCreateAttributes
   recallAdvert?: RecallAdvertCreateAttributes
   divisionMeetingAdvert?: DivisionMeetingAdvertCreateAttributes
+  divisionEndingAdvert?: DivisionEndingAdvertCreateAttributes
 }
 
 export enum AdvertVersionEnum {
@@ -110,7 +116,10 @@ export enum AdvertModelScopes {
       [Op.eq]: null,
     },
   },
-  order: [['scheduledAt', 'ASC']],
+  order: [
+    ['scheduledAt', 'ASC'],
+    ['version', 'ASC'],
+  ],
 }))
 @Scopes(() => ({
   readyForPublication: {
@@ -154,7 +163,10 @@ export enum AdvertModelScopes {
   all: {
     include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
     where: {},
-    order: [['version', 'ASC']],
+    order: [
+      ['scheduledAt', 'ASC'],
+      ['version', 'ASC'],
+    ],
   },
   recallAdvert: {
     include: [
@@ -370,6 +382,11 @@ export class AdvertModel extends BaseModel<
     foreignKey: 'advertId',
   })
   divisionMeetingAdvert?: DivisionMeetingAdvertModel
+
+  @HasOne(() => DivisionEndingAdvertModel, {
+    foreignKey: 'advertId',
+  })
+  divisionEndingAdvert?: DivisionEndingAdvertModel
 
   get title(): string {
     return this.type.title

@@ -11,3 +11,5 @@ export class CreateDivisionMeetingForApplicationDto {
   @IsString()
   meetingLocation!: string
 }
+
+export class CreateDivisionEndingMeetingForApplicationDto extends CreateDivisionMeetingForApplicationDto {}

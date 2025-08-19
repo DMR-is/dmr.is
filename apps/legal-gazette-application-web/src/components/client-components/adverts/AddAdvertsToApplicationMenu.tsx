@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 import { DropdownMenu } from '@island.is/island-ui/core'
 
+import { AddDivisionEnding } from './AddDivisionEnding'
 import { AddDivisionMeeting } from './AddDivisionMeeting'
 
 type Props = {
@@ -34,12 +35,11 @@ export const AddAdvertsToApplicationMenu = ({ caseId }: Props) => {
           },
           {
             title: 'Skiptafundi',
-            onClick: () => {
-              setDivisionMeetingModalVisible(true)
-            },
+            onClick: () => setDivisionMeetingModalVisible(true),
           },
           {
             title: 'Skiptalokum',
+            onClick: () => setDivisionEndingModalVisible(true),
           },
         ]}
       />
@@ -47,6 +47,11 @@ export const AddAdvertsToApplicationMenu = ({ caseId }: Props) => {
         caseId={caseId}
         isVisible={divisionMeetingModalVisible}
         onVisibilityChange={handleVisibilityChange}
+      />
+      <AddDivisionEnding
+        caseId={caseId}
+        isVisible={divisionEndingModalVisible}
+        onVisibilityChange={setDivisionEndingModalVisible}
       />
     </>
   )
