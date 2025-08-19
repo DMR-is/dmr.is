@@ -2651,23 +2651,27 @@
         "tags": ["Legal gazette - application web API"]
       }
     },
-    "/api/v1/applications/recalls/{caseId}/{applicationId}/division-meeting": {
+    "/api/v1/applications/recalls/{caseId}/division-meeting": {
       "post": {
-        "operationId": "createDivisionMeetingAdvert",
+        "operationId": "createDivisionMeetingForApplication",
         "parameters": [
           {
             "name": "caseId",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
-          },
-          {
-            "name": "applicationId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDivisionMeetingForApplicationDto"
+              }
+            }
+          }
+        },
         "responses": {
           "204": { "description": "" },
           "400": {
@@ -3357,6 +3361,14 @@
           "publishingDates": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["id", "caseId", "recallType", "status"]
+      },
+      "CreateDivisionMeetingForApplicationDto": {
+        "type": "object",
+        "properties": {
+          "meetingDate": { "type": "string" },
+          "meetingLocation": { "type": "string" }
+        },
+        "required": ["meetingDate", "meetingLocation"]
       }
     }
   }

@@ -1,6 +1,5 @@
 import { Type } from 'class-transformer'
 import {
-  IsDateString,
   IsDefined,
   IsEnum,
   IsOptional,
@@ -32,14 +31,6 @@ export class RecallAdvertDto {
   @IsOptional()
   @IsString()
   additionalText?: string
-
-  @ApiProperty({ type: String, required: true })
-  @IsString()
-  signatureLocation!: string
-
-  @ApiProperty({ type: String, required: true })
-  @IsDateString()
-  signatureDate!: string
 
   @ApiProperty({ type: SettlementDto, required: true })
   @ValidateNested()

@@ -20,30 +20,17 @@ type CommonAdvertAttributes = {
   advertId: string
   islandIsApplicationId?: string
   caption: string
-  signatureName: string
-  signatureLocation: string
-  signatureDate: Date
 }
 
 export type CommonAdvertCreateAttributes = {
   advertId?: string
   islandIsApplicationId?: string
   caption: string
-  signatureName: string
-  signatureLocation: string
-  signatureDate: Date
 }
 
 @BaseTable({ tableName: LegalGazetteModels.COMMON_ADVERT })
 @DefaultScope(() => ({
-  attributes: [
-    'id',
-    'advertId',
-    'caption',
-    'signatureName',
-    'signatureLocation',
-    'signatureDate',
-  ],
+  attributes: ['id', 'advertId', 'caption'],
 }))
 export class CommonAdvertModel extends BaseModel<
   CommonAdvertAttributes,
@@ -70,27 +57,6 @@ export class CommonAdvertModel extends BaseModel<
   })
   caption!: string
 
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-    field: 'signature_name',
-  })
-  signatureName!: string
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-    field: 'signature_location',
-  })
-  signatureLocation!: string
-
-  @Column({
-    type: DataType.DATE,
-    allowNull: false,
-    field: 'signature_date',
-  })
-  signatureDate!: Date
-
   @BelongsTo(() => AdvertModel, { foreignKey: 'advertId' })
   advert?: AdvertModel
 
@@ -106,20 +72,8 @@ export class CommonAdvertModel extends BaseModel<
   }
 
   static fromModel(model: CommonAdvertModel): CommonAdvertDto {
-    try {
-      return {
-        caption: model.caption,
-        signature: {
-          name: model.signatureName,
-          location: model.signatureLocation,
-          date: model.signatureDate.toISOString(),
-        },
-      }
-    } catch (error) {
-      this.logger.warn(
-        'fromModel failed for CommonAdvertModel, did you include everything?',
-      )
-      throw error
+    return {
+      caption: model.caption,
     }
   }
 

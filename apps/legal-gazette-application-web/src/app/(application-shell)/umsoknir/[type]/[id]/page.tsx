@@ -2,12 +2,10 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 
 import { AdvertList } from '../../../../../components/client-components/adverts/AdvertList'
+import { ApplicationSubmitted } from '../../../../../components/client-components/application/ApplicationSubmitted'
 import { CommonForm } from '../../../../../components/client-components/form/common/CommonForm'
 import { RecallForm } from '../../../../../components/client-components/form/recall/RecallForm'
-import {
-  ApplicationStatusEnum,
-  CommonApplicationDto,
-} from '../../../../../gen/fetch'
+import { ApplicationStatusEnum } from '../../../../../gen/fetch'
 import { authOptions } from '../../../../../lib/authOptions'
 import {
   ALLOWED_FORM_TYPES,
@@ -110,5 +108,10 @@ export default async function UmsoknirThrotabusPage({
     throw new Error('Ekki tókst að sækja auglýsingar fyrir þessa umsókn')
   }
 
-  return <AdvertList adverts={advertsResults.data.adverts} />
+  return (
+    <ApplicationSubmitted
+      caseId={params.id}
+      adverts={advertsResults.data.adverts}
+    />
+  )
 }

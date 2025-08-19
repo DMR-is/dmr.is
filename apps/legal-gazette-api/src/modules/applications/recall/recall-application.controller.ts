@@ -17,6 +17,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
+import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
@@ -42,6 +43,7 @@ import { CategoryDefaultIdEnum } from '../../category/category.model'
 import { SettlementModel } from '../../settlement/settlement.model'
 import { TypeIdEnum } from '../../type/type.model'
 import { ApplicationStatusEnum } from '../contants'
+import { CreateDivisionMeetingForApplicationDto } from './dto/create-division-meeting-for-application.dto'
 import { RecallApplicationDto } from './dto/recall-application.dto'
 import { UpdateRecallApplicationDto } from './dto/update-recall-application.dto'
 import { RecallApplicationModel } from './recall-application.model'
@@ -301,7 +303,6 @@ export class RecallApplicationtroller {
         caseId: caseId,
         typeId: TypeIdEnum.DIVISION_MEETING,
         scheduledAt: parsedApplication.data.meetingDate,
-        title: 'Skiptafundur',
         html: '<div>TODO: insert html</div>',
         submittedBy: nationalId,
         paid: false,
@@ -371,46 +372,148 @@ export class RecallApplicationtroller {
     })
   }
 
-  @Post(':caseId/:applicationId/division-meeting')
-  @LGResponse({ operationId: 'createDivisionMeetingAdvert' })
-  async createDivisionMeetingAdvert(
+  @Post(':caseId/division-meeting')
+  @LGResponse({ operationId: 'createDivisionMeetingForApplication' })
+  async createDivisionMeetingForApplication(
     @Param('caseId') caseId: string,
-    @Param('applicationId') applicationId: string,
-    @CurrentUser() user: Auth,
+    @CurrentUser() user: DMRUser,
+    @Body() body: CreateDivisionMeetingForApplicationDto,
   ): Promise<void> {
-    const recallAdvert = await this.recallAdvertModel.findOne({
+    const theCase = await this.caseModel.findOne({
+      where: {
+        id: caseId,
+        involvedPartyNationalId: user.nationalId,
+      },
       include: [
         {
           model: AdvertModel,
-          required: true,
-          attributes: ['id'],
-          where: {
-            caseId: caseId,
-          },
-          include: [
-            {
-              model: CaseModel,
-              required: true,
-              attributes: ['id'],
-              where: { id: caseId, involvedPartyNationalId: user.nationalId },
-              include: [
-                {
-                  model: RecallApplicationModel,
-                  where: { id: applicationId },
-                },
-              ],
-            },
-          ],
+          include: [RecallAdvertModel, DivisionMeetingAdvertModel],
         },
       ],
     })
 
-    if (!recallAdvert) {
-      this.logger.debug(`Recall advert not found for case ${caseId}`)
-      throw new NotFoundException('Recall advert not found')
+    const recallAdverts =
+      theCase?.adverts?.filter((ad) => ad.typeId === TypeIdEnum.RECALL) ?? []
+
+    if (!recallAdverts.length) {
+      throw new BadRequestException(
+        'No recall adverts found for this case. Please create a recall application first.',
+      )
     }
 
-    const settlement = recallAdvert.settlement.id
+    const divsionMeetings =
+      theCase?.adverts?.filter(
+        (ad) => ad.typeId === TypeIdEnum.DIVISION_MEETING,
+      ) ?? []
+
+    if (divsionMeetings.length >= 3) {
+      throw new BadRequestException(
+        'A maximum of 3 division meetings can be created for a recall application.',
+      )
+    }
+
+    if (divsionMeetings.length > 0) {
+      const lastDivisionAdvert = divsionMeetings[divsionMeetings.length - 1]
+      const divisionMeetingAdvert = lastDivisionAdvert.divisionMeetingAdvert
+
+      if (!divisionMeetingAdvert) {
+        throw new BadRequestException(
+          'Last division meeting advert does not have a division meeting advert associated with it.',
+        )
+      }
+
+      const newMeeting = await this.advertModel.create(
+        {
+          caseId: caseId,
+          typeId: TypeIdEnum.DIVISION_MEETING,
+          categoryId:
+            lastDivisionAdvert.recallAdvert?.recallType ===
+            RecallTypeEnum.BANKRUPTCY
+              ? CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING
+              : CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING,
+          scheduledAt: new Date(body.meetingDate),
+          html: '<div>TODO: insert html</div>',
+          submittedBy: `${user.name}${user.actor ? ` (${user.actor})` : ''}`,
+          paid: false,
+          divisionMeetingAdvert: {
+            meetingDate: new Date(body.meetingDate),
+            meetingLocation: body.meetingLocation,
+            recallType: divisionMeetingAdvert.recallType,
+            settlementId: divisionMeetingAdvert.settlementId,
+          },
+        },
+        {
+          include: [
+            { model: DivisionMeetingAdvertModel, as: 'divisionMeetingAdvert' },
+          ],
+        },
+      )
+
+      throw new Error(
+        'Todo: Implement logic to handle new division meeting advert creation',
+      )
+    }
+
+    // const recallAdvert = await this.recallAdvertModel.findOne({
+    //   include: [
+    //     {
+    //       model: AdvertModel,
+    //       required: true,
+    //       where: {
+    //         caseId: caseId,
+    //       },
+    //       include: [
+    //         {
+    //           model: CaseModel,
+    //           required: true,
+    //           where: { id: caseId, involvedPartyNationalId: user.nationalId },
+    //         },
+    //       ],
+    //     },
+    //   ],
+    // })
+
+    // if (!recallAdvert) {
+    //   this.logger.debug(`Recall advert not found for case ${caseId}`)
+    //   throw new NotFoundException('Recall advert not found')
+    // }
+
+    // // check how many division meetings already exist for this application
+    // const totalDivisionMeetings = await this.advertModel.count({
+    //   where: { type: TypeIdEnum.DIVISION_MEETING, caseId },
+    // })
+
+    // if (totalDivisionMeetings >= 3) {
+    //   this.logger.debug('Attempt to create more than 3 division meetings', {
+    //     caseId,
+    //   })
+    //   throw new BadRequestException(
+    //     'A maximum of 3 division meetings can be created for a recall application.',
+    //   )
+    // }
+
+    // const settlement = recallAdvert.settlement
+    // const submittedBy = `${user.name}${user.actor ? ` (${user.actor})` : ''}`
+
+    // await this.advertModel.create({
+    //   caseId,
+    //   typeId: TypeIdEnum.DIVISION_MEETING,
+    //   categoryId:
+    //     recallAdvert.recallType === RecallTypeEnum.BANKRUPTCY
+    //       ? CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING
+    //       : CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING,
+    //   scheduledAt: new Date(body.meetingDate),
+    //   title: 'Skiptafundur',
+    //   html: '<div>TODO: insert html</div>',
+    //   submittedBy: submittedBy,
+    //   paid: false,
+    //   divisionMeetingAdvert: {
+    //     recallType: recallAdvert.recallType,
+    //     settlementId: settlement.id,
+    //     meetingLocation: body.meetingLocation,
+    //     meetingDate: new Date(body.meetingDate),
+    //   },
+    // })
   }
 
   @Post(':caseId/:applicationId/division-ending')

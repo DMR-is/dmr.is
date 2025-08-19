@@ -1,6 +1,7 @@
 import { getSession } from 'next-auth/react'
 
 import {
+  CreateDivisionMeetingForApplicationRequest,
   CreateRecallCaseAndApplicationRequest,
   SubmitCommonApplicationRequest,
   SubmitRecallApplicationRequest,
@@ -14,6 +15,14 @@ const getClientWithSession = async () => {
   const session = await getSession()
 
   return getClient(session?.idToken as string)
+}
+
+export async function createDivisionMeetingForApplication(
+  args: CreateDivisionMeetingForApplicationRequest,
+) {
+  const client = await getClientWithSession()
+
+  return client.createDivisionMeetingForApplication(args)
 }
 
 export async function updateRecallApplication(

@@ -72,20 +72,6 @@ export class RecallAdvertModel extends BaseModel<
   additionalText?: string
 
   @Column({
-    field: 'signature_location',
-    type: DataType.TEXT,
-    allowNull: false,
-  })
-  signatureLocation!: string
-
-  @Column({
-    field: 'signature_date',
-    type: DataType.DATE,
-    allowNull: false,
-  })
-  signatureDate!: Date
-
-  @Column({
     field: 'settlement_id',
     type: DataType.UUID,
     allowNull: false,
@@ -129,8 +115,6 @@ export class RecallAdvertModel extends BaseModel<
       id: model.id,
       recallType: model.recallType,
       additionalText: model.additionalText,
-      signatureLocation: model.signatureLocation,
-      signatureDate: model.signatureDate.toISOString(),
       settlement: model.settlement.fromModel(),
       courtDistrict: model.courtDistrict.fromModel(),
     }
