@@ -22,6 +22,7 @@ import { LGResponse } from '../../../../decorators/lg-response.decorator'
 import { commonFormSchema } from '../../../../lib/schemas'
 import { mapIndexToVersion } from '../../../../lib/utils'
 import { AdvertModel } from '../../../advert/advert.model'
+import { CommonAdvertModel } from '../../../advert/common/common-advert.model'
 import { CaseModel } from '../../../case/case.model'
 import { CaseDto } from '../../../case/dto/case.dto'
 import { TypeIdEnum } from '../../../type/type.model'
@@ -137,6 +138,14 @@ export class CommonApplicationController {
           caption: form.data.caption,
         },
       })),
+      {
+        include: [
+          {
+            model: CommonAdvertModel,
+            as: 'commonAdvert',
+          },
+        ],
+      },
     )
 
     await application.update({

@@ -1,4 +1,7 @@
+import { BulkCreateOptions } from 'sequelize'
 import {
+  BeforeBulkCreate,
+  BeforeCreate,
   BeforeUpdate,
   BelongsTo,
   Column,
@@ -7,12 +10,14 @@ import {
   ForeignKey,
 } from 'sequelize-typescript'
 
-import { BadRequestException } from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
+import { formatDate } from '@dmr.is/utils'
 
 import { LegalGazetteModels } from '../../../lib/constants'
 import { validateAdvertStatus } from '../../../lib/utils'
+import { CaseModel } from '../../case/case.model'
 import { AdvertModel } from '../advert.model'
 import { CommonAdvertDto } from './dto/common-advert.dto'
 
@@ -59,6 +64,43 @@ export class CommonAdvertModel extends BaseModel<
 
   @BelongsTo(() => AdvertModel, { foreignKey: 'advertId' })
   advert?: AdvertModel
+
+  @BeforeCreate
+  static async setHTMLTemplate(model: CommonAdvertModel): Promise<void> {
+    const advert = await AdvertModel.findByPk(model.advertId, {
+      include: [
+        {
+          model: CaseModel,
+          attributes: ['id', 'caseNumber'],
+        },
+      ],
+    })
+
+    if (!advert) {
+      throw new NotFoundException('Advert not found')
+    }
+
+    const html = `
+    <div>
+      <p align="right">Áætlaður útgáfud.: ${formatDate(advert.scheduledAt, 'dd. MMMM yyyy')}</p>
+      <h1>${advert.category.title} - ${model.caption}</h1>
+      ${advert.html}
+      <p>${advert.signatureLocation}, ${formatDate(advert.scheduledAt, 'dd. MMMM yyyy')}</p>
+      <p>${advert.signatureName}</p>
+      <p align="right">${advert.case.caseNumber}${advert.version}</p>
+    </div>
+    `.trim()
+
+    await advert.update({ html: html })
+  }
+
+  @BeforeBulkCreate
+  static setHTMLTemplateBulk(
+    _models: CommonAdvertModel[],
+    options: BulkCreateOptions,
+  ): void {
+    options.individualHooks = true
+  }
 
   @BeforeUpdate
   static validateAdvertStatus(instance: CommonAdvertModel): void {

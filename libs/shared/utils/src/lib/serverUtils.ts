@@ -642,3 +642,14 @@ export const getPublicationTemplate = (
 
   return `<p align="center" style="margin-top: 1.5em;"><strong>${department} — Útgáfudagur: ${formatted}</strong></p>`
 }
+
+export const DateFormats = ['dd.MM.yyyy', 'dd. MMMM yyyy'] as const
+
+export const formatDate = (
+  date: string | Date,
+  df: (typeof DateFormats)[number] = 'dd.MM.yyyy',
+) => {
+  const dateToFormat = typeof date === 'string' ? new Date(date) : date
+
+  return format(dateToFormat, df, { locale: is })
+}
