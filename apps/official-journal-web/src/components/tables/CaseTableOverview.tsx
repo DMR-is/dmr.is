@@ -7,6 +7,7 @@ import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { Routes } from '../../lib/constants'
 import { formatDate, getOverviewStatusColor } from '../../lib/utils'
 import * as styles from './CaseTable.css'
+import { CaseTableOverviewInvoiceCol } from './InvoiceCol'
 import { messages } from './messages'
 import { PublishedTableProps } from './types'
 
@@ -44,6 +45,12 @@ export const CaseTableOverview = ({
       children: formatMessage(messages.tables.overview.columns.title),
     },
     {
+      field: 'invoiceDetails',
+      sortable: false,
+      size: 'tiny',
+      children: formatMessage(messages.tables.overview.columns.invoiceDetails),
+    },
+    {
       field: 'caseInstitution',
       sortable: false,
       size: 'tiny',
@@ -79,6 +86,12 @@ export const CaseTableOverview = ({
             {row.advertType.title} {row.advertTitle}
           </Text>
         </div>
+      ),
+      invoiceDetails: (
+        <CaseTableOverviewInvoiceCol
+          caseId={row.id}
+          externalReference={row.transaction?.externalReference}
+        />
       ),
       caseInstitution: (
         <div className={styles.typeTableCell}>

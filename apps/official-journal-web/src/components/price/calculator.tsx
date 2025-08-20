@@ -310,7 +310,7 @@ export const PriceCalculator = () => {
           <Box>
             {paymentData?.created ? (
               <PriceCalculatorStatusBox
-                text="Auglýsing hefur verið send til TBR"
+                text={`Auglýsing hefur verið send til TBR, nr: ${currentCase.transaction?.externalReference}`}
                 success
               />
             ) : (
@@ -339,7 +339,7 @@ export const PriceCalculator = () => {
           </Box>
         ) : paymentData?.created ? (
           <PriceCalculatorStatusBox
-            text="Auglýsing hefur verið send til TBR"
+            text={`Auglýsing hefur verið send til TBR, nr: ${currentCase.transaction?.externalReference}`}
             success
           />
         ) : (

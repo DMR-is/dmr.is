@@ -1638,6 +1638,8 @@ export class CaseService implements ICaseService {
       DepartmentEnum.C,
     ]
 
+    console.log('params', params)
+
     const [counterA, counterB, counterC] = departmentsToCount.map(
       (department) => {
         return this.caseModel.count({

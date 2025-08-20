@@ -202,6 +202,11 @@ export const messages = {
           defaultMessage: 'Stofnun',
           description: 'Institution column',
         },
+        invoiceDetails: {
+          id: 'web.components.tables:overview.columns.invoiceDetails',
+          defaultMessage: 'Vinnslunúmer',
+          description: 'invoiceDetails column',
+        },
       }),
     },
     advert: {
