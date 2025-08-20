@@ -611,8 +611,6 @@ export class RecallApplicationtroller {
       ],
     })
 
-    console.log('existingAdverts', existingAdverts)
-
     const existingRecallAdverts = existingAdverts.filter(
       (ad) => ad.typeId === TypeIdEnum.RECALL,
     )
