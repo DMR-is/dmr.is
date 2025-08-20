@@ -20,7 +20,7 @@ type Props = {
 export const AdvertDisplay = ({ disclosure }: Props) => {
   const { currentCase } = useCaseContext()
 
-  const { signatureDate } = currentCase.signature
+  const { requestedPublicationDate} = currentCase
 
   return (
     <ModalBase baseId="myDialog" disclosure={disclosure}>
@@ -50,7 +50,7 @@ export const AdvertDisplay = ({ disclosure }: Props) => {
                         Nr. 000/{new Date().getFullYear()}
                       </Text>
                       <Text variant="eyebrow" color="purple400">
-                        {formatDate(signatureDate, 'd. MMMM yyyy')}
+                        {formatDate(requestedPublicationDate, 'd. MMMM yyyy')}
                       </Text>
                     </Box>
                     <Box textAlign="center" marginBottom={[2, 3, 4]}>
@@ -82,7 +82,7 @@ export const AdvertDisplay = ({ disclosure }: Props) => {
                     >
                       <strong>
                         {currentCase.advertDepartment.title} - Útgáfudagur:{' '}
-                        {formatDate(new Date(), 'd. MMMM yyyy')}
+                        {formatDate(requestedPublicationDate, 'd. MMMM yyyy')}
                       </strong>
                     </p>
                   </Box>
