@@ -46,6 +46,7 @@ import { ApplicationStatusEnum } from '../contants'
 import {
   CreateDivisionEndingMeetingForApplicationDto,
   CreateDivisionMeetingForApplicationDto,
+  CreateRecallAdvertForApplicationDto,
 } from './dto/create-division-meeting-for-application.dto'
 import { RecallApplicationDto } from './dto/recall-application.dto'
 import { UpdateRecallApplicationDto } from './dto/update-recall-application.dto'
@@ -214,7 +215,16 @@ export class RecallApplicationtroller {
     }
 
     const settlementModel = await this.settlementModel.create(
-      settlementCheck.data,
+      {
+        liquidatorLocation: settlementCheck.data.liquidatorLocation,
+        liquidatorName: settlementCheck.data.liquidatorName,
+        liquidatorOnBehalfOf: settlementCheck.data.liquidatorOnBehalfOf,
+        settlementName: settlementCheck.data.settlementName,
+        settlementNationalId: settlementCheck.data.settlementNationalId,
+        settlementAddress: settlementCheck.data.settlementAddress,
+        settlementDeadline: settlementCheck.data.settlementDeadline,
+        settlementDateOfDeath: settlementCheck.data.settlementDateOfDeath,
+      },
       {
         returning: ['id'],
       },
@@ -292,6 +302,7 @@ export class RecallApplicationtroller {
         include: [
           {
             model: RecallAdvertModel,
+            as: 'recallAdvert',
           },
         ],
       },
@@ -576,6 +587,111 @@ export class RecallApplicationtroller {
         settlementId:
           existingDivisionMeeting.divisionMeetingAdvert?.settlementId,
         recallType: existingDivisionMeeting.divisionMeetingAdvert?.recallType,
+      },
+    })
+  }
+
+  @Post(':caseId/recall')
+  @LGResponse({ operationId: 'createRecallAdvertForApplication' })
+  async createRecallAdvertForApplication(
+    @Param('caseId') caseId: string,
+    @Body() body: CreateRecallAdvertForApplicationDto,
+    @CurrentUser() user: DMRUser,
+  ): Promise<void> {
+    const existingAdverts = await this.advertModel.findAll({
+      where: {
+        caseId: caseId,
+      },
+      include: [
+        {
+          model: RecallAdvertModel,
+          as: 'recallAdvert',
+          required: true,
+        },
+      ],
+    })
+
+    console.log('existingAdverts', existingAdverts)
+
+    const existingRecallAdverts = existingAdverts.filter(
+      (ad) => ad.typeId === TypeIdEnum.RECALL,
+    )
+
+    const exisitingDivisionMeetings = existingAdverts.filter(
+      (ad) => ad.typeId === TypeIdEnum.DIVISION_MEETING,
+    )
+
+    const lastRecallAdvert = existingRecallAdverts.reduce(
+      (youngest, current) => {
+        return new Date(current.scheduledAt) > new Date(youngest.scheduledAt)
+          ? current
+          : youngest
+      },
+      existingRecallAdverts[0],
+    )
+
+    if (!lastRecallAdvert.recallAdvert) {
+      throw new BadRequestException(
+        'No recall advert found for this case. Please create a recall application first.',
+      )
+    }
+
+    if (new Date(body.scheduledAt) <= new Date(lastRecallAdvert.scheduledAt)) {
+      throw new BadRequestException(
+        'New recall advert date must be after the last recall advert date.',
+      )
+    }
+
+    const existingDivisionEnding = existingAdverts.find(
+      (ad) => ad.typeId === TypeIdEnum.DIVISION_ENDING,
+    )
+    if (!existingRecallAdverts.length) {
+      throw new BadRequestException(
+        'No recall adverts found for this case. Please create a recall application first.',
+      )
+    }
+
+    if (existingRecallAdverts.length >= 3) {
+      throw new BadRequestException(
+        'A maximum of 3 recall adverts can be created for a recall application.',
+      )
+    }
+
+    if (exisitingDivisionMeetings.length > 0) {
+      throw new BadRequestException(
+        'A division meeting advert already exists for this application. Please create a division ending advert instead.',
+      )
+    }
+
+    if (existingDivisionEnding) {
+      throw new BadRequestException(
+        'A division ending advert already exists for this application.',
+      )
+    }
+
+    const submittedBy = `${user.name}${user.actor ? ` (${user.actor})` : ''}`
+
+    await this.advertModel.create({
+      caseId: caseId,
+      typeId: TypeIdEnum.RECALL,
+      categoryId:
+        existingRecallAdverts[0].recallAdvert?.recallType ===
+        RecallTypeEnum.BANKRUPTCY
+          ? CategoryDefaultIdEnum.BANKRUPTCY_RECALL
+          : CategoryDefaultIdEnum.DECEASED_RECALL,
+      scheduledAt: new Date(body.scheduledAt),
+      html: '<div>TODO: insert html</div>',
+      submittedBy: submittedBy,
+      paid: false,
+      version: mapIndexToVersion(existingRecallAdverts.length),
+      signatureName: existingRecallAdverts[0].signatureName,
+      signatureLocation: existingRecallAdverts[0].signatureLocation,
+      signatureDate: existingRecallAdverts[0].signatureDate,
+      recallAdvert: {
+        courtDistrictId: lastRecallAdvert.recallAdvert.courtDistrictId,
+        additionalText: lastRecallAdvert.recallAdvert.additionalText,
+        settlementId: lastRecallAdvert.recallAdvert.settlementId,
+        recallType: lastRecallAdvert.recallAdvert.recallType,
       },
     })
   }

@@ -1,6 +1,6 @@
 import { IsDateString, IsString } from 'class-validator'
 
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, PickType } from '@nestjs/swagger'
 
 export class CreateDivisionMeetingForApplicationDto {
   @ApiProperty({ type: String })
@@ -13,3 +13,9 @@ export class CreateDivisionMeetingForApplicationDto {
 }
 
 export class CreateDivisionEndingMeetingForApplicationDto extends CreateDivisionMeetingForApplicationDto {}
+
+export class CreateRecallAdvertForApplicationDto {
+  @ApiProperty({ type: String })
+  @IsDateString()
+  scheduledAt!: string
+}

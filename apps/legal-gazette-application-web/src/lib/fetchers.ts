@@ -3,6 +3,7 @@ import { getSession } from 'next-auth/react'
 import {
   CreateDivisionEndingForApplicationRequest,
   CreateDivisionMeetingForApplicationRequest,
+  CreateRecallAdvertForApplicationRequest,
   CreateRecallCaseAndApplicationRequest,
   SubmitCommonApplicationRequest,
   SubmitRecallApplicationRequest,
@@ -16,6 +17,24 @@ const getClientWithSession = async () => {
   const session = await getSession()
 
   return getClient(session?.idToken as string)
+}
+
+export async function createRecallAdvertForApplication(
+  args: CreateRecallAdvertForApplicationRequest,
+) {
+  const client = await getClientWithSession()
+
+  const results = await safeCall(() =>
+    client.createRecallAdvertForApplication(args),
+  )
+
+  if (results.error) {
+    throw new Error(
+      'Ekki tókst að búa til auglýsingu. Vinsamlegast reyndu aftur síðar.',
+    )
+  }
+
+  return results.data
 }
 
 export async function createDivisionEndingForApplication(

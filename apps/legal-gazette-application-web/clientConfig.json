@@ -2788,6 +2788,75 @@
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
+    },
+    "/api/v1/applications/recalls/{caseId}/recall": {
+      "post": {
+        "operationId": "createRecallAdvertForApplication",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecallAdvertForApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
     }
   },
   "info": {
@@ -3373,6 +3442,11 @@
           "meetingLocation": { "type": "string" }
         },
         "required": ["meetingDate", "meetingLocation"]
+      },
+      "CreateRecallAdvertForApplicationDto": {
+        "type": "object",
+        "properties": { "scheduledAt": { "type": "string" } },
+        "required": ["scheduledAt"]
       }
     }
   }

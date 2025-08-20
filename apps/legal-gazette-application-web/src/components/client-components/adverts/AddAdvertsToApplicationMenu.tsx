@@ -6,6 +6,7 @@ import { DropdownMenu } from '@island.is/island-ui/core'
 
 import { AddDivisionEnding } from './AddDivisionEnding'
 import { AddDivisionMeeting } from './AddDivisionMeeting'
+import { AddRecallAdvert } from './AddRecallAdvert'
 
 type Props = {
   caseId: string
@@ -31,7 +32,7 @@ export const AddAdvertsToApplicationMenu = ({ caseId }: Props) => {
         items={[
           {
             title: 'Innköllun',
-            onClick: () => console.log('Creating recall advert'),
+            onClick: () => setRecallModalVisible(true),
           },
           {
             title: 'Skiptafundi',
@@ -42,6 +43,11 @@ export const AddAdvertsToApplicationMenu = ({ caseId }: Props) => {
             onClick: () => setDivisionEndingModalVisible(true),
           },
         ]}
+      />
+      <AddRecallAdvert
+        caseId={caseId}
+        isVisible={recallModalVisible}
+        onVisibilityChange={setRecallModalVisible}
       />
       <AddDivisionMeeting
         caseId={caseId}
