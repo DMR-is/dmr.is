@@ -4,6 +4,7 @@ export enum PageRoutes {
   APPLICATIONS = '/umsoknir',
   APPLICATION_THROTABU = '/umsoknir/innkollun-throtabus',
   APPLICATION_DANARBU = '/umsoknir/innkollun-danarbus',
+  APPLICATION_COMMON = '/umsoknir/almenn-umsokn',
   ISLAND_IS_COMMONA_APPLICATION = 'https://island.is/umsoknir/logbirtingarblad',
 }
 

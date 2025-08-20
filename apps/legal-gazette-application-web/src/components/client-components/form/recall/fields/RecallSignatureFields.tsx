@@ -6,7 +6,7 @@ import { useUpdateRecallApplication } from '../../../../../hooks/useUpdateRecall
 import {
   BankruptcyFormFields,
   BankruptcyFormSchema,
-} from '../../../../../lib/forms/schemas/bankruptcy-schema'
+} from '../../../../../lib/forms/schemas/recall-schema'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 

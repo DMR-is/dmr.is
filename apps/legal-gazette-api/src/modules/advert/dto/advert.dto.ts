@@ -102,6 +102,18 @@ export class AdvertDto extends DetailedDto {
   })
   @IsBoolean()
   paid!: boolean
+
+  @ApiProperty({ type: String })
+  @IsString()
+  signatureName!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  signatureLocation!: string
+
+  @ApiProperty({ type: String })
+  @IsDateString()
+  signatureDate!: string
 }
 
 export class GetAdvertsDto {

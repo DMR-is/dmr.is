@@ -1,9 +1,10 @@
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 
-import { AdvertList } from '../../../../../components/client-components/adverts/AdvertList'
+import { ApplicationSubmitted } from '../../../../../components/client-components/application/ApplicationSubmitted'
+import { CommonForm } from '../../../../../components/client-components/form/common/CommonForm'
 import { RecallForm } from '../../../../../components/client-components/form/recall/RecallForm'
-import { RecallApplicationDtoStatusEnum } from '../../../../../gen/fetch'
+import { ApplicationStatusEnum } from '../../../../../gen/fetch'
 import { authOptions } from '../../../../../lib/authOptions'
 import {
   ALLOWED_FORM_TYPES,
@@ -51,7 +52,7 @@ export default async function UmsoknirThrotabusPage({
 
     const application = applicationRes.data
 
-    if (application.status === RecallApplicationDtoStatusEnum.DRAFT) {
+    if (application.status === ApplicationStatusEnum.DRAFT) {
       const { courtDistricts } = await client.getCourtDistricts()
 
       return (
@@ -69,7 +70,36 @@ export default async function UmsoknirThrotabusPage({
   }
 
   if (params.type === FormTypes.COMMON) {
-    throw new Error('Umsókn fyrir almennar auglýsingar er í vinnslu')
+    const application = await safeCall(() =>
+      client.getCommonApplicationByCaseId({ caseId: params.id }),
+    )
+
+    if (application.error) {
+      throw new Error('Umsókn fyrir almennar auglýsingar er í vinnslu')
+    }
+
+    if (application.data.status === ApplicationStatusEnum.DRAFT) {
+      const { categories } = await client.getCategories({
+        type: 'a58fe2a8-b0a9-47bd-b424-4b9cece0e622',
+      })
+
+      application.data.html = Buffer.from(
+        application.data.html ?? '',
+        'base64',
+      ).toString('utf-8')
+
+      return (
+        <CommonForm
+          application={application.data}
+          applicationId={application.data.id}
+          caseId={params.id}
+          categories={categories.map((c) => ({
+            label: c.title,
+            value: c.id,
+          }))}
+        />
+      )
+    }
   }
 
   const advertsResults = await safeCall(() =>
@@ -80,5 +110,10 @@ export default async function UmsoknirThrotabusPage({
     throw new Error('Ekki tókst að sækja auglýsingar fyrir þessa umsókn')
   }
 
-  return <AdvertList adverts={advertsResults.data.adverts} />
+  return (
+    <ApplicationSubmitted
+      caseId={params.id}
+      adverts={advertsResults.data.adverts}
+    />
+  )
 }

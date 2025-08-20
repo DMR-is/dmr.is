@@ -1,6 +1,5 @@
 import { Type } from 'class-transformer'
 import {
-  IsDateString,
   IsDefined,
   IsEnum,
   IsOptional,
@@ -20,7 +19,11 @@ export class RecallAdvertDto {
   @IsUUID()
   id!: string
 
-  @ApiProperty({ enum: RecallTypeEnum })
+  @ApiProperty({
+    enum: RecallTypeEnum,
+    enumName: 'RecallTypeEnum',
+    required: true,
+  })
   @IsEnum(RecallTypeEnum)
   recallType!: RecallTypeEnum
 
@@ -28,14 +31,6 @@ export class RecallAdvertDto {
   @IsOptional()
   @IsString()
   additionalText?: string
-
-  @ApiProperty({ type: String, required: true })
-  @IsString()
-  signatureLocation!: string
-
-  @ApiProperty({ type: String, required: true })
-  @IsDateString()
-  signatureDate!: string
 
   @ApiProperty({ type: SettlementDto, required: true })
   @ValidateNested()

@@ -9,7 +9,7 @@ import { logger } from '@dmr.is/logging'
 
 import { AppModule } from './app/app.module'
 import { AdvertModule } from './modules/advert/advert.module'
-import { CommonApplicationModule } from './modules/applications/common/common-application.module'
+import { CommonApplicationModule } from './modules/applications/common/dmr/common-application.module'
 import { BaseEntityModule } from './modules/base-entity/base-entity.module'
 import { SubscriberModule } from './modules/subscribers/subscriber.module'
 import { ApplicationWebModule } from './modules/swagger/application-web.module'

@@ -8,7 +8,7 @@ import { AdvertModel } from '../../advert.model'
 import { DivisionEndingAdvertDto } from '../dto/division.dto'
 
 export type DivisionEndingAdvertAttributes = {
-  type: RecallTypeEnum
+  recallType: RecallTypeEnum
   meetingDate: Date
   meetingLocation: string
   settlementId: string
@@ -16,7 +16,7 @@ export type DivisionEndingAdvertAttributes = {
 }
 
 export type DivisionEndingAdvertCreateAttributes = {
-  type: RecallTypeEnum
+  recallType: RecallTypeEnum
   meetingDate: Date
   meetingLocation: string
   settlementId: string

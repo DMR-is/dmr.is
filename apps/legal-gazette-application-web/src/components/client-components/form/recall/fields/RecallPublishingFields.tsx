@@ -17,7 +17,7 @@ import { ONE_DAY, TWO_WEEKS } from '../../../../../lib/constants'
 import {
   BankruptcyFormFields,
   BankruptcyFormSchema,
-} from '../../../../../lib/forms/schemas/bankruptcy-schema'
+} from '../../../../../lib/forms/schemas/recall-schema'
 import { getNextWeekday, getWeekendDays } from '../../../../../lib/utils'
 import { DatePickerController } from '../../controllers/DatePickerController'
 

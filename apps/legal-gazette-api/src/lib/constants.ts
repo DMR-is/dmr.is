@@ -21,6 +21,7 @@ export enum LegalGazetteModels {
   COMMUNICATION_CHANNEL = 'communication_channel',
   ADVERT = 'advert',
   COMMON_ADVERT = 'common_advert',
+  COMMON_APPLICATION = 'common_application',
   COURT_DISTRICT = 'court_district',
   SETTLEMENT = 'settlement',
   RECALL_ADVERT = 'recall_advert',

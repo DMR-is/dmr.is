@@ -5,14 +5,10 @@ import { FormProvider, useForm } from 'react-hook-form'
 
 import { Stack, Text, toast } from '@island.is/island-ui/core'
 
-import {
-  ApplicationTypeEnum,
-  RecallApplicationDto,
-  RecallTypeEnum,
-} from '../../../../gen/fetch'
+import { RecallApplicationDto, RecallTypeEnum } from '../../../../gen/fetch'
 import { useSubmitRecallApplication } from '../../../../hooks/useSubmitRecallApplication'
-import { recallForm } from '../../../../lib/forms/bankruptcy-form'
-import { BankruptcyFormSchema } from '../../../../lib/forms/schemas/bankruptcy-schema'
+import { recallForm } from '../../../../lib/forms/recall-form'
+import { BankruptcyFormSchema } from '../../../../lib/forms/schemas/recall-schema'
 import { ApplicationShell } from '../../application/ApplicationShell'
 import { RecallAdvertFields } from './fields/RecallAdvertFields'
 import { RecallDivisionFields } from './fields/RecallDivisionFields'

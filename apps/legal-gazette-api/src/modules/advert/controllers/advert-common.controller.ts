@@ -42,17 +42,12 @@ export class CommonAdvertController {
       throw new NotFoundException('Advert not found')
     }
 
-    if (body.html || body.caption) {
-      await advert.update({ html: body.html, title: body.caption })
+    if (body.html) {
+      await advert.update({ html: body.html })
     }
 
     const updatedAdvert = await advert.commonAdvert.update({
       caption: body.caption,
-      signatureName: body.signature?.name,
-      signatureLocation: body.signature?.location,
-      signatureDate: body?.signature?.date
-        ? new Date(body.signature.date)
-        : undefined,
     })
 
     return CommonAdvertModel.fromModel(updatedAdvert)
