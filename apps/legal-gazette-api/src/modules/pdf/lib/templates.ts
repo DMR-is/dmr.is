@@ -86,9 +86,9 @@ export const commonAdvertTemplate = (advert: AdvertModel) => {
       ? formatDate(new Date(advert.publishedAt))
       : formatDate(new Date(advert.scheduledAt)),
     signature: {
-      name: advert.commonAdvert.signatureName,
-      location: advert.commonAdvert.signatureLocation,
-      date: advert.commonAdvert.signatureDate.toISOString(),
+      name: advert.signatureName,
+      location: advert.signatureLocation,
+      date: advert.signatureDate.toISOString(),
     },
   })
 

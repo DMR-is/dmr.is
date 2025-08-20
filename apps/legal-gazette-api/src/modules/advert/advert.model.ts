@@ -25,6 +25,10 @@ import {
   CommonAdvertModel,
 } from './common/common-advert.model'
 import {
+  DivisionEndingAdvertCreateAttributes,
+  DivisionEndingAdvertModel,
+} from './division/models/division-ending-advert.model'
+import {
   DivisionMeetingAdvertCreateAttributes,
   DivisionMeetingAdvertModel,
 } from './division/models/division-meeting-advert.model'
@@ -41,7 +45,6 @@ import {
 
 type AdvertAttributes = {
   caseId: string
-  title: string
   html: string
   submittedBy: string
   publicationNumber: string
@@ -52,6 +55,9 @@ type AdvertAttributes = {
   categoryId: string
   statusId: string
   paid: boolean
+  signatureName: string
+  signatureLocation: string
+  signatureDate: Date
   type: TypeModel
   category: CategoryModel
   status: StatusModel
@@ -59,14 +65,17 @@ type AdvertAttributes = {
   commonAdvert?: CommonAdvertModel
   recallAdvert?: RecallAdvertModel
   divisionMeetingAdvert?: DivisionMeetingAdvertModel
+  divisionEndingAdvert?: DivisionEndingAdvertModel
 }
 
 export type AdvertCreateAttributes = {
-  title: string
   submittedBy: string
   typeId: string
   categoryId: string
   scheduledAt: Date
+  signatureName: string
+  signatureLocation: string
+  signatureDate: Date
   caseId?: string
   html?: string
   statusId?: string
@@ -76,6 +85,7 @@ export type AdvertCreateAttributes = {
   commonAdvert?: CommonAdvertCreateAttributes
   recallAdvert?: RecallAdvertCreateAttributes
   divisionMeetingAdvert?: DivisionMeetingAdvertCreateAttributes
+  divisionEndingAdvert?: DivisionEndingAdvertCreateAttributes
 }
 
 export enum AdvertVersionEnum {
@@ -106,7 +116,10 @@ export enum AdvertModelScopes {
       [Op.eq]: null,
     },
   },
-  order: [['scheduledAt', 'ASC']],
+  order: [
+    ['scheduledAt', 'ASC'],
+    ['version', 'ASC'],
+  ],
 }))
 @Scopes(() => ({
   readyForPublication: {
@@ -150,7 +163,10 @@ export enum AdvertModelScopes {
   all: {
     include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
     where: {},
-    order: [['version', 'ASC']],
+    order: [
+      ['scheduledAt', 'ASC'],
+      ['version', 'ASC'],
+    ],
   },
   recallAdvert: {
     include: [
@@ -290,11 +306,25 @@ export class AdvertModel extends BaseModel<
   html!: string
 
   @Column({
-    type: DataType.STRING,
+    field: 'signature_name',
+    type: DataType.STRING(100),
     allowNull: false,
-    field: 'title',
   })
-  title!: string
+  signatureName!: string
+
+  @Column({
+    field: 'signature_location',
+    type: DataType.TEXT,
+    allowNull: false,
+  })
+  signatureLocation!: string
+
+  @Column({
+    field: 'signature_date',
+    type: DataType.DATE,
+    allowNull: false,
+  })
+  signatureDate!: Date
 
   @Column({
     type: DataType.ENUM(...Object.values(AdvertVersionEnum)),
@@ -352,6 +382,15 @@ export class AdvertModel extends BaseModel<
     foreignKey: 'advertId',
   })
   divisionMeetingAdvert?: DivisionMeetingAdvertModel
+
+  @HasOne(() => DivisionEndingAdvertModel, {
+    foreignKey: 'advertId',
+  })
+  divisionEndingAdvert?: DivisionEndingAdvertModel
+
+  get title(): string {
+    return this.type.title
+  }
 
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
@@ -472,6 +511,9 @@ export class AdvertModel extends BaseModel<
         category: model.category.fromModel(),
         status: model.status.fromModel(),
         type: model.type.fromModel(),
+        signatureDate: model.signatureDate.toISOString(),
+        signatureLocation: model.signatureLocation,
+        signatureName: model.signatureName,
         createdAt: model.createdAt.toISOString(),
         updatedAt: model.updatedAt.toISOString(),
         deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
@@ -508,6 +550,9 @@ export class AdvertModel extends BaseModel<
         updatedAt: model.updatedAt.toISOString(),
         deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
         paid: model.paid,
+        signatureDate: model.signatureDate.toISOString(),
+        signatureLocation: model.signatureLocation,
+        signatureName: model.signatureName,
         commonAdvert: model.commonAdvert
           ? model.commonAdvert.fromModel()
           : undefined,

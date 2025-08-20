@@ -2650,6 +2650,213 @@
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
+    },
+    "/api/v1/applications/recalls/{caseId}/division-meeting": {
+      "post": {
+        "operationId": "createDivisionMeetingForApplication",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDivisionMeetingForApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/applications/recalls/{caseId}/division-ending": {
+      "post": {
+        "operationId": "createDivisionEndingForApplication",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDivisionEndingMeetingForApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/applications/recalls/{caseId}/recall": {
+      "post": {
+        "operationId": "createRecallAdvertForApplication",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecallAdvertForApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
     }
   },
   "info": {
@@ -2980,7 +3187,10 @@
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersion" }]
           },
           "html": { "type": "string" },
-          "paid": { "type": "boolean" }
+          "paid": { "type": "boolean" },
+          "signatureName": { "type": "string" },
+          "signatureLocation": { "type": "string" },
+          "signatureDate": { "type": "string" }
         },
         "required": [
           "createdAt",
@@ -2997,7 +3207,10 @@
           "status",
           "version",
           "html",
-          "paid"
+          "paid",
+          "signatureName",
+          "signatureLocation",
+          "signatureDate"
         ]
       },
       "UpdateCommonAdvertSignatureDto": {
@@ -3018,24 +3231,10 @@
           }
         }
       },
-      "CommonAdvertSignatureDto": {
-        "type": "object",
-        "properties": {
-          "name": { "type": "string" },
-          "location": { "type": "string" },
-          "date": { "type": "string" }
-        },
-        "required": ["name", "location", "date"]
-      },
       "CommonAdvertDto": {
         "type": "object",
-        "properties": {
-          "caption": { "type": "string" },
-          "signature": {
-            "$ref": "#/components/schemas/CommonAdvertSignatureDto"
-          }
-        },
-        "required": ["caption", "signature"]
+        "properties": { "caption": { "type": "string" } },
+        "required": ["caption"]
       },
       "AdvertStatusCounterItemDto": {
         "type": "object",
@@ -3227,6 +3426,27 @@
           "publishingDates": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["id", "caseId", "recallType", "status"]
+      },
+      "CreateDivisionMeetingForApplicationDto": {
+        "type": "object",
+        "properties": {
+          "meetingDate": { "type": "string" },
+          "meetingLocation": { "type": "string" }
+        },
+        "required": ["meetingDate", "meetingLocation"]
+      },
+      "CreateDivisionEndingMeetingForApplicationDto": {
+        "type": "object",
+        "properties": {
+          "meetingDate": { "type": "string" },
+          "meetingLocation": { "type": "string" }
+        },
+        "required": ["meetingDate", "meetingLocation"]
+      },
+      "CreateRecallAdvertForApplicationDto": {
+        "type": "object",
+        "properties": { "scheduledAt": { "type": "string" } },
+        "required": ["scheduledAt"]
       }
     }
   }
