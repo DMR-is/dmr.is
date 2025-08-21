@@ -5,7 +5,6 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { LegalGazetteModels } from '../../lib/constants'
 
 type CommunicationChannelAttributes = {
-  caseId: string
   email: string
   name: string | null
   phone: string | null
