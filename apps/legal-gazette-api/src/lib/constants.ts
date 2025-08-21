@@ -20,17 +20,8 @@ export enum LegalGazetteModels {
   CASE = 'cases',
   COMMUNICATION_CHANNEL = 'communication_channel',
   ADVERT = 'advert',
-  COMMON_ADVERT = 'common_advert',
-  COMMON_APPLICATION = 'common_application',
+  APPLICATION = 'application',
   COURT_DISTRICT = 'court_district',
   SETTLEMENT = 'settlement',
-  RECALL_ADVERT = 'recall_advert',
-  DIVISION_MEETING_ADVERT = 'division_meeting_advert',
-  DIVISION_ENDING_ADVERT = 'division_ending_advert',
-  RECALL_APPLICATION = 'recall_application',
   SUBSCRIBER = 'legal_gazette_subscribers',
-}
-
-export enum LegalGazetteEvents {
-  COMMON_APPLICATION_UPDATE = 'common-application.update',
 }
