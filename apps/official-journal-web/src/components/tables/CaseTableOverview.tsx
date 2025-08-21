@@ -90,7 +90,9 @@ export const CaseTableOverview = ({
       invoiceDetails: (
         <CaseTableOverviewInvoiceCol
           caseId={row.id}
-          externalReference={row.transaction?.externalReference}
+          externalReference={
+            row.transaction?.externalReference || row.caseNumber
+          }
         />
       ),
       caseInstitution: (
