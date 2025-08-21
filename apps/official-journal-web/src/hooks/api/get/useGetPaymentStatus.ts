@@ -27,8 +27,8 @@ export const useGetPaymentStatus = ({
     {
       ...options,
       throwOnError: false,
-      // Cache for 2 minutes
-      dedupingInterval: 1000 * 60 * 2,
+      // Cache for 4 minutes
+      dedupingInterval: 1000 * 60 * 4,
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
     },
