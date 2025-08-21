@@ -173,3 +173,7 @@ export const advertModalClose = style({
   padding: 10,
   background: '#fff',
 })
+
+export const tooltipText = style({
+  marginRight: 4,
+})

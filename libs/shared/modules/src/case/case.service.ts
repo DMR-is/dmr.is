@@ -314,6 +314,7 @@ export class CaseService implements ICaseService {
         'publishedAt',
         'publicationNumber',
         'statusId',
+        'caseNumber',
       ],
       where: whereParams,
       include: casesIncludes({

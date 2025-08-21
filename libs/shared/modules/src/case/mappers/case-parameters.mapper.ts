@@ -1,8 +1,8 @@
 import { isUUID } from 'class-validator'
 import { Op } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
 
 import { GetCasesQuery } from '@dmr.is/shared/dto'
-
 type WhereClause = {
   id?: {
     [Op.in]: string[]
@@ -78,8 +78,25 @@ export const caseParameters = (params?: GetCasesQuery) => {
   }
 
   if (params?.search !== undefined) {
-    whereClause.advertTitle = {
-      [Op.iLike]: `%${params.search}%`,
+    const isInternalCase = /^\d{11}$/.test(params?.search ?? '')
+    if (isInternalCase) {
+      whereClause.caseNumber = params.search
+    }
+    if (params?.search !== undefined) {
+      const searchCondition = `%${params.search}%`
+
+      Object.assign(whereClause, {
+        [Op.or]: [
+          {
+            advertTitle: { [Op.iLike]: searchCondition },
+          },
+          { '$involvedParty.title$': { [Op.iLike]: searchCondition } },
+          Sequelize.where(
+            Sequelize.literal(`CONCAT(publication_number, '/', year)`),
+            { [Op.iLike]: params?.search },
+          ),
+        ],
+      })
     }
   }
 

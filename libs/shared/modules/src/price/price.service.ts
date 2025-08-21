@@ -486,7 +486,7 @@ export class PriceService implements IPriceService {
 
   @LogAndHandle()
   @Transactional()
-  async postExternalPayment(
+  private async postExternalPayment(
     caseId: string,
     body: UpdateCasePaymentBody,
     transaction?: Transaction,

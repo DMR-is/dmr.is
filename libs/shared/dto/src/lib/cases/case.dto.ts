@@ -338,6 +338,8 @@ export class Case extends PickType(CaseDetailed, [
   'involvedParty',
   'publicationNumber',
   'publishedAt',
+  'transaction',
+  'caseNumber',
 ]) {}
 
 export class DepartmentCounter {
