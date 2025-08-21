@@ -9,9 +9,9 @@ import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
-import { LGResponse } from '../../decorators/lg-response.decorator'
-import { CaseModel } from '../case/case.model'
-import { ApplicationsDto } from './dto/application.dto'
+import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { CaseModel } from '../../case/case.model'
+import { ApplicationsDto } from '../dto/application.dto'
 
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard)
