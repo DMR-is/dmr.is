@@ -8,7 +8,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
@@ -35,6 +35,7 @@ export class ApplicationController {
   ) {}
 
   @Post('createApplication/:applicationType')
+  @ApiParam({ enum: ApplicationTypeEnum, name: 'applicationType' })
   @LGResponse({ operationId: 'createApplication', type: ApplicationsDto })
   async createApplication(
     @Param('applicationType', new EnumValidationPipe(ApplicationTypeEnum))
