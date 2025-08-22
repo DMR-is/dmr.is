@@ -9,25 +9,16 @@ import {
   ForeignKey,
   HasMany,
   HasOne,
-  Scopes,
 } from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import {
-  ApplicationTypeEnum,
-  LegalGazetteModels,
-  RecallTypeEnum,
-} from '../../lib/constants'
+import { LegalGazetteModels } from '../../lib/constants'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
 import {
-  CommonApplicationCreateAttributes,
-  CommonApplicationModel,
-} from '../applications/common/dmr/common-application.model'
-import {
-  RecallApplicationCreateAttributes,
-  RecallApplicationModel,
-} from '../applications/recall/recall-application.model'
+  ApplicationCreateAttributes,
+  ApplicationModel,
+} from '../applications/application.model'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
@@ -42,52 +33,22 @@ type CaseAttributes = {
   involvedPartyNationalId: string
   communicationChannels: CommunicationChannelModel[]
   adverts: AdvertModel[]
+  application?: ApplicationModel
 }
 
-type CaseCreateAttributes =
-  | {
-      involvedPartyNationalId: string
-      caseId?: string
-      assignedUserId?: string | null
-      communicationChannels?: CommunicationChannelCreateAttributes[]
-      adverts?: AdvertCreateAttributes[]
-      recallApplication?: RecallApplicationCreateAttributes
-    }
-  | {
-      involvedPartyNationalId: string
-      caseId?: string
-      assignedUserId?: string | null
-      communicationChannels?: CommunicationChannelCreateAttributes[]
-      adverts?: AdvertCreateAttributes[]
-      commonApplication?: CommonApplicationCreateAttributes
-    }
+type CaseCreateAttributes = {
+  involvedPartyNationalId: string
+  caseId?: string
+  assignedUserId?: string | null
+  communicationChannels?: CommunicationChannelCreateAttributes[]
+  adverts?: AdvertCreateAttributes[]
+  application?: ApplicationCreateAttributes
+}
 
 @BaseTable({ tableName: LegalGazetteModels.CASE })
 @DefaultScope(() => ({
   attributes: ['id', 'caseNumber', 'createdAt', 'updatedAt', 'deletedAt'],
   order: [['createdAt', 'DESC']],
-}))
-@Scopes(() => ({
-  applications: {
-    include: [
-      {
-        model: RecallApplicationModel,
-        required: false,
-        as: 'recallApplication',
-      },
-      {
-        model: CommonApplicationModel,
-        required: false,
-        as: 'commonApplication',
-      },
-    ],
-    where: {
-      [Op.or]: [
-        { '$recallApplication.id$': { [Op.ne]: null } },
-        { '$commonApplication.id$': { [Op.ne]: null } },
-      ],
-    },
-  },
 }))
 export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   @Column({
@@ -123,28 +84,8 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   @BelongsTo(() => UserModel, 'assignedUserId')
   assignedUser?: UserModel
 
-  @HasOne(() => RecallApplicationModel, {
-    foreignKey: 'caseId',
-  })
-  recallApplication?: RecallApplicationModel
-
-  @HasOne(() => CommonApplicationModel, {
-    foreignKey: 'caseId',
-  })
-  commonApplication?: CommonApplicationModel
-
-  get applicationType(): ApplicationTypeEnum {
-    if (this.recallApplication) {
-      return this.recallApplication.recallType === RecallTypeEnum.BANKRUPTCY
-        ? ApplicationTypeEnum.BANKRUPTCY
-        : ApplicationTypeEnum.DECEASED
-    }
-    if (this.commonApplication) {
-      return ApplicationTypeEnum.COMMON
-    }
-
-    throw new Error('Case does not have any applications')
-  }
+  @HasOne(() => ApplicationModel)
+  application?: ApplicationModel
 
   @BeforeDestroy
   static async markAdvertsAsWithdrawn(instance: CaseModel) {
@@ -202,7 +143,6 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
       createdAt: model.createdAt.toISOString(),
       updatedAt: model.updatedAt.toISOString(),
       deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
-      applicationType: model.applicationType,
     }
   }
 
