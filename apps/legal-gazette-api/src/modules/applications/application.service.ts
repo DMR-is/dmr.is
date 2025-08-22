@@ -22,8 +22,8 @@ import { AdvertModel } from '../advert/advert.model'
 import { CaseModel } from '../case/case.model'
 import { CaseDto } from '../case/dto/case.dto'
 import { TypeIdEnum } from '../type/type.model'
-import { IslandIsSubmitCommonApplicationDto } from './common/island-is/dto/island-is-application.dto'
 import { ApplicationsDto } from './dto/application.dto'
+import { IslandIsSubmitCommonApplicationDto } from './dto/island-is-application.dto'
 import { ApplicationModel, ApplicationTypeEnum } from './application.model'
 import { IApplicationService } from './application.service.interface'
 
@@ -139,15 +139,15 @@ export class ApplicationService implements IApplicationService {
   ): Promise<void> {
     const parsedApplication =
       createCommonAdvertFromIslandIsApplicationSchema.safeParse({
-        islandIsApplicationId: body.applicationId,
+        islandIsApplicationId: body.islandIsApplicationId,
         categoryId: body.categoryId,
         caption: body.caption,
         additionalText: body.additionalText,
         html: body.html,
-        signatureName: body.signature.name,
-        signatureOnBehalfOf: body.signature.onBehalfOf,
-        signatureLocation: body.signature.location,
-        signatureDate: new Date(body.signature.date),
+        signatureName: body.signatureName,
+        signatureOnBehalfOf: body.signatureOnBehalfOf,
+        signatureLocation: body.signatureLocation,
+        signatureDate: new Date(body.signatureDate),
         communicationChannels: body.communicationChannels,
         publishingDates: body.publishingDates.map((date) => new Date(date)),
       })

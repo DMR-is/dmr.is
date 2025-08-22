@@ -3,18 +3,17 @@ import { IsBase64, IsString, IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CreateCommonAdvertDto } from '../../../../advert/common/dto/create-common-advert.dto'
-import { CreateCommunicationChannelDto } from '../../../../communication-channel/dto/communication-channel.dto'
+import { CreateCommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
 
 export enum IslandIsCommonApplicationEventsEnum {
   APPROVE = 'APPROVE',
   REJECT = 'REJECT',
 }
 
-export class IslandIsSubmitCommonApplicationDto extends CreateCommonAdvertDto {
+export class IslandIsSubmitCommonApplicationDto {
   @ApiProperty({ type: String, required: true })
   @IsUUID()
-  applicationId!: string
+  islandIsApplicationId!: string
 
   @ApiProperty({ type: String })
   @IsBase64()
@@ -31,8 +30,40 @@ export class IslandIsSubmitCommonApplicationDto extends CreateCommonAdvertDto {
   @IsUUID()
   categoryId!: string
 
+  @ApiProperty({ type: String, required: true })
+  @IsString()
+  caption!: string
+
+  @ApiProperty({ type: String, required: false, nullable: true })
+  @IsString()
+  additionalText?: string | null
+
+  @ApiProperty({ type: String, required: true })
+  @IsString()
+  signatureName!: string
+
+  @ApiProperty({ type: String, required: false, nullable: true })
+  @IsString()
+  signatureOnBehalfOf?: string | null
+
+  @ApiProperty({ type: String, required: true })
+  @IsString()
+  signatureLocation!: string
+
+  @ApiProperty({ type: String, required: true, format: 'date-time' })
+  @IsString()
+  signatureDate!: string
+
   @ApiProperty({ type: [CreateCommunicationChannelDto], required: true })
   communicationChannels!: CreateCommunicationChannelDto[]
+
+  @ApiProperty({
+    type: [String],
+    required: true,
+    format: 'date-time',
+    isArray: true,
+  })
+  publishingDates!: string[]
 }
 
 export class IslandIsCommonApplicationUpdateStateEventDto {

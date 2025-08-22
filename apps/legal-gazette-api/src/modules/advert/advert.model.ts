@@ -89,6 +89,7 @@ export enum AdvertVersionEnum {
 
 export enum AdvertModelScopes {
   IN_PROGRESS = 'inProgress',
+  TO_BE_PUBLISHED = 'toBePublished',
   PUBLISHED = 'published',
   COMPLETED = 'completed',
 }
@@ -119,6 +120,15 @@ export enum AdvertModelScopes {
       statusId: StatusIdEnum.PUBLISHED,
     },
     order: [['publishedAt', 'DESC']],
+  },
+  toBePublished: {
+    include: [StatusModel, CategoryModel, TypeModel],
+    order: [['scheduledAt', 'ASC']],
+    where: {
+      paid: true,
+      statusId: StatusIdEnum.READY_FOR_PUBLICATION,
+      publishedAt: { [Op.eq]: null },
+    },
   },
   completed: {
     include: [StatusModel, CategoryModel, TypeModel],

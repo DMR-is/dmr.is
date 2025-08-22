@@ -1,11 +1,5 @@
 import { Type } from 'class-transformer'
-import {
-  IsArray,
-  IsOptional,
-  IsString,
-  IsUUID,
-  ValidateNested,
-} from 'class-validator'
+import { IsArray, IsString, IsUUID, ValidateNested } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -13,8 +7,7 @@ import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 import { DetailedDto } from '../../../dto/detailed.dto'
 import { ApplicationTypeEnum } from '../../../lib/constants'
-import { AdvertDetailedDto } from '../../advert/dto/advert.dto'
-import { RecallApplicationDto } from '../../applications/recall/dto/recall-application.dto'
+import { AdvertDto } from '../../advert/dto/advert.dto'
 import { CommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
 
 export class CaseQueryDto extends PagingQuery {}
@@ -62,16 +55,9 @@ export class CaseDetailedDto extends CaseDto {
   @ValidateNested({ each: true })
   communicationChannels!: CommunicationChannelDto[]
 
-  @ApiProperty({ type: [AdvertDetailedDto] })
+  @ApiProperty({ type: [AdvertDto] })
   @IsArray()
-  @Type(() => AdvertDetailedDto)
+  @Type(() => AdvertDto)
   @ValidateNested({ each: true })
-  adverts!: AdvertDetailedDto[]
-
-  @ApiProperty({ type: RecallApplicationDto, required: false })
-  @ApiProperty({ type: RecallApplicationDto, required: false })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => RecallApplicationDto)
-  bankruptcyApplication?: RecallApplicationDto
+  adverts!: AdvertDto[]
 }

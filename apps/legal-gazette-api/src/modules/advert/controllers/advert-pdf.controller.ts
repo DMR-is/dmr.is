@@ -11,10 +11,8 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
-import { commonAdvertTemplate } from '../../pdf/lib/templates'
 import { PdfService } from '../../pdf/pdf.service'
 import { AdvertModel } from '../advert.model'
-import { CommonAdvertModel } from '../common/common-advert.model'
 
 @Controller({ path: 'adverts/pdf', version: '1' })
 export class AdvertPdfController {
@@ -39,16 +37,14 @@ export class AdvertPdfController {
   })
   async getAdvertPdf(@Param('id') id: string, @Res() res: Response) {
     const advert = await this.advertModel.unscoped().findByPk(id, {
-      include: [CommonAdvertModel],
+      attributes: ['id', 'html', 'publishedAt', 'scheduledAt'],
     })
 
     if (!advert) {
       throw new NotFoundException('Advert not found')
     }
 
-    const html = commonAdvertTemplate(advert)
-
-    const pdf = await this.pdfService.generatePdfFromHtml(html)
+    const pdf = await this.pdfService.generatePdfFromHtml(advert.html)
     const timestamp = new Date(advert.publishedAt ?? advert.scheduledAt)
       .toISOString()
       .replace(/[:.]/g, '-')
@@ -56,7 +52,7 @@ export class AdvertPdfController {
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="advert-${advert?.id}-${timestamp}.pdf"`,
-      'Cont-Length': pdf.length,
+      'Content-Length': pdf.length,
     })
 
     res.send(pdf)

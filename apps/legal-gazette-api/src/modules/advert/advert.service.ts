@@ -22,11 +22,9 @@ export class AdvertService implements IAdvertService {
   ) {}
 
   async getAdvertsByCaseId(caseId: string): Promise<GetAdvertsDto> {
-    const adverts = await this.advertModel
-      .scope(AdvertModelScopes.ALL)
-      .findAll({
-        where: { caseId },
-      })
+    const adverts = await this.advertModel.findAll({
+      where: { caseId },
+    })
 
     const mapped = adverts.map((advert) => advert.fromModel())
 
@@ -122,12 +120,10 @@ export class AdvertService implements IAdvertService {
       page: query.page,
       pageSize: query.pageSize,
     })
-    const adverts = await this.advertModel
-      .scope([AdvertModelScopes.DEFAULT, { method: ['withQuery', query] }])
-      .findAndCountAll({
-        limit,
-        offset,
-      })
+    const adverts = await this.advertModel.findAndCountAll({
+      limit,
+      offset,
+    })
 
     const migrated = adverts.rows.map((advert) => advert.fromModel())
     const paging = generatePaging(
@@ -171,9 +167,7 @@ export class AdvertService implements IAdvertService {
   }
 
   async getAdvertById(id: string): Promise<AdvertDto> {
-    const advert = await this.advertModel
-      .scope(AdvertModelScopes.ALL)
-      .findByPk(id)
+    const advert = await this.advertModel.findByPk(id)
 
     if (!advert) {
       throw new NotFoundException(`Advert with id ${id} not found`)

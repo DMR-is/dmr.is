@@ -2,8 +2,8 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { CaseDto } from '../case/dto/case.dto'
-import { IslandIsSubmitCommonApplicationDto } from './common/island-is/dto/island-is-application.dto'
 import { ApplicationsDto } from './dto/application.dto'
+import { IslandIsSubmitCommonApplicationDto } from './dto/island-is-application.dto'
 
 export interface IApplicationService {
   getMyApplications(query: PagingQuery, user: DMRUser): Promise<ApplicationsDto>

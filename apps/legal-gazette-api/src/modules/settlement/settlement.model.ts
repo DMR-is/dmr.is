@@ -1,17 +1,8 @@
-import {
-  Column,
-  DataType,
-  DefaultScope,
-  HasMany,
-  HasOne,
-} from 'sequelize-typescript'
+import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
-import { DivisionEndingAdvertModel } from '../advert/division/models/division-ending-advert.model'
-import { DivisionMeetingAdvertModel } from '../advert/division/models/division-meeting-advert.model'
-import { RecallAdvertModel } from '../advert/recall/recall-advert.model'
 import { SettlementDto } from './dto/settlement.dto'
 type SettlementAttributes = {
   liquidatorName: string
@@ -101,15 +92,6 @@ export class SettlementModel extends BaseModel<
     field: 'settlement_date_of_death',
   })
   settlementDateOfDeath!: Date | null
-
-  @HasMany(() => RecallAdvertModel)
-  recallAdverts!: RecallAdvertModel[]
-
-  @HasMany(() => DivisionMeetingAdvertModel)
-  divisionMeetingAdverts?: DivisionMeetingAdvertModel[]
-
-  @HasOne(() => DivisionEndingAdvertModel)
-  divisionEndingAdvert?: DivisionEndingAdvertModel
 
   static fromModel(model: SettlementModel): SettlementDto {
     return {
