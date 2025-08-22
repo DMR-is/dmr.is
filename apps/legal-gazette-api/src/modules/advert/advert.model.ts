@@ -1,4 +1,4 @@
-import { Op, WhereOptions } from 'sequelize'
+import { Op } from 'sequelize'
 import {
   BeforeUpdate,
   BelongsTo,
@@ -39,7 +39,7 @@ type AdvertAttributes = {
   scheduledAt: Date
 
   title: string
-  submittedBy: string
+  createdBy: string
   html: string
   paid: boolean
 
@@ -58,19 +58,27 @@ type AdvertAttributes = {
 }
 
 export type AdvertCreateAttributes = {
-  submittedBy: string
+  caseId?: string
+  settlementId?: string | null
+  courtDistrictId?: string | null
+  islandIsApplicationId?: string | null
+
   typeId: string
   categoryId: string
+  statusId?: string
+
+  version?: AdvertVersionEnum
+  publishedAt?: Date | null // only if coming from an external system (ex. Skatturinn) and should be automatically set
   scheduledAt: Date
+
+  createdBy: string // ex: Gunnar Gunnarsson or Lögfræðistofa (Gunnar Gunnarsson)
+  additionalText?: string | null
+  caption?: string | null
+
   signatureName: string
+  signatureOnBehalfOf?: string | null
   signatureLocation: string
   signatureDate: Date
-  caseId?: string
-  html?: string
-  statusId?: string
-  paid?: boolean
-  publishedAt?: Date | null
-  version?: AdvertVersionEnum
 }
 
 export enum AdvertVersionEnum {
@@ -217,7 +225,7 @@ export class AdvertModel extends BaseModel<
     type: DataType.STRING,
     allowNull: false,
   })
-  submittedBy!: string
+  createdBy!: string
 
   @Column({
     type: DataType.STRING(100),
@@ -274,14 +282,12 @@ export class AdvertModel extends BaseModel<
       context: 'AdvertModel',
     })
 
-    const whereClause: WhereOptions = {
-      statusId,
-    }
-
     const [status, count] = await Promise.all([
       StatusModel.findByPk(statusId),
       this.count({
-        where: whereClause,
+        where: {
+          statusId,
+        },
       }),
     ])
 
@@ -368,7 +374,7 @@ export class AdvertModel extends BaseModel<
       caseId: model.caseId,
       title: model.title,
       html: model.html,
-      owner: model.submittedBy,
+      owner: model.createdBy,
       publicationNumber: model.publicationNumber,
       scheduledAt: model.scheduledAt.toISOString(),
       publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,

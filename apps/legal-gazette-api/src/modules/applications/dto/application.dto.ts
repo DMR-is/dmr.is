@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { ApplicationTypeEnum } from '../../../lib/constants'
+import { Paging } from '@dmr.is/shared/dto'
+
+import { CategoryDto } from '../../category/dto/category.dto'
 import { ApplicationStatusEnum } from '../contants'
 
 export class ApplicationDto {
@@ -16,14 +18,14 @@ export class ApplicationDto {
   @ApiProperty({ enum: ApplicationStatusEnum })
   status!: ApplicationStatusEnum
 
-  @ApiProperty({ enum: ApplicationTypeEnum, enumName: 'ApplicationTypeEnum' })
-  applicationType!: ApplicationTypeEnum
+  @ApiProperty({ type: CategoryDto })
+  category!: CategoryDto
 
   @ApiProperty({ type: String })
   title!: string
 }
 
-export class ApplicationsDto {
+export class ApplicationsDto extends Paging {
   @ApiProperty({ type: [ApplicationDto] })
   applications!: ApplicationDto[]
 }

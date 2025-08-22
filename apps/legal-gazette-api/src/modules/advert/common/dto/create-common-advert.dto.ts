@@ -23,6 +23,13 @@ export class CreateCommonAdvertSignatureDto {
   @MaxLength(255)
   name!: string
 
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  onBehalfOf?: string | null
+
   @ApiProperty({ type: String })
   @IsString()
   @MinLength(1)
@@ -41,6 +48,13 @@ export class CreateCommonAdvertDto {
   @MinLength(1)
   @MaxLength(255)
   caption!: string
+
+  @ApiProperty({ type: String })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  additionalText?: string | null
 
   @ApiProperty({ type: [CreateCommunicationChannelDto], required: false })
   @IsOptional()

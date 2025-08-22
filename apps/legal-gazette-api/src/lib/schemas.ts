@@ -1,73 +1,41 @@
 import { z } from 'zod'
 
-import { RecallTypeEnum } from './constants'
+export const baseEntitySchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  slug: z.string(),
+})
 
-export const settlementSchema = z
-  .object({
-    liquidatorName: z.string(),
-    liquidatorLocation: z.string(),
-    liquidatorOnBehalfOf: z.string().optional(),
-    settlementName: z.string(),
-    settlementNationalId: z.string(),
-    settlementAddress: z.string(),
-    settlementDeadline: z.date().nullable().optional(),
-    settlementDateOfDeath: z.date().nullable().optional(),
-  })
-  .refine((settlement) => {
-    // deadline or date of death must be provided
-    if (!settlement.settlementDeadline && !settlement.settlementDateOfDeath) {
-      return false
-    }
+export const communicationChannelSchema = z.object({
+  email: z.email(),
+  name: z.string().optional(),
+  phone: z.string().optional(),
+})
 
-    return true
-  })
-
-export const recallApplicationSchema = z.object({
-  recallType: z.enum(RecallTypeEnum),
-  additionalText: z.string().optional().nullable(),
-  judgmentDate: z.date(),
+export const createCommonAdvertFromApplicationSchema = z.object({
+  caseId: z.string(),
+  category: baseEntitySchema,
+  caption: z.string(),
+  additionalText: z.string().nullable().optional(),
+  html: z.string(),
+  signatureName: z.string(),
+  signatureOnBehalfOf: z.string().nullable().optional(),
   signatureLocation: z.string(),
   signatureDate: z.date(),
-  courtDistrictId: z.string(),
-  liquidatorName: z.string(),
-  liquidatorLocation: z.string(),
-  liquidatorOnBehalfOf: z.string().optional(),
-  settlementId: z.string(),
-  meetingDate: z.date(),
-  meetingLocation: z.string(),
-  publishingDates: z.array(z.date()).refine((dates) => dates.length > 0),
+  communicationChannels: z.array(communicationChannelSchema).min(1),
+  publishingDates: z.array(z.date()).min(1),
 })
 
-const bankruptcySchema = z.object({
-  settlementDeadline: z.date(),
-})
-
-const deceasedSchema = z.object({
-  settlementDateOfDeath: z.date(),
-})
-
-export const bankruptcyRecallApplicationSchema = recallApplicationSchema.extend(
-  bankruptcySchema.shape,
-)
-
-export const deceasedRecallApplicationSchema = recallApplicationSchema.extend(
-  deceasedSchema.shape,
-)
-
-export type RecallApplication = z.infer<typeof recallApplicationSchema>
-export type BankruptcyRecallApplication = z.infer<
-  typeof bankruptcyRecallApplicationSchema
->
-export type DeceasedRecallApplication = z.infer<
-  typeof deceasedRecallApplicationSchema
->
-
-export const commonFormSchema = z.object({
+export const createCommonAdvertFromIslandIsApplicationSchema = z.object({
+  islandIsApplicationId: z.string(),
   categoryId: z.string(),
   caption: z.string(),
+  additionalText: z.string().nullable().optional(),
   html: z.string(),
-  signatureDate: z.date(),
-  signatureLocation: z.string(),
   signatureName: z.string(),
-  publishingDates: z.array(z.date()).refine((dates) => dates.length > 0),
+  signatureOnBehalfOf: z.string().nullable().optional(),
+  signatureLocation: z.string(),
+  signatureDate: z.date(),
+  communicationChannels: z.array(communicationChannelSchema).min(1),
+  publishingDates: z.array(z.date()).min(1),
 })

@@ -1,4 +1,11 @@
-import { Column, DataType, ForeignKey } from 'sequelize-typescript'
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  DefaultScope,
+  ForeignKey,
+  Scopes,
+} from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
@@ -6,20 +13,136 @@ import { LegalGazetteModels } from '../../lib/constants'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
 import { CommunicationChannelCreateAttributes } from '../communication-channel/communication-channel.model'
+import { CourtDistrictModel } from '../court-district/court-district.model'
+import { ApplicationDto } from './dto/application.dto'
 import { ApplicationStatusEnum } from './contants'
+
+export enum ApplicationTypeEnum {
+  COMMON = 'COMMON',
+  RECALL_BANKRUPTCY = 'RECALL_BANKRUPTCY',
+  RECALL_DECEASED = 'RECALL_DECEASED',
+}
 
 export type ApplicationAttributes = {
   submittedByNationalId: string
   status: ApplicationStatusEnum
+  applicationType: ApplicationTypeEnum
+  categoryId: string | null
+  courtDistrictId: string | null
+  islandIsApplicationId: string | null
+  caption: string | null
+  additionalText: string | null
+  judgmentDate: Date | null
+  html: string | null
+  signatureName: string | null
+  signatureOnBehalfOf: string | null
+  signatureLocation: string | null
+  signatureDate: Date | null
+  settlementName: string | null
+  settlementNationalId: string | null
+  settlementAddress: string | null
+  settlementDeadlineDate: Date | null
+  settlementDateOfDeath: Date | null
+  divisionMeetingDate: Date | null
+  divisionMeetingLocation: string | null
+  publishingDates: Date[]
+  communicationChannels: CommunicationChannelCreateAttributes[]
 }
 
 export type ApplicationCreateAttributes = {
-  caseId: string
+  caseId?: string
+  applicationType: ApplicationTypeEnum
   submittedByNationalId: string
-  categoryId: string
+  categoryId?: string | null
+  courtDistrictId?: string | null
+  islandIsApplicationId?: string | null
+  caption?: string | null
+  additionalText?: string | null
+  judgmentDate?: Date | null
+  html?: string | null
+  signatureName?: string | null
+  signatureOnBehalfOf?: string | null
+  signatureLocation?: string | null
+  signatureDate?: Date | null
+  settlementName?: string | null
+  settlementNationalId?: string | null
+  settlementAddress?: string | null
+  settlementDeadlineDate?: Date | null
+  settlementDateOfDeath?: Date | null
+  divisionMeetingDate?: Date | null
+  divisionMeetingLocation?: string | null
+  publishingDates?: Date[]
+  communicationChannels?: CommunicationChannelCreateAttributes[]
 }
 
 @BaseTable({ tableName: LegalGazetteModels.APPLICATION })
+@DefaultScope(() => ({
+  include: [{ model: CategoryModel, as: 'category' }],
+}))
+@Scopes(() => ({
+  common: {
+    attributes: [
+      'id',
+      'caseId',
+      'submittedByNationalId',
+      'applicationType',
+      'status',
+      'caption',
+      'html',
+      'signatureName',
+      'signatureOnBehalfOf',
+      'signatureLocation',
+      'signatureDate',
+      'publishingDates',
+      'communicationChannels',
+    ],
+    include: [{ model: CategoryModel, as: 'category' }],
+  },
+  bankruptcy: {
+    attributes: [
+      'id',
+      'caseId',
+      'submittedByNationalId',
+      'applicationType',
+      'additionalText',
+      'status',
+      'judgmentDate',
+      'settlementName',
+      'settlementNationalId',
+      'settlementAddress',
+      'settlementDeadlineDate',
+      'divisionMeetingDate',
+      'divisionMeetingLocation',
+      'publishingDates',
+      'communicationChannels',
+    ],
+    include: [
+      { model: CategoryModel, as: 'category' },
+      { model: CourtDistrictModel, as: 'courtDistrict' },
+    ],
+  },
+  deceased: {
+    attributes: [
+      'id',
+      'caseId',
+      'submittedByNationalId',
+      'applicationType',
+      'additionalText',
+      'status',
+      'judgmentDate',
+      'settlementName',
+      'settlementNationalId',
+      'settlementAddress',
+      'settlementDateOfDeath',
+      'publishingDates',
+      'communicationChannels',
+    ],
+    include: [
+      { model: CategoryModel, as: 'category' },
+      { model: CourtDistrictModel, as: 'courtDistrict' },
+    ],
+  },
+}))
 export class ApplicationModel extends BaseModel<
   ApplicationAttributes,
   ApplicationCreateAttributes
@@ -27,7 +150,6 @@ export class ApplicationModel extends BaseModel<
   @Column({
     type: DataType.UUID,
     allowNull: false,
-    field: 'case_id',
   })
   @ForeignKey(() => CaseModel)
   caseId!: string
@@ -35,14 +157,19 @@ export class ApplicationModel extends BaseModel<
   @Column({
     type: DataType.TEXT,
     allowNull: false,
-    field: 'submitted_by_national_id',
   })
   submittedByNationalId!: string
 
   @Column({
-    type: DataType.UUID,
+    type: DataType.ENUM(...Object.values(ApplicationTypeEnum)),
     allowNull: false,
-    field: 'category_id',
+  })
+  applicationType!: ApplicationTypeEnum
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    defaultValue: null,
   })
   @ForeignKey(() => CategoryModel)
   categoryId!: string
@@ -51,7 +178,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.ENUM(...Object.values(ApplicationStatusEnum)),
     defaultValue: ApplicationStatusEnum.DRAFT,
     allowNull: false,
-    field: 'status',
   })
   status!: ApplicationStatusEnum
 
@@ -59,15 +185,14 @@ export class ApplicationModel extends BaseModel<
     type: DataType.UUID,
     defaultValue: null,
     allowNull: true,
-    field: 'court_district_id',
   })
+  @ForeignKey(() => CourtDistrictModel)
   courtDistrictId!: string | null
 
   @Column({
     type: DataType.UUID,
     allowNull: true,
     defaultValue: null,
-    field: 'island_is_application_id',
   })
   islandIsApplicationId!: string | null
 
@@ -75,7 +200,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.TEXT,
     allowNull: true,
     defaultValue: null,
-    field: 'caption',
   })
   caption!: string | null
 
@@ -83,7 +207,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.TEXT,
     allowNull: true,
     defaultValue: null,
-    field: 'additional_text',
   })
   additionalText!: string | null
 
@@ -91,7 +214,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.DATE,
     allowNull: true,
     defaultValue: null,
-    field: 'judgment_date',
   })
   judgmentDate!: Date | null
 
@@ -99,7 +221,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.TEXT,
     allowNull: true,
     defaultValue: null,
-    field: 'html',
   })
   html!: string | null
 
@@ -107,7 +228,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.TEXT,
     allowNull: true,
     defaultValue: null,
-    field: 'signature_name',
   })
   signatureName!: string | null
 
@@ -115,7 +235,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.TEXT,
     allowNull: true,
     defaultValue: null,
-    field: 'signature_on_behalf_of',
   })
   signatureOnBehalfOf!: string | null
 
@@ -123,7 +242,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.TEXT,
     allowNull: true,
     defaultValue: null,
-    field: 'signature_location',
   })
   signatureLocation!: string | null
 
@@ -131,7 +249,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.DATE,
     allowNull: true,
     defaultValue: null,
-    field: 'signature_date',
   })
   signatureDate!: Date | null
 
@@ -139,7 +256,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.TEXT,
     allowNull: true,
     defaultValue: null,
-    field: 'settlement_name',
   })
   settlementName!: string | null
 
@@ -147,7 +263,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.TEXT,
     allowNull: true,
     defaultValue: null,
-    field: 'settlement_national_id',
   })
   settlementNationalId!: string | null
 
@@ -155,7 +270,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.TEXT,
     allowNull: true,
     defaultValue: null,
-    field: 'settlement_address',
   })
   settlementAddress!: string | null
 
@@ -163,7 +277,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.DATE,
     allowNull: true,
     defaultValue: null,
-    field: 'settlement_deadline_date',
   })
   settlementDeadlineDate!: Date | null
 
@@ -171,7 +284,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.DATE,
     allowNull: true,
     defaultValue: null,
-    field: 'settlement_date_of_death',
   })
   settlementDateOfDeath!: Date | null
 
@@ -179,7 +291,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.DATE,
     allowNull: true,
     defaultValue: null,
-    field: 'division_meeting_date',
   })
   divisionMeetingDate!: Date | null
 
@@ -187,7 +298,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.TEXT,
     allowNull: true,
     defaultValue: null,
-    field: 'division_meeting_location',
   })
   divisionMeetingLocation!: string | null
 
@@ -195,7 +305,6 @@ export class ApplicationModel extends BaseModel<
     type: DataType.ARRAY(DataType.DATE),
     allowNull: true,
     defaultValue: [],
-    field: 'publishing_dates',
   })
   publishingDates!: Date[]
 
@@ -203,7 +312,38 @@ export class ApplicationModel extends BaseModel<
     type: DataType.JSONB,
     allowNull: true,
     defaultValue: [],
-    field: 'communication_channels',
   })
   communicationChannels!: CommunicationChannelCreateAttributes[]
+
+  @BelongsTo(() => CategoryModel)
+  category!: CategoryModel
+
+  @BelongsTo(() => CourtDistrictModel)
+  courtDistrict!: CourtDistrictModel
+
+  @BelongsTo(() => CaseModel)
+  case!: CaseModel
+
+  get title() {
+    if (this.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY) {
+      return `${this.category.title} - ${this.caption ?? ''}`
+    }
+
+    return `${this.category.title} - ${this.settlementName ?? ''}`
+  }
+
+  static fromModel(model: ApplicationModel): ApplicationDto {
+    return {
+      id: model.id,
+      caseId: model.caseId,
+      nationalId: model.submittedByNationalId,
+      status: model.status,
+      title: model.title,
+      category: model.category.fromModel(),
+    }
+  }
+
+  fromModel(): ApplicationDto {
+    return ApplicationModel.fromModel(this)
+  }
 }

@@ -4,6 +4,7 @@ import { IsBase64, IsString, IsUUID } from 'class-validator'
 import { ApiProperty } from '@nestjs/swagger'
 
 import { CreateCommonAdvertDto } from '../../../../advert/common/dto/create-common-advert.dto'
+import { CreateCommunicationChannelDto } from '../../../../communication-channel/dto/communication-channel.dto'
 
 export enum IslandIsCommonApplicationEventsEnum {
   APPROVE = 'APPROVE',
@@ -25,6 +26,13 @@ export class IslandIsSubmitCommonApplicationDto extends CreateCommonAdvertDto {
     Buffer.from(obj.htmlBase64, 'base64').toString('utf-8'),
   )
   html!: string
+
+  @ApiProperty({ type: String, required: true })
+  @IsUUID()
+  categoryId!: string
+
+  @ApiProperty({ type: [CreateCommunicationChannelDto], required: true })
+  communicationChannels!: CreateCommunicationChannelDto[]
 }
 
 export class IslandIsCommonApplicationUpdateStateEventDto {
