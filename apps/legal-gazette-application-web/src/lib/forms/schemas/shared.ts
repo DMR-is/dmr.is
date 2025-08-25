@@ -6,11 +6,9 @@ export const communicationChannelSchema = z.object({
   phone: z.string().optional(),
 })
 
-export const publishingDateSchema = z.object({
-  date: z
-    .date('Dagsetning fyrir birtingu er nauðsynleg')
-    .refine((d) => d >= new Date(), 'Dagsetning má ekki vera liðin'),
-})
+export const publishingDateSchema = z
+  .date('Dagsetning fyrir birtingu er nauðsynleg')
+  .refine((d) => d >= new Date(), 'Dagsetning má ekki vera liðin')
 
 export type CommunicationChannelSchema = z.infer<
   typeof communicationChannelSchema

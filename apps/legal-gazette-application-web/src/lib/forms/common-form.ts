@@ -32,6 +32,7 @@ export const commonForm = ({
       signatureLocation: fields.signatureLocation,
       signatureDate: fields.signatureDate,
       publishingDates: fields.publishingDates,
+      communicationChannels: fields.communicationChannels,
     },
   },
 })

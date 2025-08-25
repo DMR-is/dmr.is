@@ -11,8 +11,8 @@ import { commonForm } from '../../../../lib/forms/common-form'
 import { CommonFormSchema } from '../../../../lib/forms/schemas/common-schema'
 import { ApplicationShell } from '../../application/ApplicationShell'
 import { CommunicationChannelFields } from '../fields/CommunicationChannelFields'
+import { PublishingFields } from '../fields/PublishingFields'
 import { CommonAdvertFields } from './fields/CommonAdvertFields'
-import { CommonPublishingFields } from './fields/CommonPublishingFields'
 import { CommonSignatureFields } from './fields/CommonSignatureFields'
 
 type Props = {
@@ -68,7 +68,7 @@ export const CommonForm = ({
             </Stack>
             <CommonAdvertFields />
             <CommonSignatureFields />
-            <CommonPublishingFields />
+            <PublishingFields />
             <CommunicationChannelFields />
           </Stack>
         </ApplicationShell>

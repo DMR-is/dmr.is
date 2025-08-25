@@ -90,7 +90,6 @@ export class ApplicationService implements IApplicationService {
           ? new Date(body.settlementDeadlineDate)
           : body.settlementDeadlineDate,
     })
-
     return application.fromModelToDetailedDto()
   }
   async getApplicationByCaseId(

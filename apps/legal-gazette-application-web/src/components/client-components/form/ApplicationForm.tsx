@@ -27,6 +27,7 @@ export const ApplicationForm = ({
             publishingDates: application.publishingDates?.map(
               (d) => new Date(d),
             ),
+            communicationChannels: application.communicationChannels ?? [],
             signatureDate: application.signatureDate
               ? new Date(application.signatureDate)
               : undefined,
