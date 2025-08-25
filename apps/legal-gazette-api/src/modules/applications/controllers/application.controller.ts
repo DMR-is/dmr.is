@@ -4,6 +4,7 @@ import {
   Get,
   Inject,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -20,7 +21,11 @@ import { LGResponse } from '../../../decorators/lg-response.decorator'
 import { CaseDto } from '../../case/dto/case.dto'
 import { ApplicationTypeEnum } from '../application.model'
 import { IApplicationService } from '../application.service.interface'
-import { ApplicationsDto } from '../dto/application.dto'
+import {
+  ApplicationDetailedDto,
+  ApplicationsDto,
+  UpdateApplicationDto,
+} from '../dto/application.dto'
 
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard)
@@ -36,7 +41,7 @@ export class ApplicationController {
 
   @Post('createApplication/:applicationType')
   @ApiParam({ enum: ApplicationTypeEnum, name: 'applicationType' })
-  @LGResponse({ operationId: 'createApplication', type: ApplicationsDto })
+  @LGResponse({ operationId: 'createApplication', type: CaseDto })
   async createApplication(
     @Param('applicationType', new EnumValidationPipe(ApplicationTypeEnum))
     applicationType: ApplicationTypeEnum,
@@ -61,5 +66,42 @@ export class ApplicationController {
     @CurrentUser() user: DMRUser,
   ): Promise<ApplicationsDto> {
     return this.applicationService.getMyApplications(query, user)
+  }
+
+  @Get('getApplicationById/:applicationId')
+  @LGResponse({
+    operationId: 'getApplicationById',
+    type: ApplicationDetailedDto,
+  })
+  async getApplicationById(
+    @Param('applicationId') applicationId: string,
+    @CurrentUser() user: DMRUser,
+  ): Promise<ApplicationDetailedDto> {
+    return this.applicationService.getApplicationById(applicationId, user)
+  }
+
+  @Get('getApplicationByCaseId/:caseId')
+  @LGResponse({
+    operationId: 'getApplicationByCaseId',
+    type: ApplicationDetailedDto,
+  })
+  async getApplicationByCaseId(
+    @Param('caseId') caseId: string,
+    @CurrentUser() user: DMRUser,
+  ): Promise<ApplicationDetailedDto> {
+    return this.applicationService.getApplicationByCaseId(caseId, user)
+  }
+
+  @Patch(':applicationId')
+  @LGResponse({
+    operationId: 'updateApplication',
+    type: ApplicationDetailedDto,
+  })
+  async updateApplication(
+    @Param('applicationId') applicationId: string,
+    @Body() body: UpdateApplicationDto,
+    @CurrentUser() user: DMRUser,
+  ): Promise<ApplicationDetailedDto> {
+    return this.applicationService.updateApplication(applicationId, body, user)
   }
 }

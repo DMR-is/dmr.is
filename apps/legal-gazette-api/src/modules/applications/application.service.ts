@@ -21,8 +21,13 @@ import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertModel } from '../advert/advert.model'
 import { CaseModel } from '../case/case.model'
 import { CaseDto } from '../case/dto/case.dto'
+import { CategoryDefaultIdEnum } from '../category/category.model'
 import { TypeIdEnum } from '../type/type.model'
-import { ApplicationsDto } from './dto/application.dto'
+import {
+  ApplicationDetailedDto,
+  ApplicationsDto,
+  UpdateApplicationDto,
+} from './dto/application.dto'
 import { IslandIsSubmitCommonApplicationDto } from './dto/island-is-application.dto'
 import { ApplicationModel, ApplicationTypeEnum } from './application.model'
 import { IApplicationService } from './application.service.interface'
@@ -36,6 +41,86 @@ export class ApplicationService implements IApplicationService {
     @InjectModel(ApplicationModel)
     private readonly applicationModel: typeof ApplicationModel,
   ) {}
+  async updateApplication(
+    applicationId: string,
+    body: UpdateApplicationDto,
+    user: DMRUser,
+  ): Promise<ApplicationDetailedDto> {
+    const application = await this.applicationModel.findOne({
+      where: { id: applicationId, submittedByNationalId: user.nationalId },
+    })
+
+    if (!application) {
+      throw new NotFoundException()
+    }
+
+    await application.update({
+      additionalText: body.additionalText,
+      caption: body.caption,
+      html: body.html,
+      signatureDate:
+        typeof body.signatureDate === 'string'
+          ? new Date(body.signatureDate)
+          : body.signatureDate,
+      signatureLocation: body.signatureLocation,
+      signatureName: body.signatureName,
+      signatureOnBehalfOf: body.signatureOnBehalfOf,
+      courtDistrictId: body.courtDistrictId,
+      categoryId: body.categoryId,
+      judgmentDate:
+        typeof body.judgmentDate === 'string'
+          ? new Date(body.judgmentDate)
+          : body.judgmentDate,
+      publishingDates: body.publishingDates?.map((d) => new Date(d)),
+      communicationChannels: body.communicationChannels,
+      divisionMeetingDate:
+        typeof body.divisionMeetingDate === 'string'
+          ? new Date(body.divisionMeetingDate)
+          : body.divisionMeetingDate,
+      divisionMeetingLocation: body.divisionMeetingLocation,
+      settlementName: body.settlementName,
+      settlementNationalId: body.settlementNationalId,
+      settlementAddress: body.settlementAddress,
+      settlementDateOfDeath:
+        typeof body.settlementDateOfDeath === 'string'
+          ? new Date(body.settlementDateOfDeath)
+          : body.settlementDateOfDeath,
+      settlementDeadlineDate:
+        typeof body.settlementDeadlineDate === 'string'
+          ? new Date(body.settlementDeadlineDate)
+          : body.settlementDeadlineDate,
+    })
+
+    return application.fromModelToDetailedDto()
+  }
+  async getApplicationByCaseId(
+    caseId: string,
+    user: DMRUser,
+  ): Promise<ApplicationDetailedDto> {
+    const application = await this.applicationModel.findOne({
+      where: { caseId: caseId, submittedByNationalId: user.nationalId },
+    })
+
+    if (!application) {
+      throw new NotFoundException()
+    }
+
+    return application.fromModelToDetailedDto()
+  }
+  async getApplicationById(
+    applicationId: string,
+    user: DMRUser,
+  ): Promise<ApplicationDetailedDto> {
+    const application = await this.applicationModel.findOne({
+      where: { id: applicationId, submittedByNationalId: user.nationalId },
+    })
+
+    if (!application) {
+      throw new NotFoundException()
+    }
+
+    return application.fromModelToDetailedDto()
+  }
 
   private async submitCommonApplication(applicationId: string, user: DMRUser) {
     const application = await this.applicationModel.scope('common').findOne({
@@ -92,10 +177,18 @@ export class ApplicationService implements IApplicationService {
     applicationType: ApplicationTypeEnum,
     user: DMRUser,
   ): Promise<CaseDto> {
+    const categoryId =
+      applicationType === ApplicationTypeEnum.COMMON
+        ? null
+        : applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
+          ? CategoryDefaultIdEnum.BANKRUPTCY_RECALL
+          : CategoryDefaultIdEnum.DECEASED_RECALL
+
     const caseData = await this.caseModel.create(
       {
         involvedPartyNationalId: user.nationalId,
         application: {
+          categoryId: categoryId,
           applicationType: applicationType,
           submittedByNationalId: user.nationalId,
         },

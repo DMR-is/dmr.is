@@ -2,7 +2,7 @@ import { useFormContext } from 'react-hook-form'
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
-import { useUpdateRecallApplication } from '../../../../../hooks/useUpdateRecallApplication'
+import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
 import {
   BankruptcyFormFields,
   BankruptcyFormSchema,
@@ -13,8 +13,8 @@ import { InputController } from '../../controllers/InputController'
 export const RecallSignatureFields = () => {
   const { getValues } = useFormContext<BankruptcyFormSchema>()
 
-  const { caseId, applicationId } = getValues('meta')
-  const { trigger } = useUpdateRecallApplication({ applicationId, caseId })
+  const { applicationId } = getValues('meta')
+  const { trigger } = useUpdateApplication({ applicationId })
 
   return (
     <GridRow rowGap={[2, 3]}>

@@ -14,7 +14,8 @@ import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
 import { CommunicationChannelCreateAttributes } from '../communication-channel/communication-channel.model'
 import { CourtDistrictModel } from '../court-district/court-district.model'
-import { ApplicationDto } from './dto/application.dto'
+import { TypeEnum } from '../type/type.model'
+import { ApplicationDetailedDto, ApplicationDto } from './dto/application.dto'
 import { ApplicationStatusEnum } from './contants'
 
 export enum ApplicationTypeEnum {
@@ -24,6 +25,7 @@ export enum ApplicationTypeEnum {
 }
 
 export type ApplicationAttributes = {
+  caseId: string
   submittedByNationalId: string
   status: ApplicationStatusEnum
   applicationType: ApplicationTypeEnum
@@ -316,7 +318,7 @@ export class ApplicationModel extends BaseModel<
   communicationChannels!: CommunicationChannelCreateAttributes[]
 
   @BelongsTo(() => CategoryModel)
-  category!: CategoryModel
+  category?: CategoryModel
 
   @BelongsTo(() => CourtDistrictModel)
   courtDistrict!: CourtDistrictModel
@@ -325,7 +327,23 @@ export class ApplicationModel extends BaseModel<
   case!: CaseModel
 
   get title() {
-    if (this.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY) {
+    if (!this.category) {
+      if (this.applicationType === ApplicationTypeEnum.COMMON) {
+        return TypeEnum.COMMON_ADVERT
+      }
+
+      if (this.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY) {
+        return `${TypeEnum.RECALL} þrotabús`
+      }
+
+      if (this.applicationType === ApplicationTypeEnum.RECALL_DECEASED) {
+        return `${TypeEnum.RECALL} dánarbús`
+      }
+
+      throw new Error('Category not loaded')
+    }
+
+    if (this.applicationType === ApplicationTypeEnum.COMMON) {
       return `${this.category.title} - ${this.caption ?? ''}`
     }
 
@@ -339,11 +357,57 @@ export class ApplicationModel extends BaseModel<
       nationalId: model.submittedByNationalId,
       status: model.status,
       title: model.title,
-      category: model.category.fromModel(),
+      category: model.category?.fromModel(),
+      applicationType: model.applicationType,
     }
   }
 
   fromModel(): ApplicationDto {
     return ApplicationModel.fromModel(this)
+  }
+
+  static fromModelToDetailedDto(
+    model: ApplicationModel,
+  ): ApplicationDetailedDto {
+    return {
+      ...this.fromModel(model),
+      courtDistrictId: model.courtDistrictId,
+      islandIsApplicationId: model.islandIsApplicationId,
+      caption: model.caption,
+      additionalText: model.additionalText,
+      judgmentDate: model.judgmentDate
+        ? model.judgmentDate.toISOString()
+        : null,
+      html: model.html,
+      signatureName: model.signatureName,
+      signatureOnBehalfOf: model.signatureOnBehalfOf,
+      signatureLocation: model.signatureLocation,
+      signatureDate: model.signatureDate
+        ? model.signatureDate.toISOString()
+        : null,
+      settlementName: model.settlementName,
+      settlementNationalId: model.settlementNationalId,
+      settlementAddress: model.settlementAddress,
+      settlementDeadlineDate: model.settlementDeadlineDate
+        ? model.settlementDeadlineDate.toISOString()
+        : null,
+      settlementDateOfDeath: model.settlementDateOfDeath
+        ? model.settlementDateOfDeath.toISOString()
+        : null,
+      divisionMeetingDate: model.divisionMeetingDate
+        ? model.divisionMeetingDate.toISOString()
+        : null,
+      divisionMeetingLocation: model.divisionMeetingLocation,
+      publishingDates: model.publishingDates.map((date) => date.toISOString()),
+      communicationChannels: model.communicationChannels.map((ch) => ({
+        email: ch.email,
+        name: ch.name ?? undefined,
+        phone: ch.phone ?? undefined,
+      })),
+    }
+  }
+
+  fromModelToDetailedDto(): ApplicationDetailedDto {
+    return ApplicationModel.fromModelToDetailedDto(this)
   }
 }

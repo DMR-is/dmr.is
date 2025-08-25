@@ -6,8 +6,8 @@ import { ApiProperty } from '@nestjs/swagger'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 import { DetailedDto } from '../../../dto/detailed.dto'
-import { ApplicationTypeEnum } from '../../../lib/constants'
 import { AdvertDto } from '../../advert/dto/advert.dto'
+import { ApplicationTypeEnum } from '../../applications/application.model'
 import { CommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
 
 export class CaseQueryDto extends PagingQuery {}

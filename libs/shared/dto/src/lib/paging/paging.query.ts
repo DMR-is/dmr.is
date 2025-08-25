@@ -11,6 +11,7 @@ export class PagingQuery {
     type: Number,
     example: 1,
     name: 'page',
+    default: DEFAULT_PAGE_NUMBER,
   })
   @IsOptional()
   @IsNumber()
@@ -30,6 +31,7 @@ export class PagingQuery {
     type: Number,
     example: 10,
     name: 'pageSize',
+    default: DEFAULT_PAGE_SIZE,
   })
   @IsOptional()
   @IsNumber()

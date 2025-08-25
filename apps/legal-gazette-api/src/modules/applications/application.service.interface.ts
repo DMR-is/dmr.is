@@ -2,7 +2,11 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { CaseDto } from '../case/dto/case.dto'
-import { ApplicationsDto } from './dto/application.dto'
+import {
+  ApplicationDetailedDto,
+  ApplicationsDto,
+  UpdateApplicationDto,
+} from './dto/application.dto'
 import { IslandIsSubmitCommonApplicationDto } from './dto/island-is-application.dto'
 
 export interface IApplicationService {
@@ -16,6 +20,22 @@ export interface IApplicationService {
   ): Promise<void>
 
   submitApplication(applicationId: string, user: DMRUser): Promise<void>
+
+  getApplicationById(
+    applicationId: string,
+    user: DMRUser,
+  ): Promise<ApplicationDetailedDto>
+
+  getApplicationByCaseId(
+    caseId: string,
+    user: DMRUser,
+  ): Promise<ApplicationDetailedDto>
+
+  updateApplication(
+    applicationId: string,
+    body: UpdateApplicationDto,
+    user: DMRUser,
+  ): Promise<ApplicationDetailedDto>
 }
 
 export const IApplicationService = Symbol('IApplicationService')

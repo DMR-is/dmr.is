@@ -5,7 +5,7 @@ import { useFormContext } from 'react-hook-form'
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
-import { useUpdateRecallApplication } from '../../../../../hooks/useUpdateRecallApplication'
+import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
 import { TWO_WEEKS } from '../../../../../lib/constants'
 import {
   BankruptcyFormFields,
@@ -22,7 +22,7 @@ export const RecallDivisionFields = () => {
     watch,
     formState: { isReady, dirtyFields },
   } = useFormContext<BankruptcyFormSchema>()
-  const { caseId, applicationId } = getValues('meta')
+  const { applicationId } = getValues('meta')
 
   const recallDates = watch(BankruptcyFormFields.PUBLISHING_DATES)
 
@@ -33,13 +33,12 @@ export const RecallDivisionFields = () => {
         undefined as unknown as Date,
       )
       trigger({
-        settlementMeetingDate: null,
+        divisionMeetingDate: undefined,
       })
     }
   }, [recallDates, isReady, dirtyFields])
 
-  const { trigger } = useUpdateRecallApplication({
-    caseId,
+  const { trigger } = useUpdateApplication({
     applicationId,
   })
 
@@ -61,9 +60,7 @@ export const RecallDivisionFields = () => {
           required
           name={BankruptcyFormFields.DIVISION_MEETING_LOCATION}
           label="Staðsetning skiptafundar"
-          onBlur={(location) =>
-            trigger({ settlementMeetingLocation: location })
-          }
+          onBlur={(location) => trigger({ divisionMeetingLocation: location })}
         />
       </GridColumn>
       <GridColumn span="6/12">
@@ -76,7 +73,7 @@ export const RecallDivisionFields = () => {
           maxDate={maxDate}
           excludeDates={excludeDates}
           onChange={(date) =>
-            trigger({ settlementMeetingDate: date.toISOString() })
+            trigger({ divisionMeetingDate: date.toISOString() })
           }
         />
       </GridColumn>

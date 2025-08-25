@@ -770,13 +770,13 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "schema": { "example": 1, "type": "number" }
+            "schema": { "default": 1, "example": 1, "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "schema": { "example": 10, "type": "number" }
+            "schema": { "default": 10, "example": 10, "type": "number" }
           }
         ],
         "responses": {
@@ -1375,13 +1375,13 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "schema": { "example": 1, "type": "number" }
+            "schema": { "default": 1, "example": 1, "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "schema": { "example": 10, "type": "number" }
+            "schema": { "default": 10, "example": 10, "type": "number" }
           },
           {
             "name": "categoryId",
@@ -1486,13 +1486,13 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "schema": { "example": 1, "type": "number" }
+            "schema": { "default": 1, "example": 1, "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "schema": { "example": 10, "type": "number" }
+            "schema": { "default": 10, "example": 10, "type": "number" }
           }
         ],
         "responses": {
@@ -1558,13 +1558,13 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "schema": { "example": 1, "type": "number" }
+            "schema": { "default": 1, "example": 1, "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "schema": { "example": 10, "type": "number" }
+            "schema": { "default": 10, "example": 10, "type": "number" }
           },
           {
             "name": "categoryId",
@@ -1929,7 +1929,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApplicationsDto" }
+                "schema": { "$ref": "#/components/schemas/CaseDto" }
               }
             }
           },
@@ -2046,13 +2046,13 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "schema": { "example": 1, "type": "number" }
+            "schema": { "default": 1, "example": 1, "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "schema": { "example": 10, "type": "number" }
+            "schema": { "default": 10, "example": 10, "type": "number" }
           }
         ],
         "responses": {
@@ -2061,6 +2061,218 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApplicationsDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/applications/getApplicationById/{applicationId}": {
+      "get": {
+        "operationId": "getApplicationById",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationDetailedDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/applications/getApplicationByCaseId/{caseId}": {
+      "get": {
+        "operationId": "getApplicationByCaseId",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationDetailedDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/applications/{applicationId}": {
+      "patch": {
+        "operationId": "updateApplication",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateApplicationDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationDetailedDto"
+                }
               }
             }
           },
@@ -2329,7 +2541,7 @@
       },
       "ApplicationTypeEnum": {
         "type": "string",
-        "enum": ["BANKRUPTCY", "DECEASED", "COMMON"]
+        "enum": ["COMMON", "RECALL_BANKRUPTCY", "RECALL_DECEASED"]
       },
       "CaseDto": {
         "type": "object",
@@ -2524,16 +2736,19 @@
           "id": { "type": "string" },
           "caseId": { "type": "string" },
           "nationalId": { "type": "string" },
-          "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
+          "applicationType": {
+            "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
+          },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
           "title": { "type": "string" }
         },
         "required": [
           "id",
           "caseId",
           "nationalId",
+          "applicationType",
           "status",
-          "category",
           "title"
         ]
       },
@@ -2569,6 +2784,90 @@
           "hasPreviousPage",
           "applications"
         ]
+      },
+      "CommunicationChannelDto": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "phone": { "type": "string" }
+        },
+        "required": ["email"]
+      },
+      "ApplicationDetailedDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "caseId": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "applicationType": {
+            "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
+          },
+          "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
+          "title": { "type": "string" },
+          "categoryId": { "type": "string", "nullable": true },
+          "courtDistrictId": { "type": "string", "nullable": true },
+          "islandIsApplicationId": { "type": "string", "nullable": true },
+          "caption": { "type": "string", "nullable": true },
+          "additionalText": { "type": "string", "nullable": true },
+          "judgmentDate": { "type": "string", "nullable": true },
+          "html": { "type": "string", "nullable": true },
+          "signatureName": { "type": "string", "nullable": true },
+          "signatureOnBehalfOf": { "type": "string", "nullable": true },
+          "signatureLocation": { "type": "string", "nullable": true },
+          "signatureDate": { "type": "string", "nullable": true },
+          "settlementName": { "type": "string", "nullable": true },
+          "settlementNationalId": { "type": "string", "nullable": true },
+          "settlementAddress": { "type": "string", "nullable": true },
+          "settlementDeadlineDate": { "type": "string", "nullable": true },
+          "settlementDateOfDeath": { "type": "string", "nullable": true },
+          "divisionMeetingDate": { "type": "string", "nullable": true },
+          "divisionMeetingLocation": { "type": "string", "nullable": true },
+          "publishingDates": { "type": "array", "items": { "type": "string" } },
+          "communicationChannels": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
+          }
+        },
+        "required": [
+          "id",
+          "caseId",
+          "nationalId",
+          "applicationType",
+          "status",
+          "title",
+          "publishingDates",
+          "communicationChannels"
+        ]
+      },
+      "UpdateApplicationDto": {
+        "type": "object",
+        "properties": {
+          "categoryId": { "type": "string", "nullable": true },
+          "courtDistrictId": { "type": "string", "nullable": true },
+          "islandIsApplicationId": { "type": "string", "nullable": true },
+          "caption": { "type": "string", "nullable": true },
+          "additionalText": { "type": "string", "nullable": true },
+          "judgmentDate": { "type": "string", "nullable": true },
+          "html": { "type": "string", "nullable": true },
+          "signatureName": { "type": "string", "nullable": true },
+          "signatureOnBehalfOf": { "type": "string", "nullable": true },
+          "signatureLocation": { "type": "string", "nullable": true },
+          "signatureDate": { "type": "string", "nullable": true },
+          "settlementName": { "type": "string", "nullable": true },
+          "settlementNationalId": { "type": "string", "nullable": true },
+          "settlementAddress": { "type": "string", "nullable": true },
+          "settlementDeadlineDate": { "type": "string", "nullable": true },
+          "settlementDateOfDeath": { "type": "string", "nullable": true },
+          "divisionMeetingDate": { "type": "string", "nullable": true },
+          "divisionMeetingLocation": { "type": "string", "nullable": true },
+          "publishingDates": { "type": "array", "items": { "type": "string" } },
+          "communicationChannels": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
+          }
+        }
       }
     }
   }

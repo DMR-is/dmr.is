@@ -48,6 +48,13 @@ type CaseCreateAttributes = {
 @BaseTable({ tableName: LegalGazetteModels.CASE })
 @DefaultScope(() => ({
   attributes: ['id', 'caseNumber', 'createdAt', 'updatedAt', 'deletedAt'],
+  include: [
+    {
+      model: ApplicationModel,
+      attributes: ['id', 'applicationType', 'status'],
+    },
+  ],
+  limit: 1,
   order: [['createdAt', 'DESC']],
 }))
 export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
@@ -143,6 +150,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
       createdAt: model.createdAt.toISOString(),
       updatedAt: model.updatedAt.toISOString(),
       deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+      applicationType: model.application?.applicationType ?? undefined,
     }
   }
 

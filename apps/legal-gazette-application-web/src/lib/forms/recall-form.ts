@@ -1,7 +1,6 @@
 import addDays from 'date-fns/addDays'
 import { UseFormProps } from 'react-hook-form'
 
-import { RecallApplicationDto } from '../../gen/fetch'
 import {
   BankruptcyFormSchema,
   bankruptcyFormSchema,
@@ -13,14 +12,21 @@ type Params = {
   caseId: string
   applicationId: string
   courtOptions: { label: string; value: string }[]
-  application: RecallApplicationDto
+  fields: {
+    advert: Partial<BankruptcyFormSchema['advert']>
+    settlement: Partial<BankruptcyFormSchema['settlement']>
+    liquidator: Partial<BankruptcyFormSchema['liquidator']>
+    publishing: Partial<BankruptcyFormSchema['publishing']>
+    divisionMeeting: Partial<BankruptcyFormSchema['divisionMeeting']>
+    signature: Partial<BankruptcyFormSchema['signature']>
+  }
 }
 
 export const recallForm = ({
   caseId,
   applicationId,
   courtOptions,
-  application,
+  fields,
 }: Params): UseFormProps<BankruptcyFormSchema> => ({
   mode: 'onChange',
   resolver: zodResolver(bankruptcyFormSchema),
@@ -30,43 +36,6 @@ export const recallForm = ({
       applicationId,
       courtOptions,
     },
-    advert: {
-      courtId: application.courtDistrict?.id,
-      additionalText: application.additionalText,
-      judgementDate: application.judgmentDate
-        ? new Date(application.judgmentDate)
-        : undefined,
-    },
-    divisionMeeting: {
-      date: application.settlementMeetingDate
-        ? new Date(application.settlementMeetingDate)
-        : undefined,
-      location: application.settlementMeetingLocation,
-    },
-    liquidator: {
-      name: application.liquidator,
-      location: application.liquidatorLocation,
-      onBehalfOf: application.liquidatorOnBehalfOf,
-    },
-    settlement: {
-      name: application.settlementName,
-      nationalId: application.settlementNationalId,
-      address: application.settlementAddress,
-      deadline: application.settlementDeadline
-        ? new Date(application.settlementDeadline)
-        : undefined,
-      dateOfDeath: application.settlementDateOfDeath
-        ? new Date(application.settlementDateOfDeath)
-        : undefined,
-    },
-    signature: {
-      date: application.signatureDate
-        ? new Date(application.signatureDate)
-        : undefined,
-      location: application.signatureLocation,
-    },
-    publishing: application.publishingDates
-      ? application.publishingDates.map((date) => new Date(date))
-      : [addDays(new Date(), 14)],
+    ...fields,
   },
 })

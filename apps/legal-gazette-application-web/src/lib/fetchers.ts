@@ -1,14 +1,10 @@
 import { getSession } from 'next-auth/react'
 
 import {
-  CreateDivisionEndingForApplicationRequest,
-  CreateDivisionMeetingForApplicationRequest,
-  CreateRecallAdvertForApplicationRequest,
-  CreateRecallCaseAndApplicationRequest,
-  SubmitCommonApplicationRequest,
-  SubmitRecallApplicationRequest,
-  UpdateCommonApplicationRequest,
-  UpdateRecallApplicationRequest,
+  CreateApplicationRequest,
+  GetMyApplicationsRequest,
+  SubmitApplicationRequest,
+  UpdateApplicationRequest,
 } from '../gen/fetch'
 import { getClient } from './createClient'
 import { safeCall } from './serverUtils'
@@ -19,66 +15,10 @@ const getClientWithSession = async () => {
   return getClient(session?.idToken as string)
 }
 
-export async function createRecallAdvertForApplication(
-  args: CreateRecallAdvertForApplicationRequest,
-) {
+export async function updateApplication(args: UpdateApplicationRequest) {
   const client = await getClientWithSession()
 
-  const results = await safeCall(() =>
-    client.createRecallAdvertForApplication(args),
-  )
-
-  if (results.error) {
-    throw new Error(
-      'Ekki tókst að búa til auglýsingu. Vinsamlegast reyndu aftur síðar.',
-    )
-  }
-
-  return results.data
-}
-
-export async function createDivisionEndingForApplication(
-  args: CreateDivisionEndingForApplicationRequest,
-) {
-  const client = await getClientWithSession()
-
-  const results = await safeCall(() =>
-    client.createDivisionEndingForApplication(args),
-  )
-
-  if (results.error) {
-    throw new Error(
-      'Ekki tókst að búa til skiptalok. Vinsamlegast reyndu aftur síðar.',
-    )
-  }
-
-  return results.data
-}
-
-export async function createDivisionMeetingForApplication(
-  args: CreateDivisionMeetingForApplicationRequest,
-) {
-  const client = await getClientWithSession()
-
-  const results = await safeCall(() =>
-    client.createDivisionMeetingForApplication(args),
-  )
-
-  if (results.error) {
-    throw new Error(
-      'Ekki tókst að búa til skiptafund. Vinsamlegast reyndu aftur síðar.',
-    )
-  }
-
-  return results.data
-}
-
-export async function updateRecallApplication(
-  args: UpdateRecallApplicationRequest,
-) {
-  const client = await getClientWithSession()
-
-  const results = await safeCall(() => client.updateRecallApplication(args))
+  const results = await safeCall(() => client.updateApplication(args))
 
   if (results.error) {
     throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
@@ -87,12 +27,10 @@ export async function updateRecallApplication(
   return results.data
 }
 
-export async function updateCommonApplication(
-  args: UpdateCommonApplicationRequest,
-) {
+export const submitApplication = async (args: SubmitApplicationRequest) => {
   const client = await getClientWithSession()
 
-  const results = await safeCall(() => client.updateCommonApplication(args))
+  const results = await safeCall(() => client.submitApplication(args))
 
   if (results.error) {
     throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
@@ -101,12 +39,10 @@ export async function updateCommonApplication(
   return results.data
 }
 
-export async function submitCommonApplication(
-  args: SubmitCommonApplicationRequest,
-) {
+export async function getMyApplications(args: GetMyApplicationsRequest) {
   const client = await getClientWithSession()
 
-  const results = await safeCall(() => client.submitCommonApplication(args))
+  const results = await safeCall(() => client.getMyApplications(args))
 
   if (results.error) {
     throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
@@ -115,82 +51,10 @@ export async function submitCommonApplication(
   return results.data
 }
 
-export async function submitRecallApplication(
-  args: SubmitRecallApplicationRequest,
-) {
+export async function createApplication(args: CreateApplicationRequest) {
   const client = await getClientWithSession()
 
-  const results = await safeCall(() => client.submitRecallApplication(args))
-
-  if (results.error) {
-    throw new Error(
-      'Ekki tókst að senda inn umsókn. Vinsamlegast reyndu aftur síðar.',
-    )
-  }
-
-  return results.data
-}
-
-export async function deleteApplication(applicationId: string) {
-  const client = await getClientWithSession()
-
-  const results = await safeCall(() =>
-    client.deleteRecallApplication({ applicationId: applicationId }),
-  )
-
-  if (results.error) {
-    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
-  }
-
-  return results.data
-}
-
-export async function getMyApplications() {
-  const client = await getClientWithSession()
-
-  const results = await safeCall(() => client.getMyApplications())
-
-  if (results.error) {
-    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
-  }
-
-  return results.data
-}
-
-export async function createRecallCaseAndApplication(
-  args: CreateRecallCaseAndApplicationRequest,
-) {
-  const client = await getClientWithSession()
-
-  const results = await safeCall(() =>
-    client.createRecallCaseAndApplication(args),
-  )
-
-  if (results.error) {
-    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
-  }
-
-  return results.data
-}
-
-export async function createCommonCaseAndApplication() {
-  const client = await getClientWithSession()
-
-  const results = await safeCall(() => client.createCommonCaseAndApplication())
-
-  if (results.error) {
-    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
-  }
-
-  return results.data
-}
-
-export async function getRecallApplicationByCaseId(caseId: string) {
-  const client = await getClientWithSession()
-
-  const results = await safeCall(() =>
-    client.getRecallApplicationByCaseId({ caseId }),
-  )
+  const results = await safeCall(() => client.createApplication(args))
 
   if (results.error) {
     throw new Error(results.error.details?.[0] ?? 'Villa kom upp')

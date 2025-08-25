@@ -4,8 +4,14 @@ import { ApplicationList } from '../../components/client-components/application/
 import { UmsoknirHero } from '../../components/client-components/hero/UmsoknirHero'
 import { authOptions } from '../../lib/authOptions'
 import { getClient } from '../../lib/createClient'
+import { loadPagingSearchParams } from '../../lib/nuqs/search-params'
 
-export default async function UmsoknirPage() {
+export default async function UmsoknirPage({
+  searchParams,
+}: {
+  searchParams: { page?: string; pageSize?: string }
+}) {
+  const { page, pageSize } = loadPagingSearchParams(searchParams)
   const session = await getServerSession(authOptions)
 
   if (!session || !session.idToken) {
@@ -14,7 +20,7 @@ export default async function UmsoknirPage() {
 
   const client = getClient(session.idToken)
 
-  const data = await client.getMyApplications()
+  const data = await client.getMyApplications({ page, pageSize })
 
   return (
     <>

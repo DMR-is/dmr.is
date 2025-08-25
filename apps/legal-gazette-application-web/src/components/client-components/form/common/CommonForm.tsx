@@ -3,12 +3,10 @@
 import { useRouter } from 'next/navigation'
 
 import { FormProvider, useForm } from 'react-hook-form'
-import useSWRMutation from 'swr/mutation'
 
 import { Stack, Text, toast } from '@island.is/island-ui/core'
 
-import { CommonApplicationDto } from '../../../../gen/fetch'
-import { submitCommonApplication } from '../../../../lib/fetchers'
+import { useSubmitApplication } from '../../../../hooks/useSubmitApplication'
 import { commonForm } from '../../../../lib/forms/common-form'
 import { CommonFormSchema } from '../../../../lib/forms/schemas/common-schema'
 import { ApplicationShell } from '../../application/ApplicationShell'
@@ -20,14 +18,14 @@ type Props = {
   applicationId: string
   caseId: string
   categories: { label: string; value: string }[]
-  application: CommonApplicationDto
+  fields: Partial<CommonFormSchema['fields']>
 }
 
 export const CommonForm = ({
   applicationId,
   caseId,
   categories,
-  application,
+  fields,
 }: Props) => {
   const router = useRouter()
   const methods = useForm<CommonFormSchema>(
@@ -35,35 +33,16 @@ export const CommonForm = ({
       applicationId: applicationId,
       caseId: caseId,
       categoryOptions: categories,
-      application: application,
+      fields: fields,
     }),
   )
 
-  const { trigger } = useSWRMutation(
-    'submitCommonApplication',
-    () =>
-      submitCommonApplication({
-        applicationId: applicationId,
-        caseId: caseId,
-      }),
-    {
-      onSuccess: () => {
-        toast.success('Umsókn hefur verið send', {
-          toastId: 'submit-common-application-success',
-        })
-
-        router.refresh()
-      },
-      onError: (_error) => {
-        toast.error('Villa kom upp við að senda umsókn', {
-          toastId: 'submit-common-application-error',
-        })
-      },
-    },
-  )
+  const { trigger } = useSubmitApplication({
+    onSuccess: () => router.refresh(),
+  })
 
   const onValidSubmit = (_data: CommonFormSchema) => {
-    trigger()
+    trigger({ applicationId: applicationId })
   }
 
   const onInvalidSubmit = (_errors: unknown) => {

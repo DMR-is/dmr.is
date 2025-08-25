@@ -12,7 +12,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { useUpdateRecallApplication } from '../../../../../hooks/useUpdateRecallApplication'
+import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
 import { ONE_DAY, TWO_WEEKS } from '../../../../../lib/constants'
 import {
   BankruptcyFormFields,
@@ -23,8 +23,8 @@ import { DatePickerController } from '../../controllers/DatePickerController'
 
 export const RecallPublishingFields = () => {
   const { getValues, setValue } = useFormContext<BankruptcyFormSchema>()
-  const { caseId, applicationId } = getValues('meta')
-  const { trigger } = useUpdateRecallApplication({ applicationId, caseId })
+  const { applicationId } = getValues('meta')
+  const { trigger } = useUpdateApplication({ applicationId })
 
   const currentDates = getValues('publishing')
   const divisionMeetingDate = getValues('divisionMeeting.date')

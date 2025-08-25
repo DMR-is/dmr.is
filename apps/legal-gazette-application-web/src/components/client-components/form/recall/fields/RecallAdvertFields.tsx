@@ -4,7 +4,7 @@ import { useFormContext } from 'react-hook-form'
 
 import { GridColumn, GridRow, Stack, Text } from '@island.is/island-ui/core'
 
-import { useUpdateRecallApplication } from '../../../../../hooks/useUpdateRecallApplication'
+import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
 import {
   BankruptcyFormFields,
   BankruptcyFormSchema,
@@ -16,10 +16,9 @@ import { SelectController } from '../../controllers/SelectController'
 export const RecallAdvertFields = () => {
   const { getValues } = useFormContext<BankruptcyFormSchema>()
 
-  const { caseId, applicationId, courtOptions } = getValues('meta')
+  const { applicationId, courtOptions } = getValues('meta')
 
-  const { trigger } = useUpdateRecallApplication({
-    caseId: caseId,
+  const { trigger } = useUpdateApplication({
     applicationId: applicationId,
   })
 

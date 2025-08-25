@@ -12,7 +12,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { useUpdateCommonApplication } from '../../../../../hooks/useUpdateCommonApplication'
+import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
 import { ONE_DAY, TWO_WEEKS } from '../../../../../lib/constants'
 import {
   CommonFormFields,
@@ -24,8 +24,8 @@ import { DatePickerController } from '../../controllers/DatePickerController'
 
 export const CommonPublishingFields = () => {
   const { getValues, setValue } = useFormContext<CommonFormSchema>()
-  const { caseId, applicationId } = getValues('meta')
-  const { trigger } = useUpdateCommonApplication({ applicationId, caseId })
+  const { applicationId } = getValues('meta')
+  const { trigger } = useUpdateApplication({ applicationId })
 
   const currentDates = getValues('fields.publishingDates')
 

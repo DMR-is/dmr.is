@@ -5,12 +5,6 @@ export enum RecallTypeEnum {
   DECEASED = 'DECEASED',
 }
 
-export enum ApplicationTypeEnum {
-  BANKRUPTCY = RecallTypeEnum.BANKRUPTCY,
-  DECEASED = RecallTypeEnum.DECEASED,
-  COMMON = 'COMMON',
-}
-
 export enum LegalGazetteModels {
   USER_ROLES = 'legal_gazette_user_roles',
   USERS = 'legal_gazette_users',

@@ -2,7 +2,7 @@ import { useFormContext } from 'react-hook-form'
 
 import { GridColumn, GridRow, Stack, Text } from '@island.is/island-ui/core'
 
-import { useUpdateCommonApplication } from '../../../../../hooks/useUpdateCommonApplication'
+import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
 import {
   CommonFormFields,
   CommonFormSchema,
@@ -12,9 +12,8 @@ import { InputController } from '../../controllers/InputController'
 
 export const CommonSignatureFields = () => {
   const { getValues } = useFormContext<CommonFormSchema>()
-  const { trigger } = useUpdateCommonApplication({
+  const { trigger } = useUpdateApplication({
     applicationId: getValues('meta.applicationId'),
-    caseId: getValues('meta.caseId'),
   })
 
   return (
