@@ -45,10 +45,10 @@ export const ApplicationCard = ({ application }: Props) => {
 
   const url =
     application.applicationType === ApplicationTypeEnum.COMMON
-      ? `${PageRoutes.APPLICATION_COMMON}/${application.id}`
+      ? `${PageRoutes.APPLICATION_COMMON}/${application.caseId}`
       : application.applicationType === ApplicationTypeEnum.RECALLBANKRUPTCY
-        ? `${PageRoutes.APPLICATION_THROTABU}/${application.id}`
-        : `${PageRoutes.APPLICATION_DANARBU}/${application.id}`
+        ? `${PageRoutes.APPLICATION_THROTABU}/${application.caseId}`
+        : `${PageRoutes.APPLICATION_DANARBU}/${application.caseId}`
 
   const statusText =
     application.status === ApplicationDtoStatusEnum.DRAFT

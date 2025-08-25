@@ -10,6 +10,7 @@ import { useSubmitApplication } from '../../../../hooks/useSubmitApplication'
 import { commonForm } from '../../../../lib/forms/common-form'
 import { CommonFormSchema } from '../../../../lib/forms/schemas/common-schema'
 import { ApplicationShell } from '../../application/ApplicationShell'
+import { CommunicationChannelFields } from '../fields/CommunicationChannelFields'
 import { CommonAdvertFields } from './fields/CommonAdvertFields'
 import { CommonPublishingFields } from './fields/CommonPublishingFields'
 import { CommonSignatureFields } from './fields/CommonSignatureFields'
@@ -68,6 +69,7 @@ export const CommonForm = ({
             <CommonAdvertFields />
             <CommonSignatureFields />
             <CommonPublishingFields />
+            <CommunicationChannelFields />
           </Stack>
         </ApplicationShell>
       </form>

@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { communicationChannelSchema, publishingDateSchema } from './shared'
+
 export const commonFormMetaSchema = z.object({
   caseId: z.string(),
   applicationId: z.string(),
@@ -21,10 +23,16 @@ export const commonFormFieldsSchema = z.object({
     .min(1, 'Staðsetning undirskriftar er nauðsynleg'),
   signatureDate: z.date('Dagsetning undirskriftar er nauðsynleg'),
   publishingDates: z
-    .array(z.date('Dagsetning fyrir birtingu er nauðsynleg'))
+    .array(publishingDateSchema)
     .refine(
       (dates) => dates.length > 0,
       'Að minnsta kosti ein dagsetning fyrir birtingu er nauðsynleg',
+    ),
+  communicationChannels: z
+    .array(communicationChannelSchema)
+    .refine(
+      (val) => val.length > 0,
+      'Að minnsta kosti ein samskiptaleið er nauðsynleg',
     ),
 })
 
