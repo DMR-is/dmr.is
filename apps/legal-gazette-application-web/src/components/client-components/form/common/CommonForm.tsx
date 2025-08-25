@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 
 import { FormProvider, useForm } from 'react-hook-form'
 
-import { Stack, Text, toast } from '@island.is/island-ui/core'
+import { SkeletonLoader, Stack, Text, toast } from '@island.is/island-ui/core'
 
 import { useSubmitApplication } from '../../../../hooks/useSubmitApplication'
 import { commonForm } from '../../../../lib/forms/common-form'
@@ -66,10 +66,21 @@ export const CommonForm = ({
                 nisi ut aliquip ex ea commodo consequat.
               </Text>
             </Stack>
-            <CommonAdvertFields />
-            <CommonSignatureFields />
-            <PublishingFields />
-            <CommunicationChannelFields />
+            {methods.formState.isReady === false ? (
+              <SkeletonLoader
+                space={[2, 3]}
+                repeat={3}
+                height={66}
+                borderRadius="large"
+              />
+            ) : (
+              <>
+                <CommonAdvertFields />
+                <CommonSignatureFields />
+                <PublishingFields />
+                <CommunicationChannelFields />
+              </>
+            )}
           </Stack>
         </ApplicationShell>
       </form>
