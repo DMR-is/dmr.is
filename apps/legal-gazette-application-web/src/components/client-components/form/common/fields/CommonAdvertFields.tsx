@@ -47,7 +47,10 @@ export const CommonAdvertFields = () => {
             Meginmál
           </Text>
           <Editor
-            defaultValue={getValues('fields.html')}
+            defaultValue={Buffer.from(
+              getValues('fields.html'),
+              'base64',
+            ).toString('utf-8')}
             onBlur={(val) => {
               setValue('fields.html', val)
               trigger({ html: Buffer.from(val).toString('base64') })
