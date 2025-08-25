@@ -554,7 +554,7 @@ export const pdfCss = `
     page-break-before: avoid;
   }
 
-  .regulgation__signature p, .regulation__signature span {
+  .regulation__signature p, .regulation__signature span {
     text-indent: 0em !important; /* Avoid puppeteer indent manipulation */
   }
 
