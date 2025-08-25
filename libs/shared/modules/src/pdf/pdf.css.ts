@@ -529,8 +529,10 @@ export const pdfCss = `
     padding-left: 1em;
   }
   .regulation__text > ul > li,
+
   .regulation__text > ol > li {
     text-align: justify;
+    margin-bottom: 1em;
   }
 
   /* ======================================================================= */
