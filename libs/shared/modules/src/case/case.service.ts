@@ -288,11 +288,13 @@ export class CaseService implements ICaseService {
     return this.updateService.updateFasttrack(caseId, body)
   }
 
-  async getCasesSqlQuery(params: GetCasesQuery) {
+  private async getCasesSqlQuery(params: GetCasesQuery) {
     const whereParams = caseParameters(params)
     const sortKeys: { [key: string]: OrderItem } = {
       caseRequestPublishDate: ['requestedPublicationDate', params.direction],
-      casePublishDate: ['publishedAt', params.direction],
+      casePublishDate: Sequelize.literal(
+        `"publishedAt" ${params.direction} NULLS LAST`,
+      ),
       caseRegistrationDate: ['createdAt', params.direction],
       caseStatus: ['statusId', params.direction],
     }

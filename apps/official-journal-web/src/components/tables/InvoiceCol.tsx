@@ -62,10 +62,12 @@ export const CaseTableOverviewInvoiceCol = ({
           {externalReference || 'Finnst ekki'}
         </span>
       </Text>
-      <PaymentStatus
-        isSent={!!paymentData?.created}
-        isPaid={!!paymentData?.paid}
-      />
+      {paymentData && (
+        <PaymentStatus
+          isSent={!!paymentData?.created}
+          isPaid={!!paymentData?.paid}
+        />
+      )}
     </Box>
   )
 }
