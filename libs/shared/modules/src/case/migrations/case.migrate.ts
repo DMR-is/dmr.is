@@ -39,4 +39,5 @@ export const caseMigrate = (model: CaseModel): Case => ({
   fastTrack: model.fastTrack,
   assignedTo: model.assignedUser ? userMigrate(model.assignedUser) : null,
   tag: model?.tag ? model.tag : null,
+  caseNumber: model.caseNumber,
 })
