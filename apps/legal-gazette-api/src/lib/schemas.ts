@@ -13,7 +13,7 @@ export const communicationChannelSchema = z.object({
 })
 
 export const createCommonAdvertFromApplicationSchema = z.object({
-  caseId: z.string(),
+  caseId: z.uuid(),
   category: baseEntitySchema,
   caption: z.string(),
   additionalText: z.string().nullable().optional(),

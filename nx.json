@@ -26,6 +26,9 @@
       }
     }
   },
+  "tui": {
+    "enabled": false
+  },
   "defaultProject": "official-journal-web",
   "generators": {
     "@nrwl/nx-plugin": {

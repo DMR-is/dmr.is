@@ -66,6 +66,7 @@ export type AdvertCreateAttributes = {
   typeId: string
   categoryId: string
   statusId?: string
+  title: string
 
   version?: AdvertVersionEnum
   publishedAt?: Date | null // only if coming from an external system (ex. Skatturinn) and should be automatically set

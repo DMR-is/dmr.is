@@ -31,6 +31,7 @@ import {
 import { IslandIsSubmitCommonApplicationDto } from './dto/island-is-application.dto'
 import { ApplicationModel, ApplicationTypeEnum } from './application.model'
 import { IApplicationService } from './application.service.interface'
+import { ApplicationStatusEnum } from './contants'
 
 @Injectable()
 export class ApplicationService implements IApplicationService {
@@ -121,21 +122,42 @@ export class ApplicationService implements IApplicationService {
     return application.fromModelToDetailedDto()
   }
 
-  private async submitCommonApplication(applicationId: string, user: DMRUser) {
-    const application = await this.applicationModel.scope('common').findOne({
-      where: { id: applicationId, submittedByNationalId: user.nationalId },
-      include: [{ model: CaseModel, attributes: ['id', 'caseNumber'] }],
-    })
-
-    if (!application) {
-      throw new NotFoundException()
+  private async submitCommonApplication(
+    applicationCase: CaseModel,
+    user: DMRUser,
+  ) {
+    if (!applicationCase.application) {
+      this.logger.error('Case does not have an application', {
+        caseId: applicationCase.id,
+      })
+      throw new InternalServerErrorException()
     }
 
+    const applicationId = applicationCase.application.id
+
     const parsedApplication = createCommonAdvertFromApplicationSchema.safeParse(
-      application.dataValues,
+      {
+        caseId: applicationCase.id,
+        category: applicationCase.application.category,
+        caption: applicationCase.application.caption,
+        additionalText: applicationCase.application.additionalText,
+        html: applicationCase.application.html,
+        signatureName: applicationCase.application.signatureName,
+        signatureOnBehalfOf: applicationCase.application.signatureOnBehalfOf,
+        signatureLocation: applicationCase.application.signatureLocation,
+        signatureDate: applicationCase.application.signatureDate,
+        communicationChannels:
+          applicationCase.application.communicationChannels,
+        publishingDates: applicationCase.application.publishingDates,
+      },
     )
 
     if (!parsedApplication.success) {
+      this.logger.warn('Invalid application data', {
+        caseId: applicationCase.id,
+        applicationId: applicationCase.application.id,
+        errors: parsedApplication.error,
+      })
       throw new BadRequestException('Invalid application data')
     }
 
@@ -152,11 +174,16 @@ export class ApplicationService implements IApplicationService {
         additionalText: parsedApplication.data.additionalText,
         createdBy: createdBy,
         scheduledAt: scheduledAt,
+        signatureName: parsedApplication.data.signatureName,
+        signatureOnBehalfOf: parsedApplication.data.signatureOnBehalfOf,
+        signatureLocation: parsedApplication.data.signatureLocation,
+        signatureDate: parsedApplication.data.signatureDate,
+        title: `${parsedApplication.data.category.title} - ${parsedApplication.data.caption}`,
         html: getCommonAdvertHTMLTemplate({
           caption: parsedApplication.data.caption,
           category: parsedApplication.data.category.title,
           html: parsedApplication.data.html,
-          caseNumber: application.case.caseNumber,
+          caseNumber: applicationCase.caseNumber,
           publishedAt: scheduledAt,
           signatureDate: parsedApplication.data.signatureDate,
           signatureLocation: parsedApplication.data.signatureLocation,
@@ -164,11 +191,12 @@ export class ApplicationService implements IApplicationService {
           additionalText: parsedApplication.data.additionalText,
           version: mapIndexToVersion(i),
         }),
-        signatureName: parsedApplication.data.signatureName,
-        signatureOnBehalfOf: parsedApplication.data.signatureOnBehalfOf,
-        signatureLocation: parsedApplication.data.signatureLocation,
-        signatureDate: parsedApplication.data.signatureDate,
       })),
+    )
+
+    await this.applicationModel.update(
+      { status: ApplicationStatusEnum.SUBMITTED },
+      { where: { id: applicationId } },
     )
   }
 
@@ -274,23 +302,24 @@ export class ApplicationService implements IApplicationService {
       throw new InternalServerErrorException()
     }
 
-    return this.submitCommonApplication(createdCase.application.id, user)
+    return this.submitCommonApplication(createdCase, user)
   }
   async submitApplication(applicationId: string, user: DMRUser): Promise<void> {
-    const application = await this.applicationModel.findOne({
-      where: { id: applicationId, submittedByNationalId: user.nationalId },
+    const applicationCase = await this.caseModel.unscoped().findOne({
+      attributes: ['id', 'caseNumber'],
+      include: [{ model: ApplicationModel, where: { id: applicationId } }],
     })
 
-    if (!application) {
+    if (!applicationCase || !applicationCase.application) {
       throw new NotFoundException()
     }
 
-    switch (application.applicationType) {
+    switch (applicationCase.application.applicationType) {
       case ApplicationTypeEnum.COMMON:
-        return this.submitCommonApplication(applicationId, user)
+        return this.submitCommonApplication(applicationCase, user)
       default:
         this.logger.warn(
-          `Attempted to submit application with unknown type: ${application.applicationType}`,
+          `Attempted to submit application with unknown type: ${applicationCase.application.applicationType}`,
         )
         throw new BadRequestException()
     }
