@@ -53,7 +53,7 @@ export const CaseTableOverviewInvoiceCol = ({
   externalReference,
   caseId,
 }: InvoiceColProps) => {
-  const { data: paymentData } = useGetPaymentStatus({ caseId })
+  // const { data: paymentData } = useGetPaymentStatus({ caseId })
 
   return (
     <Box display="flex" className={styles.typeTableCell}>
@@ -62,12 +62,12 @@ export const CaseTableOverviewInvoiceCol = ({
           {externalReference || 'Finnst ekki'}
         </span>
       </Text>
-      {paymentData && (
+      {/* {paymentData && (
         <PaymentStatus
           isSent={!!paymentData?.created}
           isPaid={!!paymentData?.paid}
         />
-      )}
+      )} */}
     </Box>
   )
 }
