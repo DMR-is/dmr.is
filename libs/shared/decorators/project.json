@@ -3,6 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/shared/decorators/src",
   "projectType": "library",
+  "tags": [],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
@@ -23,6 +24,5 @@
         "jestConfig": "libs/shared/decorators/jest.config.ts"
       }
     }
-  },
-  "tags": []
+  }
 }

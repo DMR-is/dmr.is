@@ -3,6 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/legal-gazette-web",
   "projectType": "application",
+  "tags": [],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
@@ -103,6 +104,5 @@
         "file": "apps/legal-gazette-web/Dockerfile"
       }
     }
-  },
-  "tags": []
+  }
 }
