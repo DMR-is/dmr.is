@@ -1,6 +1,5 @@
 import { Box, Text, Tooltip } from '@island.is/island-ui/core'
 
-import { useGetPaymentStatus } from '../../hooks/api'
 import * as styles from './CaseTable.css'
 
 type InvoiceColProps = {
