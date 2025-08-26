@@ -805,7 +805,7 @@ export class CaseService implements ICaseService {
     body: UpdateAdvertHtmlCorrection,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    const { advertHtml, ...rest } = body
+    const { advertHtml, title, ...rest } = body
 
     const activeCase = await this.caseModel.findByPk(caseId, {
       include: [
@@ -855,6 +855,23 @@ export class CaseService implements ICaseService {
         new Date(),
       ),
     )
+
+    const signatureHtml = activeCase.signature.html
+    const additionsOrAttachmentInfoHtml =
+      (activeCase.additions && activeCase.additions.length > 0) ||
+      (activeCase.attachments && activeCase.attachments.length > 0)
+        ? `<p align="center" style="margin-top: 1.5em;">VIÐAUKI<br>(sjá PDF-skjal)</p>`
+        : ''
+    const publicationHtml = getPublicationTemplate(
+      activeCase.department.title,
+      activeCase.requestedPublicationDate,
+    )
+    const publishHtml =
+      advertHtml +
+      signatureHtml +
+      additionsOrAttachmentInfoHtml +
+      publicationHtml
+
     const [updateAdvertCheck, updatePublishedCheck, postCaseCorrectionCheck] =
       await Promise.all([
         this.updateAdvertByHtml(
@@ -863,8 +880,12 @@ export class CaseService implements ICaseService {
           transaction,
         ),
         this.updatePublishedAdvertByHtml(caseId, {
-          advertHtml,
+          advertHtml: publishHtml,
           documentPdfUrl: pdfUrl,
+          title,
+          ...(activeCase?.requestedPublicationDate && {
+            publicationDate: new Date(activeCase.requestedPublicationDate),
+          }),
         }),
         this.postCaseCorrection(
           caseId,
@@ -872,6 +893,7 @@ export class CaseService implements ICaseService {
             ...rest,
             documentHtml: advertHtml,
             documentPdfUrl: pdfUrl,
+            title,
           },
           transaction,
         ),
@@ -900,6 +922,8 @@ export class CaseService implements ICaseService {
       advertResult.advertId,
       {
         documentHtml: body.advertHtml,
+        ...(body.title && { title: body.title }),
+        ...(body.publicationDate && { publicationDate: body.publicationDate }),
       },
     )
 

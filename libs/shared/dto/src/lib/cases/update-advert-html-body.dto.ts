@@ -1,10 +1,23 @@
 import { IsOptional } from 'class-validator'
 
-import { ApiProperty, IntersectionType, OmitType } from '@nestjs/swagger'
+import {
+  ApiProperty,
+  IntersectionType,
+  OmitType,
+  PickType,
+} from '@nestjs/swagger'
 
+import { UpdateAdvertBody } from '../adverts'
 import { AddCaseAdvertCorrection } from './add-case-advert-correction.dto'
 
-export class UpdateAdvertHtmlBody {
+export class UpdateAdvertHtmlBody extends PickType(UpdateAdvertBody, [
+  'title',
+  'subject',
+  'publicationDate',
+  'publicationYear',
+  'departmentId',
+  'subject',
+] as const) {
   @ApiProperty({
     type: String,
     description: 'Advert HTML',
@@ -19,6 +32,7 @@ export class UpdateAdvertHtmlBody {
   @IsOptional()
   readonly documentPdfUrl?: string
 }
+
 export class UpdateAdvertAppendixBody {
   @ApiProperty({
     type: String,

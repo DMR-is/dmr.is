@@ -1,10 +1,8 @@
 import { Box, Text, Tooltip } from '@island.is/island-ui/core'
 
-import { useGetPaymentStatus } from '../../hooks/api'
 import * as styles from './CaseTable.css'
 
 type InvoiceColProps = {
-  caseId: string
   externalReference?: string
 }
 
@@ -51,10 +49,7 @@ export const PaymentStatus = ({
 
 export const CaseTableOverviewInvoiceCol = ({
   externalReference,
-  caseId,
 }: InvoiceColProps) => {
-  const { data: paymentData } = useGetPaymentStatus({ caseId })
-
   return (
     <Box display="flex" className={styles.typeTableCell}>
       <Text truncate variant="medium">
@@ -62,12 +57,6 @@ export const CaseTableOverviewInvoiceCol = ({
           {externalReference || 'Finnst ekki'}
         </span>
       </Text>
-      {paymentData && (
-        <PaymentStatus
-          isSent={!!paymentData?.created}
-          isPaid={!!paymentData?.paid}
-        />
-      )}
     </Box>
   )
 }
