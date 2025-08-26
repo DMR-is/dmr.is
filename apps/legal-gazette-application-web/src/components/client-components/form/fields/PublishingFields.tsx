@@ -18,7 +18,11 @@ import { CommonFormFields } from '../../../../lib/forms/schemas/common-schema'
 import { getNextWeekday, getWeekendDays } from '../../../../lib/utils'
 import { DatePickerController } from '../controllers/DatePickerController'
 
-export const PublishingFields = () => {
+type Props = {
+  additionalTitle?: string
+}
+
+export const PublishingFields = ({ additionalTitle }: Props) => {
   const { getValues, watch, setValue } = useFormContext()
   const { applicationId } = getValues('meta')
   const { trigger } = useUpdateApplication({ applicationId })
@@ -63,7 +67,7 @@ export const PublishingFields = () => {
   return (
     <GridRow rowGap={[2, 3]}>
       <GridColumn span="12/12">
-        <Text variant="h3">Birting</Text>
+        <Text variant="h3">{`Birting${additionalTitle ? ` ${additionalTitle}` : ''}`}</Text>
       </GridColumn>
       <GridColumn span="12/12">
         <Stack space={[2, 3]}>

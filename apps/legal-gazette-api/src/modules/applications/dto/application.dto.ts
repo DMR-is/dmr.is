@@ -1,3 +1,5 @@
+import { IsDateString, IsString } from 'class-validator'
+
 import { ApiProperty, IntersectionType, PartialType } from '@nestjs/swagger'
 
 import { Paging } from '@dmr.is/shared/dto'
@@ -65,6 +67,15 @@ export class ApplicationFieldsDto {
   signatureDate?: string | null
 
   @ApiProperty({ type: String, required: false, nullable: true })
+  liquidatorName?: string | null
+
+  @ApiProperty({ type: String, required: false, nullable: true })
+  liquidatorLocation?: string | null
+
+  @ApiProperty({ type: String, required: false, nullable: true })
+  liquidatorOnBehalfOf?: string | null
+
+  @ApiProperty({ type: String, required: false, nullable: true })
   settlementName?: string | null
 
   @ApiProperty({ type: String, required: false, nullable: true })
@@ -102,4 +113,22 @@ export class UpdateApplicationDto extends PartialType(ApplicationFieldsDto) {}
 export class ApplicationsDto extends Paging {
   @ApiProperty({ type: [ApplicationDto] })
   applications!: ApplicationDto[]
+}
+
+export class AddDivisionMeetingForApplicationDto {
+  @ApiProperty({ type: String })
+  @IsDateString()
+  meetingDate!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  meetingLocation!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  signatureLocation!: string
+
+  @ApiProperty({ type: String })
+  @IsDateString()
+  signatureDate!: string
 }

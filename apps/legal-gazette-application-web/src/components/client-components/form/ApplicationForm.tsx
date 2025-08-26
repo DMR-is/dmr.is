@@ -39,45 +39,41 @@ export const ApplicationForm = ({
           caseId={application.id}
         />
       )
-    case (ApplicationTypeEnum.RECALLBANKRUPTCY,
-    ApplicationTypeEnum.RECALLDECEASED):
+    case ApplicationTypeEnum.RECALLBANKRUPTCY:
+    case ApplicationTypeEnum.RECALLDECEASED:
       return (
         <RecallForm
           fields={{
-            advert: {
-              courtId: application.courtDistrictId ?? undefined,
-              additionalText: application.additionalText ?? undefined,
-              judgementDate: application.judgmentDate
-                ? new Date(application.judgmentDate)
-                : undefined,
-            },
-            divisionMeeting: {
-              date: application.divisionMeetingDate
-                ? new Date(application.divisionMeetingDate)
-                : undefined,
-              location: application.divisionMeetingLocation ?? undefined,
-            },
-            liquidator: {},
-            publishing: application.publishingDates
-              ? application.publishingDates.map((d) => new Date(d))
-              : [],
-            signature: {
-              date: application.signatureDate
-                ? new Date(application.signatureDate)
-                : undefined,
-              location: application.signatureLocation ?? undefined,
-            },
-            settlement: {
-              address: application.settlementAddress ?? undefined,
-              name: application.settlementName ?? undefined,
-              nationalId: application.settlementNationalId ?? undefined,
-              dateOfDeath: application.settlementDateOfDeath
-                ? new Date(application.settlementDateOfDeath)
-                : undefined,
-              deadline: application.settlementDeadlineDate
-                ? new Date(application.settlementDeadlineDate)
-                : undefined,
-            },
+            recallType:
+              application.applicationType ===
+              ApplicationTypeEnum.RECALLBANKRUPTCY
+                ? 'bankruptcy'
+                : 'deceased',
+            additionalText: application.additionalText ?? undefined,
+            communicationChannels: application.communicationChannels,
+            courtId: application.courtDistrictId ?? undefined,
+            judgementDate: application.judgmentDate
+              ? new Date(application.judgmentDate)
+              : undefined,
+            settlementName: application.settlementName ?? undefined,
+            settlementNationalId: application.settlementNationalId ?? undefined,
+            settlementAddress: application.settlementAddress ?? undefined,
+            settlementDateOfDeath: application.settlementDateOfDeath
+              ? new Date(application.settlementDateOfDeath)
+              : undefined,
+            settlementDeadline: application.settlementDeadlineDate
+              ? new Date(application.settlementDeadlineDate)
+              : undefined,
+            liquidatorName: application.liquidatorName ?? undefined,
+            liquidatorLocation: application.liquidatorLocation ?? undefined,
+            liquidatorOnBehalfOf: application.liquidatorOnBehalfOf ?? undefined,
+            publishingDates: application.publishingDates.map(
+              (d) => new Date(d),
+            ),
+            signatureDate: application.signatureDate
+              ? new Date(application.signatureDate)
+              : undefined,
+            signatureLocation: application.signatureLocation ?? undefined,
           }}
           applicationId={application.id}
           caseId={application.id}

@@ -290,6 +290,27 @@ export class ApplicationModel extends BaseModel<
   settlementDateOfDeath!: Date | null
 
   @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    defaultValue: null,
+  })
+  liquidatorName!: string | null
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    defaultValue: null,
+  })
+  liquidatorLocation!: string | null
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    defaultValue: null,
+  })
+  liquidatorOnBehalfOf!: string | null
+
+  @Column({
     type: DataType.DATE,
     allowNull: true,
     defaultValue: null,
@@ -394,6 +415,9 @@ export class ApplicationModel extends BaseModel<
       settlementDateOfDeath: model.settlementDateOfDeath
         ? model.settlementDateOfDeath.toISOString()
         : null,
+      liquidatorName: model.liquidatorName,
+      liquidatorLocation: model.liquidatorLocation,
+      liquidatorOnBehalfOf: model.liquidatorOnBehalfOf,
       divisionMeetingDate: model.divisionMeetingDate
         ? model.divisionMeetingDate.toISOString()
         : null,

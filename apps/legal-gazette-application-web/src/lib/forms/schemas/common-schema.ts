@@ -1,16 +1,15 @@
 import { z } from 'zod'
 
-import { communicationChannelSchema, publishingDateSchema } from './shared'
+import {
+  communicationChannelSchema,
+  optionSchema,
+  publishingDateSchema,
+} from './shared'
 
 export const commonFormMetaSchema = z.object({
   caseId: z.string(),
   applicationId: z.string(),
-  categoryOptions: z.array(
-    z.object({
-      label: z.string(),
-      value: z.string(),
-    }),
-  ),
+  categoryOptions: z.array(optionSchema),
 })
 
 export const commonFormFieldsSchema = z.object({

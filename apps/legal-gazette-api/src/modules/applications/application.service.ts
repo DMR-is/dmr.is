@@ -1,3 +1,5 @@
+import addDays from 'date-fns/addDays'
+
 import {
   BadRequestException,
   Inject,
@@ -10,20 +12,29 @@ import { InjectModel } from '@nestjs/sequelize'
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared/dto'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
+import {
+  generatePaging,
+  getLimitAndOffset,
+  getNextWeekDay,
+} from '@dmr.is/utils'
 
 import {
   createCommonAdvertFromApplicationSchema,
   createCommonAdvertFromIslandIsApplicationSchema,
 } from '../../lib/schemas'
-import { getCommonAdvertHTMLTemplate } from '../../lib/templates'
+import {
+  getCommonAdvertHTMLTemplate,
+  getDivisionMeetingAdvertHTMLTemplate,
+} from '../../lib/templates'
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertModel } from '../advert/advert.model'
 import { CaseModel } from '../case/case.model'
 import { CaseDto } from '../case/dto/case.dto'
 import { CategoryDefaultIdEnum } from '../category/category.model'
+import { SettlementModel } from '../settlement/settlement.model'
 import { TypeIdEnum } from '../type/type.model'
 import {
+  AddDivisionMeetingForApplicationDto,
   ApplicationDetailedDto,
   ApplicationsDto,
   UpdateApplicationDto,
@@ -42,6 +53,136 @@ export class ApplicationService implements IApplicationService {
     @InjectModel(ApplicationModel)
     private readonly applicationModel: typeof ApplicationModel,
   ) {}
+  async addDivisionMeetingAdvertToApplication(
+    applicationId: string,
+    body: AddDivisionMeetingForApplicationDto,
+    user: DMRUser,
+  ): Promise<void> {
+    const application = await this.applicationModel.findOne({
+      where: { id: applicationId, submittedByNationalId: user.nationalId },
+    })
+
+    if (!application) {
+      throw new NotFoundException()
+    }
+
+    if (application.status !== ApplicationStatusEnum.SUBMITTED) {
+      throw new BadRequestException(
+        'Only submitted applications can have adverts added to them',
+      )
+    }
+
+    if (
+      application.applicationType !== ApplicationTypeEnum.RECALL_BANKRUPTCY &&
+      application.applicationType !== ApplicationTypeEnum.RECALL_DECEASED
+    ) {
+      throw new BadRequestException(
+        'Only recall applications can have division meeting adverts added to them',
+      )
+    }
+
+    const currentRecallAdverts = await this.advertModel.unscoped().findAll({
+      where: {
+        caseId: application.caseId,
+        typeId: TypeIdEnum.RECALL,
+      },
+      include: [{ model: SettlementModel, as: 'settlement' }],
+    })
+
+    if (currentRecallAdverts.length === 0) {
+      throw new BadRequestException(
+        'A recall advert must be added to the application before a division meeting advert can be added',
+      )
+    }
+
+    const currentDivisionMeetingAdverts = await this.advertModel
+      .unscoped()
+      .findAll({
+        where: {
+          caseId: application.caseId,
+          typeId: TypeIdEnum.DIVISION_MEETING,
+        },
+      })
+
+    if (currentDivisionMeetingAdverts.length === 0) {
+      const latestRecallAdvert =
+        currentRecallAdverts[currentRecallAdverts.length - 1]
+
+      const categoryId =
+        application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
+          ? CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING
+          : CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING
+
+      await this.advertModel.create({
+        caseId: application.caseId,
+        categoryId: categoryId,
+        createdBy: user.fullName,
+        scheduledAt: new Date(body.meetingDate),
+        signatureName: latestRecallAdvert.signatureName,
+        signatureOnBehalfOf: latestRecallAdvert.signatureOnBehalfOf,
+        signatureDate: new Date(body.signatureDate),
+        signatureLocation: body.signatureLocation,
+        typeId: TypeIdEnum.DIVISION_MEETING,
+        title: `Skiptafundur - ${application.settlementName}`,
+        settlementId: latestRecallAdvert.settlementId,
+      })
+    }
+
+    if (currentDivisionMeetingAdverts.length >= 3) {
+      throw new BadRequestException(
+        'A maximum of 3 division meeting adverts can be added to an application',
+      )
+    }
+
+    // find the advert with the youngest scheduledAt date
+    const lastAdvert = currentDivisionMeetingAdverts.reduce(
+      (prev, current) =>
+        prev.scheduledAt > current.scheduledAt ? prev : current,
+      currentDivisionMeetingAdverts[0],
+    )
+
+    const meetingDate = new Date(body.meetingDate)
+    if (meetingDate < lastAdvert.scheduledAt) {
+      throw new BadRequestException(
+        'New division meeting advert must be scheduled after the last one',
+      )
+    }
+
+    const newMeetingAdvert = await this.advertModel.create({
+      caseId: application.caseId,
+      categoryId:
+        application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
+          ? CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING
+          : CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING,
+      createdBy: user.fullName,
+      scheduledAt: meetingDate,
+      signatureName: lastAdvert.signatureName,
+      signatureDate: new Date(body.signatureDate),
+      signatureLocation: body.signatureLocation,
+      signatureOnBehalfOf: lastAdvert.signatureOnBehalfOf,
+      typeId: TypeIdEnum.DIVISION_MEETING,
+      title: `Skiptafundur - ${application.settlementName}`,
+      settlementId: lastAdvert.settlementId,
+    })
+  }
+  addDivisionEndingAdvertToApplication(
+    applicationId: string,
+    user: DMRUser,
+  ): Promise<void> {
+    throw new Error('Method not implemented.')
+  }
+  addRecallAdvertToApplication(
+    applicationId: string,
+    user: DMRUser,
+  ): Promise<void> {
+    throw new Error('Method not implemented.')
+  }
+  addCommonAdvertToApplication(
+    applicationId: string,
+    user: DMRUser,
+  ): Promise<void> {
+    throw new Error('Method not implemented.')
+  }
   async updateApplication(
     applicationId: string,
     body: UpdateApplicationDto,
@@ -179,18 +320,6 @@ export class ApplicationService implements IApplicationService {
         signatureLocation: parsedApplication.data.signatureLocation,
         signatureDate: parsedApplication.data.signatureDate,
         title: `${parsedApplication.data.category.title} - ${parsedApplication.data.caption}`,
-        html: getCommonAdvertHTMLTemplate({
-          caption: parsedApplication.data.caption,
-          category: parsedApplication.data.category.title,
-          html: parsedApplication.data.html,
-          caseNumber: applicationCase.caseNumber,
-          publishedAt: scheduledAt,
-          signatureDate: parsedApplication.data.signatureDate,
-          signatureLocation: parsedApplication.data.signatureLocation,
-          signatureName: parsedApplication.data.signatureName,
-          additionalText: parsedApplication.data.additionalText,
-          version: mapIndexToVersion(i),
-        }),
       })),
     )
 
@@ -218,6 +347,7 @@ export class ApplicationService implements IApplicationService {
           categoryId: categoryId,
           applicationType: applicationType,
           submittedByNationalId: user.nationalId,
+          publishingDates: [addDays(getNextWeekDay(new Date()), 14)],
         },
       },
       {

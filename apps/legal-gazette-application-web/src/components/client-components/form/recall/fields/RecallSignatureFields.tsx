@@ -4,14 +4,14 @@ import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
 import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
 import {
-  BankruptcyFormFields,
-  BankruptcyFormSchema,
+  RecallFormFields,
+  RecallFormSchema,
 } from '../../../../../lib/forms/schemas/recall-schema'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
 export const RecallSignatureFields = () => {
-  const { getValues } = useFormContext<BankruptcyFormSchema>()
+  const { getValues } = useFormContext<RecallFormSchema>()
 
   const { applicationId } = getValues('meta')
   const { trigger } = useUpdateApplication({ applicationId })
@@ -25,7 +25,7 @@ export const RecallSignatureFields = () => {
         <DatePickerController
           required
           label="Dagsetning undirritunar"
-          name={BankruptcyFormFields.SIGNATURE_DATE}
+          name={RecallFormFields.SIGNATURE_DATE}
           maxDate={new Date()}
           onChange={(date) => trigger({ signatureDate: date.toISOString() })}
         />
@@ -34,7 +34,7 @@ export const RecallSignatureFields = () => {
         <InputController
           required
           label="Staðsetning undirritunar"
-          name={BankruptcyFormFields.SIGNATURE_LOCATION}
+          name={RecallFormFields.SIGNATURE_LOCATION}
           onBlur={(val) => trigger({ signatureLocation: val })}
         />
       </GridColumn>

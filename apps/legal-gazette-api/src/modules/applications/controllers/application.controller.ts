@@ -22,6 +22,7 @@ import { CaseDto } from '../../case/dto/case.dto'
 import { ApplicationTypeEnum } from '../application.model'
 import { IApplicationService } from '../application.service.interface'
 import {
+  AddDivisionMeetingForApplicationDto,
   ApplicationDetailedDto,
   ApplicationsDto,
   UpdateApplicationDto,
@@ -103,5 +104,55 @@ export class ApplicationController {
     @CurrentUser() user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
     return this.applicationService.updateApplication(applicationId, body, user)
+  }
+
+  @Post(':applicationId/addDivisionMeetingAdvertToApplication')
+  @LGResponse({ operationId: 'addDivisionMeetingAdvertToApplication' })
+  async addDivisionMeetingAdvert(
+    @Param('applicationId') applicationId: string,
+    @Body() body: AddDivisionMeetingForApplicationDto,
+    @CurrentUser() user: DMRUser,
+  ): Promise<void> {
+    return this.applicationService.addDivisionMeetingAdvertToApplication(
+      applicationId,
+      body,
+      user,
+    )
+  }
+
+  @Post(':applicationId/addDivisionEndingAdvertToApplication')
+  @LGResponse({ operationId: 'addDivisionEndingAdvertToApplication' })
+  async addDivisionEndingAdvertToApplication(
+    @Param('applicationId') applicationId: string,
+    @CurrentUser() user: DMRUser,
+  ): Promise<void> {
+    return this.applicationService.addDivisionEndingAdvertToApplication(
+      applicationId,
+      user,
+    )
+  }
+
+  @Post(':applicationId/addRecallAdvertToApplication')
+  @LGResponse({ operationId: 'addRecallAdvertToApplication' })
+  async addRecallAdvertToApplication(
+    @Param('applicationId') applicationId: string,
+    @CurrentUser() user: DMRUser,
+  ): Promise<void> {
+    return this.applicationService.addRecallAdvertToApplication(
+      applicationId,
+      user,
+    )
+  }
+
+  @Post(':applicationId/addCommonAdvertToApplication')
+  @LGResponse({ operationId: 'addCommonAdvertToApplication' })
+  async addCommonAdvertToApplication(
+    @Param('applicationId') applicationId: string,
+    @CurrentUser() user: DMRUser,
+  ): Promise<void> {
+    return this.applicationService.addCommonAdvertToApplication(
+      applicationId,
+      user,
+    )
   }
 }

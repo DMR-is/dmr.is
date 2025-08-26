@@ -643,7 +643,7 @@ export const getPublicationTemplate = (
   return `<p align="center" style="margin-top: 1.5em;"><strong>${department} — Útgáfudagur: ${formatted}</strong></p>`
 }
 
-export const DateFormats = ['dd.MM.yyyy', 'dd. MMMM yyyy'] as const
+export const DateFormats = ['dd.MM.yyyy', 'dd. MMMM yyyy', 'HH:mm'] as const
 
 export const formatDate = (
   date: string | Date,
@@ -652,4 +652,19 @@ export const formatDate = (
   const dateToFormat = typeof date === 'string' ? new Date(date) : date
 
   return format(dateToFormat, df, { locale: is })
+}
+
+export const getNextWeekDay = (date: Date | string) => {
+  const dateToUse = typeof date === 'string' ? new Date(date) : date
+  const day = dateToUse.getDay()
+
+  if (day === 6) {
+    // Saturday
+    return new Date(dateToUse.setDate(dateToUse.getDate() + 2))
+  } else if (day === 0) {
+    // Sunday
+    return new Date(dateToUse.setDate(dateToUse.getDate() + 1))
+  }
+
+  return dateToUse
 }

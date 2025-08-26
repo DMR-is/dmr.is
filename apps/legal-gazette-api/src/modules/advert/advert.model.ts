@@ -1,5 +1,9 @@
-import { Op } from 'sequelize'
+import { BulkCreateOptions, Op } from 'sequelize'
 import {
+  AfterBulkCreate,
+  AfterCreate,
+  BeforeBulkCreate,
+  BeforeCreate,
   BeforeUpdate,
   BelongsTo,
   Column,
@@ -14,6 +18,12 @@ import { BadRequestException } from '@nestjs/common'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
+import {
+  getCommonAdvertHTMLTemplate,
+  getDivisionEndingAdvertHTMLTemplate,
+  getDivisionMeetingAdvertHTMLTemplate,
+  getRecallAdvertHTMLTemplate,
+} from '../../lib/templates'
 import { validateAdvertStatus } from '../../lib/utils'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
@@ -67,6 +77,7 @@ export type AdvertCreateAttributes = {
   categoryId: string
   statusId?: string
   title: string
+  html?: string
 
   version?: AdvertVersionEnum
   publishedAt?: Date | null // only if coming from an external system (ex. Skatturinn) and should be automatically set
@@ -229,6 +240,7 @@ export class AdvertModel extends BaseModel<
   @Column({
     type: DataType.TEXT,
     allowNull: false,
+    defaultValue: '',
   })
   html!: string
 
@@ -263,6 +275,18 @@ export class AdvertModel extends BaseModel<
   signatureDate!: Date
 
   @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+  })
+  additionalText!: string | null
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+  })
+  caption!: string | null
+
+  @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
     defaultValue: false,
@@ -284,6 +308,47 @@ export class AdvertModel extends BaseModel<
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
     validateAdvertStatus(instance)
+  }
+
+  @AfterCreate
+  static addHTML(instance: AdvertModel) {
+    if (instance.html) return
+
+    try {
+      switch (instance.typeId) {
+        case TypeIdEnum.COMMON_ADVERT:
+          instance.html = getCommonAdvertHTMLTemplate(instance)
+          break
+        case TypeIdEnum.DIVISION_MEETING:
+          instance.html = getDivisionMeetingAdvertHTMLTemplate(instance)
+          break
+        case TypeIdEnum.DIVISION_ENDING:
+          instance.html = getDivisionEndingAdvertHTMLTemplate(instance)
+          break
+        case TypeIdEnum.RECALL:
+          instance.html = getRecallAdvertHTMLTemplate(instance)
+          break
+        default:
+          throw new BadRequestException(
+            'Invalid advert type for HTML generation',
+          )
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to generate HTML for advert ID ${instance.id}`,
+        { context: 'AdvertModel', error: error },
+      )
+    }
+
+    instance.save()
+  }
+
+  @AfterBulkCreate
+  static addIndividualhooks(
+    _models: AdvertModel[],
+    options: BulkCreateOptions,
+  ) {
+    options.individualHooks = true
   }
 
   static async countByStatus(

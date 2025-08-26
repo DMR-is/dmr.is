@@ -3,6 +3,7 @@ import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { CaseDto } from '../case/dto/case.dto'
 import {
+  AddDivisionMeetingForApplicationDto,
   ApplicationDetailedDto,
   ApplicationsDto,
   UpdateApplicationDto,
@@ -36,6 +37,27 @@ export interface IApplicationService {
     body: UpdateApplicationDto,
     user: DMRUser,
   ): Promise<ApplicationDetailedDto>
+
+  addDivisionMeetingAdvertToApplication(
+    applicationId: string,
+    body: AddDivisionMeetingForApplicationDto,
+    user: DMRUser,
+  ): Promise<void>
+
+  addDivisionEndingAdvertToApplication(
+    applicationId: string,
+    user: DMRUser,
+  ): Promise<void>
+
+  addRecallAdvertToApplication(
+    applicationId: string,
+    user: DMRUser,
+  ): Promise<void>
+
+  addCommonAdvertToApplication(
+    applicationId: string,
+    user: DMRUser,
+  ): Promise<void>
 }
 
 export const IApplicationService = Symbol('IApplicationService')
