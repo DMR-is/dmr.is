@@ -92,7 +92,6 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
-
     "e2e": {
       "inputs": ["default", "^production"]
     },
