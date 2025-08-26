@@ -7,8 +7,8 @@ import {
   PickType,
 } from '@nestjs/swagger'
 
-import { AddCaseAdvertCorrection } from './add-case-advert-correction.dto'
 import { UpdateAdvertBody } from '../adverts'
+import { AddCaseAdvertCorrection } from './add-case-advert-correction.dto'
 
 export class UpdateAdvertHtmlBody extends PickType(UpdateAdvertBody, [
   'title',
