@@ -369,24 +369,7 @@ export class ApplicationService implements IApplicationService {
       settlementId: lastAdvert.settlementId,
     })
   }
-  addDivisionEndingAdvertToApplication(
-    applicationId: string,
-    user: DMRUser,
-  ): Promise<void> {
-    throw new Error('Method not implemented.')
-  }
-  addRecallAdvertToApplication(
-    applicationId: string,
-    user: DMRUser,
-  ): Promise<void> {
-    throw new Error('Method not implemented.')
-  }
-  addCommonAdvertToApplication(
-    applicationId: string,
-    user: DMRUser,
-  ): Promise<void> {
-    throw new Error('Method not implemented.')
-  }
+
   async updateApplication(
     applicationId: string,
     body: UpdateApplicationDto,

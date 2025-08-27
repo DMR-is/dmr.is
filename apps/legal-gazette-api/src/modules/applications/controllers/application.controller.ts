@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Inject,
+  NotImplementedException,
   Param,
   Patch,
   Post,
@@ -123,36 +124,27 @@ export class ApplicationController {
   @Post(':applicationId/addDivisionEndingAdvertToApplication')
   @LGResponse({ operationId: 'addDivisionEndingAdvertToApplication' })
   async addDivisionEndingAdvertToApplication(
-    @Param('applicationId') applicationId: string,
-    @CurrentUser() user: DMRUser,
+    @Param('applicationId') _applicationId: string,
+    @CurrentUser() _user: DMRUser,
   ): Promise<void> {
-    return this.applicationService.addDivisionEndingAdvertToApplication(
-      applicationId,
-      user,
-    )
+    throw new NotImplementedException()
   }
 
   @Post(':applicationId/addRecallAdvertToApplication')
   @LGResponse({ operationId: 'addRecallAdvertToApplication' })
   async addRecallAdvertToApplication(
-    @Param('applicationId') applicationId: string,
-    @CurrentUser() user: DMRUser,
+    @Param('applicationId') _applicationId: string,
+    @CurrentUser() _user: DMRUser,
   ): Promise<void> {
-    return this.applicationService.addRecallAdvertToApplication(
-      applicationId,
-      user,
-    )
+    throw new NotImplementedException()
   }
 
   @Post(':applicationId/addCommonAdvertToApplication')
   @LGResponse({ operationId: 'addCommonAdvertToApplication' })
   async addCommonAdvertToApplication(
-    @Param('applicationId') applicationId: string,
-    @CurrentUser() user: DMRUser,
+    @Param('applicationId') _applicationId: string,
+    @CurrentUser() _user: DMRUser,
   ): Promise<void> {
-    return this.applicationService.addCommonAdvertToApplication(
-      applicationId,
-      user,
-    )
+    throw new NotImplementedException()
   }
 }

@@ -43,21 +43,6 @@ export interface IApplicationService {
     body: AddDivisionMeetingForApplicationDto,
     user: DMRUser,
   ): Promise<void>
-
-  addDivisionEndingAdvertToApplication(
-    applicationId: string,
-    user: DMRUser,
-  ): Promise<void>
-
-  addRecallAdvertToApplication(
-    applicationId: string,
-    user: DMRUser,
-  ): Promise<void>
-
-  addCommonAdvertToApplication(
-    applicationId: string,
-    user: DMRUser,
-  ): Promise<void>
 }
 
 export const IApplicationService = Symbol('IApplicationService')
