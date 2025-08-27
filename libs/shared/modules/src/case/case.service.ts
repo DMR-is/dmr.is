@@ -1039,6 +1039,7 @@ export class CaseService implements ICaseService {
     const caseToPublish = await this.caseModel.findByPk(caseId, {
       include: [
         ...casesDetailedIncludes,
+        CaseChannelModel,
         {
           model: SignatureModel,
           include: [
