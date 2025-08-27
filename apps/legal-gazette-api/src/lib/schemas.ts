@@ -39,3 +39,16 @@ export const createCommonAdvertFromIslandIsApplicationSchema = z.object({
   communicationChannels: z.array(communicationChannelSchema).min(1),
   publishingDates: z.array(z.date()).min(1),
 })
+
+export const createRecallAdvertFromApplicationSchema = z.object({
+  settlementName: z.string(),
+  settlementNationalId: z.string(),
+  settlementAddress: z.string(),
+  settlementDeadlineDate: z.date().nullable().optional(),
+  settlementDateOfDeath: z.date().optional().nullable(),
+  liquidatorLocation: z.string(),
+  signatureName: z.string(),
+  signatureDate: z.date(),
+  signatureLocation: z.string(),
+  signatureOnBehalfOf: z.string().nullable().optional(),
+})

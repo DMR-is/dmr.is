@@ -1,9 +1,7 @@
 import { BulkCreateOptions, Op } from 'sequelize'
 import {
-  AfterBulkCreate,
   AfterCreate,
   BeforeBulkCreate,
-  BeforeCreate,
   BeforeUpdate,
   BelongsTo,
   Column,
@@ -167,11 +165,19 @@ export class AdvertModel extends BaseModel<
   @ForeignKey(() => CaseModel)
   caseId!: string
 
-  @Column({ type: DataType.UUID })
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    defaultValue: null,
+  })
   @ForeignKey(() => SettlementModel)
   settlementId!: string | null
 
-  @Column({ type: DataType.UUID })
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    defaultValue: null,
+  })
   @ForeignKey(() => CourtDistrictModel)
   courtDistrictId!: string | null
 
@@ -305,49 +311,86 @@ export class AdvertModel extends BaseModel<
   @BelongsTo(() => StatusModel)
   status!: StatusModel
 
+  @BelongsTo(() => SettlementModel)
+  settlement?: SettlementModel
+
+  @BelongsTo(() => CourtDistrictModel)
+  courtDistrict?: CourtDistrictModel
+
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
     validateAdvertStatus(instance)
   }
 
   @AfterCreate
-  static addHTML(instance: AdvertModel) {
-    if (instance.html) return
+  static async addHTML(instance: AdvertModel) {
+    this.logger.debug(`Setting HTML template for advert ${instance.id}`, {
+      currentHTML: instance.html,
+    })
+
+    const instanceWithRelations = await AdvertModel.unscoped().findByPk(
+      instance.id,
+      {
+        include: [
+          { model: TypeModel },
+          { model: CategoryModel },
+          { model: StatusModel },
+          { model: SettlementModel },
+          { model: CourtDistrictModel },
+          { model: CaseModel, attributes: ['caseNumber', 'id'] },
+        ],
+      },
+    )
+
+    if (!instanceWithRelations) {
+      this.logger.error(
+        `Advert with ID ${instance.id} not found for HTML generation`,
+      )
+      return
+    }
+
+    if (instanceWithRelations.html) return
+
+    let html = ''
 
     try {
-      switch (instance.typeId) {
+      switch (instanceWithRelations.typeId) {
         case TypeIdEnum.COMMON_ADVERT:
-          instance.html = getCommonAdvertHTMLTemplate(instance)
+          html = getCommonAdvertHTMLTemplate(instanceWithRelations)
           break
         case TypeIdEnum.DIVISION_MEETING:
-          instance.html = getDivisionMeetingAdvertHTMLTemplate(instance)
+          html = getDivisionMeetingAdvertHTMLTemplate(instanceWithRelations)
           break
         case TypeIdEnum.DIVISION_ENDING:
-          instance.html = getDivisionEndingAdvertHTMLTemplate(instance)
+          html = getDivisionEndingAdvertHTMLTemplate(instanceWithRelations)
           break
         case TypeIdEnum.RECALL:
-          instance.html = getRecallAdvertHTMLTemplate(instance)
+          html = getRecallAdvertHTMLTemplate(instanceWithRelations)
           break
         default:
           throw new BadRequestException(
             'Invalid advert type for HTML generation',
           )
       }
+      instanceWithRelations.html = html
+      this.logger.debug(`Generated HTML for advert ${instance.id}`, {
+        html: instance.html,
+      })
+      instanceWithRelations.save()
     } catch (error) {
       this.logger.error(
         `Failed to generate HTML for advert ID ${instance.id}`,
-        { context: 'AdvertModel', error: error },
+        { error: error },
       )
     }
-
-    instance.save()
   }
 
-  @AfterBulkCreate
+  @BeforeBulkCreate
   static addIndividualhooks(
     _models: AdvertModel[],
     options: BulkCreateOptions,
   ) {
+    this.logger.debug('AfterBulkCreate, setting individualHooks to true')
     options.individualHooks = true
   }
 

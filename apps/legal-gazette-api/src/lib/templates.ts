@@ -7,7 +7,7 @@ export const getCommonAdvertHTMLTemplate = (model: AdvertModel) => {
   <div class="advert">
     <div class="advert__header">
       <p class="advert__header_publishing">Útgáfud.: ${formatDate(model.publishedAt ? model.publishedAt : model.scheduledAt, 'dd. MMMM yyyy')}</p>
-      <h1 class="advert__header_title">${model.category} - ${model.caption}</h1>
+      <h1 class="advert__header_title">${model.category.title}</h1>
     </div>
     ${
       model.additionalText

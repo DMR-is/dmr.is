@@ -7,8 +7,6 @@ import { SettlementDto } from './dto/settlement.dto'
 type SettlementAttributes = {
   liquidatorName: string
   liquidatorLocation: string
-  liquidatorOnBehalfOf?: string
-
   settlementName: string
   settlementNationalId: string
   settlementAddress: string
@@ -23,7 +21,6 @@ type SettlementCreationAttributes = SettlementAttributes
     'id',
     'liquidatorName',
     'liquidatorLocation',
-    'liquidatorOnBehalfOf',
     'settlementName',
     'settlementNationalId',
     'settlementAddress',
@@ -52,28 +49,22 @@ export class SettlementModel extends BaseModel<
 
   @Column({
     type: DataType.TEXT,
-    field: 'on_behalf_of_liquidator',
-  })
-  liquidatorOnBehalfOf?: string
-
-  @Column({
-    type: DataType.TEXT,
     allowNull: false,
-    field: 'settlement_name',
+    field: 'name',
   })
   settlementName!: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: false,
-    field: 'settlement_national_id',
+    field: 'national_id',
   })
   settlementNationalId!: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: false,
-    field: 'settlement_address',
+    field: 'address',
   })
   settlementAddress!: string
 
@@ -81,7 +72,7 @@ export class SettlementModel extends BaseModel<
     type: DataType.DATE,
     allowNull: true,
     defaultValue: null,
-    field: 'settlement_deadline_date',
+    field: 'deadline_date',
   })
   settlementDeadline!: Date | null
 
@@ -89,7 +80,7 @@ export class SettlementModel extends BaseModel<
     type: DataType.DATE,
     allowNull: true,
     defaultValue: null,
-    field: 'settlement_date_of_death',
+    field: 'date_of_death',
   })
   settlementDateOfDeath!: Date | null
 
@@ -97,7 +88,6 @@ export class SettlementModel extends BaseModel<
     return {
       liquidatorName: model.liquidatorName,
       liquidatorLocation: model.liquidatorLocation,
-      liquidatorOnBehalfOf: model.liquidatorOnBehalfOf,
       settlementName: model.settlementName,
       settlementNationalId: model.settlementNationalId,
       settlementAddress: model.settlementAddress,

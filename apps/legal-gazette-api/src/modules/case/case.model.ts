@@ -54,7 +54,6 @@ type CaseCreateAttributes = {
       attributes: ['id', 'applicationType', 'status'],
     },
   ],
-  limit: 1,
   order: [['createdAt', 'DESC']],
 }))
 export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {

@@ -19,7 +19,7 @@ export const Editor = ({ onChange, onBlur, defaultValue }: Props) => {
         onChange={onChange}
         onBlur={onBlur}
         config={{
-          toolbar: 'bold italic underline ul link',
+          toolbar: 'bold italic underline | numlist bullist | link',
         }}
       />
     </Box>

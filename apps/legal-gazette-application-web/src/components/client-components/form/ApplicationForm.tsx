@@ -55,6 +55,12 @@ export const ApplicationForm = ({
             judgementDate: application.judgmentDate
               ? new Date(application.judgmentDate)
               : undefined,
+            divisionMeetingDate: application.divisionMeetingDate
+              ? new Date(application.divisionMeetingDate)
+              : undefined,
+            divisionMeetingLocation:
+              application.divisionMeetingLocation ?? undefined,
+
             settlementName: application.settlementName ?? undefined,
             settlementNationalId: application.settlementNationalId ?? undefined,
             settlementAddress: application.settlementAddress ?? undefined,

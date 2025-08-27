@@ -48,7 +48,7 @@ export const CommonAdvertFields = () => {
           </Text>
           <Editor
             defaultValue={Buffer.from(
-              getValues('fields.html'),
+              getValues('fields.html') ?? '',
               'base64',
             ).toString('utf-8')}
             onBlur={(val) => {

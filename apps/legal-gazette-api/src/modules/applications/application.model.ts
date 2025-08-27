@@ -36,6 +36,9 @@ export type ApplicationAttributes = {
   additionalText: string | null
   judgmentDate: Date | null
   html: string | null
+  liquidatorName: string | null
+  liquidatorLocation: string | null
+  liquidatorOnBehalfOf: string | null
   signatureName: string | null
   signatureOnBehalfOf: string | null
   signatureLocation: string | null
@@ -62,6 +65,9 @@ export type ApplicationCreateAttributes = {
   additionalText?: string | null
   judgmentDate?: Date | null
   html?: string | null
+  liquidatorName?: string | null
+  liquidatorLocation?: string | null
+  liquidatorOnBehalfOf?: string | null
   signatureName?: string | null
   signatureOnBehalfOf?: string | null
   signatureLocation?: string | null
