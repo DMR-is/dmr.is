@@ -3,6 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/official-journal-api-export/src",
   "projectType": "application",
+  "tags": [],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
@@ -70,6 +71,5 @@
         "jestConfig": "apps/official-journal-api-export/jest.config.ts"
       }
     }
-  },
-  "tags": []
+  }
 }

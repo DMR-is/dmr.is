@@ -3,6 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/logging/src",
   "projectType": "library",
+  "tags": [],
   "generators": {},
   "targets": {
     "typecheck": {
@@ -16,9 +17,7 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": [
-          "libs/logging/**/*.{ts,tsx,js,jsx}"
-        ]
+        "lintFilePatterns": ["libs/logging/**/*.{ts,tsx,js,jsx}"]
       }
     },
     "test": {
@@ -27,10 +26,7 @@
         "jestConfig": "libs/logging/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": [
-        "{workspaceRoot}/coverage/libs/logging"
-      ]
+      "outputs": ["{workspaceRoot}/coverage/libs/logging"]
     }
-  },
-  "tags": []
+  }
 }

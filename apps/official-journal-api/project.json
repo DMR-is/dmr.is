@@ -3,6 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/official-journal-api/src",
   "projectType": "application",
+  "tags": [],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
@@ -128,6 +129,5 @@
         "parallel": false
       }
     }
-  },
-  "tags": []
+  }
 }

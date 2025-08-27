@@ -397,7 +397,9 @@ export const pdfCss = `
     margin-bottom: var(--paragraph-space);
     font-size: 1em;
     text-transform: uppercase;
-    text-align: center;
+    text-align: left;
+    text-decoration: underline;
+    text-transform: capitalize;
   }
 
   .appendix__text > p:not([align]) {
@@ -453,9 +455,9 @@ export const pdfCss = `
 
   .sub_signature {
     font-size: var(--font-size--name);
-    text-align: center;    
+    text-align: center;
   }
-    
+
   .sub_signature::before {
     content: "";
     display: block;
@@ -463,7 +465,7 @@ export const pdfCss = `
     margin: 0 auto 2em auto;
     border-top: 0.25pt solid black;
   }
-    
+
   .additional_member_wrapper {
     margin-top: 0.5em;
     text-align: right;

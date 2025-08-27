@@ -3,6 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/shared/dto/src",
   "projectType": "library",
+  "tags": [],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
@@ -23,6 +24,5 @@
         "jestConfig": "libs/shared/dto/jest.config.ts"
       }
     }
-  },
-  "tags": []
+  }
 }

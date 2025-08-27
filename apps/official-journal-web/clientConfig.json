@@ -1225,6 +1225,13 @@
             "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "description": "Year (signature year) to filter by",
+            "schema": { "type": "string" }
+          },
+          {
             "name": "type",
             "required": false,
             "in": "query",
@@ -4022,6 +4029,47 @@
         },
         "required": ["id", "title", "slug"]
       },
+      "CaseTransaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "externalReference": {
+            "type": "string",
+            "description": "Reference to external source"
+          },
+          "imageTier": { "type": "string", "description": "Image tier code" },
+          "price": { "type": "number", "description": "Advert price" },
+          "subject": {
+            "type": "string",
+            "description": "Advert subject (Viðfang)."
+          },
+          "feeCodes": {
+            "description": "Fee codes to get the price for",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "customBaseCount": {
+            "type": "number",
+            "description": "How many base units are there"
+          },
+          "customAdditionalDocCount": {
+            "type": "number",
+            "description": "How many additional documents are there"
+          },
+          "extraWorkCount": {
+            "type": "number",
+            "description": "How much extra work is there, in percentage"
+          },
+          "customAdditionalCharacterCount": {
+            "type": "number",
+            "description": "Custom additional character count"
+          }
+        },
+        "required": ["id", "externalReference", "imageTier"]
+      },
       "Case": {
         "type": "object",
         "properties": {
@@ -4033,6 +4081,11 @@
             "type": "number",
             "example": 2024,
             "description": "Year the case was created."
+          },
+          "caseNumber": {
+            "type": "string",
+            "example": 190,
+            "description": "Case number (numeric string) gets generated automatically when a case is created."
           },
           "status": {
             "description": "Status of the case, default to \"Innsent\"",
@@ -4096,6 +4149,11 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/Category" }
           },
+          "transaction": {
+            "description": "Case fee transaction.",
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CaseTransaction" }]
+          },
           "publicationNumber": {
             "type": "string",
             "description": "Publication number of the case."
@@ -4104,6 +4162,7 @@
         "required": [
           "id",
           "year",
+          "caseNumber",
           "status",
           "tag",
           "involvedParty",
@@ -4117,6 +4176,7 @@
           "advertDepartment",
           "advertType",
           "advertCategories",
+          "transaction",
           "publicationNumber"
         ]
       },
@@ -4511,6 +4571,23 @@
         },
         "required": ["name", "type", "url"]
       },
+      "CaseAddition": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "title": { "type": "string", "description": "Title of the addition" },
+          "html": { "type": "string", "description": "HTML of the addition" },
+          "order": {
+            "type": "number",
+            "description": "HTML of the addition",
+            "default": 0
+          }
+        },
+        "required": ["id", "title", "html", "order"]
+      },
       "AdvertCorrection": {
         "type": "object",
         "properties": {
@@ -4650,6 +4727,11 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/AdvertAttachment" }
           },
+          "additions": {
+            "description": "Additions for the advert.",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CaseAddition" }
+          },
           "corrections": {
             "description": "Corrections made to the advert.",
             "type": "array",
@@ -4744,47 +4826,6 @@
           }
         },
         "required": ["additionId"]
-      },
-      "CaseTransaction": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
-          },
-          "externalReference": {
-            "type": "string",
-            "description": "Reference to external source"
-          },
-          "imageTier": { "type": "string", "description": "Image tier code" },
-          "price": { "type": "number", "description": "Advert price" },
-          "subject": {
-            "type": "string",
-            "description": "Advert subject (Viðfang)."
-          },
-          "feeCodes": {
-            "description": "Fee codes to get the price for",
-            "type": "array",
-            "items": { "type": "string" }
-          },
-          "customBaseCount": {
-            "type": "number",
-            "description": "How many base units are there"
-          },
-          "customAdditionalDocCount": {
-            "type": "number",
-            "description": "How many additional documents are there"
-          },
-          "extraWorkCount": {
-            "type": "number",
-            "description": "How much extra work is there, in percentage"
-          },
-          "customAdditionalCharacterCount": {
-            "type": "number",
-            "description": "Custom additional character count"
-          }
-        },
-        "required": ["id", "externalReference", "imageTier"]
       },
       "CaseActionEnum": {
         "type": "string",
@@ -5012,23 +5053,6 @@
           "type",
           "deleted"
         ]
-      },
-      "CaseAddition": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
-          },
-          "title": { "type": "string", "description": "Title of the addition" },
-          "html": { "type": "string", "description": "HTML of the addition" },
-          "order": {
-            "type": "number",
-            "description": "HTML of the addition",
-            "default": 0
-          }
-        },
-        "required": ["id", "title", "html", "order"]
       },
       "HistoryDepartment": {
         "type": "object",

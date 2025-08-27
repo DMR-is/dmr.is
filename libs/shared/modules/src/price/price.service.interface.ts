@@ -5,7 +5,6 @@ import {
   GetPaymentQuery,
   GetPaymentResponse,
   TransactionFeeCodesResponse,
-  UpdateCasePaymentBody,
   UpdateCasePriceBody,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
@@ -25,11 +24,6 @@ export interface IPriceService {
   getAllFeeCodes(
     transaction?: Transaction,
   ): Promise<ResultWrapper<TransactionFeeCodesResponse>>
-  postExternalPayment(
-    caseId: string,
-    body: UpdateCasePaymentBody,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
   getExternalPaymentStatus(
     params: GetPaymentQuery,
     transaction?: Transaction,
