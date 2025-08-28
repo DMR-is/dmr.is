@@ -129,22 +129,4 @@ export class ApplicationController {
   ): Promise<void> {
     throw new NotImplementedException()
   }
-
-  @Post(':applicationId/addRecallAdvertToApplication')
-  @LGResponse({ operationId: 'addRecallAdvertToApplication' })
-  async addRecallAdvertToApplication(
-    @Param('applicationId') _applicationId: string,
-    @CurrentUser() _user: DMRUser,
-  ): Promise<void> {
-    throw new NotImplementedException()
-  }
-
-  @Post(':applicationId/addCommonAdvertToApplication')
-  @LGResponse({ operationId: 'addCommonAdvertToApplication' })
-  async addCommonAdvertToApplication(
-    @Param('applicationId') _applicationId: string,
-    @CurrentUser() _user: DMRUser,
-  ): Promise<void> {
-    throw new NotImplementedException()
-  }
 }
