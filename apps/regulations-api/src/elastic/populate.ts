@@ -15,7 +15,7 @@ import { getSettingsTemplate, mappingTemplate } from './template'
 import { Client } from '@opensearch-project/opensearch'
 
 const INDEX_NAME = 'regulations'
-const DELETE_OLD_INDEX = true // flip to false if you want to keep old snapshots
+const DELETE_OLD_INDEX = true // flip to false to keep old snapshots
 
 export type RegulationsIndexBody = {
   type: 'amending' | 'base'
@@ -60,8 +60,8 @@ const regulationToIndexItem = (reg: RegulationListItemFull) => {
 
 export async function repopulateElastic(client: Client) {
   const t0 = performance.now()
-  const baseAlias = INDEX_NAME // your intended read alias (e.g., "regulations")
-  let aliasName = baseAlias // may switch to `${baseAlias}_read` if conflict
+  const baseAlias = INDEX_NAME
+  let aliasName = baseAlias
   const newIndex = `${baseAlias}-${Date.now()}`
   const logPrefix = `[repopulate:${baseAlias}]`
 
@@ -85,7 +85,7 @@ export async function repopulateElastic(client: Client) {
     console.info(`${logPrefix} ${regulations.length} regulations found`)
 
     // 2) Build settings/mappings (use *_path packages so body stays small)
-    const settings = await getSettingsTemplate(logPrefix) // { settings: { analysis…, *_path … } }
+    const settings = await getSettingsTemplate(logPrefix)
     const mappings = mappingTemplate
 
     // Derive steady-state replicas (dev=0, prod(≥2 data nodes)=1)

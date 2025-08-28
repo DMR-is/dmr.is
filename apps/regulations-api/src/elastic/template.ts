@@ -5,11 +5,11 @@ export const getSettingsTemplate = async (logPrefix: string) => {
     return `analyzers/${id}`
   }
 
-  const STEMMER_PKG = process.env.OS_PKG_STEMMER || 'F203129716'
-  const STOPWORDS_PKG = process.env.OS_PKG_STOPWORDS || 'F167171114'
-  const KEYWORDS_PKG = process.env.OS_PKG_KEYWORDS || 'F24967943'
-  const SYNONYMS_PKG = process.env.OS_PKG_SYNONYMS || 'F256679733'
-  const HYPHEN_PKG = process.env.OS_PKG_HYPHEN || 'F22901080'
+  const STEMMER_PKG = process.env.OS_PKG_STEMMER
+  const STOPWORDS_PKG = process.env.OS_PKG_STOPWORDS
+  const KEYWORDS_PKG = process.env.OS_PKG_KEYWORDS
+  const SYNONYMS_PKG = process.env.OS_PKG_SYNONYMS
+  const HYPHEN_PKG = process.env.OS_PKG_HYPHEN
   return {
     settings: {
       analysis: {
@@ -29,7 +29,7 @@ export const getSettingsTemplate = async (logPrefix: string) => {
             keywords_path: need(KEYWORDS_PKG, 'keywords'),
           },
           icelandicSynonym: {
-            type: 'synonym', // use 'synonym_graph' if preferred for multi-word
+            type: 'synonym',
             lenient: true,
             synonyms_path: need(SYNONYMS_PKG, 'synonyms'),
           },
