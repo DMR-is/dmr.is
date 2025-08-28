@@ -356,7 +356,7 @@ export class AdvertModel extends BaseModel<
     try {
       switch (instanceWithRelations.typeId) {
         case TypeIdEnum.COMMON_ADVERT:
-          html = getCommonAdvertHTMLTemplate(instanceWithRelations)
+          html = getCommonAdvertHTMLTemplate(instance)
           break
         case TypeIdEnum.DIVISION_MEETING:
           html = getDivisionMeetingAdvertHTMLTemplate(instanceWithRelations)

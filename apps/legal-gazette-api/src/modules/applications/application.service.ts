@@ -23,6 +23,7 @@ import {
   createCommonAdvertFromIslandIsApplicationSchema,
   createRecallAdvertFromApplicationSchema,
 } from '../../lib/schemas'
+import { getCommonAdvertHTMLTemplateFromApplication } from '../../lib/templates'
 import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertModel } from '../advert/advert.model'
 import { CaseModel } from '../case/case.model'
@@ -66,7 +67,7 @@ export class ApplicationService implements IApplicationService {
     }
 
     const applicationCase = await this.caseModel.unscoped().findOne({
-      attributes: ['id'],
+      attributes: ['id', 'caseNumber'],
       where: {
         id: application.caseId,
         involvedPartyNationalId: user.nationalId,
@@ -119,6 +120,19 @@ export class ApplicationService implements IApplicationService {
         signatureOnBehalfOf: parsedApplication.data.signatureOnBehalfOf,
         signatureLocation: parsedApplication.data.signatureLocation,
         signatureDate: parsedApplication.data.signatureDate,
+        html: getCommonAdvertHTMLTemplateFromApplication({
+          publishedAt: scheduledAt,
+          caseNumber: applicationCase.caseNumber,
+          categoryTitle: parsedApplication.data.category.title,
+          additionalText: parsedApplication.data.additionalText ?? undefined,
+          html: parsedApplication.data.html,
+          signatureLocation: parsedApplication.data.signatureLocation,
+          signatureDate: parsedApplication.data.signatureDate,
+          signatureOnBehalfOf:
+            parsedApplication.data.signatureOnBehalfOf ?? undefined,
+          signatureName: parsedApplication.data.signatureName,
+          version: mapIndexToVersion(i),
+        }),
         title: `${parsedApplication.data.category.title} - ${parsedApplication.data.caption}`,
       })),
     )

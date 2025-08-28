@@ -30,6 +30,56 @@ export const getCommonAdvertHTMLTemplate = (model: AdvertModel) => {
   `
 }
 
+export const getCommonAdvertHTMLTemplateFromApplication = ({
+  publishedAt,
+  categoryTitle,
+  additionalText,
+  html,
+  signatureLocation,
+  signatureDate,
+  signatureOnBehalfOf,
+  signatureName,
+  caseNumber,
+  version,
+}: {
+  publishedAt: Date
+  categoryTitle: string
+  additionalText?: string
+  html: string
+  signatureLocation: string
+  signatureDate: Date
+  signatureOnBehalfOf?: string
+  signatureName: string
+  caseNumber: string
+  version: string
+}) => {
+  return `
+    <div class="advert">
+    <div class="advert__header">
+      <p class="advert__header_publishing">Útgáfud.: ${formatDate(publishedAt, 'dd. MMMM yyyy')}</p>
+      <h1 class="advert__header_title">${categoryTitle}</h1>
+    </div>
+    ${
+      additionalText
+        ? `<div class="advert__additional"><p>${additionalText}</p></div>`
+        : ''
+    }
+
+    <div class="advert__content">
+      ${html}
+    </div>
+    <div class="advert__signature">
+      <p>${signatureLocation}, ${formatDate(signatureDate, 'dd. MMMM yyyy')}</p>
+      ${signatureOnBehalfOf ? `<p>${signatureOnBehalfOf}</p>` : ''}
+      <p>${signatureName}</p>
+    </div>
+    <div>
+      <p class="advert__version">${caseNumber}${version}</p>
+    </div>
+  </div>
+  `
+}
+
 export const getDivisionMeetingAdvertHTMLTemplate = (model: AdvertModel) => {
   return `
   <div class="advert">
