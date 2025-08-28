@@ -5,37 +5,40 @@ export const getSettingsTemplate = async (logPrefix: string) => {
     return `analyzers/${id}`
   }
 
-  const STEMMER_PKG = process.env.OS_PKG_STEMMER
-  const STOPWORDS_PKG = process.env.OS_PKG_STOPWORDS
-  const KEYWORDS_PKG = process.env.OS_PKG_KEYWORDS
-  const SYNONYMS_PKG = process.env.OS_PKG_SYNONYMS
-  const HYPHEN_PKG = process.env.OS_PKG_HYPHEN
+  const {
+    OS_PKG_STEMMER,
+    OS_PKG_STOPWORDS,
+    OS_PKG_KEYWORDS,
+    OS_PKG_SYNONYMS,
+    OS_PKG_HYPHEN,
+  } = process.env
+
   return {
     settings: {
       analysis: {
         filter: {
           icelandicStemmer: {
             type: 'stemmer_override',
-            rules_path: need(STEMMER_PKG, 'stemmer'),
+            rules_path: need(OS_PKG_STEMMER, 'stemmer'),
           },
           icelandicStop: {
             type: 'stop',
-            stopwords_path: need(STOPWORDS_PKG, 'stopwords'),
+            stopwords_path: need(OS_PKG_STOPWORDS, 'stopwords'),
             ignore_case: true,
           },
           icelandicKeyword: {
             type: 'keyword_marker',
             ignore_case: true,
-            keywords_path: need(KEYWORDS_PKG, 'keywords'),
+            keywords_path: need(OS_PKG_KEYWORDS, 'keywords'),
           },
           icelandicSynonym: {
             type: 'synonym',
             lenient: true,
-            synonyms_path: need(SYNONYMS_PKG, 'synonyms'),
+            synonyms_path: need(OS_PKG_SYNONYMS, 'synonyms'),
           },
           icelandicDeCompounded: {
             type: 'dictionary_decompounder',
-            word_list_path: need(HYPHEN_PKG, 'hyphen whitelist'),
+            word_list_path: need(OS_PKG_HYPHEN, 'hyphen whitelist'),
             max_subword_size: 18,
             min_subword_size: 4,
           },
