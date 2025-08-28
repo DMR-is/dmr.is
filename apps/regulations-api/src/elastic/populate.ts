@@ -125,10 +125,9 @@ export async function repopulateElastic(client: Client) {
       `${logPrefix} Populating "${newIndex}" with ${regulations.length} documents…`,
     )
 
-    async function* docsGen() {
+    const docsGen = async function* () {
       for (const r of regulations) {
-        const doc = await regulationToIndexItem(r)
-        yield doc
+        yield await regulationToIndexItem(r)
       }
     }
 
