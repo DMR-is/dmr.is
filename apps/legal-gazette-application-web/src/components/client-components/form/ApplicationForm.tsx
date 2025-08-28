@@ -23,7 +23,13 @@ export const ApplicationForm = ({
           fields={{
             caption: application.caption ?? undefined,
             category: application.category?.id,
-            html: application.html ?? undefined,
+            html: (() => {
+              if (application.html) {
+                return Buffer.from(application.html, 'base64').toString('utf-8')
+              }
+
+              return ''
+            })(),
             publishingDates: application.publishingDates?.map(
               (d) => new Date(d),
             ),
