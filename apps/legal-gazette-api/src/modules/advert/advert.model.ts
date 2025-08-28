@@ -16,12 +16,7 @@ import { BadRequestException } from '@nestjs/common'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
-import {
-  getCommonAdvertHTMLTemplate,
-  getDivisionEndingAdvertHTMLTemplate,
-  getDivisionMeetingAdvertHTMLTemplate,
-  getRecallAdvertHTMLTemplate,
-} from '../../lib/templates'
+import { getAdvertHTMLMarkup } from '../../lib/templates'
 import { validateAdvertStatus } from '../../lib/utils'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
@@ -351,38 +346,9 @@ export class AdvertModel extends BaseModel<
 
     if (instanceWithRelations.html) return
 
-    let html = ''
-
-    try {
-      switch (instanceWithRelations.typeId) {
-        case TypeIdEnum.COMMON_ADVERT:
-          html = getCommonAdvertHTMLTemplate(instance)
-          break
-        case TypeIdEnum.DIVISION_MEETING:
-          html = getDivisionMeetingAdvertHTMLTemplate(instanceWithRelations)
-          break
-        case TypeIdEnum.DIVISION_ENDING:
-          html = getDivisionEndingAdvertHTMLTemplate(instanceWithRelations)
-          break
-        case TypeIdEnum.RECALL:
-          html = getRecallAdvertHTMLTemplate(instanceWithRelations)
-          break
-        default:
-          throw new BadRequestException(
-            'Invalid advert type for HTML generation',
-          )
-      }
-      instanceWithRelations.html = html
-      this.logger.debug(`Generated HTML for advert ${instance.id}`, {
-        html: instance.html,
-      })
-      instanceWithRelations.save()
-    } catch (error) {
-      this.logger.error(
-        `Failed to generate HTML for advert ID ${instance.id}`,
-        { error: error },
-      )
-    }
+    const html = getAdvertHTMLMarkup(instanceWithRelations)
+    instanceWithRelations.html = html
+    instanceWithRelations.save()
   }
 
   @BeforeBulkCreate

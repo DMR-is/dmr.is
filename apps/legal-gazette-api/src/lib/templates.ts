@@ -1,178 +1,148 @@
 import { formatDate } from '@dmr.is/utils'
 
 import { AdvertModel } from '../modules/advert/advert.model'
+import { CategoryDefaultIdEnum } from '../modules/category/category.model'
 
-export const getCommonAdvertHTMLTemplate = (model: AdvertModel) => {
-  return `
-  <div class="advert">
-    <div class="advert__header">
-      <p class="advert__header_publishing">Útgáfud.: ${formatDate(model.publishedAt ? model.publishedAt : model.scheduledAt, 'dd. MMMM yyyy')}</p>
-      <h1 class="advert__header_title">${model.category.title}</h1>
-    </div>
-    ${
-      model.additionalText
-        ? `<div class="advert__additional"><p>${model.additionalText}</p></div>`
-        : ''
-    }
+/*
 
-    <div class="advert__content">
-      ${model.html}
-    </div>
-    <div class="advert__signature">
-      <p>${model.signatureLocation}, ${formatDate(model.signatureDate, 'dd. MMMM yyyy')}</p>
-      ${model.signatureOnBehalfOf ? `<p>${model.signatureOnBehalfOf}</p>` : ''}
-      <p>${model.signatureName}</p>
-    </div>
-    <div>
-      <p class="advert__version">${model.case.caseNumber}${model.version}</p>
-    </div>
-  </div>
-  `
+.advert {
+  fontSize: 12pt;
 }
 
-export const getCommonAdvertHTMLTemplateFromApplication = ({
-  publishedAt,
-  categoryTitle,
-  additionalText,
-  html,
-  signatureLocation,
-  signatureDate,
-  signatureOnBehalfOf,
-  signatureName,
-  caseNumber,
-  version,
-}: {
-  publishedAt: Date
-  categoryTitle: string
-  additionalText?: string
-  html: string
-  signatureLocation: string
-  signatureDate: Date
-  signatureOnBehalfOf?: string
-  signatureName: string
-  caseNumber: string
-  version: string
-}) => {
-  return `
-    <div class="advert">
-    <div class="advert__header">
-      <p class="advert__header_publishing">Útgáfud.: ${formatDate(publishedAt, 'dd. MMMM yyyy')}</p>
-      <h1 class="advert__header_title">${categoryTitle}</h1>
-    </div>
-    ${
-      additionalText
-        ? `<div class="advert__additional"><p>${additionalText}</p></div>`
-        : ''
-    }
-
-    <div class="advert__content">
-      ${html}
-    </div>
-    <div class="advert__signature">
-      <p>${signatureLocation}, ${formatDate(signatureDate, 'dd. MMMM yyyy')}</p>
-      ${signatureOnBehalfOf ? `<p>${signatureOnBehalfOf}</p>` : ''}
-      <p>${signatureName}</p>
-    </div>
-    <div>
-      <p class="advert__version">${caseNumber}${version}</p>
-    </div>
-  </div>
-  `
+.advertSerial {
+  fontSize: 10pt;
+  textAlign: right;
+  marginBlock: 0;
 }
 
-export const getDivisionMeetingAdvertHTMLTemplate = (model: AdvertModel) => {
-  return `
-  <div class="advert">
-    <div class="advert__header">
-      <p class="advert__header_publishing">Útgáfud.: ${formatDate(
-        new Date(),
-        'dd. MMMM yyyy',
-      )}</p>
-      <h1 class="advert__header_title">Skiptafundur</h1>
-    </div>
-    ${
-      model.dataValues
-        ? `<div class="advert__additional"><p>${model.additionalText}</p></div>`
-        : ''
-    }
-
-    <div class="advert__content">
-      <p>Boðað er til skiptafundar ${formatDate(
-        model.scheduledAt,
-        'dd. MMMM yyyy',
-      )} kl. ${formatDate(model.scheduledAt, 'HH:mm')}.</p>
-      <p>Fundurinn fer fram í skrásettu heimili dánarbúsins.</p>
-    </div>
-    <div class="advert__signature">
-      <p>${model.signatureLocation}, ${formatDate(model.signatureDate, 'dd. MMMM yyyy')}</p>
-      ${model.signatureOnBehalfOf ? `<p>${model.signatureOnBehalfOf}</p>` : ''}
-      <p><strong>${model.signatureName}</strong></p>
-    </div>
-    <div>
-      <p class="advert__version">${model.case.caseNumber}${model.version}</p>
-    </div>
-  </div>
-  `
+.advertHeading {
+  fontWeight: bold;
+  marginBottom: 4px;
 }
 
-export const getRecallAdvertHTMLTemplate = (model: AdvertModel) => {
-  return `
-  <div class="advert">
-    <div class="advert__header">
-      <p class="advert__header_publishing">Útgáfud.: ${formatDate(
-        model.publishedAt ? model.publishedAt : model.scheduledAt,
-        'dd. MMMM yyyy',
-      )}</p>
-      <h1 class="advert__header_title">Endurköllun</h1>
-    </div>
-    ${
-      model.additionalText
-        ? `<div class="advert__additional"><p>${model.additionalText}</p></div>`
-        : ''
-    }
-
-    <div class="advert__content">
-      ${model.html}
-    </div>
-    <div class="advert__signature">
-      <p>${model.signatureLocation}, ${formatDate(model.signatureDate, 'dd. MMMM yyyy')}</p>
-      ${model.signatureOnBehalfOf ? `<p>${model.signatureOnBehalfOf}</p>` : ''}
-      <p><strong>${model.signatureName}</strong></p>
-    </div>
-    <div>
-      <p class="advert__version">${model.case.caseNumber}${model.version}</p>
-    </div>
-  </div>
-  `
+p {
+  textAlign: justify;
+  marginBlock: 1em;
 }
 
-export const getDivisionEndingAdvertHTMLTemplate = (model: AdvertModel) => {
+.advertSignature p {
+  textAlign: right;
+  marginBlock: 0;
+}
+*/
+
+export const getAdvertHTMLMarkup = (model: AdvertModel) => {
+  const additionalMarkup = model.additionalText
+    ? `<div class="advert__additional"><p>${model.additionalText}</p></div>`
+    : ''
+
+  const publishingDate = model.publishedAt
+    ? formatDate(model.publishedAt, 'dd. MMMM yyyy')
+    : formatDate(model.scheduledAt, 'dd. MMMM yyyy')
+
+  let markup = ''
+
+  switch (model.categoryId) {
+    case CategoryDefaultIdEnum.BANKRUPTCY_RECALL: {
+      if (!model.settlement || !model.settlement.settlementDeadline) {
+        throw new Error('Settlement information is missing')
+      }
+
+      markup = `
+          <p>Með úrskurði héraðsdóms Reykjaness uppkveðnum *DAGSETNINGU VANTAR* var eftirtalið bú tekið til gjaldþrotaskipta. Sama dag var undirritaður skipaður skiptastjóri í búinu. Frestdagur við gjaldþrotaskiptin er tilgreindur við nafn viðkomandi bús.</p>
+          <table>
+            <tbody>
+              <tr>
+                <td><strong>Nafn bús:</strong></td>
+                <td><strong>Frestdagur:</strong></td>
+                <td><strong>Skiptafundur:</strong></td>
+              </tr>
+              <tr>
+                <td align="left">
+                  ${model.settlement?.settlementName},
+                  <br />
+                  kt. ${model.settlement?.settlementNationalId},
+                  <br />
+                  ${model.settlement?.settlementAddress},
+                  <br />
+                </td>
+                <td align="left">
+                  ${formatDate(model.settlement.settlementDeadline, 'dd. MMMM yyyy')}
+                </td>
+                <td align="left">
+                  miðvikudaginn
+                  <br />
+                  17. september 2025,
+                  <br />
+                  kl. 14.00
+                  <br />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p>Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur búinu eða eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu innköllunar þessarar.</p>
+          <p>Kröfulýsingar skulu sendar skiptastjóra að ${model.settlement.liquidatorLocation}</p>
+          <p>Skiptafundur til að fjalla um skrá um lýstar kröfur og ráðstöfun á eignum og réttindum búsins verður haldinn á skrifstofu skiptastjóra að ${model.settlement.liquidatorLocation}, á ofangreindum tíma.</p>
+          <p>Komi ekkert fram um eignir í búinu mun skiptum lokið á þeim skiptafundi með vísan til 155. gr. laga nr. 21/1991 um gjaldþrotaskipti o.fl. Skrá um lýstar kröfur mun liggja frammi á skrifstofu skiptastjóra síðustu viku fyrir skiptafundinn.</p>
+          `
+      break
+    }
+    case CategoryDefaultIdEnum.DECEASED_RECALL: {
+      if (!model.settlement || !model.settlement.settlementDateOfDeath) {
+        throw new Error('Settlement information is missing')
+      }
+
+      markup = `
+          <p>Með úrskurði héraðsdóms Reykjavíkur uppkveðnum *DAGSETNINGU VANTAR* var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:</p>
+          <table>
+            <tbody>
+              <tr>
+                <td><strong>Dánarbú, nafn:</strong></td>
+                <td><strong>Dánardagur:</strong></td>
+              </tr>
+              <tr>
+                <td>${model.settlement.settlementName}</td>
+                <td>${formatDate(model.settlement.settlementDateOfDeath, 'dd. MMMM yyyy')}</td>
+              </tr>
+              <tr>
+                <td>kt. ${model.settlement.settlementNationalId},</td>
+              </tr>
+              <tr>
+                <td>síðasta heimilisfang:</td>
+              </tr>
+              <tr>
+                <td>${model.settlement.settlementAddress}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur framangreindu dánarbúi eða telja til eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu þessarar innköllunar. Kröfulýsingar skulu sendar skiptastjóra að ${model.settlement.liquidatorLocation}.</p>
+          `
+      break
+    }
+    default: {
+      markup = `
+          <p>${model.html /* TODO: add column content to advert to store custom html from applications */}</p>
+          `
+    }
+  }
+
   return `
   <div class="advert">
-    <div class="advert__header">
-      <p class="advert__header_publishing">Útgáfud.: ${formatDate(
-        model.publishedAt ? model.publishedAt : model.scheduledAt,
-        'dd. MMMM yyyy',
-      )}</p>
-      <h1 class="advert__header_title">Lokað fyrir kröfur</h1>
-    </div>
-    ${
-      model.additionalText
-        ? `<div class="advert__additional"><p>${model.additionalText}</p></div>`
-        : ''
-    }
+    <p class="advertSerial">Útgáfud.: ${publishingDate}</p>
+    <h1 class="advertHeading">${model.title}</h1>
 
-    <div class="advert__content">
-      ${model.html}
+    ${additionalMarkup}
+
+    <div class="advertContent">
+      ${markup}
     </div>
-    <div class="advert__signature">
+
+    <div class="advertSignature">
       <p>${model.signatureLocation}, ${formatDate(model.signatureDate, 'dd. MMMM yyyy')}</p>
       ${model.signatureOnBehalfOf ? `<p>${model.signatureOnBehalfOf}</p>` : ''}
       <p><strong>${model.signatureName}</strong></p>
     </div>
-    <div>
-      <p class="advert__version">${model.case.caseNumber}${model.version}</p>
-    </div>
+    <p class="advertSerial">${model.case.caseNumber}${model.version}</p>
   </div>
   `
 }
