@@ -27,7 +27,7 @@ export const elasticSearchRoutes: FastifyPluginCallback = (
         throw new Error('OpenSearch client not available')
       }
       const data = await searchElastic(this.opensearch, request.query)
-      reply.send(data)
+      return reply.send(data)
     },
   )
 
@@ -44,7 +44,7 @@ export const elasticSearchRoutes: FastifyPluginCallback = (
       }
       await updateElasticItem(this.opensearch, request.query)
 
-      reply.send({ success: true })
+      return reply.send({ success: true })
     },
   )
 
@@ -71,7 +71,7 @@ export const elasticRebuildRoutes: FastifyPluginCallback = (
         throw new Error('OpenSearch client not available')
       }
       const data = await recreateElastic(this.opensearch)
-      reply.send(data)
+      return reply.send(data)
     },
   )
 
@@ -90,7 +90,7 @@ export const elasticRebuildRoutes: FastifyPluginCallback = (
         throw new Error('OpenSearch client not available')
       }
       const data = await repopulateElastic(this.opensearch)
-      reply.send(data)
+      return reply.send(data)
     },
   )
 

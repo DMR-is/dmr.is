@@ -1,15 +1,15 @@
-import { FastifyPluginCallback } from 'fastify';
+import { FastifyPluginCallback } from 'fastify'
 
-import { getAllMinistries } from '../db/Ministry';
-import { MinistryAttributes } from '../models';
-import { get, set } from '../utils/cache';
-import { cacheControl, QStr } from '../utils/misc';
-import { MinistryListItem, MinistrySlug } from './types';
+import { getAllMinistries } from '../db/Ministry'
+import { MinistryAttributes } from '../models'
+import { get, set } from '../utils/cache'
+import { cacheControl, QStr } from '../utils/misc'
+import { MinistryListItem, MinistrySlug } from './types'
 
-import { DAY, SECOND } from '@hugsmidjan/qj/time';
+import { DAY, SECOND } from '@hugsmidjan/qj/time'
 
-const MINISTRY_TTL = 1;
-const MINISTRY_REDIS_TTL = 1 * (DAY / SECOND);
+const MINISTRY_TTL = 1
+const MINISTRY_REDIS_TTL = 1 * (DAY / SECOND)
 
 export const ministryRoutes: FastifyPluginCallback = (fastify, opts, done) => {
   /**
@@ -18,37 +18,37 @@ export const ministryRoutes: FastifyPluginCallback = (fastify, opts, done) => {
    * @returns {MinistryList}
    */
   fastify.get<QStr<'slugs'>>('/ministries', opts, async (req, res) => {
-    const { redis } = fastify;
+    const { redis } = fastify
 
     const slugs = req.query.slugs
       ? (req.query.slugs.split(',') as Array<MinistrySlug>)
-      : undefined;
+      : undefined
 
-    const cacheKey = `ministries-${req.query.slugs ?? 'noslugs'}`;
+    const cacheKey = `ministries-${req.query.slugs ?? 'noslugs'}`
 
-    const cached = await get<Array<MinistryAttributes> | null>(redis, cacheKey);
+    const cached = await get<Array<MinistryAttributes> | null>(redis, cacheKey)
 
-    let data: Array<MinistryAttributes>;
+    let data: Array<MinistryAttributes>
 
     if (cached) {
-      data = cached;
+      data = cached
     } else {
       try {
-        data = await getAllMinistries(slugs);
-        set(redis, cacheKey, data, MINISTRY_REDIS_TTL);
+        data = await getAllMinistries(slugs)
+        set(redis, cacheKey, data, MINISTRY_REDIS_TTL)
       } catch (e) {
         // eslint-disable-next-line no-console
-        console.error('unable to get all ministries', e);
-        return res.status(500).send();
+        console.error('unable to get all ministries', e)
+        return res.status(500).send()
       }
     }
     const ministries = data.map((m): MinistryListItem => {
-      const { id, ...ministry } = m;
-      return ministry;
-    });
-    cacheControl(res, MINISTRY_TTL);
-    res.send(ministries);
-  });
+      const { id, ...ministry } = m
+      return ministry
+    })
+    cacheControl(res, MINISTRY_TTL)
+    return res.send(ministries)
+  })
 
-  done();
-};
+  done()
+}
