@@ -3,7 +3,6 @@
 import {
   Box,
   Button,
-  DropdownMenu,
   GridColumn,
   GridContainer,
   GridRow,
@@ -49,7 +48,7 @@ export const ApplicationSubmitted = ({ caseId, adverts }: Props) => {
                   </GridColumn>
                   <GridColumn span={['12/12', '3/12']}>
                     <Inline align="right">
-                      <AddAdvertsToApplicationMenu caseId={caseId} />
+                      <AddAdvertsToApplicationMenu />
                     </Inline>
                   </GridColumn>
                 </GridRow>
