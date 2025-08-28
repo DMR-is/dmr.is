@@ -1,0 +1,86 @@
+{
+  "name": "legal-gazette-public-web",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/legal-gazette-public-web",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["codegen"],
+      "options": {
+        "commands": ["tsc -p tsconfig.json --noEmit"],
+        "cwd": "apps/legal-gazette-public-web",
+        "forwardAllArgs": false
+      }
+    },
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "dependsOn": ["codegen"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "apps/legal-gazette-public-web/dist"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "apps/legal-gazette-public-web"
+        },
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "legal-gazette-public-web:build",
+        "dev": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "legal-gazette-public-web:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "legal-gazette-public-web:build:production",
+          "dev": false
+        }
+      }
+    },
+    "update-openapi-schema": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "curl http://localhost:4100/public-swagger/json > clientConfig.json",
+          "prettier --write clientConfig.json"
+        ],
+        "parallel": true,
+        "cwd": "apps/legal-gazette-public-web"
+      }
+    },
+    "codegen": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "rm -rf apps/legal-gazette-public-web/src/gen/fetch",
+          "yarn openapi-generator -o apps/legal-gazette-public-web/src/gen/fetch -i apps/legal-gazette-public-web/clientConfig.json"
+        ]
+      },
+      "outputs": ["{projectRoot}/gen/fetch"]
+    },
+    "container": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": ["build"],
+      "options": {
+        "engine": "docker",
+        "metadata": {
+          "load": true
+        },
+        "file": "apps/legal-gazette-public-web/Dockerfile"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

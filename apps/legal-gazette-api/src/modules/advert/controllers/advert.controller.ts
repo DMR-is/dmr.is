@@ -1,29 +1,32 @@
 import {
-  Body,
   Controller,
   Get,
   Inject,
   Param,
-  Patch,
   Query,
+  UseGuards,
 } from '@nestjs/common'
+import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { LGResponse } from '@dmr.is/legal-gazette/decorators'
+import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
+import { LGResponse } from '../../../decorators/lg-response.decorator'
 import { IAdvertService } from '../advert.service.interface'
 import {
   AdvertDto,
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
-  UpdateAdvertDto,
 } from '../dto/advert.dto'
 
 @Controller({
   path: 'adverts',
   version: '1',
 })
+@ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard)
 export class AdvertController {
   constructor(
     @Inject(IAdvertService) private readonly advertService: IAdvertService,
@@ -56,10 +59,10 @@ export class AdvertController {
     return this.advertService.getAdverts(query)
   }
 
-  @Get(':id')
-  @LGResponse({ operationId: 'getAdvertPdf', type: AdvertDto })
-  getAdvertPdf(@Param('id') id: string) {
-    return this.advertService.getAdvertById(id)
+  @Get(':id/published')
+  @LGResponse({ operationId: 'getAdvertPublished', type: AdvertDto })
+  getPublishedAdvertById(@Param('id', new UUIDValidationPipe()) id: string) {
+    return this.advertService.getPublishedAdvertById(id)
   }
 
   @Get(':id')
@@ -68,12 +71,9 @@ export class AdvertController {
     return this.advertService.getAdvertById(id)
   }
 
-  @Patch(':id')
-  @LGResponse({ operationId: 'updateAdvert', type: AdvertDto })
-  updateAdvert(
-    @Param('id') id: string,
-    @Body() advertUpdateDto: UpdateAdvertDto,
-  ) {
-    return this.advertService.updateAdvert(id, advertUpdateDto)
+  @Get('byCaseId/:caseId')
+  @LGResponse({ operationId: 'getAdvertsByCaseId', type: GetAdvertsDto })
+  getAdvertByCaseId(@Param('caseId', new UUIDValidationPipe()) caseId: string) {
+    return this.advertService.getAdvertsByCaseId(caseId)
   }
 }

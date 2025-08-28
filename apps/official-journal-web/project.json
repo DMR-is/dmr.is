@@ -3,6 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/official-journal-web",
   "projectType": "application",
+  "tags": [],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
@@ -121,6 +122,5 @@
         "file": "apps/official-journal-web/Dockerfile"
       }
     }
-  },
-  "tags": []
+  }
 }

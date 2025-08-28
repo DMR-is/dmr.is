@@ -6,18 +6,22 @@ import {
   Param,
   Post,
   Query,
+  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common'
+import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { LGResponse } from '@dmr.is/legal-gazette/decorators'
+import { CurrentUser } from '@dmr.is/decorators'
+import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
-import {
-  CaseDetailedDto,
-  CaseDto,
-  CaseQueryDto,
-  GetCasesDto,
-} from './dto/case.dto'
+import { Auth } from '@island.is/auth-nest-tools'
+
+import { LGResponse } from '../../decorators/lg-response.decorator'
+import { CaseDto, CaseQueryDto, GetCasesDto } from './dto/case.dto'
 import { ICaseService } from './case.service.interface'
 
+@ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard)
 @Controller({ path: 'cases', version: '1' })
 export class CaseController {
   constructor(
@@ -30,10 +34,16 @@ export class CaseController {
     return this.caseService.getCases(query)
   }
 
-  @Get(':id')
-  @LGResponse({ operationId: 'getCase', type: CaseDetailedDto })
-  getCase(@Param('id') id: string): Promise<CaseDetailedDto> {
-    return this.caseService.getCase(id)
+  @Post()
+  @LGResponse({ operationId: 'createCase', type: CaseDto })
+  createCase(@CurrentUser() currentUser: Auth): Promise<CaseDto> {
+    if (!currentUser?.nationalId) {
+      throw new UnauthorizedException('User not authenticated')
+    }
+
+    return this.caseService.createCase({
+      involvedPartyNationalId: currentUser.nationalId,
+    })
   }
 
   @Post(':id/restore')

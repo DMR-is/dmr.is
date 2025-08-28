@@ -33,9 +33,12 @@ export const PriceCalculator = () => {
   } = useCaseContext()
   const { md } = useBreakpoint()
   const { data: session } = useSession()
-  const { data: paymentData } = useGetPaymentStatus({ caseId: currentCase.id })
+  const { data: paymentData, mutate } = useGetPaymentStatus({
+    caseId: currentCase.id,
+  })
   const { state, dispatch } = usePriceCalculatorState(currentCase)
   const [prevPrice, setPrevPrice] = useState(currentCase.transaction?.price)
+  const [isLocalPaymentLoading, setLocalPaymentLoading] = useState(false)
   const dmrClient = getDmrClient(session?.idToken as string)
 
   const { trigger: updatePrice, isMutating: isPriceLoading } = useUpdatePrice({
@@ -310,7 +313,7 @@ export const PriceCalculator = () => {
           <Box>
             {paymentData?.created ? (
               <PriceCalculatorStatusBox
-                text="Auglýsing hefur verið send til TBR"
+                text={`Auglýsing hefur verið send til TBR, nr: ${currentCase.transaction?.externalReference}`}
                 success
               />
             ) : (
@@ -318,17 +321,38 @@ export const PriceCalculator = () => {
                 <Inline alignY="center" space={[2, 4]}>
                   <Box style={{ minWidth: md ? '308px' : '254px' }}>
                     <Text>Auglýsing hefur ekki verið send til TBR.</Text>
+                    <Text variant="small">(nr: {currentCase.caseNumber})</Text>
                   </Box>
                   <Button
                     variant="ghost"
                     size="small"
                     icon="arrowForward"
                     disabled={!canEdit}
+                    loading={isLocalPaymentLoading}
                     type="button"
                     onClick={async () => {
-                      await dmrClient.postExternalPaymentByCaseId({
-                        caseId: currentCase.id,
-                      })
+                      await dmrClient
+                        .postExternalPaymentByCaseId({
+                          caseId: currentCase.id,
+                        })
+                        .then(() => {
+                          setLocalPaymentLoading(true)
+                        })
+                        .finally(() => {
+                          setTimeout(() => {
+                            mutate()
+                            setLocalPaymentLoading(false)
+                          }, 1000)
+                        })
+                        .catch(() => {
+                          setLocalPaymentLoading(false)
+                          toast.error(
+                            'Ekki tókst að senda auglýsingu til TBR',
+                            {
+                              toastId: 'external-payment-error',
+                            },
+                          )
+                        })
                     }}
                   >
                     Senda til TBR
@@ -339,7 +363,7 @@ export const PriceCalculator = () => {
           </Box>
         ) : paymentData?.created ? (
           <PriceCalculatorStatusBox
-            text="Auglýsing hefur verið send til TBR"
+            text={`Auglýsing hefur verið send til TBR, nr: ${currentCase.transaction?.externalReference}`}
             success
           />
         ) : (

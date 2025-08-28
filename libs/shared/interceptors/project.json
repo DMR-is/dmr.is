@@ -3,6 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/shared/interceptors/src",
   "projectType": "library",
+  "tags": [],
   "targets": {
     "lint": {
       "executor": "@nx/eslint:lint"
@@ -22,6 +23,5 @@
         "forwardAllArgs": false
       }
     }
-  },
-  "tags": []
+  }
 }

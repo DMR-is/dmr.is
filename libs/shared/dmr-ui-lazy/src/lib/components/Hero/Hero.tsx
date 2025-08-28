@@ -1,3 +1,5 @@
+'use client'
+
 import { ImageProps } from '@dmr.is/ui/components/Image/Image'
 
 import {

@@ -11,10 +11,10 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
-import { CommonAdvertModel } from '../../common-advert/common-advert.model'
 import { commonAdvertTemplate } from '../../pdf/lib/templates'
 import { PdfService } from '../../pdf/pdf.service'
 import { AdvertModel } from '../advert.model'
+import { CommonAdvertModel } from '../common/common-advert.model'
 
 @Controller({ path: 'adverts/pdf', version: '1' })
 export class AdvertPdfController {

@@ -11,7 +11,7 @@ import {
   Query,
   Res,
 } from '@nestjs/common'
-import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { ApiExcludeEndpoint, ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import {
   DEFAULT_CASE_SORT_BY,
@@ -36,6 +36,7 @@ import {
   GetDepartmentsQueryParams,
   GetDepartmentsResponse,
   GetInstitutionsResponse,
+  GetLeanAdvertsResponse,
   GetMainCategoriesResponse,
   GetSimilarAdvertsResponse,
 } from '@dmr.is/shared/dto'
@@ -78,6 +79,17 @@ export class JournalController {
     @Query() params?: GetAdvertsQueryParams,
   ): Promise<GetAdvertsResponse> {
     return ResultWrapper.unwrap(await this.journalService.getAdverts(params))
+  }
+
+  @Get('/adverts-lean')
+  @ApiOperation({ operationId: 'getAdvertsLean' })
+  @ApiResponse({ status: 200, type: GetLeanAdvertsResponse })
+  async advertsLean(
+    @Query() params?: GetAdvertsQueryParams,
+  ): Promise<GetLeanAdvertsResponse> {
+    return ResultWrapper.unwrap(
+      await this.journalService.getAdvertsLean(params),
+    )
   }
 
   @Get('/departments/:id')
@@ -197,12 +209,53 @@ export class JournalController {
   @Header('Content-Type', 'text/rss+xml')
   async getRssFeed(@Param('id') id: string) {
     const adverts = ResultWrapper.unwrap(
-      await this.journalService.getAdverts({
+      await this.journalService.getAdvertsLean({
         department: id?.toLowerCase(),
         pageSize: 100,
       }),
     )
     return AdvertsToRss(adverts.adverts, id?.toLowerCase())
+  }
+
+  @Get('/legacy-pdf/:id?')
+  @ApiExcludeEndpoint()
+  @ApiOperation({ operationId: 'getLegacyPdfPath' })
+  @ApiResponse({
+    status: 301,
+    headers: {
+      Location: {
+        schema: {
+          type: 'string',
+          format: 'uri',
+        },
+      },
+    },
+  })
+  async getLegacyPdfPath(
+    @Query() query: Record<string, string>,
+    @Res() res: Response,
+    @Param('id') paramId?: string,
+  ) {
+    // Need to normalize the query parameters to lowercase
+    // because the legacy URL parameters were not case-sensitive.
+    const normalizedQuery = Object.fromEntries(
+      Object.entries(query).map(([key, value]) => [key.toLowerCase(), value]),
+    )
+    const recordId = normalizedQuery['recordid']
+    const documentId = normalizedQuery['documentid']
+
+    const queryId = recordId || documentId
+
+    const id = paramId || queryId
+
+    const pdfRes = await this.journalService.handleLegacyPdfUrl(id)
+    const url = pdfRes.unwrap().url
+
+    if (!url) {
+      throw new NotFoundException('PDF not found')
+    }
+
+    return res.redirect(301, url)
   }
 
   @Get('/pdf/:id')

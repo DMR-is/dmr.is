@@ -34,6 +34,7 @@ export enum Route {
   RITSTJORN_ID = '/ritstjorn/[id]',
   UTGAFA = '/utgafa',
   HEILDARYFIRLIT = '/heildaryfirlit',
+  LOGIN = '/innskraning',
 }
 
 export const Routes: RouteItem[] = [

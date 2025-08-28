@@ -19,7 +19,9 @@ export type BaseEntityAttributes = Pick<
 export type BaseEntityAttributesDetailed = BaseEntityModelAttributes
 
 @BaseEntityTable()
-export class BaseEntityModel extends BaseModel<
+export class BaseEntityModel<
+  ReturnDtoType = BaseEntityAttributes,
+> extends BaseModel<
   BaseEntityModelAttributes,
   BaseEntityModelCreateAttributes
 > {
@@ -35,27 +37,11 @@ export class BaseEntityModel extends BaseModel<
   })
   slug!: string
 
-  static fromModel(model: BaseEntityModel): BaseEntityAttributes {
-    try {
-      return {
-        id: model.id,
-        title: model.title,
-        slug: model.slug,
-      }
-    } catch (error) {
-      this.logger.debug(
-        `fromModel failed from model ${this.constructor.name}`,
-        error,
-      )
-      throw error
-    }
-  }
-
-  fromModel(): BaseEntityAttributes {
-    return BaseEntityModel.fromModel(this)
-  }
-
-  static fromModels(models: BaseEntityModel[]): BaseEntityAttributes[] {
-    return models.map((model) => BaseEntityModel.fromModel(model))
+  fromModel(): ReturnDtoType {
+    return {
+      id: this.id,
+      title: this.title,
+      slug: this.slug,
+    } as ReturnDtoType
   }
 }

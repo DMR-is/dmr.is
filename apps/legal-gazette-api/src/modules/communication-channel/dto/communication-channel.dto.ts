@@ -8,7 +8,7 @@ import {
 
 import { ApiProperty, IntersectionType } from '@nestjs/swagger'
 
-import { DetailedDto } from '@dmr.is/legal-gazette/dto'
+import { DetailedDto } from '../../../dto/detailed.dto'
 
 export class CreateCommunicationChannelDto {
   @ApiProperty({

@@ -8,8 +8,11 @@ import { apmInit } from '@dmr.is/apm'
 import { logger } from '@dmr.is/logging'
 
 import { AppModule } from './app/app.module'
-import { CategoryModule } from './modules/category/category.module'
-import { CommonApplicationModule } from './modules/common-application/common-application.module'
+import { AdvertModule } from './modules/advert/advert.module'
+import { CommonApplicationModule } from './modules/applications/common/dmr/common-application.module'
+import { BaseEntityModule } from './modules/base-entity/base-entity.module'
+import { SubscriberModule } from './modules/subscribers/subscriber.module'
+import { ApplicationWebModule } from './modules/swagger/application-web.module'
 import { openApi } from './openApi'
 
 async function bootstrap() {
@@ -18,9 +21,15 @@ async function bootstrap() {
   const internalSwaggerPath = 'swagger'
   const islandSwaggerPath = 'island-is-swagger'
   const islandApiTag = 'Legal gazette - common application'
+  const publicSwaggerPath = 'public-swagger'
+  const publicApiTag = 'Legal gazette - public API'
+  const applicationWebSwaggerPath = 'application-web-swagger'
+  const applicationWebApiTag = 'Legal gazette - application web API'
 
   const app = await NestFactory.create(AppModule, {
-    logger: WinstonModule.createLogger({ instance: logger }),
+    logger: WinstonModule.createLogger({
+      instance: logger,
+    }),
   })
 
   app.useGlobalPipes(
@@ -39,7 +48,7 @@ async function bootstrap() {
   SwaggerModule.setup(internalSwaggerPath, app, internalDocument)
 
   const islandDocument = SwaggerModule.createDocument(app, openApi, {
-    include: [CommonApplicationModule, CategoryModule],
+    include: [CommonApplicationModule, BaseEntityModule],
     deepScanRoutes: true,
     autoTagControllers: false,
   })
@@ -59,12 +68,56 @@ async function bootstrap() {
     jsonDocumentUrl: `/${islandSwaggerPath}/json`,
   })
 
+  const publicDocument = SwaggerModule.createDocument(app, openApi, {
+    include: [AdvertModule, BaseEntityModule, SubscriberModule],
+    deepScanRoutes: true,
+    autoTagControllers: false,
+  })
+
+  // replace the default tag with 'Legal gazette - public API'
+  publicDocument.tags = [{ name: publicApiTag }]
+
+  // tag routes
+  Object.values(publicDocument.paths).forEach((path) => {
+    for (const method of Object.values(path)) {
+      method.tags = [publicApiTag]
+    }
+  })
+
+  SwaggerModule.setup(publicSwaggerPath, app, publicDocument, {
+    customSiteTitle: 'Legal Gazette Public API',
+    jsonDocumentUrl: `/${publicSwaggerPath}/json`,
+  })
+
+  const applicationWebDocument = SwaggerModule.createDocument(app, openApi, {
+    include: [ApplicationWebModule],
+    deepScanRoutes: true,
+    autoTagControllers: false,
+  })
+
+  // replace the default tag with 'Legal gazette - application web API'
+  applicationWebDocument.tags = [{ name: applicationWebApiTag }]
+
+  // tag routes
+  Object.values(applicationWebDocument.paths).forEach((path) => {
+    for (const method of Object.values(path)) {
+      method.tags = [applicationWebApiTag]
+    }
+  })
+
+  SwaggerModule.setup(applicationWebSwaggerPath, app, applicationWebDocument, {
+    customSiteTitle: 'Legal Gazette Application Web API',
+    jsonDocumentUrl: `/${applicationWebSwaggerPath}/json`,
+  })
+
   apmInit()
 
   const port = process.env.LEGAL_GAZETTE_API_PORT || 4100
   await app.listen(port)
 
-  Logger.log(
+  const tmpLogger = new Logger('LegalGazetteAPI')
+
+  tmpLogger.log(
     `🚀 Legal gazette API is running on: http://localhost:${port}/${globalPrefix}/${version}/`,
   )
 }

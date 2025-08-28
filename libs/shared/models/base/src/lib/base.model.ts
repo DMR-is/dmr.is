@@ -1,4 +1,7 @@
+import { FindOptions } from 'sequelize'
 import {
+  BeforeCreate,
+  BeforeFind,
   Column,
   CreatedAt,
   DataType,
@@ -43,6 +46,23 @@ export class BaseModel<
 
   @DeletedAt
   deletedAt!: Date | null
+
+  @BeforeCreate
+  static logBeforeCreate(
+    instance: BaseModelWithAttributes<BaseModelAttributes>,
+  ): void {
+    this.logger.debug('Creating entity', {
+      context: this.name,
+      id: instance.id,
+    })
+  }
+
+  @BeforeFind
+  static logbeforeFind(_options: FindOptions): void {
+    this.logger.debug('Looking for entities', {
+      context: this.name,
+    })
+  }
 
   static get logger() {
     return getLogger(this.name)

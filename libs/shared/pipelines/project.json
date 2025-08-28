@@ -3,6 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/shared/pipelines/src",
   "projectType": "library",
+  "tags": [],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
@@ -22,6 +23,5 @@
         "jestConfig": "libs/shared/pipelines/jest.config.ts"
       }
     }
-  },
-  "tags": []
+  }
 }

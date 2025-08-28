@@ -1,21 +1,27 @@
 import { Column, DataType, HasMany } from 'sequelize-typescript'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
+import { LegalGazetteModels } from '../../lib/constants'
 import { CategoryModel } from '../category/category.model'
 import { TypeDto } from './dto/type.dto'
 
 export enum TypeIdEnum {
-  COMMON_APPLICATION = 'a58fe2a8-b0a9-47bd-b424-4b9cece0e622',
+  COMMON_ADVERT = 'a58fe2a8-b0a9-47bd-b424-4b9cece0e622',
+  RECALL = '67cd8559-ea7a-45ae-8de1-e87005c35531',
+  DIVISION_MEETING = '5b3dded4-e6c2-411e-a9e0-213bea06af17',
+  DIVISION_ENDING = '8819e35e-89ef-4110-bf18-905df2ae122c',
 }
 
 export enum TypeEnum {
-  COMMON_APPLICATION = 'Almenn auglýsing',
+  COMMON_ADVERT = 'Almenn auglýsing',
+  RECALL = 'Innköllun',
+  DIVISION_MEETING = 'Skiptafundur',
+  DIVISION_ENDING = 'Skiptalok',
 }
 
 @BaseEntityTable({ tableName: LegalGazetteModels.ADVERT_TYPE })
-export class TypeModel extends BaseEntityModel {
+export class TypeModel extends BaseEntityModel<TypeDto> {
   @HasMany(() => CategoryModel)
   categories!: CategoryModel[]
 
@@ -25,16 +31,4 @@ export class TypeModel extends BaseEntityModel {
     allowNull: false,
   })
   title!: TypeEnum
-
-  static fromModel(model: TypeModel): TypeDto {
-    return {
-      id: model.id,
-      title: model.title,
-      slug: model.slug,
-    }
-  }
-
-  fromModel(): TypeDto {
-    return TypeModel.fromModel(this)
-  }
 }

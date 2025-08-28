@@ -413,7 +413,11 @@ export class PriceService implements IPriceService {
       })
     }
 
-    if (body.additionalDocCount && additionalDocFee?.value) {
+    if (
+      body.additionalDocCount &&
+      body.additionalDocCount > 0 &&
+      additionalDocFee?.value
+    ) {
       additionalDocPrice = body.additionalDocCount * additionalDocFee.value
       usedFeeCodes.push(additionalDocFee.feeCode)
       expenses.push({
@@ -486,7 +490,7 @@ export class PriceService implements IPriceService {
 
   @LogAndHandle()
   @Transactional()
-  async postExternalPayment(
+  private async postExternalPayment(
     caseId: string,
     body: UpdateCasePaymentBody,
     transaction?: Transaction,
@@ -569,8 +573,10 @@ export class PriceService implements IPriceService {
     )
 
     if (res.status === 404) {
-      this.logger.debug(
-        'price.service.getExternalPaymentStatus, payment not found',
+      const jsonResponse = await res.json()
+      const errorStatus = jsonResponse?.error
+      this.logger.warn(
+        `price.service.getExternalPaymentStatus, payment not found for case: ${caseLookup.caseNumber} - ${errorStatus?.detail ?? ''}`,
       )
       return ResultWrapper.ok({
         paid: false,

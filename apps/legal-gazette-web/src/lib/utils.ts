@@ -121,3 +121,24 @@ export const flattenMessages = (
     {} as Record<string, string>,
   )
 }
+
+export const getLoginRedirectUrl = (callbackUrl?: string) => {
+  const isRelativeUrl = callbackUrl && callbackUrl.startsWith('/')
+
+  if (callbackUrl && isRelativeUrl && callbackUrl !== '/') {
+    return `${Route.LOGIN}?callbackUrl=${callbackUrl}`
+  }
+
+  return Route.LOGIN
+}
+
+export const loginRedirect = (callbackUrl?: string) => {
+  const fullUrl = getLoginRedirectUrl(callbackUrl)
+
+  return {
+    redirect: {
+      destination: fullUrl,
+      permanent: false,
+    },
+  }
+}

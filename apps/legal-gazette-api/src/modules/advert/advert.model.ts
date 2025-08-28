@@ -1,5 +1,6 @@
-import { Op } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import {
+  BeforeUpdate,
   BelongsTo,
   Column,
   DataType,
@@ -11,27 +12,39 @@ import {
 
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { LegalGazetteModels } from '../../lib/constants'
+import { validateAdvertStatus } from '../../lib/utils'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
-import {
-  CommonAdvertCreationAttributes,
-  CommonAdvertModel,
-} from '../common-advert/common-advert.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
-import { TypeModel } from '../type/type.model'
+import { TypeIdEnum, TypeModel } from '../type/type.model'
+import {
+  CommonAdvertCreateAttributes,
+  CommonAdvertModel,
+} from './common/common-advert.model'
+import {
+  DivisionEndingAdvertCreateAttributes,
+  DivisionEndingAdvertModel,
+} from './division/models/division-ending-advert.model'
+import {
+  DivisionMeetingAdvertCreateAttributes,
+  DivisionMeetingAdvertModel,
+} from './division/models/division-meeting-advert.model'
 import {
   AdvertDetailedDto,
   AdvertDto,
   AdvertStatusCounterItemDto,
   GetAdvertsQueryDto,
 } from './dto/advert.dto'
+import {
+  RecallAdvertCreateAttributes,
+  RecallAdvertModel,
+} from './recall/recall-advert.model'
 
 type AdvertAttributes = {
   caseId: string
-  title: string
   html: string
   submittedBy: string
   publicationNumber: string
@@ -42,25 +55,37 @@ type AdvertAttributes = {
   categoryId: string
   statusId: string
   paid: boolean
+  signatureName: string
+  signatureLocation: string
+  signatureDate: Date
   type: TypeModel
   category: CategoryModel
   status: StatusModel
   case: CaseModel
+  commonAdvert?: CommonAdvertModel
+  recallAdvert?: RecallAdvertModel
+  divisionMeetingAdvert?: DivisionMeetingAdvertModel
+  divisionEndingAdvert?: DivisionEndingAdvertModel
 }
 
 export type AdvertCreateAttributes = {
-  title: string
   submittedBy: string
-  caseId?: string
-  html?: string
   typeId: string
   categoryId: string
+  scheduledAt: Date
+  signatureName: string
+  signatureLocation: string
+  signatureDate: Date
+  caseId?: string
+  html?: string
   statusId?: string
   paid?: boolean
   publishedAt?: Date | null
-  scheduledAt: Date
   version?: AdvertVersionEnum
-  commonAdvert?: CommonAdvertCreationAttributes
+  commonAdvert?: CommonAdvertCreateAttributes
+  recallAdvert?: RecallAdvertCreateAttributes
+  divisionMeetingAdvert?: DivisionMeetingAdvertCreateAttributes
+  divisionEndingAdvert?: DivisionEndingAdvertCreateAttributes
 }
 
 export enum AdvertVersionEnum {
@@ -75,23 +100,14 @@ export enum AdvertModelScopes {
   TO_BE_PUBLISHED = 'toBePublished',
   PUBLISHED = 'published',
   COMPLETED = 'completed',
+  RECALL_ADVERT = 'recallAdvert',
   ALL = 'all',
   WITH_QUERY = 'withQuery',
 }
 
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
 @DefaultScope(() => ({
-  include: [
-    StatusModel,
-    CategoryModel,
-    TypeModel,
-    CommonAdvertModel,
-    {
-      model: CaseModel.unscoped(),
-      attributes: ['caseNumber'],
-      required: true,
-    },
-  ],
+  include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
   where: {
     statusId: {
       [Op.in]: [StatusIdEnum.SUBMITTED, StatusIdEnum.READY_FOR_PUBLICATION],
@@ -100,21 +116,14 @@ export enum AdvertModelScopes {
       [Op.eq]: null,
     },
   },
-  order: [['scheduledAt', 'ASC']],
+  order: [
+    ['scheduledAt', 'ASC'],
+    ['version', 'ASC'],
+  ],
 }))
 @Scopes(() => ({
   readyForPublication: {
-    include: [
-      StatusModel,
-      CategoryModel,
-      TypeModel,
-      CommonAdvertModel,
-      {
-        model: CaseModel.unscoped(),
-        attributes: ['caseNumber'],
-        required: true,
-      },
-    ],
+    include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
     where: {
       statusId: StatusIdEnum.READY_FOR_PUBLICATION,
       publishedAt: { [Op.eq]: null },
@@ -122,17 +131,7 @@ export enum AdvertModelScopes {
     order: [['scheduledAt', 'ASC']],
   },
   toBePublished: {
-    include: [
-      StatusModel,
-      CategoryModel,
-      TypeModel,
-      CommonAdvertModel,
-      {
-        model: CaseModel.unscoped(),
-        attributes: ['caseNumber'],
-        required: true,
-      },
-    ],
+    include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
     where: {
       paid: true,
       statusId: StatusIdEnum.READY_FOR_PUBLICATION,
@@ -141,17 +140,7 @@ export enum AdvertModelScopes {
     order: [['scheduledAt', 'ASC']],
   },
   published: {
-    include: [
-      StatusModel,
-      CategoryModel,
-      TypeModel,
-      CommonAdvertModel,
-      {
-        model: CaseModel.unscoped(),
-        attributes: ['caseNumber'],
-        required: true,
-      },
-    ],
+    include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
     where: {
       publishedAt: { [Op.ne]: null },
       statusId: StatusIdEnum.PUBLISHED,
@@ -159,18 +148,7 @@ export enum AdvertModelScopes {
     order: [['publishedAt', 'DESC']],
   },
   completed: {
-    include: [
-      StatusModel,
-      CategoryModel,
-      TypeModel,
-      CommonAdvertModel,
-      {
-        model: CaseModel.unscoped(),
-        attributes: ['caseNumber'],
-        required: true,
-        paranoid: false,
-      },
-    ],
+    include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
     order: [['scheduledAt', 'ASC']],
     where: {
       statusId: {
@@ -183,20 +161,26 @@ export enum AdvertModelScopes {
     },
   },
   all: {
+    include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
+    where: {},
+    order: [
+      ['scheduledAt', 'ASC'],
+      ['version', 'ASC'],
+    ],
+  },
+  recallAdvert: {
     include: [
       StatusModel,
       CategoryModel,
       TypeModel,
       CommonAdvertModel,
-      {
-        model: CaseModel.unscoped(),
-        duplicating: false,
-        attributes: ['caseNumber'],
-        required: true,
-      },
+      RecallAdvertModel,
     ],
-    where: {},
-    order: [['version', 'ASC']],
+    where: {
+      typeId: {
+        [Op.eq]: TypeIdEnum.RECALL,
+      },
+    },
   },
   withQuery: (query?: GetAdvertsQueryDto) => {
     const whereClause: Record<string, string | number> = {}
@@ -215,8 +199,49 @@ export enum AdvertModelScopes {
       })
     }
 
+    if (query?.typeId) {
+      Object.assign(whereClause, {
+        typeId: query.typeId,
+      })
+    }
+
+    if (query?.dateFrom && !query?.dateTo) {
+      Object.assign(whereClause, {
+        publishedAt: {
+          [Op.gte]: new Date(query.dateFrom),
+        },
+      })
+    }
+
+    if (query?.dateTo && !query?.dateFrom) {
+      Object.assign(whereClause, {
+        publishedAt: {
+          [Op.lte]: new Date(query.dateTo),
+        },
+      })
+    }
+
+    if (query?.dateFrom && query?.dateTo) {
+      Object.assign(whereClause, {
+        publishedAt: {
+          [Op.between]: [new Date(query.dateFrom), new Date(query.dateTo)],
+        },
+      })
+    }
+
+    if (query?.search) {
+      Object.assign(whereClause, {
+        [Op.or]: [
+          { title: { [Op.iLike]: `%${query.search}%` } },
+          { publicationNumber: { [Op.iLike]: `%${query.search}%` } },
+        ],
+      })
+    }
+
     return {
+      include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
       where: whereClause,
+      order: [['scheduledAt', 'ASC']],
     }
   },
 }))
@@ -255,11 +280,11 @@ export class AdvertModel extends BaseModel<
     defaultValue: StatusIdEnum.SUBMITTED,
   })
   @ForeignKey(() => StatusModel)
-  statusId!: string
+  statusId!: StatusIdEnum
 
   @Column({
     type: DataType.DATE,
-    allowNull: true,
+    allowNull: false,
     field: 'scheduled_at',
   })
   scheduledAt!: Date
@@ -281,11 +306,25 @@ export class AdvertModel extends BaseModel<
   html!: string
 
   @Column({
-    type: DataType.STRING,
+    field: 'signature_name',
+    type: DataType.STRING(100),
     allowNull: false,
-    field: 'title',
   })
-  title!: string
+  signatureName!: string
+
+  @Column({
+    field: 'signature_location',
+    type: DataType.TEXT,
+    allowNull: false,
+  })
+  signatureLocation!: string
+
+  @Column({
+    field: 'signature_date',
+    type: DataType.DATE,
+    allowNull: false,
+  })
+  signatureDate!: Date
 
   @Column({
     type: DataType.ENUM(...Object.values(AdvertVersionEnum)),
@@ -311,13 +350,13 @@ export class AdvertModel extends BaseModel<
   submittedBy!: string
 
   @Column({
-    type: DataType.VIRTUAL,
+    type: DataType.TEXT,
+    field: 'publication_number',
+    unique: true,
+    allowNull: true,
+    defaultValue: null,
   })
-  get publicationNumber(): string {
-    const advertCase = this.getDataValue('case')
-
-    return advertCase.caseNumber
-  }
+  publicationNumber!: string | null
 
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
   case!: CaseModel
@@ -334,6 +373,30 @@ export class AdvertModel extends BaseModel<
   @HasOne(() => CommonAdvertModel, { foreignKey: 'advertId' })
   commonAdvert?: CommonAdvertModel
 
+  @HasOne(() => RecallAdvertModel, {
+    foreignKey: 'advertId',
+  })
+  recallAdvert?: RecallAdvertModel
+
+  @HasOne(() => DivisionMeetingAdvertModel, {
+    foreignKey: 'advertId',
+  })
+  divisionMeetingAdvert?: DivisionMeetingAdvertModel
+
+  @HasOne(() => DivisionEndingAdvertModel, {
+    foreignKey: 'advertId',
+  })
+  divisionEndingAdvert?: DivisionEndingAdvertModel
+
+  get title(): string {
+    return this.type.title
+  }
+
+  @BeforeUpdate
+  static validateUpdate(instance: AdvertModel) {
+    validateAdvertStatus(instance)
+  }
+
   static async countByStatus(
     statusId: StatusIdEnum,
   ): Promise<AdvertStatusCounterItemDto> {
@@ -341,7 +404,7 @@ export class AdvertModel extends BaseModel<
       context: 'AdvertModel',
     })
 
-    const whereClause: Record<string, any> = {
+    const whereClause: WhereOptions = {
       statusId,
     }
 
@@ -371,12 +434,55 @@ export class AdvertModel extends BaseModel<
   }
 
   static async publish(model: AdvertModel) {
-    this.logger.info(`Publishing advert`, {
+    const now = new Date()
+    this.logger.info(`Publishing advert at ${now}`, {
       context: 'AdvertModel',
       advertId: model.id,
+      timestamp: now,
     })
 
+    if (model.statusId !== StatusIdEnum.READY_FOR_PUBLICATION) {
+      this.logger.error(
+        `Advert with ID ${model.id} is not ready for publication`,
+        {
+          context: 'AdvertModel',
+        },
+      )
+      throw new BadRequestException('Advert is not ready for publication')
+    }
+
+    if (model.publishedAt !== null) {
+      this.logger.error(`Advert with ID ${model.id} is already published`, {
+        context: 'AdvertModel',
+      })
+      throw new BadRequestException('Advert is already published')
+    }
+
+    const startDate = now.setHours(0, 0, 0, 0)
+    const endDate = now.setHours(23, 59, 59, 999)
+
+    const year = now.getFullYear()
+    const month = (now.getMonth() + 1).toString().padStart(2, '0')
+    const day = now.getDate().toString().padStart(2, '0')
+
+    const count = await AdvertModel.count({
+      where: {
+        publishedAt: {
+          [Op.and]: [
+            { [Op.ne]: null },
+            { [Op.gte]: startDate },
+            { [Op.lt]: endDate },
+          ],
+        },
+      },
+    })
+
+    const padded = (count + 1).toString().padStart(3, '0')
+
+    const publicationNumber = `${year}${month}${day}${padded}`
+
     await model.update({
+      publicationNumber: publicationNumber,
       publishedAt: new Date(),
       statusId: StatusIdEnum.PUBLISHED,
     })
@@ -405,6 +511,9 @@ export class AdvertModel extends BaseModel<
         category: model.category.fromModel(),
         status: model.status.fromModel(),
         type: model.type.fromModel(),
+        signatureDate: model.signatureDate.toISOString(),
+        signatureLocation: model.signatureLocation,
+        signatureName: model.signatureName,
         createdAt: model.createdAt.toISOString(),
         updatedAt: model.updatedAt.toISOString(),
         deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
@@ -441,8 +550,14 @@ export class AdvertModel extends BaseModel<
         updatedAt: model.updatedAt.toISOString(),
         deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
         paid: model.paid,
+        signatureDate: model.signatureDate.toISOString(),
+        signatureLocation: model.signatureLocation,
+        signatureName: model.signatureName,
         commonAdvert: model.commonAdvert
           ? model.commonAdvert.fromModel()
+          : undefined,
+        recallAdvert: model.recallAdvert
+          ? model.recallAdvert.fromModel()
           : undefined,
       }
     } catch (error) {

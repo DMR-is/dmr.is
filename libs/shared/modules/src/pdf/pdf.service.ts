@@ -124,37 +124,47 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     htmlContent: string,
     header?: string,
   ): Promise<ResultWrapper<Buffer>> {
-    try {
-      return retryAsync(
-        async () => {
-          if (this.browser === null) {
-            this.logger.debug('Creating new browser instance', {
-              category: LOGGING_CATEGORY,
-            })
-            this.browser = await getBrowser()
-          }
+    const attempt = async (): Promise<Buffer> => {
+      // (Re)create browser if missing or disconnected
+      if (!this.browser || !this.browser.isConnected()) {
+        this.logger.debug('Creating new browser instance', {
+          category: LOGGING_CATEGORY,
+        })
+        this.browser = await getBrowser()
+      }
 
-          const page = await this.browser.newPage()
-          await page.setContent(htmlContent)
-          await page.addStyleTag({
-            content: pdfCss,
+      let page: import('puppeteer').Page | null = null
+
+      try {
+        page = (await this.browser!.newPage()) as Page
+
+        // Safer timeouts to avoid mid-command drops
+        page.setDefaultTimeout(60000)
+        page.setDefaultNavigationTimeout(60000)
+
+        // Load content and wait for quiet network so PDF has stable layout
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
+
+        // Your shared PDF CSS
+        await page.addStyleTag({ content: pdfCss })
+
+        if (header) {
+          // Keep your original paragraph wrapping transform
+          await page.evaluate(() => {
+            const paragraphs = document.querySelectorAll('p')
+
+            paragraphs.forEach((p) => {
+              const parts = p.innerHTML.split('<br>')
+              const wrappedParts = parts.map(
+                (text) =>
+                  `<span style="text-indent: 2em; display: block; max-width: 100%;">${text.trim()}</span>`,
+              )
+              p.innerHTML = wrappedParts.join('<br>')
+            })
           })
 
-          if (header) {
-            await (page as Page).evaluate(() => {
-              const paragraphs = document.querySelectorAll('p')
-
-              paragraphs.forEach((p) => {
-                const parts = p.innerHTML.split('<br>')
-                const wrappedParts = parts.map(
-                  (text) =>
-                    `<span style="text-indent: 2em; display: block; max-width: 100%;">${text.trim()}</span>`,
-                )
-                p.innerHTML = wrappedParts.join('<br>')
-              })
-            })
-            const pdf = await page.pdf({
-              headerTemplate: `
+          const pdf = await page.pdf({
+            headerTemplate: `
               <div style="font-size:14px;
                           width:100%;
                           padding:35px 100px;
@@ -165,20 +175,59 @@ export class PdfService implements OnModuleDestroy, IPdfService {
                 ${header}
               </div>
             `,
-              footerTemplate: '<div></div>',
-              displayHeaderFooter: true,
-            })
-            await page.close()
-            return ResultWrapper.ok(pdf)
-          } else {
-            const pdf = await page.pdf()
-            await page.close()
-            return ResultWrapper.ok(pdf)
+            footerTemplate: '<div></div>',
+            displayHeaderFooter: true,
+          })
+
+          return pdf
+        } else {
+          const pdf = await page.pdf()
+          return pdf
+        }
+      } finally {
+        try {
+          await page?.close({ runBeforeUnload: true })
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+
+    try {
+      const buffer = await retryAsync(
+        async () => {
+          try {
+            return await attempt()
+          } catch (err: any) {
+            const msg = String(err?.message ?? '')
+            // If Chrome/DevTools connection dropped, rebuild browser for the next try
+            if (
+              /Protocol error|Target closed|Connection closed|Session closed|Navigation failed/i.test(
+                msg,
+              )
+            ) {
+              this.logger.warn(
+                'PDF attempt failed; resetting browser before retry',
+                {
+                  category: LOGGING_CATEGORY,
+                  error: msg,
+                },
+              )
+              try {
+                await this.browser?.close()
+              } catch {
+                /* ignore */
+              }
+              this.browser = null
+            }
+            throw err // let retryAsync back off and retry
           }
         },
         PDF_RETRY_ATTEMPTS,
         PDF_RETRY_DELAY,
       )
+
+      return ResultWrapper.ok(buffer)
     } catch (error) {
       this.logger.error(`Failed to generate PDF`, {
         category: LOGGING_CATEGORY,
@@ -197,6 +246,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     caseId: string,
     publishedAt?: string,
     serial?: number,
+    correctionDate?: string | Date,
   ): Promise<ResultWrapper<Buffer>> {
     const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
     const activeCase = caseDetailedMigrate(caseLookup)
@@ -216,6 +266,9 @@ export class PdfService implements OnModuleDestroy, IPdfService {
         activeCase.publishedAt && activeCase.advertDepartment.title
           ? `<div class="sub_signature">${activeCase.advertDepartment.title} - Útgáfudagur: ${formatAnyDate(activeCase.publishedAt)}</div>`
           : undefined,
+      correction: correctionDate
+        ? `<div class="correction"><p>Leiðrétt skjal: ${formatAnyDate(correctionDate)}</p></div>`
+        : '',
     })
 
     const signatureRecords = activeCase.signature.records

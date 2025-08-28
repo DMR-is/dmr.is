@@ -11,6 +11,7 @@ import {
 
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { formatDate } from '../../lib/utils'
+import { Appendixes } from '../appendixes/Appendixes'
 import * as styles from './AdvertDisplay.css'
 
 type Props = {
@@ -19,7 +20,7 @@ type Props = {
 export const AdvertDisplay = ({ disclosure }: Props) => {
   const { currentCase } = useCaseContext()
 
-  const { signatureDate } = currentCase.signature
+  const { requestedPublicationDate} = currentCase
 
   return (
     <ModalBase baseId="myDialog" disclosure={disclosure}>
@@ -46,10 +47,10 @@ export const AdvertDisplay = ({ disclosure }: Props) => {
                   >
                     <Box display="flex" justifyContent="spaceBetween">
                       <Text variant="eyebrow" color="purple400">
-                        Nr. {currentCase.caseNumber}
+                        Nr. 000/{new Date().getFullYear()}
                       </Text>
                       <Text variant="eyebrow" color="purple400">
-                        {formatDate(signatureDate)}
+                        {formatDate(requestedPublicationDate, 'd. MMMM yyyy')}
                       </Text>
                     </Box>
                     <Box textAlign="center" marginBottom={[2, 3, 4]}>
@@ -61,7 +62,29 @@ export const AdvertDisplay = ({ disclosure }: Props) => {
                       dangerouslySetInnerHTML={{
                         __html: currentCase.html,
                       }}
-                    ></Box>
+                    />
+                    <Box
+                      className={styles.bodyText}
+                      dangerouslySetInnerHTML={{
+                        __html: currentCase.signature?.html ?? '',
+                      }}
+                    />
+                    {currentCase.additions &&
+                    currentCase.additions.length > 0 ? (
+                      <Appendixes additions={currentCase.additions} />
+                    ) : undefined}
+                    <p
+                      style={{
+                        marginTop: '1.5em',
+                        marginBottom: '1.5em',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <strong>
+                        {currentCase.advertDepartment.title} - Útgáfudagur:{' '}
+                        {formatDate(requestedPublicationDate, 'd. MMMM yyyy')}
+                      </strong>
+                    </p>
                   </Box>
                 </Box>
               </Box>

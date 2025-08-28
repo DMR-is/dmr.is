@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-import { BaseEntityDto } from '@dmr.is/legal-gazette/dto'
+import { BaseEntityDto } from '../../../dto/base-entity.dto'
+import { StatusEnum, StatusIdEnum } from '../status.model'
 
 export class GetStatusesDto {
   @ApiProperty({
@@ -9,4 +10,23 @@ export class GetStatusesDto {
   statuses!: BaseEntityDto[]
 }
 
-export class StatusDto extends BaseEntityDto {}
+export class StatusDto {
+  @ApiProperty({
+    type: String,
+    enum: StatusIdEnum,
+    enumName: 'StatusIdEnum',
+  })
+  id!: string
+
+  @ApiProperty({
+    type: String,
+    enum: StatusEnum,
+    enumName: 'StatusEnum',
+  })
+  title!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  slug!: string
+}

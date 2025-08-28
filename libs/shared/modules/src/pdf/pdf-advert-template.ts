@@ -6,6 +6,7 @@ type AdvertTemplateProps = {
   additions?: string
   hiddenSignature?: boolean
   subSignature?: string
+  correction?: string
 }
 
 export const advertPdfTemplate = ({
@@ -16,6 +17,7 @@ export const advertPdfTemplate = ({
   signature,
   hiddenSignature,
   subSignature,
+  correction,
 }: AdvertTemplateProps) => {
   const publishSignature = subSignature ?? ''
   return `
@@ -25,7 +27,7 @@ export const advertPdfTemplate = ({
       ${content}
       <section class="regulation__signature${hiddenSignature ? ' hidden' : ''}">
         ${signature}
-        ${!additions ? publishSignature : ''}
+        ${!additions ? publishSignature + correction : ''}
       </section>
     </div>
     ${
@@ -34,7 +36,7 @@ export const advertPdfTemplate = ({
     <div class="appendixes">
       ${additions}
       <section class="regulation__signature${hiddenSignature ? ' hidden' : ''}">
-        ${publishSignature}
+        ${publishSignature + correction}
       </section>
     </div>`
         : ''

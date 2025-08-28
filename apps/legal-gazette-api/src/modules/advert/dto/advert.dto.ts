@@ -15,15 +15,16 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { DetailedDto } from '@dmr.is/legal-gazette/dto'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
+import { DetailedDto } from '../../../dto/detailed.dto'
 import { CategoryDto } from '../../category/dto/category.dto'
-import { CommonAdvertDto } from '../../common-advert/dto/common-advert.dto'
 import { StatusDto } from '../../status/dto/status.dto'
 import { StatusIdEnum } from '../../status/status.model'
 import { TypeDto } from '../../type/dto/type.dto'
 import { AdvertVersionEnum } from '../advert.model'
+import { CommonAdvertDto } from '../common/dto/common-advert.dto'
+import { RecallAdvertDto } from '../recall/dto/recall-advert.dto'
 
 export class AdvertDto extends DetailedDto {
   @ApiProperty({
@@ -40,9 +41,10 @@ export class AdvertDto extends DetailedDto {
 
   @ApiProperty({
     type: String,
+    nullable: true,
   })
   @IsUUID()
-  publicationNumber!: string
+  publicationNumber!: string | null
 
   @ApiProperty({
     type: String,
@@ -100,6 +102,18 @@ export class AdvertDto extends DetailedDto {
   })
   @IsBoolean()
   paid!: boolean
+
+  @ApiProperty({ type: String })
+  @IsString()
+  signatureName!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  signatureLocation!: string
+
+  @ApiProperty({ type: String })
+  @IsDateString()
+  signatureDate!: string
 }
 
 export class GetAdvertsDto {
@@ -141,6 +155,40 @@ export class GetAdvertsQueryDto extends PagingQuery {
   @IsArray()
   @IsEnum(StatusIdEnum, { each: true })
   statusId?: StatusIdEnum[]
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  typeId?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  @Transform(({ value }) => (value ? new Date(value).toISOString() : null))
+  dateFrom?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  @Transform(({ value }) => (value ? new Date(value).toISOString() : null))
+  dateTo?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  search?: string
 }
 
 export class AdvertStatusCounterItemDto {
@@ -198,12 +246,24 @@ export class AdvertDetailedDto extends AdvertDto {
   @ApiProperty({
     type: CommonAdvertDto,
     nullable: true,
+    required: false,
   })
   @IsOptional()
   @ValidateIf((o) => o.commonAdvert !== null)
   @Type(() => CommonAdvertDto)
   @ValidateNested()
   commonAdvert?: CommonAdvertDto
+
+  @ApiProperty({
+    type: RecallAdvertDto,
+    nullable: true,
+    required: false,
+  })
+  @IsOptional()
+  @ValidateIf((o) => o.recallAdvert !== null)
+  @Type(() => RecallAdvertDto)
+  @ValidateNested()
+  recallAdvert?: RecallAdvertDto
 }
 
 export class UpdateAdvertDto {
@@ -241,4 +301,30 @@ export class PublishAdvertsBody {
   @IsArray()
   @IsUUID(undefined, { each: true })
   advertIds!: string[]
+}
+
+export class CreateAdvertDto {
+  @ApiProperty({
+    type: String,
+  })
+  @IsString()
+  title!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  @IsUUID()
+  typeId!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  @IsUUID()
+  categoryId!: string
+
+  @ApiProperty({
+    type: String,
+  })
+  @IsDateString()
+  scheduledAt!: string
 }

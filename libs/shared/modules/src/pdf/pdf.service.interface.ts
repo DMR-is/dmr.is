@@ -5,6 +5,7 @@ export interface IPdfService {
     caseId: string,
     publishedAt?: string | Date,
     serial?: number,
+    correctionDate?: string | Date,
   ): Promise<ResultWrapper<Buffer>>
 
   getPdfByApplicationId(

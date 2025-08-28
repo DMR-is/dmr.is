@@ -8,84 +8,88 @@ import {
   DefaultScope,
   ForeignKey,
   HasMany,
+  HasOne,
   Scopes,
 } from 'sequelize-typescript'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { mapIndexToVersion } from '../../lib/utils'
+import {
+  ApplicationTypeEnum,
+  LegalGazetteModels,
+  RecallTypeEnum,
+} from '../../lib/constants'
 import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
-import { CategoryModel } from '../category/category.model'
-import { CommonAdvertModel } from '../common-advert/common-advert.model'
-import { CreateCommonAdvertInternalDto } from '../common-advert/dto/create-common-advert.dto'
+import {
+  CommonApplicationCreateAttributes,
+  CommonApplicationModel,
+} from '../applications/common/dmr/common-application.model'
+import {
+  RecallApplicationCreateAttributes,
+  RecallApplicationModel,
+} from '../applications/recall/recall-application.model'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
 } from '../communication-channel/communication-channel.model'
-import { StatusIdEnum, StatusModel } from '../status/status.model'
-import { TypeIdEnum, TypeModel } from '../type/type.model'
+import { StatusIdEnum } from '../status/status.model'
 import { UserModel } from '../users/users.model'
-import { CaseDetailedDto, CaseDto } from './dto/case.dto'
-
-const LOGGING_CONTEXT = 'CaseModel'
+import { CaseDto } from './dto/case.dto'
 
 type CaseAttributes = {
   caseNumber: string
-  applicationId: string | null
   assignedUserId: string | null
+  involvedPartyNationalId: string
   communicationChannels: CommunicationChannelModel[]
   adverts: AdvertModel[]
 }
 
-type CaseCreateAttributes = {
-  applicationId?: string
-  caseId?: string
-  communicationChannels?: CommunicationChannelCreateAttributes[]
-  adverts?: AdvertCreateAttributes[]
-}
+type CaseCreateAttributes =
+  | {
+      involvedPartyNationalId: string
+      caseId?: string
+      assignedUserId?: string | null
+      communicationChannels?: CommunicationChannelCreateAttributes[]
+      adverts?: AdvertCreateAttributes[]
+      recallApplication?: RecallApplicationCreateAttributes
+    }
+  | {
+      involvedPartyNationalId: string
+      caseId?: string
+      assignedUserId?: string | null
+      communicationChannels?: CommunicationChannelCreateAttributes[]
+      adverts?: AdvertCreateAttributes[]
+      commonApplication?: CommonApplicationCreateAttributes
+    }
 
 @BaseTable({ tableName: LegalGazetteModels.CASE })
 @DefaultScope(() => ({
-  attributes: [
-    'id',
-    'applicationId',
-    'caseNumber',
-    'createdAt',
-    'updatedAt',
-    'deletedAt',
-  ],
+  attributes: ['id', 'caseNumber', 'createdAt', 'updatedAt', 'deletedAt'],
   order: [['createdAt', 'DESC']],
 }))
 @Scopes(() => ({
-  detailed: {
+  applications: {
     include: [
-      { model: CommunicationChannelModel, separate: true, duplicating: false },
       {
-        model: AdvertModel.unscoped(),
-        scope: 'all',
-        duplicating: false,
-        separate: true,
-        order: [['version', 'ASC']],
-        include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
+        model: RecallApplicationModel,
+        required: false,
+        as: 'recallApplication',
       },
-      { model: UserModel },
+      {
+        model: CommonApplicationModel,
+        required: false,
+        as: 'commonApplication',
+      },
     ],
+    where: {
+      [Op.or]: [
+        { '$recallApplication.id$': { [Op.ne]: null } },
+        { '$commonApplication.id$': { [Op.ne]: null } },
+      ],
+    },
   },
-  byApplicationId: (applicationId: string) => ({
-    attributes: ['id', 'applicationId'],
-    where: { applicationId },
-  }),
 }))
 export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
-  @Column({
-    type: DataType.UUID,
-    allowNull: true,
-    field: 'application_id',
-    defaultValue: null,
-  })
-  applicationId!: string | null
-
   @Column({
     type: DataType.UUID,
     allowNull: true,
@@ -103,6 +107,13 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   })
   caseNumber!: string
 
+  @Column({
+    type: DataType.TEXT,
+    field: 'involved_party_national_id',
+    allowNull: false,
+  })
+  involvedPartyNationalId!: string
+
   @HasMany(() => CommunicationChannelModel, 'caseId')
   communicationChannels!: CommunicationChannelModel[]
 
@@ -112,45 +123,27 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   @BelongsTo(() => UserModel, 'assignedUserId')
   assignedUser?: UserModel
 
-  static async createCommonAdvert(body: CreateCommonAdvertInternalDto) {
-    this.logger.info('Creating case for common advert', {
-      context: LOGGING_CONTEXT,
-    })
+  @HasOne(() => RecallApplicationModel, {
+    foreignKey: 'caseId',
+  })
+  recallApplication?: RecallApplicationModel
 
-    const channels =
-      body.channels?.map((ch) => ({
-        email: ch.email,
-        name: ch?.name,
-        phone: ch?.phone,
-      })) ?? []
+  @HasOne(() => CommonApplicationModel, {
+    foreignKey: 'caseId',
+  })
+  commonApplication?: CommonApplicationModel
 
-    await this.create(
-      {
-        applicationId: body.applicationId,
-        communicationChannels: channels,
-        adverts: body.publishingDates.map((date, i) => ({
-          categoryId: body.categoryId,
-          typeId: TypeIdEnum.COMMON_APPLICATION,
-          scheduledAt: new Date(date),
-          title: body.caption,
-          html: body.html,
-          version: mapIndexToVersion(i),
-          submittedBy: body.submittedBy,
-          commonAdvert: {
-            caption: body.caption,
-            signatureDate: new Date(body.signature.date),
-            signatureLocation: body.signature.location,
-            signatureName: body.signature.name,
-          },
-        })),
-      },
-      {
-        include: [
-          { model: CommunicationChannelModel },
-          { model: AdvertModel, include: [{ model: CommonAdvertModel }] },
-        ],
-      },
-    )
+  get applicationType(): ApplicationTypeEnum {
+    if (this.recallApplication) {
+      return this.recallApplication.recallType === RecallTypeEnum.BANKRUPTCY
+        ? ApplicationTypeEnum.BANKRUPTCY
+        : ApplicationTypeEnum.DECEASED
+    }
+    if (this.commonApplication) {
+      return ApplicationTypeEnum.COMMON
+    }
+
+    throw new Error('Case does not have any applications')
   }
 
   @BeforeDestroy
@@ -168,7 +161,6 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
 
     this.logger.info('Marked adverts as withdrawn', {
       caseId: instance.id,
-      context: LOGGING_CONTEXT,
       advertIds: adverts.map((advert) => advert.id),
     })
   }
@@ -179,73 +171,42 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     const month = String(instance.createdAt.getMonth() + 1).padStart(2, '0')
     const day = String(instance.createdAt.getDate()).padStart(2, '0')
 
-    const count = await CaseModel.unscoped().count({
-      where: { caseNumber: { [Op.like]: `${year}%` } },
+    const datePrefix = `${year}${month}${day}`
+
+    // Get the latest (max) case number for the day
+    const latestCase = await CaseModel.unscoped().findOne({
+      where: {
+        caseNumber: {
+          [Op.like]: `${datePrefix}%`,
+        },
+      },
+      order: [['caseNumber', 'DESC']],
+      paranoid: false, // include soft-deleted cases to avoid reuse
     })
 
-    instance.caseNumber = `${year}${month}${day}${String(count + 1).padStart(
-      3,
-      '0',
-    )}`
+    let nextSequence = 1
+
+    if (latestCase && latestCase.caseNumber) {
+      const lastSequence = parseInt(latestCase.caseNumber.slice(8)) // last 3 digits
+      nextSequence = lastSequence + 1
+    }
+
+    // Construct new case number
+    instance.caseNumber = `${datePrefix}${String(nextSequence).padStart(3, '0')}`
   }
 
   static fromModel(model: CaseModel): CaseDto {
-    try {
-      if (!model) {
-        throw new Error('Case model is undefined or null')
-      }
-
-      return {
-        id: model.id,
-        applicationId:
-          model.applicationId === null ? undefined : model.applicationId,
-        caseNumber: model.caseNumber,
-        createdAt: model.createdAt.toISOString(),
-        updatedAt: model.updatedAt.toISOString(),
-        deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
-      }
-    } catch (error) {
-      this.logger.debug(
-        `fromModel failed for CaseModel, did you include everything?`,
-        { context: LOGGING_CONTEXT },
-      )
-      throw error
+    return {
+      id: model.id,
+      caseNumber: model.caseNumber,
+      createdAt: model.createdAt.toISOString(),
+      updatedAt: model.updatedAt.toISOString(),
+      deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+      applicationType: model.applicationType,
     }
   }
 
   fromModel(): CaseDto {
     return CaseModel.fromModel(this)
-  }
-
-  static fromModelDetailed(model: CaseModel): CaseDetailedDto {
-    try {
-      return {
-        id: model.id,
-        applicationId:
-          model.applicationId === null ? undefined : model.applicationId,
-        caseNumber: model.caseNumber,
-        createdAt: model.createdAt.toISOString(),
-        updatedAt: model.updatedAt.toISOString(),
-        deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
-        adverts: model.adverts.map((advert) =>
-          AdvertModel.fromModelDetailed(advert),
-        ),
-        communicationChannels: model.communicationChannels.map((channel) => ({
-          email: channel.email,
-          phone: channel.phone ? channel.phone : undefined,
-          name: channel.name ? channel.name : undefined,
-        })),
-      }
-    } catch (error) {
-      this.logger.debug(
-        `fromModelDetailed failed for CaseModel, did you include everything?`,
-        { context: LOGGING_CONTEXT },
-      )
-      throw error
-    }
-  }
-
-  fromModelDetailed(): CaseDetailedDto {
-    return CaseModel.fromModelDetailed(this)
   }
 }

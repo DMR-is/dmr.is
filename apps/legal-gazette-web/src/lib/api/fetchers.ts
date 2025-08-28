@@ -1,3 +1,5 @@
+import { getSession } from 'next-auth/react'
+
 import {
   DeleteCaseRequest,
   GetCategoriesRequest,
@@ -7,14 +9,24 @@ import {
   UpdateAdvertStatusRequest,
   UpdateCommonAdvertRequest,
 } from '../../gen/fetch'
-import { getLegalGazetteClient } from './createClient'
+import { ApiClientMap, getLegalGazetteClient } from './createClient'
 
-type SWRFetcherArgs<T> = {
-  func: () => Promise<T>
-}
+type SWRFetcherArgs<T extends keyof ApiClientMap, ReturnType> = (
+  client: ApiClientMap[T],
+) => Promise<ReturnType>
 
-export const fetcher = async <T>({ func }: SWRFetcherArgs<T>): Promise<T> => {
-  const res = await func()
+export const fetcher = async <T extends keyof ApiClientMap, ReturnType>(
+  func: SWRFetcherArgs<T, ReturnType>,
+  api: T,
+): Promise<ReturnType> => {
+  const session = await getSession()
+
+  if (!session) {
+    throw new Error('No session found')
+  }
+  const client = getLegalGazetteClient(api, session.idToken)
+
+  const res = await func(client)
 
   return res
 }
@@ -23,15 +35,11 @@ export const fetchCategories = async (
   _url: string,
   params: GetCategoriesRequest = {},
 ) => {
-  const client = getLegalGazetteClient('CategoryApi', 'todo:add-token')
-
-  return await client.getCategories(params)
+  return fetcher((client) => client.getCategories(params), 'CategoryApi')
 }
 
 export const fetchCase = async (_url: string, id: string) => {
-  const client = getLegalGazetteClient('CaseApi', 'todo:add-token')
-
-  return await client.getCase({ id })
+  return fetcher((client) => client.getCase({ id }), 'CaseApi')
 }
 
 export const setAdvertCategory = async (
@@ -42,9 +50,10 @@ export const setAdvertCategory = async (
     arg: UpdateAdvertCategoryRequest
   },
 ) => {
-  const client = getLegalGazetteClient('AdvertCategoryApi', 'todo:add-token')
-
-  await client.updateAdvertCategory(arg)
+  return fetcher(
+    (client) => client.updateAdvertCategory(arg),
+    'AdvertUpdateApi',
+  )
 }
 
 export const setAdvertStatus = async (
@@ -55,9 +64,7 @@ export const setAdvertStatus = async (
     arg: UpdateAdvertStatusRequest
   },
 ) => {
-  const client = getLegalGazetteClient('AdvertStatusApi', 'todo:add-token')
-
-  await client.updateAdvertStatus(arg)
+  return fetcher((client) => client.updateAdvertStatus(arg), 'AdvertUpdateApi')
 }
 
 export const rejectCase = async (
@@ -68,34 +75,26 @@ export const rejectCase = async (
     arg: DeleteCaseRequest
   },
 ) => {
-  const client = getLegalGazetteClient('CaseApi', 'todo:add-token')
-
-  await client.deleteCase(arg)
+  return fetcher((client) => client.deleteCase(arg), 'CaseApi')
 }
 
 export const updateCommonAdvert = async (
   _url: string,
   { arg }: { arg: UpdateCommonAdvertRequest },
 ) => {
-  const client = getLegalGazetteClient('CommonAdvertApi', 'todo:add-token')
-
-  await client.updateCommonAdvert(arg)
+  return fetcher((client) => client.updateCommonAdvert(arg), 'CommonAdvertApi')
 }
 
 export const updateAdvert = async (
   _url: string,
   { arg }: { arg: UpdateAdvertRequest },
 ) => {
-  const client = getLegalGazetteClient('AdvertApi', 'todo:add-token')
-
-  await client.updateAdvert(arg)
+  return fetcher((client) => client.updateAdvert(arg), 'AdvertUpdateApi')
 }
 
 export const publishAdverts = async (
   _url: string,
   { arg }: { arg: PublishAdvertsRequest },
 ) => {
-  const client = getLegalGazetteClient('AdvertPublishApi', 'todo:add-token')
-
-  await client.publishAdverts(arg)
+  return fetcher((client) => client.publishAdverts(arg), 'AdvertPublishApi')
 }

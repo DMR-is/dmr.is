@@ -5,6 +5,7 @@ import { v4 } from 'uuid'
 
 import { Inject, Injectable, NestMiddleware } from '@nestjs/common'
 
+import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 @Injectable()
@@ -15,12 +16,7 @@ export class CLSMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
-    const nameSpaceHeader = req.headers['x-namespace']
-
-    if (!nameSpaceHeader) {
-      throw new Error('Namespace header not found')
-    }
-    const transactionNamespace = getNamespace(nameSpaceHeader as string)
+    const transactionNamespace = getNamespace(CLS_NAMESPACE)
 
     if (!transactionNamespace) {
       throw new Error('Transaction namespace not found')

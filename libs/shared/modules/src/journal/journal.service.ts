@@ -1,5 +1,7 @@
 import { Cache } from 'cache-manager'
-import { Op, Transaction } from 'sequelize'
+import endOfDay from 'date-fns/endOfDay'
+import startOfDay from 'date-fns/startOfDay'
+import { Op, Transaction, WhereOptions } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
@@ -34,9 +36,9 @@ import {
   GetDepartmentsResponse,
   GetInstitutionResponse,
   GetInstitutionsResponse,
+  GetLeanAdvertsResponse,
   GetMainCategoriesResponse,
   GetMainCategoryResponse,
-  GetSimilarAdvertsResponse,
   Institution,
   S3UploadFileResponse,
   UpdateAdvertBody,
@@ -57,6 +59,7 @@ import { advertUpdateParametersMapper } from './mappers/advert-update-parameters
 import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
 import { removeAllHtmlComments } from './util/removeAllHtmlComments'
 import { removeSubjectFromHtml } from './util/removeSubjectFromHtml'
+import { scoreBuckets, sortByScoreAndSlice } from './util/similaritySorting'
 import { IJournalService } from './journal.service.interface'
 import {
   advertCategoryMigrate,
@@ -64,6 +67,7 @@ import {
   advertInvolvedPartyMigrate,
   advertMainCategoryMigrate,
   advertMigrate,
+  advertMigrateLean,
 } from './migrations'
 import {
   AdvertAttachmentsModel,
@@ -934,84 +938,125 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  async getSimilarAdverts(
-    advertId: string,
-    limit = 5,
-  ): Promise<ResultWrapper<GetSimilarAdvertsResponse>> {
-    // TODO: We might not need the models here, and only get the ids
-    const originalAdvert = await this.advertModel.findByPk(advertId, {
-      include: [
-        { model: AdvertDepartmentModel, as: 'department' },
-        { model: AdvertInvolvedPartyModel, as: 'involvedParty' },
-        { model: AdvertCategoryModel, as: 'categories' },
-        { model: AdvertTypeModel },
-      ],
-    })
-
-    if (!originalAdvert) {
-      throw new NotFoundException(`Advert with ID ${advertId} not found.`)
-    }
-
-    const departmentId = originalAdvert.department.id
-    const involvedPartyId = originalAdvert.involvedParty.id
-    const categoryIds = originalAdvert.categories?.map((c) => c.id) ?? []
-
-    const similarAdverts = await this.advertModel.findAll({
-      where: {
-        id: {
-          [Op.ne]: advertId,
-        },
-      },
+  async getSimilarAdverts(advertId: string, limit = 5) {
+    // 1) Fetch only what is needed from the original advert
+    const original = await this.advertModel.findByPk(advertId, {
+      attributes: ['id', 'departmentId', 'involvedPartyId', 'publicationDate'],
       include: [
         {
-          model: AdvertDepartmentModel,
-          where: {
-            id: {
-              [Op.eq]: departmentId,
+          model: AdvertCategoryModel,
+          as: 'categories',
+          attributes: ['id'],
+          through: { attributes: [] },
+          required: false,
+        },
+      ],
+    })
+    if (!original) throw new NotFoundException(`Advert ${advertId} not found`)
+
+    const deptId = (original as any).departmentId ?? null
+    const partyId = (original as any).involvedPartyId ?? null
+    const catIds = Array.isArray((original as any).categories)
+      ? (original as any).categories.map((c: any) => c.id)
+      : []
+
+    // 2) Small id queries to find candidates
+    const PER_BUCKET = Math.max(limit * 6, 30)
+
+    const idsByDept = deptId
+      ? await this.advertModel.findAll({
+          attributes: ['id'],
+          where: { id: { [Op.ne]: advertId }, departmentId: deptId },
+          limit: PER_BUCKET,
+          raw: true,
+        })
+      : []
+
+    const idsByParty = partyId
+      ? await this.advertModel.findAll({
+          attributes: ['id'],
+          where: { id: { [Op.ne]: advertId }, involvedPartyId: partyId },
+          limit: PER_BUCKET,
+          raw: true,
+        })
+      : []
+
+    const idsByCats = catIds.length
+      ? await this.advertModel.findAll({
+          attributes: ['id'],
+          where: { id: { [Op.ne]: advertId } },
+          include: [
+            {
+              model: AdvertCategoryModel,
+              as: 'categories',
+              attributes: [],
+              through: { attributes: [] },
+              where: { id: { [Op.in]: catIds } },
+              required: true,
             },
-          },
+          ],
+          limit: PER_BUCKET,
+          raw: true,
+        })
+      : []
+
+    // 3) Score candidates
+    const scores = scoreBuckets(
+      { party: idsByParty, dept: idsByDept, cats: idsByCats },
+      { party: 2, dept: 1, cats: 1 }, // tweak weights here
+    )
+
+    const candidateIds = Array.from(scores.keys())
+    if (candidateIds.length === 0) {
+      return ResultWrapper.ok({ adverts: [] })
+    }
+
+    // 4) Fetch skinny rows for similar ads
+    const rows = await this.advertModel.findAll({
+      where: { id: { [Op.in]: candidateIds } },
+      attributes: [
+        'id',
+        'subject',
+        'publicationDate',
+        'serialNumber',
+        'publicationYear',
+      ],
+      include: [
+        {
+          model: AdvertTypeModel,
+          as: 'type',
+          attributes: ['id', 'title', 'slug'],
+          required: false,
+        },
+        {
+          model: AdvertDepartmentModel,
+          as: 'department',
+          attributes: ['id', 'title', 'slug'],
+          required: false,
         },
         {
           model: AdvertInvolvedPartyModel,
-          where: {
-            id: {
-              [Op.eq]: involvedPartyId,
-            },
-          },
-        },
-        AdvertAttachmentsModel,
-        AdvertStatusModel,
-        {
-          model: AdvertTypeModel,
+          as: 'involvedParty',
           attributes: ['id', 'title', 'slug'],
+          required: false,
         },
         {
           model: AdvertCategoryModel,
+          as: 'categories',
           attributes: ['id', 'title', 'slug'],
-          where: {
-            id: {
-              [Op.in]: categoryIds,
-            },
-          },
+          through: { attributes: [] },
+          required: false,
         },
       ],
-      order: [
-        [
-          Sequelize.literal(`CASE
-            WHEN "AdvertModel"."involved_party_id" = '${involvedPartyId}' THEN 2
-            WHEN "AdvertModel"."department_id" = '${departmentId}' THEN 1
-            ELSE 0 END`),
-          'DESC',
-        ],
-      ],
-      limit: limit,
     })
 
-    const mapped = similarAdverts.map((item) => advertSimilarMigrate(item))
+    // 5) Sort via utility
+    const finalists = sortByScoreAndSlice(rows, scores, limit, (r: any) =>
+      r.publicationDate ? new Date(r.publicationDate) : 0,
+    )
 
-    return ResultWrapper.ok({
-      adverts: mapped,
-    })
+    const mapped = finalists.map((item) => advertSimilarMigrate(item))
+    return ResultWrapper.ok({ adverts: mapped })
   }
 
   @LogAndHandle()
@@ -1021,7 +1066,6 @@ export class JournalService implements IJournalService {
   ): Promise<ResultWrapper<GetAdvertsResponse>> {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
-    const searchCondition = params?.search ? `%${params.search}%` : undefined
 
     try {
       // Check if the search is for an internal case number
@@ -1075,11 +1119,11 @@ export class JournalService implements IJournalService {
       // do nothing, just continue.
     }
 
-    const whereParams = {}
+    const whereParams: WhereOptions = {}
     if (params?.dateFrom) {
       Object.assign(whereParams, {
         publicationDate: {
-          [Op.gte]: params.dateFrom,
+          [Op.gte]: startOfDay(new Date(params.dateFrom)),
         },
       })
     }
@@ -1087,7 +1131,15 @@ export class JournalService implements IJournalService {
     if (params?.dateTo) {
       Object.assign(whereParams, {
         publicationDate: {
-          [Op.lte]: params.dateTo,
+          [Op.lte]: endOfDay(new Date(params.dateTo)),
+        },
+      })
+    }
+
+    if (params?.year) {
+      Object.assign(whereParams, {
+        publicationYear: {
+          [Op.eq]: params.year,
         },
       })
     }
@@ -1095,25 +1147,53 @@ export class JournalService implements IJournalService {
     if (params?.dateTo && params?.dateFrom) {
       Object.assign(whereParams, {
         publicationDate: {
-          [Op.between]: [params.dateFrom, params.dateTo],
+          [Op.between]: [
+            startOfDay(new Date(params.dateFrom)),
+            endOfDay(new Date(params.dateTo)),
+          ],
         },
       })
     }
 
+    const attributes: { include: any[] } = {
+      include: [
+        [
+          Sequelize.literal(`CONCAT(serial_number, '/', publication_year)`),
+          'document_id',
+        ],
+      ],
+    }
+
+    let rankExpr = null
+
     if (params?.search) {
-      Object.assign(whereParams, {
+      const escapedSearch = this.sequelize.escape(params.search)
+      const tsQuery = `plainto_tsquery('simple', ${escapedSearch})`
+      const docIdExpr = `CONCAT(serial_number, '/', publication_year)`
+
+      // Boost document_id match
+      rankExpr = this.sequelize.literal(`
+      CASE
+        WHEN ${docIdExpr} = ${escapedSearch} THEN 1000
+        ELSE ts_rank(tsv, ${tsQuery})
+      END
+    `)
+
+      // Full-text search condition
+      const tsvCondition = Sequelize.where(this.sequelize.literal('tsv'), {
+        [Op.match]: this.sequelize.literal(tsQuery),
+      })
+
+      // Add OR logic for document_id exact match or full-text match
+      Object.assign(whereParams as any, {
         [Op.or]: [
-          {
-            subject: { [Op.iLike]: searchCondition },
-          },
-          [
-            Sequelize.where(
-              Sequelize.literal(`CONCAT(serial_number, '/', publication_year)`),
-              { [Op.iLike]: searchCondition },
-            ),
-          ],
+          Sequelize.where(this.sequelize.literal(docIdExpr), params.search),
+          tsvCondition,
         ],
       })
+
+      // Include the rank in the returned attributes
+      attributes.include.push([rankExpr, 'rank'])
     }
 
     const adverts = await this.advertModel.findAndCountAll({
@@ -1125,6 +1205,7 @@ export class JournalService implements IJournalService {
         include: [
           ['publication_date', 'customPublicationDate'],
           ['serial_number', 'customSerialNumber'],
+          ...attributes.include,
         ],
       },
       include: [
@@ -1170,10 +1251,12 @@ export class JournalService implements IJournalService {
             : undefined,
         },
       ],
-      order: [
-        [Sequelize.literal('"customPublicationDate"'), 'DESC'],
-        [Sequelize.literal('"customSerialNumber"'), 'DESC'],
-      ],
+      order: rankExpr
+        ? [[rankExpr, 'DESC']]
+        : [
+            [Sequelize.literal('"customPublicationDate"'), 'DESC'],
+            [Sequelize.literal('"customSerialNumber"'), 'DESC'],
+          ],
     })
 
     const mapped = adverts.rows.map((item) => advertMigrate(item))
@@ -1187,21 +1270,290 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
+  @Cacheable()
+  async getAdvertsLean(
+    params?: GetAdvertsQueryParams,
+  ): Promise<ResultWrapper<GetLeanAdvertsResponse>> {
+    const page = params?.page ?? 1
+    const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
+
+    // ----- Direct lookup by 11‑digit internal case number -----
+    try {
+      const isInternalCase = /^\d{11}$/.test(params?.search ?? '')
+      if (isInternalCase) {
+        const found = await this.caseModel.findOne({
+          include: [
+            {
+              model: AdvertModel,
+              attributes: [
+                'id',
+                'subject',
+                'serialNumber',
+                'publicationYear',
+                'publicationDate',
+              ],
+              include: [
+                {
+                  model: AdvertTypeModel,
+                  as: 'type',
+                  attributes: ['id', 'title', 'slug'],
+                },
+                {
+                  model: AdvertDepartmentModel,
+                  attributes: ['id', 'title', 'slug'],
+                },
+                {
+                  model: AdvertInvolvedPartyModel,
+                  attributes: ['id', 'title', 'slug', 'nationalId'],
+                },
+                {
+                  model: AdvertCategoryModel,
+                  attributes: ['id', 'title', 'slug'],
+                  through: { attributes: [] },
+                },
+              ],
+            },
+          ],
+          where: { caseNumber: params?.search },
+        })
+
+        if (!found?.advert) {
+          return ResultWrapper.ok({
+            adverts: [],
+            paging: generatePaging([], 1, pageSize, 0),
+          })
+        }
+
+        const migrated = advertMigrateLean(found.advert)
+        const paging = generatePaging([migrated], 1, pageSize, 1)
+        return ResultWrapper.ok({ adverts: [migrated], paging })
+      }
+    } catch {
+      // ignore and continue
+    }
+
+    // ----- Base WHERE on the advert table -----
+    const whereParams: WhereOptions = {}
+    if (params?.dateFrom && params?.dateTo) {
+      Object.assign(whereParams, {
+        publicationDate: {
+          [Op.between]: [
+            startOfDay(new Date(params.dateFrom)),
+            endOfDay(new Date(params.dateTo)),
+          ],
+        },
+      })
+    } else {
+      if (params?.dateFrom)
+        Object.assign(whereParams, {
+          publicationDate: { [Op.gte]: startOfDay(new Date(params.dateFrom)) },
+        })
+      if (params?.dateTo)
+        Object.assign(whereParams, {
+          publicationDate: { [Op.lte]: endOfDay(new Date(params.dateTo)) },
+        })
+    }
+    if (params?.year)
+      Object.assign(whereParams, { publicationYear: { [Op.eq]: params.year } })
+
+    // ----- Ranking / FTS on base table -----
+    let rankExpr: any = null
+    if (params?.search) {
+      const escapedSearch = this.sequelize.escape(params.search)
+      const tsQuery = `plainto_tsquery('simple', ${escapedSearch})`
+      const docIdExpr = `CONCAT(serial_number, '/', publication_year)`
+
+      rankExpr = this.sequelize.literal(`
+      CASE
+        WHEN ${docIdExpr} = ${escapedSearch} THEN 1000
+        ELSE ts_rank(tsv, ${tsQuery})
+      END
+    `)
+
+      const tsvCondition = Sequelize.where(this.sequelize.literal('tsv'), {
+        [Op.match]: this.sequelize.literal(tsQuery),
+      })
+
+      Object.assign(whereParams as any, {
+        [Op.or]: [
+          Sequelize.where(this.sequelize.literal(docIdExpr), params.search),
+          tsvCondition,
+        ],
+      })
+    }
+
+    // ----- Association filters (USED in IDs + COUNT) -----
+    const includeFilters = [
+      params?.type && {
+        model: AdvertTypeModel,
+        as: 'type',
+        attributes: [],
+        where: { slug: params.type },
+        required: true,
+      },
+      params?.department && {
+        model: AdvertDepartmentModel,
+        attributes: [],
+        where: { slug: params.department },
+        required: true,
+      },
+      params?.involvedParty && {
+        model: AdvertInvolvedPartyModel,
+        attributes: [],
+        where: { slug: params.involvedParty },
+        required: true,
+      },
+      params?.category && {
+        model: AdvertCategoryModel,
+        attributes: [],
+        where: { slug: params.category },
+        required: true,
+        through: { attributes: [] },
+      },
+    ].filter(Boolean) as any[]
+
+    // ----- First query: IDs only (with filters) -----
+    const order: any[] = rankExpr
+      ? [[rankExpr, 'DESC']]
+      : [
+          [Sequelize.col('publication_date'), 'DESC'],
+          [Sequelize.col('serial_number'), 'DESC'],
+        ]
+
+    const idRows = await this.advertModel.findAll({
+      attributes: [
+        'id',
+        // make order-by columns available to the outer query
+        [Sequelize.col('publication_date'), 'publication_date'],
+        [Sequelize.col('serial_number'), 'serial_number'],
+        ...(rankExpr ? [[rankExpr, 'rank'] as [any, string]] : []),
+      ],
+      where: whereParams,
+      include: includeFilters,
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+      order,
+      raw: true,
+    })
+
+    const ids: (string | number)[] = idRows.map((r: any) => r?.id)
+
+    // ----- Count with the SAME filters -----
+    const total = await this.advertModel.count({
+      where: whereParams,
+      include: includeFilters,
+      distinct: true, // ✅ valid on count
+      col: this.advertModel.primaryKeyAttribute || 'id',
+    })
+
+    if (ids.length === 0) {
+      return ResultWrapper.ok({
+        adverts: [],
+        paging: generatePaging([], page, pageSize, total),
+      })
+    }
+
+    // ----- Second query: skinny fetch by IDs (NO filter where; don't drop rows) -----
+    const pageRows = await this.advertModel.findAll({
+      where: { id: ids },
+      attributes: [
+        'id',
+        'subject',
+        'serialNumber',
+        'publicationYear',
+        'publicationDate',
+      ],
+      include: [
+        {
+          model: AdvertTypeModel,
+          as: 'type',
+          attributes: ['id', 'title', 'slug'],
+          required: false,
+        },
+        {
+          model: AdvertDepartmentModel,
+          attributes: ['id', 'title', 'slug'],
+          required: false,
+        },
+        {
+          model: AdvertInvolvedPartyModel,
+          attributes: ['id', 'title', 'nationalId', 'slug'],
+          required: false,
+        },
+        {
+          model: AdvertCategoryModel,
+          attributes: ['id', 'title', 'slug'],
+          required: false,
+          through: { attributes: [] },
+        },
+      ],
+    })
+
+    // Preserve first-query order in Node
+    const pos = new Map(ids.map((id, i) => [String(id), i]))
+    const sortedRows = pageRows
+      .filter((r: any) => r && r.id != null)
+      .sort(
+        (a: any, b: any) =>
+          (pos.get(String(a.id)) ?? 0) - (pos.get(String(b.id)) ?? 0),
+      )
+
+    const mapped = sortedRows.map(advertMigrateLean)
+    const paging = generatePaging(mapped, page, pageSize, total)
+
+    return ResultWrapper.ok({ adverts: mapped, paging })
+  }
+
+  @LogAndHandle()
   async uploadAdvertPDF(
     advertId: string,
     file: Express.Multer.File,
   ): Promise<ResultWrapper<S3UploadFileResponse>> {
     const advert = ResultWrapper.unwrap(await this.getAdvert(advertId)).advert
     //create advert url from
-    const key = `adverts/${advert.department?.title[0]}_nr_${advert.publicationNumber?.number}_${advert.publicationNumber?.year}.pdf`
+    const filename = `${advert.department?.title[0]}_nr_${advert.publicationNumber?.number}_${advert.publicationNumber?.year}.pdf`
+    const key = `adverts/${filename}`
     const uploadedFile = (
       await this.s3Service.replaceAdvertPdf(key, file)
     ).unwrap()
+
+    await this.updateAdvert(advertId, {
+      documentPdfUrl: `${uploadedFile.url}/${filename}`,
+    })
 
     return ResultWrapper.ok({
       ...uploadedFile,
       url: uploadedFile.url,
       file: uploadedFile,
+    })
+  }
+
+  @LogAndHandle()
+  async handleLegacyPdfUrl(
+    id?: string,
+  ): Promise<ResultWrapper<{ url: string }>> {
+    if (!id) {
+      return ResultWrapper.err({
+        message: 'No legacyPdfId or legacyAdvertId provided',
+        code: 400,
+      })
+    }
+    let advert: AdvertModel | null = null
+
+    // Try finding by legacyPdfId first
+    advert = await this.advertModel.findOne({
+      where: { documentPdfLegacy: id },
+    })
+
+    // If not found, try treating it as a legacyAdvertId
+    if (!advert) {
+      advert = await this.advertModel.findOne({
+        where: { id },
+      })
+    }
+
+    return ResultWrapper.ok({
+      url: advert?.documentPdfUrl ?? 'https://stjornartidindi.is/',
     })
   }
 }

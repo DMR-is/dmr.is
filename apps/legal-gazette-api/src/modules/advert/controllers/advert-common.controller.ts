@@ -4,21 +4,24 @@ import {
   NotFoundException,
   Param,
   Patch,
+  UseGuards,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { LGResponse } from '@dmr.is/legal-gazette/decorators'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
-import { CommonAdvertModel } from '../../common-advert/common-advert.model'
-import { CommonAdvertDto } from '../../common-advert/dto/common-advert.dto'
-import { UpdateCommonAdvertDto } from '../../common-advert/dto/update-common-advert.dto'
+import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { AdvertUpdateGuard } from '../../../guards/advert-update.guard'
 import { AdvertModel } from '../advert.model'
+import { CommonAdvertModel } from '../common/common-advert.model'
+import { CommonAdvertDto } from '../common/dto/common-advert.dto'
+import { UpdateCommonAdvertDto } from '../common/dto/update-common-advert.dto'
 
 @Controller({
   path: 'adverts/common',
   version: '1',
 })
+@UseGuards(AdvertUpdateGuard)
 export class CommonAdvertController {
   constructor(
     @InjectModel(AdvertModel)
@@ -39,17 +42,12 @@ export class CommonAdvertController {
       throw new NotFoundException('Advert not found')
     }
 
-    if (body.html || body.caption) {
-      await advert.update({ html: body.html, title: body.caption })
+    if (body.html) {
+      await advert.update({ html: body.html })
     }
 
     const updatedAdvert = await advert.commonAdvert.update({
       caption: body.caption,
-      signatureName: body.signature?.name,
-      signatureLocation: body.signature?.location,
-      signatureDate: body?.signature?.date
-        ? new Date(body.signature.date)
-        : undefined,
     })
 
     return CommonAdvertModel.fromModel(updatedAdvert)

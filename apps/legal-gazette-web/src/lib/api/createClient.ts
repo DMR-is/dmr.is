@@ -2,41 +2,41 @@ import { config } from '@dmr.is/api-client/createClient'
 
 import {
   AdvertApi,
-  AdvertCategoryApi,
   AdvertPublishApi,
-  AdvertStatusApi,
+  AdvertUpdateApi,
   CaseApi,
   CategoryApi,
   CommonAdvertApi,
   Configuration,
   StatusApi,
   TypeApi,
+  UsersApi,
 } from '../../gen/fetch'
 
 const apis = [
   'AdvertApi',
   'AdvertPublishApi',
-  'AdvertStatusApi',
-  'AdvertCategoryApi',
+  'AdvertUpdateApi',
   'CaseApi',
   'CategoryApi',
   'CommonAdvertApi',
   'StatusApi',
   'TypeApi',
+  'UsersApi',
 ] as const
 
 type ApiKey = (typeof apis)[number]
 
-type ApiClientMap = {
+export type ApiClientMap = {
   AdvertApi: AdvertApi
   AdvertPublishApi: AdvertPublishApi
-  AdvertStatusApi: AdvertStatusApi
-  AdvertCategoryApi: AdvertCategoryApi
+  AdvertUpdateApi: AdvertUpdateApi
   CaseApi: CaseApi
   CategoryApi: CategoryApi
   CommonAdvertApi: CommonAdvertApi
   StatusApi: StatusApi
   TypeApi: TypeApi
+  UsersApi: UsersApi
 }
 
 const ApiConstructors: {
@@ -44,13 +44,13 @@ const ApiConstructors: {
 } = {
   AdvertApi,
   AdvertPublishApi,
-  AdvertStatusApi,
-  AdvertCategoryApi,
+  AdvertUpdateApi,
   CaseApi,
   CategoryApi,
   CommonAdvertApi,
   StatusApi,
   TypeApi,
+  UsersApi,
 }
 
 const apiClients: Partial<{
@@ -65,7 +65,8 @@ export const getLegalGazetteClient = <T extends ApiKey>(
 
   if (typeof window === 'undefined' || !cached || cached.token !== token) {
     const ClientClass = ApiConstructors[key]
-    const client = new ClientClass(config(Configuration, token))
+    const client = new ClientClass(config(Configuration, token, 'LGAdmin'))
+
     //@ts-expect-error - TypeScript doesn't know about the dynamic nature of ApiClientMap
     apiClients[key] = { client, token }
     return client

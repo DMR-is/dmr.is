@@ -32,6 +32,7 @@ import {
   GetInstitutionResponse,
   GetInstitutionsQueryParams,
   GetInstitutionsResponse,
+  GetLeanAdvertsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetMainCategoryResponse,
@@ -111,6 +112,11 @@ export class MockJournalService implements IJournalService {
   insertCategory(title: string): Promise<ResultWrapper<GetCategoryResponse>> {
     throw new Error('Method not implemented.')
   }
+  getAdvertsLean(
+    params?: GetAdvertsQueryParams,
+  ): Promise<ResultWrapper<GetLeanAdvertsResponse>> {
+    throw new Error('Method not implemented.')
+  }
   updateCategory(
     id: string,
     model: Category,
@@ -143,6 +149,9 @@ export class MockJournalService implements IJournalService {
     advertId: string,
     file: Express.Multer.File,
   ): Promise<ResultWrapper<S3UploadFileResponse>> {
+    throw new Error('Method not implemented.')
+  }
+  handleLegacyPdfUrl(id: string): Promise<ResultWrapper<S3UploadFileResponse>> {
     throw new Error('Method not implemented.')
   }
 

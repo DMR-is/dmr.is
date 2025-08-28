@@ -1,24 +1,33 @@
-import { NextFunction,Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 
-import { Injectable, NestMiddleware } from '@nestjs/common'
+import { Inject, Injectable, NestMiddleware } from '@nestjs/common'
 
-import { logger } from '@dmr.is/logging'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 @Injectable()
 export class LogRequestMiddleware implements NestMiddleware {
+  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {}
   use(req: Request, res: Response, next: NextFunction) {
-    const { method, url } = req
+    const now = new Date()
+    const { protocol, method, originalUrl } = req
+    const fullUrl = `${originalUrl}`
 
-    logger.debug(`${method}: ${url}`, {
-      context: 'LogRequestMiddleware',
-      method,
-      url,
+    this.logger.info(`[${method}]: ${fullUrl}`, {
+      context: 'LoggingMiddleware',
+      request: {
+        method,
+        protocol,
+        url: fullUrl,
+        body: req.body,
+        params: req.params,
+        query: req.query,
+        timestamp: now.toISOString(),
+      },
+      response: {
+        statusCode: res.statusCode,
+      },
     })
 
     next()
   }
-}
-
-export const logRequestMiddlewareFactory = () => {
-  return new LogRequestMiddleware()
 }

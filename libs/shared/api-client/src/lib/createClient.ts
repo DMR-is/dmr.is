@@ -1,17 +1,28 @@
 import { createEnhancedFetch } from './createEnhancedFetch'
 
-const getPath = () => {
+type WebClient = 'LGAdmin' | 'OJOIAdmin' | 'LGWeb' | 'LGApplicationWeb'
+
+const getPath = (client: WebClient) => {
   if (process.env.NODE_ENV !== 'production') {
-    return 'http://localhost:4100'
+    const port = client === 'OJOIAdmin' ? 4000 : 4100
+    return `http://localhost:${port}`
   }
 
   if (typeof window === 'undefined') {
     return process.env.DMR_ADMIN_API_BASE_PATH as string
   }
-  // Removing first part of the domain (ritstjorn) and adding admin-api
+
   const host = window.location.host.split('.')
-  host.shift()
-  host.unshift('admin-api')
+  if (client === 'OJOIAdmin') {
+    // Removing first part of the domain (ritstjorn) and adding admin-api of OJOI
+    // Example: https://ritstjorn.example.com -> https://admin-api.example.com
+    host.shift()
+    host.unshift('admin-api')
+  } else {
+    // Not removing first part of domain for LG, and adding api.internal for LG
+    // Example: https://example.com -> https://api.internal.example.com
+    host.unshift('api.internal')
+  }
   return `https://${host.join('.')}`
 }
 
@@ -24,6 +35,7 @@ type CParameters = {
 export const config = <Configuration>(
   Configuration: new (config?: CParameters) => Configuration,
   token: string,
+  client: WebClient,
 ) => {
   const fetchWithCookie = createEnhancedFetch()
 
@@ -35,7 +47,7 @@ export const config = <Configuration>(
       return fetchWithCookie(finalUrl, init)
     },
     accessToken: token,
-    basePath: getPath(),
+    basePath: getPath(client),
   })
 }
 
@@ -48,15 +60,16 @@ export const getDmrClient = <DefaultApi, Configuration>(
   DefaultApi: new (config: Configuration) => DefaultApi,
   Configuration: new (config?: CParameters) => Configuration,
   token: string,
+  client: WebClient = 'OJOIAdmin',
 ): DefaultApi => {
   if (typeof window === 'undefined') {
-    return new DefaultApi(config(Configuration, token))
+    return new DefaultApi(config(Configuration, token, client))
   }
   if (dmrClient && dmrClient.token === token) {
     return dmrClient.client as DefaultApi
   }
   dmrClient = {
-    client: new DefaultApi(config(Configuration, token)),
+    client: new DefaultApi(config(Configuration, token, client)),
     token,
   }
 

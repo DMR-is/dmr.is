@@ -1,23 +1,57 @@
-import { Op } from 'sequelize'
-import { HasMany } from 'sequelize-typescript'
+import { Column, DataType, HasMany } from 'sequelize-typescript'
 
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 
-import { LegalGazetteModels } from '@dmr.is/legal-gazette/constants'
-import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
+import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { LegalGazetteModels } from '../../lib/constants'
 import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
+import { StatusDto } from './dto/status.dto'
 
 export enum StatusIdEnum {
+  DRAFT = '63726fce-edcf-412d-85e8-087e99c592f2',
   SUBMITTED = 'cd3bf301-52a1-493e-8c80-a391c310c840',
   READY_FOR_PUBLICATION = 'a2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
   PUBLISHED = 'bd835a1d-0ecb-4aa4-9910-b5e60c30dced',
   REJECTED = 'f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
   WITHDRAWN = 'e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
 }
+export enum StatusEnum {
+  DRAFT = 'Drög',
+  SUBMITTED = 'Innsent',
+  READY_FOR_PUBLICATION = 'Tilbúið til útgáfu',
+  PUBLISHED = 'Útgefið',
+  REJECTED = 'Hafnað',
+  REVOKED = 'Afturkallað',
+}
 
-@BaseEntityTable({ tableName: LegalGazetteModels.ADVERT_STATUS })
-export class StatusModel extends BaseEntityModel {
+type StatusAttributes = {
+  id: StatusIdEnum
+  title: StatusEnum
+  slug: string
+}
+
+@BaseTable({ tableName: LegalGazetteModels.ADVERT_STATUS })
+export class StatusModel extends BaseModel<StatusAttributes, StatusAttributes> {
+  @Column({
+    type: DataType.ENUM(...Object.values(StatusIdEnum)),
+    allowNull: false,
+    primaryKey: true,
+  })
+  id!: StatusIdEnum
+
+  @Column({
+    type: DataType.ENUM(...Object.values(StatusEnum)),
+    allowNull: false,
+  })
+  title!: StatusEnum
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  slug!: string
+
   @HasMany(() => AdvertModel, {
     foreignKey: 'statusId',
   })
@@ -133,5 +167,17 @@ export class StatusModel extends BaseEntityModel {
         }
       }
     }
+  }
+
+  static fromModel(model: StatusModel): StatusDto {
+    return {
+      id: model.id,
+      title: model.title,
+      slug: model.slug,
+    }
+  }
+
+  fromModel(): StatusDto {
+    return StatusModel.fromModel(this)
   }
 }
