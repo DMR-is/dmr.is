@@ -1,10 +1,6 @@
 import { FastifyPluginCallback } from 'fastify'
 
-import {
-  recreateElastic,
-  repopulateElastic,
-  updateElasticItem,
-} from '../elastic/populate'
+import { repopulateElastic, updateElasticItem } from '../elastic/populate'
 import { searchElastic, SearchQueryParams } from '../elastic/search'
 import { QStr } from '../utils/misc'
 
@@ -23,7 +19,7 @@ export const elasticSearchRoutes: FastifyPluginCallback = (
     '/search',
     opts,
     async function (request, reply) {
-      if (this.isOpensearchClient(this.opensearch)) {
+      if (!this.opensearch) {
         throw new Error('OpenSearch client not available')
       }
       const data = await searchElastic(this.opensearch, request.query)
@@ -39,7 +35,7 @@ export const elasticSearchRoutes: FastifyPluginCallback = (
     '/search/update',
     opts,
     async function (request, reply) {
-      if (this.isOpensearchClient(this.opensearch)) {
+      if (!this.opensearch) {
         throw new Error('OpenSearch client not available')
       }
       await updateElasticItem(this.opensearch, request.query)
@@ -57,26 +53,7 @@ export const elasticRebuildRoutes: FastifyPluginCallback = (
   done,
 ) => {
   /**
-   * Recreate regulations search index
-   * Does **not** populate it with any regulations or other data
-   * @returns {success: boolean>}
-   */
-  fastify.get<QStr<'template'>>(
-    '/search/recreate',
-    Object.assign({}, opts, {
-      onRequest: fastify.basicAuth,
-    }),
-    async function (request, reply) {
-      if (this.isOpensearchClient(this.opensearch)) {
-        throw new Error('OpenSearch client not available')
-      }
-      const data = await recreateElastic(this.opensearch)
-      return reply.send(data)
-    },
-  )
-
-  /**
-   * Repopulate regulations search index
+   * Repopulate and Recreate regulations search index
    * Throws out the old and refills the index with shiny fresh regulations data.
    * @returns {success: boolean>}
    */
@@ -86,7 +63,7 @@ export const elasticRebuildRoutes: FastifyPluginCallback = (
       onRequest: fastify.basicAuth,
     }),
     async function (request, reply) {
-      if (this.isOpensearchClient(this.opensearch)) {
+      if (!this.opensearch) {
         throw new Error('OpenSearch client not available')
       }
       const data = await repopulateElastic(this.opensearch)

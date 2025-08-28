@@ -15,6 +15,7 @@ import { getSettingsTemplate, mappingTemplate } from './template'
 import { Client } from '@opensearch-project/opensearch'
 
 const INDEX_NAME = 'regulations'
+const DELETE_OLD_INDEX = true // flip to false if you want to keep old snapshots
 
 export type RegulationsIndexBody = {
   type: 'amending' | 'base'
@@ -57,143 +58,154 @@ const regulationToIndexItem = (reg: RegulationListItemFull) => {
 
 // ---------------------------------------------------------------------------
 
-const checkIfIndexExists = async (
-  client: Client,
-  index: string,
-): Promise<boolean> => {
-  const result = await client.indices.exists({ index })
-  return result.statusCode === 200
-}
-
-export async function recreateElastic(client: Client) {
-  const t0 = performance.now()
-  try {
-    if (await checkIfIndexExists(client, INDEX_NAME)) {
-      console.info('Deleting old index...')
-      await client.indices.delete({
-        index: INDEX_NAME,
-      })
-    }
-
-    console.info('Creating new "' + INDEX_NAME + '" index...')
-    await client.indices.create({
-      index: INDEX_NAME,
-    })
-
-    await client.indices.close({
-      index: INDEX_NAME,
-    })
-    console.info('Applying settings to "' + INDEX_NAME + '" index...')
-    const settingsTemplate = await getSettingsTemplate('main', 'is')
-    await client.indices.putSettings({
-      index: INDEX_NAME,
-      body: settingsTemplate,
-    })
-
-    console.info('Applying mappings to "' + INDEX_NAME + '" index...')
-    await client.indices.putMapping({
-      index: INDEX_NAME,
-      body: mappingTemplate,
-    })
-    await client.indices.open({
-      index: INDEX_NAME,
-    })
-
-    console.info('refreshing indices for "' + INDEX_NAME + '" index...')
-    await client.indices.refresh({ index: INDEX_NAME })
-
-    const t1 = performance.now()
-    console.info(
-      'Recreating "' +
-        INDEX_NAME +
-        '" successful in ' +
-        Math.round(t1 - t0) +
-        'ms.',
-    )
-  } catch (err) {
-    const t1 = performance.now()
-    console.info(err)
-    console.info(
-      'Recreating "' +
-        INDEX_NAME +
-        '" failed in ' +
-        Math.round(t1 - t0) +
-        'ms.',
-    )
-    return { success: false }
-  }
-  return { success: true }
-}
-
-// ---------------------------------------------------------------------------
-
 export async function repopulateElastic(client: Client) {
   const t0 = performance.now()
+  const baseAlias = INDEX_NAME // your intended read alias (e.g., "regulations")
+  let aliasName = baseAlias // may switch to `${baseAlias}_read` if conflict
+  const newIndex = `${baseAlias}-${Date.now()}`
+  const logPrefix = `[repopulate:${baseAlias}]`
+
+  let indexed = 0
+  let oldIndex: string | undefined
   let success = false
+
   try {
-    console.info('fetching regulations...')
-    let regulations = loadData<Array<RegulationListItemFull>>(
+    // 1) Load data (file → DB fallback)
+    console.info(`${logPrefix} Fetching regulations…`)
+    const fileRegs = (loadData<RegulationListItemFull[]>(
       'backup-json/all-extra.json',
-    )
-    if (!regulations) {
-      console.info('fetching data from db (this takes a while)...')
-      regulations = await getAllRegulations({
-        extra: true,
-        includeRepealed: true,
-      })
-      storeData(regulations, 'backup-json/all-extra.json')
-    } else {
-      console.info('returning data from file')
+    ) || undefined) as RegulationListItemFull[] | undefined
+
+    const regulations: RegulationListItemFull[] =
+      fileRegs ??
+      (await getAllRegulations({ extra: true, includeRepealed: true }))
+
+    if (!fileRegs) storeData(regulations, 'backup-json/all-extra.json')
+    if (regulations.length === 0) throw new Error('No regulations to index')
+    console.info(`${logPrefix} ${regulations.length} regulations found`)
+
+    // 2) Build settings/mappings (use *_path packages so body stays small)
+    const settings = await getSettingsTemplate(logPrefix) // { settings: { analysis…, *_path … } }
+    const mappings = mappingTemplate
+
+    // Derive steady-state replicas (dev=0, prod(≥2 data nodes)=1)
+    let steadyReplicas = 0
+    try {
+      const health = await client.cluster.health()
+      const body = (health as any)?.body ?? health
+      const dataNodes: number = body?.number_of_data_nodes ?? 1
+      steadyReplicas = dataNodes >= 2 ? 1 : 0
+      console.info(
+        `${logPrefix} data nodes=${dataNodes} → target replicas=${steadyReplicas}`,
+      )
+    } catch {
+      /* default 0 ok */
     }
 
-    if (!regulations.length) {
-      throw new Error('Error fetching regulations')
-    } else {
-      console.info(regulations.length + ' regulations found')
-    }
-
-    console.info(`deleting all items from ${INDEX_NAME} index...`)
-    await client.deleteByQuery({
-      index: INDEX_NAME,
+    // 3) Create new index (cheap)
+    console.info(`${logPrefix} Creating fresh index "${newIndex}"…`)
+    await client.indices.create({
+      index: newIndex,
       body: {
-        query: {
-          match_all: {},
+        settings: {
+          ...(settings.settings ?? settings),
+          index: {
+            number_of_replicas: 0,
+            refresh_interval: '-1',
+          },
         },
+        mappings,
       },
+      wait_for_active_shards: '1',
+      timeout: '5m',
     })
 
-    let count = 0
+    // 4) Bulk index (helpers.bulk: low concurrency + retries)
     console.info(
-      `populating ${INDEX_NAME} index...
-      (with ${regulations.length} regulations)
-      `,
+      `${logPrefix} Populating "${newIndex}" with ${regulations.length} documents…`,
     )
-    for await (const reg of regulations) {
-      const aReg = await regulationToIndexItem(reg)
 
-      await client.index({
-        index: INDEX_NAME,
-        body: aReg,
-      })
-      count++
-      if (count % 100 === 0) {
-        console.info(`… indexed ${count} regulations`)
+    async function* docsGen() {
+      for (const r of regulations) {
+        const doc = await regulationToIndexItem(r)
+        yield doc
       }
     }
 
-    console.info(`Refreshing ${INDEX_NAME} indices...`)
-    await client.indices.refresh({ index: INDEX_NAME })
+    const bulkRes = await (client as any).helpers.bulk({
+      datasource: docsGen(),
+      onDocument: (doc: any) => ({ index: { _index: newIndex, _id: doc.id } }),
+      concurrency: 2,
+      flushBytes: 5_000_000,
+      retries: 5,
+      wait: 2000,
+      onDrop: (item: any) =>
+        console.error(`${logPrefix} Dropped item:`, item?.error || item),
+    })
+    indexed = bulkRes?.total ?? regulations.length
+
+    // 5) Restore steady-state + make searchable
+    await client.indices.putSettings({
+      index: newIndex,
+      body: {
+        index: { number_of_replicas: steadyReplicas, refresh_interval: '1s' },
+      },
+    })
+    await client.indices.refresh({ index: newIndex })
+
+    // 6) Alias cut-over (handle concrete-index conflict)
+    const asBool = (r: any) => (typeof r === 'boolean' ? r : !!r?.body)
+
+    // If an index named like the alias exists, either delete (if allowed) or fall back to "<alias>_read"
+    const concreteExists = asBool(
+      await client.indices.exists({ index: aliasName }),
+    )
+    if (concreteExists) {
+      if (process.env.ALLOW_DELETE_CONCRETE === 'true') {
+        console.warn(
+          `${logPrefix} Concrete index "${aliasName}" exists; deleting to use alias.`,
+        )
+        await client.indices.delete({
+          index: aliasName,
+          ignore_unavailable: true,
+        })
+      } else {
+        aliasName = `${baseAlias}_read`
+        console.warn(
+          `${logPrefix} Concrete index named "${baseAlias}" exists; using alias "${aliasName}"`,
+        )
+      }
+    }
+
+    console.info(`${logPrefix} Switching alias "${aliasName}" → "${newIndex}"…`)
+    const actions: any[] = [{ add: { index: newIndex, alias: aliasName } }]
+    try {
+      const current = await client.indices.getAlias({ name: aliasName })
+      oldIndex = Object.keys((current as any).body ?? current)[0]
+      if (oldIndex && oldIndex !== newIndex)
+        actions.push({ remove: { index: oldIndex, alias: aliasName } })
+    } catch {
+      /* alias didn’t exist; first time */
+    }
+    await client.indices.updateAliases({ body: { actions } })
+
+    // 7) Optional: delete old index
+    if (DELETE_OLD_INDEX && oldIndex && oldIndex !== newIndex) {
+      console.info(`${logPrefix} Deleting old index "${oldIndex}"…`)
+      await client.indices.delete({ index: oldIndex, ignore_unavailable: true })
+    }
 
     success = true
   } catch (err) {
-    console.info(err)
+    console.error(`${logPrefix} Error:`, err)
+  } finally {
+    const tookMs = Math.round(performance.now() - t0)
+    console.info(
+      `${logPrefix} ${success ? 'successful in' : 'failed after'} ${tookMs} ms (docs: ${indexed}).`,
+    )
   }
 
-  const resultType = success ? 'successful in' : 'failed after'
-  const msElapsed = Math.round(performance.now() - t0)
-  console.info(`Indexing ${INDEX_NAME} ${resultType} ${msElapsed} ms.`)
-
-  return { success }
+  return { success, indexed, newIndex, oldIndex, alias: aliasName }
 }
 
 // ---------------------------------------------------------------------------

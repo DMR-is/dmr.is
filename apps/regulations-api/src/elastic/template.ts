@@ -1,71 +1,41 @@
-import fetch from 'node-fetch'
+export const getSettingsTemplate = async (logPrefix: string) => {
+  const need = (id: string | undefined, name: string) => {
+    if (!id)
+      throw new Error(`${logPrefix} missing env var for ${name} package id`)
+    return `analyzers/${id}`
+  }
 
-import promiseAll from '@hugsmidjan/qj/promiseAllObject'
-
-const getDictionaryFile = async (
-  sha: string,
-  locale: 'is',
-  analyzer: string,
-) => {
-  return await fetch(
-    `https://github.com/island-is/elasticsearch-dictionaries/blob/${sha}/${locale}/${analyzer}.txt?raw=true`,
-  )
-    .then((response) => response.text())
-    .then((response) => {
-      if (response) {
-        return response.split(/\n/).filter(Boolean)
-      } else {
-        return []
-      }
-    })
-}
-
-const domainSpecificStopWords = ['reglugerð']
-
-export const getSettingsTemplate = async (sha: string, locale: 'is') => {
-  const {
-    stemmer,
-    keywords,
-    synonyms,
-    stopwords,
-    hyphenwhitelist,
-    // autocompletestop,
-  } = await promiseAll({
-    stemmer: getDictionaryFile(sha, locale, 'stemmer'),
-    keywords: getDictionaryFile(sha, locale, 'keywords'), // Empty at the moment – 2021-09
-    synonyms: getDictionaryFile(sha, locale, 'synonyms'),
-    stopwords: getDictionaryFile(sha, locale, 'stopwords').then((words) =>
-      words.concat(domainSpecificStopWords),
-    ),
-    hyphenwhitelist: getDictionaryFile(sha, locale, 'hyphenwhitelist'),
-    // autocompletestop: getDictionaryFile(sha, locale, 'autocompletestop'),
-  })
-
+  const STEMMER_PKG = process.env.OS_PKG_STEMMER || 'F203129716'
+  const STOPWORDS_PKG = process.env.OS_PKG_STOPWORDS || 'F167171114'
+  const KEYWORDS_PKG = process.env.OS_PKG_KEYWORDS || 'F24967943'
+  const SYNONYMS_PKG = process.env.OS_PKG_SYNONYMS || 'F256679733'
+  const HYPHEN_PKG = process.env.OS_PKG_HYPHEN || 'F22901080'
   return {
     settings: {
       analysis: {
         filter: {
           icelandicStemmer: {
             type: 'stemmer_override',
-            rules: stemmer,
+            rules_path: need(STEMMER_PKG, 'stemmer'),
           },
           icelandicStop: {
             type: 'stop',
-            stopwords: stopwords,
+            stopwords_path: need(STOPWORDS_PKG, 'stopwords'),
+            ignore_case: true,
           },
           icelandicKeyword: {
             type: 'keyword_marker',
             ignore_case: true,
-            keywords: keywords,
+            keywords_path: need(KEYWORDS_PKG, 'keywords'),
           },
           icelandicSynonym: {
-            type: 'synonym',
+            type: 'synonym', // use 'synonym_graph' if preferred for multi-word
             lenient: true,
-            synonyms: synonyms,
+            synonyms_path: need(SYNONYMS_PKG, 'synonyms'),
           },
           icelandicDeCompounded: {
             type: 'dictionary_decompounder',
-            word_list: hyphenwhitelist,
+            word_list_path: need(HYPHEN_PKG, 'hyphen whitelist'),
             max_subword_size: 18,
             min_subword_size: 4,
           },
@@ -81,7 +51,6 @@ export const getSettingsTemplate = async (sha: string, locale: 'is') => {
               'icelandicKeyword',
               'icelandicStemmer',
             ],
-            // char_filter: ['html_strip'],
           },
           compoundIcelandic: {
             type: 'custom',
@@ -94,7 +63,6 @@ export const getSettingsTemplate = async (sha: string, locale: 'is') => {
               'icelandicDeCompounded',
               'icelandicStemmer',
             ],
-            // char_filter: ['html_strip'],
           },
           termIcelandic: {
             type: 'custom',
