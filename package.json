@@ -239,7 +239,7 @@
     "node-fetch": "2.6.7",
     "lodash": "4.17.21",
     "tar-fs": "3.0.9",
-    "koa": "2.16.1",
+    "koa": "2.16.2",
     "puppeteer": "^22.8.1",
     "puppeteer-core": "^22.8.0"
   }
