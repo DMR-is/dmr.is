@@ -15,7 +15,6 @@ import { AdvertPreview } from '../advert-display/AdvertPreview'
 import { IconButton } from '../icon-button/IconButton'
 import { AdvertFields } from './AdvertFields'
 import { AppendixFields } from './AppendixFields'
-import { AttachmentFields } from './AttachmentsFields'
 import { CaseCorrectionFields } from './CaseCorrectionField'
 import { CommentFields } from './CommentFields'
 import { CommonFields } from './CommonFields'
@@ -23,6 +22,7 @@ import { CommunicationChannelsField } from './CommunicationChannelsField'
 import { MessageField } from './MessageField'
 import { PublishingFields } from './PublishingFields'
 import { SignatureFields } from './SignatureFields'
+import { SupportingDocs } from './SupportingDocFields'
 
 export const CaseFields = () => {
   const { canEdit, isPublishedOrRejected } = useCaseContext()
@@ -120,7 +120,7 @@ export const CaseFields = () => {
                 toggle={appendixToggle.toggle}
                 onToggle={appendixToggle.onToggle}
               />
-              <AttachmentFields
+              <SupportingDocs
                 toggle={attachmentToggle.toggle}
                 onToggle={attachmentToggle.onToggle}
               />
