@@ -229,7 +229,7 @@ export async function getAllRegulations(opts?: {
       r.publishedDate,
       r.effectiveDate,
       c.date as repealedDate,
-      r.repealedBeacuseReasons
+      r.repealedbeacusereasons
     from Regulation as r
     left join RegulationCancel as c on c.regulationId = r.id
     left join Task as t on t.regulationId = r.id

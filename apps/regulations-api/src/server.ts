@@ -28,17 +28,20 @@ import fastifyRedis from '@fastify/redis'
 const fastify = fast({
   logger: true,
   ignoreTrailingSlash: true,
-  // rewriteUrl: (req) => {
-  //   console.log('FOOBAR', { url: req.url });
-  //   return req.url || '/';
-  // },
 })
 fastify.register(fastifyRateLimiter, {
   max: 100,
   timeWindow: '1 minute',
 })
 
-const { ROUTES_USERNAME, ROUTES_PASSWORD, PORT, REDIS_URL, REDIS_PASSWORD } = process.env
+const {
+  ROUTES_USERNAME,
+  ROUTES_PASSWORD,
+  PORT,
+  REDIS_URL,
+  REDIS_PASSWORD,
+  OPENSEARCH_CLUSTER_ENDPOINT,
+} = process.env
 
 if (REDIS_URL) {
   console.info('redis active')
@@ -75,12 +78,14 @@ if (process.env.PROXIED !== 'true') {
   fastify.register(fastifyCompress, { global: true })
 }
 
-const OPENSEARCH_CLUSTER_ENDPOINT = process.env.OPENSEARCH_CLUSTER_ENDPOINT
-
 if (OPENSEARCH_CLUSTER_ENDPOINT) {
   fastify.register(FastifyOpenSearch, {
     node: OPENSEARCH_CLUSTER_ENDPOINT,
-    healthcheck: false,
+    ssl: { rejectUnauthorized: false },
+    maxRetries: 5,
+    requestTimeout: 120_000,
+    compression: 'gzip',
+    agent: { keepAlive: true, maxSockets: 10 },
   })
   fastify.register(elasticSearchRoutes, { prefix: '/api/v1' })
   fastify.register(elasticRebuildRoutes, { prefix: '/api/v1' })
@@ -104,7 +109,7 @@ const start = async () => {
     connectSequelize()
     const serverPort = PORT || 3000
 
-    fastify.listen({port: 3000, host: '0.0.0.0'})
+    fastify.listen({ port: 3000, host: '0.0.0.0' })
 
     console.info('API up and running on port ' + serverPort)
   } catch (err) {

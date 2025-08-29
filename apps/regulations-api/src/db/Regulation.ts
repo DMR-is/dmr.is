@@ -243,7 +243,7 @@ const augmentRegulation = async (
     publishedDate,
     effectiveDate,
     ministry,
-    repealed: !!repealedDate || repealedBeacuseReasons,
+    repealed: !!repealedDate || !!repealedBeacuseReasons,
     repealedDate,
     lastAmendDate,
     lawChapters,
@@ -373,7 +373,6 @@ const removeEmptyAppendixes = <T extends RegulationMaybeDiff>(
 // ===========================================================================
 
 // ===========================================================================
-
 
 export async function getRegulation(
   regulationName: RegName,
