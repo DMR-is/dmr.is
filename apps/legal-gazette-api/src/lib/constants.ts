@@ -14,6 +14,7 @@ export enum LegalGazetteModels {
   CASE = 'cases',
   COMMUNICATION_CHANNEL = 'communication_channel',
   ADVERT = 'advert',
+  ADVERT_PUBLICATIONS = 'advert_publications',
   APPLICATION = 'application',
   COURT_DISTRICT = 'court_district',
   SETTLEMENT = 'settlement',

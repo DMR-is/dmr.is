@@ -18,6 +18,7 @@ import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { AdvertModel } from '../modules/advert/advert.model'
 import { AdvertModule } from '../modules/advert/advert.module'
+import { AdvertPublicationsModel } from '../modules/advert-publications/advert-publications.model'
 import { ApplicationModel } from '../modules/applications/application.model'
 import { ApplicationModule } from '../modules/applications/application.module'
 import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
@@ -66,6 +67,7 @@ import { UsersModule } from '../modules/users/users.module'
             SettlementModel,
             SubscriberModel,
             ApplicationModel,
+            AdvertPublicationsModel,
           ],
         }),
       ],

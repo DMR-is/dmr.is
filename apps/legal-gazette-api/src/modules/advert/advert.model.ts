@@ -8,6 +8,7 @@ import {
   DataType,
   DefaultScope,
   ForeignKey,
+  HasMany,
   Scopes,
 } from 'sequelize-typescript'
 
@@ -18,6 +19,7 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { LegalGazetteModels } from '../../lib/constants'
 import { getAdvertHTMLMarkup } from '../../lib/templates'
 import { validateAdvertStatus } from '../../lib/utils'
+import { AdvertPublicationsModel } from '../advert-publications/advert-publications.model'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
 import { CourtDistrictModel } from '../court-district/court-district.model'
@@ -311,6 +313,9 @@ export class AdvertModel extends BaseModel<
 
   @BelongsTo(() => CourtDistrictModel)
   courtDistrict?: CourtDistrictModel
+
+  @HasMany(() => AdvertPublicationsModel)
+  publications!: AdvertPublicationsModel[]
 
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {

@@ -144,6 +144,19 @@ module.exports = {
       SIGNATURE_DATE TIMESTAMPTZ DEFAULT NULL
     );
 
+    CREATE TABLE ADVERT_PUBLICATIONS (
+      ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      CREATED_AT TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      UPDATED_AT TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      DELETED_AT TIMESTAMPTZ,
+
+      ADVERT_ID UUID NOT NULL REFERENCES ADVERT(ID),
+      SCHEDULED_AT TIMESTAMPTZ NOT NULL,
+      PUBLISHED_AT TIMESTAMPTZ DEFAULT NULL,
+      VERSION_NUMBER INTEGER NOT NULL,
+      UNIQUE (ADVERT_ID, VERSION_NUMBER)
+    );
+
     CREATE TABLE COMMUNICATION_CHANNEL (
       ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       CREATED_AT TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -222,6 +235,10 @@ module.exports = {
 
     CREATE INDEX idx_advert_scheduled_at ON advert (scheduled_at ASC);
 
+    CREATE INDEX idx_advert_publications_advert_id ON ADVERT_PUBLICATIONS (ADVERT_ID);
+    CREATE INDEX idx_advert_publications_scheduled_at_asc ON ADVERT_PUBLICATIONS (SCHEDULED_AT ASC);
+    CREATE INDEX idx_advert_publications_published_at_desc ON ADVERT_PUBLICATIONS (PUBLISHED_AT DESC);
+
     COMMIT;
 
     `)
@@ -237,6 +254,9 @@ module.exports = {
     DROP INDEX IF EXISTS idx_advert_status_title_asc;
     DROP INDEX IF EXISTS idx_advert_category_title_asc;
     DROP INDEX IF EXISTS idx_advert_type_title_asc;
+    DROP INDEX IF EXISTS idx_advert_publications_advert_id;
+    DROP INDEX IF EXISTS idx_advert_publications_scheduled_at_asc;
+    DROP INDEX IF EXISTS idx_advert_publications_published_at_desc;
 
     DROP TABLE IF EXISTS LEGAL_GAZETTE_SUBSCRIBERS;
     DROP TABLE IF EXISTS APPLICATION;
