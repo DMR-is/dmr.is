@@ -29,7 +29,7 @@ export class PublishingService {
     })
 
     const advertToBePublished = await this.advertModel
-      .scope(AdvertModelScopes.TO_BE_PUBLISHED)
+      .scope(AdvertModelScopes)
       .findAll()
 
     if (advertToBePublished.length === 0) {

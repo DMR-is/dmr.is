@@ -25,6 +25,12 @@ export const CurrentUser = createParamDecorator(
       throw new UnauthorizedException()
     }
 
+    request.user.fullName = request.user.name
+
+    if (request.user.actor) {
+      request.user.fullName = `${request.user.name} (${request.user.actor.name})`
+    }
+
     return request.user
   },
 )

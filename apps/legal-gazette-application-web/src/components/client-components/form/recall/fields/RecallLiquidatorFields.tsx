@@ -2,17 +2,16 @@ import { useFormContext } from 'react-hook-form'
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
-import { useUpdateRecallApplication } from '../../../../../hooks/useUpdateRecallApplication'
+import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
 import {
-  BankruptcyFormFields,
-  BankruptcyFormSchema,
+  RecallFormFields,
+  RecallFormSchema,
 } from '../../../../../lib/forms/schemas/recall-schema'
 import { InputController } from '../../controllers/InputController'
 
 export const RecallLiquidatorFields = () => {
-  const { caseId, applicationId } =
-    useFormContext<BankruptcyFormSchema>().getValues('meta')
-  const { trigger } = useUpdateRecallApplication({ applicationId, caseId })
+  const { applicationId } = useFormContext<RecallFormSchema>().getValues('meta')
+  const { trigger } = useUpdateApplication({ applicationId })
 
   return (
     <GridRow rowGap={[2, 3]}>
@@ -22,15 +21,15 @@ export const RecallLiquidatorFields = () => {
       <GridColumn span={['12/12', '6/12']}>
         <InputController
           label="Nafn skiptastjóra"
-          name={BankruptcyFormFields.LIQUIDATOR_NAME}
-          onBlur={(val) => trigger({ liquidator: val })}
+          name={RecallFormFields.LIQUIDATOR_NAME}
+          onBlur={(val) => trigger({ liquidatorName: val })}
           required
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
         <InputController
           label="Staðsetning skiptastjóra"
-          name={BankruptcyFormFields.LIQUIDATOR_LOCATION}
+          name={RecallFormFields.LIQUIDATOR_LOCATION}
           onBlur={(val) => trigger({ liquidatorLocation: val })}
           required
         />
@@ -38,7 +37,7 @@ export const RecallLiquidatorFields = () => {
       <GridColumn span={['12/12', '6/12']}>
         <InputController
           label="Fyrir hönd skiptastjóra"
-          name={BankruptcyFormFields.LIQUIDATOR_ON_BEHALF_OF}
+          name={RecallFormFields.LIQUIDATOR_ON_BEHALF_OF}
           onBlur={(val) => trigger({ liquidatorOnBehalfOf: val })}
         />
       </GridColumn>

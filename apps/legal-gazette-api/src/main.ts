@@ -9,10 +9,10 @@ import { logger } from '@dmr.is/logging'
 
 import { AppModule } from './app/app.module'
 import { AdvertModule } from './modules/advert/advert.module'
-import { CommonApplicationModule } from './modules/applications/common/dmr/common-application.module'
 import { BaseEntityModule } from './modules/base-entity/base-entity.module'
 import { SubscriberModule } from './modules/subscribers/subscriber.module'
 import { ApplicationWebModule } from './modules/swagger/application-web.module'
+import { IslandIsApplicationModule } from './modules/swagger/island-is-application.module'
 import { openApi } from './openApi'
 
 async function bootstrap() {
@@ -48,7 +48,7 @@ async function bootstrap() {
   SwaggerModule.setup(internalSwaggerPath, app, internalDocument)
 
   const islandDocument = SwaggerModule.createDocument(app, openApi, {
-    include: [CommonApplicationModule, BaseEntityModule],
+    include: [IslandIsApplicationModule],
     deepScanRoutes: true,
     autoTagControllers: false,
   })

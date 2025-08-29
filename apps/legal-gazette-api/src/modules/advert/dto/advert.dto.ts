@@ -23,9 +23,6 @@ import { StatusDto } from '../../status/dto/status.dto'
 import { StatusIdEnum } from '../../status/status.model'
 import { TypeDto } from '../../type/dto/type.dto'
 import { AdvertVersionEnum } from '../advert.model'
-import { CommonAdvertDto } from '../common/dto/common-advert.dto'
-import { RecallAdvertDto } from '../recall/dto/recall-advert.dto'
-
 export class AdvertDto extends DetailedDto {
   @ApiProperty({
     type: String,
@@ -240,30 +237,6 @@ export class GetAdvertsStatusCounterDto {
   @Type(() => AdvertStatusCounterItemDto)
   @ValidateNested()
   published!: AdvertStatusCounterItemDto
-}
-
-export class AdvertDetailedDto extends AdvertDto {
-  @ApiProperty({
-    type: CommonAdvertDto,
-    nullable: true,
-    required: false,
-  })
-  @IsOptional()
-  @ValidateIf((o) => o.commonAdvert !== null)
-  @Type(() => CommonAdvertDto)
-  @ValidateNested()
-  commonAdvert?: CommonAdvertDto
-
-  @ApiProperty({
-    type: RecallAdvertDto,
-    nullable: true,
-    required: false,
-  })
-  @IsOptional()
-  @ValidateIf((o) => o.recallAdvert !== null)
-  @Type(() => RecallAdvertDto)
-  @ValidateNested()
-  recallAdvert?: RecallAdvertDto
 }
 
 export class UpdateAdvertDto {

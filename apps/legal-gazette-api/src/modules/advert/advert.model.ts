@@ -1,91 +1,89 @@
-import { Op, WhereOptions } from 'sequelize'
+import { BulkCreateOptions, Op } from 'sequelize'
 import {
+  AfterCreate,
+  BeforeBulkCreate,
   BeforeUpdate,
   BelongsTo,
   Column,
   DataType,
   DefaultScope,
   ForeignKey,
-  HasOne,
   Scopes,
 } from 'sequelize-typescript'
 
-import { BadRequestException, NotFoundException } from '@nestjs/common'
+import { BadRequestException } from '@nestjs/common'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
+import { getAdvertHTMLMarkup } from '../../lib/templates'
 import { validateAdvertStatus } from '../../lib/utils'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
+import { CourtDistrictModel } from '../court-district/court-district.model'
+import { SettlementModel } from '../settlement/settlement.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
 import { TypeIdEnum, TypeModel } from '../type/type.model'
-import {
-  CommonAdvertCreateAttributes,
-  CommonAdvertModel,
-} from './common/common-advert.model'
-import {
-  DivisionEndingAdvertCreateAttributes,
-  DivisionEndingAdvertModel,
-} from './division/models/division-ending-advert.model'
-import {
-  DivisionMeetingAdvertCreateAttributes,
-  DivisionMeetingAdvertModel,
-} from './division/models/division-meeting-advert.model'
-import {
-  AdvertDetailedDto,
-  AdvertDto,
-  AdvertStatusCounterItemDto,
-  GetAdvertsQueryDto,
-} from './dto/advert.dto'
-import {
-  RecallAdvertCreateAttributes,
-  RecallAdvertModel,
-} from './recall/recall-advert.model'
+import { AdvertDto, AdvertStatusCounterItemDto } from './dto/advert.dto'
 
 type AdvertAttributes = {
   caseId: string
-  html: string
-  submittedBy: string
-  publicationNumber: string
-  publishedAt: Date | null
-  scheduledAt: Date
-  version: AdvertVersionEnum
+  settlementId: string | null
+  courtDistrictId: string | null
+  islandIsApplicationId: string | null
+
   typeId: string
   categoryId: string
   statusId: string
+
+  publicationNumber: string | null
+  version: AdvertVersionEnum
+  publishedAt: Date | null
+  scheduledAt: Date
+
+  title: string
+  createdBy: string
+  html: string
   paid: boolean
+
+  additionalText: string | null
+  caption: string | null
+
   signatureName: string
+  signatureOnBehalfOf: string | null
   signatureLocation: string
   signatureDate: Date
+
   type: TypeModel
   category: CategoryModel
   status: StatusModel
   case: CaseModel
-  commonAdvert?: CommonAdvertModel
-  recallAdvert?: RecallAdvertModel
-  divisionMeetingAdvert?: DivisionMeetingAdvertModel
-  divisionEndingAdvert?: DivisionEndingAdvertModel
 }
 
 export type AdvertCreateAttributes = {
-  submittedBy: string
+  caseId?: string
+  settlementId?: string | null
+  courtDistrictId?: string | null
+  islandIsApplicationId?: string | null
+
   typeId: string
   categoryId: string
+  statusId?: string
+  title: string
+  html?: string
+
+  version?: AdvertVersionEnum
+  publishedAt?: Date | null // only if coming from an external system (ex. Skatturinn) and should be automatically set
   scheduledAt: Date
+
+  createdBy: string // ex: Gunnar Gunnarsson or Lögfræðistofa (Gunnar Gunnarsson)
+  additionalText?: string | null
+  caption?: string | null
+
   signatureName: string
+  signatureOnBehalfOf?: string | null
   signatureLocation: string
   signatureDate: Date
-  caseId?: string
-  html?: string
-  statusId?: string
-  paid?: boolean
-  publishedAt?: Date | null
-  version?: AdvertVersionEnum
-  commonAdvert?: CommonAdvertCreateAttributes
-  recallAdvert?: RecallAdvertCreateAttributes
-  divisionMeetingAdvert?: DivisionMeetingAdvertCreateAttributes
-  divisionEndingAdvert?: DivisionEndingAdvertCreateAttributes
 }
 
 export enum AdvertVersionEnum {
@@ -95,60 +93,50 @@ export enum AdvertVersionEnum {
 }
 
 export enum AdvertModelScopes {
-  DEFAULT = 'defaultScope',
-  READY_FOR_PUBLICATION = 'readyForPublication',
+  IN_PROGRESS = 'inProgress',
   TO_BE_PUBLISHED = 'toBePublished',
   PUBLISHED = 'published',
   COMPLETED = 'completed',
-  RECALL_ADVERT = 'recallAdvert',
-  ALL = 'all',
-  WITH_QUERY = 'withQuery',
 }
 
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
 @DefaultScope(() => ({
-  include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
-  where: {
-    statusId: {
-      [Op.in]: [StatusIdEnum.SUBMITTED, StatusIdEnum.READY_FOR_PUBLICATION],
-    },
-    publishedAt: {
-      [Op.eq]: null,
-    },
-  },
+  include: [StatusModel, CategoryModel, TypeModel],
   order: [
     ['scheduledAt', 'ASC'],
     ['version', 'ASC'],
   ],
 }))
 @Scopes(() => ({
-  readyForPublication: {
-    include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
+  inProgress: {
+    include: [StatusModel, CategoryModel, TypeModel],
     where: {
-      statusId: StatusIdEnum.READY_FOR_PUBLICATION,
-      publishedAt: { [Op.eq]: null },
-    },
-    order: [['scheduledAt', 'ASC']],
-  },
-  toBePublished: {
-    include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
-    where: {
-      paid: true,
-      statusId: StatusIdEnum.READY_FOR_PUBLICATION,
+      statusId: {
+        [Op.in]: [StatusIdEnum.SUBMITTED, StatusIdEnum.READY_FOR_PUBLICATION],
+      },
       publishedAt: { [Op.eq]: null },
     },
     order: [['scheduledAt', 'ASC']],
   },
   published: {
-    include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
+    include: [StatusModel, CategoryModel, TypeModel],
     where: {
       publishedAt: { [Op.ne]: null },
       statusId: StatusIdEnum.PUBLISHED,
     },
     order: [['publishedAt', 'DESC']],
   },
+  toBePublished: {
+    include: [StatusModel, CategoryModel, TypeModel],
+    order: [['scheduledAt', 'ASC']],
+    where: {
+      paid: true,
+      statusId: StatusIdEnum.READY_FOR_PUBLICATION,
+      publishedAt: { [Op.eq]: null },
+    },
+  },
   completed: {
-    include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
+    include: [StatusModel, CategoryModel, TypeModel],
     order: [['scheduledAt', 'ASC']],
     where: {
       statusId: {
@@ -160,90 +148,6 @@ export enum AdvertModelScopes {
       },
     },
   },
-  all: {
-    include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
-    where: {},
-    order: [
-      ['scheduledAt', 'ASC'],
-      ['version', 'ASC'],
-    ],
-  },
-  recallAdvert: {
-    include: [
-      StatusModel,
-      CategoryModel,
-      TypeModel,
-      CommonAdvertModel,
-      RecallAdvertModel,
-    ],
-    where: {
-      typeId: {
-        [Op.eq]: TypeIdEnum.RECALL,
-      },
-    },
-  },
-  withQuery: (query?: GetAdvertsQueryDto) => {
-    const whereClause: Record<string, string | number> = {}
-
-    if (query?.statusId) {
-      Object.assign(whereClause, {
-        statusId: {
-          [Op.in]: query.statusId,
-        },
-      })
-    }
-
-    if (query?.categoryId) {
-      Object.assign(whereClause, {
-        categoryId: query.categoryId,
-      })
-    }
-
-    if (query?.typeId) {
-      Object.assign(whereClause, {
-        typeId: query.typeId,
-      })
-    }
-
-    if (query?.dateFrom && !query?.dateTo) {
-      Object.assign(whereClause, {
-        publishedAt: {
-          [Op.gte]: new Date(query.dateFrom),
-        },
-      })
-    }
-
-    if (query?.dateTo && !query?.dateFrom) {
-      Object.assign(whereClause, {
-        publishedAt: {
-          [Op.lte]: new Date(query.dateTo),
-        },
-      })
-    }
-
-    if (query?.dateFrom && query?.dateTo) {
-      Object.assign(whereClause, {
-        publishedAt: {
-          [Op.between]: [new Date(query.dateFrom), new Date(query.dateTo)],
-        },
-      })
-    }
-
-    if (query?.search) {
-      Object.assign(whereClause, {
-        [Op.or]: [
-          { title: { [Op.iLike]: `%${query.search}%` } },
-          { publicationNumber: { [Op.iLike]: `%${query.search}%` } },
-        ],
-      })
-    }
-
-    return {
-      include: [StatusModel, CategoryModel, TypeModel, CommonAdvertModel],
-      where: whereClause,
-      order: [['scheduledAt', 'ASC']],
-    }
-  },
 }))
 export class AdvertModel extends BaseModel<
   AdvertAttributes,
@@ -252,10 +156,30 @@ export class AdvertModel extends BaseModel<
   @Column({
     type: DataType.UUID,
     allowNull: false,
-    field: 'case_id',
   })
   @ForeignKey(() => CaseModel)
   caseId!: string
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    defaultValue: null,
+  })
+  @ForeignKey(() => SettlementModel)
+  settlementId!: string | null
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    defaultValue: null,
+  })
+  @ForeignKey(() => CourtDistrictModel)
+  courtDistrictId!: string | null
+
+  @Column({
+    type: DataType.UUID,
+  })
+  islandIsApplicationId!: string | null
 
   @Column({
     type: DataType.UUID,
@@ -263,7 +187,7 @@ export class AdvertModel extends BaseModel<
     field: 'advert_type_id',
   })
   @ForeignKey(() => TypeModel)
-  typeId!: string
+  typeId!: TypeIdEnum
 
   @Column({
     type: DataType.UUID,
@@ -285,78 +209,90 @@ export class AdvertModel extends BaseModel<
   @Column({
     type: DataType.DATE,
     allowNull: false,
-    field: 'scheduled_at',
   })
   scheduledAt!: Date
 
   @Column({
     type: DataType.DATE,
-    allowNull: true,
-    field: 'published_at',
     defaultValue: null,
   })
   publishedAt!: Date | null
 
   @Column({
+    type: DataType.ENUM(...Object.values(AdvertVersionEnum)),
+    allowNull: false,
+    defaultValue: AdvertVersionEnum.A,
+  })
+  version!: AdvertVersionEnum
+
+  @Column({
+    type: DataType.TEXT,
+    unique: true,
+    defaultValue: null,
+  })
+  publicationNumber!: string | null
+
+  @Column({
     type: DataType.TEXT,
     allowNull: false,
-    field: 'html',
+  })
+  title!: string
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: false,
     defaultValue: '',
   })
   html!: string
 
   @Column({
-    field: 'signature_name',
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  createdBy!: string
+
+  @Column({
     type: DataType.STRING(100),
     allowNull: false,
   })
   signatureName!: string
 
   @Column({
-    field: 'signature_location',
+    type: DataType.STRING(100),
+    allowNull: true,
+  })
+  signatureOnBehalfOf!: string | null
+
+  @Column({
     type: DataType.TEXT,
     allowNull: false,
   })
   signatureLocation!: string
 
   @Column({
-    field: 'signature_date',
     type: DataType.DATE,
     allowNull: false,
   })
   signatureDate!: Date
 
   @Column({
-    type: DataType.ENUM(...Object.values(AdvertVersionEnum)),
-    allowNull: false,
-    defaultValue: AdvertVersionEnum.A,
-    field: 'version',
+    type: DataType.TEXT,
+    allowNull: true,
   })
-  version!: AdvertVersionEnum
+  additionalText!: string | null
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+  })
+  caption!: string | null
 
   @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
-    defaultValue: true, // TODO: Change to false when adverts are not paid by default
-    field: 'paid',
+    defaultValue: false,
   })
   paid!: boolean
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-    field: 'submitted_by',
-  })
-  submittedBy!: string
-
-  @Column({
-    type: DataType.TEXT,
-    field: 'publication_number',
-    unique: true,
-    allowNull: true,
-    defaultValue: null,
-  })
-  publicationNumber!: string | null
 
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
   case!: CaseModel
@@ -370,31 +306,58 @@ export class AdvertModel extends BaseModel<
   @BelongsTo(() => StatusModel)
   status!: StatusModel
 
-  @HasOne(() => CommonAdvertModel, { foreignKey: 'advertId' })
-  commonAdvert?: CommonAdvertModel
+  @BelongsTo(() => SettlementModel)
+  settlement?: SettlementModel
 
-  @HasOne(() => RecallAdvertModel, {
-    foreignKey: 'advertId',
-  })
-  recallAdvert?: RecallAdvertModel
-
-  @HasOne(() => DivisionMeetingAdvertModel, {
-    foreignKey: 'advertId',
-  })
-  divisionMeetingAdvert?: DivisionMeetingAdvertModel
-
-  @HasOne(() => DivisionEndingAdvertModel, {
-    foreignKey: 'advertId',
-  })
-  divisionEndingAdvert?: DivisionEndingAdvertModel
-
-  get title(): string {
-    return this.type.title
-  }
+  @BelongsTo(() => CourtDistrictModel)
+  courtDistrict?: CourtDistrictModel
 
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
     validateAdvertStatus(instance)
+  }
+
+  @AfterCreate
+  static async addHTML(instance: AdvertModel) {
+    this.logger.debug(`Setting HTML template for advert ${instance.id}`, {
+      currentHTML: instance.html,
+    })
+
+    const instanceWithRelations = await AdvertModel.unscoped().findByPk(
+      instance.id,
+      {
+        include: [
+          { model: TypeModel },
+          { model: CategoryModel },
+          { model: StatusModel },
+          { model: SettlementModel },
+          { model: CourtDistrictModel },
+          { model: CaseModel, attributes: ['caseNumber', 'id'] },
+        ],
+      },
+    )
+
+    if (!instanceWithRelations) {
+      this.logger.error(
+        `Advert with ID ${instance.id} not found for HTML generation`,
+      )
+      return
+    }
+
+    if (instanceWithRelations.html) return
+
+    const html = getAdvertHTMLMarkup(instanceWithRelations)
+    instanceWithRelations.html = html
+    instanceWithRelations.save()
+  }
+
+  @BeforeBulkCreate
+  static addIndividualhooks(
+    _models: AdvertModel[],
+    options: BulkCreateOptions,
+  ) {
+    this.logger.debug('AfterBulkCreate, setting individualHooks to true')
+    options.individualHooks = true
   }
 
   static async countByStatus(
@@ -404,14 +367,12 @@ export class AdvertModel extends BaseModel<
       context: 'AdvertModel',
     })
 
-    const whereClause: WhereOptions = {
-      statusId,
-    }
-
     const [status, count] = await Promise.all([
       StatusModel.findByPk(statusId),
       this.count({
-        where: whereClause,
+        where: {
+          statusId,
+        },
       }),
     ])
 
@@ -493,83 +454,30 @@ export class AdvertModel extends BaseModel<
   }
 
   static fromModel(model: AdvertModel): AdvertDto {
-    try {
-      if (!model) {
-        throw new NotFoundException('Advert not found')
-      }
-
-      return {
-        id: model.id,
-        caseId: model.caseId,
-        title: model.title,
-        html: model.html,
-        owner: model.submittedBy,
-        publicationNumber: model.publicationNumber,
-        scheduledAt: model.scheduledAt.toISOString(),
-        publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
-        version: model.version,
-        category: model.category.fromModel(),
-        status: model.status.fromModel(),
-        type: model.type.fromModel(),
-        signatureDate: model.signatureDate.toISOString(),
-        signatureLocation: model.signatureLocation,
-        signatureName: model.signatureName,
-        createdAt: model.createdAt.toISOString(),
-        updatedAt: model.updatedAt.toISOString(),
-        deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
-        paid: model.paid,
-      }
-    } catch (error) {
-      this.logger.debug(
-        `fromModel failed for AdvertModel, did you include everything?`,
-      )
-      throw error
+    return {
+      id: model.id,
+      caseId: model.caseId,
+      title: model.title,
+      html: model.html,
+      owner: model.createdBy,
+      publicationNumber: model.publicationNumber,
+      scheduledAt: model.scheduledAt.toISOString(),
+      publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
+      version: model.version,
+      category: model.category.fromModel(),
+      status: model.status.fromModel(),
+      type: model.type.fromModel(),
+      signatureDate: model.signatureDate.toISOString(),
+      signatureLocation: model.signatureLocation,
+      signatureName: model.signatureName,
+      createdAt: model.createdAt.toISOString(),
+      updatedAt: model.updatedAt.toISOString(),
+      deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+      paid: model.paid,
     }
   }
 
   fromModel(): AdvertDto {
     return AdvertModel.fromModel(this)
-  }
-
-  static fromModelDetailed(model: AdvertModel): AdvertDetailedDto {
-    try {
-      return {
-        id: model.id,
-        caseId: model.caseId,
-        title: model.title,
-        html: model.html,
-        owner: model.submittedBy,
-        publicationNumber: model.publicationNumber,
-        scheduledAt: model.scheduledAt.toISOString(),
-        publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
-        version: model.version,
-        category: model.category.fromModel(),
-        status: model.status.fromModel(),
-        type: model.type.fromModel(),
-        createdAt: model.createdAt.toISOString(),
-        updatedAt: model.updatedAt.toISOString(),
-        deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
-        paid: model.paid,
-        signatureDate: model.signatureDate.toISOString(),
-        signatureLocation: model.signatureLocation,
-        signatureName: model.signatureName,
-        commonAdvert: model.commonAdvert
-          ? model.commonAdvert.fromModel()
-          : undefined,
-        recallAdvert: model.recallAdvert
-          ? model.recallAdvert.fromModel()
-          : undefined,
-      }
-    } catch (error) {
-      this.logger.debug(`fromModelDetailed failed for AdvertModel`, {
-        context: 'AdvertModel',
-      })
-
-      throw error
-    }
-  }
-
-  fromModelDetailed(): AdvertDetailedDto {
-    return AdvertModel.fromModelDetailed(this)
   }
 }

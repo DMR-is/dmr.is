@@ -2,9 +2,8 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 
 import { ApplicationSubmitted } from '../../../../../components/client-components/application/ApplicationSubmitted'
-import { CommonForm } from '../../../../../components/client-components/form/common/CommonForm'
-import { RecallForm } from '../../../../../components/client-components/form/recall/RecallForm'
-import { ApplicationStatusEnum } from '../../../../../gen/fetch'
+import { ApplicationForm } from '../../../../../components/client-components/form/ApplicationForm'
+import { ApplicationDetailedDtoStatusEnum } from '../../../../../gen/fetch'
 import { authOptions } from '../../../../../lib/authOptions'
 import {
   ALLOWED_FORM_TYPES,
@@ -31,89 +30,54 @@ export default async function UmsoknirThrotabusPage({
 
   const client = getClient(session.idToken)
 
-  if (
-    params.type === FormTypes.BANKRUPTCY ||
-    params.type === FormTypes.DECEASED
-  ) {
-    const applicationRes = await safeCall(() =>
-      client.getRecallApplicationByCaseId({ caseId: params.id }),
-    )
-
-    if (applicationRes.error) {
-      if (
-        applicationRes.error.statusCode >= 400 &&
-        applicationRes.error.statusCode < 500
-      ) {
-        throw new Error('Umsókn fannst ekki')
-      }
-
-      throw new Error('Ekki tókst að sækja umsókn')
-    }
-
-    const application = applicationRes.data
-
-    if (application.status === ApplicationStatusEnum.DRAFT) {
-      const { courtDistricts } = await client.getCourtDistricts()
-
-      return (
-        <RecallForm
-          applicationId={application.id}
-          caseId={params.id}
-          application={application}
-          courtOptions={courtDistricts.map((c) => ({
-            label: c.title,
-            value: c.id,
-          }))}
-        />
-      )
-    }
-  }
-
-  if (params.type === FormTypes.COMMON) {
-    const application = await safeCall(() =>
-      client.getCommonApplicationByCaseId({ caseId: params.id }),
-    )
-
-    if (application.error) {
-      throw new Error('Umsókn fyrir almennar auglýsingar er í vinnslu')
-    }
-
-    if (application.data.status === ApplicationStatusEnum.DRAFT) {
-      const { categories } = await client.getCategories({
-        type: 'a58fe2a8-b0a9-47bd-b424-4b9cece0e622',
-      })
-
-      application.data.html = Buffer.from(
-        application.data.html ?? '',
-        'base64',
-      ).toString('utf-8')
-
-      return (
-        <CommonForm
-          application={application.data}
-          applicationId={application.data.id}
-          caseId={params.id}
-          categories={categories.map((c) => ({
-            label: c.title,
-            value: c.id,
-          }))}
-        />
-      )
-    }
-  }
-
-  const advertsResults = await safeCall(() =>
-    client.getAdvertsByCaseId({ caseId: params.id }),
+  const applicationResult = await safeCall(() =>
+    client.getApplicationByCaseId({ caseId: params.id }),
   )
 
-  if (advertsResults.error) {
-    throw new Error('Ekki tókst að sækja auglýsingar fyrir þessa umsókn')
+  if (applicationResult.error) {
+    if (applicationResult.error.statusCode === 404) {
+      throw new Error('Umsókn fannst ekki')
+    }
+
+    throw new Error('Ekki tókst að sækja umsókn')
   }
 
+  if (
+    applicationResult.data.status === ApplicationDetailedDtoStatusEnum.SUBMITTED
+  ) {
+    const advertsResults = await safeCall(() =>
+      client.getAdvertsByCaseId({ caseId: params.id }),
+    )
+
+    if (advertsResults.error) {
+      throw new Error('Ekki tókst að sækja auglýsingar fyrir þessa umsókn')
+    }
+
+    return (
+      <ApplicationSubmitted
+        caseId={params.id}
+        adverts={advertsResults.data.adverts}
+      />
+    )
+  }
+
+  const { courtDistricts } = await client.getCourtDistricts()
+  const { categories } = await client.getCategories({
+    type: 'a58fe2a8-b0a9-47bd-b424-4b9cece0e622',
+  })
+
   return (
-    <ApplicationSubmitted
+    <ApplicationForm
       caseId={params.id}
-      adverts={advertsResults.data.adverts}
+      application={applicationResult.data}
+      categories={categories.map((category) => ({
+        label: category.title,
+        value: category.id,
+      }))}
+      courtDistricts={courtDistricts.map((court) => ({
+        label: court.title,
+        value: court.id,
+      }))}
     />
   )
 }

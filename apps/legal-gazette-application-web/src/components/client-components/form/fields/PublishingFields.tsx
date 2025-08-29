@@ -12,22 +12,22 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { useUpdateCommonApplication } from '../../../../../hooks/useUpdateCommonApplication'
-import { ONE_DAY, TWO_WEEKS } from '../../../../../lib/constants'
-import {
-  CommonFormFields,
-  CommonFormSchema,
-} from '../../../../../lib/forms/schemas/common-schema'
-import {} from '../../../../../lib/forms/schemas/recall-schema'
-import { getNextWeekday, getWeekendDays } from '../../../../../lib/utils'
-import { DatePickerController } from '../../controllers/DatePickerController'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { ONE_DAY, TWO_WEEKS } from '../../../../lib/constants'
+import { CommonFormFields } from '../../../../lib/forms/schemas/common-schema'
+import { getNextWeekday, getWeekendDays } from '../../../../lib/utils'
+import { DatePickerController } from '../controllers/DatePickerController'
 
-export const CommonPublishingFields = () => {
-  const { getValues, setValue } = useFormContext<CommonFormSchema>()
-  const { caseId, applicationId } = getValues('meta')
-  const { trigger } = useUpdateCommonApplication({ applicationId, caseId })
+type Props = {
+  additionalTitle?: string
+}
 
-  const currentDates = getValues('fields.publishingDates')
+export const PublishingFields = ({ additionalTitle }: Props) => {
+  const { getValues, watch, setValue } = useFormContext()
+  const { applicationId } = getValues('meta')
+  const { trigger } = useUpdateApplication({ applicationId })
+
+  const currentDates: Date[] = watch('fields.publishingDates', [])
 
   const [dateState, setDateState] = useState<Date[]>(currentDates)
 
@@ -67,7 +67,7 @@ export const CommonPublishingFields = () => {
   return (
     <GridRow rowGap={[2, 3]}>
       <GridColumn span="12/12">
-        <Text variant="h3">Birting</Text>
+        <Text variant="h3">{`Birting${additionalTitle ? ` ${additionalTitle}` : ''}`}</Text>
       </GridColumn>
       <GridColumn span="12/12">
         <Stack space={[2, 3]}>

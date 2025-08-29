@@ -7,7 +7,6 @@ import { CategoryModel } from '../category/category.model'
 import { PdfService } from '../pdf/pdf.service'
 import { StatusModel } from '../status/status.model'
 import { AdvertController } from './controllers/advert.controller'
-import { CommonAdvertController } from './controllers/advert-common.controller'
 import { AdvertPdfController } from './controllers/advert-pdf.controller'
 import { AdvertPublishController } from './controllers/advert-publish.controller'
 import { AdvertUpdateController } from './controllers/advert-update.controller'
@@ -22,7 +21,6 @@ import { IAdvertService } from './advert.service.interface'
   controllers: [
     AdvertUpdateController,
     AdvertPdfController,
-    CommonAdvertController,
     AdvertController,
     AdvertPublishController,
   ],

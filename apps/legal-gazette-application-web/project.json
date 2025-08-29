@@ -68,7 +68,7 @@
       },
       "outputs": ["{projectRoot}/gen/fetch"]
     },
-      "container": {
+    "container": {
       "executor": "@nx-tools/nx-container:build",
       "dependsOn": ["build"],
       "options": {

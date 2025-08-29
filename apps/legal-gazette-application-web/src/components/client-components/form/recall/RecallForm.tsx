@@ -5,44 +5,51 @@ import { FormProvider, useForm } from 'react-hook-form'
 
 import { Stack, Text, toast } from '@island.is/island-ui/core'
 
-import { RecallApplicationDto, RecallTypeEnum } from '../../../../gen/fetch'
-import { useSubmitRecallApplication } from '../../../../hooks/useSubmitRecallApplication'
+import { useSubmitApplication } from '../../../../hooks/useSubmitApplication'
 import { recallForm } from '../../../../lib/forms/recall-form'
-import { BankruptcyFormSchema } from '../../../../lib/forms/schemas/recall-schema'
+import {
+  RecallFormFieldsSchema,
+  RecallFormSchema,
+} from '../../../../lib/forms/schemas/recall-schema'
 import { ApplicationShell } from '../../application/ApplicationShell'
+import { CommunicationChannelFields } from '../fields/CommunicationChannelFields'
+import { PublishingFields } from '../fields/PublishingFields'
 import { RecallAdvertFields } from './fields/RecallAdvertFields'
 import { RecallDivisionFields } from './fields/RecallDivisionFields'
 import { RecallLiquidatorFields } from './fields/RecallLiquidatorFields'
-import { RecallPublishingFields } from './fields/RecallPublishingFields'
 import { RecallSettlementFields } from './fields/RecallSettlementFields'
 import { RecallSignatureFields } from './fields/RecallSignatureFields'
 
 type Props = {
   caseId: string
   applicationId: string
-  application: RecallApplicationDto
   courtOptions: { label: string; value: string }[]
+  fields: Partial<RecallFormFieldsSchema>
 }
 
 export const RecallForm = ({
   caseId,
   applicationId,
-  application,
   courtOptions,
+  fields,
 }: Props) => {
   const router = useRouter()
 
-  const methods = useForm<BankruptcyFormSchema>(
-    recallForm({ caseId, applicationId, application, courtOptions }),
+  const methods = useForm<RecallFormSchema>(
+    recallForm({
+      caseId: caseId,
+      applicationId: applicationId,
+      courtOptions: courtOptions,
+      fields: fields,
+    }),
   )
 
-  const { trigger: submitRecallApplicationTrigger } =
-    useSubmitRecallApplication({
-      onSuccess: () => router.refresh(),
-    })
+  const { trigger } = useSubmitApplication({
+    onSuccess: () => router.refresh(),
+  })
 
-  const onValidSubmit = (_data: BankruptcyFormSchema) => {
-    submitRecallApplicationTrigger({ applicationId, caseId })
+  const onValidSubmit = (_data: RecallFormSchema) => {
+    trigger({ applicationId })
   }
 
   const onInvalidSubmit = (_errors: unknown) => {
@@ -51,13 +58,17 @@ export const RecallForm = ({
     })
   }
 
+  const isBankruptcy = fields.recallType === 'bankruptcy'
+
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onValidSubmit, onInvalidSubmit)}>
         <ApplicationShell sidebar={<Text variant="h4">Texti hér</Text>}>
           <Stack space={[2, 3, 4]}>
             <Stack space={[1, 2]}>
-              <Text variant="h2">{`Innköllun ${application.recallType === RecallTypeEnum.BANKRUPTCY ? 'þrotabús' : 'dánarbús'}`}</Text>
+              <Text variant="h2">
+                Innköllun {isBankruptcy ? 'þrotabús' : 'dánarbús'}
+              </Text>
               <Text>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
                 eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
@@ -66,11 +77,12 @@ export const RecallForm = ({
               </Text>
             </Stack>
             <RecallAdvertFields />
-            <RecallSettlementFields applicationType={application.recallType} />
+            <RecallSettlementFields />
             <RecallLiquidatorFields />
-            <RecallPublishingFields />
-            <RecallDivisionFields />
+            <PublishingFields additionalTitle="innköllunar" />
+            <RecallDivisionFields required={isBankruptcy} />
             <RecallSignatureFields />
+            <CommunicationChannelFields />
           </Stack>
         </ApplicationShell>
       </form>

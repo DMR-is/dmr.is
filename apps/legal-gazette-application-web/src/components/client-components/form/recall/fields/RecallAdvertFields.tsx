@@ -4,22 +4,21 @@ import { useFormContext } from 'react-hook-form'
 
 import { GridColumn, GridRow, Stack, Text } from '@island.is/island-ui/core'
 
-import { useUpdateRecallApplication } from '../../../../../hooks/useUpdateRecallApplication'
+import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
 import {
-  BankruptcyFormFields,
-  BankruptcyFormSchema,
+  RecallFormFields,
+  RecallFormSchema,
 } from '../../../../../lib/forms/schemas/recall-schema'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
 
 export const RecallAdvertFields = () => {
-  const { getValues } = useFormContext<BankruptcyFormSchema>()
+  const { getValues } = useFormContext<RecallFormSchema>()
 
-  const { caseId, applicationId, courtOptions } = getValues('meta')
+  const { applicationId, courtOptions } = getValues('meta')
 
-  const { trigger } = useUpdateRecallApplication({
-    caseId: caseId,
+  const { trigger } = useUpdateApplication({
     applicationId: applicationId,
   })
 
@@ -30,7 +29,7 @@ export const RecallAdvertFields = () => {
         <GridColumn span={['12/12', '6/12']}>
           <SelectController
             options={courtOptions}
-            name={BankruptcyFormFields.ADVERT_COURT_ID}
+            name={RecallFormFields.COURT_ID}
             label="Dómstóll"
             required
             onChange={(val) => trigger({ courtDistrictId: val })}
@@ -38,7 +37,7 @@ export const RecallAdvertFields = () => {
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <DatePickerController
-            name={BankruptcyFormFields.ADVERT_JUDGEMENT_DATE}
+            name={RecallFormFields.JUDGEMENT_DATE}
             label="Úrskurðardagur"
             required
             onChange={(val) =>
@@ -48,7 +47,7 @@ export const RecallAdvertFields = () => {
         </GridColumn>
         <GridColumn span="12/12">
           <InputController
-            name={BankruptcyFormFields.ADVERT_ADDITIONAL_TEXT}
+            name={RecallFormFields.ADDITIONAL_TEXT}
             label="Frjáls texti"
             onBlur={(val) => trigger({ additionalText: val })}
           />

@@ -5,41 +5,44 @@ import { useFormContext } from 'react-hook-form'
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
-import { useUpdateRecallApplication } from '../../../../../hooks/useUpdateRecallApplication'
+import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
 import { TWO_WEEKS } from '../../../../../lib/constants'
 import {
-  BankruptcyFormFields,
-  BankruptcyFormSchema,
+  RecallFormFields,
+  RecallFormSchema,
 } from '../../../../../lib/forms/schemas/recall-schema'
 import { getNextWeekday, getWeekendDays } from '../../../../../lib/utils'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
-export const RecallDivisionFields = () => {
+type Props = {
+  required?: boolean
+}
+
+export const RecallDivisionFields = ({ required = true }: Props) => {
   const {
     getValues,
     setValue,
     watch,
     formState: { isReady, dirtyFields },
-  } = useFormContext<BankruptcyFormSchema>()
-  const { caseId, applicationId } = getValues('meta')
+  } = useFormContext<RecallFormSchema>()
+  const { applicationId } = getValues('meta')
 
-  const recallDates = watch(BankruptcyFormFields.PUBLISHING_DATES)
+  const recallDates = watch(RecallFormFields.PUBLISHING_DATES)
 
   useEffect(() => {
-    if (isReady && dirtyFields?.publishing) {
+    if (isReady && dirtyFields?.fields?.publishingDates) {
       setValue(
-        BankruptcyFormFields.DIVISION_MEETING_DATE,
+        RecallFormFields.DIVISION_MEETING_DATE,
         undefined as unknown as Date,
       )
       trigger({
-        settlementMeetingDate: null,
+        divisionMeetingDate: undefined,
       })
     }
   }, [recallDates, isReady, dirtyFields])
 
-  const { trigger } = useUpdateRecallApplication({
-    caseId,
+  const { trigger } = useUpdateApplication({
     applicationId,
   })
 
@@ -58,25 +61,23 @@ export const RecallDivisionFields = () => {
 
       <GridColumn span="6/12">
         <InputController
-          required
-          name={BankruptcyFormFields.DIVISION_MEETING_LOCATION}
+          required={required}
+          name={RecallFormFields.DIVISION_MEETING_LOCATION}
           label="Staðsetning skiptafundar"
-          onBlur={(location) =>
-            trigger({ settlementMeetingLocation: location })
-          }
+          onBlur={(location) => trigger({ divisionMeetingLocation: location })}
         />
       </GridColumn>
       <GridColumn span="6/12">
         <DatePickerController
-          required
+          required={required}
           withTime={true}
-          name={BankruptcyFormFields.DIVISION_MEETING_DATE}
+          name={RecallFormFields.DIVISION_MEETING_DATE}
           label="Dagsetning skiptafundar"
           minDate={minDate ? getNextWeekday(minDate) : undefined}
           maxDate={maxDate}
           excludeDates={excludeDates}
           onChange={(date) =>
-            trigger({ settlementMeetingDate: date.toISOString() })
+            trigger({ divisionMeetingDate: date.toISOString() })
           }
         />
       </GridColumn>

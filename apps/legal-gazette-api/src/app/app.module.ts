@@ -18,14 +18,8 @@ import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { AdvertModel } from '../modules/advert/advert.model'
 import { AdvertModule } from '../modules/advert/advert.module'
-import { CommonAdvertModel } from '../modules/advert/common/common-advert.model'
-import { DivisionEndingAdvertModel } from '../modules/advert/division/models/division-ending-advert.model'
-import { DivisionMeetingAdvertModel } from '../modules/advert/division/models/division-meeting-advert.model'
-import { RecallAdvertModel } from '../modules/advert/recall/recall-advert.model'
+import { ApplicationModel } from '../modules/applications/application.model'
 import { ApplicationModule } from '../modules/applications/application.module'
-import { CommonApplicationModel } from '../modules/applications/common/dmr/common-application.model'
-import { CommonApplicationModule } from '../modules/applications/common/dmr/common-application.module'
-import { RecallApplicationModel } from '../modules/applications/recall/recall-application.model'
 import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
 import { CaseModel } from '../modules/case/case.model'
 import { CaseModule } from '../modules/case/case.module'
@@ -68,15 +62,10 @@ import { UsersModule } from '../modules/users/users.module'
             StatusModel,
             CommunicationChannelModel,
             CaseModel,
-            CommonAdvertModel,
             AdvertModel,
             SettlementModel,
-            RecallAdvertModel,
-            DivisionMeetingAdvertModel,
-            DivisionEndingAdvertModel,
-            RecallApplicationModel,
-            CommonApplicationModel,
             SubscriberModel,
+            ApplicationModel,
           ],
         }),
       ],
@@ -86,7 +75,6 @@ import { UsersModule } from '../modules/users/users.module'
     }),
     BaseEntityModule,
     CaseModule,
-    CommonApplicationModule,
     AdvertModule,
     SubscriberModule,
     UsersModule,

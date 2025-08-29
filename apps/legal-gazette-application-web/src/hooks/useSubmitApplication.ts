@@ -1,23 +1,23 @@
 import { toast } from 'react-toastify'
 import useSWRMutation from 'swr/mutation'
 
-import { SubmitRecallApplicationRequest } from '../gen/fetch'
-import { submitRecallApplication } from '../lib/fetchers'
+import { SubmitApplicationRequest } from '../gen/fetch'
+import { submitApplication } from '../lib/fetchers'
 
 type Props = {
   onSuccess?: () => void
   onError?: () => void
 }
 
-export const useSubmitRecallApplication = ({ onSuccess, onError }: Props) => {
+export const useSubmitApplication = ({ onSuccess, onError }: Props = {}) => {
   const { trigger } = useSWRMutation(
-    'submitBankruptcyApplication',
-    (_key: string, { arg }: { arg: SubmitRecallApplicationRequest }) =>
-      submitRecallApplication(arg),
+    'submitApplication',
+    (_key: string, { arg }: { arg: SubmitApplicationRequest }) =>
+      submitApplication(arg),
     {
       onSuccess: () => {
         toast.success('Umsókn hefur verið send til birtingar.', {
-          toastId: 'submit-bankruptcy-application-success',
+          toastId: 'submit-application-success',
         })
         onSuccess?.()
       },
@@ -25,7 +25,7 @@ export const useSubmitRecallApplication = ({ onSuccess, onError }: Props) => {
         toast.error(
           'Ekki tókst að senda inn umsókn. Vinsamlegast reyndu aftur síðar.',
           {
-            toastId: 'submit-bankruptcy-application-error',
+            toastId: 'submit-application-error',
           },
         )
         onError?.()

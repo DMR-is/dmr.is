@@ -1,18 +1,10 @@
-import {
-  BelongsTo,
-  Column,
-  DataType,
-  DefaultScope,
-  ForeignKey,
-} from 'sequelize-typescript'
+import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
-import { CaseModel } from '../case/case.model'
 
 type CommunicationChannelAttributes = {
-  caseId: string
   email: string
   name: string | null
   phone: string | null
@@ -20,7 +12,6 @@ type CommunicationChannelAttributes = {
 
 export type CommunicationChannelCreateAttributes = {
   email: string
-  caseId?: string
   name?: string | null
   phone?: string | null
 }
@@ -50,15 +41,4 @@ export class CommunicationChannelModel extends BaseModel<
     allowNull: true,
   })
   phone!: string | null
-
-  @ForeignKey(() => CaseModel)
-  @Column({
-    type: DataType.UUID,
-    allowNull: false,
-    field: 'case_id',
-  })
-  caseId!: string
-
-  @BelongsTo(() => CaseModel)
-  case!: CaseModel
 }

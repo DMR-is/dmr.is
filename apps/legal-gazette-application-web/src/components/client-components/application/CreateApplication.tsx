@@ -8,99 +8,87 @@ import { DropdownMenu, toast } from '@island.is/island-ui/core'
 
 import {
   ApplicationTypeEnum,
-  CreateRecallCaseAndApplicationRecallTypeEnum,
+  CreateApplicationApplicationTypeEnum,
 } from '../../../gen/fetch'
 import { PageRoutes } from '../../../lib/constants'
-import {
-  createCommonCaseAndApplication,
-  createRecallCaseAndApplication,
-} from '../../../lib/fetchers'
+import { createApplication } from '../../../lib/fetchers'
 export const CreateApplication = () => {
   const router = useRouter()
 
-  const { trigger: createRecallApplication, isMutating: isRecallMutating } =
-    useSWRMutation(
-      'createRecallCaseAndApplication',
-      (
-        _key: string,
-        {
-          arg,
-        }: {
-          arg: { recallType: CreateRecallCaseAndApplicationRecallTypeEnum }
-        },
-      ) => createRecallCaseAndApplication({ recallType: arg.recallType }),
+  const { trigger: createApplicationTrigger, isMutating } = useSWRMutation(
+    'createRecallCaseAndApplication',
+    (
+      _key: string,
       {
-        onSuccess: (data) => {
-          if (!data.applicationType) {
-            toast.error(
-              'Umsóknartegund vantar. Vinsamlegast reyndu aftur síðar.',
-              {
-                toastId: 'createRecallCaseAndApplicationError',
-              },
-            )
-            return
-          }
-
-          const routeToTake =
-            data.applicationType === ApplicationTypeEnum.BANKRUPTCY
-              ? PageRoutes.APPLICATION_THROTABU
-              : PageRoutes.APPLICATION_DANARBU
-
-          router.push(`${routeToTake}/${data.id}`)
-        },
-        onError: (_error) => {
+        arg,
+      }: {
+        arg: { type: CreateApplicationApplicationTypeEnum }
+      },
+    ) => createApplication({ applicationType: arg.type }),
+    {
+      onSuccess: (data) => {
+        if (!data.applicationType) {
           toast.error(
-            'Ekki tókst að stofna umsókn. Vinsamlegast reyndu aftur síðar.',
+            'Umsóknartegund vantar. Vinsamlegast reyndu aftur síðar.',
             {
               toastId: 'createRecallCaseAndApplicationError',
             },
           )
-        },
-      },
-    )
 
-  const { trigger: createCommonApplication, isMutating: isCommonMutating } =
-    useSWRMutation(
-      'createCommonApplication',
-      () => createCommonCaseAndApplication(),
-      {
-        onSuccess: (data) => {
-          router.push(`${PageRoutes.APPLICATION_COMMON}/${data.id}`)
-        },
-        onError: (_error) => {
-          toast.error(
-            'Ekki tókst að stofna almennri umsókn. Vinsamlegast reyndu aftur síðar.',
-            {
-              toastId: 'createCommonApplicationError',
-            },
-          )
-        },
+          return
+        }
+
+        let routeToTake
+        if (data.applicationType === ApplicationTypeEnum.RECALLBANKRUPTCY) {
+          routeToTake = PageRoutes.APPLICATION_THROTABU
+        } else if (
+          data.applicationType === ApplicationTypeEnum.RECALLDECEASED
+        ) {
+          routeToTake = PageRoutes.APPLICATION_DANARBU
+        } else if (data.applicationType === ApplicationTypeEnum.COMMON) {
+          routeToTake = PageRoutes.APPLICATION_COMMON
+        } else {
+          throw new Error('Unsupported application type')
+        }
+
+        router.push(`${routeToTake}/${data.id}`)
       },
-    )
+      onError: (_error) => {
+        toast.error(
+          'Ekki tókst að stofna umsókn. Vinsamlegast reyndu aftur síðar.',
+          {
+            toastId: 'createRecallCaseAndApplicationError',
+          },
+        )
+      },
+    },
+  )
 
   return (
     <DropdownMenu
       title="Stofna umsókn"
       icon="hammer"
-      loading={isRecallMutating || isCommonMutating}
+      loading={isMutating}
       items={[
         {
           title: 'Almenn umsókn',
-          onClick: () => createCommonApplication(),
+          onClick: () =>
+            createApplicationTrigger({
+              type: CreateApplicationApplicationTypeEnum.COMMON,
+            }),
         },
         {
           title: 'Innköllun þrotabús',
           onClick: () =>
-            createRecallApplication({
-              recallType:
-                CreateRecallCaseAndApplicationRecallTypeEnum.BANKRUPTCY,
+            createApplicationTrigger({
+              type: CreateApplicationApplicationTypeEnum.RECALLBANKRUPTCY,
             }),
         },
         {
           title: 'Innköllun dánarbús',
           onClick: () =>
-            createRecallApplication({
-              recallType: CreateRecallCaseAndApplicationRecallTypeEnum.DECEASED,
+            createApplicationTrigger({
+              type: CreateApplicationApplicationTypeEnum.RECALLDECEASED,
             }),
         },
       ]}

@@ -21,40 +21,39 @@ import {
   ApplicationTypeEnum,
 } from '../../../gen/fetch'
 import { PageRoutes } from '../../../lib/constants'
-import { deleteApplication } from '../../../lib/fetchers'
 
 type Props = {
   application: ApplicationDto
 }
 
 export const ApplicationCard = ({ application }: Props) => {
-  const { trigger: deleteApplicationTrigger } = useSWRMutation(
-    ['deleteApplication', application.id],
-    ([_key, id]) => deleteApplication(id),
-    {
-      onSuccess: () => {
-        toast.success('Umsókn eytt', { toastId: 'delete-application-success' })
-        mutate('getMyApplications')
-      },
-      onError: () => {
-        toast.error(`Ekki tókst að eyða umsókn`, {
-          toastId: 'delete-application-error',
-        })
-      },
-    },
-  )
+  // const { trigger: deleteApplicationTrigger } = useSWRMutation(
+  //   ['deleteApplication', application.id],
+  //   ([_key, id]) => deleteApplication(id),
+  //   {
+  //     onSuccess: () => {
+  //       toast.success('Umsókn eytt', { toastId: 'delete-application-success' })
+  //       mutate('getMyApplications')
+  //     },
+  //     onError: () => {
+  //       toast.error(`Ekki tókst að eyða umsókn`, {
+  //         toastId: 'delete-application-error',
+  //       })
+  //     },
+  //   },
+  // )
+
+  const url =
+    application.applicationType === ApplicationTypeEnum.COMMON
+      ? `${PageRoutes.APPLICATION_COMMON}/${application.caseId}`
+      : application.applicationType === ApplicationTypeEnum.RECALLBANKRUPTCY
+        ? `${PageRoutes.APPLICATION_THROTABU}/${application.caseId}`
+        : `${PageRoutes.APPLICATION_DANARBU}/${application.caseId}`
 
   const statusText =
     application.status === ApplicationDtoStatusEnum.DRAFT
       ? 'Í vinnslu'
       : 'Innsend'
-
-  const applicationUrl =
-    application.applicationType === ApplicationTypeEnum.BANKRUPTCY
-      ? `${PageRoutes.APPLICATION_THROTABU}/${application.caseId}`
-      : application.applicationType === ApplicationTypeEnum.DECEASED
-        ? `${PageRoutes.APPLICATION_DANARBU}/${application.caseId}`
-        : `${PageRoutes.APPLICATION_COMMON}/${application.caseId}`
 
   return (
     <Box borderRadius="large" border="standard" padding={3} background="white">
@@ -63,18 +62,10 @@ export const ApplicationCard = ({ application }: Props) => {
           <Text variant="h3">{application.title}</Text>
           <Inline space={2} alignY="center">
             <Tag variant="blue">{statusText}</Tag>
-            <button onClick={() => deleteApplicationTrigger()}>
-              <Icon
-                icon="trash"
-                type="outline"
-                size="small"
-                color="roseTinted400"
-              />
-            </button>
           </Inline>
         </Inline>
         <Inline align="right">
-          <LinkV2 href={applicationUrl}>
+          <LinkV2 href={url}>
             <Button
               variant="text"
               icon="arrowForward"
