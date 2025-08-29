@@ -1,4 +1,4 @@
-import { FindOptions } from 'sequelize'
+import { FindOptions, ModelStatic } from 'sequelize'
 import {
   BeforeCreate,
   BeforeFind,
@@ -10,6 +10,8 @@ import {
   PrimaryKey,
   UpdatedAt,
 } from 'sequelize-typescript'
+
+import { NotFoundException } from '@nestjs/common'
 
 import { getLogger } from '@dmr.is/logging'
 
@@ -25,12 +27,10 @@ type BaseModelAttributes = {
 export type BaseModelWithAttributes<T> = T & BaseModelAttributes
 
 export class BaseModel<
-  ModelAttributes,
-  ModelCreateAttributes extends BaseModelCreateAttributes,
-> extends Model<
-  BaseModelWithAttributes<ModelAttributes>,
-  ModelCreateAttributes
-> {
+  TAttributes,
+  TCreateAttributes extends BaseModelCreateAttributes,
+  TModel extends BaseModel<TAttributes, TCreateAttributes, TModel> = any,
+> extends Model<BaseModelWithAttributes<TAttributes>, TCreateAttributes> {
   @PrimaryKey
   @Column({
     type: DataType.UUIDV4,
@@ -66,5 +66,47 @@ export class BaseModel<
 
   static get logger() {
     return getLogger(this.name)
+  }
+
+  static async findOneOrThrow<T extends BaseModel<any, any, any>>(
+    this: ModelStatic<T>,
+    options: FindOptions<T>,
+  ): Promise<T> {
+    const result = await this.findOne(options)
+
+    if (!result) throw new NotFoundException('Entity not found')
+
+    return result as T
+  }
+
+  static async findByPkOrThrow<T extends BaseModel<any, any, any>>(
+    this: ModelStatic<T>,
+    id: string,
+    options?: Omit<FindOptions<T>, 'where'>,
+  ): Promise<T> {
+    const result = await this.findByPk(id, options)
+
+    if (!result) throw new NotFoundException('Entity not found')
+
+    return result as T
+  }
+
+  async findOneOrThrow(options: Omit<FindOptions<TModel>, 'where'>) {
+    const modelClass = this.constructor as typeof BaseModel
+    const result = await modelClass.findOne(options)
+
+    if (!result) throw new NotFoundException('Entity not found')
+
+    return result as TModel
+  }
+
+  async findByPkOrThrow(
+    options?: Omit<FindOptions<TModel>, 'where'>,
+  ): Promise<TModel> {
+    const modelClass = this.constructor as typeof BaseModel
+    const result = await modelClass.findByPk(this.id, options)
+
+    if (!result) throw new NotFoundException('Entity not found')
+    return result as TModel
   }
 }
