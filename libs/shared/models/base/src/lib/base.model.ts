@@ -70,7 +70,7 @@ export class BaseModel<
 
   static async findOneOrThrow<T extends BaseModel<any, any, any>>(
     this: ModelStatic<T>,
-    options: FindOptions,
+    options: FindOptions<T>,
   ): Promise<T> {
     const result = await this.findOne(options)
 
@@ -82,7 +82,7 @@ export class BaseModel<
   static async findByPkOrThrow<T extends BaseModel<any, any, any>>(
     this: ModelStatic<T>,
     id: string,
-    options?: Omit<FindOptions, 'where'>,
+    options?: Omit<FindOptions<T>, 'where'>,
   ): Promise<T> {
     const result = await this.findByPk(id, options)
 
@@ -91,7 +91,7 @@ export class BaseModel<
     return result as T
   }
 
-  async findOneOrThrow(options: Omit<FindOptions, 'where'>) {
+  async findOneOrThrow(options: Omit<FindOptions<TModel>, 'where'>) {
     const modelClass = this.constructor as typeof BaseModel
     const result = await modelClass.findOne(options)
 
@@ -100,7 +100,9 @@ export class BaseModel<
     return result as TModel
   }
 
-  async findByPkOrThrow(options?: Omit<FindOptions, 'where'>): Promise<TModel> {
+  async findByPkOrThrow(
+    options?: Omit<FindOptions<TModel>, 'where'>,
+  ): Promise<TModel> {
     const modelClass = this.constructor as typeof BaseModel
     const result = await modelClass.findByPk(this.id, options)
 

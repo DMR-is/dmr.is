@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 import { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 
 import { ApiErrorDto, ApiErrorName } from '@dmr.is/legal-gazette/dto'
@@ -9,7 +11,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp()
     const response = ctx.getResponse()
-    const status = 500
+    let status = 500
 
     const now = new Date().toISOString()
 
@@ -17,6 +19,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       statusCode: status,
       timestamp: now,
       name: ApiErrorName.UnknownError,
+    }
+
+    if (exception instanceof z.ZodError) {
+      status = 400
+      err.name = ApiErrorName.BadRequest
+      err.message = 'Invalid form data'
     }
 
     if (exception instanceof TypeError) {
