@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
-import { ROLES_KEY } from '@dmr.is/constants'
+import { ROLES_KEY, UserRoleEnum } from '@dmr.is/constants'
 import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { UserRoleTitle } from '@dmr.is/types'
@@ -45,40 +45,68 @@ export class RoleGuard implements CanActivate {
     }
 
     try {
-      // Check if user has required roles
-      const userLookup = await this.userService.getUserByNationalId(
-        req.user?.actor?.nationalId ?? req.user.nationalId,
-      )
+      // Check if user is acting through delegation
+      if (req.user?.actor?.nationalId) {
+        const involvedPartyLookup =
+          await this.userService.getInvolvedPartyByNationalId(
+            req.user.actor.nationalId,
+          )
 
-      if (!userLookup.result.ok) {
-        this.logger.warn('Could not find user', {
-          error: userLookup.result.error,
-          category: LOGGING_CATEGORY,
-          context: LOGGING_CONTEXT,
-        })
-        return false
+        if (!involvedPartyLookup.result.ok) {
+          this.logger.warn('Could not find involved party', {
+            error: involvedPartyLookup.result.error,
+            category: LOGGING_CATEGORY,
+            context: LOGGING_CONTEXT,
+          })
+          return false
+        }
+
+        const resParty = involvedPartyLookup.result.value
+
+        // Set user data for delegation
+        req.user = {
+          role: UserRoleEnum.User,
+          id: req.user?.actor?.nationalId,
+        }
+        req.involvedParties = resParty
+
+        return true
+      } else {
+        // Handle normal case - check the user's own roles
+        const userLookup = await this.userService.getUserByNationalId(
+          req.user.nationalId,
+        )
+
+        if (!userLookup.result.ok) {
+          this.logger.warn('Could not find user', {
+            error: userLookup.result.error,
+            category: LOGGING_CATEGORY,
+            context: LOGGING_CONTEXT,
+          })
+          return false
+        }
+
+        const user = userLookup.result.value.user
+
+        const hasRole = requiredRoles?.some((role) =>
+          user.role.title === role ? true : false,
+        )
+
+        if (!hasRole) {
+          this.logger.warn('User does not have required roles', {
+            user: user,
+            requiredRoles: requiredRoles,
+            category: LOGGING_CATEGORY,
+            context: LOGGING_CONTEXT,
+          })
+          return false
+        }
+
+        req.user = user
+        req.involvedParties = user.involvedParties.map((party) => party.id)
+
+        return true
       }
-
-      const user = userLookup.result.value.user
-
-      const hasRole = requiredRoles?.some((role) =>
-        user.role.title === role ? true : false,
-      )
-
-      if (!hasRole) {
-        this.logger.warn('User does not have required roles', {
-          user: user,
-          requiredRoles: requiredRoles,
-          category: LOGGING_CATEGORY,
-          context: LOGGING_CONTEXT,
-        })
-        return false
-      }
-
-      req.user = user
-      req.involvedParties = user.involvedParties.map((party) => party.id)
-
-      return true
     } catch (error) {
       this.logger.error('roleLookup Error:', error)
       throw new InternalServerErrorException('User role lookup failed')

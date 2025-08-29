@@ -1,6 +1,7 @@
 import {
   CreateUserDto,
   GetInvoledPartiesByUserResponse,
+  GetInvoledPartyByNationalIdResponse,
   GetMyUserInfoResponse,
   GetRolesByUserResponse,
   GetUserResponse,
@@ -25,6 +26,10 @@ export interface IUserService {
   getUserByNationalId(
     nationalId: string,
   ): Promise<ResultWrapper<GetUserResponse>>
+
+  getInvolvedPartyByNationalId(
+    nationalId: string,
+  ): Promise<ResultWrapper<GetInvoledPartyByNationalIdResponse>>
 
   getRolesByUser(
     currentUser: UserDto,
