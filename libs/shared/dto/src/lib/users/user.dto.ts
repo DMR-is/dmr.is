@@ -99,6 +99,13 @@ export class GetInvoledPartiesByUserResponse {
   involvedParties!: Institution[]
 }
 
+export class GetInvoledPartyByNationalIdResponse {
+  @ApiProperty({
+    type: Institution,
+  })
+  involvedParty!: Institution
+}
+
 export class CreateUserDto extends PickType(UserDto, [
   'nationalId',
   'firstName',

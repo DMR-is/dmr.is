@@ -13,6 +13,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CreateUserDto,
   GetInvoledPartiesByUserResponse,
+  GetInvoledPartyByNationalIdResponse,
   GetMyUserInfoResponse,
   GetRolesByUserResponse,
   GetUserResponse,
@@ -395,6 +396,33 @@ export class UserService implements IUserService {
 
     return ResultWrapper.ok({
       involvedParties: migrated,
+    })
+  }
+
+  @LogAndHandle()
+  async getInvolvedPartyByNationalId(
+    nationalId: string,
+  ): Promise<ResultWrapper<GetInvoledPartyByNationalIdResponse>> {
+    const userInvolvedParty = await this.userInvolvedPartiesModel.findOne({
+      include: [AdvertInvolvedPartyModel],
+      where: {
+        nationalId,
+      },
+    })
+
+    if (!userInvolvedParty) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Involved party not found',
+      })
+    }
+
+    const found = userInvolvedParty?.involvedParties
+
+    const migrated = advertInvolvedPartyMigrate(found)
+
+    return ResultWrapper.ok({
+      involvedParty: migrated,
     })
   }
 
