@@ -1276,6 +1276,49 @@ export class JournalService implements IJournalService {
     const page = params?.page ?? 1
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
+    // First attempt with 15-second timeout
+    try {
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Query timeout')), 15000) // 15 seconds
+      })
+
+      const queryPromise = this.executeGetAdvertsLean(params, page, pageSize)
+
+      const result = await Promise.race([queryPromise, timeoutPromise])
+      return result as ResultWrapper<GetLeanAdvertsResponse>
+    } catch (error) {
+      this.logger.warn('First query attempt failed, retrying...', {
+        category: LOGGING_CATEGORY,
+        error: error,
+        params: {
+          search: !!params?.search,
+          hasFilters: !!(
+            params?.type ||
+            params?.department ||
+            params?.category
+          ),
+        },
+      })
+
+      // Retry the exact same query - with warmed cache
+      try {
+        return await this.executeGetAdvertsLean(params, page, pageSize)
+      } catch (retryError) {
+        this.logger.error('Retry also failed', {
+          category: LOGGING_CATEGORY,
+          error: retryError,
+          params,
+        })
+        throw retryError
+      }
+    }
+  }
+
+  private async executeGetAdvertsLean(
+    params?: GetAdvertsQueryParams,
+    page: number = 1,
+    pageSize: number = DEFAULT_PAGE_SIZE,
+  ): Promise<ResultWrapper<GetLeanAdvertsResponse>> {
     // ----- Direct lookup by 11‑digit internal case number -----
     try {
       const isInternalCase = /^\d{11}$/.test(params?.search ?? '')
