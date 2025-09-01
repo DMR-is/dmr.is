@@ -46,10 +46,7 @@ import {
   UpdateMainCategory,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging } from '@dmr.is/utils'
-
-import dirtyClean from '@island.is/regulations-tools/dirtyClean-server'
-import { HTMLText } from '@island.is/regulations-tools/types'
+import { cleanLegacyHtml, generatePaging } from '@dmr.is/utils'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAWSService } from '../aws/aws.service.interface'
@@ -894,7 +891,7 @@ export class JournalService implements IJournalService {
 
         const cleaningPromise = new Promise((resolve, reject) => {
           try {
-            const cleaned = dirtyClean(html as HTMLText)
+            const cleaned = cleanLegacyHtml(html)
             resolve(cleaned)
           } catch (e) {
             reject(e)
@@ -903,10 +900,12 @@ export class JournalService implements IJournalService {
 
         html = (await Promise.race([cleaningPromise, timeoutPromise])) as string
 
+        const now = new Date()
         await this.advertModel.update(
           {
             documentHtml: html,
-            documentLegacyHtml: advert.documentHtml,
+            documentHtmlLegacy: advert.documentHtml,
+            updatedAt: now.toISOString(),
             isLegacy: false,
           },
           {
