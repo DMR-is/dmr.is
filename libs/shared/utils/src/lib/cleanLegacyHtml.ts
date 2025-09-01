@@ -1,8 +1,8 @@
-import sanitizeHtml from 'sanitize-html'
-import { parseDocument } from 'htmlparser2'
+import render from 'dom-serializer'
 import { ChildNode, Document, Element, Node } from 'domhandler'
 import { findAll, findOne, getText } from 'domutils'
-import render from 'dom-serializer'
+import { parseDocument } from 'htmlparser2'
+import sanitizeHtml from 'sanitize-html'
 
 const isElement = (n: Node): n is Element => (n as Element).type === 'tag'
 const tag = (n: Node) => (isElement(n) ? n.name.toLowerCase() : '')
@@ -31,10 +31,15 @@ function unwrapTagInPlace(el: Element) {
 function normalizeStyle(val?: string): string {
   if (!val) return ''
   let s = val.replace(/&quot;|&#34;/g, '"').trim()
-  s = s
-    .replace(/^"(.*)"$/s, '$1')
-    .replace(/^'(.*)'$/s, '$1')
-    .trim()
+
+  if (
+    s.length >= 2 &&
+    ((s.startsWith('"') && s.endsWith('"')) ||
+      (s.startsWith("'") && s.endsWith("'")))
+  ) {
+    s = s.slice(1, -1).trim()
+  }
+
   s = s.replace(/\s*;\s*/g, '; ').replace(/;+\s*$/g, '')
   return s
 }

@@ -78,7 +78,6 @@ import {
   AdvertModel,
   AdvertStatusModel,
 } from './models'
-import { update } from 'lodash'
 const DEFAULT_PAGE_SIZE = 20
 const LOGGING_CATEGORY = 'journal-service'
 @Injectable()
