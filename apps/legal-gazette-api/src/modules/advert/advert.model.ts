@@ -9,6 +9,7 @@ import {
   DefaultScope,
   ForeignKey,
   HasMany,
+  HasOne,
   Scopes,
 } from 'sequelize-typescript'
 
@@ -19,18 +20,23 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { LegalGazetteModels } from '../../lib/constants'
 import { getAdvertHTMLMarkup } from '../../lib/templates'
 import { validateAdvertStatus } from '../../lib/utils'
-import { AdvertPublicationsModel } from '../advert-publications/advert-publications.model'
+import {
+  AdvertPublicationsCreateAttributes,
+  AdvertPublicationsModel,
+} from '../advert-publications/advert-publications.model'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
 import { CourtDistrictModel } from '../court-district/court-district.model'
-import { SettlementModel } from '../settlement/settlement.model'
+import {
+  SettlementCreateAttributes,
+  SettlementModel,
+} from '../settlement/settlement.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
 import { TypeIdEnum, TypeModel } from '../type/type.model'
 import { AdvertDto, AdvertStatusCounterItemDto } from './dto/advert.dto'
 
 type AdvertAttributes = {
   caseId: string
-  settlementId: string | null
   courtDistrictId: string | null
   islandIsApplicationId: string | null
 
@@ -39,9 +45,6 @@ type AdvertAttributes = {
   statusId: string
 
   publicationNumber: string | null
-  version: AdvertVersionEnum
-  publishedAt: Date | null
-  scheduledAt: Date
 
   title: string
   createdBy: string
@@ -60,11 +63,11 @@ type AdvertAttributes = {
   category: CategoryModel
   status: StatusModel
   case: CaseModel
+  settlement?: SettlementModel
 }
 
 export type AdvertCreateAttributes = {
   caseId?: string
-  settlementId?: string | null
   courtDistrictId?: string | null
   islandIsApplicationId?: string | null
 
@@ -74,10 +77,6 @@ export type AdvertCreateAttributes = {
   title: string
   html?: string
 
-  version?: AdvertVersionEnum
-  publishedAt?: Date | null // only if coming from an external system (ex. Skatturinn) and should be automatically set
-  scheduledAt: Date
-
   createdBy: string // ex: Gunnar Gunnarsson or Lögfræðistofa (Gunnar Gunnarsson)
   additionalText?: string | null
   caption?: string | null
@@ -86,6 +85,10 @@ export type AdvertCreateAttributes = {
   signatureOnBehalfOf?: string | null
   signatureLocation: string
   signatureDate: Date
+
+  // We must include the publications when creating an advert
+  publications: AdvertPublicationsCreateAttributes[]
+  settlement?: SettlementCreateAttributes
 }
 
 export enum AdvertVersionEnum {
@@ -103,11 +106,7 @@ export enum AdvertModelScopes {
 
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
 @DefaultScope(() => ({
-  include: [StatusModel, CategoryModel, TypeModel],
-  order: [
-    ['scheduledAt', 'ASC'],
-    ['version', 'ASC'],
-  ],
+  include: [StatusModel, CategoryModel, TypeModel, AdvertPublicationsModel],
 }))
 @Scopes(() => ({
   inProgress: {
@@ -116,30 +115,23 @@ export enum AdvertModelScopes {
       statusId: {
         [Op.in]: [StatusIdEnum.SUBMITTED, StatusIdEnum.READY_FOR_PUBLICATION],
       },
-      publishedAt: { [Op.eq]: null },
     },
-    order: [['scheduledAt', 'ASC']],
   },
   published: {
     include: [StatusModel, CategoryModel, TypeModel],
     where: {
-      publishedAt: { [Op.ne]: null },
       statusId: StatusIdEnum.PUBLISHED,
     },
-    order: [['publishedAt', 'DESC']],
   },
   toBePublished: {
     include: [StatusModel, CategoryModel, TypeModel],
-    order: [['scheduledAt', 'ASC']],
     where: {
       paid: true,
       statusId: StatusIdEnum.READY_FOR_PUBLICATION,
-      publishedAt: { [Op.eq]: null },
     },
   },
   completed: {
     include: [StatusModel, CategoryModel, TypeModel],
-    order: [['scheduledAt', 'ASC']],
     where: {
       statusId: {
         [Op.in]: [
@@ -161,14 +153,6 @@ export class AdvertModel extends BaseModel<
   })
   @ForeignKey(() => CaseModel)
   caseId!: string
-
-  @Column({
-    type: DataType.UUID,
-    allowNull: true,
-    defaultValue: null,
-  })
-  @ForeignKey(() => SettlementModel)
-  settlementId!: string | null
 
   @Column({
     type: DataType.UUID,
@@ -207,25 +191,6 @@ export class AdvertModel extends BaseModel<
   })
   @ForeignKey(() => StatusModel)
   statusId!: StatusIdEnum
-
-  @Column({
-    type: DataType.DATE,
-    allowNull: false,
-  })
-  scheduledAt!: Date
-
-  @Column({
-    type: DataType.DATE,
-    defaultValue: null,
-  })
-  publishedAt!: Date | null
-
-  @Column({
-    type: DataType.ENUM(...Object.values(AdvertVersionEnum)),
-    allowNull: false,
-    defaultValue: AdvertVersionEnum.A,
-  })
-  version!: AdvertVersionEnum
 
   @Column({
     type: DataType.TEXT,
@@ -308,7 +273,7 @@ export class AdvertModel extends BaseModel<
   @BelongsTo(() => StatusModel)
   status!: StatusModel
 
-  @BelongsTo(() => SettlementModel)
+  @HasOne(() => SettlementModel)
   settlement?: SettlementModel
 
   @BelongsTo(() => CourtDistrictModel)
@@ -328,7 +293,7 @@ export class AdvertModel extends BaseModel<
       currentHTML: instance.html,
     })
 
-    const instanceWithRelations = await AdvertModel.unscoped().findByPk(
+    const instanceWithRelations = await AdvertModel.unscoped().findByPkOrThrow(
       instance.id,
       {
         include: [
@@ -341,13 +306,6 @@ export class AdvertModel extends BaseModel<
         ],
       },
     )
-
-    if (!instanceWithRelations) {
-      this.logger.error(
-        `Advert with ID ${instance.id} not found for HTML generation`,
-      )
-      return
-    }
 
     if (instanceWithRelations.html) return
 
@@ -399,75 +357,14 @@ export class AdvertModel extends BaseModel<
     }
   }
 
-  static async publish(model: AdvertModel) {
-    const now = new Date()
-    this.logger.info(`Publishing advert at ${now}`, {
-      context: 'AdvertModel',
-      advertId: model.id,
-      timestamp: now,
-    })
-
-    if (model.statusId !== StatusIdEnum.READY_FOR_PUBLICATION) {
-      this.logger.error(
-        `Advert with ID ${model.id} is not ready for publication`,
-        {
-          context: 'AdvertModel',
-        },
-      )
-      throw new BadRequestException('Advert is not ready for publication')
-    }
-
-    if (model.publishedAt !== null) {
-      this.logger.error(`Advert with ID ${model.id} is already published`, {
-        context: 'AdvertModel',
-      })
-      throw new BadRequestException('Advert is already published')
-    }
-
-    const startDate = now.setHours(0, 0, 0, 0)
-    const endDate = now.setHours(23, 59, 59, 999)
-
-    const year = now.getFullYear()
-    const month = (now.getMonth() + 1).toString().padStart(2, '0')
-    const day = now.getDate().toString().padStart(2, '0')
-
-    const count = await AdvertModel.count({
-      where: {
-        publishedAt: {
-          [Op.and]: [
-            { [Op.ne]: null },
-            { [Op.gte]: startDate },
-            { [Op.lt]: endDate },
-          ],
-        },
-      },
-    })
-
-    const padded = (count + 1).toString().padStart(3, '0')
-
-    const publicationNumber = `${year}${month}${day}${padded}`
-
-    await model.update({
-      publicationNumber: publicationNumber,
-      publishedAt: new Date(),
-      statusId: StatusIdEnum.PUBLISHED,
-    })
-  }
-
-  publishAdvert(): Promise<void> {
-    return AdvertModel.publish(this)
-  }
-
   static fromModel(model: AdvertModel): AdvertDto {
     return {
       id: model.id,
       caseId: model.caseId,
       title: model.title,
       html: model.html,
-      owner: model.createdBy,
+      createdBy: model.createdBy,
       publicationNumber: model.publicationNumber,
-      scheduledAt: model.scheduledAt.toISOString(),
-      publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
       version: model.version,
       category: model.category.fromModel(),
       status: model.status.fromModel(),
@@ -479,6 +376,7 @@ export class AdvertModel extends BaseModel<
       updatedAt: model.updatedAt.toISOString(),
       deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
       paid: model.paid,
+      publications: model.publications.map((p) => p.fromModel()),
     }
   }
 

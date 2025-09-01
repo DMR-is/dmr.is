@@ -131,4 +131,12 @@ export class AddDivisionMeetingForApplicationDto {
   @ApiProperty({ type: String })
   @IsDateString()
   signatureDate!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  signatureName!: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsString()
+  signatureOnBehalfOf?: string
 }
