@@ -11,6 +11,8 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
+import { formatDate } from '@dmr.is/utils'
+
 import { PdfService } from '../../pdf/pdf.service'
 import { AdvertModel } from '../advert.model'
 
@@ -45,13 +47,13 @@ export class AdvertPdfController {
     }
 
     const pdf = await this.pdfService.generatePdfFromHtml(advert.html)
-    const timestamp = new Date(advert.publishedAt ?? advert.scheduledAt)
-      .toISOString()
-      .replace(/[:.]/g, '-')
+    // const timestamp = new Date(advert.publishedAt ?? advert.scheduledAt)
+    // TODO: Replace timestamp with the publication
+    const timeStamp = formatDate(new Date(), 'dd. MMMM yyyy')
 
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="advert-${advert?.id}-${timestamp}.pdf"`,
+      'Content-Disposition': `attachment; filename="advert-${advert?.id}-${timeStamp}.pdf"`,
       'Content-Length': pdf.length,
     })
 
