@@ -134,19 +134,6 @@ export class ApplicationService implements IApplicationService {
       )
     }
 
-    const settlement = await this.settlementModel.create(
-      {
-        liquidatorName: requiredFields.signatureName,
-        liquidatorLocation: requiredFields.liquidatorLocation,
-        settlementAddress: requiredFields.settlementAddress,
-        settlementName: requiredFields.settlementName,
-        settlementNationalId: requiredFields.settlementNationalId,
-        settlementDateOfDeath: requiredFields.settlementDateOfDeath,
-        settlementDeadline: requiredFields.settlementDeadlineDate,
-      },
-      { returning: ['id'] },
-    )
-
     const categoryId = isBankruptcy
       ? CategoryDefaultIdEnum.BANKRUPTCY_RECALL
       : CategoryDefaultIdEnum.DECEASED_RECALL
@@ -166,12 +153,20 @@ export class ApplicationService implements IApplicationService {
         signatureLocation: requiredFields.signatureLocation,
         signatureDate: requiredFields.signatureDate,
         title: title,
-        settlementId: settlement.id,
+        settlement: {
+          liquidatorName: requiredFields.signatureName,
+          liquidatorLocation: requiredFields.liquidatorLocation,
+          settlementAddress: requiredFields.settlementAddress,
+          settlementName: requiredFields.settlementName,
+          settlementNationalId: requiredFields.settlementNationalId,
+          settlementDateOfDeath: requiredFields.settlementDateOfDeath ?? null,
+          settlementDeadline: requiredFields.settlementDeadlineDate ?? null,
+        },
         publications: application.publishingDates.map((scheduledAt) => ({
           scheduledAt,
         })),
       },
-      { include: [AdvertPublicationsModel] },
+      { include: [AdvertPublicationsModel, SettlementModel] },
     )
 
     // TODO: INCLUDE THE FIRST DIVISION MEETING IN THE RECALL ADVERT IF IT IS A BANKRUPTCY ADVERT

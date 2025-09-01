@@ -27,14 +27,16 @@ import {
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
 import { CourtDistrictModel } from '../court-district/court-district.model'
-import { SettlementModel } from '../settlement/settlement.model'
+import {
+  SettlementCreateAttributes,
+  SettlementModel,
+} from '../settlement/settlement.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
 import { TypeIdEnum, TypeModel } from '../type/type.model'
 import { AdvertDto, AdvertStatusCounterItemDto } from './dto/advert.dto'
 
 type AdvertAttributes = {
   caseId: string
-  settlementId: string | null
   courtDistrictId: string | null
   islandIsApplicationId: string | null
 
@@ -61,11 +63,11 @@ type AdvertAttributes = {
   category: CategoryModel
   status: StatusModel
   case: CaseModel
+  settlement?: SettlementModel
 }
 
 export type AdvertCreateAttributes = {
   caseId?: string
-  settlementId?: string | null
   courtDistrictId?: string | null
   islandIsApplicationId?: string | null
 
@@ -86,6 +88,7 @@ export type AdvertCreateAttributes = {
 
   // We must include the publications when creating an advert
   publications: AdvertPublicationsCreateAttributes[]
+  settlement?: SettlementCreateAttributes
 }
 
 export enum AdvertVersionEnum {
