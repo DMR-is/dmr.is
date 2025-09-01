@@ -78,6 +78,7 @@ import {
   AdvertModel,
   AdvertStatusModel,
 } from './models'
+const DEFAULT_PAGE = 1
 const DEFAULT_PAGE_SIZE = 20
 const LOGGING_CATEGORY = 'journal-service'
 @Injectable()
@@ -1273,7 +1274,7 @@ export class JournalService implements IJournalService {
   async getAdvertsLean(
     params?: GetAdvertsQueryParams,
   ): Promise<ResultWrapper<GetLeanAdvertsResponse>> {
-    const page = params?.page ?? 1
+    const page = params?.page ?? DEFAULT_PAGE
     const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
 
     // First attempt with 15-second timeout
@@ -1316,7 +1317,7 @@ export class JournalService implements IJournalService {
 
   private async executeGetAdvertsLean(
     params?: GetAdvertsQueryParams,
-    page: number = 1,
+    page: number = DEFAULT_PAGE,
     pageSize: number = DEFAULT_PAGE_SIZE,
   ): Promise<ResultWrapper<GetLeanAdvertsResponse>> {
     // ----- Direct lookup by 11‑digit internal case number -----
