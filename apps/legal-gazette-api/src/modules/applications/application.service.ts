@@ -398,7 +398,7 @@ export class ApplicationService implements IApplicationService {
       title: `${category.title} - ${requiredFields.caption}`,
       caption: requiredFields.caption,
       additionalText: requiredFields.additionalText,
-      html: requiredFields.html,
+      content: requiredFields.html,
       signatureOnBehalfOf: requiredFields.signatureOnBehalfOf,
       publications: body.publishingDates.map((scheduledAt) => ({
         scheduledAt: new Date(scheduledAt),

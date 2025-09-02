@@ -1168,7 +1168,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertDto" }
+                "schema": { "$ref": "#/components/schemas/AdvertDetailedDto" }
               }
             }
           },
@@ -1231,7 +1231,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertDto" }
+                "schema": { "$ref": "#/components/schemas/AdvertDetailedDto" }
               }
             }
           },
@@ -2681,7 +2681,7 @@
       },
       "AdvertVersion": { "type": "string", "enum": ["A", "B", "C"] },
       "AdvertVersionEnum": { "type": "string", "enum": ["A", "B", "C"] },
-      "AdvertPublicationsDto": {
+      "AdvertPublicationDto": {
         "type": "object",
         "properties": {
           "id": { "type": "string" },
@@ -2694,7 +2694,7 @@
         },
         "required": ["id", "advertId", "scheduledAt", "publishedAt", "version"]
       },
-      "AdvertDto": {
+      "AdvertDetailedDto": {
         "type": "object",
         "properties": {
           "createdAt": {
@@ -2724,14 +2724,13 @@
           "version": {
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersion" }]
           },
-          "html": { "type": "string" },
           "paid": { "type": "boolean" },
           "signatureName": { "type": "string" },
           "signatureLocation": { "type": "string" },
           "signatureDate": { "type": "string" },
           "publications": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertPublicationsDto" }
+            "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
           }
         },
         "required": [
@@ -2746,7 +2745,6 @@
           "category",
           "status",
           "version",
-          "html",
           "paid",
           "signatureName",
           "signatureLocation",
@@ -2787,6 +2785,49 @@
           "withdrawn",
           "rejected",
           "published"
+        ]
+      },
+      "AdvertDto": {
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "description": "ISO representation of the creation date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "ISO representation of the updated date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": "string",
+            "description": "ISO representation of the deletion date",
+            "example": "2021-08-31T12:00:00.000Z",
+            "nullable": true
+          },
+          "scheduledAt": { "type": "string" },
+          "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "type": { "$ref": "#/components/schemas/TypeDto" },
+          "status": { "$ref": "#/components/schemas/StatusDto" },
+          "title": { "type": "string" },
+          "createdBy": { "type": "string" },
+          "assignedUser": { "type": "string" },
+          "publications": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
+          }
+        },
+        "required": [
+          "createdAt",
+          "updatedAt",
+          "scheduledAt",
+          "category",
+          "type",
+          "status",
+          "title",
+          "createdBy",
+          "publications"
         ]
       },
       "GetAdvertsDto": {

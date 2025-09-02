@@ -22,7 +22,7 @@ type Props = {
   adverts: AdvertDto[]
 }
 
-export const ApplicationSubmitted = ({ caseId, adverts }: Props) => {
+export const ApplicationSubmitted = ({ caseId: _caseId, adverts }: Props) => {
   return (
     <GridContainer>
       <GridRow>
