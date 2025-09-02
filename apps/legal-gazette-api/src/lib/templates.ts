@@ -36,9 +36,14 @@ export const getAdvertHTMLMarkup = (model: AdvertModel) => {
     ? `<div class="advert__additional"><p>${model.additionalText}</p></div>`
     : ''
 
-  const publishingDate = model.publishedAt
-    ? formatDate(model.publishedAt, 'dd. MMMM yyyy')
-    : formatDate(model.scheduledAt, 'dd. MMMM yyyy')
+  const latestPublished = model.publications.filter(
+    (pub) => pub.publishedAt !== null,
+  )
+
+  const publishingDate =
+    latestPublished.length > 0
+      ? latestPublished[latestPublished.length - 1].publishedAt
+      : model.publications[0].scheduledAt
 
   let markup = ''
 

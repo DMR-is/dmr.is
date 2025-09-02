@@ -3,6 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AdvertModel } from '../advert/advert.model'
 import { CaseModel } from '../case/case.model'
+import { CategoryModel } from '../category/category.model'
 import { SettlementModel } from '../settlement/settlement.model'
 import { ApplicationController } from './controllers/application.controller'
 import { ApplicationModel } from './application.model'
@@ -16,6 +17,7 @@ import { IApplicationService } from './application.service.interface'
       AdvertModel,
       ApplicationModel,
       SettlementModel,
+      CategoryModel,
     ]),
   ],
   controllers: [ApplicationController],

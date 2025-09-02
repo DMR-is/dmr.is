@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { PagingQuery } from '@dmr.is/shared/dto'
@@ -35,16 +35,13 @@ export class AdvertService implements IAdvertService {
   }
 
   async updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDto> {
-    const advert = await this.advertModel.findByPk(id)
-
-    if (!advert) {
-      throw new NotFoundException(`Advert not found`)
-    }
+    const advert = await this.advertModel.findByPkOrThrow(id)
 
     const updated = await advert.update({
       ...body,
-      scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : undefined,
     })
+
+    // TODO: update the publication scheduledAt date from body
 
     return updated.fromModel()
   }
@@ -167,23 +164,7 @@ export class AdvertService implements IAdvertService {
   }
 
   async getAdvertById(id: string): Promise<AdvertDto> {
-    const advert = await this.advertModel.findByPk(id)
-
-    if (!advert) {
-      throw new NotFoundException(`Advert with id ${id} not found`)
-    }
-
-    return advert.fromModel()
-  }
-
-  async getPublishedAdvertById(id: string): Promise<AdvertDto> {
-    const advert = await this.advertModel
-      .scope(AdvertModelScopes.PUBLISHED)
-      .findByPk(id)
-
-    if (!advert) {
-      throw new NotFoundException(`Advert with id ${id} not found`)
-    }
+    const advert = await this.advertModel.findByPkOrThrow(id)
 
     return advert.fromModel()
   }

@@ -18,6 +18,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 import { DetailedDto } from '../../../dto/detailed.dto'
+import { AdvertPublicationsDto } from '../../advert-publications/dto/advert-publications.dto'
 import { CategoryDto } from '../../category/dto/category.dto'
 import { StatusDto } from '../../status/dto/status.dto'
 import { StatusIdEnum } from '../../status/status.model'
@@ -51,21 +52,9 @@ export class AdvertDto extends DetailedDto {
 
   @ApiProperty({
     type: String,
-    nullable: true,
-  })
-  @ValidateIf((o) => o.publishedAt !== null)
-  @IsDateString()
-  publishedAt!: string | null
-
-  @ApiProperty({
-    type: String,
   })
   @IsString()
-  owner!: string
-
-  @ApiProperty({ type: String })
-  @IsDateString()
-  scheduledAt!: string
+  createdBy!: string
 
   @ApiProperty({ type: TypeDto })
   @Type(() => TypeDto)
@@ -111,6 +100,9 @@ export class AdvertDto extends DetailedDto {
   @ApiProperty({ type: String })
   @IsDateString()
   signatureDate!: string
+
+  @ApiProperty({ type: [AdvertPublicationsDto] })
+  publications!: AdvertPublicationsDto[]
 }
 
 export class GetAdvertsDto {

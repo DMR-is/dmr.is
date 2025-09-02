@@ -1,10 +1,10 @@
 import addDays from 'date-fns/addDays'
+import { Op } from 'sequelize'
 
 import {
   BadRequestException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -23,11 +23,14 @@ import {
   createCommonAdvertFromIslandIsApplicationSchema,
   createRecallAdvertFromApplicationSchema,
 } from '../../lib/schemas'
-import { mapIndexToVersion } from '../../lib/utils'
 import { AdvertModel } from '../advert/advert.model'
+import { AdvertPublicationsModel } from '../advert-publications/advert-publications.model'
 import { CaseModel } from '../case/case.model'
 import { CaseDto } from '../case/dto/case.dto'
-import { CategoryDefaultIdEnum } from '../category/category.model'
+import {
+  CategoryDefaultIdEnum,
+  CategoryModel,
+} from '../category/category.model'
 import { SettlementModel } from '../settlement/settlement.model'
 import { TypeIdEnum } from '../type/type.model'
 import {
@@ -51,111 +54,57 @@ export class ApplicationService implements IApplicationService {
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     @InjectModel(ApplicationModel)
     private readonly applicationModel: typeof ApplicationModel,
+    @InjectModel(CategoryModel)
+    private readonly categoryModel: typeof CategoryModel,
   ) {}
 
-  private async submitCommonApplication(applicationId: string, user: DMRUser) {
-    const application = await this.applicationModel.findOne({
-      where: { id: applicationId, submittedByNationalId: user.nationalId },
+  private async submitCommonApplication(
+    application: ApplicationModel,
+    user: DMRUser,
+  ) {
+    const requiredFields = createCommonAdvertFromApplicationSchema.parse({
+      caseId: application.caseId,
+      category: application.category,
+      caption: application.caption,
+      additionalText: application.additionalText,
+      html: application.html,
+      signatureName: application.signatureName,
+      signatureOnBehalfOf: application.signatureOnBehalfOf,
+      signatureLocation: application.signatureLocation,
+      signatureDate: application.signatureDate,
+      communicationChannels: application.communicationChannels,
+      publishingDates: application.publishingDates,
     })
 
-    if (!application) {
-      this.logger.warn('Application not found or does not belong to user', {
-        applicationId,
-      })
-      throw new NotFoundException()
-    }
-
-    const applicationCase = await this.caseModel.unscoped().findOne({
-      attributes: ['id', 'caseNumber'],
-      where: {
-        id: application.caseId,
-        involvedPartyNationalId: user.nationalId,
-      },
-    })
-
-    if (!applicationCase) {
-      this.logger.error('Case does not have an application', {
-        applicationId: applicationId,
-      })
-      throw new InternalServerErrorException()
-    }
-
-    const parsedApplication = createCommonAdvertFromApplicationSchema.safeParse(
+    await this.advertModel.create(
       {
-        caseId: applicationCase.id,
-        category: application.category,
-        caption: application.caption,
-        additionalText: application.additionalText,
-        html: application.html,
-        signatureName: application.signatureName,
-        signatureOnBehalfOf: application.signatureOnBehalfOf,
-        signatureLocation: application.signatureLocation,
-        signatureDate: application.signatureDate,
-        communicationChannels: application.communicationChannels,
-        publishingDates: application.publishingDates,
-      },
-    )
-
-    if (!parsedApplication.success) {
-      this.logger.warn('Invalid application data', {
-        caseId: applicationCase.id,
-        applicationId: application.id,
-        errors: parsedApplication.error,
-      })
-      throw new BadRequestException('Invalid application data')
-    }
-
-    await this.advertModel.bulkCreate(
-      parsedApplication.data.publishingDates.map((scheduledAt, i) => ({
         typeId: TypeIdEnum.COMMON_ADVERT,
-        caption: parsedApplication.data.caption,
-        version: mapIndexToVersion(i),
-        caseId: parsedApplication.data.caseId,
-        categoryId: parsedApplication.data.category.id,
-        additionalText: parsedApplication.data.additionalText,
+        caption: requiredFields.caption,
+        caseId: requiredFields.caseId,
+        categoryId: requiredFields.category.id,
+        additionalText: requiredFields.additionalText,
         createdBy: user.fullName,
-        scheduledAt: scheduledAt,
-        signatureName: parsedApplication.data.signatureName,
-        signatureOnBehalfOf: parsedApplication.data.signatureOnBehalfOf,
-        signatureLocation: parsedApplication.data.signatureLocation,
-        signatureDate: parsedApplication.data.signatureDate,
+        signatureName: requiredFields.signatureName,
+        signatureOnBehalfOf: requiredFields.signatureOnBehalfOf,
+        signatureLocation: requiredFields.signatureLocation,
+        signatureDate: requiredFields.signatureDate,
         html: '',
-        title: `${parsedApplication.data.category.title} - ${parsedApplication.data.caption}`,
-      })),
+        title: `${requiredFields.category.title} - ${requiredFields.caption}`,
+        publications: requiredFields.publishingDates.map((scheduledAt) => ({
+          scheduledAt,
+        })),
+      },
+      { include: [AdvertPublicationsModel] },
     )
 
     await application.update({ status: ApplicationStatusEnum.SUBMITTED })
   }
 
-  private async submitRecallApplication(applicationId: string, user: DMRUser) {
-    const application = await this.applicationModel.findOne({
-      where: { id: applicationId, submittedByNationalId: user.nationalId },
-    })
-
-    if (!application) {
-      this.logger.warn('Application not found or does not belong to user', {
-        applicationId,
-      })
-      throw new NotFoundException()
-    }
-
-    const applicationCase = await this.caseModel.unscoped().findOne({
-      attributes: ['id'],
-      where: {
-        id: application.caseId,
-        involvedPartyNationalId: user.nationalId,
-      },
-      include: [{ model: ApplicationModel, as: 'application' }],
-    })
-
-    if (!applicationCase) {
-      this.logger.error('Case does not have an application', {
-        applicationId: applicationId,
-      })
-      throw new InternalServerErrorException()
-    }
-
-    const requiredFields = createRecallAdvertFromApplicationSchema.safeParse({
+  private async submitRecallApplication(
+    application: ApplicationModel,
+    user: DMRUser,
+  ) {
+    const requiredFields = createRecallAdvertFromApplicationSchema.parse({
       settlementName: application.settlementName,
       settlementNationalId: application.settlementNationalId,
       settlementAddress: application.settlementAddress,
@@ -169,91 +118,58 @@ export class ApplicationService implements IApplicationService {
       signatureLocation: application.signatureLocation,
     })
 
-    if (!requiredFields.success) {
-      this.logger.warn('Invalid application data', {
-        caseId: applicationCase.id,
-        applicationId: application.id,
-        errors: requiredFields.error,
-      })
-      throw new BadRequestException('Invalid application data')
-    }
-
     const applicationType = application.applicationType
     const isBankruptcy =
       applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
 
-    if (isBankruptcy && !requiredFields.data.settlementDeadlineDate) {
+    if (isBankruptcy && !requiredFields.settlementDeadlineDate) {
       throw new BadRequestException(
         'Settlement deadline date is required for bankruptcy recall applications',
       )
     }
 
-    if (!isBankruptcy && !requiredFields.data.settlementDateOfDeath) {
+    if (!isBankruptcy && !requiredFields.settlementDateOfDeath) {
       throw new BadRequestException(
         'Settlement date of death is required for bankruptcy recall applications',
       )
     }
-
-    const { data } = requiredFields
-
-    const settlement = await this.settlementModel.create(
-      {
-        liquidatorName: data.signatureName,
-        liquidatorLocation: data.liquidatorLocation,
-        settlementAddress: data.settlementAddress,
-        settlementName: data.settlementName,
-        settlementNationalId: data.settlementNationalId,
-        settlementDateOfDeath: data.settlementDateOfDeath,
-        settlementDeadline: data.settlementDeadlineDate,
-      },
-      { returning: ['id'] },
-    )
 
     const categoryId = isBankruptcy
       ? CategoryDefaultIdEnum.BANKRUPTCY_RECALL
       : CategoryDefaultIdEnum.DECEASED_RECALL
 
     const title = isBankruptcy
-      ? `Innköllun þrotabús - ${data.settlementName}`
-      : `Innköllun dánarbús - ${data.settlementName}`
+      ? `Innköllun þrotabús - ${requiredFields.settlementName}`
+      : `Innköllun dánarbús - ${requiredFields.settlementName}`
 
-    await this.advertModel.bulkCreate(
-      application.publishingDates.map((scheduledAt, i) => ({
-        caseId: applicationCase.id,
+    await this.advertModel.create(
+      {
+        caseId: application.caseId,
         categoryId: categoryId,
-        scheduledAt: scheduledAt,
         typeId: TypeIdEnum.RECALL,
         createdBy: user.fullName,
-        version: mapIndexToVersion(i),
-        signatureName: data.signatureName,
-        signatureOnBehalfOf: data.signatureOnBehalfOf,
-        signatureLocation: data.signatureLocation,
-        signatureDate: data.signatureDate,
+        signatureName: requiredFields.signatureName,
+        signatureOnBehalfOf: requiredFields.signatureOnBehalfOf,
+        signatureLocation: requiredFields.signatureLocation,
+        signatureDate: requiredFields.signatureDate,
         title: title,
-        settlementId: settlement.id,
-      })),
+        settlement: {
+          liquidatorName: requiredFields.signatureName,
+          liquidatorLocation: requiredFields.liquidatorLocation,
+          settlementAddress: requiredFields.settlementAddress,
+          settlementName: requiredFields.settlementName,
+          settlementNationalId: requiredFields.settlementNationalId,
+          settlementDateOfDeath: requiredFields.settlementDateOfDeath ?? null,
+          settlementDeadline: requiredFields.settlementDeadlineDate ?? null,
+        },
+        publications: application.publishingDates.map((scheduledAt) => ({
+          scheduledAt,
+        })),
+      },
+      { include: [AdvertPublicationsModel, SettlementModel] },
     )
 
-    if (
-      application.divisionMeetingDate &&
-      application.divisionMeetingLocation
-    ) {
-      await this.advertModel.create({
-        caseId: applicationCase.id,
-        categoryId: isBankruptcy
-          ? CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING
-          : CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING,
-        createdBy: user.fullName,
-        scheduledAt: application.divisionMeetingDate,
-        signatureName: data.signatureName,
-        signatureDate: data.signatureDate,
-        signatureLocation: data.signatureLocation,
-        signatureOnBehalfOf: data.signatureOnBehalfOf,
-        typeId: TypeIdEnum.DIVISION_MEETING,
-        title: `Skiptafundur - ${data.settlementName}`,
-        settlementId: settlement.id,
-      })
-    }
+    // TODO: INCLUDE THE FIRST DIVISION MEETING IN THE RECALL ADVERT IF IT IS A BANKRUPTCY ADVERT
 
     await application.update({ status: ApplicationStatusEnum.SUBMITTED })
   }
@@ -263,95 +179,19 @@ export class ApplicationService implements IApplicationService {
     body: AddDivisionMeetingForApplicationDto,
     user: DMRUser,
   ): Promise<void> {
-    const application = await this.applicationModel.findOne({
-      where: { id: applicationId, submittedByNationalId: user.nationalId },
-    })
-
-    if (!application) {
-      throw new NotFoundException()
-    }
-
-    if (application.status !== ApplicationStatusEnum.SUBMITTED) {
-      throw new BadRequestException(
-        'Only submitted applications can have adverts added to them',
-      )
-    }
-
-    if (
-      application.applicationType !== ApplicationTypeEnum.RECALL_BANKRUPTCY &&
-      application.applicationType !== ApplicationTypeEnum.RECALL_DECEASED
-    ) {
-      throw new BadRequestException(
-        'Only recall applications can have division meeting adverts added to them',
-      )
-    }
-
-    const currentRecallAdverts = await this.advertModel.unscoped().findAll({
+    const application = await this.applicationModel.findOneOrThrow({
       where: {
-        caseId: application.caseId,
-        typeId: TypeIdEnum.RECALL,
-      },
-      include: [{ model: SettlementModel, as: 'settlement' }],
-    })
-
-    if (currentRecallAdverts.length === 0) {
-      throw new BadRequestException(
-        'A recall advert must be added to the application before a division meeting advert can be added',
-      )
-    }
-
-    const currentDivisionMeetingAdverts = await this.advertModel
-      .unscoped()
-      .findAll({
-        where: {
-          caseId: application.caseId,
-          typeId: TypeIdEnum.DIVISION_MEETING,
+        id: applicationId,
+        submittedByNationalId: user.nationalId,
+        status: ApplicationStatusEnum.SUBMITTED,
+        applicationType: {
+          [Op.or]: [
+            ApplicationTypeEnum.RECALL_BANKRUPTCY,
+            ApplicationTypeEnum.RECALL_DECEASED,
+          ],
         },
-      })
-
-    if (currentDivisionMeetingAdverts.length === 0) {
-      const latestRecallAdvert =
-        currentRecallAdverts[currentRecallAdverts.length - 1]
-
-      const categoryId =
-        application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
-          ? CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING
-          : CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING
-
-      await this.advertModel.create({
-        caseId: application.caseId,
-        categoryId: categoryId,
-        createdBy: user.fullName,
-        scheduledAt: new Date(body.meetingDate),
-        signatureName: latestRecallAdvert.signatureName,
-        signatureOnBehalfOf: latestRecallAdvert.signatureOnBehalfOf,
-        signatureDate: new Date(body.signatureDate),
-        signatureLocation: body.signatureLocation,
-        typeId: TypeIdEnum.DIVISION_MEETING,
-        title: `Skiptafundur - ${application.settlementName}`,
-        settlementId: latestRecallAdvert.settlementId,
-      })
-    }
-
-    if (currentDivisionMeetingAdverts.length >= 3) {
-      throw new BadRequestException(
-        'A maximum of 3 division meeting adverts can be added to an application',
-      )
-    }
-
-    // find the advert with the youngest scheduledAt date
-    const lastAdvert = currentDivisionMeetingAdverts.reduce(
-      (prev, current) =>
-        prev.scheduledAt > current.scheduledAt ? prev : current,
-      currentDivisionMeetingAdverts[0],
-    )
-
-    const meetingDate = new Date(body.meetingDate)
-    if (meetingDate < lastAdvert.scheduledAt) {
-      throw new BadRequestException(
-        'New division meeting advert must be scheduled after the last one',
-      )
-    }
+      },
+    })
 
     await this.advertModel.create({
       caseId: application.caseId,
@@ -360,14 +200,17 @@ export class ApplicationService implements IApplicationService {
           ? CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING
           : CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING,
       createdBy: user.fullName,
-      scheduledAt: meetingDate,
-      signatureName: lastAdvert.signatureName,
+      signatureName: body.signatureName,
       signatureDate: new Date(body.signatureDate),
       signatureLocation: body.signatureLocation,
-      signatureOnBehalfOf: lastAdvert.signatureOnBehalfOf,
+      signatureOnBehalfOf: body.signatureOnBehalfOf,
       typeId: TypeIdEnum.DIVISION_MEETING,
-      title: `Skiptafundur - ${application.settlementName}`,
-      settlementId: lastAdvert.settlementId,
+      title: `Skiptafundur - ${application.settlementName}`, // TODO: maybe look for the settlement instead of using the application data
+      publications: [
+        {
+          scheduledAt: new Date(body.meetingDate),
+        },
+      ],
     })
   }
 
@@ -512,8 +355,13 @@ export class ApplicationService implements IApplicationService {
     body: IslandIsSubmitCommonApplicationDto,
     user: DMRUser,
   ): Promise<void> {
-    const parsedApplication =
-      createCommonAdvertFromIslandIsApplicationSchema.safeParse({
+    const newCase = await this.caseModel.create(
+      { involvedPartyNationalId: user.nationalId },
+      { returning: ['id'] },
+    )
+
+    const requiredFields =
+      createCommonAdvertFromIslandIsApplicationSchema.parse({
         islandIsApplicationId: body.islandIsApplicationId,
         categoryId: body.categoryId,
         caption: body.caption,
@@ -527,58 +375,41 @@ export class ApplicationService implements IApplicationService {
         publishingDates: body.publishingDates.map((date) => new Date(date)),
       })
 
-    if (!parsedApplication.success) {
-      throw new BadRequestException('Invalid application data')
-    }
-
-    const createdCase = await this.caseModel.create(
-      {
-        involvedPartyNationalId: user.nationalId,
-        application: {
-          applicationType: ApplicationTypeEnum.COMMON,
-          submittedByNationalId: user.nationalId,
-          ...parsedApplication.data,
-        },
-      },
-      {
-        include: [{ model: ApplicationModel }],
-        returning: true,
-      },
+    const category = await this.categoryModel.findByPkOrThrow(
+      requiredFields.categoryId,
     )
 
-    if (!createdCase.application) {
-      this.logger.error(
-        'Case created without application for IslandIs submission',
-        {
-          caseId: createdCase.id,
-          userNationalId: user.nationalId,
-        },
-      )
-      throw new InternalServerErrorException()
-    }
-
-    // return this.submitCommonApplication(createdCase, user)
+    await this.advertModel.create({
+      caseId: newCase.id,
+      typeId: TypeIdEnum.COMMON_ADVERT,
+      categoryId: requiredFields.categoryId,
+      islandIsApplicationId: requiredFields.islandIsApplicationId,
+      createdBy: user.fullName,
+      signatureDate: requiredFields.signatureDate,
+      signatureLocation: requiredFields.signatureLocation,
+      signatureName: requiredFields.signatureName,
+      title: `${category.title} - ${requiredFields.caption}`,
+      caption: requiredFields.caption,
+      additionalText: requiredFields.additionalText,
+      html: requiredFields.html,
+      signatureOnBehalfOf: requiredFields.signatureOnBehalfOf,
+      publications: body.publishingDates.map((scheduledAt) => ({
+        scheduledAt: new Date(scheduledAt),
+      })),
+    })
   }
   async submitApplication(applicationId: string, user: DMRUser): Promise<void> {
-    const application = await this.applicationModel.unscoped().findOne({
-      attributes: ['id', 'applicationType'],
+    const application = await this.applicationModel.unscoped().findOneOrThrow({
       where: { id: applicationId, submittedByNationalId: user.nationalId },
     })
 
-    if (!application) {
-      this.logger.warn('Application not found or does not belong to user', {
-        applicationId,
-      })
-      throw new NotFoundException()
-    }
-
     switch (application.applicationType) {
       case ApplicationTypeEnum.COMMON:
-        await this.submitCommonApplication(applicationId, user)
+        await this.submitCommonApplication(application, user)
         break
       case ApplicationTypeEnum.RECALL_BANKRUPTCY:
       case ApplicationTypeEnum.RECALL_DECEASED:
-        await this.submitRecallApplication(applicationId, user)
+        await this.submitRecallApplication(application, user)
         break
       default:
         this.logger.warn(
@@ -587,7 +418,7 @@ export class ApplicationService implements IApplicationService {
         throw new BadRequestException()
     }
 
-    this.logger.debug('Application successfully submitted', {
+    this.logger.info('Application successfully submitted', {
       applicationId: application.id,
       caseId: application.caseId,
     })

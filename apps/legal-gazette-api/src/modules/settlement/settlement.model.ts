@@ -1,10 +1,18 @@
-import { Column, DataType, DefaultScope } from 'sequelize-typescript'
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  DefaultScope,
+  ForeignKey,
+} from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
+import { AdvertModel } from '../advert/advert.model'
 import { SettlementDto } from './dto/settlement.dto'
 type SettlementAttributes = {
+  advertId: string
   liquidatorName: string
   liquidatorLocation: string
   settlementName: string
@@ -14,11 +22,17 @@ type SettlementAttributes = {
   settlementDateOfDeath: Date | null
 }
 
-type SettlementCreationAttributes = SettlementAttributes
+export type SettlementCreateAttributes = Omit<
+  SettlementAttributes,
+  'advertId'
+> & {
+  advertId?: string
+}
 
 @DefaultScope(() => ({
   attributes: [
     'id',
+    'advertId',
     'liquidatorName',
     'liquidatorLocation',
     'settlementName',
@@ -31,19 +45,24 @@ type SettlementCreationAttributes = SettlementAttributes
 @BaseTable({ tableName: LegalGazetteModels.SETTLEMENT })
 export class SettlementModel extends BaseModel<
   SettlementAttributes,
-  SettlementCreationAttributes
+  SettlementCreateAttributes
 > {
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+  })
+  @ForeignKey(() => AdvertModel)
+  advertId!: string
+
   @Column({
     type: DataType.TEXT,
     allowNull: false,
-    field: 'liquidator_name',
   })
   liquidatorName!: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: false,
-    field: 'liquidator_location',
   })
   liquidatorLocation!: string
 
@@ -83,6 +102,9 @@ export class SettlementModel extends BaseModel<
     field: 'date_of_death',
   })
   settlementDateOfDeath!: Date | null
+
+  @BelongsTo(() => AdvertModel)
+  advert!: AdvertModel
 
   static fromModel(model: SettlementModel): SettlementDto {
     return {

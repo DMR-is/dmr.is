@@ -14,8 +14,9 @@ import { InternalServerErrorException } from '@nestjs/common'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
-import { AdvertModel } from '../advert/advert.model'
+import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
 import { TypeIdEnum } from '../type/type.model'
+import { AdvertPublicationsDto } from './dto/advert-publications.dto'
 
 export type AdvertPublicationsAttributes = {
   advertId: string
@@ -25,7 +26,7 @@ export type AdvertPublicationsAttributes = {
 }
 
 export type AdvertPublicationsCreateAttributes = {
-  advertId: string
+  advertId?: string
   scheduledAt: Date
 }
 
@@ -66,8 +67,16 @@ export class AdvertPublicationsModel extends BaseModel<
   }
 
   @Column({ type: DataType.VIRTUAL, allowNull: false })
-  get versionLetter(): string {
-    return String.fromCharCode(64 + this.versionNumber)
+  get versionLetter(): AdvertVersionEnum {
+    const letter = String.fromCharCode(64 + this.versionNumber)
+
+    if (
+      Object.values(AdvertVersionEnum).includes(letter as AdvertVersionEnum)
+    ) {
+      return letter as AdvertVersionEnum
+    }
+
+    throw new Error('Invalid version letter')
   }
 
   @BelongsTo(() => AdvertModel)
@@ -126,5 +135,19 @@ export class AdvertPublicationsModel extends BaseModel<
 
     instance.versionNumber = nextVersion
     instance.save()
+  }
+
+  static fromModel(model: AdvertPublicationsModel): AdvertPublicationsDto {
+    return {
+      id: model.id,
+      advertId: model.advertId,
+      scheduledAt: model.scheduledAt.toISOString(),
+      publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
+      version: model.versionLetter,
+    }
+  }
+
+  fromModel(): AdvertPublicationsDto {
+    return AdvertPublicationsModel.fromModel(this)
   }
 }

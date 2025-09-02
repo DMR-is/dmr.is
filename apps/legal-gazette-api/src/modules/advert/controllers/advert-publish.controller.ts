@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   NotFoundException,
+  NotImplementedException,
   Param,
   Post,
 } from '@nestjs/common'
@@ -26,23 +27,13 @@ export class AdvertPublishController {
   @Post('publish')
   @LGResponse({ operationId: 'publishAdverts' })
   async publishAdverts(@Body() body: PublishAdvertsBody) {
-    for (const advertId of body.advertIds) {
-      const advert = await this.advertModel.findByPk(advertId)
-
-      if (!advert) throw new NotFoundException('Advert not found')
-
-      await advert.publishAdvert()
-    }
+    throw new NotImplementedException()
   }
 
   @Post(':id/publish')
   @ApiParam({ name: 'id', type: String })
   @LGResponse({ operationId: 'publishAdvert' })
   async publishAdvert(@Param('id', new UUIDValidationPipe()) id: string) {
-    const advert = await this.advertModel.findByPk(id)
-
-    if (!advert) throw new NotFoundException('Advert not found')
-
-    await advert.publishAdvert()
+    throw new NotImplementedException()
   }
 }

@@ -59,12 +59,6 @@ export class AdvertController {
     return this.advertService.getAdverts(query)
   }
 
-  @Get(':id/published')
-  @LGResponse({ operationId: 'getAdvertPublished', type: AdvertDto })
-  getPublishedAdvertById(@Param('id', new UUIDValidationPipe()) id: string) {
-    return this.advertService.getPublishedAdvertById(id)
-  }
-
   @Get(':id')
   @LGResponse({ operationId: 'getAdvertById', type: AdvertDto })
   getAdvertById(@Param('id') id: string) {
