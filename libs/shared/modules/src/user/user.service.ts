@@ -403,23 +403,22 @@ export class UserService implements IUserService {
   async getInvolvedPartyByNationalId(
     nationalId: string,
   ): Promise<ResultWrapper<GetInvoledPartyByNationalIdResponse>> {
-    const userInvolvedParty = await this.userInvolvedPartiesModel.findOne({
-      include: [AdvertInvolvedPartyModel],
+    const involvedParty = await this.advertInvolvedPartyModel.findOne({
       where: {
-        nationalId,
+        nationalId: {
+          [Op.eq]: nationalId,
+        },
       },
     })
 
-    if (!userInvolvedParty) {
+    if (!involvedParty) {
       return ResultWrapper.err({
         code: 404,
         message: 'Involved party not found',
       })
     }
 
-    const found = userInvolvedParty?.involvedParties
-
-    const migrated = advertInvolvedPartyMigrate(found)
+    const migrated = advertInvolvedPartyMigrate(involvedParty)
 
     return ResultWrapper.ok({
       involvedParty: migrated,
