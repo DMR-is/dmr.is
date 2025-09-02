@@ -58,7 +58,7 @@ export class AdvertService implements IAdvertService {
       where: { caseId },
     })
 
-    const mapped = adverts.map((advert) => advert.fromModelToDetailed())
+    const mapped = adverts.map((advert) => advert.fromModel())
 
     return {
       adverts: mapped,
@@ -131,7 +131,7 @@ export class AdvertService implements IAdvertService {
         offset,
       })
 
-    const migrated = adverts.rows.map((advert) => advert.fromModelToDetailed())
+    const migrated = adverts.rows.map((advert) => advert.fromModel())
     const paging = generatePaging(
       migrated,
       query.page,
@@ -157,7 +157,7 @@ export class AdvertService implements IAdvertService {
       offset,
     })
 
-    const migrated = adverts.rows.map((advert) => advert.fromModelToDetailed())
+    const migrated = adverts.rows.map((advert) => advert.fromModel())
     const paging = generatePaging(
       migrated,
       query.page,
@@ -184,7 +184,7 @@ export class AdvertService implements IAdvertService {
         offset,
       })
 
-    const migrated = results.rows.map((advert) => advert.fromModelToDetailed())
+    const migrated = results.rows.map((advert) => advert.fromModel())
     const paging = generatePaging(
       migrated,
       query.page,

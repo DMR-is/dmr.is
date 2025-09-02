@@ -112,10 +112,7 @@ export enum AdvertModelScopes {
     { model: StatusModel },
     { model: CategoryModel },
     { model: TypeModel },
-    { model: AdvertPublicationModel },
-    { model: SettlementModel },
-    { model: CourtDistrictModel },
-    { model: CaseModel, attributes: ['caseNumber', 'id'] },
+    { model: UserModel },
   ],
 }))
 @Scopes(() => ({

@@ -22,7 +22,6 @@ import { CategoryDto } from '../../category/dto/category.dto'
 import { StatusDto } from '../../status/dto/status.dto'
 import { StatusIdEnum } from '../../status/status.model'
 import { TypeDto } from '../../type/dto/type.dto'
-import { UserDto } from '../../users/dto/user.dto'
 import { AdvertVersionEnum } from '../advert.model'
 
 export class AdvertDto extends DetailedDto {
@@ -143,9 +142,9 @@ export class AdvertDetailedDto extends DetailedDto {
 
 export class GetAdvertsDto {
   @ApiProperty({
-    type: [AdvertDetailedDto],
+    type: [AdvertDto],
   })
-  adverts!: AdvertDetailedDto[]
+  adverts!: AdvertDto[]
 
   @ApiProperty({
     type: Paging,
