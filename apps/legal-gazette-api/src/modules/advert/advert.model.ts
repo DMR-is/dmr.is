@@ -112,15 +112,11 @@ export enum AdvertModelScopes {
     { model: StatusModel },
     { model: CategoryModel },
     { model: TypeModel },
-    { model: AdvertPublicationModel },
-    { model: SettlementModel },
-    { model: CourtDistrictModel },
-    { model: CaseModel, attributes: ['caseNumber', 'id'] },
+    { model: UserModel },
   ],
 }))
 @Scopes(() => ({
   inProgress: {
-    include: [StatusModel, CategoryModel, TypeModel],
     where: {
       statusId: {
         [Op.in]: [StatusIdEnum.SUBMITTED, StatusIdEnum.READY_FOR_PUBLICATION],
@@ -128,20 +124,17 @@ export enum AdvertModelScopes {
     },
   },
   published: {
-    include: [StatusModel, CategoryModel, TypeModel],
     where: {
       statusId: StatusIdEnum.PUBLISHED,
     },
   },
   toBePublished: {
-    include: [StatusModel, CategoryModel, TypeModel],
     where: {
       paid: true,
       statusId: StatusIdEnum.READY_FOR_PUBLICATION,
     },
   },
   completed: {
-    include: [StatusModel, CategoryModel, TypeModel],
     where: {
       statusId: {
         [Op.in]: [
@@ -314,11 +307,11 @@ export class AdvertModel extends BaseModel<
     validateAdvertStatus(instance)
   }
 
-  get htmlMarkup(): string {
+  htmlMarkup(version: AdvertVersionEnum): string {
     if (this.legacyHtml) return this.legacyHtml
 
     try {
-      return getAdvertHTMLMarkup(this)
+      return getAdvertHTMLMarkup(this, version)
     } catch (error) {
       const logger = getLogger('AdvertModel')
       logger.error('Error generating HTML markup', { error })
@@ -384,11 +377,17 @@ export class AdvertModel extends BaseModel<
       deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
       category: model.category.fromModel(),
       type: model.type.fromModel(),
+      status: model.status.fromModel(),
       createdBy: model.createdBy,
       scheduledAt: date.toISOString(),
       title: model.title,
-      assignedUser: model.assignedUser?.fromModel(),
+      assignedUser: model.assignedUser?.fullName,
+      publications: model.publications.map((p) => p.fromModel()),
     }
+  }
+
+  fromModel(): AdvertDto {
+    return AdvertModel.fromModel(this)
   }
 
   static fromModelToDetailed(model: AdvertModel): AdvertDetailedDto {
@@ -396,7 +395,6 @@ export class AdvertModel extends BaseModel<
       id: model.id,
       caseId: model.caseId,
       title: model.title,
-      html: model.htmlMarkup,
       createdBy: model.createdBy,
       publicationNumber: model.publicationNumber,
       version: model.version,

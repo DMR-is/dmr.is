@@ -22,7 +22,6 @@ import { CategoryDto } from '../../category/dto/category.dto'
 import { StatusDto } from '../../status/dto/status.dto'
 import { StatusIdEnum } from '../../status/status.model'
 import { TypeDto } from '../../type/dto/type.dto'
-import { UserDto } from '../../users/dto/user.dto'
 import { AdvertVersionEnum } from '../advert.model'
 
 export class AdvertDto extends DetailedDto {
@@ -53,10 +52,13 @@ export class AdvertDto extends DetailedDto {
   @IsString()
   createdBy!: string
 
-  @ApiProperty({ type: UserDto, required: false })
-  @Type(() => UserDto)
+  @ApiProperty({ type: String, required: false })
+  @Type(() => String)
   @ValidateNested()
-  assignedUser?: UserDto
+  assignedUser?: string
+
+  @ApiProperty({ type: [AdvertPublicationDto] })
+  publications!: AdvertPublicationDto[]
 }
 
 export class AdvertDetailedDto extends DetailedDto {
@@ -113,12 +115,6 @@ export class AdvertDetailedDto extends DetailedDto {
   version!: AdvertVersionEnum
 
   @ApiProperty({
-    type: String,
-  })
-  @IsString()
-  html!: string
-
-  @ApiProperty({
     type: Boolean,
   })
   @IsBoolean()
@@ -142,9 +138,9 @@ export class AdvertDetailedDto extends DetailedDto {
 
 export class GetAdvertsDto {
   @ApiProperty({
-    type: [AdvertDetailedDto],
+    type: [AdvertDto],
   })
-  adverts!: AdvertDetailedDto[]
+  adverts!: AdvertDto[]
 
   @ApiProperty({
     type: Paging,

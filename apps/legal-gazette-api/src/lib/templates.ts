@@ -1,6 +1,8 @@
+import { InternalServerErrorException } from '@nestjs/common'
+
 import { formatDate } from '@dmr.is/utils'
 
-import { AdvertModel } from '../modules/advert/advert.model'
+import { AdvertModel, AdvertVersionEnum } from '../modules/advert/advert.model'
 import { CategoryDefaultIdEnum } from '../modules/category/category.model'
 
 /*
@@ -31,20 +33,25 @@ p {
 }
 */
 
-export const getAdvertHTMLMarkup = (model: AdvertModel) => {
+export const getAdvertHTMLMarkup = (
+  model: AdvertModel,
+  version: AdvertVersionEnum,
+) => {
   const additionalMarkup = model.additionalText
     ? `<div class="advert__additional"><p>${model.additionalText}</p></div>`
     : ''
 
-  const latestPublished = model.publications.filter(
-    (pub) => pub.publishedAt !== null,
-  )
+  const publishing = model.publications.find((pub) => pub.version === version)
 
-  const publishingDate: Date =
-    latestPublished.length > 0
-      ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        latestPublished[latestPublished.length - 1].publishedAt!
-      : model.publications[0].scheduledAt
+  if (!publishing) {
+    throw new InternalServerErrorException(
+      'No publication exists with this version.',
+    )
+  }
+
+  const publishingDate = publishing.publishedAt
+    ? publishing.publishedAt
+    : publishing.scheduledAt
 
   let markup = ''
 
@@ -132,7 +139,7 @@ export const getAdvertHTMLMarkup = (model: AdvertModel) => {
 
   return `
   <div class="advert">
-    <p class="advertSerial">${latestPublished.length > 0 ? `Útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}` : `Áætlaður útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}`}</p>
+    <p class="advertSerial">${publishing.publishedAt ? `Útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}` : `Áætlaður útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}`}</p>
     <h1 class="advertHeading">${model.title}</h1>
 
     ${additionalMarkup}

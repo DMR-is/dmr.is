@@ -4,6 +4,8 @@ import { InjectModel } from '@nestjs/sequelize'
 import { PagingQuery } from '@dmr.is/shared/dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
+import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
+import { AdvertPublicationDetailedDto } from '../advert-publications/dto/advert-publication.dto'
 import { StatusIdEnum } from '../status/status.model'
 import {
   AdvertDetailedDto,
@@ -12,21 +14,50 @@ import {
   GetAdvertsStatusCounterDto,
   UpdateAdvertDto,
 } from './dto/advert.dto'
-import { AdvertModel, AdvertModelScopes } from './advert.model'
+import {
+  AdvertModel,
+  AdvertModelScopes,
+  AdvertVersionEnum,
+} from './advert.model'
 import { IAdvertService } from './advert.service.interface'
 
 @Injectable()
 export class AdvertService implements IAdvertService {
   constructor(
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    @InjectModel(AdvertPublicationModel)
+    private readonly advertPublicationModel: typeof AdvertPublicationModel,
   ) {}
+  async getAdvertPublication(
+    id: string,
+    version: AdvertVersionEnum,
+  ): Promise<AdvertPublicationDetailedDto> {
+    const advertPromise = this.advertModel.findByPkOrThrow(id)
+    const publicationPromise = this.advertPublicationModel.findOneOrThrow({
+      where: {
+        advertId: id,
+        version: version,
+      },
+    })
+
+    const [advert, publication] = await Promise.all([
+      advertPromise,
+      publicationPromise,
+    ])
+
+    return {
+      advert: advert.fromModel(),
+      html: advert.htmlMarkup(version),
+      publication: publication.fromModel(),
+    }
+  }
 
   async getAdvertsByCaseId(caseId: string): Promise<GetAdvertsDto> {
     const adverts = await this.advertModel.findAll({
       where: { caseId },
     })
 
-    const mapped = adverts.map((advert) => advert.fromModelToDetailed())
+    const mapped = adverts.map((advert) => advert.fromModel())
 
     return {
       adverts: mapped,
@@ -99,7 +130,7 @@ export class AdvertService implements IAdvertService {
         offset,
       })
 
-    const migrated = adverts.rows.map((advert) => advert.fromModelToDetailed())
+    const migrated = adverts.rows.map((advert) => advert.fromModel())
     const paging = generatePaging(
       migrated,
       query.page,
@@ -125,7 +156,7 @@ export class AdvertService implements IAdvertService {
       offset,
     })
 
-    const migrated = adverts.rows.map((advert) => advert.fromModelToDetailed())
+    const migrated = adverts.rows.map((advert) => advert.fromModel())
     const paging = generatePaging(
       migrated,
       query.page,
@@ -152,7 +183,7 @@ export class AdvertService implements IAdvertService {
         offset,
       })
 
-    const migrated = results.rows.map((advert) => advert.fromModelToDetailed())
+    const migrated = results.rows.map((advert) => advert.fromModel())
     const paging = generatePaging(
       migrated,
       query.page,

@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
 import { AdvertVersionEnum } from '../../advert/advert.model'
+import { AdvertDto } from '../../advert/dto/advert.dto'
 
 export class AdvertPublicationDto {
   @ApiProperty()
@@ -17,4 +18,15 @@ export class AdvertPublicationDto {
 
   @ApiProperty({ enum: AdvertVersionEnum, enumName: 'AdvertVersionEnum' })
   version!: AdvertVersionEnum
+}
+
+export class AdvertPublicationDetailedDto {
+  @ApiProperty({ type: AdvertPublicationDto })
+  publication!: AdvertPublicationDto
+
+  @ApiProperty({ type: AdvertDto })
+  advert!: AdvertDto
+
+  @ApiProperty({ type: String })
+  html!: string
 }
