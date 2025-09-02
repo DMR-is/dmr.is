@@ -49,7 +49,7 @@ export class RoleGuard implements CanActivate {
       if (req.user?.actor?.nationalId) {
         const involvedPartyLookup =
           await this.userService.getInvolvedPartyByNationalId(
-            req.user.actor.nationalId,
+            req.user.nationalId,
           )
 
         if (!involvedPartyLookup.result.ok) {
@@ -66,7 +66,7 @@ export class RoleGuard implements CanActivate {
         // Set user data for delegation
         req.user = {
           role: UserRoleEnum.User,
-          id: req.user?.actor?.nationalId,
+          id: req.user.nationalId,
         }
         req.involvedParties = resParty
 
