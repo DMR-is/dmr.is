@@ -6,7 +6,7 @@ import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { StatusIdEnum } from '../status/status.model'
 import {
-  AdvertDto,
+  AdvertDetailedDto,
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
@@ -26,7 +26,7 @@ export class AdvertService implements IAdvertService {
       where: { caseId },
     })
 
-    const mapped = adverts.map((advert) => advert.fromModel())
+    const mapped = adverts.map((advert) => advert.fromModelToDetailed())
 
     return {
       adverts: mapped,
@@ -34,7 +34,10 @@ export class AdvertService implements IAdvertService {
     }
   }
 
-  async updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDto> {
+  async updateAdvert(
+    id: string,
+    body: UpdateAdvertDto,
+  ): Promise<AdvertDetailedDto> {
     const advert = await this.advertModel.findByPkOrThrow(id)
 
     const updated = await advert.update({
@@ -43,7 +46,7 @@ export class AdvertService implements IAdvertService {
 
     // TODO: update the publication scheduledAt date from body
 
-    return updated.fromModel()
+    return updated.fromModelToDetailed()
   }
 
   async getAdvertsCount(): Promise<GetAdvertsStatusCounterDto> {
@@ -96,7 +99,7 @@ export class AdvertService implements IAdvertService {
         offset,
       })
 
-    const migrated = adverts.rows.map((advert) => advert.fromModel())
+    const migrated = adverts.rows.map((advert) => advert.fromModelToDetailed())
     const paging = generatePaging(
       migrated,
       query.page,
@@ -122,7 +125,7 @@ export class AdvertService implements IAdvertService {
       offset,
     })
 
-    const migrated = adverts.rows.map((advert) => advert.fromModel())
+    const migrated = adverts.rows.map((advert) => advert.fromModelToDetailed())
     const paging = generatePaging(
       migrated,
       query.page,
@@ -149,7 +152,7 @@ export class AdvertService implements IAdvertService {
         offset,
       })
 
-    const migrated = results.rows.map((advert) => advert.fromModel())
+    const migrated = results.rows.map((advert) => advert.fromModelToDetailed())
     const paging = generatePaging(
       migrated,
       query.page,
@@ -163,9 +166,9 @@ export class AdvertService implements IAdvertService {
     }
   }
 
-  async getAdvertById(id: string): Promise<AdvertDto> {
+  async getAdvertById(id: string): Promise<AdvertDetailedDto> {
     const advert = await this.advertModel.findByPkOrThrow(id)
 
-    return advert.fromModel()
+    return advert.fromModelToDetailed()
   }
 }

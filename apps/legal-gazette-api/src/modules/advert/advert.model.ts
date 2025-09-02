@@ -37,7 +37,12 @@ import {
 } from '../settlement/settlement.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
 import { TypeIdEnum, TypeModel } from '../type/type.model'
-import { AdvertDto, AdvertStatusCounterItemDto } from './dto/advert.dto'
+import { UserModel } from '../users/users.model'
+import {
+  AdvertDetailedDto,
+  AdvertDto,
+  AdvertStatusCounterItemDto,
+} from './dto/advert.dto'
 
 type AdvertAttributes = {
   caseId: string
@@ -158,6 +163,14 @@ export class AdvertModel extends BaseModel<
   })
   @ForeignKey(() => CaseModel)
   caseId!: string
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    defaultValue: null,
+  })
+  @ForeignKey(() => UserModel)
+  assignedUserId!: string | null
 
   @Column({
     type: DataType.UUID,
@@ -290,6 +303,9 @@ export class AdvertModel extends BaseModel<
   @BelongsTo(() => CourtDistrictModel)
   courtDistrict?: CourtDistrictModel
 
+  @BelongsTo(() => UserModel)
+  assignedUser?: UserModel
+
   @HasMany(() => AdvertPublicationModel)
   publications!: AdvertPublicationModel[]
 
@@ -354,6 +370,28 @@ export class AdvertModel extends BaseModel<
   }
 
   static fromModel(model: AdvertModel): AdvertDto {
+    const publishing = model.publications.find(
+      (pub) => pub.publishedAt === null,
+    )
+
+    const date = publishing
+      ? publishing.scheduledAt
+      : model.publications[model.publications.length - 1].scheduledAt
+
+    return {
+      createdAt: model.createdAt.toISOString(),
+      updatedAt: model.updatedAt.toISOString(),
+      deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+      category: model.category.fromModel(),
+      type: model.type.fromModel(),
+      createdBy: model.createdBy,
+      scheduledAt: date.toISOString(),
+      title: model.title,
+      assignedUser: model.assignedUser?.fromModel(),
+    }
+  }
+
+  static fromModelToDetailed(model: AdvertModel): AdvertDetailedDto {
     return {
       id: model.id,
       caseId: model.caseId,
@@ -376,7 +414,7 @@ export class AdvertModel extends BaseModel<
     }
   }
 
-  fromModel(): AdvertDto {
-    return AdvertModel.fromModel(this)
+  fromModelToDetailed(): AdvertDetailedDto {
+    return AdvertModel.fromModelToDetailed(this)
   }
 }

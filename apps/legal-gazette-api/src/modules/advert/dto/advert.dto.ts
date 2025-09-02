@@ -9,7 +9,6 @@ import {
   IsUUID,
   MaxLength,
   MinLength,
-  ValidateIf,
   ValidateNested,
 } from 'class-validator'
 
@@ -23,8 +22,44 @@ import { CategoryDto } from '../../category/dto/category.dto'
 import { StatusDto } from '../../status/dto/status.dto'
 import { StatusIdEnum } from '../../status/status.model'
 import { TypeDto } from '../../type/dto/type.dto'
+import { UserDto } from '../../users/dto/user.dto'
 import { AdvertVersionEnum } from '../advert.model'
+
 export class AdvertDto extends DetailedDto {
+  @ApiProperty({ type: String })
+  @IsDateString()
+  scheduledAt!: string
+
+  @ApiProperty({ type: CategoryDto })
+  @Type(() => CategoryDto)
+  @ValidateNested()
+  category!: CategoryDto
+
+  @ApiProperty({ type: TypeDto })
+  @Type(() => TypeDto)
+  @ValidateNested()
+  type!: TypeDto
+
+  @ApiProperty({ type: StatusDto })
+  @Type(() => StatusDto)
+  @ValidateNested()
+  status!: StatusDto
+
+  @ApiProperty({ type: String })
+  @IsString()
+  title!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  createdBy!: string
+
+  @ApiProperty({ type: UserDto, required: false })
+  @Type(() => UserDto)
+  @ValidateNested()
+  assignedUser?: UserDto
+}
+
+export class AdvertDetailedDto extends DetailedDto {
   @ApiProperty({
     type: String,
   })
@@ -107,9 +142,9 @@ export class AdvertDto extends DetailedDto {
 
 export class GetAdvertsDto {
   @ApiProperty({
-    type: [AdvertDto],
+    type: [AdvertDetailedDto],
   })
-  adverts!: AdvertDto[]
+  adverts!: AdvertDetailedDto[]
 
   @ApiProperty({
     type: Paging,
