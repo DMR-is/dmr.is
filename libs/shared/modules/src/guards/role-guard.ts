@@ -67,8 +67,11 @@ export class RoleGuard implements CanActivate {
         req.user = {
           role: UserRoleEnum.User,
           id: req.user.nationalId,
+          nationalId: req.user.nationalId,
+          firstName: req.user.name,
+          fullName: req.user.name,
         }
-        req.involvedParties = resParty
+        req.involvedParties = [resParty.involvedParty]
 
         return true
       } else {
