@@ -40,9 +40,10 @@ export const getAdvertHTMLMarkup = (model: AdvertModel) => {
     (pub) => pub.publishedAt !== null,
   )
 
-  const publishingDate =
+  const publishingDate: Date =
     latestPublished.length > 0
-      ? latestPublished[latestPublished.length - 1].publishedAt
+      ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        latestPublished[latestPublished.length - 1].publishedAt!
       : model.publications[0].scheduledAt
 
   let markup = ''
@@ -125,15 +126,13 @@ export const getAdvertHTMLMarkup = (model: AdvertModel) => {
       break
     }
     default: {
-      markup = `
-          <p>${model.html /* TODO: add column content to advert to store custom html from applications */}</p>
-          `
+      markup = `${model.content}`
     }
   }
 
   return `
   <div class="advert">
-    <p class="advertSerial">Útgáfud.: ${publishingDate}</p>
+    <p class="advertSerial">${latestPublished.length > 0 ? `Útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}` : `Áætlaður útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}`}</p>
     <h1 class="advertHeading">${model.title}</h1>
 
     ${additionalMarkup}

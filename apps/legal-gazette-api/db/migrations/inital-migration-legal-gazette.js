@@ -100,9 +100,11 @@ module.exports = {
       ADVERT_CATEGORY_ID UUID NOT NULL REFERENCES ADVERT_CATEGORY(ID),
       ADVERT_STATUS_ID UUID NOT NULL REFERENCES ADVERT_STATUS(ID) DEFAULT '63726fce-edcf-412d-85e8-087e99c592f2',
 
+      PUBLICATION_NUMBER TEXT DEFAULT NULL,
       TITLE TEXT NOT NULL,
-      HTML TEXT NOT NULL,
+      LEGACY_HTML TEXT DEFAULT NULL,
       CREATED_BY TEXT NOT NULL,
+      CONTENT TEXT DEFAULT NULL, -- The HTML content of the application (only applicable for common adverts) submitted by the user
 
       PAID BOOLEAN NOT NULL DEFAULT FALSE,
 
@@ -133,7 +135,7 @@ module.exports = {
       ADVERT_ID UUID NOT NULL REFERENCES ADVERT(ID)
     );
 
-    CREATE TABLE ADVERT_PUBLICATIONS (
+    CREATE TABLE ADVERT_PUBLICATION (
       ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       CREATED_AT TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
       UPDATED_AT TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -222,11 +224,9 @@ module.exports = {
 
     CREATE INDEX idx_advert_status_type_category ON advert (advert_status_id, advert_type_id, advert_category_id);
 
-    CREATE INDEX idx_advert_scheduled_at ON advert (scheduled_at ASC);
-
-    CREATE INDEX idx_advert_publications_advert_id ON ADVERT_PUBLICATIONS (ADVERT_ID);
-    CREATE INDEX idx_advert_publications_scheduled_at_asc ON ADVERT_PUBLICATIONS (SCHEDULED_AT ASC);
-    CREATE INDEX idx_advert_publications_published_at_desc ON ADVERT_PUBLICATIONS (PUBLISHED_AT DESC);
+    CREATE INDEX idx_advert_publication_advert_id ON ADVERT_PUBLICATION (ADVERT_ID);
+    CREATE INDEX idx_advert_publication_scheduled_at_asc ON ADVERT_PUBLICATION (SCHEDULED_AT ASC);
+    CREATE INDEX idx_advert_publication_published_at_desc ON ADVERT_PUBLICATION (PUBLISHED_AT DESC);
 
     COMMIT;
 
@@ -237,21 +237,20 @@ module.exports = {
     return await queryInterface.sequelize.query(`
     BEGIN;
 
-    DROP INDEX IF EXISTS idx_advert_scheduled_at;
+    DROP INDEX IF EXISTS idx_advert_publication_published_at_desc;
+    DROP INDEX IF EXISTS idx_advert_publication_scheduled_at_asc;
+    DROP INDEX IF EXISTS idx_advert_publication_advert_id;
     DROP INDEX IF EXISTS idx_advert_status_type_category;
     DROP INDEX IF EXISTS idx_user_national_id;
     DROP INDEX IF EXISTS idx_advert_status_title_asc;
     DROP INDEX IF EXISTS idx_advert_category_title_asc;
     DROP INDEX IF EXISTS idx_advert_type_title_asc;
-    DROP INDEX IF EXISTS idx_advert_publications_advert_id;
-    DROP INDEX IF EXISTS idx_advert_publications_scheduled_at_asc;
-    DROP INDEX IF EXISTS idx_advert_publications_published_at_desc;
 
     DROP TABLE IF EXISTS LEGAL_GAZETTE_SUBSCRIBERS;
     DROP TABLE IF EXISTS APPLICATION;
     DROP TABLE IF EXISTS COMMUNICATION_CHANNEL;
-    DROP TABLE IF EXISTS ADVERT;
     DROP TABLE IF EXISTS SETTLEMENT;
+    DROP TABLE IF EXISTS ADVERT;
     DROP TABLE IF EXISTS ADVERT_STATUS;
     DROP TABLE IF EXISTS ADVERT_CATEGORY;
     DROP TABLE IF EXISTS ADVERT_TYPE;

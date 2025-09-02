@@ -18,7 +18,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const err: ApiErrorDto = {
       statusCode: status,
       timestamp: now,
-      name: ApiErrorName.UnknownError,
+      name: ApiErrorName.InternalServerError,
     }
 
     if (exception instanceof z.ZodError) {
@@ -39,13 +39,23 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       return response.status(status).json(err)
     }
 
-    logger.error(`An unknown error occurred`, {
+    if (exception instanceof Error) {
+      const cleanedMessage = exception.message.replace(/\\n/g, '\n')
+
+      logger.error(`An unknown error occurred`, {
+        context: LOGGING_CONTEXT,
+        message: cleanedMessage,
+        error: exception,
+      })
+
+      return response.status(status).json(err)
+    }
+
+    logger.error(`An unknown non-error was thrown`, {
       context: LOGGING_CONTEXT,
-      exception:
-        exception instanceof Error ? exception.message : String(exception),
-      stack: exception instanceof Error ? exception.stack : undefined,
+      message: JSON.stringify(exception),
     })
 
-    response.status(status).json(err)
+    return response.status(status).json(err)
   }
 }

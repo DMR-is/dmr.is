@@ -18,7 +18,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 import { DetailedDto } from '../../../dto/detailed.dto'
-import { AdvertPublicationsDto } from '../../advert-publications/dto/advert-publications.dto'
+import { AdvertPublicationDto } from '../../advert-publications/dto/advert-publication.dto'
 import { CategoryDto } from '../../category/dto/category.dto'
 import { StatusDto } from '../../status/dto/status.dto'
 import { StatusIdEnum } from '../../status/status.model'
@@ -101,8 +101,8 @@ export class AdvertDto extends DetailedDto {
   @IsDateString()
   signatureDate!: string
 
-  @ApiProperty({ type: [AdvertPublicationsDto] })
-  publications!: AdvertPublicationsDto[]
+  @ApiProperty({ type: [AdvertPublicationDto] })
+  publications!: AdvertPublicationDto[]
 }
 
 export class GetAdvertsDto {

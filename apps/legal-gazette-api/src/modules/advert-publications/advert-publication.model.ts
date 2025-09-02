@@ -1,5 +1,7 @@
-import { Op } from 'sequelize'
+import { BulkCreateOptions, CreateOptions, Op } from 'sequelize'
 import {
+  AfterCreate,
+  BeforeBulkCreate,
   BeforeCreate,
   BelongsTo,
   Column,
@@ -9,14 +11,17 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
-import { InternalServerErrorException } from '@nestjs/common'
+import {
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
 import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
 import { TypeIdEnum } from '../type/type.model'
-import { AdvertPublicationsDto } from './dto/advert-publications.dto'
+import { AdvertPublicationDto } from './dto/advert-publication.dto'
 
 export type AdvertPublicationsAttributes = {
   advertId: string
@@ -28,9 +33,11 @@ export type AdvertPublicationsAttributes = {
 export type AdvertPublicationsCreateAttributes = {
   advertId?: string
   scheduledAt: Date
+  publishedAt?: Date | null
+  versionNumber?: number
 }
 
-@BaseTable({ tableName: LegalGazetteModels.ADVERT_PUBLICATIONS })
+@BaseTable({ tableName: LegalGazetteModels.ADVERT_PUBLICATION })
 @DefaultScope(() => ({
   order: [['scheduledAt', 'ASC']],
 }))
@@ -44,7 +51,7 @@ export type AdvertPublicationsCreateAttributes = {
     order: [['publishedAt', 'DESC']],
   },
 }))
-export class AdvertPublicationsModel extends BaseModel<
+export class AdvertPublicationModel extends BaseModel<
   AdvertPublicationsAttributes,
   AdvertPublicationsCreateAttributes
 > {
@@ -55,18 +62,18 @@ export class AdvertPublicationsModel extends BaseModel<
   @Column({ type: DataType.DATE, allowNull: false })
   scheduledAt!: Date
 
-  @Column({ type: DataType.DATE, allowNull: true })
+  @Column({ type: DataType.DATE })
   publishedAt!: Date | null
 
-  @Column({ type: DataType.INTEGER, allowNull: false })
+  @Column({ type: DataType.INTEGER, defaultValue: '1' })
   versionNumber!: number
 
-  @Column({ type: DataType.VIRTUAL, allowNull: false })
+  @Column({ type: DataType.VIRTUAL })
   get isPublished(): boolean {
     return this.publishedAt !== null
   }
 
-  @Column({ type: DataType.VIRTUAL, allowNull: false })
+  @Column({ type: DataType.VIRTUAL })
   get versionLetter(): AdvertVersionEnum {
     const letter = String.fromCharCode(64 + this.versionNumber)
 
@@ -83,61 +90,43 @@ export class AdvertPublicationsModel extends BaseModel<
   advert!: AdvertModel
 
   @BeforeCreate
-  static async validateInsertAndComputeVersionNumber(
-    instance: AdvertPublicationsModel,
-  ) {
-    const advertPublication = await AdvertPublicationsModel.findOne({
-      where: { id: instance.id },
-      include: [
-        { model: AdvertModel, attributes: ['id', 'typeId'], required: true },
-      ],
-    })
-
-    if (!advertPublication || !advertPublication.advert) {
-      this.logger.error('Advert not found', {
-        advertId: instance.advertId,
-        publicationId: instance.id,
-      })
-      throw new InternalServerErrorException('Advert not found')
-    }
-
-    const currentVersion = await AdvertPublicationsModel.max<
-      number | null,
-      AdvertPublicationsModel
-    >('versionNumber', {
-      where: { advertId: instance.advertId },
-    })
-
-    const nextVersion = (currentVersion || 0) + 1
-
-    const { advert } = advertPublication
+  static async validate(model: AdvertPublicationModel) {
+    const advert = await AdvertModel.unscoped().findByPkOrThrow(
+      model.advertId,
+      {
+        attributes: ['id', 'typeId'],
+      },
+    )
 
     switch (advert.typeId) {
       case TypeIdEnum.DIVISION_MEETING: {
-        if (nextVersion >= 1) {
-          throw new InternalServerErrorException(
-            'Division Meeting can only have one publication',
+        if (model.versionNumber > 1) {
+          throw new BadRequestException(
+            'Division meeting adverts can only have one version',
           )
         }
 
         break
       }
       default: {
-        if (nextVersion >= 3) {
-          throw new InternalServerErrorException(
-            'Advert can only have up to 3 publications',
+        if (model.versionNumber > 3) {
+          throw new BadRequestException(
+            'Max three versions are allowed for this advert type',
           )
         }
-
-        break
       }
     }
-
-    instance.versionNumber = nextVersion
-    instance.save()
   }
 
-  static fromModel(model: AdvertPublicationsModel): AdvertPublicationsDto {
+  @BeforeBulkCreate
+  static async testing(
+    _instances: AdvertPublicationModel[],
+    options: BulkCreateOptions,
+  ) {
+    options.individualHooks = true
+  }
+
+  static fromModel(model: AdvertPublicationModel): AdvertPublicationDto {
     return {
       id: model.id,
       advertId: model.advertId,
@@ -147,7 +136,7 @@ export class AdvertPublicationsModel extends BaseModel<
     }
   }
 
-  fromModel(): AdvertPublicationsDto {
-    return AdvertPublicationsModel.fromModel(this)
+  fromModel(): AdvertPublicationDto {
+    return AdvertPublicationModel.fromModel(this)
   }
 }
