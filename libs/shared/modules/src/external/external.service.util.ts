@@ -16,7 +16,7 @@ type Regulation = {
 
 export const advertsToRegulations = (advert: Advert): Regulation => {
   return {
-    subject: advert.title.replace('REGLUGERÐ', 'Reglugerd'),
+    subject: advert.title.replace('REGLUGERÐ', 'Reglugerð'),
     link: advert.document.pdfUrl ?? '',
     recordid: advert.id,
     body: advert.document.html ?? '',
