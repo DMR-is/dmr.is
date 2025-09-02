@@ -1,17 +1,17 @@
 import { Response } from 'express'
 
 import {
+  BadGatewayException,
   Controller,
   Get,
   Inject,
   NotFoundException,
+  NotImplementedException,
   Param,
   Res,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
-
-import { formatDate } from '@dmr.is/utils'
 
 import { PdfService } from '../../pdf/pdf.service'
 import { AdvertModel } from '../advert.model'
@@ -38,22 +38,25 @@ export class AdvertPdfController {
     },
   })
   async getAdvertPdf(@Param('id') id: string, @Res() res: Response) {
-    const advert = await this.advertModel.unscoped().findByPk(id, {
-      attributes: ['id', 'html', 'publishedAt', 'scheduledAt'],
-    })
+    const advert = await this.advertModel.findByPkOrThrow(id)
 
-    if (!advert) {
-      throw new NotFoundException('Advert not found')
+    const publications = advert.publications.filter(
+      (pub) => pub.publishedAt !== null,
+    )
+
+    if (publications.length === 0 || !advert.publicationNumber) {
+      throw new BadGatewayException('Advert is not published')
     }
 
-    const pdf = await this.pdfService.generatePdfFromHtml(advert.html)
-    // const timestamp = new Date(advert.publishedAt ?? advert.scheduledAt)
-    // TODO: Replace timestamp with the publication
-    const timeStamp = formatDate(new Date(), 'dd. MMMM yyyy')
+    const version = publications[publications.length - 1].version
+
+    const html = advert.htmlMarkup(version)
+
+    const pdf = await this.pdfService.generatePdfFromHtml(html)
 
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="advert-${advert?.id}-${timeStamp}.pdf"`,
+      'Content-Disposition': `attachment; filename="advert-${advert.publicationNumber}.pdf"`,
       'Content-Length': pdf.length,
     })
 
