@@ -40,6 +40,7 @@ export const getAdvertHTMLMarkup = (
   model: AdvertModel,
   version: AdvertVersionEnum,
 ) => {
+  const logger = getLogger('AdvertModel')
   const additionalMarkup = model.additionalText
     ? `<div class="advert__additional"><p>${model.additionalText}</p></div>`
     : ''
@@ -49,7 +50,6 @@ export const getAdvertHTMLMarkup = (
   )
 
   if (!publishing) {
-    const logger = getLogger('AdvertModel')
     logger.debug('No publication exists with this version.', {
       version: version,
       advertId: model.id,
@@ -166,7 +166,7 @@ export const getAdvertHTMLMarkup = (
       ${model.signatureOnBehalfOf ? `<p>${model.signatureOnBehalfOf}</p>` : ''}
       <p><strong>${model.signatureName}</strong></p>
     </div>
-    <p class="advertSerial">${model.case.caseNumber}${version}</p>
+    ${model.publicationNumber ? `<p class="advertSerial">${model.publicationNumber}${version}</p>` : `<p class="advertSerial">(Reiknast við útgáfu)${version}</p>`}
   </div>
   `
 }

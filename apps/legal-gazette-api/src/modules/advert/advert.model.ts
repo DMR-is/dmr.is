@@ -109,12 +109,13 @@ export enum AdvertModelScopes {
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
 @DefaultScope(() => ({
   include: [
-    { model: CaseModel.unscoped(), attributes: ['id', 'caseNumber'] },
     { model: StatusModel },
     { model: CategoryModel },
     { model: TypeModel },
-    { model: UserModel },
     { model: AdvertPublicationModel },
+    { model: SettlementModel },
+    { model: CourtDistrictModel },
+    { model: CaseModel, attributes: ['caseNumber', 'id'] },
   ],
 }))
 @Scopes(() => ({
