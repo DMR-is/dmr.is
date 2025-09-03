@@ -3,7 +3,10 @@ import { getServerSession } from 'next-auth'
 
 import { ApplicationSubmitted } from '../../../../../components/client-components/application/ApplicationSubmitted'
 import { ApplicationForm } from '../../../../../components/client-components/form/ApplicationForm'
-import { ApplicationDetailedDtoStatusEnum } from '../../../../../gen/fetch'
+import {
+  ApplicationDetailedDtoStatusEnum,
+  ApplicationTypeEnum,
+} from '../../../../../gen/fetch'
 import { authOptions } from '../../../../../lib/authOptions'
 import {
   ALLOWED_FORM_TYPES,
@@ -57,6 +60,9 @@ export default async function UmsoknirThrotabusPage({
       <ApplicationSubmitted
         caseId={params.id}
         adverts={advertsResults.data.adverts}
+        isCommon={
+          applicationResult.data.applicationType === ApplicationTypeEnum.COMMON
+        }
       />
     )
   }

@@ -49,8 +49,6 @@ export class ApplicationService implements IApplicationService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
-    @InjectModel(SettlementModel)
-    private readonly settlementModel: typeof SettlementModel,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     @InjectModel(ApplicationModel)
     private readonly applicationModel: typeof ApplicationModel,
@@ -123,6 +121,10 @@ export class ApplicationService implements IApplicationService {
       signatureOnBehalfOf: application.liquidatorOnBehalfOf,
       signatureDate: application.signatureDate,
       signatureLocation: application.signatureLocation,
+      divisionMeetingDate: application.divisionMeetingDate,
+      divisionMeetingLocation: application.divisionMeetingLocation,
+      judgementDate: application.judgmentDate,
+      courtDistrictId: application.courtDistrictId,
     })
 
     const applicationType = application.applicationType
@@ -149,7 +151,7 @@ export class ApplicationService implements IApplicationService {
       ? `Innköllun þrotabús - ${requiredFields.settlementName}`
       : `Innköllun dánarbús - ${requiredFields.settlementName}`
 
-    await this.advertModel.create(
+    const advert = await this.advertModel.create(
       {
         caseId: application.caseId,
         categoryId: categoryId,
@@ -160,6 +162,10 @@ export class ApplicationService implements IApplicationService {
         signatureLocation: requiredFields.signatureLocation,
         signatureDate: requiredFields.signatureDate,
         title: title,
+        divisionMeetingDate: requiredFields.divisionMeetingDate,
+        divisionMeetingLocation: requiredFields.divisionMeetingLocation,
+        judgementDate: requiredFields.judgementDate,
+        courtDistrictId: requiredFields.courtDistrictId,
         settlement: {
           liquidatorName: requiredFields.signatureName,
           liquidatorLocation: requiredFields.liquidatorLocation,
@@ -169,14 +175,17 @@ export class ApplicationService implements IApplicationService {
           settlementDateOfDeath: requiredFields.settlementDateOfDeath ?? null,
           settlementDeadline: requiredFields.settlementDeadlineDate ?? null,
         },
-        publications: application.publishingDates.map((scheduledAt) => ({
-          scheduledAt,
-        })),
       },
-      { include: [AdvertPublicationModel, SettlementModel] },
+      { returning: ['id'], include: [SettlementModel] },
     )
 
-    // TODO: INCLUDE THE FIRST DIVISION MEETING IN THE RECALL ADVERT IF IT IS A BANKRUPTCY ADVERT
+    await this.publicationModel.bulkCreate(
+      application.publishingDates.map((d, i) => ({
+        advertId: advert.id,
+        scheduledAt: d,
+        versionNumber: i + 1,
+      })),
+    )
 
     await application.update({ status: ApplicationStatusEnum.SUBMITTED })
   }
@@ -212,7 +221,7 @@ export class ApplicationService implements IApplicationService {
       signatureLocation: body.signatureLocation,
       signatureOnBehalfOf: body.signatureOnBehalfOf,
       typeId: TypeIdEnum.DIVISION_MEETING,
-      title: `Skiptafundur - ${application.settlementName}`, // TODO: maybe look for the settlement instead of using the application data
+      title: `Skiptafundur - ${application.settlementName}`,
       publications: [
         {
           scheduledAt: new Date(body.meetingDate),
@@ -424,10 +433,5 @@ export class ApplicationService implements IApplicationService {
         )
         throw new BadRequestException()
     }
-
-    this.logger.info('Application successfully submitted', {
-      applicationId: application.id,
-      caseId: application.caseId,
-    })
   }
 }

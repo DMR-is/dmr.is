@@ -71,8 +71,16 @@ export const getAdvertHTMLMarkup = (
         throw new Error('Settlement information is missing')
       }
 
+      if (!model.judgementDate) {
+        throw new Error('Judgement date is missing')
+      }
+
+      if (!model.divisionMeetingLocation || !model.divisionMeetingDate) {
+        throw new Error('Division meeting information is missing')
+      }
+
       markup = `
-          <p>Með úrskurði héraðsdóms Reykjaness uppkveðnum *DAGSETNINGU VANTAR* var eftirtalið bú tekið til gjaldþrotaskipta. Sama dag var undirritaður skipaður skiptastjóri í búinu. Frestdagur við gjaldþrotaskiptin er tilgreindur við nafn viðkomandi bús.</p>
+          <p>Með úrskurði ${model.courtDistrict?.title} uppkveðnum ${formatDate(model.judgementDate, 'dd. MMMM yyyy')} var eftirtalið bú tekið til gjaldþrotaskipta. Sama dag var undirritaður skipaður skiptastjóri í búinu. Frestdagur við gjaldþrotaskiptin er tilgreindur við nafn viðkomandi bús.</p>
           <table>
             <tbody>
               <tr>
@@ -86,18 +94,18 @@ export const getAdvertHTMLMarkup = (
                   <br />
                   kt. ${model.settlement?.settlementNationalId},
                   <br />
-                  ${model.settlement?.settlementAddress},
+                  ${model.settlement?.settlementAddress}
                   <br />
                 </td>
                 <td align="left">
                   ${formatDate(model.settlement.settlementDeadline, 'dd. MMMM yyyy')}
                 </td>
                 <td align="left">
-                  miðvikudaginn
+                  ${formatDate(model.divisionMeetingDate, 'EEEE')}
                   <br />
-                  17. september 2025,
+                  ${formatDate(model.divisionMeetingDate, 'dd. MMMM yyyy')}
                   <br />
-                  kl. 14.00
+                  kl. ${formatDate(model.divisionMeetingDate, 'HH:mm')}
                   <br />
                 </td>
               </tr>
@@ -115,8 +123,12 @@ export const getAdvertHTMLMarkup = (
         throw new Error('Settlement information is missing')
       }
 
+      if (!model.judgementDate) {
+        throw new Error('Judgement date is missing')
+      }
+
       markup = `
-          <p>Með úrskurði héraðsdóms Reykjavíkur uppkveðnum *DAGSETNINGU VANTAR* var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:</p>
+          <p>Með úrskurði ${model.courtDistrict?.title} uppkveðnum ${formatDate(model.judgementDate)} var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:</p>
           <table>
             <tbody>
               <tr>
@@ -124,17 +136,13 @@ export const getAdvertHTMLMarkup = (
                 <td><strong>Dánardagur:</strong></td>
               </tr>
               <tr>
-                <td>${model.settlement.settlementName}</td>
+                <td>
+                  ${model.settlement.settlementName}, <br />
+                  kt. ${model.settlement.settlementNationalId}, <br />
+                  síðasta heimilisfang:<br />
+                  ${model.settlement.settlementAddress}
+                </td>
                 <td>${formatDate(model.settlement.settlementDateOfDeath, 'dd. MMMM yyyy')}</td>
-              </tr>
-              <tr>
-                <td>kt. ${model.settlement.settlementNationalId},</td>
-              </tr>
-              <tr>
-                <td>síðasta heimilisfang:</td>
-              </tr>
-              <tr>
-                <td>${model.settlement.settlementAddress}</td>
               </tr>
             </tbody>
           </table>
@@ -151,7 +159,7 @@ export const getAdvertHTMLMarkup = (
   }
 
   return `
-  <div class="advert">
+  <div class="advert legal-gazette">
     <p class="advertSerial">${publishing.publishedAt ? `Útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}` : `Áætlaður útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}`}</p>
     <h1 class="advertHeading">${model.title}</h1>
 

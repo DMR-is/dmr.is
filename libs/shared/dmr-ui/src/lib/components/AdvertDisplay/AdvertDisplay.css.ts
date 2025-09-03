@@ -23,3 +23,28 @@ globalStyle(
     display: 'block',
   },
 )
+
+globalStyle('.advert.legal-gazette .advert', {
+  fontSize: '12pt',
+})
+
+globalStyle('.advert.legal-gazette .advertSerial', {
+  fontSize: '10pt',
+  textAlign: 'right',
+  marginBlock: 0,
+})
+
+globalStyle('.advert.legal-gazette .advertHeading', {
+  fontWeight: 'bold',
+  marginBottom: '4px',
+})
+
+globalStyle('.advert.legal-gazette p', {
+  textAlign: 'justify',
+  marginBlock: '1em',
+})
+
+globalStyle('.advert.legal-gazette .advertSignature p', {
+  textAlign: 'right',
+  marginBlock: 0,
+})

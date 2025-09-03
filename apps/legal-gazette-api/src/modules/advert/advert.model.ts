@@ -56,14 +56,22 @@ type AdvertAttributes = {
   createdBy: string
   legacyHtml: string | null
   paid: boolean
-  additionalText: string | null
-  caption: string | null
-  content: string | null
   signatureName: string
   signatureOnBehalfOf: string | null
   signatureLocation: string
   signatureDate: Date
 
+  // Common specific properties
+  caption: string | null
+  content: string | null
+  additionalText: string | null
+
+  // Recall specific properties
+  judgementDate?: Date | null
+  divisionMeetingDate?: Date | null
+  divisionMeetingLocation?: string | null
+
+  // relations
   type: TypeModel
   category: CategoryModel
   status: StatusModel
@@ -80,15 +88,23 @@ export type AdvertCreateAttributes = {
   statusId?: string
   title: string
   legacyHtml?: string
-  createdBy: string // ex: Gunnar Gunnarsson or Lögfræðistofa (Gunnar Gunnarsson)
-  additionalText?: string | null
-  caption?: string | null
-  content?: string | null
+  createdBy: string
   signatureName: string
   signatureOnBehalfOf?: string | null
   signatureLocation: string
   signatureDate: Date
 
+  // Common specific properties
+  additionalText: string | null
+  caption: string | null
+  content: string | null
+
+  // Recall specific properties
+  judgementDate?: Date | null
+  divisionMeetingDate?: Date | null
+  divisionMeetingLocation?: string | null
+
+  // relations
   publications?: AdvertPublicationsCreateAttributes[]
   settlement?: SettlementCreateAttributes
 }
@@ -109,12 +125,13 @@ export enum AdvertModelScopes {
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
 @DefaultScope(() => ({
   include: [
-    { model: CaseModel.unscoped(), attributes: ['id', 'caseNumber'] },
     { model: StatusModel },
     { model: CategoryModel },
+    { model: CourtDistrictModel },
     { model: TypeModel },
     { model: UserModel },
     { model: AdvertPublicationModel },
+    { model: SettlementModel },
   ],
 }))
 @Scopes(() => ({
@@ -272,6 +289,27 @@ export class AdvertModel extends BaseModel<
     allowNull: true,
   })
   content!: string | null
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    defaultValue: null,
+  })
+  divisionMeetingLocation!: string | null
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    defaultValue: null,
+  })
+  divisionMeetingDate!: Date | null
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    defaultValue: null,
+  })
+  judgementDate!: Date | null
 
   @Column({
     type: DataType.BOOLEAN,
