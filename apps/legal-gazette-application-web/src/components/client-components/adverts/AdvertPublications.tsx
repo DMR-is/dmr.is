@@ -87,7 +87,8 @@ export const AdvertPublications = ({ advert }: Props) => {
                 html={html}
                 onVisiblityChange={(vis) => setToggle(vis)}
                 isVisible={
-                  pub.version === publicationRequest?.version && toggle
+                  (pub.version as unknown as GetAdvertPublicationVersionEnum) ===
+                    publicationRequest?.version && toggle
                 }
               />
             </>

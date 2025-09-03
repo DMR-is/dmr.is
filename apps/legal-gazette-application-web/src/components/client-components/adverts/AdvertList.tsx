@@ -71,7 +71,8 @@ export const AdvertList = ({ adverts }: Props) => {
       </Stack>
       {adverts.map((advert) => (
         <AdvertModal
-          advert={advert}
+          id={advert.id}
+          html=""
           isVisible={modalState[advert.id]}
           onVisiblityChange={(vis) =>
             setModalState((prev) => ({
