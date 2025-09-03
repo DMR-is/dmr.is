@@ -1,5 +1,8 @@
+import { isBase64 } from 'class-validator'
+
 import { InternalServerErrorException } from '@nestjs/common'
 
+import { getLogger } from '@dmr.is/logging'
 import { formatDate } from '@dmr.is/utils'
 
 import { AdvertModel, AdvertVersionEnum } from '../modules/advert/advert.model'
@@ -41,9 +44,16 @@ export const getAdvertHTMLMarkup = (
     ? `<div class="advert__additional"><p>${model.additionalText}</p></div>`
     : ''
 
-  const publishing = model.publications.find((pub) => pub.version === version)
+  const publishing = model.publications.find(
+    (pub) => pub.versionLetter === version,
+  )
 
   if (!publishing) {
+    const logger = getLogger('AdvertModel')
+    logger.debug('No publication exists with this version.', {
+      version: version,
+      advertId: model.id,
+    })
     throw new InternalServerErrorException(
       'No publication exists with this version.',
     )
@@ -133,7 +143,10 @@ export const getAdvertHTMLMarkup = (
       break
     }
     default: {
-      markup = `${model.content}`
+      markup =
+        isBase64(model.content) && model.content
+          ? `${Buffer.from(model.content, 'base64').toString('utf-8')}`
+          : `${model.content}`
     }
   }
 
@@ -153,7 +166,7 @@ export const getAdvertHTMLMarkup = (
       ${model.signatureOnBehalfOf ? `<p>${model.signatureOnBehalfOf}</p>` : ''}
       <p><strong>${model.signatureName}</strong></p>
     </div>
-    <p class="advertSerial">${model.case.caseNumber}${model.version}</p>
+    <p class="advertSerial">${model.case.caseNumber}${version}</p>
   </div>
   `
 }

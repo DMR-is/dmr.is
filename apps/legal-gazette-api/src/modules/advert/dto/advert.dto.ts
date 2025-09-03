@@ -26,6 +26,10 @@ import { AdvertVersionEnum } from '../advert.model'
 
 export class AdvertDto extends DetailedDto {
   @ApiProperty({ type: String })
+  @IsUUID()
+  id!: string
+
+  @ApiProperty({ type: String })
   @IsDateString()
   scheduledAt!: string
 

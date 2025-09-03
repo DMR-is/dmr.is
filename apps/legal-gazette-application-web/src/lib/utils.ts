@@ -4,10 +4,13 @@ import is from 'date-fns/locale/is'
 
 import { DateFormats, FormTypes } from './constants'
 
-export const formatDate = (date: string | Date): string => {
+export const formatDate = (
+  date: string | Date,
+  df: DateFormats = DateFormats.LONG,
+): string => {
   const dateToUse = typeof date === 'string' ? new Date(date) : date
 
-  return format(dateToUse, DateFormats.LONG, { locale: is })
+  return format(dateToUse, df, { locale: is })
 }
 
 export const isWeekday = (date: Date): boolean => {

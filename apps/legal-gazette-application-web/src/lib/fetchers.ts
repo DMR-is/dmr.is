@@ -2,6 +2,7 @@ import { getSession } from 'next-auth/react'
 
 import {
   CreateApplicationRequest,
+  GetAdvertPublicationRequest,
   GetMyApplicationsRequest,
   SubmitApplicationRequest,
   UpdateApplicationRequest,
@@ -13,6 +14,18 @@ const getClientWithSession = async () => {
   const session = await getSession()
 
   return getClient(session?.idToken as string)
+}
+
+export async function getAdvertPublication(args: GetAdvertPublicationRequest) {
+  const client = await getClientWithSession()
+
+  const results = await safeCall(() => client.getAdvertPublication(args))
+
+  if (results.error) {
+    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
+  }
+
+  return results.data
 }
 
 export async function updateApplication(args: UpdateApplicationRequest) {

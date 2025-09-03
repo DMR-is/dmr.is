@@ -16,6 +16,7 @@ import { AdvertDto } from '../../../gen/fetch'
 import { PageRoutes } from '../../../lib/constants'
 import { AddAdvertsToApplicationMenu } from '../adverts/AddAdvertsToApplicationMenu'
 import { AdvertList } from '../adverts/AdvertList'
+import { AdvertTable } from '../adverts/AdvertTable'
 
 type Props = {
   caseId: string
@@ -53,6 +54,7 @@ export const ApplicationSubmitted = ({ caseId: _caseId, adverts }: Props) => {
                   </GridColumn>
                 </GridRow>
               </Stack>
+              <AdvertTable adverts={adverts} />
               <AdvertList adverts={adverts} />
             </Stack>
           </Box>

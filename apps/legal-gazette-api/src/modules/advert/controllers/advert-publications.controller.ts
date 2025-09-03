@@ -1,14 +1,15 @@
-import { Controller, Inject, Param } from '@nestjs/common'
+import { Controller, Get, Inject, Param } from '@nestjs/common'
 import { ApiParam } from '@nestjs/swagger'
 
-import { Get } from '@dmr.is/decorators'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 
+import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { AdvertPublicationDetailedDto } from '../../advert-publications/dto/advert-publication.dto'
 import { AdvertVersionEnum } from '../advert.model'
 import { IAdvertService } from '../advert.service.interface'
 
 @Controller({
-  path: 'adverts/:advertId/:version',
+  path: 'adverts/:advertId',
   version: '1',
 })
 export class AdvertPublicationsController {
@@ -17,10 +18,14 @@ export class AdvertPublicationsController {
     private readonly advertService: IAdvertService,
   ) {}
 
-  @Get()
+  @Get(':version')
   @ApiParam({
     name: 'version',
     enum: AdvertVersionEnum,
+  })
+  @LGResponse({
+    operationId: 'getAdvertPublication',
+    type: AdvertPublicationDetailedDto,
   })
   async getPublication(
     @Param('advertId', new UUIDValidationPipe()) advertId: string,

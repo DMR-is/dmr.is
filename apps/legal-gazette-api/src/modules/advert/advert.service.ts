@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { PagingQuery } from '@dmr.is/shared/dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
+import { mapVersionToIndex } from '../../lib/utils'
 import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
 import { AdvertPublicationDetailedDto } from '../advert-publications/dto/advert-publication.dto'
 import { StatusIdEnum } from '../status/status.model'
@@ -36,7 +37,7 @@ export class AdvertService implements IAdvertService {
     const publicationPromise = this.advertPublicationModel.findOneOrThrow({
       where: {
         advertId: id,
-        version: version,
+        versionNumber: mapVersionToIndex(version),
       },
     })
 

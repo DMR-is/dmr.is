@@ -13,25 +13,26 @@ import {
   Stack,
 } from '@island.is/island-ui/core'
 
-import { AdvertDto } from '../../../gen/fetch'
-import { formatDate } from '../../../lib/utils'
 import * as styles from './advert-modal.css'
 
 type Props = {
-  advert: AdvertDto
+  id: string
+  html: string
   isVisible?: boolean
   onVisiblityChange?: (visible: boolean) => void
 }
 
 export const AdvertModal = ({
-  advert,
+  id,
+  html,
   isVisible = false,
   onVisiblityChange,
 }: Props) => {
   return (
     <ModalBase
+      initialVisibility={isVisible}
       isVisible={isVisible}
-      baseId={`advert-${advert.id}`}
+      baseId={id}
       onVisibilityChange={onVisiblityChange}
     >
       {({ closeModal }) => (
@@ -49,13 +50,7 @@ export const AdvertModal = ({
                         icon="close"
                       />
                     </Inline>
-                    <AdvertDisplay
-                      date={formatDate(advert.scheduledAt)}
-                      html={advert.html}
-                      number={`Útg nr:. ${advert.publicationNumber ?? 'Ekki til staðar'}`}
-                      title={advert.title}
-                      type={advert.type.title}
-                    />
+                    <AdvertDisplay html={html} />
                   </Stack>
                 </Box>
               </Box>

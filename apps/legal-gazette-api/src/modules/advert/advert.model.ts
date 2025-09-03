@@ -109,10 +109,12 @@ export enum AdvertModelScopes {
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
 @DefaultScope(() => ({
   include: [
+    { model: CaseModel.unscoped(), attributes: ['id', 'caseNumber'] },
     { model: StatusModel },
     { model: CategoryModel },
     { model: TypeModel },
     { model: UserModel },
+    { model: AdvertPublicationModel },
   ],
 }))
 @Scopes(() => ({
@@ -372,6 +374,7 @@ export class AdvertModel extends BaseModel<
       : model.publications[model.publications.length - 1].scheduledAt
 
     return {
+      id: model.id,
       createdAt: model.createdAt.toISOString(),
       updatedAt: model.updatedAt.toISOString(),
       deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
