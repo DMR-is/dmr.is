@@ -46,7 +46,6 @@ import {
 
 type AdvertAttributes = {
   caseId: string
-  courtDistrictId: string | null
   islandIsApplicationId: string | null
   typeId: string
   categoryId: string
@@ -67,9 +66,11 @@ type AdvertAttributes = {
   additionalText: string | null
 
   // Recall specific properties
+  courtDistrictId: string | null
   judgementDate?: Date | null
   divisionMeetingDate?: Date | null
   divisionMeetingLocation?: string | null
+  settlementId?: string | null
 
   // relations
   type: TypeModel
@@ -81,7 +82,6 @@ type AdvertAttributes = {
 
 export type AdvertCreateAttributes = {
   caseId?: string
-  courtDistrictId?: string | null
   islandIsApplicationId?: string | null
   typeId: string
   categoryId: string
@@ -100,6 +100,8 @@ export type AdvertCreateAttributes = {
   content: string | null
 
   // Recall specific properties
+  courtDistrictId?: string | null
+  settlementId?: string | null
   judgementDate?: Date | null
   divisionMeetingDate?: Date | null
   divisionMeetingLocation?: string | null
@@ -191,6 +193,14 @@ export class AdvertModel extends BaseModel<
   })
   @ForeignKey(() => CourtDistrictModel)
   courtDistrictId!: string | null
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    defaultValue: null,
+  })
+  @ForeignKey(() => SettlementModel)
+  settlementId!: string | null
 
   @Column({
     type: DataType.UUID,
@@ -330,7 +340,7 @@ export class AdvertModel extends BaseModel<
   @BelongsTo(() => StatusModel)
   status!: StatusModel
 
-  @HasOne(() => SettlementModel)
+  @BelongsTo(() => SettlementModel)
   settlement?: SettlementModel
 
   @BelongsTo(() => CourtDistrictModel)

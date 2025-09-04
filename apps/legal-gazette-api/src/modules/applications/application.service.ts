@@ -209,24 +209,36 @@ export class ApplicationService implements IApplicationService {
       },
     })
 
-    await this.advertModel.create({
-      caseId: application.caseId,
-      categoryId:
-        application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
-          ? CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING
-          : CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING,
-      createdBy: user.fullName,
-      signatureName: body.signatureName,
-      signatureDate: new Date(body.signatureDate),
-      signatureLocation: body.signatureLocation,
-      signatureOnBehalfOf: body.signatureOnBehalfOf,
-      typeId: TypeIdEnum.DIVISION_MEETING,
-      title: `Skiptafundur - ${application.settlementName}`,
-      publications: [
-        {
-          scheduledAt: new Date(body.meetingDate),
-        },
-      ],
+    const settlement = await this.advertModel.unscoped().findOneOrThrow({
+      attributes: ['id', 'settlementId'],
+      where: {
+        caseId: application.caseId,
+        settlementId: { [Op.not]: null },
+      },
+    })
+
+    const newAdvert = await this.advertModel.create(
+      {
+        caseId: application.caseId,
+        categoryId:
+          application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
+            ? CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING
+            : CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING,
+        createdBy: user.fullName,
+        signatureName: body.signatureName,
+        signatureDate: new Date(body.signatureDate),
+        signatureLocation: body.signatureLocation,
+        signatureOnBehalfOf: body.signatureOnBehalfOf,
+        typeId: TypeIdEnum.DIVISION_MEETING,
+        title: `Skiptafundur - ${application.settlementName}`,
+        settlementId: settlement.settlementId,
+      },
+      { returning: ['id'] },
+    )
+
+    await this.publicationModel.create({
+      scheduledAt: new Date(body.meetingDate),
+      advertId: newAdvert.id,
     })
   }
 

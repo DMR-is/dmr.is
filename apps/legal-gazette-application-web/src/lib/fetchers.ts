@@ -1,6 +1,7 @@
 import { getSession } from 'next-auth/react'
 
 import {
+  AddDivisionMeetingAdvertToApplicationRequest,
   CreateApplicationRequest,
   GetAdvertPublicationRequest,
   GetMyApplicationsRequest,
@@ -14,6 +15,22 @@ const getClientWithSession = async () => {
   const session = await getSession()
 
   return getClient(session?.idToken as string)
+}
+
+export async function addDivisionMeeting(
+  args: AddDivisionMeetingAdvertToApplicationRequest,
+) {
+  const client = await getClientWithSession()
+
+  const results = await safeCall(() =>
+    client.addDivisionMeetingAdvertToApplication(args),
+  )
+
+  if (results.error) {
+    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
+  }
+
+  return results.data
 }
 
 export async function getAdvertPublication(args: GetAdvertPublicationRequest) {

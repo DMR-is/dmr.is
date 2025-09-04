@@ -14,24 +14,20 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { AdvertDto } from '../../../gen/fetch'
+import { AdvertDto, ApplicationTypeEnum } from '../../../gen/fetch'
+import { useApplicationContext } from '../../../hooks/useApplicationContext'
 import { PageRoutes } from '../../../lib/constants'
 import { AddAdvertsToApplicationMenu } from '../adverts/AddAdvertsToApplicationMenu'
 import { AdvertList } from '../adverts/AdvertList'
 import { AdvertTable } from '../adverts/AdvertTable'
 
 type Props = {
-  caseId: string
   adverts: AdvertDto[]
-  isCommon?: boolean
 }
 
-export const ApplicationSubmitted = ({
-  caseId: _caseId,
-  adverts,
-  isCommon = false,
-}: Props) => {
-  const [showAsCards, setShowAsCards] = useState(isCommon)
+export const ApplicationSubmitted = ({ adverts }: Props) => {
+  const [showAsCards, setShowAsCards] = useState(false)
+  const { applicationType } = useApplicationContext()
   return (
     <GridContainer>
       <GridRow>
@@ -55,7 +51,7 @@ export const ApplicationSubmitted = ({
                       aliqua.
                     </Text>
                   </GridColumn>
-                  {!isCommon && (
+                  {applicationType !== ApplicationTypeEnum.COMMON && (
                     <GridColumn span={['12/12', '3/12']}>
                       <Inline align="right">
                         <AddAdvertsToApplicationMenu />

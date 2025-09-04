@@ -128,7 +128,7 @@ export const getAdvertHTMLMarkup = (
       }
 
       markup = `
-          <p>Með úrskurði ${model.courtDistrict?.title} uppkveðnum ${formatDate(model.judgementDate)} var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:</p>
+          <p>Með úrskurði ${model.courtDistrict?.title} uppkveðnum ${formatDate(model.judgementDate, 'dd. MMMM yyyy')} var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:</p>
           <table>
             <tbody>
               <tr>
