@@ -7,6 +7,7 @@ import { Input } from '@island.is/island-ui/core'
 type Props = UseControllerProps & {
   label?: string
   required?: boolean
+  textArea?: boolean
   onChange?: (value: string) => void
   onBlur?: (value: string) => void
 }
@@ -41,6 +42,7 @@ export const InputController = (props: Props) => {
       label={label}
       backgroundColor="blue"
       size="sm"
+      textarea={props.textArea}
       defaultValue={props.defaultValue}
       errorMessage={error ? error.message : undefined}
       required={required}

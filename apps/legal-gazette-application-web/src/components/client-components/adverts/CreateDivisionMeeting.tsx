@@ -49,6 +49,7 @@ export const CreateDivisionMeeting = ({
 
   const [createState, setCreateState] =
     useState<AddDivisionMeetingForApplicationDto>({
+      additionalText: '',
       meetingDate: '',
       meetingLocation: '',
       signatureDate: '',
@@ -90,6 +91,24 @@ export const CreateDivisionMeeting = ({
                       </Inline>
                     </Stack>
                     <Stack space={[1, 2]}>
+                      <GridRow>
+                        <GridColumn span="12/12">
+                          <Input
+                            name="additionalText"
+                            label="Frjáls texti"
+                            textarea
+                            backgroundColor="blue"
+                            rows={4}
+                            size="sm"
+                            onChange={(e) =>
+                              setCreateState({
+                                ...createState,
+                                additionalText: e.target.value,
+                              })
+                            }
+                          />
+                        </GridColumn>
+                      </GridRow>
                       <GridRow rowGap={[1, 2]}>
                         <GridColumn span="12/12">
                           <Text variant="h4">Skiptafundur</Text>
@@ -213,6 +232,7 @@ export const CreateDivisionMeeting = ({
                                   {
                                     onSuccess: () => {
                                       setCreateState({
+                                        additionalText: '',
                                         meetingDate: '',
                                         meetingLocation: '',
                                         signatureDate: '',

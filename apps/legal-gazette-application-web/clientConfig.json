@@ -3087,7 +3087,8 @@
           "signatureLocation": { "type": "string" },
           "signatureDate": { "type": "string" },
           "signatureName": { "type": "string" },
-          "signatureOnBehalfOf": { "type": "string" }
+          "signatureOnBehalfOf": { "type": "string" },
+          "additionalText": { "type": "string" }
         },
         "required": [
           "meetingDate",

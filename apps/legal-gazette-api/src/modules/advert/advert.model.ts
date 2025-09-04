@@ -364,7 +364,8 @@ export class AdvertModel extends BaseModel<
       return getAdvertHTMLMarkup(this, version)
     } catch (error) {
       const logger = getLogger('AdvertModel')
-      logger.error('Error generating HTML markup', { error })
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      logger.error('Error generating HTML markup,', { message })
       throw new InternalServerErrorException()
     }
   }

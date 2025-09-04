@@ -150,6 +150,74 @@ export const getAdvertHTMLMarkup = (
           `
       break
     }
+    case CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING: {
+      if (!model.settlement) {
+        throw new Error('Settlement information is missing')
+      }
+
+      if (!model.divisionMeetingDate || !model.divisionMeetingLocation) {
+        throw new Error('Division meeting information is missing')
+      }
+
+      markup = `
+        <p>Skiptafundur í eftirtöldu þrotabúi verður haldinn á skrifstofu skiptastjóra að ${model.divisionMeetingLocation} á neðangreindum tíma. Komi ekki fram ábendingar um eignir í búinu í síðasta lagi á fundinum, má vænta þess að skiptum verði lokið þar á grundvelli 155. gr. laga nr. 21/1991.</p>
+        <table>
+          <tbody>
+            <tr>
+              <td><strong>Nafn bús:</strong></td>
+              <td><strong>Skiptafundur:</strong></td>
+            </tr>
+            <tr>
+              <td>
+                ${model.settlement.settlementName},<br />
+                kt: ${model.settlement.settlementNationalId},<br />
+                ${model.settlement.settlementAddress}</td>
+              <td>
+                ${formatDate(model.divisionMeetingDate, 'dd. MMMM yyyy')},<br />
+                kl. ${formatDate(model.divisionMeetingDate, 'HH:mm')}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      `
+      break
+    }
+    case CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING: {
+      if (!model.settlement || !model.settlement.settlementDateOfDeath) {
+        throw new Error('Settlement information is missing')
+      }
+
+      if (!model.divisionMeetingDate || !model.divisionMeetingLocation) {
+        throw new Error('Division meeting information is missing')
+      }
+
+      markup = `
+        <p>Skiptafundur í eftirtöldu dánarbúi verður haldinn á skrifstofu skiptastjóra að ${model.divisionMeetingLocation} á neðangreindum tíma.</p>
+        <table>
+          <tbody>
+            <tr>
+              <td><strong>Dánarbú, nafn:</strong></td>
+              <td><strong>Skiptafundur:</strong></td>
+            </tr>
+            <tr>
+              <td>${model.settlement.settlementName}</td>
+              <td>${formatDate(model.divisionMeetingDate, 'dd. MMMM yyyy')}</td>
+            </tr>
+            <tr>
+              <td>kt: ${model.settlement.settlementNationalId}</td>
+              <td>${formatDate(model.divisionMeetingDate, 'HH:mm')}</td>
+            </tr>
+            <tr>
+              <td>síðasta heimilisfang:</td>
+            </tr>
+            <tr>
+              <td>${model.settlement.settlementAddress}</td>
+            </tr>
+          </tbody>
+        </table>
+      `
+      break
+    }
     default: {
       markup =
         isBase64(model.content) && model.content

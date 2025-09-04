@@ -1,4 +1,4 @@
-import { IsDateString, IsString } from 'class-validator'
+import { IsDateString, IsOptional, IsString } from 'class-validator'
 
 import { ApiProperty, IntersectionType, PartialType } from '@nestjs/swagger'
 
@@ -137,6 +137,12 @@ export class AddDivisionMeetingForApplicationDto {
   signatureName!: string
 
   @ApiProperty({ type: String, required: false })
+  @IsOptional()
   @IsString()
   signatureOnBehalfOf?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  additionalText?: string
 }
