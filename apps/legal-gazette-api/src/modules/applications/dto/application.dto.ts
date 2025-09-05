@@ -156,6 +156,10 @@ export class AddDivisionEndingForApplicationDto extends OmitType(
   AddDivisionMeetingForApplicationDto,
   ['meetingDate', 'meetingLocation'],
 ) {
+  @ApiProperty({ type: String })
+  @IsDateString()
+  scheduledAt!: string
+
   @ApiProperty({ type: Number })
   @IsNumber()
   declaredClaims!: number

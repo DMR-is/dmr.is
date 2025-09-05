@@ -275,24 +275,36 @@ export class ApplicationService implements IApplicationService {
       },
     })
 
+    if (!advertSettlement.settlementId) {
+      throw new NotFoundException('Settlement not found for application')
+    }
+
     const settlement = await this.settlementModel.findByPkOrThrow(
-      advertSettlement.id,
+      advertSettlement.settlementId,
     )
 
     await settlement.update({ settlementDeclaredClaims: body.declaredClaims })
 
-    await this.advertModel.create({
-      caseId: application.caseId,
-      categoryId: CategoryDefaultIdEnum.DIVISION_ENDING,
-      createdBy: user.fullName,
-      signatureName: body.signatureName,
-      signatureDate: new Date(body.signatureDate),
-      signatureLocation: body.signatureLocation,
-      signatureOnBehalfOf: body.signatureOnBehalfOf,
-      typeId: TypeIdEnum.DIVISION_ENDING,
-      title: `Skiptafundur - ${application.settlementName}`,
-      additionalText: body.additionalText,
-      settlementId: settlement.id,
+    const newAdvert = await this.advertModel.create(
+      {
+        caseId: application.caseId,
+        categoryId: CategoryDefaultIdEnum.DIVISION_ENDING,
+        createdBy: user.fullName,
+        signatureName: body.signatureName,
+        signatureDate: new Date(body.signatureDate),
+        signatureLocation: body.signatureLocation,
+        signatureOnBehalfOf: body.signatureOnBehalfOf,
+        typeId: TypeIdEnum.DIVISION_ENDING,
+        title: `Skiptalok - ${application.settlementName}`,
+        additionalText: body.additionalText,
+        settlementId: settlement.id,
+      },
+      { returning: ['id'] },
+    )
+
+    await this.publicationModel.create({
+      scheduledAt: new Date(body.scheduledAt),
+      advertId: newAdvert.id,
     })
 
     await application.update({ status: ApplicationStatusEnum.FINISHED })

@@ -3122,12 +3122,14 @@
           "signatureName": { "type": "string" },
           "signatureOnBehalfOf": { "type": "string" },
           "additionalText": { "type": "string" },
+          "scheduledAt": { "type": "string" },
           "declaredClaims": { "type": "number" }
         },
         "required": [
           "signatureLocation",
           "signatureDate",
           "signatureName",
+          "scheduledAt",
           "declaredClaims"
         ]
       }
