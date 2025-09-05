@@ -19,9 +19,10 @@ import * as styles from './advert.css'
 
 type Props = {
   advert: AdvertDto
+  detailed?: boolean
 }
 
-export const AdvertPublications = ({ advert }: Props) => {
+export const AdvertPublications = ({ advert, detailed = false }: Props) => {
   const [html, setHTML] = useState<string>('')
   const [toggle, setToggle] = useState(false)
 
@@ -65,8 +66,13 @@ export const AdvertPublications = ({ advert }: Props) => {
                   outlined: false,
                 }}
                 headingVariant="h4"
-                heading={`Birting ${pub.version}`}
+                heading={detailed ? advert.title : `Birting ${pub.version}`}
                 key={i}
+                eyebrow={
+                  detailed
+                    ? `${advert.type.title} - ${advert.category.title} - Birting ${pub.version}`
+                    : undefined
+                }
                 cta={{
                   label: 'Opna auglýsingu',
                   icon: 'open',

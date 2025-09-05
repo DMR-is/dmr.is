@@ -40,6 +40,7 @@ export const getAdvertHTMLMarkup = (
   model: AdvertModel,
   version: AdvertVersionEnum,
 ) => {
+  const logger = getLogger('AdvertModel')
   const additionalMarkup = model.additionalText
     ? `<div class="advert__additional"><p>${model.additionalText}</p></div>`
     : ''
@@ -49,7 +50,6 @@ export const getAdvertHTMLMarkup = (
   )
 
   if (!publishing) {
-    const logger = getLogger('AdvertModel')
     logger.debug('No publication exists with this version.', {
       version: version,
       advertId: model.id,
@@ -71,8 +71,16 @@ export const getAdvertHTMLMarkup = (
         throw new Error('Settlement information is missing')
       }
 
+      if (!model.judgementDate) {
+        throw new Error('Judgement date is missing')
+      }
+
+      if (!model.divisionMeetingLocation || !model.divisionMeetingDate) {
+        throw new Error('Division meeting information is missing')
+      }
+
       markup = `
-          <p>Með úrskurði héraðsdóms Reykjaness uppkveðnum *DAGSETNINGU VANTAR* var eftirtalið bú tekið til gjaldþrotaskipta. Sama dag var undirritaður skipaður skiptastjóri í búinu. Frestdagur við gjaldþrotaskiptin er tilgreindur við nafn viðkomandi bús.</p>
+          <p>Með úrskurði ${model.courtDistrict?.title} uppkveðnum ${formatDate(model.judgementDate, 'dd. MMMM yyyy')} var eftirtalið bú tekið til gjaldþrotaskipta. Sama dag var undirritaður skipaður skiptastjóri í búinu. Frestdagur við gjaldþrotaskiptin er tilgreindur við nafn viðkomandi bús.</p>
           <table>
             <tbody>
               <tr>
@@ -86,18 +94,18 @@ export const getAdvertHTMLMarkup = (
                   <br />
                   kt. ${model.settlement?.settlementNationalId},
                   <br />
-                  ${model.settlement?.settlementAddress},
+                  ${model.settlement?.settlementAddress}
                   <br />
                 </td>
                 <td align="left">
                   ${formatDate(model.settlement.settlementDeadline, 'dd. MMMM yyyy')}
                 </td>
                 <td align="left">
-                  miðvikudaginn
+                  ${formatDate(model.divisionMeetingDate, 'EEEE')}
                   <br />
-                  17. september 2025,
+                  ${formatDate(model.divisionMeetingDate, 'dd. MMMM yyyy')}
                   <br />
-                  kl. 14.00
+                  kl. ${formatDate(model.divisionMeetingDate, 'HH:mm')}
                   <br />
                 </td>
               </tr>
@@ -115,8 +123,12 @@ export const getAdvertHTMLMarkup = (
         throw new Error('Settlement information is missing')
       }
 
+      if (!model.judgementDate) {
+        throw new Error('Judgement date is missing')
+      }
+
       markup = `
-          <p>Með úrskurði héraðsdóms Reykjavíkur uppkveðnum *DAGSETNINGU VANTAR* var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:</p>
+          <p>Með úrskurði ${model.courtDistrict?.title} uppkveðnum ${formatDate(model.judgementDate, 'dd. MMMM yyyy')} var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:</p>
           <table>
             <tbody>
               <tr>
@@ -124,22 +136,86 @@ export const getAdvertHTMLMarkup = (
                 <td><strong>Dánardagur:</strong></td>
               </tr>
               <tr>
-                <td>${model.settlement.settlementName}</td>
+                <td>
+                  ${model.settlement.settlementName}, <br />
+                  kt. ${model.settlement.settlementNationalId}, <br />
+                  síðasta heimilisfang:<br />
+                  ${model.settlement.settlementAddress}
+                </td>
                 <td>${formatDate(model.settlement.settlementDateOfDeath, 'dd. MMMM yyyy')}</td>
-              </tr>
-              <tr>
-                <td>kt. ${model.settlement.settlementNationalId},</td>
-              </tr>
-              <tr>
-                <td>síðasta heimilisfang:</td>
-              </tr>
-              <tr>
-                <td>${model.settlement.settlementAddress}</td>
               </tr>
             </tbody>
           </table>
           <p>Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur framangreindu dánarbúi eða telja til eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu þessarar innköllunar. Kröfulýsingar skulu sendar skiptastjóra að ${model.settlement.liquidatorLocation}.</p>
           `
+      break
+    }
+    case CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING: {
+      if (!model.settlement) {
+        throw new Error('Settlement information is missing')
+      }
+
+      if (!model.divisionMeetingDate || !model.divisionMeetingLocation) {
+        throw new Error('Division meeting information is missing')
+      }
+
+      markup = `
+        <p>Skiptafundur í eftirtöldu þrotabúi verður haldinn á skrifstofu skiptastjóra að ${model.divisionMeetingLocation} á neðangreindum tíma. Komi ekki fram ábendingar um eignir í búinu í síðasta lagi á fundinum, má vænta þess að skiptum verði lokið þar á grundvelli 155. gr. laga nr. 21/1991.</p>
+        <table>
+          <tbody>
+            <tr>
+              <td><strong>Nafn bús:</strong></td>
+              <td><strong>Skiptafundur:</strong></td>
+            </tr>
+            <tr>
+              <td>
+                ${model.settlement.settlementName},<br />
+                kt: ${model.settlement.settlementNationalId},<br />
+                ${model.settlement.settlementAddress}</td>
+              <td>
+                ${formatDate(model.divisionMeetingDate, 'dd. MMMM yyyy')},<br />
+                kl. ${formatDate(model.divisionMeetingDate, 'HH:mm')}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      `
+      break
+    }
+    case CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING: {
+      if (!model.settlement || !model.settlement.settlementDateOfDeath) {
+        throw new Error('Settlement information is missing')
+      }
+
+      if (!model.divisionMeetingDate || !model.divisionMeetingLocation) {
+        throw new Error('Division meeting information is missing')
+      }
+
+      markup = `
+        <p>Skiptafundur í eftirtöldu dánarbúi verður haldinn á skrifstofu skiptastjóra að ${model.divisionMeetingLocation} á neðangreindum tíma.</p>
+        <table>
+          <tbody>
+            <tr>
+              <td><strong>Dánarbú, nafn:</strong></td>
+              <td><strong>Skiptafundur:</strong></td>
+            </tr>
+            <tr>
+              <td>${model.settlement.settlementName}</td>
+              <td>${formatDate(model.divisionMeetingDate, 'dd. MMMM yyyy')}</td>
+            </tr>
+            <tr>
+              <td>kt: ${model.settlement.settlementNationalId}</td>
+              <td>${formatDate(model.divisionMeetingDate, 'HH:mm')}</td>
+            </tr>
+            <tr>
+              <td>síðasta heimilisfang:</td>
+            </tr>
+            <tr>
+              <td>${model.settlement.settlementAddress}</td>
+            </tr>
+          </tbody>
+        </table>
+      `
       break
     }
     default: {
@@ -151,7 +227,7 @@ export const getAdvertHTMLMarkup = (
   }
 
   return `
-  <div class="advert">
+  <div class="advert legal-gazette">
     <p class="advertSerial">${publishing.publishedAt ? `Útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}` : `Áætlaður útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}`}</p>
     <h1 class="advertHeading">${model.title}</h1>
 
@@ -166,7 +242,7 @@ export const getAdvertHTMLMarkup = (
       ${model.signatureOnBehalfOf ? `<p>${model.signatureOnBehalfOf}</p>` : ''}
       <p><strong>${model.signatureName}</strong></p>
     </div>
-    <p class="advertSerial">${model.case.caseNumber}${version}</p>
+    ${model.publicationNumber ? `<p class="advertSerial">${model.publicationNumber}${version}</p>` : `<p class="advertSerial">(Reiknast við útgáfu)${version}</p>`}
   </div>
   `
 }

@@ -47,6 +47,7 @@ export const RecallAdvertFields = () => {
         </GridColumn>
         <GridColumn span="12/12">
           <InputController
+            textArea
             name={RecallFormFields.ADDITIONAL_TEXT}
             label="Frjáls texti"
             onBlur={(val) => trigger({ additionalText: val })}

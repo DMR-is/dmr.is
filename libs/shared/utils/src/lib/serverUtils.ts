@@ -643,7 +643,13 @@ export const getPublicationTemplate = (
   return `<p align="center" style="margin-top: 1.5em;"><strong>${department} — Útgáfudagur: ${formatted}</strong></p>`
 }
 
-export const DateFormats = ['dd.MM.yyyy', 'dd. MMMM yyyy', 'HH:mm'] as const
+export const DateFormats = [
+  'dd.MM.yyyy',
+  'dd. MMMM yyyy',
+  'HH:mm',
+  'MMMM',
+  'EEEE',
+] as const
 
 export const formatDate = (
   date: string | Date,

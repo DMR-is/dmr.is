@@ -1,10 +1,4 @@
-import {
-  BelongsTo,
-  Column,
-  DataType,
-  DefaultScope,
-  ForeignKey,
-} from 'sequelize-typescript'
+import { Column, DataType, HasMany } from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
@@ -29,31 +23,11 @@ export type SettlementCreateAttributes = Omit<
   advertId?: string
 }
 
-@DefaultScope(() => ({
-  attributes: [
-    'id',
-    'advertId',
-    'liquidatorName',
-    'liquidatorLocation',
-    'settlementName',
-    'settlementNationalId',
-    'settlementAddress',
-    'settlementDeadline',
-    'settlementDateOfDeath',
-  ],
-}))
 @BaseTable({ tableName: LegalGazetteModels.SETTLEMENT })
 export class SettlementModel extends BaseModel<
   SettlementAttributes,
   SettlementCreateAttributes
 > {
-  @Column({
-    type: DataType.UUID,
-    allowNull: false,
-  })
-  @ForeignKey(() => AdvertModel)
-  advertId!: string
-
   @Column({
     type: DataType.TEXT,
     allowNull: false,
@@ -103,8 +77,8 @@ export class SettlementModel extends BaseModel<
   })
   settlementDateOfDeath!: Date | null
 
-  @BelongsTo(() => AdvertModel)
-  advert!: AdvertModel
+  @HasMany(() => AdvertModel)
+  adverts!: AdvertModel[]
 
   static fromModel(model: SettlementModel): SettlementDto {
     return {

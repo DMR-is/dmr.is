@@ -46,7 +46,6 @@ import {
 
 type AdvertAttributes = {
   caseId: string
-  courtDistrictId: string | null
   islandIsApplicationId: string | null
   typeId: string
   categoryId: string
@@ -56,14 +55,24 @@ type AdvertAttributes = {
   createdBy: string
   legacyHtml: string | null
   paid: boolean
-  additionalText: string | null
-  caption: string | null
-  content: string | null
   signatureName: string
   signatureOnBehalfOf: string | null
   signatureLocation: string
   signatureDate: Date
 
+  // Common specific properties
+  caption: string | null
+  content: string | null
+  additionalText: string | null
+
+  // Recall specific properties
+  courtDistrictId: string | null
+  judgementDate?: Date | null
+  divisionMeetingDate?: Date | null
+  divisionMeetingLocation?: string | null
+  settlementId?: string | null
+
+  // relations
   type: TypeModel
   category: CategoryModel
   status: StatusModel
@@ -73,22 +82,31 @@ type AdvertAttributes = {
 
 export type AdvertCreateAttributes = {
   caseId?: string
-  courtDistrictId?: string | null
   islandIsApplicationId?: string | null
   typeId: string
   categoryId: string
   statusId?: string
   title: string
   legacyHtml?: string
-  createdBy: string // ex: Gunnar Gunnarsson or Lögfræðistofa (Gunnar Gunnarsson)
-  additionalText?: string | null
-  caption?: string | null
-  content?: string | null
+  createdBy: string
   signatureName: string
   signatureOnBehalfOf?: string | null
   signatureLocation: string
   signatureDate: Date
 
+  // Common specific properties
+  additionalText: string | null
+  caption: string | null
+  content: string | null
+
+  // Recall specific properties
+  courtDistrictId?: string | null
+  settlementId?: string | null
+  judgementDate?: Date | null
+  divisionMeetingDate?: Date | null
+  divisionMeetingLocation?: string | null
+
+  // relations
   publications?: AdvertPublicationsCreateAttributes[]
   settlement?: SettlementCreateAttributes
 }
@@ -109,12 +127,13 @@ export enum AdvertModelScopes {
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
 @DefaultScope(() => ({
   include: [
-    { model: CaseModel.unscoped(), attributes: ['id', 'caseNumber'] },
     { model: StatusModel },
     { model: CategoryModel },
+    { model: CourtDistrictModel },
     { model: TypeModel },
     { model: UserModel },
     { model: AdvertPublicationModel },
+    { model: SettlementModel },
   ],
 }))
 @Scopes(() => ({
@@ -174,6 +193,14 @@ export class AdvertModel extends BaseModel<
   })
   @ForeignKey(() => CourtDistrictModel)
   courtDistrictId!: string | null
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    defaultValue: null,
+  })
+  @ForeignKey(() => SettlementModel)
+  settlementId!: string | null
 
   @Column({
     type: DataType.UUID,
@@ -274,6 +301,27 @@ export class AdvertModel extends BaseModel<
   content!: string | null
 
   @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    defaultValue: null,
+  })
+  divisionMeetingLocation!: string | null
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    defaultValue: null,
+  })
+  divisionMeetingDate!: Date | null
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    defaultValue: null,
+  })
+  judgementDate!: Date | null
+
+  @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
     defaultValue: false,
@@ -292,7 +340,7 @@ export class AdvertModel extends BaseModel<
   @BelongsTo(() => StatusModel)
   status!: StatusModel
 
-  @HasOne(() => SettlementModel)
+  @BelongsTo(() => SettlementModel)
   settlement?: SettlementModel
 
   @BelongsTo(() => CourtDistrictModel)
@@ -316,7 +364,8 @@ export class AdvertModel extends BaseModel<
       return getAdvertHTMLMarkup(this, version)
     } catch (error) {
       const logger = getLogger('AdvertModel')
-      logger.error('Error generating HTML markup', { error })
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      logger.error('Error generating HTML markup,', { message })
       throw new InternalServerErrorException()
     }
   }
