@@ -187,6 +187,116 @@ export class UserService implements IUserService {
 
   @LogAndHandle()
   @Transactional()
+  async createUserFromInvolvedParty(
+    body: {
+      name: string
+      nationalId: string
+    },
+    involvedPartyId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetUserResponse>> {
+    // Create as 'Innsendandi'
+    const userRole = await this.userRoleModel.findOne({
+      where: {
+        title: UserRoleEnum.User,
+      },
+    })
+
+    if (!userRole) {
+      this.logger.warn('User role not found', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Could not create user',
+      })
+    }
+
+    const roleId = userRole.id
+
+    const newUser = await this.userModel.create(
+      {
+        nationalId: body.nationalId,
+        firstName: body.name,
+        lastName: '',
+        displayName: body.name,
+        email: 'empty',
+        roleId: roleId,
+      },
+      {
+        returning: ['id'],
+        transaction,
+      },
+    )
+
+    const userInvolvedParties = [
+      {
+        userId: newUser.id,
+        involvedPartyId,
+      },
+    ]
+
+    await this.userInvolvedPartiesModel.bulkCreate(userInvolvedParties, {
+      transaction,
+    })
+
+    const withAssociations = await this.userModel.findByPk(newUser.id, {
+      transaction,
+    })
+
+    if (!withAssociations) {
+      this.logger.warn('User not found after creation', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        newUserId: newUser.id,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Could not create user',
+      })
+    }
+
+    const migrated = userMigrate(withAssociations)
+
+    return ResultWrapper.ok({ user: migrated })
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  @CacheEvict(0)
+  async associateUserToInvolvedParty(
+    userId: string,
+    involvedPartyId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const associationUpdate = await this.userInvolvedPartiesModel.create(
+      {
+        userId,
+        involvedPartyId,
+      },
+      {
+        transaction,
+      },
+    )
+
+    if (!associationUpdate) {
+      this.logger.warn('associationUpdate failed', {
+        context: LOGGING_CONTEXT,
+        category: LOGGING_CATEGORY,
+        userId,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Could not associate user to party',
+      })
+    }
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
   @CacheEvict(0)
   async updateUser(
     userId: string,

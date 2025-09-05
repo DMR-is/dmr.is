@@ -66,6 +66,7 @@ import {
   S3UploadFilesResponse,
   UserDto,
 } from '@dmr.is/shared/dto'
+import { PartyGuard } from '../guards/party.guard'
 import { ResultWrapper } from '@dmr.is/types'
 
 import 'multer'
@@ -74,7 +75,7 @@ import 'multer'
   path: 'applications',
   version: '1',
 })
-@UseGuards(TokenJwtAuthGuard, RoleGuard)
+@UseGuards(TokenJwtAuthGuard, PartyGuard, RoleGuard)
 @ApiBearerAuth()
 @Roles(UserRoleEnum.Admin, UserRoleEnum.Editor, UserRoleEnum.User)
 export class ApplicationController {
