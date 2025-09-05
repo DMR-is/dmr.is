@@ -29,6 +29,7 @@ export interface IUserService {
 
   getInvolvedPartyByNationalId(
     nationalId: string,
+    name?: string,
   ): Promise<ResultWrapper<GetInvoledPartyByNationalIdResponse>>
 
   getRolesByUser(
@@ -47,12 +48,24 @@ export interface IUserService {
     body: CreateUserDto,
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetUserResponse>>
+
+  createUserFromInvolvedParty(
+    body: {
+      name: string
+      nationalId: string
+    },
+    involvedPartyId: string,
+  ): Promise<ResultWrapper<GetUserResponse>>
   updateUser(
     userId: string,
     body: UpdateUserDto,
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetUserResponse>>
   deleteUser(userId: string, currentUser: UserDto): Promise<ResultWrapper>
+  associateUserToInvolvedParty(
+    userId: string,
+    involvedPartyId: string,
+  ): Promise<ResultWrapper>
 }
 
 export const IUserService = Symbol('IUserService')
