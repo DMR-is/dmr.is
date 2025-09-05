@@ -1,6 +1,7 @@
 import { getSession } from 'next-auth/react'
 
 import {
+  AddDivisionEndingAdvertToApplicationRequest,
   AddDivisionMeetingAdvertToApplicationRequest,
   CreateApplicationRequest,
   GetAdvertPublicationRequest,
@@ -24,6 +25,22 @@ export async function addDivisionMeeting(
 
   const results = await safeCall(() =>
     client.addDivisionMeetingAdvertToApplication(args),
+  )
+
+  if (results.error) {
+    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
+  }
+
+  return results.data
+}
+
+export async function addDivisionEnding(
+  args: AddDivisionEndingAdvertToApplicationRequest,
+) {
+  const client = await getClientWithSession()
+
+  const results = await safeCall(() =>
+    client.addDivisionEndingAdvertToApplication(args),
   )
 
   if (results.error) {
