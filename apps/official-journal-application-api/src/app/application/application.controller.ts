@@ -66,8 +66,9 @@ import {
   S3UploadFilesResponse,
   UserDto,
 } from '@dmr.is/shared/dto'
-import { PartyGuard } from '../guards/party.guard'
 import { ResultWrapper } from '@dmr.is/types'
+
+import { PartyGuard } from '../guards/party.guard'
 
 import 'multer'
 
