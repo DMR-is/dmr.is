@@ -32,8 +32,12 @@ export class PartyGuard implements CanActivate {
 
     try {
       // User is acting on behalf of involved party
+      // Try by name first,
       const involvedPartyLookup =
-        await this.userService.getInvolvedPartyByNationalId(req.user.nationalId)
+        await this.userService.getInvolvedPartyByNationalId(
+          req.user.nationalId,
+          req.user.name,
+        )
 
       if (!involvedPartyLookup.result.ok) {
         this.logger.warn('Could not find involved party', {
@@ -62,7 +66,7 @@ export class PartyGuard implements CanActivate {
         const createdUser = await this.userService.createUserFromInvolvedParty(
           {
             nationalId: req.user.nationalId,
-            name: req.user.name,
+            name: req.user?.actor.name,
           },
           resParty.involvedParty.id,
         )
