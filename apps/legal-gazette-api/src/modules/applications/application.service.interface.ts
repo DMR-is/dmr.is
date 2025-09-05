@@ -3,6 +3,7 @@ import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { CaseDto } from '../case/dto/case.dto'
 import {
+  AddDivisionEndingForApplicationDto,
   AddDivisionMeetingForApplicationDto,
   ApplicationDetailedDto,
   ApplicationsDto,
@@ -41,6 +42,12 @@ export interface IApplicationService {
   addDivisionMeetingAdvertToApplication(
     applicationId: string,
     body: AddDivisionMeetingForApplicationDto,
+    user: DMRUser,
+  ): Promise<void>
+
+  addDivisionEndingAdvertToApplication(
+    applicationId: string,
+    body: AddDivisionEndingForApplicationDto,
     user: DMRUser,
   ): Promise<void>
 }
