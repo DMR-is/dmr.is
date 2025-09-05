@@ -15,7 +15,7 @@ import { PagingQuery } from '@dmr.is/shared/dto'
 import { LGResponse } from '../../../decorators/lg-response.decorator'
 import { IAdvertService } from '../advert.service.interface'
 import {
-  AdvertDto,
+  AdvertDetailedDto,
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
@@ -60,7 +60,7 @@ export class AdvertController {
   }
 
   @Get(':id')
-  @LGResponse({ operationId: 'getAdvertById', type: AdvertDto })
+  @LGResponse({ operationId: 'getAdvertById', type: AdvertDetailedDto })
   getAdvertById(@Param('id') id: string) {
     return this.advertService.getAdvertById(id)
   }

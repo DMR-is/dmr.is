@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  NotFoundException,
   NotImplementedException,
   Param,
   Post,

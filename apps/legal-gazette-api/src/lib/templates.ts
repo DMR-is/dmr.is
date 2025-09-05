@@ -1,6 +1,11 @@
+import { isBase64 } from 'class-validator'
+
+import { InternalServerErrorException } from '@nestjs/common'
+
+import { getLogger } from '@dmr.is/logging'
 import { formatDate } from '@dmr.is/utils'
 
-import { AdvertModel } from '../modules/advert/advert.model'
+import { AdvertModel, AdvertVersionEnum } from '../modules/advert/advert.model'
 import { CategoryDefaultIdEnum } from '../modules/category/category.model'
 
 /*
@@ -31,19 +36,32 @@ p {
 }
 */
 
-export const getAdvertHTMLMarkup = (model: AdvertModel) => {
+export const getAdvertHTMLMarkup = (
+  model: AdvertModel,
+  version: AdvertVersionEnum,
+) => {
   const additionalMarkup = model.additionalText
     ? `<div class="advert__additional"><p>${model.additionalText}</p></div>`
     : ''
 
-  const latestPublished = model.publications.filter(
-    (pub) => pub.publishedAt !== null,
+  const publishing = model.publications.find(
+    (pub) => pub.versionLetter === version,
   )
 
-  const publishingDate =
-    latestPublished.length > 0
-      ? latestPublished[latestPublished.length - 1].publishedAt
-      : model.publications[0].scheduledAt
+  if (!publishing) {
+    const logger = getLogger('AdvertModel')
+    logger.debug('No publication exists with this version.', {
+      version: version,
+      advertId: model.id,
+    })
+    throw new InternalServerErrorException(
+      'No publication exists with this version.',
+    )
+  }
+
+  const publishingDate = publishing.publishedAt
+    ? publishing.publishedAt
+    : publishing.scheduledAt
 
   let markup = ''
 
@@ -125,15 +143,16 @@ export const getAdvertHTMLMarkup = (model: AdvertModel) => {
       break
     }
     default: {
-      markup = `
-          <p>${model.html /* TODO: add column content to advert to store custom html from applications */}</p>
-          `
+      markup =
+        isBase64(model.content) && model.content
+          ? `${Buffer.from(model.content, 'base64').toString('utf-8')}`
+          : `${model.content}`
     }
   }
 
   return `
   <div class="advert">
-    <p class="advertSerial">Útgáfud.: ${publishingDate}</p>
+    <p class="advertSerial">${publishing.publishedAt ? `Útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}` : `Áætlaður útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}`}</p>
     <h1 class="advertHeading">${model.title}</h1>
 
     ${additionalMarkup}
@@ -147,7 +166,7 @@ export const getAdvertHTMLMarkup = (model: AdvertModel) => {
       ${model.signatureOnBehalfOf ? `<p>${model.signatureOnBehalfOf}</p>` : ''}
       <p><strong>${model.signatureName}</strong></p>
     </div>
-    <p class="advertSerial">${model.case.caseNumber}${model.version}</p>
+    <p class="advertSerial">${model.case.caseNumber}${version}</p>
   </div>
   `
 }

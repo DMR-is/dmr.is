@@ -4,22 +4,54 @@ import { InjectModel } from '@nestjs/sequelize'
 import { PagingQuery } from '@dmr.is/shared/dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
+import { mapVersionToIndex } from '../../lib/utils'
+import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
+import { AdvertPublicationDetailedDto } from '../advert-publications/dto/advert-publication.dto'
 import { StatusIdEnum } from '../status/status.model'
 import {
-  AdvertDto,
+  AdvertDetailedDto,
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
   UpdateAdvertDto,
 } from './dto/advert.dto'
-import { AdvertModel, AdvertModelScopes } from './advert.model'
+import {
+  AdvertModel,
+  AdvertModelScopes,
+  AdvertVersionEnum,
+} from './advert.model'
 import { IAdvertService } from './advert.service.interface'
 
 @Injectable()
 export class AdvertService implements IAdvertService {
   constructor(
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    @InjectModel(AdvertPublicationModel)
+    private readonly advertPublicationModel: typeof AdvertPublicationModel,
   ) {}
+  async getAdvertPublication(
+    id: string,
+    version: AdvertVersionEnum,
+  ): Promise<AdvertPublicationDetailedDto> {
+    const advertPromise = this.advertModel.findByPkOrThrow(id)
+    const publicationPromise = this.advertPublicationModel.findOneOrThrow({
+      where: {
+        advertId: id,
+        versionNumber: mapVersionToIndex(version),
+      },
+    })
+
+    const [advert, publication] = await Promise.all([
+      advertPromise,
+      publicationPromise,
+    ])
+
+    return {
+      advert: advert.fromModel(),
+      html: advert.htmlMarkup(version),
+      publication: publication.fromModel(),
+    }
+  }
 
   async getAdvertsByCaseId(caseId: string): Promise<GetAdvertsDto> {
     const adverts = await this.advertModel.findAll({
@@ -34,7 +66,10 @@ export class AdvertService implements IAdvertService {
     }
   }
 
-  async updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDto> {
+  async updateAdvert(
+    id: string,
+    body: UpdateAdvertDto,
+  ): Promise<AdvertDetailedDto> {
     const advert = await this.advertModel.findByPkOrThrow(id)
 
     const updated = await advert.update({
@@ -43,7 +78,7 @@ export class AdvertService implements IAdvertService {
 
     // TODO: update the publication scheduledAt date from body
 
-    return updated.fromModel()
+    return updated.fromModelToDetailed()
   }
 
   async getAdvertsCount(): Promise<GetAdvertsStatusCounterDto> {
@@ -163,9 +198,9 @@ export class AdvertService implements IAdvertService {
     }
   }
 
-  async getAdvertById(id: string): Promise<AdvertDto> {
+  async getAdvertById(id: string): Promise<AdvertDetailedDto> {
     const advert = await this.advertModel.findByPkOrThrow(id)
 
-    return advert.fromModel()
+    return advert.fromModelToDetailed()
   }
 }

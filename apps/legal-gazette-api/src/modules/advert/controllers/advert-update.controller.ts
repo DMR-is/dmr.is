@@ -16,7 +16,7 @@ import { AdvertUpdateGuard } from '../../../guards/advert-update.guard'
 import { CategoryModel } from '../../category/category.model'
 import { StatusIdEnum, StatusModel } from '../../status/status.model'
 import { IAdvertService } from '../advert.service.interface'
-import { AdvertDto, UpdateAdvertDto } from '../dto/advert.dto'
+import { AdvertDetailedDto, UpdateAdvertDto } from '../dto/advert.dto'
 
 @Controller({
   path: 'adverts/:id',
@@ -59,7 +59,7 @@ export class AdvertUpdateController {
   }
 
   @Patch()
-  @LGResponse({ operationId: 'updateAdvert', type: AdvertDto })
+  @LGResponse({ operationId: 'updateAdvert', type: AdvertDetailedDto })
   updateAdvert(
     @Param('id') advertId: string,
     @Body() advertUpdateDto: UpdateAdvertDto,

@@ -9,7 +9,6 @@ import {
   IsUUID,
   MaxLength,
   MinLength,
-  ValidateIf,
   ValidateNested,
 } from 'class-validator'
 
@@ -18,13 +17,55 @@ import { ApiProperty } from '@nestjs/swagger'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 import { DetailedDto } from '../../../dto/detailed.dto'
-import { AdvertPublicationsDto } from '../../advert-publications/dto/advert-publications.dto'
+import { AdvertPublicationDto } from '../../advert-publications/dto/advert-publication.dto'
 import { CategoryDto } from '../../category/dto/category.dto'
 import { StatusDto } from '../../status/dto/status.dto'
 import { StatusIdEnum } from '../../status/status.model'
 import { TypeDto } from '../../type/dto/type.dto'
 import { AdvertVersionEnum } from '../advert.model'
+
 export class AdvertDto extends DetailedDto {
+  @ApiProperty({ type: String })
+  @IsUUID()
+  id!: string
+
+  @ApiProperty({ type: String })
+  @IsDateString()
+  scheduledAt!: string
+
+  @ApiProperty({ type: CategoryDto })
+  @Type(() => CategoryDto)
+  @ValidateNested()
+  category!: CategoryDto
+
+  @ApiProperty({ type: TypeDto })
+  @Type(() => TypeDto)
+  @ValidateNested()
+  type!: TypeDto
+
+  @ApiProperty({ type: StatusDto })
+  @Type(() => StatusDto)
+  @ValidateNested()
+  status!: StatusDto
+
+  @ApiProperty({ type: String })
+  @IsString()
+  title!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  createdBy!: string
+
+  @ApiProperty({ type: String, required: false })
+  @Type(() => String)
+  @ValidateNested()
+  assignedUser?: string
+
+  @ApiProperty({ type: [AdvertPublicationDto] })
+  publications!: AdvertPublicationDto[]
+}
+
+export class AdvertDetailedDto extends DetailedDto {
   @ApiProperty({
     type: String,
   })
@@ -78,12 +119,6 @@ export class AdvertDto extends DetailedDto {
   version!: AdvertVersionEnum
 
   @ApiProperty({
-    type: String,
-  })
-  @IsString()
-  html!: string
-
-  @ApiProperty({
     type: Boolean,
   })
   @IsBoolean()
@@ -101,8 +136,8 @@ export class AdvertDto extends DetailedDto {
   @IsDateString()
   signatureDate!: string
 
-  @ApiProperty({ type: [AdvertPublicationsDto] })
-  publications!: AdvertPublicationsDto[]
+  @ApiProperty({ type: [AdvertPublicationDto] })
+  publications!: AdvertPublicationDto[]
 }
 
 export class GetAdvertsDto {

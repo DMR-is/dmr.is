@@ -6,7 +6,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 import { DetailedDto } from '../../../dto/detailed.dto'
-import { AdvertDto } from '../../advert/dto/advert.dto'
+import { AdvertDetailedDto } from '../../advert/dto/advert.dto'
 import { ApplicationTypeEnum } from '../../applications/application.model'
 import { CommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
 
@@ -55,9 +55,9 @@ export class CaseDetailedDto extends CaseDto {
   @ValidateNested({ each: true })
   communicationChannels!: CommunicationChannelDto[]
 
-  @ApiProperty({ type: [AdvertDto] })
+  @ApiProperty({ type: [AdvertDetailedDto] })
   @IsArray()
-  @Type(() => AdvertDto)
+  @Type(() => AdvertDetailedDto)
   @ValidateNested({ each: true })
-  adverts!: AdvertDto[]
+  adverts!: AdvertDetailedDto[]
 }

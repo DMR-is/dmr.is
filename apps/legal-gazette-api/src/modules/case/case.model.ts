@@ -2,11 +2,9 @@ import { Op } from 'sequelize'
 import {
   BeforeCreate,
   BeforeDestroy,
-  BelongsTo,
   Column,
   DataType,
   DefaultScope,
-  ForeignKey,
   HasMany,
   HasOne,
 } from 'sequelize-typescript'
@@ -24,7 +22,6 @@ import {
   CommunicationChannelModel,
 } from '../communication-channel/communication-channel.model'
 import { StatusIdEnum } from '../status/status.model'
-import { UserModel } from '../users/users.model'
 import { CaseDto } from './dto/case.dto'
 
 type CaseAttributes = {
@@ -58,15 +55,6 @@ type CaseCreateAttributes = {
 }))
 export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   @Column({
-    type: DataType.UUID,
-    allowNull: true,
-    field: 'assigned_user_id',
-    defaultValue: null,
-  })
-  @ForeignKey(() => UserModel)
-  assignedUserId!: string | null
-
-  @Column({
     type: DataType.TEXT,
     allowNull: false,
     field: 'case_number',
@@ -86,9 +74,6 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
 
   @HasMany(() => AdvertModel, 'caseId')
   adverts!: AdvertModel[]
-
-  @BelongsTo(() => UserModel, 'assignedUserId')
-  assignedUser?: UserModel
 
   @HasOne(() => ApplicationModel)
   application?: ApplicationModel

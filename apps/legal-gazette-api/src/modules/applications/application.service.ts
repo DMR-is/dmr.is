@@ -24,7 +24,7 @@ import {
   createRecallAdvertFromApplicationSchema,
 } from '../../lib/schemas'
 import { AdvertModel } from '../advert/advert.model'
-import { AdvertPublicationsModel } from '../advert-publications/advert-publications.model'
+import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
 import { CaseModel } from '../case/case.model'
 import { CaseDto } from '../case/dto/case.dto'
 import {
@@ -56,6 +56,8 @@ export class ApplicationService implements IApplicationService {
     private readonly applicationModel: typeof ApplicationModel,
     @InjectModel(CategoryModel)
     private readonly categoryModel: typeof CategoryModel,
+    @InjectModel(AdvertPublicationModel)
+    private readonly publicationModel: typeof AdvertPublicationModel,
   ) {}
 
   private async submitCommonApplication(
@@ -76,11 +78,11 @@ export class ApplicationService implements IApplicationService {
       publishingDates: application.publishingDates,
     })
 
-    await this.advertModel.create(
+    const advert = await this.advertModel.create(
       {
+        caseId: requiredFields.caseId,
         typeId: TypeIdEnum.COMMON_ADVERT,
         caption: requiredFields.caption,
-        caseId: requiredFields.caseId,
         categoryId: requiredFields.category.id,
         additionalText: requiredFields.additionalText,
         createdBy: user.fullName,
@@ -88,13 +90,18 @@ export class ApplicationService implements IApplicationService {
         signatureOnBehalfOf: requiredFields.signatureOnBehalfOf,
         signatureLocation: requiredFields.signatureLocation,
         signatureDate: requiredFields.signatureDate,
-        html: '',
+        content: requiredFields.html,
         title: `${requiredFields.category.title} - ${requiredFields.caption}`,
-        publications: requiredFields.publishingDates.map((scheduledAt) => ({
-          scheduledAt,
-        })),
       },
-      { include: [AdvertPublicationsModel] },
+      { returning: ['id'] },
+    )
+
+    await this.publicationModel.bulkCreate(
+      requiredFields.publishingDates.map((d, i) => ({
+        advertId: advert.id,
+        scheduledAt: d,
+        versionNumber: i + 1,
+      })),
     )
 
     await application.update({ status: ApplicationStatusEnum.SUBMITTED })
@@ -166,7 +173,7 @@ export class ApplicationService implements IApplicationService {
           scheduledAt,
         })),
       },
-      { include: [AdvertPublicationsModel, SettlementModel] },
+      { include: [AdvertPublicationModel, SettlementModel] },
     )
 
     // TODO: INCLUDE THE FIRST DIVISION MEETING IN THE RECALL ADVERT IF IT IS A BANKRUPTCY ADVERT
@@ -391,7 +398,7 @@ export class ApplicationService implements IApplicationService {
       title: `${category.title} - ${requiredFields.caption}`,
       caption: requiredFields.caption,
       additionalText: requiredFields.additionalText,
-      html: requiredFields.html,
+      content: requiredFields.html,
       signatureOnBehalfOf: requiredFields.signatureOnBehalfOf,
       publications: body.publishingDates.map((scheduledAt) => ({
         scheduledAt: new Date(scheduledAt),
@@ -399,7 +406,7 @@ export class ApplicationService implements IApplicationService {
     })
   }
   async submitApplication(applicationId: string, user: DMRUser): Promise<void> {
-    const application = await this.applicationModel.unscoped().findOneOrThrow({
+    const application = await this.applicationModel.findOneOrThrow({
       where: { id: applicationId, submittedByNationalId: user.nationalId },
     })
 

@@ -13,17 +13,21 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
-import { BadRequestException } from '@nestjs/common'
+import {
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common'
 
+import { getLogger } from '@dmr.is/logging'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
 import { getAdvertHTMLMarkup } from '../../lib/templates'
 import { validateAdvertStatus } from '../../lib/utils'
 import {
+  AdvertPublicationModel,
   AdvertPublicationsCreateAttributes,
-  AdvertPublicationsModel,
-} from '../advert-publications/advert-publications.model'
+} from '../advert-publications/advert-publication.model'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
 import { CourtDistrictModel } from '../court-district/court-district.model'
@@ -33,27 +37,28 @@ import {
 } from '../settlement/settlement.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
 import { TypeIdEnum, TypeModel } from '../type/type.model'
-import { AdvertDto, AdvertStatusCounterItemDto } from './dto/advert.dto'
+import { UserModel } from '../users/users.model'
+import {
+  AdvertDetailedDto,
+  AdvertDto,
+  AdvertStatusCounterItemDto,
+} from './dto/advert.dto'
 
 type AdvertAttributes = {
   caseId: string
   courtDistrictId: string | null
   islandIsApplicationId: string | null
-
   typeId: string
   categoryId: string
   statusId: string
-
   publicationNumber: string | null
-
   title: string
   createdBy: string
-  html: string
+  legacyHtml: string | null
   paid: boolean
-
   additionalText: string | null
   caption: string | null
-
+  content: string | null
   signatureName: string
   signatureOnBehalfOf: string | null
   signatureLocation: string
@@ -70,24 +75,21 @@ export type AdvertCreateAttributes = {
   caseId?: string
   courtDistrictId?: string | null
   islandIsApplicationId?: string | null
-
   typeId: string
   categoryId: string
   statusId?: string
   title: string
-  html?: string
-
+  legacyHtml?: string
   createdBy: string // ex: Gunnar Gunnarsson or Lögfræðistofa (Gunnar Gunnarsson)
   additionalText?: string | null
   caption?: string | null
-
+  content?: string | null
   signatureName: string
   signatureOnBehalfOf?: string | null
   signatureLocation: string
   signatureDate: Date
 
-  // We must include the publications when creating an advert
-  publications: AdvertPublicationsCreateAttributes[]
+  publications?: AdvertPublicationsCreateAttributes[]
   settlement?: SettlementCreateAttributes
 }
 
@@ -106,11 +108,17 @@ export enum AdvertModelScopes {
 
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
 @DefaultScope(() => ({
-  include: [StatusModel, CategoryModel, TypeModel, AdvertPublicationsModel],
+  include: [
+    { model: CaseModel.unscoped(), attributes: ['id', 'caseNumber'] },
+    { model: StatusModel },
+    { model: CategoryModel },
+    { model: TypeModel },
+    { model: UserModel },
+    { model: AdvertPublicationModel },
+  ],
 }))
 @Scopes(() => ({
   inProgress: {
-    include: [StatusModel, CategoryModel, TypeModel],
     where: {
       statusId: {
         [Op.in]: [StatusIdEnum.SUBMITTED, StatusIdEnum.READY_FOR_PUBLICATION],
@@ -118,20 +126,17 @@ export enum AdvertModelScopes {
     },
   },
   published: {
-    include: [StatusModel, CategoryModel, TypeModel],
     where: {
       statusId: StatusIdEnum.PUBLISHED,
     },
   },
   toBePublished: {
-    include: [StatusModel, CategoryModel, TypeModel],
     where: {
       paid: true,
       statusId: StatusIdEnum.READY_FOR_PUBLICATION,
     },
   },
   completed: {
-    include: [StatusModel, CategoryModel, TypeModel],
     where: {
       statusId: {
         [Op.in]: [
@@ -153,6 +158,14 @@ export class AdvertModel extends BaseModel<
   })
   @ForeignKey(() => CaseModel)
   caseId!: string
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    defaultValue: null,
+  })
+  @ForeignKey(() => UserModel)
+  assignedUserId!: string | null
 
   @Column({
     type: DataType.UUID,
@@ -207,10 +220,10 @@ export class AdvertModel extends BaseModel<
 
   @Column({
     type: DataType.TEXT,
-    allowNull: false,
-    defaultValue: '',
+    allowNull: true,
+    defaultValue: null,
   })
-  html!: string
+  legacyHtml!: string | null
 
   @Column({
     type: DataType.STRING,
@@ -255,6 +268,12 @@ export class AdvertModel extends BaseModel<
   caption!: string | null
 
   @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+  })
+  content!: string | null
+
+  @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
     defaultValue: false,
@@ -279,39 +298,27 @@ export class AdvertModel extends BaseModel<
   @BelongsTo(() => CourtDistrictModel)
   courtDistrict?: CourtDistrictModel
 
-  @HasMany(() => AdvertPublicationsModel)
-  publications!: AdvertPublicationsModel[]
+  @BelongsTo(() => UserModel)
+  assignedUser?: UserModel
+
+  @HasMany(() => AdvertPublicationModel)
+  publications!: AdvertPublicationModel[]
 
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
     validateAdvertStatus(instance)
   }
 
-  @AfterCreate
-  static async addHTML(instance: AdvertModel) {
-    this.logger.debug(`Setting HTML template for advert ${instance.id}`, {
-      currentHTML: instance.html,
-    })
+  htmlMarkup(version: AdvertVersionEnum): string {
+    if (this.legacyHtml) return this.legacyHtml
 
-    const instanceWithRelations = await AdvertModel.unscoped().findByPkOrThrow(
-      instance.id,
-      {
-        include: [
-          { model: TypeModel },
-          { model: CategoryModel },
-          { model: StatusModel },
-          { model: SettlementModel },
-          { model: CourtDistrictModel },
-          { model: CaseModel, attributes: ['caseNumber', 'id'] },
-        ],
-      },
-    )
-
-    if (instanceWithRelations.html) return
-
-    const html = getAdvertHTMLMarkup(instanceWithRelations)
-    instanceWithRelations.html = html
-    instanceWithRelations.save()
+    try {
+      return getAdvertHTMLMarkup(this, version)
+    } catch (error) {
+      const logger = getLogger('AdvertModel')
+      logger.error('Error generating HTML markup', { error })
+      throw new InternalServerErrorException()
+    }
   }
 
   @BeforeBulkCreate
@@ -358,11 +365,39 @@ export class AdvertModel extends BaseModel<
   }
 
   static fromModel(model: AdvertModel): AdvertDto {
+    const publishing = model.publications.find(
+      (pub) => pub.publishedAt === null,
+    )
+
+    const date = publishing
+      ? publishing.scheduledAt
+      : model.publications[model.publications.length - 1].scheduledAt
+
+    return {
+      id: model.id,
+      createdAt: model.createdAt.toISOString(),
+      updatedAt: model.updatedAt.toISOString(),
+      deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+      category: model.category.fromModel(),
+      type: model.type.fromModel(),
+      status: model.status.fromModel(),
+      createdBy: model.createdBy,
+      scheduledAt: date.toISOString(),
+      title: model.title,
+      assignedUser: model.assignedUser?.fullName,
+      publications: model.publications.map((p) => p.fromModel()),
+    }
+  }
+
+  fromModel(): AdvertDto {
+    return AdvertModel.fromModel(this)
+  }
+
+  static fromModelToDetailed(model: AdvertModel): AdvertDetailedDto {
     return {
       id: model.id,
       caseId: model.caseId,
       title: model.title,
-      html: model.html,
       createdBy: model.createdBy,
       publicationNumber: model.publicationNumber,
       version: model.version,
@@ -380,7 +415,7 @@ export class AdvertModel extends BaseModel<
     }
   }
 
-  fromModel(): AdvertDto {
-    return AdvertModel.fromModel(this)
+  fromModelToDetailed(): AdvertDetailedDto {
+    return AdvertModel.fromModelToDetailed(this)
   }
 }

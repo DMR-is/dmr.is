@@ -66,6 +66,10 @@ export class UserModel extends BaseModel<UserAttributes, UserCreateAttributes> {
   })
   phone!: string | null
 
+  get fullName(): string {
+    return `${this.firstName} ${this.lastName}`
+  }
+
   static fromModel(model: UserModel): UserDto {
     return {
       id: model.id,
