@@ -51,7 +51,8 @@ export interface IUserService {
 
   createUserFromInvolvedParty(
     body: {
-      name: string
+      firstName: string
+      lastName?: string
       nationalId: string
     },
     involvedPartyId: string,
