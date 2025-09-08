@@ -1,6 +1,5 @@
 import { BulkCreateOptions, Op } from 'sequelize'
 import {
-  AfterCreate,
   BeforeBulkCreate,
   BeforeUpdate,
   BelongsTo,
@@ -9,7 +8,6 @@ import {
   DefaultScope,
   ForeignKey,
   HasMany,
-  HasOne,
   Scopes,
 } from 'sequelize-typescript'
 
@@ -45,7 +43,7 @@ import {
 } from './dto/advert.dto'
 
 type AdvertAttributes = {
-  caseId: string
+  caseId: string | null
   islandIsApplicationId: string | null
   typeId: string
   categoryId: string
@@ -173,10 +171,18 @@ export class AdvertModel extends BaseModel<
 > {
   @Column({
     type: DataType.UUID,
-    allowNull: false,
+    defaultValue: null,
+    allowNull: true,
   })
   @ForeignKey(() => CaseModel)
-  caseId!: string
+  caseId!: string | null
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    defaultValue: null,
+  })
+  legacyId!: string | null
 
   @Column({
     type: DataType.UUID,
@@ -445,7 +451,7 @@ export class AdvertModel extends BaseModel<
   static fromModelToDetailed(model: AdvertModel): AdvertDetailedDto {
     return {
       id: model.id,
-      caseId: model.caseId,
+      caseId: model.caseId || undefined,
       title: model.title,
       createdBy: model.createdBy,
       publicationNumber: model.publicationNumber,
