@@ -74,9 +74,11 @@ export class AdvertDetailedDto extends DetailedDto {
 
   @ApiProperty({
     type: String,
+    required: false,
   })
+  @IsOptional()
   @IsUUID()
-  caseId!: string
+  caseId?: string
 
   @ApiProperty({
     type: String,
