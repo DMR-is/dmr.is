@@ -51,7 +51,11 @@ export const CreateApplication = () => {
           throw new Error('Unsupported application type')
         }
 
-        router.push(`${routeToTake}/${data.id}`)
+        router.refresh()
+
+        setTimeout(() => {
+          router.push(`${routeToTake}/${data.id}`)
+        }, 100)
       },
       onError: (_error) => {
         toast.error(

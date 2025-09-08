@@ -34,6 +34,7 @@ import {
 import { SettlementModel } from '../settlement/settlement.model'
 import { TypeIdEnum } from '../type/type.model'
 import {
+  AddDivisionEndingForApplicationDto,
   AddDivisionMeetingForApplicationDto,
   ApplicationDetailedDto,
   ApplicationsDto,
@@ -56,6 +57,8 @@ export class ApplicationService implements IApplicationService {
     private readonly categoryModel: typeof CategoryModel,
     @InjectModel(AdvertPublicationModel)
     private readonly publicationModel: typeof AdvertPublicationModel,
+    @InjectModel(SettlementModel)
+    private readonly settlementModel: typeof SettlementModel,
   ) {}
 
   private async submitCommonApplication(
@@ -187,7 +190,7 @@ export class ApplicationService implements IApplicationService {
       })),
     )
 
-    await application.update({ status: ApplicationStatusEnum.SUBMITTED })
+    await application.update({ status: ApplicationStatusEnum.FINISHED })
   }
 
   async addDivisionMeetingAdvertToApplication(
@@ -243,6 +246,68 @@ export class ApplicationService implements IApplicationService {
       scheduledAt: new Date(body.meetingDate),
       advertId: newAdvert.id,
     })
+  }
+
+  async addDivisionEndingAdvertToApplication(
+    applicationId: string,
+    body: AddDivisionEndingForApplicationDto,
+    user: DMRUser,
+  ): Promise<void> {
+    const application = await this.applicationModel.findOneOrThrow({
+      where: {
+        id: applicationId,
+        submittedByNationalId: user.nationalId,
+        status: ApplicationStatusEnum.SUBMITTED,
+        applicationType: {
+          [Op.or]: [
+            ApplicationTypeEnum.RECALL_BANKRUPTCY,
+            ApplicationTypeEnum.RECALL_DECEASED,
+          ],
+        },
+      },
+    })
+
+    const advertSettlement = await this.advertModel.unscoped().findOneOrThrow({
+      attributes: ['id', 'settlementId'],
+      where: {
+        caseId: application.caseId,
+        settlementId: { [Op.not]: null },
+      },
+    })
+
+    if (!advertSettlement.settlementId) {
+      throw new NotFoundException('Settlement not found for application')
+    }
+
+    const settlement = await this.settlementModel.findByPkOrThrow(
+      advertSettlement.settlementId,
+    )
+
+    await settlement.update({ settlementDeclaredClaims: body.declaredClaims })
+
+    const newAdvert = await this.advertModel.create(
+      {
+        caseId: application.caseId,
+        categoryId: CategoryDefaultIdEnum.DIVISION_ENDING,
+        createdBy: user.fullName,
+        signatureName: body.signatureName,
+        signatureDate: new Date(body.signatureDate),
+        signatureLocation: body.signatureLocation,
+        signatureOnBehalfOf: body.signatureOnBehalfOf,
+        typeId: TypeIdEnum.DIVISION_ENDING,
+        title: `Skiptalok - ${application.settlementName}`,
+        additionalText: body.additionalText,
+        settlementId: settlement.id,
+      },
+      { returning: ['id'] },
+    )
+
+    await this.publicationModel.create({
+      scheduledAt: new Date(body.scheduledAt),
+      advertId: newAdvert.id,
+    })
+
+    await application.update({ status: ApplicationStatusEnum.FINISHED })
   }
 
   async updateApplication(

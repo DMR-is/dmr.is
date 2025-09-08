@@ -1,6 +1,11 @@
-import { IsDateString, IsOptional, IsString } from 'class-validator'
+import { IsDateString, IsNumber, IsOptional, IsString } from 'class-validator'
 
-import { ApiProperty, IntersectionType, PartialType } from '@nestjs/swagger'
+import {
+  ApiProperty,
+  IntersectionType,
+  OmitType,
+  PartialType,
+} from '@nestjs/swagger'
 
 import { Paging } from '@dmr.is/shared/dto'
 
@@ -145,4 +150,17 @@ export class AddDivisionMeetingForApplicationDto {
   @IsOptional()
   @IsString()
   additionalText?: string
+}
+
+export class AddDivisionEndingForApplicationDto extends OmitType(
+  AddDivisionMeetingForApplicationDto,
+  ['meetingDate', 'meetingLocation'],
+) {
+  @ApiProperty({ type: String })
+  @IsDateString()
+  scheduledAt!: string
+
+  @ApiProperty({ type: Number })
+  @IsNumber()
+  declaredClaims!: number
 }

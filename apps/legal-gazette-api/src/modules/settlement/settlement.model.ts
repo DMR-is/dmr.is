@@ -14,13 +14,15 @@ type SettlementAttributes = {
   settlementAddress: string
   settlementDeadline: Date | null
   settlementDateOfDeath: Date | null
+  settlementDeclaredClaims: number | null
 }
 
 export type SettlementCreateAttributes = Omit<
   SettlementAttributes,
-  'advertId'
+  'advertId' | 'settlementDeclaredClaims'
 > & {
   advertId?: string
+  settlementDeclaredClaims?: number | null
 }
 
 @BaseTable({ tableName: LegalGazetteModels.SETTLEMENT })
@@ -76,6 +78,13 @@ export class SettlementModel extends BaseModel<
     field: 'date_of_death',
   })
   settlementDateOfDeath!: Date | null
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+  })
+  declaredClaims!: number | null
 
   @HasMany(() => AdvertModel)
   adverts!: AdvertModel[]

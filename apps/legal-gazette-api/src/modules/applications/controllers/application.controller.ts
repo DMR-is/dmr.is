@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Inject,
-  NotImplementedException,
   Param,
   Patch,
   Post,
@@ -23,6 +22,7 @@ import { CaseDto } from '../../case/dto/case.dto'
 import { ApplicationTypeEnum } from '../application.model'
 import { IApplicationService } from '../application.service.interface'
 import {
+  AddDivisionEndingForApplicationDto,
   AddDivisionMeetingForApplicationDto,
   ApplicationDetailedDto,
   ApplicationsDto,
@@ -124,9 +124,14 @@ export class ApplicationController {
   @Post(':applicationId/addDivisionEndingAdvertToApplication')
   @LGResponse({ operationId: 'addDivisionEndingAdvertToApplication' })
   async addDivisionEndingAdvertToApplication(
-    @Param('applicationId') _applicationId: string,
-    @CurrentUser() _user: DMRUser,
+    @Param('applicationId') applicationId: string,
+    @Body() body: AddDivisionEndingForApplicationDto,
+    @CurrentUser() user: DMRUser,
   ): Promise<void> {
-    throw new NotImplementedException()
+    return this.applicationService.addDivisionEndingAdvertToApplication(
+      applicationId,
+      body,
+      user,
+    )
   }
 }

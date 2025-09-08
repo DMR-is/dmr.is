@@ -2409,6 +2409,16 @@
             "schema": { "type": "string" }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddDivisionEndingForApplicationDto"
+              }
+            }
+          }
+        },
         "responses": {
           "204": { "description": "" },
           "400": {
@@ -2944,7 +2954,10 @@
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
-          "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
+          "status": {
+            "type": "string",
+            "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
+          },
           "title": { "type": "string" }
         },
         "required": [
@@ -3008,7 +3021,10 @@
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
-          "status": { "type": "string", "enum": ["DRAFT", "SUBMITTED"] },
+          "status": {
+            "type": "string",
+            "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
+          },
           "title": { "type": "string" },
           "categoryId": { "type": "string", "nullable": true },
           "courtDistrictId": { "type": "string", "nullable": true },
@@ -3096,6 +3112,25 @@
           "signatureLocation",
           "signatureDate",
           "signatureName"
+        ]
+      },
+      "AddDivisionEndingForApplicationDto": {
+        "type": "object",
+        "properties": {
+          "signatureLocation": { "type": "string" },
+          "signatureDate": { "type": "string" },
+          "signatureName": { "type": "string" },
+          "signatureOnBehalfOf": { "type": "string" },
+          "additionalText": { "type": "string" },
+          "scheduledAt": { "type": "string" },
+          "declaredClaims": { "type": "number" }
+        },
+        "required": [
+          "signatureLocation",
+          "signatureDate",
+          "signatureName",
+          "scheduledAt",
+          "declaredClaims"
         ]
       }
     }

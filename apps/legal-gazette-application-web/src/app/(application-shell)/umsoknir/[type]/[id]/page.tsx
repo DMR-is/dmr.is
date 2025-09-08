@@ -47,7 +47,7 @@ export default async function UmsoknirThrotabusPage({
   }
 
   if (
-    applicationResult.data.status === ApplicationDetailedDtoStatusEnum.SUBMITTED
+    applicationResult.data.status !== ApplicationDetailedDtoStatusEnum.DRAFT
   ) {
     const advertsResults = await safeCall(() =>
       client.getAdvertsByCaseId({ caseId: params.id }),

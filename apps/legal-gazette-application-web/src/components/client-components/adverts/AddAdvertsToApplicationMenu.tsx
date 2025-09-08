@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 import { DropdownMenu } from '@island.is/island-ui/core'
 
+import { CreateDivisionEnding } from './CreateDivisionEnding'
 import { CreateDivisionMeeting } from './CreateDivisionMeeting'
 
 export const AddAdvertsToApplicationMenu = () => {
@@ -30,6 +31,10 @@ export const AddAdvertsToApplicationMenu = () => {
       <CreateDivisionMeeting
         isVisible={toggleDivisionMeeting}
         onVisibilityChange={setToggleDivisionMeeting}
+      />
+      <CreateDivisionEnding
+        isVisible={toggleDivisionEnding}
+        onVisibilityChange={setToggleDivisionEnding}
       />
     </>
   )

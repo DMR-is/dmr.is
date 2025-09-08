@@ -218,6 +218,39 @@ export const getAdvertHTMLMarkup = (
       `
       break
     }
+    case CategoryDefaultIdEnum.DIVISION_ENDING: {
+      if (!model.judgementDate) {
+        throw new Error('Judgement date is missing')
+      }
+
+      if (!model.settlement) {
+        throw new Error('Settlement information is missing')
+      }
+
+      markup = `
+        <p>Með úrskurði héraðsdóms Reykjavíkur uppkveðnum ${formatDate(model.judgementDate, 'dd. MMMM yyyy')} var neðangreint bú tekið til gjaldþrotaskipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri í þrotabúinu.</p>
+        <p>Engar eignir fundust í búinu og var skiptum í því lokið 17. janúar 2025 samkvæmt 155. gr. laga nr. 21/1991 án þess að greiðsla fengist upp í lýstar kröfur, auk áfallinna vaxta og kostnaðar eftir úrskurðardag gjaldþrotaskipta.</p>
+        <table>
+          <tbody>
+            <tr>
+              <td>Nafn bús:</td>
+              <td>Lýstar kröfur:</td>
+            </tr>
+            <tr>
+              <td>
+                ${model.settlement.settlementName}, <br />
+                kt. ${model.settlement.settlementNationalId}
+              </td>
+              <td>
+                kr. ${model.settlement.declaredClaims?.toLocaleString('is-IS').replaceAll(',', '.')},-
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      `
+
+      break
+    }
     default: {
       markup =
         isBase64(model.content) && model.content
