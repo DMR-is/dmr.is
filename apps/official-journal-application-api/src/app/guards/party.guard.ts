@@ -66,7 +66,8 @@ export class PartyGuard implements CanActivate {
         const createdUser = await this.userService.createUserFromInvolvedParty(
           {
             nationalId: req.user?.actor?.nationalId,
-            name: req.user?.actor.name,
+            firstName: req.user?.name,
+            lastName: '(Innsendandi í umboði)',
           },
           resParty.involvedParty.id,
         )
