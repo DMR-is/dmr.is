@@ -190,7 +190,7 @@ export class ApplicationService implements IApplicationService {
       })),
     )
 
-    await application.update({ status: ApplicationStatusEnum.SUBMITTED })
+    await application.update({ status: ApplicationStatusEnum.FINISHED })
   }
 
   async addDivisionMeetingAdvertToApplication(
