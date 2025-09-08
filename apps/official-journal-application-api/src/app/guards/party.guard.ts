@@ -65,7 +65,7 @@ export class PartyGuard implements CanActivate {
         // User has never existed, create with association
         const createdUser = await this.userService.createUserFromInvolvedParty(
           {
-            nationalId: req.user.nationalId,
+            nationalId: req.user?.actor?.nationalId,
             name: req.user?.actor.name,
           },
           resParty.involvedParty.id,
