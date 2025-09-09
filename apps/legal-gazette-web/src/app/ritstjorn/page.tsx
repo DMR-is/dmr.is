@@ -1,23 +1,28 @@
-import dynamic from 'next/dynamic'
+import { getServerSession } from 'next-auth'
 
+import { PageContainer } from '../../components/client-components/ritstjorn/PageContainer'
+import { getLegalGazetteClient } from '../../lib/api/createClient'
+import { authOptions } from '../../lib/auth/authOptions'
+import { loadSearchParams } from '../../lib/nuqs/search-params'
 
-const PageContainer = dynamic(
-  () =>
-    import('../../components/client-components/ritstjorn/PageContainer').then(
-      (mod) => mod.PageContainer,
-    ),
-  {
-    ssr: false,
-  },
-)
+export const dynamic = 'force-dynamic'
 
-export default async function Ritstjorn(props: {
-  searchParams: {
-    tab: string
-    [key: string]: string | string[] | undefined
-  }
+export default async function Ritstjorn({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const { searchParams } = props
+  const sp = await loadSearchParams(searchParams)
 
-  return <PageContainer searchParams={searchParams} />
+  const session = await getServerSession(authOptions)
+
+  if (!session) {
+    throw new Error('Unauthorized')
+  }
+
+  const client = getLegalGazetteClient('AdvertApi', session.idToken)
+
+  const advertsCountData = await client.getAdvertsCount()
+
+  return <PageContainer initalAdvertsCount={advertsCountData} />
 }

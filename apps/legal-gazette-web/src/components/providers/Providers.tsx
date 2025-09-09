@@ -3,6 +3,7 @@
 import { Session } from 'next-auth'
 import { SessionProvider } from 'next-auth/react'
 
+import { NuqsAdapter } from 'nuqs/adapters/next'
 import { IntlProvider } from 'react-intl'
 
 import { allMessages } from '../../lib/messages'
@@ -16,7 +17,7 @@ export const Providers = ({
   session: Session | null
 }) => {
   return (
-    <>
+    <NuqsAdapter>
       <SessionProvider
         session={session}
         refetchInterval={1 * 60}
@@ -43,6 +44,6 @@ export const Providers = ({
           {children}
         </IntlProvider>
       </SessionProvider>
-    </>
+    </NuqsAdapter>
   )
 }
