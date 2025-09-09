@@ -68,15 +68,13 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { PartyGuard } from '../guards/party.guard'
-
 import 'multer'
 
 @Controller({
   path: 'applications',
   version: '1',
 })
-@UseGuards(TokenJwtAuthGuard, PartyGuard, RoleGuard)
+@UseGuards(TokenJwtAuthGuard, RoleGuard)
 @ApiBearerAuth()
 @Roles(UserRoleEnum.Admin, UserRoleEnum.Editor, UserRoleEnum.User)
 export class ApplicationController {

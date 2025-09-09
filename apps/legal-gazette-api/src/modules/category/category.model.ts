@@ -1,4 +1,4 @@
-import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
+import { BelongsToMany } from 'sequelize-typescript'
 
 import { NotFoundException } from '@nestjs/common'
 
@@ -7,6 +7,7 @@ import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 import { LegalGazetteModels } from '../../lib/constants'
 import { AdvertModel } from '../advert/advert.model'
 import { TypeModel } from '../type/type.model'
+import { TypeCategoriesModel } from '../type-categories/type-categories.model'
 import { CategoryDto } from './dto/category.dto'
 
 export enum CategoryDefaultIdEnum {
@@ -21,13 +22,8 @@ export enum CategoryDefaultIdEnum {
   tableName: LegalGazetteModels.ADVERT_CATEGORY,
 })
 export class CategoryModel extends BaseEntityModel<CategoryDto> {
-  @ForeignKey(() => TypeModel)
-  @Column({ type: DataType.UUID, field: 'advert_type_id' })
-  typeId!: string
-
-  @BelongsTo(() => TypeModel)
-  type!: TypeModel
-
+  @BelongsToMany(() => TypeModel, { through: () => TypeCategoriesModel })
+  types!: TypeModel[]
   static async setAdvertCategory(advertId: string, categoryId: string) {
     const advert = await AdvertModel.unscoped().findByPk(advertId, {
       attributes: ['id', 'statusId'],

@@ -576,7 +576,12 @@ export class PriceService implements IPriceService {
       const jsonResponse = await res.json()
       const errorStatus = jsonResponse?.error
       this.logger.warn(
-        `price.service.getExternalPaymentStatus, payment not found for case: ${caseLookup.caseNumber} - ${errorStatus?.detail ?? ''}`,
+        `price.service.getExternalPaymentStatus, payment not found for case: ${caseLookup.caseNumber}`,
+        {
+          status: res.status,
+          error: jsonResponse?.error,
+          detail: errorStatus?.detail,
+        },
       )
       return ResultWrapper.ok({
         paid: false,

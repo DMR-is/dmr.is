@@ -33,6 +33,8 @@ import { SubscriberModel } from '../modules/subscribers/subscriber.model'
 import { SubscriberModule } from '../modules/subscribers/subscriber.module'
 import { ApplicationWebModule } from '../modules/swagger/application-web.module'
 import { TypeModel } from '../modules/type/type.model'
+import { TypeCategoriesModel } from '../modules/type-categories/type-categories.model'
+import { TypesCategoriesModule } from '../modules/type-categories/type-categories.module'
 import { UserModel } from '../modules/users/users.model'
 import { UsersModule } from '../modules/users/users.module'
 
@@ -68,6 +70,7 @@ import { UsersModule } from '../modules/users/users.module'
             SubscriberModel,
             ApplicationModel,
             AdvertPublicationModel,
+            TypeCategoriesModel,
           ],
         }),
       ],
@@ -81,6 +84,7 @@ import { UsersModule } from '../modules/users/users.module'
     SubscriberModule,
     UsersModule,
     ApplicationModule,
+    TypesCategoriesModule,
     {
       module: AuthModule,
       global: true,

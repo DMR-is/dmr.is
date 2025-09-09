@@ -189,7 +189,8 @@ export class UserService implements IUserService {
   @Transactional()
   async createUserFromInvolvedParty(
     body: {
-      name: string
+      firstName: string
+      lastName?: string
       nationalId: string
     },
     involvedPartyId: string,
@@ -218,9 +219,9 @@ export class UserService implements IUserService {
     const newUser = await this.userModel.create(
       {
         nationalId: body.nationalId,
-        firstName: body.name,
-        lastName: '',
-        displayName: body.name,
+        firstName: body.firstName,
+        lastName: body.lastName ?? '',
+        displayName: `${body.firstName} ${body.lastName ?? ''}`,
         email: 'empty',
         roleId: roleId,
       },
@@ -735,22 +736,28 @@ export class UserService implements IUserService {
       limit,
       offset,
       where: query.search
-        ? {
-            [Op.or]: {
-              displayName: {
-                [Op.iLike]: `%${query.search}%`,
+        ? query.search?.length === 10 && !isNaN(Number(query.search))
+          ? {
+              nationalId: {
+                [Op.eq]: query.search,
               },
-              email: {
-                [Op.iLike]: `%${query.search}%`,
+            }
+          : {
+              [Op.or]: {
+                displayName: {
+                  [Op.iLike]: `%${query.search}%`,
+                },
+                email: {
+                  [Op.iLike]: `%${query.search}%`,
+                },
+                firstName: {
+                  [Op.iLike]: `%${query.search}%`,
+                },
+                lastName: {
+                  [Op.iLike]: `%${query.search}%`,
+                },
               },
-              firstName: {
-                [Op.iLike]: `%${query.search}%`,
-              },
-              lastName: {
-                [Op.iLike]: `%${query.search}%`,
-              },
-            },
-          }
+            }
         : {},
       include: [
         {
