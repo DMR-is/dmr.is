@@ -1,14 +1,22 @@
 
 
 
+
+import slugify from 'slugify'
+
 import {
   Advert,
   AdvertCategory,
   Category,
+  CategoryAndType,
   CategoryDepartment,
   Correction,
+  DbAdvert,
   Department,
   InvolvedParty,
+  LBCategory,
+  LBType,
+  LogbirtingAdvert,
   Status,
   SuperCategory,
   Type,
@@ -80,6 +88,17 @@ export function generateAdvertsInserts(adverts: Array<Advert>) {
   return inserts
 }
 
+
+export function generateAdvertsUpdates(adverts: Array<DbAdvert | undefined>) {
+  const inserts = adverts.map((advert) => {
+    if(!advert){
+      return '';
+    }
+    return `UPDATE advert SET document_pdf_url = '${advert.document_pdf_url}' WHERE id = '${advert.id}';`
+  });
+  return inserts
+}
+
 export function generateAdvertsCategoriesInserts(
   advertCategories: Array<AdvertCategory>,
 ) {
@@ -94,6 +113,63 @@ export function generateCategoryDepartmentInserts(
 ) {
   const inserts = categoryDepartment.map((item) => {
     return `INSERT INTO category_department(category_id,department_id) VALUES ('${item.category_id}','${item.department_id}');`
+  })
+  return inserts
+}
+
+
+export function generateLBTypeInserts(types: Array<LBType>) {
+  const inserts = types.map((type) => {
+    return `INSERT INTO ADVERT_TYPE (id, title ,slug) VALUES ('${type.typeId}', '${type.typeName}', '${slugify(type.typeName)}');`
+  })
+
+  return inserts
+}
+
+export function generateLBCategoryInserts(categories: Array<LBCategory> ) {
+  const inserts = categories.map((category) => {
+    return `INSERT INTO ADVERT_CATEGORY (id, title,slug) VALUES ('${category.categoryName}', '${category.categoryId}', '${slugify(category.categoryId)}');`
+  })
+
+  return inserts
+}
+
+
+function escapeSqlString(str: string): string {
+
+  return str.replaceAll("'", "''").replaceAll("\\", "\\\\")
+}
+
+export function generateLBAdvertsInserts(adverts: Array<LogbirtingAdvert>) {
+
+  const inserts = adverts.map((advert) => {
+    // create uuid for each advert
+    //insert current advert id into legacy_id,
+   // const correctCategory = advert.category_id ?? ? mergedCategories[advert.category_id] ? mergedCategories[advert.category_id] : advert.category_id : null
+
+    //const correctType = advert.type_id ? mergedTypes[advert.type_id] ? mergedTypes[advert.type_id] : advert.type_id : null
+    if(advert.type_id?.toLowerCase() === 'CF39756A-49C7-44B7-94B7-BF8408296024'.toLowerCase()){
+      advert.type_id = 'D40BED80-6D9C-4388-AEA8-445B27614D8A'.toLowerCase()
+    }
+    if(advert.type_id?.toLowerCase() === 'AE233E22-A819-471F-A733-1453EF72374B'.toLowerCase()){
+      advert.type_id = '6BD9C89E-8658-4EA0-A1CE-1948656EB4E7'.toLowerCase()
+    }
+    if(advert.type_id?.toLowerCase() === '79F69CCC-4A06-4C66-B5CC-2661F306D490'.toLowerCase()){
+      advert.type_id = 'F1A7CE20-37BE-451B-8AA7-BC90B8A7E7BD'.toLowerCase()
+    }
+
+
+    const ID = crypto.randomUUID();
+    const advertInsert = `INSERT INTO ADVERT (id,legacy_id, created_at, updated_at, advert_type_id, advert_category_id, advert_status_id, publication_number, title, legacy_html, created_by,paid) VALUES ('${ID}','${advert.legacy_id}', '${new Date(advert.created_at).toISOString()}', '${new Date(advert.updated_at).toISOString()}', ${advert.type_id ? `'${advert.type_id}'`:null} ,${advert.category_id ? `'${advert.category_id}'`: `'52112993-EDCE-46A1-B7E6-8E3E5CD296F6'`}, '${advert.advert_status}', '${advert.publication_number}', '${advert.title}', '${escapeSqlString(advert.html)}', '${advert.responsible_name}',true);`
+    const advertPublicationInsert = `INSERT INTO ADVERT_PUBLICATION (advert_id,version_number,scheduled_at) VALUES ('${ID}','${advert.version}','${new Date(advert.created_at).toISOString()}');`
+    return `${advertInsert}\n${advertPublicationInsert}`
+  })
+  return inserts
+}
+
+export function generateLBAdvertsAndCategoriesInsert(typesAndCategories: Array<CategoryAndType>){
+  const inserts = typesAndCategories.map((item) => {
+    return `INSERT INTO TYPE_CATEGORIES (type_id, category_id) VALUES ('${item.typeId}', '${item.categoryId}');`
   })
   return inserts
 }

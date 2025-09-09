@@ -1,9 +1,9 @@
-/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import mssql from 'mssql'
 
 import {
   AdvertCategory,
+  CategoryAndType,
   Correction,
   DbAdvert,
   DbAdverts,
@@ -12,18 +12,17 @@ import {
   DbDepartment,
   DbInvolvedParty,
   DbStatus,
+  DbSubscriber,
   DbType,
   Document,
+  LBCategory,
+  LBType,
+  LogbirtingAdvert,
 } from '../types'
 
-import {
-  AbortMultipartUploadCommand,
-  CompleteMultipartUploadCommand,
-  CreateMultipartUploadCommand,
-  HeadObjectCommand,
-  S3Client,
-  UploadPartCommand,
-} from '@aws-sdk/client-s3'
+const SUBSCRIBER_QUERY = `SELECT RecordID, UserName, FullName, Email, [Password], SubscriptionValidFrom, SubscriptionValidTo, Blocked, FreeSubscription,
+		   IDNumber, FirstName, MiddleName, LastName, ContactName, PhoneNumber, StreetName, StreetNumber, PostCode, [Floor], City
+	FROM ClientsView where SubscriptionValidTo > '2025-08-01 12:00:00.000'`
 
 const DEPARTMENT_QUERY =
   'SELECT typename AS name, typeid AS id, COUNT(*) AS count FROM Adverts GROUP BY typename, typeid'
@@ -63,8 +62,136 @@ const INVOLVED_PARTIES_QUERY = `
   SELECT InvolvedPartyID, InvolvedPartyName FROM Adverts  GROUP BY InvolvedPartyID, InvolvedPartyName
 `
 
+const LOGBIRTING_QUERY = `
+SELECT TOP 1000
+dbo.Records.ModifiedDate,
+		dbo.Cases.RecordID,
+		dbo.Cases.CaseNumber,
+		dbo.Records.Name,
+		dbo.Records.CreationDate,
+		dbo.Records.StatusID,
+    l1.ListValue AS StatusName,
+    Responsibles.Name AS ResponsibleName,
+		CaseTypes.Name AS TypeName,
+    l2.ListValue AS Category,
+    l2.ListValueID as CategoryID,
+		dbo.Cases.CaseTemplateID,
+		dbo.Cases.CaseTemplateID AS TypeID,
+    Clients.Name AS InvolvedPartyName,
+		Clients.RecordID AS InvolvedPartyID,
+		CaseCategories.Name AS CategoryName,
+		dbo.PublicationDates.PublicationDate,
+		ISNULL(dbo.PublicationDates.PrintingChar, '') AS PrintingChar,
+		dbo.PublicationDates.Printing,
+		dbo.SignatureDates.SignatureDate,
+		dbo.AdvertHtmlCache.Body,
+		dbo.AdvertUserGroups.UserGroupID,
+		dbo.AdvertUserGroups.UserGroupName,
+	    m1.MetadataValue AS PublicationNumber,
+        m2.MetadataValue AS Subject2
+FROM    dbo.Cases INNER JOIN
+        dbo.Records ON dbo.Records.RecordID = dbo.Cases.RecordID LEFT JOIN
+        dbo.Keywords k on k.RecordID = dbo.Cases.RecordID LEFT JOIN
+        dbo.ListValues l2 on l2.ListValueID = k.KeywordID LEFT JOIN
+        dbo.ListValues l1 ON l1.ListValueID = dbo.Records.StatusID INNER JOIN
+        dbo.Records AS Responsibles ON Responsibles.RecordID = dbo.Cases.ResponsibleWorkerID INNER JOIN
+        dbo.OrganisationalUnits ON dbo.OrganisationalUnits.OrganisationalUnitID = dbo.Records.OrganisationalUnitID LEFT OUTER JOIN
+        dbo.PublicationDates ON dbo.PublicationDates.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.SignatureDates ON dbo.SignatureDates.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.AdvertUserGroups ON dbo.AdvertUserGroups.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.Records AS CaseTypes ON CaseTypes.RecordID = dbo.Cases.CaseTemplateID LEFT OUTER JOIN
+        dbo.Records AS Clients ON Clients.RecordID = dbo.Cases.ClientID LEFT OUTER JOIN
+        dbo.RecordJournalKeys ON dbo.RecordJournalKeys.RecordID = dbo.Records.RecordID AND dbo.RecordJournalKeys.IsPrimary = 1 LEFT OUTER JOIN
+        dbo.Categories ON dbo.Categories.RecordID = dbo.RecordJournalKeys.CategoryID LEFT OUTER JOIN
+        dbo.Records AS CaseCategories ON CaseCategories.RecordID = dbo.Cases.CategoryID LEFT OUTER JOIN
+        dbo.AdvertHtmlCache ON (dbo.AdvertHtmlCache.PrintingChar = dbo.PublicationDates.PrintingChar)  AND dbo.AdvertHtmlCache.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.Metadata m1 on (dbo.Records.RecordID = m1.RecordID and m1.MetadataName = 'PublishingCaseNumber') LEFT OUTER JOIN
+        dbo.Metadata m2 on (dbo.Records.RecordID = m2.RecordID and m2.MetadataName = 'Subject2')
+WHERE Records.Deleted = 0 and Records.IsMarkedForDelete = 0 AND Records.RecordType = '3B0F842A-CDAB-420F-88BC-930E259F5782' and l1.ListValue = 'Útgefin'
+`
+
+const LOGBIRTING_TYPE_AND_CATEGORY_QUERY = `
+SELECT
+
+        CaseTypes.RecordID as TypeId,
+
+        l2.ListValueID as CategoryID
+FROM    dbo.Cases INNER JOIN
+        dbo.Records ON dbo.Records.RecordID = dbo.Cases.RecordID LEFT JOIN
+        dbo.Keywords k on k.RecordID = dbo.Cases.RecordID LEFT JOIN
+        dbo.ListValues l2 on l2.ListValueID = k.KeywordID LEFT JOIN
+        dbo.ListValues l1 ON l1.ListValueID = dbo.Records.StatusID INNER JOIN
+        dbo.Records AS Responsibles ON Responsibles.RecordID = dbo.Cases.ResponsibleWorkerID INNER JOIN
+        dbo.OrganisationalUnits ON dbo.OrganisationalUnits.OrganisationalUnitID = dbo.Records.OrganisationalUnitID LEFT OUTER JOIN
+        dbo.PublicationDates ON dbo.PublicationDates.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.SignatureDates ON dbo.SignatureDates.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.AdvertUserGroups ON dbo.AdvertUserGroups.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.Records AS CaseTypes ON CaseTypes.RecordID = dbo.Cases.CaseTemplateID LEFT OUTER JOIN
+        dbo.Records AS Clients ON Clients.RecordID = dbo.Cases.ClientID LEFT OUTER JOIN
+        dbo.RecordJournalKeys ON dbo.RecordJournalKeys.RecordID = dbo.Records.RecordID AND dbo.RecordJournalKeys.IsPrimary = 1 LEFT OUTER JOIN
+        dbo.Categories ON dbo.Categories.RecordID = dbo.RecordJournalKeys.CategoryID LEFT OUTER JOIN
+        dbo.Records AS CaseCategories ON CaseCategories.RecordID = dbo.Cases.CategoryID LEFT OUTER JOIN
+        dbo.AdvertHtmlCache ON (dbo.AdvertHtmlCache.PrintingChar = dbo.PublicationDates.PrintingChar)  AND dbo.AdvertHtmlCache.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.Metadata m1 on (dbo.Records.RecordID = m1.RecordID and m1.MetadataName = 'PublishingCaseNumber') LEFT OUTER JOIN
+        dbo.Metadata m2 on (dbo.Records.RecordID = m2.RecordID and m2.MetadataName = 'Subject2')
+WHERE Records.Deleted = 0 and Records.IsMarkedForDelete = 0 AND Records.RecordType = '3B0F842A-CDAB-420F-88BC-930E259F5782' AND l2.ListValue IS NOT NULL and l1.ListValue = 'Útgefin'
+GROUP BY CaseTypes.RecordID, l2.ListValueID`
+
+const LOGBIRTING_TYPE_QUERY = `
+SELECT
+		CaseTypes.Name AS TypeName,
+        CaseTypes.RecordID as TypeId
+FROM    dbo.Cases INNER JOIN
+        dbo.Records ON dbo.Records.RecordID = dbo.Cases.RecordID LEFT JOIN
+        dbo.Keywords k on k.RecordID = dbo.Cases.RecordID LEFT JOIN
+        dbo.ListValues l2 on l2.ListValueID = k.KeywordID LEFT JOIN
+        dbo.ListValues l1 ON l1.ListValueID = dbo.Records.StatusID INNER JOIN
+        dbo.Records AS Responsibles ON Responsibles.RecordID = dbo.Cases.ResponsibleWorkerID INNER JOIN
+        dbo.OrganisationalUnits ON dbo.OrganisationalUnits.OrganisationalUnitID = dbo.Records.OrganisationalUnitID LEFT OUTER JOIN
+        dbo.PublicationDates ON dbo.PublicationDates.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.SignatureDates ON dbo.SignatureDates.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.AdvertUserGroups ON dbo.AdvertUserGroups.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.Records AS CaseTypes ON CaseTypes.RecordID = dbo.Cases.CaseTemplateID LEFT OUTER JOIN
+        dbo.Records AS Clients ON Clients.RecordID = dbo.Cases.ClientID LEFT OUTER JOIN
+        dbo.RecordJournalKeys ON dbo.RecordJournalKeys.RecordID = dbo.Records.RecordID AND dbo.RecordJournalKeys.IsPrimary = 1 LEFT OUTER JOIN
+        dbo.Categories ON dbo.Categories.RecordID = dbo.RecordJournalKeys.CategoryID LEFT OUTER JOIN
+        dbo.Records AS CaseCategories ON CaseCategories.RecordID = dbo.Cases.CategoryID LEFT OUTER JOIN
+        dbo.AdvertHtmlCache ON (dbo.AdvertHtmlCache.PrintingChar = dbo.PublicationDates.PrintingChar)  AND dbo.AdvertHtmlCache.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.Metadata m1 on (dbo.Records.RecordID = m1.RecordID and m1.MetadataName = 'PublishingCaseNumber') LEFT OUTER JOIN
+        dbo.Metadata m2 on (dbo.Records.RecordID = m2.RecordID and m2.MetadataName = 'Subject2')
+WHERE Records.Deleted = 0 and Records.IsMarkedForDelete = 0 AND Records.RecordType = '3B0F842A-CDAB-420F-88BC-930E259F5782'
+GROUP BY CaseTypes.Name, CaseTypes.RecordID
+`
+const LOGBIRTING_CATEGORY_QUERY = `
+
+SELECT
+        l2.ListValue AS Category,
+        l2.ListValueID as CategoryID
+FROM    dbo.Cases INNER JOIN
+        dbo.Records ON dbo.Records.RecordID = dbo.Cases.RecordID LEFT JOIN
+        dbo.Keywords k on k.RecordID = dbo.Cases.RecordID LEFT JOIN
+        dbo.ListValues l2 on l2.ListValueID = k.KeywordID LEFT JOIN
+        dbo.ListValues l1 ON l1.ListValueID = dbo.Records.StatusID INNER JOIN
+        dbo.Records AS Responsibles ON Responsibles.RecordID = dbo.Cases.ResponsibleWorkerID INNER JOIN
+        dbo.OrganisationalUnits ON dbo.OrganisationalUnits.OrganisationalUnitID = dbo.Records.OrganisationalUnitID LEFT OUTER JOIN
+        dbo.PublicationDates ON dbo.PublicationDates.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.SignatureDates ON dbo.SignatureDates.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.AdvertUserGroups ON dbo.AdvertUserGroups.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.Records AS CaseTypes ON CaseTypes.RecordID = dbo.Cases.CaseTemplateID LEFT OUTER JOIN
+        dbo.Records AS Clients ON Clients.RecordID = dbo.Cases.ClientID LEFT OUTER JOIN
+        dbo.RecordJournalKeys ON dbo.RecordJournalKeys.RecordID = dbo.Records.RecordID AND dbo.RecordJournalKeys.IsPrimary = 1 LEFT OUTER JOIN
+        dbo.Categories ON dbo.Categories.RecordID = dbo.RecordJournalKeys.CategoryID LEFT OUTER JOIN
+        dbo.Records AS CaseCategories ON CaseCategories.RecordID = dbo.Cases.CategoryID LEFT OUTER JOIN
+        dbo.AdvertHtmlCache ON (dbo.AdvertHtmlCache.PrintingChar = dbo.PublicationDates.PrintingChar)  AND dbo.AdvertHtmlCache.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
+        dbo.Metadata m1 on (dbo.Records.RecordID = m1.RecordID and m1.MetadataName = 'PublishingCaseNumber') LEFT OUTER JOIN
+        dbo.Metadata m2 on (dbo.Records.RecordID = m2.RecordID and m2.MetadataName = 'Subject2')
+WHERE Records.Deleted = 0 and Records.IsMarkedForDelete = 0 AND Records.RecordType = '3B0F842A-CDAB-420F-88BC-930E259F5782' AND l2.ListValue IS NOT NULL and l1.ListValue = 'Útgefin'
+GROUP BY l2.ListValue, l2.ListValueID
+`
+
 const ADVERTS_QUERY = (limit = 10, offset = 0) => `
   SELECT
+    TOP 1000
     [ModifiedDate],
     [RecordID],
     [CaseNumber],
@@ -91,10 +218,11 @@ const ADVERTS_QUERY = (limit = 10, offset = 0) => `
     [Subject2]
   FROM
     [Adverts]
+    where PublicationNumber IS NOT NULL AND PublicationNumber != '' and PublicationDate < '2025-01-01'
   ORDER BY
     [ModifiedDate] ASC
-  OFFSET ${offset} ROWS
-  FETCH NEXT ${limit} ROWS ONLY
+
+
 `
 
 const ADVERTS_CATEGORIES_QUERY = `
@@ -149,6 +277,39 @@ WHERE
 
 export async function connect(mssqlConnectionString: string) {
   await mssql.connect(mssqlConnectionString)
+}
+
+export async function getSubscribers(): Promise<Array<DbSubscriber>> {
+  const subscribers = await mssql.query(SUBSCRIBER_QUERY)
+  const records = subscribers.recordset as Array<any>
+  const subs: Array<DbSubscriber> = []
+
+  records.forEach((subscriber) => {
+    const s = {
+      id: subscriber.RecordID,
+      username: subscriber.UserName,
+      fullName: subscriber.FullName,
+      email: subscriber.Email,
+      password: subscriber.Password,
+      subscriptionValidFrom: subscriber.SubscriptionValidFrom,
+      subscriptionValidTo: subscriber.SubscriptionValidTo,
+      blocked: subscriber.Blocked,
+      freeSubscription: subscriber.FreeSubscription,
+      idNumber: subscriber.IDNumber,
+      firstName: subscriber.FirstName,
+      middleName: subscriber.MiddleName,
+      lastName: subscriber.LastName,
+      contactName: subscriber.ContactName,
+      phoneNumber: subscriber.PhoneNumber,
+      streetName: subscriber.StreetName,
+      streetNumber: subscriber.StreetNumber,
+      postCode: subscriber.PostCode,
+      floor: subscriber.Floor,
+      city: subscriber.City,
+    }
+    subs.push(s)
+  })
+  return subs
 }
 
 export async function getDepartments(): Promise<Array<DbDepartment>> {
@@ -267,6 +428,8 @@ export async function getAdverts(
       type_id: '',
       subject: advert.Subject2,
       status_id: advert.StatusID,
+      category: advert.Category,
+      category_id: advert.CategoryID,
       serial_number: parseInt(advert.PublicationNumber.split('/')[0], 10),
       publication_year: advert.PublicationDate,
       signature_date: advert.SignatureDate,
@@ -291,15 +454,43 @@ export async function getAdverts(
   }
 }
 
+export async function mapWithConcurrency<T, R>(
+  items: T[],
+  mapper: (item: T, index: number) => Promise<R>,
+  concurrency: number,
+): Promise<R[]> {
+  const results: R[] = []
+  let current = 0
+
+  async function next(): Promise<void> {
+    if (current >= items.length) return
+    const idx = current++
+    results[idx] = await mapper(items[idx], idx)
+    await next()
+  }
+
+  const workers = Array(Math.min(concurrency, items.length))
+    .fill(0)
+    .map(() => next())
+  await Promise.all(workers)
+  return results
+}
+
 export async function getAdvertDocuments(
   adverts: DbAdverts,
 ): Promise<Array<DbAdvert>> {
   const advertsWithFileUrl = await Promise.all(
     adverts.adverts.map(async (item) => {
-      const documentFromDB = await mssql.query(ADVERT_DOCUMENTS_QUERY(item.id))
+      //const documentFromDB = await mssql.query(ADVERT_DOCUMENTS_QUERY(item.id))
 
-      //const test = new PdfService();
-      const url = await savePDF(documentFromDB.recordset[0])
+      //const url = `${cdnUrl}/${key}`
+      const url = await savePDF(
+        null,
+        item.serial_number,
+        new Date(item.publication_year).getFullYear(),
+        item.department_id,
+      )
+
       if (url) {
         item.document_pdf_url = url
       }
@@ -348,8 +539,13 @@ export async function getAdvertsCategories() {
   return advertsCategories
 }
 
-export async function savePDF(document: Document) {
-  const client = new S3Client({
+export async function savePDF(
+  document: Document | null,
+  serial: number,
+  year: number,
+  departmentId: string,
+) {
+  /* const client = new S3Client({
     region: 'eu-west-1',
     credentials: {
       accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? '',
@@ -359,95 +555,109 @@ export async function savePDF(document: Document) {
   })
   if (!client) {
     throw new Error('S3 client not initialized')
+  }*/
+
+  let departmentLetter
+  switch (departmentId.toLocaleLowerCase()) {
+    case '69cd3e90-106e-4b9c-8419-148c29e1738a':
+      departmentLetter = `A`
+      break
+    case '637291f2-f7f4-405d-8586-ef88b59cab00':
+      departmentLetter = `B`
+      break
+    case '472af28c-5f60-48b4-81f5-4bb4254dd74d':
+      departmentLetter = `C`
+      break
+    case 'aa408eae-a76a-4ed8-9aa3-388dc0c8ff05':
+      departmentLetter = `tolublod`
+      break
   }
 
   const bucket = process.env.ADVERTS_BUCKET
   const cdnUrl = process.env.ADVERTS_CDN_URL
-  const key = `${document.FileName}`
-  if (!bucket) {
-    throw new Error('AWS_BUCKET_NAME not set')
-  }
-  try {
-    const command = new HeadObjectCommand({
-      Bucket: bucket,
-      Key: `adverts/${key}`,
-    })
+  const key = `${departmentLetter}_nr_${serial}_${year}.pdf`
+  return `${cdnUrl}/${key}`
+}
 
-    const fileCheck = await client.send(command)
-    //console.log(`File exists: ${key}`)
-    //console.log(`https://${bucket}.s3.eu-west-1.amazonaws.com/${key}`)
-    console.log('found file in s3')
-    return `${cdnUrl}/${document.FileName}`
-    //https://official-journal-application-files-bucket-dev.s3.eu-west-1.amazonaws.com/adverts/A_nr_1_2006.pdf
-  } catch (error: any) {
-    console.log(`File does not exist: ${key}, let upload`)
-  }
+export async function getLogbirtingAdverts(): Promise<Array<LogbirtingAdvert>> {
+  const advertsFromDb = await mssql.query(LOGBIRTING_QUERY)
 
-  let uploadId
-  const buffer = Buffer.from(document.Stream, 'utf8')
-  try {
-    const multipartUpload = await client.send(
-      new CreateMultipartUploadCommand({
-        Bucket: bucket,
-        Key: `adverts/${document.FileName}`,
-      }),
-    )
+  const records = advertsFromDb.recordset as Array<any>
+  const adverts: Array<LogbirtingAdvert> = []
 
-    uploadId = multipartUpload.UploadId
-
-    const uploadPromises = []
-    // Multipart uploads require a minimum size of 5 MB per part.
-    const chunkSize = 1024 * 1024 * 5
-    const numberOfparts = Math.ceil(buffer.length / chunkSize)
-
-    // Upload each part.
-    for (let i = 0; i < numberOfparts; i++) {
-      const start = i * chunkSize
-      const end = start + chunkSize
-      uploadPromises.push(
-        client
-          .send(
-            new UploadPartCommand({
-              Bucket: bucket,
-              Key: `adverts/${document.FileName}`,
-              UploadId: uploadId,
-              Body: buffer.subarray(start, end),
-              PartNumber: i + 1,
-            }),
-          )
-          .then((d) => {
-            return d
-          }),
-      )
+  records.forEach((advert) => {
+    const a: LogbirtingAdvert = {
+      legacy_id: advert.RecordID,
+      category_id: advert.CategoryID,
+      html: advert.Body,
+      publication_number: advert.PublicationNumber,
+      responsible_name: advert.ResponsibleName,
+      title: advert.Name,
+      type_id: advert.TypeID,
+      created_at: advert.PublicationDate,
+      updated_at: advert.PublicationDate,
+      advert_status: 'bd835a1d-0ecb-4aa4-9910-b5e60c30dced',
+      paid: true,
+      version:
+        advert.PrintingChar === 'A'
+          ? 1
+          : advert.PrintingChar === 'B'
+            ? 2
+            : advert.PrintingChar === 'C'
+              ? 3
+              : 1,
     }
+    adverts.push(a)
+  })
 
-    const uploadResults = await Promise.all(uploadPromises)
+  return adverts
+}
 
-    const res = await client.send(
-      new CompleteMultipartUploadCommand({
-        Bucket: bucket,
-        Key: `adverts/${document.FileName}`,
-        UploadId: uploadId,
-        MultipartUpload: {
-          Parts: uploadResults.map(({ ETag }, i) => ({
-            ETag,
-            PartNumber: i + 1,
-          })),
-        },
-      }),
-    )
-    return `${cdnUrl}/${document.FileName}`
-  } catch (err) {
-    console.log('Error uploading parts', err)
-    if (uploadId) {
-      const res = await client.send(
-        new AbortMultipartUploadCommand({
-          Bucket: bucket,
-          Key: `adverts/${document.FileName}`,
-          UploadId: uploadId,
-        }),
-      )
+export async function getLogbirtingTypes() {
+  const typesFromDb = await mssql.query(LOGBIRTING_TYPE_QUERY)
+  const records = typesFromDb.recordset as Array<any>
+  const types: Array<LBType> = []
+
+  records.forEach((type) => {
+    const t = {
+      typeName: type.TypeName,
+      typeId: type.TypeId,
     }
-    return null
-  }
+    types.push(t)
+  })
+  return types
+}
+
+export async function getLogbirtingCategories(): Promise<LBCategory[]> {
+  const categoriesFromDb = await mssql.query(LOGBIRTING_CATEGORY_QUERY)
+  const records = categoriesFromDb.recordset as Array<any>
+  const categories: Array<LBCategory> = []
+
+  records.forEach((category) => {
+    const c = {
+      categoryId: category.Category,
+      categoryName: category.CategoryID,
+    }
+    categories.push(c)
+  })
+  return categories
+}
+
+export async function getLogbirtingTypesAndCategories(): Promise<
+  CategoryAndType[]
+> {
+  const categoriesFromDb = await mssql.query(LOGBIRTING_TYPE_AND_CATEGORY_QUERY)
+  const records = categoriesFromDb.recordset as Array<any>
+  const categories: Array<CategoryAndType> = []
+
+  records.forEach((category) => {
+    const c: CategoryAndType = {
+      categoryId: category.CategoryID,
+      typeId: category.TypeId,
+      categoryName: category.Category,
+      typeName: category.TypeName,
+    }
+    categories.push(c)
+  })
+  return categories
 }
