@@ -21,6 +21,8 @@ type Props = {
   initalAdvertsCount: GetAdvertsStatusCounterDto
 }
 
+const TabIds = ['innsendar', 'utgafa', 'yfirlit']
+
 export const PageContainer = ({ initalAdvertsCount }: Props) => {
   const session = useSession()
 
@@ -31,9 +33,7 @@ export const PageContainer = ({ initalAdvertsCount }: Props) => {
   const client = getLegalGazetteClient('AdvertApi', session.data.idToken)
   const [tab, setTab] = useQueryState(
     'tab',
-    parseAsStringEnum(['innsendar', 'utgafa', 'yfirlit']).withDefault(
-      'innsendar',
-    ),
+    parseAsStringEnum(TabIds).withDefault('innsendar'),
   )
 
   const { data: advertsCountData } = useSWR(
@@ -60,7 +60,6 @@ export const PageContainer = ({ initalAdvertsCount }: Props) => {
             <Tabs
               label=""
               selected={tab}
-              /* @ts-expect-error the ids (type string) are hardcoded below */
               onChange={(tab) => setTab(tab)}
               tabs={[
                 {

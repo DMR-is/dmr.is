@@ -7,7 +7,7 @@ import useSWR from 'swr'
 
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
-import { AlertMessage, SkeletonLoader } from '@island.is/island-ui/core'
+import { AlertMessage } from '@island.is/island-ui/core'
 
 import { useFilters } from '../../../hooks/useFilters'
 import { getLegalGazetteClient } from '../../../lib/api/createClient'
@@ -29,7 +29,7 @@ export const AdvertsInProgress = () => {
 
   const { data, isLoading, error } = useSWR(
     ['getAdverts', params],
-    ([_key, params]) =>
+    async ([_key, params]) =>
       client.getAdvertsInProgress({
         page: params.page,
         pageSize: params.pageSize,
@@ -59,17 +59,6 @@ export const AdvertsInProgress = () => {
         type="error"
         title="Villa kom upp"
         message="Ekki tókst að sækja auglýsingar í vinnslu"
-      />
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <SkeletonLoader
-        repeat={5}
-        height={44}
-        space={[1, 2]}
-        borderRadius="large"
       />
     )
   }
