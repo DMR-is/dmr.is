@@ -2,6 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
 import { BaseEntityController } from '../base-entity/base-entity.controller'
+import { TypeModel } from '../type/type.model'
 import {
   CategoryDto,
   GetCategoriesDto,
@@ -38,17 +39,14 @@ export class CategoryController extends BaseEntityController<
   async findAll(
     @Query() query: GetCategoriesQueryDto,
   ): Promise<GetCategoriesDto> {
-    const options = {}
-
-    if (query.type) {
-      Object.assign(options, {
-        where: {
-          typeId: query.type,
+    const categories = await super.findAll({
+      include: [
+        {
+          model: TypeModel,
+          where: query.type ? { id: query.type } : undefined,
         },
-      })
-    }
-
-    const categories = await super.findAll(options)
+      ],
+    })
 
     return {
       categories: categories,
