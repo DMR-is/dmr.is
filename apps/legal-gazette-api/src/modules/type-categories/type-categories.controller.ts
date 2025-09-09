@@ -3,7 +3,11 @@ import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
-import { TypeWithCategoriesQueryDto } from './dto/type-categories.dto'
+import {
+  TypesWithCategoriesResponseDto,
+  TypeWithCategoriesQueryDto,
+  TypeWithCategoriesResponseDto,
+} from './dto/type-categories.dto'
 import { ITypeCategoriesService } from './type-categories.service.interface'
 
 @Controller({
@@ -17,13 +21,19 @@ export class TypeWithCategoriesController {
   ) {}
 
   @Get()
-  @LGResponse({ operationId: 'getTypeCategories' })
+  @LGResponse({
+    operationId: 'getTypeCategories',
+    type: TypesWithCategoriesResponseDto,
+  })
   getTypeCategories(@Query() query: TypeWithCategoriesQueryDto) {
     return this.typeCategoriesService.findAll(query)
   }
 
   @Get('category/:categoryId')
-  @LGResponse({ operationId: 'getTypeCategoriesByCategoryId' })
+  @LGResponse({
+    operationId: 'getTypeCategoriesByCategoryId',
+    type: TypesWithCategoriesResponseDto,
+  })
   getTypeCategoriesByCategoryId(
     @Param('categoryId', new UUIDValidationPipe()) categoryId: string,
   ) {
@@ -31,7 +41,10 @@ export class TypeWithCategoriesController {
   }
 
   @Get('type/:typeId')
-  @LGResponse({ operationId: 'getTypeCategoriesByTypeId' })
+  @LGResponse({
+    operationId: 'getTypeCategoriesByTypeId',
+    type: TypeWithCategoriesResponseDto,
+  })
   getTypeCategoriesByTypeId(
     @Param('typeId', new UUIDValidationPipe()) typeId: string,
   ) {
