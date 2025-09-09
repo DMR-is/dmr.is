@@ -19,4 +19,5 @@ export enum LegalGazetteModels {
   COURT_DISTRICT = 'court_district',
   SETTLEMENT = 'settlement',
   SUBSCRIBER = 'legal_gazette_subscribers',
+  TYPE_CATEGORIES = 'type_categories',
 }

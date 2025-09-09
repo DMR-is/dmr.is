@@ -1,9 +1,11 @@
-import { Column, DataType, HasMany } from 'sequelize-typescript'
+import { BelongsToMany, Column, DataType } from 'sequelize-typescript'
 
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
 import { CategoryModel } from '../category/category.model'
+import { TypeWithCategoriesDto } from '../type-categories/dto/type-categories.dto'
+import { TypeCategoriesModel } from '../type-categories/type-categories.model'
 import { TypeDto } from './dto/type.dto'
 
 export enum TypeIdEnum {
@@ -22,7 +24,7 @@ export enum TypeEnum {
 
 @BaseEntityTable({ tableName: LegalGazetteModels.ADVERT_TYPE })
 export class TypeModel extends BaseEntityModel<TypeDto> {
-  @HasMany(() => CategoryModel)
+  @BelongsToMany(() => CategoryModel, { through: () => TypeCategoriesModel })
   categories!: CategoryModel[]
 
   @Column({
@@ -31,4 +33,17 @@ export class TypeModel extends BaseEntityModel<TypeDto> {
     allowNull: false,
   })
   title!: TypeEnum
+
+  static fromModelWithCategories(model: TypeModel): TypeWithCategoriesDto {
+    return {
+      id: model.id,
+      title: model.title,
+      slug: model.slug,
+      categories: model.categories.map((category) => category.fromModel()),
+    }
+  }
+
+  fromModelWithCategories(): TypeWithCategoriesDto {
+    return TypeModel.fromModelWithCategories(this)
+  }
 }
