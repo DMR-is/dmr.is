@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   Inject,
   Injectable,
+  InternalServerErrorException,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
@@ -44,6 +45,7 @@ export class RoleGuard implements CanActivate {
     }
 
     try {
+      // Check if user has required roles
       const userLookup = await this.userService.getUserByNationalId(
         req.user?.actor?.nationalId ?? req.user.nationalId,
       )
@@ -79,7 +81,7 @@ export class RoleGuard implements CanActivate {
       return true
     } catch (error) {
       this.logger.error('roleLookup Error:', error)
-      return false
+      throw new InternalServerErrorException('User role lookup failed')
     }
   }
 }
