@@ -104,7 +104,6 @@ export class ApplicationController {
   @ApiOperation({ operationId: 'getMyUserInfo' })
   @ApiResponse({ type: GetMyUserInfoResponse })
   async getMyUserInfo(@CurrentUser() user: UserDto) {
-    // Skiptir engu
     return ResultWrapper.unwrap(await this.userService.getMyUserInfo(user))
   }
 
@@ -162,7 +161,6 @@ export class ApplicationController {
     @Body() commentBody: PostApplicationComment,
     @CurrentUser() user: UserDto,
   ): Promise<void> {
-    // Hér þarf breytingu á db og service, taka inn nafn, ef nafn er ekki til staðar þá nota current leið
     ResultWrapper.unwrap(
       await this.applicationService.postComment(
         applicationId,
@@ -300,7 +298,6 @@ export class ApplicationController {
     @Param('id', new UUIDValidationPipe()) _id: string,
     @CurrentUser() user: UserDto,
   ) {
-    // Hér þarf breytingu, ef actor, sækja þá involved party by nationalid?
     return ResultWrapper.unwrap(
       await this.userService.getInvolvedPartiesByUser(user),
     )
