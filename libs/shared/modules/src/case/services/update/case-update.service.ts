@@ -376,9 +376,18 @@ export class CaseUpdateService implements ICaseUpdateService {
     const nextStatus = getNextStatus(caseLookup.status.title)
 
     if (nextStatus === CaseStatusEnum.ReadyForPublishing) {
-      ResultWrapper.unwrap(
-        await this.priceService.postExternalPaymentByCaseId(id, transaction),
-      )
+      try {
+        await this.priceService.postExternalPaymentByCaseId(id, transaction)
+      } catch (error) {
+        // Log and continue ..
+        this.logger.error(
+          `Error occurred while processing external payment for case<${id}>: ${
+            typeof error === 'object' && error !== null && 'message' in error
+              ? (error as any).message
+              : 'Unknown error'
+          }`,
+        )
+      }
     }
 
     ResultWrapper.unwrap(
