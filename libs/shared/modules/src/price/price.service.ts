@@ -195,7 +195,7 @@ export class PriceService implements IPriceService {
 
     const feeCalculation = caseFeeCalculation.unwrap()
 
-    this.postExternalPayment(
+    return await this.postExternalPayment(
       caseId,
       {
         id: caseLookup.transaction.id,
@@ -213,8 +213,6 @@ export class PriceService implements IPriceService {
       },
       transaction,
     )
-
-    return ResultWrapper.ok()
   }
 
   @LogAndHandle()
@@ -367,7 +365,7 @@ export class PriceService implements IPriceService {
     ) {
       // B-department
       charactersOverBaseMax = characterLength - MAX_CHARACTER_HTML
-      characterFee = baseModifierFee.value * charactersOverBaseMax
+      characterFee = Math.round(baseModifierFee.value * charactersOverBaseMax)
       baseTransactionFee = baseFee.value + characterFee
       usedFeeCodes.push(baseModifierFee.feeCode)
       usedFeeCodes.push(baseFee.feeCode)
@@ -390,7 +388,7 @@ export class PriceService implements IPriceService {
       })
     } else if (body.baseDocumentCount && body.baseDocumentCount > 1) {
       // A and C department
-      baseTransactionFee = baseFee.value * body.baseDocumentCount
+      baseTransactionFee = Math.round(baseFee.value * body.baseDocumentCount)
       baseCount = body.baseDocumentCount
 
       usedFeeCodes.push(baseFee.feeCode)
@@ -418,7 +416,9 @@ export class PriceService implements IPriceService {
       body.additionalDocCount > 0 &&
       additionalDocFee?.value
     ) {
-      additionalDocPrice = body.additionalDocCount * additionalDocFee.value
+      additionalDocPrice = Math.round(
+        body.additionalDocCount * additionalDocFee.value,
+      )
       usedFeeCodes.push(additionalDocFee.feeCode)
       expenses.push({
         FeeCode: additionalDocFee.feeCode,
@@ -445,8 +445,9 @@ export class PriceService implements IPriceService {
       usedFeeCodes.push(fastTrackModifier.feeCode)
       fastTrackMultiplier = fastTrackModifier.value
 
-      const fastTrackPrice =
-        baseTransactionFee * fastTrackMultiplier - baseTransactionFee
+      const fastTrackPrice = Math.round(
+        baseTransactionFee * fastTrackMultiplier - baseTransactionFee,
+      )
       expenses.push({
         FeeCode: fastTrackModifier.feeCode,
         Reference: fastTrackModifier.feeCode,
@@ -459,8 +460,9 @@ export class PriceService implements IPriceService {
     if (customMultiplierFee?.feeCode && body.extraWorkCount) {
       usedFeeCodes.push(customMultiplierFee.feeCode)
       customMultiplier = body.extraWorkCount / 100 + 1 // Extra work is in percentage
-      const customMultiplierValue =
-        baseTransactionFee * customMultiplier - baseTransactionFee
+      const customMultiplierValue = Math.round(
+        baseTransactionFee * customMultiplier - baseTransactionFee,
+      )
       expenses.push({
         FeeCode: customMultiplierFee.feeCode,
         Reference: customMultiplierFee.description,
@@ -504,23 +506,41 @@ export class PriceService implements IPriceService {
     }
 
     const credentials = btoa(process.env.FEE_SERVICE_CRED)
-    await this.authService.xroadFetch(`${process.env.XROAD_FJS_PATH}/claim`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Basic ${credentials}`,
+    const res = await this.authService.xroadFetch(
+      `${process.env.XROAD_FJS_PATH}/claim`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Basic ${credentials}`,
+        },
+        body: JSON.stringify({
+          UUID: body.id,
+          office: process.env.FEE_SERVICE_OFFICE_ID,
+          chargeCategory: process.env.FEE_SERVICE_CHARGE_CATEGORY,
+          chargeBase: body.chargeBase,
+          Expenses: body.Expenses,
+          debtorNationalId: body.debtorNationalId,
+          employeeNationalId: body.debtorNationalId,
+          extraData: body.extra,
+        }),
       },
-      body: JSON.stringify({
-        UUID: body.id,
-        office: process.env.FEE_SERVICE_OFFICE_ID,
-        chargeCategory: process.env.FEE_SERVICE_CHARGE_CATEGORY,
-        chargeBase: body.chargeBase,
-        Expenses: body.Expenses,
-        debtorNationalId: body.debtorNationalId,
-        employeeNationalId: body.debtorNationalId,
-        extraData: body.extra,
-      }),
-    })
+    )
+
+    if (!res.ok) {
+      this.logger.error(
+        `price.service.postExternalPayment, could not post payment<${body.chargeBase}>`,
+        {
+          status: res.status,
+          category: LOGGING_CATEGORY,
+          detail: res.statusText,
+        },
+      )
+      return ResultWrapper.err({
+        code: res.status,
+        message: `Payment post <${body.chargeBase}> error`,
+      })
+    }
 
     return ResultWrapper.ok()
   }
