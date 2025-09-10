@@ -16,6 +16,11 @@ module.exports = {
       'utf8',
     )
 
+    const typeCategoriesSeed = await readFile(
+      './src/modules/type-categories/type-categories.seed.sql',
+      'utf8',
+    )
+
     const statusSeed = await readFile(
       './src/modules/status/status.seed.sql',
       'utf8',
@@ -40,6 +45,7 @@ module.exports = {
 
         ${typeSeed}
         ${categoriesSeed}
+        ${typeCategoriesSeed}
         ${statusSeed}
         ${usersSeed}
         ${courtDistrictSeed}
