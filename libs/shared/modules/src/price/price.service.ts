@@ -195,7 +195,7 @@ export class PriceService implements IPriceService {
 
     const feeCalculation = caseFeeCalculation.unwrap()
 
-    return this.postExternalPayment(
+    return await this.postExternalPayment(
       caseId,
       {
         id: caseLookup.transaction.id,
