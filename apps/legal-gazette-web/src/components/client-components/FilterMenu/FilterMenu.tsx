@@ -13,7 +13,7 @@ import {
   Stack,
 } from '@island.is/island-ui/core'
 
-import { useFilters } from '../../../hooks/useFilters'
+import { useFilterContext } from '../../../hooks/useFilters'
 import { QueryParams } from '../../../lib/constants'
 import { messages } from '../../../lib/messages/messages'
 import { OptionType, QueryFilterValue } from '../../../lib/types'
@@ -50,7 +50,7 @@ export const FilterMenu = <T extends QueryFilterValue>({
   filters,
 }: FilterMenuProps<T>) => {
   const { formatMessage } = useIntl()
-  const { params, setParams } = useFilters()
+  const { params, setParams } = useFilterContext()
   const popover = usePopoverState({
     placement: 'bottom-start',
   })

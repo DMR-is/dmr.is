@@ -1387,7 +1387,7 @@
             "name": "categoryId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
             "name": "statusId",
@@ -1402,7 +1402,7 @@
             "name": "typeId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
             "name": "dateFrom",
@@ -1570,7 +1570,7 @@
             "name": "categoryId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
             "name": "statusId",
@@ -1585,7 +1585,7 @@
             "name": "typeId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
             "name": "dateFrom",
@@ -2585,6 +2585,213 @@
         "tags": ["Application"]
       }
     },
+    "/api/v1/type-categories": {
+      "get": {
+        "operationId": "getTypeCategories",
+        "parameters": [
+          {
+            "name": "typeId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TypesWithCategoriesResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["TypeWithCategories"]
+      }
+    },
+    "/api/v1/type-categories/category/{categoryId}": {
+      "get": {
+        "operationId": "getTypeCategoriesByCategoryId",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TypesWithCategoriesResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["TypeWithCategories"]
+      }
+    },
+    "/api/v1/type-categories/type/{typeId}": {
+      "get": {
+        "operationId": "getTypeCategoriesByTypeId",
+        "parameters": [
+          {
+            "name": "typeId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TypeWithCategoriesResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["TypeWithCategories"]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "HealthController__v1",
@@ -3277,6 +3484,36 @@
           "scheduledAt",
           "declaredClaims"
         ]
+      },
+      "TypeWithCategoriesDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "slug": { "type": "string" },
+          "categories": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CategoryDto" }
+          }
+        },
+        "required": ["id", "title", "slug", "categories"]
+      },
+      "TypesWithCategoriesResponseDto": {
+        "type": "object",
+        "properties": {
+          "types": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TypeWithCategoriesDto" }
+          }
+        },
+        "required": ["types"]
+      },
+      "TypeWithCategoriesResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": { "$ref": "#/components/schemas/TypeWithCategoriesDto" }
+        },
+        "required": ["type"]
       }
     }
   }

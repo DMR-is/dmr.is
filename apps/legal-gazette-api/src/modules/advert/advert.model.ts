@@ -140,15 +140,15 @@ export enum AdvertModelScopes {
     const whereOptions: WhereOptions = {}
 
     if (query.typeId) {
-      Object.assign(whereOptions, { typeId: query.typeId })
+      Object.assign(whereOptions, { typeId: { [Op.in]: query.typeId } })
     }
 
     if (query.categoryId) {
-      Object.assign(whereOptions, { categoryId: query.categoryId })
+      Object.assign(whereOptions, { categoryId: { [Op.in]: query.categoryId } })
     }
 
     if (query.statusId) {
-      Object.assign(whereOptions, { statusId: query.statusId })
+      Object.assign(whereOptions, { statusId: { [Op.in]: query.statusId } })
     }
 
     if (query.dateFrom && query.dateTo) {

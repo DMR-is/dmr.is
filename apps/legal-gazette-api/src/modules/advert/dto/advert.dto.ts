@@ -156,12 +156,17 @@ export class GetAdvertsDto {
 
 export class GetAdvertsQueryDto extends PagingQuery {
   @ApiProperty({
-    type: String,
+    type: [String],
     required: false,
   })
+  @Transform(({ value }) => {
+    if (!value) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
   @IsOptional()
-  @IsUUID()
-  categoryId?: string
+  @IsArray()
+  @IsUUID(undefined, { each: true })
+  categoryId?: string[]
 
   @ApiProperty({
     enum: StatusIdEnum,
@@ -176,19 +181,27 @@ export class GetAdvertsQueryDto extends PagingQuery {
     isArray: true,
     required: false,
   })
-  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
+  @Transform(({ value }) => {
+    if (!value) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
   @IsOptional()
   @IsArray()
   @IsEnum(StatusIdEnum, { each: true })
   statusId?: StatusIdEnum[]
 
   @ApiProperty({
-    type: String,
+    type: [String],
     required: false,
   })
+  @Transform(({ value }) => {
+    if (!value) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
   @IsOptional()
-  @IsUUID()
-  typeId?: string
+  @IsArray()
+  @IsUUID(undefined, { each: true })
+  typeId?: string[]
 
   @ApiProperty({
     type: String,

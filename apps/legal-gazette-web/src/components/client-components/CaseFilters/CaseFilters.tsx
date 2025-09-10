@@ -3,22 +3,21 @@
 import debounce from 'lodash/debounce'
 import { useCallback, useState } from 'react'
 import { useIntl } from 'react-intl'
-import useSWR from 'swr'
+
+import { ActiveFilters } from '@dmr.is/ui/components/ActiveFilters/ActiveFilters'
 
 import { Inline, Input, Stack } from '@island.is/island-ui/core'
 
-import { useClient } from '../../../hooks/useClient'
-import { useFilters } from '../../../hooks/useFilters'
+import { useFilterContext } from '../../../hooks/useFilters'
 import { QueryParams } from '../../../lib/constants'
 import { messages } from '../../../lib/messages/messages'
 import FilterMenu from '../FilterMenu/FilterMenu'
 
 export const CaseFilters = () => {
-  const typeClient = useClient('TypeApi')
-  const categoryClient = useClient('CategoryApi')
-
-  const { params, setParams } = useFilters()
+  const { params, setParams, resetParams } = useFilterContext()
   const [localSearch, setLocalSearch] = useState(params.search)
+
+  const { typeOptions, categoryOptions, activeFilters } = useFilterContext()
 
   const { formatMessage } = useIntl()
 
@@ -28,36 +27,6 @@ export const CaseFilters = () => {
     }, 500),
     [],
   )
-
-  const { data: typesData } = useSWR('getTypes', typeClient.getTypes, {
-    refreshInterval: 0,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false,
-    revalidateIfStale: false,
-    keepPreviousData: true,
-  })
-
-  const { data: categoriesData } = useSWR(
-    'getCategories',
-    categoryClient.getCategories,
-    {
-      refreshInterval: 0,
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      revalidateIfStale: false,
-      keepPreviousData: true,
-    },
-  )
-
-  const typeOptions = typesData?.types.map((type) => ({
-    value: type.id,
-    label: type.title,
-  }))
-  const categoryOptions = categoriesData?.categories.map((cat) => ({
-    value: cat.id,
-    label: cat.title,
-  }))
-
   return (
     <Stack space={[1, 2]}>
       <Inline alignY="center" space={2}>
@@ -87,7 +56,11 @@ export const CaseFilters = () => {
           ]}
         />
       </Inline>
-      <div>Active filters</div>
+      <ActiveFilters
+        onClear={resetParams}
+        onClearLabel="Hreinsa síur"
+        filters={activeFilters}
+      />
     </Stack>
   )
 }

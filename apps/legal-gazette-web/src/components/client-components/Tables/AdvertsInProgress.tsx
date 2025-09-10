@@ -9,13 +9,13 @@ import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { AlertMessage } from '@island.is/island-ui/core'
 
-import { useFilters } from '../../../hooks/useFilters'
+import { useFilterContext } from '../../../hooks/useFilters'
 import { getLegalGazetteClient } from '../../../lib/api/createClient'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
 import { formatDate } from '../../../lib/utils'
 
 export const AdvertsInProgress = () => {
-  const { params, setParams } = useFilters()
+  const { params, setParams } = useFilterContext()
 
   const { formatMessage } = useIntl()
 
@@ -34,8 +34,8 @@ export const AdvertsInProgress = () => {
         page: params.page,
         pageSize: params.pageSize,
         search: params.search,
-        categoryId: params.categoryId || undefined,
-        typeId: params.typeId || undefined,
+        categoryId: params.categoryId,
+        typeId: params.typeId,
         dateFrom: params.dateFrom?.toISOString(),
         dateTo: params.dateTo?.toISOString(),
       }),
