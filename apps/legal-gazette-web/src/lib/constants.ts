@@ -6,11 +6,13 @@ export const DEFAULT_PAGE_SIZE = 10
 export enum QueryParams {
   SEARCH = 'search',
   STATUS = 'status',
-  TYPE = 'type',
-  CATEGORY = 'category',
+  TYPE = 'typeId',
+  CATEGORY = 'categoryId',
   PUBLICATION = 'publication',
   PAGE = 'page',
   PAGE_SIZE = 'pageSize',
+  DATE_FROM = 'dateFrom',
+  DATE_TO = 'dateTo',
   SORT_BY = 'sortBy',
   DIRECTION = 'direction',
 }

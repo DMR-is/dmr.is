@@ -1,25 +1,23 @@
 'use client'
 
 import debounce from 'lodash/debounce'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useIntl } from 'react-intl'
-
-import { ActiveFilters } from '@dmr.is/ui/components/ActiveFilters/ActiveFilters'
+import useSWR from 'swr'
 
 import { Inline, Input, Stack } from '@island.is/island-ui/core'
 
+import { useClient } from '../../../hooks/useClient'
 import { useFilters } from '../../../hooks/useFilters'
+import { QueryParams } from '../../../lib/constants'
 import { messages } from '../../../lib/messages/messages'
-import { QueryFilterValue } from '../../../lib/types'
-import { toggleArrayOption } from '../../../lib/utils'
-import FilterMenu, { FilterMenuProps } from '../FilterMenu/FilterMenu'
+import FilterMenu from '../FilterMenu/FilterMenu'
 
-type CaseFiltersProps = {
-  filters: FilterMenuProps<QueryFilterValue>['filters']
-}
+export const CaseFilters = () => {
+  const typeClient = useClient('TypeApi')
+  const categoryClient = useClient('CategoryApi')
 
-export const CaseFilters = ({ filters }: CaseFiltersProps) => {
-  const { params, setParams, activeFilters } = useFilters()
+  const { params, setParams } = useFilters()
   const [localSearch, setLocalSearch] = useState(params.search)
 
   const { formatMessage } = useIntl()
@@ -31,86 +29,65 @@ export const CaseFilters = ({ filters }: CaseFiltersProps) => {
     [],
   )
 
-  // when all filters are cleared, clear the search
-  useEffect(() => {
-    if (params.search !== localSearch) {
-      setLocalSearch(params.search)
-    }
-  }, [params.search])
+  const { data: typesData } = useSWR('getTypes', typeClient.getTypes, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    revalidateIfStale: false,
+    keepPreviousData: true,
+  })
 
-  const activeFilterProps = useMemo(() => {
-    return activeFilters
-      .map((filter) => {
-        const [queryParam, value] = filter
+  const { data: categoriesData } = useSWR(
+    'getCategories',
+    categoryClient.getCategories,
+    {
+      refreshInterval: 0,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      revalidateIfStale: false,
+      keepPreviousData: true,
+    },
+  )
 
-        const currentFilter = filters.find((f) => f.queryParam === queryParam)
-
-        if (!currentFilter) {
-          return null
-        }
-
-        const currentOptions =
-          currentFilter?.options.filter((opt) =>
-            value.includes(opt.value as string),
-          ) || []
-
-        if (currentOptions.length === 0) {
-          return null
-        }
-
-        return {
-          queryParam: queryParam,
-          options: currentOptions.map((opt) => ({
-            label: opt.label,
-            value: opt.value,
-          })),
-        }
-      })
-      .filter((filter) => filter !== null)
-  }, [activeFilters])
+  const typeOptions = typesData?.types.map((type) => ({
+    value: type.id,
+    label: type.title,
+  }))
+  const categoryOptions = categoriesData?.categories.map((cat) => ({
+    value: cat.id,
+    label: cat.title,
+  }))
 
   return (
-    <Stack space={2}>
-      <Inline space={2}>
+    <Stack space={[1, 2]}>
+      <Inline alignY="center" space={2}>
         <Input
-          name="search"
           size="sm"
-          backgroundColor="blue"
+          name="search"
           placeholder={formatMessage(messages.search)}
+          backgroundColor="blue"
+          value={localSearch}
           onChange={(e) => {
             setLocalSearch(e.target.value)
             handleSearch(e.target.value)
           }}
-          value={localSearch}
-          icon={{
-            name: 'search',
-            type: 'outline',
-          }}
         />
-        <FilterMenu filters={filters} />
-      </Inline>
-      <ActiveFilters
-        onClearLabel={formatMessage(messages.clear)}
-        onClear={() =>
-          setParams(
-            activeFilters.reduce((acc, [key]) => ({ ...acc, [key]: [] }), {}),
-          )
-        }
-        filters={activeFilterProps.flatMap((af) =>
-          af.options.map((opt) => ({
-            label: opt.label,
-            onClick: () => {
-              setParams({
-                [af.queryParam]: toggleArrayOption(
-                  params[af.queryParam],
-                  opt.value,
-                  false,
-                ),
-              })
+        <FilterMenu
+          filters={[
+            {
+              title: 'Tegund',
+              options: typeOptions,
+              queryParam: QueryParams.TYPE,
             },
-          })),
-        )}
-      />
+            {
+              title: 'Flokkur',
+              options: categoryOptions,
+              queryParam: QueryParams.CATEGORY,
+            },
+          ]}
+        />
+      </Inline>
+      <div>Active filters</div>
     </Stack>
   )
 }

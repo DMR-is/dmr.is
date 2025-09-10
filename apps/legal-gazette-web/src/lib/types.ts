@@ -10,6 +10,8 @@ export type QueryFilters = {
   [QueryParams.PAGE_SIZE]: number // default 10
   [QueryParams.SORT_BY]: string | null // maybe we can set default here to avoid null
   [QueryParams.DIRECTION]: string // default 'desc'
+  [QueryParams.DATE_FROM]: Date | null // maybe we can set default here to avoid null
+  [QueryParams.DATE_TO]: Date | null // maybe we can set default here to avoid null
 }
 
 export type QueryFilterParam = QueryFilters[keyof QueryFilters]

@@ -5,16 +5,22 @@ import { SessionProvider } from 'next-auth/react'
 
 import { NuqsAdapter } from 'nuqs/adapters/next'
 import { IntlProvider } from 'react-intl'
+import { SWRConfig } from 'swr'
 
+import { GetCategoriesDto, GetTypesDto } from '../../gen/fetch'
 import { allMessages } from '../../lib/messages'
 import { flattenMessages } from '../../lib/utils'
 
 export const Providers = ({
   children,
   session,
+  types,
+  categories,
 }: {
   children: React.ReactNode
   session: Session | null
+  types: GetTypesDto
+  categories: GetCategoriesDto
 }) => {
   return (
     <NuqsAdapter>
@@ -41,7 +47,16 @@ export const Providers = ({
             console.error('Error in IntlProvider', { exception: err })
           }}
         >
-          {children}
+          <SWRConfig
+            value={{
+              fallback: {
+                getTypes: types,
+                getCategories: categories,
+              },
+            }}
+          >
+            {children}
+          </SWRConfig>
         </IntlProvider>
       </SessionProvider>
     </NuqsAdapter>

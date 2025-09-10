@@ -152,10 +152,13 @@ export class AdvertService implements IAdvertService {
       page: query.page,
       pageSize: query.pageSize,
     })
-    const adverts = await this.advertModel.findAndCountAll({
-      limit,
-      offset,
-    })
+
+    const adverts = await this.advertModel
+      .scope({ method: ['withQuery', query] })
+      .findAndCountAll({
+        limit,
+        offset,
+      })
 
     const migrated = adverts.rows.map((advert) => advert.fromModel())
     const paging = generatePaging(

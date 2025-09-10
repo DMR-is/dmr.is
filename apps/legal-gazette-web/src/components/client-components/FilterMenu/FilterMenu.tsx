@@ -39,7 +39,7 @@ export type FilterMenuClearCallback = ({
 export type FilterMenuItem<T> = {
   title: string
   queryParam: QueryParams
-  options: OptionType<T>[]
+  options?: OptionType<T>[]
 }
 
 export type FilterMenuProps<T> = {
@@ -82,9 +82,9 @@ export const FilterMenu = <T extends QueryFilterValue>({
                   startExpanded={i === 0}
                 >
                   <Stack space={2}>
-                    {filter.options.map((option, j) => {
+                    {filter.options?.map((option, j) => {
                       const isChecked = isArrayOptionSelected(
-                        params[filter.queryParam],
+                        params[filter.queryParam as keyof typeof params],
                         option.value,
                       )
                       return (
@@ -95,7 +95,9 @@ export const FilterMenu = <T extends QueryFilterValue>({
                           onChange={(e) => {
                             setParams({
                               [filter.queryParam]: toggleArrayOption(
-                                params[filter.queryParam],
+                                params[
+                                  filter.queryParam as keyof typeof params
+                                ],
                                 option.value,
                                 e.target.checked,
                               ),

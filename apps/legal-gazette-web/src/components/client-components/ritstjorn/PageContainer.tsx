@@ -9,12 +9,12 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
-  Stack,
   Tabs,
 } from '@island.is/island-ui/core'
 
 import { GetAdvertsStatusCounterDto } from '../../../gen/fetch'
 import { getLegalGazetteClient } from '../../../lib/api/createClient'
+import { RitstjornHero } from '../ritstjorn/Hero'
 import { SubmittedTab } from '../tabs/SubmittedTab'
 
 type Props = {
@@ -53,7 +53,8 @@ export const PageContainer = ({ initalAdvertsCount }: Props) => {
     advertsCountData.withdrawn.count
 
   return (
-    <Stack space={2}>
+    <>
+      <RitstjornHero />
       <GridContainer>
         <GridRow>
           <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
@@ -82,6 +83,6 @@ export const PageContainer = ({ initalAdvertsCount }: Props) => {
           </GridColumn>
         </GridRow>
       </GridContainer>
-    </Stack>
+    </>
   )
 }
