@@ -9,7 +9,6 @@ import { ActiveFilters } from '@dmr.is/ui/components/ActiveFilters/ActiveFilters
 import { Inline, Input, Stack } from '@island.is/island-ui/core'
 
 import { useFilterContext } from '../../../hooks/useFilters'
-import { QueryParams } from '../../../lib/constants'
 import { messages } from '../../../lib/messages/messages'
 import FilterMenu from '../FilterMenu/FilterMenu'
 
@@ -17,7 +16,7 @@ export const CaseFilters = () => {
   const { params, setParams, resetParams } = useFilterContext()
   const [localSearch, setLocalSearch] = useState(params.search)
 
-  const { typeOptions, categoryOptions, activeFilters } = useFilterContext()
+  const { activeFilters } = useFilterContext()
 
   const { formatMessage } = useIntl()
 
@@ -41,20 +40,7 @@ export const CaseFilters = () => {
             handleSearch(e.target.value)
           }}
         />
-        <FilterMenu
-          filters={[
-            {
-              title: 'Tegund',
-              options: typeOptions,
-              queryParam: QueryParams.TYPE,
-            },
-            {
-              title: 'Flokkur',
-              options: categoryOptions,
-              queryParam: QueryParams.CATEGORY,
-            },
-          ]}
-        />
+        <FilterMenu />
       </Inline>
       <ActiveFilters
         onClear={resetParams}

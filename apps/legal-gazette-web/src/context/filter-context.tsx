@@ -9,21 +9,22 @@ import {
 import { createContext } from 'react'
 
 import { GetCategoriesDto, GetTypesDto } from '../gen/fetch'
+import { QueryParams } from '../lib/constants'
 type Option<T = string> = {
   label: string
   value: T
 }
 
-type Params = {
-  search: string
-  page: number
-  pageSize: number
-  categoryId: string[]
-  typeId: string[]
-  dateFrom?: Date
-  dateTo?: Date
-  sortBy?: string
-  direction: 'asc' | 'desc'
+interface Params {
+  [QueryParams.SEARCH]: string
+  [QueryParams.PAGE]: number
+  [QueryParams.PAGE_SIZE]: number
+  [QueryParams.CATEGORY]: string[]
+  [QueryParams.TYPE]: string[]
+  [QueryParams.DATE_FROM]?: Date | null
+  [QueryParams.DATE_TO]?: Date | null
+  [QueryParams.SORT_BY]?: string | null
+  [QueryParams.DIRECTION]: 'asc' | 'desc'
 }
 
 type ActiveFilters = {
@@ -37,7 +38,7 @@ export type FilterContextState = {
   params: Params
   setParams: (params: Partial<Params>) => Promise<URLSearchParams>
   activeFilters: ActiveFilters[]
-  resetParams?: () => void
+  resetParams: () => void
 }
 
 export const FilterContext = createContext<FilterContextState>({
@@ -62,15 +63,17 @@ export const FilterProvider = ({
 }: FilterProviderProps) => {
   const [searchParams, setSearchParams] = useQueryStates(
     {
-      search: parseAsString.withDefault(''),
-      page: parseAsInteger.withDefault(1),
-      pageSize: parseAsInteger.withDefault(10),
-      categoryId: parseAsArrayOf(parseAsString).withDefault([]),
-      typeId: parseAsArrayOf(parseAsString).withDefault([]),
-      dateFrom: parseAsIsoDate,
-      dateTo: parseAsIsoDate,
-      sortBy: parseAsString,
-      direction: parseAsStringEnum(['asc', 'desc']).withDefault('desc'),
+      [QueryParams.SEARCH]: parseAsString.withDefault(''),
+      [QueryParams.PAGE]: parseAsInteger.withDefault(1),
+      [QueryParams.PAGE_SIZE]: parseAsInteger.withDefault(10),
+      [QueryParams.CATEGORY]: parseAsArrayOf(parseAsString).withDefault([]),
+      [QueryParams.TYPE]: parseAsArrayOf(parseAsString).withDefault([]),
+      [QueryParams.DATE_FROM]: parseAsIsoDate,
+      [QueryParams.DATE_TO]: parseAsIsoDate,
+      [QueryParams.SORT_BY]: parseAsString,
+      [QueryParams.DIRECTION]: parseAsStringEnum(['asc', 'desc']).withDefault(
+        'desc',
+      ),
     },
     {
       clearOnDefault: true,
@@ -83,15 +86,15 @@ export const FilterProvider = ({
 
   const resetSearchParams = () => {
     setSearchParams({
-      search: '',
-      page: 1,
-      pageSize: 10,
-      categoryId: [],
-      typeId: [],
-      dateFrom: null,
-      dateTo: null,
-      sortBy: null,
-      direction: 'desc',
+      [QueryParams.SEARCH]: '',
+      [QueryParams.PAGE]: 1,
+      [QueryParams.PAGE_SIZE]: 10,
+      [QueryParams.CATEGORY]: [],
+      [QueryParams.TYPE]: [],
+      [QueryParams.DATE_FROM]: null,
+      [QueryParams.DATE_TO]: null,
+      [QueryParams.SORT_BY]: null,
+      [QueryParams.DIRECTION]: 'desc',
     })
   }
 
