@@ -19,6 +19,11 @@ import {
 } from '@dmr.is/utils'
 
 import {
+  RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
+  RECALL_CATEGORY_ID,
+  RECALL_DECEASED_ADVERT_TYPE_ID,
+} from '../../lib/constants'
+import {
   createCommonAdvertFromApplicationSchema,
   createCommonAdvertFromIslandIsApplicationSchema,
   createRecallAdvertFromApplicationSchema,
@@ -114,8 +119,6 @@ export class ApplicationService implements IApplicationService {
     user: DMRUser,
   ) {
     const requiredFields = createRecallAdvertFromApplicationSchema.parse({
-      type: application.type,
-      category: application.category,
       settlementName: application.settlementName,
       settlementNationalId: application.settlementNationalId,
       settlementAddress: application.settlementAddress,
@@ -134,6 +137,7 @@ export class ApplicationService implements IApplicationService {
     })
 
     const applicationType = application.applicationType
+
     const isBankruptcy =
       applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
 
@@ -156,8 +160,10 @@ export class ApplicationService implements IApplicationService {
     const advert = await this.advertModel.create(
       {
         caseId: application.caseId,
-        typeId: requiredFields.type.id,
-        categoryId: requiredFields.category.id,
+        typeId: isBankruptcy
+          ? RECALL_BANKRUPTCY_ADVERT_TYPE_ID
+          : RECALL_DECEASED_ADVERT_TYPE_ID,
+        categoryId: RECALL_CATEGORY_ID,
         createdBy: user.fullName,
         signatureName: requiredFields.signatureName,
         signatureOnBehalfOf: requiredFields.signatureOnBehalfOf,

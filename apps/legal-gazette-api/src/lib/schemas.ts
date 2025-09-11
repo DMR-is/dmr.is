@@ -42,8 +42,6 @@ export const createCommonAdvertFromIslandIsApplicationSchema = z.object({
 })
 
 export const createRecallAdvertFromApplicationSchema = z.object({
-  type: baseEntitySchema,
-  category: baseEntitySchema,
   courtDistrictId: z.uuid(),
   settlementName: z.string(),
   settlementNationalId: z.string(),
