@@ -9,10 +9,11 @@ import {
 export const commonFormMetaSchema = z.object({
   caseId: z.string(),
   applicationId: z.string(),
-  categoryOptions: z.array(optionSchema),
+  typeOptions: z.array(optionSchema),
 })
 
 export const commonFormFieldsSchema = z.object({
+  type: z.string().min(1, 'Tegund er nauðsynleg').optional(),
   category: z.string().min(1, 'Flokkur er nauðsynlegur'),
   caption: z.string().min(1, 'Yfirskrift er nauðsynleg'),
   html: z.string().min(1, 'Meginmál er nauðsynlegt'),
@@ -45,6 +46,7 @@ export type CommonFormMetaSchema = z.infer<typeof commonFormMetaSchema>
 export type CommonFormSchema = z.infer<typeof commonFormSchema>
 
 export enum CommonFormFields {
+  TYPE = 'fields.type',
   CATEGORY = 'fields.category',
   CAPTION = 'fields.caption',
   HTML = 'fields.html',

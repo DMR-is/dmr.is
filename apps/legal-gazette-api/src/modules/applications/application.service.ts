@@ -67,6 +67,7 @@ export class ApplicationService implements IApplicationService {
   ) {
     const requiredFields = createCommonAdvertFromApplicationSchema.parse({
       caseId: application.caseId,
+      type: application.type,
       category: application.category,
       caption: application.caption,
       additionalText: application.additionalText,
@@ -82,7 +83,7 @@ export class ApplicationService implements IApplicationService {
     const advert = await this.advertModel.create(
       {
         caseId: requiredFields.caseId,
-        typeId: TypeIdEnum.COMMON_ADVERT,
+        typeId: requiredFields.type.id,
         caption: requiredFields.caption,
         categoryId: requiredFields.category.id,
         additionalText: requiredFields.additionalText,
@@ -113,6 +114,8 @@ export class ApplicationService implements IApplicationService {
     user: DMRUser,
   ) {
     const requiredFields = createRecallAdvertFromApplicationSchema.parse({
+      type: application.type,
+      category: application.category,
       settlementName: application.settlementName,
       settlementNationalId: application.settlementNationalId,
       settlementAddress: application.settlementAddress,
@@ -146,10 +149,6 @@ export class ApplicationService implements IApplicationService {
       )
     }
 
-    const categoryId = isBankruptcy
-      ? CategoryDefaultIdEnum.BANKRUPTCY_RECALL
-      : CategoryDefaultIdEnum.DECEASED_RECALL
-
     const title = isBankruptcy
       ? `Innköllun þrotabús - ${requiredFields.settlementName}`
       : `Innköllun dánarbús - ${requiredFields.settlementName}`
@@ -157,8 +156,8 @@ export class ApplicationService implements IApplicationService {
     const advert = await this.advertModel.create(
       {
         caseId: application.caseId,
-        categoryId: categoryId,
-        typeId: TypeIdEnum.RECALL,
+        typeId: requiredFields.type.id,
+        categoryId: requiredFields.category.id,
         createdBy: user.fullName,
         signatureName: requiredFields.signatureName,
         signatureOnBehalfOf: requiredFields.signatureOnBehalfOf,
@@ -324,6 +323,7 @@ export class ApplicationService implements IApplicationService {
     }
 
     await application.update({
+      typeId: body.typeId,
       additionalText: body.additionalText,
       caption: body.caption,
       html: body.html,
@@ -397,18 +397,10 @@ export class ApplicationService implements IApplicationService {
     applicationType: ApplicationTypeEnum,
     user: DMRUser,
   ): Promise<CaseDto> {
-    const categoryId =
-      applicationType === ApplicationTypeEnum.COMMON
-        ? null
-        : applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
-          ? CategoryDefaultIdEnum.BANKRUPTCY_RECALL
-          : CategoryDefaultIdEnum.DECEASED_RECALL
-
     const caseData = await this.caseModel.create(
       {
         involvedPartyNationalId: user.nationalId,
         application: {
-          categoryId: categoryId,
           applicationType: applicationType,
           submittedByNationalId: user.nationalId,
           publishingDates: [addDays(getNextWeekDay(new Date()), 14)],

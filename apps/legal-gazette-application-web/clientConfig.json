@@ -66,6 +66,64 @@
         "tags": ["Legal gazette - application web API"]
       }
     },
+    "/api/v1/types/common": {
+      "get": {
+        "operationId": "getCommonAdvertTypes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetTypesDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
     "/api/v1/types/{id}": {
       "get": {
         "operationId": "getType",
@@ -1387,7 +1445,7 @@
             "name": "categoryId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
             "name": "statusId",
@@ -1402,7 +1460,7 @@
             "name": "typeId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
             "name": "dateFrom",
@@ -1570,7 +1628,7 @@
             "name": "categoryId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
             "name": "statusId",
@@ -1585,7 +1643,7 @@
             "name": "typeId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
             "name": "dateFrom",
@@ -2820,7 +2878,6 @@
           "createdAt",
           "updatedAt",
           "id",
-          "caseId",
           "publicationNumber",
           "title",
           "createdBy",
@@ -2954,6 +3011,7 @@
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": {
             "type": "string",
             "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
@@ -3021,11 +3079,13 @@
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": {
             "type": "string",
             "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
           },
           "title": { "type": "string" },
+          "typeId": { "type": "string", "nullable": true },
           "categoryId": { "type": "string", "nullable": true },
           "courtDistrictId": { "type": "string", "nullable": true },
           "islandIsApplicationId": { "type": "string", "nullable": true },
@@ -3067,6 +3127,7 @@
       "UpdateApplicationDto": {
         "type": "object",
         "properties": {
+          "typeId": { "type": "string", "nullable": true },
           "categoryId": { "type": "string", "nullable": true },
           "courtDistrictId": { "type": "string", "nullable": true },
           "islandIsApplicationId": { "type": "string", "nullable": true },

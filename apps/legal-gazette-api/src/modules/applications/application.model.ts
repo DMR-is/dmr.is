@@ -14,7 +14,7 @@ import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
 import { CommunicationChannelCreateAttributes } from '../communication-channel/communication-channel.model'
 import { CourtDistrictModel } from '../court-district/court-district.model'
-import { TypeEnum } from '../type/type.model'
+import { TypeEnum, TypeModel } from '../type/type.model'
 import { ApplicationDetailedDto, ApplicationDto } from './dto/application.dto'
 import { ApplicationStatusEnum } from './contants'
 
@@ -29,6 +29,7 @@ export type ApplicationAttributes = {
   submittedByNationalId: string
   status: ApplicationStatusEnum
   applicationType: ApplicationTypeEnum
+  typeId: string | null
   categoryId: string | null
   courtDistrictId: string | null
   islandIsApplicationId: string | null
@@ -61,6 +62,7 @@ export type ApplicationCreateAttributes = {
   categoryId?: string | null
   courtDistrictId?: string | null
   islandIsApplicationId?: string | null
+  typeId?: string | null
   caption?: string | null
   additionalText?: string | null
   judgmentDate?: Date | null
@@ -85,7 +87,10 @@ export type ApplicationCreateAttributes = {
 
 @BaseTable({ tableName: LegalGazetteModels.APPLICATION })
 @DefaultScope(() => ({
-  include: [{ model: CategoryModel, as: 'category' }],
+  include: [
+    { model: CategoryModel, as: 'category' },
+    { model: TypeModel, as: 'type' },
+  ],
 }))
 @Scopes(() => ({
   common: {
@@ -104,7 +109,10 @@ export type ApplicationCreateAttributes = {
       'publishingDates',
       'communicationChannels',
     ],
-    include: [{ model: CategoryModel, as: 'category' }],
+    include: [
+      { model: CategoryModel, as: 'category' },
+      { model: TypeModel, as: 'type' },
+    ],
   },
   bankruptcy: {
     attributes: [
@@ -181,6 +189,14 @@ export class ApplicationModel extends BaseModel<
   })
   @ForeignKey(() => CategoryModel)
   categoryId!: string
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    defaultValue: null,
+  })
+  @ForeignKey(() => TypeModel)
+  typeId!: string | null
 
   @Column({
     type: DataType.ENUM(...Object.values(ApplicationStatusEnum)),
@@ -347,6 +363,9 @@ export class ApplicationModel extends BaseModel<
   @BelongsTo(() => CategoryModel)
   category?: CategoryModel
 
+  @BelongsTo(() => TypeModel)
+  type?: TypeModel | null
+
   @BelongsTo(() => CourtDistrictModel)
   courtDistrict!: CourtDistrictModel
 
@@ -384,6 +403,7 @@ export class ApplicationModel extends BaseModel<
       nationalId: model.submittedByNationalId,
       status: model.status,
       title: model.title,
+      type: model.type?.fromModel(),
       category: model.category?.fromModel(),
       applicationType: model.applicationType,
     }

@@ -14,6 +14,7 @@ export const communicationChannelSchema = z.object({
 
 export const createCommonAdvertFromApplicationSchema = z.object({
   caseId: z.uuid(),
+  type: baseEntitySchema,
   category: baseEntitySchema,
   caption: z.string(),
   additionalText: z.string().nullable().optional(),
@@ -41,6 +42,8 @@ export const createCommonAdvertFromIslandIsApplicationSchema = z.object({
 })
 
 export const createRecallAdvertFromApplicationSchema = z.object({
+  type: baseEntitySchema,
+  category: baseEntitySchema,
   courtDistrictId: z.uuid(),
   settlementName: z.string(),
   settlementNationalId: z.string(),

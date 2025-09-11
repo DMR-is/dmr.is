@@ -5,6 +5,7 @@ import {
   AddDivisionMeetingAdvertToApplicationRequest,
   CreateApplicationRequest,
   GetAdvertPublicationRequest,
+  GetCategoriesRequest,
   GetMyApplicationsRequest,
   SubmitApplicationRequest,
   UpdateApplicationRequest,
@@ -16,6 +17,18 @@ const getClientWithSession = async () => {
   const session = await getSession()
 
   return getClient(session?.idToken as string)
+}
+
+export async function getCategories(args: GetCategoriesRequest) {
+  const client = await getClientWithSession()
+
+  const results = await safeCall(() => client.getCategories(args))
+
+  if (results.error) {
+    throw new Error(results.error.details?.[0] ?? 'Villa kom upp')
+  }
+
+  return results.data
 }
 
 export async function addDivisionMeeting(
