@@ -2820,7 +2820,6 @@
           "html": { "type": "string" }
         }
       },
-      "AdvertVersion": { "type": "string", "enum": ["A", "B", "C"] },
       "AdvertVersionEnum": { "type": "string", "enum": ["A", "B", "C"] },
       "AdvertPublicationDto": {
         "type": "object",
@@ -2834,6 +2833,26 @@
           }
         },
         "required": ["id", "advertId", "scheduledAt", "publishedAt", "version"]
+      },
+      "SettlementDto": {
+        "type": "object",
+        "properties": {
+          "liquidatorName": { "type": "string" },
+          "liquidatorLocation": { "type": "string" },
+          "settlementName": { "type": "string" },
+          "settlementNationalId": { "type": "string" },
+          "settlementAddress": { "type": "string" },
+          "settlementDeadline": { "type": "string", "nullable": true },
+          "settlementDateOfDeath": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "liquidatorName",
+          "liquidatorLocation",
+          "settlementName",
+          "settlementNationalId",
+          "settlementAddress",
+          "settlementDeadline"
+        ]
       },
       "AdvertDetailedDto": {
         "type": "object",
@@ -2855,41 +2874,53 @@
             "nullable": true
           },
           "id": { "type": "string" },
-          "caseId": { "type": "string" },
-          "publicationNumber": { "type": "string", "nullable": true },
+          "scheduledAt": { "type": "string" },
+          "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "type": { "$ref": "#/components/schemas/TypeDto" },
+          "status": { "$ref": "#/components/schemas/StatusDto" },
           "title": { "type": "string" },
           "createdBy": { "type": "string" },
-          "type": { "$ref": "#/components/schemas/TypeDto" },
-          "category": { "$ref": "#/components/schemas/CategoryDto" },
-          "status": { "$ref": "#/components/schemas/StatusDto" },
-          "version": {
-            "allOf": [{ "$ref": "#/components/schemas/AdvertVersion" }]
-          },
-          "paid": { "type": "boolean" },
-          "signatureName": { "type": "string" },
-          "signatureLocation": { "type": "string" },
-          "signatureDate": { "type": "string" },
+          "assignedUser": { "type": "string" },
           "publications": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
-          }
+          },
+          "caseId": { "type": "string" },
+          "publicationNumber": { "type": "string", "nullable": true },
+          "content": { "type": "string", "nullable": true },
+          "caption": { "type": "string", "nullable": true },
+          "additionalText": { "type": "string", "nullable": true },
+          "paid": { "type": "boolean" },
+          "signatureName": { "type": "string" },
+          "signatureLocation": { "type": "string" },
+          "signatureOnBehalfOf": { "type": "string", "nullable": true },
+          "signatureDate": { "type": "string" },
+          "judgementDate": { "type": "string" },
+          "divisionMeetingDate": { "type": "string" },
+          "divisionMeetingLocation": { "type": "string" },
+          "settlement": { "$ref": "#/components/schemas/SettlementDto" },
+          "courtDistrict": { "$ref": "#/components/schemas/CourtDistrictDto" }
         },
         "required": [
           "createdAt",
           "updatedAt",
           "id",
-          "publicationNumber",
+          "scheduledAt",
+          "category",
+          "type",
+          "status",
           "title",
           "createdBy",
-          "type",
-          "category",
-          "status",
-          "version",
+          "publications",
+          "publicationNumber",
+          "content",
+          "caption",
+          "additionalText",
           "paid",
           "signatureName",
           "signatureLocation",
-          "signatureDate",
-          "publications"
+          "signatureOnBehalfOf",
+          "signatureDate"
         ]
       },
       "AdvertStatusCounterItemDto": {

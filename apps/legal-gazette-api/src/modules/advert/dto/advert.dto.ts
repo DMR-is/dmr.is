@@ -19,6 +19,8 @@ import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { DetailedDto } from '../../../dto/detailed.dto'
 import { AdvertPublicationDto } from '../../advert-publications/dto/advert-publication.dto'
 import { CategoryDto } from '../../category/dto/category.dto'
+import { CourtDistrictDto } from '../../court-district/dto/court-district.dto'
+import { SettlementDto } from '../../settlement/dto/settlement.dto'
 import { StatusDto } from '../../status/dto/status.dto'
 import { StatusIdEnum } from '../../status/status.model'
 import { TypeDto } from '../../type/dto/type.dto'
@@ -65,13 +67,7 @@ export class AdvertDto extends DetailedDto {
   publications!: AdvertPublicationDto[]
 }
 
-export class AdvertDetailedDto extends DetailedDto {
-  @ApiProperty({
-    type: String,
-  })
-  @IsUUID()
-  id!: string
-
+export class AdvertDetailedDto extends AdvertDto {
   @ApiProperty({
     type: String,
     required: false,
@@ -114,11 +110,14 @@ export class AdvertDetailedDto extends DetailedDto {
   @ValidateNested()
   status!: StatusDto
 
-  @ApiProperty({
-    enum: AdvertVersionEnum,
-    enumName: 'AdvertVersion',
-  })
-  version!: AdvertVersionEnum
+  @ApiProperty({ type: String, nullable: true })
+  content!: string | null
+
+  @ApiProperty({ type: String, nullable: true })
+  caption!: string | null
+
+  @ApiProperty({ type: String, nullable: true })
+  additionalText!: string | null
 
   @ApiProperty({
     type: Boolean,
@@ -134,9 +133,35 @@ export class AdvertDetailedDto extends DetailedDto {
   @IsString()
   signatureLocation!: string
 
+  @ApiProperty({ type: String, nullable: true })
+  @IsString()
+  signatureOnBehalfOf!: string | null
+
   @ApiProperty({ type: String })
   @IsDateString()
   signatureDate!: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  judgementDate?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  divisionMeetingDate?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  divisionMeetingLocation?: string
+
+  @ApiProperty({ type: SettlementDto, required: false })
+  @IsOptional()
+  settlement?: SettlementDto
+
+  @ApiProperty({ type: CourtDistrictDto, required: false })
+  courtDistrict?: CourtDistrictDto
 
   @ApiProperty({ type: [AdvertPublicationDto] })
   publications!: AdvertPublicationDto[]
@@ -306,7 +331,17 @@ export class UpdateAdvertDto {
   })
   @IsOptional()
   @IsString()
-  html?: string
+  content?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsUUID()
+  typeId?: string
 }
 
 export class PublishAdvertsBody {

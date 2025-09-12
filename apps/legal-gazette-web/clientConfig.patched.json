@@ -80,6 +80,76 @@
         "tags": ["Type"]
       }
     },
+    "/api/v1/types/common": {
+      "get": {
+        "operationId": "getCommonAdvertTypes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTypesDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Type"]
+      }
+    },
     "/api/v1/types/{id}": {
       "get": {
         "operationId": "getType",
@@ -3892,14 +3962,16 @@
           "title": {
             "type": "string"
           },
-          "html": {
+          "content": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "typeId": {
             "type": "string"
           }
         }
-      },
-      "AdvertVersion": {
-        "type": "string",
-        "enum": ["A", "B", "C"]
       },
       "AdvertVersionEnum": {
         "type": "string",
@@ -3931,6 +4003,42 @@
         },
         "required": ["id", "advertId", "scheduledAt", "publishedAt", "version"]
       },
+      "SettlementDto": {
+        "type": "object",
+        "properties": {
+          "liquidatorName": {
+            "type": "string"
+          },
+          "liquidatorLocation": {
+            "type": "string"
+          },
+          "settlementName": {
+            "type": "string"
+          },
+          "settlementNationalId": {
+            "type": "string"
+          },
+          "settlementAddress": {
+            "type": "string"
+          },
+          "settlementDeadline": {
+            "type": "string",
+            "nullable": true
+          },
+          "settlementDateOfDeath": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "liquidatorName",
+          "liquidatorLocation",
+          "settlementName",
+          "settlementNationalId",
+          "settlementAddress",
+          "settlementDeadline"
+        ]
+      },
       "AdvertDetailedDto": {
         "type": "object",
         "properties": {
@@ -3953,12 +4061,17 @@
           "id": {
             "type": "string"
           },
-          "caseId": {
+          "scheduledAt": {
             "type": "string"
           },
-          "publicationNumber": {
-            "type": "string",
-            "nullable": true
+          "category": {
+            "$ref": "#/components/schemas/CategoryDto"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TypeDto"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusDto"
           },
           "title": {
             "type": "string"
@@ -3966,21 +4079,33 @@
           "createdBy": {
             "type": "string"
           },
-          "type": {
-            "$ref": "#/components/schemas/TypeDto"
+          "assignedUser": {
+            "type": "string"
           },
-          "category": {
-            "$ref": "#/components/schemas/CategoryDto"
+          "publications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdvertPublicationDto"
+            }
           },
-          "status": {
-            "$ref": "#/components/schemas/StatusDto"
+          "caseId": {
+            "type": "string"
           },
-          "version": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/AdvertVersion"
-              }
-            ]
+          "publicationNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "additionalText": {
+            "type": "string",
+            "nullable": true
           },
           "paid": {
             "type": "boolean"
@@ -3991,32 +4116,49 @@
           "signatureLocation": {
             "type": "string"
           },
+          "signatureOnBehalfOf": {
+            "type": "string",
+            "nullable": true
+          },
           "signatureDate": {
             "type": "string"
           },
-          "publications": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AdvertPublicationDto"
-            }
+          "judgementDate": {
+            "type": "string"
+          },
+          "divisionMeetingDate": {
+            "type": "string"
+          },
+          "divisionMeetingLocation": {
+            "type": "string"
+          },
+          "settlement": {
+            "$ref": "#/components/schemas/SettlementDto"
+          },
+          "courtDistrict": {
+            "$ref": "#/components/schemas/CourtDistrictDto"
           }
         },
         "required": [
           "createdAt",
           "updatedAt",
           "id",
-          "publicationNumber",
+          "scheduledAt",
+          "category",
+          "type",
+          "status",
           "title",
           "createdBy",
-          "type",
-          "category",
-          "status",
-          "version",
+          "publications",
+          "publicationNumber",
+          "content",
+          "caption",
+          "additionalText",
           "paid",
           "signatureName",
           "signatureLocation",
-          "signatureDate",
-          "publications"
+          "signatureOnBehalfOf",
+          "signatureDate"
         ]
       },
       "AdvertStatusCounterItemDto": {
@@ -4221,6 +4363,9 @@
           "category": {
             "$ref": "#/components/schemas/CategoryDto"
           },
+          "type": {
+            "$ref": "#/components/schemas/TypeDto"
+          },
           "status": {
             "type": "string",
             "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
@@ -4333,12 +4478,19 @@
           "category": {
             "$ref": "#/components/schemas/CategoryDto"
           },
+          "type": {
+            "$ref": "#/components/schemas/TypeDto"
+          },
           "status": {
             "type": "string",
             "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
           },
           "title": {
             "type": "string"
+          },
+          "typeId": {
+            "type": "string",
+            "nullable": true
           },
           "categoryId": {
             "type": "string",
@@ -4451,6 +4603,10 @@
       "UpdateApplicationDto": {
         "type": "object",
         "properties": {
+          "typeId": {
+            "type": "string",
+            "nullable": true
+          },
           "categoryId": {
             "type": "string",
             "nullable": true

@@ -73,10 +73,11 @@ export class AdvertService implements IAdvertService {
     const advert = await this.advertModel.findByPkOrThrow(id)
 
     const updated = await advert.update({
-      ...body,
+      typeId: body.typeId,
+      categoryId: body.categoryId,
+      title: body.title,
+      content: body.content,
     })
-
-    // TODO: update the publication scheduledAt date from body
 
     return updated.fromModelToDetailed()
   }

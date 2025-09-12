@@ -517,23 +517,28 @@ export class AdvertModel extends BaseModel<
 
   static fromModelToDetailed(model: AdvertModel): AdvertDetailedDto {
     return {
-      id: model.id,
+      ...this.fromModel(model),
       caseId: model.caseId || undefined,
-      title: model.title,
-      createdBy: model.createdBy,
       publicationNumber: model.publicationNumber,
-      version: model.version,
-      category: model.category.fromModel(),
-      status: model.status.fromModel(),
-      type: model.type.fromModel(),
+      signatureOnBehalfOf: model.signatureOnBehalfOf,
       signatureDate: model.signatureDate.toISOString(),
       signatureLocation: model.signatureLocation,
       signatureName: model.signatureName,
-      createdAt: model.createdAt.toISOString(),
-      updatedAt: model.updatedAt.toISOString(),
-      deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
       paid: model.paid,
-      publications: model.publications.map((p) => p.fromModel()),
+      caption: model.caption,
+      content: model.content,
+      additionalText: model.additionalText,
+      courtDistrict: model.courtDistrict?.fromModel()
+        ? model.courtDistrict.fromModel()
+        : undefined,
+      judgementDate: model.judgementDate
+        ? model.judgementDate.toISOString()
+        : undefined,
+      divisionMeetingDate: model.divisionMeetingDate
+        ? model.divisionMeetingDate.toISOString()
+        : undefined,
+      divisionMeetingLocation: model.divisionMeetingLocation ?? undefined,
+      settlement: model.settlement?.fromModel(),
     }
   }
 
