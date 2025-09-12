@@ -81,6 +81,11 @@ if (process.env.PROXIED !== 'true') {
   fastify.register(fastifyCompress, { global: true })
 }
 
+if (!OPENSEARCH_CLUSTER_ENDPOINT) {
+  console.warn(
+    'No OpenSearch endpoint found. Search routes and elastic rebuild routes not enabled.',
+  )
+}
 if (OPENSEARCH_CLUSTER_ENDPOINT) {
   fastify.register(FastifyOpenSearch, {
     node: OPENSEARCH_CLUSTER_ENDPOINT,
