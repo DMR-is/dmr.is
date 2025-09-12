@@ -5,12 +5,12 @@ import { useIntl } from 'react-intl'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { useCompletedAdverts } from '../../../hooks/adverts/useCompletedAdverts'
-import { useFilters } from '../../../hooks/useFilters'
+import { useFilterContext } from '../../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
 import { formatDate } from '../../../lib/utils'
 
 export const AdvertsCompleted = () => {
-  const { params } = useFilters()
+  const { params } = useFilterContext()
   const { formatMessage } = useIntl()
 
   const { adverts, isLoading, paging } = useCompletedAdverts({

@@ -7,20 +7,21 @@ import { RecallForm } from './recall/RecallForm'
 export type Props = {
   caseId: string
   application: ApplicationDetailedDto
-  categories: { label: string; value: string }[]
+  types?: { label: string; value: string }[]
   courtDistricts: { label: string; value: string }[]
 }
 
 export const ApplicationForm = ({
   application,
-  categories,
   courtDistricts,
+  types,
 }: Props) => {
   switch (application.applicationType) {
     case ApplicationTypeEnum.COMMON:
       return (
         <CommonForm
           fields={{
+            type: application.type?.id,
             caption: application.caption ?? undefined,
             category: application.category?.id,
             html: (() => {
@@ -40,7 +41,7 @@ export const ApplicationForm = ({
             signatureLocation: application.signatureLocation ?? undefined,
             signatureName: application.signatureName ?? undefined,
           }}
-          categories={categories}
+          types={types}
           applicationId={application.id}
           caseId={application.id}
         />

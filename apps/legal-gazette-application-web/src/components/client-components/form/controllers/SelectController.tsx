@@ -24,6 +24,9 @@ export const SelectController = (
     }
   }
 
+  const value = field.value
+  console.log(field.name, value)
+
   return (
     <Select
       {...field}
@@ -36,6 +39,7 @@ export const SelectController = (
       errorMessage={error ? error.message : undefined}
       required={required}
       onChange={(opt) => handleChange(opt?.value)}
+      isDisabled={props.disabled}
     />
   )
 }

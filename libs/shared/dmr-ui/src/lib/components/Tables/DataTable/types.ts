@@ -47,6 +47,8 @@ export type DataTableBodyProps<T extends readonly DataTableColumnProps[]> = {
 
 export type DataTablePaginationProps = {
   paging: DataTablePagingProps
+  onPageChange?: (page: number) => void
+  onPageSizeChange?: (pageSize: number) => void
 }
 
 export type DataTableProps<T extends readonly DataTableColumnProps[]> = {
@@ -55,5 +57,7 @@ export type DataTableProps<T extends readonly DataTableColumnProps[]> = {
   columns: T
   rows?: Array<Omit<DataTableRowProps<T>, 'columns'>>
   paging?: DataTablePagingProps
+  onPageChange?: (page: number) => void
+  onPageSizeChange?: (pageSize: number) => void
   noDataMessage?: string
 }

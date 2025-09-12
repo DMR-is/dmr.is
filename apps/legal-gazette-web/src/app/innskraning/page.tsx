@@ -1,4 +1,4 @@
-import { GetServerSideProps } from 'next'
+'use client'
 import { signIn } from 'next-auth/react'
 
 import { useState } from 'react'
@@ -15,13 +15,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { LayoutProps } from '../layout/Layout'
-
-type Props = {
-  prevUrl?: string
-}
-
-export default function Login({ prevUrl }: Props) {
+export default function Login() {
   const [loading, setLoading] = useState(false)
   return (
     <GridContainer>
@@ -31,7 +25,7 @@ export default function Login({ prevUrl }: Props) {
           offset={['0', '1/12']}
           span={['12/12', '5/12']}
         >
-          <Box component="img" src="/assets/image-with-text-1.svg" />
+          <Box component="img" src="/images/image-with-text-1.svg" />
         </GridColumn>
         <GridColumn paddingBottom={[2, 2, 3]} span={['12/12', '5/12']}>
           <Box
@@ -51,7 +45,7 @@ export default function Login({ prevUrl }: Props) {
                     e.preventDefault()
                     try {
                       setLoading(true)
-                      await signIn(identityServerId, { callbackUrl: prevUrl })
+                      await signIn(identityServerId, { callbackUrl: '/' })
                     } catch (error) {
                       setLoading(false)
                     }
@@ -69,14 +63,4 @@ export default function Login({ prevUrl }: Props) {
       </GridRow>
     </GridContainer>
   )
-}
-export const getServerSideProps: GetServerSideProps<Props> = async ({
-  query,
-}) => {
-  const callbackUrl = query.callbackUrl ? query.callbackUrl : '/'
-
-  const layout: LayoutProps = {
-    showFooter: true,
-  }
-  return { props: { layout, prevUrl: callbackUrl as string } }
 }

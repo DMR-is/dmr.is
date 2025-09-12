@@ -73,10 +73,11 @@ export class AdvertService implements IAdvertService {
     const advert = await this.advertModel.findByPkOrThrow(id)
 
     const updated = await advert.update({
-      ...body,
+      typeId: body.typeId,
+      categoryId: body.categoryId,
+      title: body.title,
+      content: body.content,
     })
-
-    // TODO: update the publication scheduledAt date from body
 
     return updated.fromModelToDetailed()
   }
@@ -152,10 +153,13 @@ export class AdvertService implements IAdvertService {
       page: query.page,
       pageSize: query.pageSize,
     })
-    const adverts = await this.advertModel.findAndCountAll({
-      limit,
-      offset,
-    })
+
+    const adverts = await this.advertModel
+      .scope({ method: ['withQuery', query] })
+      .findAndCountAll({
+        limit,
+        offset,
+      })
 
     const migrated = adverts.rows.map((advert) => advert.fromModel())
     const paging = generatePaging(

@@ -18,22 +18,17 @@ import { CommonSignatureFields } from './fields/CommonSignatureFields'
 type Props = {
   applicationId: string
   caseId: string
-  categories: { label: string; value: string }[]
+  types?: { label: string; value: string }[]
   fields: Partial<CommonFormSchema['fields']>
 }
 
-export const CommonForm = ({
-  applicationId,
-  caseId,
-  categories,
-  fields,
-}: Props) => {
+export const CommonForm = ({ applicationId, caseId, types, fields }: Props) => {
   const router = useRouter()
   const methods = useForm<CommonFormSchema>(
     commonForm({
       applicationId: applicationId,
       caseId: caseId,
-      categoryOptions: categories,
+      typeOptions: types,
       fields: fields,
     }),
   )

@@ -11,6 +11,7 @@ import { Paging } from '@dmr.is/shared/dto'
 
 import { CategoryDto } from '../../category/dto/category.dto'
 import { CommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
+import { TypeDto } from '../../type/dto/type.dto'
 import { ApplicationTypeEnum } from '../application.model'
 import { ApplicationStatusEnum } from '../contants'
 
@@ -30,6 +31,9 @@ export class ApplicationDto {
   @ApiProperty({ type: CategoryDto, required: false })
   category?: CategoryDto
 
+  @ApiProperty({ type: TypeDto, required: false })
+  type?: TypeDto
+
   @ApiProperty({ enum: ApplicationStatusEnum })
   status!: ApplicationStatusEnum
 
@@ -38,6 +42,9 @@ export class ApplicationDto {
 }
 
 export class ApplicationFieldsDto {
+  @ApiProperty({ type: String, required: false, nullable: true })
+  typeId?: string | null
+
   @ApiProperty({ type: String, required: false, nullable: true })
   categoryId?: string | null
 
