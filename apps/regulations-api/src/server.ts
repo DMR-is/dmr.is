@@ -50,6 +50,9 @@ if (REDIS_URL) {
     host: REDIS_URL ?? '',
     port: 6379,
     password: REDIS_PASSWORD ?? '',
+    tls: {
+      rejectUnauthorized: false,
+    },
   })
 }
 
