@@ -12,8 +12,6 @@ import { useAdvertContext } from '../../../../hooks/useAdvertContext'
 export const ReadOnlyFields = () => {
   const { advert } = useAdvertContext()
 
-  console.log('advert', advert)
-
   return (
     <Stack space={[1, 2]}>
       <GridRow>
@@ -50,7 +48,7 @@ export const ReadOnlyFields = () => {
             name="publicationNumber"
             size="sm"
             label="Útgáfunúmer"
-            value={advert.publicationNumber ?? 'Ekkert útgáfunúmer'}
+            value={advert.publicationNumber ?? 'Reiknast við útgáfu'}
             buttons={
               advert.publicationNumber
                 ? [

@@ -10,6 +10,7 @@ import {
 
 import { AdvertForm } from '../../../components/client-components/Form/AdvertForm'
 import { Form } from '../../../components/client-components/Form/Form'
+import { AdvertSidebar } from '../../../components/client-components/Form/FormSidebar'
 import { AdvertProvider } from '../../../context/advert-context'
 import { getLegalGazetteClient } from '../../../lib/api/createClient'
 import { authOptions } from '../../../lib/auth/authOptions'
@@ -49,7 +50,7 @@ export default async function AdvertDetails({ params }: Props) {
               </Form>
             </GridColumn>
             <GridColumn span={['12/12', '12/12', '3/12', '3/12']}>
-              {/* <AdvertSidebar /> */}
+              <AdvertSidebar />
             </GridColumn>
           </GridRow>
         </GridContainer>
