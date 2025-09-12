@@ -22,7 +22,6 @@ export default async function RootLayout({
   const typeClient = getLegalGazetteClient('TypeApi', session?.idToken)
   const categoryClient = getLegalGazetteClient('CategoryApi', session?.idToken)
 
-  // Preload types and categories to have them ready in SWR cache
   const types = await typeClient.getTypes()
   const categories = await categoryClient.getCategories({})
 

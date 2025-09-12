@@ -1,5 +1,8 @@
 'use client'
 
+import format from 'date-fns/format'
+import is from 'date-fns/locale/is'
+
 import { GridColumn, Input, Stack, Text } from '@dmr.is/ui/components/island-is'
 
 import { GridRow, toast } from '@island.is/island-ui/core'
@@ -8,14 +11,17 @@ import { useAdvertContext } from '../../../../hooks/useAdvertContext'
 
 export const ReadOnlyFields = () => {
   const { advert } = useAdvertContext()
+
+  console.log('advert', advert)
+
   return (
-    <Stack space={[2, 3]}>
+    <Stack space={[1, 2]}>
       <GridRow>
         <GridColumn span="12/12">
           <Text variant="h3">Upplýsingar um auglýsingu</Text>
         </GridColumn>
       </GridRow>
-      <GridRow>
+      <GridRow rowGap={[1, 2]}>
         <GridColumn span={['12/12', '6/12']}>
           <Input
             readOnly
@@ -36,6 +42,44 @@ export const ReadOnlyFields = () => {
                 },
               },
             ]}
+          />
+        </GridColumn>
+        <GridColumn span={['12/12', '6/12']}>
+          <Input
+            readOnly
+            name="publicationNumber"
+            size="sm"
+            label="Útgáfunúmer"
+            value={advert.publicationNumber ?? 'Ekkert útgáfunúmer'}
+            buttons={
+              advert.publicationNumber
+                ? [
+                    {
+                      name: 'copy',
+                      label: 'Afrita',
+                      type: 'outline',
+                      onClick: () => {
+                        navigator.clipboard.writeText(advert.createdBy)
+                        toast.info('Útgáfunúmer afritað', {
+                          toastId: 'copyCreatedBy',
+                        })
+                      },
+                    },
+                  ]
+                : undefined
+            }
+          />
+        </GridColumn>
+
+        <GridColumn span={['12/12', '6/12']}>
+          <Input
+            readOnly
+            name="createdAt"
+            size="sm"
+            label="Dagsetning innsendingar"
+            value={format(new Date(advert.createdAt), 'dd. MMMM yyyy', {
+              locale: is,
+            })}
           />
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>

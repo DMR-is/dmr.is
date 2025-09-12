@@ -7,7 +7,11 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { BaseAdvertFields } from '../ritstjorn/fields/BaseAdvertFields'
+import { ContentFields } from '../ritstjorn/fields/ContentsField'
+import { PublicationsFields } from '../ritstjorn/fields/PublicationsField'
 import { ReadOnlyFields } from '../ritstjorn/fields/ReadOnlyFields'
+import { SettlementFields } from '../ritstjorn/fields/SettlementFields'
+import { SignatureFields } from '../ritstjorn/fields/SignatureFields'
 
 export const AdvertForm = () => {
   return (
@@ -28,6 +32,10 @@ export const AdvertForm = () => {
         </GridRow>
         <ReadOnlyFields />
         <BaseAdvertFields />
+        <ContentFields />
+        <SettlementFields />
+        <SignatureFields />
+        <PublicationsFields />
       </Stack>
     </GridContainer>
   )
