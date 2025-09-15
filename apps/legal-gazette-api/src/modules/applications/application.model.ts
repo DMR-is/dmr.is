@@ -373,27 +373,8 @@ export class ApplicationModel extends BaseModel<
   case!: CaseModel
 
   get title() {
-    if (!this.category) {
-      if (this.applicationType === ApplicationTypeEnum.COMMON) {
-        return TypeEnum.COMMON_ADVERT
-      }
-
-      if (this.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY) {
-        return `${TypeEnum.RECALL} þrotabús`
-      }
-
-      if (this.applicationType === ApplicationTypeEnum.RECALL_DECEASED) {
-        return `${TypeEnum.RECALL} dánarbús`
-      }
-
-      throw new Error('Category not loaded')
-    }
-
-    if (this.applicationType === ApplicationTypeEnum.COMMON) {
-      return `${this.category.title} - ${this.caption ?? ''}`
-    }
-
-    return `${this.category.title} - ${this.settlementName ?? ''}`
+    const captionOrType = this.caption || this.type?.title
+    return `${this.type?.title}${captionOrType ? ` - ${captionOrType}` : ''}`
   }
 
   static fromModel(model: ApplicationModel): ApplicationDto {

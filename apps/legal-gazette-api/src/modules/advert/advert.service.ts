@@ -155,7 +155,7 @@ export class AdvertService implements IAdvertService {
     })
 
     const adverts = await this.advertModel
-      .scope({ method: ['withQuery', query] })
+      .scope(['defaultScope', { method: ['withQuery', query] }])
       .findAndCountAll({
         limit,
         offset,

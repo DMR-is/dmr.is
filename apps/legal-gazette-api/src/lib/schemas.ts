@@ -30,6 +30,7 @@ export const createCommonAdvertFromApplicationSchema = z.object({
 export const createCommonAdvertFromIslandIsApplicationSchema = z.object({
   islandIsApplicationId: z.string(),
   categoryId: z.string(),
+  typeId: z.string(),
   caption: z.string(),
   additionalText: z.string().nullable().optional(),
   html: z.string(),

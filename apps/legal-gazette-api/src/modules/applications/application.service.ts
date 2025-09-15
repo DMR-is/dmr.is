@@ -111,7 +111,7 @@ export class ApplicationService implements IApplicationService {
       })),
     )
 
-    await application.update({ status: ApplicationStatusEnum.SUBMITTED })
+    await application.update({ status: ApplicationStatusEnum.FINISHED })
   }
 
   private async submitRecallApplication(
@@ -195,7 +195,7 @@ export class ApplicationService implements IApplicationService {
       })),
     )
 
-    await application.update({ status: ApplicationStatusEnum.FINISHED })
+    await application.update({ status: ApplicationStatusEnum.SUBMITTED })
   }
 
   async addDivisionMeetingAdvertToApplication(
@@ -207,7 +207,6 @@ export class ApplicationService implements IApplicationService {
       where: {
         id: applicationId,
         submittedByNationalId: user.nationalId,
-        status: ApplicationStatusEnum.SUBMITTED,
         applicationType: {
           [Op.or]: [
             ApplicationTypeEnum.RECALL_BANKRUPTCY,
@@ -228,10 +227,7 @@ export class ApplicationService implements IApplicationService {
     const newAdvert = await this.advertModel.create(
       {
         caseId: application.caseId,
-        categoryId:
-          application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
-            ? CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING
-            : CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING,
+        categoryId: CategoryDefaultIdEnum.DIVISION_MEETINGS,
         createdBy: user.fullName,
         signatureName: body.signatureName,
         signatureDate: new Date(body.signatureDate),
@@ -293,7 +289,7 @@ export class ApplicationService implements IApplicationService {
     const newAdvert = await this.advertModel.create(
       {
         caseId: application.caseId,
-        categoryId: CategoryDefaultIdEnum.DIVISION_ENDING,
+        categoryId: CategoryDefaultIdEnum.DIVISION_ENDINGS,
         createdBy: user.fullName,
         signatureName: body.signatureName,
         signatureDate: new Date(body.signatureDate),
@@ -457,6 +453,7 @@ export class ApplicationService implements IApplicationService {
     const requiredFields =
       createCommonAdvertFromIslandIsApplicationSchema.parse({
         islandIsApplicationId: body.islandIsApplicationId,
+        typeId: body.typeId,
         categoryId: body.categoryId,
         caption: body.caption,
         additionalText: body.additionalText,
@@ -475,7 +472,7 @@ export class ApplicationService implements IApplicationService {
 
     await this.advertModel.create({
       caseId: newCase.id,
-      typeId: TypeIdEnum.COMMON_ADVERT,
+      typeId: requiredFields.typeId,
       categoryId: requiredFields.categoryId,
       islandIsApplicationId: requiredFields.islandIsApplicationId,
       createdBy: user.fullName,

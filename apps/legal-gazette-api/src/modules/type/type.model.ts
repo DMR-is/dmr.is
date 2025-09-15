@@ -9,14 +9,13 @@ import { TypeCategoriesModel } from '../type-categories/type-categories.model'
 import { TypeDto } from './dto/type.dto'
 
 export enum TypeIdEnum {
-  COMMON_ADVERT = 'a58fe2a8-b0a9-47bd-b424-4b9cece0e622',
-  RECALL = '67cd8559-ea7a-45ae-8de1-e87005c35531',
-  DIVISION_MEETING = '5b3dded4-e6c2-411e-a9e0-213bea06af17',
-  DIVISION_ENDING = '8819e35e-89ef-4110-bf18-905df2ae122c',
+  RECALL_BANKRUPTCY = '065C3FD9-58D1-436F-9FB8-C1F5C214FA50',
+  RECALL_DECEASED = 'BC6384F4-91B0-48FE-9A3A-B528B0AA6468',
+  DIVISION_MEETING = 'F1A7CE20-37BE-451B-8AA7-BC90B8A7E7BD',
+  DIVISION_ENDING = 'D40BED80-6D9C-4388-AEA8-445B27614D8A',
 }
 
 export enum TypeEnum {
-  COMMON_ADVERT = 'Almenn auglýsing',
   RECALL = 'Innköllun',
   DIVISION_MEETING = 'Skiptafundur',
   DIVISION_ENDING = 'Skiptalok',

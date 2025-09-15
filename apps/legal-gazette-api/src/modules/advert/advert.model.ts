@@ -134,6 +134,13 @@ export enum AdvertModelScopes {
     { model: AdvertPublicationModel },
     { model: SettlementModel },
   ],
+  order: [
+    [
+      { model: AdvertPublicationModel, as: 'publications' },
+      'scheduledAt',
+      'ASC',
+    ],
+  ],
 }))
 @Scopes(() => ({
   withQuery: (query: GetAdvertsQueryDto) => {
