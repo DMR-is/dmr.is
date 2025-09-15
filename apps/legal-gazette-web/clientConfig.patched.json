@@ -3651,7 +3651,7 @@
       },
       "TypeEnum": {
         "type": "string",
-        "enum": ["Almenn auglýsing", "Innköllun", "Skiptafundur", "Skiptalok"]
+        "enum": ["Innköllun", "Skiptafundur", "Skiptalok"]
       },
       "TypeDto": {
         "type": "object",
@@ -3969,6 +3969,24 @@
             "type": "string"
           },
           "typeId": {
+            "type": "string"
+          },
+          "additionalText": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string"
+          },
+          "signatureName": {
+            "type": "string"
+          },
+          "signatureLocation": {
+            "type": "string"
+          },
+          "signatureOnBehalfOf": {
+            "type": "string"
+          },
+          "signatureDate": {
             "type": "string"
           }
         }

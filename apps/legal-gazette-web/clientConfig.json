@@ -2912,7 +2912,7 @@
       },
       "TypeEnum": {
         "type": "string",
-        "enum": ["Almenn auglýsing", "Innköllun", "Skiptafundur", "Skiptalok"]
+        "enum": ["Innköllun", "Skiptafundur", "Skiptalok"]
       },
       "TypeDto": {
         "type": "object",
@@ -3152,7 +3152,13 @@
           "title": { "type": "string" },
           "content": { "type": "string" },
           "categoryId": { "type": "string" },
-          "typeId": { "type": "string" }
+          "typeId": { "type": "string" },
+          "additionalText": { "type": "string" },
+          "caption": { "type": "string" },
+          "signatureName": { "type": "string" },
+          "signatureLocation": { "type": "string" },
+          "signatureOnBehalfOf": { "type": "string" },
+          "signatureDate": { "type": "string" }
         }
       },
       "AdvertVersionEnum": { "type": "string", "enum": ["A", "B", "C"] },

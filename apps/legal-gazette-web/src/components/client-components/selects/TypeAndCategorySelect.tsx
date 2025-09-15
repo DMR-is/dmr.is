@@ -5,6 +5,8 @@ import useSWR from 'swr'
 
 import { GridColumn } from '@dmr.is/ui/components/island-is'
 
+import { toast } from '@island.is/island-ui/core'
+
 import { CategoryDto, TypeDto } from '../../../gen/fetch'
 import { useClient } from '../../../hooks/useClient'
 import { useUpdateAdvert } from '../../../hooks/useUpdateAdvert'
@@ -48,22 +50,49 @@ export const TypeAndCategorySelect = ({
           throw new Error('No categories found for type')
         }
 
-        return setSelectedCategoryId(categories[0].id)
+        const cat = categories[0].id
+        setSelectedCategoryId(cat)
+        trigger({ categoryId: cat })
       },
     },
   )
 
   const handleCategoryChange = (categoryId?: string) => {
     setSelectedCategoryId(categoryId)
-    trigger({ categoryId: categoryId })
+    trigger(
+      { categoryId: categoryId },
+      {
+        onSuccess: () => {
+          toast.success('Flokkur vistaður', { toastId: 'save-category' })
+        },
+        onError: () => {
+          toast.error('Ekki tókst að uppfæra flokk', {
+            toastId: 'error-category',
+          })
+        },
+      },
+    )
   }
 
   const handleTypeChange = (typeId?: string) => {
     if (!typeId) throw new Error('Type is required')
     setSelectedTypeId(typeId)
+
     if (!hasTypeChanged) {
       setHasTypeChanged(true)
     }
+
+    trigger(
+      { typeId: typeId },
+      {
+        onSuccess: () => {
+          toast.success('Tegund vistaður', { toastId: 'save-type' })
+        },
+        onError: () => {
+          toast.error('Ekki tókst að uppfæra tegund', { toastId: 'error-type' })
+        },
+      },
+    )
   }
 
   return (

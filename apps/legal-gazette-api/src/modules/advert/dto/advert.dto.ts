@@ -342,6 +342,36 @@ export class UpdateAdvertDto {
   @IsOptional()
   @IsUUID()
   typeId?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  additionalText?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  caption?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  signatureName?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  signatureLocation?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  signatureOnBehalfOf?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  signatureDate?: string
 }
 
 export class PublishAdvertsBody {

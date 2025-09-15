@@ -77,6 +77,14 @@ export class AdvertService implements IAdvertService {
       categoryId: body.categoryId,
       title: body.title,
       content: body.content,
+      signatureDate:
+        typeof body.signatureDate === 'string'
+          ? new Date(body.signatureDate)
+          : body.signatureDate,
+      signatureLocation: body.signatureLocation,
+      signatureName: body.signatureName,
+      additionalText: body.additionalText,
+      caption: body.caption,
     })
 
     return updated.fromModelToDetailed()
