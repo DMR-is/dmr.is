@@ -237,7 +237,7 @@ export const getAdvertHTMLMarkup = (
 
     <div class="advertSignature">
       <p>${model.signatureLocation}, ${formatDate(model.signatureDate, 'dd. MMMM yyyy')}</p>
-      ${model.signatureOnBehalfOf ? `<p>${model.signatureOnBehalfOf}</p>` : ''}
+      ${model.signatureOnBehalfOf ? `<p>f.h. ${model.signatureOnBehalfOf}</p>` : ''}
       <p><strong>${model.signatureName}</strong></p>
     </div>
     ${model.publicationNumber ? `<p class="advertSerial">${model.publicationNumber}${version}</p>` : `<p class="advertSerial">(Reiknast við útgáfu)${version}</p>`}

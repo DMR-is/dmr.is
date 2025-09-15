@@ -30,6 +30,27 @@ export class AdvertService implements IAdvertService {
     @InjectModel(AdvertPublicationModel)
     private readonly advertPublicationModel: typeof AdvertPublicationModel,
   ) {}
+  async markAdvertAsSubmitted(advertId: string): Promise<void> {
+    const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
+      attributes: ['id', 'statusId'],
+    })
+
+    await advert.update(
+      { statusId: StatusIdEnum.SUBMITTED },
+      { where: { id: advertId, statusId: StatusIdEnum.DRAFT } },
+    )
+  }
+  async markAdvertAsReady(advertId: string): Promise<void> {
+    const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
+      attributes: ['id', 'statusId'],
+    })
+
+    await advert.update(
+      { statusId: StatusIdEnum.READY_FOR_PUBLICATION },
+      { where: { id: advertId, statusId: StatusIdEnum.DRAFT } },
+    )
+  }
+
   async deleteAdvertPublication(
     id: string,
     version: AdvertVersionEnum,
@@ -108,6 +129,7 @@ export class AdvertService implements IAdvertService {
           : body.signatureDate,
       signatureLocation: body.signatureLocation,
       signatureName: body.signatureName,
+      signatureOnBehalfOf: body.signatureOnBehalfOf,
       additionalText: body.additionalText,
       caption: body.caption,
     })

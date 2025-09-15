@@ -4,6 +4,7 @@ import {
   Inject,
   Param,
   Patch,
+  Post,
   UseGuards,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -35,6 +36,20 @@ export class AdvertUpdateController {
     @InjectModel(StatusModel)
     private readonly statusModel: typeof StatusModel,
   ) {}
+
+  @Post('ready')
+  @LGResponse({ operationId: 'markAdvertAsReady' })
+  markAdvertAsReady(@Param('id', new UUIDValidationPipe()) advertId: string) {
+    return this.advertService.markAdvertAsReady(advertId)
+  }
+
+  @Post('submit')
+  @LGResponse({ operationId: 'markAdvertAsSubmitted' })
+  markAdvertAsSubmitted(
+    @Param('id', new UUIDValidationPipe()) advertId: string,
+  ) {
+    return this.advertService.markAdvertAsSubmitted(advertId)
+  }
 
   @Patch('category/:categoryId')
   @LGResponse({ operationId: 'updateAdvertCategory' })

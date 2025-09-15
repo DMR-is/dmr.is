@@ -37,6 +37,10 @@ export interface IAdvertService {
     id: string,
     version: AdvertVersionEnum,
   ): Promise<AdvertPublicationDetailedDto>
+
+  markAdvertAsReady(advertId: string): Promise<void>
+
+  markAdvertAsSubmitted(advertId: string): Promise<void>
 }
 
 export const IAdvertService = Symbol('IAdvertService')
