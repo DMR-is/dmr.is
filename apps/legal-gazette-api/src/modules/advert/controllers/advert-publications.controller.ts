@@ -1,4 +1,11 @@
-import { Controller, Get, Inject, Param } from '@nestjs/common'
+import {
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  UseGuards,
+} from '@nestjs/common'
 import { ApiParam } from '@nestjs/swagger'
 
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
@@ -33,5 +40,19 @@ export class AdvertPublicationsController {
     version: AdvertVersionEnum,
   ) {
     return this.advertService.getAdvertPublication(advertId, version)
+  }
+
+  @Delete(':version')
+  @ApiParam({
+    name: 'version',
+    enum: AdvertVersionEnum,
+  })
+  @LGResponse({ operationId: 'deleteAdvertPublication' })
+  async deletePublication(
+    @Param('advertId', new UUIDValidationPipe()) advertId: string,
+    @Param('version', new EnumValidationPipe(AdvertVersionEnum))
+    version: AdvertVersionEnum,
+  ) {
+    return this.advertService.deleteAdvertPublication(advertId, version)
   }
 }

@@ -36,6 +36,7 @@ async function bootstrap() {
     new ValidationPipe({
       transform: true,
       whitelist: true,
+      enableDebugMessages: true,
     }),
   )
   app.setGlobalPrefix(globalPrefix)

@@ -14,6 +14,7 @@ import {
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
   UpdateAdvertDto,
+  UpdateAdvertPublicationDto,
 } from './dto/advert.dto'
 import {
   AdvertModel,
@@ -29,6 +30,30 @@ export class AdvertService implements IAdvertService {
     @InjectModel(AdvertPublicationModel)
     private readonly advertPublicationModel: typeof AdvertPublicationModel,
   ) {}
+  async deleteAdvertPublication(
+    id: string,
+    version: AdvertVersionEnum,
+  ): Promise<void> {
+    await this.advertPublicationModel.destroy({
+      where: {
+        advertId: id,
+        versionNumber: mapVersionToIndex(version),
+      },
+    })
+  }
+  async updateAdvertPublication(
+    advertId: string,
+    publicationId: string,
+    body: UpdateAdvertPublicationDto,
+  ): Promise<void> {
+    const publication = await this.advertPublicationModel.findOneOrThrow({
+      where: { id: publicationId, advertId },
+    })
+
+    await publication.update({
+      scheduledAt: new Date(body.scheduledAt),
+    })
+  }
   async getAdvertPublication(
     id: string,
     version: AdvertVersionEnum,

@@ -2,6 +2,7 @@ import { Transform, Type } from 'class-transformer'
 import {
   IsArray,
   IsBoolean,
+  IsDate,
   IsDateString,
   IsEnum,
   IsOptional,
@@ -24,7 +25,6 @@ import { SettlementDto } from '../../settlement/dto/settlement.dto'
 import { StatusDto } from '../../status/dto/status.dto'
 import { StatusIdEnum } from '../../status/status.model'
 import { TypeDto } from '../../type/dto/type.dto'
-import { AdvertVersionEnum } from '../advert.model'
 
 export class AdvertDto extends DetailedDto {
   @ApiProperty({ type: String })
@@ -304,6 +304,12 @@ export class GetAdvertsStatusCounterDto {
   @Type(() => AdvertStatusCounterItemDto)
   @ValidateNested()
   published!: AdvertStatusCounterItemDto
+}
+
+export class UpdateAdvertPublicationDto {
+  @ApiProperty({ type: String })
+  @IsDateString()
+  scheduledAt!: string
 }
 
 export class UpdateAdvertDto {

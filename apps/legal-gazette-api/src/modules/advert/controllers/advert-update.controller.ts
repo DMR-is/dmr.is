@@ -16,7 +16,11 @@ import { AdvertUpdateGuard } from '../../../guards/advert-update.guard'
 import { CategoryModel } from '../../category/category.model'
 import { StatusIdEnum, StatusModel } from '../../status/status.model'
 import { IAdvertService } from '../advert.service.interface'
-import { AdvertDetailedDto, UpdateAdvertDto } from '../dto/advert.dto'
+import {
+  AdvertDetailedDto,
+  UpdateAdvertDto,
+  UpdateAdvertPublicationDto,
+} from '../dto/advert.dto'
 
 @Controller({
   path: 'adverts/:id',
@@ -65,5 +69,20 @@ export class AdvertUpdateController {
     @Body() advertUpdateDto: UpdateAdvertDto,
   ) {
     return this.advertService.updateAdvert(advertId, advertUpdateDto)
+  }
+
+  @Patch('publication/:publicationId')
+  @ApiParam({ name: 'publicationId', type: String })
+  @LGResponse({ operationId: 'updateAdvertPublication' })
+  async updateAdvertPublication(
+    @Param('id', new UUIDValidationPipe()) advertId: string,
+    @Param('publicationId', new UUIDValidationPipe()) publicationId: string,
+    @Body() body: UpdateAdvertPublicationDto,
+  ): Promise<void> {
+    await this.advertService.updateAdvertPublication(
+      advertId,
+      publicationId,
+      body,
+    )
   }
 }

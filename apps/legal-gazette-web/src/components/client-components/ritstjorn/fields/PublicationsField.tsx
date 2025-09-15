@@ -4,6 +4,7 @@ import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import { useState } from 'react'
 import useSWR from 'swr'
+import useSWRMutation from 'swr/mutation'
 
 import {
   DatePicker,
@@ -21,6 +22,7 @@ import {
   ApiErrorDto,
   GetAdvertPublicationRequest,
   GetAdvertPublicationVersionEnum,
+  UpdateAdvertPublicationRequest,
 } from '../../../../gen/fetch'
 import { useAdvertContext } from '../../../../hooks/useAdvertContext'
 import { useClient } from '../../../../hooks/useClient'
@@ -30,6 +32,7 @@ export const PublicationsFields = () => {
   const { advert } = useAdvertContext()
 
   const publicationClient = useClient('AdvertPublicationsApi')
+  const updateClient = useClient('AdvertUpdateApi')
   const [html, setHTML] = useState<string>('')
   const [toggle, setToggle] = useState(false)
 
@@ -55,6 +58,12 @@ export const PublicationsFields = () => {
       },
       dedupingInterval: 2000,
     },
+  )
+
+  const { trigger } = useSWRMutation(
+    'updatePublication',
+    (_key: string, { arg }: { arg: UpdateAdvertPublicationRequest }) =>
+      updateClient.updateAdvertPublication(arg),
   )
 
   return (
@@ -83,6 +92,31 @@ export const PublicationsFields = () => {
                   selected={new Date(pub.scheduledAt)}
                   size="sm"
                   locale="is"
+                  minDate={new Date()}
+                  handleChange={(date) => {
+                    if (!date) return
+                    trigger(
+                      {
+                        id: advert.id,
+                        publicationId: pub.id,
+                        updateAdvertPublicationDto: {
+                          scheduledAt: date.toISOString(),
+                        },
+                      },
+                      {
+                        onSuccess: () => {
+                          toast.success('Breyting vistuð', {
+                            toastId: 'update-publication-success',
+                          })
+                        },
+                        onError: () => {
+                          toast.error('Ekki tókst að vista breytingu', {
+                            toastId: 'update-publication-error',
+                          })
+                        },
+                      },
+                    )
+                  }}
                 />
               </GridColumn>
               <GridColumn span={['12/12', '6/12']} key={pub.id}>
