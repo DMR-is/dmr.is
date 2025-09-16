@@ -10,15 +10,21 @@ import { Box } from '@dmr.is/ui/components/island-is'
 
 import { Button, Inline, Stack, toast } from '@island.is/island-ui/core'
 
-import { StatusIdEnum } from '../../../gen/fetch'
+import {
+  PublishAdvertsRequest,
+  StatusIdEnum,
+  UpdateAdvertStatusRequest,
+} from '../../../gen/fetch'
 import { useAdvertsInProgress } from '../../../hooks/adverts/useAdvertsInProgress'
-import { publishAdverts, setAdvertStatus } from '../../../lib/api/fetchers'
+import { useClient } from '../../../hooks/useClient'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
 import { toastMessages } from '../../../lib/messages/toast/messages'
 import AdvertsToBePublished from '../Tables/AdvertsToBePublished'
 
 export const PublishingTab = () => {
   const [selectedAdvertIds, setSelectedAdvertIds] = useState<string[]>([])
+  const publishClient = useClient('AdvertPublishApi')
+  const updateClient = useClient('AdvertUpdateApi')
 
   const router = useRouter()
   const { formatMessage } = useIntl()
@@ -41,12 +47,14 @@ export const PublishingTab = () => {
 
   const { trigger: publishAdvertsTrigger } = useSWRMutation(
     'publishAdverts',
-    publishAdverts,
+    (_key: string, { arg }: { arg: PublishAdvertsRequest }) =>
+      publishClient.publishAdverts(arg),
     {
       onSuccess: () => {
         refetchAdvertsInProgress()
         setSelectedAdvertIds([])
         toast.success(formatMessage(toastMessages.publishAdverts.success))
+        router.refresh()
       },
       onError: () => {
         toast.error(formatMessage(toastMessages.publishAdverts.failure))
@@ -56,7 +64,8 @@ export const PublishingTab = () => {
 
   const { trigger: updateAdvertStatusTrigger } = useSWRMutation(
     'updateAdvertStatus',
-    setAdvertStatus,
+    (_key: string, { arg }: { arg: UpdateAdvertStatusRequest }) =>
+      updateClient.updateAdvertStatus(arg),
     {
       onSuccess: () => {
         toast.success('Auglýsing færð í stöðuna innsend', {

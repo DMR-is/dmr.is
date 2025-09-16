@@ -27,6 +27,13 @@ export class AdvertPublicationService implements IAdvertPublicationService {
     // maybe fail if length of advert results is not the same as advertIds length
     const adverts = await this.advertModel.unscoped().findAll({
       attributes: ['id', 'publicationNumber', 'statusId'],
+      include: [
+        {
+          model: AdvertPublicationModel,
+          required: true,
+          limit: 1,
+        },
+      ],
       where: {
         id: {
           [Op.in]: advertIds,
@@ -37,30 +44,16 @@ export class AdvertPublicationService implements IAdvertPublicationService {
       },
     })
 
-    // if (adverts.length !== advertIds.length) {
-    //   throw new BadRequestException(
-    //     'Some adverts are not ready for publication or do not exist',
-    //   )
-    // }
+    for (const advert of adverts) {
+      const publication = advert.publications?.[0]
 
-    await Promise.all(
-      adverts.map(async (advert) => {
-        const publication = await this.advertPublicationModel.findOneOrThrow({
-          where: {
-            advertId: advert.id,
-            publishedAt: {
-              [Op.is]: null,
-            },
-          },
-          order: [
-            ['scheduledAt', 'ASC'],
-            ['versionNumber', 'ASC'],
-          ],
-        })
+      if (!publication) {
+        this.logger.error(`No publication found for advert ${advert.id}`)
+        throw new BadRequestException('No publication found for advert')
+      }
 
-        await this.publishAdvertPublication(advert.id, publication.id)
-      }),
-    )
+      await this.publishAdvertPublication(advert.id, publication.id)
+    }
   }
   async createAdvertPublication(advertId: string): Promise<void> {
     const currentPublications = await this.advertPublicationModel.findAll({
