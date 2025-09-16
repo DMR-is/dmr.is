@@ -1203,7 +1203,15 @@ export class CaseService implements ICaseService {
     if (caseToPublish.applicationId) {
       await this.utilityService.approveApplication(caseToPublish.applicationId)
     }
-    await this.s3.sendMail(message)
+    try {
+      await this.s3.sendMail(message)
+    } catch (error) {
+      this.logger.error('Failed to send publish email', {
+        error,
+        publicationNumber: publicationNumber,
+        category: LOGGING_CATEGORY,
+      })
+    }
     const maintypes = await this.advertMainTypeModel.findAll({
       where: {
         slug: {
