@@ -1,3 +1,5 @@
+import { IsDateString } from 'class-validator'
+
 import { ApiProperty } from '@nestjs/swagger'
 
 import { AdvertVersionEnum } from '../../advert/advert.model'
@@ -29,4 +31,10 @@ export class AdvertPublicationDetailedDto {
 
   @ApiProperty({ type: String })
   html!: string
+}
+
+export class UpdateAdvertPublicationDto {
+  @ApiProperty({ type: String })
+  @IsDateString()
+  scheduledAt!: string
 }

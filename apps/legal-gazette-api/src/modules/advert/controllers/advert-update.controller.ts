@@ -95,19 +95,4 @@ export class AdvertUpdateController {
   ) {
     return this.advertService.updateAdvert(advertId, advertUpdateDto)
   }
-
-  @Patch('publication/:publicationId')
-  @ApiParam({ name: 'publicationId', type: String })
-  @LGResponse({ operationId: 'updateAdvertPublication' })
-  async updateAdvertPublication(
-    @Param('id', new UUIDValidationPipe()) advertId: string,
-    @Param('publicationId', new UUIDValidationPipe()) publicationId: string,
-    @Body() body: UpdateAdvertPublicationDto,
-  ): Promise<void> {
-    await this.advertService.updateAdvertPublication(
-      advertId,
-      publicationId,
-      body,
-    )
-  }
 }

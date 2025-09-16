@@ -4,7 +4,6 @@ import { InjectModel } from '@nestjs/sequelize'
 import { PagingQuery } from '@dmr.is/shared/dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
-import { mapVersionToIndex } from '../../lib/utils'
 import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
 import { AdvertPublicationDetailedDto } from '../advert-publications/dto/advert-publication.dto'
 import { StatusIdEnum } from '../status/status.model'
@@ -14,7 +13,6 @@ import {
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
   UpdateAdvertDto,
-  UpdateAdvertPublicationDto,
 } from './dto/advert.dto'
 import {
   AdvertModel,
@@ -30,6 +28,12 @@ export class AdvertService implements IAdvertService {
     @InjectModel(AdvertPublicationModel)
     private readonly advertPublicationModel: typeof AdvertPublicationModel,
   ) {}
+  getAdvertPublication(
+    id: string,
+    version: AdvertVersionEnum,
+  ): Promise<AdvertPublicationDetailedDto> {
+    throw new Error('Method not implemented.')
+  }
   async assignAdvertToEmployee(
     advertId: string,
     userId: string,
@@ -58,54 +62,6 @@ export class AdvertService implements IAdvertService {
       { statusId: StatusIdEnum.READY_FOR_PUBLICATION },
       { where: { id: advertId, statusId: StatusIdEnum.DRAFT } },
     )
-  }
-
-  async deleteAdvertPublication(
-    id: string,
-    version: AdvertVersionEnum,
-  ): Promise<void> {
-    await this.advertPublicationModel.destroy({
-      where: {
-        advertId: id,
-        versionNumber: mapVersionToIndex(version),
-      },
-    })
-  }
-  async updateAdvertPublication(
-    advertId: string,
-    publicationId: string,
-    body: UpdateAdvertPublicationDto,
-  ): Promise<void> {
-    const publication = await this.advertPublicationModel.findOneOrThrow({
-      where: { id: publicationId, advertId },
-    })
-
-    await publication.update({
-      scheduledAt: new Date(body.scheduledAt),
-    })
-  }
-  async getAdvertPublication(
-    id: string,
-    version: AdvertVersionEnum,
-  ): Promise<AdvertPublicationDetailedDto> {
-    const advertPromise = this.advertModel.findByPkOrThrow(id)
-    const publicationPromise = this.advertPublicationModel.findOneOrThrow({
-      where: {
-        advertId: id,
-        versionNumber: mapVersionToIndex(version),
-      },
-    })
-
-    const [advert, publication] = await Promise.all([
-      advertPromise,
-      publicationPromise,
-    ])
-
-    return {
-      advert: advert.fromModel(),
-      html: advert.htmlMarkup(version),
-      publication: publication.fromModel(),
-    }
   }
 
   async getAdvertsByCaseId(caseId: string): Promise<GetAdvertsDto> {

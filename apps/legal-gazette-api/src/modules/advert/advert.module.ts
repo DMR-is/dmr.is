@@ -9,7 +9,6 @@ import { PdfService } from '../pdf/pdf.service'
 import { StatusModel } from '../status/status.model'
 import { AdvertController } from './controllers/advert.controller'
 import { AdvertPdfController } from './controllers/advert-pdf.controller'
-import { AdvertPublicationsController } from './controllers/advert-publications.controller'
 import { AdvertPublishController } from './controllers/advert-publish.controller'
 import { AdvertUpdateController } from './controllers/advert-update.controller'
 import { AdvertModel } from './advert.model'
@@ -30,7 +29,6 @@ import { IAdvertService } from './advert.service.interface'
     AdvertPdfController,
     AdvertController,
     AdvertPublishController,
-    AdvertPublicationsController,
   ],
   providers: [
     AdvertUpdateGuard,

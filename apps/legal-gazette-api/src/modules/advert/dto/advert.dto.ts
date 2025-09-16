@@ -306,12 +306,6 @@ export class GetAdvertsStatusCounterDto {
   published!: AdvertStatusCounterItemDto
 }
 
-export class UpdateAdvertPublicationDto {
-  @ApiProperty({ type: String })
-  @IsDateString()
-  scheduledAt!: string
-}
-
 export class UpdateAdvertDto {
   @ApiProperty({
     type: String,
