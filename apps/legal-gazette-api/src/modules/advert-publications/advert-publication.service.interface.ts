@@ -19,6 +19,11 @@ export interface IAdvertPublicationService {
     id: string,
     version: AdvertVersionEnum,
   ): Promise<AdvertPublicationDetailedDto>
+
+  publishAdvertPublication(
+    advertId: string,
+    publicationId: string,
+  ): Promise<void>
 }
 
 export const IAdvertPublicationService = Symbol('IAdvertPublicationService')

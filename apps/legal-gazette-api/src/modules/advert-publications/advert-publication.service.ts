@@ -1,6 +1,10 @@
 import addDays from 'date-fns/addDays'
+import { Op } from 'sequelize'
 
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { mapVersionToIndex } from '../../lib/utils'
 import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
@@ -14,8 +18,11 @@ import { IAdvertPublicationService } from './advert-publication.service.interfac
 @Injectable()
 export class AdvertPublicationService implements IAdvertPublicationService {
   constructor(
-    private readonly advertPublicationModel: typeof AdvertPublicationModel,
-    private readonly advertModel: typeof AdvertModel,
+    @InjectModel(AdvertPublicationModel)
+    readonly advertPublicationModel: typeof AdvertPublicationModel,
+    @InjectModel(AdvertModel)
+    readonly advertModel: typeof AdvertModel,
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
   async createAdvertPublication(advertId: string): Promise<void> {
     const currentPublications = await this.advertPublicationModel.findAll({
@@ -58,6 +65,10 @@ export class AdvertPublicationService implements IAdvertPublicationService {
       ],
     })
 
+    if (publications.length <= 1) {
+      throw new BadRequestException('At least one publication must remain')
+    }
+
     publications.forEach(async (publication, index) => {
       await publication.update({ versionNumber: index + 1 })
     })
@@ -99,5 +110,64 @@ export class AdvertPublicationService implements IAdvertPublicationService {
       html: advert.htmlMarkup(version),
       publication: publication.fromModel(),
     }
+  }
+
+  async publishAdvertPublication(
+    advertId: string,
+    publicationId: string,
+  ): Promise<void> {
+    const pubDate = new Date()
+    this.logger.info(
+      `Publishing advert publication at ${pubDate.toISOString()}`,
+      {
+        advertId,
+        publicationId,
+        date: pubDate.toISOString(),
+      },
+    )
+
+    const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
+      attributes: ['id', 'publicationNumber'],
+    })
+
+    const publication = await this.advertPublicationModel.findOneOrThrow({
+      where: { id: publicationId, advertId },
+    })
+
+    if (publication.publishedAt) {
+      throw new BadRequestException('Publication already published')
+    }
+
+    if (!advert.publicationNumber) {
+      const year = pubDate.getFullYear()
+      const month = (pubDate.getMonth() + 1).toString().padStart(2, '0')
+      const day = pubDate.getDate().toString().padStart(2, '0')
+
+      // find max publication number for today
+      const maxPublication = await this.advertModel.unscoped().findOne({
+        attributes: ['id', 'publicationNumber'],
+        where: {
+          publicationNumber: {
+            [Op.like]: `${year}${month}${day}%`,
+          },
+        },
+        order: [['publicationNumber', 'DESC']],
+        limit: 1,
+      })
+
+      const publishCount = (
+        maxPublication && maxPublication.publicationNumber
+          ? parseInt(maxPublication.publicationNumber.slice(8), 11) + 1
+          : 1
+      )
+        .toString()
+        .padStart(3, '0')
+
+      const publicationNumber = `${year}${month}${day}${publishCount}`
+
+      await advert.update({ publicationNumber })
+    }
+
+    await publication.update({ publishedAt: new Date() })
   }
 }

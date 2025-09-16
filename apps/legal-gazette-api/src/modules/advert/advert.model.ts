@@ -431,7 +431,7 @@ export class AdvertModel extends BaseModel<
 
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
-    validateAdvertStatus(instance)
+    // validateAdvertStatus(instance)
   }
 
   htmlMarkup(version: AdvertVersionEnum): string {

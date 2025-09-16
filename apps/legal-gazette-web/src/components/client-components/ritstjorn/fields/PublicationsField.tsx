@@ -1,5 +1,7 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import { useState } from 'react'
@@ -7,6 +9,7 @@ import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import {
+  Button,
   DatePicker,
   GridColumn,
   GridRow,
@@ -20,8 +23,11 @@ import { DropdownMenu, Inline, toast } from '@island.is/island-ui/core'
 import {
   AdvertPublicationDetailedDto,
   ApiErrorDto,
+  DeleteAdvertPublicationRequest,
   GetAdvertPublicationRequest,
   GetAdvertPublicationVersionEnum,
+  PublishAdvertPublicationRequest,
+  StatusEnum,
   UpdateAdvertPublicationRequest,
 } from '../../../../gen/fetch'
 import { useAdvertContext } from '../../../../hooks/useAdvertContext'
@@ -30,9 +36,9 @@ import { AdvertModal } from '../../modals/AdvertPublicationModal'
 
 export const PublicationsFields = () => {
   const { advert } = useAdvertContext()
+  const router = useRouter()
 
-  const publicationClient = useClient('AdvertPublicationsApi')
-  const updateClient = useClient('AdvertUpdateApi')
+  const publicationClient = useClient('AdvertPublicationApi')
   const [html, setHTML] = useState<string>('')
   const [toggle, setToggle] = useState(false)
 
@@ -60,10 +66,59 @@ export const PublicationsFields = () => {
     },
   )
 
-  const { trigger } = useSWRMutation(
+  const { trigger: updatePublicationTrigger } = useSWRMutation(
     'updatePublication',
     (_key: string, { arg }: { arg: UpdateAdvertPublicationRequest }) =>
-      updateClient.updateAdvertPublication(arg),
+      publicationClient.updateAdvertPublication(arg),
+  )
+
+  const { trigger: deletePublicationTrigger, isMutating: isDeleting } =
+    useSWRMutation(
+      'deletePublication',
+      (_key: string, { arg }: { arg: DeleteAdvertPublicationRequest }) =>
+        publicationClient.deleteAdvertPublication(arg),
+    )
+
+  const { trigger: createPublicationTrigger, isMutating: isCreating } =
+    useSWRMutation(
+      'createPublication',
+      (_key: string, { arg }: { arg: { advertId: string } }) =>
+        publicationClient.createAdvertPublication(arg),
+      {
+        onSuccess: () => {
+          toast.success('Birting bætt við', {
+            toastId: 'create-publication-success',
+          })
+          router.refresh()
+        },
+        onError: () => {
+          toast.error('Ekki tókst að bæta við birtingu', {
+            toastId: 'create-publication-error',
+          })
+        },
+      },
+    )
+
+  const {
+    trigger: publishAdvertPublicationTrigger,
+    isMutating: isPublishingAdvert,
+  } = useSWRMutation(
+    'publishAdvert',
+    (_key: string, { arg }: { arg: PublishAdvertPublicationRequest }) =>
+      publicationClient.publishAdvertPublication(arg),
+    {
+      onSuccess: () => {
+        toast.success('Birting gefin út', {
+          toastId: 'publish-advert-success',
+        })
+        router.refresh()
+      },
+      onError: () => {
+        toast.error('Ekki tókst að gefa birtingu út', {
+          toastId: 'publish-advert-error',
+        })
+      },
+    },
   )
 
   return (
@@ -97,9 +152,9 @@ export const PublicationsFields = () => {
                   minDate={new Date()}
                   handleChange={(date) => {
                     if (!date) return
-                    trigger(
+                    updatePublicationTrigger(
                       {
-                        id: advert.id,
+                        advertId: advert.id,
                         publicationId: pub.id,
                         updateAdvertPublicationDto: {
                           scheduledAt: date.toISOString(),
@@ -154,12 +209,76 @@ export const PublicationsFields = () => {
                   <DropdownMenu
                     icon="settings"
                     iconType="outline"
+                    loading={isDeleting}
                     items={[
                       {
                         title: 'Gefa út birtingu',
+                        onClick: () => {
+                          if (
+                            advert.status.title !== StatusEnum.TilbúiðTilÚtgáfu
+                          ) {
+                            toast.warning('Auglýsing ekki tilbúin til útgáfu', {
+                              toastId: 'publish-publication-error',
+                            })
+                            return
+                          }
+
+                          if (pub.publishedAt) {
+                            toast.warning('Birting þegar gefin út', {
+                              toastId: 'publish-publication-error',
+                            })
+                            return
+                          }
+
+                          publishAdvertPublicationTrigger(
+                            {
+                              advertId: advert.id,
+                              publicationId: pub.id,
+                            },
+                            {
+                              onSuccess: () => {
+                                toast.success('Birting gefin út', {
+                                  toastId: 'publish-publication-success',
+                                })
+
+                                router.refresh()
+                              },
+                              onError: () => {
+                                toast.error('Ekki tókst að gefa út birtingu', {
+                                  toastId: 'publish-publication-error',
+                                })
+                              },
+                            },
+                          )
+                        },
                       },
                       {
                         title: 'Fjarlægja birtingu',
+                        onClick: () => {
+                          deletePublicationTrigger(
+                            {
+                              advertId: advert.id,
+                              publicationId: pub.id,
+                            },
+                            {
+                              onSuccess: () => {
+                                toast.success('Birting fjarlægð', {
+                                  toastId: 'delete-publication-success',
+                                })
+
+                                router.refresh()
+                              },
+                              onError: () => {
+                                toast.error(
+                                  'Ekki tókst að fjarlægja birtingu',
+                                  {
+                                    toastId: 'delete-publication-error',
+                                  },
+                                )
+                              },
+                            },
+                          )
+                        },
                       },
                     ]}
                   />
@@ -167,6 +286,23 @@ export const PublicationsFields = () => {
               </GridColumn>
             </GridRow>
           ))}
+          <GridRow>
+            <GridColumn span="12/12">
+              <Inline align="right" alignY="center">
+                <Button
+                  disabled={advert.publications.length >= 3}
+                  icon="add"
+                  iconType="outline"
+                  loading={isCreating}
+                  onClick={() =>
+                    createPublicationTrigger({ advertId: advert.id })
+                  }
+                >
+                  Bæta við birtingu
+                </Button>
+              </Inline>
+            </GridColumn>
+          </GridRow>
         </Stack>
       </Stack>
       <AdvertModal

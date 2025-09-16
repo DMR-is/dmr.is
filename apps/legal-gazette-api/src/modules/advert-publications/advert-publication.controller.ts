@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -25,7 +26,8 @@ import { IAdvertPublicationService } from './advert-publication.service.interfac
 })
 export class AdvertPublicationController {
   constructor(
-    private readonly advertPublicationService: IAdvertPublicationService,
+    @Inject(IAdvertPublicationService)
+    readonly advertPublicationService: IAdvertPublicationService,
   ) {}
 
   @Get(':version')
@@ -51,6 +53,18 @@ export class AdvertPublicationController {
     @Param('advertId', new UUIDValidationPipe()) advertId: string,
   ): Promise<void> {
     await this.advertPublicationService.createAdvertPublication(advertId)
+  }
+
+  @Post(':publicationId/publish')
+  @LGResponse({ operationId: 'publishAdvertPublication' })
+  async publishAdvertPublication(
+    @Param('advertId', new UUIDValidationPipe()) advertId: string,
+    @Param('publicationId', new UUIDValidationPipe()) publicationId: string,
+  ): Promise<void> {
+    await this.advertPublicationService.publishAdvertPublication(
+      advertId,
+      publicationId,
+    )
   }
 
   @Patch('/:publicationId')

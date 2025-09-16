@@ -37,24 +37,24 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
         })}
         {hasLink && row.href && (
           <td align="center" className={styles.linkTableCell}>
-            <Box
-              className={styles.seeMoreTableCellLink({
-                visible: hovered,
-              })}
-              component={LinkV2}
-              href={row.href}
-            >
-              <Box className={styles.seeMoreTableCellLinkText}>
-                <Text variant="eyebrow" color={'blue400'}>
-                  {breakpoints.xl && 'Sjá nánar'}
-                  <Icon
-                    icon="arrowForward"
-                    color="blue400"
-                    className={styles.seeMoreTableCellLinkIcon}
-                  />
-                </Text>
+            <LinkV2 href={row.href} shallow={false}>
+              <Box
+                className={styles.seeMoreTableCellLink({
+                  visible: hovered,
+                })}
+              >
+                <Box className={styles.seeMoreTableCellLinkText}>
+                  <Text variant="eyebrow" color={'blue400'}>
+                    {breakpoints.xl && 'Sjá nánar'}
+                    <Icon
+                      icon="arrowForward"
+                      color="blue400"
+                      className={styles.seeMoreTableCellLinkIcon}
+                    />
+                  </Text>
+                </Box>
               </Box>
-            </Box>
+            </LinkV2>
           </td>
         )}
         {isExpandable && (

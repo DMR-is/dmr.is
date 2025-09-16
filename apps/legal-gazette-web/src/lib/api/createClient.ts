@@ -3,7 +3,7 @@ import { config } from '@dmr.is/api-client/createClient'
 import {
   AdvertApi,
   AdvertPdfApi,
-  AdvertPublicationsApi,
+  AdvertPublicationApi,
   AdvertPublishApi,
   AdvertUpdateApi,
   ApplicationApi,
@@ -29,7 +29,7 @@ const apis = [
   'UsersApi',
   'ApplicationApi',
   'AdvertPdfApi',
-  'AdvertPublicationsApi',
+  'AdvertPublicationApi',
   'CourtDistrictApi',
   'HealthApi',
   'SubscriberApi',
@@ -48,7 +48,7 @@ export type ApiClientMap = {
   UsersApi: UsersApi
   ApplicationApi: ApplicationApi
   AdvertPdfApi: AdvertPdfApi
-  AdvertPublicationsApi: AdvertPublicationsApi
+  AdvertPublicationApi: AdvertPublicationApi
   CourtDistrictApi: CourtDistrictApi
   HealthApi: HealthApi
   SubscriberApi: SubscriberApi
@@ -67,7 +67,7 @@ const ApiConstructors: {
   UsersApi,
   ApplicationApi,
   AdvertPdfApi,
-  AdvertPublicationsApi,
+  AdvertPublicationApi,
   CourtDistrictApi,
   HealthApi,
   SubscriberApi,

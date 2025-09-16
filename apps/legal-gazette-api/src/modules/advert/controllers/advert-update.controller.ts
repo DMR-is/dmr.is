@@ -17,11 +17,7 @@ import { AdvertUpdateGuard } from '../../../guards/advert-update.guard'
 import { CategoryModel } from '../../category/category.model'
 import { StatusIdEnum, StatusModel } from '../../status/status.model'
 import { IAdvertService } from '../advert.service.interface'
-import {
-  AdvertDetailedDto,
-  UpdateAdvertDto,
-  UpdateAdvertPublicationDto,
-} from '../dto/advert.dto'
+import { AdvertDetailedDto, UpdateAdvertDto } from '../dto/advert.dto'
 
 @Controller({
   path: 'adverts/:id',

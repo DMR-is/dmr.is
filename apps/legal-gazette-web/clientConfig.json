@@ -1519,80 +1519,6 @@
         "tags": ["Advert"]
       }
     },
-    "/api/v1/adverts/{id}/publication/{publicationId}": {
-      "patch": {
-        "operationId": "updateAdvertPublication",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "publicationId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateAdvertPublicationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["AdvertUpdate"]
-      }
-    },
     "/api/v1/adverts/pdf/{id}": {
       "get": {
         "operationId": "getAdvertPdf",
@@ -2156,7 +2082,7 @@
         "tags": ["AdvertPublish"]
       }
     },
-    "/api/v1/adverts/{advertId}/{version}": {
+    "/api/v1/adverts/{advertId}/publications/{version}": {
       "get": {
         "operationId": "getAdvertPublication",
         "parameters": [
@@ -2226,22 +2152,18 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertPublications"]
-      },
-      "delete": {
-        "operationId": "deleteAdvertPublication",
+        "tags": ["AdvertPublication"]
+      }
+    },
+    "/api/v1/adverts/{advertId}/publications": {
+      "post": {
+        "operationId": "createAdvertPublication",
         "parameters": [
           {
             "name": "advertId",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
-          },
-          {
-            "name": "version",
-            "required": true,
-            "in": "path",
-            "schema": { "enum": ["A", "B", "C"], "type": "string" }
           }
         ],
         "responses": {
@@ -2288,7 +2210,207 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertPublications"]
+        "tags": ["AdvertPublication"]
+      }
+    },
+    "/api/v1/adverts/{advertId}/publications/{publicationId}/publish": {
+      "post": {
+        "operationId": "publishAdvertPublication",
+        "parameters": [
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "publicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["AdvertPublication"]
+      }
+    },
+    "/api/v1/adverts/{advertId}/publications/{publicationId}": {
+      "patch": {
+        "operationId": "updateAdvertPublication",
+        "parameters": [
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "publicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdvertPublicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["AdvertPublication"]
+      },
+      "delete": {
+        "operationId": "deleteAdvertPublication",
+        "parameters": [
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "publicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["AdvertPublication"]
       }
     },
     "/api/v1/subscribers/me": {
@@ -3639,11 +3761,6 @@
           "signatureDate"
         ]
       },
-      "UpdateAdvertPublicationDto": {
-        "type": "object",
-        "properties": { "scheduledAt": { "type": "string" } },
-        "required": ["scheduledAt"]
-      },
       "AdvertStatusCounterItemDto": {
         "type": "object",
         "properties": {
@@ -3752,6 +3869,11 @@
           "html": { "type": "string" }
         },
         "required": ["publication", "advert", "html"]
+      },
+      "UpdateAdvertPublicationDto": {
+        "type": "object",
+        "properties": { "scheduledAt": { "type": "string" } },
+        "required": ["scheduledAt"]
       },
       "SubscriberDto": {
         "type": "object",
