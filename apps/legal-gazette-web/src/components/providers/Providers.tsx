@@ -9,7 +9,7 @@ import { IntlProvider } from 'react-intl'
 import { ToastContainer } from '@island.is/island-ui/core'
 
 import { FilterProvider } from '../../context/filter-context'
-import { GetCategoriesDto, GetTypesDto } from '../../gen/fetch'
+import { GetCategoriesDto, GetStatusesDto, GetTypesDto } from '../../gen/fetch'
 import { allMessages } from '../../lib/messages'
 import { flattenMessages } from '../../lib/utils'
 
@@ -17,11 +17,13 @@ export const Providers = ({
   children,
   session,
   types,
+  statuses,
   categories,
 }: {
   children: React.ReactNode
   session: Session | null
   types: GetTypesDto
+  statuses: GetStatusesDto
   categories: GetCategoriesDto
 }) => {
   return (
@@ -50,7 +52,11 @@ export const Providers = ({
               console.error('Error in IntlProvider', { exception: err })
             }}
           >
-            <FilterProvider categories={categories} types={types}>
+            <FilterProvider
+              categories={categories}
+              types={types}
+              statuses={statuses}
+            >
               {children}
             </FilterProvider>
           </IntlProvider>

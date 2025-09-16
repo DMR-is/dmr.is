@@ -44,8 +44,14 @@ export type FilterMenuItem = {
 
 export const FilterMenu = () => {
   const { formatMessage } = useIntl()
-  const { params, setParams, typeOptions, categoryOptions, resetParams } =
-    useFilterContext()
+  const {
+    params,
+    setParams,
+    typeOptions,
+    categoryOptions,
+    statusOptions,
+    resetParams,
+  } = useFilterContext()
   const popover = usePopoverState({
     placement: 'bottom-start',
   })
@@ -60,6 +66,11 @@ export const FilterMenu = () => {
       queryParam: QueryParams.CATEGORY,
       title: 'Flokkur',
       options: categoryOptions,
+    },
+    {
+      queryParam: QueryParams.STATUS,
+      title: 'Staða',
+      options: statusOptions,
     },
   ]
 
@@ -87,7 +98,7 @@ export const FilterMenu = () => {
                   iconVariant="small"
                   id={`accordion-filter-${i}`}
                   label={filter.title}
-                  startExpanded={i === 0}
+                  startExpanded={false}
                 >
                   <Stack space={2}>
                     {filter.options?.map((option, j) => {

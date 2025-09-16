@@ -8,7 +8,7 @@ import {
 } from 'nuqs'
 import { createContext } from 'react'
 
-import { GetCategoriesDto, GetTypesDto } from '../gen/fetch'
+import { GetCategoriesDto, GetStatusesDto, GetTypesDto } from '../gen/fetch'
 import { QueryParams } from '../lib/constants'
 type Option<T = string> = {
   label: string
@@ -20,6 +20,7 @@ interface Params {
   [QueryParams.PAGE]: number
   [QueryParams.PAGE_SIZE]: number
   [QueryParams.CATEGORY]: string[]
+  [QueryParams.STATUS]: string[]
   [QueryParams.TYPE]: string[]
   [QueryParams.DATE_FROM]?: Date | null
   [QueryParams.DATE_TO]?: Date | null
@@ -35,6 +36,7 @@ type ActiveFilters = {
 export type FilterContextState = {
   typeOptions: Option[]
   categoryOptions: Option[]
+  statusOptions: Option[]
   params: Params
   setParams: (params: Partial<Params>) => Promise<URLSearchParams>
   activeFilters: ActiveFilters[]
@@ -44,6 +46,7 @@ export type FilterContextState = {
 export const FilterContext = createContext<FilterContextState>({
   typeOptions: [],
   categoryOptions: [],
+  statusOptions: [],
   params: {} as Params,
   setParams: async () => new URLSearchParams(),
   activeFilters: [],
@@ -53,6 +56,7 @@ export const FilterContext = createContext<FilterContextState>({
 type FilterProviderProps = {
   types: GetTypesDto
   categories: GetCategoriesDto
+  statuses: GetStatusesDto
   children: React.ReactNode
 }
 
@@ -60,6 +64,7 @@ export const FilterProvider = ({
   children,
   types,
   categories,
+  statuses,
 }: FilterProviderProps) => {
   const [searchParams, setSearchParams] = useQueryStates(
     {
@@ -68,6 +73,7 @@ export const FilterProvider = ({
       [QueryParams.PAGE_SIZE]: parseAsInteger.withDefault(10),
       [QueryParams.CATEGORY]: parseAsArrayOf(parseAsString).withDefault([]),
       [QueryParams.TYPE]: parseAsArrayOf(parseAsString).withDefault([]),
+      [QueryParams.STATUS]: parseAsArrayOf(parseAsString).withDefault([]),
       [QueryParams.DATE_FROM]: parseAsIsoDate,
       [QueryParams.DATE_TO]: parseAsIsoDate,
       [QueryParams.SORT_BY]: parseAsString,
@@ -90,11 +96,12 @@ export const FilterProvider = ({
       [QueryParams.PAGE]: 1,
       [QueryParams.PAGE_SIZE]: 10,
       [QueryParams.CATEGORY]: [],
+      [QueryParams.STATUS]: [],
       [QueryParams.TYPE]: [],
       [QueryParams.DATE_FROM]: null,
       [QueryParams.DATE_TO]: null,
       [QueryParams.SORT_BY]: null,
-      [QueryParams.DIRECTION]: 'desc',
+      [QueryParams.DIRECTION]: 'asc',
     })
   }
 
@@ -153,6 +160,31 @@ export const FilterProvider = ({
         return acc
       }
 
+      if (key === 'status' && Array.isArray(value)) {
+        const statusNames = statuses.statuses
+          .filter((status) => value.includes(status.id))
+          .map((status) => status.title)
+        statusNames.forEach((title) => {
+          acc.push({
+            label: title,
+            onClick: () => {
+              const newStatus = (searchParams.statusId as string[]).filter(
+                (id) => {
+                  const status = statuses.statuses.find((s) => s.id === id)
+                  return status?.title !== title
+                },
+              )
+              setSearchParams({
+                ...searchParams,
+                statusId: newStatus,
+                page: 1,
+              })
+            },
+          })
+        })
+        return acc
+      }
+
       return acc
     },
     [] as ActiveFilters[],
@@ -166,6 +198,11 @@ export const FilterProvider = ({
   const categoryOptions = categories.categories.map((category) => ({
     label: category.title,
     value: category.id,
+  }))
+
+  const statusOptions = statuses.statuses.map((status) => ({
+    label: status.title,
+    value: status.id,
   }))
 
   const setParams = (params: Partial<Params>) => {
@@ -182,6 +219,7 @@ export const FilterProvider = ({
       value={{
         typeOptions,
         categoryOptions,
+        statusOptions,
         params: searchParams as FilterContextState['params'],
         setParams: setParams,
         activeFilters: activeFilters,

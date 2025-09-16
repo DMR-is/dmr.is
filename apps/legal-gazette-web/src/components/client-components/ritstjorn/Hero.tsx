@@ -20,7 +20,7 @@ export const RitstjornHero = () => {
         alt: 'Image alt',
       }}
     >
-      <CaseFilters filters={[]} />
+      <CaseFilters />
     </Hero>
   )
 }

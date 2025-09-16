@@ -21,14 +21,21 @@ export default async function RootLayout({
 
   const typeClient = getLegalGazetteClient('TypeApi', session?.idToken)
   const categoryClient = getLegalGazetteClient('CategoryApi', session?.idToken)
+  const statusClient = getLegalGazetteClient('StatusApi', session?.idToken)
 
   const types = await typeClient.getTypes()
   const categories = await categoryClient.getCategories({})
+  const statuses = await statusClient.getStatuses()
 
   return (
     <html lang="is">
       <body>
-        <Providers session={session} types={types} categories={categories}>
+        <Providers
+          session={session}
+          types={types}
+          categories={categories}
+          statuses={statuses}
+        >
           <Header variant="blue" />
           {children}
         </Providers>

@@ -9,7 +9,7 @@ import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { AlertMessage, Tag } from '@island.is/island-ui/core'
 
-import { StatusEnum } from '../../../gen/fetch'
+import { StatusEnum, StatusIdEnum } from '../../../gen/fetch'
 import { useFilterContext } from '../../../hooks/useFilters'
 import { getLegalGazetteClient } from '../../../lib/api/createClient'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
@@ -36,6 +36,7 @@ export const AdvertsInProgress = () => {
         pageSize: params.pageSize,
         search: params.search,
         categoryId: params.categoryId,
+        statusId: params.statusId as StatusIdEnum[],
         typeId: params.typeId,
         dateFrom: params.dateFrom?.toISOString(),
         dateTo: params.dateTo?.toISOString(),

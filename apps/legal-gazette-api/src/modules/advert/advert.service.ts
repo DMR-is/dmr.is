@@ -4,8 +4,6 @@ import { InjectModel } from '@nestjs/sequelize'
 import { PagingQuery } from '@dmr.is/shared/dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
-import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
-import { AdvertPublicationDetailedDto } from '../advert-publications/dto/advert-publication.dto'
 import { StatusIdEnum } from '../status/status.model'
 import {
   AdvertDetailedDto,
@@ -14,26 +12,15 @@ import {
   GetAdvertsStatusCounterDto,
   UpdateAdvertDto,
 } from './dto/advert.dto'
-import {
-  AdvertModel,
-  AdvertModelScopes,
-  AdvertVersionEnum,
-} from './advert.model'
+import { AdvertModel, AdvertModelScopes } from './advert.model'
 import { IAdvertService } from './advert.service.interface'
 
 @Injectable()
 export class AdvertService implements IAdvertService {
   constructor(
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
-    @InjectModel(AdvertPublicationModel)
-    private readonly advertPublicationModel: typeof AdvertPublicationModel,
   ) {}
-  getAdvertPublication(
-    id: string,
-    version: AdvertVersionEnum,
-  ): Promise<AdvertPublicationDetailedDto> {
-    throw new Error('Method not implemented.')
-  }
+
   async assignAdvertToEmployee(
     advertId: string,
     userId: string,
@@ -174,11 +161,32 @@ export class AdvertService implements IAdvertService {
       pageSize: query.pageSize,
     })
 
+    const allowedStatuses = [
+      StatusIdEnum.SUBMITTED,
+      StatusIdEnum.READY_FOR_PUBLICATION,
+    ]
+
+    if (query.statusId && query.statusId.length > 0) {
+      const filteredStatuses = query.statusId.filter((status) =>
+        allowedStatuses.includes(status),
+      )
+
+      if (filteredStatuses.length > 0) {
+        query.statusId = filteredStatuses
+      } else {
+        query.statusId = allowedStatuses
+      }
+    } else {
+      query.statusId = allowedStatuses
+    }
+
     const adverts = await this.advertModel
       .scope(['defaultScope', { method: ['withQuery', query] }])
       .findAndCountAll({
         limit,
         offset,
+        distinct: true,
+        col: 'AdvertModel.id',
       })
 
     const migrated = adverts.rows.map((advert) => advert.fromModel())

@@ -8,6 +8,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { mapVersionToIndex } from '../../lib/utils'
 import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
+import { StatusIdEnum } from '../status/status.model'
 import {
   AdvertPublicationDetailedDto,
   UpdateAdvertPublicationDto,
@@ -165,7 +166,10 @@ export class AdvertPublicationService implements IAdvertPublicationService {
 
       const publicationNumber = `${year}${month}${day}${publishCount}`
 
-      await advert.update({ publicationNumber })
+      await advert.update({
+        publicationNumber,
+        statusId: StatusIdEnum.PUBLISHED,
+      })
     }
 
     await publication.update({ publishedAt: new Date() })

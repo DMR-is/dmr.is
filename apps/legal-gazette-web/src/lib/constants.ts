@@ -5,7 +5,7 @@ export const DEFAULT_PAGE_SIZE = 10
 
 export enum QueryParams {
   SEARCH = 'search',
-  STATUS = 'status',
+  STATUS = 'statusId',
   TYPE = 'typeId',
   CATEGORY = 'categoryId',
   PUBLICATION = 'publication',
