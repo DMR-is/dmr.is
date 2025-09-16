@@ -8,6 +8,8 @@ import {
 } from 'nuqs'
 import { createContext } from 'react'
 
+import { Tag } from '@island.is/island-ui/core'
+
 import { GetCategoriesDto, GetStatusesDto, GetTypesDto } from '../gen/fetch'
 import { QueryParams } from '../lib/constants'
 type Option<T = string> = {
@@ -31,6 +33,7 @@ interface Params {
 type ActiveFilters = {
   label: string
   onClick: () => void
+  variant?: React.ComponentProps<typeof Tag>['variant']
 }
 
 export type FilterContextState = {
@@ -107,7 +110,7 @@ export const FilterProvider = ({
 
   const activeFilters = Object.entries(searchParams).reduce(
     (acc, [key, value]) => {
-      if (key === 'categoryId' && Array.isArray(value)) {
+      if (key === QueryParams.CATEGORY && Array.isArray(value)) {
         const categoryNames = categories.categories
           .filter((category) => value.includes(category.id))
           .map((category) => category.title)
@@ -135,13 +138,14 @@ export const FilterProvider = ({
         return acc
       }
 
-      if (key === 'typeId' && Array.isArray(value)) {
+      if (key === QueryParams.TYPE && Array.isArray(value)) {
         const typeNames = types.types
           .filter((type) => value.includes(type.id))
           .map((type) => type.title)
         typeNames.forEach((title) => {
           acc.push({
             label: title,
+            variant: 'blueberry',
             onClick: () => {
               const newTypes = (searchParams.typeId as string[]).filter(
                 (id) => {
@@ -160,13 +164,14 @@ export const FilterProvider = ({
         return acc
       }
 
-      if (key === 'status' && Array.isArray(value)) {
+      if (key === QueryParams.STATUS && Array.isArray(value)) {
         const statusNames = statuses.statuses
           .filter((status) => value.includes(status.id))
           .map((status) => status.title)
         statusNames.forEach((title) => {
           acc.push({
             label: title,
+            variant: 'mint',
             onClick: () => {
               const newStatus = (searchParams.statusId as string[]).filter(
                 (id) => {
