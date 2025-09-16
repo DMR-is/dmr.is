@@ -95,6 +95,7 @@ export class SignatureService implements ISignatureService {
   ): Promise<ResultWrapper<SignatureModel>> {
     const signature = await this._getSignature(signatureId, transaction)
 
+    console.log('_updateSignature')
     if (!signature) {
       this.logger.warn('Signature not found', {
         context: LOGGING_CONTEXT,
@@ -152,6 +153,7 @@ export class SignatureService implements ISignatureService {
       transaction,
     })
 
+    console.log('updateSignatureRecord')
     if (!record) {
       this.logger.warn('Signature record not found', {
         context: LOGGING_CONTEXT,

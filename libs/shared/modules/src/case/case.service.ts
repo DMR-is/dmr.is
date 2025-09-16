@@ -1101,18 +1101,30 @@ export class CaseService implements ICaseService {
       await this.utilityService.caseStatusLookup(CaseStatusEnum.Published)
     ).unwrap()
 
+    const signatureRecords = caseToPublish.signature.records
+    const newest = signatureRecords
+      .map((item) => item.signatureDate)
+      .sort((a, b) => {
+        return new Date(b).getTime() - new Date(a).getTime()
+      })[0]
+
+    const signatureYear = new Date(newest).getFullYear()
+    console.log('signatureYear: ', signatureYear)
     const serial = (
       await this.utilityService.getNextPublicationNumber(
         caseToPublish.departmentId,
+        signatureYear,
         transaction,
       )
     ).unwrap()
+
+    console.log('serial: ', serial)
 
     const signatureHtml = caseToPublish.signature.html
     const departmentPrefix = caseToPublish.department.slug
       .replace('-deild', '')
       .toUpperCase()
-    const pdfFileName = `${departmentPrefix}_nr_${serial}_${caseToPublish.year}.pdf`
+    const pdfFileName = `${departmentPrefix}_nr_${serial}_${signatureYear}.pdf`
 
     await this.createPdfAndUpload(caseId, pdfFileName, now, serial)
 
@@ -1126,12 +1138,6 @@ export class CaseService implements ICaseService {
       (caseToPublish.attachments && caseToPublish.attachments.length > 0)
         ? `<p align="center" style="margin-top: 1.5em;">VIÐAUKI<br>(sjá PDF-skjal)</p>`
         : ''
-    const signatureRecords = caseToPublish.signature.records
-    const newest = signatureRecords
-      .map((item) => item.signatureDate)
-      .sort((a, b) => {
-        return new Date(b).getTime() - new Date(a).getTime()
-      })[0]
 
     const advertCreateResult = await this.journalService.create(
       {
@@ -1150,6 +1156,7 @@ export class CaseService implements ICaseService {
           publicationHtml,
         pdfUrl: `${process.env.ADVERTS_CDN_URL ?? 'https://adverts.stjornartidindi.is'}/${pdfFileName}`,
         advertId: caseToPublish.proposedAdvertId,
+        publicationYear: signatureYear.toString(),
       },
       transaction,
     )
@@ -1172,6 +1179,7 @@ export class CaseService implements ICaseService {
         statusId: caseStatus.id,
         publishedAt: now.toISOString(),
         updatedAt: now.toISOString(),
+        year: signatureYear,
       },
       {
         where: {

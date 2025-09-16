@@ -258,4 +258,10 @@ export class CreateAdvert {
     required: false,
   })
   advertId?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  publicationYear?: string
 }
