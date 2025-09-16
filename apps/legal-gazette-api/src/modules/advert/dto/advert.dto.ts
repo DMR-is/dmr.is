@@ -2,7 +2,6 @@ import { Transform, Type } from 'class-transformer'
 import {
   IsArray,
   IsBoolean,
-  IsDate,
   IsDateString,
   IsEnum,
   IsOptional,

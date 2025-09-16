@@ -36,7 +36,7 @@ export const AdvertsInProgress = () => {
         pageSize: params.pageSize,
         search: params.search,
         categoryId: params.categoryId,
-        statusId: params.statusId as StatusIdEnum[],
+        statusId: [StatusIdEnum.SUBMITTED],
         typeId: params.typeId,
         dateFrom: params.dateFrom?.toISOString(),
         dateTo: params.dateTo?.toISOString(),

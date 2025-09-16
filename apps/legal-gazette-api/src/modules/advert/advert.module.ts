@@ -4,6 +4,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { AdvertUpdateGuard } from '../../guards/advert-update.guard'
 import { PublishingService } from '../../services/publishing/publishing.service'
 import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
+import { AdvertPublicationModule } from '../advert-publications/advert-publication.module'
 import { CategoryModel } from '../category/category.model'
 import { PdfService } from '../pdf/pdf.service'
 import { StatusModel } from '../status/status.model'
@@ -23,6 +24,7 @@ import { IAdvertService } from './advert.service.interface'
       StatusModel,
       CategoryModel,
     ]),
+    AdvertPublicationModule,
   ],
   controllers: [
     AdvertUpdateController,

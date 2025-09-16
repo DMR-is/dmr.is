@@ -1,11 +1,9 @@
 import { Column, DataType, HasMany } from 'sequelize-typescript'
 
-import { BadRequestException, NotFoundException } from '@nestjs/common'
-
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
-import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
+import { AdvertModel } from '../advert/advert.model'
 import { StatusDto } from './dto/status.dto'
 
 export enum StatusIdEnum {
@@ -58,115 +56,12 @@ export class StatusModel extends BaseModel<StatusAttributes, StatusAttributes> {
   adverts!: AdvertModel[]
 
   static async setAdvertStatus(advertId: string, statusId: StatusIdEnum) {
-    const advert = await AdvertModel.unscoped().findByPk(advertId, {
-      attributes: ['id', 'caseId', 'version', 'statusId'],
+    const advert = await AdvertModel.unscoped().findByPkOrThrow(advertId, {
+      attributes: ['id', 'statusId'],
+      include: [StatusModel],
     })
 
-    if (!advert) {
-      throw new NotFoundException(`Advert not found`)
-    }
-
-    const siblings = await AdvertModel.unscoped().findAll({
-      attributes: ['id', 'caseId', 'version', 'statusId'],
-      where: {
-        caseId: advert?.caseId,
-      },
-    })
-
-    if (statusId === StatusIdEnum.SUBMITTED && siblings.length > 0) {
-      switch (advert.version) {
-        case AdvertVersionEnum.A: {
-          // mark all as submitted
-          siblings.forEach(async (sibling) => {
-            await sibling.update({
-              statusId: StatusIdEnum.SUBMITTED,
-            })
-          })
-          break
-        }
-        case AdvertVersionEnum.B: {
-          siblings.forEach(async (sibling) => {
-            if (sibling.version !== AdvertVersionEnum.A) {
-              await sibling.update({
-                statusId: StatusIdEnum.SUBMITTED,
-              })
-            }
-          })
-          break
-        }
-      }
-    }
-
-    if (statusId === StatusIdEnum.READY_FOR_PUBLICATION) {
-      // is previous sibling ready for publication or published?
-      switch (advert.version) {
-        case AdvertVersionEnum.A: {
-          await advert.update({
-            statusId: StatusIdEnum.READY_FOR_PUBLICATION,
-          })
-          break
-        }
-        case AdvertVersionEnum.B: {
-          const canProceed = siblings.find(
-            (sibling) =>
-              (sibling.version === AdvertVersionEnum.A &&
-                sibling.statusId === StatusIdEnum.PUBLISHED) ||
-              sibling.statusId === StatusIdEnum.READY_FOR_PUBLICATION,
-          )
-
-          if (!canProceed) {
-            this.logger.warn(
-              `Advert cannot be set to READY_FOR_PUBLICATION because previous version A is not published or ready for publication.`,
-              {
-                advertId: advert.id,
-                caseId: advert.caseId,
-                version: advert.version,
-                statusId: advert.statusId,
-              },
-            )
-            throw new BadRequestException(
-              `Advert cannot be set to READY_FOR_PUBLICATION because previous version A is not published or ready for publication.`,
-            )
-          }
-
-          await advert.update({ statusId: StatusIdEnum.READY_FOR_PUBLICATION })
-
-          break
-        }
-        case AdvertVersionEnum.C: {
-          const canProceed = siblings.find(
-            (sibling) =>
-              (sibling.version === AdvertVersionEnum.B &&
-                sibling.statusId === StatusIdEnum.PUBLISHED) ||
-              sibling.statusId === StatusIdEnum.READY_FOR_PUBLICATION,
-          )
-
-          if (!canProceed) {
-            this.logger.warn(
-              `Advert cannot be set to READY_FOR_PUBLICATION because previous version B is not published or ready for publication.`,
-              {
-                advertId: advert.id,
-                caseId: advert.caseId,
-                version: advert.version,
-                statusId: advert.statusId,
-              },
-            )
-            throw new BadRequestException(
-              `Advert cannot be set to READY_FOR_PUBLICATION because previous version B is not published or ready for publication.`,
-            )
-          }
-
-          await advert.update(
-            { statusId: StatusIdEnum.READY_FOR_PUBLICATION },
-            {
-              returning: false,
-            },
-          )
-
-          break
-        }
-      }
-    }
+    await advert.update({ statusId })
   }
 
   static fromModel(model: StatusModel): StatusDto {

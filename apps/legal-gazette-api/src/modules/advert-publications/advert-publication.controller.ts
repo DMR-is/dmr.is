@@ -14,10 +14,8 @@ import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
 import { AdvertVersionEnum } from '../advert/advert.model'
-import {
-  AdvertPublicationDetailedDto,
-  UpdateAdvertPublicationDto,
-} from './dto/advert-publication.dto'
+import { UpdateAdvertPublicationDto } from './dto/advert-publication.dto'
+import { AdvertPublicationDetailedDto } from './dto/advert-publication-detailed.dto'
 import { IAdvertPublicationService } from './advert-publication.service.interface'
 
 @Controller({

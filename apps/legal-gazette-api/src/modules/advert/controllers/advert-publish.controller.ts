@@ -1,17 +1,10 @@
-import {
-  Body,
-  Controller,
-  NotImplementedException,
-  Param,
-  Post,
-} from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
+import { Body, Controller, Inject, Param, Post } from '@nestjs/common'
 import { ApiParam } from '@nestjs/swagger'
 
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
-import { AdvertModel } from '../advert.model'
+import { IAdvertPublicationService } from '../../advert-publications/advert-publication.service.interface'
 import { PublishAdvertsBody } from '../dto/advert.dto'
 
 @Controller({
@@ -20,19 +13,20 @@ import { PublishAdvertsBody } from '../dto/advert.dto'
 })
 export class AdvertPublishController {
   constructor(
-    @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    @Inject(IAdvertPublicationService)
+    private readonly advertPublicationService: IAdvertPublicationService,
   ) {}
 
   @Post('publish')
   @LGResponse({ operationId: 'publishAdverts' })
   async publishAdverts(@Body() body: PublishAdvertsBody) {
-    throw new NotImplementedException()
+    return await this.advertPublicationService.publishAdverts(body.advertIds)
   }
 
   @Post(':id/publish')
   @ApiParam({ name: 'id', type: String })
   @LGResponse({ operationId: 'publishAdvert' })
   async publishAdvert(@Param('id', new UUIDValidationPipe()) id: string) {
-    throw new NotImplementedException()
+    return await this.advertPublicationService.publishAdverts([id])
   }
 }

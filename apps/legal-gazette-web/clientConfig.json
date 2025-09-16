@@ -3865,7 +3865,7 @@
           "publication": {
             "$ref": "#/components/schemas/AdvertPublicationDto"
           },
-          "advert": { "type": "object" },
+          "advert": { "$ref": "#/components/schemas/AdvertDto" },
           "html": { "type": "string" }
         },
         "required": ["publication", "advert", "html"]

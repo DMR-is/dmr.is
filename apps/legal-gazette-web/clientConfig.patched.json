@@ -4934,7 +4934,7 @@
             "$ref": "#/components/schemas/AdvertPublicationDto"
           },
           "advert": {
-            "type": "object"
+            "$ref": "#/components/schemas/AdvertDto"
           },
           "html": {
             "type": "string"

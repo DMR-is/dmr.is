@@ -9,10 +9,8 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { mapVersionToIndex } from '../../lib/utils'
 import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
 import { StatusIdEnum } from '../status/status.model'
-import {
-  AdvertPublicationDetailedDto,
-  UpdateAdvertPublicationDto,
-} from './dto/advert-publication.dto'
+import { UpdateAdvertPublicationDto } from './dto/advert-publication.dto'
+import { AdvertPublicationDetailedDto } from './dto/advert-publication-detailed.dto'
 import { AdvertPublicationModel } from './advert-publication.model'
 import { IAdvertPublicationService } from './advert-publication.service.interface'
 
@@ -25,6 +23,45 @@ export class AdvertPublicationService implements IAdvertPublicationService {
     readonly advertModel: typeof AdvertModel,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
+  async publishAdverts(advertIds: string[]): Promise<void> {
+    // maybe fail if length of advert results is not the same as advertIds length
+    const adverts = await this.advertModel.unscoped().findAll({
+      attributes: ['id', 'publicationNumber', 'statusId'],
+      where: {
+        id: {
+          [Op.in]: advertIds,
+        },
+        statusId: {
+          [Op.eq]: StatusIdEnum.READY_FOR_PUBLICATION,
+        },
+      },
+    })
+
+    // if (adverts.length !== advertIds.length) {
+    //   throw new BadRequestException(
+    //     'Some adverts are not ready for publication or do not exist',
+    //   )
+    // }
+
+    await Promise.all(
+      adverts.map(async (advert) => {
+        const publication = await this.advertPublicationModel.findOneOrThrow({
+          where: {
+            advertId: advert.id,
+            publishedAt: {
+              [Op.is]: null,
+            },
+          },
+          order: [
+            ['scheduledAt', 'ASC'],
+            ['versionNumber', 'ASC'],
+          ],
+        })
+
+        await this.publishAdvertPublication(advert.id, publication.id)
+      }),
+    )
+  }
   async createAdvertPublication(advertId: string): Promise<void> {
     const currentPublications = await this.advertPublicationModel.findAll({
       where: { advertId },
