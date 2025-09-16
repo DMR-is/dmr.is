@@ -49,6 +49,7 @@ type AdvertAttributes = {
   typeId: string
   categoryId: string
   statusId: string
+  assignedUserId: string | null
   publicationNumber: string | null
   title: string
   createdBy: string
@@ -510,7 +511,7 @@ export class AdvertModel extends BaseModel<
         createdBy: model.createdBy,
         scheduledAt: date.toISOString(),
         title: model.title,
-        assignedUser: model.assignedUser?.fullName,
+        assignedUser: model.assignedUser?.id,
         publications: model.publications.map((p) => p.fromModel()),
       }
     } catch (error) {

@@ -37,6 +37,7 @@ export const SignatureFields = () => {
         <GridColumn span={['12/12', '6/12']}>
           <Input
             name="signatureName"
+            backgroundColor="blue"
             size="sm"
             label="Nafn undirritara"
             defaultValue={signatureName}
@@ -64,6 +65,7 @@ export const SignatureFields = () => {
         <GridColumn span={['12/12', '6/12']}>
           <Input
             name="signatureOnBehalfOf"
+            backgroundColor="blue"
             size="sm"
             label="Fyrir hönd"
             defaultValue={signatureOnBehalfOf ?? ''}
@@ -89,6 +91,7 @@ export const SignatureFields = () => {
         <GridColumn span={['12/12', '6/12']}>
           <Input
             name="signatureLocation"
+            backgroundColor="blue"
             size="sm"
             label="Staður undirritunar"
             defaultValue={signatureLocation}
@@ -114,6 +117,7 @@ export const SignatureFields = () => {
         <GridColumn span={['12/12', '6/12']}>
           <DatePicker
             name="signatureDate"
+            backgroundColor="blue"
             placeholderText=""
             size="sm"
             label="Dagsetning undirritunar"

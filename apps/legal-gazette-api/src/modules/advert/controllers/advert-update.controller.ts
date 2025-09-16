@@ -37,6 +37,16 @@ export class AdvertUpdateController {
     private readonly statusModel: typeof StatusModel,
   ) {}
 
+  @Post('assign/:userId')
+  @ApiParam({ name: 'userId', type: String })
+  @LGResponse({ operationId: 'assignAdvertToEmployee' })
+  assignAdvertToEmployee(
+    @Param('id', new UUIDValidationPipe()) advertId: string,
+    @Param('userId', new UUIDValidationPipe()) userId: string,
+  ) {
+    return this.advertService.assignAdvertToEmployee(advertId, userId)
+  }
+
   @Post('ready')
   @LGResponse({ operationId: 'markAdvertAsReady' })
   markAdvertAsReady(@Param('id', new UUIDValidationPipe()) advertId: string) {

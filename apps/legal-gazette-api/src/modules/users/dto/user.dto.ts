@@ -36,3 +36,10 @@ export class UserDto {
   @IsString()
   phone?: string | null
 }
+
+export class GetUsersResponse {
+  @ApiProperty({
+    type: [UserDto],
+  })
+  users!: UserDto[]
+}

@@ -30,6 +30,15 @@ export class AdvertService implements IAdvertService {
     @InjectModel(AdvertPublicationModel)
     private readonly advertPublicationModel: typeof AdvertPublicationModel,
   ) {}
+  async assignAdvertToEmployee(
+    advertId: string,
+    userId: string,
+  ): Promise<void> {
+    await this.advertModel.update(
+      { assignedUserId: userId },
+      { where: { id: advertId } },
+    )
+  }
   async markAdvertAsSubmitted(advertId: string): Promise<void> {
     const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
       attributes: ['id', 'statusId'],

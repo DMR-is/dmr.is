@@ -7,8 +7,9 @@ import useSWR from 'swr'
 
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
-import { AlertMessage } from '@island.is/island-ui/core'
+import { AlertMessage, Tag } from '@island.is/island-ui/core'
 
+import { StatusEnum } from '../../../gen/fetch'
 import { useFilterContext } from '../../../hooks/useFilters'
 import { getLegalGazetteClient } from '../../../lib/api/createClient'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
@@ -47,6 +48,13 @@ export const AdvertsInProgress = () => {
   const rows = data?.adverts.map((advert) => ({
     birting: formatDate(advert.scheduledAt),
     skraning: formatDate(advert.createdAt),
+    status: (
+      <Tag
+        variant={advert.status.title === StatusEnum.Innsent ? 'blue' : 'mint'}
+      >
+        {advert.status.title}
+      </Tag>
+    ),
     tegund: advert.type.title,
     efni: advert.title,
     href: `/ritstjorn/${advert.id}`,
@@ -82,6 +90,12 @@ export const AdvertsInProgress = () => {
           children: formatMessage(ritstjornTableMessages.columns.createdAt),
           size: 'tiny',
           sortable: true,
+        },
+
+        {
+          field: 'status',
+          children: formatMessage(ritstjornTableMessages.columns.status),
+          size: 'tiny',
         },
         {
           field: 'tegund',

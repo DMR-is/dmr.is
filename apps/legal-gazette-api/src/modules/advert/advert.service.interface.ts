@@ -41,6 +41,8 @@ export interface IAdvertService {
   markAdvertAsReady(advertId: string): Promise<void>
 
   markAdvertAsSubmitted(advertId: string): Promise<void>
+
+  assignAdvertToEmployee(advertId: string, userId: string): Promise<void>
 }
 
 export const IAdvertService = Symbol('IAdvertService')

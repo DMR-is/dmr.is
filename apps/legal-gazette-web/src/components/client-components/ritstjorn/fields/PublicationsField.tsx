@@ -87,6 +87,8 @@ export const PublicationsFields = () => {
             <GridRow>
               <GridColumn span={['12/12', '6/12']} key={pub.id}>
                 <DatePicker
+                  backgroundColor="blue"
+                  name="scheduledAt"
                   label={`Birting ${pub.version}`}
                   placeholderText=""
                   selected={new Date(pub.scheduledAt)}
@@ -122,6 +124,7 @@ export const PublicationsFields = () => {
               <GridColumn span={['12/12', '6/12']} key={pub.id}>
                 <Inline space={[1, 2]} flexWrap="nowrap" alignY="center">
                   <Input
+                    backgroundColor="blue"
                     name="publishedAt"
                     readOnly
                     label="Útgáfudagur"
@@ -154,6 +157,9 @@ export const PublicationsFields = () => {
                     items={[
                       {
                         title: 'Gefa út birtingu',
+                      },
+                      {
+                        title: 'Fjarlægja birtingu',
                       },
                     ]}
                   />

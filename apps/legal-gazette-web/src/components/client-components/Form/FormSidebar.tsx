@@ -1,6 +1,7 @@
 'use client'
 import { useRouter } from 'next/navigation'
 
+import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import {
@@ -25,6 +26,26 @@ export const AdvertSidebar = () => {
 
   const userClient = useClient('UsersApi')
   const updateClient = useClient('AdvertUpdateApi')
+
+  const { data: usersData, isLoading: isLoadingEmployees } = useSWR(
+    'getEmployees',
+    () => userClient.getEmployees(),
+    {
+      revalidateOnFocus: false,
+      refreshInterval: 0,
+    },
+  )
+
+  const employeeOptions = usersData
+    ? usersData.users?.map((user) => ({
+        label: user.name,
+        value: user.id,
+      }))
+    : []
+
+  const defaultEmployee = usersData?.users?.find(
+    (user) => user.id === advert.assignedUser,
+  )
 
   const isSubmitted = advert.status.title === StatusEnum.Innsent
   const isReadyForPublication =
@@ -73,6 +94,15 @@ export const AdvertSidebar = () => {
     },
   )
 
+  const { trigger: assignUserTrigger } = useSWRMutation(
+    'assignUserToAdvert',
+    (_key, { arg }: { arg: { advertId: string; userId: string } }) =>
+      updateClient.assignAdvertToEmployee({
+        id: arg.advertId,
+        userId: arg.userId,
+      }),
+  )
+
   return (
     <Box className={styles.advertSideBarStyle}>
       <Stack space={2}>
@@ -87,7 +117,37 @@ export const AdvertSidebar = () => {
             Til baka í auglýsingar
           </Button>
         </LinkV2>
-        <Select label="Starfsmaður" options={[]} size="sm" />
+        <Select
+          isLoading={isLoadingEmployees}
+          key={`select-employee-${defaultEmployee?.id}`}
+          label="Starfsmaður"
+          options={employeeOptions}
+          defaultValue={
+            defaultEmployee
+              ? { label: defaultEmployee.name, value: defaultEmployee.id }
+              : undefined
+          }
+          size="sm"
+          onChange={(option) => {
+            if (!option) return
+
+            assignUserTrigger(
+              { advertId: advert.id, userId: option.value },
+              {
+                onSuccess: () => {
+                  toast.success('Starfsmaður úthlutaður', {
+                    toastId: 'assignUserToAdvert',
+                  })
+                },
+                onError: () => {
+                  toast.error('Ekki tókst að úthluta starfsmanni', {
+                    toastId: 'assignUserToAdvertError',
+                  })
+                },
+              },
+            )
+          }}
+        />
         <Box background="white">
           <Input
             name="advert-status"
