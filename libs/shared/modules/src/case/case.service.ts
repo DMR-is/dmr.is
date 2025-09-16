@@ -1109,7 +1109,6 @@ export class CaseService implements ICaseService {
       })[0]
 
     const signatureYear = new Date(newest).getFullYear()
-    console.log('signatureYear: ', signatureYear)
     const serial = (
       await this.utilityService.getNextPublicationNumber(
         caseToPublish.departmentId,
@@ -1117,8 +1116,6 @@ export class CaseService implements ICaseService {
         transaction,
       )
     ).unwrap()
-
-    console.log('serial: ', serial)
 
     const signatureHtml = caseToPublish.signature.html
     const departmentPrefix = caseToPublish.department.slug
