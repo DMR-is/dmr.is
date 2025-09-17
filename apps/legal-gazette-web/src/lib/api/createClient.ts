@@ -12,6 +12,7 @@ import {
   Configuration,
   CourtDistrictApi,
   HealthApi,
+  SettlementApi,
   StatusApi,
   SubscriberApi,
   TypeApi,
@@ -33,6 +34,7 @@ const apis = [
   'CourtDistrictApi',
   'HealthApi',
   'SubscriberApi',
+  'SettlementApi',
 ] as const
 
 type ApiKey = (typeof apis)[number]
@@ -52,6 +54,7 @@ export type ApiClientMap = {
   CourtDistrictApi: CourtDistrictApi
   HealthApi: HealthApi
   SubscriberApi: SubscriberApi
+  SettlementApi: SettlementApi
 }
 
 const ApiConstructors: {
@@ -71,6 +74,7 @@ const ApiConstructors: {
   CourtDistrictApi,
   HealthApi,
   SubscriberApi,
+  SettlementApi,
 }
 
 const apiClients: Partial<{

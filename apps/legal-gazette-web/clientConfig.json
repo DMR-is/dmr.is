@@ -3347,6 +3347,72 @@
         "tags": ["TypeWithCategories"]
       }
     },
+    "/api/v1/settlements/{id}": {
+      "patch": {
+        "operationId": "updateSettlement",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateSettlementDto" }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Settlement"]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "HealthController__v1",
@@ -3665,6 +3731,7 @@
       "SettlementDto": {
         "type": "object",
         "properties": {
+          "id": { "type": "string" },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
           "settlementName": { "type": "string" },
@@ -3675,6 +3742,7 @@
           "settlementDateOfDeath": { "type": "string", "nullable": true }
         },
         "required": [
+          "id",
           "liquidatorName",
           "liquidatorLocation",
           "settlementName",
@@ -4119,6 +4187,20 @@
           "type": { "$ref": "#/components/schemas/TypeWithCategoriesDto" }
         },
         "required": ["type"]
+      },
+      "UpdateSettlementDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "liquidatorName": { "type": "string" },
+          "liquidatorLocation": { "type": "string" },
+          "settlementName": { "type": "string" },
+          "settlementNationalId": { "type": "string" },
+          "settlementAddress": { "type": "string" },
+          "declaredClaims": { "type": "number" },
+          "settlementDeadline": { "type": "string", "nullable": true },
+          "settlementDateOfDeath": { "type": "string", "nullable": true }
+        }
       }
     }
   }

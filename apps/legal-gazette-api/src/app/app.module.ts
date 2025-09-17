@@ -29,6 +29,7 @@ import { CategoryModel } from '../modules/category/category.model'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
 import { CourtDistrictModel } from '../modules/court-district/court-district.model'
 import { SettlementModel } from '../modules/settlement/settlement.model'
+import { SettlementModule } from '../modules/settlement/settlement.module'
 import { StatusModel } from '../modules/status/status.model'
 import { SubscriberModel } from '../modules/subscribers/subscriber.model'
 import { SubscriberModule } from '../modules/subscribers/subscriber.module'
@@ -87,6 +88,7 @@ import { UsersModule } from '../modules/users/users.module'
     UsersModule,
     ApplicationModule,
     TypesCategoriesModule,
+    SettlementModule,
     {
       module: AuthModule,
       global: true,
