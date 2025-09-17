@@ -134,6 +134,7 @@ export type ApplicationCreateAttributes = {
     ],
     include: [
       { model: CategoryModel, as: 'category' },
+      { model: TypeModel, as: 'type' },
       { model: CourtDistrictModel, as: 'courtDistrict' },
     ],
   },
@@ -155,6 +156,7 @@ export type ApplicationCreateAttributes = {
     ],
     include: [
       { model: CategoryModel, as: 'category' },
+      { model: TypeModel, as: 'type' },
       { model: CourtDistrictModel, as: 'courtDistrict' },
     ],
   },
@@ -373,8 +375,27 @@ export class ApplicationModel extends BaseModel<
   case!: CaseModel
 
   get title() {
-    const captionOrType = this.caption || this.type?.title
-    return `${this.type?.title}${captionOrType ? ` - ${captionOrType}` : ''}`
+    switch (this.applicationType) {
+      case ApplicationTypeEnum.COMMON: {
+        let title = 'Almenn umsókn'
+        if (this.caption && this.type) {
+          title = `${this.type.title} - ${this.caption}`
+        }
+
+        return title
+      }
+      case ApplicationTypeEnum.RECALL_BANKRUPTCY:
+      case ApplicationTypeEnum.RECALL_DECEASED: {
+        let title = 'Innköllun þrotabús'
+        if (this.settlementName) {
+          title = `Innköllun þrotabús - ${this.settlementName}`
+        }
+
+        return title
+      }
+      default:
+        return 'Almenn umsókn'
+    }
   }
 
   static fromModel(model: ApplicationModel): ApplicationDto {
