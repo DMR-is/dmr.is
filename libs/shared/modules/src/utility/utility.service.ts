@@ -153,11 +153,12 @@ export class UtilityService implements IUtilityService {
   @Transactional()
   async getNextPublicationNumber(
     departmentId: string,
+    signatureYear?: number,
     transaction?: Transaction,
   ): Promise<ResultWrapper<number>> {
     const now = new Date()
 
-    const year = now.getFullYear()
+    const year = signatureYear ?? now.getFullYear()
     const janFirst = new Date(year, 0, 1)
 
     const nextPublicationNumber = await this.advertModel.count({

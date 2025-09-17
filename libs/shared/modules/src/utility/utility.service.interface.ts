@@ -83,6 +83,7 @@ export interface IUtilityService {
 
   getNextPublicationNumber(
     departmentId: string,
+    signatureYear?: number,
     transaction?: Transaction,
   ): Promise<ResultWrapper<number>>
 

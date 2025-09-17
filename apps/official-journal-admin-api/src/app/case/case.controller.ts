@@ -82,7 +82,6 @@ import {
   GetDepartmentsResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
-  GetNextPublicationNumberResponse,
   GetPaymentResponse,
   GetTagsResponse,
   InternalCommentBodyDto,
@@ -157,17 +156,6 @@ export class CaseController {
   ) {
     ResultWrapper.unwrap(
       await this.caseService.deleteCaseChannel(caseId, channelId),
-    )
-  }
-
-  @Get('nextPublicationNumber/:departmentId')
-  @ApiOperation({ operationId: 'getNextPublicationNumber' })
-  @ApiResponse({ status: 200, type: GetNextPublicationNumberResponse })
-  async getNextPublicationNumber(
-    @Param('departmentId', new UUIDValidationPipe()) departmentId: string,
-  ): Promise<GetNextPublicationNumberResponse> {
-    return ResultWrapper.unwrap(
-      await this.caseService.getNextCasePublicationNumber(departmentId),
     )
   }
 
