@@ -118,6 +118,7 @@ export const SignatureFields = () => {
           <DatePicker
             name="signatureDate"
             backgroundColor="blue"
+            locale="is"
             placeholderText=""
             size="sm"
             label="Dagsetning undirritunar"

@@ -133,7 +133,7 @@ export class AdvertService implements IAdvertService {
       pageSize: query.pageSize,
     })
     const adverts = await this.advertModel
-      .scope(AdvertModelScopes.COMPLETED)
+      .scope(['defaultScope', AdvertModelScopes.COMPLETED])
       .findAndCountAll({
         limit,
         offset,

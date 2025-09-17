@@ -12,12 +12,6 @@ const enumMappings = {
     REJECTED: 'f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
     WITHDRAWN: 'e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
   },
-  TypeEnum: {
-    COMMON_ADVERT: 'Almenn auglýsing',
-    BANKRUPTCY_ADVERT: 'Innköllun þrotabús',
-    BANKRUPTCY_DIVISION_ADVERT: 'Skiptafundur þrotabús',
-    DECEASED_ADVERT: 'Innköllun dánarbús',
-  },
 }
 
 // ✅ 2. Paths

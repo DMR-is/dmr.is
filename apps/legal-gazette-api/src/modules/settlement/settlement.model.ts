@@ -102,6 +102,7 @@ export class SettlementModel extends BaseModel<
       settlementDateOfDeath: model.settlementDateOfDeath
         ? model.settlementDateOfDeath.toISOString()
         : null,
+      declaredClaims: model.declaredClaims,
     }
   }
 

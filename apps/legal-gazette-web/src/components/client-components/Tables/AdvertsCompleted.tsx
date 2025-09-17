@@ -2,6 +2,7 @@
 
 import { useIntl } from 'react-intl'
 
+import { Box } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { useCompletedAdverts } from '../../../hooks/adverts/useCompletedAdverts'
@@ -29,45 +30,49 @@ export const AdvertsCompleted = () => {
   }))
 
   return (
-    <DataTable
-      noDataMessage={formatMessage(
-        ritstjornTableMessages.general.noDataMessage,
-      )}
-      loading={isLoading}
-      columns={
-        [
-          {
-            field: 'birting',
-            children: formatMessage(ritstjornTableMessages.columns.scheduledAt),
-            sortable: true,
-            size: 'tiny',
-          },
-          {
-            field: 'skraning',
-            children: formatMessage(ritstjornTableMessages.columns.createdAt),
-            size: 'tiny',
-            sortable: true,
-          },
-          {
-            field: 'tegund',
-            children: formatMessage(ritstjornTableMessages.columns.type),
-            width: '200px',
-          },
-          {
-            field: 'flokkur',
-            children: formatMessage(ritstjornTableMessages.columns.category),
-            size: 'small',
-          },
-          {
-            field: 'efni',
-            children: formatMessage(ritstjornTableMessages.columns.content),
-            fluid: true,
-          },
-        ] as const
-      }
-      rows={rows}
-      paging={paging}
-    />
+    <Box background="white">
+      <DataTable
+        noDataMessage={formatMessage(
+          ritstjornTableMessages.general.noDataMessage,
+        )}
+        loading={isLoading}
+        columns={
+          [
+            {
+              field: 'birting',
+              children: formatMessage(
+                ritstjornTableMessages.columns.scheduledAt,
+              ),
+              sortable: true,
+              size: 'tiny',
+            },
+            {
+              field: 'skraning',
+              children: formatMessage(ritstjornTableMessages.columns.createdAt),
+              size: 'tiny',
+              sortable: true,
+            },
+            {
+              field: 'tegund',
+              children: formatMessage(ritstjornTableMessages.columns.type),
+              width: '200px',
+            },
+            {
+              field: 'flokkur',
+              children: formatMessage(ritstjornTableMessages.columns.category),
+              size: 'small',
+            },
+            {
+              field: 'efni',
+              children: formatMessage(ritstjornTableMessages.columns.content),
+              fluid: true,
+            },
+          ] as const
+        }
+        rows={rows}
+        paging={paging}
+      />
+    </Box>
   )
 }
 

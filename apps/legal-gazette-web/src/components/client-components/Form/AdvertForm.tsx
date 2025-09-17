@@ -16,7 +16,7 @@ import { SignatureFields } from '../ritstjorn/fields/SignatureFields'
 export const AdvertForm = () => {
   return (
     <GridContainer>
-      <Stack space={[2, 3]}>
+      <Stack space={[3, 4]}>
         <GridRow>
           <GridColumn span="12/12">
             <Text marginBottom={[1, 2]} variant="h2">

@@ -14,8 +14,9 @@ import {
 
 import { GetAdvertsStatusCounterDto } from '../../../gen/fetch'
 import { getLegalGazetteClient } from '../../../lib/api/createClient'
-import PublishingTab from '../PublishingTab/PublishingTab'
 import { RitstjornHero } from '../ritstjorn/Hero'
+import AdvertsCompleted from '../Tables/AdvertsCompleted'
+import PublishingTab from '../tabs/PublishingTab'
 import { SubmittedTab } from '../tabs/SubmittedTab'
 
 type Props = {
@@ -77,7 +78,7 @@ export const PageContainer = ({ initalAdvertsCount }: Props) => {
                 {
                   id: 'yfirlit',
                   label: `Yfirlit (${overviewCount})`,
-                  content: <div>Yfirlit content</div>,
+                  content: <AdvertsCompleted />,
                 },
               ]}
             />

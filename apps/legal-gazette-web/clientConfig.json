@@ -3407,10 +3407,6 @@
         },
         "required": ["statusCode", "timestamp"]
       },
-      "TypeEnum": {
-        "type": "string",
-        "enum": ["Innköllun", "Skiptafundur", "Skiptalok"]
-      },
       "TypeDto": {
         "type": "object",
         "properties": {
@@ -3420,15 +3416,9 @@
             "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
           },
           "title": {
+            "type": "string",
             "description": "Title of the entity",
-            "example": "Base entity",
-            "x-enumNames": [
-              "Common",
-              "Recall",
-              "DivisionMeeting",
-              "DivisionEnding"
-            ],
-            "allOf": [{ "$ref": "#/components/schemas/TypeEnum" }]
+            "example": "Base entity"
           },
           "slug": {
             "type": "string",
@@ -3680,6 +3670,7 @@
           "settlementName": { "type": "string" },
           "settlementNationalId": { "type": "string" },
           "settlementAddress": { "type": "string" },
+          "declaredClaims": { "type": "number" },
           "settlementDeadline": { "type": "string", "nullable": true },
           "settlementDateOfDeath": { "type": "string", "nullable": true }
         },
@@ -3689,6 +3680,7 @@
           "settlementName",
           "settlementNationalId",
           "settlementAddress",
+          "declaredClaims",
           "settlementDeadline"
         ]
       },

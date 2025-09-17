@@ -15,23 +15,17 @@ export enum TypeIdEnum {
   DIVISION_ENDING = 'D40BED80-6D9C-4388-AEA8-445B27614D8A',
 }
 
-export enum TypeEnum {
-  RECALL = 'Innköllun',
-  DIVISION_MEETING = 'Skiptafundur',
-  DIVISION_ENDING = 'Skiptalok',
-}
-
 @BaseEntityTable({ tableName: LegalGazetteModels.ADVERT_TYPE })
 export class TypeModel extends BaseEntityModel<TypeDto> {
   @BelongsToMany(() => CategoryModel, { through: () => TypeCategoriesModel })
   categories!: CategoryModel[]
 
   @Column({
-    type: DataType.ENUM(...Object.values(TypeEnum)),
+    type: DataType.TEXT,
     field: 'title',
     allowNull: false,
   })
-  title!: TypeEnum
+  title!: string
 
   static fromModelWithCategories(model: TypeModel): TypeWithCategoriesDto {
     return {
