@@ -21,7 +21,6 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
 import { getAdvertHTMLMarkup } from '../../lib/templates'
-import { validateAdvertStatus } from '../../lib/utils'
 import {
   AdvertPublicationModel,
   AdvertPublicationsCreateAttributes,

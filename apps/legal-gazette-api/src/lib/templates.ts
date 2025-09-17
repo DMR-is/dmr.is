@@ -84,7 +84,7 @@ export const getAdvertHTMLMarkup = (
           </table>
           <p>Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur búinu eða eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu innköllunar þessarar.</p>
           <p>Kröfulýsingar skulu sendar skiptastjóra að ${model.settlement.liquidatorLocation}</p>
-          <p>Skiptafundur til að fjalla um skrá um lýstar kröfur og ráðstöfun á eignum og réttindum búsins verður haldinn á skrifstofu skiptastjóra að ${model.settlement.liquidatorLocation}, á ofangreindum tíma.</p>
+          <p>Skiptafundur til að fjalla um skrá um lýstar kröfur og ráðstöfun á eignum og réttindum búsins verður haldinn á skrifstofu skiptastjóra að ${model.divisionMeetingLocation}, á ofangreindum tíma.</p>
           <p>Komi ekkert fram um eignir í búinu mun skiptum lokið á þeim skiptafundi með vísan til 155. gr. laga nr. 21/1991 um gjaldþrotaskipti o.fl. Skrá um lýstar kröfur mun liggja frammi á skrifstofu skiptastjóra síðustu viku fyrir skiptafundinn.</p>
           `
       break

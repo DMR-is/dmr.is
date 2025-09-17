@@ -371,6 +371,21 @@ export class UpdateAdvertDto {
   @IsOptional()
   @IsDateString()
   signatureDate?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  divisionMeetingLocation?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  divisionMeetingDate?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  judgementDate?: string
 }
 
 export class PublishAdvertsBody {

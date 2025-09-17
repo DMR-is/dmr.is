@@ -8,6 +8,7 @@ import {
 
 import { BaseAdvertFields } from '../ritstjorn/fields/BaseAdvertFields'
 import { ContentFields } from '../ritstjorn/fields/ContentsField'
+import { DivisionMeetingFields } from '../ritstjorn/fields/DivisionMeetingFields'
 import { PublicationsFields } from '../ritstjorn/fields/PublicationsField'
 import { ReadOnlyFields } from '../ritstjorn/fields/ReadOnlyFields'
 import { SettlementFields } from '../ritstjorn/fields/SettlementFields'
@@ -33,6 +34,7 @@ export const AdvertForm = () => {
         <ReadOnlyFields />
         <BaseAdvertFields />
         <ContentFields />
+        <DivisionMeetingFields />
         <SettlementFields />
         <SignatureFields />
         <PublicationsFields />

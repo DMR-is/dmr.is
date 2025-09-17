@@ -83,6 +83,11 @@ export class AdvertService implements IAdvertService {
       signatureName: body.signatureName,
       signatureOnBehalfOf: body.signatureOnBehalfOf,
       additionalText: body.additionalText,
+      divisionMeetingDate:
+        typeof body.divisionMeetingDate === 'string'
+          ? new Date(body.divisionMeetingDate)
+          : body.divisionMeetingDate,
+      divisionMeetingLocation: body.divisionMeetingLocation,
       caption: body.caption,
     })
 

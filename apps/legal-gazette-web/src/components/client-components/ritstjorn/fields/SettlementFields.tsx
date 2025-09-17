@@ -54,7 +54,7 @@ export const SettlementFields = () => {
         </GridColumn>
       </GridRow>
       <GridRow>
-        <GridColumn span="6/12">
+        <GridColumn span={['12/12', '6/12']}>
           <Input
             size="sm"
             backgroundColor="blue"
@@ -76,7 +76,7 @@ export const SettlementFields = () => {
             }
           />
         </GridColumn>
-        <GridColumn span="6/12">
+        <GridColumn span={['12/12', '6/12']}>
           <Input
             size="sm"
             backgroundColor="blue"
@@ -102,7 +102,7 @@ export const SettlementFields = () => {
         </GridColumn>
       </GridRow>
       <GridRow>
-        <GridColumn span="6/12">
+        <GridColumn span={['12/12', '6/12']}>
           <Input
             size="sm"
             backgroundColor="blue"
@@ -124,7 +124,7 @@ export const SettlementFields = () => {
             }
           />
         </GridColumn>
-        <GridColumn span="6/12">
+        <GridColumn span={['12/12', '6/12']}>
           <Input
             size="sm"
             backgroundColor="blue"
@@ -148,7 +148,7 @@ export const SettlementFields = () => {
         </GridColumn>
       </GridRow>
       <GridRow>
-        <GridColumn span="6/12">
+        <GridColumn span={['12/12', '6/12']}>
           <Input
             size="sm"
             backgroundColor="blue"
@@ -171,7 +171,7 @@ export const SettlementFields = () => {
           />
         </GridColumn>
         {isBankruptcyRecall && (
-          <GridColumn span="6/12">
+          <GridColumn span={['12/12', '6/12']}>
             <DatePicker
               size="sm"
               placeholderText=""
@@ -203,7 +203,7 @@ export const SettlementFields = () => {
           </GridColumn>
         )}
         {isDeceasedRecall && (
-          <GridColumn span="6/12">
+          <GridColumn span={['12/12', '6/12']}>
             <DatePicker
               size="sm"
               placeholderText=""
@@ -235,7 +235,7 @@ export const SettlementFields = () => {
       </GridRow>
       <GridRow>
         {isDivisionEnding && (
-          <GridColumn span="6/12">
+          <GridColumn span={['12/12', '6/12']}>
             <Input
               name="declared-claims"
               size="sm"

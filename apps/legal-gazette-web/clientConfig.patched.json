@@ -4675,6 +4675,15 @@
           },
           "signatureDate": {
             "type": "string"
+          },
+          "divisionMeetingLocation": {
+            "type": "string"
+          },
+          "divisionMeetingDate": {
+            "type": "string"
+          },
+          "judgementDate": {
+            "type": "string"
           }
         }
       },

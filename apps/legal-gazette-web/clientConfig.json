@@ -3711,7 +3711,10 @@
           "signatureName": { "type": "string" },
           "signatureLocation": { "type": "string" },
           "signatureOnBehalfOf": { "type": "string" },
-          "signatureDate": { "type": "string" }
+          "signatureDate": { "type": "string" },
+          "divisionMeetingLocation": { "type": "string" },
+          "divisionMeetingDate": { "type": "string" },
+          "judgementDate": { "type": "string" }
         }
       },
       "AdvertVersionEnum": { "type": "string", "enum": ["A", "B", "C"] },
