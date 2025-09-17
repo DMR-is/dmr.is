@@ -4,6 +4,29 @@ export type Department = {
   slug: string
 }
 
+export type DbSubscriber = {
+  id: string
+  username: string
+  fullName: string
+  email: string
+  password: string
+  subscriptionValidFrom: Date
+  subscriptionValidTo: Date
+  blocked: boolean
+  freeSubscription: boolean
+  idNumber: string
+  firstName: string
+  middleName: string
+  lastName: string
+  contactName: string
+  phoneNumber: string
+  streetName: string
+  streetNumber: string
+  postCode: string
+  floor: string
+  city: string
+}
+
 export type DbDepartment = Omit<Department, 'slug'>
 
 export type Type = {
@@ -15,6 +38,15 @@ export type Type = {
 }
 export type DbType = Omit<Type, 'slug'>
 
+export type LBType = {
+  typeId: string
+  typeName: string
+}
+export type LBCategory = {
+  categoryId: string
+  categoryName: string
+}
+
 export type Category = {
   id: string
   title: string
@@ -22,6 +54,8 @@ export type Category = {
   main_category_id?: string | null
 }
 export type DbCategory = Omit<Category, 'slug' | 'superCategoryId'>
+
+export type CategoryAndType = LBCategory & LBType
 
 export type DbCorrections = {
   id: string
@@ -63,6 +97,8 @@ export type Advert = {
   type_id: string | null
   subject: string
   status_id: string
+  category: string
+  category_id: string | null
   serial_number: number
   publication_year: number
   signature_date: string
@@ -74,6 +110,22 @@ export type Advert = {
   created: Date
   modified: Date
 }
+
+export type LogbirtingAdvert = {
+  legacy_id: string
+  created_at: string
+  updated_at: string
+  category_id: string | null
+  type_id: string | null
+  advert_status: 'bd835a1d-0ecb-4aa4-9910-b5e60c30dced'
+  publication_number: string
+  title: string
+  html: string
+  paid: true
+  responsible_name: string
+  version: number
+}
+
 export type DbAdvert = Omit<Advert, ''> & { typeName: string }
 
 export type DbAdverts = {

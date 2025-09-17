@@ -355,6 +355,14 @@ export const pdfCss = `
   .section__title + .chapter__title {
     margin-top: 0 !important; /* Workaround for https://gitlab.pagedmedia.org/tools/pagedjs/issues/352 */
   }
+
+  .subchapter__title {
+    text-align: center;
+    font-size: 1em;
+    font-weight: var(--font-weight--normal);
+    break-after: avoid;
+  }
+
   .chapter__name {
     display: block;
     font-style: inherit;

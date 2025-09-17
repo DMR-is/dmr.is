@@ -7,6 +7,7 @@ import {
   Advert,
   AdvertCategory,
   Category,
+  CategoryAndType,
   Correction,
   DbAdverts,
   DbCategory,
@@ -74,6 +75,60 @@ const SKIP_TYPES = [
   'ÞETTA ER PRUFA FYRIR TBR',
   'ÞETTA ER PRUFUAUGLÝSING',
 ]
+
+export async function fixLbCats(
+  typesAndCategories: Array<CategoryAndType>,
+  fixedTypes: { [key: string]: string },
+): Promise<{
+  cats: Array<CategoryAndType>
+  merged: { [key: string]: string }
+}> {
+  const cats: Array<CategoryAndType> = []
+  const merged: { [key: string]: string } = {}
+
+  for (const item of typesAndCategories) {
+    //check if category with same name already exists, and set them  to merged if exists
+    const existing = cats.find(
+      (cat) =>
+        cat.categoryName === item.categoryName &&
+        cat.typeName === item.typeName,
+    )
+    if (existing) {
+      merged[item.categoryId] = existing.categoryId
+    } else {
+      // also check if type has been merged and update typeId accordingly
+      if (fixedTypes[item.categoryId]) {
+        item.categoryId = fixedTypes[item.categoryId]
+      }
+
+      cats.push(item)
+    }
+  }
+
+  return { cats, merged }
+}
+
+export async function fixLBTypes(
+  typesAndCategories: Array<CategoryAndType>,
+): Promise<{
+  cats: Array<CategoryAndType>
+  merged: { [key: string]: string }
+}> {
+  const cats: Array<CategoryAndType> = []
+  const merged: { [key: string]: string } = {}
+
+  for (const item of typesAndCategories) {
+    //check if category with same name already exists, and set them  to merged if exists
+    const existing = cats.find((cat) => cat.typeName === item.typeName)
+    if (existing) {
+      merged[item.typeId] = existing.typeId
+    } else {
+      cats.push(item)
+    }
+  }
+
+  return { cats, merged }
+}
 
 export async function fixTypes(
   types: Array<DbType>,

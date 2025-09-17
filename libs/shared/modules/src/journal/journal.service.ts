@@ -142,7 +142,8 @@ export class JournalService implements IJournalService {
       throw new InternalServerErrorException('Advert status not found')
     }
 
-    const publicationYear = new Date(model.publicationDate).getFullYear()
+    const publicationYear =
+      model.publicationYear ?? new Date(model.publicationDate).getFullYear()
 
     const ad = await this.advertModel.create(
       {

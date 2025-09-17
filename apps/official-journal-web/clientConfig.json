@@ -159,33 +159,6 @@
         "summary": ""
       }
     },
-    "/api/v1/cases/nextPublicationNumber/{departmentId}": {
-      "get": {
-        "operationId": "getNextPublicationNumber",
-        "parameters": [
-          {
-            "name": "departmentId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetNextPublicationNumberResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": ""
-      }
-    },
     "/api/v1/cases/departments": {
       "get": {
         "operationId": "getDepartments",
@@ -676,13 +649,13 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "schema": { "example": 1, "type": "number" }
+            "schema": { "default": 1, "example": 1, "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "schema": { "example": 10, "type": "number" }
+            "schema": { "default": 10, "example": 10, "type": "number" }
           },
           {
             "name": "sortBy",
@@ -1562,13 +1535,13 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "schema": { "example": 1, "type": "number" }
+            "schema": { "default": 1, "example": 1, "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "schema": { "example": 10, "type": "number" }
+            "schema": { "default": 10, "example": 10, "type": "number" }
           },
           {
             "name": "sortBy",
@@ -1686,13 +1659,13 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "schema": { "example": 1, "type": "number" }
+            "schema": { "default": 1, "example": 1, "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "schema": { "example": 10, "type": "number" }
+            "schema": { "default": 10, "example": 10, "type": "number" }
           },
           {
             "name": "sortBy",
@@ -2894,13 +2867,13 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "schema": { "example": 1, "type": "number" }
+            "schema": { "default": 1, "example": 1, "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "schema": { "example": 10, "type": "number" }
+            "schema": { "default": 10, "example": 10, "type": "number" }
           },
           {
             "name": "search",
@@ -2954,13 +2927,13 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "schema": { "example": 1, "type": "number" }
+            "schema": { "default": 1, "example": 1, "type": "number" }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "schema": { "example": 10, "type": "number" }
+            "schema": { "default": 10, "example": 10, "type": "number" }
           },
           {
             "name": "search",
@@ -3464,17 +3437,6 @@
           }
         },
         "required": ["id", "name", "email"]
-      },
-      "GetNextPublicationNumberResponse": {
-        "type": "object",
-        "properties": {
-          "publicationNumber": {
-            "type": "number",
-            "description": "Next publication number",
-            "example": 1
-          }
-        },
-        "required": ["publicationNumber"]
       },
       "Department": {
         "type": "object",
@@ -4352,21 +4314,30 @@
       "UpdateAdvertHtmlCorrection": {
         "type": "object",
         "properties": {
-          "advertHtml": { "type": "string", "description": "Advert HTML" },
+          "departmentId": { "type": "string" },
+          "subject": { "type": "string" },
+          "publicationYear": { "type": "number" },
           "title": {
             "type": "string",
             "description": "Title of the correction"
           },
+          "publicationDate": { "format": "date-time", "type": "string" },
+          "advertHtml": { "type": "string", "description": "Advert HTML" },
           "description": {
             "type": "string",
             "description": "The correction description"
           }
         },
-        "required": ["advertHtml", "title", "description"]
+        "required": ["title", "advertHtml", "description"]
       },
       "UpdateAdvertHtmlBody": {
         "type": "object",
         "properties": {
+          "departmentId": { "type": "string" },
+          "subject": { "type": "string" },
+          "publicationYear": { "type": "number" },
+          "title": { "type": "string" },
+          "publicationDate": { "format": "date-time", "type": "string" },
           "advertHtml": { "type": "string", "description": "Advert HTML" },
           "documentPdfUrl": { "type": "string", "nullable": true }
         },
