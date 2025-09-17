@@ -2,10 +2,9 @@
 
 import { useState } from 'react'
 
-import { ActionCard, Box, Stack } from '@island.is/island-ui/core'
+import { Box, Stack } from '@island.is/island-ui/core'
 
 import { AdvertDto } from '../../../gen/fetch'
-import { formatDate } from '../../../lib/utils'
 import { AdvertModal } from '../advert-modal/AdvertModal'
 import { AdvertPublications } from './AdvertPublications'
 

@@ -1,18 +1,13 @@
 'use client'
 
-import { mutate } from 'swr'
-import useSWRMutation from 'swr/mutation'
-
 import {
   Box,
   Button,
-  Icon,
   Inline,
   LinkV2,
   Stack,
   Tag,
   Text,
-  toast,
 } from '@island.is/island-ui/core'
 
 import {
@@ -27,22 +22,6 @@ type Props = {
 }
 
 export const ApplicationCard = ({ application }: Props) => {
-  // const { trigger: deleteApplicationTrigger } = useSWRMutation(
-  //   ['deleteApplication', application.id],
-  //   ([_key, id]) => deleteApplication(id),
-  //   {
-  //     onSuccess: () => {
-  //       toast.success('Umsókn eytt', { toastId: 'delete-application-success' })
-  //       mutate('getMyApplications')
-  //     },
-  //     onError: () => {
-  //       toast.error(`Ekki tókst að eyða umsókn`, {
-  //         toastId: 'delete-application-error',
-  //       })
-  //     },
-  //   },
-  // )
-
   const url =
     application.applicationType === ApplicationTypeEnum.COMMON
       ? `${PageRoutes.APPLICATION_COMMON}/${application.caseId}`

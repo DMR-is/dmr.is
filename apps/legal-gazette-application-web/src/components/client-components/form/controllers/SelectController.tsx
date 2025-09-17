@@ -24,9 +24,6 @@ export const SelectController = (
     }
   }
 
-  const value = field.value
-  console.log(field.name, value)
-
   return (
     <Select
       {...field}
