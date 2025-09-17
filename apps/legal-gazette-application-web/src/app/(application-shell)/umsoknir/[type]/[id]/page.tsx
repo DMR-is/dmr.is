@@ -4,10 +4,7 @@ import { getServerSession } from 'next-auth'
 import { ApplicationSubmitted } from '../../../../../components/client-components/application/ApplicationSubmitted'
 import { ApplicationForm } from '../../../../../components/client-components/form/ApplicationForm'
 import { ApplicationProvider } from '../../../../../context/applicationContext'
-import {
-  ApplicationDetailedDtoStatusEnum,
-  ApplicationTypeEnum,
-} from '../../../../../gen/fetch'
+import { ApplicationDetailedDtoStatusEnum } from '../../../../../gen/fetch'
 import { authOptions } from '../../../../../lib/authOptions'
 import {
   ALLOWED_FORM_TYPES,
@@ -65,17 +62,15 @@ export default async function UmsoknirThrotabusPage({
   }
 
   const { courtDistricts } = await client.getCourtDistricts()
-  const { categories } = await client.getCategories({
-    type: 'a58fe2a8-b0a9-47bd-b424-4b9cece0e622',
-  })
+  const { types } = await client.getCommonAdvertTypes()
 
   return (
     <ApplicationForm
       caseId={params.id}
       application={applicationResult.data}
-      categories={categories.map((category) => ({
-        label: category.title,
-        value: category.id,
+      types={types.map((type) => ({
+        label: type.title,
+        value: type.id,
       }))}
       courtDistricts={courtDistricts.map((court) => ({
         label: court.title,

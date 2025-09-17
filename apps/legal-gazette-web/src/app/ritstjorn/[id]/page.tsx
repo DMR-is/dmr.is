@@ -1,8 +1,5 @@
-import { notFound, redirect } from 'next/navigation'
-import { getServerSession, Session } from 'next-auth'
-import { parseAsString } from 'next-usequerystate'
+import { getServerSession } from 'next-auth'
 
-import { serverFetcher } from '@dmr.is/api-client/fetchers'
 import {
   Box,
   GridColumn,
@@ -14,54 +11,50 @@ import {
 import { AdvertForm } from '../../../components/client-components/Form/AdvertForm'
 import { Form } from '../../../components/client-components/Form/Form'
 import { AdvertSidebar } from '../../../components/client-components/Form/FormSidebar'
-import { HeroNoSSRWrapper } from '../../../components/client-components/Messages/HeroNoSSRWrapper'
-import { CaseProvider } from '../../../context/case-context'
+import { AdvertProvider } from '../../../context/advert-context'
 import { getLegalGazetteClient } from '../../../lib/api/createClient'
 import { authOptions } from '../../../lib/auth/authOptions'
-// import { ritstjornSingleMessages } from '../../../lib/messages/ritstjorn/single'
 
 type Props = {
   params: {
     id: string
   }
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export default async function SingleCase({ params, searchParams }: Props) {
-  const session = (await getServerSession(authOptions)) as Session
-  const client = getLegalGazetteClient('CaseApi', session.idToken)
+export default async function AdvertDetails({ params }: Props) {
+  const session = await getServerSession(authOptions)
 
-  const caseId = parseAsString.parseServerSide(params?.id)
-  const selectedTab = (await searchParams).tab as string | undefined
+  if (!session?.idToken) {
+    return <div>Not signed in</div>
+  }
 
-  if (!caseId) return notFound()
-
-  const { data: initalCase } = await serverFetcher(() =>
-    client.getCase({
-      id: caseId,
-    }),
+  const advertClient = getLegalGazetteClient('AdvertApi', session.idToken)
+  const typesClient = getLegalGazetteClient('TypeApi', session.idToken)
+  const categoriesClient = getLegalGazetteClient('CategoryApi', session.idToken)
+  const courtDistrictClient = getLegalGazetteClient(
+    'CourtDistrictApi',
+    session.idToken,
   )
-  if (!initalCase) {
-    return notFound()
-  }
-
-  if (!selectedTab) {
-    const advertId = initalCase.adverts[0]?.id
-    redirect(`/ritstjorn/${initalCase.id}?tab=${advertId}`)
-  }
+  const advert = await advertClient.getAdvertById({ id: params.id })
+  const { types } = await typesClient.getTypes()
+  const { categories } = await categoriesClient.getCategories({
+    type: advert.type.id,
+  })
+  const { courtDistricts } = await courtDistrictClient.getCourtDistricts()
 
   return (
-    <CaseProvider initalCase={initalCase} intialAdvertId={selectedTab}>
+    <AdvertProvider
+      advert={advert}
+      categories={categories}
+      types={types}
+      courtDistricts={courtDistricts}
+    >
       <Box padding={6} background="purple100">
         <GridContainer>
           <GridRow>
             <GridColumn span={['12/12', '12/12', '9/12', '9/12']}>
               <Form>
                 <Stack space={4}>
-                  <HeroNoSSRWrapper
-                    // namespace={ritstjornSingleMessages}
-                    caseNumber={initalCase.caseNumber}
-                  />
                   <AdvertForm />
                 </Stack>
               </Form>
@@ -72,6 +65,6 @@ export default async function SingleCase({ params, searchParams }: Props) {
           </GridRow>
         </GridContainer>
       </Box>
-    </CaseProvider>
+    </AdvertProvider>
   )
 }

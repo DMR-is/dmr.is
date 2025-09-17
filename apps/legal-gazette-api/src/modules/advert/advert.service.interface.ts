@@ -1,6 +1,5 @@
 import { PagingQuery } from '@dmr.is/shared/dto'
 
-import { AdvertPublicationDetailedDto } from '../advert-publications/dto/advert-publication.dto'
 import {
   AdvertDetailedDto,
   GetAdvertsDto,
@@ -8,7 +7,6 @@ import {
   GetAdvertsStatusCounterDto,
   UpdateAdvertDto,
 } from './dto/advert.dto'
-import { AdvertVersionEnum } from './advert.model'
 
 export interface IAdvertService {
   getAdverts(query: GetAdvertsQueryDto): Promise<GetAdvertsDto>
@@ -25,10 +23,11 @@ export interface IAdvertService {
 
   getAdvertsByCaseId(caseId: string): Promise<GetAdvertsDto>
 
-  getAdvertPublication(
-    id: string,
-    version: AdvertVersionEnum,
-  ): Promise<AdvertPublicationDetailedDto>
+  markAdvertAsReady(advertId: string): Promise<void>
+
+  markAdvertAsSubmitted(advertId: string): Promise<void>
+
+  assignAdvertToEmployee(advertId: string, userId: string): Promise<void>
 }
 
 export const IAdvertService = Symbol('IAdvertService')

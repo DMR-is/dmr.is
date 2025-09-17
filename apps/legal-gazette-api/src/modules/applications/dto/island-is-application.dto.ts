@@ -28,6 +28,10 @@ export class IslandIsSubmitCommonApplicationDto {
 
   @ApiProperty({ type: String, required: true })
   @IsUUID()
+  typeId!: string
+
+  @ApiProperty({ type: String, required: true })
+  @IsUUID()
   categoryId!: string
 
   @ApiProperty({ type: String, required: true })

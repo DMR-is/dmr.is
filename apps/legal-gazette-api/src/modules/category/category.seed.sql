@@ -2,157 +2,241 @@ INSERT INTO
   ADVERT_CATEGORY (id, title, slug)
 VALUES
   (
-    'f7cf46fd-dcf7-427e-acf0-65b81d757243',
-    'Áskorun',
-    'almenn-auglysing-askorun'
-  ),
-  (
-    '6c90ce47-467b-4114-9f8b-6c5644193cc5',
-    'Dómsbirting',
-    'almenn-auglysing-domsbirting'
-  ),
-  (
-    '321a709c-09cc-470f-bdd7-cb43db68bd26',
-    'Embætti, sýslanir, leyfi o.fl.',
-    'almenn-auglysing-embaetti-syslanir-leyfi'
-  ),
-  (
-    'd509a96e-0a85-43f2-99ac-89628273ec28',
-    'Fasteigna,- fyrirtækja- og skipasala',
-    'almenn-auglysing-fasteigna-fyrirtaekja-og-skipasala'
-  ),
-  (
-    '40fc5c2c-8a7f-4621-bf91-2109b17f74f4',
-    'Félagsslit',
-    'almenn-auglysing-felagslit'
-  ),
-  (
-    '69b8e7b1-d3d7-4365-9667-b61dbdbdb445',
-    'Fjármálastarfsemi',
-    'almenn-auglysing-fjarmalastarfsemi'
-  ),
-  (
-    'ba7285b6-70d9-474d-93ec-f1597acc335b',
-    'Framhald uppboðs',
-    'almenn-auglysing-framhald-uppbods'
-  ),
-  (
-    '4de88b33-4fe1-48b8-a764-d7e1cc71e386',
-    'Fyrirkall',
-    'almenn-auglysing-fyrirkall'
-  ),
-  (
-    '8aa5752a-05b0-44b6-ab0f-f77e77684457',
+    'B2B798E2-E8A3-4928-94EB-0021A5F13409',
     'Greiðsluaðlögun',
-    'almenn-auglysing-greidsluadlogun'
-  ),
+    'Greidsluadlogun'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
   (
-    '85de8662-4902-4162-ae33-7af47bbea2ce',
-    'Happdrætti',
-    'almenn-auglysing-happdraetti'
-  ),
-  (
-    '6c84ffa3-fbff-4bd2-8a94-95e1424949fc',
-    'Hlutafélög',
-    'almenn-auglysing-hlutafelog'
-  ),
-  (
-    'c8896894-a46f-4a9b-89fb-393051b1785b',
-    'Húsbréf',
-    'almenn-auglysing-husbref'
-  ),
-  (
-    'a1e80162-a2ff-48a8-b122-1be58b4d8e4e',
-    'Innkall',
-    'almenn-auglysing-innkall'
-  ),
-  (
-    '0a58675d-ef5b-47c2-8278-20e5ae990147',
-    'Kaupmáli',
-    'almenn-auglysing-kaupmali'
-  ),
-  (
-    'a56f8a93-1e19-44c2-a434-308dcf7fa753',
-    'Laus störf, stöður, embætti o.fl',
-    'almenn-auglysing-laus-storf-stodur-embaetti'
-  ),
-  (
-    '3d464363-d07b-4de0-9f68-af7561819263',
-    'Mat á umhverfisáhrifum',
-    'almenn-auglysing-mat-a-umhverfisahrifum'
-  ),
-  (
-    '91cf80ba-94fb-4cb5-90cd-62c61a544423',
-    'Nauðasamningar',
-    'almenn-auglysing-naudasamningar'
-  ),
-  (
-    'c164b9f1-62b1-498c-9056-56c9b9e071d4',
-    'Skipulagsauglýsing',
-    'almenn-auglysing-skipulagsauglysing'
-  ),
-  (
-    'a825beb2-f17c-4fc9-b638-ac30af3ae7c6',
-    'Slit á félögum',
-    'almenn-auglysing-slit-a-felogum'
-  ),
-  (
-    '479b9d9c-e3e7-429e-950f-071c54c372de',
-    'Starfsleyfi',
-    'almenn-auglysing-starfsleyfi'
-  ),
-  (
-    '4b771c6c-8527-40b1-8eb1-1a49d3e3c9b3',
-    'Stefna',
-    'almenn-auglysing-stefna'
-  ),
-  (
-    '9fb52701-ccf6-47c3-af1f-f7dea132250e',
-    'Svipting fjárræðis',
-    'almenn-auglysing-svipting-fjarradis'
-  ),
-  (
-    '65ab47d2-6eee-475b-a472-c884c7938c6d',
-    'Vátryggingastarfsemi',
-    'almenn-auglysing-vatryggingastarfsemi'
-  ),
-  (
-    '7017fb0c-2660-4066-aff7-2657ff33acb4',
-    'Veðhafafundur',
-    'almenn-auglysing-vedhafafundur'
-  ),
-  (
-    '3164d64a-a0e6-477e-860c-8452d7dbf194',
-    'Ýmsar auglýsingar frá ráðuneytum',
-    'almenn-auglysing-ymsar-auglysingar-fra-raduneytum'
-  ),
-  (
-    '1c610c51-6ad8-4ad8-ab53-a129033547db',
-    'Ýmsar auglýsingar og tilkynningar',
-    'almenn-auglysing-ymsar-auglysingar-og-tilkynningar'
-  ),
-  (
-    '30452623-789d-4bc8-b068-ff44b706ba8e',
-    'Innköllun þrotabús',
-    'innkollun-throtabus'
-  ),
-  (
-    '6b7ccba1-afd9-4eaf-adb5-297fe1cc163c',
-    'Innköllun dánarbús',
-    'innkollun-danabus'
-  ),
-  (
-    '23064adc-db71-48ad-aeae-6044f0567ff9',
-    'Skiptafundur þrotabús',
-    'skiptafundur-throtabus'
-  ),
-  (
-    '94effe96-d167-4edb-b776-99eb9f92d7da',
-    'Skiptafundur dánarbús',
-    'skiptafundur-danabus'
-  ),
-  (
-    '7cd93ede-27e9-46ac-bf43-2259ce6dd8ff',
+    'E99EC08C-7467-4B4F-8E72-1496CA61C9CC',
     'Skiptalok',
-    'skiptalok'
+    'Skiptalok'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '7CBFCDC8-F8F8-4FC8-B174-20A73B8F8A69',
+    'Stefnur',
+    'Stefnur'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    'C3B48892-AC9D-48D4-903A-26F21083143E',
+    'Áskoranir',
+    'Askoranir'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '9061801B-8B52-4E42-ADB0-272EE5F817A0',
+    'Fyrirköll og ákærur',
+    'Fyrirkoll-og-akaerur'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '7C3AE710-F3C8-431D-90F7-2AC9D1029793',
+    'Laus störf, embætti o.fl.',
+    'Laus-storf-embaetti-o.fl.'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '6FB035BF-028D-4BFA-937F-32A7AA592F16',
+    'Firmaskrá',
+    'Firmaskra'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '30EE5FA5-1E6C-4A2D-9959-3DED2D9BEF34',
+    'Embætti, sýslanir, leyfi o.fl.',
+    'Embaetti-syslanir-leyfi-o.fl.'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '7B3C12AB-3638-456D-844B-42FD12DF3686',
+    'Nauðasamningar',
+    'Naudasamningar'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    'ABD7A365-B33F-44C9-99C7-4BBBF120A1FD',
+    'Kaupmálar',
+    'Kaupmalar'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    'C60E266F-E3F4-4B54-B1AE-565AA30962C4',
+    'Skipta- og veðhafafundir',
+    'Skipta-og-vedhafafundir'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    'A73E2D18-F6D7-4CED-8DF6-646B27A8EA87',
+    'Svipting fjárræðis',
+    'Svipting-fjarraedis'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '3B372DD8-EDE5-4231-8616-6CB413BF8E2D',
+    'Nauðungarsölur',
+    'Naudungarsolur'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    'F830A298-18FC-45F8-9F57-6E92BF37F433',
+    'Fjármálastarfsemi',
+    'Fjarmalastarfsemi'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '6E7E9476-941A-4FB8-8100-81193B15E777',
+    'Fasteigna-, fyrirtækja- og skipasala',
+    'Fasteigna-fyrirtaekja-og-skipasala'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '52112993-EDCE-46A1-B7E6-8E3E5CD296F6',
+    'Allar auglýsingar',
+    'Allar-auglysingar'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    'CFCE9D63-214B-43DE-B46D-9C9FDF904FA8',
+    'Mat á umhverfisáhrifum',
+    'Mat-a-umhverfisahrifum'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '7D0E4B20-2FDD-4CA9-895B-9E7792ECA6E5',
+    'Innkallanir',
+    'Innkallanir'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '573846C8-AC9B-46F3-AC5C-A48AB24DFDB8',
+    'Ýmsar auglýsingar frá ráðuneytum',
+    'Ymsar-auglysingar-fra-raduneytum'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    'C2430AC0-A18F-4363-BE88-B6DE46B857B9',
+    'Hlutafélög',
+    'Hlutafelog'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '61447A7E-F36E-4CCA-BE53-BA4C6923C11A',
+    'Starfsleyfi',
+    'Starfsleyfi'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    'A1FBB9FA-CBEF-43B4-9AD6-BE908E8675CD',
+    'Húsbréf',
+    'Husbref'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '2AC37319-990A-4C40-9383-CAC74BBCB15F',
+    'Ýmsar auglýsingar og tilkynningar',
+    'Ymsar-auglysingar-og-tilkynningar'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '31B614DC-8978-4B75-82D2-CB62285C3A37',
+    'Happdrætti',
+    'Happdraetti'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '17734D0F-0418-4F08-9038-DA68E7E82EA6',
+    'Skipulagsauglýsingar',
+    'Skipulagsauglysingar'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '4E3B3847-7C06-4E13-9D6D-E6A254113892',
+    'Dómsbirtingar',
+    'Domsbirtingar'
+  );
+
+INSERT INTO
+  ADVERT_CATEGORY (id, title, slug)
+VALUES
+  (
+    '5F15F88C-27D3-42E7-B345-F8B69A2DB51D',
+    'Umferðarauglýsingar',
+    'Umferdarauglysingar'
   );

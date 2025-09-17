@@ -91,6 +91,7 @@ export class SettlementModel extends BaseModel<
 
   static fromModel(model: SettlementModel): SettlementDto {
     return {
+      id: model.id,
       liquidatorName: model.liquidatorName,
       liquidatorLocation: model.liquidatorLocation,
       settlementName: model.settlementName,
@@ -102,6 +103,7 @@ export class SettlementModel extends BaseModel<
       settlementDateOfDeath: model.settlementDateOfDeath
         ? model.settlementDateOfDeath.toISOString()
         : null,
+      declaredClaims: model.declaredClaims,
     }
   }
 

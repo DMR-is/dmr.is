@@ -7,7 +7,6 @@ import {
   UpdateAdvertCategoryRequest,
   UpdateAdvertRequest,
   UpdateAdvertStatusRequest,
-  UpdateCommonAdvertRequest,
 } from '../../gen/fetch'
 import { ApiClientMap, getLegalGazetteClient } from './createClient'
 
@@ -36,10 +35,6 @@ export const fetchCategories = async (
   params: GetCategoriesRequest = {},
 ) => {
   return fetcher((client) => client.getCategories(params), 'CategoryApi')
-}
-
-export const fetchCase = async (_url: string, id: string) => {
-  return fetcher((client) => client.getCase({ id }), 'CaseApi')
 }
 
 export const setAdvertCategory = async (
@@ -76,13 +71,6 @@ export const rejectCase = async (
   },
 ) => {
   return fetcher((client) => client.deleteCase(arg), 'CaseApi')
-}
-
-export const updateCommonAdvert = async (
-  _url: string,
-  { arg }: { arg: UpdateCommonAdvertRequest },
-) => {
-  return fetcher((client) => client.updateCommonAdvert(arg), 'CommonAdvertApi')
 }
 
 export const updateAdvert = async (

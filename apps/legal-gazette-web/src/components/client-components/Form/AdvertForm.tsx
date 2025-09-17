@@ -1,68 +1,46 @@
-'use client'
+import {
+  GridColumn,
+  GridContainer,
+  GridRow,
+  Stack,
+  Text,
+} from '@dmr.is/ui/components/island-is'
 
-import { useRouter } from 'next/router'
-
-import { useIntl } from 'react-intl'
-
-import { AlertMessage, Tabs, TabType } from '@island.is/island-ui/core'
-
-import { TypeEnum } from '../../../gen/fetch'
-import { useCaseContext } from '../../../hooks/cases/useCase'
-import { errorMessages } from '../../../lib/messages/errors/messages'
-import { ritstjornSingleMessages } from '../../../lib/messages/ritstjorn/single'
-import { CommonAdvertTab } from './form-tabs/CommonAdvert'
+import { BaseAdvertFields } from '../ritstjorn/fields/BaseAdvertFields'
+import { ContentFields } from '../ritstjorn/fields/ContentsField'
+import { CourtAndJudgementFields } from '../ritstjorn/fields/CourtAndJudgmentFields'
+import { DivisionMeetingFields } from '../ritstjorn/fields/DivisionMeetingFields'
+import { PublicationsFields } from '../ritstjorn/fields/PublicationsField'
+import { ReadOnlyFields } from '../ritstjorn/fields/ReadOnlyFields'
+import { SettlementFields } from '../ritstjorn/fields/SettlementFields'
+import { SignatureFields } from '../ritstjorn/fields/SignatureFields'
 
 export const AdvertForm = () => {
-  const { case: theCase, selectedAdvert, setSelectedAdvert } = useCaseContext()
-  const router = useRouter()
-  const { formatMessage } = useIntl()
-  const adverts = theCase.adverts
-
-  const handleTabChange = (id: string) => {
-    const advert = adverts.find((advert) => advert.id === id)
-    if (advert) {
-      setSelectedAdvert(id)
-      router.query.tab = id
-      router.replace(router, undefined, { shallow: true })
-    }
-  }
-
-  const tabs: TabType[] = adverts.map((advert, index) => {
-    switch (advert.type.title) {
-      case TypeEnum.COMMON_ADVERT: {
-        return {
-          id: advert.id,
-          label: formatMessage(ritstjornSingleMessages.tabs.title, {
-            version: advert.version,
-          }),
-          content: <CommonAdvertTab key={index} />,
-        }
-      }
-      default: {
-        return {
-          id: advert.id,
-          label: formatMessage(errorMessages.unknownAdvertType),
-          content: (
-            <AlertMessage
-              key={index}
-              type="warning"
-              title={formatMessage(errorMessages.unknownAdvertTypeMessage, {
-                advertType: advert.type.title,
-              })}
-            />
-          ),
-        }
-      }
-    }
-  })
-
   return (
-    <Tabs
-      onChange={handleTabChange}
-      contentBackground="white"
-      selected={selectedAdvert.id}
-      tabs={tabs}
-      label=""
-    />
+    <GridContainer>
+      <Stack space={[3, 4]}>
+        <GridRow>
+          <GridColumn span="12/12">
+            <Text marginBottom={[1, 2]} variant="h2">
+              Vinnslusvæði Lögbirtingablaðsins
+            </Text>
+            <Text marginBottom={[1, 2]}>
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+              Suspendisse at interdum risus. Orci varius natoque penatibus et
+              magnis dis parturient montes, nascetur ridiculus mus. Phasellus
+              finibus lacinia luctus. Donec in nisi et justo luctus egestas.
+            </Text>
+          </GridColumn>
+        </GridRow>
+        <ReadOnlyFields />
+        <BaseAdvertFields />
+        <ContentFields />
+        <CourtAndJudgementFields />
+        <DivisionMeetingFields />
+        <SettlementFields />
+        <SignatureFields />
+        <PublicationsFields />
+      </Stack>
+    </GridContainer>
   )
 }

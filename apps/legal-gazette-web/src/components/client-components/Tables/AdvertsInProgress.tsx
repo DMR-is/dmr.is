@@ -1,38 +1,76 @@
 'use client'
 
+import { useSession } from 'next-auth/react'
+
 import { useIntl } from 'react-intl'
+import useSWR from 'swr'
 
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
-import { StatusIdEnum } from '../../../gen/fetch'
-import { useAdvertsInProgress } from '../../../hooks/adverts/useAdvertsInProgress'
-import { useFilters } from '../../../hooks/useFilters'
+import { AlertMessage, Tag } from '@island.is/island-ui/core'
+
+import { StatusEnum, StatusIdEnum } from '../../../gen/fetch'
+import { useFilterContext } from '../../../hooks/useFilters'
+import { getLegalGazetteClient } from '../../../lib/api/createClient'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
 import { formatDate } from '../../../lib/utils'
 
 export const AdvertsInProgress = () => {
-  const { params } = useFilters()
+  const { params, setParams } = useFilterContext()
 
   const { formatMessage } = useIntl()
 
-  const { adverts, isLoading, paging } = useAdvertsInProgress({
-    params: {
-      page: params.page,
-      pageSize: params.pageSize,
-      statusId: [StatusIdEnum.SUBMITTED],
-    },
-  })
+  const session = useSession()
 
-  const rows = adverts.map((advert) => ({
+  if (!session.data?.idToken) {
+    throw new Error('Unauthorized')
+  }
+
+  const client = getLegalGazetteClient('AdvertApi', session.data.idToken)
+
+  const { data, isLoading, error } = useSWR(
+    ['getAdverts', params],
+    async ([_key, params]) =>
+      client.getAdvertsInProgress({
+        page: params.page,
+        pageSize: params.pageSize,
+        search: params.search,
+        categoryId: params.categoryId,
+        statusId: [StatusIdEnum.SUBMITTED],
+        typeId: params.typeId,
+        dateFrom: params.dateFrom?.toISOString(),
+        dateTo: params.dateTo?.toISOString(),
+      }),
+    {
+      keepPreviousData: true,
+    },
+  )
+
+  const rows = data?.adverts.map((advert) => ({
     birting: formatDate(advert.scheduledAt),
     skraning: formatDate(advert.createdAt),
+    status: (
+      <Tag
+        variant={advert.status.title === StatusEnum.Innsent ? 'blue' : 'mint'}
+      >
+        {advert.status.title}
+      </Tag>
+    ),
     tegund: advert.type.title,
-    utgafunumer: advert.publicationNumber,
-    // flokkur: advert.category.title,
     efni: advert.title,
-    href: `/ritstjorn/${advert.caseId}?tab=${advert.id}`,
+    href: `/ritstjorn/${advert.id}`,
     hasLink: true,
   }))
+
+  if (error) {
+    return (
+      <AlertMessage
+        type="error"
+        title="Villa kom upp"
+        message="Ekki tókst að sækja auglýsingar í vinnslu"
+      />
+    )
+  }
 
   return (
     <DataTable
@@ -41,38 +79,39 @@ export const AdvertsInProgress = () => {
       )}
       loading={isLoading}
       layout="auto"
-      columns={
-        [
-          {
-            field: 'birting',
-            children: formatMessage(ritstjornTableMessages.columns.scheduledAt),
-            sortable: true,
-            size: 'tiny',
-          },
-          {
-            field: 'skraning',
-            children: formatMessage(ritstjornTableMessages.columns.createdAt),
-            size: 'tiny',
-            sortable: true,
-          },
-          {
-            field: 'utgafunumer',
-            children: formatMessage(ritstjornTableMessages.columns.createdAt),
-            size: 'tiny',
-          },
-          {
-            field: 'tegund',
-            children: formatMessage(ritstjornTableMessages.columns.type),
-            size: 'tiny',
-          },
-          {
-            field: 'efni',
-            children: formatMessage(ritstjornTableMessages.columns.content),
-          },
-        ] as const
-      }
+      columns={[
+        {
+          field: 'birting',
+          children: formatMessage(ritstjornTableMessages.columns.scheduledAt),
+          sortable: true,
+          size: 'tiny',
+        },
+        {
+          field: 'skraning',
+          children: formatMessage(ritstjornTableMessages.columns.createdAt),
+          size: 'tiny',
+          sortable: true,
+        },
+
+        {
+          field: 'status',
+          children: formatMessage(ritstjornTableMessages.columns.status),
+          size: 'tiny',
+        },
+        {
+          field: 'tegund',
+          children: formatMessage(ritstjornTableMessages.columns.type),
+          size: 'tiny',
+        },
+        {
+          field: 'efni',
+          children: formatMessage(ritstjornTableMessages.columns.content),
+        },
+      ]}
       rows={rows}
-      paging={paging}
+      paging={data?.paging}
+      onPageChange={(page) => setParams({ page: page })}
+      onPageSizeChange={(pageSize) => setParams({ pageSize: pageSize })}
     />
   )
 }

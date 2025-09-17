@@ -4,9 +4,6 @@ import { InjectModel } from '@nestjs/sequelize'
 import { PagingQuery } from '@dmr.is/shared/dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
-import { mapVersionToIndex } from '../../lib/utils'
-import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
-import { AdvertPublicationDetailedDto } from '../advert-publications/dto/advert-publication.dto'
 import { StatusIdEnum } from '../status/status.model'
 import {
   AdvertDetailedDto,
@@ -15,42 +12,43 @@ import {
   GetAdvertsStatusCounterDto,
   UpdateAdvertDto,
 } from './dto/advert.dto'
-import {
-  AdvertModel,
-  AdvertModelScopes,
-  AdvertVersionEnum,
-} from './advert.model'
+import { AdvertModel, AdvertModelScopes } from './advert.model'
 import { IAdvertService } from './advert.service.interface'
 
 @Injectable()
 export class AdvertService implements IAdvertService {
   constructor(
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
-    @InjectModel(AdvertPublicationModel)
-    private readonly advertPublicationModel: typeof AdvertPublicationModel,
   ) {}
-  async getAdvertPublication(
-    id: string,
-    version: AdvertVersionEnum,
-  ): Promise<AdvertPublicationDetailedDto> {
-    const advertPromise = this.advertModel.findByPkOrThrow(id)
-    const publicationPromise = this.advertPublicationModel.findOneOrThrow({
-      where: {
-        advertId: id,
-        versionNumber: mapVersionToIndex(version),
-      },
+
+  async assignAdvertToEmployee(
+    advertId: string,
+    userId: string,
+  ): Promise<void> {
+    await this.advertModel.update(
+      { assignedUserId: userId },
+      { where: { id: advertId } },
+    )
+  }
+  async markAdvertAsSubmitted(advertId: string): Promise<void> {
+    const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
+      attributes: ['id', 'statusId'],
     })
 
-    const [advert, publication] = await Promise.all([
-      advertPromise,
-      publicationPromise,
-    ])
+    await advert.update(
+      { statusId: StatusIdEnum.SUBMITTED },
+      { where: { id: advertId, statusId: StatusIdEnum.DRAFT } },
+    )
+  }
+  async markAdvertAsReady(advertId: string): Promise<void> {
+    const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
+      attributes: ['id', 'statusId'],
+    })
 
-    return {
-      advert: advert.fromModel(),
-      html: advert.htmlMarkup(version),
-      publication: publication.fromModel(),
-    }
+    await advert.update(
+      { statusId: StatusIdEnum.READY_FOR_PUBLICATION },
+      { where: { id: advertId, statusId: StatusIdEnum.DRAFT } },
+    )
   }
 
   async getAdvertsByCaseId(caseId: string): Promise<GetAdvertsDto> {
@@ -73,10 +71,25 @@ export class AdvertService implements IAdvertService {
     const advert = await this.advertModel.findByPkOrThrow(id)
 
     const updated = await advert.update({
-      ...body,
+      typeId: body.typeId,
+      categoryId: body.categoryId,
+      title: body.title,
+      content: body.content,
+      signatureDate:
+        typeof body.signatureDate === 'string'
+          ? new Date(body.signatureDate)
+          : body.signatureDate,
+      signatureLocation: body.signatureLocation,
+      signatureName: body.signatureName,
+      signatureOnBehalfOf: body.signatureOnBehalfOf,
+      additionalText: body.additionalText,
+      divisionMeetingDate:
+        typeof body.divisionMeetingDate === 'string'
+          ? new Date(body.divisionMeetingDate)
+          : body.divisionMeetingDate,
+      divisionMeetingLocation: body.divisionMeetingLocation,
+      caption: body.caption,
     })
-
-    // TODO: update the publication scheduledAt date from body
 
     return updated.fromModelToDetailed()
   }
@@ -125,7 +138,7 @@ export class AdvertService implements IAdvertService {
       pageSize: query.pageSize,
     })
     const adverts = await this.advertModel
-      .scope(AdvertModelScopes.COMPLETED)
+      .scope(['defaultScope', AdvertModelScopes.COMPLETED])
       .findAndCountAll({
         limit,
         offset,
@@ -152,10 +165,34 @@ export class AdvertService implements IAdvertService {
       page: query.page,
       pageSize: query.pageSize,
     })
-    const adverts = await this.advertModel.findAndCountAll({
-      limit,
-      offset,
-    })
+
+    const allowedStatuses = [
+      StatusIdEnum.SUBMITTED,
+      StatusIdEnum.READY_FOR_PUBLICATION,
+    ]
+
+    if (query.statusId && query.statusId.length > 0) {
+      const filteredStatuses = query.statusId.filter((status) =>
+        allowedStatuses.includes(status),
+      )
+
+      if (filteredStatuses.length > 0) {
+        query.statusId = filteredStatuses
+      } else {
+        query.statusId = allowedStatuses
+      }
+    } else {
+      query.statusId = allowedStatuses
+    }
+
+    const adverts = await this.advertModel
+      .scope(['defaultScope', { method: ['withQuery', query] }])
+      .findAndCountAll({
+        limit,
+        offset,
+        distinct: true,
+        col: 'AdvertModel.id',
+      })
 
     const migrated = adverts.rows.map((advert) => advert.fromModel())
     const paging = generatePaging(

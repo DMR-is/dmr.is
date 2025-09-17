@@ -36,6 +36,7 @@ export const SelectController = (
       errorMessage={error ? error.message : undefined}
       required={required}
       onChange={(opt) => handleChange(opt?.value)}
+      isDisabled={props.disabled}
     />
   )
 }

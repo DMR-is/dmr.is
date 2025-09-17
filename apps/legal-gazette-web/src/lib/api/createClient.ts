@@ -2,13 +2,19 @@ import { config } from '@dmr.is/api-client/createClient'
 
 import {
   AdvertApi,
+  AdvertPdfApi,
+  AdvertPublicationApi,
   AdvertPublishApi,
   AdvertUpdateApi,
+  ApplicationApi,
   CaseApi,
   CategoryApi,
-  CommonAdvertApi,
   Configuration,
+  CourtDistrictApi,
+  HealthApi,
+  SettlementApi,
   StatusApi,
+  SubscriberApi,
   TypeApi,
   UsersApi,
 } from '../../gen/fetch'
@@ -19,10 +25,16 @@ const apis = [
   'AdvertUpdateApi',
   'CaseApi',
   'CategoryApi',
-  'CommonAdvertApi',
   'StatusApi',
   'TypeApi',
   'UsersApi',
+  'ApplicationApi',
+  'AdvertPdfApi',
+  'AdvertPublicationApi',
+  'CourtDistrictApi',
+  'HealthApi',
+  'SubscriberApi',
+  'SettlementApi',
 ] as const
 
 type ApiKey = (typeof apis)[number]
@@ -33,10 +45,16 @@ export type ApiClientMap = {
   AdvertUpdateApi: AdvertUpdateApi
   CaseApi: CaseApi
   CategoryApi: CategoryApi
-  CommonAdvertApi: CommonAdvertApi
   StatusApi: StatusApi
   TypeApi: TypeApi
   UsersApi: UsersApi
+  ApplicationApi: ApplicationApi
+  AdvertPdfApi: AdvertPdfApi
+  AdvertPublicationApi: AdvertPublicationApi
+  CourtDistrictApi: CourtDistrictApi
+  HealthApi: HealthApi
+  SubscriberApi: SubscriberApi
+  SettlementApi: SettlementApi
 }
 
 const ApiConstructors: {
@@ -47,10 +65,16 @@ const ApiConstructors: {
   AdvertUpdateApi,
   CaseApi,
   CategoryApi,
-  CommonAdvertApi,
   StatusApi,
   TypeApi,
   UsersApi,
+  ApplicationApi,
+  AdvertPdfApi,
+  AdvertPublicationApi,
+  CourtDistrictApi,
+  HealthApi,
+  SubscriberApi,
+  SettlementApi,
 }
 
 const apiClients: Partial<{

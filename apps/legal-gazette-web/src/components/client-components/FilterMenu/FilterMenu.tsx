@@ -13,20 +13,20 @@ import {
   Stack,
 } from '@island.is/island-ui/core'
 
-import { useFilters } from '../../../hooks/useFilters'
+import { useFilterContext } from '../../../hooks/useFilters'
 import { QueryParams } from '../../../lib/constants'
 import { messages } from '../../../lib/messages/messages'
-import { OptionType, QueryFilterValue } from '../../../lib/types'
+import { OptionType } from '../../../lib/types'
 import { isArrayOptionSelected, toggleArrayOption } from '../../../lib/utils'
 import * as styles from './FilterMenu.css'
 
-export type FilterMenuToggleCallback<T> = ({
+export type FilterMenuToggleCallback = ({
   param,
   option,
   value,
 }: {
   param: QueryParams
-  option: T
+  option: string
   value: boolean
 }) => void
 
@@ -36,24 +36,43 @@ export type FilterMenuClearCallback = ({
   param: QueryParams
 }) => void
 
-export type FilterMenuItem<T> = {
+export type FilterMenuItem = {
   title: string
   queryParam: QueryParams
-  options: OptionType<T>[]
+  options?: OptionType<string>[]
 }
 
-export type FilterMenuProps<T> = {
-  filters: FilterMenuItem<T>[]
-}
-
-export const FilterMenu = <T extends QueryFilterValue>({
-  filters,
-}: FilterMenuProps<T>) => {
+export const FilterMenu = () => {
   const { formatMessage } = useIntl()
-  const { params, setParams } = useFilters()
+  const {
+    params,
+    setParams,
+    typeOptions,
+    categoryOptions,
+    statusOptions,
+    resetParams,
+  } = useFilterContext()
   const popover = usePopoverState({
     placement: 'bottom-start',
   })
+
+  const filters: FilterMenuItem[] = [
+    {
+      queryParam: QueryParams.TYPE,
+      title: 'Tegund',
+      options: typeOptions,
+    },
+    {
+      queryParam: QueryParams.CATEGORY,
+      title: 'Flokkur',
+      options: categoryOptions,
+    },
+    {
+      queryParam: QueryParams.STATUS,
+      title: 'Staða',
+      options: statusOptions,
+    },
+  ]
 
   return (
     <Box className={styles.filterMenu}>
@@ -79,12 +98,13 @@ export const FilterMenu = <T extends QueryFilterValue>({
                   iconVariant="small"
                   id={`accordion-filter-${i}`}
                   label={filter.title}
-                  startExpanded={i === 0}
+                  startExpanded={false}
                 >
                   <Stack space={2}>
-                    {filter.options.map((option, j) => {
+                    {filter.options?.map((option, j) => {
                       const isChecked = isArrayOptionSelected(
-                        params[filter.queryParam],
+                        params[filter.queryParam as keyof typeof params] ??
+                          null,
                         option.value,
                       )
                       return (
@@ -95,7 +115,9 @@ export const FilterMenu = <T extends QueryFilterValue>({
                           onChange={(e) => {
                             setParams({
                               [filter.queryParam]: toggleArrayOption(
-                                params[filter.queryParam],
+                                params[
+                                  filter.queryParam as keyof typeof params
+                                ] ?? null,
                                 option.value,
                                 e.target.checked,
                               ),
@@ -126,7 +148,7 @@ export const FilterMenu = <T extends QueryFilterValue>({
         </Box>
         <Box className={styles.filterMenuClearButton}>
           <Button
-            onClick={() => setParams(null)}
+            onClick={() => resetParams()}
             size="small"
             variant="text"
             icon="reload"

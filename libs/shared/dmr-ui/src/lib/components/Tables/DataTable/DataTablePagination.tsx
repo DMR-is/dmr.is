@@ -8,8 +8,25 @@ import { DataTablePaginationProps } from './types'
 
 export const DataTablePagination = ({
   paging,
+  onPageChange,
+  onPageSizeChange,
 }: DataTablePaginationProps) => {
   const { setParams } = useFilters()
+
+  const handlePageSizeChange = (pageSize: number | undefined = 10) => {
+    if (onPageSizeChange) return onPageSizeChange(pageSize)
+
+    setParams({
+      pageSize,
+      page: 1,
+    })
+  }
+
+  const handlePageChange = (page: number | undefined = 1) => {
+    if (onPageChange) return onPageChange(page)
+
+    setParams({ page })
+  }
 
   return (
     <div className={styles.dataTablePagination({ size: 'small' })}>
@@ -19,10 +36,7 @@ export const DataTablePagination = ({
         totalItems={paging.totalItems}
         totalPages={paging.totalPages}
         renderLink={(page, className, children) => (
-          <button
-            className={className}
-            onClick={() => setParams({page})}
-          >
+          <button className={className} onClick={() => handlePageChange(page)}>
             {children}
           </button>
         )}
@@ -33,12 +47,7 @@ export const DataTablePagination = ({
           label: paging.pageSize.toString(),
           value: paging.pageSize,
         }}
-        onChange={(e) => {
-          setParams({
-            pageSize: e?.value,
-            page: 1,
-          })
-        }}
+        onChange={(e) => handlePageSizeChange(e?.value)}
         options={PAGE_SIZE_OPTIONS}
       />
     </div>

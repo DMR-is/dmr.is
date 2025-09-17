@@ -6,35 +6,7 @@ import { getLogger } from '@dmr.is/logging'
 import { formatDate } from '@dmr.is/utils'
 
 import { AdvertModel, AdvertVersionEnum } from '../modules/advert/advert.model'
-import { CategoryDefaultIdEnum } from '../modules/category/category.model'
-
-/*
-
-.advert {
-  fontSize: 12pt;
-}
-
-.advertSerial {
-  fontSize: 10pt;
-  textAlign: right;
-  marginBlock: 0;
-}
-
-.advertHeading {
-  fontWeight: bold;
-  marginBottom: 4px;
-}
-
-p {
-  textAlign: justify;
-  marginBlock: 1em;
-}
-
-.advertSignature p {
-  textAlign: right;
-  marginBlock: 0;
-}
-*/
+import { TypeIdEnum } from '../modules/type/type.model'
 
 export const getAdvertHTMLMarkup = (
   model: AdvertModel,
@@ -64,9 +36,8 @@ export const getAdvertHTMLMarkup = (
     : publishing.scheduledAt
 
   let markup = ''
-
-  switch (model.categoryId) {
-    case CategoryDefaultIdEnum.BANKRUPTCY_RECALL: {
+  switch (model.typeId.toUpperCase()) {
+    case TypeIdEnum.RECALL_BANKRUPTCY: {
       if (!model.settlement || !model.settlement.settlementDeadline) {
         throw new Error('Settlement information is missing')
       }
@@ -113,12 +84,12 @@ export const getAdvertHTMLMarkup = (
           </table>
           <p>Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur búinu eða eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu innköllunar þessarar.</p>
           <p>Kröfulýsingar skulu sendar skiptastjóra að ${model.settlement.liquidatorLocation}</p>
-          <p>Skiptafundur til að fjalla um skrá um lýstar kröfur og ráðstöfun á eignum og réttindum búsins verður haldinn á skrifstofu skiptastjóra að ${model.settlement.liquidatorLocation}, á ofangreindum tíma.</p>
+          <p>Skiptafundur til að fjalla um skrá um lýstar kröfur og ráðstöfun á eignum og réttindum búsins verður haldinn á skrifstofu skiptastjóra að ${model.divisionMeetingLocation}, á ofangreindum tíma.</p>
           <p>Komi ekkert fram um eignir í búinu mun skiptum lokið á þeim skiptafundi með vísan til 155. gr. laga nr. 21/1991 um gjaldþrotaskipti o.fl. Skrá um lýstar kröfur mun liggja frammi á skrifstofu skiptastjóra síðustu viku fyrir skiptafundinn.</p>
           `
       break
     }
-    case CategoryDefaultIdEnum.DECEASED_RECALL: {
+    case TypeIdEnum.RECALL_DECEASED: {
       if (!model.settlement || !model.settlement.settlementDateOfDeath) {
         throw new Error('Settlement information is missing')
       }
@@ -150,13 +121,42 @@ export const getAdvertHTMLMarkup = (
           `
       break
     }
-    case CategoryDefaultIdEnum.BANKRUPTCY_DIVISION_MEETING: {
+    case TypeIdEnum.DIVISION_MEETING: {
+      if (!model.divisionMeetingDate || !model.divisionMeetingLocation) {
+        throw new Error('Division meeting information is missing')
+      }
+
       if (!model.settlement) {
         throw new Error('Settlement information is missing')
       }
 
-      if (!model.divisionMeetingDate || !model.divisionMeetingLocation) {
-        throw new Error('Division meeting information is missing')
+      if (model.settlement.settlementDateOfDeath) {
+        markup = `
+        <p>Skiptafundur í eftirtöldu dánarbúi verður haldinn á skrifstofu skiptastjóra að ${model.divisionMeetingLocation} á neðangreindum tíma.</p>
+        <table>
+          <tbody>
+            <tr>
+              <td><strong>Dánarbú, nafn:</strong></td>
+              <td><strong>Skiptafundur:</strong></td>
+            </tr>
+            <tr>
+              <td>${model.settlement.settlementName}</td>
+              <td>${formatDate(model.divisionMeetingDate, 'dd. MMMM yyyy')}</td>
+            </tr>
+            <tr>
+              <td>kt: ${model.settlement.settlementNationalId}</td>
+              <td>${formatDate(model.divisionMeetingDate, 'HH:mm')}</td>
+            </tr>
+            <tr>
+              <td>síðasta heimilisfang:</td>
+            </tr>
+            <tr>
+              <td>${model.settlement.settlementAddress}</td>
+            </tr>
+          </tbody>
+        </table>
+        `
+        break
       }
 
       markup = `
@@ -182,43 +182,7 @@ export const getAdvertHTMLMarkup = (
       `
       break
     }
-    case CategoryDefaultIdEnum.DECEASED_DIVISION_MEETING: {
-      if (!model.settlement || !model.settlement.settlementDateOfDeath) {
-        throw new Error('Settlement information is missing')
-      }
-
-      if (!model.divisionMeetingDate || !model.divisionMeetingLocation) {
-        throw new Error('Division meeting information is missing')
-      }
-
-      markup = `
-        <p>Skiptafundur í eftirtöldu dánarbúi verður haldinn á skrifstofu skiptastjóra að ${model.divisionMeetingLocation} á neðangreindum tíma.</p>
-        <table>
-          <tbody>
-            <tr>
-              <td><strong>Dánarbú, nafn:</strong></td>
-              <td><strong>Skiptafundur:</strong></td>
-            </tr>
-            <tr>
-              <td>${model.settlement.settlementName}</td>
-              <td>${formatDate(model.divisionMeetingDate, 'dd. MMMM yyyy')}</td>
-            </tr>
-            <tr>
-              <td>kt: ${model.settlement.settlementNationalId}</td>
-              <td>${formatDate(model.divisionMeetingDate, 'HH:mm')}</td>
-            </tr>
-            <tr>
-              <td>síðasta heimilisfang:</td>
-            </tr>
-            <tr>
-              <td>${model.settlement.settlementAddress}</td>
-            </tr>
-          </tbody>
-        </table>
-      `
-      break
-    }
-    case CategoryDefaultIdEnum.DIVISION_ENDING: {
+    case TypeIdEnum.DIVISION_ENDING: {
       if (!model.judgementDate) {
         throw new Error('Judgement date is missing')
       }
@@ -252,10 +216,11 @@ export const getAdvertHTMLMarkup = (
       break
     }
     default: {
-      markup =
-        isBase64(model.content) && model.content
+      markup = model.content
+        ? isBase64(model.content)
           ? `${Buffer.from(model.content, 'base64').toString('utf-8')}`
           : `${model.content}`
+        : ''
     }
   }
 
@@ -272,7 +237,7 @@ export const getAdvertHTMLMarkup = (
 
     <div class="advertSignature">
       <p>${model.signatureLocation}, ${formatDate(model.signatureDate, 'dd. MMMM yyyy')}</p>
-      ${model.signatureOnBehalfOf ? `<p>${model.signatureOnBehalfOf}</p>` : ''}
+      ${model.signatureOnBehalfOf ? `<p>f.h. ${model.signatureOnBehalfOf}</p>` : ''}
       <p><strong>${model.signatureName}</strong></p>
     </div>
     ${model.publicationNumber ? `<p class="advertSerial">${model.publicationNumber}${version}</p>` : `<p class="advertSerial">(Reiknast við útgáfu)${version}</p>`}

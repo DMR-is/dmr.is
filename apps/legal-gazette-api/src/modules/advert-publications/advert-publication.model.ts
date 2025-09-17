@@ -1,6 +1,5 @@
-import { BulkCreateOptions, CreateOptions, Op } from 'sequelize'
+import { BulkCreateOptions, Op } from 'sequelize'
 import {
-  AfterCreate,
   BeforeBulkCreate,
   BeforeCreate,
   BelongsTo,
@@ -11,10 +10,7 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
-import {
-  BadRequestException,
-  InternalServerErrorException,
-} from '@nestjs/common'
+import { BadRequestException } from '@nestjs/common'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 

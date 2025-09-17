@@ -1,4 +1,4 @@
-import { BulkCreateOptions, Op } from 'sequelize'
+import { BulkCreateOptions, Op, WhereOptions } from 'sequelize'
 import {
   BeforeBulkCreate,
   BeforeUpdate,
@@ -21,7 +21,6 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
 import { getAdvertHTMLMarkup } from '../../lib/templates'
-import { validateAdvertStatus } from '../../lib/utils'
 import {
   AdvertPublicationModel,
   AdvertPublicationsCreateAttributes,
@@ -40,6 +39,7 @@ import {
   AdvertDetailedDto,
   AdvertDto,
   AdvertStatusCounterItemDto,
+  GetAdvertsQueryDto,
 } from './dto/advert.dto'
 
 type AdvertAttributes = {
@@ -48,6 +48,7 @@ type AdvertAttributes = {
   typeId: string
   categoryId: string
   statusId: string
+  assignedUserId: string | null
   publicationNumber: string | null
   title: string
   createdBy: string
@@ -133,8 +134,77 @@ export enum AdvertModelScopes {
     { model: AdvertPublicationModel },
     { model: SettlementModel },
   ],
+  order: [
+    [
+      { model: AdvertPublicationModel, as: 'publications' },
+      'scheduledAt',
+      'ASC',
+    ],
+  ],
 }))
 @Scopes(() => ({
+  withQuery: (query: GetAdvertsQueryDto) => {
+    const whereOptions: WhereOptions = {}
+
+    if (query.typeId) {
+      Object.assign(whereOptions, { typeId: { [Op.in]: query.typeId } })
+    }
+
+    if (query.categoryId) {
+      Object.assign(whereOptions, { categoryId: { [Op.in]: query.categoryId } })
+    }
+
+    if (query.statusId) {
+      Object.assign(whereOptions, { statusId: { [Op.in]: query.statusId } })
+    }
+
+    if (query.dateFrom && query.dateTo) {
+      Object.assign(whereOptions, {
+        createdAt: {
+          [Op.between]: [query.dateFrom, query.dateTo],
+        },
+      })
+    }
+
+    if (query.dateFrom && !query.dateTo) {
+      Object.assign(whereOptions, {
+        createdAt: {
+          [Op.gte]: query.dateFrom,
+        },
+      })
+    }
+
+    if (!query.dateFrom && query.dateTo) {
+      Object.assign(whereOptions, {
+        createdAt: {
+          [Op.lte]: query.dateTo,
+        },
+      })
+    }
+
+    if (query.search) {
+      Object.assign(whereOptions, {
+        [Op.or]: [
+          { title: { [Op.iLike]: `%${query.search}%` } },
+          { content: { [Op.iLike]: `%${query.search}%` } },
+          { caption: { [Op.iLike]: `%${query.search}%` } },
+        ],
+      })
+    }
+
+    return {
+      include: [
+        { model: StatusModel },
+        { model: CategoryModel },
+        { model: CourtDistrictModel },
+        { model: TypeModel },
+        { model: UserModel },
+        { model: AdvertPublicationModel },
+        { model: SettlementModel },
+      ],
+      where: whereOptions,
+    }
+  },
   inProgress: {
     where: {
       statusId: {
@@ -360,7 +430,7 @@ export class AdvertModel extends BaseModel<
 
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
-    validateAdvertStatus(instance)
+    // validateAdvertStatus(instance)
   }
 
   htmlMarkup(version: AdvertVersionEnum): string {
@@ -428,19 +498,23 @@ export class AdvertModel extends BaseModel<
       ? publishing.scheduledAt
       : model.publications[model.publications.length - 1].scheduledAt
 
-    return {
-      id: model.id,
-      createdAt: model.createdAt.toISOString(),
-      updatedAt: model.updatedAt.toISOString(),
-      deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
-      category: model.category.fromModel(),
-      type: model.type.fromModel(),
-      status: model.status.fromModel(),
-      createdBy: model.createdBy,
-      scheduledAt: date.toISOString(),
-      title: model.title,
-      assignedUser: model.assignedUser?.fullName,
-      publications: model.publications.map((p) => p.fromModel()),
+    try {
+      return {
+        id: model.id,
+        createdAt: model.createdAt.toISOString(),
+        updatedAt: model.updatedAt.toISOString(),
+        deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+        category: model.category.fromModel(),
+        type: model.type.fromModel(),
+        status: model.status.fromModel(),
+        createdBy: model.createdBy,
+        scheduledAt: date.toISOString(),
+        title: model.title,
+        assignedUser: model.assignedUser?.id,
+        publications: model.publications.map((p) => p.fromModel()),
+      }
+    } catch (error) {
+      throw new InternalServerErrorException()
     }
   }
 
@@ -450,23 +524,28 @@ export class AdvertModel extends BaseModel<
 
   static fromModelToDetailed(model: AdvertModel): AdvertDetailedDto {
     return {
-      id: model.id,
+      ...this.fromModel(model),
       caseId: model.caseId || undefined,
-      title: model.title,
-      createdBy: model.createdBy,
       publicationNumber: model.publicationNumber,
-      version: model.version,
-      category: model.category.fromModel(),
-      status: model.status.fromModel(),
-      type: model.type.fromModel(),
+      signatureOnBehalfOf: model.signatureOnBehalfOf,
       signatureDate: model.signatureDate.toISOString(),
       signatureLocation: model.signatureLocation,
       signatureName: model.signatureName,
-      createdAt: model.createdAt.toISOString(),
-      updatedAt: model.updatedAt.toISOString(),
-      deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
       paid: model.paid,
-      publications: model.publications.map((p) => p.fromModel()),
+      caption: model.caption,
+      content: model.content,
+      additionalText: model.additionalText,
+      courtDistrict: model.courtDistrict?.fromModel()
+        ? model.courtDistrict.fromModel()
+        : undefined,
+      judgementDate: model.judgementDate
+        ? model.judgementDate.toISOString()
+        : undefined,
+      divisionMeetingDate: model.divisionMeetingDate
+        ? model.divisionMeetingDate.toISOString()
+        : undefined,
+      divisionMeetingLocation: model.divisionMeetingLocation ?? undefined,
+      settlement: model.settlement?.fromModel(),
     }
   }
 

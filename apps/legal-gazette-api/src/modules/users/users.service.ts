@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { UserDto } from './dto/user.dto'
+import { GetUsersResponse, UserDto } from './dto/user.dto'
 import { UserModel } from './users.model'
 import { IUsersService } from './users.service.interface'
 
@@ -12,16 +12,15 @@ export class UsersService implements IUsersService {
     private readonly userModel: typeof UserModel,
   ) {}
 
+  async getEmployees(): Promise<GetUsersResponse> {
+    const employees = await this.userModel.findAll()
+    return { users: employees.map((user) => user.fromModel()) }
+  }
+
   async getUserByNationalId(nationalId: string): Promise<UserDto> {
-    const user = await this.userModel.findOne({
+    const user = await this.userModel.findOneOrThrow({
       where: { nationalId },
     })
-
-    if (!user) {
-      throw new NotFoundException(
-        `User not found`,
-      )
-    }
 
     return user.fromModel()
   }

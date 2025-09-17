@@ -104,10 +104,11 @@ export const mapQueryToRitstjornTabs = (
 }
 
 export const flattenMessages = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   messages: Record<string, any>,
 ): Record<string, string> => {
   return Object.entries(messages).reduce(
-    (acc, [key, value]) => {
+    (acc, [_key, value]) => {
       if (value.id && value.defaultMessage) {
         // Leaf message
         acc[value.id] = value.defaultMessage

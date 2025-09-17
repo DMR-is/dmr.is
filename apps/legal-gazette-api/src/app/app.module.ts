@@ -19,6 +19,7 @@ import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 import { AdvertModel } from '../modules/advert/advert.model'
 import { AdvertModule } from '../modules/advert/advert.module'
 import { AdvertPublicationModel } from '../modules/advert-publications/advert-publication.model'
+import { AdvertPublicationModule } from '../modules/advert-publications/advert-publication.module'
 import { ApplicationModel } from '../modules/applications/application.model'
 import { ApplicationModule } from '../modules/applications/application.module'
 import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
@@ -28,6 +29,7 @@ import { CategoryModel } from '../modules/category/category.model'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
 import { CourtDistrictModel } from '../modules/court-district/court-district.model'
 import { SettlementModel } from '../modules/settlement/settlement.model'
+import { SettlementModule } from '../modules/settlement/settlement.module'
 import { StatusModel } from '../modules/status/status.model'
 import { SubscriberModel } from '../modules/subscribers/subscriber.model'
 import { SubscriberModule } from '../modules/subscribers/subscriber.module'
@@ -81,10 +83,12 @@ import { UsersModule } from '../modules/users/users.module'
     BaseEntityModule,
     CaseModule,
     AdvertModule,
+    AdvertPublicationModule,
     SubscriberModule,
     UsersModule,
     ApplicationModule,
     TypesCategoriesModule,
+    SettlementModule,
     {
       module: AuthModule,
       global: true,

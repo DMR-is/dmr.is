@@ -7,13 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 type Params = {
   caseId: string
   applicationId: string
-  categoryOptions?: { label: string; value: string }[]
+  typeOptions?: { label: string; value: string }[]
   fields: Partial<CommonFormSchema['fields']>
 }
 export const commonForm = ({
   caseId,
   applicationId,
-  categoryOptions,
+  typeOptions,
   fields,
 }: Params): UseFormProps<CommonFormSchema> => ({
   mode: 'onChange',
@@ -22,9 +22,10 @@ export const commonForm = ({
     meta: {
       caseId,
       applicationId,
-      categoryOptions: categoryOptions,
+      typeOptions: typeOptions,
     },
     fields: {
+      type: fields.type,
       caption: fields.caption,
       category: fields.category,
       html: fields.html,

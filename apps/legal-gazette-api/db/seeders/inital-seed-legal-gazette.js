@@ -16,6 +16,11 @@ module.exports = {
       'utf8',
     )
 
+    const typeCategoriesSeed = await readFile(
+      './src/modules/type-categories/type-categories.seed.sql',
+      'utf8',
+    )
+
     const statusSeed = await readFile(
       './src/modules/status/status.seed.sql',
       'utf8',
@@ -35,15 +40,19 @@ module.exports = {
       'utf8',
     )
 
+    const advertSeed = await readFile('./src/modules/advert/advert.seed.sql')
+
     const seed = `
       BEGIN;
 
         ${typeSeed}
         ${categoriesSeed}
+        ${typeCategoriesSeed}
         ${statusSeed}
         ${usersSeed}
         ${courtDistrictSeed}
         ${subscribersSeed}
+        ${advertSeed}
 
       COMMIT;
       `

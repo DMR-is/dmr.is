@@ -1,8 +1,19 @@
-import { IsDateString, IsString, MaxLength, ValidateIf } from 'class-validator'
+import {
+  IsDateString,
+  IsNumber,
+  IsString,
+  IsUUID,
+  MaxLength,
+  ValidateIf,
+} from 'class-validator'
 
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, PartialType } from '@nestjs/swagger'
 
 export class SettlementDto {
+  @ApiProperty({ type: String, required: true })
+  @IsUUID()
+  id!: string
+
   @ApiProperty({ type: String, required: true })
   @IsString()
   @MaxLength(255)
@@ -28,6 +39,10 @@ export class SettlementDto {
   @MaxLength(255)
   settlementAddress!: string
 
+  @ApiProperty({ type: Number, required: true })
+  @IsNumber()
+  declaredClaims!: number | null
+
   @ApiProperty({ type: String, required: true, nullable: true })
   @ValidateIf((o) => o.settlementDeadline !== null)
   @IsDateString()
@@ -38,3 +53,5 @@ export class SettlementDto {
   @IsDateString()
   settlementDateOfDeath!: string | null
 }
+
+export class UpdateSettlementDto extends PartialType(SettlementDto) {}

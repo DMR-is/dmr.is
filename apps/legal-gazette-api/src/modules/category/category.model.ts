@@ -11,11 +11,9 @@ import { TypeCategoriesModel } from '../type-categories/type-categories.model'
 import { CategoryDto } from './dto/category.dto'
 
 export enum CategoryDefaultIdEnum {
-  BANKRUPTCY_RECALL = '30452623-789d-4bc8-b068-ff44b706ba8e',
-  DECEASED_RECALL = '6b7ccba1-afd9-4eaf-adb5-297fe1cc163c',
-  BANKRUPTCY_DIVISION_MEETING = '23064adc-db71-48ad-aeae-6044f0567ff9',
-  DECEASED_DIVISION_MEETING = '94effe96-d167-4edb-b776-99eb9f92d7da',
-  DIVISION_ENDING = '7cd93ede-27e9-46ac-bf43-2259ce6dd8ff',
+  RECALLS = '7D0E4B20-2FDD-4CA9-895B-9E7792ECA6E5',
+  DIVISION_MEETINGS = 'C60E266F-E3F4-4B54-B1AE-565AA30962C4',
+  DIVISION_ENDINGS = 'E99EC08C-7467-4B4F-8E72-1496CA61C9CC',
 }
 
 @BaseEntityTable({
