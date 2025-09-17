@@ -4,11 +4,17 @@ import { useSession } from 'next-auth/react'
 
 import { createContext } from 'react'
 
-import { AdvertDetailedDto, CategoryDto, TypeDto } from '../gen/fetch'
+import {
+  AdvertDetailedDto,
+  CategoryDto,
+  CourtDistrictDto,
+  TypeDto,
+} from '../gen/fetch'
 
 export type AdvertContextState = {
   advert: AdvertDetailedDto
   categories: CategoryDto[]
+  courtDistricts: CourtDistrictDto[]
   types: TypeDto[]
   canEdit: boolean
 }
@@ -22,6 +28,7 @@ export type AdvertProviderProps = {
   advert: AdvertDetailedDto
   categories: CategoryDto[]
   types: TypeDto[]
+  courtDistricts: CourtDistrictDto[]
 }
 
 export const AdvertProvider = ({
@@ -29,6 +36,7 @@ export const AdvertProvider = ({
   advert,
   categories,
   types,
+  courtDistricts,
 }: AdvertProviderProps) => {
   const session = useSession()
   const currentUserId = session.data?.user.id
@@ -36,7 +44,9 @@ export const AdvertProvider = ({
   const canEdit = advert.assignedUser === currentUserId
 
   return (
-    <AdvertContext.Provider value={{ advert, categories, types, canEdit }}>
+    <AdvertContext.Provider
+      value={{ advert, categories, types, courtDistricts, canEdit }}
+    >
       {children}
     </AdvertContext.Provider>
   )

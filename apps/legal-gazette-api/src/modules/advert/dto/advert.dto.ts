@@ -386,6 +386,11 @@ export class UpdateAdvertDto {
   @IsOptional()
   @IsDateString()
   judgementDate?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsUUID()
+  courtDistrictId?: string
 }
 
 export class PublishAdvertsBody {

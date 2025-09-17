@@ -4684,6 +4684,9 @@
           },
           "judgementDate": {
             "type": "string"
+          },
+          "courtDistrictId": {
+            "type": "string"
           }
         }
       },

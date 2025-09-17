@@ -31,14 +31,24 @@ export default async function AdvertDetails({ params }: Props) {
   const advertClient = getLegalGazetteClient('AdvertApi', session.idToken)
   const typesClient = getLegalGazetteClient('TypeApi', session.idToken)
   const categoriesClient = getLegalGazetteClient('CategoryApi', session.idToken)
+  const courtDistrictClient = getLegalGazetteClient(
+    'CourtDistrictApi',
+    session.idToken,
+  )
   const advert = await advertClient.getAdvertById({ id: params.id })
   const { types } = await typesClient.getTypes()
   const { categories } = await categoriesClient.getCategories({
     type: advert.type.id,
   })
+  const { courtDistricts } = await courtDistrictClient.getCourtDistricts()
 
   return (
-    <AdvertProvider advert={advert} categories={categories} types={types}>
+    <AdvertProvider
+      advert={advert}
+      categories={categories}
+      types={types}
+      courtDistricts={courtDistricts}
+    >
       <Box padding={6} background="purple100">
         <GridContainer>
           <GridRow>

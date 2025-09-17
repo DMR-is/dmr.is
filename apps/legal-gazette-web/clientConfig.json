@@ -3714,7 +3714,8 @@
           "signatureDate": { "type": "string" },
           "divisionMeetingLocation": { "type": "string" },
           "divisionMeetingDate": { "type": "string" },
-          "judgementDate": { "type": "string" }
+          "judgementDate": { "type": "string" },
+          "courtDistrictId": { "type": "string" }
         }
       },
       "AdvertVersionEnum": { "type": "string", "enum": ["A", "B", "C"] },
