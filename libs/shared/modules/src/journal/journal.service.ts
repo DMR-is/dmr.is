@@ -923,12 +923,16 @@ export class JournalService implements IJournalService {
       }
     }
 
+    const orderedAdditions = advert.case?.additions
+      ? advert.case.additions
+          .map((addition) => caseAdditionMigrate(addition))
+          .sort((a, b) => a.order - b.order)
+      : undefined
+
     return ResultWrapper.ok({
       advert: {
         ...ad,
-        additions: advert.case?.additions
-          ? advert.case.additions.map((item) => caseAdditionMigrate(item))
-          : undefined,
+        additions: orderedAdditions,
         document: {
           isLegacy: advert.isLegacy,
           html,
