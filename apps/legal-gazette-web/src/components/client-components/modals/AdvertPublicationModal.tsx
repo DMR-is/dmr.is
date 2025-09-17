@@ -19,21 +19,21 @@ type Props = {
   id: string
   html: string
   isVisible?: boolean
-  onVisiblityChange?: (visible: boolean) => void
+  onVisibilityChange?: (visible: boolean) => void
 }
 
 export const AdvertModal = ({
   id,
   html,
   isVisible = false,
-  onVisiblityChange,
+  onVisibilityChange,
 }: Props) => {
   return (
     <ModalBase
       initialVisibility={isVisible}
       isVisible={isVisible}
       baseId={id}
-      onVisibilityChange={onVisiblityChange}
+      onVisibilityChange={(vis) => onVisibilityChange?.(vis)}
     >
       {({ closeModal }) => (
         <GridContainer>

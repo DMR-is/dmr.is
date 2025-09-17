@@ -62,7 +62,7 @@ export const PublicationsFields = () => {
         setPublicationRequest(null)
         setToggle(false)
       },
-      dedupingInterval: 2000,
+      dedupingInterval: 0,
     },
   )
 
@@ -99,10 +99,7 @@ export const PublicationsFields = () => {
       },
     )
 
-  const {
-    trigger: publishAdvertPublicationTrigger,
-    isMutating: isPublishingAdvert,
-  } = useSWRMutation(
+  const { trigger: publishAdvertPublicationTrigger } = useSWRMutation(
     'publishAdvert',
     (_key: string, { arg }: { arg: PublishAdvertPublicationRequest }) =>
       publicationClient.publishAdvertPublication(arg),
@@ -139,8 +136,8 @@ export const PublicationsFields = () => {
             </GridColumn>
           </GridRow>
           {advert.publications.map((pub) => (
-            <GridRow>
-              <GridColumn span={['12/12', '6/12']} key={pub.id}>
+            <GridRow key={pub.id}>
+              <GridColumn span={['12/12', '6/12']}>
                 <DatePicker
                   backgroundColor="blue"
                   name="scheduledAt"
@@ -176,7 +173,7 @@ export const PublicationsFields = () => {
                   }}
                 />
               </GridColumn>
-              <GridColumn span={['12/12', '6/12']} key={pub.id}>
+              <GridColumn span={['12/12', '6/12']}>
                 <Inline space={[1, 2]} flexWrap="nowrap" alignY="center">
                   <Input
                     backgroundColor="blue"
@@ -308,7 +305,10 @@ export const PublicationsFields = () => {
       <AdvertModal
         html={html}
         isVisible={toggle}
-        onVisiblityChange={setToggle}
+        onVisibilityChange={(vis) => {
+          setToggle(vis)
+          setPublicationRequest(null)
+        }}
         id="advert-publication-modal"
       />
     </>
