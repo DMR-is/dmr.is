@@ -9,10 +9,10 @@ import {
   Stack,
 } from '@dmr.is/ui/components/island-is'
 
-import { BannerSearch } from '../components/client-components/banner-search/BannerSearch'
-import { PublicationCard } from '../components/client-components/cards/PublicationCard'
-import { authOptions } from '../lib/authOptions'
-import { getClient } from '../lib/createClient'
+import { PublicationCard } from '../../components/client-components/cards/PublicationCard'
+import { BannerSearch } from '../../components/client-components/front-page/banner-search/BannerSearch'
+import { authOptions } from '../../lib/authOptions'
+import { getClient } from '../../lib/createClient'
 
 export default async function HomePage() {
   const session = await getServerSession(authOptions)

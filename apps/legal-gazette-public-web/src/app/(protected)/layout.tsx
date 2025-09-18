@@ -1,11 +1,11 @@
 import { getServerSession } from 'next-auth'
 
-import { Header } from '@dmr.is/ui/components/Header/Header'
+import { Header } from '@dmr.is/ui/components/client-components/Header/Header'
 
-import { Providers } from '../components/client-components/providers/Providers'
-import { authOptions } from '../lib/authOptions'
+import { Providers } from '../../components/client-components/providers/Providers'
+import { authOptions } from '../../lib/authOptions'
 
-import '../styles/global.css'
+import '../../styles/global.css'
 
 export default async function RootLayout({
   children,
@@ -14,7 +14,7 @@ export default async function RootLayout({
 }) {
   const session = await getServerSession(authOptions)
 
-  if (!session) {
+  if (!session?.idToken) {
     throw new Error('Unauthorized')
   }
 

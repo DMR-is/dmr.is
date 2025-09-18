@@ -139,7 +139,6 @@ export const authOptions: AuthOptions = {
           return false
         }
         // Mutate user object to include roles, nationalId and displayName
-
         user.nationalId = authMember.nationalId
         user.id = authMember.id
         return true

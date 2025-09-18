@@ -1,3 +1,26 @@
+import { getServerSession } from 'next-auth'
+
+import { authOptions } from '../../../lib/authOptions'
+import { getClient } from '../../../lib/createClient'
+
+export default async function SearchPage() {
+  const session = await getServerSession(authOptions)
+
+  if (!session?.idToken) {
+    throw new Error('Unauthorized')
+  }
+
+  const client = getClient(session.idToken)
+
+  const [types, categories] = await Promise.all([
+    client.getTypes(),
+    client.getCategories({}),
+  ])
+  return <div>Search</div>
+}
+
+/*
+
 import { GetServerSideProps } from 'next'
 import dynamic from 'next/dynamic'
 
@@ -101,3 +124,6 @@ export const getServerSideProps: GetServerSideProps = async () => {
 }
 
 export default AuglysingarPage
+
+
+*/

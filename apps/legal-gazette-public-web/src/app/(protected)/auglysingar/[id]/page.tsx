@@ -1,3 +1,9 @@
+export default function AdvertPage() {
+  return <div>Advert</div>
+}
+
+/*
+
 import { GetServerSideProps } from 'next'
 import { parseAsString } from 'next-usequerystate'
 
@@ -85,3 +91,4 @@ export const getServerSideProps: GetServerSideProps<SinglPageProps> = async ({
     },
   }
 }
+*/

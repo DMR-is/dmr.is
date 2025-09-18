@@ -5,7 +5,7 @@ import { SessionProvider } from 'next-auth/react'
 
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
-import { ToastContainer } from '@island.is/island-ui/core'
+import { ToastContainer } from '@dmr.is/ui/components/island-is'
 
 type Props = {
   session: Session
