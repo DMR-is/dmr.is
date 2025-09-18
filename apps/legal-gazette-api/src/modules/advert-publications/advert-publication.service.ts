@@ -5,11 +5,16 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { mapVersionToIndex } from '../../lib/utils'
 import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
 import { StatusIdEnum } from '../status/status.model'
-import { UpdateAdvertPublicationDto } from './dto/advert-publication.dto'
+import {
+  GetPublicationsDto,
+  GetPublicationsQueryDto,
+  UpdateAdvertPublicationDto,
+} from './dto/advert-publication.dto'
 import { AdvertPublicationDetailedDto } from './dto/advert-publication-detailed.dto'
 import { AdvertPublicationModel } from './advert-publication.model'
 import { IAdvertPublicationService } from './advert-publication.service.interface'
@@ -23,6 +28,37 @@ export class AdvertPublicationService implements IAdvertPublicationService {
     readonly advertModel: typeof AdvertModel,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
+
+  async getPublications(
+    query: GetPublicationsQueryDto,
+  ): Promise<GetPublicationsDto> {
+    const { limit, offset } = getLimitAndOffset({
+      page: query.page,
+      pageSize: query.pageSize,
+    })
+
+    const publications = await this.advertPublicationModel
+      .scope('published')
+      .findAndCountAll({
+        limit,
+        offset,
+      })
+
+    const mapped = publications.rows.map((pub) => pub.fromModelToPublishedDto())
+
+    const paging = generatePaging(
+      publications.rows,
+      query.page,
+      query.pageSize,
+      publications.count,
+    )
+
+    return {
+      publications: mapped,
+      paging,
+    }
+  }
+
   async publishAdverts(advertIds: string[]): Promise<void> {
     // maybe fail if length of advert results is not the same as advertIds length
     const adverts = await this.advertModel.unscoped().findAll({

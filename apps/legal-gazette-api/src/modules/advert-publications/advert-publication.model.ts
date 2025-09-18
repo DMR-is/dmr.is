@@ -16,8 +16,12 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
 import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
-import { TypeIdEnum } from '../type/type.model'
-import { AdvertPublicationDto } from './dto/advert-publication.dto'
+import { CategoryModel } from '../category/category.model'
+import { TypeIdEnum, TypeModel } from '../type/type.model'
+import {
+  AdvertPublicationDto,
+  PublishedPublicationDto,
+} from './dto/advert-publication.dto'
 
 export type AdvertPublicationsAttributes = {
   advertId: string
@@ -44,6 +48,14 @@ export type AdvertPublicationsCreateAttributes = {
         [Op.ne]: null,
       },
     },
+    include: [
+      {
+        model: AdvertModel.unscoped(),
+        required: true,
+        attributes: ['id', 'title', 'publicationNumber', 'createdBy'],
+        include: [{ model: TypeModel }, { model: CategoryModel }],
+      },
+    ],
     order: [['publishedAt', 'DESC']],
   },
 }))
@@ -134,5 +146,33 @@ export class AdvertPublicationModel extends BaseModel<
 
   fromModel(): AdvertPublicationDto {
     return AdvertPublicationModel.fromModel(this)
+  }
+
+  static fromModelToPublishedDto(
+    model: AdvertPublicationModel,
+  ): PublishedPublicationDto {
+    if (!model.publishedAt) {
+      throw new Error('Publication is not published')
+    }
+
+    if (!model.advert.publicationNumber) {
+      throw new Error('Advert is not loaded')
+    }
+
+    return {
+      id: model.id,
+      advertId: model.advertId,
+      publishedAt: model.publishedAt.toISOString(),
+      version: model.versionLetter,
+      category: model.advert.category.fromModel(),
+      type: model.advert.type.fromModel(),
+      title: model.advert.title,
+      publicationNumber: model.advert.publicationNumber,
+      createdBy: model.advert.createdBy,
+    }
+  }
+
+  fromModelToPublishedDto(): PublishedPublicationDto {
+    return AdvertPublicationModel.fromModelToPublishedDto(this)
   }
 }

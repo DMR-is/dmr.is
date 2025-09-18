@@ -4,7 +4,10 @@ import { SessionProvider } from 'next-auth/react'
 
 import { Layout } from '../components/layout/Layout'
 
-function CustomApp({ Component, pageProps: { session, ...pageProps } }: NextAppProps) {
+function CustomApp({
+  Component,
+  pageProps: { session, ...pageProps },
+}: NextAppProps) {
   return (
     <>
       <Head>

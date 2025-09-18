@@ -1,20 +1,30 @@
-import { Hero } from '@dmr.is/ui/components/Hero/Hero'
+import { getServerSession } from 'next-auth'
 
+import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 import {
   Box,
   GridColumn,
   GridContainer,
   GridRow,
-} from '@island.is/island-ui/core'
+  Stack,
+} from '@dmr.is/ui/components/island-is'
 
-import { BannerSearch } from '../components/banner-search/BannerSearch'
-import { LatestAdverts } from '../components/latest-adverts/LatestAdverts'
+import { BannerSearch } from '../components/client-components/banner-search/BannerSearch'
+import { PublicationCard } from '../components/client-components/cards/PublicationCard'
+import { authOptions } from '../lib/authOptions'
+import { getClient } from '../lib/createClient'
 
-export function Index() {
+export default async function HomePage() {
+  const session = await getServerSession(authOptions)
+
+  if (!session?.idToken) {
+    throw new Error('Unauthorized')
+  }
+
   const quickLinks: React.ComponentProps<typeof BannerSearch>['quickLinks'] = [
     {
-      title: 'Almennar auglýsingar',
-      href: '/auglysingar?type=almenn-auglysing',
+      title: 'Allar auglýsingar',
+      href: '/auglysingar',
       variant: 'blue',
     },
     {
@@ -37,6 +47,12 @@ export function Index() {
     ],
   }
 
+  const client = getClient(session.idToken)
+  const latestPublications = await client.getPublications({
+    page: 1,
+    pageSize: 5,
+  })
+
   return (
     <>
       <Hero
@@ -56,7 +72,11 @@ export function Index() {
         <GridContainer>
           <GridRow>
             <GridColumn span={['1/1', '1/1', '1/1', '12/12']}>
-              <LatestAdverts />
+              <Stack space={[2, 3, 4]}>
+                {latestPublications.publications.map((pub) => (
+                  <PublicationCard publication={pub} key={pub.id} />
+                ))}
+              </Stack>
             </GridColumn>
           </GridRow>
         </GridContainer>
@@ -64,5 +84,3 @@ export function Index() {
     </>
   )
 }
-
-export default Index

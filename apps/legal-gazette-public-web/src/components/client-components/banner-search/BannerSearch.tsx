@@ -1,3 +1,7 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+
 import {
   GridColumn,
   GridContainer,
@@ -7,7 +11,7 @@ import {
   Stack,
   Tag,
   Text,
-} from '@island.is/island-ui/core'
+} from '@dmr.is/ui/components/island-is'
 
 import * as styles from './BannerSearch.css'
 
@@ -22,6 +26,20 @@ type Props = {
 }
 
 export const BannerSearch = ({ quickLinks }: Props) => {
+  const router = useRouter()
+
+  const handleSearch = (
+    event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const wasEnter = event.key === 'Enter'
+    if (!wasEnter) return
+
+    const target = event.target as HTMLInputElement
+    const query = target.value
+
+    router.push(`/auglysingar?search=${query}`)
+  }
+
   return (
     <GridContainer>
       <GridRow>
@@ -33,6 +51,7 @@ export const BannerSearch = ({ quickLinks }: Props) => {
               className={styles.searchBox}
               icon={{ name: 'search', type: 'outline' }}
               placeholder="Leita í Lögbirtingablaðinu"
+              onKeyDown={(event) => handleSearch(event)}
             />
             {quickLinks && quickLinks.length > 0 && (
               <Stack space={1}>
@@ -41,7 +60,7 @@ export const BannerSearch = ({ quickLinks }: Props) => {
                 </Text>
                 <Inline space={2}>
                   {quickLinks?.map((link, i) => (
-                    <Tag variant={link.variant} href={link.href}>
+                    <Tag key={i} variant={link.variant} href={link.href}>
                       {link.title}
                     </Tag>
                   ))}

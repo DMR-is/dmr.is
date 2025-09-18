@@ -10,7 +10,6 @@ const nextConfig = {
   output: 'standalone',
   webpack: (config, { isServer }) => {
     config.resolve.alias.canvas = false
-
     if (process.env.ANALYZE === 'true' && !isServer) {
       config.plugins.push(
         new BundleAnalyzerPlugin({

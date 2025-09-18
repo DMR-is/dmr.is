@@ -15,7 +15,7 @@ import {
 } from '@island.is/island-ui/core'
 
 import { getAdverts } from '../../lib/fetchers'
-import { AdvertCard } from '../cards/AdvertCard'
+import { PublicationCard } from '../client-components/cards/PublicationCard'
 
 export const AdvertSearchResults = () => {
   const [searchParams, setSearchParams] = useQueryStates({
@@ -62,7 +62,9 @@ export const AdvertSearchResults = () => {
         />
       )}
       {data && data.adverts.length > 0 ? (
-        data.adverts.map((advert, i) => <AdvertCard advert={advert} key={i} />)
+        data.adverts.map((advert, i) => (
+          <PublicationCard advert={advert} key={i} />
+        ))
       ) : (
         <AlertMessage
           type="info"
