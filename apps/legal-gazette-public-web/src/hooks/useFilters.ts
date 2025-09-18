@@ -1,10 +1,17 @@
-import { parseAsArrayOf, parseAsString, useQueryStates } from 'nuqs'
+import {
+  parseAsArrayOf,
+  parseAsInteger,
+  parseAsString,
+  useQueryStates,
+} from 'nuqs'
 
 export const useFilters = () => {
   const [filters, setFilters] = useQueryStates({
+    page: parseAsInteger.withDefault(1),
+    pageSize: parseAsInteger.withDefault(5),
     search: parseAsString.withDefault(''),
+    typeId: parseAsString,
     categoryId: parseAsArrayOf(parseAsString).withDefault([]),
-    typeId: parseAsArrayOf(parseAsString).withDefault([]),
     dateFrom: parseAsString,
     dateTo: parseAsString,
   })
@@ -12,8 +19,8 @@ export const useFilters = () => {
   const reset = () => {
     setFilters({
       search: '',
+      typeId: null,
       categoryId: [],
-      typeId: [],
       dateFrom: null,
       dateTo: null,
     })
