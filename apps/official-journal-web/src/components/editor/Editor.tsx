@@ -10,6 +10,7 @@ type Props = {
   onChange?: (value: HTMLText) => void
   readonly?: boolean
   handleUpload: EditorFileUploader
+  onBlur?: (value: HTMLText) => void
 }
 
 export const HTMLEditor = ({
@@ -17,6 +18,7 @@ export const HTMLEditor = ({
   readonly = false,
   onChange,
   handleUpload,
+  onBlur,
 }: Props) => {
   const valueRef = useRef(() => defaultValue as HTMLText)
 
@@ -36,6 +38,7 @@ export const HTMLEditor = ({
        * Delayed onChange to prevent the editor from reading the value before it has been updated
        */
       onChange={() => setTimeout(() => handleChange(valueRef.current()), 100)}
+      onBlur={() => onBlur?.(valueRef.current())}
     />
   )
 }
