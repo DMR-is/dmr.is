@@ -78,6 +78,14 @@ export const SearchSidebar = () => {
     filters.categoryId.includes(c.value),
   )
 
+  const totalResultsOptions = Array.from(
+    { length: 5 },
+    (_, i) => (i + 1) * 5,
+  ).map((num) => ({
+    label: num.toString(),
+    value: num,
+  }))
+
   return (
     <Stack space={[1, 2]} key={timestamp}>
       <Text variant="h4">Leit</Text>
@@ -85,6 +93,7 @@ export const SearchSidebar = () => {
         placeholder="Leit í Lögbirtingablaðinu"
         name="search"
         size="sm"
+        defaultValue={filters.search || ''}
         onChange={(e) => debouncedSetFilters('search', e.target.value)}
       />
       <Divider />
@@ -155,6 +164,18 @@ export const SearchSidebar = () => {
         minDate={filters.dateFrom ? filters.dateFrom : MIN_DATE}
         maxDate={new Date()}
         handleChange={(date) => updateDate('dateTo', date)}
+      />
+      <Select
+        label="Fjöldi niðurstaða"
+        options={totalResultsOptions}
+        size="xs"
+        defaultValue={totalResultsOptions.find(
+          (o) => o.value === filters.pageSize,
+        )}
+        onChange={(opt) => {
+          if (!opt) return
+          setFilters({ ...filters, pageSize: opt.value as number })
+        }}
       />
     </Stack>
   )
