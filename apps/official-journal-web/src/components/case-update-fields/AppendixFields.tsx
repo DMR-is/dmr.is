@@ -82,8 +82,6 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
           </Text>
         )}
         {currentCase.additions.map((addition, additionIndex) => {
-          const currentAddition = currentCase.additions.at(additionIndex)
-          const defaultValue = currentAddition?.html || ''
           return (
             <Box
               key={addition.id}
@@ -99,17 +97,17 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
                   disabled={!canEdit}
                   name={`additionTitle-${additionIndex}`}
                   defaultValue={addition.title}
-                  onChange={(e) =>
+                  onBlur={(e) => {
                     onChangeHandler(addition.id, {
                       title: e.target.value,
                       content: addition.html,
                     })
-                  }
+                  }}
                 />
                 <HTMLEditor
                   readonly={!canEdit}
                   defaultValue={addition.html}
-                  onChange={(val) =>
+                  onBlur={(val) =>
                     onChangeHandler(addition.id, {
                       content: val,
                       title: addition.title,
