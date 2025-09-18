@@ -1,4 +1,10 @@
-import { IsDateString } from 'class-validator'
+import {
+  IsArray,
+  IsDateString,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -68,4 +74,30 @@ export class GetPublicationsDto {
   paging!: Paging
 }
 
-export class GetPublicationsQueryDto extends PagingQuery {}
+export class GetPublicationsQueryDto extends PagingQuery {
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  search?: string
+
+  @ApiProperty({ type: [String], required: false })
+  @IsOptional()
+  @IsArray()
+  @IsUUID(undefined, { each: true })
+  categoryId?: string[]
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsUUID()
+  typeId?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  dateFrom?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  dateTo?: string
+}

@@ -39,16 +39,20 @@ export const SearchSidebar = () => {
       return setFilters({ ...filters, [key]: null })
     }
 
-    setFilters({ ...filters, [key]: (date as Date).toISOString() })
+    setFilters({ ...filters, [key]: date })
   }
 
-  const { data: typeData } = useSWR('getTypes', () => client.getTypes(), {
-    dedupingInterval: 60000,
-    refreshInterval: 0,
-    revalidateOnFocus: false,
-  })
+  const { data: typeData, isLoading: isLoadingTypes } = useSWR(
+    'getTypes',
+    () => client.getTypes(),
+    {
+      dedupingInterval: 60000,
+      refreshInterval: 0,
+      revalidateOnFocus: false,
+    },
+  )
 
-  const { data: categoryData } = useSWR(
+  const { data: categoryData, isLoading: isLoadingCategories } = useSWR(
     ['getCategories', filters.typeId],
     ([_key, typeIds]) => client.getCategories({ type: typeIds }),
     {
@@ -63,10 +67,16 @@ export const SearchSidebar = () => {
     value: type.id,
   }))
 
+  const defaultType = typeOptions?.find((t) => t.value === filters.typeId)
+
   const categoryOptions = categoryData?.categories.map((cat) => ({
     label: cat.title,
     value: cat.id,
   }))
+
+  const defaultCategories = categoryOptions?.filter((c) =>
+    filters.categoryId.includes(c.value),
+  )
 
   return (
     <Stack space={[1, 2]} key={timestamp}>
@@ -92,15 +102,13 @@ export const SearchSidebar = () => {
         </Button>
       </Inline>
       <Select
+        key={`filters.typeId-${isLoadingTypes ? 'loading' : 'loaded'}`}
         isClearable
+        isLoading={isLoadingTypes}
         label="Tegund"
         options={typeOptions || []}
         size="xs"
-        defaultValue={
-          filters.typeId
-            ? { label: filters.typeId, value: filters.typeId }
-            : null
-        }
+        defaultValue={defaultType || null}
         onChange={(opt) => {
           if (!opt) {
             return setFilters({ ...filters, typeId: null, categoryId: [] })
@@ -113,17 +121,16 @@ export const SearchSidebar = () => {
         }}
       />
       <Select
-        key={filters.typeId}
+        key={`filters.categoryId-${filters.typeId}-${categoryOptions?.length}`}
+        isLoading={isLoadingCategories}
+        placeholder={!filters.typeId ? 'Veldu tegund fyrst' : 'Veldu flokka'}
         noOptionsMessage="Veldu tegund fyrst"
         isMulti
         isClearable
         label="Flokkur"
+        defaultValue={defaultCategories || []}
         options={categoryOptions || []}
         size="xs"
-        defaultValue={filters.categoryId.map((id) => ({
-          label: id,
-          value: id,
-        }))}
         onChange={(options) => {
           const incoming = options.map((opt) => opt.value as string)
           setFilters({ ...filters, categoryId: incoming })
@@ -134,6 +141,7 @@ export const SearchSidebar = () => {
         label="Dagsetning frá"
         size="xs"
         placeholderText=""
+        selected={filters.dateFrom}
         minDate={MIN_DATE}
         maxDate={new Date()}
         handleChange={(date) => updateDate('dateFrom', date)}
@@ -143,7 +151,8 @@ export const SearchSidebar = () => {
         label="Dagsetning til"
         size="xs"
         placeholderText=""
-        minDate={filters.dateFrom ? new Date(filters.dateFrom) : MIN_DATE}
+        selected={filters.dateTo}
+        minDate={filters.dateFrom ? filters.dateFrom : MIN_DATE}
         maxDate={new Date()}
         handleChange={(date) => updateDate('dateTo', date)}
       />

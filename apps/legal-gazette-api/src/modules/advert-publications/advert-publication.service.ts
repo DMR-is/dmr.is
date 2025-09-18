@@ -1,5 +1,5 @@
 import addDays from 'date-fns/addDays'
-import { Op } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -38,7 +38,7 @@ export class AdvertPublicationService implements IAdvertPublicationService {
     })
 
     const publications = await this.advertPublicationModel
-      .scope('published')
+      .scope({ method: ['published', query] })
       .findAndCountAll({
         limit,
         offset,

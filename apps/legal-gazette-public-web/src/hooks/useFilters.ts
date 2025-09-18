@@ -1,6 +1,7 @@
 import {
   parseAsArrayOf,
   parseAsInteger,
+  parseAsIsoDate,
   parseAsString,
   useQueryStates,
 } from 'nuqs'
@@ -12,8 +13,8 @@ export const useFilters = () => {
     search: parseAsString.withDefault(''),
     typeId: parseAsString,
     categoryId: parseAsArrayOf(parseAsString).withDefault([]),
-    dateFrom: parseAsString,
-    dateTo: parseAsString,
+    dateFrom: parseAsIsoDate,
+    dateTo: parseAsIsoDate,
   })
 
   const reset = () => {

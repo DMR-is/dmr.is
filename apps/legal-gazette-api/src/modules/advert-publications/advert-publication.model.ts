@@ -1,4 +1,4 @@
-import { BulkCreateOptions, Op } from 'sequelize'
+import { BulkCreateOptions, Op, WhereOptions } from 'sequelize'
 import {
   BeforeBulkCreate,
   BeforeCreate,
@@ -20,6 +20,7 @@ import { CategoryModel } from '../category/category.model'
 import { TypeIdEnum, TypeModel } from '../type/type.model'
 import {
   AdvertPublicationDto,
+  GetPublicationsQueryDto,
   PublishedPublicationDto,
 } from './dto/advert-publication.dto'
 
@@ -42,21 +43,88 @@ export type AdvertPublicationsCreateAttributes = {
   order: [['scheduledAt', 'ASC']],
 }))
 @Scopes(() => ({
-  published: {
-    where: {
+  published: (query: GetPublicationsQueryDto) => {
+    const publicationWhereOptions: WhereOptions = {
       publishedAt: {
         [Op.ne]: null,
       },
-    },
-    include: [
-      {
-        model: AdvertModel.unscoped(),
-        required: true,
-        attributes: ['id', 'title', 'publicationNumber', 'createdBy'],
-        include: [{ model: TypeModel }, { model: CategoryModel }],
-      },
-    ],
-    order: [['publishedAt', 'DESC']],
+    }
+
+    if (query.dateFrom && query.dateTo) {
+      Object.assign(publicationWhereOptions, {
+        publishedAt: {
+          [Op.between]: [query.dateFrom, query.dateTo],
+        },
+      })
+    }
+
+    if (query.dateFrom && !query.dateTo) {
+      Object.assign(publicationWhereOptions, {
+        publishedAt: {
+          [Op.gte]: query.dateFrom,
+        },
+      })
+    }
+
+    if (!query.dateFrom && query.dateTo) {
+      Object.assign(publicationWhereOptions, {
+        publishedAt: {
+          [Op.lte]: query.dateTo,
+        },
+      })
+    }
+
+    const advertWhereOptions: WhereOptions = {}
+
+    if (query.search) {
+      if (query.search.length === 10 && !isNaN(Number(query.search))) {
+        // If the search term is exactly 10 characters long and is a number, we assume it's a publication number
+        Object.assign(advertWhereOptions, {
+          publicationNumber: query.search,
+        })
+      } else {
+        Object.assign(advertWhereOptions, {
+          title: {
+            [Op.iLike]: `%${query.search}%`,
+          },
+        })
+      }
+    }
+
+    if (query.typeId) {
+      Object.assign(advertWhereOptions, {
+        typeId: query.typeId,
+      })
+    }
+
+    if (query.categoryId) {
+      Object.assign(advertWhereOptions, {
+        categoryId: {
+          [Op.in]: query.categoryId,
+        },
+      })
+    }
+
+    return {
+      where: publicationWhereOptions,
+      include: [
+        {
+          model: AdvertModel.unscoped(),
+          required: true,
+          attributes: [
+            'id',
+            'title',
+            'typeId',
+            'categoryId',
+            'publicationNumber',
+            'createdBy',
+          ],
+          include: [{ model: TypeModel }, { model: CategoryModel }],
+          where: advertWhereOptions,
+        },
+      ],
+      order: [['publishedAt', 'DESC']],
+    }
   },
 }))
 export class AdvertPublicationModel extends BaseModel<
