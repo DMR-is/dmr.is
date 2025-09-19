@@ -212,7 +212,9 @@ export const PublicationsFields = () => {
                         title: 'Gefa út birtingu',
                         onClick: () => {
                           if (
-                            advert.status.title !== StatusEnum.TilbúiðTilÚtgáfu
+                            advert.status.title !==
+                              StatusEnum.TilbúiðTilÚtgáfu &&
+                            advert.status.title !== StatusEnum.ÚTgefið
                           ) {
                             toast.warning('Auglýsing ekki tilbúin til útgáfu', {
                               toastId: 'publish-publication-error',

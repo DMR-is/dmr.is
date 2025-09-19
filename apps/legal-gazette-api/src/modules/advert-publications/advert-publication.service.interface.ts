@@ -1,5 +1,10 @@
 import { AdvertVersionEnum } from '../advert/advert.model'
-import { UpdateAdvertPublicationDto } from './dto/advert-publication.dto'
+import {
+  GetPublicationsDto,
+  GetPublicationsQueryDto,
+  GetRelatedPublicationsDto,
+  UpdateAdvertPublicationDto,
+} from './dto/advert-publication.dto'
 import { AdvertPublicationDetailedDto } from './dto/advert-publication-detailed.dto'
 
 export interface IAdvertPublicationService {
@@ -17,6 +22,8 @@ export interface IAdvertPublicationService {
     id: string,
     version: AdvertVersionEnum,
   ): Promise<AdvertPublicationDetailedDto>
+
+  getPublications(query?: GetPublicationsQueryDto): Promise<GetPublicationsDto>
 
   publishAdvertPublication(
     advertId: string,

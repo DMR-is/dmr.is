@@ -9,6 +9,7 @@ import { logger } from '@dmr.is/logging'
 
 import { AppModule } from './app/app.module'
 import { AdvertModule } from './modules/advert/advert.module'
+import { AdvertPublicationModule } from './modules/advert-publications/advert-publication.module'
 import { BaseEntityModule } from './modules/base-entity/base-entity.module'
 import { SubscriberModule } from './modules/subscribers/subscriber.module'
 import { ApplicationWebModule } from './modules/swagger/application-web.module'
@@ -70,7 +71,7 @@ async function bootstrap() {
   })
 
   const publicDocument = SwaggerModule.createDocument(app, openApi, {
-    include: [AdvertModule, BaseEntityModule, SubscriberModule],
+    include: [BaseEntityModule, SubscriberModule, AdvertPublicationModule],
     deepScanRoutes: true,
     autoTagControllers: false,
   })
