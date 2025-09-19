@@ -21,6 +21,7 @@ export const advertPdfTemplate = ({
 }: AdvertTemplateProps) => {
   const publishSignature = subSignature ?? ''
   return `
+    <title>${title}</title>
     <div class="regulation__prefix">${type?.toUpperCase()}</div>
     <h1 class="regulation__title">${title}</h1>
     <div class="regulation__text">
