@@ -1,5 +1,5 @@
 import addDays from 'date-fns/addDays'
-import { Op, WhereOptions } from 'sequelize'
+import { Op } from 'sequelize'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'

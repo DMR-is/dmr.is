@@ -41,13 +41,13 @@ export const PublicationCard = ({ publication }: Props) => {
         <Inline justifyContent="spaceBetween">
           <Inline space={1} alignY="center">
             <Tag
-              href={`/auglysingar?type=${publication.type.slug.toLocaleLowerCase()}`}
+              href={`/auglysingar?typeId=${publication.type.id}`}
               variant="blueberry"
             >
               {publication.type.title}
             </Tag>
             <Tag
-              href={`/auglysingar?category=${publication.category.slug.toLocaleLowerCase()}`}
+              href={`/auglysingar?categoryId=${publication.category.id}`}
               variant="blue"
             >
               {publication.category.title}

@@ -29,6 +29,9 @@ export class AdvertPublicationDto {
 
   @ApiProperty({ enum: AdvertVersionEnum, enumName: 'AdvertVersionEnum' })
   version!: AdvertVersionEnum
+
+  @ApiProperty({ type: Boolean })
+  isLegacy!: boolean
 }
 
 export class UpdateAdvertPublicationDto {
@@ -64,6 +67,9 @@ export class PublishedPublicationDto {
 
   @ApiProperty({ type: String })
   createdBy!: string
+
+  @ApiProperty({ type: Boolean })
+  isLegacy!: boolean
 }
 
 export class GetPublicationsDto {
@@ -74,7 +80,17 @@ export class GetPublicationsDto {
   paging!: Paging
 }
 
+export class GetRelatedPublicationsDto {
+  @ApiProperty({ type: [PublishedPublicationDto] })
+  publications!: PublishedPublicationDto[]
+}
+
 export class GetPublicationsQueryDto extends PagingQuery {
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsUUID()
+  advertId?: string
+
   @ApiProperty({ type: String, required: false })
   @IsOptional()
   @IsString()

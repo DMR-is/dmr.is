@@ -1,3 +1,5 @@
+'use client'
+
 import { Box, Text } from '@island.is/island-ui/core'
 
 import * as styles from './AdvertDisplay.css'
@@ -8,6 +10,7 @@ export type AdvertDisplayProps = {
   type?: string
   title?: string
   html?: string
+  withStyles?: boolean
 }
 export const AdvertDisplay = ({
   number,
@@ -15,6 +18,7 @@ export const AdvertDisplay = ({
   type,
   title,
   html,
+  withStyles = false,
 }: AdvertDisplayProps) => {
   const hasNumberOrDate = number || date
   return (
@@ -42,7 +46,7 @@ export const AdvertDisplay = ({
         </Box>
         {html && (
           <Box
-            className={styles.bodyText}
+            className={withStyles ? styles.bodyText : undefined}
             dangerouslySetInnerHTML={{
               __html: html,
             }}

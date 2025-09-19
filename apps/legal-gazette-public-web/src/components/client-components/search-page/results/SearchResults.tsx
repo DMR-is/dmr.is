@@ -50,17 +50,6 @@ export const SearchResults = () => {
     )
   }
 
-  if (isLoading) {
-    return (
-      <SkeletonLoader
-        height={230}
-        borderRadius="large"
-        repeat={5}
-        space={[2, 3, 4]}
-      />
-    )
-  }
-
   return (
     <Stack space={[2, 3, 4]}>
       <Box>
@@ -72,9 +61,23 @@ export const SearchResults = () => {
           Lögbirtingablað nr. 15/2005.
         </Text>
       </Box>
-      {data?.publications.map((publication) => (
-        <PublicationCard key={publication.id} publication={publication} />
-      ))}
+      {isLoading ? (
+        <SkeletonLoader
+          height={230}
+          borderRadius="large"
+          repeat={5}
+          space={[2, 3, 4]}
+        />
+      ) : (data?.publications.length || 0) > 0 ? (
+        data?.publications.map((publication) => (
+          <PublicationCard key={publication.id} publication={publication} />
+        ))
+      ) : (
+        <Box padding={[2, 3, 4]} borderRadius="large" border="standard">
+          <Text variant="h3">Engar birtingar fundust</Text>
+          <Text>Vinsamlegast endurskoðaðu leitarskilyrði</Text>
+        </Box>
+      )}
       {(data?.paging.totalItems || 0) > 0 && (
         <Pagination
           page={filters.page}
@@ -90,12 +93,6 @@ export const SearchResults = () => {
             </button>
           )}
         />
-      )}
-      {data?.publications.length === 0 && (
-        <Box padding={[2, 3, 4]} borderRadius="large" border="standard">
-          <Text variant="h3">Engar birtingar fundust</Text>
-          <Text>Vinsamlegast endurskoðaðu leitarskilyrði</Text>
-        </Box>
       )}
     </Stack>
   )

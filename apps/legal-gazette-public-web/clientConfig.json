@@ -837,6 +837,12 @@
             "schema": { "default": 10, "example": 10, "type": "number" }
           },
           {
+            "name": "advertId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
             "name": "search",
             "required": false,
             "in": "query",
@@ -1532,7 +1538,8 @@
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersionEnum" }]
           },
           "publicationNumber": { "type": "string" },
-          "createdBy": { "type": "string" }
+          "createdBy": { "type": "string" },
+          "isLegacy": { "type": "boolean" }
         },
         "required": [
           "id",
@@ -1543,7 +1550,8 @@
           "category",
           "version",
           "publicationNumber",
-          "createdBy"
+          "createdBy",
+          "isLegacy"
         ]
       },
       "Paging": {
@@ -1594,9 +1602,17 @@
           "publishedAt": { "type": "string", "nullable": true },
           "version": {
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersionEnum" }]
-          }
+          },
+          "isLegacy": { "type": "boolean" }
         },
-        "required": ["id", "advertId", "scheduledAt", "publishedAt", "version"]
+        "required": [
+          "id",
+          "advertId",
+          "scheduledAt",
+          "publishedAt",
+          "version",
+          "isLegacy"
+        ]
       },
       "AdvertDto": {
         "type": "object",

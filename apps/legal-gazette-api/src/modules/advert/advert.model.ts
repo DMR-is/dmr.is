@@ -58,6 +58,7 @@ type AdvertAttributes = {
   signatureOnBehalfOf: string | null
   signatureLocation: string
   signatureDate: Date
+  legacyId: string | null
 
   // Common specific properties
   caption: string | null

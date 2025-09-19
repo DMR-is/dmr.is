@@ -43,11 +43,34 @@ export type AdvertPublicationsCreateAttributes = {
   order: [['scheduledAt', 'ASC']],
 }))
 @Scopes(() => ({
-  published: (query: GetPublicationsQueryDto) => {
+  published: (query?: GetPublicationsQueryDto) => {
     const publicationWhereOptions: WhereOptions = {
       publishedAt: {
         [Op.ne]: null,
       },
+    }
+
+    if (!query) {
+      return {
+        where: publicationWhereOptions,
+        include: [
+          {
+            model: AdvertModel.unscoped(),
+            required: true,
+            attributes: [
+              'id',
+              'title',
+              'typeId',
+              'categoryId',
+              'publicationNumber',
+              'createdBy',
+              'legacyId',
+            ],
+            include: [{ model: TypeModel }, { model: CategoryModel }],
+          },
+        ],
+        order: [['publishedAt', 'DESC']],
+      }
     }
 
     if (query.dateFrom && query.dateTo) {
@@ -75,6 +98,12 @@ export type AdvertPublicationsCreateAttributes = {
     }
 
     const advertWhereOptions: WhereOptions = {}
+
+    if (query.advertId) {
+      Object.assign(advertWhereOptions, {
+        id: query.advertId,
+      })
+    }
 
     if (query.search) {
       if (query.search.length === 10 && !isNaN(Number(query.search))) {
@@ -214,6 +243,7 @@ export class AdvertPublicationModel extends BaseModel<
       scheduledAt: model.scheduledAt.toISOString(),
       publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
       version: model.versionLetter,
+      isLegacy: model.advert?.legacyId ? true : false,
     }
   }
 
@@ -242,6 +272,7 @@ export class AdvertPublicationModel extends BaseModel<
       title: model.advert.title,
       publicationNumber: model.advert.publicationNumber,
       createdBy: model.advert.createdBy,
+      isLegacy: model.advert.legacyId ? true : false,
     }
   }
 
