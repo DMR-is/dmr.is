@@ -37,7 +37,6 @@ import {
   InvolvedPartyGuard,
   ISignatureService,
   IUserService,
-  RoleGuard,
   TokenJwtAuthGuard,
 } from '@dmr.is/modules'
 import {
@@ -69,12 +68,13 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 
 import 'multer'
+import { ApplicationGuard } from '../guards/application.guard'
 
 @Controller({
   path: 'applications',
   version: '1',
 })
-@UseGuards(TokenJwtAuthGuard, RoleGuard)
+@UseGuards(TokenJwtAuthGuard, ApplicationGuard)
 @ApiBearerAuth()
 @Roles(UserRoleEnum.Admin, UserRoleEnum.Editor, UserRoleEnum.User)
 export class ApplicationController {
@@ -297,7 +297,20 @@ export class ApplicationController {
   async getInvolvedParties(
     @Param('id', new UUIDValidationPipe()) _id: string,
     @CurrentUser() user: UserDto,
+    @Query('partyName') partyName?: string,
   ) {
+    if (user.role.title === UserRoleEnum.InvolvedParty) {
+      const res = ResultWrapper.unwrap(
+        await this.userService.getInvolvedPartyByNationalId(
+          user.nationalId,
+          partyName,
+        ),
+      )
+      return {
+        involvedParties: [res.involvedParty],
+      }
+    }
+
     return ResultWrapper.unwrap(
       await this.userService.getInvolvedPartiesByUser(user),
     )

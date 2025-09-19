@@ -86,6 +86,7 @@ export enum UserRoleEnum {
   Admin = 'Ritstjóri',
   Editor = 'Fulltrúi',
   User = 'Innsendandi',
+  InvolvedParty = 'Stofnun',
 }
 
 export const PAGE_SIZE_OPTIONS = [

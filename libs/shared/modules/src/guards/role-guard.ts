@@ -47,7 +47,7 @@ export class RoleGuard implements CanActivate {
     try {
       // Check if user has required roles
       const userLookup = await this.userService.getUserByNationalId(
-        req.user?.actor?.nationalId ?? req.user.nationalId,
+        req.user.nationalId,
       )
 
       if (!userLookup.result.ok) {
