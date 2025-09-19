@@ -183,7 +183,7 @@ export class AWSService implements IAWSService {
       ...(isPdf
         ? {
             ContentType: 'application/pdf',
-            ContentDisposition: 'inline',
+            ContentDisposition: `inline; filename="${fileName}"`,
           }
         : {}),
     })
