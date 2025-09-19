@@ -21,7 +21,6 @@ export class ApplicationGuard implements CanActivate {
       return this.partyGuard.canActivate(context)
     }
 
-    console.log('SHOULD NOT BE HERE - ApplicationGuard')
     // This is a person. Use role guard.
     return this.roleGuard.canActivate(context)
   }
