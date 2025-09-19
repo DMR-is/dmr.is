@@ -4,7 +4,7 @@ import { SearchSidebar } from '../../../../components/client-components/search-p
 
 export default function SearchPageSidebar() {
   return (
-    <Box paddingX={[1, 2]}>
+    <Box padding={3} borderRadius="large" background="blue100">
       <SearchSidebar />
     </Box>
   )

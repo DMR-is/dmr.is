@@ -1,12 +1,7 @@
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Stack,
-} from '@dmr.is/ui/components/island-is'
+import { Box, GridContainer, Stack } from '@dmr.is/ui/components/island-is'
 
 import { NavigateBack } from '../../../components/client-components/navigate-back/NavigateBack'
+import * as styles from './grid-layout.css'
 
 export default async function Layout({
   children,
@@ -17,19 +12,15 @@ export default async function Layout({
 }) {
   return (
     <GridContainer>
-      <GridRow marginBottom={[4, 5, 6]} marginTop={[4, 5, 6]}>
-        <GridColumn span={['12/12', '3/12']}>
+      <Box paddingY={8} className={styles.gridLayout}>
+        <Box className={styles.sidebarStyle}>
           <Stack space={[1, 2]}>
             <NavigateBack />
-            <Box paddingY={[2, 3, 4]} borderRadius="large" background="blue100">
-              {sidebar}
-            </Box>
+            {sidebar}
           </Stack>
-        </GridColumn>
-        <GridColumn span={['12/12', '9/12']}>
-          <Box paddingY={[2, 3, 4]}>{children}</Box>
-        </GridColumn>
-      </GridRow>
+        </Box>
+        <Box className={styles.mainStyle}>{children}</Box>
+      </Box>
     </GridContainer>
   )
 }

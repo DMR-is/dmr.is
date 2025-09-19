@@ -63,6 +63,15 @@ export const SearchResults = () => {
 
   return (
     <Stack space={[2, 3, 4]}>
+      <Box>
+        <Text marginBottom={[2, 3]} variant="h1">
+          Leit í lögbirtingablaðinu
+        </Text>
+        <Text>
+          Um útgáfu Lögbirtingablaðsins gilda lög um Stjórnartíðindi og
+          Lögbirtingablað nr. 15/2005.
+        </Text>
+      </Box>
       {data?.publications.map((publication) => (
         <PublicationCard key={publication.id} publication={publication} />
       ))}

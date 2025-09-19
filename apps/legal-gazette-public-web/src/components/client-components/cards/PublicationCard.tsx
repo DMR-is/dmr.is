@@ -54,7 +54,7 @@ export const PublicationCard = ({ publication }: Props) => {
             </Tag>
           </Inline>
           <NextLink
-            href={`${PageRoutes.AUGLYSING.replace('[id]', publication.id)}`}
+            href={`${PageRoutes.AUGLYSING.replace('[id]', publication.advertId)}/${publication.version}`}
           >
             <Button size="small" iconType="outline" icon="open" variant="text">
               Skoða nánar

@@ -84,8 +84,13 @@ export type AdvertPublicationsCreateAttributes = {
         })
       } else {
         Object.assign(advertWhereOptions, {
-          title: {
-            [Op.iLike]: `%${query.search}%`,
+          [Op.or]: {
+            title: {
+              [Op.iLike]: `%${query.search}%`,
+            },
+            publicationNumber: {
+              [Op.iLike]: `%${query.search}%`,
+            },
           },
         })
       }
