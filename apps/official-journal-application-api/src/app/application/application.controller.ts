@@ -67,8 +67,9 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import 'multer'
 import { ApplicationGuard } from '../guards/application.guard'
+
+import 'multer'
 
 @Controller({
   path: 'applications',
