@@ -15,6 +15,7 @@ import {
   ApplicationModule,
   HealthModule,
   PdfModule,
+  RoleGuard,
   SignatureModule,
   UserModule,
   UtilityModule,
@@ -22,6 +23,8 @@ import {
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { ApplicationController } from './application/application.controller'
+import { ApplicationGuard } from './guards/application.guard'
+import { PartyGuard } from './guards/party.guard'
 
 @Module({
   imports: [
@@ -53,6 +56,9 @@ import { ApplicationController } from './application/application.controller'
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
     },
+    PartyGuard,
+    ApplicationGuard,
+    RoleGuard,
   ],
 })
 export class AppModule implements NestModule {

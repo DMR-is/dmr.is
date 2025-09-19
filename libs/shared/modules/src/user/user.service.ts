@@ -266,39 +266,6 @@ export class UserService implements IUserService {
   @LogAndHandle()
   @Transactional()
   @CacheEvict(0)
-  async associateUserToInvolvedParty(
-    userId: string,
-    involvedPartyId: string,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper> {
-    const associationUpdate = await this.userInvolvedPartiesModel.create(
-      {
-        userId,
-        involvedPartyId,
-      },
-      {
-        transaction,
-      },
-    )
-
-    if (!associationUpdate) {
-      this.logger.warn('associationUpdate failed', {
-        context: LOGGING_CONTEXT,
-        category: LOGGING_CATEGORY,
-        userId,
-      })
-      return ResultWrapper.err({
-        code: 500,
-        message: 'Could not associate user to party',
-      })
-    }
-
-    return ResultWrapper.ok()
-  }
-
-  @LogAndHandle()
-  @Transactional()
-  @CacheEvict(0)
   async updateUser(
     userId: string,
     body: UpdateUserDto,

@@ -7,4 +7,11 @@ export class PostApplicationComment {
     required: true,
   })
   comment!: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    description: 'Name of the user making the application comment.',
+  })
+  applicationUserName?: string
 }

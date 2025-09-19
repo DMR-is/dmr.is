@@ -63,10 +63,6 @@ export interface IUserService {
     currentUser: UserDto,
   ): Promise<ResultWrapper<GetUserResponse>>
   deleteUser(userId: string, currentUser: UserDto): Promise<ResultWrapper>
-  associateUserToInvolvedParty(
-    userId: string,
-    involvedPartyId: string,
-  ): Promise<ResultWrapper>
 }
 
 export const IUserService = Symbol('IUserService')

@@ -141,7 +141,14 @@ export class ExternalCommentBodyDto extends PickType(CommentFields, [
 export class ApplicationCommentBody extends PickType(CommentFields, [
   'applicationUserCreatorId',
   'comment',
-]) {}
+]) {
+  @ApiProperty({
+    type: String,
+    required: false,
+    description: 'Passed with application comments only.',
+  })
+  applicationUserName?: string
+}
 
 export class GetComment {
   @ApiProperty({
