@@ -2,7 +2,6 @@ import { Box, GridContainer, Stack } from '@dmr.is/ui/components/island-is'
 
 import { Breadcrumbs } from '../../../components/client-components/breadcrumbs/Breadcrumbs'
 import { NavigateBack } from '../../../components/client-components/navigate-back/NavigateBack'
-import { PublicationProvider } from '../../../components/client-components/providers/PublicationProvider'
 import * as styles from './grid-layout.css'
 
 export default async function Layout({
@@ -15,7 +14,7 @@ export default async function Layout({
   related: React.ReactNode
 }) {
   return (
-    <PublicationProvider>
+    <>
       <GridContainer>
         <Box paddingY={8} className={styles.gridLayout}>
           <Box className={styles.sidebarStyle}>
@@ -33,6 +32,6 @@ export default async function Layout({
         </Box>
       </GridContainer>
       {related && <Box>{related}</Box>}
-    </PublicationProvider>
+    </>
   )
 }
