@@ -2,7 +2,7 @@ import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay
 import { Stack, Text } from '@dmr.is/ui/components/island-is'
 
 import { GetAdvertPublicationVersionEnum } from '../../../../../gen/fetch'
-import { getPublication } from '../../../../../lib/cache/publication'
+import { getPublication } from '../../../../../lib/with-cache/publication'
 
 export default async function AdvertPage({
   params,
