@@ -56,6 +56,7 @@ import {
   GetApplicationResponse,
   GetComments,
   GetInvoledPartiesByUserResponse,
+  GetInvolvedPartiesForApplicationQuery,
   GetMyUserInfoResponse,
   GetPresignedUrlBody,
   GetSignature,
@@ -67,9 +68,8 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { ApplicationGuard } from '../guards/application.guard'
-
 import 'multer'
+import { ApplicationGuard } from '../guards/application.guard'
 
 @Controller({
   path: 'applications',
@@ -298,13 +298,13 @@ export class ApplicationController {
   async getInvolvedParties(
     @Param('id', new UUIDValidationPipe()) _id: string,
     @CurrentUser() user: UserDto,
-    @Query('partyName') partyName?: string,
+    @Query() params?: GetInvolvedPartiesForApplicationQuery,
   ) {
     if (user.role.title === UserRoleEnum.InvolvedParty) {
       const res = ResultWrapper.unwrap(
         await this.userService.getInvolvedPartyByNationalId(
           user.nationalId,
-          partyName,
+          params?.partyName ?? undefined,
         ),
       )
       return {
