@@ -42,5 +42,5 @@ export const advertPdfTemplate = ({
         : ''
     }
   `
-  return `<!DOCTYPE html><html><head><title>${title}</title></head><body>${body}</body></html>`
+  return `<title>${title}</title>${body}`
 }
