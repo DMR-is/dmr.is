@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 
 import { LogMethod } from '@dmr.is/decorators'
 import { RoleGuard } from '@dmr.is/modules'
+
 import { PartyGuard } from './party.guard'
 
 @Injectable()

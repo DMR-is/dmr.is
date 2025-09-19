@@ -5,10 +5,10 @@ import {
   Injectable,
 } from '@nestjs/common'
 
+import { UserRoleEnum } from '@dmr.is/constants'
 import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IUserService } from '@dmr.is/modules'
-import { UserRoleEnum } from '@dmr.is/constants'
 
 const LOGGING_CATEGORY = 'party-guard'
 const LOGGING_CONTEXT = 'PartyGuard'
