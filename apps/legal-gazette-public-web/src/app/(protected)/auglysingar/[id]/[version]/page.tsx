@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 
 import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay'
+import { Stack, Text } from '@dmr.is/ui/components/island-is'
 
 import { GetAdvertPublicationVersionEnum } from '../../../../../gen/fetch'
 import { authOptions } from '../../../../../lib/authOptions'
@@ -23,11 +24,19 @@ export default async function AdvertPage({
   try {
     const pub = await client.getAdvertPublication({
       advertId: params.id,
-      version: params.version,
+      version:
+        params.version.toUpperCase() as unknown as GetAdvertPublicationVersionEnum,
     })
 
+    const title = pub.publication.isLegacy
+      ? `${pub.advert.type.title} - ${pub.advert.title}`
+      : pub.advert.title
+
     return (
-      <AdvertDisplay html={pub.html} withStyles={pub.publication.isLegacy} />
+      <Stack space={[2, 3]}>
+        <Text variant="h3">{title}</Text>
+        <AdvertDisplay html={pub.html} withStyles={pub.publication.isLegacy} />
+      </Stack>
     )
   } catch (e) {
     return notFound()

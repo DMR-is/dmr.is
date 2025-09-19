@@ -1,11 +1,9 @@
-import NextLink from 'next/link'
-
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
 import {
+  ArrowLink,
   Box,
-  Button,
   Inline,
   Stack,
   Tag,
@@ -13,7 +11,6 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { PublishedPublicationDto } from '../../../gen/fetch'
-import { PageRoutes } from '../../../lib/constants'
 
 type Props = {
   publication: PublishedPublicationDto
@@ -53,13 +50,11 @@ export const PublicationCard = ({ publication }: Props) => {
               {publication.category.title}
             </Tag>
           </Inline>
-          <NextLink
-            href={`${PageRoutes.AUGLYSING.replace('[id]', publication.advertId)}/${publication.version}`}
+          <ArrowLink
+            href={`/auglysingar/${publication.id}/${publication.version}`}
           >
-            <Button size="small" iconType="outline" icon="open" variant="text">
-              Skoða nánar
-            </Button>
-          </NextLink>
+            Sjá nánar
+          </ArrowLink>
         </Inline>
       </Stack>
     </Box>

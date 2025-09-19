@@ -7,6 +7,7 @@ import {
   GridContainer,
   GridRow,
   Stack,
+  Text,
 } from '@dmr.is/ui/components/island-is'
 
 import { PublicationCard } from '../../components/client-components/cards/PublicationCard'
@@ -73,6 +74,7 @@ export default async function HomePage() {
           <GridRow>
             <GridColumn span={['1/1', '1/1', '1/1', '12/12']}>
               <Stack space={[2, 3, 4]}>
+                <Text variant="h2">Nýjustu auglýsingar</Text>
                 {latestPublications.publications.map((pub) => (
                   <PublicationCard publication={pub} key={pub.id} />
                 ))}

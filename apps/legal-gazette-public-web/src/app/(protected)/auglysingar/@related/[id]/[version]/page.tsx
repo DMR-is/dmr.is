@@ -5,10 +5,12 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
+  SimpleSlider,
   Stack,
-  Swiper,
   Text,
 } from '@dmr.is/ui/components/island-is'
+
+import { theme } from '@island.is/island-ui/theme'
 
 import { PublicationCard } from '../../../../../../components/client-components/cards/PublicationCard'
 import { authOptions } from '../../../../../../lib/authOptions'
@@ -30,13 +32,18 @@ export default async function RelatedPublications({
   const relatedPubs = await client.getPublications({
     advertId: params.id,
   })
+
   const filtered = relatedPubs.publications.filter(
-    (pub) => pub.advertId !== params.id && params.version !== pub.version,
+    (pub) => !(pub.advertId === params.id && pub.version === params.version),
   )
 
   if (filtered.length === 0) {
     return null
   }
+
+  const items = filtered.map((pub) => (
+    <PublicationCard key={pub.id} publication={pub} />
+  ))
 
   return (
     <Box background="blue100" padding={[4, 5, 6]}>
@@ -48,11 +55,32 @@ export default async function RelatedPublications({
               {filtered.length === 1 ? (
                 <PublicationCard publication={filtered[0]} />
               ) : (
-                <Swiper itemWidth={300}>
-                  {filtered.map((pub) => (
-                    <PublicationCard key={pub.id} publication={pub} />
-                  ))}
-                </Swiper>
+                <SimpleSlider
+                  carouselController
+                  items={items}
+                  breakpoints={{
+                    0: {
+                      gutterWidth: theme.grid.gutter.mobile,
+                      slideCount: 1,
+                    },
+                    [theme.breakpoints.sm]: {
+                      gutterWidth: theme.grid.gutter.mobile,
+                      slideCount: 2,
+                    },
+                    [theme.breakpoints.md]: {
+                      gutterWidth: theme.spacing[3],
+                      slideCount: 2,
+                    },
+                    [theme.breakpoints.lg]: {
+                      gutterWidth: theme.spacing[3],
+                      slideCount: 2,
+                    },
+                    [theme.breakpoints.xl]: {
+                      gutterWidth: theme.spacing[3],
+                      slideCount: 3,
+                    },
+                  }}
+                />
               )}
             </Stack>
           </GridColumn>

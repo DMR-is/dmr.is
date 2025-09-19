@@ -24,15 +24,11 @@ export default async function AdvertPageSidebar({
     return notFound()
   }
 
-  try {
-    const publication = await client.getAdvertPublication({
-      advertId: params.id,
-      version:
-        params.version.toUpperCase() as unknown as GetAdvertPublicationVersionEnum,
-    })
+  const pub = await client.getAdvertPublication({
+    advertId: params.id,
+    version:
+      params.version.toUpperCase() as unknown as GetAdvertPublicationVersionEnum,
+  })
 
-    return <PublicationSidebar publication={publication} />
-  } catch (error) {
-    return notFound()
-  }
+  return <PublicationSidebar publication={pub} />
 }
