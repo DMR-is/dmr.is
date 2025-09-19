@@ -23,8 +23,6 @@ export default function GlobalError({
     console.log(error)
   }, [error])
 
-  console.log('ERROR FROM FKN GLOBAL ERROR', error)
-
   return (
     <html>
       <body>

@@ -16,10 +16,7 @@ type ErrorWithPotentialReqRes = Error & {
   response?: unknown
 }
 
-const NODE_ENV = process.env.NODE_ENV
 const SESION_TIMEOUT = 60 * 60 // 1 hour
-
-const secure = NODE_ENV === 'production' ? '__Secure-' : ''
 
 const LOGGING_CATEGORY = 'next-auth'
 
