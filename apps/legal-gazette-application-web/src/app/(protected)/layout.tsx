@@ -5,13 +5,14 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { Header } from '@dmr.is/ui/components/Header/Header'
 
 import { Providers } from '../../components/client-components/providers/Providers'
+import { authOptions } from '../../lib/authOptions'
 
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
 
   return (
     <html lang="is">
