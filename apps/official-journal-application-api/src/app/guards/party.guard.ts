@@ -48,6 +48,7 @@ export class PartyGuard implements CanActivate {
       req.user.role = {
         title: UserRoleEnum.InvolvedParty,
       }
+      req.involvedParties = [resParty.involvedParty.id]
 
       if (resParty.involvedParty.nationalId) {
         // Involved party exists.
