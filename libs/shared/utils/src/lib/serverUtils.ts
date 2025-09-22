@@ -442,6 +442,11 @@ export const formatAnyDate = (date: unknown): string => {
   return format(parsedDate, 'd. MMMM yyyy', { locale: is })
 }
 
+export const formatDateToRFC822 = (date: string | Date): string => {
+  const dateToUse = typeof date === 'string' ? new Date(date) : date
+  return format(dateToUse, 'EEE, dd MMM yyyy HH:mm:ss xx')
+}
+
 export const handlePdfAdditions = (additionArray: CaseAddition[]) => {
   return additionArray
     .sort((a, b) => {
