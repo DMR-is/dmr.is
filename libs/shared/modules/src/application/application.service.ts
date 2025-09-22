@@ -436,6 +436,7 @@ export class ApplicationService implements IApplicationService {
       await this.commentService.createApplicationComment(caseLookup.id, {
         applicationUserCreatorId: UserDto.id,
         comment: body.comment,
+        applicationUserName: body.applicationUserName,
       }),
     )
 

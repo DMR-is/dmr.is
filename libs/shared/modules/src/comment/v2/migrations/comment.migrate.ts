@@ -26,15 +26,23 @@ export const commentMigrate = (
       break
     }
     case CaseActionEnum.COMMENT_APPLICATION: {
-      // application user
       const involvedParty = model.userCreator?.involvedParties.find(
         (party) => party.id === involvedPartyId,
       )
-      creator = {
-        id: `${model.userCreatorId}`,
-        title: `${model.userCreator?.firstName} ${model.userCreator?.lastName}${
-          involvedParty ? ` (${involvedParty.title})` : ''
-        }`,
+      if (model.userCreatorId) {
+        creator = {
+          id: `${model.userCreatorId}`,
+          title: `${model.userCreator?.firstName} ${model.userCreator?.lastName}${
+            involvedParty ? ` (${involvedParty.title})` : ''
+          }`,
+        }
+      } else {
+        creator = {
+          id: '',
+          title: `${model.applicationUserName}${
+            involvedParty ? ` (${involvedParty.title})` : ''
+          }`,
+        }
       }
       break
     }
