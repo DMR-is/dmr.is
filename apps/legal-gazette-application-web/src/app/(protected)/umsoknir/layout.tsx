@@ -1,4 +1,4 @@
-import { Footer } from '../../components/client-components/footer/Footer'
+import { Footer } from '../../../components/client-components/footer/Footer'
 
 export default function UmsoknirLadningLayout({
   children,

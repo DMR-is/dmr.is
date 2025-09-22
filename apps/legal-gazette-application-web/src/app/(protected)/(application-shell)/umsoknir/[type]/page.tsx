@@ -14,7 +14,7 @@ import {
   ALLOWED_FORM_TYPES,
   FormTypes,
   PageRoutes,
-} from '../../../../lib/constants'
+} from '../../../../../lib/constants'
 
 export default function ApplicationTypePage({
   params,

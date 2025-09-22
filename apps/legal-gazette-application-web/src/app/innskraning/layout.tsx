@@ -2,9 +2,9 @@ import { getServerSession } from 'next-auth'
 
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
-import { Header } from '@dmr.is/ui/components/Header/Header'
+import { HeaderNoAuth } from '@dmr.is/ui/components/HeaderNoAuth/HeaderNoAuth'
 
-import { Providers } from '../components/client-components/providers/Providers'
+import { Providers } from '../../components/client-components/providers/Providers'
 
 import '../styles/global.css'
 
@@ -20,7 +20,7 @@ export default async function RootLayout({
       <body>
         <NuqsAdapter>
           <Providers session={session}>
-            <Header variant="white" />
+            <HeaderNoAuth variant="white" />
             {children}
           </Providers>
         </NuqsAdapter>

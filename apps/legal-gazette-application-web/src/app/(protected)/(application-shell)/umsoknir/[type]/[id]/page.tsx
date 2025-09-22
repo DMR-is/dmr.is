@@ -1,18 +1,18 @@
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 
-import { ApplicationSubmitted } from '../../../../../components/client-components/application/ApplicationSubmitted'
-import { ApplicationForm } from '../../../../../components/client-components/form/ApplicationForm'
-import { ApplicationProvider } from '../../../../../context/applicationContext'
-import { ApplicationDetailedDtoStatusEnum } from '../../../../../gen/fetch'
-import { authOptions } from '../../../../../lib/authOptions'
+import { ApplicationSubmitted } from '../../../../../../components/client-components/application/ApplicationSubmitted'
+import { ApplicationForm } from '../../../../../../components/client-components/form/ApplicationForm'
+import { ApplicationProvider } from '../../../../../../context/applicationContext'
+import { ApplicationDetailedDtoStatusEnum } from '../../../../../../gen/fetch'
+import { authOptions } from '../../../../../../lib/authOptions'
 import {
   ALLOWED_FORM_TYPES,
   FormTypes,
   PageRoutes,
-} from '../../../../../lib/constants'
-import { getClient } from '../../../../../lib/createClient'
-import { safeCall } from '../../../../../lib/serverUtils'
+} from '../../../../../../lib/constants'
+import { getClient } from '../../../../../../lib/createClient'
+import { safeCall } from '../../../../../../lib/serverUtils'
 
 export default async function UmsoknirThrotabusPage({
   params,

@@ -1,10 +1,10 @@
 import { getServerSession } from 'next-auth'
 
-import { ApplicationList } from '../../components/client-components/application/ApplicationList'
-import { UmsoknirHero } from '../../components/client-components/hero/UmsoknirHero'
-import { authOptions } from '../../lib/authOptions'
-import { getClient } from '../../lib/createClient'
-import { loadPagingSearchParams } from '../../lib/nuqs/search-params'
+import { ApplicationList } from '../../../components/client-components/application/ApplicationList'
+import { UmsoknirHero } from '../../../components/client-components/hero/UmsoknirHero'
+import { authOptions } from '../../../lib/authOptions'
+import { getClient } from '../../../lib/createClient'
+import { loadPagingSearchParams } from '../../../lib/nuqs/search-params'
 
 export default async function UmsoknirPage({
   searchParams,
