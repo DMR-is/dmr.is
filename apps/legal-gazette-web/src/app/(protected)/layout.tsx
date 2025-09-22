@@ -6,8 +6,6 @@ import { Providers } from '../../components/providers/Providers'
 import { getLegalGazetteClient } from '../../lib/api/createClient'
 import { authOptions } from '../../lib/auth/authOptions'
 
-import '../styles/global.css'
-
 export default async function RootLayout({
   children,
 }: {

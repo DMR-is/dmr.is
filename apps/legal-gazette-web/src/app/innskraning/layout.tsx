@@ -1,7 +1,5 @@
 import { HeaderNoAuth } from '@dmr.is/ui/components/HeaderNoAuth/HeaderNoAuth'
 
-import '../styles/global.css'
-
 export default async function RootLayout({
   children,
 }: {

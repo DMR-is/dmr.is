@@ -25,7 +25,7 @@ export default function Login() {
           offset={['0', '1/12']}
           span={['12/12', '5/12']}
         >
-          <Box component="img" src="/images/image-with-text-1.svg" />
+          <Box component="img" src="/assets/image-with-text-1.svg" />
         </GridColumn>
         <GridColumn paddingBottom={[2, 2, 3]} span={['12/12', '5/12']}>
           <Box
