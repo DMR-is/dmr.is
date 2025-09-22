@@ -8,12 +8,12 @@ import {
   Stack,
 } from '@dmr.is/ui/components/island-is'
 
-import { AdvertForm } from '../../../components/client-components/Form/AdvertForm'
-import { Form } from '../../../components/client-components/Form/Form'
-import { AdvertSidebar } from '../../../components/client-components/Form/FormSidebar'
-import { AdvertProvider } from '../../../context/advert-context'
-import { getLegalGazetteClient } from '../../../lib/api/createClient'
-import { authOptions } from '../../../lib/auth/authOptions'
+import { AdvertForm } from '../../../../components/client-components/Form/AdvertForm'
+import { Form } from '../../../../components/client-components/Form/Form'
+import { AdvertSidebar } from '../../../../components/client-components/Form/FormSidebar'
+import { AdvertProvider } from '../../../../context/advert-context'
+import { getLegalGazetteClient } from '../../../../lib/api/createClient'
+import { authOptions } from '../../../../lib/auth/authOptions'
 
 type Props = {
   params: {

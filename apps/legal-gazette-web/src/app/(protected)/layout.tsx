@@ -2,9 +2,9 @@ import { getServerSession } from 'next-auth'
 
 import { Header } from '@dmr.is/ui/components/client-components/Header/Header'
 
-import { Providers } from '../components/providers/Providers'
-import { getLegalGazetteClient } from '../lib/api/createClient'
-import { authOptions } from '../lib/auth/authOptions'
+import { Providers } from '../../components/providers/Providers'
+import { getLegalGazetteClient } from '../../lib/api/createClient'
+import { authOptions } from '../../lib/auth/authOptions'
 
 import '../styles/global.css'
 
