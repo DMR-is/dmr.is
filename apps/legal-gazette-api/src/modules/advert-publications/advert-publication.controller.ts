@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common'
 import { ApiParam } from '@nestjs/swagger'
 
@@ -14,12 +15,17 @@ import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
 import { AdvertVersionEnum } from '../advert/advert.model'
-import { UpdateAdvertPublicationDto } from './dto/advert-publication.dto'
+import {
+  GetPublicationsDto,
+  GetPublicationsQueryDto,
+  GetRelatedPublicationsDto,
+  UpdateAdvertPublicationDto,
+} from './dto/advert-publication.dto'
 import { AdvertPublicationDetailedDto } from './dto/advert-publication-detailed.dto'
 import { IAdvertPublicationService } from './advert-publication.service.interface'
 
 @Controller({
-  path: 'adverts/:advertId/publications',
+  path: '/publications',
   version: '1',
 })
 export class AdvertPublicationController {
@@ -28,7 +34,18 @@ export class AdvertPublicationController {
     readonly advertPublicationService: IAdvertPublicationService,
   ) {}
 
-  @Get(':version')
+  @Get()
+  @LGResponse({
+    operationId: 'getPublications',
+    type: GetPublicationsDto,
+  })
+  async getPublishedPublications(
+    @Query() query: GetPublicationsQueryDto,
+  ): Promise<GetPublicationsDto> {
+    return this.advertPublicationService.getPublications(query)
+  }
+
+  @Get('/adverts/:advertId/:version')
   @ApiParam({
     name: 'version',
     enum: AdvertVersionEnum,
@@ -45,7 +62,7 @@ export class AdvertPublicationController {
     return this.advertPublicationService.getAdvertPublication(advertId, version)
   }
 
-  @Post('')
+  @Post('/adverts/:advertId')
   @LGResponse({ operationId: 'createAdvertPublication' })
   async createAdvertPublication(
     @Param('advertId', new UUIDValidationPipe()) advertId: string,
@@ -53,7 +70,7 @@ export class AdvertPublicationController {
     await this.advertPublicationService.createAdvertPublication(advertId)
   }
 
-  @Post(':publicationId/publish')
+  @Post(':publicationId/adverts/:advertId/publish')
   @LGResponse({ operationId: 'publishAdvertPublication' })
   async publishAdvertPublication(
     @Param('advertId', new UUIDValidationPipe()) advertId: string,
@@ -65,7 +82,7 @@ export class AdvertPublicationController {
     )
   }
 
-  @Patch('/:publicationId')
+  @Patch('/:publicationId/adverts/:advertId')
   @LGResponse({ operationId: 'updateAdvertPublication' })
   async updateAdvertPublication(
     @Param('advertId', new UUIDValidationPipe()) advertId: string,
@@ -79,7 +96,7 @@ export class AdvertPublicationController {
     )
   }
 
-  @Delete('/:publicationId')
+  @Delete('/:publicationId/adverts/:advertId')
   @LGResponse({ operationId: 'deleteAdvertPublication' })
   async deleteAdvertPublication(
     @Param('advertId', new UUIDValidationPipe()) advertId: string,

@@ -16,10 +16,7 @@ type ErrorWithPotentialReqRes = Error & {
   response?: unknown
 }
 
-const NODE_ENV = process.env.NODE_ENV
 const SESION_TIMEOUT = 60 * 60 // 1 hour
-
-const secure = NODE_ENV === 'production' ? '__Secure-' : ''
 
 const LOGGING_CATEGORY = 'next-auth'
 
@@ -139,7 +136,6 @@ export const authOptions: AuthOptions = {
           return false
         }
         // Mutate user object to include roles, nationalId and displayName
-
         user.nationalId = authMember.nationalId
         user.id = authMember.id
         return true
@@ -160,6 +156,7 @@ export const authOptions: AuthOptions = {
           scope: `${identityServerConfig.scope}`,
           domain: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
           protection: 'pkce',
+          prompt: 'select_account',
         },
       },
     }),

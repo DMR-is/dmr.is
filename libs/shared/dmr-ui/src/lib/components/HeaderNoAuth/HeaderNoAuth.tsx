@@ -1,3 +1,5 @@
+'use client'
+
 import {
   GridColumn,
   GridContainer,
@@ -8,18 +10,13 @@ import {
   useBreakpoint,
 } from '@island.is/island-ui/core'
 
-import { ControlPanel, ControlPanelProps } from '../ControlPanel/ControlPanel'
 import * as styles from '../Header/Header.css'
 
 export type HeaderProps = {
-  controlPanel?: ControlPanelProps
   variant?: 'blue' | 'white'
 }
 
-export const HeaderNoAuth = ({
-  controlPanel,
-  variant = 'blue',
-}: HeaderProps) => {
+export const HeaderNoAuth = ({ variant = 'blue' }: HeaderProps) => {
   const { lg } = useBreakpoint()
 
   return (
@@ -39,8 +36,6 @@ export const HeaderNoAuth = ({
                     width={lg ? 160 : 30}
                     iconOnly={lg ? false : true}
                   />
-
-                  {controlPanel && <ControlPanel {...controlPanel} />}
                 </Inline>
               </Inline>
             </GridColumn>

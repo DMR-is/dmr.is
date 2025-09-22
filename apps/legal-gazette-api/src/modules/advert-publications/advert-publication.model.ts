@@ -1,4 +1,4 @@
-import { BulkCreateOptions, Op } from 'sequelize'
+import { BulkCreateOptions, Op, WhereOptions } from 'sequelize'
 import {
   BeforeBulkCreate,
   BeforeCreate,
@@ -16,8 +16,13 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
 import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
-import { TypeIdEnum } from '../type/type.model'
-import { AdvertPublicationDto } from './dto/advert-publication.dto'
+import { CategoryModel } from '../category/category.model'
+import { TypeIdEnum, TypeModel } from '../type/type.model'
+import {
+  AdvertPublicationDto,
+  GetPublicationsQueryDto,
+  PublishedPublicationDto,
+} from './dto/advert-publication.dto'
 
 export type AdvertPublicationsAttributes = {
   advertId: string
@@ -38,13 +43,122 @@ export type AdvertPublicationsCreateAttributes = {
   order: [['scheduledAt', 'ASC']],
 }))
 @Scopes(() => ({
-  published: {
-    where: {
+  published: (query?: GetPublicationsQueryDto) => {
+    const publicationWhereOptions: WhereOptions = {
       publishedAt: {
         [Op.ne]: null,
       },
-    },
-    order: [['publishedAt', 'DESC']],
+    }
+
+    if (!query) {
+      return {
+        where: publicationWhereOptions,
+        include: [
+          {
+            model: AdvertModel.unscoped(),
+            required: true,
+            attributes: [
+              'id',
+              'title',
+              'typeId',
+              'categoryId',
+              'publicationNumber',
+              'createdBy',
+              'legacyId',
+            ],
+            include: [{ model: TypeModel }, { model: CategoryModel }],
+          },
+        ],
+        order: [['publishedAt', 'DESC']],
+      }
+    }
+
+    if (query.dateFrom && query.dateTo) {
+      Object.assign(publicationWhereOptions, {
+        publishedAt: {
+          [Op.between]: [query.dateFrom, query.dateTo],
+        },
+      })
+    }
+
+    if (query.dateFrom && !query.dateTo) {
+      Object.assign(publicationWhereOptions, {
+        publishedAt: {
+          [Op.gte]: query.dateFrom,
+        },
+      })
+    }
+
+    if (!query.dateFrom && query.dateTo) {
+      Object.assign(publicationWhereOptions, {
+        publishedAt: {
+          [Op.lte]: query.dateTo,
+        },
+      })
+    }
+
+    const advertWhereOptions: WhereOptions = {}
+
+    if (query.advertId) {
+      Object.assign(advertWhereOptions, {
+        id: query.advertId,
+      })
+    }
+
+    if (query.search) {
+      if (query.search.length === 10 && !isNaN(Number(query.search))) {
+        // If the search term is exactly 10 characters long and is a number, we assume it's a publication number
+        Object.assign(advertWhereOptions, {
+          publicationNumber: query.search,
+        })
+      } else {
+        Object.assign(advertWhereOptions, {
+          [Op.or]: {
+            title: {
+              [Op.iLike]: `%${query.search}%`,
+            },
+            publicationNumber: {
+              [Op.iLike]: `%${query.search}%`,
+            },
+          },
+        })
+      }
+    }
+
+    if (query.typeId) {
+      Object.assign(advertWhereOptions, {
+        typeId: query.typeId,
+      })
+    }
+
+    if (query.categoryId) {
+      Object.assign(advertWhereOptions, {
+        categoryId: {
+          [Op.in]: query.categoryId,
+        },
+      })
+    }
+
+    return {
+      where: publicationWhereOptions,
+      include: [
+        {
+          model: AdvertModel.unscoped(),
+          required: true,
+          attributes: [
+            'id',
+            'title',
+            'typeId',
+            'categoryId',
+            'publicationNumber',
+            'createdBy',
+          ],
+          include: [{ model: TypeModel }, { model: CategoryModel }],
+          where: advertWhereOptions,
+        },
+      ],
+      order: [['publishedAt', 'DESC']],
+    }
   },
 }))
 export class AdvertPublicationModel extends BaseModel<
@@ -129,10 +243,40 @@ export class AdvertPublicationModel extends BaseModel<
       scheduledAt: model.scheduledAt.toISOString(),
       publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
       version: model.versionLetter,
+      isLegacy: model.advert?.legacyId ? true : false,
     }
   }
 
   fromModel(): AdvertPublicationDto {
     return AdvertPublicationModel.fromModel(this)
+  }
+
+  static fromModelToPublishedDto(
+    model: AdvertPublicationModel,
+  ): PublishedPublicationDto {
+    if (!model.publishedAt) {
+      throw new Error('Publication is not published')
+    }
+
+    if (!model.advert.publicationNumber) {
+      throw new Error('Advert is not loaded')
+    }
+
+    return {
+      id: model.id,
+      advertId: model.advertId,
+      publishedAt: model.publishedAt.toISOString(),
+      version: model.versionLetter,
+      category: model.advert.category.fromModel(),
+      type: model.advert.type.fromModel(),
+      title: model.advert.title,
+      publicationNumber: model.advert.publicationNumber,
+      createdBy: model.advert.createdBy,
+      isLegacy: model.advert.legacyId ? true : false,
+    }
+  }
+
+  fromModelToPublishedDto(): PublishedPublicationDto {
+    return AdvertPublicationModel.fromModelToPublishedDto(this)
   }
 }

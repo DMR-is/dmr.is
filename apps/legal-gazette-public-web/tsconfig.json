@@ -37,6 +37,7 @@
     "**/*.tsx",
     "next-env.d.ts",
     ".next/types/**/*.ts",
+    "../../dist/apps/legal-gazette-public-web/.next/types/**/*.ts",
     "../../apps/legal-gazette-public-web/dist/.next/types/**/*.ts"
   ],
   "exclude": [
