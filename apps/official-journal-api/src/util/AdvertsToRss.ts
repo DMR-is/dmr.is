@@ -1,5 +1,5 @@
 import { AdvertLean } from '@dmr.is/shared/dto'
-import { formatAnyDate } from '@dmr.is/utils'
+import { formatDateToRFC822 } from '@dmr.is/utils'
 
 export const AdvertsToRss = (
   adverts: Array<AdvertLean>,
@@ -11,7 +11,9 @@ export const AdvertsToRss = (
         <title>${advert.department?.title ?? ''} ${advert.publicationNumber?.full}</title>
         <description>${advert.title}</description>
         <pubDate>${
-          advert.publicationDate ? formatAnyDate(advert.publicationDate) : ''
+          advert.publicationDate
+            ? formatDateToRFC822(advert.publicationDate)
+            : ''
         }</pubDate>
         <link>https://www.island.is/stjornartidindi/nr/${advert.id}</link>
         <guid>https://www.island.is/stjornartidindi/nr/${advert.id}</guid>

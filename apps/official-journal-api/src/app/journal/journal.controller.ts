@@ -206,7 +206,7 @@ export class JournalController {
       },
     },
   })
-  @Header('Content-Type', 'text/rss+xml')
+  @Header('Content-Type', 'application/rss+xml')
   async getRssFeed(@Param('id') id: string) {
     const adverts = ResultWrapper.unwrap(
       await this.journalService.getAdvertsLean({
