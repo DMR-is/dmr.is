@@ -712,7 +712,6 @@ export class CommentServiceV2 implements ICommentServiceV2 {
         createdStatusId: statusId,
         caseActionId: actionId,
         userCreatorId: body.applicationUserCreatorId,
-        applicationUserName: body.applicationUserName,
         comment: body.comment,
         created: now,
       },

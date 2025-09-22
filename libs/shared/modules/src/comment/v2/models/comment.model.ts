@@ -84,13 +84,6 @@ export class CommentModel extends Model {
   })
   caseStatusReceiverId!: string | null
 
-  @Column({
-    type: DataType.UUIDV4,
-    allowNull: true,
-    field: 'application_user_name',
-  })
-  applicationUserName!: string | null
-
   @ForeignKey(() => UserModel)
   @Column({
     type: DataType.UUIDV4,
