@@ -34,7 +34,6 @@ import { StatusModel } from '../modules/status/status.model'
 import { SubscriberModel } from '../modules/subscribers/subscriber.model'
 import { SubscriberModule } from '../modules/subscribers/subscriber.module'
 import { ApplicationWebModule } from '../modules/swagger/application-web.module'
-import { TBRModule } from '../modules/tbr/tbr.module'
 import { TypeModel } from '../modules/type/type.model'
 import { TypeCategoriesModel } from '../modules/type-categories/type-categories.model'
 import { TypesCategoriesModule } from '../modules/type-categories/type-categories.module'
@@ -96,12 +95,6 @@ import { UsersModule } from '../modules/users/users.module'
     },
     HealthModule,
     ApplicationWebModule,
-    TBRModule.forRoot({
-      chargeCategory: process.env.TBR_CHARGE_CATEGORY!,
-      credentials: process.env.TBR_CREDENTIALS!,
-      officeId: process.env.TBR_OFFICE_ID!,
-      tbrPath: process.env.TBR_PATH!,
-    }),
   ],
   controllers: [],
   providers: [
