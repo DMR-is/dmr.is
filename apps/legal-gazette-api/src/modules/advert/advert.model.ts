@@ -8,6 +8,7 @@ import {
   DefaultScope,
   ForeignKey,
   HasMany,
+  HasOne,
   Scopes,
 } from 'sequelize-typescript'
 
@@ -33,6 +34,7 @@ import {
   SettlementModel,
 } from '../settlement/settlement.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
+import { TBRTransactionModel } from '../tbr-transaction/tbr-transactions.model'
 import { TypeIdEnum, TypeModel } from '../type/type.model'
 import { UserModel } from '../users/users.model'
 import {
@@ -428,6 +430,9 @@ export class AdvertModel extends BaseModel<
 
   @HasMany(() => AdvertPublicationModel)
   publications!: AdvertPublicationModel[]
+
+  @HasOne(() => TBRTransactionModel)
+  transaction?: TBRTransactionModel
 
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
