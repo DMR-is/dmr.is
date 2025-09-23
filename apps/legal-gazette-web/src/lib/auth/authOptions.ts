@@ -148,7 +148,6 @@ export const authOptions: AuthOptions = {
           scope: `${identityServerConfig.scope}`,
           domain: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
           protection: 'pkce',
-          prompt: 'select_account',
         },
       },
     }),
