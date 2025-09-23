@@ -1,0 +1,63 @@
+'use strict'
+
+module.exports = {
+  up: (queryInterface, Sequelize) => {
+    return queryInterface.sequelize.query(`
+      BEGIN;
+
+    -- Create fee code table
+      CREATE TABLE IF NOT EXISTS TBR_FEE_CODES (
+        ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        CREATED_AT TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        UPDATED_AT TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        DELETED_AT TIMESTAMPTZ,
+
+        FEE_CODE VARCHAR NOT NULL,
+        DESCRIPTION VARCHAR NOT NULL,
+        VALUE NUMERIC NOT NULL,
+        IS_MULTIPLIED BOOLEAN NOT NULL,
+        PRIMARY KEY (ID)
+      );
+
+    -- Create transaction table
+      CREATE TABLE IF NOT EXISTS TBR_TRANSACTION (
+        ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        CREATED_AT TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        UPDATED_AT TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        DELETED_AT TIMESTAMPTZ,
+
+        ADVERT_ID UUID NOT NULL UNIQUE FOREIGN KEY (ADVERT_ID) REFERENCES ADVERT (ID),
+        FEE_CODE_ID UUID NOT NULL FOREIGN KEY (FEE_CODE_ID) REFERENCES TBR_FEE_CODES (ID),
+
+        TOTAL_PRICE NUMERIC NOT NULL,
+        FEE_CODE_MULTIPLIER NUMERIC DEFAULT 1,
+        PRIMARY KEY (ID)
+      );
+
+
+      -- Remove paid from advert
+      ALTER TABLE ADVERT DROP COLUMN IF EXISTS PAID;
+
+      -- Add created by national id to advert
+      ALTER TABLE ADVERT ADD COLUMN CREATED_BY_NATIONAL_ID TEXT;
+
+      COMMIT;
+    `)
+  },
+
+  down(queryInterface, Sequelize) {
+    return queryInterface.sequelize.query(`
+      BEGIN;
+
+      DROP TABLE IF EXISTS TBR_TRANSACTION;
+
+      DROP TABLE IF EXISTS TBR_FEE_CODES;
+
+      ALTER TABLE ADVERT ADD COLUMN PAID BOOLEAN DEFAULT FALSE;
+
+      ALTER TABLE ADVERT DROP COLUMN IF EXISTS CREATED_BY_NATIONAL_ID;
+
+      COMMIT;
+    `)
+  },
+}
