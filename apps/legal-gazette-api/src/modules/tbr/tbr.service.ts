@@ -49,7 +49,6 @@ export class TBRService implements ITBRService {
         Expenses: body.expenses,
         debtorNationalId: body.debtorNationalId,
         employeeNationalId: body.debtorNationalId,
-        extraData: body.extraData,
       }),
     })
 
@@ -72,7 +71,9 @@ export class TBRService implements ITBRService {
   async getPaymentStatus(
     query: TBRGetPaymentQueryDto,
   ): Promise<TBRGetPaymentResponseDto> {
-    const url = new URL(`${this.config.tbrPath}/claim/${query.claimId}`)
+    const url = new URL(
+      `${this.config.tbrPath}/claim/${query.debtorNationalId}`,
+    )
 
     url.searchParams.append('office', this.config.officeId)
     url.searchParams.append('chargeCategory', this.config.chargeCategory)
@@ -86,7 +87,7 @@ export class TBRService implements ITBRService {
       const json = await response.json()
 
       this.logger.error('TBR claim not found', {
-        claimId: query.claimId,
+        debtorNationalId: query.debtorNationalId,
         chargeBase: query.chargeBase,
         status: response.status,
         error: json?.error,
@@ -101,7 +102,7 @@ export class TBRService implements ITBRService {
       const json = await response.json()
 
       this.logger.error('TBR claim request failed', {
-        claimId: query.claimId,
+        debtorNationalId: query.debtorNationalId,
         chargeBase: query.chargeBase,
         status: response.status,
         error: json?.error,
@@ -116,7 +117,7 @@ export class TBRService implements ITBRService {
 
     if (!json.paymentStatus) {
       this.logger.error('TBR claim response missing paymentStatus', {
-        claimId: query.claimId,
+        debtorNationalId: query.debtorNationalId,
         chargeBase: query.chargeBase,
         status: response.status,
         response: json,

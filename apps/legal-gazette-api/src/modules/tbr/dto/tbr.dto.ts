@@ -18,7 +18,7 @@ export class TBRGetPaymentResponseDto {
 
 export class TBRGetPaymentQueryDto {
   @ApiProperty({ type: String })
-  claimId!: string
+  debtorNationalId!: string
 
   @ApiProperty({ type: String })
   chargeBase!: string
@@ -46,16 +46,6 @@ export class TBRPaymentExpensesDto {
   sum!: number
 }
 
-export class TBRPaymentExtraDataDto {
-  @ApiProperty({ type: String })
-  @IsString()
-  name!: string
-
-  @ApiProperty({ type: String })
-  @IsString()
-  value!: string
-}
-
 export class TBRPostPaymentBodyDto {
   @ApiProperty({ type: String, description: 'Advert id' })
   advertId!: string
@@ -75,10 +65,4 @@ export class TBRPostPaymentBodyDto {
     description: 'List of expenses',
   })
   expenses!: TBRPaymentExpensesDto[]
-
-  @ApiProperty({
-    type: [TBRPaymentExtraDataDto],
-    description: 'List of extra data',
-  })
-  extraData?: TBRPaymentExtraDataDto[]
 }
