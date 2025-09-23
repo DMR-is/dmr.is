@@ -89,7 +89,19 @@ export const authOptions: AuthOptions = {
         const logger = getLogger('AuthOptions')
 
         logger.info('Setting up IdentityServer4 provider', {
-          redirect_uri: `${process.env.IDENTITY_SERVER_LOGOUT_URL}/api/auth/callback/identity-server`,
+          logout_url: `${process.env.IDENTITY_SERVER_LOGOUT_URL}`,
+          id: identityServerConfig.id,
+          name: identityServerConfig.name,
+          clientId: identityServerConfig.clientId,
+          issuer: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
+          authorization: {
+            params: {
+              scope: `${identityServerConfig.scope}`,
+              domain: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
+              protection: 'pkce',
+              prompt: 'select_account',
+            },
+          },
         })
 
         return {
@@ -100,7 +112,6 @@ export const authOptions: AuthOptions = {
           issuer: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
           authorization: {
             params: {
-              redirect_uri: `${process.env.IDENTITY_SERVER_LOGOUT_URL}/api/auth/callback/identity-server`,
               scope: `${identityServerConfig.scope}`,
               domain: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
               protection: 'pkce',
