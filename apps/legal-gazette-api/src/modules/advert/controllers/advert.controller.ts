@@ -13,6 +13,7 @@ import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { IPriceCalculatorService } from '../../price-calculator/price-calculator.service.interface'
 import { IAdvertService } from '../advert.service.interface'
 import {
   AdvertDetailedDto,
@@ -30,6 +31,8 @@ import {
 export class AdvertController {
   constructor(
     @Inject(IAdvertService) private readonly advertService: IAdvertService,
+    @Inject(IPriceCalculatorService)
+    private readonly priceCalculatorService: IPriceCalculatorService,
   ) {}
 
   @Get('count')
@@ -39,6 +42,14 @@ export class AdvertController {
   })
   getAdvertsCount() {
     return this.advertService.getAdvertsCount()
+  }
+
+  @Get('price/:advertId')
+  @LGResponse({ operationId: 'getAdvertPrice', type: Number })
+  getAdvertPrice(
+    @Param('advertId', new UUIDValidationPipe()) advertId: string,
+  ) {
+    return this.priceCalculatorService.calculateAdvertPrice(advertId)
   }
 
   @Get('inprogress')

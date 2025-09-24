@@ -1,4 +1,4 @@
-import { Column, DataType } from 'sequelize-typescript'
+import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
@@ -13,6 +13,9 @@ export interface FeeCodeAttributes {
 }
 
 @BaseTable({ tableName: LegalGazetteModels.TBR_FEE_CODE })
+@DefaultScope(() => ({
+  attributes: ['id', 'feeCode', 'description', 'value', 'isMultiplied'],
+}))
 export class FeeCodeModel extends BaseModel<FeeCodeAttributes, FeeCodeModel> {
   @Column({ type: DataType.TEXT })
   feeCode!: string

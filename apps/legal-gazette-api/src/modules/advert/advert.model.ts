@@ -400,13 +400,6 @@ export class AdvertModel extends BaseModel<
   })
   judgementDate!: Date | null
 
-  @Column({
-    type: DataType.BOOLEAN,
-    allowNull: false,
-    defaultValue: false,
-  })
-  paid!: boolean
-
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
   case!: CaseModel
 
@@ -537,7 +530,6 @@ export class AdvertModel extends BaseModel<
       signatureDate: model.signatureDate.toISOString(),
       signatureLocation: model.signatureLocation,
       signatureName: model.signatureName,
-      paid: model.paid,
       caption: model.caption,
       content: model.content,
       additionalText: model.additionalText,

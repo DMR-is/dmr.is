@@ -17,7 +17,9 @@ export enum TypeIdEnum {
   DIVISION_ENDING = 'D40BED80-6D9C-4388-AEA8-445B27614D8A',
 }
 
-@BaseEntityTable({ tableName: LegalGazetteModels.ADVERT_TYPE })
+@BaseEntityTable({
+  tableName: LegalGazetteModels.ADVERT_TYPE,
+})
 export class TypeModel extends BaseEntityModel<TypeDto> {
   @BelongsToMany(() => CategoryModel, { through: () => TypeCategoriesModel })
   categories!: CategoryModel[]

@@ -22,6 +22,26 @@ export class TBRService implements ITBRService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(ITBRConfig) private config: ITBRConfig,
   ) {
+    if (!this.config) {
+      throw new Error('TBR config not provided')
+    }
+
+    if (!this.config.credentials) {
+      throw new Error('TBR credentials not provided')
+    }
+
+    if (!this.config.tbrPath) {
+      throw new Error('TBR path not provided')
+    }
+
+    if (!this.config.officeId) {
+      throw new Error('TBR officeId not provided')
+    }
+
+    if (!this.config.chargeCategory) {
+      throw new Error('TBR chargeCategory not provided')
+    }
+
     this.credentials = btoa(this.config.credentials)
   }
 

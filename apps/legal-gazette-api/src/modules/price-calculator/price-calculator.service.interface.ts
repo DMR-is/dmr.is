@@ -1,5 +1,5 @@
 export interface IPriceCalculatorService {
-  calculate(): Promise<number>
+  calculateAdvertPrice(advertId: string): Promise<number>
 }
 
 export const IPriceCalculatorService = Symbol('IPriceCalculatorService')

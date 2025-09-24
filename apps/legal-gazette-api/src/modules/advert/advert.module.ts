@@ -7,6 +7,7 @@ import { AdvertPublicationModel } from '../advert-publications/advert-publicatio
 import { AdvertPublicationModule } from '../advert-publications/advert-publication.module'
 import { CategoryModel } from '../category/category.model'
 import { PdfService } from '../pdf/pdf.service'
+import { PriceCalculatorModule } from '../price-calculator/price-calculator.module'
 import { StatusModel } from '../status/status.model'
 import { AdvertController } from './controllers/advert.controller'
 import { AdvertPdfController } from './controllers/advert-pdf.controller'
@@ -25,6 +26,7 @@ import { IAdvertService } from './advert.service.interface'
       CategoryModel,
     ]),
     AdvertPublicationModule,
+    PriceCalculatorModule,
   ],
   controllers: [
     AdvertUpdateController,

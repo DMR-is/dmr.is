@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AdvertModel } from '../advert/advert.model'
 import { TBRModule } from '../tbr/tbr.module'
+import { PriceCalculatorService } from './price-calculator.service'
+import { IPriceCalculatorService } from './price-calculator.service.interface'
 
 @Module({
   imports: [
@@ -14,5 +17,12 @@ import { TBRModule } from '../tbr/tbr.module'
       tbrPath: process.env.LG_TBR_PATH!,
     }),
   ],
+  providers: [
+    {
+      provide: IPriceCalculatorService,
+      useClass: PriceCalculatorService,
+    },
+  ],
+  exports: [IPriceCalculatorService],
 })
 export class PriceCalculatorModule {}
