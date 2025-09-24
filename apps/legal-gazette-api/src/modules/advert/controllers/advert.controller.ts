@@ -49,7 +49,7 @@ export class AdvertController {
   getAdvertPrice(
     @Param('advertId', new UUIDValidationPipe()) advertId: string,
   ) {
-    return this.priceCalculatorService.calculateAdvertPrice(advertId)
+    return this.priceCalculatorService.getPaymentData(advertId)
   }
 
   @Get('inprogress')

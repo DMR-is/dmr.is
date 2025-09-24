@@ -1,5 +1,7 @@
+import { TBRPostPaymentBodyDto } from '../tbr/dto/tbr.dto'
+
 export interface IPriceCalculatorService {
-  calculateAdvertPrice(advertId: string): Promise<number>
+  getPaymentData(advertId: string): Promise<TBRPostPaymentBodyDto>
 }
 
 export const IPriceCalculatorService = Symbol('IPriceCalculatorService')

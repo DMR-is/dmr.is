@@ -1,5 +1,5 @@
 import {
-  Inject,
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common'
@@ -7,22 +7,25 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
 import { FeeCodeModel } from '../fee-code/fee-code.model'
-import { ITBRService } from '../tbr/tbr.service.interface'
+import { TBRPostPaymentBodyDto } from '../tbr/dto/tbr.dto'
 import { TypeModel } from '../type/type.model'
 import { IPriceCalculatorService } from './price-calculator.service.interface'
 
 @Injectable()
 export class PriceCalculatorService implements IPriceCalculatorService {
   constructor(
-    @Inject(ITBRService) private readonly tbrService: ITBRService,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
   ) {}
-  async calculateAdvertPrice(advertId: string): Promise<number> {
-    const test = await this.advertModel.findByPkOrThrow(advertId, {
+  async getPaymentData(advertId: string): Promise<TBRPostPaymentBodyDto> {
+    const advert = await this.advertModel.findByPkOrThrow(advertId, {
       include: [{ model: TypeModel, include: [{ model: FeeCodeModel }] }],
     })
 
-    const feeCodeResult = test.type.feeCode
+    if (!advert.publicationNumber) {
+      throw new BadRequestException('Advert is not published')
+    }
+
+    const feeCodeResult = advert.type.feeCode
 
     if (!feeCodeResult || feeCodeResult.length === 0) {
       throw new InternalServerErrorException(
@@ -35,17 +38,43 @@ export class PriceCalculatorService implements IPriceCalculatorService {
     const feeCodeModel = feeCodeResult[0]
 
     if (!feeCodeModel.isMultiplied) {
-      return feeCodeModel.value
+      return {
+        advertId: advertId,
+        chargeBase: '',
+        debtorNationalId: advert.createdByNationalId,
+        expenses: [
+          {
+            feeCode: feeCodeModel.feeCode,
+            quantity: 1,
+            reference: advert.publicationNumber,
+            sum: feeCodeModel.value,
+            unitPrice: feeCodeModel.value,
+          },
+        ],
+      }
     }
 
     // the publication lengths should be the same,
     // but since we only charge for the first publication we set it to "A"
-    const html = test.htmlMarkup(AdvertVersionEnum.A)
+    const html = advert.htmlMarkup(AdvertVersionEnum.A)
 
     if (!html) {
       throw new InternalServerErrorException('HTML markup not found for advert')
     }
 
-    return html.length * feeCodeModel.value
+    return {
+      advertId: advertId,
+      chargeBase: '',
+      debtorNationalId: advert.createdByNationalId,
+      expenses: [
+        {
+          feeCode: feeCodeModel.feeCode,
+          quantity: html.length,
+          reference: advert.publicationNumber,
+          sum: feeCodeModel.value * html.length,
+          unitPrice: feeCodeModel.value,
+        },
+      ],
+    }
   }
 }

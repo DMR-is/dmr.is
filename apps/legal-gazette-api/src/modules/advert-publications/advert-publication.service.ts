@@ -2,6 +2,7 @@ import addDays from 'date-fns/addDays'
 import { Op } from 'sequelize'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -27,6 +28,7 @@ export class AdvertPublicationService implements IAdvertPublicationService {
     @InjectModel(AdvertModel)
     readonly advertModel: typeof AdvertModel,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async getPublications(
@@ -239,5 +241,11 @@ export class AdvertPublicationService implements IAdvertPublicationService {
     }
 
     await publication.update({ publishedAt: new Date() })
+
+    // if the publication version is 1 (the first publication)
+    //  we emit the event that will create the TBR transaction
+    if (publication.versionNumber === 1) {
+      this.eventEmitter.emit('advert.published', { id: advert.id })
+    }
   }
 }

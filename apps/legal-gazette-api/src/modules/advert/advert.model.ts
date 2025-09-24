@@ -54,6 +54,7 @@ type AdvertAttributes = {
   publicationNumber: string | null
   title: string
   createdBy: string
+  createdByNationalId: string
   legacyHtml: string | null
   paid: boolean
   signatureName: string
@@ -91,6 +92,7 @@ export type AdvertCreateAttributes = {
   title: string
   legacyHtml?: string
   createdBy: string
+  createdByNationalId: string
   signatureName: string
   signatureOnBehalfOf?: string | null
   signatureLocation: string
@@ -330,6 +332,12 @@ export class AdvertModel extends BaseModel<
     defaultValue: null,
   })
   legacyHtml!: string | null
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  createdByNationalId!: string
 
   @Column({
     type: DataType.STRING,

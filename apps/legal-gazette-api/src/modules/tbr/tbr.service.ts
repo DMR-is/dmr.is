@@ -52,6 +52,7 @@ export class TBRService implements ITBRService {
         Authorization: `Basic ${this.credentials}`,
         'Content-Type': 'application/json',
       },
+      signal: AbortSignal.timeout(10000), // 10 seconds
       ...options,
     })
   }
