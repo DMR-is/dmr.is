@@ -153,7 +153,6 @@ export const authOptions: AuthOptions = {
       issuer: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
       authorization: {
         params: {
-          redirect_uri: `${process.env.IDENTITY_SERVER_LOGOUT_URL}/api/auth/callback/identity-server`,
           scope: `${identityServerConfig.scope}`,
           domain: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
           protection: 'pkce',
