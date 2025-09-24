@@ -3,7 +3,9 @@ import { BelongsToMany, Column, DataType } from 'sequelize-typescript'
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
+import { AdvertTypeFeeCodeModel } from '../advert-type-fee-code/advert-type-fee-code.model'
 import { CategoryModel } from '../category/category.model'
+import { FeeCodesModel } from '../fee-codes/fee-codes.model'
 import { TypeWithCategoriesDto } from '../type-categories/dto/type-categories.dto'
 import { TypeCategoriesModel } from '../type-categories/type-categories.model'
 import { TypeDto } from './dto/type.dto'
@@ -26,6 +28,10 @@ export class TypeModel extends BaseEntityModel<TypeDto> {
     allowNull: false,
   })
   title!: string
+
+  // This is always a array with one element, we need to use BelongsToMany to get the join table
+  @BelongsToMany(() => FeeCodesModel, { through: () => AdvertTypeFeeCodeModel })
+  feeCode?: FeeCodesModel[]
 
   static fromModelWithCategories(model: TypeModel): TypeWithCategoriesDto {
     return {

@@ -22,6 +22,7 @@ export enum LegalGazetteModels {
   TYPE_CATEGORIES = 'type_categories',
   TBR_FEE_CODES = 'tbr_fee_codes',
   TBR_TRANSACTION = 'tbr_transaction',
+  ADVERT_TYPE_FEE_CODE = 'advert_type_fee_code',
 }
 
 export const RECALL_BANKRUPTCY_ADVERT_TYPE_ID =
