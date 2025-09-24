@@ -121,9 +121,9 @@ export type LogbirtingAdvert = {
   publication_number: string
   title: string
   html: string
-  paid: true
   responsible_name: string
   version: number
+  ssn: string | null
 }
 
 export type DbAdvert = Omit<Advert, ''> & { typeName: string }

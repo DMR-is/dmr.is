@@ -1944,6 +1944,7 @@ async function legalGazetteMain() {
       inserts.types = generateLBTypeInserts(types)
       //inserts.superCategories = generateSuperCategoryInserts(superCategories)
       inserts.categories = generateLBCategoryInserts(dbCategories)
+
       inserts.adverts = generateLBAdvertsInserts(dbAdverts)
       inserts.advertsAndCategories =
         generateLBAdvertsAndCategoriesInsert(typesCategoriesMap)
@@ -1951,9 +1952,8 @@ async function legalGazetteMain() {
     },
     '🔨',
   )
-
   await exec(
-    'writing sql files',
+    'writing sql files for legal gazette',
     () => {
       write('logbirting_types.sql', inserts.types.join('\n'))
       //write('02_main_categories.sql', inserts.superCategories.join('\n'))

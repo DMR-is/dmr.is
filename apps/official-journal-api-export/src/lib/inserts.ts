@@ -160,7 +160,7 @@ export function generateLBAdvertsInserts(adverts: Array<LogbirtingAdvert>) {
 
 
     const ID = crypto.randomUUID();
-    const advertInsert = `INSERT INTO ADVERT (id,legacy_id, created_at, updated_at, advert_type_id, advert_category_id, advert_status_id, publication_number, title, legacy_html, created_by,paid) VALUES ('${ID}','${advert.legacy_id}', '${new Date(advert.created_at).toISOString()}', '${new Date(advert.updated_at).toISOString()}', ${advert.type_id ? `'${advert.type_id}'`:null} ,${advert.category_id ? `'${advert.category_id}'`: `'52112993-EDCE-46A1-B7E6-8E3E5CD296F6'`}, '${advert.advert_status}', '${advert.publication_number}', '${advert.title}', '${escapeSqlString(advert.html)}', '${advert.responsible_name}',true);`
+    const advertInsert = `INSERT INTO ADVERT (id,legacy_id, created_at, updated_at, advert_type_id, advert_category_id, advert_status_id, publication_number, title, legacy_html, created_by,created_by_national_id) VALUES ('${ID}','${advert.legacy_id}', '${new Date(advert.created_at).toISOString()}', '${new Date(advert.updated_at).toISOString()}', ${advert.type_id ? `'${advert.type_id}'`:null} ,${advert.category_id ? `'${advert.category_id}'`: `'52112993-EDCE-46A1-B7E6-8E3E5CD296F6'`}, '${advert.advert_status}', '${advert.publication_number}', '${advert.title}', '${escapeSqlString(advert.html)}', '${advert.responsible_name}','${advert.ssn}');`
     const advertPublicationInsert = `INSERT INTO ADVERT_PUBLICATION (advert_id,version_number,scheduled_at) VALUES ('${ID}','${advert.version}','${new Date(advert.created_at).toISOString()}');`
     return `${advertInsert}\n${advertPublicationInsert}`
   })

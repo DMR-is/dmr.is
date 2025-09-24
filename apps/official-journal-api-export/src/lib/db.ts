@@ -79,6 +79,7 @@ dbo.Records.ModifiedDate,
 		dbo.Cases.CaseTemplateID AS TypeID,
     Clients.Name AS InvolvedPartyName,
 		Clients.RecordID AS InvolvedPartyID,
+        ClientID.IDNumber as SSN,
 		CaseCategories.Name AS CategoryName,
 		dbo.PublicationDates.PublicationDate,
 		ISNULL(dbo.PublicationDates.PrintingChar, '') AS PrintingChar,
@@ -101,14 +102,14 @@ FROM    dbo.Cases INNER JOIN
         dbo.AdvertUserGroups ON dbo.AdvertUserGroups.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
         dbo.Records AS CaseTypes ON CaseTypes.RecordID = dbo.Cases.CaseTemplateID LEFT OUTER JOIN
         dbo.Records AS Clients ON Clients.RecordID = dbo.Cases.ClientID LEFT OUTER JOIN
+        dbo.Clients as ClientID on Clients.RecordID = ClientID.RecordID LEFT OUTER JOIN
         dbo.RecordJournalKeys ON dbo.RecordJournalKeys.RecordID = dbo.Records.RecordID AND dbo.RecordJournalKeys.IsPrimary = 1 LEFT OUTER JOIN
         dbo.Categories ON dbo.Categories.RecordID = dbo.RecordJournalKeys.CategoryID LEFT OUTER JOIN
         dbo.Records AS CaseCategories ON CaseCategories.RecordID = dbo.Cases.CategoryID LEFT OUTER JOIN
         dbo.AdvertHtmlCache ON (dbo.AdvertHtmlCache.PrintingChar = dbo.PublicationDates.PrintingChar)  AND dbo.AdvertHtmlCache.RecordID = dbo.Cases.RecordID LEFT OUTER JOIN
         dbo.Metadata m1 on (dbo.Records.RecordID = m1.RecordID and m1.MetadataName = 'PublishingCaseNumber') LEFT OUTER JOIN
         dbo.Metadata m2 on (dbo.Records.RecordID = m2.RecordID and m2.MetadataName = 'Subject2')
-WHERE Records.Deleted = 0 and Records.IsMarkedForDelete = 0 AND Records.RecordType = '3B0F842A-CDAB-420F-88BC-930E259F5782' and l1.ListValue = 'Útgefin'
-`
+WHERE Records.Deleted = 0 and Records.IsMarkedForDelete = 0 AND Records.RecordType = '3B0F842A-CDAB-420F-88BC-930E259F5782' and l1.ListValue = 'Útgefin'`
 
 const LOGBIRTING_TYPE_AND_CATEGORY_QUERY = `
 SELECT
@@ -597,7 +598,7 @@ export async function getLogbirtingAdverts(): Promise<Array<LogbirtingAdvert>> {
       created_at: advert.PublicationDate,
       updated_at: advert.PublicationDate,
       advert_status: 'bd835a1d-0ecb-4aa4-9910-b5e60c30dced',
-      paid: true,
+      ssn: advert.SSN,
       version:
         advert.PrintingChar === 'A'
           ? 1
