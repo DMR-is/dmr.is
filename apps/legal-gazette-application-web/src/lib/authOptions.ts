@@ -6,6 +6,7 @@ import { decode } from 'jsonwebtoken'
 
 import { identityServerConfig } from '@dmr.is/auth/identityServerConfig'
 import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
+import { getLogger } from '@dmr.is/logging'
 
 const SESION_TIMEOUT = 60 * 60 // 1 hour
 
@@ -83,21 +84,42 @@ export const authOptions: AuthOptions = {
     },
   },
   providers: [
-    IdentityServer4({
-      id: identityServerConfig.id,
-      name: identityServerConfig.name,
-      clientId: identityServerConfig.clientId,
-      clientSecret: identityServerConfig.clientSecret,
-      issuer: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
-      authorization: {
-        params: {
-          redirect_uri: `${process.env.IDENTITY_SERVER_LOGOUT_URL}/api/auth/callback/identity-server`,
-          scope: `${identityServerConfig.scope}`,
-          domain: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
-          protection: 'pkce',
-          prompt: 'select_account',
-        },
-      },
-    }),
+    IdentityServer4(
+      (() => {
+        const logger = getLogger('AuthOptions')
+
+        logger.info('Setting up IdentityServer4 provider', {
+          logout_url: `${process.env.IDENTITY_SERVER_LOGOUT_URL}`,
+          id: identityServerConfig.id,
+          name: identityServerConfig.name,
+          clientId: identityServerConfig.clientId,
+          issuer: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
+          authorization: {
+            params: {
+              scope: `${identityServerConfig.scope}`,
+              domain: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
+              protection: 'pkce',
+              prompt: 'select_account',
+            },
+          },
+        })
+
+        return {
+          id: identityServerConfig.id,
+          name: identityServerConfig.name,
+          clientId: identityServerConfig.clientId,
+          clientSecret: identityServerConfig.clientSecret,
+          issuer: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
+          authorization: {
+            params: {
+              scope: `${identityServerConfig.scope}`,
+              domain: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
+              protection: 'pkce',
+              prompt: 'select_account',
+            },
+          },
+        }
+      })(),
+    ),
   ],
 }
