@@ -1,3 +1,5 @@
+import Kennitala from 'kennitala'
+
 import {
   Inject,
   Injectable,
@@ -18,6 +20,8 @@ import { ITBRService } from './tbr.service.interface'
 @Injectable()
 export class TBRService implements ITBRService {
   private readonly credentials: string
+  private chargeCategoryPerson: string
+  private chargeCategoryCompany: string
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(ITBRConfig) private config: ITBRConfig,
@@ -38,11 +42,17 @@ export class TBRService implements ITBRService {
       throw new Error('TBR officeId not provided')
     }
 
-    if (!this.config.chargeCategory) {
-      throw new Error('TBR chargeCategory not provided')
+    if (!process.env.LG_TBR_CHARGE_CATEGORY_PERSON) {
+      throw new Error('TBR charge category for person not provided')
+    }
+
+    if (!process.env.LG_TBR_CHARGE_CATEGORY_COMPANY) {
+      throw new Error('TBR charge category for company not provided')
     }
 
     this.credentials = btoa(this.config.credentials)
+    this.chargeCategoryPerson = process.env.LG_TBR_CHARGE_CATEGORY_PERSON
+    this.chargeCategoryCompany = process.env.LG_TBR_CHARGE_CATEGORY_COMPANY
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,12 +70,16 @@ export class TBRService implements ITBRService {
   async postPayment(body: TBRPostPaymentBodyDto): Promise<void> {
     const url = new URL(`${this.config.tbrPath}/claim`)
 
+    const isPerson = Kennitala.isPerson(body.debtorNationalId)
+
     const response = await this.request(url.toString(), {
       method: 'POST',
       body: JSON.stringify({
         UUID: body.advertId,
         office: this.config.officeId,
-        chargeCategory: this.config.chargeCategory,
+        chargeCategory: isPerson
+          ? this.chargeCategoryPerson
+          : this.chargeCategoryCompany,
         chargeBase: body.chargeBase,
         Expenses: body.expenses,
         debtorNationalId: body.debtorNationalId,
@@ -96,8 +110,13 @@ export class TBRService implements ITBRService {
       `${this.config.tbrPath}/claim/${query.debtorNationalId}`,
     )
 
+    const isPerson = Kennitala.isPerson(query.debtorNationalId)
+
     url.searchParams.append('office', this.config.officeId)
-    url.searchParams.append('chargeCategory', this.config.chargeCategory)
+    url.searchParams.append(
+      'chargeCategory',
+      isPerson ? this.chargeCategoryPerson : this.chargeCategoryCompany,
+    )
     url.searchParams.append('chargeBase', query.chargeBase)
 
     const response = await this.request(url.toString(), {

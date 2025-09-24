@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AdvertModel } from '../advert/advert.model'
+import { PriceCalculatorModule } from '../price-calculator/price-calculator.module'
 import { TBRModule } from '../tbr/tbr.module'
+import { TBRTransactionModel } from '../tbr-transaction/tbr-transactions.model'
 import { AdvertPublishedListener } from './listeners/advert-published.listener'
 import { AdvertPublicationController } from './advert-publication.controller'
 import { AdvertPublicationModel } from './advert-publication.model'
@@ -11,13 +13,17 @@ import { IAdvertPublicationService } from './advert-publication.service.interfac
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([AdvertModel, AdvertPublicationModel]),
+    SequelizeModule.forFeature([
+      AdvertModel,
+      AdvertPublicationModel,
+      TBRTransactionModel,
+    ]),
     TBRModule.forRoot({
-      chargeCategory: process.env.LG_TBR_CHARGE_CATEGORY!,
       credentials: process.env.LG_TBR_CREDENTIALS!,
       officeId: process.env.LG_TBR_OFFICE_ID!,
       tbrPath: process.env.LG_TBR_PATH!,
     }),
+    PriceCalculatorModule,
   ],
   controllers: [AdvertPublicationController],
   providers: [
