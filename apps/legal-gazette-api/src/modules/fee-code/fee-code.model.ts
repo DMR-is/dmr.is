@@ -12,7 +12,7 @@ export interface FeeCodeAttributes {
   isMultiplied: boolean
 }
 
-@BaseTable({ tableName: LegalGazetteModels.TBR_FEE_CODES })
+@BaseTable({ tableName: LegalGazetteModels.TBR_FEE_CODE })
 export class FeeCodeModel extends BaseModel<FeeCodeAttributes, FeeCodeModel> {
   @Column({ type: DataType.TEXT })
   feeCode!: string

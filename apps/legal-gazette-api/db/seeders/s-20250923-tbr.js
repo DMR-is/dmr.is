@@ -5,7 +5,7 @@ module.exports = {
   async up(queryInterface) {
     const seed = `
       INSERT INTO
-        TBR_FEE_CODES (id, fee_code, description, value, is_multiplied)
+        TBR_FEE_CODE (id, fee_code, description, value, is_multiplied)
       VALUES
         ('5572d02f-3684-4849-9246-ac21a06e7f1f', 'RL101', 'Auglýsing - Áskorun', 4, true),
         ('6806b7df-9c94-4edd-8572-9b829d98b630', 'RL102', 'Auglýsing - Auglýsingar/tilkynningar frá ráðuneyti', 4, true),
