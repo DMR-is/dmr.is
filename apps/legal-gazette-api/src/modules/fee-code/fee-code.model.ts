@@ -5,7 +5,7 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { LegalGazetteModels } from '../../lib/constants'
 import { FeeCodeDto } from './dto/fee-codes.dto'
 
-export interface FeeCodesAttributes {
+export interface FeeCodeAttributes {
   feeCode: string
   description: string
   value: number
@@ -13,10 +13,7 @@ export interface FeeCodesAttributes {
 }
 
 @BaseTable({ tableName: LegalGazetteModels.TBR_FEE_CODES })
-export class FeeCodesModel extends BaseModel<
-  FeeCodesAttributes,
-  FeeCodesModel
-> {
+export class FeeCodeModel extends BaseModel<FeeCodeAttributes, FeeCodeModel> {
   @Column({ type: DataType.TEXT })
   feeCode!: string
 
@@ -29,7 +26,7 @@ export class FeeCodesModel extends BaseModel<
   @Column({ type: DataType.BOOLEAN, defaultValue: false })
   isMultiplied!: boolean
 
-  static fromModel(model: FeeCodesModel): FeeCodeDto {
+  static fromModel(model: FeeCodeModel): FeeCodeDto {
     return {
       id: model.id,
       feeCode: model.feeCode,
@@ -40,6 +37,6 @@ export class FeeCodesModel extends BaseModel<
   }
 
   fromModel(): FeeCodeDto {
-    return FeeCodesModel.fromModel(this)
+    return FeeCodeModel.fromModel(this)
   }
 }

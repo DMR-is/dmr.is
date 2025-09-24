@@ -9,14 +9,14 @@ import {
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
-import { FeeCodesModel } from '../fee-codes/fee-codes.model'
+import { FeeCodeModel } from '../fee-code/fee-code.model'
 import { TypeModel } from '../type/type.model'
 
 type AdvertTypeFeeCodeAttributes = {
   advertTypeId: number
   feeCodeId: number
   type: TypeModel
-  feeCode: FeeCodesModel
+  feeCode: FeeCodeModel
 }
 
 type AdvertTypeFeeCodeCreateAttributes = {
@@ -36,12 +36,12 @@ export class AdvertTypeFeeCodeModel extends BaseModel<
 
   @PrimaryKey
   @Column({ type: DataType.UUID })
-  @ForeignKey(() => FeeCodesModel)
+  @ForeignKey(() => FeeCodeModel)
   feeCodeId!: number
 
   @BelongsTo(() => TypeModel)
   type!: TypeModel
 
-  @BelongsTo(() => FeeCodesModel)
-  feeCode!: FeeCodesModel
+  @BelongsTo(() => FeeCodeModel)
+  feeCode!: FeeCodeModel
 }

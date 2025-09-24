@@ -4,7 +4,7 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
 import { AdvertModel } from '../advert/advert.model'
-import { FeeCodesModel } from '../fee-codes/fee-codes.model'
+import { FeeCodeModel } from '../fee-code/fee-code.model'
 
 export type TBRTransactionAttributes = {
   advertId: string
@@ -25,7 +25,7 @@ export class TBRTransactionModel extends BaseModel<
   advertId!: string
 
   @Column({ type: DataType.UUID, allowNull: false })
-  @ForeignKey(() => FeeCodesModel)
+  @ForeignKey(() => FeeCodeModel)
   feeCodeId!: string
 
   @Column({ type: DataType.NUMBER, allowNull: false })
@@ -37,6 +37,6 @@ export class TBRTransactionModel extends BaseModel<
   @BelongsTo(() => AdvertModel)
   advert!: AdvertModel
 
-  @BelongsTo(() => FeeCodesModel)
-  feeCode!: FeeCodesModel
+  @BelongsTo(() => FeeCodeModel)
+  feeCode!: FeeCodeModel
 }

@@ -2,14 +2,14 @@ import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { FeeCodeDto, GetFeeCodesResponse } from './dto/fee-codes.dto'
-import { FeeCodesModel } from './fee-codes.model'
-import { IFeeCodesService } from './fee-codes.service.interface'
+import { FeeCodeModel } from './fee-code.model'
+import { IFeeCodeService } from './fee-code.service.interface'
 
 @Injectable()
-export class FeeCodesService implements IFeeCodesService {
+export class FeeCodeService implements IFeeCodeService {
   constructor(
-    @InjectModel(FeeCodesModel)
-    private readonly feeCodesModel: typeof FeeCodesModel,
+    @InjectModel(FeeCodeModel)
+    private readonly feeCodesModel: typeof FeeCodeModel,
   ) {}
   async getFeeCodeById(id: string): Promise<FeeCodeDto> {
     const feeCode = await this.feeCodesModel.findByPkOrThrow(id)
