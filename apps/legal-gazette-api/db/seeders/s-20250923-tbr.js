@@ -59,7 +59,7 @@ module.exports = {
         ('26f4563c-fa83-4d8a-a6eb-17bcd534bed4', 'RL405', 'Prent áskrift,  júlí - desember', 41000, false),
         ('7d9bd40d-7e5d-4354-81dd-646bb0d04f09', 'RL901', 'Auglýsing, álag', 0, false),
         ('2749e2e4-eff7-4875-9aca-e264f5cf8476', 'RL902', 'Auglýsing, afsláttur', 0, false),
-        ('', 'RL903', 'Auglýsing, gjald v/fylgiskjals', 0, false);
+        ('26a0593d-f47d-46cd-96b3-432e036ce35f', 'RL903', 'Auglýsing, gjald v/fylgiskjals', 0, false);
 
       INSERT INTO
         ADVERT_TYPE_FEE_CODE (advert_type_id, fee_code_id)
@@ -110,7 +110,7 @@ module.exports = {
 
       DELETE FROM ADVERT_TYPE_FEE_CODE;
 
-      DELETE FROM TBR_FEE_CODES;
+      DELETE FROM TBR_FEE_CODE;
     `)
   },
 }
