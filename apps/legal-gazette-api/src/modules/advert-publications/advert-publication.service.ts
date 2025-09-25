@@ -248,13 +248,12 @@ export class AdvertPublicationService implements IAdvertPublicationService {
 
       await publication.update({ publishedAt: new Date() })
 
-      // if the publication version is 1 (the first publication)
-      //  we emit the event that will create the TBR transaction
-      if (publication.versionNumber === 1) {
-        t.afterCommit(() => {
-          this.eventEmitter.emit('advert.published', { id: advert.id })
+      t.afterCommit(() => {
+        this.eventEmitter.emit('advert.published', {
+          id: advert.id,
+          version: publication.versionLetter,
         })
-      }
+      })
     })
   }
 }
