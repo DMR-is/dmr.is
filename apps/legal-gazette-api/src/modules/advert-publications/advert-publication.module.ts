@@ -21,7 +21,7 @@ import { IAdvertPublicationService } from './advert-publication.service.interfac
     TBRModule.forRoot({
       credentials: process.env.LG_TBR_CREDENTIALS!,
       officeId: process.env.LG_TBR_OFFICE_ID!,
-      tbrPath: process.env.LG_TBR_PATH!,
+      tbrBasePath: process.env.LG_TBR_PATH!,
     }),
     PriceCalculatorModule,
   ],

@@ -1,6 +1,6 @@
 export interface ITBRConfig {
   credentials: string
-  tbrPath: string
+  tbrBasePath: string
   officeId: string
 }
 

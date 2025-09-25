@@ -34,8 +34,8 @@ export class TBRService implements ITBRService {
       throw new Error('TBR credentials not provided')
     }
 
-    if (!this.config.tbrPath) {
-      throw new Error('TBR path not provided')
+    if (!this.config.tbrBasePath) {
+      throw new Error('TBR base path not provided')
     }
 
     if (!this.config.officeId) {
@@ -59,11 +59,13 @@ export class TBRService implements ITBRService {
     this.chargeCategoryCompany = process.env.LG_TBR_CHARGE_CATEGORY_COMPANY
   }
 
-  private async request(url: string, options?: Omit<RequestInit, 'headers'>) {
-    const response = await fetch(url, {
+  private async request(path: string, options?: Omit<RequestInit, 'headers'>) {
+    const endpoint = new URL(`${this.config.tbrBasePath}/${path}`).toString()
+    const response = await fetch(endpoint, {
       headers: {
         Authorization: `Basic ${this.credentials}`,
         'Content-Type': 'application/json',
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         'X-Road-Client': process.env.XROAD_DMR_CLIENT!,
       },
       signal: AbortSignal.timeout(10000), // 10 seconds
@@ -84,7 +86,7 @@ export class TBRService implements ITBRService {
       }
 
       this.logger.error('TBR request failed', {
-        url,
+        url: path,
         status: response.status,
         context: 'TBRService',
         detail: err,
@@ -100,11 +102,10 @@ export class TBRService implements ITBRService {
     this.logger.info('Creating TBR claim', {
       advertId: body.advertId,
     })
-    const url = new URL(`${this.config.tbrPath}/claim`)
 
     const isPerson = Kennitala.isPerson(body.debtorNationalId)
 
-    await this.request(url.toString(), {
+    await this.request('/claim', {
       method: 'POST',
       body: JSON.stringify({
         UUID: body.advertId,
@@ -130,9 +131,7 @@ export class TBRService implements ITBRService {
   async getPaymentStatus(
     query: TBRGetPaymentQueryDto,
   ): Promise<TBRGetPaymentResponseDto> {
-    const url = new URL(
-      `${this.config.tbrPath}/claim/${query.debtorNationalId}`,
-    )
+    const url = new URL(`/claim/${query.debtorNationalId}`)
 
     const isPerson = Kennitala.isPerson(query.debtorNationalId)
 
