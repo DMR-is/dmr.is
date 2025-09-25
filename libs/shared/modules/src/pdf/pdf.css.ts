@@ -537,8 +537,10 @@ export const pdfCss = `
     padding-left: 1em;
   }
   .regulation__text > ul > li,
+
   .regulation__text > ol > li {
     text-align: justify;
+    margin-bottom: 1em;
   }
 
   /* ======================================================================= */
@@ -562,7 +564,7 @@ export const pdfCss = `
     page-break-before: avoid;
   }
 
-  .regulgation__signature p, .regulation__signature span {
+  .regulation__signature p, .regulation__signature span {
     text-indent: 0em !important; /* Avoid puppeteer indent manipulation */
   }
 
