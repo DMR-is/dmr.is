@@ -39,7 +39,7 @@ export const commentMigrate = (
       } else {
         creator = {
           id: '',
-          title: `${model.applicationUserName}${
+          title: `${model.applicationUserName ?? ''}${
             involvedParty ? ` (${involvedParty.title})` : ''
           }`,
         }
@@ -51,9 +51,21 @@ export const commentMigrate = (
     case CaseActionEnum.ASSIGN_SELF:
     case CaseActionEnum.COMMENT_EXTERNAL:
     case CaseActionEnum.COMMENT_INTERNAL: {
-      creator = {
-        id: `${model.userCreatorId}`,
-        title: `${model.userCreator?.displayName}`,
+      if (model.userCreatorId) {
+        creator = {
+          id: `${model.userCreatorId}`,
+          title: `${model.userCreator?.displayName}`,
+        }
+      } else {
+        const involvedParty = model.userCreator?.involvedParties.find(
+          (party) => party.id === involvedPartyId,
+        )
+        creator = {
+          id: '',
+          title: `${model.applicationUserName ?? ''}${
+            involvedParty ? ` (${involvedParty.title})` : ''
+          }`,
+        }
       }
       break
     }
