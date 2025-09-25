@@ -20,6 +20,7 @@ import { AdvertModel } from '../modules/advert/advert.model'
 import { AdvertModule } from '../modules/advert/advert.module'
 import { AdvertPublicationModel } from '../modules/advert-publications/advert-publication.model'
 import { AdvertPublicationModule } from '../modules/advert-publications/advert-publication.module'
+import { AdvertTypeFeeCodeModel } from '../modules/advert-type-fee-code/advert-type-fee-code.model'
 import { ApplicationModel } from '../modules/applications/application.model'
 import { ApplicationModule } from '../modules/applications/application.module'
 import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
@@ -28,12 +29,14 @@ import { CaseModule } from '../modules/case/case.module'
 import { CategoryModel } from '../modules/category/category.model'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
 import { CourtDistrictModel } from '../modules/court-district/court-district.model'
+import { FeeCodeModel } from '../modules/fee-code/fee-code.model'
 import { SettlementModel } from '../modules/settlement/settlement.model'
 import { SettlementModule } from '../modules/settlement/settlement.module'
 import { StatusModel } from '../modules/status/status.model'
 import { SubscriberModel } from '../modules/subscribers/subscriber.model'
 import { SubscriberModule } from '../modules/subscribers/subscriber.module'
 import { ApplicationWebModule } from '../modules/swagger/application-web.module'
+import { TBRTransactionModel } from '../modules/tbr-transaction/tbr-transactions.model'
 import { TypeModel } from '../modules/type/type.model'
 import { TypeCategoriesModel } from '../modules/type-categories/type-categories.model'
 import { TypesCategoriesModule } from '../modules/type-categories/type-categories.module'
@@ -73,6 +76,9 @@ import { UsersModule } from '../modules/users/users.module'
             ApplicationModel,
             AdvertPublicationModel,
             TypeCategoriesModel,
+            FeeCodeModel,
+            TBRTransactionModel,
+            AdvertTypeFeeCodeModel,
           ],
         }),
       ],

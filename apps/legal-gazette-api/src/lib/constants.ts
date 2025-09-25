@@ -20,6 +20,9 @@ export enum LegalGazetteModels {
   SETTLEMENT = 'settlement',
   SUBSCRIBER = 'legal_gazette_subscribers',
   TYPE_CATEGORIES = 'type_categories',
+  TBR_FEE_CODE = 'tbr_fee_code',
+  TBR_TRANSACTION = 'tbr_transaction',
+  ADVERT_TYPE_FEE_CODE = 'advert_type_fee_code',
 }
 
 export const RECALL_BANKRUPTCY_ADVERT_TYPE_ID =

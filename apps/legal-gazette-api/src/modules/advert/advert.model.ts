@@ -8,6 +8,7 @@ import {
   DefaultScope,
   ForeignKey,
   HasMany,
+  HasOne,
   Scopes,
 } from 'sequelize-typescript'
 
@@ -33,6 +34,7 @@ import {
   SettlementModel,
 } from '../settlement/settlement.model'
 import { StatusIdEnum, StatusModel } from '../status/status.model'
+import { TBRTransactionModel } from '../tbr-transaction/tbr-transactions.model'
 import { TypeIdEnum, TypeModel } from '../type/type.model'
 import { UserModel } from '../users/users.model'
 import {
@@ -52,6 +54,7 @@ type AdvertAttributes = {
   publicationNumber: string | null
   title: string
   createdBy: string
+  createdByNationalId: string
   legacyHtml: string | null
   paid: boolean
   signatureName: string
@@ -89,6 +92,7 @@ export type AdvertCreateAttributes = {
   title: string
   legacyHtml?: string
   createdBy: string
+  createdByNationalId: string
   signatureName: string
   signatureOnBehalfOf?: string | null
   signatureLocation: string
@@ -333,6 +337,12 @@ export class AdvertModel extends BaseModel<
     type: DataType.STRING,
     allowNull: false,
   })
+  createdByNationalId!: string
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
   createdBy!: string
 
   @Column({
@@ -398,13 +408,6 @@ export class AdvertModel extends BaseModel<
   })
   judgementDate!: Date | null
 
-  @Column({
-    type: DataType.BOOLEAN,
-    allowNull: false,
-    defaultValue: false,
-  })
-  paid!: boolean
-
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
   case!: CaseModel
 
@@ -428,6 +431,9 @@ export class AdvertModel extends BaseModel<
 
   @HasMany(() => AdvertPublicationModel)
   publications!: AdvertPublicationModel[]
+
+  @HasOne(() => TBRTransactionModel)
+  transaction?: TBRTransactionModel
 
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
@@ -532,7 +538,6 @@ export class AdvertModel extends BaseModel<
       signatureDate: model.signatureDate.toISOString(),
       signatureLocation: model.signatureLocation,
       signatureName: model.signatureName,
-      paid: model.paid,
       caption: model.caption,
       content: model.content,
       additionalText: model.additionalText,

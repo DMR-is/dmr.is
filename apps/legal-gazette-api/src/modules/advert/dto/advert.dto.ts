@@ -118,12 +118,6 @@ export class AdvertDetailedDto extends AdvertDto {
   @ApiProperty({ type: String, nullable: true })
   additionalText!: string | null
 
-  @ApiProperty({
-    type: Boolean,
-  })
-  @IsBoolean()
-  paid!: boolean
-
   @ApiProperty({ type: String })
   @IsString()
   signatureName!: string

@@ -1,19 +1,10 @@
-import {
-  Body,
-  Controller,
-  Inject,
-  Param,
-  Patch,
-  Post,
-  UseGuards,
-} from '@nestjs/common'
+import { Body, Controller, Inject, Param, Patch, Post } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 import { ApiParam } from '@nestjs/swagger'
 
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
-import { AdvertUpdateGuard } from '../../../guards/advert-update.guard'
 import { CategoryModel } from '../../category/category.model'
 import { StatusIdEnum, StatusModel } from '../../status/status.model'
 import { IAdvertService } from '../advert.service.interface'
@@ -23,7 +14,7 @@ import { AdvertDetailedDto, UpdateAdvertDto } from '../dto/advert.dto'
   path: 'adverts/:id',
   version: '1',
 })
-@UseGuards(AdvertUpdateGuard)
+// @UseGuards(AdvertUpdateGuard)
 export class AdvertUpdateController {
   constructor(
     @Inject(IAdvertService) private readonly advertService: IAdvertService,
