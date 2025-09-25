@@ -28,6 +28,7 @@ import {
 } from '../advert-publications/advert-publication.model'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
+import { CommunicationChannelModel } from '../communication-channel/communication-channel.model'
 import { CourtDistrictModel } from '../court-district/court-district.model'
 import {
   SettlementCreateAttributes,

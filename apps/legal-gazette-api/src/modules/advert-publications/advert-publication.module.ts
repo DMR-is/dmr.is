@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AdvertModel } from '../advert/advert.model'
+import { AWSModule } from '../aws/aws.module'
 import { PriceCalculatorModule } from '../price-calculator/price-calculator.module'
 import { TBRModule } from '../tbr/tbr.module'
 import { TBRTransactionModel } from '../tbr-transaction/tbr-transactions.model'
@@ -23,6 +24,7 @@ import { IAdvertPublicationService } from './advert-publication.service.interfac
       officeId: process.env.LG_TBR_OFFICE_ID!,
       tbrBasePath: process.env.LG_TBR_PATH!,
     }),
+    AWSModule,
     PriceCalculatorModule,
   ],
   controllers: [AdvertPublicationController],

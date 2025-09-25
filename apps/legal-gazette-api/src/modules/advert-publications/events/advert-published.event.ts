@@ -1,6 +1,7 @@
-import { AdvertVersionEnum } from '../../advert/advert.model'
+import { AdvertModel } from '../../advert/advert.model'
+import { AdvertPublicationModel } from '../advert-publication.model'
 
 export class AdvertPublishedEvent {
-  id!: string
-  version!: AdvertVersionEnum
+  advert!: AdvertModel
+  publication!: AdvertPublicationModel
 }

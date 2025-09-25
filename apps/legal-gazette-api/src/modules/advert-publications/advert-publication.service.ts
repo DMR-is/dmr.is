@@ -13,6 +13,8 @@ import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { mapVersionToIndex } from '../../lib/utils'
 import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
+import { CaseModel } from '../case/case.model'
+import { CommunicationChannelModel } from '../communication-channel/communication-channel.model'
 import { StatusIdEnum } from '../status/status.model'
 import {
   GetPublicationsDto,
@@ -20,6 +22,7 @@ import {
   UpdateAdvertPublicationDto,
 } from './dto/advert-publication.dto'
 import { AdvertPublicationDetailedDto } from './dto/advert-publication-detailed.dto'
+import { AdvertPublishedEvent } from './events/advert-published.event'
 import { AdvertPublicationModel } from './advert-publication.model'
 import { IAdvertPublicationService } from './advert-publication.service.interface'
 @Injectable()
@@ -199,11 +202,9 @@ export class AdvertPublicationService implements IAdvertPublicationService {
         },
       )
 
-      const advert = await this.advertModel
-        .unscoped()
-        .findByPkOrThrow(advertId, {
-          attributes: ['id', 'publicationNumber'],
-        })
+      const advert = await this.advertModel.findByPkOrThrow(advertId, {
+        include: [{ model: CaseModel, include: [CommunicationChannelModel] }],
+      })
 
       const publication = await this.advertPublicationModel.findOneOrThrow({
         where: { id: publicationId, advertId },
@@ -249,10 +250,12 @@ export class AdvertPublicationService implements IAdvertPublicationService {
       await publication.update({ publishedAt: new Date() })
 
       t.afterCommit(() => {
-        this.eventEmitter.emit('advert.published', {
-          id: advert.id,
-          version: publication.versionLetter,
-        })
+        const payload: AdvertPublishedEvent = {
+          advert,
+          publication,
+        }
+
+        this.eventEmitter.emit('advert.published', payload)
       })
     })
   }
