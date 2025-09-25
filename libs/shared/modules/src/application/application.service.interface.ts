@@ -35,10 +35,7 @@ export interface IApplicationService {
 
   postApplication(id: string): Promise<ResultWrapper>
 
-  getComments(
-    applicationId: string,
-    UserDto?: UserDto,
-  ): Promise<ResultWrapper<GetComments>>
+  getComments(applicationId: string): Promise<ResultWrapper<GetComments>>
 
   postComment(
     applicationId: string,
