@@ -165,6 +165,7 @@ export class CommentServiceV2 implements ICommentServiceV2 {
   async getComments(
     caseId: string,
     query?: GetCommentsQuery,
+    involvedPartyId?: string,
   ): Promise<ResultWrapper<GetComments>> {
     const whereParams = {}
 
@@ -211,7 +212,9 @@ export class CommentServiceV2 implements ICommentServiceV2 {
     })
 
     return ResultWrapper.ok({
-      comments: comments.map((comment) => commentMigrate(comment)),
+      comments: comments.map((comment) =>
+        commentMigrate(comment, involvedPartyId),
+      ),
     })
   }
 

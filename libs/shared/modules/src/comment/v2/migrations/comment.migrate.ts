@@ -39,9 +39,11 @@ export const commentMigrate = (
       } else {
         creator = {
           id: '',
-          title: `${model.applicationUserName}${
-            involvedParty ? ` (${involvedParty.title})` : ''
-          }`,
+          title: model.applicationUserName
+            ? `${model.applicationUserName}${
+                involvedParty ? ` (${involvedParty.title})` : ''
+              }`
+            : (involvedParty?.title ?? 'Innsendandi'),
         }
       }
       break
