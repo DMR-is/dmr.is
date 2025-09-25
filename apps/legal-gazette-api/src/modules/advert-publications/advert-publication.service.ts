@@ -1,10 +1,13 @@
+import { getNamespace } from 'cls-hooked'
 import addDays from 'date-fns/addDays'
 import { Op } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
@@ -19,7 +22,6 @@ import {
 import { AdvertPublicationDetailedDto } from './dto/advert-publication-detailed.dto'
 import { AdvertPublicationModel } from './advert-publication.model'
 import { IAdvertPublicationService } from './advert-publication.service.interface'
-
 @Injectable()
 export class AdvertPublicationService implements IAdvertPublicationService {
   constructor(
@@ -29,6 +31,7 @@ export class AdvertPublicationService implements IAdvertPublicationService {
     readonly advertModel: typeof AdvertModel,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     private eventEmitter: EventEmitter2,
+    private sequelize: Sequelize,
   ) {}
 
   async getPublications(
@@ -185,67 +188,73 @@ export class AdvertPublicationService implements IAdvertPublicationService {
     advertId: string,
     publicationId: string,
   ): Promise<void> {
-    const pubDate = new Date()
-    this.logger.info(
-      `Publishing advert publication at ${pubDate.toISOString()}`,
-      {
-        advertId,
-        publicationId,
-        date: pubDate.toISOString(),
-      },
-    )
-
-    const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
-      attributes: ['id', 'publicationNumber'],
-    })
-
-    const publication = await this.advertPublicationModel.findOneOrThrow({
-      where: { id: publicationId, advertId },
-    })
-
-    if (publication.publishedAt) {
-      throw new BadRequestException('Publication already published')
-    }
-
-    if (!advert.publicationNumber) {
-      const year = pubDate.getFullYear()
-      const month = (pubDate.getMonth() + 1).toString().padStart(2, '0')
-      const day = pubDate.getDate().toString().padStart(2, '0')
-
-      // find max publication number for today
-      const maxPublication = await this.advertModel.unscoped().findOne({
-        attributes: ['id', 'publicationNumber'],
-        where: {
-          publicationNumber: {
-            [Op.like]: `${year}${month}${day}%`,
-          },
+    await this.sequelize.transaction(async (t) => {
+      const pubDate = new Date()
+      this.logger.info(
+        `Publishing advert publication at ${pubDate.toISOString()}`,
+        {
+          advertId,
+          publicationId,
+          date: pubDate.toISOString(),
         },
-        order: [['publicationNumber', 'DESC']],
-        limit: 1,
-      })
-
-      const publishCount = (
-        maxPublication && maxPublication.publicationNumber
-          ? parseInt(maxPublication.publicationNumber.slice(8), 11) + 1
-          : 1
       )
-        .toString()
-        .padStart(3, '0')
 
-      const publicationNumber = `${year}${month}${day}${publishCount}`
+      const advert = await this.advertModel
+        .unscoped()
+        .findByPkOrThrow(advertId, {
+          attributes: ['id', 'publicationNumber'],
+        })
 
-      await advert.update({
-        publicationNumber,
-        statusId: StatusIdEnum.PUBLISHED,
+      const publication = await this.advertPublicationModel.findOneOrThrow({
+        where: { id: publicationId, advertId },
       })
-    }
 
-    await publication.update({ publishedAt: new Date() })
+      if (publication.publishedAt) {
+        throw new BadRequestException('Publication already published')
+      }
 
-    // if the publication version is 1 (the first publication)
-    //  we emit the event that will create the TBR transaction
-    if (publication.versionNumber === 1) {
-      this.eventEmitter.emit('advert.published', { id: advert.id })
-    }
+      if (!advert.publicationNumber) {
+        const year = pubDate.getFullYear()
+        const month = (pubDate.getMonth() + 1).toString().padStart(2, '0')
+        const day = pubDate.getDate().toString().padStart(2, '0')
+
+        // find max publication number for today
+        const maxPublication = await this.advertModel.unscoped().findOne({
+          attributes: ['id', 'publicationNumber'],
+          where: {
+            publicationNumber: {
+              [Op.like]: `${year}${month}${day}%`,
+            },
+          },
+          order: [['publicationNumber', 'DESC']],
+          limit: 1,
+        })
+
+        const publishCount = (
+          maxPublication && maxPublication.publicationNumber
+            ? parseInt(maxPublication.publicationNumber.slice(8), 11) + 1
+            : 1
+        )
+          .toString()
+          .padStart(3, '0')
+
+        const publicationNumber = `${year}${month}${day}${publishCount}`
+
+        await advert.update({
+          publicationNumber,
+          statusId: StatusIdEnum.PUBLISHED,
+        })
+      }
+
+      await publication.update({ publishedAt: new Date() })
+
+      // if the publication version is 1 (the first publication)
+      //  we emit the event that will create the TBR transaction
+      if (publication.versionNumber === 1) {
+        t.afterCommit(() => {
+          this.eventEmitter.emit('advert.published', { id: advert.id })
+        })
+      }
+    })
   }
 }

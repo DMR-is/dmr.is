@@ -50,29 +50,61 @@ export class TBRService implements ITBRService {
       throw new Error('TBR charge category for company not provided')
     }
 
+    if (!process.env.XROAD_DMR_CLIENT) {
+      throw new Error('X-Road client not provided')
+    }
+
     this.credentials = btoa(this.config.credentials)
     this.chargeCategoryPerson = process.env.LG_TBR_CHARGE_CATEGORY_PERSON
     this.chargeCategoryCompany = process.env.LG_TBR_CHARGE_CATEGORY_COMPANY
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private request(url: string, options?: Omit<RequestInit, 'headers'>) {
-    return fetch(url, {
+  private async request(url: string, options?: Omit<RequestInit, 'headers'>) {
+    const response = await fetch(url, {
       headers: {
         Authorization: `Basic ${this.credentials}`,
         'Content-Type': 'application/json',
+        'X-Road-Client': process.env.XROAD_DMR_CLIENT!,
       },
       signal: AbortSignal.timeout(10000), // 10 seconds
       ...options,
     })
+
+    if (!response.ok) {
+      const err = await response.json()
+      if (response.status === 404) {
+        this.logger.error('TBR claim not found', {
+          status: response.status,
+          error: err?.error,
+          detail: err?.error?.detail,
+          context: 'TBRService',
+        })
+
+        throw new NotFoundException('TBR claim not found')
+      }
+
+      this.logger.error('TBR request failed', {
+        url,
+        status: response.status,
+        context: 'TBRService',
+        detail: err,
+      })
+
+      throw new InternalServerErrorException('TBR request failed')
+    }
+
+    return response
   }
 
   async postPayment(body: TBRPostPaymentBodyDto): Promise<void> {
+    this.logger.info('Creating TBR claim', {
+      advertId: body.advertId,
+    })
     const url = new URL(`${this.config.tbrPath}/claim`)
 
     const isPerson = Kennitala.isPerson(body.debtorNationalId)
 
-    const response = await this.request(url.toString(), {
+    await this.request(url.toString(), {
       method: 'POST',
       body: JSON.stringify({
         UUID: body.advertId,
@@ -81,26 +113,18 @@ export class TBRService implements ITBRService {
           ? this.chargeCategoryPerson
           : this.chargeCategoryCompany,
         chargeBase: body.chargeBase,
-        Expenses: body.expenses,
+        Expenses: body.expenses.map((ex) => ({
+          FeeCode: ex.feeCode,
+          Quantity: ex.quantity,
+          Reference: ex.reference,
+          Sum: ex.sum,
+          UnitPrice: ex.unitPrice,
+        })),
         debtorNationalId: body.debtorNationalId,
         employeeNationalId: body.debtorNationalId,
+        extraData: [],
       }),
     })
-
-    if (!response.ok) {
-      const json = await response.json()
-
-      this.logger.error('TBR claim creation failed', {
-        advertId: body.advertId,
-        chargeBase: body.chargeBase,
-        status: response.status,
-        error: json?.error,
-        detail: json?.error?.detail,
-        context: 'TBRService',
-      })
-
-      throw new InternalServerErrorException('TBR claim creation failed')
-    }
   }
 
   async getPaymentStatus(
@@ -122,36 +146,6 @@ export class TBRService implements ITBRService {
     const response = await this.request(url.toString(), {
       method: 'GET',
     })
-
-    if (response.status === 404) {
-      const json = await response.json()
-
-      this.logger.error('TBR claim not found', {
-        debtorNationalId: query.debtorNationalId,
-        chargeBase: query.chargeBase,
-        status: response.status,
-        error: json?.error,
-        detail: json?.error?.detail,
-        context: 'TBRService',
-      })
-
-      throw new NotFoundException('TBR claim not found')
-    }
-
-    if (!response.ok) {
-      const json = await response.json()
-
-      this.logger.error('TBR claim request failed', {
-        debtorNationalId: query.debtorNationalId,
-        chargeBase: query.chargeBase,
-        status: response.status,
-        error: json?.error,
-        detail: json?.error?.detail,
-        context: 'TBRService',
-      })
-
-      throw new InternalServerErrorException('TBR claim request failed')
-    }
 
     const json = await response.json()
 

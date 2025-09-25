@@ -9,6 +9,8 @@ import { ITBRService } from '../../tbr/tbr.service.interface'
 import { TBRTransactionModel } from '../../tbr-transaction/tbr-transactions.model'
 import { AdvertPublishedEvent } from '../events/advert-published.event'
 
+const LOGGING_CONTEXT = 'AdvertPublishedListener'
+
 @Injectable()
 export class AdvertPublishedListener {
   constructor(
@@ -25,18 +27,18 @@ export class AdvertPublishedListener {
   async createTBRTransaction(payload: AdvertPublishedEvent) {
     this.logger.info('Creating TBR transaction for advert', {
       advertId: payload.id,
+      context: LOGGING_CONTEXT,
     })
 
-    const paymentData = await this.priceCalculatorService.getPaymentData(
-      payload.id,
-    )
+    const { feeCodeId, paymentData } =
+      await this.priceCalculatorService.getPaymentData(payload.id)
 
     // expenses is treated as an array
     // but we only support one expense per advert for now
     if (paymentData.expenses.length === 0) {
       this.logger.warn(
         'No expenses found for advert, skipping TBR transaction creation',
-        { advertId: payload.id },
+        { advertId: payload.id, context: LOGGING_CONTEXT },
       )
       return
     }
@@ -45,9 +47,14 @@ export class AdvertPublishedListener {
 
     await this.tbrService.postPayment(paymentData)
 
+    this.logger.info('TBR payment posted, creating transaction', {
+      advertId: payload.id,
+      context: LOGGING_CONTEXT,
+    })
+
     await this.tbrTransactionModel.create({
       advertId: payload.id,
-      feeCodeId: expenses.feeCode,
+      feeCodeId: feeCodeId,
       feeCodeMultiplier: expenses.quantity,
       totalPrice: expenses.sum,
     })

@@ -12,50 +12,52 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp()
     const response = ctx.getResponse()
     let status = 500
+    try {
+      const now = new Date().toISOString()
 
-    const now = new Date().toISOString()
-
-    const err: ApiErrorDto = {
-      statusCode: status,
-      timestamp: now,
-      name: ApiErrorName.InternalServerError,
-    }
-
-    if (exception instanceof z.ZodError) {
-      status = 400
-      err.name = ApiErrorName.BadRequest
-      err.message = 'Invalid form data'
-    }
-
-    if (exception instanceof TypeError) {
-      const culprit = exception.stack?.split('at self.')[1].split('(')[0].trim()
-
-      if (culprit) {
-        logger.debug(`READ UNDEFINED PROPERTY = "${culprit}"`, {
-          context: LOGGING_CONTEXT,
-        })
+      const err: ApiErrorDto = {
+        statusCode: status,
+        timestamp: now,
+        name: ApiErrorName.InternalServerError,
       }
 
-      return response.status(status).json(err)
-    }
+      if (exception instanceof z.ZodError) {
+        status = 400
+        err.name = ApiErrorName.BadRequest
+        err.message = 'Invalid form data'
 
-    if (exception instanceof Error) {
-      const cleanedMessage = exception.message.replace(/\\n/g, '\n')
+        return response.status(status).json(err)
+      }
 
-      logger.error(`An unknown error occurred`, {
+      if (exception instanceof Error) {
+        const cleanedMessage = exception.message.replace(/\\n/g, '\n')
+
+        logger.error(`Internal server exception: ${cleanedMessage}`, {
+          context: LOGGING_CONTEXT,
+          detail: cleanedMessage,
+          error: exception,
+        })
+
+        return response.status(status).json(err)
+      }
+
+      logger.error(`An unknown non-error was thrown`, {
         context: LOGGING_CONTEXT,
-        message: cleanedMessage,
-        error: exception,
+        detail: JSON.stringify(exception),
       })
 
       return response.status(status).json(err)
+    } catch (err) {
+      logger.error(`Error in GlobalExceptionFilter`, {
+        context: LOGGING_CONTEXT,
+        detail: err,
+      })
+
+      return response.status(500).json({
+        statusCode: 500,
+        timestamp: new Date().toISOString(),
+        name: ApiErrorName.InternalServerError,
+      })
     }
-
-    logger.error(`An unknown non-error was thrown`, {
-      context: LOGGING_CONTEXT,
-      message: JSON.stringify(exception),
-    })
-
-    return response.status(status).json(err)
   }
 }
