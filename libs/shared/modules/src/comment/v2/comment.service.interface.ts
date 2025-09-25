@@ -23,6 +23,7 @@ export interface ICommentServiceV2 {
   getComments(
     caseId: string,
     query?: GetCommentsQuery,
+    involvedPartyId?: string,
   ): Promise<ResultWrapper<GetComments>>
 
   deleteComment(
