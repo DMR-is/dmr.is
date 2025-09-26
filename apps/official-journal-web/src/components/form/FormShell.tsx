@@ -242,13 +242,14 @@ export const FormShell = ({ children }: FormShellType) => {
                     size="sm"
                   />
                   <OJOIInput
-                    name="status"
+                    name="communication-status"
                     disabled
                     value={currentCase.communicationStatus.title}
                     type="text"
                     label={formatMessage(messages.actions.communicationsStatus)}
                     size="sm"
                     backgroundColor={'blue'}
+                    key={currentCase.communicationStatus.id}
                   />
                   <OJOISelect
                     isDisabled={!canEdit}

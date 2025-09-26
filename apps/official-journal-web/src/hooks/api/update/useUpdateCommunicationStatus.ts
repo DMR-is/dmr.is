@@ -29,18 +29,11 @@ export const useUpdateCommunicationStatus = ({
     Key,
     UpdateCommunicationStatusTriggerArgs
   >(
-    APIRoutes.UpdateCommunicationStatus,
+    caseId ? APIRoutes.UpdateCommunicationStatus.replace(':id', caseId) : null,
     (url: string, { arg }: { arg: UpdateCommunicationStatusTriggerArgs }) =>
-      fetcher<Response, UpdateCommunicationStatusTriggerArgs>(
-        url.replace(':id', caseId),
-        {
-          arg: {
-            withAuth: true,
-            method: 'POST',
-            body: arg,
-          },
-        },
-      ),
+      fetcher<Response, UpdateCommunicationStatusTriggerArgs>(url, {
+        arg: { withAuth: true, method: 'POST', body: arg },
+      }),
     {
       ...options,
       throwOnError: false,

@@ -1,8 +1,16 @@
 import { useState } from 'react'
 
-import { Box, Button, Inline, Input, Stack } from '@island.is/island-ui/core'
+import {
+  Box,
+  Button,
+  Inline,
+  Input,
+  Select,
+  Stack,
+} from '@island.is/island-ui/core'
 
-import { useAddComment } from '../../hooks/api'
+import { useAddComment, useCommunicationStatuses } from '../../hooks/api'
+import { useUpdateCommunicationStatus } from '../../hooks/api/update/useUpdateCommunicationStatus'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from './messages'
@@ -16,6 +24,9 @@ export const AddCommentTab = ({ internal, placeholder }: Props) => {
   const { currentCase, refetch } = useCaseContext()
 
   const [commentValue, setCommentValue] = useState('')
+  const { data: statuses, isLoading } = useCommunicationStatuses({
+    options: {},
+  })
 
   const {
     createExternalComment,
@@ -32,11 +43,42 @@ export const AddCommentTab = ({ internal, placeholder }: Props) => {
     },
   })
 
+  const { trigger: updateCommunicationStatus } = useUpdateCommunicationStatus({
+    caseId: currentCase.id,
+    options: {
+      onSuccess: () => {
+        refetch()
+      },
+    },
+  })
+
   const isMutating = isCreatingExternalComment || isCreatingInternalComment
 
   return (
     <Box>
       <Stack space={2}>
+        {statuses && !isLoading && (
+          <Box width="half">
+            <Select
+              size="xs"
+              name="communication-status"
+              onChange={(e) => {
+                if (!e) return
+                updateCommunicationStatus({
+                  statusId: e.value,
+                })
+              }}
+              options={statuses.statuses.map((s) => ({
+                label: s.title,
+                value: s.id,
+              }))}
+              defaultValue={{
+                value: currentCase.communicationStatus.id,
+                label: currentCase.communicationStatus.title,
+              }}
+            />
+          </Box>
+        )}
         <Input
           disabled={isMutating}
           loading={isMutating}
