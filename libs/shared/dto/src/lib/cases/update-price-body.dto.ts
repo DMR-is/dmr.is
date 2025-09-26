@@ -127,6 +127,14 @@ export class CaseFeeCalculationBody {
   @ApiProperty({
     type: Number,
     required: false,
+    description: 'Length of the Additional HTML content',
+  })
+  @IsOptional()
+  additionalHTMLLength?: number
+
+  @ApiProperty({
+    type: Number,
+    required: false,
     description: 'How much extra work is there, in percentage',
   })
   @IsOptional()
