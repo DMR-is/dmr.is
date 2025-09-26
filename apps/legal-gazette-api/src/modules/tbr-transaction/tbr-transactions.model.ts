@@ -34,6 +34,9 @@ export class TBRTransactionModel extends BaseModel<
   @Column({ type: DataType.NUMBER, allowNull: false, defaultValue: 1 })
   feeCodeMultiplier!: number
 
+  @Column({ type: DataType.DATE, allowNull: true, defaultValue: null })
+  paidAt!: Date | null
+
   @BelongsTo(() => AdvertModel)
   advert!: AdvertModel
 
