@@ -11,8 +11,8 @@ import {
 
 import { useAddComment, useCommunicationStatuses } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
-import { useUpdateCommunicationStatus } from '../../hooks/api/update/useUpdateCommunicationStatus'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { useUpdateCommunicationStatus } from '../../hooks/api/update/useUpdateCommunicationStatus'
 import { messages } from './messages'
 
 type Props = {
