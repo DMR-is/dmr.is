@@ -1,4 +1,3 @@
-import { getNamespace } from 'cls-hooked'
 import addDays from 'date-fns/addDays'
 import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
@@ -7,7 +6,6 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
@@ -20,6 +18,7 @@ import {
   UpdateAdvertPublicationDto,
 } from './dto/advert-publication.dto'
 import { AdvertPublicationDetailedDto } from './dto/advert-publication-detailed.dto'
+import { AdvertPublishedEvent } from './events/advert-published.event'
 import { AdvertPublicationModel } from './advert-publication.model'
 import { IAdvertPublicationService } from './advert-publication.service.interface'
 @Injectable()
@@ -199,11 +198,7 @@ export class AdvertPublicationService implements IAdvertPublicationService {
         },
       )
 
-      const advert = await this.advertModel
-        .unscoped()
-        .findByPkOrThrow(advertId, {
-          attributes: ['id', 'publicationNumber'],
-        })
+      const advert = await this.advertModel.findByPkOrThrow(advertId)
 
       const publication = await this.advertPublicationModel.findOneOrThrow({
         where: { id: publicationId, advertId },
@@ -249,10 +244,12 @@ export class AdvertPublicationService implements IAdvertPublicationService {
       await publication.update({ publishedAt: new Date() })
 
       t.afterCommit(() => {
-        this.eventEmitter.emit('advert.published', {
-          id: advert.id,
-          version: publication.versionLetter,
-        })
+        const payload: AdvertPublishedEvent = {
+          advert: advert.fromModelToDetailed(),
+          publication: publication.fromModel(),
+        }
+
+        this.eventEmitter.emit('advert.published', payload)
       })
     })
   }

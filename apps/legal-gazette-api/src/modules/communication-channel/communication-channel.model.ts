@@ -1,8 +1,15 @@
-import { Column, DataType, DefaultScope } from 'sequelize-typescript'
+import {
+  Column,
+  DataType,
+  DefaultScope,
+  ForeignKey,
+} from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
+import { AdvertModel } from '../advert/advert.model'
+import { CommunicationChannelDto } from './dto/communication-channel.dto'
 
 type CommunicationChannelAttributes = {
   email: string
@@ -25,6 +32,10 @@ export class CommunicationChannelModel extends BaseModel<
   CommunicationChannelAttributes,
   CommunicationChannelCreateAttributes
 > {
+  @ForeignKey(() => AdvertModel)
+  @Column({ type: DataType.UUID, allowNull: false })
+  advertId!: string
+
   @Column({
     type: DataType.TEXT,
   })
@@ -41,4 +52,16 @@ export class CommunicationChannelModel extends BaseModel<
     allowNull: true,
   })
   phone!: string | null
+
+  static fromModel(model: CommunicationChannelModel): CommunicationChannelDto {
+    return {
+      email: model.email,
+      name: model.name ?? undefined,
+      phone: model.phone ?? undefined,
+    }
+  }
+
+  fromModel(): CommunicationChannelDto {
+    return CommunicationChannelModel.fromModel(this)
+  }
 }

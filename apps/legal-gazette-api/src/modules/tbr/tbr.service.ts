@@ -17,6 +17,8 @@ import {
 import { ITBRConfig } from './tbr.config'
 import { ITBRService } from './tbr.service.interface'
 
+type TBRPathString = `/${string}`
+
 @Injectable()
 export class TBRService implements ITBRService {
   private readonly credentials: string
@@ -59,8 +61,19 @@ export class TBRService implements ITBRService {
     this.chargeCategoryCompany = process.env.LG_TBR_CHARGE_CATEGORY_COMPANY
   }
 
-  private async request(path: string, options?: Omit<RequestInit, 'headers'>) {
-    const endpoint = new URL(`${this.config.tbrBasePath}/${path}`).toString()
+  private async request(
+    path: TBRPathString,
+    options?: Omit<RequestInit, 'headers'>,
+  ) {
+    const endpoint = new URL(`${this.config.tbrBasePath}${path}`).toString()
+
+    this.logger.info('Making TBR request to:', {
+      message: endpoint,
+      path: path,
+      method: options?.method || 'GET',
+      context: 'TBRService',
+    })
+
     const response = await fetch(endpoint, {
       headers: {
         Authorization: `Basic ${this.credentials}`,
@@ -131,20 +144,14 @@ export class TBRService implements ITBRService {
   async getPaymentStatus(
     query: TBRGetPaymentQueryDto,
   ): Promise<TBRGetPaymentResponseDto> {
-    const url = new URL(`/claim/${query.debtorNationalId}`)
-
     const isPerson = Kennitala.isPerson(query.debtorNationalId)
 
-    url.searchParams.append('office', this.config.officeId)
-    url.searchParams.append(
-      'chargeCategory',
-      isPerson ? this.chargeCategoryPerson : this.chargeCategoryCompany,
+    const response = await this.request(
+      `/claim/${query.debtorNationalId}?office=${this.config.officeId}&chargeCategory=${isPerson ? this.chargeCategoryPerson : this.chargeCategoryCompany}&chargeBase=${query.chargeBase}`,
+      {
+        method: 'GET',
+      },
     )
-    url.searchParams.append('chargeBase', query.chargeBase)
-
-    const response = await this.request(url.toString(), {
-      method: 'GET',
-    })
 
     const json = await response.json()
 

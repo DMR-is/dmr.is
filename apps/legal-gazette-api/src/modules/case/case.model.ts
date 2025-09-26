@@ -17,10 +17,6 @@ import {
   ApplicationCreateAttributes,
   ApplicationModel,
 } from '../applications/application.model'
-import {
-  CommunicationChannelCreateAttributes,
-  CommunicationChannelModel,
-} from '../communication-channel/communication-channel.model'
 import { StatusIdEnum } from '../status/status.model'
 import { CaseDto } from './dto/case.dto'
 
@@ -28,7 +24,6 @@ type CaseAttributes = {
   caseNumber: string
   assignedUserId: string | null
   involvedPartyNationalId: string
-  communicationChannels: CommunicationChannelModel[]
   adverts: AdvertModel[]
   application?: ApplicationModel
 }
@@ -37,7 +32,6 @@ type CaseCreateAttributes = {
   involvedPartyNationalId: string
   caseId?: string
   assignedUserId?: string | null
-  communicationChannels?: CommunicationChannelCreateAttributes[]
   adverts?: AdvertCreateAttributes[]
   application?: ApplicationCreateAttributes
 }
@@ -68,9 +62,6 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     allowNull: false,
   })
   involvedPartyNationalId!: string
-
-  @HasMany(() => CommunicationChannelModel, 'caseId')
-  communicationChannels!: CommunicationChannelModel[]
 
   @HasMany(() => AdvertModel, 'caseId')
   adverts!: AdvertModel[]

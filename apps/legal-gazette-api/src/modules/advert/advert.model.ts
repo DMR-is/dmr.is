@@ -28,6 +28,10 @@ import {
 } from '../advert-publications/advert-publication.model'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
+import {
+  CommunicationChannelCreateAttributes,
+  CommunicationChannelModel,
+} from '../communication-channel/communication-channel.model'
 import { CourtDistrictModel } from '../court-district/court-district.model'
 import {
   SettlementCreateAttributes,
@@ -81,6 +85,7 @@ type AdvertAttributes = {
   status: StatusModel
   case: CaseModel
   settlement?: SettlementModel
+  communicationChannels?: CommunicationChannelModel[]
 }
 
 export type AdvertCreateAttributes = {
@@ -113,6 +118,7 @@ export type AdvertCreateAttributes = {
   // relations
   publications?: AdvertPublicationsCreateAttributes[]
   settlement?: SettlementCreateAttributes
+  communicationChannels?: CommunicationChannelCreateAttributes[]
 }
 
 export enum AdvertVersionEnum {
@@ -138,6 +144,7 @@ export enum AdvertModelScopes {
     { model: UserModel },
     { model: AdvertPublicationModel },
     { model: SettlementModel },
+    { model: CommunicationChannelModel },
   ],
   order: [
     [
@@ -411,6 +418,9 @@ export class AdvertModel extends BaseModel<
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
   case!: CaseModel
 
+  @HasMany(() => CommunicationChannelModel)
+  communicationChannels!: CommunicationChannelModel[]
+
   @BelongsTo(() => TypeModel)
   type!: TypeModel
 
@@ -552,6 +562,9 @@ export class AdvertModel extends BaseModel<
         : undefined,
       divisionMeetingLocation: model.divisionMeetingLocation ?? undefined,
       settlement: model.settlement?.fromModel(),
+      communicationChannels: model.communicationChannels?.map((c) =>
+        c.fromModel(),
+      ),
     }
   }
 

@@ -10,7 +10,10 @@ import {
 import { Paging } from '@dmr.is/shared/dto'
 
 import { CategoryDto } from '../../category/dto/category.dto'
-import { CommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
+import {
+  CommunicationChannelDto,
+  CreateCommunicationChannelDto,
+} from '../../communication-channel/dto/communication-channel.dto'
 import { TypeDto } from '../../type/dto/type.dto'
 import { ApplicationTypeEnum } from '../application.model'
 import { ApplicationStatusEnum } from '../contants'
@@ -157,6 +160,9 @@ export class AddDivisionMeetingForApplicationDto {
   @IsOptional()
   @IsString()
   additionalText?: string
+
+  @ApiProperty({ type: [CreateCommunicationChannelDto], required: false })
+  communicationChannels?: CreateCommunicationChannelDto[]
 }
 
 export class AddDivisionEndingForApplicationDto extends OmitType(

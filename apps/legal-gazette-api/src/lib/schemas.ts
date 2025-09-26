@@ -57,4 +57,5 @@ export const createRecallAdvertFromApplicationSchema = z.object({
   divisionMeetingLocation: z.string().optional().nullable(),
   divisionMeetingDate: z.date().optional().nullable(),
   judgementDate: z.date(),
+  communicationChannels: z.array(communicationChannelSchema).min(1),
 })
