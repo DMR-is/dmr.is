@@ -562,6 +562,9 @@ export class AdvertModel extends BaseModel<
         : undefined,
       divisionMeetingLocation: model.divisionMeetingLocation ?? undefined,
       settlement: model.settlement?.fromModel(),
+      communicationChannels: model.communicationChannels?.map((c) =>
+        c.fromModel(),
+      ),
     }
   }
 

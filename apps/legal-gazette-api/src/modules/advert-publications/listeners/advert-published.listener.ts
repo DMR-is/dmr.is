@@ -28,7 +28,7 @@ export class AdvertPublishedListener {
 
   @OnEvent('advert.published', { async: true })
   async createTBRTransaction({ advert, publication }: AdvertPublishedEvent) {
-    if (publication.versionLetter !== AdvertVersionEnum.A) return
+    if (publication.version !== AdvertVersionEnum.A) return
 
     this.logger.info('Creating TBR transaction for advert', {
       advertId: advert.id,

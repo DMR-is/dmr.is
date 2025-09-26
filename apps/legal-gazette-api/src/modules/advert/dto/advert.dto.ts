@@ -19,6 +19,7 @@ import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { DetailedDto } from '../../../dto/detailed.dto'
 import { AdvertPublicationDto } from '../../advert-publications/dto/advert-publication.dto'
 import { CategoryDto } from '../../category/dto/category.dto'
+import { CommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
 import { CourtDistrictDto } from '../../court-district/dto/court-district.dto'
 import { SettlementDto } from '../../settlement/dto/settlement.dto'
 import { StatusDto } from '../../status/dto/status.dto'
@@ -155,6 +156,9 @@ export class AdvertDetailedDto extends AdvertDto {
 
   @ApiProperty({ type: CourtDistrictDto, required: false })
   courtDistrict?: CourtDistrictDto
+
+  @ApiProperty({ type: [CommunicationChannelDto] })
+  communicationChannels!: CommunicationChannelDto[]
 
   @ApiProperty({ type: [AdvertPublicationDto] })
   publications!: AdvertPublicationDto[]

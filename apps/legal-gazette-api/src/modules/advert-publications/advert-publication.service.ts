@@ -245,8 +245,8 @@ export class AdvertPublicationService implements IAdvertPublicationService {
 
       t.afterCommit(() => {
         const payload: AdvertPublishedEvent = {
-          advert,
-          publication,
+          advert: advert.fromModelToDetailed(),
+          publication: publication.fromModel(),
         }
 
         this.eventEmitter.emit('advert.published', payload)

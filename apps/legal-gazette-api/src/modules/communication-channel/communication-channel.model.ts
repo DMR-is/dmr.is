@@ -9,6 +9,7 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
 import { AdvertModel } from '../advert/advert.model'
+import { CommunicationChannelDto } from './dto/communication-channel.dto'
 
 type CommunicationChannelAttributes = {
   email: string
@@ -51,4 +52,16 @@ export class CommunicationChannelModel extends BaseModel<
     allowNull: true,
   })
   phone!: string | null
+
+  static fromModel(model: CommunicationChannelModel): CommunicationChannelDto {
+    return {
+      email: model.email,
+      name: model.name ?? undefined,
+      phone: model.phone ?? undefined,
+    }
+  }
+
+  fromModel(): CommunicationChannelDto {
+    return CommunicationChannelModel.fromModel(this)
+  }
 }
