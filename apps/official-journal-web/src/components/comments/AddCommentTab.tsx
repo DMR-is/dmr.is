@@ -54,7 +54,6 @@ export const AddCommentTab = ({ internal, placeholder }: Props) => {
 
   const isMutating = isCreatingExternalComment || isCreatingInternalComment
 
-  console.log('statuses', statuses)
   return (
     <Box>
       <Stack space={2}>
@@ -64,12 +63,10 @@ export const AddCommentTab = ({ internal, placeholder }: Props) => {
               size="xs"
               name="communication-status"
               onChange={(e) => {
-                console.log('e', e)
                 if (!e) return
                 updateCommunicationStatus({
                   statusId: e.value,
                 })
-                console.log('EEEEEEEEE')
               }}
               options={statuses.statuses.map((s) => ({
                 label: s.title,
