@@ -528,12 +528,16 @@ export class PriceService implements IPriceService {
     )
 
     if (!res.ok) {
+      const jsonResponse = await res.json()
+      const errorStatus = jsonResponse?.error
       this.logger.error(
         `price.service.postExternalPayment, could not post payment<${body.chargeBase}>`,
         {
           status: res.status,
           category: LOGGING_CATEGORY,
-          detail: res.statusText,
+          statusText: res.statusText,
+          error: jsonResponse?.error,
+          detail: errorStatus?.detail,
         },
       )
       return ResultWrapper.err({
@@ -612,11 +616,16 @@ export class PriceService implements IPriceService {
     }
 
     if (!res.ok) {
+      const jsonResponse = await res.json()
+      const errorStatus = jsonResponse?.error
       this.logger.error(
         `price.service.getExternalPaymentStatus, could not get payment<${parameters.caseId}>`,
         {
           status: res.status,
           category: LOGGING_CATEGORY,
+          statusText: res?.statusText,
+          error: jsonResponse?.error,
+          detail: errorStatus?.detail,
         },
       )
       return ResultWrapper.err({
