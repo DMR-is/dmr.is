@@ -1,4 +1,3 @@
-import { getNamespace } from 'cls-hooked'
 import addDays from 'date-fns/addDays'
 import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
@@ -7,14 +6,11 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { mapVersionToIndex } from '../../lib/utils'
 import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
-import { CaseModel } from '../case/case.model'
-import { CommunicationChannelModel } from '../communication-channel/communication-channel.model'
 import { StatusIdEnum } from '../status/status.model'
 import {
   GetPublicationsDto,
@@ -202,9 +198,7 @@ export class AdvertPublicationService implements IAdvertPublicationService {
         },
       )
 
-      const advert = await this.advertModel.findByPkOrThrow(advertId, {
-        include: [{ model: CaseModel, include: [CommunicationChannelModel] }],
-      })
+      const advert = await this.advertModel.findByPkOrThrow(advertId)
 
       const publication = await this.advertPublicationModel.findOneOrThrow({
         where: { id: publicationId, advertId },

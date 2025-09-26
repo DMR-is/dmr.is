@@ -36,6 +36,11 @@ import {
   CategoryDefaultIdEnum,
   CategoryModel,
 } from '../category/category.model'
+import {
+  CommunicationChannelCreateAttributes,
+  CommunicationChannelModel,
+} from '../communication-channel/communication-channel.model'
+import { CreateCommunicationChannelDto } from '../communication-channel/dto/communication-channel.dto'
 import { SettlementModel } from '../settlement/settlement.model'
 import { TypeIdEnum } from '../type/type.model'
 import {
@@ -100,8 +105,9 @@ export class ApplicationService implements IApplicationService {
         signatureDate: requiredFields.signatureDate,
         content: requiredFields.html,
         title: `${requiredFields.category.title} - ${requiredFields.caption}`,
+        communicationChannels: requiredFields.communicationChannels,
       },
-      { returning: ['id'] },
+      { returning: ['id'], include: [CommunicationChannelModel] },
     )
 
     await this.publicationModel.bulkCreate(
@@ -135,6 +141,7 @@ export class ApplicationService implements IApplicationService {
       divisionMeetingLocation: application.divisionMeetingLocation,
       judgementDate: application.judgmentDate,
       courtDistrictId: application.courtDistrictId,
+      communicationChannels: application.communicationChannels,
     })
 
     const applicationType = application.applicationType
@@ -185,8 +192,12 @@ export class ApplicationService implements IApplicationService {
           settlementDateOfDeath: requiredFields.settlementDateOfDeath ?? null,
           settlementDeadline: requiredFields.settlementDeadlineDate ?? null,
         },
+        communicationChannels: requiredFields.communicationChannels,
       },
-      { returning: ['id'], include: [SettlementModel] },
+      {
+        returning: ['id'],
+        include: [SettlementModel, CommunicationChannelModel],
+      },
     )
 
     await this.publicationModel.bulkCreate(
@@ -226,6 +237,34 @@ export class ApplicationService implements IApplicationService {
       },
     })
 
+    let communicationChannels: CommunicationChannelCreateAttributes[] = []
+
+    if (body.communicationChannels && body.communicationChannels.length > 0) {
+      communicationChannels = body.communicationChannels
+    } else {
+      const recallAdvert = await this.advertModel.unscoped().findOneOrThrow({
+        attributes: ['id'],
+        include: [{ model: CommunicationChannelModel }],
+        where: {
+          caseId: application.caseId,
+          categoryId: RECALL_CATEGORY_ID,
+        },
+      })
+
+      if (
+        recallAdvert.communicationChannels &&
+        recallAdvert.communicationChannels.length
+      ) {
+        communicationChannels = recallAdvert.communicationChannels.map(
+          (ch) => ({
+            email: ch.email,
+            name: ch.name,
+            phone: ch.phone,
+          }),
+        )
+      }
+    }
+
     const newAdvert = await this.advertModel.create(
       {
         caseId: application.caseId,
@@ -242,8 +281,9 @@ export class ApplicationService implements IApplicationService {
         title: `Skiptafundur - ${application.settlementName}`,
         additionalText: body.additionalText,
         settlementId: settlement.settlementId,
+        communicationChannels: communicationChannels,
       },
-      { returning: ['id'] },
+      { returning: ['id'], include: [CommunicationChannelModel] },
     )
 
     await this.publicationModel.create({
@@ -289,6 +329,34 @@ export class ApplicationService implements IApplicationService {
 
     await settlement.update({ settlementDeclaredClaims: body.declaredClaims })
 
+    let communicationChannels: CommunicationChannelCreateAttributes[] = []
+
+    if (body.communicationChannels && body.communicationChannels.length > 0) {
+      communicationChannels = body.communicationChannels
+    } else {
+      const recallAdvert = await this.advertModel.unscoped().findOneOrThrow({
+        attributes: ['id'],
+        include: [{ model: CommunicationChannelModel }],
+        where: {
+          caseId: application.caseId,
+          categoryId: RECALL_CATEGORY_ID,
+        },
+      })
+
+      if (
+        recallAdvert.communicationChannels &&
+        recallAdvert.communicationChannels.length
+      ) {
+        communicationChannels = recallAdvert.communicationChannels.map(
+          (ch) => ({
+            email: ch.email,
+            name: ch.name,
+            phone: ch.phone,
+          }),
+        )
+      }
+    }
+
     const newAdvert = await this.advertModel.create(
       {
         caseId: application.caseId,
@@ -303,8 +371,9 @@ export class ApplicationService implements IApplicationService {
         title: `Skiptalok - ${application.settlementName}`,
         additionalText: body.additionalText,
         settlementId: settlement.id,
+        communicationChannels: communicationChannels,
       },
-      { returning: ['id'] },
+      { returning: ['id'], include: [CommunicationChannelModel] },
     )
 
     await this.publicationModel.create({
@@ -489,6 +558,7 @@ export class ApplicationService implements IApplicationService {
       additionalText: requiredFields.additionalText,
       content: requiredFields.html,
       signatureOnBehalfOf: requiredFields.signatureOnBehalfOf,
+      communicationChannels: requiredFields.communicationChannels,
       publications: body.publishingDates.map((scheduledAt) => ({
         scheduledAt: new Date(scheduledAt),
       })),
