@@ -1108,7 +1108,9 @@ export class CaseService implements ICaseService {
         return new Date(b).getTime() - new Date(a).getTime()
       })[0]
 
-    const signatureYear = new Date(newest).getFullYear()
+    const signatureYear = newest
+      ? new Date(newest).getFullYear()
+      : new Date().getFullYear()
     const serial = (
       await this.utilityService.getNextPublicationNumber(
         caseToPublish.departmentId,
