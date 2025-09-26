@@ -69,8 +69,6 @@ export class PriceCalculatorService implements IPriceCalculatorService {
 
     const stripped = getHtmlTextLength(html)
 
-    console.log('Stripped length:', stripped)
-
     return {
       feeCodeId: feeCodeModel.id,
       paymentData: {
