@@ -108,9 +108,8 @@ export class PriceService implements IPriceService {
     const transactionPrice = await this.getPriceByDepartmentSlug(
       {
         slug: application.answers.advert.department.slug,
-        bodyLengthCount:
-          getHtmlTextLength(application.answers?.advert.html) +
-          additionsHtmlContentCount,
+        bodyLengthCount: getHtmlTextLength(application.answers?.advert.html),
+        additionalHTMLLength: additionsHtmlContentCount,
         isFastTrack,
       },
       transaction,
@@ -186,7 +185,8 @@ export class PriceService implements IPriceService {
         baseDocumentCount: caseLookup.transaction.customBaseCount ?? 0,
         bodyLengthCount:
           caseLookup.transaction.customAdditionalCharacterCount ??
-          getHtmlTextLength(caseLookup.html) + additionsHtmlContentCount,
+          getHtmlTextLength(caseLookup.html),
+        additionalHTMLLength: additionsHtmlContentCount,
         additionalDocCount:
           caseLookup.transaction.customAdditionalDocCount ?? 0,
       },
@@ -259,13 +259,13 @@ export class PriceService implements IPriceService {
         : 0
 
     const characterLength =
-      body.customBodyLengthCount ||
-      getHtmlTextLength(caseLookup.html) + additionsHtmlContentCount
+      body.customBodyLengthCount || getHtmlTextLength(caseLookup.html)
 
     const caseFeeCalculation = await this.getPriceByDepartmentSlug(
       {
         slug: caseLookup.department.slug,
         bodyLengthCount: characterLength,
+        additionalHTMLLength: additionsHtmlContentCount,
         isFastTrack: caseLookup.fastTrack,
         imageTier: body.imageTier,
         baseDocumentCount: body.customBaseDocumentCount,
@@ -356,10 +356,18 @@ export class PriceService implements IPriceService {
     const usedFeeCodes = []
     const expenses: PaymentExpenses[] = []
 
-    const characterLength = body.bodyLengthCount
+    const combinedCharLength =
+      (body.bodyLengthCount ?? 0) + (body.additionalHTMLLength ?? 0)
+
+    // If there are additional documents, we only get main text body length, else we count main + additional.
+    // If there are additional documents, the price of those are calculated separately.
+    const characterLength =
+      body.additionalDocCount && body.additionalDocCount > 0
+        ? body.bodyLengthCount
+        : combinedCharLength
 
     if (
-      baseModifierFee?.value &&
+      baseModifierFee?.value && // BASE_MODIFIER is only for B-department
       characterLength &&
       characterLength > MAX_CHARACTER_HTML
     ) {
