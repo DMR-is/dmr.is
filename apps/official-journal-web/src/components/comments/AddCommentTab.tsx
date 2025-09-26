@@ -10,9 +10,9 @@ import {
 } from '@island.is/island-ui/core'
 
 import { useAddComment, useCommunicationStatuses } from '../../hooks/api'
+import { useUpdateCommunicationStatus } from '../../hooks/api/update/useUpdateCommunicationStatus'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { useUpdateCommunicationStatus } from '../../hooks/api/update/useUpdateCommunicationStatus'
 import { messages } from './messages'
 
 type Props = {
