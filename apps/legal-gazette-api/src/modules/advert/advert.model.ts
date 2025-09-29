@@ -565,6 +565,9 @@ export class AdvertModel extends BaseModel<
       communicationChannels: model.communicationChannels?.map((c) =>
         c.fromModel(),
       ),
+      paidAt: model.transaction?.paidAt
+        ? model.transaction.paidAt.toISOString()
+        : undefined,
     }
   }
 

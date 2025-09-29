@@ -1,5 +1,3 @@
-import Kennitala from 'kennitala'
-
 import {
   Inject,
   Injectable,
@@ -22,8 +20,6 @@ type TBRPathString = `/${string}`
 @Injectable()
 export class TBRService implements ITBRService {
   private readonly credentials: string
-  private chargeCategoryPerson: string
-  private chargeCategoryCompany: string
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(ITBRConfig) private config: ITBRConfig,
@@ -57,8 +53,6 @@ export class TBRService implements ITBRService {
     }
 
     this.credentials = btoa(this.config.credentials)
-    this.chargeCategoryPerson = process.env.LG_TBR_CHARGE_CATEGORY_PERSON
-    this.chargeCategoryCompany = process.env.LG_TBR_CHARGE_CATEGORY_COMPANY
   }
 
   private async request(
@@ -87,6 +81,7 @@ export class TBRService implements ITBRService {
 
     if (!response.ok) {
       const err = await response.json()
+
       if (response.status === 404) {
         this.logger.error('TBR claim not found', {
           status: response.status,
@@ -116,16 +111,12 @@ export class TBRService implements ITBRService {
       advertId: body.advertId,
     })
 
-    const isPerson = Kennitala.isPerson(body.debtorNationalId)
-
     await this.request('/claim', {
       method: 'POST',
       body: JSON.stringify({
         UUID: body.advertId,
         office: this.config.officeId,
-        chargeCategory: isPerson
-          ? this.chargeCategoryPerson
-          : this.chargeCategoryCompany,
+        chargeCategory: body.chargeCategory,
         chargeBase: body.chargeBase,
         Expenses: body.expenses.map((ex) => ({
           FeeCode: ex.feeCode,
@@ -144,10 +135,8 @@ export class TBRService implements ITBRService {
   async getPaymentStatus(
     query: TBRGetPaymentQueryDto,
   ): Promise<TBRGetPaymentResponseDto> {
-    const isPerson = Kennitala.isPerson(query.debtorNationalId)
-
     const response = await this.request(
-      `/claim/${query.debtorNationalId}?office=${this.config.officeId}&chargeCategory=${isPerson ? this.chargeCategoryPerson : this.chargeCategoryCompany}&chargeBase=${query.chargeBase}`,
+      `/claim/${query.debtorNationalId}?office=${this.config.officeId}&chargeCategory=${query.chargeCategory}&chargeBase=${query.chargeBase}`,
       {
         method: 'GET',
       },

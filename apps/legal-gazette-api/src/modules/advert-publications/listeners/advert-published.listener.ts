@@ -62,6 +62,8 @@ export class AdvertPublishedListener {
       feeCodeId: feeCodeId,
       feeCodeMultiplier: expenses.quantity,
       totalPrice: expenses.sum,
+      chargeCategory: paymentData.chargeCategory,
+      chargeBase: paymentData.chargeBase,
     })
   }
 

@@ -1,4 +1,10 @@
-import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  ForeignKey,
+  Scopes,
+} from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
@@ -11,11 +17,24 @@ export type TBRTransactionAttributes = {
   feeCodeId: string
   totalPrice: number
   feeCodeMultiplier: number
+  chargeBase: string
+  chargeCategory: string
+  paidAt: Date | null
 }
 
 export type TBRTransactionCreateAttributes = TBRTransactionAttributes
 
 @BaseTable({ tableName: LegalGazetteModels.TBR_TRANSACTION })
+@Scopes(() => ({
+  withDebtor: {
+    include: [
+      {
+        model: AdvertModel.unscoped(),
+        attributes: ['id', 'createdByNationalId'],
+      },
+    ],
+  },
+}))
 export class TBRTransactionModel extends BaseModel<
   TBRTransactionAttributes,
   TBRTransactionCreateAttributes
@@ -33,6 +52,15 @@ export class TBRTransactionModel extends BaseModel<
 
   @Column({ type: DataType.NUMBER, allowNull: false, defaultValue: 1 })
   feeCodeMultiplier!: number
+
+  @Column({ type: DataType.DATE, allowNull: true, defaultValue: null })
+  paidAt!: Date | null
+
+  @Column({ type: DataType.STRING, allowNull: false })
+  chargeBase!: string
+
+  @Column({ type: DataType.STRING, allowNull: false })
+  chargeCategory!: string
 
   @BelongsTo(() => AdvertModel)
   advert!: AdvertModel

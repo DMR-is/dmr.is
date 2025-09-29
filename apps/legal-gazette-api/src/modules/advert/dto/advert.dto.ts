@@ -162,6 +162,11 @@ export class AdvertDetailedDto extends AdvertDto {
 
   @ApiProperty({ type: [AdvertPublicationDto] })
   publications!: AdvertPublicationDto[]
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  paidAt?: string
 }
 
 export class GetAdvertsDto {

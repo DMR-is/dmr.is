@@ -3,6 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AdvertUpdateGuard } from '../../guards/advert-update.guard'
 import { PublishingService } from '../../services/publishing/publishing.service'
+import { AdvertPaymentModule } from '../advert-payment/advert-payment.module'
 import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
 import { AdvertPublicationModule } from '../advert-publications/advert-publication.module'
 import { CategoryModel } from '../category/category.model'
@@ -25,6 +26,7 @@ import { IAdvertService } from './advert.service.interface'
       CategoryModel,
     ]),
     AdvertPublicationModule,
+    AdvertPaymentModule,
   ],
   controllers: [
     AdvertUpdateController,

@@ -22,6 +22,9 @@ export class TBRGetPaymentQueryDto {
 
   @ApiProperty({ type: String })
   chargeBase!: string
+
+  @ApiProperty({ type: String })
+  chargeCategory!: string
 }
 
 export class TBRPaymentExpensesDto {
@@ -49,6 +52,9 @@ export class TBRPaymentExpensesDto {
 export class TBRPostPaymentBodyDto {
   @ApiProperty({ type: String, description: 'Advert id' })
   advertId!: string
+
+  @ApiProperty({ type: String, description: 'Charge category' })
+  chargeCategory!: string
 
   @ApiProperty({ type: String, description: 'Charge base (Case number)' })
   chargeBase!: string
