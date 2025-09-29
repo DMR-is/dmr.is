@@ -1,3 +1,5 @@
+import Kennitala from 'kennitala'
+
 import {
   BadRequestException,
   Injectable,
@@ -35,6 +37,8 @@ export class PriceCalculatorService implements IPriceCalculatorService {
       )
     }
 
+    const isPerson = Kennitala.isPerson(advert.createdByNationalId)
+
     // the relation in the db is one-to-one
     // but to handle sequelize join tables we have to treat it as an array
     const feeCodeModel = feeCodeResult[0]
@@ -45,6 +49,9 @@ export class PriceCalculatorService implements IPriceCalculatorService {
         paymentData: {
           advertId: advertId,
           chargeBase: advert.publicationNumber,
+          chargeCategory: isPerson
+            ? process.env.LG_TBR_CHARGE_CATEGORY_PERSON!
+            : process.env.LG_TBR_CHARGE_CATEGORY_COMPANY!,
           debtorNationalId: advert.createdByNationalId,
           expenses: [
             {
@@ -74,6 +81,9 @@ export class PriceCalculatorService implements IPriceCalculatorService {
       paymentData: {
         advertId: advertId,
         chargeBase: advert.publicationNumber,
+        chargeCategory: isPerson
+          ? process.env.LG_TBR_CHARGE_CATEGORY_PERSON!
+          : process.env.LG_TBR_CHARGE_CATEGORY_COMPANY!,
         debtorNationalId: advert.createdByNationalId,
         expenses: [
           {
