@@ -82,8 +82,6 @@ export class TBRService implements ITBRService {
     if (!response.ok) {
       const err = await response.json()
 
-      console.log(err?.error?.detail)
-
       if (response.status === 404) {
         this.logger.error('TBR claim not found', {
           status: response.status,
