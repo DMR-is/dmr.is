@@ -191,7 +191,9 @@ export const CaseProvider = ({
     cb()
   }
 
-  const typeOptions = createOptionsWithCapitalize(advertTypes ? advertTypes.types : types)
+  const typeOptions = createOptionsWithCapitalize(
+    advertTypes ? advertTypes.types : types,
+  )
 
   const canEdit = currentUserId === currentCase.assignedTo?.id
 
