@@ -15,6 +15,26 @@ import {
 import { ITBRConfig } from './tbr.config'
 import { ITBRService } from './tbr.service.interface'
 
+type TBRPaymentJSON = {
+  capital: number
+  interest: number
+  expense: number
+  agreement: boolean
+  paymentAdjustment: boolean
+  agreementReference: { code: string | null; description: string | null }
+  liquidity: { code: string | null; description: string | null }
+  arrearsReference: {
+    code: string | null
+    description: string | null
+    date: string | null
+  }
+  canceled: boolean
+}
+
+type TBRGetPaymentResponse = {
+  result: TBRPaymentJSON
+}
+
 type TBRPathString = `/${string}`
 
 @Injectable()
@@ -142,21 +162,7 @@ export class TBRService implements ITBRService {
       },
     )
 
-    const json = await response.json()
-
-    if (!json.paymentStatus) {
-      this.logger.error('TBR claim response missing paymentStatus', {
-        debtorNationalId: query.debtorNationalId,
-        chargeBase: query.chargeBase,
-        status: response.status,
-        response: json,
-        context: 'TBRService',
-      })
-
-      throw new InternalServerErrorException(
-        'TBR claim response missing paymentStatus',
-      )
-    }
+    const json = (await response.json()) as TBRGetPaymentResponse
 
     return {
       created: true,

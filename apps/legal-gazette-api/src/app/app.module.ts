@@ -36,6 +36,7 @@ import { StatusModel } from '../modules/status/status.model'
 import { SubscriberModel } from '../modules/subscribers/subscriber.model'
 import { SubscriberModule } from '../modules/subscribers/subscriber.module'
 import { ApplicationWebModule } from '../modules/swagger/application-web.module'
+import { ExternalSystemsModule } from '../modules/swagger/external-systems.module'
 import { TBRTransactionModel } from '../modules/tbr-transaction/tbr-transactions.model'
 import { TypeModel } from '../modules/type/type.model'
 import { TypeCategoriesModel } from '../modules/type-categories/type-categories.model'
@@ -60,7 +61,7 @@ import { UsersModule } from '../modules/users/users.module'
             Number(process.env.LEGAL_GAZETTE_DB_PORT) ||
             5434,
           clsNamespace: CLS_NAMESPACE,
-          debugLog: false,
+          debugLog: true,
           autoLoadModels: false,
           models: [
             UserModel,
@@ -101,6 +102,7 @@ import { UsersModule } from '../modules/users/users.module'
     },
     HealthModule,
     ApplicationWebModule,
+    ExternalSystemsModule,
   ],
   controllers: [],
   providers: [
