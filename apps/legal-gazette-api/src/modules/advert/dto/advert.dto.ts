@@ -1,7 +1,6 @@
 import { Transform, Type } from 'class-transformer'
 import {
   IsArray,
-  IsBoolean,
   IsDateString,
   IsEnum,
   IsOptional,
@@ -19,7 +18,10 @@ import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { DetailedDto } from '../../../dto/detailed.dto'
 import { AdvertPublicationDto } from '../../advert-publications/dto/advert-publication.dto'
 import { CategoryDto } from '../../category/dto/category.dto'
-import { CommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
+import {
+  CommunicationChannelDto,
+  CreateCommunicationChannelDto,
+} from '../../communication-channel/dto/communication-channel.dto'
 import { CourtDistrictDto } from '../../court-district/dto/court-district.dto'
 import { SettlementDto } from '../../settlement/dto/settlement.dto'
 import { StatusDto } from '../../status/dto/status.dto'
@@ -408,25 +410,192 @@ export class PublishAdvertsBody {
 export class CreateAdvertDto {
   @ApiProperty({
     type: String,
+    required: false,
+    description: 'Unique identifier of the case',
   })
+  @IsOptional()
+  @IsString()
+  caseId?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    nullable: true,
+    description: 'Island.is application identifier',
+  })
+  @IsOptional()
+  @IsString()
+  islandIsApplicationId?: string | null
+
+  @ApiProperty({ type: String, description: 'Case type identifier' })
+  @IsString()
+  typeId!: string
+
+  @ApiProperty({ type: String, description: 'Case category identifier' })
+  @IsString()
+  categoryId!: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    description: 'Case status identifier',
+  })
+  @IsOptional()
+  @IsString()
+  statusId?: string
+
+  @ApiProperty({ type: String, description: 'Case title' })
   @IsString()
   title!: string
 
   @ApiProperty({
     type: String,
+    required: false,
+    description: 'Legacy HTML content',
   })
-  @IsUUID()
-  typeId!: string
+  @IsOptional()
+  @IsString()
+  legacyHtml?: string
+
+  @ApiProperty({ type: String, description: 'User who created the case' })
+  @IsString()
+  createdBy!: string
+
+  @ApiProperty({ type: String, description: 'National ID of the creator' })
+  @IsString()
+  createdByNationalId!: string
+
+  @ApiProperty({ type: String, description: 'Signature name' })
+  @IsString()
+  signatureName!: string
 
   @ApiProperty({
     type: String,
+    required: false,
+    nullable: true,
+    description: 'Signature on behalf of another person',
   })
-  @IsUUID()
-  categoryId!: string
+  @IsOptional()
+  @IsString()
+  signatureOnBehalfOf?: string | null
 
   @ApiProperty({
     type: String,
+    description: 'Location where the signature was provided',
+  })
+  @IsString()
+  signatureLocation!: string
+
+  @ApiProperty({
+    type: String,
+    format: 'date-time',
+    description: 'Date of signature',
   })
   @IsDateString()
-  scheduledAt!: string
+  signatureDate!: string
+
+  // Common specific properties
+  @ApiProperty({
+    type: String,
+    required: false,
+    nullable: true,
+    description: 'Additional text content',
+  })
+  @IsOptional()
+  @IsString()
+  additionalText?: string | null
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    nullable: true,
+    description: 'Case caption',
+  })
+  @IsOptional()
+  @IsString()
+  caption?: string | null
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    nullable: true,
+    description: 'Case content',
+  })
+  @IsOptional()
+  @IsString()
+  content?: string | null
+
+  // Recall specific properties
+  @ApiProperty({
+    type: String,
+    required: false,
+    nullable: true,
+    description: 'Court district identifier',
+  })
+  @IsOptional()
+  @IsString()
+  courtDistrictId?: string | null
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    nullable: true,
+    description: 'Settlement identifier',
+  })
+  @IsOptional()
+  @IsString()
+  settlementId?: string | null
+
+  @ApiProperty({
+    type: String,
+    format: 'date-time',
+    required: false,
+    nullable: true,
+    description: 'Date of judgement',
+  })
+  @IsOptional()
+  @IsDateString()
+  judgementDate?: string | null
+
+  @ApiProperty({
+    type: String,
+    format: 'date-time',
+    required: false,
+    nullable: true,
+    description: 'Division meeting date',
+  })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDateString()
+  divisionMeetingDate?: Date | null
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    nullable: true,
+    description: 'Location of the division meeting',
+  })
+  @IsOptional()
+  @IsString()
+  divisionMeetingLocation?: string | null
+
+  @ApiProperty({
+    type: [String],
+    description: 'List of scheduled publication dates',
+  })
+  @IsArray()
+  @IsDateString(undefined, { each: true })
+  @MinLength(1, { each: true })
+  @MaxLength(3, { each: true })
+  scheduledAt!: string[]
+
+  @ApiProperty({
+    type: [CreateCommunicationChannelDto],
+    description: 'List of communication channels for notifications',
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateCommunicationChannelDto)
+  communicationChannels?: CreateCommunicationChannelDto[]
 }

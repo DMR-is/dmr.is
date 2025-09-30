@@ -2,6 +2,7 @@ import { PagingQuery } from '@dmr.is/shared/dto'
 
 import {
   AdvertDetailedDto,
+  CreateAdvertDto,
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
@@ -28,6 +29,8 @@ export interface IAdvertService {
   markAdvertAsSubmitted(advertId: string): Promise<void>
 
   assignAdvertToEmployee(advertId: string, userId: string): Promise<void>
+
+  createAdvert(body: CreateAdvertDto): Promise<void>
 }
 
 export const IAdvertService = Symbol('IAdvertService')
