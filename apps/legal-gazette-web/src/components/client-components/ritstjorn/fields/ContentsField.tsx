@@ -1,5 +1,6 @@
 'use client'
 
+import { isBase64 } from 'class-validator'
 import debounce from 'lodash/debounce'
 import { useCallback } from 'react'
 
@@ -61,9 +62,11 @@ export const ContentFields = () => {
         <GridRow>
           <GridColumn span="12/12">
             <Editor
-              defaultValue={Buffer.from(advert.content, 'base64').toString(
-                'utf-8',
-              )}
+              defaultValue={
+                isBase64(advert.content)
+                  ? Buffer.from(advert.content, 'base64').toString('utf-8')
+                  : advert.content
+              }
               onChange={(val) =>
                 silentHTMLUpdateHandler({
                   content: Buffer.from(val, 'utf-8').toString('base64'),

@@ -1,0 +1,177 @@
+import { Inject, Injectable } from '@nestjs/common'
+
+import { formatDate } from '@dmr.is/utils'
+
+import { IAdvertService } from '../advert/advert.service.interface'
+import { RegisterCompanyDto } from './dto/company.dto'
+import { ICompanyService } from './company.service.interface'
+import { formatParty, getNextWednesday } from './utils'
+
+@Injectable()
+export class CompanyService implements ICompanyService {
+  constructor(
+    @Inject(IAdvertService) private readonly advertService: IAdvertService,
+  ) {}
+
+  async registerCompany(body: RegisterCompanyDto): Promise<void> {
+    const nextTuesday = getNextWednesday()
+
+    const creators = body.creators.map((c) => formatParty(c)).join(', ')
+
+    const boardMembers = body.administration
+      ? `${formatParty(body.administration.administrator)}${
+          (body.administration.viceAdministration?.length || 0) > 0
+            ? `, Varastjórn: ${
+                body.administration.viceAdministration
+                  ? body.administration.viceAdministration
+                      .map((dm) => formatParty(dm))
+                      .join(', ')
+                  : ''
+              }`
+            : ''
+        }`
+      : ''
+
+    const chairmen = body.chairmen
+      ? `${formatParty(body.chairmen.chairman)}${
+          body.chairmen.viceChairman
+            ? `, Meðstjórnandi: ${formatParty(body.chairmen.viceChairman)}`
+            : ''
+        }${
+          body.chairmen.reserveChairmen
+            ? `, Varastjórn: ${body.chairmen.reserveChairmen
+                .map((rc) => formatParty(rc))
+                .join(', ')}`
+            : ''
+        }`
+      : ''
+
+    const htmlContent = `
+      <table>
+        <tbody>
+          <tr>
+            <td>
+              <i>Félagið heitir: </i>
+              ${body.name}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Kt.: </i>
+              ${body.nationalId}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Heimili og varnarþing: </i>
+              ${body.registeredAddress}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Dagsetning samþykkta er: </i>
+              ${formatDate(body.approvedDate, 'dd. MMMM yyyy')}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Stofnendur: </i>
+              ${creators}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Stjórn félagsins skipa skv. fundi dags: </i>
+              ${formatDate(body.boardAppointed, 'dd. MMMM yyyy')}
+            </td>
+          </tr>
+          ${
+            boardMembers.length > 0 &&
+            `
+              <tr>
+                <td>
+                  <i>Stjórnarmaður: </i>
+                  ${boardMembers}
+                </td>
+              </tr>
+            `
+          }
+          ${
+            chairmen.length > 0 &&
+            `
+              <tr>
+                <td>
+                  <i>Formaður stjórnar: </i>
+                  ${chairmen}
+                </td>
+              </tr>
+            `
+          }
+          <tr>
+            <td>
+              <i>Firmað ritar: </i>
+              ${body.signingAuthority}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Framkvæmdastjórn: </i>
+              ${body.executiveBoard.map((eb) => formatParty(eb)).join(', ')}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Prókúruumboð: </i>
+              ${body.procurationHolders?.map((ph) => formatParty(ph)).join(', ') || ''}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Skoðunarmaður/endurskoðandi: </i>
+              ${body.auditors.map((a) => formatParty(a)).join(', ')}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Hlutafé kr.: </i>
+              ${body.capital}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Tilgangur: </i>
+              ${body.purpose}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Hömlur á meðferð hlutabréfa: </i>
+              ${body.benefits ? 'Já' : 'Nei'}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Lausnarskylda á hlutabréfum: </i>
+              ${body.liquidationObligation ? 'Já' : 'Nei'}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    `
+
+    await this.advertService.createAdvert({
+      title: `Hlutafélagaskrá - nýskráning`,
+      typeId: '4E8DEC71-5270-49D8-BB67-B9A2CA5BEEAC',
+      categoryId: 'C2430AC0-A18F-4363-BE88-B6DE46B857B9',
+      createdBy: body.responsibleParty.name,
+      createdByNationalId: body.responsibleParty.nationalId,
+      caption: `Nýskráning hlutafélags`,
+      content: htmlContent,
+      signatureDate: body.responsibleParty.signatureDate,
+      signatureName: body.responsibleParty.signatureName,
+      signatureLocation: body.responsibleParty.signatureLocation,
+      signatureOnBehalfOf: body.responsibleParty.signatureOnBehalfOf,
+      scheduledAt: [nextTuesday.toISOString()],
+    })
+  }
+}

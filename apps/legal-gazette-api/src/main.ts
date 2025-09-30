@@ -8,11 +8,11 @@ import { apmInit } from '@dmr.is/apm'
 import { logger } from '@dmr.is/logging'
 
 import { AppModule } from './app/app.module'
-import { AdvertModule } from './modules/advert/advert.module'
 import { AdvertPublicationModule } from './modules/advert-publications/advert-publication.module'
 import { BaseEntityModule } from './modules/base-entity/base-entity.module'
 import { SubscriberModule } from './modules/subscribers/subscriber.module'
 import { ApplicationWebModule } from './modules/swagger/application-web.module'
+import { ExternalSystemsModule } from './modules/swagger/external-systems.module'
 import { IslandIsApplicationModule } from './modules/swagger/island-is-application.module'
 import { openApi } from './openApi'
 
@@ -26,6 +26,8 @@ async function bootstrap() {
   const publicApiTag = 'Legal gazette - public API'
   const applicationWebSwaggerPath = 'application-web-swagger'
   const applicationWebApiTag = 'Legal gazette - application web API'
+  const externalSystemsSwaggerPath = 'external-swagger'
+  const externalSystemsTag = 'Legal gazette - external systems'
 
   const app = await NestFactory.create(AppModule, {
     logger: WinstonModule.createLogger({
@@ -110,6 +112,35 @@ async function bootstrap() {
   SwaggerModule.setup(applicationWebSwaggerPath, app, applicationWebDocument, {
     customSiteTitle: 'Legal Gazette Application Web API',
     jsonDocumentUrl: `/${applicationWebSwaggerPath}/json`,
+  })
+
+  const externalSystemDocument = SwaggerModule.createDocument(app, openApi, {
+    include: [ExternalSystemsModule],
+    deepScanRoutes: true,
+    autoTagControllers: false,
+  })
+
+  externalSystemDocument.tags = [{ name: externalSystemsTag }]
+
+  Object.values(externalSystemDocument.paths).forEach((path) => {
+    for (const method of Object.values(path)) {
+      method.tags = [externalSystemsTag]
+    }
+  })
+
+  SwaggerModule.setup(externalSystemsSwaggerPath, app, externalSystemDocument, {
+    customSiteTitle: 'Legal Gazette External Systems API',
+    swaggerOptions: {
+      tags: [
+        { name: externalSystemsTag, description: 'APIs for external systems' },
+      ],
+      paths: Object.fromEntries(
+        Object.entries(internalDocument.paths).filter(([path]) =>
+          path.startsWith('/api/v1/external/'),
+        ),
+      ),
+    },
+    jsonDocumentUrl: `/${externalSystemsSwaggerPath}/json`,
   })
 
   apmInit()

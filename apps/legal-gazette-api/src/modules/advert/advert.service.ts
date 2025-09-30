@@ -4,9 +4,12 @@ import { InjectModel } from '@nestjs/sequelize'
 import { PagingQuery } from '@dmr.is/shared/dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
+import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
+import { CommunicationChannelModel } from '../communication-channel/communication-channel.model'
 import { StatusIdEnum } from '../status/status.model'
 import {
   AdvertDetailedDto,
+  CreateAdvertDto,
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
@@ -19,7 +22,56 @@ import { IAdvertService } from './advert.service.interface'
 export class AdvertService implements IAdvertService {
   constructor(
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    @InjectModel(AdvertPublicationModel)
+    private readonly advertPublicationModel: typeof AdvertPublicationModel,
   ) {}
+  async createAdvert(body: CreateAdvertDto): Promise<void> {
+    const advert = await this.advertModel.create(
+      {
+        typeId: body.typeId,
+        categoryId: body.categoryId,
+        caseId: body.caseId,
+        title: body.title,
+        content: body.content,
+        createdBy: body.createdBy,
+        caption: body.caption,
+        createdByNationalId: body.createdByNationalId,
+        statusId: body.statusId,
+        courtDistrictId: body.courtDistrictId,
+        legacyHtml: body.legacyHtml,
+        islandIsApplicationId: body.islandIsApplicationId,
+        judgementDate:
+          typeof body.judgementDate === 'string'
+            ? new Date(body.judgementDate)
+            : body.judgementDate,
+        signatureDate:
+          typeof body.signatureDate === 'string'
+            ? new Date(body.signatureDate)
+            : body.signatureDate,
+        signatureLocation: body.signatureLocation,
+        signatureName: body.signatureName,
+        signatureOnBehalfOf: body.signatureOnBehalfOf,
+        additionalText: body.additionalText,
+        divisionMeetingDate:
+          typeof body.divisionMeetingDate === 'string'
+            ? new Date(body.divisionMeetingDate)
+            : body.divisionMeetingDate,
+        divisionMeetingLocation: body.divisionMeetingLocation,
+        communicationChannels: body.communicationChannels,
+      },
+      {
+        returning: ['id'],
+        include: body.communicationChannels ? [CommunicationChannelModel] : [],
+      },
+    )
+
+    await this.advertPublicationModel.bulkCreate(
+      body.scheduledAt.map((scheduledAt) => ({
+        advertId: advert.id,
+        scheduledAt: new Date(scheduledAt),
+      })),
+    )
+  }
 
   async assignAdvertToEmployee(
     advertId: string,
