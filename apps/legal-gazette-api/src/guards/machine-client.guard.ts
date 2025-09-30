@@ -7,8 +7,8 @@ export class MachineClientGuard implements CanActivate {
 
     return (
       user &&
-      user.scopes &&
-      user.scopes.includes(process.env.LEGAL_GAZETTE_MACHINE_CLIENT_SCOPES)
+      user.scope &&
+      user.scope.includes(process.env.LEGAL_GAZETTE_MACHINE_CLIENT_SCOPES)
     )
   }
 }
