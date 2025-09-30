@@ -16,7 +16,7 @@ export class ResponsiblePartyDto {
   @ApiProperty({
     type: String,
     description: 'Name of the party responsible for the advert',
-    example: 'John Doe',
+    example: 'Ríkisskattstjóri, hlutafélagaskrá',
   })
   @IsString()
   name!: string
@@ -31,15 +31,15 @@ export class ResponsiblePartyDto {
 
   @ApiProperty({
     type: String,
-    description: 'The name of the person signing the advert',
-    example: 'Jón Jónsson',
+    description: 'The name of the institution signing the advert',
+    example: 'Ríkisskattstjóri, hlutafélagaskrá',
   })
   @IsString()
   signatureName!: string
 
   @ApiProperty({
     type: String,
-    description: 'The location where the responsible party signed the advert',
+    description: 'Where the signature took place',
     example: 'Reykjavík',
   })
   @IsString()
@@ -70,7 +70,7 @@ export class PartyEntityDto {
   @ApiProperty({
     type: String,
     description: 'Name of the party',
-    example: 'John Doe',
+    example: 'Jón Jónsson / Jón ehf.',
   })
   @IsString()
   name!: string
@@ -99,7 +99,7 @@ export class PartyEntityDto {
 export class CompanyChairmanDto {
   @ApiProperty({
     type: PartyEntityDto,
-    description: 'The chairman of the company',
+    description: 'The chairman (formaður) of the company',
   })
   @IsDefined()
   @Type(() => PartyEntityDto)
@@ -108,60 +108,46 @@ export class CompanyChairmanDto {
 
   @ApiProperty({
     type: PartyEntityDto,
-    description: 'The vice chairman of the company',
+    description: 'The vice chairman (meðstjórnandi) of the company',
     required: false,
   })
   @IsOptional()
   @Type(() => PartyEntityDto)
   @ValidateNested()
   viceChairman?: PartyEntityDto
+
+  @ApiProperty({
+    type: [PartyEntityDto],
+    description: 'The reserve chairmen (varastjórn) of the company',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @Type(() => PartyEntityDto)
+  @ValidateNested({ each: true })
+  reserveChairmen?: PartyEntityDto[]
 }
 
-export class CompanyBoardDto {
+export class CompanyAdministrationDto {
   @ApiProperty({
     type: PartyEntityDto,
-    description: 'A board member of the company',
+    description: 'The vice administrator of the company (Stjórnarmaður)',
   })
   @IsDefined()
   @Type(() => PartyEntityDto)
   @ValidateNested()
-  boardMember!: PartyEntityDto
+  administrator!: PartyEntityDto
 
   @ApiProperty({
-    type: PartyEntityDto,
-    description: 'The vice chairman of the company',
+    type: [PartyEntityDto],
+    description: 'The vice administation of the company (Varastjórn)',
     required: false,
   })
   @IsOptional()
+  @IsArray()
   @Type(() => PartyEntityDto)
   @ValidateNested()
-  deputyMember?: PartyEntityDto
-}
-
-export class CompanyCreatorDto {
-  @ApiProperty({
-    type: String,
-    description: 'Name of the company creator',
-    example: 'John Doe',
-  })
-  @IsString()
-  name!: string
-
-  @ApiProperty({
-    type: String,
-    description: 'National id of the company creator',
-    example: '1234567890',
-  })
-  @IsString()
-  nationalId!: string
-
-  @ApiProperty({
-    type: String,
-    description: 'Address of the company creator',
-    example: 'Laugavegur 1, 101 Reykjavik',
-  })
-  @IsString()
-  address!: string
+  viceAdministration?: PartyEntityDto[]
 }
 
 export class RegisterCompanyDto {
@@ -176,15 +162,15 @@ export class RegisterCompanyDto {
 
   @ApiProperty({
     type: String,
-    description: 'Name of the company',
-    example: 'My company',
+    description: 'Name of the registered company (Félagið heitir)',
+    example: 'HXM ehf.',
   })
   @IsString()
   name!: string
 
   @ApiProperty({
     type: String,
-    description: 'National id of the company',
+    description: 'National id of the registered company (Kennitala fyrirtækis)',
     example: '1234567890',
   })
   @IsString()
@@ -192,24 +178,25 @@ export class RegisterCompanyDto {
 
   @ApiProperty({
     type: String,
-    description: 'Address of the company',
+    description:
+      'Address of the registered company (Skráð heimilisfang fyrirtækis)',
     example: 'Laugavegur 1, 101 Reykjavik',
   })
   @IsString()
   registeredAddress!: string
 
   @ApiProperty({
-    type: [CompanyCreatorDto],
-    description: 'List of company creators',
+    type: [PartyEntityDto],
+    description: 'List of registered company creators (Stofnendur)',
   })
   @IsDefined()
-  @Type(() => CompanyCreatorDto)
+  @Type(() => PartyEntityDto)
   @ValidateNested({ each: true })
-  creators!: CompanyCreatorDto[]
+  creators!: PartyEntityDto[]
 
   @ApiProperty({
     type: String,
-    description: 'Date when the company was accepted',
+    description: 'Date when the company was accepted (Dagsetning samþykkta er)',
     example: '2023-10-01T12:00:00Z (ISO 8601 format)',
   })
   @IsDateString()
@@ -217,25 +204,26 @@ export class RegisterCompanyDto {
 
   @ApiProperty({
     type: String,
-    description: 'Date when the board was established',
+    description:
+      'Date when the board was established (Stjórn félagsins skipa skv. fundi dags)',
     example: '2023-10-01T12:00:00Z (ISO 8601 format)',
   })
   @IsDateString()
   boardAppointed!: string
 
   @ApiProperty({
-    type: CompanyBoardDto,
-    description: 'The chairman of the board',
+    type: CompanyAdministrationDto,
+    description: 'The administration of the company (Stjórnarmaður)',
     required: false,
   })
   @IsOptional()
-  @Type(() => CompanyBoardDto)
+  @Type(() => CompanyAdministrationDto)
   @ValidateNested()
-  boardMembers?: CompanyBoardDto
+  administration?: CompanyAdministrationDto
 
   @ApiProperty({
     type: CompanyChairmanDto,
-    description: 'The chairman of the board',
+    description: 'The chairman of the company board (Formaðurs stjórnar)',
     required: false,
   })
   @IsOptional()
@@ -245,7 +233,7 @@ export class RegisterCompanyDto {
 
   @ApiProperty({
     type: [PartyEntityDto],
-    description: 'The executive board of the company',
+    description: 'The executive board of the company (Framkvæmdastjórn)',
   })
   @IsArray()
   @Type(() => PartyEntityDto)
@@ -255,14 +243,14 @@ export class RegisterCompanyDto {
   @ApiProperty({
     type: String,
     example:
-      'Ef einn í stjórn:  Stjórnarmaður, ef stjórn er fjölskipuð: Meirihluti stjórnar',
+      'Ef einn í stjórn:  Stjórnarmaður, ef stjórn er fjölskipuð: Meirihluti stjórnar (Firmað ritar)',
   })
   @IsString()
   signingAuthority!: string
 
   @ApiProperty({
     type: [PartyEntityDto],
-    description: 'The procuration holders of the company',
+    description: 'The procuration holders of the company (Prókuruumboð)',
     required: false,
   })
   @IsOptional()
@@ -273,8 +261,7 @@ export class RegisterCompanyDto {
 
   @ApiProperty({
     type: [PartyEntityDto],
-    description: 'John Doe',
-    example: 'Nafn endurskoðanda',
+    description: 'The auditors of the company (Skoðunarmaður/endurskoðandi)',
   })
   @IsDefined()
   @Type(() => PartyEntityDto)
@@ -283,7 +270,7 @@ export class RegisterCompanyDto {
 
   @ApiProperty({
     type: Number,
-    description: 'Hlutafé í kr.',
+    description: 'The capital of the company in ISK (Hlutafé kr.)',
     example: 1000000,
   })
   @IsNumber()
@@ -291,15 +278,14 @@ export class RegisterCompanyDto {
 
   @ApiProperty({
     type: String,
-    description: 'Tilgangur fyrirtækis',
-    example: 'Að reka veitingahús',
+    description: 'The purpose of the company (Tilgangur)',
   })
   @IsString()
   purpose!: string
 
   @ApiProperty({
     type: Boolean,
-    description: 'Eru hömlur? ',
+    description: 'Are there special benefits (Hömlur á meðferð hlutabréfa)',
     example: false,
   })
   @IsBoolean()
@@ -307,7 +293,8 @@ export class RegisterCompanyDto {
 
   @ApiProperty({
     type: Boolean,
-    description: 'Lausnarskylda',
+    description:
+      'Is there an obligation for liquidation (Lausnarskylda á hlutabréfum)',
     example: false,
   })
   @IsBoolean()

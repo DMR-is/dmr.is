@@ -18,10 +18,16 @@ export class CompanyService implements ICompanyService {
 
     const creators = body.creators.map((c) => formatParty(c)).join(', ')
 
-    const boardMembers = body.boardMembers
-      ? `${formatParty(body.boardMembers.boardMember)}${
-          body.boardMembers.deputyMember
-            ? `, Varastjórn: ${formatParty(body.boardMembers.deputyMember)}`
+    const boardMembers = body.administration
+      ? `${formatParty(body.administration.administrator)}${
+          (body.administration.viceAdministration?.length || 0) > 0
+            ? `, Varastjórn: ${
+                body.administration.viceAdministration
+                  ? body.administration.viceAdministration
+                      .map((dm) => formatParty(dm))
+                      .join(', ')
+                  : ''
+              }`
             : ''
         }`
       : ''
@@ -30,6 +36,12 @@ export class CompanyService implements ICompanyService {
       ? `${formatParty(body.chairmen.chairman)}${
           body.chairmen.viceChairman
             ? `, Meðstjórnandi: ${formatParty(body.chairmen.viceChairman)}`
+            : ''
+        }${
+          body.chairmen.reserveChairmen
+            ? `, Varastjórn: ${body.chairmen.reserveChairmen
+                .map((rc) => formatParty(rc))
+                .join(', ')}`
             : ''
         }`
       : ''

@@ -1,4 +1,5 @@
 import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common'
+import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
@@ -11,6 +12,7 @@ import { ICompanyService } from './company.service.interface'
   path: 'companies',
   version: '1',
 })
+@ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, MachineClientGuard)
 export class CompanyController {
   constructor(
