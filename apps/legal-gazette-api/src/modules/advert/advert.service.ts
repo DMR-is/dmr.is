@@ -59,7 +59,10 @@ export class AdvertService implements IAdvertService {
         divisionMeetingLocation: body.divisionMeetingLocation,
         communicationChannels: body.communicationChannels,
       },
-      { returning: ['id'], include: [CommunicationChannelModel] },
+      {
+        returning: ['id'],
+        include: body.communicationChannels ? [CommunicationChannelModel] : [],
+      },
     )
 
     await this.advertPublicationModel.bulkCreate(
