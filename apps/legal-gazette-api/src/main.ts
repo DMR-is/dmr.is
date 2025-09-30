@@ -14,7 +14,6 @@ import { BaseEntityModule } from './modules/base-entity/base-entity.module'
 import { SubscriberModule } from './modules/subscribers/subscriber.module'
 import { ApplicationWebModule } from './modules/swagger/application-web.module'
 import { IslandIsApplicationModule } from './modules/swagger/island-is-application.module'
-import { openApi } from './openApi'
 
 async function bootstrap() {
   const globalPrefix = 'api'
