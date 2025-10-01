@@ -3,7 +3,10 @@ import { Inject, Injectable } from '@nestjs/common'
 import { formatDate } from '@dmr.is/utils'
 
 import { IAdvertService } from '../advert/advert.service.interface'
-import { RegisterCompanyDto } from './dto/company.dto'
+import {
+  RegisterCompanyHlutafelagDto,
+  RegisterCompanyFirmaskraDto,
+} from './dto/company.dto'
 import { ICompanyService } from './company.service.interface'
 import { formatParty, getNextWednesday } from './utils'
 
@@ -12,9 +15,113 @@ export class CompanyService implements ICompanyService {
   constructor(
     @Inject(IAdvertService) private readonly advertService: IAdvertService,
   ) {}
+  registerCompanyFirmaskra(body: RegisterCompanyFirmaskraDto): Promise<void> {
+    const nextWednesday = getNextWednesday()
 
-  async registerCompany(body: RegisterCompanyDto): Promise<void> {
-    const nextTuesday = getNextWednesday()
+    const creators = body.creators.map((c) => formatParty(c)).join(', ')
+    const procurators = body.procurationHolders
+      ? body.procurationHolders.map((ph) => formatParty(ph)).join(', ')
+      : ''
+    const additionalProperties = body.additionalProperties
+      ? body.additionalProperties.map((ap) => ({
+          key: ap.key,
+          value: formatParty(ap.value),
+        }))
+      : []
+
+    const htmlContent = `
+      <table>
+        <tbody>
+          <tr>
+            <td>
+              <i>Nafn</i>
+              ${body.name}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Kt.: </i>
+              ${body.nationalId}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Dagsetning samþykkta: </i>
+              ${formatDate(body.approvedDate, 'dd. MMMM yyyy')}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Heimilisfang: </i>
+              ${body.registeredAddress}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Eigendur: </i>
+              ${creators}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Tilgangur</i>
+              ${body.purpose}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Skattaðlid: </i>
+              ${body.taxMembership}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Firmaritun: </i>
+              ${body.firmWriting}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <i>Prókúruumboð: </i>
+              ${procurators}
+            </td>
+          </tr>
+          ${additionalProperties
+            .map(
+              ({ key, value }) => `
+              <tr>
+                <td>
+                  <i>${key}: </i>
+                  ${value}
+                </td>
+              </tr>
+            `,
+            )
+            .join('')}
+        </tbody>
+      </table>
+    `
+
+    return this.advertService.createAdvert({
+      title: `Fyrirtækjaskrá - nýskráning`,
+      typeId: 'B390117B-A39A-4292-AE59-91295190F57D',
+      categoryId: '6FB035BF-028D-4BFA-937F-32A7AA592F16',
+      createdBy: body.responsibleParty.name,
+      createdByNationalId: body.responsibleParty.nationalId,
+      caption: body.name,
+      content: htmlContent,
+      signatureDate: body.responsibleParty.signatureDate,
+      signatureName: body.responsibleParty.signatureName,
+      signatureLocation: body.responsibleParty.signatureLocation,
+      signatureOnBehalfOf: body.responsibleParty.signatureOnBehalfOf,
+      scheduledAt: [nextWednesday.toISOString()],
+    })
+  }
+
+  async registerCompanyHlutafelag(
+    body: RegisterCompanyHlutafelagDto,
+  ): Promise<void> {
+    const nextWednesDay = getNextWednesday()
 
     const creators = body.creators.map((c) => formatParty(c)).join(', ')
 
@@ -110,7 +217,7 @@ export class CompanyService implements ICompanyService {
           <tr>
             <td>
               <i>Firmað ritar: </i>
-              ${body.signingAuthority}
+              ${body.theFirmWrites}
             </td>
           </tr>
           <tr>
@@ -165,13 +272,13 @@ export class CompanyService implements ICompanyService {
       categoryId: 'C2430AC0-A18F-4363-BE88-B6DE46B857B9',
       createdBy: body.responsibleParty.name,
       createdByNationalId: body.responsibleParty.nationalId,
-      caption: `Nýskráning hlutafélags`,
+      caption: body.name,
       content: htmlContent,
       signatureDate: body.responsibleParty.signatureDate,
       signatureName: body.responsibleParty.signatureName,
       signatureLocation: body.responsibleParty.signatureLocation,
       signatureOnBehalfOf: body.responsibleParty.signatureOnBehalfOf,
-      scheduledAt: [nextTuesday.toISOString()],
+      scheduledAt: [nextWednesDay.toISOString()],
     })
   }
 }

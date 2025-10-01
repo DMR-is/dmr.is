@@ -1,7 +1,12 @@
-import { RegisterCompanyDto } from './dto/company.dto'
+import {
+  RegisterCompanyHlutafelagDto,
+  RegisterCompanyFirmaskraDto,
+} from './dto/company.dto'
 
 export interface ICompanyService {
-  registerCompany(body: RegisterCompanyDto): Promise<void>
+  registerCompanyHlutafelag(body: RegisterCompanyHlutafelagDto): Promise<void>
+
+  registerCompanyFirmaskra(body: RegisterCompanyFirmaskraDto): Promise<void>
 }
 
 export const ICompanyService = 'ICompanyService'
