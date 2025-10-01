@@ -45,6 +45,19 @@ export class InvolvedPartyGuard implements CanActivate {
         return true
       }
 
+      const involvedPartyResult =
+        await this.utilityService.institutionLookup(caseInvoledPartyId)
+
+      if (involvedPartyResult.result.ok) {
+        const involvedPartyNationalId =
+          involvedPartyResult.result.value.nationalId
+
+        // Check if the involved party national ID matches the user's national ID
+        if (involvedPartyNationalId === request.user.nationalId) {
+          return true
+        }
+      }
+
       this.logger.warn(`No matching involed parties found`, {
         context: 'InvolvedPartyGuard',
         category: 'involved-party-guard',
