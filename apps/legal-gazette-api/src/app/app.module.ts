@@ -39,6 +39,7 @@ import { SubscriberModule } from '../modules/subscribers/subscriber.module'
 import { ApplicationWebModule } from '../modules/swagger/application-web.module'
 import { ExternalSystemsModule } from '../modules/swagger/external-systems.module'
 import { IslandIsApplicationModule } from '../modules/swagger/island-is-application.module'
+import { PublicWebModule } from '../modules/swagger/public-web.module'
 import { TBRTransactionModel } from '../modules/tbr-transaction/tbr-transactions.model'
 import { TypeModel } from '../modules/type/type.model'
 import { TypeCategoriesModel } from '../modules/type-categories/type-categories.model'
@@ -107,6 +108,7 @@ import { UsersModule } from '../modules/users/users.module'
     ApplicationWebModule,
     ExternalSystemsModule,
     IslandIsApplicationModule,
+    PublicWebModule,
   ],
   controllers: [],
   providers: [
