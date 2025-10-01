@@ -2,32 +2,17 @@ import { WinstonModule } from 'nest-winston'
 
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
-import { SwaggerModule } from '@nestjs/swagger'
 
 import { apmInit } from '@dmr.is/apm'
 import { logger } from '@dmr.is/logging'
 
 import { AppModule } from './app/app.module'
-import { AdvertPublicationModule } from './modules/advert-publications/advert-publication.module'
-import { BaseEntityModule } from './modules/base-entity/base-entity.module'
-import { SubscriberModule } from './modules/subscribers/subscriber.module'
-import { ApplicationWebModule } from './modules/swagger/application-web.module'
-import { ExternalSystemsModule } from './modules/swagger/external-systems.module'
-import { IslandIsApplicationModule } from './modules/swagger/island-is-application.module'
-import { openApi } from './openApi'
+import { setupSwaggerDocument } from './setupSwaggerDocument'
+import { SWAGGER_CONFIG } from './swagger.config'
 
 async function bootstrap() {
   const globalPrefix = 'api'
   const version = 'v1'
-  const internalSwaggerPath = 'swagger'
-  const islandSwaggerPath = 'island-is-swagger'
-  const islandApiTag = 'Legal gazette - common application'
-  const publicSwaggerPath = 'public-swagger'
-  const publicApiTag = 'Legal gazette - public API'
-  const applicationWebSwaggerPath = 'application-web-swagger'
-  const applicationWebApiTag = 'Legal gazette - application web API'
-  const externalSystemsSwaggerPath = 'external-swagger'
-  const externalSystemsTag = 'Legal gazette - external systems'
 
   const app = await NestFactory.create(AppModule, {
     logger: WinstonModule.createLogger({
@@ -48,100 +33,9 @@ async function bootstrap() {
     type: VersioningType.URI,
   })
 
-  const internalDocument = SwaggerModule.createDocument(app, openApi)
-  SwaggerModule.setup(internalSwaggerPath, app, internalDocument)
-
-  const islandDocument = SwaggerModule.createDocument(app, openApi, {
-    include: [IslandIsApplicationModule],
-    deepScanRoutes: true,
-    autoTagControllers: false,
-  })
-
-  // replace the default tag with 'Legal gazette - common application'
-  islandDocument.tags = [{ name: islandApiTag }]
-
-  // tag routes
-  Object.values(islandDocument.paths).forEach((path) => {
-    for (const method of Object.values(path)) {
-      method.tags = [islandApiTag]
-    }
-  })
-
-  SwaggerModule.setup(islandSwaggerPath, app, islandDocument, {
-    customSiteTitle: 'Legal Gazette API',
-    jsonDocumentUrl: `/${islandSwaggerPath}/json`,
-  })
-
-  const publicDocument = SwaggerModule.createDocument(app, openApi, {
-    include: [BaseEntityModule, SubscriberModule, AdvertPublicationModule],
-    deepScanRoutes: true,
-    autoTagControllers: false,
-  })
-
-  // replace the default tag with 'Legal gazette - public API'
-  publicDocument.tags = [{ name: publicApiTag }]
-
-  // tag routes
-  Object.values(publicDocument.paths).forEach((path) => {
-    for (const method of Object.values(path)) {
-      method.tags = [publicApiTag]
-    }
-  })
-
-  SwaggerModule.setup(publicSwaggerPath, app, publicDocument, {
-    customSiteTitle: 'Legal Gazette Public API',
-    jsonDocumentUrl: `/${publicSwaggerPath}/json`,
-  })
-
-  const applicationWebDocument = SwaggerModule.createDocument(app, openApi, {
-    include: [ApplicationWebModule],
-    deepScanRoutes: true,
-    autoTagControllers: false,
-  })
-
-  // replace the default tag with 'Legal gazette - application web API'
-  applicationWebDocument.tags = [{ name: applicationWebApiTag }]
-
-  // tag routes
-  Object.values(applicationWebDocument.paths).forEach((path) => {
-    for (const method of Object.values(path)) {
-      method.tags = [applicationWebApiTag]
-    }
-  })
-
-  SwaggerModule.setup(applicationWebSwaggerPath, app, applicationWebDocument, {
-    customSiteTitle: 'Legal Gazette Application Web API',
-    jsonDocumentUrl: `/${applicationWebSwaggerPath}/json`,
-  })
-
-  const externalSystemDocument = SwaggerModule.createDocument(app, openApi, {
-    include: [ExternalSystemsModule],
-    deepScanRoutes: true,
-    autoTagControllers: false,
-  })
-
-  externalSystemDocument.tags = [{ name: externalSystemsTag }]
-
-  Object.values(externalSystemDocument.paths).forEach((path) => {
-    for (const method of Object.values(path)) {
-      method.tags = [externalSystemsTag]
-    }
-  })
-
-  SwaggerModule.setup(externalSystemsSwaggerPath, app, externalSystemDocument, {
-    customSiteTitle: 'Legal Gazette External Systems API',
-    swaggerOptions: {
-      tags: [
-        { name: externalSystemsTag, description: 'APIs for external systems' },
-      ],
-      paths: Object.fromEntries(
-        Object.entries(internalDocument.paths).filter(([path]) =>
-          path.startsWith('/api/v1/external/'),
-        ),
-      ),
-    },
-    jsonDocumentUrl: `/${externalSystemsSwaggerPath}/json`,
-  })
+  for (const config of SWAGGER_CONFIG) {
+    setupSwaggerDocument(app, config)
+  }
 
   apmInit()
 

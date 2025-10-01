@@ -40,7 +40,6 @@ import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
 } from '../communication-channel/communication-channel.model'
-import { CreateCommunicationChannelDto } from '../communication-channel/dto/communication-channel.dto'
 import { SettlementModel } from '../settlement/settlement.model'
 import { TypeIdEnum } from '../type/type.model'
 import {
