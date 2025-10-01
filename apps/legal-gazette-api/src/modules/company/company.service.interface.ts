@@ -1,6 +1,6 @@
 import {
-  RegisterCompanyHlutafelagDto,
   RegisterCompanyFirmaskraDto,
+  RegisterCompanyHlutafelagDto,
 } from './dto/company.dto'
 
 export interface ICompanyService {

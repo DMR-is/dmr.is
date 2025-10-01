@@ -4,8 +4,8 @@ import { formatDate } from '@dmr.is/utils'
 
 import { IAdvertService } from '../advert/advert.service.interface'
 import {
-  RegisterCompanyHlutafelagDto,
   RegisterCompanyFirmaskraDto,
+  RegisterCompanyHlutafelagDto,
 } from './dto/company.dto'
 import { ICompanyService } from './company.service.interface'
 import { formatParty, getNextWednesday } from './utils'
@@ -121,37 +121,16 @@ export class CompanyService implements ICompanyService {
   async registerCompanyHlutafelag(
     body: RegisterCompanyHlutafelagDto,
   ): Promise<void> {
-    const nextWednesDay = getNextWednesday()
+    const nextWednesday = getNextWednesday()
 
     const creators = body.creators.map((c) => formatParty(c)).join(', ')
+    const boardMembers = body.board.members
+      .map((m) => formatParty(m))
+      .join(', ')
 
-    const boardMembers = body.administration
-      ? `${formatParty(body.administration.administrator)}${
-          (body.administration.viceAdministration?.length || 0) > 0
-            ? `, Varastjórn: ${
-                body.administration.viceAdministration
-                  ? body.administration.viceAdministration
-                      .map((dm) => formatParty(dm))
-                      .join(', ')
-                  : ''
-              }`
-            : ''
-        }`
-      : ''
-
-    const chairmen = body.chairmen
-      ? `${formatParty(body.chairmen.chairman)}${
-          body.chairmen.viceChairman
-            ? `, Meðstjórnandi: ${formatParty(body.chairmen.viceChairman)}`
-            : ''
-        }${
-          body.chairmen.reserveChairmen
-            ? `, Varastjórn: ${body.chairmen.reserveChairmen
-                .map((rc) => formatParty(rc))
-                .join(', ')}`
-            : ''
-        }`
-      : ''
+    const executiveBoardMembers =
+      body.board.executiveBoardMembers?.map((m) => formatParty(m)).join(', ') ??
+      ''
 
     const htmlContent = `
       <table>
@@ -189,43 +168,29 @@ export class CompanyService implements ICompanyService {
           <tr>
             <td>
               <i>Stjórn félagsins skipa skv. fundi dags: </i>
-              ${formatDate(body.boardAppointed, 'dd. MMMM yyyy')}
+              ${formatDate(body.board.appointedDate, 'dd. MMMM yyyy')}
             </td>
           </tr>
-          ${
-            boardMembers.length > 0 &&
-            `
-              <tr>
-                <td>
-                  <i>Stjórnarmaður: </i>
-                  ${boardMembers}
-                </td>
-              </tr>
-            `
-          }
-          ${
-            chairmen.length > 0 &&
-            `
-              <tr>
-                <td>
-                  <i>Formaður stjórnar: </i>
-                  ${chairmen}
-                </td>
-              </tr>
-            `
-          }
+          <tr>
+            <td>
+              ${boardMembers}
+            </td>
+          </tr>
           <tr>
             <td>
               <i>Firmað ritar: </i>
               ${body.theFirmWrites}
             </td>
           </tr>
-          <tr>
-            <td>
-              <i>Framkvæmdastjórn: </i>
-              ${body.executiveBoard.map((eb) => formatParty(eb)).join(', ')}
-            </td>
-          </tr>
+          ${
+            executiveBoardMembers.length > 0 &&
+            `<tr>
+              <td>
+                <i>Framkvæmdarstjórn</i>
+                ${executiveBoardMembers}
+              </td>
+            </tr>`
+          }
           <tr>
             <td>
               <i>Prókúruumboð: </i>
@@ -278,7 +243,7 @@ export class CompanyService implements ICompanyService {
       signatureName: body.responsibleParty.signatureName,
       signatureLocation: body.responsibleParty.signatureLocation,
       signatureOnBehalfOf: body.responsibleParty.signatureOnBehalfOf,
-      scheduledAt: [nextWednesDay.toISOString()],
+      scheduledAt: [nextWednesday.toISOString()],
     })
   }
 }

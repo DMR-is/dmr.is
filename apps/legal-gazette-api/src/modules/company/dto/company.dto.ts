@@ -154,6 +154,18 @@ export class CompanyBoardDto {
   @Type(() => PartyEntityDto)
   @ValidateNested({ each: true })
   members!: PartyEntityDto[]
+
+  @ApiProperty({
+    type: [PartyEntityDto],
+    description:
+      'The executive members of the company board (Framkvæmdarstjórn)',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @Type(() => PartyEntityDto)
+  @ValidateNested({ each: true })
+  executiveBoardMembers?: PartyEntityDto[]
 }
 
 export class RegisterCompanyHlutafelagDto {
