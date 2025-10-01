@@ -18,10 +18,14 @@ export const formatParty = ({
   name,
   nationalId,
   address,
+  role,
+  jobTitle,
 }: {
   name: string
   nationalId?: string
   address?: string
+  role?: string
+  jobTitle?: string
 }) => {
-  return `${name}${nationalId ? `, kt. ${nationalId}` : ''}${address ? `, ${address}` : ''}`
+  return `${role ? `${role}: ` : ''}${name}${nationalId ? `, kt. ${nationalId}` : ''}${address ? `, ${address}` : ''}${jobTitle ? `, ${jobTitle}` : ''}`.trim()
 }

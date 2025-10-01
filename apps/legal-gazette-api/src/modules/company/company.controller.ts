@@ -5,7 +5,10 @@ import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
 import { MachineClientGuard } from '../../guards/machine-client.guard'
-import { RegisterCompanyDto } from './dto/company.dto'
+import {
+  RegisterCompanyFirmaskraDto,
+  RegisterCompanyHlutafelagDto,
+} from './dto/company.dto'
 import { ICompanyService } from './company.service.interface'
 
 @Controller({
@@ -19,9 +22,23 @@ export class CompanyController {
     @Inject(ICompanyService) private readonly companyService: ICompanyService,
   ) {}
 
-  @Post('register')
-  @LGResponse({ operationId: 'registerCompany' })
-  async registerCompany(@Body() body: RegisterCompanyDto) {
-    return this.companyService.registerCompany(body)
+  @Post('hlutafelag')
+  @LGResponse({
+    operationId: 'registerHlutafelag',
+    description: 'Register a new company (Hlutafélag nýskráning)',
+  })
+  async registerCompany(@Body() body: RegisterCompanyHlutafelagDto) {
+    return this.companyService.registerCompanyHlutafelag(body)
+  }
+
+  @Post('firmaskra')
+  @LGResponse({
+    operationId: 'registerFirmaskra',
+    description: 'Register a new company from (Firmaskrá - Fyrirtækjaskrá)',
+  })
+  async registerCompanyFromFirmaskra(
+    @Body() body: RegisterCompanyFirmaskraDto,
+  ) {
+    return this.companyService.registerCompanyFirmaskra(body)
   }
 }
