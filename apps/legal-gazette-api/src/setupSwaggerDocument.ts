@@ -1,7 +1,9 @@
 import { INestApplication } from '@nestjs/common'
-import { OpenAPIObject, SwaggerModule } from '@nestjs/swagger'
+import { SwaggerModule } from '@nestjs/swagger'
 
-type SetupSwaggerOptions = {
+import { openApi } from './openApi'
+
+export type SetupSwaggerOptions = {
   modules: Function[]
   tag: string
   swaggerTitle: string
@@ -11,7 +13,6 @@ type SetupSwaggerOptions = {
 
 export const setupSwaggerDocument = (
   app: INestApplication,
-  openApi: Omit<OpenAPIObject, 'paths'>,
   options: SetupSwaggerOptions,
 ) => {
   const document = SwaggerModule.createDocument(app, openApi, {

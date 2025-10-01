@@ -28,6 +28,7 @@ import { CaseModel } from '../modules/case/case.model'
 import { CaseModule } from '../modules/case/case.module'
 import { CategoryModel } from '../modules/category/category.model'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
+import { CompanyModule } from '../modules/company/company.module'
 import { CourtDistrictModel } from '../modules/court-district/court-district.model'
 import { FeeCodeModel } from '../modules/fee-code/fee-code.model'
 import { SettlementModel } from '../modules/settlement/settlement.model'
@@ -37,6 +38,7 @@ import { SubscriberModel } from '../modules/subscribers/subscriber.model'
 import { SubscriberModule } from '../modules/subscribers/subscriber.module'
 import { ApplicationWebModule } from '../modules/swagger/application-web.module'
 import { ExternalSystemsModule } from '../modules/swagger/external-systems.module'
+import { IslandIsApplicationModule } from '../modules/swagger/island-is-application.module'
 import { TBRTransactionModel } from '../modules/tbr-transaction/tbr-transactions.model'
 import { TypeModel } from '../modules/type/type.model'
 import { TypeCategoriesModel } from '../modules/type-categories/type-categories.model'
@@ -88,6 +90,7 @@ import { UsersModule } from '../modules/users/users.module'
       inject: [DMRSequelizeConfigService],
     }),
     BaseEntityModule,
+    CompanyModule,
     CaseModule,
     AdvertModule,
     AdvertPublicationModule,
@@ -103,6 +106,7 @@ import { UsersModule } from '../modules/users/users.module'
     HealthModule,
     ApplicationWebModule,
     ExternalSystemsModule,
+    IslandIsApplicationModule,
   ],
   controllers: [],
   providers: [
