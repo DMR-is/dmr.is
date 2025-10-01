@@ -652,6 +652,7 @@ export const DateFormats = [
   'dd.MM.yyyy',
   'dd. MMMM yyyy',
   'HH:mm',
+  'MMMM yyyy',
   'MMMM',
   'EEEE',
 ] as const
