@@ -10,7 +10,7 @@ import {
   ValidateNested,
 } from 'class-validator'
 
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, PickType } from '@nestjs/swagger'
 
 export class ResponsiblePartyDto {
   @ApiProperty({
@@ -299,4 +299,41 @@ export class RegisterCompanyDto {
   })
   @IsBoolean()
   liquidationObligation!: boolean
+}
+
+export class RegisterCompanyFirmaskraDto extends PickType(RegisterCompanyDto, [
+  'responsibleParty',
+  'nationalId',
+  'approvedDate',
+  'registeredAddress',
+  'creators',
+  'purpose',
+  'procurationHolders',
+] as const) {
+  @ApiProperty({
+    type: String,
+    description: 'Tax membership status (Skattaðlid)',
+    example: 'félagið er sjálfstæður skattaðili',
+  })
+  @IsString()
+  taxMembership!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'Firmaritun',
+    example: 'Allir félagsmenn saman',
+  })
+  @IsString()
+  firmWriting!: string
+
+  @ApiProperty({
+    type: [PartyEntityDto],
+    description: 'The executive board of the company (Framkvæmdarstjóri)',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @Type(() => PartyEntityDto)
+  @ValidateNested({ each: true })
+  executives!: PartyEntityDto[]
 }
