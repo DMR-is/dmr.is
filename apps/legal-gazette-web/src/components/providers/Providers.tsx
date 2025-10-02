@@ -6,7 +6,7 @@ import { SessionProvider } from 'next-auth/react'
 import { NuqsAdapter } from 'nuqs/adapters/next'
 import { IntlProvider } from 'react-intl'
 
-import { ToastContainer } from '@island.is/island-ui/core'
+import { ToastContainer } from '@dmr.is/ui/components/island-is'
 
 import { FilterProvider } from '../../context/filter-context'
 import { GetCategoriesDto, GetStatusesDto, GetTypesDto } from '../../gen/fetch'

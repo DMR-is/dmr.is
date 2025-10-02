@@ -1,14 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useIntl } from 'react-intl'
+import useSWR from 'swr'
 
+import { AlertMessage } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { Tag } from '@island.is/island-ui/core'
 
-import { getAdvertsInProgress } from '../../../actions/adverts'
-import { GetAdvertsDto, StatusEnum, StatusIdEnum } from '../../../gen/fetch'
+import { GetAdvertsDto, StatusEnum } from '../../../gen/fetch'
 import { useFilterContext } from '../../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
 import { formatDate } from '../../../lib/utils'
@@ -18,29 +18,27 @@ export const AdvertsInProgress = () => {
 
   const { formatMessage } = useIntl()
 
-  const [data, setData] = useState<GetAdvertsDto>()
-  const [isLoading, setIsLoading] = useState(false)
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const data = await getAdvertsInProgress({
-        page: params.page,
-        pageSize: params.pageSize,
-        search: params.search,
-        categoryId: params.categoryId,
-        statusId: [StatusIdEnum.SUBMITTED],
-        typeId: params.typeId,
-        dateFrom: params.dateFrom?.toISOString(),
-        dateTo: params.dateTo?.toISOString(),
-      })
-
-      setData(data)
-      setIsLoading(false)
-    }
-
-    setIsLoading(true)
-    fetchData()
-  }, [params])
+  const { data, isLoading, error } = useSWR<GetAdvertsDto>(
+    ['api/adverts/in-progress', params],
+    ([key, params]: [string, Record<string, any>]) => {
+      const filtered = Object.entries(params).filter(
+        ([_, v]) =>
+          v != null && v !== '' && !(Array.isArray(v) && v.length === 0),
+      )
+      const urlSearchParams = new URLSearchParams(
+        filtered as unknown as Record<string, string>,
+      )
+      return fetch(`${key}?${urlSearchParams.toString()}`).then((res) =>
+        res.json(),
+      )
+    },
+    {
+      keepPreviousData: true,
+      errorRetryCount: 3,
+      revalidateOnFocus: true,
+      dedupingInterval: 60000,
+    },
+  )
 
   const rows = data?.adverts.map((advert) => ({
     birting: formatDate(advert.scheduledAt),
@@ -58,15 +56,15 @@ export const AdvertsInProgress = () => {
     hasLink: true,
   }))
 
-  // if (error) {
-  //   return (
-  //     <AlertMessage
-  //       type="error"
-  //       title="Villa kom upp"
-  //       message="Ekki tókst að sækja auglýsingar í vinnslu"
-  //     />
-  //   )
-  // }
+  if (error) {
+    return (
+      <AlertMessage
+        type="error"
+        title="Villa kom upp"
+        message="Ekki tókst að sækja auglýsingar í vinnslu"
+      />
+    )
+  }
 
   return (
     <DataTable
