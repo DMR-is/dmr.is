@@ -37,7 +37,7 @@ const apis = [
   'SettlementApi',
 ] as const
 
-type ApiKey = (typeof apis)[number]
+export type ApiKey = (typeof apis)[number]
 
 export type ApiClientMap = {
   AdvertApi: AdvertApi

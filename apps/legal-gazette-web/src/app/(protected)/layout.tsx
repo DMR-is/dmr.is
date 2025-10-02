@@ -26,18 +26,14 @@ export default async function RootLayout({
   const statuses = await statusClient.getStatuses()
 
   return (
-    <html lang="is">
-      <body>
-        <Providers
-          session={session}
-          types={types}
-          categories={categories}
-          statuses={statuses}
-        >
-          <Header variant="blue" />
-          {children}
-        </Providers>
-      </body>
-    </html>
+    <Providers
+      session={session}
+      types={types}
+      categories={categories}
+      statuses={statuses}
+    >
+      <Header variant="blue" />
+      {children}
+    </Providers>
   )
 }
