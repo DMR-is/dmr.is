@@ -1,14 +1,18 @@
 import nodemailer from 'nodemailer'
 import Mail from 'nodemailer/lib/mailer'
 
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
+
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ISESService } from './ses.service.interface'
 
 @Injectable()
 export class SESService implements ISESService {
+  constructor(@Inject(LOGGER_PROVIDER) private logger: Logger) {}
+
   sendMail(message: Mail.Options): Promise<nodemailer.SentMessageInfo> {
-    throw new Error('Method not implemented.')
+    this.logger.warn('SESService.sendMail is not implemented')
   }
   // private readonly sesClient = new SESClient({
   //   region: process.env.AWS_REGION ?? 'eu-west-1',
