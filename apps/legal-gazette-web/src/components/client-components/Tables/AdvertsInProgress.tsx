@@ -1,17 +1,15 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
-
+import { useEffect, useState } from 'react'
 import { useIntl } from 'react-intl'
-import useSWR from 'swr'
 
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
-import { AlertMessage, Tag } from '@island.is/island-ui/core'
+import { Tag } from '@island.is/island-ui/core'
 
-import { StatusEnum, StatusIdEnum } from '../../../gen/fetch'
+import { getAdvertsInProgress } from '../../../actions/adverts'
+import { GetAdvertsDto, StatusEnum, StatusIdEnum } from '../../../gen/fetch'
 import { useFilterContext } from '../../../hooks/useFilters'
-import { getLegalGazetteClient } from '../../../lib/api/createClient'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
 import { formatDate } from '../../../lib/utils'
 
@@ -20,18 +18,12 @@ export const AdvertsInProgress = () => {
 
   const { formatMessage } = useIntl()
 
-  const session = useSession()
+  const [data, setData] = useState<GetAdvertsDto>()
+  const [isLoading, setIsLoading] = useState(false)
 
-  if (!session.data?.idToken) {
-    throw new Error('Unauthorized')
-  }
-
-  const client = getLegalGazetteClient('AdvertApi', session.data.idToken)
-
-  const { data, isLoading, error } = useSWR(
-    ['getAdverts', params],
-    async ([_key, params]) =>
-      client.getAdvertsInProgress({
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await getAdvertsInProgress({
         page: params.page,
         pageSize: params.pageSize,
         search: params.search,
@@ -40,11 +32,15 @@ export const AdvertsInProgress = () => {
         typeId: params.typeId,
         dateFrom: params.dateFrom?.toISOString(),
         dateTo: params.dateTo?.toISOString(),
-      }),
-    {
-      keepPreviousData: true,
-    },
-  )
+      })
+
+      setData(data)
+      setIsLoading(false)
+    }
+
+    setIsLoading(true)
+    fetchData()
+  }, [params])
 
   const rows = data?.adverts.map((advert) => ({
     birting: formatDate(advert.scheduledAt),
@@ -62,15 +58,15 @@ export const AdvertsInProgress = () => {
     hasLink: true,
   }))
 
-  if (error) {
-    return (
-      <AlertMessage
-        type="error"
-        title="Villa kom upp"
-        message="Ekki tókst að sækja auglýsingar í vinnslu"
-      />
-    )
-  }
+  // if (error) {
+  //   return (
+  //     <AlertMessage
+  //       type="error"
+  //       title="Villa kom upp"
+  //       message="Ekki tókst að sækja auglýsingar í vinnslu"
+  //     />
+  //   )
+  // }
 
   return (
     <DataTable
