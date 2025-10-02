@@ -11,7 +11,7 @@ import { ISESService } from './ses.service.interface'
 export class SESService implements ISESService {
   constructor(@Inject(LOGGER_PROVIDER) private logger: Logger) {}
 
-  sendMail(message: Mail.Options): Promise<nodemailer.SentMessageInfo> {
+  async sendMail(message: Mail.Options): Promise<void> {
     this.logger.warn('SESService.sendMail is not implemented')
   }
   // private readonly sesClient = new SESClient({
