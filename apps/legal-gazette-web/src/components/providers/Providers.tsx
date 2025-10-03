@@ -11,8 +11,8 @@ import { ToastContainer } from '@dmr.is/ui/components/island-is'
 import { FilterProvider } from '../../context/filter-context'
 import { GetCategoriesDto, GetStatusesDto, GetTypesDto } from '../../gen/fetch'
 import { allMessages } from '../../lib/messages'
+import ProviderTRPC from '../../lib/trpc/client/Provider'
 import { flattenMessages } from '../../lib/utils'
-import TRPCProvider from './TRPCProvider'
 
 export const Providers = ({
   children,
@@ -53,7 +53,7 @@ export const Providers = ({
               console.error('Error in IntlProvider', { exception: err })
             }}
           >
-            <TRPCProvider>
+            <ProviderTRPC>
               <FilterProvider
                 categories={categories}
                 types={types}
@@ -61,7 +61,7 @@ export const Providers = ({
               >
                 {children}
               </FilterProvider>
-            </TRPCProvider>
+            </ProviderTRPC>
           </IntlProvider>
         </SessionProvider>
       </NuqsAdapter>
