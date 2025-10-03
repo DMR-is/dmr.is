@@ -11,7 +11,7 @@ import { Tag } from '@island.is/island-ui/core'
 import { GetAdvertsDto, StatusEnum } from '../../../gen/fetch'
 import { useFilterContext } from '../../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
-import { trpc } from '../../../lib/trpc/utils'
+import { trpc } from '../../../lib/trpc/client'
 import { formatDate } from '../../../lib/utils'
 
 export const AdvertsInProgress = () => {
@@ -19,9 +19,11 @@ export const AdvertsInProgress = () => {
 
   const { formatMessage } = useIntl()
 
-  const test = trpc.hello.useQuery({ text: 'client side' })
+  const {data: x} = trpc.getAdverts.useQuery()
+  const {data: y} = trpc.getTest.useQuery()
 
-  console.log(test.data)
+  console.log(x)
+  console.log(y)
 
   const { data, isLoading, error } = useSWR<GetAdvertsDto>(
     ['api/adverts/in-progress', params],
