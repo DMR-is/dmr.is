@@ -15,18 +15,14 @@ const getAdvertsRequestSchema = z.object({
 })
 
 export const advertsRouter = router({
-  getAdvertsInProgress: protectedProcedure
-    .input(getAdvertsRequestSchema)
-    .query(async ({ ctx, input }) => {
-      console.log('input', input)
-      const data = await ctx.advertApi.getAdvertsInProgress(input)
-
-      data.adverts.map((ad) => console.log(ad.status.title))
-      return data
-    }),
+  getAdvertsInProgress: protectedProcedure.input(getAdvertsRequestSchema).query(
+    async ({ ctx, input }) =>
+      await ctx.advertApi.getAdverts({
+        ...input,
+        statusId: [StatusIdEnum.SUBMITTED],
+      }),
+  ),
   getCompletedAdverts: protectedProcedure
     .input(getAdvertsRequestSchema)
-    .query(
-      async ({ ctx, input }) => await ctx.advertApi.getCompletedAdverts(input),
-    ),
+    .query(async ({ ctx, input }) => await ctx.advertApi.getAdverts(input)),
 })

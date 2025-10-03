@@ -8,7 +8,7 @@ import { formatDate } from '@dmr.is/utils/client'
 
 import { Tag } from '@island.is/island-ui/core'
 
-import { StatusEnum } from '../../../gen/fetch'
+import { StatusEnum, StatusIdEnum } from '../../../gen/fetch'
 import { useFilterContext } from '../../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
 import { trpc } from '../../../lib/trpc/client'
@@ -19,6 +19,10 @@ export const AdvertsInProgress = () => {
   const { formatMessage } = useIntl()
 
   const { data, isLoading, error } = trpc.getAdvertsInProgress.useQuery({
+    categoryId: params.categoryId,
+    typeId: params.typeId,
+    statusId: params.statusId as StatusIdEnum[],
+    search: params.search,
     page: params.page,
     pageSize: params.pageSize,
   })

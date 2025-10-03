@@ -6,6 +6,7 @@ import { Box } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { formatDate } from '@dmr.is/utils/client'
 
+import { StatusIdEnum } from '../../../gen/fetch'
 import { useFilterContext } from '../../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
 import { trpc } from '../../../lib/trpc/client'
@@ -15,6 +16,10 @@ export const AdvertsCompleted = () => {
   const { formatMessage } = useIntl()
 
   const { data, isLoading } = trpc.getCompletedAdverts.useQuery({
+    categoryId: params.categoryId,
+    typeId: params.typeId,
+    statusId: params.statusId as StatusIdEnum[],
+    search: params.search,
     page: params.page,
     pageSize: params.pageSize,
   })
