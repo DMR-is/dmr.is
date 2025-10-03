@@ -5,23 +5,27 @@ import { useIntl } from 'react-intl'
 import { Box } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
-import { useCompletedAdverts } from '../../../hooks/adverts/useCompletedAdverts'
 import { useFilterContext } from '../../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
+import { trpc } from '../../../lib/trpc/client'
 import { formatDate } from '../../../lib/utils'
 
 export const AdvertsCompleted = () => {
   const { params } = useFilterContext()
   const { formatMessage } = useIntl()
 
-  const { adverts, isLoading, paging } = useCompletedAdverts({
-    query: {
-      page: params.page,
-      pageSize: params.pageSize,
-    },
+  const { data, isLoading } = trpc.getCompletedAdverts.useQuery({
+    page: params.page,
+    pageSize: params.pageSize,
   })
 
-  const rows = adverts.map((advert) => ({
+  const { adverts, paging } = data ?? { adverts: [], paging: {} }
+
+  if (!data) {
+    return <div>No data</div>
+  }
+
+  const rows = adverts?.map((advert) => ({
     birting: formatDate(advert.scheduledAt),
     skraning: formatDate(advert.createdAt),
     tegund: advert.type.title,

@@ -1,9 +1,16 @@
-import { appRouter } from '../../../../server/routers/_app'
+import { createTRPCContext } from '../../../../lib/trpc/server'
+import { appRouter } from '../../../../lib/trpc/server/routers/_app'
 
-import * as trpcNext from '@trpc/server/adapters/next'
-// export API handler
-// @link https://trpc.io/docs/v11/server/adapters
-export default trpcNext.createNextApiHandler({
-  router: appRouter,
-  createContext: () => ({}),
-})
+import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
+
+const handler = async (req: Request) => {
+  const response = await fetchRequestHandler({
+    endpoint: '/api/trpc',
+    req,
+    router: appRouter,
+    createContext: () => createTRPCContext(),
+  })
+  return response
+}
+
+export { handler as GET, handler as POST }
