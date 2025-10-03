@@ -1,21 +1,18 @@
-import { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
-import { getServerSession } from 'next-auth'
-
 import { cache } from 'react'
 
-import { authOptions } from '../../auth/authOptions'
+import { AdvertApi } from '../../../gen/fetch'
+import { getServerClient } from '../../api/serverClient'
 
 import { initTRPC, TRPCError } from '@trpc/server'
 
-export const createTRPCContext = cache(
-  async (opts: { cookies: ReadonlyRequestCookies }) => {
-    const session = await getServerSession(authOptions)
+let advertApi: AdvertApi | null = null
 
-    return {
-      session: session,
-    }
-  },
-)
+export const createTRPCContext = cache(async () => {
+  const client = (advertApi ??= await getServerClient('AdvertApi'))
+  return {
+    advertApi: client,
+  }
+})
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   errorFormatter(opts) {
@@ -45,7 +42,7 @@ export const publicProcedure = t.procedure.use(({ ctx, next }) => {
 
 // Protected procedures should always have session available
 export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
-  if (!ctx.session) {
+  if (!ctx.advertApi) {
     throw new TRPCError({ code: 'UNAUTHORIZED' })
   }
 
@@ -53,7 +50,7 @@ export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
   return next({
     ctx: {
       ...ctx,
-      session: ctx.session,
+      advertApi: ctx.advertApi,
     },
   })
 })

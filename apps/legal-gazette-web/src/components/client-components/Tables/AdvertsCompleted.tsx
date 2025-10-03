@@ -6,22 +6,25 @@ import { Box } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { formatDate } from '@dmr.is/utils/client'
 
-import { useCompletedAdverts } from '../../../hooks/adverts/useCompletedAdverts'
 import { useFilterContext } from '../../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
+import { trpc } from '../../../lib/trpc/client'
 
 export const AdvertsCompleted = () => {
   const { params } = useFilterContext()
   const { formatMessage } = useIntl()
 
-  const { adverts, isLoading, paging } = useCompletedAdverts({
-    query: {
-      page: params.page,
-      pageSize: params.pageSize,
-    },
+  const { data, isLoading } = trpc.getCompletedAdverts.useQuery({
+    page: params.page,
+    pageSize: params.pageSize,
   })
 
-  const rows = adverts.map((advert) => ({
+
+  if (!data) {
+    return <div>No data</div>
+  }
+
+  const rows = data.adverts?.map((advert) => ({
     birting: formatDate(advert.scheduledAt),
     skraning: formatDate(advert.createdAt),
     tegund: advert.type.title,
@@ -70,7 +73,7 @@ export const AdvertsCompleted = () => {
           ] as const
         }
         rows={rows}
-        paging={paging}
+        paging={data.paging}
       />
     </Box>
   )
