@@ -1,46 +1,32 @@
 import { z } from 'zod'
 
+import { StatusIdEnum } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '..'
 
-import { inferRouterOutputs } from '@trpc/server'
+const getAdvertsRequestSchema = z.object({
+  page: z.number().optional(),
+  pageSize: z.number().optional(),
+  search: z.string().optional(),
+  categoryId: z.array(z.string()).optional(),
+  typeId: z.array(z.string()).optional(),
+  statusId: z.array(z.enum(StatusIdEnum)).optional(),
+  fromDate: z.string().optional(),
+  toDate: z.string().optional(),
+})
 
 export const advertsRouter = router({
   getAdvertsInProgress: protectedProcedure
-    .input(
-      z.object({
-        page: z.number().optional(),
-        pageSize: z.number().optional(),
-        categoryId: z.array(z.string()).optional(),
-        typeId: z.array(z.string()).optional(),
-      }),
-    )
+    .input(getAdvertsRequestSchema)
     .query(async ({ ctx, input }) => {
-      const { page, pageSize, categoryId, typeId } = input
-      const data = await ctx.advertApi.getAdverts({
-        page,
-        pageSize,
-        categoryId,
-        typeId,
-      })
-      console.log(data)
+      console.log('input', input)
+      const data = await ctx.advertApi.getAdvertsInProgress(input)
+
+      data.adverts.map((ad) => console.log(ad.status.title))
       return data
     }),
   getCompletedAdverts: protectedProcedure
-    .input(
-      z.object({
-        page: z.number().optional(),
-        pageSize: z.number().optional(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const { page, pageSize } = input
-      const data = await ctx.advertApi.getCompletedAdverts({ page, pageSize })
-      console.log('completed', data)
-      return data
-    }),
+    .input(getAdvertsRequestSchema)
+    .query(
+      async ({ ctx, input }) => await ctx.advertApi.getCompletedAdverts(input),
+    ),
 })
-
-
-export type infertRouterOutputs = inferRouterOutputs<typeof advertsRouter>
-export type GetCompletedAdvertsOutput = infertRouterOutputs['getCompletedAdverts']
-
