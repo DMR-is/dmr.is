@@ -77,7 +77,7 @@
           }
         },
         "summary": "",
-        "tags": ["Type"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/types/common": {
@@ -147,7 +147,7 @@
           }
         },
         "summary": "",
-        "tags": ["Type"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/types/{id}": {
@@ -226,7 +226,7 @@
           }
         },
         "summary": "",
-        "tags": ["Type"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/types": {
@@ -296,7 +296,7 @@
           }
         },
         "summary": "",
-        "tags": ["Type"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/categories/slug/{slug}": {
@@ -375,7 +375,7 @@
           }
         },
         "summary": "",
-        "tags": ["Category"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/categories/{id}": {
@@ -454,7 +454,7 @@
           }
         },
         "summary": "",
-        "tags": ["Category"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/categories": {
@@ -534,7 +534,7 @@
           }
         },
         "summary": "",
-        "tags": ["Category"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/statuses": {
@@ -604,7 +604,7 @@
           }
         },
         "summary": "",
-        "tags": ["Status"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/statuses/{id}": {
@@ -683,7 +683,7 @@
           }
         },
         "summary": "",
-        "tags": ["Status"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/statuses/slug/{slug}": {
@@ -762,7 +762,7 @@
           }
         },
         "summary": "",
-        "tags": ["Status"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/court-districts": {
@@ -832,7 +832,7 @@
           }
         },
         "summary": "",
-        "tags": ["CourtDistrict"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/court-districts/{id}": {
@@ -911,7 +911,7 @@
           }
         },
         "summary": "",
-        "tags": ["CourtDistrict"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/court-districts/slug/{slug}": {
@@ -990,7 +990,165 @@
           }
         },
         "summary": "",
-        "tags": ["CourtDistrict"]
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/external/companies/hlutafelag": {
+      "post": {
+        "description": "Register a new company (Hlutafélag nýskráning)",
+        "operationId": "registerHlutafelag",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterCompanyHlutafelagDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/external/companies/firmaskra": {
+      "post": {
+        "description": "Register a new company from (Firmaskrá - Fyrirtækjaskrá)",
+        "operationId": "registerFirmaskra",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterCompanyFirmaskraDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/cases": {
@@ -1086,7 +1244,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Case"]
+        "tags": ["Legal gazette - internal API"]
       },
       "post": {
         "operationId": "createCase",
@@ -1159,7 +1317,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Case"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/cases/{id}/restore": {
@@ -1243,7 +1401,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Case"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/cases/{id}": {
@@ -1320,7 +1478,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Case"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/{id}/assign/{userId}": {
@@ -1400,7 +1558,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertUpdate"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/{id}/ready": {
@@ -1472,7 +1630,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertUpdate"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/{id}/submit": {
@@ -1544,7 +1702,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertUpdate"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/{id}/category/{categoryId}": {
@@ -1624,7 +1782,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertUpdate"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/{id}/status/{statusId}": {
@@ -1704,7 +1862,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertUpdate"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/{id}": {
@@ -1793,7 +1951,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertUpdate"]
+        "tags": ["Legal gazette - internal API"]
       },
       "get": {
         "operationId": "getAdvertById",
@@ -1875,7 +2033,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Advert"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/pdf/{id}": {
@@ -1905,7 +2063,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertPdf"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/count": {
@@ -1980,256 +2138,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Advert"]
-      }
-    },
-    "/api/v1/adverts/inprogress": {
-      "get": {
-        "operationId": "getAdvertsInProgress",
-        "parameters": [
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": 1,
-              "example": 1,
-              "type": "number"
-            }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": 10,
-              "example": 10,
-              "type": "number"
-            }
-          },
-          {
-            "name": "categoryId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
-            "name": "statusId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/StatusIdEnum"
-              }
-            }
-          },
-          {
-            "name": "typeId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
-            "name": "dateFrom",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "dateTo",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetAdvertsDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "",
-        "tags": ["Advert"]
-      }
-    },
-    "/api/v1/adverts/completed": {
-      "get": {
-        "operationId": "getCompletedAdverts",
-        "parameters": [
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": 1,
-              "example": 1,
-              "type": "number"
-            }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": 10,
-              "example": 10,
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetAdvertsDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "",
-        "tags": ["Advert"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts": {
@@ -2382,7 +2291,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Advert"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/byCaseId/{caseId}": {
@@ -2466,7 +2375,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Advert"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/publish": {
@@ -2539,7 +2448,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertPublish"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/{id}/publish": {
@@ -2611,7 +2520,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertPublish"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/publications": {
@@ -2753,7 +2662,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertPublication"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/publications/adverts/{advertId}/{version}": {
@@ -2841,7 +2750,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertPublication"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/publications/adverts/{advertId}": {
@@ -2913,7 +2822,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertPublication"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/publications/{publicationId}/adverts/{advertId}/publish": {
@@ -2993,7 +2902,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertPublication"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/publications/{publicationId}/adverts/{advertId}": {
@@ -3083,7 +2992,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertPublication"]
+        "tags": ["Legal gazette - internal API"]
       },
       "delete": {
         "operationId": "deleteAdvertPublication",
@@ -3161,7 +3070,7 @@
           }
         },
         "summary": "",
-        "tags": ["AdvertPublication"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/subscribers/me": {
@@ -3236,7 +3145,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Subscriber"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/users/me": {
@@ -3311,7 +3220,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Users"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/users/employees": {
@@ -3386,7 +3295,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Users"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/applications/createApplication/{applicationType}": {
@@ -3471,7 +3380,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Application"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/applications/submitApplication/{applicationId}": {
@@ -3548,7 +3457,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Application"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/applications/getMyApplications": {
@@ -3644,7 +3553,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Application"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/applications/getApplicationById/{applicationId}": {
@@ -3728,7 +3637,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Application"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/applications/getApplicationByCaseId/{caseId}": {
@@ -3812,7 +3721,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Application"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/applications/{applicationId}": {
@@ -3906,7 +3815,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Application"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/applications/{applicationId}/addDivisionMeetingAdvertToApplication": {
@@ -3993,7 +3902,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Application"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/applications/{applicationId}/addDivisionEndingAdvertToApplication": {
@@ -4080,7 +3989,7 @@
           }
         ],
         "summary": "",
-        "tags": ["Application"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/type-categories": {
@@ -4167,7 +4076,7 @@
           }
         },
         "summary": "",
-        "tags": ["TypeWithCategories"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/type-categories/category/{categoryId}": {
@@ -4246,7 +4155,7 @@
           }
         },
         "summary": "",
-        "tags": ["TypeWithCategories"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/type-categories/type/{typeId}": {
@@ -4325,7 +4234,7 @@
           }
         },
         "summary": "",
-        "tags": ["TypeWithCategories"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/settlements/{id}": {
@@ -4407,7 +4316,7 @@
           }
         },
         "summary": "",
-        "tags": ["Settlement"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/health": {
@@ -4419,17 +4328,21 @@
             "description": "Health check endpoint."
           }
         },
-        "tags": ["Health"]
+        "tags": ["Legal gazette - internal API"]
       }
     }
   },
   "info": {
     "title": "The Legal Gazette of Iceland API",
-    "description": "The Legal Gazette of Iceland API",
+    "description": "The API for the Legal Gazette of Iceland",
     "version": "1.0",
     "contact": {}
   },
-  "tags": [],
+  "tags": [
+    {
+      "name": "Legal gazette - internal API"
+    }
+  ],
   "servers": [],
   "components": {
     "securitySchemes": {
@@ -4677,6 +4590,303 @@
         },
         "required": ["courtDistricts"]
       },
+      "ResponsiblePartyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the party responsible for the advert",
+            "example": "Ríkisskattstjóri, hlutafélagaskrá"
+          },
+          "nationalId": {
+            "type": "string",
+            "description": "The national id of who is responsible for the advert",
+            "example": "1234567890"
+          },
+          "signatureName": {
+            "type": "string",
+            "description": "The name of the institution signing the advert",
+            "example": "Ríkisskattstjóri, hlutafélagaskrá"
+          },
+          "signatureLocation": {
+            "type": "string",
+            "description": "Where the signature took place",
+            "example": "Reykjavík"
+          },
+          "signatureDate": {
+            "type": "string",
+            "description": "The date when the responsible party signed the advert in ISO 8601 format",
+            "example": "2023-10-01T12:00:00Z"
+          },
+          "signatureOnBehalfOf": {
+            "type": "string",
+            "description": "The name of the person signing on behalf of the responsible party prefixed with f.h.",
+            "example": "Jón Jónsson"
+          }
+        },
+        "required": [
+          "name",
+          "nationalId",
+          "signatureName",
+          "signatureLocation",
+          "signatureDate"
+        ]
+      },
+      "PartyEntityDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the party",
+            "example": "Jón Jónsson / Jón ehf."
+          },
+          "nationalId": {
+            "type": "string",
+            "description": "National id of the party",
+            "example": "1234567890"
+          },
+          "address": {
+            "type": "string",
+            "description": "Address of the party",
+            "example": "Laugavegur 1, 101 Reykjavik"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role of the party, always comes first if present",
+            "example": "Stjórnarmaður, meðstjórnandi o.s.frv."
+          },
+          "jobTitle": {
+            "type": "string",
+            "description": "Job title of the party, always comes last if present",
+            "example": "löggiltur endurskoðandi"
+          }
+        },
+        "required": ["name"]
+      },
+      "CompanyBoardDto": {
+        "type": "object",
+        "properties": {
+          "appointedDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date when the board was appointed",
+            "example": "2023-10-01T12:00:00Z (ISO 8601 format)"
+          },
+          "members": {
+            "description": "The members of the company board (Stjórn)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartyEntityDto"
+            }
+          },
+          "executiveBoardMembers": {
+            "description": "The executive members of the company board (Framkvæmdarstjórn)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartyEntityDto"
+            }
+          }
+        },
+        "required": ["appointedDate", "members"]
+      },
+      "RegisterCompanyHlutafelagDto": {
+        "type": "object",
+        "properties": {
+          "responsibleParty": {
+            "description": "The party responsible for the company",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResponsiblePartyDto"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the registered company (Félagið heitir)",
+            "example": "HXM ehf."
+          },
+          "nationalId": {
+            "type": "string",
+            "description": "National id of the registered company (Kennitala fyrirtækis)",
+            "example": "1234567890"
+          },
+          "registeredAddress": {
+            "type": "string",
+            "description": "Address of the registered company (Skráð heimilisfang fyrirtækis)",
+            "example": "Laugavegur 1, 101 Reykjavik"
+          },
+          "creators": {
+            "description": "List of registered company creators (Stofnendur)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartyEntityDto"
+            }
+          },
+          "approvedDate": {
+            "type": "string",
+            "description": "Date when the company was accepted (Dagsetning samþykkta er)",
+            "example": "2023-10-01T12:00:00Z (ISO 8601 format)"
+          },
+          "board": {
+            "description": "The board of the company (Stjórn)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CompanyBoardDto"
+              }
+            ]
+          },
+          "theFirmWrites": {
+            "type": "string",
+            "example": "Ef einn í stjórn:  Stjórnarmaður, ef stjórn er fjölskipuð: Meirihluti stjórnar (Firmað ritar)"
+          },
+          "procurationHolders": {
+            "description": "The procuration holders of the company (Prókuruumboð)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartyEntityDto"
+            }
+          },
+          "auditors": {
+            "description": "The auditors of the company (Skoðunarmaður/endurskoðandi)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartyEntityDto"
+            }
+          },
+          "capital": {
+            "type": "number",
+            "description": "The capital of the company in ISK (Hlutafé kr.)",
+            "example": 1000000
+          },
+          "purpose": {
+            "type": "string",
+            "description": "The purpose of the company (Tilgangur)"
+          },
+          "benefits": {
+            "type": "boolean",
+            "description": "Are there special benefits (Hömlur á meðferð hlutabréfa)",
+            "example": false
+          },
+          "liquidationObligation": {
+            "type": "boolean",
+            "description": "Is there an obligation for liquidation (Lausnarskylda á hlutabréfum)",
+            "example": false
+          }
+        },
+        "required": [
+          "responsibleParty",
+          "name",
+          "nationalId",
+          "registeredAddress",
+          "creators",
+          "approvedDate",
+          "board",
+          "theFirmWrites",
+          "auditors",
+          "capital",
+          "purpose",
+          "benefits",
+          "liquidationObligation"
+        ]
+      },
+      "AdditionalPropertiesDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "The key of the addtional information",
+            "example": "Stjórn / Stjórnarformaður og framkvæmdastjórn"
+          },
+          "value": {
+            "description": "The value of the addtional information",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PartyEntityDto"
+              }
+            ]
+          }
+        },
+        "required": ["key", "value"]
+      },
+      "RegisterCompanyFirmaskraDto": {
+        "type": "object",
+        "properties": {
+          "responsibleParty": {
+            "description": "The party responsible for the company",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResponsiblePartyDto"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the registered company (Félagið heitir)",
+            "example": "HXM ehf."
+          },
+          "nationalId": {
+            "type": "string",
+            "description": "National id of the registered company (Kennitala fyrirtækis)",
+            "example": "1234567890"
+          },
+          "registeredAddress": {
+            "type": "string",
+            "description": "Address of the registered company (Skráð heimilisfang fyrirtækis)",
+            "example": "Laugavegur 1, 101 Reykjavik"
+          },
+          "creators": {
+            "description": "List of registered company creators (Stofnendur)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartyEntityDto"
+            }
+          },
+          "approvedDate": {
+            "type": "string",
+            "description": "Date when the company was accepted (Dagsetning samþykkta er)",
+            "example": "2023-10-01T12:00:00Z (ISO 8601 format)"
+          },
+          "procurationHolders": {
+            "description": "The procuration holders of the company (Prókuruumboð)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartyEntityDto"
+            }
+          },
+          "purpose": {
+            "type": "string",
+            "description": "The purpose of the company (Tilgangur)"
+          },
+          "taxMembership": {
+            "type": "string",
+            "description": "Tax membership status (Skattaðlid)",
+            "example": "félagið er sjálfstæður skattaðili"
+          },
+          "firmWriting": {
+            "type": "string",
+            "description": "Firmaritun",
+            "example": "Allir félagsmenn saman"
+          },
+          "additionalProperties": {
+            "description": "Additional properties (Auka eigindi, birtast neðst í auglýsingu)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdditionalPropertiesDto"
+            }
+          }
+        },
+        "required": [
+          "responsibleParty",
+          "name",
+          "nationalId",
+          "registeredAddress",
+          "creators",
+          "approvedDate",
+          "purpose",
+          "taxMembership",
+          "firmWriting"
+        ]
+      },
       "ApplicationTypeEnum": {
         "type": "string",
         "enum": ["COMMON", "RECALL_BANKRUPTCY", "RECALL_DECEASED"]
@@ -4916,6 +5126,21 @@
           "settlementDeadline"
         ]
       },
+      "CommunicationChannelDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          }
+        },
+        "required": ["email"]
+      },
       "AdvertDetailedDto": {
         "type": "object",
         "properties": {
@@ -4984,9 +5209,6 @@
             "type": "string",
             "nullable": true
           },
-          "paid": {
-            "type": "boolean"
-          },
           "signatureName": {
             "type": "string"
           },
@@ -5014,6 +5236,15 @@
           },
           "courtDistrict": {
             "$ref": "#/components/schemas/CourtDistrictDto"
+          },
+          "communicationChannels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommunicationChannelDto"
+            }
+          },
+          "paidAt": {
+            "type": "string"
           }
         },
         "required": [
@@ -5031,11 +5262,11 @@
           "content",
           "caption",
           "additionalText",
-          "paid",
           "signatureName",
           "signatureLocation",
           "signatureOnBehalfOf",
-          "signatureDate"
+          "signatureDate",
+          "communicationChannels"
         ]
       },
       "AdvertStatusCounterItemDto": {
@@ -5405,21 +5636,6 @@
           "applications"
         ]
       },
-      "CommunicationChannelDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "phone": {
-            "type": "string"
-          }
-        },
-        "required": ["email"]
-      },
       "ApplicationDetailedDto": {
         "type": "object",
         "properties": {
@@ -5669,6 +5885,21 @@
           }
         }
       },
+      "CreateCommunicationChannelDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          }
+        },
+        "required": ["email"]
+      },
       "AddDivisionMeetingForApplicationDto": {
         "type": "object",
         "properties": {
@@ -5692,6 +5923,12 @@
           },
           "additionalText": {
             "type": "string"
+          },
+          "communicationChannels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
           }
         },
         "required": [
@@ -5719,6 +5956,12 @@
           },
           "additionalText": {
             "type": "string"
+          },
+          "communicationChannels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
           },
           "scheduledAt": {
             "type": "string"

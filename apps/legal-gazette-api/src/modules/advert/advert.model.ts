@@ -127,13 +127,6 @@ export enum AdvertVersionEnum {
   C = 'C',
 }
 
-export enum AdvertModelScopes {
-  IN_PROGRESS = 'inProgress',
-  TO_BE_PUBLISHED = 'toBePublished',
-  PUBLISHED = 'published',
-  COMPLETED = 'completed',
-}
-
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
 @DefaultScope(() => ({
   include: [
@@ -216,35 +209,6 @@ export enum AdvertModelScopes {
       ],
       where: whereOptions,
     }
-  },
-  inProgress: {
-    where: {
-      statusId: {
-        [Op.in]: [StatusIdEnum.SUBMITTED, StatusIdEnum.READY_FOR_PUBLICATION],
-      },
-    },
-  },
-  published: {
-    where: {
-      statusId: StatusIdEnum.PUBLISHED,
-    },
-  },
-  toBePublished: {
-    where: {
-      paid: true,
-      statusId: StatusIdEnum.READY_FOR_PUBLICATION,
-    },
-  },
-  completed: {
-    where: {
-      statusId: {
-        [Op.in]: [
-          StatusIdEnum.PUBLISHED,
-          StatusIdEnum.REJECTED,
-          StatusIdEnum.WITHDRAWN,
-        ],
-      },
-    },
   },
 }))
 export class AdvertModel extends BaseModel<
