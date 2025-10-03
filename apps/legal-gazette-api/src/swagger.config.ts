@@ -11,6 +11,7 @@ export const SWAGGER_CONFIG: SetupSwaggerOptions[] = [
     swaggerTitle: 'Legal Gazette API',
     tag: 'Legal gazette - internal API',
     modules: [AppModule],
+    autoTagControllers: true,
   },
   {
     swaggerPath: 'island-is-swagger',

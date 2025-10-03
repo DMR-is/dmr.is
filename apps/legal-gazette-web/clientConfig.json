@@ -63,7 +63,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Type"]
       }
     },
     "/api/v1/types/common": {
@@ -121,7 +121,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Type"]
       }
     },
     "/api/v1/types/{id}": {
@@ -186,7 +186,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Type"]
       }
     },
     "/api/v1/types": {
@@ -244,7 +244,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Type"]
       }
     },
     "/api/v1/categories/slug/{slug}": {
@@ -309,7 +309,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Category"]
       }
     },
     "/api/v1/categories/{id}": {
@@ -374,7 +374,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Category"]
       }
     },
     "/api/v1/categories": {
@@ -439,7 +439,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Category"]
       }
     },
     "/api/v1/statuses": {
@@ -497,7 +497,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Status"]
       }
     },
     "/api/v1/statuses/{id}": {
@@ -562,7 +562,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Status"]
       }
     },
     "/api/v1/statuses/slug/{slug}": {
@@ -627,7 +627,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Status"]
       }
     },
     "/api/v1/court-districts": {
@@ -687,7 +687,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["CourtDistrict"]
       }
     },
     "/api/v1/court-districts/{id}": {
@@ -752,7 +752,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["CourtDistrict"]
       }
     },
     "/api/v1/court-districts/slug/{slug}": {
@@ -817,7 +817,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["CourtDistrict"]
       }
     },
     "/api/v1/external/companies/hlutafelag": {
@@ -880,7 +880,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Company"]
       }
     },
     "/api/v1/external/companies/firmaskra": {
@@ -943,7 +943,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Company"]
       }
     },
     "/api/v1/cases": {
@@ -1015,7 +1015,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Case"]
       },
       "post": {
         "operationId": "createCase",
@@ -1072,7 +1072,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}/restore": {
@@ -1138,7 +1138,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Case"]
       }
     },
     "/api/v1/cases/{id}": {
@@ -1197,7 +1197,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Case"]
       }
     },
     "/api/v1/adverts/{id}/assign/{userId}": {
@@ -1261,7 +1261,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["AdvertUpdate"]
       }
     },
     "/api/v1/adverts/{id}/ready": {
@@ -1319,7 +1319,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["AdvertUpdate"]
       }
     },
     "/api/v1/adverts/{id}/submit": {
@@ -1377,7 +1377,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["AdvertUpdate"]
       }
     },
     "/api/v1/adverts/{id}/category/{categoryId}": {
@@ -1441,7 +1441,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["AdvertUpdate"]
       }
     },
     "/api/v1/adverts/{id}/status/{statusId}": {
@@ -1505,7 +1505,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["AdvertUpdate"]
       }
     },
     "/api/v1/adverts/{id}": {
@@ -1578,7 +1578,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["AdvertUpdate"]
       },
       "get": {
         "operationId": "getAdvertById",
@@ -1642,7 +1642,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Advert"]
       }
     },
     "/api/v1/adverts/pdf/{id}": {
@@ -1667,7 +1667,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["AdvertPdf"]
       }
     },
     "/api/v1/adverts/count": {
@@ -1728,7 +1728,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Advert"]
       }
     },
     "/api/v1/adverts": {
@@ -1839,7 +1839,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Advert"]
       }
     },
     "/api/v1/adverts/byCaseId/{caseId}": {
@@ -1905,7 +1905,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Advert"]
       }
     },
     "/api/v1/adverts/publish": {
@@ -1964,7 +1964,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["AdvertPublish"]
       }
     },
     "/api/v1/adverts/{id}/publish": {
@@ -2022,7 +2022,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["AdvertPublish"]
       }
     },
     "/api/v1/publications": {
@@ -2129,7 +2129,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["AdvertPublication"]
       }
     },
     "/api/v1/publications/adverts/{advertId}/{version}": {
@@ -2202,7 +2202,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["AdvertPublication"]
       }
     },
     "/api/v1/publications/adverts/{advertId}": {
@@ -2260,7 +2260,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["AdvertPublication"]
       }
     },
     "/api/v1/publications/{publicationId}/adverts/{advertId}/publish": {
@@ -2324,7 +2324,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["AdvertPublication"]
       }
     },
     "/api/v1/publications/{publicationId}/adverts/{advertId}": {
@@ -2398,7 +2398,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["AdvertPublication"]
       },
       "delete": {
         "operationId": "deleteAdvertPublication",
@@ -2460,7 +2460,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["AdvertPublication"]
       }
     },
     "/api/v1/subscribers/me": {
@@ -2519,7 +2519,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Subscriber"]
       }
     },
     "/api/v1/users/me": {
@@ -2578,7 +2578,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Users"]
       }
     },
     "/api/v1/users/employees": {
@@ -2637,7 +2637,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Users"]
       }
     },
     "/api/v1/applications/createApplication/{applicationType}": {
@@ -2706,7 +2706,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Application"]
       }
     },
     "/api/v1/applications/submitApplication/{applicationId}": {
@@ -2765,7 +2765,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Application"]
       }
     },
     "/api/v1/applications/getMyApplications": {
@@ -2837,7 +2837,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Application"]
       }
     },
     "/api/v1/applications/getApplicationById/{applicationId}": {
@@ -2905,7 +2905,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Application"]
       }
     },
     "/api/v1/applications/getApplicationByCaseId/{caseId}": {
@@ -2973,7 +2973,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Application"]
       }
     },
     "/api/v1/applications/{applicationId}": {
@@ -3049,7 +3049,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Application"]
       }
     },
     "/api/v1/applications/{applicationId}/addDivisionMeetingAdvertToApplication": {
@@ -3118,7 +3118,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Application"]
       }
     },
     "/api/v1/applications/{applicationId}/addDivisionEndingAdvertToApplication": {
@@ -3187,7 +3187,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Application"]
       }
     },
     "/api/v1/type-categories": {
@@ -3260,7 +3260,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["TypeWithCategories"]
       }
     },
     "/api/v1/type-categories/category/{categoryId}": {
@@ -3327,7 +3327,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["TypeWithCategories"]
       }
     },
     "/api/v1/type-categories/type/{typeId}": {
@@ -3394,7 +3394,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["TypeWithCategories"]
       }
     },
     "/api/v1/settlements/{id}": {
@@ -3460,7 +3460,7 @@
           }
         },
         "summary": "",
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Settlement"]
       }
     },
     "/api/v1/health": {
@@ -3468,7 +3468,7 @@
         "operationId": "HealthController__v1",
         "parameters": [],
         "responses": { "200": { "description": "Health check endpoint." } },
-        "tags": ["Legal gazette - internal API"]
+        "tags": ["Health"]
       }
     }
   },

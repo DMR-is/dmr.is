@@ -9,6 +9,7 @@ export type SetupSwaggerOptions = {
   swaggerTitle: string
   swaggerPath: string
   filterPaths?: (path: Record<string, any>) => Record<string, any>
+  autoTagControllers?: boolean
 }
 
 export const setupSwaggerDocument = (
@@ -18,14 +19,16 @@ export const setupSwaggerDocument = (
   const document = SwaggerModule.createDocument(app, openApi, {
     deepScanRoutes: true,
     include: options.modules,
-    autoTagControllers: true,
+    autoTagControllers: options.autoTagControllers ?? false,
   })
 
   document.tags = [{ name: options.tag }]
 
   if (options.filterPaths) {
     document.paths = options.filterPaths(document.paths)
-  } else {
+  }
+
+  if (!options.autoTagControllers) {
     // tag routes
     Object.values(document.paths).forEach((path) => {
       for (const method of Object.values(path)) {
