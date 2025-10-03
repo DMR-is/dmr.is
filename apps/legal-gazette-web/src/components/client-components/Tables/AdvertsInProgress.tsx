@@ -12,11 +12,16 @@ import { Tag } from '@island.is/island-ui/core'
 import { GetAdvertsDto, StatusEnum } from '../../../gen/fetch'
 import { useFilterContext } from '../../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
+import { trpc } from '../../../lib/trpc/utils'
 
 export const AdvertsInProgress = () => {
   const { params, setParams } = useFilterContext()
 
   const { formatMessage } = useIntl()
+
+  const test = trpc.hello.useQuery({ text: 'client side' })
+
+  console.log(test.data)
 
   const { data, isLoading, error } = useSWR<GetAdvertsDto>(
     ['api/adverts/in-progress', params],
