@@ -1,16 +1,16 @@
 'use client'
 
 import { useIntl } from 'react-intl'
-import useSWR from 'swr'
 
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { Tag } from '@island.is/island-ui/core'
 
-import { GetAdvertsDto, StatusEnum } from '../../../gen/fetch'
+import { StatusEnum, StatusIdEnum } from '../../../gen/fetch'
 import { useFilterContext } from '../../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
+import { trpc } from '../../../lib/trpc/client'
 import { formatDate } from '../../../lib/utils'
 
 export const AdvertsInProgress = () => {
@@ -18,27 +18,14 @@ export const AdvertsInProgress = () => {
 
   const { formatMessage } = useIntl()
 
-  const { data, isLoading, error } = useSWR<GetAdvertsDto>(
-    ['api/adverts/in-progress', params],
-    ([key, params]: [string, Record<string, any>]) => {
-      const filtered = Object.entries(params).filter(
-        ([_, v]) =>
-          v != null && v !== '' && !(Array.isArray(v) && v.length === 0),
-      )
-      const urlSearchParams = new URLSearchParams(
-        filtered as unknown as Record<string, string>,
-      )
-      return fetch(`${key}?${urlSearchParams.toString()}`).then((res) =>
-        res.json(),
-      )
-    },
-    {
-      keepPreviousData: true,
-      errorRetryCount: 3,
-      revalidateOnFocus: true,
-      dedupingInterval: 60000,
-    },
-  )
+  const { data, isLoading, error } = trpc.getSubmittedAdverts.useQuery({
+    categoryId: params.categoryId,
+    typeId: params.typeId,
+    statusId: params.statusId as StatusIdEnum[],
+    search: params.search,
+    page: params.page,
+    pageSize: params.pageSize,
+  })
 
   const rows = data?.adverts.map((advert) => ({
     birting: formatDate(advert.scheduledAt),
