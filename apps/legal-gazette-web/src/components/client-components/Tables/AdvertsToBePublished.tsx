@@ -13,7 +13,7 @@ import { formatDate } from '../../../lib/utils'
 type Props = {
   selectedAdvertIds?: string[]
   onToggle?: (advertId: string) => void
-  adverts: AdvertDto[]
+  adverts?: AdvertDto[]
 }
 
 export const AdvertsToBePublished = ({

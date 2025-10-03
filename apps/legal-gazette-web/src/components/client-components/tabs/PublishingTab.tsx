@@ -15,10 +15,11 @@ import {
   StatusIdEnum,
   UpdateAdvertStatusRequest,
 } from '../../../gen/fetch'
-import { useAdvertsInProgress } from '../../../hooks/adverts/useAdvertsInProgress'
 import { useClient } from '../../../hooks/useClient'
+import { useFilterContext } from '../../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
 import { toastMessages } from '../../../lib/messages/toast/messages'
+import { trpc } from '../../../lib/trpc/client'
 import AdvertsToBePublished from '../Tables/AdvertsToBePublished'
 
 export const PublishingTab = () => {
@@ -29,12 +30,14 @@ export const PublishingTab = () => {
   const router = useRouter()
   const { formatMessage } = useIntl()
 
-  const { adverts, mutate: refetchAdvertsInProgress } = useAdvertsInProgress({
-    params: {
-      page: 1,
-      pageSize: 100,
-      statusId: [StatusIdEnum.READY_FOR_PUBLICATION],
-    },
+  const { params } = useFilterContext()
+
+  const { data, refetch } = trpc.getReadyForPublicationAdverts.useQuery({
+    categoryId: params.categoryId,
+    page: params.page,
+    pageSize: params.pageSize,
+    search: params.search,
+    typeId: params.typeId,
   })
 
   const handleAdvertToggle = (id: string) => {
@@ -51,7 +54,7 @@ export const PublishingTab = () => {
       publishClient.publishAdverts(arg),
     {
       onSuccess: () => {
-        refetchAdvertsInProgress()
+        refetch()
         setSelectedAdvertIds([])
         toast.success(formatMessage(toastMessages.publishAdverts.success))
         router.refresh()
@@ -71,7 +74,7 @@ export const PublishingTab = () => {
         toast.success('Auglýsing færð í stöðuna innsend', {
           toastId: 'update-advert-status-success',
         })
-        refetchAdvertsInProgress()
+        refetch()
         setSelectedAdvertIds([])
       },
       onError: () => {
@@ -84,7 +87,7 @@ export const PublishingTab = () => {
     <Box background="white">
       <Stack space={[3, 4, 5]}>
         <AdvertsToBePublished
-          adverts={adverts}
+          adverts={data?.adverts}
           selectedAdvertIds={selectedAdvertIds}
           onToggle={handleAdvertToggle}
         />
