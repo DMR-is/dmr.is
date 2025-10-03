@@ -12,6 +12,7 @@ import { FilterProvider } from '../../context/filter-context'
 import { GetCategoriesDto, GetStatusesDto, GetTypesDto } from '../../gen/fetch'
 import { allMessages } from '../../lib/messages'
 import { flattenMessages } from '../../lib/utils'
+import TRPCProvider from './TRPCProvider'
 
 export const Providers = ({
   children,
@@ -52,13 +53,15 @@ export const Providers = ({
               console.error('Error in IntlProvider', { exception: err })
             }}
           >
-            <FilterProvider
-              categories={categories}
-              types={types}
-              statuses={statuses}
-            >
-              {children}
-            </FilterProvider>
+            <TRPCProvider>
+              <FilterProvider
+                categories={categories}
+                types={types}
+                statuses={statuses}
+              >
+                {children}
+              </FilterProvider>
+            </TRPCProvider>
           </IntlProvider>
         </SessionProvider>
       </NuqsAdapter>
