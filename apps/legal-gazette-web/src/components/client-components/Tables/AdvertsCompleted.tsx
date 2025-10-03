@@ -19,13 +19,7 @@ export const AdvertsCompleted = () => {
     pageSize: params.pageSize,
   })
 
-  const { adverts, paging } = data ?? { adverts: [], paging: {} }
-
-  if (!data) {
-    return <div>No data</div>
-  }
-
-  const rows = adverts?.map((advert) => ({
+  const rows = data?.adverts?.map((advert) => ({
     birting: formatDate(advert.scheduledAt),
     skraning: formatDate(advert.createdAt),
     tegund: advert.type.title,
@@ -74,7 +68,7 @@ export const AdvertsCompleted = () => {
           ] as const
         }
         rows={rows}
-        paging={paging}
+        paging={data?.paging}
       />
     </Box>
   )
