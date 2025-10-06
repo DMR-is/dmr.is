@@ -489,7 +489,7 @@ export class UserService implements IUserService {
       involvedParty = await this.advertInvolvedPartyModel.findOne({
         where: {
           nationalId: { [Op.eq]: nationalId },
-          name: { [Op.iLike]: `%${name}%` },
+          title: { [Op.iLike]: `%${name}%` },
         },
       })
 
