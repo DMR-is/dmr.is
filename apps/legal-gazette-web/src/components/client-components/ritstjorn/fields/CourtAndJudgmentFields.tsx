@@ -6,10 +6,9 @@ import {
   GridRow,
   Select,
   Stack,
-  Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { toast } from '@island.is/island-ui/core'
+import { AccordionItem, toast } from '@island.is/island-ui/core'
 
 import { useAdvertContext } from '../../../../hooks/useAdvertContext'
 import { useUpdateAdvert } from '../../../../hooks/useUpdateAdvert'
@@ -44,72 +43,70 @@ export const CourtAndJudgementFields = () => {
     courtDistrictOptions?.find(
       (option) => option.value === advert.courtDistrict?.id,
     ) || null
-  return (
-    <Stack space={[1, 2]}>
-      <GridRow>
-        <GridColumn span="12/12">
-          <Text variant="h3">Dómstóll og úrskurðardagur</Text>
-        </GridColumn>
-      </GridRow>
-      <GridRow>
-        <GridColumn span={['12/12', '6/12']}>
-          <Select
-            size="sm"
-            backgroundColor="blue"
-            label="Dómstóll"
-            options={courtDistrictOptions}
-            defaultValue={defaultCourtDistrict}
-            onChange={(opt) => {
-              if (!opt) return
 
-              trigger(
-                {
-                  courtDistrictId: opt.value,
-                },
-                {
-                  onSuccess: () =>
-                    toast.success('Dómstóll vistaður', {
-                      toastId: 'court-success',
-                    }),
-                  onError: () =>
-                    toast.error('Villa við að vista dómstól', {
-                      toastId: 'court-error',
-                    }),
-                },
-              )
-            }}
-          />
-        </GridColumn>
-        <GridColumn span={['12/12', '6/12']}>
-          <DatePicker
-            size="sm"
-            locale="is"
-            backgroundColor="blue"
-            placeholderText=""
-            label="Úrskurðardagur"
-            selected={
-              advert.judgementDate ? new Date(advert.judgementDate) : null
-            }
-            handleChange={(date) => {
-              trigger(
-                {
-                  judgementDate: date ? date.toISOString() : undefined,
-                },
-                {
-                  onSuccess: () =>
-                    toast.success('Úrskurðadagur vistaður', {
-                      toastId: 'judgement-success',
-                    }),
-                  onError: () =>
-                    toast.error('Villa við að vista úrskurðardag', {
-                      toastId: 'judgement-error',
-                    }),
-                },
-              )
-            }}
-          />
-        </GridColumn>
-      </GridRow>
-    </Stack>
+  return (
+    <AccordionItem id="court" label="Dómstóll og úrskurðardagur">
+      <Stack space={[1, 2]}>
+        <GridRow>
+          <GridColumn span={['12/12', '6/12']}>
+            <Select
+              size="sm"
+              backgroundColor="blue"
+              label="Dómstóll"
+              options={courtDistrictOptions}
+              defaultValue={defaultCourtDistrict}
+              onChange={(opt) => {
+                if (!opt) return
+
+                trigger(
+                  {
+                    courtDistrictId: opt.value,
+                  },
+                  {
+                    onSuccess: () =>
+                      toast.success('Dómstóll vistaður', {
+                        toastId: 'court-success',
+                      }),
+                    onError: () =>
+                      toast.error('Villa við að vista dómstól', {
+                        toastId: 'court-error',
+                      }),
+                  },
+                )
+              }}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12']}>
+            <DatePicker
+              size="sm"
+              locale="is"
+              backgroundColor="blue"
+              placeholderText=""
+              label="Úrskurðardagur"
+              selected={
+                advert.judgementDate ? new Date(advert.judgementDate) : null
+              }
+              handleChange={(date) => {
+                trigger(
+                  {
+                    judgementDate: date ? date.toISOString() : undefined,
+                  },
+                  {
+                    onSuccess: () =>
+                      toast.success('Úrskurðadagur vistaður', {
+                        toastId: 'judgement-success',
+                      }),
+                    onError: () =>
+                      toast.error('Villa við að vista úrskurðardag', {
+                        toastId: 'judgement-error',
+                      }),
+                  },
+                )
+              }}
+            />
+          </GridColumn>
+        </GridRow>
+      </Stack>
+    </AccordionItem>
   )
 }

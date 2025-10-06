@@ -18,7 +18,12 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { DropdownMenu, Inline, toast } from '@island.is/island-ui/core'
+import {
+  AccordionItem,
+  DropdownMenu,
+  Inline,
+  toast,
+} from '@island.is/island-ui/core'
 
 import {
   AdvertPublicationDetailedDto,
@@ -119,13 +124,8 @@ export const PublicationsFields = () => {
   )
 
   return (
-    <>
+    <AccordionItem id="publications" label="Birtingar">
       <Stack space={[1, 2]}>
-        <GridRow>
-          <GridColumn span="12/12">
-            <Text variant="h3">Birtingar</Text>
-          </GridColumn>
-        </GridRow>
         <Stack space={[1, 2]}>
           <GridRow>
             <GridColumn span={['12/12', '6/12']}>
@@ -313,6 +313,6 @@ export const PublicationsFields = () => {
         }}
         id="advert-publication-modal"
       />
-    </>
+    </AccordionItem>
   )
 }
