@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import useSWR from 'swr'
 
+import { formatDate } from '@dmr.is/utils/client'
+
 import { ActionCard, Box, Stack, toast } from '@island.is/island-ui/core'
 
 import {
@@ -13,7 +15,6 @@ import {
   GetAdvertPublicationVersionEnum,
 } from '../../../gen/fetch'
 import { getAdvertPublication } from '../../../lib/fetchers'
-import { formatDate } from '../../../lib/utils'
 import { AdvertModal } from '../advert-modal/AdvertModal'
 import * as styles from './advert.css'
 

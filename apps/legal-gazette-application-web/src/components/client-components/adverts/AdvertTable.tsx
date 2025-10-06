@@ -2,10 +2,10 @@
 
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
+import { formatDate } from '@dmr.is/utils/client'
 
 import { AdvertDto } from '../../../gen/fetch'
 import { DateFormats } from '../../../lib/constants'
-import { formatDate } from '../../../lib/utils'
 import { AdvertPublications } from './AdvertPublications'
 
 type Props = {

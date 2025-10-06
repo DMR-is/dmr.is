@@ -68,17 +68,17 @@ export const PageContainer = ({ initalAdvertsCount }: Props) => {
                 {
                   id: 'innsendar',
                   label: `Innsendar (${advertsCountData.submitted.count})`,
-                  content: <SubmittedTab />,
+                  content: <SubmittedTab key="submitted-tab" />,
                 },
                 {
                   id: 'utgafa',
                   label: `Útgáfa (${advertsCountData.readyForPublication.count})`,
-                  content: <PublishingTab />,
+                  content: <PublishingTab key="publishing-tab" />,
                 },
                 {
                   id: 'yfirlit',
                   label: `Yfirlit (${overviewCount})`,
-                  content: <AdvertsCompleted />,
+                  content: <AdvertsCompleted key="overview-tab" />,
                 },
               ]}
             />

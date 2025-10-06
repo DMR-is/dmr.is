@@ -5,13 +5,13 @@ import useSWR from 'swr'
 
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
+import { formatDate } from '@dmr.is/utils/client'
 
 import { Tag } from '@island.is/island-ui/core'
 
 import { GetAdvertsDto, StatusEnum } from '../../../gen/fetch'
 import { useFilterContext } from '../../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
-import { formatDate } from '../../../lib/utils'
 
 export const AdvertsInProgress = () => {
   const { params, setParams } = useFilterContext()

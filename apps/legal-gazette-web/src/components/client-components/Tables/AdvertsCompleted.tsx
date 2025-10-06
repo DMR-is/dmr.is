@@ -4,11 +4,11 @@ import { useIntl } from 'react-intl'
 
 import { Box } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
+import { formatDate } from '@dmr.is/utils/client'
 
 import { useCompletedAdverts } from '../../../hooks/adverts/useCompletedAdverts'
 import { useFilterContext } from '../../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
-import { formatDate } from '../../../lib/utils'
 
 export const AdvertsCompleted = () => {
   const { params } = useFilterContext()
