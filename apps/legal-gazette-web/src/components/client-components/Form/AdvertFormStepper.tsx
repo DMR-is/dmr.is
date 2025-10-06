@@ -19,7 +19,7 @@ export const AdvertFormStepper = () => {
     { status: StatusEnum.Drög },
     { status: StatusEnum.Innsent },
     { status: StatusEnum.TilbúiðTilÚtgáfu },
-    { status: StatusEnum.Útgefið },
+    { status: StatusEnum.ÚTgefið },
   ]
 
   // If advert has been rejected or cancelled, add that as the final step after "Innsent"
