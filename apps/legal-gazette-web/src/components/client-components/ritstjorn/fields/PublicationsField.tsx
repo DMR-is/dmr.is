@@ -214,7 +214,7 @@ export const PublicationsFields = () => {
                           if (
                             advert.status.title !==
                               StatusEnum.TilbúiðTilÚtgáfu &&
-                            advert.status.title !== StatusEnum.Útgefið
+                            advert.status.title !== StatusEnum.ÚTgefið
                           ) {
                             toast.warning('Auglýsing ekki tilbúin til útgáfu', {
                               toastId: 'publish-publication-error',
