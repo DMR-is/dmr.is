@@ -19,7 +19,9 @@ import { StatusEnum } from '../../../gen/fetch'
 import { useAdvertContext } from '../../../hooks/useAdvertContext'
 import { useClient } from '../../../hooks/useClient'
 import { Route } from '../../../lib/constants'
+import { AdvertFormStepper } from './AdvertFormStepper'
 import * as styles from './Form.css'
+
 export const AdvertSidebar = () => {
   const { advert } = useAdvertContext()
   const router = useRouter() // TODO: maybe update the context instead of refreshing the whole page
@@ -183,6 +185,7 @@ export const AdvertSidebar = () => {
             </Text>
           </Button>
         )}
+        <AdvertFormStepper />
       </Stack>
     </Box>
   )

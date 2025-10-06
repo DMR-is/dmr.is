@@ -3,12 +3,12 @@
 import { useIntl } from 'react-intl'
 
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
+import { formatDate } from '@dmr.is/utils/client'
 
 import { Checkbox } from '@island.is/island-ui/core'
 
 import { AdvertDto } from '../../../gen/fetch'
 import { ritstjornTableMessages } from '../../../lib/messages/ritstjorn/tables'
-import { formatDate } from '../../../lib/utils'
 
 type Props = {
   selectedAdvertIds?: string[]

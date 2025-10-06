@@ -3,6 +3,11 @@ import { RouteItem } from './types'
 export const DEFAULT_PAGE = 1
 export const DEFAULT_PAGE_SIZE = 10
 
+export enum DateFormats {
+  DEFAULT = 'dd.MM.yyyy',
+  LONG = 'dd. MMMM yyyy',
+}
+
 export enum QueryParams {
   SEARCH = 'search',
   STATUS = 'statusId',

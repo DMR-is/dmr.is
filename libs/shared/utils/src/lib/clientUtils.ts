@@ -1,3 +1,6 @@
+import format from 'date-fns/format'
+import is from 'date-fns/locale/is'
+
 export const isSingular = (n: number | string): boolean => {
   const c = '' + Number(n)
   return c.slice(-1) === '1' && c.slice(-2) !== '11'
@@ -27,4 +30,26 @@ export const deleteUndefined = <T>(
     })
   }
   return obj as T
+}
+
+const dateFormats = [
+  'dd.MM.yyyy',
+  'dd. MMMM yyyy',
+  'HH:mm',
+  'MMMM',
+  'EEEE',
+] as const
+
+export const formatDate = (
+  date: Date | string,
+  dateFormat: (typeof dateFormats)[number] = 'dd.MM.yyyy',
+  locale = is,
+) => {
+  const dateToFormat = typeof date === 'string' ? new Date(date) : date
+
+  if (dateToFormat instanceof Date && !isNaN(dateToFormat.getTime())) {
+    return format(dateToFormat, dateFormat, { locale })
+  }
+
+  throw new Error(`Invalid date: ${date}`)
 }
