@@ -277,24 +277,26 @@ export function fixCats(
 export function fixInvolvedParties(
   involvedParties: Array<DbInvolvedParty>,
 ): Promise<Array<InvolvedParty>> {
-  const arr: Array<InvolvedParty> = []
+  const arr: Array<InvolvedParty> = involvedParties.flatMap((party) => {
+    if (
+      party.id === '' ||
+      party.name === '' ||
+      party.id === null ||
+      party.name === null
+    ) {
+      return []
+    }
+    const mapped: InvolvedParty = {
+      ...party,
+      slug: slugit(party.name),
+      legacy_id: party.id,
+    }
+    if (arr.findIndex((item) => item.id === party.id) > -1) {
+      mapped.id = uuid()
+    }
 
-  const mapped = involvedParties
-    .filter(
-      (x) => x.id !== '' && x.name !== '' && x.id !== null && x.name !== null,
-    )
-    .map((party) => {
-      const mapped: InvolvedParty = {
-        ...party,
-        slug: slugit(party.name),
-        legacy_id: party.id,
-      }
-      if (arr.findIndex((item) => item.id === party.id) > -1) {
-        mapped.id = uuid()
-      }
-
-      return arr.push(mapped)
-    })
+    return [mapped]
+  })
   return Promise.resolve(arr)
 }
 
@@ -342,8 +344,8 @@ export function fixAdverts(
         .find((x) => x.department_id === advert.department_id)?.id ?? null
     if (!typeId && types.typeLegacyMap.get(advert.typeName)) {
       typeId =
-        types.types.find((x) => types.typeLegacyMap.get(advert.typeName))?.id ??
-        null
+        types.types.find((_x) => types.typeLegacyMap.get(advert.typeName))
+          ?.id ?? null
     }
 
     return {

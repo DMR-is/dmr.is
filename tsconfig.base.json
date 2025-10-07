@@ -3,7 +3,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "module": "esnext", // Ensure all dependencies and build tools support ES modules
-    "target": "es2021",
+    "target": "es2015",
     "baseUrl": ".",
     "declaration": false,
     "sourceMap": true,
