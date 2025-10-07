@@ -20,6 +20,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 import {
+  getBodyHTMLlength,
   getFastTrack,
   getHtmlTextLength,
   MAX_CHARACTER_HTML,
@@ -108,8 +109,9 @@ export class PriceService implements IPriceService {
     const transactionPrice = await this.getPriceByDepartmentSlug(
       {
         slug: application.answers.advert.department.slug,
-        bodyLengthCount: getHtmlTextLength(application.answers?.advert.html),
-        additionalHTMLLength: additionsHtmlContentCount,
+        bodyLengthCount:
+          getHtmlTextLength(application.answers?.advert.html) +
+          additionsHtmlContentCount,
         isFastTrack,
       },
       transaction,
@@ -177,16 +179,21 @@ export class PriceService implements IPriceService {
             .reduce((acc, curr) => acc + curr, 0)
         : 0
 
+    const characterLength =
+      caseLookup.transaction.customAdditionalCharacterCount ||
+      getBodyHTMLlength(
+        getHtmlTextLength(caseLookup.html),
+        additionsHtmlContentCount,
+        caseLookup.transaction.customAdditionalDocCount,
+      )
+
     const caseFeeCalculation = await this.getPriceByDepartmentSlug(
       {
         slug: caseLookup.department.slug,
         isFastTrack: caseLookup.fastTrack,
         imageTier: caseLookup.transaction.imageTier ?? undefined,
         baseDocumentCount: caseLookup.transaction.customBaseCount ?? 0,
-        bodyLengthCount:
-          caseLookup.transaction.customAdditionalCharacterCount ??
-          getHtmlTextLength(caseLookup.html),
-        additionalHTMLLength: additionsHtmlContentCount,
+        bodyLengthCount: characterLength,
         additionalDocCount:
           caseLookup.transaction.customAdditionalDocCount ?? 0,
       },
@@ -259,13 +266,17 @@ export class PriceService implements IPriceService {
         : 0
 
     const characterLength =
-      body.customBodyLengthCount || getHtmlTextLength(caseLookup.html)
+      body.customBodyLengthCount ||
+      getBodyHTMLlength(
+        getHtmlTextLength(caseLookup.html),
+        additionsHtmlContentCount,
+        body.customAdditionalDocCount,
+      )
 
     const caseFeeCalculation = await this.getPriceByDepartmentSlug(
       {
         slug: caseLookup.department.slug,
         bodyLengthCount: characterLength,
-        additionalHTMLLength: additionsHtmlContentCount,
         isFastTrack: caseLookup.fastTrack,
         imageTier: body.imageTier,
         baseDocumentCount: body.customBaseDocumentCount,
@@ -356,15 +367,7 @@ export class PriceService implements IPriceService {
     const usedFeeCodes = []
     const expenses: PaymentExpenses[] = []
 
-    const combinedCharLength =
-      (body.bodyLengthCount ?? 0) + (body.additionalHTMLLength ?? 0)
-
-    // If there are additional documents, we only get main text body length, else we count main + additional.
-    // If there are additional documents, the price of those are calculated separately.
-    const characterLength =
-      body.additionalDocCount && body.additionalDocCount > 0
-        ? body.bodyLengthCount
-        : combinedCharLength
+    const characterLength = body.bodyLengthCount
 
     if (
       baseModifierFee?.value && // BASE_MODIFIER is only for B-department
@@ -546,6 +549,7 @@ export class PriceService implements IPriceService {
           statusText: res.statusText,
           error: jsonResponse?.error,
           detail: errorStatus?.detail,
+          expenses: body.Expenses,
         },
       )
       return ResultWrapper.err({
