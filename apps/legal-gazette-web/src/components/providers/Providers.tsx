@@ -9,23 +9,15 @@ import { IntlProvider } from 'react-intl'
 import { ToastContainer } from '@dmr.is/ui/components/island-is'
 
 import { FilterProvider } from '../../context/filter-context'
-import { GetCategoriesDto, GetStatusesDto, GetTypesDto } from '../../gen/fetch'
 import { allMessages } from '../../lib/messages'
-import ProviderTRPC from '../../lib/trpc/client/Provider'
 import { flattenMessages } from '../../lib/utils'
 
 export const Providers = ({
   children,
   session,
-  types,
-  statuses,
-  categories,
 }: {
   children: React.ReactNode
   session: Session | null
-  types: GetTypesDto
-  statuses: GetStatusesDto
-  categories: GetCategoriesDto
 }) => {
   return (
     <>
@@ -53,15 +45,7 @@ export const Providers = ({
               console.error('Error in IntlProvider', { exception: err })
             }}
           >
-            <ProviderTRPC>
-              <FilterProvider
-                categories={categories}
-                types={types}
-                statuses={statuses}
-              >
-                {children}
-              </FilterProvider>
-            </ProviderTRPC>
+            <FilterProvider>{children}</FilterProvider>
           </IntlProvider>
         </SessionProvider>
       </NuqsAdapter>

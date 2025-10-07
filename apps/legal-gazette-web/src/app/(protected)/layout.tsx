@@ -3,8 +3,9 @@ import { getServerSession } from 'next-auth'
 import { Header } from '@dmr.is/ui/components/client-components/Header/Header'
 
 import { Providers } from '../../components/providers/Providers'
-import { getLegalGazetteClient } from '../../lib/api/createClient'
 import { authOptions } from '../../lib/auth/authOptions'
+import ProviderTRPC from '../../lib/trpc/client/Provider'
+import { getTrpcServer } from '../../lib/trpc/server/server'
 
 export default async function RootLayout({
   children,
@@ -17,23 +18,18 @@ export default async function RootLayout({
     throw new Error('Unauthorized')
   }
 
-  const typeClient = getLegalGazetteClient('TypeApi', session?.idToken)
-  const categoryClient = getLegalGazetteClient('CategoryApi', session?.idToken)
-  const statusClient = getLegalGazetteClient('StatusApi', session?.idToken)
+  const { trpc, HydrateClient } = await getTrpcServer()
 
-  const types = await typeClient.getTypes()
-  const categories = await categoryClient.getCategories({})
-  const statuses = await statusClient.getStatuses()
+  void trpc.baseEntity.getAllEntities.prefetch()
 
   return (
-    <Providers
-      session={session}
-      types={types}
-      categories={categories}
-      statuses={statuses}
-    >
-      <Header variant="blue" />
-      {children}
-    </Providers>
+    <ProviderTRPC>
+      <HydrateClient>
+        <Providers session={session}>
+          <Header variant="blue" />
+          {children}
+        </Providers>
+      </HydrateClient>
+    </ProviderTRPC>
   )
 }

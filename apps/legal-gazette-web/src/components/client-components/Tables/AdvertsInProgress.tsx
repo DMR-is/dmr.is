@@ -18,7 +18,7 @@ export const AdvertsInProgress = () => {
 
   const { formatMessage } = useIntl()
 
-  const { data, isLoading, error } = trpc.getSubmittedAdverts.useQuery({
+  const { data, isLoading, error } = trpc.adverts.getSubmittedAdverts.useQuery({
     categoryId: params.categoryId,
     typeId: params.typeId,
     statusId: params.statusId as StatusIdEnum[],

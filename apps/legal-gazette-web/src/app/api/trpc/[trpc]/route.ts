@@ -1,4 +1,4 @@
-import { createTRPCContext } from '../../../../lib/trpc/server'
+import { createTRPCContext } from '../../../../lib/trpc/server/trpc'
 import { appRouter } from '../../../../lib/trpc/server/routers/_app'
 
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'

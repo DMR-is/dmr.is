@@ -1,22 +1,25 @@
 import { cache } from 'react'
 
-import { AdvertApi } from '../../../gen/fetch'
 import { getServerClient } from '../../api/serverClient'
+import { makeQueryClient } from '../client/query-client'
 
 import { initTRPC, TRPCError } from '@trpc/server'
 
-let advertApi: AdvertApi | null = null
-
 export const createTRPCContext = cache(async () => {
-  const client = (advertApi ??= await getServerClient('AdvertApi'))
   return {
-    advertApi: client,
+    advertApi: await getServerClient('AdvertApi'),
+    baseEntity: {
+      typeApi: await getServerClient('TypeApi'),
+      categoryApi: await getServerClient('CategoryApi'),
+      statusApi: await getServerClient('StatusApi'),
+      courtDistrictApi: await getServerClient('CourtDistrictApi'),
+    },
   }
 })
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   errorFormatter(opts) {
-    const { shape, error } = opts
+    const { shape } = opts
 
     return {
       ...shape,
@@ -54,3 +57,5 @@ export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
     },
   })
 })
+
+export const getQueryClient = cache(makeQueryClient)
