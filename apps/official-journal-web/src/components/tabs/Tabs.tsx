@@ -1,3 +1,4 @@
+import { isDefined } from 'class-validator'
 import { useEffect } from 'react'
 import { Tab, TabList, TabPanel, useTabState } from 'reakit'
 
@@ -8,7 +9,6 @@ import {
   GridRow,
   Text,
 } from '@island.is/island-ui/core'
-import { isDefined } from '@island.is/shared/utils'
 
 import * as styles from './Tabs.css'
 

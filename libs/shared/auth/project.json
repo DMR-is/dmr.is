@@ -15,7 +15,7 @@
         "jestConfig": "libs/shared/auth/jest.config.ts"
       }
     },
-    "typecheck": {
+    "tsc": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["tsc -p tsconfig.lib.json --noEmit"],

@@ -161,7 +161,7 @@ storage._handleFile = function (req, file, cb) {
   const fileData: Array<Buffer> = []
   file.stream
     .on('data', (data: Buffer) => {
-      hash.update(data)
+      hash.update(data.toString('binary'))
       fileData.push(data)
     })
     .on('end', () => {
