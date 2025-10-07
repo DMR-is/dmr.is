@@ -105,7 +105,7 @@ export const PriceCalculator = () => {
 
   useEffect(() => {
     updateAllPrices()
-  }, [currentCase.html, currentCase.fastTrack, currentCase.additions])
+  }, [currentCase.html, currentCase.fastTrack])
 
   return (
     <>
