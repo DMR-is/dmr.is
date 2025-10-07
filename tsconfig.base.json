@@ -1,10 +1,22 @@
 {
   "compilerOptions": {
-    "target": "es2021",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "module": "commonjs",
+    "module": "esnext", // Ensure all dependencies and build tools support ES modules
+    "target": "es2021",
     "baseUrl": ".",
+    "declaration": false,
+    "sourceMap": true,
+    "importHelpers": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "types": ["node", "Multer", "../../node_modules/@types/node"],
+    "typeRoots": ["node_modules/@types"],
     "paths": {
       "@dmr.is/api-client/*": ["libs/shared/api-client/src/lib/*"],
       "@dmr.is/apm": ["libs/apm/src/index.ts"],
@@ -67,15 +79,7 @@
       "@island.is/shared/utils": [
         "submodules/island.is/libs/shared/utils/src/index.ts"
       ]
-    },
-    "sourceMap": true,
-    "importHelpers": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "types": ["node", "Multer"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }
