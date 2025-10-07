@@ -5,7 +5,7 @@
   "projectType": "application",
   "tags": [],
   "targets": {
-    "tsCheck": {
+    "tsc": {
       "executor": "nx:run-commands",
       "dependsOn": ["codegen"],
       "options": {

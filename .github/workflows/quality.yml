@@ -82,7 +82,7 @@ jobs:
 
       - name: Run tests
         run: yarn run nx affected -t test
-  tsCheck:
+  tsc:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -103,8 +103,8 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
 
-      - name: tsCheck
-        run: yarn run nx affected -t tsCheck
+      - name: tsc
+        run: yarn run nx affected -t tsc
 
       # TODO: Removing build step for now, we will add again building all affected projects if needed
       # - name: Build application

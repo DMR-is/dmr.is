@@ -15,7 +15,7 @@
         "jestConfig": "libs/shared/models/base/jest.config.ts"
       }
     },
-    "tsCheck": {
+    "tsc": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["tsc -p tsconfig.lib.json --noEmit"],
