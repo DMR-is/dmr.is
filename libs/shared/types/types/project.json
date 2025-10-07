@@ -16,7 +16,7 @@
         "jestConfig": "libs/shared/types/types/jest.config.ts"
       }
     },
-    "typecheck": {
+    "tsCheck": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["tsc -p tsconfig.lib.json --noEmit"],

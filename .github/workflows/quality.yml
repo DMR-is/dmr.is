@@ -82,12 +82,13 @@ jobs:
 
       - name: Run tests
         run: yarn run nx affected -t test
-  typecheck:
+  tsCheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: true
 
       - name: ♻️ Use Node.js 20.x
         uses: actions/setup-node@v4
@@ -102,8 +103,8 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
 
-      - name: Typecheck
-        run: yarn run nx affected -t typecheck
+      - name: tsCheck
+        run: yarn run nx affected -t tsCheck
 
       # TODO: Removing build step for now, we will add again building all affected projects if needed
       # - name: Build application

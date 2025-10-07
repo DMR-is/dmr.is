@@ -5,7 +5,7 @@
   "projectType": "application",
   "tags": [],
   "targets": {
-    "typecheck": {
+    "tsCheck": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["tsc -p tsconfig.app.json --noEmit"],

@@ -4,7 +4,7 @@
   "projectType": "application",
   "implicitDependencies": ["official-journal-api-export"],
   "targets": {
-    "typecheck": {
+    "tsCheck": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["tsc -p tsconfig.json --noEmit"],
