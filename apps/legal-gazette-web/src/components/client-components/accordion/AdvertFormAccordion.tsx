@@ -41,11 +41,11 @@ export const AdvertFormAccordion = () => {
   ]
 
   const expandAll = () => {
-    toggles.forEach((toggle) => toggle.setToggle(true))
+    toggles.forEach((toggle) => toggle.setExpanded(true))
   }
 
   const closeAll = () => {
-    toggles.forEach((toggle) => toggle.setToggle(false))
+    toggles.forEach((toggle) => toggle.setExpanded(false))
   }
 
   const isSomeOpen = toggles.some((toggle) => toggle.expanded)
@@ -53,35 +53,35 @@ export const AdvertFormAccordion = () => {
   const accordionItems = [
     <ReadOnlyAccordionItem
       expanded={readOnlyToggle.expanded}
-      onToggle={readOnlyToggle.onToggle}
+      onToggle={() => readOnlyToggle.setExpanded((prev) => !prev)}
     />,
     <BaseAdvertAccordionItem
       expanded={baseAdvertToggle.expanded}
-      onToggle={baseAdvertToggle.onToggle}
+      onToggle={() => baseAdvertToggle.setExpanded((prev) => !prev)}
     />,
     <ContentAccordionItem
       expanded={contentToggle.expanded}
-      onToggle={contentToggle.onToggle}
+      onToggle={() => contentToggle.setExpanded((prev) => !prev)}
     />,
     <CourtAndJudgementAccordionItem
       expanded={courtAndJudgementToggle.expanded}
-      onToggle={courtAndJudgementToggle.onToggle}
+      onToggle={() => courtAndJudgementToggle.setExpanded((prev) => !prev)}
     />,
     <DivisionMeetingAccordionItem
       expanded={divisionMeetingToggle.expanded}
-      onToggle={divisionMeetingToggle.onToggle}
+      onToggle={() => divisionMeetingToggle.setExpanded((prev) => !prev)}
     />,
     <SettlementAccordionItem
       expanded={settlementToggle.expanded}
-      onToggle={settlementToggle.onToggle}
+      onToggle={() => settlementToggle.setExpanded((prev) => !prev)}
     />,
     <SignatureAccordionItem
       expanded={signatureToggle.expanded}
-      onToggle={signatureToggle.onToggle}
+      onToggle={() => signatureToggle.setExpanded((prev) => !prev)}
     />,
     <PublicationsAccordionItem
       expanded={publicationsToggle.expanded}
-      onToggle={publicationsToggle.onToggle}
+      onToggle={() => publicationsToggle.setExpanded((prev) => !prev)}
     />,
   ]
 
