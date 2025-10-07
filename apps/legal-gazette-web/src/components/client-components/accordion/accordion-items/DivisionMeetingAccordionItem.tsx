@@ -30,7 +30,12 @@ export const DivisionMeetingAccordionItem = () => {
   }
 
   return (
-    <AccordionItem id="division" label="Upplýsingar um skiptafund">
+    <AccordionItem
+      id="division"
+      label="Upplýsingar um skiptafund"
+      labelVariant="h5"
+      iconVariant="small"
+    >
       <Stack space={[1, 2]}>
         <GridRow>
           <GridColumn span={['12/12', '6/12']}>

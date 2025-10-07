@@ -28,7 +28,7 @@ const accordionItems = [
 export const AdvertFormAccordion = () => (
   <Box className={styles.advertFormAccordion}>
     {accordionItems.map((Item, index) => (
-      <div key={index} className={styles.fieldWrapper}>
+      <div key={index} className={styles.accordionItemContainer}>
         {Item}
       </div>
     ))}

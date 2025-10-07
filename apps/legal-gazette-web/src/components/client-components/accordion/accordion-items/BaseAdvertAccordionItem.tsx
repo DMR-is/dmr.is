@@ -19,7 +19,12 @@ export const BaseAdvertAccordionItem = () => {
   const { trigger } = useUpdateAdvert(advert.id)
 
   return (
-    <AccordionItem id="base" label="Almennar upplýsingar">
+    <AccordionItem
+      id="base"
+      label="Almennar upplýsingar"
+      labelVariant="h5"
+      iconVariant="small"
+    >
       <Stack space={[1, 2]}>
         <GridRow>
           <TypeAndCategorySelect

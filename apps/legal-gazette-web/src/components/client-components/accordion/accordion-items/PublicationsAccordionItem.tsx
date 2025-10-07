@@ -124,7 +124,12 @@ export const PublicationsAccordionItem = () => {
   )
 
   return (
-    <AccordionItem id="publications" label="Birtingar">
+    <AccordionItem
+      id="publications"
+      label="Birtingar"
+      labelVariant="h5"
+      iconVariant="small"
+    >
       <Stack space={[1, 2]}>
         <Stack space={[1, 2]}>
           <GridRow>

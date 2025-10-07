@@ -45,7 +45,12 @@ export const CourtAndJudgementAccordionItem = () => {
     ) || null
 
   return (
-    <AccordionItem id="court" label="Dómstóll og úrskurðardagur">
+    <AccordionItem
+      id="court"
+      label="Dómstóll og úrskurðardagur"
+      labelVariant="h5"
+      iconVariant="small"
+    >
       <Stack space={[1, 2]}>
         <GridRow>
           <GridColumn span={['12/12', '6/12']}>

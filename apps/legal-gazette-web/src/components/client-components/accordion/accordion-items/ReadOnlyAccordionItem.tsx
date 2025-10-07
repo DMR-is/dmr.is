@@ -13,7 +13,12 @@ export const ReadOnlyAccordionItem = () => {
   const { advert } = useAdvertContext()
 
   return (
-    <AccordionItem id="readonly" label="Upplýsingar um auglýsingu">
+    <AccordionItem
+      id="readonly"
+      label="Upplýsingar um auglýsingu"
+      labelVariant="h5"
+      iconVariant="small"
+    >
       <Stack space={[1, 2]}>
         <GridRow rowGap={[1, 2]}>
           <GridColumn span={['12/12', '6/12']}>

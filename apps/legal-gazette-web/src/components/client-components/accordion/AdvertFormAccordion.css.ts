@@ -15,7 +15,7 @@ export const advertFormAccordion = style({
   },
 })
 
-export const fieldWrapper = style({
+export const accordionItemContainer = style({
   selectors: {
     '&:empty': {
       display: 'none',

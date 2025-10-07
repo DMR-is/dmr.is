@@ -46,7 +46,12 @@ export const SettlementAccordionItem = () => {
   const settlement = advert.settlement
 
   return (
-    <AccordionItem id="settlement" label="Upplýsingar um búið">
+    <AccordionItem
+      id="settlement"
+      label="Upplýsingar um búið"
+      labelVariant="h5"
+      iconVariant="small"
+    >
       <Stack space={[1, 2]}>
         <GridRow>
           <GridColumn span={['12/12', '6/12']}>

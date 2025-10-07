@@ -26,7 +26,12 @@ export const SignatureAccordionItem = () => {
   const { trigger } = useUpdateAdvert(advert.id)
 
   return (
-    <AccordionItem id="signature" label="Undirritun">
+    <AccordionItem
+      id="signature"
+      label="Undirritun"
+      labelVariant="h5"
+      iconVariant="small"
+    >
       <Stack space={[1, 2]}>
         <GridRow rowGap={[1, 2]}>
           <GridColumn span={['12/12', '6/12']}>

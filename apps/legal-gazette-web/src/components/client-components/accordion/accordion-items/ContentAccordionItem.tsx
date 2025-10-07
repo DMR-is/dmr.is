@@ -22,7 +22,12 @@ export const ContentAccordionItem = () => {
   const silentHTMLUpdateHandler = useCallback(debounce(trigger, 500), [])
 
   return (
-    <AccordionItem id="content" label="Efni auglýsingar">
+    <AccordionItem
+      id="content"
+      label="Efni auglýsingar"
+      labelVariant="h5"
+      iconVariant="small"
+    >
       <Stack space={[1, 2]}>
         {!!advert.caption && (
           <GridRow>
