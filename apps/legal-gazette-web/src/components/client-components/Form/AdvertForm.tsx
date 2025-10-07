@@ -6,7 +6,7 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { AdvertFormAccordion } from './AdvertFormAccordion'
+import { AdvertFormAccordion } from '../accordion/AdvertFormAccordion'
 
 export const AdvertForm = () => {
   return (
