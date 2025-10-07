@@ -679,3 +679,14 @@ export const getNextWeekDay = (date: Date | string) => {
 
   return dateToUse
 }
+
+export const getBodyHTMLlength = (
+  bodyLength: number,
+  additionsLength: number,
+  additionalDocCount?: number | null,
+) => {
+  if (additionalDocCount) {
+    return bodyLength
+  }
+  return bodyLength + additionsLength
+}
