@@ -13,7 +13,12 @@ import { useAdvertContext } from '../../../../hooks/useAdvertContext'
 import { useUpdateAdvert } from '../../../../hooks/useUpdateAdvert'
 import { TypeAndCategorySelect } from '../../selects/TypeAndCategorySelect'
 
-export const BaseAdvertAccordionItem = () => {
+type BaseAdvertAccordionItemProps = { expanded: boolean; onToggle: () => void }
+
+export const BaseAdvertAccordionItem = ({
+  expanded,
+  onToggle,
+}: BaseAdvertAccordionItemProps) => {
   const { advert, types, categories } = useAdvertContext()
 
   const { trigger } = useUpdateAdvert(advert.id)
@@ -24,6 +29,8 @@ export const BaseAdvertAccordionItem = () => {
       label="Almennar upplýsingar"
       labelVariant="h5"
       iconVariant="small"
+      expanded={expanded}
+      onToggle={onToggle}
     >
       <Stack space={[1, 2]}>
         <GridRow>

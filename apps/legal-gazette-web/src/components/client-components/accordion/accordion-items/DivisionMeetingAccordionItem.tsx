@@ -17,7 +17,15 @@ import {
   isDivisionMeetingAdvert,
 } from '../../../../lib/advert-type-guards'
 
-export const DivisionMeetingAccordionItem = () => {
+type DivisionMeetingAccordionItemProps = {
+  expanded: boolean
+  onToggle: () => void
+}
+
+export const DivisionMeetingAccordionItem = ({
+  expanded,
+  onToggle,
+}: DivisionMeetingAccordionItemProps) => {
   const { advert } = useAdvertContext()
   const { trigger } = useUpdateAdvert(advert.id)
 
@@ -35,6 +43,8 @@ export const DivisionMeetingAccordionItem = () => {
       label="Upplýsingar um skiptafund"
       labelVariant="h5"
       iconVariant="small"
+      expanded={expanded}
+      onToggle={onToggle}
     >
       <Stack space={[1, 2]}>
         <GridRow>

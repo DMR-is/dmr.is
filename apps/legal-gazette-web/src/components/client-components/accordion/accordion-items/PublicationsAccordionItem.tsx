@@ -39,7 +39,15 @@ import { useAdvertContext } from '../../../../hooks/useAdvertContext'
 import { useClient } from '../../../../hooks/useClient'
 import { AdvertModal } from '../../modals/AdvertPublicationModal'
 
-export const PublicationsAccordionItem = () => {
+type PublicationsAccordionItemProps = {
+  expanded: boolean
+  onToggle: () => void
+}
+
+export const PublicationsAccordionItem = ({
+  expanded,
+  onToggle,
+}: PublicationsAccordionItemProps) => {
   const { advert } = useAdvertContext()
   const router = useRouter()
 
@@ -129,6 +137,8 @@ export const PublicationsAccordionItem = () => {
       label="Birtingar"
       labelVariant="h5"
       iconVariant="small"
+      expanded={expanded}
+      onToggle={onToggle}
     >
       <Stack space={[1, 2]}>
         <Stack space={[1, 2]}>

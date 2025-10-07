@@ -9,7 +9,15 @@ import { AccordionItem, GridRow, toast } from '@island.is/island-ui/core'
 
 import { useAdvertContext } from '../../../../hooks/useAdvertContext'
 
-export const ReadOnlyAccordionItem = () => {
+type ReadOnlyAccordionItemProps = {
+  expanded: boolean
+  onToggle: () => void
+}
+
+export const ReadOnlyAccordionItem = ({
+  expanded,
+  onToggle,
+}: ReadOnlyAccordionItemProps) => {
   const { advert } = useAdvertContext()
 
   return (
@@ -18,6 +26,8 @@ export const ReadOnlyAccordionItem = () => {
       label="Upplýsingar um auglýsingu"
       labelVariant="h5"
       iconVariant="small"
+      expanded={expanded}
+      onToggle={onToggle}
     >
       <Stack space={[1, 2]}>
         <GridRow rowGap={[1, 2]}>

@@ -13,7 +13,15 @@ import { AccordionItem, toast } from '@island.is/island-ui/core'
 import { useAdvertContext } from '../../../../hooks/useAdvertContext'
 import { useUpdateAdvert } from '../../../../hooks/useUpdateAdvert'
 
-export const SignatureAccordionItem = () => {
+type SignatureAccordionItemProps = {
+  expanded: boolean
+  onToggle: () => void
+}
+
+export const SignatureAccordionItem = ({
+  expanded,
+  onToggle,
+}: SignatureAccordionItemProps) => {
   const { advert } = useAdvertContext()
 
   const {
@@ -31,6 +39,8 @@ export const SignatureAccordionItem = () => {
       label="Undirritun"
       labelVariant="h5"
       iconVariant="small"
+      expanded={expanded}
+      onToggle={onToggle}
     >
       <Stack space={[1, 2]}>
         <GridRow rowGap={[1, 2]}>

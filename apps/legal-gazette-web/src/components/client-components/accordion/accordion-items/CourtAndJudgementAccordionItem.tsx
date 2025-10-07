@@ -18,7 +18,15 @@ import {
   isDivisionEndingAdvert,
 } from '../../../../lib/advert-type-guards'
 
-export const CourtAndJudgementAccordionItem = () => {
+type CourtAndJudgementAccordionItemProps = {
+  expanded: boolean
+  onToggle: () => void
+}
+
+export const CourtAndJudgementAccordionItem = ({
+  expanded,
+  onToggle,
+}: CourtAndJudgementAccordionItemProps) => {
   const { advert, courtDistricts } = useAdvertContext()
 
   const { trigger } = useUpdateAdvert(advert.id)
@@ -50,6 +58,8 @@ export const CourtAndJudgementAccordionItem = () => {
       label="Dómstóll og úrskurðardagur"
       labelVariant="h5"
       iconVariant="small"
+      expanded={expanded}
+      onToggle={onToggle}
     >
       <Stack space={[1, 2]}>
         <GridRow>

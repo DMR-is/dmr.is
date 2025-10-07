@@ -21,7 +21,15 @@ import {
   isDivisionEndingAdvert,
 } from '../../../../lib/advert-type-guards'
 
-export const SettlementAccordionItem = () => {
+type SettlementAccordionItemProps = {
+  expanded: boolean
+  onToggle: () => void
+}
+
+export const SettlementAccordionItem = ({
+  expanded,
+  onToggle,
+}: SettlementAccordionItemProps) => {
   const { advert } = useAdvertContext()
 
   const client = useClient('SettlementApi')
@@ -51,6 +59,8 @@ export const SettlementAccordionItem = () => {
       label="Upplýsingar um búið"
       labelVariant="h5"
       iconVariant="small"
+      expanded={expanded}
+      onToggle={onToggle}
     >
       <Stack space={[1, 2]}>
         <GridRow>

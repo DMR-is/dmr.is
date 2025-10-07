@@ -12,7 +12,15 @@ import { useAdvertContext } from '../../../../hooks/useAdvertContext'
 import { useUpdateAdvert } from '../../../../hooks/useUpdateAdvert'
 import { Editor } from '../../editor/HTMLEditor'
 
-export const ContentAccordionItem = () => {
+type ContentAccordionItemProps = {
+  expanded: boolean
+  onToggle: () => void
+}
+
+export const ContentAccordionItem = ({
+  expanded,
+  onToggle,
+}: ContentAccordionItemProps) => {
   const { advert } = useAdvertContext()
 
   if (!advert.caption && !advert.content) return null
@@ -27,6 +35,8 @@ export const ContentAccordionItem = () => {
       label="Efni auglýsingar"
       labelVariant="h5"
       iconVariant="small"
+      expanded={expanded}
+      onToggle={onToggle}
     >
       <Stack space={[1, 2]}>
         {!!advert.caption && (
