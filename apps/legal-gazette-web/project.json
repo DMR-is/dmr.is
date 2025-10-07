@@ -5,7 +5,7 @@
   "projectType": "application",
   "tags": [],
   "targets": {
-    "typecheck": {
+    "tsc": {
       "executor": "nx:run-commands",
       "dependsOn": ["codegen"],
       "options": {
@@ -74,7 +74,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "curl http://localhost:4100/swagger-json > clientConfig.json",
+          "curl http://localhost:4100/swagger/json > clientConfig.json",
           "prettier --write clientConfig.json",
           "node patch-enums.js",
           "prettier --write clientConfig.patched.json"

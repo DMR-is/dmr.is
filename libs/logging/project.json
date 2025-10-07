@@ -6,7 +6,7 @@
   "tags": [],
   "generators": {},
   "targets": {
-    "typecheck": {
+    "tsc": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["tsc -p tsconfig.json --noEmit"],

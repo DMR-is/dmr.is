@@ -5,6 +5,7 @@ import { helperStyles, theme } from '@island.is/island-ui/theme'
 
 import * as mixins from './EditorInput.mixins'
 
+import type { StyleRule } from '@vanilla-extract/css'
 import { style } from '@vanilla-extract/css'
 
 export const containerDisabled = style({
@@ -27,7 +28,7 @@ export const container = style({
   selectors: {
     [`&:hover:not(${containerDisabled})`]: mixins.containerHover,
   },
-})
+} as StyleRule)
 
 export const errorMessage = style(mixins.errorMessage)
 
@@ -40,7 +41,7 @@ export const label = style({
   selectors: {
     [`${hasError} &`]: mixins.labelErrorState,
   },
-})
+} as StyleRule)
 
 export const isRequiredStar = style({
   color: theme.color.red600,

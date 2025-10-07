@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "skipLibCheck": true,
     "jsx": "preserve",
     "allowJs": true,
     "esModuleInterop": true,
@@ -20,15 +21,8 @@
         "name": "next"
       }
     ],
-    "types": [
-      "jest",
-      "node"
-    ],
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "types": ["jest", "node"],
+    "lib": ["dom", "dom.iterable", "es2019"],
     "moduleResolution": "node"
   },
   "include": [
@@ -38,7 +32,5 @@
     "next-env.d.ts",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

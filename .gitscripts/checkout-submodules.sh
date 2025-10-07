@@ -14,7 +14,7 @@ jq -c '.submodules[]' <"${CONFIG_FILE}" | while read -r submodule; do
   git submodule update --init --quiet "${SUBMODULE_PATH}"
 
   # Fetch updates quietly
-  git -C "${SUBMODULE_PATH}" fetch --quiet
+  git -C "${SUBMODULE_PATH}" fetch --quiet --prune
 
   # Checkout to the specified SHA quietly
   git -C "${SUBMODULE_PATH}" checkout --quiet "${SHA}"

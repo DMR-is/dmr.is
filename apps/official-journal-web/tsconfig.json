@@ -21,7 +21,7 @@
       }
     ],
     "types": ["jest", "node"],
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": ["dom", "dom.iterable", "es2019"],
     "moduleResolution": "node"
   },
   "include": ["**/*.js", "**/*.ts", "**/*.tsx", "next-env.d.ts"],

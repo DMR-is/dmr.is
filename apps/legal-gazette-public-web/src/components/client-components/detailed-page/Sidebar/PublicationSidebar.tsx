@@ -1,7 +1,7 @@
 import { Box, Button, Stack, Text } from '@dmr.is/ui/components/island-is'
+import { formatDate } from '@dmr.is/utils/client'
 
 import { AdvertPublicationDetailedDto } from '../../../../gen/fetch'
-import { formatDate } from '../../../../lib/utils'
 
 type Props = {
   publication: AdvertPublicationDetailedDto

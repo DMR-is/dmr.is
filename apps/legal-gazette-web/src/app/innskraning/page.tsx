@@ -4,7 +4,6 @@ import { signIn } from 'next-auth/react'
 import { useState } from 'react'
 
 import { identityServerId } from '@dmr.is/auth/identityProvider'
-
 import {
   Box,
   Button,
@@ -13,7 +12,7 @@ import {
   GridRow,
   Stack,
   Text,
-} from '@island.is/island-ui/core'
+} from '@dmr.is/ui/components/island-is'
 
 export default function Login() {
   const [loading, setLoading] = useState(false)

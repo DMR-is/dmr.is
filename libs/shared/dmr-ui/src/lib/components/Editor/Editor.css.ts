@@ -12,7 +12,7 @@ import {
   readOnly,
 } from './EditorInput.css'
 
-import { globalStyle, keyframes, style, StyleRule } from '@vanilla-extract/css'
+import { globalStyle, keyframes, style } from '@vanilla-extract/css'
 import { recipe } from '@vanilla-extract/recipes'
 
 const { color, typography, border } = theme
@@ -53,7 +53,7 @@ const addLegened = (
   $legend?: string | { value: string },
   $tiny?: boolean,
   $warning?: boolean,
-): StyleRule => {
+): Record<string, unknown> => {
   let color = '#555'
   let backgroundColor = '#dde9cc'
 
@@ -67,8 +67,8 @@ const addLegened = (
   const content = !$legend
     ? undefined
     : typeof $legend === 'string'
-    ? `"${$legend}"`
-    : $legend.value
+      ? `"${$legend}"`
+      : $legend.value
 
   return {
     position: 'absolute',
@@ -408,7 +408,7 @@ export const classes: EditorClasses = {
   }),
 }
 
-const { wrapper: wrapperClass, ...rest } = classes
+const { wrapper: _wrapperClass, ...rest } = classes
 
 const wrapperNoMinHeight = style({
   minHeight: 'auto',

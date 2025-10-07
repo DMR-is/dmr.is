@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { PagingQuery } from '@dmr.is/shared/dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
@@ -15,7 +14,7 @@ import {
   GetAdvertsStatusCounterDto,
   UpdateAdvertDto,
 } from './dto/advert.dto'
-import { AdvertModel, AdvertModelScopes } from './advert.model'
+import { AdvertModel } from './advert.model'
 import { IAdvertService } from './advert.service.interface'
 
 @Injectable()
@@ -184,82 +183,6 @@ export class AdvertService implements IAdvertService {
     }
   }
 
-  async getCompletedAdverts(query: PagingQuery): Promise<GetAdvertsDto> {
-    const { limit, offset } = getLimitAndOffset({
-      page: query.page,
-      pageSize: query.pageSize,
-    })
-    const adverts = await this.advertModel
-      .scope(['defaultScope', AdvertModelScopes.COMPLETED])
-      .findAndCountAll({
-        limit,
-        offset,
-      })
-
-    const migrated = adverts.rows.map((advert) => advert.fromModel())
-    const paging = generatePaging(
-      migrated,
-      query.page,
-      query.pageSize,
-      adverts.count,
-    )
-
-    return {
-      adverts: migrated,
-      paging,
-    }
-  }
-
-  async getAdvertsInProgress(
-    query: GetAdvertsQueryDto,
-  ): Promise<GetAdvertsDto> {
-    const { limit, offset } = getLimitAndOffset({
-      page: query.page,
-      pageSize: query.pageSize,
-    })
-
-    const allowedStatuses = [
-      StatusIdEnum.SUBMITTED,
-      StatusIdEnum.READY_FOR_PUBLICATION,
-    ]
-
-    if (query.statusId && query.statusId.length > 0) {
-      const filteredStatuses = query.statusId.filter((status) =>
-        allowedStatuses.includes(status),
-      )
-
-      if (filteredStatuses.length > 0) {
-        query.statusId = filteredStatuses
-      } else {
-        query.statusId = allowedStatuses
-      }
-    } else {
-      query.statusId = allowedStatuses
-    }
-
-    const adverts = await this.advertModel
-      .scope(['defaultScope', { method: ['withQuery', query] }])
-      .findAndCountAll({
-        limit,
-        offset,
-        distinct: true,
-        col: 'AdvertModel.id',
-      })
-
-    const migrated = adverts.rows.map((advert) => advert.fromModel())
-    const paging = generatePaging(
-      migrated,
-      query.page,
-      query.pageSize,
-      adverts.count,
-    )
-
-    return {
-      adverts: migrated,
-      paging,
-    }
-  }
-
   async getAdverts(query: GetAdvertsQueryDto): Promise<GetAdvertsDto> {
     const { limit, offset } = getLimitAndOffset({
       page: query.page,
@@ -267,7 +190,7 @@ export class AdvertService implements IAdvertService {
     })
 
     const results = await this.advertModel
-      .scope([AdvertModelScopes.PUBLISHED, { method: ['withQuery', query] }])
+      .scope([{ method: ['withQuery', query] }])
       .findAndCountAll({
         limit,
         offset,

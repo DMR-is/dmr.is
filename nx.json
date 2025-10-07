@@ -7,7 +7,7 @@
           "build",
           "lint",
           "test",
-          "typecheck",
+          "tsc",
           "e2e",
           "codegen/backend-client",
           "codegen/backend-schema",
@@ -101,7 +101,7 @@
     "lint": {
       "inputs": ["default", "{workspaceRoot}/.eslintrc.json"]
     },
-    "typecheck": {
+    "tsc": {
       "inputs": ["default", "^production"]
     },
     "test": {
