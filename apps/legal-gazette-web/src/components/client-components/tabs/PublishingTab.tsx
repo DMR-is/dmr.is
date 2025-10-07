@@ -32,13 +32,15 @@ export const PublishingTab = () => {
 
   const { params } = useFilterContext()
 
-  const { data, refetch } = trpc.getReadyForPublicationAdverts.useQuery({
-    categoryId: params.categoryId,
-    page: params.page,
-    pageSize: params.pageSize,
-    search: params.search,
-    typeId: params.typeId,
-  })
+  const { data, refetch } = trpc.adverts.getReadyForPublicationAdverts.useQuery(
+    {
+      categoryId: params.categoryId,
+      page: params.page,
+      pageSize: params.pageSize,
+      search: params.search,
+      typeId: params.typeId,
+    },
+  )
 
   const handleAdvertToggle = (id: string) => {
     setSelectedAdvertIds((prevSelected) =>
