@@ -41,18 +41,6 @@ export class AdvertController {
     return this.advertService.getAdvertsCount()
   }
 
-  @Get('inprogress')
-  @LGResponse({ operationId: 'getAdvertsInProgress', type: GetAdvertsDto })
-  getAdvertsInProgress(@Query() query: GetAdvertsQueryDto) {
-    return this.advertService.getAdvertsInProgress(query)
-  }
-
-  @Get('/completed')
-  @LGResponse({ operationId: 'getCompletedAdverts', type: GetAdvertsDto })
-  getCompletedAdverts(@Query() query: PagingQuery) {
-    return this.advertService.getCompletedAdverts(query)
-  }
-
   @Get()
   @LGResponse({ operationId: 'getAdverts', type: GetAdvertsDto })
   getAdverts(@Query() query: GetAdvertsQueryDto) {

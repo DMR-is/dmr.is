@@ -1,5 +1,3 @@
-import { PagingQuery } from '@dmr.is/shared/dto'
-
 import {
   AdvertDetailedDto,
   CreateAdvertDto,
@@ -11,10 +9,6 @@ import {
 
 export interface IAdvertService {
   getAdverts(query: GetAdvertsQueryDto): Promise<GetAdvertsDto>
-
-  getAdvertsInProgress(query: GetAdvertsQueryDto): Promise<GetAdvertsDto>
-
-  getCompletedAdverts(query: PagingQuery): Promise<GetAdvertsDto>
 
   getAdvertById(id: string): Promise<AdvertDetailedDto>
 
