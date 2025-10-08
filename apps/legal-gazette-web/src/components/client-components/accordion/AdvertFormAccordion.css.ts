@@ -8,9 +8,12 @@ export const accordionItemContainer = style({
       display: 'none',
     },
 
+    '&:not(:empty)': {
+      paddingBlock: theme.spacing[3],
+    },
+
     '&:not(:empty):not(:last-child)': {
       borderBottom: `1px solid ${theme.color.blue200}`,
-      paddingBlock: theme.spacing[3],
     },
   },
 })
