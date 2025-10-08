@@ -1,10 +1,11 @@
-import { createCallerFactory, mergeRouters } from '..'
+import { router } from '../trpc'
 import { advertsRouter } from './advertsRouter'
-import { testRouter } from './testRouter'
-export const appRouter = mergeRouters(advertsRouter, testRouter)
+import { baseEntityRouter } from './baseEntityRouter'
 
-const createCaller = createCallerFactory(appRouter)
+export const appRouter = router({
+  adverts: advertsRouter,
+  baseEntity: baseEntityRouter,
+})
 
-export { createCaller }
 // export type definition of API
 export type AppRouter = typeof appRouter

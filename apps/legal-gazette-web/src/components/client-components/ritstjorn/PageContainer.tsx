@@ -13,6 +13,7 @@ import {
 } from '@island.is/island-ui/core'
 
 import { GetAdvertsStatusCounterDto } from '../../../gen/fetch'
+import { useFilterContext } from '../../../hooks/useFilters'
 import { getLegalGazetteClient } from '../../../lib/api/createClient'
 import { RitstjornHero } from '../ritstjorn/Hero'
 import AdvertsCompleted from '../Tables/AdvertsCompleted'
@@ -37,6 +38,14 @@ export const PageContainer = ({ initalAdvertsCount }: Props) => {
     'tab',
     parseAsStringEnum(TabIds).withDefault('innsendar'),
   )
+  const { setParams } = useFilterContext()
+
+  const handleTabChange = (tab: string) => {
+    setTab(tab)
+    setParams({
+      page: 1,
+    })
+  }
 
   const { data: advertsCountData } = useSWR(
     'getAdvertsCount',
@@ -63,7 +72,7 @@ export const PageContainer = ({ initalAdvertsCount }: Props) => {
             <Tabs
               label=""
               selected={tab}
-              onChange={(tab) => setTab(tab)}
+              onChange={handleTabChange}
               tabs={[
                 {
                   id: 'innsendar',

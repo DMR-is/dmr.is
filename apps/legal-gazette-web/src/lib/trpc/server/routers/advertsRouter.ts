@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { StatusIdEnum } from '../../../../gen/fetch'
-import { protectedProcedure, router } from '..'
+import { protectedProcedure, router } from '../trpc'
 
 const getAdvertsRequestSchema = z.object({
   page: z.number().optional(),

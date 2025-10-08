@@ -10,8 +10,8 @@ import { createContext } from 'react'
 
 import { Tag } from '@island.is/island-ui/core'
 
-import { GetCategoriesDto, GetStatusesDto, GetTypesDto } from '../gen/fetch'
 import { QueryParams } from '../lib/constants'
+import { trpc } from '../lib/trpc/client'
 type Option<T = string> = {
   label: string
   value: T
@@ -57,18 +57,22 @@ export const FilterContext = createContext<FilterContextState>({
 })
 
 type FilterProviderProps = {
-  types: GetTypesDto
-  categories: GetCategoriesDto
-  statuses: GetStatusesDto
-  children: React.ReactNode
+  children?: React.ReactNode
 }
 
-export const FilterProvider = ({
-  children,
-  types,
-  categories,
-  statuses,
-}: FilterProviderProps) => {
+export const FilterProvider = ({ children }: FilterProviderProps) => {
+  const { data: entities } = trpc.baseEntity.getAllEntities.useQuery()
+
+  const categories = {
+    categories: entities?.categories.categories || [],
+  }
+  const types = {
+    types: entities?.types.types || [],
+  }
+  const statuses = {
+    statuses: entities?.statuses.statuses || [],
+  }
+
   const [searchParams, setSearchParams] = useQueryStates(
     {
       [QueryParams.SEARCH]: parseAsString.withDefault(''),
