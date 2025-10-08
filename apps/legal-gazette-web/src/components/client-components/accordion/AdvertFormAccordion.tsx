@@ -85,8 +85,11 @@ export const AdvertFormAccordion = () => {
     />,
   ]
 
+  // Not using Accordion from island-ui/core because it renders empty accordion items with borders
+  // TODO: Refactor to use conditional rendering and data mapping instead of relying on
+  // accordion item components to return null when they shouldn't be displayed
   return (
-    <Box className={styles.advertFormAccordion}>
+    <Box>
       <Stack space={8}>
         <Inline alignY="center" align="right">
           <OpenCloseButton
