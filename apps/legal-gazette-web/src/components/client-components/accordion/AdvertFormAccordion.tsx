@@ -61,7 +61,7 @@ export const AdvertFormAccordion = ({ items }: Props) => {
             isOpen={isSomeOpen}
           />
         </Inline>
-        <Accordion>
+        <Accordion singleExpand={false}>
           {items.map((item, index) => (
             <AccordionItem
               id={`accordion-item-${index}`}

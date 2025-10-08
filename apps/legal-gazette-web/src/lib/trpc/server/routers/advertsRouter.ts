@@ -14,7 +14,31 @@ const getAdvertsRequestSchema = z.object({
   toDate: z.string().optional(),
 })
 
+const updateAdvertDtoSchema = z.object({
+  id: z.string(),
+  scheduledAt: z.string().optional(),
+  title: z.string().optional(),
+  content: z.string().optional(),
+  categoryId: z.string().optional(),
+  typeId: z.string().optional(),
+  additionalText: z.string().optional(),
+  caption: z.string().optional(),
+  signatureName: z.string().optional(),
+  signatureLocation: z.string().optional(),
+  signatureOnBehalfOf: z.string().optional(),
+  signatureDate: z.string().optional(),
+  divisionMeetingLocation: z.string().optional(),
+  divisionMeetingDate: z.string().optional(),
+  judgementDate: z.string().optional(),
+  courtDistrictId: z.string().optional(),
+})
+
 export const advertsRouter = router({
+  getAdvert: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return await ctx.advertsApi.getAdvertById({ id: input.id })
+    }),
   getAdvertsCount: protectedProcedure.query(async ({ ctx }) => {
     return await ctx.advertsApi.getAdvertsCount()
   }),
@@ -37,4 +61,13 @@ export const advertsRouter = router({
   getCompletedAdverts: protectedProcedure
     .input(getAdvertsRequestSchema)
     .query(async ({ ctx, input }) => await ctx.advertsApi.getAdverts(input)),
+  updateAdvert: protectedProcedure
+    .input(updateAdvertDtoSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...rest } = input
+      return await ctx.adverts.updateApi.updateAdvert({
+        id: id,
+        updateAdvertDto: rest,
+      })
+    }),
 })

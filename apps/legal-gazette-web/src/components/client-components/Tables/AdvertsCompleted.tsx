@@ -15,7 +15,7 @@ export const AdvertsCompleted = () => {
   const { params } = useFilterContext()
   const { formatMessage } = useIntl()
 
-  const { data, isLoading } = trpc.advertsApi.getCompletedAdverts.useQuery({
+  const { data, isLoading } = trpc.adverts.getCompletedAdverts.useQuery({
     categoryId: params.categoryId,
     typeId: params.typeId,
     statusId: params.statusId as StatusIdEnum[],

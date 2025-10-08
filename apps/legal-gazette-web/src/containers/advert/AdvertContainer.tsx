@@ -14,8 +14,6 @@ type Props = {
 }
 
 export async function AdvertContainer({ advert }: Props) {
-  // map data to make snese
-
   return (
     <Box paddingY={[4, 5, 6]} background="purple100">
       <GridContainer>

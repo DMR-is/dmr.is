@@ -7,8 +7,10 @@ import { initTRPC, TRPCError } from '@trpc/server'
 
 export const createTRPCContext = cache(async () => {
   return {
-    advertApi: await getServerClient('AdvertUpdateApi'),
-    advertsApi: await getServerClient('AdvertApi'),
+    adverts: {
+      baseApi: await getServerClient('AdvertApi'),
+      updateApi: await getServerClient('AdvertUpdateApi'),
+    },
     baseEntity: {
       typeApi: await getServerClient('TypeApi'),
       categoryApi: await getServerClient('CategoryApi'),
@@ -46,7 +48,11 @@ export const publicProcedure = t.procedure.use(({ ctx, next }) => {
 
 // Protected procedures should always have session available
 export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
-  if (!ctx.advertsApi) {
+  if (!ctx.adverts.baseApi) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' })
+  }
+
+  if (!ctx.adverts.updateApi) {
     throw new TRPCError({ code: 'UNAUTHORIZED' })
   }
 
@@ -59,16 +65,12 @@ export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
     throw new TRPCError({ code: 'UNAUTHORIZED' })
   }
 
-  if (!ctx.advertApi) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' })
-  }
-
   // Type assertion is safe here because we know that the user is set
   return next({
     ctx: {
       ...ctx,
-      advertsApi: ctx.advertsApi,
-      advertApi: ctx.advertApi,
+      advertsApi: ctx.adverts.baseApi,
+      updateApi: ctx.adverts.updateApi,
       baseEntity: {
         typeApi: ctx.baseEntity.typeApi,
         categoryApi: ctx.baseEntity.categoryApi,
