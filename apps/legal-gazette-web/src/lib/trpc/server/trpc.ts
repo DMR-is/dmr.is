@@ -7,7 +7,8 @@ import { initTRPC, TRPCError } from '@trpc/server'
 
 export const createTRPCContext = cache(async () => {
   return {
-    advertApi: await getServerClient('AdvertApi'),
+    advertApi: await getServerClient('AdvertUpdateApi'),
+    advertsApi: await getServerClient('AdvertApi'),
     baseEntity: {
       typeApi: await getServerClient('TypeApi'),
       categoryApi: await getServerClient('CategoryApi'),
@@ -45,6 +46,19 @@ export const publicProcedure = t.procedure.use(({ ctx, next }) => {
 
 // Protected procedures should always have session available
 export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
+  if (!ctx.advertsApi) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' })
+  }
+
+  if (
+    !ctx.baseEntity.categoryApi ||
+    !ctx.baseEntity.typeApi ||
+    !ctx.baseEntity.statusApi ||
+    !ctx.baseEntity.courtDistrictApi
+  ) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' })
+  }
+
   if (!ctx.advertApi) {
     throw new TRPCError({ code: 'UNAUTHORIZED' })
   }
@@ -53,7 +67,14 @@ export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
   return next({
     ctx: {
       ...ctx,
+      advertsApi: ctx.advertsApi,
       advertApi: ctx.advertApi,
+      baseEntity: {
+        typeApi: ctx.baseEntity.typeApi,
+        categoryApi: ctx.baseEntity.categoryApi,
+        statusApi: ctx.baseEntity.statusApi,
+        courtDistrictApi: ctx.baseEntity.courtDistrictApi,
+      },
     },
   })
 })

@@ -18,14 +18,15 @@ export const AdvertsInProgress = () => {
 
   const { formatMessage } = useIntl()
 
-  const { data, isLoading, error } = trpc.adverts.getSubmittedAdverts.useQuery({
-    categoryId: params.categoryId,
-    typeId: params.typeId,
-    statusId: params.statusId as StatusIdEnum[],
-    search: params.search,
-    page: params.page,
-    pageSize: params.pageSize,
-  })
+  const { data, isLoading, error } =
+    trpc.advertsApi.getSubmittedAdverts.useQuery({
+      categoryId: params.categoryId,
+      typeId: params.typeId,
+      statusId: params.statusId as StatusIdEnum[],
+      search: params.search,
+      page: params.page,
+      pageSize: params.pageSize,
+    })
 
   const rows = data?.adverts.map((advert) => ({
     birting: formatDate(advert.scheduledAt),
