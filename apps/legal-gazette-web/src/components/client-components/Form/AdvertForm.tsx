@@ -6,14 +6,7 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { BaseAdvertFields } from '../ritstjorn/fields/BaseAdvertFields'
-import { ContentFields } from '../ritstjorn/fields/ContentsField'
-import { CourtAndJudgementFields } from '../ritstjorn/fields/CourtAndJudgmentFields'
-import { DivisionMeetingFields } from '../ritstjorn/fields/DivisionMeetingFields'
-import { PublicationsFields } from '../ritstjorn/fields/PublicationsField'
-import { ReadOnlyFields } from '../ritstjorn/fields/ReadOnlyFields'
-import { SettlementFields } from '../ritstjorn/fields/SettlementFields'
-import { SignatureFields } from '../ritstjorn/fields/SignatureFields'
+import { AdvertFormAccordion } from '../accordion/AdvertFormAccordion'
 
 export const AdvertForm = () => {
   return (
@@ -32,14 +25,7 @@ export const AdvertForm = () => {
             </Text>
           </GridColumn>
         </GridRow>
-        <ReadOnlyFields />
-        <BaseAdvertFields />
-        <ContentFields />
-        <CourtAndJudgementFields />
-        <DivisionMeetingFields />
-        <SettlementFields />
-        <SignatureFields />
-        <PublicationsFields />
+        <AdvertFormAccordion />
       </Stack>
     </GridContainer>
   )

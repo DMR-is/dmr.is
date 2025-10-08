@@ -18,7 +18,12 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { DropdownMenu, Inline, toast } from '@island.is/island-ui/core'
+import {
+  AccordionItem,
+  DropdownMenu,
+  Inline,
+  toast,
+} from '@island.is/island-ui/core'
 
 import {
   AdvertPublicationDetailedDto,
@@ -34,7 +39,15 @@ import { useAdvertContext } from '../../../../hooks/useAdvertContext'
 import { useClient } from '../../../../hooks/useClient'
 import { AdvertModal } from '../../modals/AdvertPublicationModal'
 
-export const PublicationsFields = () => {
+type PublicationsAccordionItemProps = {
+  expanded: boolean
+  onToggle: () => void
+}
+
+export const PublicationsAccordionItem = ({
+  expanded,
+  onToggle,
+}: PublicationsAccordionItemProps) => {
   const { advert } = useAdvertContext()
   const router = useRouter()
 
@@ -119,13 +132,15 @@ export const PublicationsFields = () => {
   )
 
   return (
-    <>
+    <AccordionItem
+      id="publications"
+      label="Birtingar"
+      labelVariant="h5"
+      iconVariant="small"
+      expanded={expanded}
+      onToggle={onToggle}
+    >
       <Stack space={[1, 2]}>
-        <GridRow>
-          <GridColumn span="12/12">
-            <Text variant="h3">Birtingar</Text>
-          </GridColumn>
-        </GridRow>
         <Stack space={[1, 2]}>
           <GridRow>
             <GridColumn span={['12/12', '6/12']}>
@@ -313,6 +328,6 @@ export const PublicationsFields = () => {
         }}
         id="advert-publication-modal"
       />
-    </>
+    </AccordionItem>
   )
 }
