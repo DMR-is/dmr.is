@@ -17,7 +17,7 @@ export async function AdvertContainer({ advert }: Props) {
   // map data to make snese
 
   return (
-    <Box padding={6} background="purple100">
+    <Box paddingY={[4, 5, 6]} background="purple100">
       <GridContainer>
         <GridRow>
           <GridColumn span={['12/12', '12/12', '9/12', '9/12']}>

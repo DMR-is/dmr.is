@@ -5,6 +5,7 @@ import React from 'react'
 import {
   Accordion,
   AccordionItem,
+  Button,
   Inline,
 } from '@dmr.is/ui/components/island-is'
 import { Stack } from '@dmr.is/ui/components/island-is'
@@ -38,28 +39,42 @@ export const AdvertFormAccordion = ({ items }: Props) => {
 
   return (
     <Box>
-      <Stack space={8}>
-        <Inline alignY="center" align="right">
+      <Stack space={4}>
+        <Inline
+          space={2}
+          alignY="center"
+          flexWrap="wrap"
+          justifyContent="spaceBetween"
+        >
+          <Button
+            onClick={() => alert('í vinnslu')}
+            variant="utility"
+            size="small"
+            icon="open"
+            iconType="outline"
+          >
+            Stofna auglýsingu
+          </Button>
           <OpenCloseButton
             label={isSomeOpen ? 'Loka fellilista' : 'Opna fellista'}
             onClick={() => (isSomeOpen ? closeAll() : expandAll())}
             isOpen={isSomeOpen}
           />
         </Inline>
+        <Accordion>
+          {items.map((item, index) => (
+            <AccordionItem
+              id={`accordion-item-${index}`}
+              key={index}
+              expanded={toggles[index].expanded}
+              onToggle={toggles[index].setExpanded}
+              label={item.title}
+            >
+              {item.children}
+            </AccordionItem>
+          ))}
+        </Accordion>
       </Stack>
-      <Accordion>
-        {items.map((item, index) => (
-          <AccordionItem
-            id={`accordion-item-${index}`}
-            key={index}
-            expanded={toggles[index].expanded}
-            onToggle={toggles[index].setExpanded}
-            label={item.title}
-          >
-            {item.children}
-          </AccordionItem>
-        ))}
-      </Accordion>
     </Box>
   )
 }

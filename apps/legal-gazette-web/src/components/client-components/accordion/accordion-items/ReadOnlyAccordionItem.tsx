@@ -37,6 +37,7 @@ export const AdvertReadonlyFields = ({
                 onClick: () => navigator.clipboard.writeText(id),
               },
             ]}
+            value={id}
           />
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
