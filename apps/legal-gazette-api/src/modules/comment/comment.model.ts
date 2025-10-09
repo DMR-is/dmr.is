@@ -1,4 +1,10 @@
-import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  DefaultScope,
+  ForeignKey,
+} from 'sequelize-typescript'
 
 import { BaseModel } from '@dmr.is/shared/models/base'
 
@@ -55,6 +61,10 @@ type CreateCommentAttributes =
   | CreateStatusUpdateComment
   | CreateTextComment
 
+@DefaultScope(() => ({
+  include: [{ model: StatusModel }],
+  order: [['createdAt', 'DESC']],
+}))
 export class CommentModel extends BaseModel<
   CommentAttributes,
   CreateCommentAttributes
