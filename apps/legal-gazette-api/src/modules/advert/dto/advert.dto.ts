@@ -24,7 +24,10 @@ import {
   CreateCommunicationChannelDto,
 } from '../../communication-channel/dto/communication-channel.dto'
 import { CourtDistrictDto } from '../../court-district/dto/court-district.dto'
-import { SettlementDto } from '../../settlement/dto/settlement.dto'
+import {
+  CreateSettlementDto,
+  SettlementDto,
+} from '../../settlement/dto/settlement.dto'
 import { StatusDto } from '../../status/dto/status.dto'
 import { StatusIdEnum } from '../../status/status.model'
 import { TypeDto } from '../../type/dto/type.dto'
@@ -605,4 +608,13 @@ export class CreateAdvertDto {
   @ValidateNested({ each: true })
   @Type(() => CreateCommunicationChannelDto)
   communicationChannels?: CreateCommunicationChannelDto[]
+
+  @ApiProperty({
+    type: CreateSettlementDto,
+    required: false,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateSettlementDto)
+  settlement?: CreateSettlementDto | null
 }

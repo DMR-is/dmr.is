@@ -1,3 +1,5 @@
+import { Includeable } from 'sequelize'
+
 import { Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
@@ -6,6 +8,7 @@ import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
 import { CommunicationChannelModel } from '../communication-channel/communication-channel.model'
+import { SettlementModel } from '../settlement/settlement.model'
 import { StatusIdEnum } from '../status/status.model'
 import {
   AdvertDetailedDto,
@@ -27,6 +30,15 @@ export class AdvertService implements IAdvertService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
   async createAdvert(body: CreateAdvertDto): Promise<void> {
+    const includeArr: Includeable[] = []
+
+    if (body.communicationChannels) {
+      includeArr.push({ model: CommunicationChannelModel })
+    }
+    if (body.settlement) {
+      includeArr.push({ model: SettlementModel })
+    }
+
     const advert = await this.advertModel.create(
       {
         typeId: body.typeId,
@@ -62,7 +74,7 @@ export class AdvertService implements IAdvertService {
       },
       {
         returning: ['id'],
-        include: body.communicationChannels ? [CommunicationChannelModel] : [],
+        include: includeArr,
       },
     )
 
