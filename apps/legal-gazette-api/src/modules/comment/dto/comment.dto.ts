@@ -45,31 +45,19 @@ class CreateCommentBaseDto {
   actorId!: string
 }
 
-export class CreateSubmitCommentDto extends CreateCommentBaseDto {
-  @ApiProperty({ enum: CommentTypeEnum, enumName: 'CommentTypeEnum' })
-  type!: CommentTypeEnum.SUBMIT
-}
+export class CreateSubmitCommentDto extends CreateCommentBaseDto {}
 
 export class CreateAssignCommentDto extends CreateCommentBaseDto {
-  @ApiProperty({ enum: CommentTypeEnum, enumName: 'CommentTypeEnum' })
-  type!: CommentTypeEnum.ASSIGN
-
   @ApiProperty({ type: String })
   receiverId!: string
 }
 
 export class CreateStatusUpdateCommentDto extends CreateCommentBaseDto {
-  @ApiProperty({ enum: CommentTypeEnum, enumName: 'CommentTypeEnum' })
-  type!: CommentTypeEnum.STATUS_UPDATE
-
   @ApiProperty({ type: String })
   receiverId!: string
 }
 
 export class CreateTextCommentDto extends CreateCommentBaseDto {
-  @ApiProperty({ enum: CommentTypeEnum, enumName: 'CommentTypeEnum' })
-  type!: CommentTypeEnum.COMMENT
-
   @ApiProperty({ type: String })
   comment!: string
 }
