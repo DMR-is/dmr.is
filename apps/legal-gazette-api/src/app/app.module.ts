@@ -66,7 +66,7 @@ import { UsersModule } from '../modules/users/users.module'
             Number(process.env.LEGAL_GAZETTE_DB_PORT) ||
             5434,
           clsNamespace: CLS_NAMESPACE,
-          debugLog: true,
+          debugLog: process.env.DB_DEBUG === 'true',
           autoLoadModels: false,
           models: [
             UserModel,
