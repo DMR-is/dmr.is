@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AdvertModel } from '../advert/advert.model'
-import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
+import { AdvertModule } from '../advert/advert.module'
 import { ApplicationModel } from '../applications/application.model'
 import { ApplicationService } from '../applications/application.service'
 import { IApplicationService } from '../applications/application.service.interface'
@@ -17,12 +17,12 @@ import { SettlementModel } from '../settlement/settlement.model'
     SequelizeModule.forFeature([
       CaseModel,
       ApplicationModel,
-      AdvertModel,
       CategoryModel,
-      AdvertPublicationModel,
       SettlementModel,
+      AdvertModel,
     ]),
     BaseEntityModule,
+    AdvertModule,
   ],
   controllers: [IslandIsApplicationController],
   providers: [

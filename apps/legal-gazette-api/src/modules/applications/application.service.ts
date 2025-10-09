@@ -29,7 +29,7 @@ import {
   createRecallAdvertFromApplicationSchema,
 } from '../../lib/schemas'
 import { AdvertModel } from '../advert/advert.model'
-import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
+import { IAdvertService } from '../advert/advert.service.interface'
 import { CaseModel } from '../case/case.model'
 import { CaseDto } from '../case/dto/case.dto'
 import {
@@ -58,14 +58,13 @@ import { ApplicationStatusEnum } from './contants'
 export class ApplicationService implements IApplicationService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(IAdvertService) private readonly advertService: IAdvertService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     @InjectModel(ApplicationModel)
     private readonly applicationModel: typeof ApplicationModel,
     @InjectModel(CategoryModel)
     private readonly categoryModel: typeof CategoryModel,
-    @InjectModel(AdvertPublicationModel)
-    private readonly publicationModel: typeof AdvertPublicationModel,
     @InjectModel(SettlementModel)
     private readonly settlementModel: typeof SettlementModel,
   ) {}
@@ -89,33 +88,23 @@ export class ApplicationService implements IApplicationService {
       publishingDates: application.publishingDates,
     })
 
-    const advert = await this.advertModel.create(
-      {
-        caseId: requiredFields.caseId,
-        typeId: requiredFields.type.id,
-        caption: requiredFields.caption,
-        categoryId: requiredFields.category.id,
-        additionalText: requiredFields.additionalText,
-        createdBy: user.fullName,
-        createdByNationalId: user.nationalId,
-        signatureName: requiredFields.signatureName,
-        signatureOnBehalfOf: requiredFields.signatureOnBehalfOf,
-        signatureLocation: requiredFields.signatureLocation,
-        signatureDate: requiredFields.signatureDate,
-        content: requiredFields.html,
-        title: `${requiredFields.category.title} - ${requiredFields.caption}`,
-        communicationChannels: requiredFields.communicationChannels,
-      },
-      { returning: ['id'], include: [CommunicationChannelModel] },
-    )
-
-    await this.publicationModel.bulkCreate(
-      requiredFields.publishingDates.map((d, i) => ({
-        advertId: advert.id,
-        scheduledAt: d,
-        versionNumber: i + 1,
-      })),
-    )
+    await this.advertService.createAdvert({
+      caseId: requiredFields.caseId,
+      typeId: requiredFields.type.id,
+      caption: requiredFields.caption,
+      categoryId: requiredFields.category.id,
+      additionalText: requiredFields.additionalText,
+      createdBy: user.fullName,
+      createdByNationalId: user.nationalId,
+      signatureName: requiredFields.signatureName,
+      signatureOnBehalfOf: requiredFields.signatureOnBehalfOf,
+      signatureLocation: requiredFields.signatureLocation,
+      signatureDate: requiredFields.signatureDate.toISOString(),
+      content: requiredFields.html,
+      title: `${requiredFields.category.title} - ${requiredFields.caption}`,
+      communicationChannels: requiredFields.communicationChannels,
+      scheduledAt: requiredFields.publishingDates.map((d) => d.toISOString()),
+    })
 
     await application.update({ status: ApplicationStatusEnum.FINISHED })
   }
@@ -164,48 +153,37 @@ export class ApplicationService implements IApplicationService {
       ? `Innköllun þrotabús - ${requiredFields.settlementName}`
       : `Innköllun dánarbús - ${requiredFields.settlementName}`
 
-    const advert = await this.advertModel.create(
-      {
-        caseId: application.caseId,
-        typeId: isBankruptcy
-          ? RECALL_BANKRUPTCY_ADVERT_TYPE_ID
-          : RECALL_DECEASED_ADVERT_TYPE_ID,
-        categoryId: RECALL_CATEGORY_ID,
-        createdBy: user.fullName,
-        createdByNationalId: user.nationalId,
-        signatureName: requiredFields.signatureName,
-        signatureOnBehalfOf: requiredFields.signatureOnBehalfOf,
-        signatureLocation: requiredFields.signatureLocation,
-        signatureDate: requiredFields.signatureDate,
-        title: title,
-        divisionMeetingDate: requiredFields.divisionMeetingDate,
-        divisionMeetingLocation: requiredFields.divisionMeetingLocation,
-        judgementDate: requiredFields.judgementDate,
-        courtDistrictId: requiredFields.courtDistrictId,
-        settlement: {
-          liquidatorName: requiredFields.signatureName,
-          liquidatorLocation: requiredFields.liquidatorLocation,
-          settlementAddress: requiredFields.settlementAddress,
-          settlementName: requiredFields.settlementName,
-          settlementNationalId: requiredFields.settlementNationalId,
-          settlementDateOfDeath: requiredFields.settlementDateOfDeath ?? null,
-          settlementDeadline: requiredFields.settlementDeadlineDate ?? null,
-        },
-        communicationChannels: requiredFields.communicationChannels,
+    await this.advertService.createAdvert({
+      caseId: application.caseId,
+      typeId: isBankruptcy
+        ? RECALL_BANKRUPTCY_ADVERT_TYPE_ID
+        : RECALL_DECEASED_ADVERT_TYPE_ID,
+      categoryId: RECALL_CATEGORY_ID,
+      createdBy: user.fullName,
+      createdByNationalId: user.nationalId,
+      signatureName: requiredFields.signatureName,
+      signatureOnBehalfOf: requiredFields.signatureOnBehalfOf,
+      signatureLocation: requiredFields.signatureLocation,
+      signatureDate: requiredFields.signatureDate.toISOString(),
+      title: title,
+      divisionMeetingDate: requiredFields.divisionMeetingDate,
+      divisionMeetingLocation: requiredFields.divisionMeetingLocation,
+      judgementDate: requiredFields.judgementDate.toISOString(),
+      courtDistrictId: requiredFields.courtDistrictId,
+      settlement: {
+        liquidatorName: requiredFields.signatureName,
+        liquidatorLocation: requiredFields.liquidatorLocation,
+        settlementAddress: requiredFields.settlementAddress,
+        settlementName: requiredFields.settlementName,
+        settlementNationalId: requiredFields.settlementNationalId,
+        settlementDateOfDeath:
+          requiredFields.settlementDateOfDeath?.toISOString(),
+        settlementDeadline:
+          requiredFields.settlementDeadlineDate?.toISOString(),
       },
-      {
-        returning: ['id'],
-        include: [SettlementModel, CommunicationChannelModel],
-      },
-    )
-
-    await this.publicationModel.bulkCreate(
-      application.publishingDates.map((d, i) => ({
-        advertId: advert.id,
-        scheduledAt: d,
-        versionNumber: i + 1,
-      })),
-    )
+      communicationChannels: requiredFields.communicationChannels,
+      scheduledAt: application.publishingDates.map((d) => d.toISOString()),
+    })
 
     await application.update({ status: ApplicationStatusEnum.SUBMITTED })
   }
@@ -264,30 +242,27 @@ export class ApplicationService implements IApplicationService {
       }
     }
 
-    const newAdvert = await this.advertModel.create(
-      {
-        caseId: application.caseId,
-        categoryId: CategoryDefaultIdEnum.DIVISION_MEETINGS,
-        createdBy: user.fullName,
-        createdByNationalId: user.nationalId,
-        signatureName: body.signatureName,
-        signatureDate: new Date(body.signatureDate),
-        signatureLocation: body.signatureLocation,
-        signatureOnBehalfOf: body.signatureOnBehalfOf,
-        divisionMeetingDate: new Date(body.meetingDate),
-        divisionMeetingLocation: body.meetingLocation,
-        typeId: TypeIdEnum.DIVISION_MEETING,
-        title: `Skiptafundur - ${application.settlementName}`,
-        additionalText: body.additionalText,
-        settlementId: settlement.settlementId,
-        communicationChannels: communicationChannels,
-      },
-      { returning: ['id'], include: [CommunicationChannelModel] },
-    )
-
-    await this.publicationModel.create({
-      scheduledAt: new Date(body.meetingDate),
-      advertId: newAdvert.id,
+    await this.advertService.createAdvert({
+      caseId: application.caseId,
+      categoryId: CategoryDefaultIdEnum.DIVISION_MEETINGS,
+      createdBy: user.fullName,
+      createdByNationalId: user.nationalId,
+      signatureName: body.signatureName,
+      signatureDate: body.signatureDate,
+      signatureLocation: body.signatureLocation,
+      signatureOnBehalfOf: body.signatureOnBehalfOf,
+      divisionMeetingDate: new Date(body.meetingDate),
+      divisionMeetingLocation: body.meetingLocation,
+      typeId: TypeIdEnum.DIVISION_MEETING,
+      title: `Skiptafundur - ${application.settlementName}`,
+      additionalText: body.additionalText,
+      settlementId: settlement.settlementId,
+      communicationChannels: communicationChannels.map((ch) => ({
+        email: ch.email,
+        name: ch.name ?? undefined,
+        phone: ch.phone ?? undefined,
+      })),
+      scheduledAt: [body.meetingDate],
     })
   }
 
@@ -356,31 +331,27 @@ export class ApplicationService implements IApplicationService {
       }
     }
 
-    const newAdvert = await this.advertModel.create(
-      {
-        caseId: application.caseId,
-        categoryId: CategoryDefaultIdEnum.DIVISION_ENDINGS,
-        createdBy: user.fullName,
-        createdByNationalId: user.nationalId,
-        signatureName: body.signatureName,
-        signatureDate: new Date(body.signatureDate),
-        signatureLocation: body.signatureLocation,
-        signatureOnBehalfOf: body.signatureOnBehalfOf,
-        typeId: TypeIdEnum.DIVISION_ENDING,
-        title: `Skiptalok - ${application.settlementName}`,
-        additionalText: body.additionalText,
-        settlementId: settlement.id,
-        communicationChannels: communicationChannels,
-      },
-      { returning: ['id'], include: [CommunicationChannelModel] },
-    )
-
-    await this.publicationModel.create({
-      scheduledAt: new Date(body.scheduledAt),
-      advertId: newAdvert.id,
-    })
-
-    await application.update({ status: ApplicationStatusEnum.FINISHED })
+    await this.advertService.createAdvert({
+      caseId: application.caseId,
+      categoryId: CategoryDefaultIdEnum.DIVISION_ENDINGS,
+      createdBy: user.fullName,
+      createdByNationalId: user.nationalId,
+      signatureName: body.signatureName,
+      signatureDate: body.signatureDate,
+      signatureLocation: body.signatureLocation,
+      signatureOnBehalfOf: body.signatureOnBehalfOf,
+      typeId: TypeIdEnum.DIVISION_ENDING,
+      title: `Skiptalok - ${application.settlementName}`,
+      additionalText: body.additionalText,
+      settlementId: settlement.id,
+      communicationChannels: communicationChannels.map((ch) => ({
+        email: ch.email,
+        name: ch.name ?? undefined,
+        phone: ch.phone ?? undefined,
+      })),
+      scheduledAt: [body.scheduledAt],
+    }),
+      await application.update({ status: ApplicationStatusEnum.FINISHED })
   }
 
   async updateApplication(
@@ -542,14 +513,14 @@ export class ApplicationService implements IApplicationService {
       requiredFields.categoryId,
     )
 
-    await this.advertModel.create({
+    await this.advertService.createAdvert({
       caseId: newCase.id,
       typeId: requiredFields.typeId,
       categoryId: requiredFields.categoryId,
       islandIsApplicationId: requiredFields.islandIsApplicationId,
       createdBy: user.fullName,
       createdByNationalId: user.nationalId,
-      signatureDate: requiredFields.signatureDate,
+      signatureDate: requiredFields.signatureDate.toISOString(),
       signatureLocation: requiredFields.signatureLocation,
       signatureName: requiredFields.signatureName,
       title: `${category.title} - ${requiredFields.caption}`,
@@ -558,9 +529,7 @@ export class ApplicationService implements IApplicationService {
       content: requiredFields.html,
       signatureOnBehalfOf: requiredFields.signatureOnBehalfOf,
       communicationChannels: requiredFields.communicationChannels,
-      publications: body.publishingDates.map((scheduledAt) => ({
-        scheduledAt: new Date(scheduledAt),
-      })),
+      scheduledAt: requiredFields.publishingDates.map((d) => d.toISOString()),
     })
   }
   async submitApplication(applicationId: string, user: DMRUser): Promise<void> {

@@ -1,6 +1,7 @@
 import {
   IsDateString,
   IsNumber,
+  IsOptional,
   IsString,
   IsUUID,
   MaxLength,
@@ -52,6 +53,48 @@ export class SettlementDto {
   @ValidateIf((o) => o.settlementDateOfDeath !== null)
   @IsDateString()
   settlementDateOfDeath!: string | null
+}
+
+export class CreateSettlementDto {
+  @ApiProperty({ type: String, required: true })
+  @IsString()
+  @MaxLength(255)
+  liquidatorName!: string
+
+  @ApiProperty({ type: String, required: true })
+  @IsString()
+  @MaxLength(255)
+  liquidatorLocation!: string
+
+  @ApiProperty({ type: String, required: true })
+  @IsString()
+  @MaxLength(255)
+  settlementName!: string
+
+  @ApiProperty({ type: String, required: true })
+  @IsString()
+  @MaxLength(255)
+  settlementNationalId!: string
+
+  @ApiProperty({ type: String, required: true })
+  @IsString()
+  @MaxLength(255)
+  settlementAddress!: string
+
+  @ApiProperty({ type: Number, required: false })
+  @IsOptional()
+  @IsNumber()
+  declaredClaims?: number
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  settlementDeadline?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  settlementDateOfDeath?: string
 }
 
 export class UpdateSettlementDto extends PartialType(SettlementDto) {}

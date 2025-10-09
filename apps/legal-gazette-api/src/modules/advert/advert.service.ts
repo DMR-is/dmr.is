@@ -1,10 +1,14 @@
+import { Includeable } from 'sequelize'
+
 import { Injectable } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
 import { CommunicationChannelModel } from '../communication-channel/communication-channel.model'
+import { SettlementModel } from '../settlement/settlement.model'
 import { StatusIdEnum } from '../status/status.model'
 import {
   AdvertDetailedDto,
@@ -23,8 +27,18 @@ export class AdvertService implements IAdvertService {
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     @InjectModel(AdvertPublicationModel)
     private readonly advertPublicationModel: typeof AdvertPublicationModel,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
   async createAdvert(body: CreateAdvertDto): Promise<void> {
+    const includeArr: Includeable[] = []
+
+    if (body.communicationChannels) {
+      includeArr.push({ model: CommunicationChannelModel })
+    }
+    if (body.settlement) {
+      includeArr.push({ model: SettlementModel })
+    }
+
     const advert = await this.advertModel.create(
       {
         typeId: body.typeId,
@@ -60,7 +74,7 @@ export class AdvertService implements IAdvertService {
       },
       {
         returning: ['id'],
-        include: body.communicationChannels ? [CommunicationChannelModel] : [],
+        include: includeArr,
       },
     )
 
@@ -70,6 +84,12 @@ export class AdvertService implements IAdvertService {
         scheduledAt: new Date(scheduledAt),
       })),
     )
+
+    this.eventEmitter.emit('advert.created', {
+      advertId: advert.id,
+      statusId: body.statusId,
+      actorId: body.createdByNationalId,
+    })
   }
 
   async assignAdvertToEmployee(
