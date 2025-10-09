@@ -18,6 +18,7 @@ import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { DetailedDto } from '../../../dto/detailed.dto'
 import { AdvertPublicationDto } from '../../advert-publications/dto/advert-publication.dto'
 import { CategoryDto } from '../../category/dto/category.dto'
+import { CommentDto } from '../../comment/dto/comment.dto'
 import {
   CommunicationChannelDto,
   CreateCommunicationChannelDto,
@@ -169,6 +170,12 @@ export class AdvertDetailedDto extends AdvertDto {
   @IsOptional()
   @IsDateString()
   paidAt?: string
+
+  @ApiProperty({ type: [CommentDto], required: true })
+  @IsArray()
+  @Type(() => CommentDto)
+  @ValidateNested({ each: true })
+  comments!: CommentDto[]
 }
 
 export class GetAdvertsDto {
