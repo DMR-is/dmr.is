@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
@@ -23,6 +24,7 @@ export class AdvertService implements IAdvertService {
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     @InjectModel(AdvertPublicationModel)
     private readonly advertPublicationModel: typeof AdvertPublicationModel,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
   async createAdvert(body: CreateAdvertDto): Promise<void> {
     const advert = await this.advertModel.create(
@@ -70,6 +72,12 @@ export class AdvertService implements IAdvertService {
         scheduledAt: new Date(scheduledAt),
       })),
     )
+
+    this.eventEmitter.emit('advert.created', {
+      advertId: advert.id,
+      statusId: body.statusId,
+      actorId: body.createdByNationalId,
+    })
   }
 
   async assignAdvertToEmployee(
