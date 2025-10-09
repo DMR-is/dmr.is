@@ -9,6 +9,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
+import { LegalGazetteEvents } from '../../lib/constants'
 import { mapVersionToIndex } from '../../lib/utils'
 import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
 import { StatusIdEnum } from '../status/status.model'
@@ -249,7 +250,7 @@ export class AdvertPublicationService implements IAdvertPublicationService {
           publication: publication.fromModel(),
         }
 
-        this.eventEmitter.emit('advert.published', payload)
+        this.eventEmitter.emit(LegalGazetteEvents.ADVERT_PUBLISHED, payload)
       })
     })
   }

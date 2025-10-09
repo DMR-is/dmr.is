@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { LegalGazetteEvents } from '../../../lib/constants'
 import { AdvertVersionEnum } from '../../advert/advert.model'
 import { ISESService } from '../../aws/services/ses/ses.service.interface'
 import { IPriceCalculatorService } from '../../price-calculator/price-calculator.service.interface'
@@ -26,7 +27,7 @@ export class AdvertPublishedListener {
     private readonly tbrTransactionModel: typeof TBRTransactionModel,
   ) {}
 
-  @OnEvent('advert.published', { async: true })
+  @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED, { async: true })
   async createTBRTransaction({ advert, publication }: AdvertPublishedEvent) {
     if (publication.version !== AdvertVersionEnum.A) return
 
@@ -67,7 +68,7 @@ export class AdvertPublishedListener {
     })
   }
 
-  @OnEvent('advert.published', { async: true })
+  @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED, { async: true })
   async sendEmailNotification({ advert, publication }: AdvertPublishedEvent) {
     this.logger.info('Sending email notification for advert', {
       advertId: advert.id,

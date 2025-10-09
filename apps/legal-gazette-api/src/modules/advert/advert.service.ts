@@ -6,6 +6,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
+import { LegalGazetteEvents } from '../../lib/constants'
 import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
 import { CommunicationChannelModel } from '../communication-channel/communication-channel.model'
 import { SettlementModel } from '../settlement/settlement.model'
@@ -73,22 +74,23 @@ export class AdvertService implements IAdvertService {
         communicationChannels: body.communicationChannels,
       },
       {
-        returning: ['id'],
+        returning: true,
         include: includeArr,
       },
     )
 
     await this.advertPublicationModel.bulkCreate(
-      body.scheduledAt.map((scheduledAt) => ({
+      body.scheduledAt.map((scheduledAt, i) => ({
         advertId: advert.id,
         scheduledAt: new Date(scheduledAt),
+        versionNumber: i + 1,
       })),
     )
 
-    this.eventEmitter.emit('advert.created', {
+    this.eventEmitter.emit(LegalGazetteEvents.ADVERT_CREATED, {
       advertId: advert.id,
-      statusId: body.statusId,
-      actorId: body.createdByNationalId,
+      statusId: advert.statusId,
+      actorId: advert.createdByNationalId,
     })
   }
 

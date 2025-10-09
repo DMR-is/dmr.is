@@ -5,6 +5,11 @@ export enum RecallTypeEnum {
   DECEASED = 'DECEASED',
 }
 
+export enum LegalGazetteEvents {
+  ADVERT_CREATED = 'advert.created',
+  ADVERT_PUBLISHED = 'advert.published',
+}
+
 export enum LegalGazetteModels {
   USER_ROLES = 'legal_gazette_user_roles',
   USERS = 'legal_gazette_users',
