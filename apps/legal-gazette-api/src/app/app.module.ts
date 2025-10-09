@@ -27,6 +27,8 @@ import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
 import { CaseModel } from '../modules/case/case.model'
 import { CaseModule } from '../modules/case/case.module'
 import { CategoryModel } from '../modules/category/category.model'
+import { CommentModel } from '../modules/comment/comment.model'
+import { CommentModule } from '../modules/comment/comment.module'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
 import { CompanyModule } from '../modules/company/company.module'
 import { CourtDistrictModel } from '../modules/court-district/court-district.model'
@@ -83,6 +85,7 @@ import { UsersModule } from '../modules/users/users.module'
             FeeCodeModel,
             TBRTransactionModel,
             AdvertTypeFeeCodeModel,
+            CommentModel,
           ],
         }),
       ],
@@ -100,6 +103,7 @@ import { UsersModule } from '../modules/users/users.module'
     ApplicationModule,
     TypesCategoriesModule,
     SettlementModule,
+    CommentModule,
     {
       module: AuthModule,
       global: true,
