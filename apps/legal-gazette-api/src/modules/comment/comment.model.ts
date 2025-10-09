@@ -6,8 +6,9 @@ import {
   ForeignKey,
 } from 'sequelize-typescript'
 
-import { BaseModel } from '@dmr.is/shared/models/base'
+import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { LegalGazetteModels } from '../../lib/constants'
 import { AdvertModel } from '../advert/advert.model'
 import { StatusModel } from '../status/status.model'
 import { CommentDto } from './dto/comment.dto'
@@ -68,6 +69,7 @@ type CreateCommentAttributes =
   include: [{ model: StatusModel }],
   order: [['createdAt', 'DESC']],
 }))
+@BaseTable({ tableName: LegalGazetteModels.COMMENT })
 export class CommentModel extends BaseModel<
   CommentAttributes,
   CreateCommentAttributes
