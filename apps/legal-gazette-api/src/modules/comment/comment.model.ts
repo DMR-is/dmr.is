@@ -34,6 +34,7 @@ type CreateCommentBaseAttributes = {
   advertId: string
   statusId: string
   actorId: string
+  actor: string
 }
 
 type CreateSubmitComment = CreateCommentBaseAttributes & {
@@ -43,11 +44,13 @@ type CreateSubmitComment = CreateCommentBaseAttributes & {
 type CreateAssignComment = CreateCommentBaseAttributes & {
   type: CommentTypeEnum.ASSIGN
   receiverId: string
+  receiver: string
 }
 
 type CreateStatusUpdateComment = CreateCommentBaseAttributes & {
   type: CommentTypeEnum.STATUS_UPDATE
   receiverId: string
+  receiver: string
 }
 
 type CreateTextComment = CreateCommentBaseAttributes & {
@@ -136,5 +139,9 @@ export class CommentModel extends BaseModel<
       receiver: model.receiver,
       comment: model.comment,
     }
+  }
+
+  fromModel(): CommentDto {
+    return CommentModel.fromModel(this)
   }
 }
