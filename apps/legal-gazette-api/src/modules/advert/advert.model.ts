@@ -28,6 +28,7 @@ import {
 } from '../advert-publications/advert-publication.model'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
+import { CommentModel } from '../comment/comment.model'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
@@ -86,6 +87,7 @@ type AdvertAttributes = {
   case: CaseModel
   settlement?: SettlementModel
   communicationChannels?: CommunicationChannelModel[]
+  comments: CommentModel[]
 }
 
 export type AdvertCreateAttributes = {
@@ -138,6 +140,8 @@ export enum AdvertVersionEnum {
     { model: AdvertPublicationModel },
     { model: SettlementModel },
     { model: CommunicationChannelModel },
+    { model: TBRTransactionModel },
+    { model: CommentModel },
   ],
   order: [
     [
@@ -206,6 +210,9 @@ export enum AdvertVersionEnum {
         { model: UserModel },
         { model: AdvertPublicationModel },
         { model: SettlementModel },
+        { model: CommunicationChannelModel },
+        { model: TBRTransactionModel },
+        { model: CommentModel },
       ],
       where: whereOptions,
     }
@@ -409,6 +416,9 @@ export class AdvertModel extends BaseModel<
   @HasOne(() => TBRTransactionModel)
   transaction?: TBRTransactionModel
 
+  @HasMany(() => CommentModel)
+  comments!: CommentModel[]
+
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
     // validateAdvertStatus(instance)
@@ -532,6 +542,7 @@ export class AdvertModel extends BaseModel<
       paidAt: model.transaction?.paidAt
         ? model.transaction.paidAt.toISOString()
         : undefined,
+      comments: model.comments?.map((c) => c.fromModel()) || [],
     }
   }
 
