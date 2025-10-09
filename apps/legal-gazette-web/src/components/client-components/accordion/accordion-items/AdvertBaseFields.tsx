@@ -5,38 +5,52 @@ import {
   Stack,
 } from '@dmr.is/ui/components/island-is'
 
-import type { UpdateAdvertDto } from '../../../../lib/trpc/server/routers/advertsRouter'
+import { CategoryDto, TypeDto } from '../../../../gen/fetch'
+import { useUpdateAdvert } from '../../../../hooks/useUpdateAdvert'
+import { CategorySelect } from '../../selects/CategoriesSelect'
+import { TypeSelect } from '../../selects/TypeSelect'
 
 type Props = {
-  id: string
+  types: TypeDto[]
+  categories: CategoryDto[]
+  typeId: string
+  categoryId: string
   title: string
   additionalText?: string
   onUpdate: (data: UpdateAdvertDto) => void
 }
 
-export const AdvertBaseFields = ({ title, additionalText }: Props) => {
+export const AdvertBaseFields = ({
+  types,
+  categories,
+  typeId,
+  categoryId,
+  title,
+  additionalText,
+}: Props) => {
   const id = useParams().id as string
-  const updateAdvert = trpc.adverts.updateAdvert.useMutation({
-    onMutate: async (variables) => {
-      const prevData = utils.adverts.getAdvert.getData({
-        id: variables.id,
-      })
 
-      return prevData
-    },
-  })
-  const utils = trpc.useUtils()
+  const { updateType, updateCategory, updateTitle, updateAdditionalText } =
+    useUpdateAdvert(id)
 
   return (
     <Stack space={[1, 2]}>
       <GridRow>
-        {/* <TypeAndCategorySelect
-          advertId={advert.id}
-          initalTypeId={advert.type.id}
-          initalCategoryId={advert.category.id}
-          types={data?.categories ?? []}
-          initalCategories={data?.categories ?? []}
-        /> */}
+        <GridColumn span={['12/12', '6/12']}>
+          <TypeSelect
+            types={types.map((t) => t)}
+            selectedId={typeId}
+            onSelect={(id) => updateType(id ?? '')}
+          />
+        </GridColumn>
+        <GridColumn span={['12/12', '6/12']}>
+          <CategorySelect
+            selectedId={categoryId}
+            onSelect={(id) => updateCategory(id ?? '')}
+            categories={categories}
+            isLoading={false}
+          />
+        </GridColumn>
       </GridRow>
       <GridRow>
         <GridColumn span="12/12">
@@ -50,18 +64,7 @@ export const AdvertBaseFields = ({ title, additionalText }: Props) => {
               if (evt.target.value === title) {
                 return
               }
-              updateAdvert.mutate(
-                { id: id, title: evt.target.value },
-                {
-                  onSuccess: (_data, _variables, mutateResults) => {
-                    if (mutateResults?.title === evt.target.value) {
-                      return
-                    }
-                    toast.success('Titill vistaður')
-                    utils.adverts.getAdvert.invalidate({ id: id })
-                  },
-                },
-              )
+              updateTitle(evt.target.value)
             }}
           />
         </GridColumn>
@@ -79,18 +82,7 @@ export const AdvertBaseFields = ({ title, additionalText }: Props) => {
               if (evt.target.value === additionalText) {
                 return
               }
-              updateAdvert.mutate(
-                { id: id, additionalText: evt.target.value },
-                {
-                  onSuccess: (_data, _variables, mutateResults) => {
-                    if (mutateResults?.additionalText === evt.target.value) {
-                      return
-                    }
-                    toast.success('Frjáls texti vistaður')
-                    utils.adverts.getAdvert.invalidate({ id: id })
-                  },
-                },
-              )
+              updateAdditionalText({ additionalText: evt.target.value })
             }}
           />
         </GridColumn>

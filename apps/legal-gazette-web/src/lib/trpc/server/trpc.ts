@@ -17,6 +17,7 @@ export const createTRPCContext = cache(async () => {
       statusApi: await getServerClient('StatusApi'),
       courtDistrictApi: await getServerClient('CourtDistrictApi'),
     },
+    usersApi: await getServerClient('UsersApi'),
   }
 })
 

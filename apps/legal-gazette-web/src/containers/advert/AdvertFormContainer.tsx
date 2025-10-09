@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { Box, Stack, Text } from '@dmr.is/ui/components/island-is'
 import { formatDate } from '@dmr.is/utils/client'
 
+import { AdvertBaseFields } from '../../components/client-components/accordion/accordion-items/AdvertBaseFields'
 import { AdvertReadonlyFields } from '../../components/client-components/accordion/accordion-items/AdvertReadonlyFields'
 import { ContentFields } from '../../components/client-components/accordion/accordion-items/ContentFields'
 import { AdvertFormAccordion } from '../../components/client-components/accordion/AdvertFormAccordion'
@@ -13,6 +14,12 @@ import { trpc } from '../../lib/trpc/client'
 export function AdvertFormContainer() {
   const { id } = useParams()
   const [advert] = trpc.adverts.getAdvert.useSuspenseQuery({ id: id as string })
+  const [{ types }] = trpc.baseEntity.getAllEntities.useSuspenseQuery()
+
+  const { data: categoriesForTypes } =
+    trpc.baseEntity.getCategories.useQuery({
+      type: advert.type.id,
+    })
 
   const items = [
     {
@@ -25,6 +32,20 @@ export function AdvertFormContainer() {
           createdBy={advert.createdBy}
         />
       ),
+    },
+    {
+      title: 'Almennar upplýsingar',
+      children: (
+        <AdvertBaseFields
+          types={types}
+          categories={categoriesForTypes?.categories ?? []}
+          typeId={advert.type.id}
+          categoryId={advert.category.id}
+          title={advert.title ?? ''}
+          additionalText={advert.additionalText ?? ''}
+        />
+      ),
+      hidden: false,
     },
     {
       title: 'Efni auglýsingar',

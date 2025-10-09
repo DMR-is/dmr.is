@@ -21,9 +21,7 @@ export const TypeSelect = ({ onSelect, selectedId, types }: Props) => {
       label="Tegund auglýsingar"
       placeholder="Veldu tegund"
       options={options}
-      defaultValue={
-        selected ? { label: selected.title, value: selected.id } : null
-      }
+      value={selected ? { label: selected.title, value: selected.id } : null}
       onChange={(opt) => onSelect?.(opt?.value)}
     />
   )

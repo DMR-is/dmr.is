@@ -34,8 +34,10 @@ export const CategorySelect = ({
       backgroundColor="blue"
       label="Flokkur auglýsingar"
       placeholder="Veldu flokk"
-      defaultValue={
-        selected ? { label: selected.title, value: selected.id } : null
+      value={
+        categories.length > 0 && selected
+          ? { label: selected.title, value: selected.id }
+          : null
       }
       options={options}
       isClearable={isClearable}

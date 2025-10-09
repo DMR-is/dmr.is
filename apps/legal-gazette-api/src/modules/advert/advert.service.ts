@@ -1,7 +1,4 @@
-import { Includeable } from 'sequelize'
-
-import { Injectable } from '@nestjs/common'
-import { EventEmitter2 } from '@nestjs/event-emitter'
+import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
@@ -11,6 +8,7 @@ import { AdvertPublicationModel } from '../advert-publications/advert-publicatio
 import { CommunicationChannelModel } from '../communication-channel/communication-channel.model'
 import { SettlementModel } from '../settlement/settlement.model'
 import { StatusIdEnum } from '../status/status.model'
+import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
 import {
   AdvertDetailedDto,
   CreateAdvertDto,
@@ -26,6 +24,8 @@ import { IAdvertService } from './advert.service.interface'
 export class AdvertService implements IAdvertService {
   constructor(
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    @Inject(ITypeCategoriesService)
+    private readonly typeCategoriesService: ITypeCategoriesService,
     @InjectModel(AdvertPublicationModel)
     private readonly advertPublicationModel: typeof AdvertPublicationModel,
     private readonly eventEmitter: EventEmitter2,
@@ -143,9 +143,14 @@ export class AdvertService implements IAdvertService {
   ): Promise<AdvertDetailedDto> {
     const advert = await this.advertModel.findByPkOrThrow(id)
 
+    const category = body.typeId
+      ? (await this.typeCategoriesService.findByTypeId(body.typeId)).type.categories[0]
+      : undefined
+
+
     const updated = await advert.update({
       typeId: body.typeId,
-      categoryId: body.categoryId,
+      categoryId: category ? category.id : body.categoryId,
       title: body.title,
       content: body.content,
       signatureDate:
