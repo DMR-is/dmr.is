@@ -1,26 +1,25 @@
-'use client'
-
-import { useParams } from 'next/navigation'
-
 import {
   GridColumn,
   GridRow,
   Input,
   Stack,
-  toast,
 } from '@dmr.is/ui/components/island-is'
 
-import { trpc } from '../../../../lib/trpc/client'
+import type { UpdateAdvertDto } from '../../../../lib/trpc/server/routers/advertsRouter'
 
 type Props = {
+  id: string
   title: string
   additionalText?: string
+  onUpdate: (data: UpdateAdvertDto) => void
 }
 
-export const AdvertBaseFields = ({ title, additionalText }: Props) => {
-  const id = useParams().id as string
-  const { mutate: updateAdvert } = trpc.adverts.updateAdvert.useMutation()
-
+export const AdvertBaseFields = ({
+  id,
+  title,
+  additionalText,
+  onUpdate,
+}: Props) => {
   return (
     <Stack space={[1, 2]}>
       <GridRow>
@@ -40,12 +39,7 @@ export const AdvertBaseFields = ({ title, additionalText }: Props) => {
             backgroundColor="blue"
             label="Titill"
             defaultValue={title}
-            onBlur={(evt) =>
-              updateAdvert(
-                { id: id, title: evt.target.value },
-                { onSuccess: () => toast.success('Titill vistaður') },
-              )
-            }
+            onBlur={(evt) => onUpdate({ id: id, title: evt.target.value })}
           />
         </GridColumn>
       </GridRow>
@@ -59,10 +53,7 @@ export const AdvertBaseFields = ({ title, additionalText }: Props) => {
             textarea
             defaultValue={additionalText}
             onBlur={(evt) =>
-              updateAdvert(
-                { id: id, additionalText: evt.target.value },
-                { onSuccess: () => toast.success('Frjáls texti vistaður') },
-              )
+              onUpdate({ id: id, additionalText: evt.target.value })
             }
           />
         </GridColumn>

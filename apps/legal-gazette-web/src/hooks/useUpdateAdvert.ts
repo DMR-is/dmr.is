@@ -1,16 +1,82 @@
-import useSWRMutation from 'swr/mutation'
+import { useCallback } from 'react'
+
+import { toast } from '@dmr.is/ui/components/island-is'
 
 import { UpdateAdvertDto } from '../gen/fetch'
-import { useClient } from './useClient'
+import { trpc } from '../lib/trpc/client'
+
+type UpdateOptions = {
+  successMessage?: string
+  errorMessage?: string
+}
 
 export const useUpdateAdvert = (id: string) => {
-  const client = useClient('AdvertUpdateApi')
+  const mutation = trpc.adverts.updateAdvert.useMutation()
+  const utils = trpc.useUtils()
 
-  const { trigger, isMutating } = useSWRMutation(
-    ['updateAdvert', id],
-    ([_key, id]: [string, string], { arg }: { arg: UpdateAdvertDto }) =>
-      client.updateAdvert({ id, updateAdvertDto: arg }),
+  const updateAdvert = useCallback(
+    (data: UpdateAdvertDto, options: UpdateOptions = {}) => {
+      const { successMessage, errorMessage = 'Villa við að vista breytingar' } =
+        options
+
+      return mutation.mutate(
+        { id, ...data },
+        {
+          onSuccess: () => {
+            if (successMessage) {
+              toast.success(successMessage)
+            }
+            utils.adverts.getAdvert.invalidate({ id })
+          },
+          onError: () => {
+            toast.error(errorMessage)
+          },
+        },
+      )
+    },
+    [id, mutation],
   )
 
-  return { trigger, isMutating }
+  const updateTitle = useCallback(
+    (title: string) =>
+      updateAdvert(
+        { title },
+        {
+          successMessage: 'Yfirskrift vistuð',
+          errorMessage: 'Villa við að vista yfirskrift',
+        },
+      ),
+    [updateAdvert],
+  )
+
+  const updateCaption = useCallback(
+    (caption: string) =>
+      updateAdvert(
+        { caption },
+        {
+          successMessage: 'Yfirskrift vistuð',
+          errorMessage: 'Villa við að vista yfirskrift',
+        },
+      ),
+    [updateAdvert],
+  )
+
+  const updateContent = useCallback(
+    ({ content }: { content: string }) =>
+      updateAdvert(
+        { content },
+        {
+          successMessage: 'Yfirskrift vistuð',
+          errorMessage: 'Villa við að vista yfirskrift',
+        },
+      ),
+    [updateAdvert],
+  )
+
+  return {
+    updateAdvert,
+    updateCaption,
+    updateContent,
+    updateTitle,
+  }
 }

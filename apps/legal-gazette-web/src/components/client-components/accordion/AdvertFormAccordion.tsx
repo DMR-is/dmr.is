@@ -18,6 +18,7 @@ import { OpenCloseButton } from '../buttons/OpenCloseButton'
 type AccordionFormItem = {
   title: string
   children: React.ReactNode
+  hidden?: boolean
 }
 
 type Props = {
@@ -62,17 +63,21 @@ export const AdvertFormAccordion = ({ items }: Props) => {
           />
         </Inline>
         <Accordion singleExpand={false}>
-          {items.map((item, index) => (
-            <AccordionItem
-              id={`accordion-item-${index}`}
-              key={index}
-              expanded={toggles[index].expanded}
-              onToggle={toggles[index].setExpanded}
-              label={item.title}
-            >
-              {item.children}
-            </AccordionItem>
-          ))}
+          {items
+            .filter((item) => !item.hidden)
+            .map((accordionItem: AccordionFormItem, index) => (
+              <AccordionItem
+                id={`accordion-item-${index}`}
+                key={index}
+                expanded={toggles[index].expanded}
+                onToggle={toggles[index].setExpanded}
+                label={accordionItem.title}
+                labelVariant="h5"
+                iconVariant="small"
+              >
+                {accordionItem.children}
+              </AccordionItem>
+            ))}
         </Accordion>
       </Stack>
     </Box>
