@@ -26,9 +26,13 @@ module.exports = {
         ADVERT_ID UUID NOT NULL REFERENCES ADVERT(ID) ON DELETE CASCADE,
 
         ACTOR_ID TEXT NOT NULL,
+        ACTOR TEXT NOT NULL,
         RECEIVER_ID TEXT,
+        RECEIVER TEXT,
         COMMENT TEXT,
       );
+
+      CREATE INDEX IDX_ADVERT_COMMENT_ADVERT_ID ON ADVERT_COMMENT(ADVERT_ID);
 
       COMMIT;
     `)
@@ -37,6 +41,8 @@ module.exports = {
   down(queryInterface, Sequelize) {
     return queryInterface.sequelize.query(`
       BEGIN;
+
+        DROP INDEX IF EXISTS IDX_ADVERT_COMMENT_ADVERT_ID;
 
         DROP TABLE IF EXISTS ADVERT_COMMENT;
         DROP TYPE IF EXISTS ADVERT_COMMENT_TYPE;
