@@ -70,4 +70,21 @@ export const advertsRouter = router({
         updateAdvertDto: rest,
       })
     }),
+  assignUser: protectedProcedure
+    .input(z.object({ id: z.string(), userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.adverts.updateApi.assignAdvertToEmployee({
+        id: input.id,
+        userId: input.userId,
+      })
+    }),
+  changeAdvertStatus: protectedProcedure
+    .input(z.object({ id: z.string(), statusId: z.enum(StatusIdEnum) }))
+    .mutation(async ({ ctx, input }) => {
+      if (input.statusId === StatusIdEnum.READY_FOR_PUBLICATION) {
+        return await ctx.adverts.updateApi.markAdvertAsReady({ id: input.id })
+      } else if (input.statusId === StatusIdEnum.SUBMITTED) {
+        return await ctx.adverts.updateApi.markAdvertAsSubmitted({ id: input.id })
+      }
+    }),
 })

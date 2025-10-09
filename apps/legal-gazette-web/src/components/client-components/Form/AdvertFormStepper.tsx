@@ -1,17 +1,20 @@
 'use client'
 
+import { useParams } from 'next/navigation'
+
 import { FormStepper, Section } from '@dmr.is/ui/components/island-is'
 import { formatDate } from '@dmr.is/utils/client'
 
 import { StatusEnum } from '../../../gen/fetch'
-import { useAdvertContext } from '../../../hooks/useAdvertContext'
+import { trpc } from '../../../lib/trpc/client'
 
 /**
  * Work in progress
  * TODO: update after we have added history tracking/comments to adverts
  */
 export const AdvertFormStepper = () => {
-  const { advert } = useAdvertContext()
+  const { id } = useParams()
+  const [advert] = trpc.adverts.getAdvert.useSuspenseQuery({ id: id as string })
 
   const statusTitle = advert.status.title
 

@@ -1,4 +1,6 @@
-// import { useUpdateAdvert } from 'apps/legal-gazette-web/src/hooks/useUpdateAdvert'
+'use client'
+
+import { useParams } from 'next/navigation'
 
 import { Box, Stack, Text } from '@dmr.is/ui/components/island-is'
 import { formatDate } from '@dmr.is/utils/client'
@@ -6,13 +8,12 @@ import { formatDate } from '@dmr.is/utils/client'
 import { AdvertReadonlyFields } from '../../components/client-components/accordion/accordion-items/AdvertReadonlyFields'
 import { ContentFields } from '../../components/client-components/accordion/accordion-items/ContentFields'
 import { AdvertFormAccordion } from '../../components/client-components/accordion/AdvertFormAccordion'
-import { AdvertDetailedDto } from '../../gen/fetch'
+import { trpc } from '../../lib/trpc/client'
 
-type Props = {
-  advert: AdvertDetailedDto
-}
+export function AdvertFormContainer() {
+  const { id } = useParams()
+  const [advert] = trpc.adverts.getAdvert.useSuspenseQuery({ id: id as string })
 
-export async function AdvertFormContainer({ advert }: Props) {
   const items = [
     {
       title: 'Upplýsingar um auglýsingu',

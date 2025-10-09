@@ -14,12 +14,19 @@ type Props = {
   onUpdate: (data: UpdateAdvertDto) => void
 }
 
-export const AdvertBaseFields = ({
-  id,
-  title,
-  additionalText,
-  onUpdate,
-}: Props) => {
+export const AdvertBaseFields = ({ title, additionalText }: Props) => {
+  const id = useParams().id as string
+  const updateAdvert = trpc.adverts.updateAdvert.useMutation({
+    onMutate: async (variables) => {
+      const prevData = utils.adverts.getAdvert.getData({
+        id: variables.id,
+      })
+
+      return prevData
+    },
+  })
+  const utils = trpc.useUtils()
+
   return (
     <Stack space={[1, 2]}>
       <GridRow>
@@ -39,7 +46,23 @@ export const AdvertBaseFields = ({
             backgroundColor="blue"
             label="Titill"
             defaultValue={title}
-            onBlur={(evt) => onUpdate({ id: id, title: evt.target.value })}
+            onBlur={(evt) => {
+              if (evt.target.value === title) {
+                return
+              }
+              updateAdvert.mutate(
+                { id: id, title: evt.target.value },
+                {
+                  onSuccess: (_data, _variables, mutateResults) => {
+                    if (mutateResults?.title === evt.target.value) {
+                      return
+                    }
+                    toast.success('Titill vistaður')
+                    utils.adverts.getAdvert.invalidate({ id: id })
+                  },
+                },
+              )
+            }}
           />
         </GridColumn>
       </GridRow>
@@ -52,9 +75,23 @@ export const AdvertBaseFields = ({
             label="Frjáls texti"
             textarea
             defaultValue={additionalText}
-            onBlur={(evt) =>
-              onUpdate({ id: id, additionalText: evt.target.value })
-            }
+            onBlur={(evt) => {
+              if (evt.target.value === additionalText) {
+                return
+              }
+              updateAdvert.mutate(
+                { id: id, additionalText: evt.target.value },
+                {
+                  onSuccess: (_data, _variables, mutateResults) => {
+                    if (mutateResults?.additionalText === evt.target.value) {
+                      return
+                    }
+                    toast.success('Frjáls texti vistaður')
+                    utils.adverts.getAdvert.invalidate({ id: id })
+                  },
+                },
+              )
+            }}
           />
         </GridColumn>
       </GridRow>

@@ -1,3 +1,5 @@
+import { AdvertSidebar } from '../../components/client-components/Form/FormSidebar'
+
 export async function AdvertSidebarContainer() {
-  return <div>AdvertSidebarContainer</div>
+  return <AdvertSidebar />
 }
