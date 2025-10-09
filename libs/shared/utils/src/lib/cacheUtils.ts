@@ -7,6 +7,8 @@ import { CacheModule, CacheModuleAsyncOptions } from '@nestjs/cache-manager'
 import { getLogger } from '@dmr.is/logging'
 const host = process.env.REDIS_HOST || 'localhost'
 const port = process.env.REDIS_PORT || 6379
+const username = process.env.REDIS_USER || 'default'
+const password = process.env.REDIS_PASSWORD || 'default'
 
 export type StoreKeyMapper =
   | 'case'
@@ -32,7 +34,11 @@ export const createRedisCacheOptions = (storeKey: StoreKeyMapper) => {
     useFactory: async () => {
       const store = await redisStore({
         name: storeKey,
-        nodes: [{ host: host, port: port }],
+        password,
+        username,
+        nodes: [
+          { host: host, port: port, tls: true, rejectUnauthorized: false },
+        ],
       })
       return { store: store }
     },
