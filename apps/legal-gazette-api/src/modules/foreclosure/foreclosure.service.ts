@@ -11,4 +11,8 @@ export class ForeclosureService implements IForeclosureService {
   getForeclosureById(id: string): Promise<ForeclosureDto> {
     throw new Error('Method not implemented.')
   }
+
+  createForeclosureSale(): Promise<void> {
+    throw new Error('Method not implemented.')
+  }
 }
