@@ -26,6 +26,8 @@ const nextConfig = {
   },
   env: {
     API_MOCKS: process.env.API_MOCKS || '',
+    NEXTAUTH_URL:
+      process.env.OFFICIAL_JOURNAL_NEXTAUTH_URL ?? process.env.NEXTAUTH_URL,
   },
 }
 
