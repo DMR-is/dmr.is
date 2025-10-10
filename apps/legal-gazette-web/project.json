@@ -34,7 +34,8 @@
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "legal-gazette-web:build",
-        "dev": true
+        "dev": true,
+        "port": 4200
       },
       "configurations": {
         "development": {
