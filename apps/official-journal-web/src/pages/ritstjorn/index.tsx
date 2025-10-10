@@ -26,8 +26,6 @@ import {
 import { CustomNextError } from '../../units/error'
 import { authOptions } from '../api/auth/[...nextauth]'
 
-
-
 const CaseOverviewTabs = dynamic(
   () => import('../../components/tabs/CaseOverviewTabs'),
   {
@@ -87,7 +85,6 @@ export const getServerSideProps: GetServerSideProps = async ({
   resolvedUrl,
 }) => {
   const session = await getServerSession(req, res, authOptions)
-
 
   if (!session) {
     return loginRedirect(resolvedUrl)

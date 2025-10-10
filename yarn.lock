@@ -3813,6 +3813,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cacheable/utils@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "@cacheable/utils@npm:2.1.0"
+  dependencies:
+    keyv: "npm:^5.5.3"
+  checksum: 10c0/0fe83cd992863c9234d83aa1cf108e83e02013bc81f730ba187861bc4d2a60b62fb3945b37dd4f5f58d749a4dff8420d6e9e723324aa2bda53944bedbd83ebd1
+  languageName: node
+  linkType: hard
+
 "@colors/colors@npm:1.6.0, @colors/colors@npm:^1.6.0":
   version: 1.6.0
   resolution: "@colors/colors@npm:1.6.0"
@@ -5794,12 +5803,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@keyv/serialize@npm:^1.0.3":
-  version: 1.0.3
-  resolution: "@keyv/serialize@npm:1.0.3"
+"@keyv/redis@npm:5.1.3":
+  version: 5.1.3
+  resolution: "@keyv/redis@npm:5.1.3"
   dependencies:
-    buffer: "npm:^6.0.3"
-  checksum: 10c0/24a257870b0548cfe430680c2ae1641751e6a6ec90c573eaf51bfe956839b6cfa462b4d2827157363b6d620872d32d69fa2f37210a864ba488f8ec7158436398
+    "@redis/client": "npm:^5.8.3"
+    cluster-key-slot: "npm:^1.1.2"
+    hookified: "npm:^1.12.1"
+  peerDependencies:
+    keyv: ^5.5.3
+  checksum: 10c0/a7648736cbbdfc6748786d69ddd4b4be595fadbe4d8cf4cc5749f20ab14bf53ec07bd7055f4a1bc481662cf39a37f9148cab258f87b79de9224184b8524baef1
+  languageName: node
+  linkType: hard
+
+"@keyv/serialize@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "@keyv/serialize@npm:1.1.1"
+  checksum: 10c0/b0008cae4a54400c3abf587b8cc2474c6f528ee58969ce6cf9cb07a04006f80c73c85971d6be6544408318a2bc40108236a19a82aea0a6de95aae49533317374
   languageName: node
   linkType: hard
 
@@ -6204,16 +6224,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nestjs/cache-manager@npm:2.0.1":
-  version: 2.0.1
-  resolution: "@nestjs/cache-manager@npm:2.0.1"
+"@nestjs/cache-manager@npm:3.0.1":
+  version: 3.0.1
+  resolution: "@nestjs/cache-manager@npm:3.0.1"
   peerDependencies:
-    "@nestjs/common": ^9.0.0 || ^10.0.0
-    "@nestjs/core": ^9.0.0 || ^10.0.0
-    cache-manager: <=5
-    reflect-metadata: ^0.1.12
-    rxjs: ^7.0.0
-  checksum: 10c0/c87aadba3c35360220b6b3a4f195b443c156ca92ea933912108073f9bdf4a9837f3d64457b12f5ffb7c215a3ec4ce81dfbe379b9ebc5a398ce5f4404b8061462
+    "@nestjs/common": ^9.0.0 || ^10.0.0 || ^11.0.0
+    "@nestjs/core": ^9.0.0 || ^10.0.0 || ^11.0.0
+    cache-manager: ">=6"
+    keyv: ">=5"
+    rxjs: ^7.8.1
+  checksum: 10c0/a28bf4a24195f648ccb0dc88a46056003665ff4fdc60454b17f0b9a15fcaa8cb5c1a4fdb49a7bd6b2371ce56382698116c4dfc88c7dd09527b833588582af46a
   languageName: node
   linkType: hard
 
@@ -7742,6 +7762,15 @@ __metadata:
   version: 2.5.0
   resolution: "@react-pdf/types@npm:2.5.0"
   checksum: 10c0/3b4822aef6de360d66b678bc53ece3f27c5c129ad67cdd85fab7649aada52fb69eab1a046645f90cb361789e7c44300c3013a5f2a37b2cb5d9df908b23d0bf2d
+  languageName: node
+  linkType: hard
+
+"@redis/client@npm:^5.8.3":
+  version: 5.8.3
+  resolution: "@redis/client@npm:5.8.3"
+  dependencies:
+    cluster-key-slot: "npm:1.1.2"
+  checksum: 10c0/af34e1373fd853d6034ba69add08611c1fe19cf1e1e28f35d4eb1c570e4d11cae9a1b7869739f7593e5ba701f3f13edde64654691f075d74b04a131983347b35
   languageName: node
   linkType: hard
 
@@ -12771,33 +12800,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cache-manager-ioredis-yet@npm:^2.1.2":
-  version: 2.1.2
-  resolution: "cache-manager-ioredis-yet@npm:2.1.2"
+"cache-manager@npm:7.2.4":
+  version: 7.2.4
+  resolution: "cache-manager@npm:7.2.4"
   dependencies:
-    cache-manager: "npm:*"
-    ioredis: "npm:^5.4.1"
-    telejson: "npm:^7.2.0"
-  checksum: 10c0/5c6cf63991cd6e8609b0780c43a17f21525f795971eedb772f0bde158318605f4eb56926632a5d21092fea0160b9cc172903e9d190d912532e37facb06b927ba
-  languageName: node
-  linkType: hard
-
-"cache-manager@npm:*":
-  version: 6.4.3
-  resolution: "cache-manager@npm:6.4.3"
-  dependencies:
-    keyv: "npm:^5.3.3"
-  checksum: 10c0/eb5af37e2206cf01390bf61ddd86d3cb86f281700a2621393835ac4f9bdd5872a618765f643fce76d1cbb56f512a13cef502665fb6259be9c16d5121c713a1f7
-  languageName: node
-  linkType: hard
-
-"cache-manager@npm:5.2.3":
-  version: 5.2.3
-  resolution: "cache-manager@npm:5.2.3"
-  dependencies:
-    lodash.clonedeep: "npm:^4.5.0"
-    lru-cache: "npm:^9.1.2"
-  checksum: 10c0/33ad28b8733022b9b71d9db222647a32dade52edaf9ce53df1121d8bab7faa428eb08adc05de58c521f2804c54335895e397f9a3a8be09cd4f98cad214eddf13
+    "@cacheable/utils": "npm:^2.1.0"
+    keyv: "npm:^5.5.3"
+  checksum: 10c0/51b52d31bbdcc7386a8dfd1c5398bdbbcb1fe1c7891885ee6c7e58d58ab7e7052eb394f26e58c018017153864ea9f9839bef84dbe6fe62d10e12dfa98d267a07
   languageName: node
   linkType: hard
 
@@ -13178,7 +13187,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cluster-key-slot@npm:^1.1.0":
+"cluster-key-slot@npm:1.1.2, cluster-key-slot@npm:^1.1.0, cluster-key-slot@npm:^1.1.2":
   version: 1.1.2
   resolution: "cluster-key-slot@npm:1.1.2"
   checksum: 10c0/d7d39ca28a8786e9e801eeb8c770e3c3236a566625d7299a47bb71113fb2298ce1039596acb82590e598c52dbc9b1f088c8f587803e697cb58e1867a95ff94d3
@@ -14750,7 +14759,8 @@ __metadata:
     "@hookform/resolvers": "npm:5.2.1"
     "@hugsmidjan/qj": "npm:^4.10.2"
     "@island.is/regulations-tools": "npm:^0.9.2"
-    "@nestjs/cache-manager": "npm:2.0.1"
+    "@keyv/redis": "npm:5.1.3"
+    "@nestjs/cache-manager": "npm:3.0.1"
     "@nestjs/common": "npm:^10.4.19"
     "@nestjs/core": "npm:^10.4.19"
     "@nestjs/event-emitter": "npm:3.0.1"
@@ -14826,8 +14836,7 @@ __metadata:
     axios: "npm:^1.11.0"
     babel-jest: "npm:30.0.5"
     beygla: "npm:1.5.2"
-    cache-manager: "npm:5.2.3"
-    cache-manager-ioredis-yet: "npm:^2.1.2"
+    cache-manager: "npm:7.2.4"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.14.1"
     classnames: "npm:^2.5.1"
@@ -17786,6 +17795,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hookified@npm:^1.12.1":
+  version: 1.12.1
+  resolution: "hookified@npm:1.12.1"
+  checksum: 10c0/fe8d74ee49d1f79677dcdff7606eeb731f7a7dc59f61ec2141a11e3bb94ff6532f870649b900fa9f68568f410c504a338d8732e4d1abe61b426e645c37862e50
+  languageName: node
+  linkType: hard
+
 "hosted-git-info@npm:^2.1.4":
   version: 2.8.9
   resolution: "hosted-git-info@npm:2.8.9"
@@ -18375,7 +18391,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ioredis@npm:^5.0.0, ioredis@npm:^5.4.1":
+"ioredis@npm:^5.0.0":
   version: 5.6.1
   resolution: "ioredis@npm:5.6.1"
   dependencies:
@@ -20044,12 +20060,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"keyv@npm:^5.3.3":
-  version: 5.3.3
-  resolution: "keyv@npm:5.3.3"
+"keyv@npm:^5.5.3":
+  version: 5.5.3
+  resolution: "keyv@npm:5.5.3"
   dependencies:
-    "@keyv/serialize": "npm:^1.0.3"
-  checksum: 10c0/6b9064d061784e80a5dc500453b03cacb099f06fddd0346063519371d563a66771237e04467f3387b60d8a33a3c99864288991274921fb1338c6adf638574924
+    "@keyv/serialize": "npm:^1.1.1"
+  checksum: 10c0/6890ed8a76e6b16034ceda89a4a7dc9cd1ebd05bf0ee1f7f3d3fe37ac3e4a6196d710ab2fef3d47cf8c394b61104b3bfcab17f23cc6e0dc2dcbe36483a43f84d
   languageName: node
   linkType: hard
 
@@ -20685,13 +20701,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:^9.1.2":
-  version: 9.1.2
-  resolution: "lru-cache@npm:9.1.2"
-  checksum: 10c0/886811ab451332c899c230274e7e51507c15e5b3b18f0b39fb55f558978d58799a0b1a50e04d60a448d8c970ff4e6ee718bb119083ca88abb78930284f1e0900
-  languageName: node
-  linkType: hard
-
 "lru-memoizer@npm:^2.2.0":
   version: 2.3.0
   resolution: "lru-memoizer@npm:2.3.0"
@@ -20843,13 +20852,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"map-or-similar@npm:^1.5.0":
-  version: 1.5.0
-  resolution: "map-or-similar@npm:1.5.0"
-  checksum: 10c0/33c6ccfdc272992e33e4e99a69541a3e7faed9de3ac5bc732feb2500a9ee71d3f9d098980a70b7746e7eeb7f859ff7dfb8aa9b5ecc4e34170a32ab78cfb18def
-  languageName: node
-  linkType: hard
-
 "math-intrinsics@npm:^1.1.0":
   version: 1.1.0
   resolution: "math-intrinsics@npm:1.1.0"
@@ -20949,15 +20951,6 @@ __metadata:
     next-tick: "npm:^1.1.0"
     timers-ext: "npm:^0.1.7"
   checksum: 10c0/19821d055f0f641e79b718f91d6d89a6c92840643234a6f4e91d42aa330e8406f06c47d3828931e177c38830aa9b959710e5b7f0013be452af46d0f9eae4baf4
-  languageName: node
-  linkType: hard
-
-"memoizerific@npm:^1.11.3":
-  version: 1.11.3
-  resolution: "memoizerific@npm:1.11.3"
-  dependencies:
-    map-or-similar: "npm:^1.5.0"
-  checksum: 10c0/661bf69b7afbfad57f0208f0c63324f4c96087b480708115b78ee3f0237d86c7f91347f6db31528740b2776c2e34c709bcb034e1e910edee2270c9603a0a469e
   languageName: node
   linkType: hard
 
@@ -27382,15 +27375,6 @@ __metadata:
     native-duplexpair: "npm:^1.0.0"
     sprintf-js: "npm:^1.1.3"
   checksum: 10c0/db0bdc2ed8ad1b11e6382d9530c924a890d0c05bd1cb8055ba8eed69317db050006666b8e5079a92c3041ed8fa2ed57d2b50c501cf5793d1433e7a9df6878835
-  languageName: node
-  linkType: hard
-
-"telejson@npm:^7.2.0":
-  version: 7.2.0
-  resolution: "telejson@npm:7.2.0"
-  dependencies:
-    memoizerific: "npm:^1.11.3"
-  checksum: 10c0/d26e6cc93e54bfdcdb207b49905508c5db45862e811a2e2193a735409e47b14530e1c19351618a3e03ad2fd4ffc3759364fcd72851aba2df0300fab574b6151c
   languageName: node
   linkType: hard
 
