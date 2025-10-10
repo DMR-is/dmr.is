@@ -18,7 +18,6 @@ import { AdvertVersionEnum } from '../advert/advert.model'
 import {
   GetPublicationsDto,
   GetPublicationsQueryDto,
-  GetRelatedPublicationsDto,
   UpdateAdvertPublicationDto,
 } from './dto/advert-publication.dto'
 import { AdvertPublicationDetailedDto } from './dto/advert-publication-detailed.dto'

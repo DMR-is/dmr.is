@@ -1,19 +1,5 @@
-import { getServerSession } from 'next-auth'
-
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Stack,
-} from '@dmr.is/ui/components/island-is'
-
-import { AdvertForm } from '../../../../components/client-components/Form/AdvertForm'
-import { Form } from '../../../../components/client-components/Form/Form'
-import { AdvertSidebar } from '../../../../components/client-components/Form/FormSidebar'
-import { AdvertProvider } from '../../../../context/advert-context'
-import { getLegalGazetteClient } from '../../../../lib/api/createClient'
-import { authOptions } from '../../../../lib/auth/authOptions'
+import { AdvertContainer } from '../../../../containers/advert/AdvertContainer'
+import { getTrpcServer } from '../../../../lib/trpc/server/server'
 
 type Props = {
   params: {
@@ -22,49 +8,15 @@ type Props = {
 }
 
 export default async function AdvertDetails({ params }: Props) {
-  const session = await getServerSession(authOptions)
+  const { id } = params
+  const { trpc, HydrateClient } = await getTrpcServer()
 
-  if (!session?.idToken) {
-    return <div>Not signed in</div>
-  }
-
-  const advertClient = getLegalGazetteClient('AdvertApi', session.idToken)
-  const typesClient = getLegalGazetteClient('TypeApi', session.idToken)
-  const categoriesClient = getLegalGazetteClient('CategoryApi', session.idToken)
-  const courtDistrictClient = getLegalGazetteClient(
-    'CourtDistrictApi',
-    session.idToken,
-  )
-  const advert = await advertClient.getAdvertById({ id: params.id })
-  const { types } = await typesClient.getTypes()
-  const { categories } = await categoriesClient.getCategories({
-    type: advert.type.id,
-  })
-  const { courtDistricts } = await courtDistrictClient.getCourtDistricts()
+  void trpc.adverts.getAdvert.prefetch({ id: params.id })
+  void trpc.baseEntity.getAllEntities.prefetch()
 
   return (
-    <AdvertProvider
-      advert={advert}
-      categories={categories}
-      types={types}
-      courtDistricts={courtDistricts}
-    >
-      <Box padding={6} background="purple100">
-        <GridContainer>
-          <GridRow>
-            <GridColumn span={['12/12', '12/12', '9/12', '9/12']}>
-              <Form>
-                <Stack space={4}>
-                  <AdvertForm />
-                </Stack>
-              </Form>
-            </GridColumn>
-            <GridColumn span={['12/12', '12/12', '3/12', '3/12']}>
-              <AdvertSidebar />
-            </GridColumn>
-          </GridRow>
-        </GridContainer>
-      </Box>
-    </AdvertProvider>
+    <HydrateClient>
+      <AdvertContainer id={id} />
+    </HydrateClient>
   )
 }

@@ -1,8 +1,6 @@
 'use client'
-import { useRouter } from 'next/navigation'
 
-import useSWR from 'swr'
-import useSWRMutation from 'swr/mutation'
+import { useMemo } from 'react'
 
 import {
   Box,
@@ -13,97 +11,43 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { LinkV2, toast } from '@island.is/island-ui/core'
+import { LinkV2 } from '@island.is/island-ui/core'
 
-import { StatusEnum } from '../../../gen/fetch'
-import { useAdvertContext } from '../../../hooks/useAdvertContext'
-import { useClient } from '../../../hooks/useClient'
+import { AdvertDetailedDto, StatusEnum, StatusIdEnum } from '../../../gen/fetch'
+import { useUpdateAdvert } from '../../../hooks/useUpdateAdvert'
 import { Route } from '../../../lib/constants'
+import { trpc } from '../../../lib/trpc/client'
 import { AdvertFormStepper } from './AdvertFormStepper'
 import * as styles from './Form.css'
 
-export const AdvertSidebar = () => {
-  const { advert } = useAdvertContext()
-  const router = useRouter() // TODO: maybe update the context instead of refreshing the whole page
+type AdvertSidebarProps = {
+  advert: AdvertDetailedDto
+}
 
-  const userClient = useClient('UsersApi')
-  const updateClient = useClient('AdvertUpdateApi')
+export const AdvertSidebar = ({ advert }: AdvertSidebarProps) => {
+  const { assignUser, changeAdvertStatus, isChangingAdvertStatus } =
+    useUpdateAdvert(advert.id as string)
+  const { data: usersData, isLoading: isLoadingEmployees } =
+    trpc.users.getEmployees.useQuery()
 
-  const { data: usersData, isLoading: isLoadingEmployees } = useSWR(
-    'getEmployees',
-    () => userClient.getEmployees(),
-    {
-      revalidateOnFocus: false,
-      refreshInterval: 0,
-    },
+  const employeeOptions = useMemo(
+    () =>
+      usersData
+        ? usersData.users?.map((user) => ({
+            label: user.name,
+            value: user.id,
+          }))
+        : [],
+    [usersData],
   )
-
-  const employeeOptions = usersData
-    ? usersData.users?.map((user) => ({
-        label: user.name,
-        value: user.id,
-      }))
-    : []
 
   const defaultEmployee = usersData?.users?.find(
     (user) => user.id === advert.assignedUser,
   )
-
-  const isSubmitted = advert.status.title === StatusEnum.Innsent
-  const isReadyForPublication =
-    advert.status.title === StatusEnum.TilbúiðTilÚtgáfu
-
-  const { trigger: markAdvertAsReadyTrigger } = useSWRMutation(
-    'markAdvertAsReadyForPublication',
-    (_key, { arg }: { arg: { id: string } }) =>
-      updateClient.markAdvertAsReady({ id: arg.id }),
-    {
-      onSuccess: () => {
-        toast.success('Auglýsing færð í stöðuna tilbúið til útgáfu', {
-          toastId: 'markAdvertAsReady',
-        })
-
-        router.refresh()
-      },
-      onError: () => {
-        toast.error(
-          'Ekki tókst að færa auglýsingu í stöðuna tilbúið til útgáfu',
-          {
-            toastId: 'markAdvertAsReadyError',
-          },
-        )
-      },
-    },
-  )
-
-  const { trigger: markAdvertAsSubmittedTrigger } = useSWRMutation(
-    'markAdvertAsSubmitted',
-    (_key, { arg }: { arg: { id: string } }) =>
-      updateClient.markAdvertAsSubmitted({ id: arg.id }),
-    {
-      onSuccess: () => {
-        toast.success('Auglýsing færð í stöðuna innsent', {
-          toastId: 'markAdvertAsSubmitted',
-        })
-
-        router.refresh()
-      },
-      onError: () => {
-        toast.error('Ekki tókst að færa auglýsingu í stöðuna innsent', {
-          toastId: 'markAdvertAsSubmittedError',
-        })
-      },
-    },
-  )
-
-  const { trigger: assignUserTrigger } = useSWRMutation(
-    'assignUserToAdvert',
-    (_key, { arg }: { arg: { advertId: string; userId: string } }) =>
-      updateClient.assignAdvertToEmployee({
-        id: arg.advertId,
-        userId: arg.userId,
-      }),
-  )
+  const isSubmitted = advert?.status.title === StatusEnum.Innsent
+  const shouldShowButton =
+    advert?.status.title === StatusEnum.TilbúiðTilÚtgáfu ||
+    advert?.status.title === StatusEnum.Innsent
 
   return (
     <Box className={styles.advertSideBarStyle}>
@@ -124,7 +68,7 @@ export const AdvertSidebar = () => {
           key={`select-employee-${defaultEmployee?.id}`}
           label="Starfsmaður"
           options={employeeOptions}
-          defaultValue={
+          value={
             defaultEmployee
               ? { label: defaultEmployee.name, value: defaultEmployee.id }
               : undefined
@@ -132,22 +76,7 @@ export const AdvertSidebar = () => {
           size="sm"
           onChange={(option) => {
             if (!option) return
-
-            assignUserTrigger(
-              { advertId: advert.id, userId: option.value },
-              {
-                onSuccess: () => {
-                  toast.success('Starfsmaður úthlutaður', {
-                    toastId: 'assignUserToAdvert',
-                  })
-                },
-                onError: () => {
-                  toast.error('Ekki tókst að úthluta starfsmanni', {
-                    toastId: 'assignUserToAdvertError',
-                  })
-                },
-              },
-            )
+            assignUser(option.value)
           }}
         />
         <Box background="white">
@@ -159,32 +88,28 @@ export const AdvertSidebar = () => {
             label="Staða auglýsingar"
           />
         </Box>
-        {isSubmitted && (
+
+        {shouldShowButton && (
           <Button
             size="small"
             fluid
-            icon="arrowForward"
+            icon={isSubmitted ? 'arrowForward' : 'arrowBack'}
             iconType="outline"
-            onClick={() => markAdvertAsReadyTrigger({ id: advert.id })}
+            disabled={isChangingAdvertStatus}
+            onClick={() =>
+              changeAdvertStatus(
+                isSubmitted
+                  ? StatusIdEnum.READY_FOR_PUBLICATION
+                  : StatusIdEnum.SUBMITTED,
+              )
+            }
           >
             <Text color="white" variant="small" fontWeight="semiBold">
-              Færa í tilbúið til útgáfu
+              {isSubmitted ? 'Færa í tilbúið til útgáfu' : 'Færa í innsent'}
             </Text>
           </Button>
         )}
-        {isReadyForPublication && (
-          <Button
-            size="small"
-            fluid
-            preTextIcon="arrowBack"
-            preTextIconType="outline"
-            onClick={() => markAdvertAsSubmittedTrigger({ id: advert.id })}
-          >
-            <Text color="white" variant="small" fontWeight="semiBold">
-              Færa í innsent
-            </Text>
-          </Button>
-        )}
+
         <AdvertFormStepper />
       </Stack>
     </Box>

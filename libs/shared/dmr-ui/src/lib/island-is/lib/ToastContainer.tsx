@@ -3,7 +3,10 @@
 
 import React from 'react'
 
-import { ToastContainer as IslandToastContainer } from '@island.is/island-ui/core'
+import {
+  toast as islandisToast,
+  ToastContainer as IslandToastContainer,
+} from '@island.is/island-ui/core'
 
 export const ToastContainer = (
   props: React.ComponentProps<typeof IslandToastContainer>,
@@ -23,3 +26,5 @@ export const ToastContainer = (
 
   return <IslandToastContainer {...props} />
 }
+
+export const toast = islandisToast

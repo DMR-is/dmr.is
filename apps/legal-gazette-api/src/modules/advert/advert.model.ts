@@ -19,6 +19,7 @@ import {
 
 import { getLogger } from '@dmr.is/logging'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
+import { cleanLegacyHtml } from '@dmr.is/utils'
 
 import { LegalGazetteModels } from '../../lib/constants'
 import { getAdvertHTMLMarkup } from '../../lib/templates'
@@ -425,7 +426,9 @@ export class AdvertModel extends BaseModel<
   }
 
   htmlMarkup(version: AdvertVersionEnum): string {
-    if (this.legacyHtml) return this.legacyHtml
+    if (this.legacyHtml) {
+      return cleanLegacyHtml(this.legacyHtml)
+    }
 
     try {
       return getAdvertHTMLMarkup(this, version)
@@ -519,7 +522,7 @@ export class AdvertModel extends BaseModel<
       caseId: model.caseId || undefined,
       publicationNumber: model.publicationNumber,
       signatureOnBehalfOf: model.signatureOnBehalfOf,
-      signatureDate: model.signatureDate.toISOString(),
+      signatureDate: model.signatureDate?.toISOString(),
       signatureLocation: model.signatureLocation,
       signatureName: model.signatureName,
       caption: model.caption,
@@ -529,10 +532,10 @@ export class AdvertModel extends BaseModel<
         ? model.courtDistrict.fromModel()
         : undefined,
       judgementDate: model.judgementDate
-        ? model.judgementDate.toISOString()
+        ? model.judgementDate?.toISOString()
         : undefined,
       divisionMeetingDate: model.divisionMeetingDate
-        ? model.divisionMeetingDate.toISOString()
+        ? model.divisionMeetingDate?.toISOString()
         : undefined,
       divisionMeetingLocation: model.divisionMeetingLocation ?? undefined,
       settlement: model.settlement?.fromModel(),
@@ -540,7 +543,7 @@ export class AdvertModel extends BaseModel<
         c.fromModel(),
       ),
       paidAt: model.transaction?.paidAt
-        ? model.transaction.paidAt.toISOString()
+        ? model.transaction.paidAt?.toISOString()
         : undefined,
       comments: model.comments?.map((c) => c.fromModel()) || [],
     }

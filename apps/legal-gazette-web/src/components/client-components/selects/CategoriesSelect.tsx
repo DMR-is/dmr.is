@@ -5,7 +5,7 @@ import { Select } from '@dmr.is/ui/components/island-is'
 import { CategoryDto } from '../../../gen/fetch'
 
 type Props = {
-  onSelect?: (id?: string) => void
+  onSelect?: (id: string) => void
   isLoading?: boolean
   selectedId?: string
   categories: CategoryDto[]
@@ -25,6 +25,12 @@ export const CategorySelect = ({
     value: category.id,
   }))
 
+  const handleChange = (opt: { label: string; value: string } | null) => {
+    if (opt?.value) {
+      onSelect?.(opt.value)
+    }
+  }
+
   return (
     <Select
       key={selectedId}
@@ -34,12 +40,14 @@ export const CategorySelect = ({
       backgroundColor="blue"
       label="Flokkur auglýsingar"
       placeholder="Veldu flokk"
-      defaultValue={
-        selected ? { label: selected.title, value: selected.id } : null
+      value={
+        categories.length > 0 && selected
+          ? { label: selected.title, value: selected.id }
+          : null
       }
       options={options}
       isClearable={isClearable}
-      onChange={(opt) => onSelect?.(opt?.value)}
+      onChange={handleChange}
     />
   )
 }

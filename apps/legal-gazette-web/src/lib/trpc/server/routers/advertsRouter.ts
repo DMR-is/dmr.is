@@ -14,10 +14,37 @@ const getAdvertsRequestSchema = z.object({
   toDate: z.string().optional(),
 })
 
+const updateAdvertDtoSchema = z.object({
+  id: z.string(),
+  scheduledAt: z.string().optional(),
+  title: z.string().optional(),
+  content: z.string().optional(),
+  categoryId: z.string().optional(),
+  typeId: z.string().optional(),
+  additionalText: z.string().optional(),
+  caption: z.string().optional(),
+  signatureName: z.string().optional(),
+  signatureLocation: z.string().optional(),
+  signatureOnBehalfOf: z.string().optional(),
+  signatureDate: z.string().optional(),
+  divisionMeetingLocation: z.string().optional(),
+  divisionMeetingDate: z.string().optional(),
+  judgementDate: z.string().optional(),
+  courtDistrictId: z.string().optional(),
+})
+
 export const advertsRouter = router({
+  getAdvert: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return await ctx.advertsApi.getAdvertById({ id: input.id })
+    }),
+  getAdvertsCount: protectedProcedure.query(async ({ ctx }) => {
+    return await ctx.advertsApi.getAdvertsCount()
+  }),
   getSubmittedAdverts: protectedProcedure.input(getAdvertsRequestSchema).query(
     async ({ ctx, input }) =>
-      await ctx.advertApi.getAdverts({
+      await ctx.advertsApi.getAdverts({
         ...input,
         statusId: [StatusIdEnum.SUBMITTED],
       }),
@@ -26,12 +53,38 @@ export const advertsRouter = router({
     .input(getAdvertsRequestSchema)
     .query(
       async ({ ctx, input }) =>
-        await ctx.advertApi.getAdverts({
+        await ctx.advertsApi.getAdverts({
           ...input,
           statusId: [StatusIdEnum.READY_FOR_PUBLICATION],
         }),
     ),
   getCompletedAdverts: protectedProcedure
     .input(getAdvertsRequestSchema)
-    .query(async ({ ctx, input }) => await ctx.advertApi.getAdverts(input)),
+    .query(async ({ ctx, input }) => await ctx.advertsApi.getAdverts(input)),
+  updateAdvert: protectedProcedure
+    .input(updateAdvertDtoSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...rest } = input
+      return await ctx.adverts.updateApi.updateAdvert({
+        id: id,
+        updateAdvertDto: rest,
+      })
+    }),
+  assignUser: protectedProcedure
+    .input(z.object({ id: z.string(), userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.adverts.updateApi.assignAdvertToEmployee({
+        id: input.id,
+        userId: input.userId,
+      })
+    }),
+  changeAdvertStatus: protectedProcedure
+    .input(z.object({ id: z.string(), statusId: z.enum(StatusIdEnum) }))
+    .mutation(async ({ ctx, input }) => {
+      if (input.statusId === StatusIdEnum.READY_FOR_PUBLICATION) {
+        return await ctx.adverts.updateApi.markAdvertAsReady({ id: input.id })
+      } else if (input.statusId === StatusIdEnum.SUBMITTED) {
+        return await ctx.adverts.updateApi.markAdvertAsSubmitted({ id: input.id })
+      }
+    }),
 })
