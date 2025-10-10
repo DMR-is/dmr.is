@@ -21,7 +21,6 @@ export const createRedisCacheOptions = (namespace: StoreKeyMapper) => {
     return CacheModule.register({ ttl: 0, max: 0 })
   }
 
-  console.log('urlFromEnv', urlFromEnv)
   if (!urlFromEnv) {
     logger.warn(
       'ENABLE_REDIS=true but no REDIS_URL provided; falling back to in-memory',

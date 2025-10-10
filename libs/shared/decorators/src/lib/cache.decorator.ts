@@ -123,7 +123,6 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
 
     const originalMethod = descriptor.value
 
-    logger.debug('Applying @Cacheable')
     descriptor.value = async function (...args: unknown[]) {
       if (!('cacheManager' in this)) {
         throw new Error('cacheManager instance is required')
@@ -139,11 +138,6 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
         // schedule background refresh if near expiry
         const remaining = envelope.exp - now
 
-        logger.debug('CACHE HIT', {
-          method: propertyKey,
-          key,
-          remaining,
-        })
         if (remaining < REFRESH_THRESHOLD) {
           setTimeout(async () => {
             try {
@@ -152,12 +146,6 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
               const exp = Date.now() + ttlMs
               const newEnvelope: CachedEnvelope = { data, exp }
 
-              logger.debug('CACHE SET', {
-                method: propertyKey,
-                key,
-                exp,
-                ttlMs,
-              })
               await cache.set(key, newEnvelope, ttlMs)
 
               // maintain tag index (if any)
@@ -174,8 +162,6 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
             }
           }, 0)
         }
-
-        logger.debug('CACHE HIT', { method: propertyKey, key, remaining })
 
         return ResultWrapper.ok(envelope.data)
       }
