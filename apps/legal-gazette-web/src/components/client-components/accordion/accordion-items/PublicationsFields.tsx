@@ -1,0 +1,219 @@
+'use client'
+
+import format from 'date-fns/format'
+import is from 'date-fns/locale/is'
+import { useEffect, useState } from 'react'
+
+import {
+  Button,
+  DatePicker,
+  GridColumn,
+  GridRow,
+  Input,
+  Stack,
+  Text,
+} from '@dmr.is/ui/components/island-is'
+
+import { DropdownMenu, Inline, toast } from '@island.is/island-ui/core'
+
+import {
+  AdvertPublicationDto,
+  GetAdvertPublicationVersionEnum,
+  StatusEnum,
+} from '../../../../gen/fetch'
+import { useUpdatePublications } from '../../../../hooks/useUpdatePublications'
+import { trpc } from '../../../../lib/trpc/client'
+import { AdvertModal } from '../../modals/AdvertPublicationModal'
+
+type PublicationsFieldsProps = {
+  id: string
+  publications: AdvertPublicationDto[]
+  advertStatus: StatusEnum
+}
+
+export const PublicationsFields = ({
+  id,
+  publications,
+  advertStatus,
+}: PublicationsFieldsProps) => {
+  const {
+    createPublication,
+    updatePublication,
+    deletePublication,
+    publishPublication,
+  } = useUpdatePublications(id)
+
+  console.log('publications', publications)
+
+  const [html, setHTML] = useState<string>('')
+  const [modalVisible, setModalVisible] = useState(false)
+
+  const {
+    refetch: fetchPublicationHTML,
+    data: publicationData,
+    error: publicationError,
+    isLoading: isLoadingPublicationData,
+  } = trpc.publications.getPublication.useQuery(
+    {
+      advertId: id,
+      version: GetAdvertPublicationVersionEnum.A,
+    },
+    {
+      enabled: false,
+    },
+  )
+
+  useEffect(() => {
+    if (publicationData && !isLoadingPublicationData) {
+      setHTML(publicationData.html)
+      setModalVisible(true)
+    }
+  }, [publicationData, isLoadingPublicationData])
+
+  useEffect(() => {
+    if (publicationError && !isLoadingPublicationData) {
+      toast.error('Ekki tókst að sækja birtingu')
+    }
+  }, [publicationError, isLoadingPublicationData])
+
+  const handleCreatePublication = () => {
+    createPublication()
+  }
+
+  const handleDeletePublication = (publicationId: string) => {
+    deletePublication(publicationId)
+  }
+
+  const handlePublishPublication = (pub: AdvertPublicationDto) => {
+    if (
+      advertStatus !== StatusEnum.TilbúiðTilÚtgáfu &&
+      advertStatus !== StatusEnum.ÚTgefið
+    ) {
+      toast.warning('Auglýsing ekki tilbúin til útgáfu')
+      return
+    }
+
+    if (pub.publishedAt) {
+      toast.warning('Birting þegar gefin út')
+      return
+    }
+
+    publishPublication(pub.id)
+  }
+
+  // const handlePreviewPublication = async (pub: AdvertPublicationDto) => {
+  //   await fetchPublicationHTML({
+  //     advertId: id,
+  //     version:
+  //       GetAdvertPublicationVersionEnum[
+  //         pub.version as keyof typeof GetAdvertPublicationVersionEnum
+  //       ],
+  //   })
+  // }
+
+  return (
+    <>
+      <Stack space={[1, 2]}>
+        <GridRow>
+          <GridColumn span={['12/12', '6/12']}>
+            <Text variant="h4">Áætlaður útgáfudagur</Text>
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12']}>
+            <Text variant="h4">Útgáfudagur</Text>
+          </GridColumn>
+        </GridRow>
+
+        {publications.map((pub) => (
+          <GridRow key={pub.id}>
+            <GridColumn span={['12/12', '6/12']}>
+              <DatePicker
+                backgroundColor="blue"
+                name="scheduledAt"
+                label={`Birting ${pub.version}`}
+                placeholderText=""
+                selected={new Date(pub.scheduledAt)}
+                size="sm"
+                locale="is"
+                minDate={new Date()}
+                // disabled={isUpdatingAdvert}
+                handleChange={(date) => {
+                  if (date) {
+                    updatePublication(pub.id, date.toISOString())
+                  }
+                }}
+              />
+            </GridColumn>
+
+            <GridColumn span={['12/12', '6/12']}>
+              <Inline space={[1, 2]} flexWrap="nowrap" alignY="center">
+                <Input
+                  backgroundColor="blue"
+                  name="publishedAt"
+                  readOnly
+                  label="Útgáfudagur"
+                  value={
+                    pub.publishedAt
+                      ? format(new Date(pub.publishedAt), 'dd. MMMM. yyyy', {
+                          locale: is,
+                        })
+                      : ''
+                  }
+                  size="sm"
+                  buttons={[
+                    {
+                      name: 'eye',
+                      label: 'Skoða',
+                      type: 'outline',
+                      // onClick: () => handlePreviewPublication(pub),
+                    },
+                  ]}
+                />
+                <DropdownMenu
+                  icon="settings"
+                  iconType="outline"
+                  // loading={isUpdatingAdvert}
+                  items={[
+                    {
+                      title: 'Gefa út birtingu',
+                      onClick: () => handlePublishPublication(pub),
+                    },
+                    {
+                      title: 'Fjarlægja birtingu',
+                      onClick: () => handleDeletePublication(pub.id),
+                    },
+                  ]}
+                />
+              </Inline>
+            </GridColumn>
+          </GridRow>
+        ))}
+
+        <GridRow>
+          <GridColumn span="12/12">
+            <Inline align="right" alignY="center">
+              <Button
+                disabled={publications.length >= 3}
+                icon="add"
+                iconType="outline"
+                // loading={isUpdatingAdvert}
+                onClick={handleCreatePublication}
+              >
+                Bæta við birtingu
+              </Button>
+            </Inline>
+          </GridColumn>
+        </GridRow>
+      </Stack>
+
+      <AdvertModal
+        html={html}
+        isVisible={modalVisible}
+        onVisibilityChange={(vis) => {
+          setModalVisible(vis)
+          setHTML('')
+        }}
+        id="advert-publication-modal"
+      />
+    </>
+  )
+}

@@ -11,6 +11,7 @@ import { CategorySelect } from '../../selects/CategoriesSelect'
 import { TypeSelect } from '../../selects/TypeSelect'
 
 type Props = {
+  id: string
   types: TypeDto[]
   categories: CategoryDto[]
   typeId: string
@@ -21,6 +22,7 @@ type Props = {
 }
 
 export const AdvertBaseFields = ({
+  id,
   types,
   categories,
   typeId,
@@ -28,8 +30,6 @@ export const AdvertBaseFields = ({
   title,
   additionalText,
 }: Props) => {
-  const id = useParams().id as string
-
   const { updateType, updateCategory, updateTitle, updateAdditionalText } =
     useUpdateAdvert(id)
 
@@ -60,12 +60,7 @@ export const AdvertBaseFields = ({
             backgroundColor="blue"
             label="Titill"
             defaultValue={title}
-            onBlur={(evt) => {
-              if (evt.target.value === title) {
-                return
-              }
-              updateTitle(evt.target.value)
-            }}
+            onBlur={(evt) => updateTitle(evt.target.value)}
           />
         </GridColumn>
       </GridRow>
@@ -78,12 +73,9 @@ export const AdvertBaseFields = ({
             label="Frjáls texti"
             textarea
             defaultValue={additionalText}
-            onBlur={(evt) => {
-              if (evt.target.value === additionalText) {
-                return
-              }
+            onBlur={(evt) =>
               updateAdditionalText({ additionalText: evt.target.value })
-            }}
+            }
           />
         </GridColumn>
       </GridRow>

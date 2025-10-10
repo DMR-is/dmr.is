@@ -1,7 +1,5 @@
 'use client'
 
-import { useParams } from 'next/navigation'
-
 import { useMemo } from 'react'
 
 import {
@@ -15,18 +13,20 @@ import {
 
 import { LinkV2 } from '@island.is/island-ui/core'
 
-import { StatusEnum, StatusIdEnum } from '../../../gen/fetch'
+import { AdvertDetailedDto, StatusEnum, StatusIdEnum } from '../../../gen/fetch'
 import { useUpdateAdvert } from '../../../hooks/useUpdateAdvert'
 import { Route } from '../../../lib/constants'
 import { trpc } from '../../../lib/trpc/client'
 import { AdvertFormStepper } from './AdvertFormStepper'
 import * as styles from './Form.css'
 
-export const AdvertSidebar = () => {
-  const { id } = useParams()
+type AdvertSidebarProps = {
+  advert: AdvertDetailedDto
+}
+
+export const AdvertSidebar = ({ advert }: AdvertSidebarProps) => {
   const { assignUser, changeAdvertStatus, isChangingAdvertStatus } =
-    useUpdateAdvert(id as string)
-  const [advert] = trpc.adverts.getAdvert.useSuspenseQuery({ id: id as string })
+    useUpdateAdvert(advert.id as string)
   const { data: usersData, isLoading: isLoadingEmployees } =
     trpc.users.getEmployees.useQuery()
 
@@ -44,7 +44,6 @@ export const AdvertSidebar = () => {
   const defaultEmployee = usersData?.users?.find(
     (user) => user.id === advert.assignedUser,
   )
-
   const isSubmitted = advert?.status.title === StatusEnum.Innsent
   const shouldShowButton =
     advert?.status.title === StatusEnum.TilbúiðTilÚtgáfu ||

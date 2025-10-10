@@ -1,5 +1,10 @@
 import { AdvertSidebar } from '../../components/client-components/Form/FormSidebar'
+import { AdvertDetailedDto } from '../../gen/fetch'
 
-export async function AdvertSidebarContainer() {
-  return <AdvertSidebar />
+type AdvertContainerProps = {
+  advert: AdvertDetailedDto
+}
+
+export async function AdvertSidebarContainer({ advert }: AdvertContainerProps) {
+  return <AdvertSidebar advert={advert} />
 }

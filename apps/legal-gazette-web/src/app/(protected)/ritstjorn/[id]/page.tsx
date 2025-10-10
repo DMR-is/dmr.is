@@ -8,14 +8,19 @@ type Props = {
 }
 
 export default async function AdvertDetails({ params }: Props) {
+  const { id } = params
   const { trpc, HydrateClient } = await getTrpcServer()
 
-  void trpc.adverts.getAdvert.prefetch({ id: params.id })
+  // void trpc.adverts.getAdvert.prefetch({ id: params.id })
   void trpc.baseEntity.getAllEntities.prefetch()
+
+  const advert = await trpc.adverts.getAdvert({ id })
+
+  // id
 
   return (
     <HydrateClient>
-      <AdvertContainer />
+      <AdvertContainer advert={advert} />
     </HydrateClient>
   )
 }

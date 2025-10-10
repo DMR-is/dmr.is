@@ -17,6 +17,9 @@ export const createTRPCContext = cache(async () => {
       statusApi: await getServerClient('StatusApi'),
       courtDistrictApi: await getServerClient('CourtDistrictApi'),
     },
+    publications: {
+      publicationsApi: await getServerClient('AdvertPublicationApi'),
+    },
     usersApi: await getServerClient('UsersApi'),
   }
 })
@@ -34,11 +37,11 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
     }
   },
 })
+
 export const createCallerFactory = t.createCallerFactory
 export const router = t.router
 export const mergeRouters = t.mergeRouters
 
-// Public procedures should always have client available
 export const publicProcedure = t.procedure.use(({ ctx, next }) => {
   return next({
     ctx: {
@@ -47,7 +50,6 @@ export const publicProcedure = t.procedure.use(({ ctx, next }) => {
   })
 })
 
-// Protected procedures should always have session available
 export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
   if (!ctx.adverts.baseApi) {
     throw new TRPCError({ code: 'UNAUTHORIZED' })
@@ -66,7 +68,10 @@ export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
     throw new TRPCError({ code: 'UNAUTHORIZED' })
   }
 
-  // Type assertion is safe here because we know that the user is set
+  if (!ctx.publications.publicationsApi) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' })
+  }
+
   return next({
     ctx: {
       ...ctx,
@@ -78,6 +83,7 @@ export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
         statusApi: ctx.baseEntity.statusApi,
         courtDistrictApi: ctx.baseEntity.courtDistrictApi,
       },
+      publicationsApi: ctx.publications.publicationsApi,
     },
   })
 })

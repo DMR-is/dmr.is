@@ -5,19 +5,24 @@ import {
   GridRow,
 } from '@dmr.is/ui/components/island-is'
 
+import { AdvertDetailedDto } from '../../gen/fetch'
 import { AdvertFormContainer } from './AdvertFormContainer'
 import { AdvertSidebarContainer } from './AdvertSidebarContainer'
 
-export async function AdvertContainer() {
+type AdvertContainerProps = {
+  advert: AdvertDetailedDto
+}
+
+export async function AdvertContainer({ advert }: AdvertContainerProps) {
   return (
     <Box paddingY={[4, 5, 6]} background="purple100">
       <GridContainer>
         <GridRow>
           <GridColumn span={['12/12', '12/12', '9/12', '9/12']}>
-            <AdvertFormContainer />
+            <AdvertFormContainer advert={advert} />
           </GridColumn>
           <GridColumn span={['12/12', '12/12', '3/12', '3/12']}>
-            <AdvertSidebarContainer />
+            <AdvertSidebarContainer advert={advert} />
           </GridColumn>
         </GridRow>
       </GridContainer>

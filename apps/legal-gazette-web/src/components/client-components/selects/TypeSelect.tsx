@@ -5,7 +5,7 @@ import { Select } from '@dmr.is/ui/components/island-is'
 import { TypeDto } from '../../../gen/fetch'
 
 type Props = {
-  onSelect?: (id?: string) => void
+  onSelect?: (id: string) => void
   selectedId?: string
   types: TypeDto[]
 }

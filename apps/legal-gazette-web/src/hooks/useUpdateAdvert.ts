@@ -150,7 +150,6 @@ export const useUpdateAdvert = (id: string) => {
             await utils.adverts.getAdvert.invalidate({ id })
           },
           onError: (_error, _variables, mutateResults) => {
-            console.log('mutateResults', _error)
             utils.adverts.getAdvert.setData({ id }, mutateResults)
             toast.error(errorMessage)
           },
@@ -185,6 +184,7 @@ export const useUpdateAdvert = (id: string) => {
       if (title === advert.title) {
         return
       }
+
       updateAdvert(
         { title },
         {
@@ -201,6 +201,7 @@ export const useUpdateAdvert = (id: string) => {
       if (caption === advert.caption) {
         return
       }
+
       return updateAdvert(
         { caption },
         {
@@ -217,6 +218,7 @@ export const useUpdateAdvert = (id: string) => {
       if (content === advert.content) {
         return
       }
+
       return updateAdvert(
         { content },
         {
@@ -265,6 +267,7 @@ export const useUpdateAdvert = (id: string) => {
       if (categoryId === advert.category.id) {
         return
       }
+
       return updateAdvert(
         { categoryId },
         {
@@ -276,16 +279,162 @@ export const useUpdateAdvert = (id: string) => {
     [updateAdvert, advert.category.id],
   )
 
+  const updateSignatureName = useCallback(
+    (signatureName?: string) => {
+      if (signatureName === advert.signatureName) {
+        return
+      }
+
+      return updateAdvert(
+        { signatureName },
+        {
+          successMessage: 'Nafn undirritara uppfært',
+          errorMessage: 'Villa við að uppfæra nafn undirritara',
+        },
+      )
+    },
+    [updateAdvert, advert.category.id],
+  )
+
+  const updateSignatureOnBehalfOf = useCallback(
+    (signatureOnBehalfOf: string) =>
+      updateAdvert(
+        { signatureOnBehalfOf },
+        {
+          successMessage: 'Fyrir hönd uppfært',
+          errorMessage: 'Villa við að uppfæra fyrir hönd',
+        },
+      ),
+    [updateAdvert],
+  )
+
+  const updateSignatureLocation = useCallback(
+    (signatureLocation: string) =>
+      updateAdvert(
+        { signatureLocation },
+        {
+          successMessage: 'Staður undirritunar uppfærður',
+          errorMessage: 'Villa við að uppfæra stað undirritunar',
+        },
+      ),
+    [updateAdvert],
+  )
+
+  const updateSignatureDate = useCallback(
+    (signatureDate: string) =>
+      updateAdvert(
+        { signatureDate },
+        {
+          successMessage: 'Dagsetning undirritunar uppfærð',
+          errorMessage: 'Villa við að uppfæra dagsetningu undirritunar',
+        },
+      ),
+    [updateAdvert],
+  )
+
+  // Publications mutations - nota sama loading state
+  const { mutate: createPublicationMutation } =
+    trpc.publications.createPublication.useMutation({
+      onSuccess: () => {
+        toast.success('Birting bætt við')
+        utils.adverts.getAdvert.invalidate({ id })
+      },
+      onError: () => {
+        toast.error('Ekki tókst að bæta við birtingu')
+      },
+    })
+
+  const { mutate: updatePublicationMutation } =
+    trpc.publications.updatePublication.useMutation({
+      onSuccess: () => {
+        toast.success('Birting uppfærð')
+        utils.adverts.getAdvert.invalidate({ id })
+      },
+      onError: () => {
+        toast.error('Ekki tókst að uppfæra birtingu')
+      },
+    })
+
+  const { mutate: deletePublicationMutation } =
+    trpc.publications.deletePublication.useMutation({
+      onSuccess: () => {
+        toast.success('Birting fjarlægð')
+        utils.adverts.getAdvert.invalidate({ id })
+      },
+      onError: (e) => {
+        toast.error('Ekki tókst að fjarlægja birtingu')
+      },
+    })
+
+  const { mutate: publishPublicationMutation } =
+    trpc.publications.publishPublication.useMutation({
+      onSuccess: () => {
+        toast.success('Birting gefin út')
+        utils.adverts.getAdvert.invalidate({ id })
+      },
+      onError: () => {
+        toast.error('Ekki tókst að gefa út birtingu')
+      },
+    })
+
+  // Publication convenience methods
+  const createPublication = useCallback(() => {
+    return createPublicationMutation({ advertId: id })
+  }, [id, createPublicationMutation])
+
+  const updatePublication = useCallback(
+    (publicationId: string, scheduledAt: string) => {
+      return updatePublicationMutation({
+        advertId: id,
+        publicationId,
+        scheduledAt,
+      })
+    },
+    [id, updatePublicationMutation],
+  )
+
+  const deletePublication = useCallback(
+    (publicationId: string) => {
+      return deletePublicationMutation({
+        advertId: id,
+        publicationId,
+      })
+    },
+    [id, deletePublicationMutation],
+  )
+
+  const publishPublication = useCallback(
+    (publicationId: string) => {
+      return publishPublicationMutation({
+        advertId: id,
+        publicationId,
+      })
+    },
+    [id, publishPublicationMutation],
+  )
+
   return {
     isUpdatingAdvert,
     changeAdvertStatus,
     isChangingAdvertStatus,
     assignUser,
+
+    // Update fields
     updateTitle,
     updateCaption,
     updateContent,
     updateAdditionalText,
     updateType,
     updateCategory,
+    updateSignatureName,
+    updateSignatureOnBehalfOf,
+    updateSignatureLocation,
+    updateSignatureDate,
+
+    // Publication methods
+    createPublication,
+    updatePublication,
+    deletePublication,
+    publishPublication,
   }
 }
