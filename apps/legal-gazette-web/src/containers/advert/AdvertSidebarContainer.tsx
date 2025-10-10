@@ -5,6 +5,6 @@ type AdvertContainerProps = {
   advert: AdvertDetailedDto
 }
 
-export async function AdvertSidebarContainer({ advert }: AdvertContainerProps) {
+export function AdvertSidebarContainer({ advert }: AdvertContainerProps) {
   return <AdvertSidebar advert={advert} />
 }

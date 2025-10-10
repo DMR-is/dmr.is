@@ -9,7 +9,9 @@ import { ContentFields } from '../../components/client-components/accordion/acco
 import { PublicationsFields } from '../../components/client-components/accordion/accordion-items/PublicationsFields'
 import { SignatureFields } from '../../components/client-components/accordion/accordion-items/SignatureFields'
 import { AdvertFormAccordion } from '../../components/client-components/accordion/AdvertFormAccordion'
-import { AdvertDetailedDto } from '../../gen/fetch'
+import {
+  AdvertDetailedDto,
+} from '../../gen/fetch'
 import { trpc } from '../../lib/trpc/client'
 
 type AdvertContainerProps = {
@@ -18,12 +20,10 @@ type AdvertContainerProps = {
 
 export function AdvertFormContainer({ advert }: AdvertContainerProps) {
   const [{ types }] = trpc.baseEntity.getAllEntities.useSuspenseQuery()
+
   const { data: categoriesForTypes } = trpc.baseEntity.getCategories.useQuery({
     type: advert.type.id,
   })
-  // const [{ publications }] =
-  //   trpc.publications.
-
   const items = [
     {
       title: 'Upplýsingar um auglýsingu',
@@ -80,8 +80,8 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
       children: (
         <PublicationsFields
           id={advert.id}
-          publications={advert.publications ?? []}
-          advertStatus={advert.status}
+          publications={advert.publications}
+          advertStatus={advert.status.title}
         />
       ),
     },

@@ -519,7 +519,7 @@ export class AdvertModel extends BaseModel<
       caseId: model.caseId || undefined,
       publicationNumber: model.publicationNumber,
       signatureOnBehalfOf: model.signatureOnBehalfOf,
-      signatureDate: model.signatureDate.toISOString(),
+      signatureDate: model.signatureDate?.toISOString(),
       signatureLocation: model.signatureLocation,
       signatureName: model.signatureName,
       caption: model.caption,
@@ -529,10 +529,10 @@ export class AdvertModel extends BaseModel<
         ? model.courtDistrict.fromModel()
         : undefined,
       judgementDate: model.judgementDate
-        ? model.judgementDate.toISOString()
+        ? model.judgementDate?.toISOString()
         : undefined,
       divisionMeetingDate: model.divisionMeetingDate
-        ? model.divisionMeetingDate.toISOString()
+        ? model.divisionMeetingDate?.toISOString()
         : undefined,
       divisionMeetingLocation: model.divisionMeetingLocation ?? undefined,
       settlement: model.settlement?.fromModel(),
@@ -540,7 +540,7 @@ export class AdvertModel extends BaseModel<
         c.fromModel(),
       ),
       paidAt: model.transaction?.paidAt
-        ? model.transaction.paidAt.toISOString()
+        ? model.transaction.paidAt?.toISOString()
         : undefined,
       comments: model.comments?.map((c) => c.fromModel()) || [],
     }

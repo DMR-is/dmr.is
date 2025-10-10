@@ -43,33 +43,16 @@ export const PublicationsFields = ({
     publishPublication,
   } = useUpdatePublications(id)
 
-  console.log('publications', publications)
-
-  const [html, setHTML] = useState<string>('')
-  const [modalVisible, setModalVisible] = useState(false)
-
   const {
-    refetch: fetchPublicationHTML,
     data: publicationData,
     error: publicationError,
     isLoading: isLoadingPublicationData,
-  } = trpc.publications.getPublication.useQuery(
-    {
-      advertId: id,
-      version: GetAdvertPublicationVersionEnum.A,
-    },
-    {
-      enabled: false,
-    },
-  )
+  } = trpc.publications.getPublication.useQuery({
+    advertId: id,
+    version: GetAdvertPublicationVersionEnum.B,
+  })
 
-  useEffect(() => {
-    if (publicationData && !isLoadingPublicationData) {
-      setHTML(publicationData.html)
-      setModalVisible(true)
-    }
-  }, [publicationData, isLoadingPublicationData])
-
+  const [modalVisible, setModalVisible] = useState(false)
   useEffect(() => {
     if (publicationError && !isLoadingPublicationData) {
       toast.error('Ekki tókst að sækja birtingu')
@@ -100,6 +83,9 @@ export const PublicationsFields = ({
 
     publishPublication(pub.id)
   }
+
+  console.log('publicationData', publicationData)
+  console.log('modalVisible', modalVisible)
 
   // const handlePreviewPublication = async (pub: AdvertPublicationDto) => {
   //   await fetchPublicationHTML({
@@ -164,7 +150,9 @@ export const PublicationsFields = ({
                       name: 'eye',
                       label: 'Skoða',
                       type: 'outline',
-                      // onClick: () => handlePreviewPublication(pub),
+                      onClick: () => {
+                        setModalVisible(true)
+                      },
                     },
                   ]}
                 />
@@ -204,16 +192,16 @@ export const PublicationsFields = ({
           </GridColumn>
         </GridRow>
       </Stack>
-
-      <AdvertModal
-        html={html}
-        isVisible={modalVisible}
-        onVisibilityChange={(vis) => {
-          setModalVisible(vis)
-          setHTML('')
-        }}
-        id="advert-publication-modal"
-      />
+      {publicationData?.html && modalVisible && (
+        <AdvertModal
+          html={publicationData.html}
+          isVisible={modalVisible}
+          onVisibilityChange={(vis) => {
+            setModalVisible(vis)
+          }}
+          id="advert-publication-modal"
+        />
+      )}
     </>
   )
 }

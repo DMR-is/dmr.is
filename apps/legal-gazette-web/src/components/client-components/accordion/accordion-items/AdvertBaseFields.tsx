@@ -18,7 +18,6 @@ type Props = {
   categoryId: string
   title: string
   additionalText?: string
-  onUpdate: (data: UpdateAdvertDto) => void
 }
 
 export const AdvertBaseFields = ({

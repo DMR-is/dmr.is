@@ -14,13 +14,9 @@ export default async function AdvertDetails({ params }: Props) {
   // void trpc.adverts.getAdvert.prefetch({ id: params.id })
   void trpc.baseEntity.getAllEntities.prefetch()
 
-  const advert = await trpc.adverts.getAdvert({ id })
-
-  // id
-
   return (
     <HydrateClient>
-      <AdvertContainer advert={advert} />
+      <AdvertContainer id={id} />
     </HydrateClient>
   )
 }

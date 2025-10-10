@@ -361,7 +361,7 @@ export const useUpdateAdvert = (id: string) => {
         toast.success('Birting fjarlægð')
         utils.adverts.getAdvert.invalidate({ id })
       },
-      onError: (e) => {
+      onError: () => {
         toast.error('Ekki tókst að fjarlægja birtingu')
       },
     })

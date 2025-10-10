@@ -1,3 +1,4 @@
+'use client'
 import {
   Box,
   GridColumn,
@@ -5,15 +6,23 @@ import {
   GridRow,
 } from '@dmr.is/ui/components/island-is'
 
-import { AdvertDetailedDto } from '../../gen/fetch'
+import { trpc } from '../../lib/trpc/client'
 import { AdvertFormContainer } from './AdvertFormContainer'
 import { AdvertSidebarContainer } from './AdvertSidebarContainer'
 
 type AdvertContainerProps = {
-  advert: AdvertDetailedDto
+  id: string
 }
 
-export async function AdvertContainer({ advert }: AdvertContainerProps) {
+export function AdvertContainer({ id }: AdvertContainerProps) {
+  const {data: advert} = trpc.adverts.getAdvert.useQuery({
+    id: id,
+  })
+
+  if (!advert) {
+    return <div>Advert not found</div>
+  }
+
   return (
     <Box paddingY={[4, 5, 6]} background="purple100">
       <GridContainer>
