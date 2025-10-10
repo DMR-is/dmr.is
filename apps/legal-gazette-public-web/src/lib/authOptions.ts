@@ -97,7 +97,12 @@ export const authOptions: AuthOptions = {
       // If token is expired, try to refresh it
       // Returning new access, refresh and id tokens
       // On failure, return token.invalid = true
-      return refreshAccessToken(token)
+
+      const redirectUri =
+        process.env.LEGAL_GAZETTE_PUBLIC_WEB_IDENTITY_SERVER_LOGOUT_URL ??
+        process.env.IDENTITY_SERVER_LOGOUT_URL
+
+      return refreshAccessToken(token, redirectUri)
     },
 
     session: async ({ session, token }) => {

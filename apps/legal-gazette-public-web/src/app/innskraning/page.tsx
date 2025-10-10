@@ -45,7 +45,7 @@ export default function Login() {
                     e.preventDefault()
                     try {
                       setLoading(true)
-                      await signIn(identityServerId)
+                      await signIn(identityServerId, { callbackUrl: '/' })
                     } catch (error) {
                       setLoading(false)
                     }
