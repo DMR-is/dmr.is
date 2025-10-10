@@ -4,13 +4,37 @@ import {
   IsBoolean,
   IsDateString,
   IsDefined,
+  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
+  Max,
+  Min,
   ValidateNested,
 } from 'class-validator'
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
+
+export enum AnnouncementItem {
+  A = 'A',
+  B = 'B',
+  C = 'C',
+  D = 'D',
+  E = 'E',
+  F = 'F',
+  G = 'G',
+  H = 'H',
+  J = 'J',
+  K = 'K',
+  L = 'L',
+  M = 'M',
+  N = 'N',
+  O = 'O',
+  P = 'P',
+  R = 'R',
+  S = 'S',
+  T = 'T',
+}
 
 export class ResponsiblePartyDto {
   @ApiProperty({
@@ -288,6 +312,85 @@ export class RegisterCompanyHlutafelagDto {
   })
   @IsBoolean()
   liquidationObligation!: boolean
+}
+
+export class AdditionalAnnouncementsDto {
+  @ApiProperty({
+    type: String,
+    description: 'The national id of the company (Kennitala fyrirtækis)',
+    example: '1234567890',
+  })
+  @IsString()
+  companyNationalId!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'The name of the company (Heiti fyrirtækis)',
+    example: 'HXM ehf.',
+  })
+  @IsString()
+  companyName!: string
+
+  @ApiProperty({
+    type: String,
+    description: 'The location of the company (Staðsetning fyrirtækis)',
+    example: 'Reykjavík',
+  })
+  @IsString()
+  companyLocation!: string
+
+  @ApiProperty({
+    enum: [AnnouncementItem],
+    enumName: 'AnnouncementItem',
+    description: 'List of additional announcements to create (Tegundir)',
+    example: ['A', 'J'],
+  })
+  @IsArray()
+  @IsEnum(AnnouncementItem, { each: true })
+  announcementItems!: AnnouncementItem[]
+}
+
+export class CreateAdditionalAnnouncementsDto {
+  @ApiProperty({
+    type: ResponsiblePartyDto,
+    description: 'The party responsible for the additional announcements',
+  })
+  @IsDefined()
+  @Type(() => ResponsiblePartyDto)
+  @ValidateNested()
+  responsibleParty!: ResponsiblePartyDto
+
+  @ApiProperty({
+    type: Number,
+    description:
+      'The year of the additional announcements to create (1900 - 2100)',
+    example: 2024,
+  })
+  @IsNumber()
+  @Min(1900)
+  @Max(2100)
+  announcementYear!: number
+
+  @ApiProperty({
+    type: Number,
+    description: 'The month of the additional announcements to create (0 - 11)',
+    example: 6,
+  })
+  @IsNumber()
+  @Min(0)
+  @Max(11)
+  announcementMonth!: number
+
+  @ApiProperty({
+    type: [AdditionalAnnouncementsDto],
+    description:
+      'List of additional announcements to create (Fjöldi tilkynninga)',
+  })
+  @IsDefined()
+  @IsArray()
+  @Type(() => AdditionalAnnouncementsDto)
+  @ValidateNested({ each: true })
+  announcements!: AdditionalAnnouncementsDto[]
 }
 
 export class RegisterCompanyFirmaskraDto extends PickType(

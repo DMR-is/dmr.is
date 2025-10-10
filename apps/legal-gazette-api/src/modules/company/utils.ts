@@ -29,3 +29,58 @@ export const formatParty = ({
 }) => {
   return `${role ? `${role}: ` : ''}${name}${nationalId ? `, kt. ${nationalId}` : ''}${address ? `, ${address}` : ''}${jobTitle ? `, ${jobTitle}` : ''}`.trim()
 }
+
+export const formatCompanyAnnouncement = ({
+  name,
+  nationalId,
+  location,
+  items,
+  publicationNumber,
+  index,
+}: {
+  name: string
+  nationalId: string
+  location: string
+  items: string[]
+  publicationNumber?: string
+  index: number
+}) => {
+  const padded = index.toString().padStart(3, '0')
+  const publicationWithIndex = `${publicationNumber ? `${publicationNumber}-${padded}` : `(Reiknast við útgáfu)-${padded}`}`
+
+  return `
+    <table>
+      <tbody>
+        <tr>
+          <td>
+            <i>Heiti: </i>
+            ${name}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <i>Kennitala: </i>
+            ${nationalId}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <i>Staður: </i>
+            ${location}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <i>Tilkynningaratriði: </i>
+            ${items.join('')}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <i>${publicationWithIndex}</i>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  `
+}
