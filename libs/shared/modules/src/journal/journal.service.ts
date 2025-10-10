@@ -811,7 +811,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  @Cacheable()
+  @Cacheable({ tagBy: [0] })
   async getCategories(
     params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetCategoriesResponse>> {
@@ -1065,7 +1065,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  @Cacheable()
+  @Cacheable({ tagBy: [0] })
   async getAdverts(
     params?: GetAdvertsQueryParams,
   ): Promise<ResultWrapper<GetAdvertsResponse>> {
@@ -1275,7 +1275,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  @Cacheable()
+  @Cacheable({ tagBy: [0] })
   async getAdvertsLean(
     params?: GetAdvertsQueryParams,
   ): Promise<ResultWrapper<GetLeanAdvertsResponse>> {

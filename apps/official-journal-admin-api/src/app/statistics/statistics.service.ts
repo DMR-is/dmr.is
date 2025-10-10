@@ -48,7 +48,7 @@ export class StatisticsService implements IStatisticsService {
   ) {}
 
   @LogAndHandle()
-  @Cacheable()
+  @Cacheable({ tagBy: [0] })
   async getDepartment(
     slug: DepartmentSlugEnum,
   ): Promise<ResultWrapper<GetStatisticsDepartmentResponse>> {
@@ -102,7 +102,7 @@ export class StatisticsService implements IStatisticsService {
   }
 
   @LogAndHandle()
-  @Cacheable()
+  @Cacheable({ tagBy: [1] })
   async getOverview(
     type: StatisticsOverviewQueryType,
     userId?: string,
@@ -134,7 +134,7 @@ export class StatisticsService implements IStatisticsService {
   }
 
   @LogAndHandle()
-  @Cacheable()
+  @Cacheable({ tagBy: [0] })
   async getOverviewForDashboard(
     userId: string,
   ): Promise<ResultWrapper<GetStatisticOverviewDashboardResponse>> {

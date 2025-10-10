@@ -214,11 +214,11 @@ export class CaseService implements ICaseService {
       body,
       transaction,
     )
-    const keys = await this.cacheManager?.store.keys()
-    const keysWithCases = keys?.filter((key) => key.includes('cases-'))
-    keysWithCases?.forEach(async (key) => {
-      await this.cacheManager?.store.del(key)
-    })
+
+    // clears all cache for case service namespace
+    // could be optimized to only clear relevant tags
+    // not a big performance issue since cases are not created that often
+    await this.cacheManager?.clear()
 
     return results
   }
@@ -1265,7 +1265,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  @Cacheable()
+  @Cacheable({ tagBy: [0, 1] })
   async getCasesWithStatusCount(
     status: CaseStatusEnum,
     params: GetCasesWithStatusCountQuery,
@@ -1353,7 +1353,7 @@ export class CaseService implements ICaseService {
     return ResultWrapper.ok()
   }
 
-  @Cacheable()
+  @Cacheable({ tagBy: [0] })
   @LogAndHandle()
   async getCase(id: string): Promise<ResultWrapper<GetCaseResponse>> {
     const channels = await this.caseChannelsModel.findAll({
@@ -1570,7 +1570,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  @Cacheable()
+  @Cacheable({ tagBy: [0] })
   async getCases(
     params: GetCasesQuery,
   ): Promise<ResultWrapper<GetCasesReponse>> {
@@ -1668,7 +1668,7 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  @Cacheable()
+  @Cacheable({ tagBy: [0, 1] })
   async getCasesWithDepartmentCount(
     department: DepartmentEnum,
     params: GetCasesWithDepartmentCountQuery,
