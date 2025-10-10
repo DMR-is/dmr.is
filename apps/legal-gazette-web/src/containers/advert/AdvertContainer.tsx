@@ -15,7 +15,7 @@ type AdvertContainerProps = {
 }
 
 export function AdvertContainer({ id }: AdvertContainerProps) {
-  const {data: advert} = trpc.adverts.getAdvert.useQuery({
+  const [advert] = trpc.adverts.getAdvert.useSuspenseQuery({
     id: id,
   })
 

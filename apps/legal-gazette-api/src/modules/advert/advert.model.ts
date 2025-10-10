@@ -19,6 +19,7 @@ import {
 
 import { getLogger } from '@dmr.is/logging'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
+import { cleanLegacyHtml } from '@dmr.is/utils'
 
 import { LegalGazetteModels } from '../../lib/constants'
 import { getAdvertHTMLMarkup } from '../../lib/templates'
@@ -425,7 +426,9 @@ export class AdvertModel extends BaseModel<
   }
 
   htmlMarkup(version: AdvertVersionEnum): string {
-    if (this.legacyHtml) return this.legacyHtml
+    if (this.legacyHtml) {
+      return cleanLegacyHtml(this.legacyHtml)
+    }
 
     try {
       return getAdvertHTMLMarkup(this, version)
