@@ -64,13 +64,13 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
   const { data: entities } = trpc.baseEntity.getAllEntities.useQuery()
 
   const categories = {
-    categories: entities?.categories.categories || [],
+    categories: entities?.categories || [],
   }
   const types = {
-    types: entities?.types.types || [],
+    types: entities?.types || [],
   }
   const statuses = {
-    statuses: entities?.statuses.statuses || [],
+    statuses: entities?.statuses || [],
   }
 
   const [searchParams, setSearchParams] = useQueryStates(

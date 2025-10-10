@@ -1,9 +1,6 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
-
 import { parseAsStringEnum, useQueryState } from 'nuqs'
-import useSWR from 'swr'
 
 import {
   GridColumn,
@@ -14,26 +11,18 @@ import {
 
 import { GetAdvertsStatusCounterDto } from '../../../gen/fetch'
 import { useFilterContext } from '../../../hooks/useFilters'
-import { getLegalGazetteClient } from '../../../lib/api/createClient'
 import { RitstjornHero } from '../ritstjorn/Hero'
 import AdvertsCompleted from '../Tables/AdvertsCompleted'
 import PublishingTab from '../tabs/PublishingTab'
 import { SubmittedTab } from '../tabs/SubmittedTab'
 
 type Props = {
-  initalAdvertsCount: GetAdvertsStatusCounterDto
+  advertCount: GetAdvertsStatusCounterDto
 }
 
 const TabIds = ['innsendar', 'utgafa', 'yfirlit']
 
-export const PageContainer = ({ initalAdvertsCount }: Props) => {
-  const session = useSession()
-
-  if (!session.data?.idToken) {
-    throw new Error('Unauthorized')
-  }
-
-  const client = getLegalGazetteClient('AdvertApi', session.data.idToken)
+export const PageContainer = ({ advertCount }: Props) => {
   const [tab, setTab] = useQueryState(
     'tab',
     parseAsStringEnum(TabIds).withDefault('innsendar'),
@@ -42,26 +31,13 @@ export const PageContainer = ({ initalAdvertsCount }: Props) => {
 
   const handleTabChange = (tab: string) => {
     setTab(tab)
-    setParams({
-      page: 1,
-    })
+    setParams({ page: 1 })
   }
 
-  const { data: advertsCountData } = useSWR(
-    'getAdvertsCount',
-    (_key: string) => {
-      return client.getAdvertsCount()
-    },
-    {
-      fallbackData: initalAdvertsCount,
-      keepPreviousData: true,
-    },
-  )
-
-  const overviewCount =
-    advertsCountData.rejected.count +
-    advertsCountData.published.count +
-    advertsCountData.withdrawn.count
+  const completedCount =
+    advertCount.rejected.count +
+    advertCount.published.count +
+    advertCount.withdrawn.count
 
   return (
     <>
@@ -76,17 +52,17 @@ export const PageContainer = ({ initalAdvertsCount }: Props) => {
               tabs={[
                 {
                   id: 'innsendar',
-                  label: `Innsendar (${advertsCountData.submitted.count})`,
+                  label: `Innsendar (${advertCount.submitted.count})`,
                   content: <SubmittedTab key="submitted-tab" />,
                 },
                 {
                   id: 'utgafa',
-                  label: `Útgáfa (${advertsCountData.readyForPublication.count})`,
+                  label: `Útgáfa (${advertCount.readyForPublication.count})`,
                   content: <PublishingTab key="publishing-tab" />,
                 },
                 {
                   id: 'yfirlit',
-                  label: `Yfirlit (${overviewCount})`,
+                  label: `Yfirlit (${completedCount})`,
                   content: <AdvertsCompleted key="overview-tab" />,
                 },
               ]}

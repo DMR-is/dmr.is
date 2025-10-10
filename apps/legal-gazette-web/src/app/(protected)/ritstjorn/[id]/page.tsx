@@ -1,5 +1,3 @@
-import { getServerSession } from 'next-auth'
-
 import {
   Box,
   GridColumn,
@@ -12,8 +10,7 @@ import { AdvertForm } from '../../../../components/client-components/Form/Advert
 import { Form } from '../../../../components/client-components/Form/Form'
 import { AdvertSidebar } from '../../../../components/client-components/Form/FormSidebar'
 import { AdvertProvider } from '../../../../context/advert-context'
-import { getLegalGazetteClient } from '../../../../lib/api/createClient'
-import { authOptions } from '../../../../lib/auth/authOptions'
+import { getTrpcServer } from '../../../../lib/trpc/server/server'
 
 type Props = {
   params: {
@@ -22,25 +19,11 @@ type Props = {
 }
 
 export default async function AdvertDetails({ params }: Props) {
-  const session = await getServerSession(authOptions)
+  const { trpc } = await getTrpcServer()
 
-  if (!session?.idToken) {
-    return <div>Not signed in</div>
-  }
-
-  const advertClient = getLegalGazetteClient('AdvertApi', session.idToken)
-  const typesClient = getLegalGazetteClient('TypeApi', session.idToken)
-  const categoriesClient = getLegalGazetteClient('CategoryApi', session.idToken)
-  const courtDistrictClient = getLegalGazetteClient(
-    'CourtDistrictApi',
-    session.idToken,
-  )
-  const advert = await advertClient.getAdvertById({ id: params.id })
-  const { types } = await typesClient.getTypes()
-  const { categories } = await categoriesClient.getCategories({
-    type: advert.type.id,
-  })
-  const { courtDistricts } = await courtDistrictClient.getCourtDistricts()
+  const advert = await trpc.advertApi.getAdvert({ id: params.id })
+  const { categories, types, courtDistricts } =
+    await trpc.baseEntity.getAllEntities()
 
   return (
     <AdvertProvider

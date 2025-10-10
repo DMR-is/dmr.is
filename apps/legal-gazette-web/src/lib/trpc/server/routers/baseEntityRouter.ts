@@ -22,12 +22,13 @@ export const baseEntityRouter = router({
     return ctx.baseEntity.courtDistrictApi.getCourtDistricts()
   }),
   getAllEntities: protectedProcedure.query(async ({ ctx }) => {
-    const [types, categories, statuses, courtDistricts] = await Promise.all([
-      ctx.baseEntity.typeApi.getTypes(),
-      ctx.baseEntity.categoryApi.getCategories({}),
-      ctx.baseEntity.statusApi.getStatuses(),
-      ctx.baseEntity.courtDistrictApi.getCourtDistricts(),
-    ])
+    const [{ types }, { categories }, { statuses }, { courtDistricts }] =
+      await Promise.all([
+        ctx.baseEntity.typeApi.getTypes(),
+        ctx.baseEntity.categoryApi.getCategories({}),
+        ctx.baseEntity.statusApi.getStatuses(),
+        ctx.baseEntity.courtDistrictApi.getCourtDistricts(),
+      ])
     return { types, categories, statuses, courtDistricts }
   }),
 })
