@@ -17,7 +17,13 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { Cacheable, LogAndHandle, Transactional } from '@dmr.is/decorators'
+import {
+  Cacheable,
+  CacheEvictTopics,
+  evictByTags,
+  LogAndHandle,
+  Transactional,
+} from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertStatus,
@@ -86,7 +92,7 @@ export class JournalService implements IJournalService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     // This is needed to be able to use the Cacheable and CacheEvict decorators
-    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache | undefined,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     @InjectModel(AdvertModel)
     private advertModel: typeof AdvertModel,
 
@@ -119,6 +125,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle({ logArgs: false })
+  @CacheEvictTopics('adverts:all')
   async create(
     model: CreateAdvert,
     transaction?: Transaction,
@@ -216,6 +223,7 @@ export class JournalService implements IJournalService {
       where: { id: advertId },
     })
 
+    await evictByTags(this.cacheManager, 'getAdvert', [advertId]) // Evict cache for getAdvert
     const advert = await this.getAdvert(advertId)
 
     if (!advert.result.ok) {
@@ -657,6 +665,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
+  @Cacheable({ tagBy: [0], topic: 'categories:all' })
   async getMainCategories(
     params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetMainCategoriesResponse>> {
@@ -710,6 +719,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
+  @Cacheable({ tagBy: [0], topic: 'departments:all' })
   async getDepartments(
     params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetDepartmentsResponse>> {
@@ -765,6 +775,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
+  @Cacheable({ tagBy: [0], topic: 'institutions:all' })
   async getInstitutions(
     params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetInstitutionsResponse>> {
@@ -811,7 +822,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  @Cacheable()
+  @Cacheable({ tagBy: [0], topic: 'categories:all' })
   async getCategories(
     params?: DefaultSearchParams,
   ): Promise<ResultWrapper<GetCategoriesResponse>> {
@@ -859,6 +870,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
+  @Cacheable({ tagBy: [0], ttlMs: 1 * 60_000 })
   async getAdvert(id: string): Promise<ResultWrapper<GetAdvertResponse>> {
     if (!id) {
       throw new BadRequestException()
@@ -943,6 +955,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
+  @Cacheable({ tagBy: [0] })
   async getSimilarAdverts(advertId: string, limit = 5) {
     // 1) Fetch only what is needed from the original advert
     const original = await this.advertModel.findByPk(advertId, {
@@ -1065,7 +1078,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  @Cacheable()
+  @Cacheable({ tagBy: [0], ttlMs: 10 * 60_000, topic: 'adverts:all' })
   async getAdverts(
     params?: GetAdvertsQueryParams,
   ): Promise<ResultWrapper<GetAdvertsResponse>> {
@@ -1275,7 +1288,7 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  @Cacheable()
+  @Cacheable({ tagBy: [0], topic: 'adverts:all' })
   async getAdvertsLean(
     params?: GetAdvertsQueryParams,
   ): Promise<ResultWrapper<GetLeanAdvertsResponse>> {
@@ -1557,6 +1570,7 @@ export class JournalService implements IJournalService {
     advertId: string,
     file: Express.Multer.File,
   ): Promise<ResultWrapper<S3UploadFileResponse>> {
+    await evictByTags(this.cacheManager, 'getAdvert', [advertId])
     const advert = ResultWrapper.unwrap(await this.getAdvert(advertId)).advert
     //create advert url from
     const filename = `${advert.department?.title[0]}_nr_${advert.publicationNumber?.number}_${advert.publicationNumber?.year}.pdf`
