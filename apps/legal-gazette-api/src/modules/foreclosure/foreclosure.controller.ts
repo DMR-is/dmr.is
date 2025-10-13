@@ -46,7 +46,7 @@ export class ForeclosureController {
   @Post('/sale')
   @LGResponse({
     operationId: 'createForeclosureSale',
-    type: 'void',
+    type: ForeclosureDto,
     description:
       'Creates a new foreclosure advertisement along with its properties',
   })
@@ -70,8 +70,8 @@ export class ForeclosureController {
   @Post('/sale/:id/property')
   @LGResponse({
     operationId: 'createForeclosureProperty',
-    type: 'void',
     description: 'Creates a new property for an existing foreclosure sale',
+    type: ForeclosurePropertyDto,
   })
   @ApiParam({ name: 'id', description: 'The ID of the foreclosure sale' })
   async createForeclosureProperty(

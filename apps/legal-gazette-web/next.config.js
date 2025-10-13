@@ -3,14 +3,6 @@ const { createVanillaExtractPlugin } = require('@vanilla-extract/next-plugin')
 const withVanillaExtract = createVanillaExtractPlugin()
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 
-// Read port from project.json
-const fs = require('fs')
-const path = require('path')
-const projectConfig = JSON.parse(
-  fs.readFileSync(path.join(__dirname, 'project.json'), 'utf8'),
-)
-const port = projectConfig.targets?.serve?.options?.port || 4300
-
 /**
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
