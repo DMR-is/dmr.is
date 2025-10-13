@@ -1,9 +1,19 @@
-import { Body, Controller, Delete, Inject, Param, Post } from '@nestjs/common'
-import { ApiParam } from '@nestjs/swagger'
+import {
+  Body,
+  Controller,
+  Delete,
+  Inject,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common'
+import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import { Get } from '@dmr.is/decorators'
+import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
+import { MachineClientGuard } from '../../guards/machine-client.guard'
 import {
   CreateForeclosureSaleDto,
   ForeclosureDto,
@@ -15,6 +25,8 @@ import { IForeclosureService } from './foreclosure.service.interface'
   path: 'foreclosures',
   version: '1',
 })
+@ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard, MachineClientGuard)
 export class ForeclosureController {
   constructor(
     @Inject(IForeclosureService)

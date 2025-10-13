@@ -26,7 +26,7 @@ type ForeclosureModelAttributes = {
 }
 
 type ForeclosureModelCreateAttributes = {
-  advertId: string
+  advertId?: string
   foreclosureRegion: string
   foreclosureAddress: string
   foreclosureDate: Date

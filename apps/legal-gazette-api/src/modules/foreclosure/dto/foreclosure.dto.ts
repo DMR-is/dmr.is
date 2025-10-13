@@ -8,7 +8,9 @@ import {
   ValidateNested,
 } from 'class-validator'
 
-import { ApiProperty, OmitType } from '@nestjs/swagger'
+import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
+
+import { ResponsiblePartyDto } from '../../company/dto/company.dto'
 
 export class ForeclosurePropertyDto {
   @ApiProperty({ type: String })
@@ -121,6 +123,13 @@ export class ForeclosureDto {
   foreclosureDate!: string
 
   @ApiProperty({
+    type: String,
+    description: 'The location of the authority handling the foreclosure',
+  })
+  @IsString()
+  authorityLocation!: string
+
+  @ApiProperty({
     type: [ForeclosurePropertyDto],
     description: 'List of all the properties listed in the foreclosure',
   })
@@ -136,6 +145,14 @@ export class CreateForeclosureSaleDto extends OmitType(ForeclosureDto, [
   'updatedAt',
   'advertId',
 ] as const) {
+  @ApiProperty({
+    type: ResponsiblePartyDto,
+    description: 'The responsible party for the foreclosure',
+  })
+  @ValidateNested()
+  @Type(() => ResponsiblePartyDto)
+  responsibleParty!: ResponsiblePartyDto
+
   @ApiProperty({
     type: [ForeclosurePropertyDto],
     description: 'List of all the properties listed in the foreclosure',

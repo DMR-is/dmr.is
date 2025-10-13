@@ -30,7 +30,7 @@ export class AdvertService implements IAdvertService {
     private readonly advertPublicationModel: typeof AdvertPublicationModel,
     private readonly eventEmitter: EventEmitter2,
   ) {}
-  async createAdvert(body: CreateAdvertDto): Promise<void> {
+  async createAdvert(body: CreateAdvertDto): Promise<{ id: string }> {
     const includeArr: Includeable[] = []
 
     if (body.communicationChannels) {
@@ -92,6 +92,8 @@ export class AdvertService implements IAdvertService {
       statusId: advert.statusId,
       actorId: advert.createdByNationalId,
     })
+
+    return { id: advert.id }
   }
 
   async assignAdvertToEmployee(

@@ -24,7 +24,7 @@ export interface IAdvertService {
 
   assignAdvertToEmployee(advertId: string, userId: string): Promise<void>
 
-  createAdvert(body: CreateAdvertDto): Promise<void>
+  createAdvert(body: CreateAdvertDto): Promise<{ id: string }>
 }
 
 export const IAdvertService = Symbol('IAdvertService')
