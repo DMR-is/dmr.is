@@ -52,7 +52,7 @@ export const CourtAndJudgementFields = ({
             backgroundColor="blue"
             label="Dómstóll"
             options={courtDistrictOptions}
-            defaultValue={defaultCourtDistrict}
+            value={defaultCourtDistrict}
             onChange={handleChangeCourtDistrict}
           />
         </GridColumn>

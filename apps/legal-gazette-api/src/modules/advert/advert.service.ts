@@ -147,9 +147,9 @@ export class AdvertService implements IAdvertService {
     const advert = await this.advertModel.findByPkOrThrow(id)
 
     const category = body.typeId
-      ? (await this.typeCategoriesService.findByTypeId(body.typeId)).type.categories[0]
+      ? (await this.typeCategoriesService.findByTypeId(body.typeId)).type
+          .categories[0]
       : undefined
-
 
     const updated = await advert.update({
       typeId: body.typeId,
@@ -170,6 +170,11 @@ export class AdvertService implements IAdvertService {
           : body.divisionMeetingDate,
       divisionMeetingLocation: body.divisionMeetingLocation,
       caption: body.caption,
+      courtDistrictId: body.courtDistrictId,
+      judgementDate:
+        typeof body.judgementDate === 'string'
+          ? new Date(body.judgementDate)
+          : body.judgementDate,
     })
 
     return updated.fromModelToDetailed()

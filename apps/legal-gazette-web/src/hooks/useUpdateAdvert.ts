@@ -356,8 +356,8 @@ export const useUpdateAdvert = (id: string) => {
       return updateAdvert(
         { courtDistrictId },
         {
-          successMessage: 'Tegund uppfærð',
-          errorMessage: 'Villa við að uppfæra tegund',
+          successMessage: 'Dómstóll uppfærður',
+          errorMessage: 'Villa við að uppfæra dómstól',
         },
       )
     },
