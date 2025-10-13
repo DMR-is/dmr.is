@@ -1,4 +1,4 @@
-import { AdvertSidebar } from '../../components/client-components/Form/FormSidebar'
+import { AdvertSidebar } from '../../components/Form/FormSidebar'
 import { AdvertDetailedDto } from '../../gen/fetch'
 
 type AdvertContainerProps = {

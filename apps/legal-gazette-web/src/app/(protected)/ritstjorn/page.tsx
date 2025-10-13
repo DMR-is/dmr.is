@@ -1,4 +1,4 @@
-import { PageContainer } from '../../../components/client-components/ritstjorn/PageContainer'
+import { PageContainer } from '../../../components/ritstjorn/PageContainer'
 import { getTrpcServer } from '../../../lib/trpc/server/server'
 
 export default async function Ritstjorn() {

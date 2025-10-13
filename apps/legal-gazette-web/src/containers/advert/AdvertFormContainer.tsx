@@ -3,13 +3,13 @@
 import { Box, Stack, Text } from '@dmr.is/ui/components/island-is'
 import { formatDate } from '@dmr.is/utils/client'
 
-import { AdvertBaseFields } from '../../components/client-components/accordion/accordion-items/AdvertBaseFields'
-import { AdvertReadonlyFields } from '../../components/client-components/accordion/accordion-items/AdvertReadonlyFields'
-import { ContentFields } from '../../components/client-components/accordion/accordion-items/ContentFields'
-import { CourtAndJudgementFields } from '../../components/client-components/accordion/accordion-items/CourtAndJudgementFields'
-import { PublicationsFields } from '../../components/client-components/accordion/accordion-items/PublicationsFields'
-import { SignatureFields } from '../../components/client-components/accordion/accordion-items/SignatureFields'
-import { AdvertFormAccordion } from '../../components/client-components/accordion/AdvertFormAccordion'
+import { AdvertBaseFields } from '../../components/accordion/accordion-items/AdvertBaseFields'
+import { AdvertReadonlyFields } from '../../components/accordion/accordion-items/AdvertReadonlyFields'
+import { ContentFields } from '../../components/accordion/accordion-items/ContentFields'
+import { CourtAndJudgementFields } from '../../components/accordion/accordion-items/CourtAndJudgementFields'
+import { PublicationsFields } from '../../components/accordion/accordion-items/PublicationsFields'
+import { SignatureFields } from '../../components/accordion/accordion-items/SignatureFields'
+import { AdvertFormAccordion } from '../../components/accordion/AdvertFormAccordion'
 import { AdvertDetailedDto } from '../../gen/fetch'
 import {
   isBankruptcyRecallAdvert,
@@ -29,8 +29,6 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
   const { data: categoriesForTypes } = trpc.baseEntity.getCategories.useQuery({
     type: advert.type.id,
   })
-
-  console.log('advert', advert)
 
   const isRecallBankruptcy = isBankruptcyRecallAdvert(advert)
   const isRecallDeceased = isDeceasedRecallAdvert(advert)
