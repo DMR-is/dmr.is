@@ -9,6 +9,7 @@ import { ContentFields } from '../../components/field-set-items/ContentFields'
 import { CourtAndJudgementFields } from '../../components/field-set-items/CourtAndJudgementFields'
 import { DivisionMeetingFields } from '../../components/field-set-items/DivisionMeetingFields'
 import { PublicationsFields } from '../../components/field-set-items/PublicationsFields'
+import { SettlementFields } from '../../components/field-set-items/SettlementFields'
 import { SignatureFields } from '../../components/field-set-items/SignatureFields'
 import { AdvertFormAccordion } from '../../components/Form/AdvertFormAccordion'
 import { AdvertDetailedDto } from '../../gen/fetch'
@@ -100,6 +101,17 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
           divisionMeetingDate={
             advert.divisionMeetingDate ?? new Date().toISOString()
           }
+        />
+      ),
+      hidden: !shouldShowDivisionMeeting,
+    },
+    {
+      title: 'Upplýsingar um búið',
+      children: (
+        <SettlementFields
+          id={advert.id}
+          liquidatorName={advert.settlement?.liquidatorName ?? ''}
+          liquidatorLocation={advert.settlement?.liquidatorLocation ?? ''}
         />
       ),
       hidden: !shouldShowDivisionMeeting,

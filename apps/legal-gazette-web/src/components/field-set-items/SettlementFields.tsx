@@ -1,119 +1,54 @@
 'use client'
 
-import useSWRMutation from 'swr/mutation'
-
 import {
-  DatePicker,
   GridColumn,
   GridRow,
   Input,
   Stack,
 } from '@dmr.is/ui/components/island-is'
 
-import { AccordionItem, toast } from '@island.is/island-ui/core'
+import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 
-import { UpdateSettlementDto } from '../../gen/fetch'
-import { useAdvertContext } from '../../hooks/useAdvertContext'
-import { useClient } from '../../hooks/useClient'
-import {
-  isBankruptcyRecallAdvert,
-  isDeceasedRecallAdvert,
-  isDivisionEndingAdvert,
-} from '../../lib/advert-type-guards'
-
-type SettlementAccordionItemProps = {
-  expanded: boolean
-  onToggle: () => void
+type SettlementFieldsProps = {
+  id: string
+  liquidatorName: string
+  liquidatorLocation: string
 }
 
-export const SettlementAccordionItem = ({
-  expanded,
-  onToggle,
-}: SettlementAccordionItemProps) => {
-  const { advert } = useAdvertContext()
-
-  const client = useClient('SettlementApi')
-
-  const { trigger } = useSWRMutation(
-    advert.settlement?.id ? ['updateSettlement', advert.settlement.id] : null,
-    ([_key, id], { arg }: { arg: UpdateSettlementDto }) =>
-      client.updateSettlement({
-        id,
-        updateSettlementDto: arg,
-      }),
-  )
-
-  if (!advert.settlement) {
-    return null
-  }
-
-  const isDivisionEnding = isDivisionEndingAdvert(advert)
-  const isBankruptcyRecall = isBankruptcyRecallAdvert(advert)
-  const isDeceasedRecall = isDeceasedRecallAdvert(advert)
-
-  const settlement = advert.settlement
+export const SettlementFields = ({
+  id,
+  liquidatorName,
+  liquidatorLocation,
+}: SettlementFieldsProps) => {
+  const { updateLiquidorName, updateLiquidorLocation } = useUpdateAdvert(id)
 
   return (
-    <AccordionItem
-      id="settlement"
-      label="Upplýsingar um búið"
-      labelVariant="h5"
-      iconVariant="small"
-      expanded={expanded}
-      onToggle={onToggle}
-    >
-      <Stack space={[1, 2]}>
-        <GridRow>
-          <GridColumn span={['12/12', '6/12']}>
-            <Input
-              size="sm"
-              backgroundColor="blue"
-              name="settlement-liquidator-name"
-              label="Skiptastjóri"
-              defaultValue={settlement.liquidatorName}
-              onBlur={(evt) =>
-                trigger(
-                  { liquidatorName: evt.target.value },
-                  {
-                    onSuccess: () => {
-                      toast.success('Skiptastjóri uppfærður')
-                    },
-                    onError: () => {
-                      toast.error('Ekki tókst að uppfæra skiptastjóra')
-                    },
-                  },
-                )
-              }
-            />
-          </GridColumn>
-          <GridColumn span={['12/12', '6/12']}>
-            <Input
-              size="sm"
-              backgroundColor="blue"
-              name="settlement-liquidator-location"
-              label="Staðsetning skiptastjóra"
-              defaultValue={settlement.liquidatorLocation}
-              onBlur={(evt) =>
-                trigger(
-                  { liquidatorLocation: evt.target.value },
-                  {
-                    onSuccess: () => {
-                      toast.success('Staðsetning skiptastjóra uppfærð')
-                    },
-                    onError: () => {
-                      toast.error(
-                        'Ekki tókst að uppfæra staðsetningu skiptastjóra',
-                      )
-                    },
-                  },
-                )
-              }
-            />
-          </GridColumn>
-        </GridRow>
-        <GridRow>
-          <GridColumn span={['12/12', '6/12']}>
-            <Input
+    <Stack space={[1, 2]}>
+      <GridRow>
+        <GridColumn span={['12/12', '6/12']}>
+          <Input
+            size="sm"
+            backgroundColor="blue"
+            name="settlement-liquidator-name"
+            label="Skiptastjóri"
+            value={liquidatorName}
+            onBlur={(evt) => updateLiquidorName(evt.target.value)}
+          />
+        </GridColumn>
+        <GridColumn span={['12/12', '6/12']}>
+          <Input
+            size="sm"
+            backgroundColor="blue"
+            name="settlement-liquidator-location"
+            label="Staðsetning skiptastjóra"
+            defaultValue={liquidatorLocation}
+            onBlur={(evt) => updateLiquidorLocation(evt.target.value)}
+          />
+        </GridColumn>
+      </GridRow>
+      <GridRow>
+        <GridColumn span={['12/12', '6/12']}>
+          {/* <Input
               size="sm"
               backgroundColor="blue"
               name="settlement-name"
@@ -132,10 +67,10 @@ export const SettlementAccordionItem = ({
                   },
                 )
               }
-            />
-          </GridColumn>
-          <GridColumn span={['12/12', '6/12']}>
-            <Input
+            /> */}
+        </GridColumn>
+        <GridColumn span={['12/12', '6/12']}>
+          {/* <Input
               size="sm"
               backgroundColor="blue"
               name="settlement-national-id"
@@ -154,12 +89,12 @@ export const SettlementAccordionItem = ({
                   },
                 )
               }
-            />
-          </GridColumn>
-        </GridRow>
-        <GridRow>
-          <GridColumn span={['12/12', '6/12']}>
-            <Input
+            /> */}
+        </GridColumn>
+      </GridRow>
+      <GridRow>
+        <GridColumn span={['12/12', '6/12']}>
+          {/* <Input
               size="sm"
               backgroundColor="blue"
               name="settlement-address"
@@ -178,11 +113,11 @@ export const SettlementAccordionItem = ({
                   },
                 )
               }
-            />
-          </GridColumn>
-          {isBankruptcyRecall && (
-            <GridColumn span={['12/12', '6/12']}>
-              <DatePicker
+            /> */}
+        </GridColumn>
+        {isBankruptcyRecall && (
+          <GridColumn span={['12/12', '6/12']}>
+            {/* <DatePicker
                 size="sm"
                 placeholderText=""
                 backgroundColor="blue"
@@ -209,12 +144,12 @@ export const SettlementAccordionItem = ({
                     },
                   )
                 }}
-              />
-            </GridColumn>
-          )}
-          {isDeceasedRecall && (
-            <GridColumn span={['12/12', '6/12']}>
-              <DatePicker
+              /> */}
+          </GridColumn>
+        )}
+        {isDeceasedRecall && (
+          <GridColumn span={['12/12', '6/12']}>
+            {/* <DatePicker
                 size="sm"
                 placeholderText=""
                 backgroundColor="blue"
@@ -239,14 +174,14 @@ export const SettlementAccordionItem = ({
                     },
                   )
                 }}
-              />
-            </GridColumn>
-          )}
-        </GridRow>
-        <GridRow>
-          {isDivisionEnding && (
-            <GridColumn span={['12/12', '6/12']}>
-              <Input
+              /> */}
+          </GridColumn>
+        )}
+      </GridRow>
+      <GridRow>
+        {isDivisionEnding && (
+          <GridColumn span={['12/12', '6/12']}>
+            {/* <Input
                 name="declared-claims"
                 size="sm"
                 backgroundColor="blue"
@@ -273,11 +208,10 @@ export const SettlementAccordionItem = ({
                     },
                   )
                 }}
-              />
-            </GridColumn>
-          )}
-        </GridRow>
-      </Stack>
-    </AccordionItem>
+              /> */}
+          </GridColumn>
+        )}
+      </GridRow>
+    </Stack>
   )
 }
