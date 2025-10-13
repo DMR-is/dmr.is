@@ -121,7 +121,7 @@ export class ForeclosureDto {
   foreclosureDate!: string
 }
 
-export class CreateForeclosureDto extends OmitType(ForeclosureDto, [
+export class CreateForeclosureSaleDto extends OmitType(ForeclosureDto, [
   'id',
   'createdAt',
   'updatedAt',
@@ -135,9 +135,4 @@ export class CreateForeclosureDto extends OmitType(ForeclosureDto, [
   @Type(() => CreateForeclosurePropertyDto)
   @ValidateNested({ each: true })
   properties!: CreateForeclosurePropertyDto[]
-}
-
-export class GetForeclosuresDto {
-  @ApiProperty({ type: [ForeclosureDto] })
-  foreclosures!: ForeclosureDto[]
 }
