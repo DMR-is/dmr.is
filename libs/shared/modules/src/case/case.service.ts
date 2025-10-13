@@ -1,11 +1,9 @@
-import { Cache } from 'cache-manager'
 import Mail from 'nodemailer/lib/mailer'
 import { Op, OrderItem, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import slugify from 'slugify'
 import { v4 as uuid } from 'uuid'
 
-import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import {
   BadRequestException,
   forwardRef,
@@ -16,7 +14,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { AttachmentTypeParam } from '@dmr.is/constants'
-import { Cacheable, LogAndHandle, Transactional } from '@dmr.is/decorators'
+import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AddCaseAdvertCorrection,
@@ -125,8 +123,6 @@ const LOGGING_QUERY = 'CaseServiceQueryRunner'
 export class CaseService implements ICaseService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    // This is needed to be able to use the Cacheable and CacheEvict decorators
-    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache | undefined,
     @Inject(forwardRef(() => IJournalService))
     private readonly journalService: IJournalService,
     @Inject(ICaseCreateService)
@@ -214,11 +210,6 @@ export class CaseService implements ICaseService {
       body,
       transaction,
     )
-
-    // clears all cache for case service namespace
-    // could be optimized to only clear relevant tags
-    // not a big performance issue since cases are not created that often
-    await this.cacheManager?.clear()
 
     return results
   }
@@ -1265,7 +1256,6 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  @Cacheable({ tagBy: [0, 1] })
   async getCasesWithStatusCount(
     status: CaseStatusEnum,
     params: GetCasesWithStatusCountQuery,
@@ -1353,7 +1343,6 @@ export class CaseService implements ICaseService {
     return ResultWrapper.ok()
   }
 
-  @Cacheable({ tagBy: [0] })
   @LogAndHandle()
   async getCase(id: string): Promise<ResultWrapper<GetCaseResponse>> {
     const channels = await this.caseChannelsModel.findAll({
@@ -1570,7 +1559,6 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  @Cacheable({ tagBy: [0] })
   async getCases(
     params: GetCasesQuery,
   ): Promise<ResultWrapper<GetCasesReponse>> {
@@ -1668,7 +1656,6 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  @Cacheable({ tagBy: [0, 1] })
   async getCasesWithDepartmentCount(
     department: DepartmentEnum,
     params: GetCasesWithDepartmentCountQuery,

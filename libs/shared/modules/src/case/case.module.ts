@@ -47,7 +47,6 @@ const API_MOCK = process.env.API_MOCK === 'true'
 
 @Module({
   imports: [
-    createRedisCacheOptions('case'),
     SequelizeModule.forFeature([
       ...caseModels,
       ...advertModels,

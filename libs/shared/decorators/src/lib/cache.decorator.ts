@@ -1,8 +1,8 @@
 import { Cache } from 'cache-manager'
+import { createHash } from 'node:crypto'
+
 import { getLogger } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
-
-import { createHash } from 'node:crypto'
 
 const logger = getLogger('cache.decorator')
 
@@ -26,6 +26,34 @@ type CachedEnvelope<T = unknown> = {
 type CacheableOptions = {
   ttlMs?: number
   tagBy?: number[]
+  topic?: string // NEW (single)
+  topics?: string[] // NEW (multiple)
+}
+
+const topicKey = (topic: string) => `__topic:${topic}`
+
+async function indexKeyByTopics(
+  cache: Cache,
+  cacheKey: string,
+  topics: string[],
+) {
+  for (const t of topics) {
+    const tk = topicKey(t)
+    const existing = (await cache.get<string[]>(tk)) ?? []
+    if (!existing.includes(cacheKey)) {
+      existing.push(cacheKey)
+      await cache.set(tk, existing, TAG_INDEX_TTL)
+    }
+  }
+}
+
+export async function evictByTopics(cache: Cache, topics: string[]) {
+  for (const t of topics) {
+    const tk = topicKey(t)
+    const keys = (await cache.get<string[]>(tk)) ?? []
+    if (keys.length) await Promise.allSettled(keys.map((k) => cache.del(k)))
+    await cache.del(tk)
+  }
 }
 
 const isPlainObject = (v: unknown): v is Record<string, unknown> =>
@@ -90,7 +118,11 @@ async function indexKeyByTags(
 }
 
 /** remove all keys referenced by the tag indexes, then remove the tag indexes */
-async function evictByTags(cache: Cache, method: string, tagValues: unknown[]) {
+export async function evictByTags(
+  cache: Cache,
+  method: string,
+  tagValues: unknown[],
+) {
   for (const tv of tagValues) {
     const tk = tagKey(method, tv)
     const keys = (await cache.get<string[]>(tk)) ?? []
@@ -112,7 +144,7 @@ async function evictByTags(cache: Cache, method: string, tagValues: unknown[]) {
  *   - compute, set envelope, index by tagBy values (if provided), return result
  */
 export const Cacheable = (opts: CacheableOptions = {}) => {
-  const { ttlMs = CACHE_TTL, tagBy = [] } = opts
+  const { ttlMs = CACHE_TTL, tagBy = [], topic, topics } = opts
 
   return function (
     _target: unknown,
@@ -142,9 +174,15 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
           setTimeout(async () => {
             try {
               const fresh = await originalMethod.apply(this, args)
-              const data = ResultWrapper.unwrap(fresh)
+              let dataForCache: unknown | undefined
+              try {
+                dataForCache = ResultWrapper.unwrap(fresh) // throws if err
+              } catch {
+                // Keep serving the old cached value; don't overwrite with an error
+                return
+              }
               const exp = Date.now() + ttlMs
-              const newEnvelope: CachedEnvelope = { data, exp }
+              const newEnvelope: CachedEnvelope = { data: dataForCache, exp }
 
               await cache.set(key, newEnvelope, ttlMs)
 
@@ -152,6 +190,14 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
               if (tagBy.length) {
                 const tags = tagBy.map((i) => args[i])
                 await indexKeyByTags(cache, propertyKey, key, tags)
+              }
+
+              const resolvedTopics = [
+                ...(topic ? [topic] : []),
+                ...(topics ?? []),
+              ]
+              if (resolvedTopics.length) {
+                await indexKeyByTopics(cache, key, resolvedTopics)
               }
             } catch (error) {
               // non-fatal
@@ -168,9 +214,15 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
 
       // Miss: compute
       const result = await originalMethod.apply(this, args)
-      const data = ResultWrapper.unwrap(result)
+      let dataForCache: unknown | undefined
+      try {
+        dataForCache = ResultWrapper.unwrap(result) // throws if err
+      } catch {
+        // Do NOT cache errors
+        return result
+      }
       const exp = now + ttlMs
-      const newEnvelope: CachedEnvelope = { data, exp }
+      const newEnvelope: CachedEnvelope = { data: dataForCache, exp }
 
       await cache.set(key, newEnvelope, ttlMs)
 
@@ -178,6 +230,11 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
       if (tagBy.length) {
         const tags = tagBy.map((i) => args[i])
         await indexKeyByTags(cache, propertyKey, key, tags)
+      }
+
+      const resolvedTopics = [...(topic ? [topic] : []), ...(topics ?? [])]
+      if (resolvedTopics.length) {
+        await indexKeyByTopics(cache, key, resolvedTopics)
       }
 
       return result
@@ -195,45 +252,69 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
  * - idParamIndex: which argument contains the primary id (default 0)
  * - optionalParams: additional arg names or values you want to evict by; if you
  *   used Cacheable({ tagBy: [...] }), pass matching indices or values here.
+ * - methodsToEvict: array of method names to evict; defaults to the decorated method
  */
 export const CacheEvict = (
   idParamIndex = 0,
   optionalParams: Array<number | string> = [],
+  methodsToEvict?: string[], // <— new
 ) => {
   return function (
-    _target: unknown,
+    _t: unknown,
     propertyKey: string,
     descriptor: PropertyDescriptor,
   ) {
     if (process.env.ENABLE_REDIS !== 'true') return descriptor
-
-    const originalMethod = descriptor.value
+    const original = descriptor.value
 
     descriptor.value = async function (...args: unknown[]) {
-      if (!('cacheManager' in this)) {
+      if (!('cacheManager' in this))
         throw new Error('cacheManager instance is required')
-      }
-
       const cache = (this as any).cacheManager as Cache
 
       const primary = args[idParamIndex]
       const extras = optionalParams.map((p) =>
         typeof p === 'number' ? args[p] : p,
       )
+      const tags = [primary, ...extras]
 
-      logger.info('Evicting cache via tags', {
-        method: propertyKey,
-        primary,
-        extras,
-      })
+      const result = await original.apply(this, args)
 
-      // Run original method first (or after—up to your semantics)
-      const result = await originalMethod.apply(this, args)
-
-      // Evict all keys indexed under the primary id and optional extras
-      await evictByTags(cache, propertyKey, [primary, ...extras])
+      // Evict tags for the specified methods, or default to this method
+      const methods = methodsToEvict?.length ? methodsToEvict : [propertyKey]
+      await Promise.all(methods.map((m) => evictByTags(cache, m, tags)))
 
       return result
+    }
+
+    return descriptor
+  }
+}
+
+export const CacheEvictTopics = (
+  topics: string[] | string | ((args: unknown[]) => string[]),
+) => {
+  return function (_t: unknown, _p: string, descriptor: PropertyDescriptor) {
+    if (process.env.ENABLE_REDIS !== 'true') return descriptor
+    const original = descriptor.value
+
+    descriptor.value = async function (...args: unknown[]) {
+      if (!('cacheManager' in this))
+        throw new Error('cacheManager instance is required')
+      const cache = (this as any).cacheManager as Cache
+
+      const res = await original.apply(this, args)
+
+      const resolved =
+        typeof topics === 'function'
+          ? topics(args)
+          : Array.isArray(topics)
+            ? topics
+            : [topics]
+
+      await evictByTopics(cache, resolved)
+
+      return res
     }
 
     return descriptor

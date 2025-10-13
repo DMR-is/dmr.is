@@ -1,16 +1,26 @@
+/* eslint-disable local-rules/no-async-module-init */
 import { Cache } from 'cache-manager'
+import Keyv from 'keyv'
+
 import { CacheModule, CacheModuleAsyncOptions } from '@nestjs/cache-manager'
+
 import { getLogger } from '@dmr.is/logging'
 
-import Keyv from 'keyv'
 import KeyvRedis from '@keyv/redis'
 
 const logger = getLogger('cacheUtils')
-const urlFromEnv = process.env.REDIS_URL
+
+const prefix = process.env.REDIS_PREFIX || 'rediss'
+
+const user = process.env.REDIS_USER
+const pass = process.env.REDIS_PASSWORD
+const host = process.env.REDIS_HOST
+const port = process.env.REDIS_PORT
+const urlFromEnv = `${prefix}://${user}:${pass}@${host}:${port}`
 const isTLS = !!urlFromEnv?.startsWith('rediss://')
 
 export type StoreKeyMapper =
-  | 'case'
+  | 'ojoi-case'
   | 'ojoi-user'
   | 'ojoi-journal'
   | 'ojoi-statistics'
@@ -21,9 +31,16 @@ export const createRedisCacheOptions = (namespace: StoreKeyMapper) => {
     return CacheModule.register({ ttl: 0, max: 0 })
   }
 
-  if (!urlFromEnv) {
+  // Check if any part of the URL is missing
+  if (!user || !pass || !host || !port) {
     logger.warn(
-      'ENABLE_REDIS=true but no REDIS_URL provided; falling back to in-memory',
+      'ENABLE_REDIS=true but some REDIS_* environment variables are missing; falling back to in-memory',
+      {
+        userProvided: !!user,
+        passProvided: !!pass,
+        hostProvided: !!host,
+        portProvided: !!port,
+      },
     )
     return CacheModule.register({ ttl: 0, max: 0 })
   }

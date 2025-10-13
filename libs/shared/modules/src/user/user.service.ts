@@ -5,7 +5,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { UserRoleEnum } from '@dmr.is/constants'
-import { CacheEvict, LogAndHandle, Transactional } from '@dmr.is/decorators'
+import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CreateUserDto,
@@ -40,7 +40,6 @@ const LOGGING_CATEGORY = 'user-service'
 export class UserService implements IUserService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    // This is needed to be able to use the Cacheable and CacheEvict decorators
     @InjectModel(UserModel) private readonly userModel: typeof UserModel,
     @InjectModel(UserRoleModel)
     private readonly userRoleModel: typeof UserRoleModel,
@@ -261,7 +260,6 @@ export class UserService implements IUserService {
 
   @LogAndHandle()
   @Transactional()
-  @CacheEvict(0)
   async updateUser(
     userId: string,
     body: UpdateUserDto,
