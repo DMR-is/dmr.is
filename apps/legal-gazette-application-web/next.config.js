@@ -34,7 +34,9 @@ const nextConfig = {
   },
   env: {
     API_MOCKS: process.env.API_MOCKS || '',
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL ?? `http://localhost:${port}`,
+    NEXTAUTH_URL:
+      process.env.LEGAL_GAZETTE_APPLICATION_WEB_NEXTAUTH_URL ??
+      process.env.NEXTAUTH_URL,
   },
 }
 

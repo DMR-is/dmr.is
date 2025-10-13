@@ -272,11 +272,20 @@ export const getAdvertHTMLMarkup = (
       break
     }
     default: {
-      markup = model.content
+      const isPublished = !!model.publicationNumber
+      const rawHtml = model.content
         ? isBase64(model.content)
-          ? `${Buffer.from(model.content, 'base64').toString('utf-8')}`
-          : `${model.content}`
+          ? Buffer.from(model.content, 'base64').toString('utf-8')
+          : model.content
         : ''
+
+      // we gotta replace all the (Reiknast við útgáfu) if the advert is published
+      markup = isPublished
+        ? rawHtml.replaceAll(
+            '(Reiknast við útgáfu)',
+            model.publicationNumber || '',
+          )
+        : rawHtml
     }
   }
 
