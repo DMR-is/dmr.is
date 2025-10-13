@@ -6,6 +6,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/modules'
 import { LGResponse } from '../../decorators/lg-response.decorator'
 import { MachineClientGuard } from '../../guards/machine-client.guard'
 import {
+  CreateAdditionalAnnouncementsDto,
   RegisterCompanyFirmaskraDto,
   RegisterCompanyHlutafelagDto,
 } from './dto/company.dto'
@@ -40,5 +41,13 @@ export class CompanyController {
     @Body() body: RegisterCompanyFirmaskraDto,
   ) {
     return this.companyService.registerCompanyFirmaskra(body)
+  }
+
+  @Post('aukatilkynningar')
+  @LGResponse({ operationId: 'createAdditionalAnnouncements' })
+  async createAdditionalAnnouncements(
+    @Body() body: CreateAdditionalAnnouncementsDto,
+  ) {
+    return this.companyService.createAdditionalAnnouncements(body)
   }
 }
