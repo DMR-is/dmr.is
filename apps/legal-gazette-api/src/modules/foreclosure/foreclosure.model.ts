@@ -22,7 +22,6 @@ type ForeclosureModelAttributes = {
   foreclosureRegion: string
   foreclosureAddress: string
   foreclosureDate: Date
-  authorityLocation: string
 }
 
 type ForeclosureModelCreateAttributes = {
@@ -30,7 +29,6 @@ type ForeclosureModelCreateAttributes = {
   foreclosureRegion: string
   foreclosureAddress: string
   foreclosureDate: Date
-  authorityLocation: string
   properties?: ForeclosurePropertyModelCreateAttributes[]
 }
 
@@ -59,9 +57,6 @@ export class ForeclosureModel extends BaseModel<
 
   @Column({ type: DataType.DATE, allowNull: false })
   foreclosureDate!: Date
-
-  @Column({ type: DataType.STRING, allowNull: false })
-  authorityLocation!: string
 
   @BelongsTo(() => AdvertModel)
   advert!: AdvertModel

@@ -15,7 +15,6 @@ import { ForeclosureModel } from './foreclosure.model'
 export type ForeclosurePropertyModelAttributes = {
   foreclosureId: string
   propertyName: string
-  propertyAddress: string
   propertyNumber: string
   propertyTotalPrice: number
   claimant: string
@@ -25,7 +24,6 @@ export type ForeclosurePropertyModelAttributes = {
 export type ForeclosurePropertyModelCreateAttributes = {
   foreclosureId?: string
   propertyName: string
-  propertyAddress: string
   propertyNumber: string
   propertyTotalPrice: number
   claimant: string
@@ -49,9 +47,6 @@ export class ForeclosurePropertyModel extends BaseModel<
   propertyName!: string
 
   @Column({ type: DataType.TEXT, allowNull: false })
-  propertyAddress!: string
-
-  @Column({ type: DataType.TEXT, allowNull: false })
   propertyNumber!: string
 
   @Column({ type: DataType.INTEGER, allowNull: false })
@@ -73,7 +68,6 @@ export class ForeclosurePropertyModel extends BaseModel<
       updatedAt: model.updatedAt.toISOString(),
       foreclosureId: model.foreclosureId,
       propertyName: model.propertyName,
-      propertyAddress: model.propertyAddress,
       propertyNumber: model.propertyNumber,
       propertyTotalPrice: model.propertyTotalPrice,
       claimant: model.claimant,

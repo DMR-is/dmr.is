@@ -15,9 +15,7 @@ module.exports = {
 
         FORECLOSURE_REGION TEXT NOT NULL, -- Landsvæði nauðungarsölu
         FORECLOSURE_ADDRESS TEXT NOT NULL, -- Heimilisfang/Götuheiti nauðungarsölu
-        FORECLOSURE_DATE TIMESTAMP WITH TIME ZONE NOT NULL, -- Dagsetning og tími nauðungarsölu
-
-        AUTHORITY_LOCATION TEXT NOT NULL -- Staðsetning embættis
+        FORECLOSURE_DATE TIMESTAMP WITH TIME ZONE NOT NULL -- Dagsetning og tími nauðungarsölu
       );
 
       CREATE TABLE FORECLOSURE_PROPERTY (
@@ -30,7 +28,6 @@ module.exports = {
 
         PROPERTY_NAME TEXT NOT NULL, -- Ferjubakki 12
         PROPERTY_NUMBER TEXT NOT NULL, -- Fastanúmer 2500900
-        PROPERTY_ADDRESS TEXT NOT NULL, -- Staður Hveragerði/Flóahreppur...
         PROPERTY_TOTAL_PRICE INTEGER NOT NULL, -- Heildarfjárhæð
 
         RESPONDENT TEXT NOT NULL, -- Gerðarþoli/ar

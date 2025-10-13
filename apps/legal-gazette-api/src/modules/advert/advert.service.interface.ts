@@ -21,6 +21,7 @@ export interface IAdvertService {
   markAdvertAsReady(advertId: string): Promise<void>
 
   markAdvertAsSubmitted(advertId: string): Promise<void>
+  markAdvertAsWithdrawn(advertId: string): Promise<void>
 
   assignAdvertToEmployee(advertId: string, userId: string): Promise<void>
 

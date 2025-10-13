@@ -8,7 +8,7 @@ import {
   ValidateNested,
 } from 'class-validator'
 
-import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
+import { ApiProperty, OmitType } from '@nestjs/swagger'
 
 import { ResponsiblePartyDto } from '../../company/dto/company.dto'
 
@@ -50,10 +50,6 @@ export class ForeclosurePropertyDto {
   })
   @IsString()
   propertyNumber!: string
-
-  @ApiProperty({ type: String, description: 'The address of the property' })
-  @IsString()
-  propertyAddress!: string
 
   @ApiProperty({ type: Number, description: 'The total price of the property' })
   @IsNumber()
@@ -108,6 +104,7 @@ export class ForeclosureDto {
     type: String,
     description: 'The land region of where the foreclosure is located',
   })
+  @IsString()
   foreclosureRegion!: string
 
   @ApiProperty({ type: String, description: 'The address of the foreclosure' })
@@ -121,13 +118,6 @@ export class ForeclosureDto {
   })
   @IsDateString()
   foreclosureDate!: string
-
-  @ApiProperty({
-    type: String,
-    description: 'The location of the authority handling the foreclosure',
-  })
-  @IsString()
-  authorityLocation!: string
 
   @ApiProperty({
     type: [ForeclosurePropertyDto],
@@ -144,6 +134,7 @@ export class CreateForeclosureSaleDto extends OmitType(ForeclosureDto, [
   'createdAt',
   'updatedAt',
   'advertId',
+  'properties',
 ] as const) {
   @ApiProperty({
     type: ResponsiblePartyDto,
@@ -154,11 +145,11 @@ export class CreateForeclosureSaleDto extends OmitType(ForeclosureDto, [
   responsibleParty!: ResponsiblePartyDto
 
   @ApiProperty({
-    type: [ForeclosurePropertyDto],
+    type: [CreateForeclosurePropertyDto],
     description: 'List of all the properties listed in the foreclosure',
   })
   @IsArray()
-  @Type(() => ForeclosurePropertyDto)
+  @Type(() => CreateForeclosurePropertyDto)
   @ValidateNested({ each: true })
-  properties!: ForeclosurePropertyDto[]
+  properties!: CreateForeclosurePropertyDto[]
 }

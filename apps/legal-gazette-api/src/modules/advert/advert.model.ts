@@ -1,6 +1,8 @@
 import { BulkCreateOptions, Op, WhereOptions } from 'sequelize'
 import {
   BeforeBulkCreate,
+  BeforeBulkDestroy,
+  BeforeDestroy,
   BeforeUpdate,
   BelongsTo,
   Column,

@@ -5,6 +5,7 @@ import { OnEvent } from '@nestjs/event-emitter'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { LegalGazetteEvents } from '../../../lib/constants'
 import { ICommentService } from '../comment.service.interface'
 import { CreateSubmitCommentDto } from '../dto/comment.dto'
 
@@ -16,7 +17,7 @@ export class CommentListener {
     private sequelize: Sequelize,
   ) {}
 
-  @OnEvent('advert.created', { async: true })
+  @OnEvent(LegalGazetteEvents.ADVERT_CREATED, { async: true })
   async handleAdvertCreatedEvent(payload: CreateSubmitCommentDto) {
     // we gotta make a new transaction context for CLS to work
     await this.sequelize.transaction(async (_t) => {

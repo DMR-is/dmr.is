@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Inject,
   Param,
   Post,
@@ -9,7 +10,6 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
-import { Get } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
@@ -54,6 +54,17 @@ export class ForeclosureController {
     @Body() body: CreateForeclosureSaleDto,
   ): Promise<ForeclosureDto> {
     return this.foreclosureService.createForeclosureSale(body)
+  }
+
+  @Delete('/sale/:id')
+  @LGResponse({
+    operationId: 'deleteForeclosureSale',
+    description:
+      'Deletes a foreclosure sale by its ID, marks the advert as withdrawn',
+  })
+  @ApiParam({ name: 'id', description: 'The ID of the foreclosure sale' })
+  async deleteForeclosureSale(@Param('id') id: string): Promise<void> {
+    return this.foreclosureService.deleteForclosureSale(id)
   }
 
   @Post('/sale/:id/property')

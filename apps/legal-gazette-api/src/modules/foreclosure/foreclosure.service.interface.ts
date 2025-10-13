@@ -7,6 +7,7 @@ import {
 
 export interface IForeclosureService {
   getForeclosureById(id: string): Promise<ForeclosureDto>
+  deleteForclosureSale(id: string): Promise<void>
   createForeclosureSale(body: CreateForeclosureSaleDto): Promise<ForeclosureDto>
   createForeclosureProperty(
     id: string,
