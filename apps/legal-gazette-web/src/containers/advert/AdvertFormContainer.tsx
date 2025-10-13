@@ -32,14 +32,14 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
     type: advert.type.id,
   })
 
-  const isRecallBankruptcy = isBankruptcyRecallAdvert(advert)
+  const isBankruptcyRecall = isBankruptcyRecallAdvert(advert)
   const isRecallDeceased = isDeceasedRecallAdvert(advert)
   const isDivisionEnding = isDivisionEndingAdvert(advert)
   const isDivisionMeeting = isDivisionMeetingAdvert(advert)
 
   const shouldShowCourtAndJudgementFields =
-    isRecallBankruptcy || isRecallDeceased || isDivisionEnding
-  const shouldShowDivisionMeeting = isRecallBankruptcy || isDivisionMeeting
+    isBankruptcyRecall || isRecallDeceased || isDivisionEnding
+  const shouldShowDivisionMeeting = isBankruptcyRecall || isDivisionMeeting
 
   const items = [
     {
@@ -112,9 +112,12 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
           id={advert.id}
           liquidatorName={advert.settlement?.liquidatorName ?? ''}
           liquidatorLocation={advert.settlement?.liquidatorLocation ?? ''}
+          isBankruptcyRecall={isBankruptcyRecall}
+          isDeceasedRecall={isRecallDeceased}
+          isDivisionEnding={isDivisionEnding}
         />
       ),
-      hidden: !shouldShowDivisionMeeting,
+      hidden: !advert.settlement,
     },
     {
       title: 'Undirritun',

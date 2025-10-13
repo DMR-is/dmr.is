@@ -13,12 +13,18 @@ type SettlementFieldsProps = {
   id: string
   liquidatorName: string
   liquidatorLocation: string
+  isBankruptcyRecall?: boolean
+  isDeceasedRecall?: boolean
+  isDivisionEnding?: boolean
 }
 
 export const SettlementFields = ({
   id,
   liquidatorName,
   liquidatorLocation,
+  isBankruptcyRecall,
+  isDeceasedRecall,
+  isDivisionEnding,
 }: SettlementFieldsProps) => {
   const { updateLiquidorName, updateLiquidorLocation } = useUpdateAdvert(id)
 
