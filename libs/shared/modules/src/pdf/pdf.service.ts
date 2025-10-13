@@ -149,20 +149,6 @@ export class PdfService implements OnModuleDestroy, IPdfService {
         await page.addStyleTag({ content: pdfCss })
 
         if (header) {
-          // Keep your original paragraph wrapping transform
-          await page.evaluate(() => {
-            const paragraphs = document.querySelectorAll('p')
-
-            paragraphs.forEach((p) => {
-              const parts = p.innerHTML.split('<br>')
-              const wrappedParts = parts.map(
-                (text) =>
-                  `<span style="text-indent: 2em; display: block; max-width: 100%;">${text.trim()}</span>`,
-              )
-              p.innerHTML = wrappedParts.join('<br>')
-            })
-          })
-
           const pdf = await page.pdf({
             headerTemplate: `
               <div style="font-size:14px;

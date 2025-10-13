@@ -567,6 +567,11 @@ export const pdfCss = `
   .regulation__signature p, .regulation__signature span {
     text-indent: 0em !important; /* Avoid puppeteer indent manipulation */
   }
+  
+  .indented {
+    position: relative;
+    margin-left: 2em;
+  }
 
   /* ======================================================================= */
 
