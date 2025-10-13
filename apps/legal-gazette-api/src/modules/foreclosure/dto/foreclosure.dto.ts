@@ -119,6 +119,15 @@ export class ForeclosureDto {
   })
   @IsDateString()
   foreclosureDate!: string
+
+  @ApiProperty({
+    type: [ForeclosurePropertyDto],
+    description: 'List of all the properties listed in the foreclosure',
+  })
+  @IsArray()
+  @Type(() => ForeclosurePropertyDto)
+  @ValidateNested({ each: true })
+  properties!: ForeclosurePropertyDto[]
 }
 
 export class CreateForeclosureSaleDto extends OmitType(ForeclosureDto, [
@@ -128,11 +137,11 @@ export class CreateForeclosureSaleDto extends OmitType(ForeclosureDto, [
   'advertId',
 ] as const) {
   @ApiProperty({
-    type: [CreateForeclosurePropertyDto],
+    type: [ForeclosurePropertyDto],
     description: 'List of all the properties listed in the foreclosure',
   })
   @IsArray()
-  @Type(() => CreateForeclosurePropertyDto)
+  @Type(() => ForeclosurePropertyDto)
   @ValidateNested({ each: true })
-  properties!: CreateForeclosurePropertyDto[]
+  properties!: ForeclosurePropertyDto[]
 }
