@@ -12,14 +12,14 @@ import {
 
 import { AccordionItem, toast } from '@island.is/island-ui/core'
 
-import { UpdateSettlementDto } from '../../../gen/fetch'
-import { useAdvertContext } from '../../../hooks/useAdvertContext'
-import { useClient } from '../../../hooks/useClient'
+import { UpdateSettlementDto } from '../../gen/fetch'
+import { useAdvertContext } from '../../hooks/useAdvertContext'
+import { useClient } from '../../hooks/useClient'
 import {
   isBankruptcyRecallAdvert,
   isDeceasedRecallAdvert,
   isDivisionEndingAdvert,
-} from '../../../lib/advert-type-guards'
+} from '../../lib/advert-type-guards'
 
 type SettlementAccordionItemProps = {
   expanded: boolean

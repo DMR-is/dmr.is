@@ -5,10 +5,10 @@ import {
   Stack,
 } from '@dmr.is/ui/components/island-is'
 
-import { CategoryDto, TypeDto } from '../../../gen/fetch'
-import { useUpdateAdvert } from '../../../hooks/useUpdateAdvert'
-import { CategorySelect } from '../../selects/CategorySelect'
-import { TypeSelect } from '../../selects/TypeSelect'
+import { CategoryDto, TypeDto } from '../../gen/fetch'
+import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
+import { CategorySelect } from '../selects/CategorySelect'
+import { TypeSelect } from '../selects/TypeSelect'
 
 type Props = {
   id: string

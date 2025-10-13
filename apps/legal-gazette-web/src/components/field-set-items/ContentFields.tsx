@@ -6,8 +6,8 @@ import { GridColumn, Input, Stack } from '@dmr.is/ui/components/island-is'
 
 import { GridRow } from '@island.is/island-ui/core'
 
-import { useUpdateAdvert } from '../../../hooks/useUpdateAdvert'
-import { Editor } from '../../editor/HTMLEditor'
+import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
+import { Editor } from '../editor/HTMLEditor'
 
 type ContentFieldsProps = {
   id: string

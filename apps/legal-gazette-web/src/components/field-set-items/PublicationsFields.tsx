@@ -21,10 +21,10 @@ import {
   AdvertPublicationDto,
   GetAdvertPublicationVersionEnum,
   StatusEnum,
-} from '../../../gen/fetch'
-import { useUpdatePublications } from '../../../hooks/useUpdatePublications'
-import { trpc } from '../../../lib/trpc/client'
-import { AdvertPublicationModal } from '../../modals/AdvertPublicationModal'
+} from '../../gen/fetch'
+import { useUpdatePublications } from '../../hooks/useUpdatePublications'
+import { trpc } from '../../lib/trpc/client'
+import { AdvertPublicationModal } from '../modals/AdvertPublicationModal'
 
 type PublicationsFieldsProps = {
   id: string

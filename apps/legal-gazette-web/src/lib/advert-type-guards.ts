@@ -17,7 +17,3 @@ export const isDivisionEndingAdvert = (advert: AdvertDetailedDto): boolean => {
 export const isDivisionMeetingAdvert = (advert: AdvertDetailedDto): boolean => {
   return advert.type.id.toLowerCase() === 'f1a7ce20-37be-451b-8aa7-bc90b8a7e7bd' // Skiptafundur
 }
-
-export const isDebtReleifAdvert = (advert: AdvertDetailedDto): boolean => {
-  return advert.type.id.toLowerCase() === '91c5dbf4-13db-441b-8174-bcf8366720fa' // Greiðsluaðlögun
-}

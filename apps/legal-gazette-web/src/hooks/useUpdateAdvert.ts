@@ -381,13 +381,46 @@ export const useUpdateAdvert = (id: string) => {
     [updateAdvert],
   )
 
+  const updateDivisionMeetingLocation = useCallback(
+    (divisionMeetingLocation: string) => {
+      if (divisionMeetingLocation === advert.divisionMeetingLocation) {
+        return
+      }
+
+      return updateAdvert(
+        { divisionMeetingLocation },
+        {
+          successMessage: 'Staðsetning skiptafundar uppfærð',
+          errorMessage: 'Villa við að uppfæra staðsetningu skiptafundar',
+        },
+      )
+    },
+    [updateAdvert, advert.divisionMeetingLocation],
+  )
+
+  const updateDivisionMeetingDate = useCallback(
+    (divisionMeetingDate: string) => {
+      if (divisionMeetingDate === advert.divisionMeetingDate) {
+        return
+      }
+
+      return updateAdvert(
+        { divisionMeetingDate },
+        {
+          successMessage: 'Dagsetning skiptafundar uppfærð',
+          errorMessage: 'Villa við að uppfæra dagsetningu skiptafundar',
+        },
+      )
+    },
+    [updateAdvert, advert.divisionMeetingDate],
+  )
+
   return {
     isUpdatingAdvert,
     changeAdvertStatus,
     isChangingAdvertStatus,
     assignUser,
 
-    // Update fields
     updateTitle,
     updateCaption,
     updateContent,
@@ -400,5 +433,7 @@ export const useUpdateAdvert = (id: string) => {
     updateSignatureDate,
     updateCourtDistrict,
     updateJudgementDay,
+    updateDivisionMeetingLocation,
+    updateDivisionMeetingDate,
   }
 }

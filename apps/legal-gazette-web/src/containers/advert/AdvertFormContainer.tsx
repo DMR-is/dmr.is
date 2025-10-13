@@ -3,19 +3,20 @@
 import { Box, Stack, Text } from '@dmr.is/ui/components/island-is'
 import { formatDate } from '@dmr.is/utils/client'
 
-import { AdvertBaseFields } from '../../components/accordion/accordion-items/AdvertBaseFields'
-import { AdvertReadonlyFields } from '../../components/accordion/accordion-items/AdvertReadonlyFields'
-import { ContentFields } from '../../components/accordion/accordion-items/ContentFields'
-import { CourtAndJudgementFields } from '../../components/accordion/accordion-items/CourtAndJudgementFields'
-import { PublicationsFields } from '../../components/accordion/accordion-items/PublicationsFields'
-import { SignatureFields } from '../../components/accordion/accordion-items/SignatureFields'
-import { AdvertFormAccordion } from '../../components/accordion/AdvertFormAccordion'
+import { AdvertBaseFields } from '../../components/field-set-items/AdvertBaseFields'
+import { AdvertReadonlyFields } from '../../components/field-set-items/AdvertReadonlyFields'
+import { ContentFields } from '../../components/field-set-items/ContentFields'
+import { CourtAndJudgementFields } from '../../components/field-set-items/CourtAndJudgementFields'
+import { DivisionMeetingFields } from '../../components/field-set-items/DivisionMeetingFields'
+import { PublicationsFields } from '../../components/field-set-items/PublicationsFields'
+import { SignatureFields } from '../../components/field-set-items/SignatureFields'
+import { AdvertFormAccordion } from '../../components/Form/AdvertFormAccordion'
 import { AdvertDetailedDto } from '../../gen/fetch'
 import {
   isBankruptcyRecallAdvert,
-  isDebtReleifAdvert,
   isDeceasedRecallAdvert,
   isDivisionEndingAdvert,
+  isDivisionMeetingAdvert,
 } from '../../lib/advert-type-guards'
 import { trpc } from '../../lib/trpc/client'
 
@@ -33,10 +34,11 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
   const isRecallBankruptcy = isBankruptcyRecallAdvert(advert)
   const isRecallDeceased = isDeceasedRecallAdvert(advert)
   const isDivisionEnding = isDivisionEndingAdvert(advert)
-  const isDebtReleif = isDebtReleifAdvert(advert)
+  const isDivisionMeeting = isDivisionMeetingAdvert(advert)
 
   const shouldShowCourtAndJudgementFields =
-    isRecallBankruptcy || isRecallDeceased || isDivisionEnding || isDebtReleif
+    isRecallBankruptcy || isRecallDeceased || isDivisionEnding
+  const shouldShowDivisionMeeting = isRecallBankruptcy || isDivisionMeeting
 
   const items = [
     {
@@ -88,6 +90,19 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
         />
       ),
       hidden: !shouldShowCourtAndJudgementFields,
+    },
+    {
+      title: 'Upplýsingar um skiptafund',
+      children: (
+        <DivisionMeetingFields
+          id={advert.id}
+          divisionMeetingLocation={advert.divisionMeetingLocation ?? ''}
+          divisionMeetingDate={
+            advert.divisionMeetingDate ?? new Date().toISOString()
+          }
+        />
+      ),
+      hidden: !shouldShowDivisionMeeting,
     },
     {
       title: 'Undirritun',

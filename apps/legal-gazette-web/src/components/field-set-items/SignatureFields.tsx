@@ -8,7 +8,7 @@ import {
   Stack,
 } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateAdvert } from '../../../hooks/useUpdateAdvert'
+import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 
 type SignatureFieldsProps = {
   id: string

@@ -8,8 +8,8 @@ import {
   Stack,
 } from '@dmr.is/ui/components/island-is'
 
-import { CourtDistrictDto } from '../../../gen/fetch'
-import { useUpdateAdvert } from '../../../hooks/useUpdateAdvert'
+import { CourtDistrictDto } from '../../gen/fetch'
+import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 
 type CourtAndJudgementFieldsProps = {
   id: string
