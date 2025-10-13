@@ -29,6 +29,8 @@ export enum LegalGazetteModels {
   TBR_TRANSACTION = 'tbr_transaction',
   ADVERT_TYPE_FEE_CODE = 'advert_type_fee_code',
   COMMENT = 'advert_comment',
+  FORECLOSURE = 'foreclosure',
+  FORECLOSURE_PROPERTY = 'foreclosure_property',
 }
 
 export const RECALL_BANKRUPTCY_ADVERT_TYPE_ID =

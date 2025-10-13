@@ -164,7 +164,9 @@ export class CompanyService implements ICompanyService {
     })
   }
 
-  registerCompanyFirmaskra(body: RegisterCompanyFirmaskraDto): Promise<void> {
+  async registerCompanyFirmaskra(
+    body: RegisterCompanyFirmaskraDto,
+  ): Promise<void> {
     const nextWednesday = getNextWednesday()
 
     const creators = body.creators.map((c) => formatParty(c)).join(', ')
@@ -251,7 +253,7 @@ export class CompanyService implements ICompanyService {
       </table>
     `
 
-    return this.advertService.createAdvert({
+    await this.advertService.createAdvert({
       title: `Fyrirtækjaskrá - nýskráning`,
       typeId: 'B390117B-A39A-4292-AE59-91295190F57D',
       categoryId: '6FB035BF-028D-4BFA-937F-32A7AA592F16',
