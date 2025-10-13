@@ -29,8 +29,13 @@ export const AdvertBaseFields = ({
   title,
   additionalText,
 }: Props) => {
-  const { updateType, updateCategory, updateTitle, updateAdditionalText } =
-    useUpdateAdvert(id)
+  const {
+    updateType,
+    updateCategory,
+    updateTitle,
+    updateAdditionalText,
+    isUpdatingAdvert,
+  } = useUpdateAdvert(id)
 
   return (
     <Stack space={[1, 2]}>
@@ -47,7 +52,7 @@ export const AdvertBaseFields = ({
             selectedId={categoryId}
             onSelect={(id) => updateCategory(id ?? '')}
             categories={categories}
-            isLoading={false}
+            isLoading={isUpdatingAdvert}
           />
         </GridColumn>
       </GridRow>

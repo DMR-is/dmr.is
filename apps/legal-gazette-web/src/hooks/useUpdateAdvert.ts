@@ -297,120 +297,88 @@ export const useUpdateAdvert = (id: string) => {
   )
 
   const updateSignatureOnBehalfOf = useCallback(
-    (signatureOnBehalfOf: string) =>
+    (signatureOnBehalfOf: string) => {
+      if (signatureOnBehalfOf === advert.signatureOnBehalfOf) {
+        return
+      }
+
       updateAdvert(
         { signatureOnBehalfOf },
         {
           successMessage: 'Fyrir hönd uppfært',
           errorMessage: 'Villa við að uppfæra fyrir hönd',
         },
-      ),
+      )
+    },
     [updateAdvert],
   )
 
   const updateSignatureLocation = useCallback(
-    (signatureLocation: string) =>
+    (signatureLocation: string) => {
+      if (signatureLocation === advert.signatureLocation) {
+        return
+      }
+
       updateAdvert(
         { signatureLocation },
         {
           successMessage: 'Staður undirritunar uppfærður',
           errorMessage: 'Villa við að uppfæra stað undirritunar',
         },
-      ),
+      )
+    },
     [updateAdvert],
   )
 
   const updateSignatureDate = useCallback(
-    (signatureDate: string) =>
+    (signatureDate: string) => {
+      if (signatureDate === advert.signatureDate) {
+        return
+      }
+
       updateAdvert(
         { signatureDate },
         {
           successMessage: 'Dagsetning undirritunar uppfærð',
           errorMessage: 'Villa við að uppfæra dagsetningu undirritunar',
         },
-      ),
+      )
+    },
     [updateAdvert],
   )
 
-  // Publications mutations - nota sama loading state
-  const { mutate: createPublicationMutation } =
-    trpc.publications.createPublication.useMutation({
-      onSuccess: () => {
-        toast.success('Birting bætt við')
-        utils.adverts.getAdvert.invalidate({ id })
-      },
-      onError: () => {
-        toast.error('Ekki tókst að bæta við birtingu')
-      },
-    })
+  const updateCourtDistrict = useCallback(
+    (courtDistrictId: string) => {
+      if (courtDistrictId === advert.courtDistrict?.id) {
+        return
+      }
 
-  const { mutate: updatePublicationMutation } =
-    trpc.publications.updatePublication.useMutation({
-      onSuccess: () => {
-        toast.success('Birting uppfærð')
-        utils.adverts.getAdvert.invalidate({ id })
-      },
-      onError: () => {
-        toast.error('Ekki tókst að uppfæra birtingu')
-      },
-    })
-
-  const { mutate: deletePublicationMutation } =
-    trpc.publications.deletePublication.useMutation({
-      onSuccess: () => {
-        toast.success('Birting fjarlægð')
-        utils.adverts.getAdvert.invalidate({ id })
-      },
-      onError: () => {
-        toast.error('Ekki tókst að fjarlægja birtingu')
-      },
-    })
-
-  const { mutate: publishPublicationMutation } =
-    trpc.publications.publishPublication.useMutation({
-      onSuccess: () => {
-        toast.success('Birting gefin út')
-        utils.adverts.getAdvert.invalidate({ id })
-      },
-      onError: () => {
-        toast.error('Ekki tókst að gefa út birtingu')
-      },
-    })
-
-  // Publication convenience methods
-  const createPublication = useCallback(() => {
-    return createPublicationMutation({ advertId: id })
-  }, [id, createPublicationMutation])
-
-  const updatePublication = useCallback(
-    (publicationId: string, scheduledAt: string) => {
-      return updatePublicationMutation({
-        advertId: id,
-        publicationId,
-        scheduledAt,
-      })
+      return updateAdvert(
+        { courtDistrictId },
+        {
+          successMessage: 'Tegund uppfærð',
+          errorMessage: 'Villa við að uppfæra tegund',
+        },
+      )
     },
-    [id, updatePublicationMutation],
+    [updateAdvert, advert.courtDistrict?.id],
   )
 
-  const deletePublication = useCallback(
-    (publicationId: string) => {
-      return deletePublicationMutation({
-        advertId: id,
-        publicationId,
-      })
-    },
-    [id, deletePublicationMutation],
-  )
+  const updateJudgementDay = useCallback(
+    (judgementDate: string) => {
+      if (judgementDate === advert.judgementDate) {
+        return
+      }
 
-  const publishPublication = useCallback(
-    (publicationId: string) => {
-      return publishPublicationMutation({
-        advertId: id,
-        publicationId,
-      })
+      updateAdvert(
+        { judgementDate },
+        {
+          successMessage: 'Úrskurðadagur uppfærður',
+          errorMessage: 'Villa við að uppfæra úrskurðardag',
+        },
+      )
     },
-    [id, publishPublicationMutation],
+    [updateAdvert],
   )
 
   return {
@@ -430,11 +398,7 @@ export const useUpdateAdvert = (id: string) => {
     updateSignatureOnBehalfOf,
     updateSignatureLocation,
     updateSignatureDate,
-
-    // Publication methods
-    createPublication,
-    updatePublication,
-    deletePublication,
-    publishPublication,
+    updateCourtDistrict,
+    updateJudgementDay,
   }
 }

@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import {
   Button,
   DatePicker,
+  DropdownMenu,
   GridColumn,
   GridRow,
   Input,
@@ -14,7 +15,7 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { DropdownMenu, Inline, toast } from '@island.is/island-ui/core'
+import { Inline, toast } from '@island.is/island-ui/core'
 
 import {
   AdvertPublicationDto,
@@ -83,19 +84,6 @@ export const PublicationsFields = ({
 
     publishPublication(pub.id)
   }
-
-  console.log('publicationData', publicationData)
-  console.log('modalVisible', modalVisible)
-
-  // const handlePreviewPublication = async (pub: AdvertPublicationDto) => {
-  //   await fetchPublicationHTML({
-  //     advertId: id,
-  //     version:
-  //       GetAdvertPublicationVersionEnum[
-  //         pub.version as keyof typeof GetAdvertPublicationVersionEnum
-  //       ],
-  //   })
-  // }
 
   return (
     <>

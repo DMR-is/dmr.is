@@ -1,4 +1,5 @@
 'use client'
+
 import {
   Box,
   GridColumn,
@@ -20,7 +21,7 @@ export function AdvertContainer({ id }: AdvertContainerProps) {
   })
 
   if (!advert) {
-    return <div>Advert not found</div>
+    return null
   }
 
   return (

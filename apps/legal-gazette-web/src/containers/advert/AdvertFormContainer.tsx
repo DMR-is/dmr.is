@@ -6,12 +6,17 @@ import { formatDate } from '@dmr.is/utils/client'
 import { AdvertBaseFields } from '../../components/client-components/accordion/accordion-items/AdvertBaseFields'
 import { AdvertReadonlyFields } from '../../components/client-components/accordion/accordion-items/AdvertReadonlyFields'
 import { ContentFields } from '../../components/client-components/accordion/accordion-items/ContentFields'
+import { CourtAndJudgementFields } from '../../components/client-components/accordion/accordion-items/CourtAndJudgementFields'
 import { PublicationsFields } from '../../components/client-components/accordion/accordion-items/PublicationsFields'
 import { SignatureFields } from '../../components/client-components/accordion/accordion-items/SignatureFields'
 import { AdvertFormAccordion } from '../../components/client-components/accordion/AdvertFormAccordion'
+import { AdvertDetailedDto } from '../../gen/fetch'
 import {
-  AdvertDetailedDto,
-} from '../../gen/fetch'
+  isBankruptcyRecallAdvert,
+  isDebtReleifAdvert,
+  isDeceasedRecallAdvert,
+  isDivisionEndingAdvert,
+} from '../../lib/advert-type-guards'
 import { trpc } from '../../lib/trpc/client'
 
 type AdvertContainerProps = {
@@ -20,10 +25,21 @@ type AdvertContainerProps = {
 
 export function AdvertFormContainer({ advert }: AdvertContainerProps) {
   const [{ types }] = trpc.baseEntity.getAllEntities.useSuspenseQuery()
-
+  const [{ courtDistricts }] = trpc.baseEntity.getAllEntities.useSuspenseQuery()
   const { data: categoriesForTypes } = trpc.baseEntity.getCategories.useQuery({
     type: advert.type.id,
   })
+
+  console.log('advert', advert)
+
+  const isRecallBankruptcy = isBankruptcyRecallAdvert(advert)
+  const isRecallDeceased = isDeceasedRecallAdvert(advert)
+  const isDivisionEnding = isDivisionEndingAdvert(advert)
+  const isDebtReleif = isDebtReleifAdvert(advert)
+
+  const shouldShowCourtAndJudgementFields =
+    isRecallBankruptcy || isRecallDeceased || isDivisionEnding || isDebtReleif
+
   const items = [
     {
       title: 'Upplýsingar um auglýsingu',
@@ -62,6 +78,18 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
       ),
       // hidden: !!advert.caption && !!advert.content,
       hidden: false,
+    },
+    {
+      title: 'Dómstóll og úrskurðardagur',
+      children: (
+        <CourtAndJudgementFields
+          id={advert.id}
+          courtDistrictId={advert.courtDistrict?.id}
+          courtDistricts={courtDistricts}
+          judgementDate={advert.judgementDate}
+        />
+      ),
+      hidden: !shouldShowCourtAndJudgementFields,
     },
     {
       title: 'Undirritun',
