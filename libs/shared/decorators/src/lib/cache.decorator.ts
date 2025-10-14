@@ -123,6 +123,8 @@ export async function evictByTags(
   method: string,
   tagValues: unknown[],
 ) {
+  if (process.env.ENABLE_REDIS !== 'true') return // no-op if caching disabled
+
   for (const tv of tagValues) {
     const tk = tagKey(method, tv)
     const keys = (await cache.get<string[]>(tk)) ?? []
