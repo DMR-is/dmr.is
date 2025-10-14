@@ -18,8 +18,6 @@ type UpdateOptions = {
   errorMessage?: string
 }
 
-// This can optimistic update everything except category, type and courDistrict
-// TODO: If we fetch categories, types and courtDistricts, we can optimistic update them as well
 const createOptimisticDataForAdvert = (
   prevData: AdvertDetailedDto,
   variables: UpdateAdvertDto,
