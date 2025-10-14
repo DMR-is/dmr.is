@@ -210,8 +210,6 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
           }, 0)
         }
 
-        logger.info('CACHE HIT', { method: propertyKey, key, remaining })
-
         return ResultWrapper.ok(envelope.data)
       }
 
@@ -228,8 +226,6 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
       const newEnvelope: CachedEnvelope = { data: dataForCache, exp }
 
       await cache.set(key, newEnvelope, ttlMs)
-
-      logger.info('CACHE SET', { method: propertyKey, key, exp, ttlMs })
 
       // tag index for eviction
       if (tagBy.length) {
