@@ -210,9 +210,7 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
           }, 0)
         }
 
-        if (process.env.NODE_ENV !== 'production') {
-          logger.info('CACHE HIT', { method: propertyKey, key, remaining })
-        }
+        logger.info('CACHE HIT', { method: propertyKey, key, remaining })
 
         return ResultWrapper.ok(envelope.data)
       }
@@ -231,9 +229,7 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
 
       await cache.set(key, newEnvelope, ttlMs)
 
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info('CACHE SET', { method: propertyKey, key, exp, ttlMs })
-      }
+      logger.info('CACHE SET', { method: propertyKey, key, exp, ttlMs })
 
       // tag index for eviction
       if (tagBy.length) {
