@@ -21,6 +21,7 @@ export const createTRPCContext = cache(async () => {
       publicationsApi: await getServerClient('AdvertPublicationApi'),
     },
     usersApi: await getServerClient('UsersApi'),
+    settlementApi: await getServerClient('SettlementApi'),
   }
 })
 
@@ -84,6 +85,8 @@ export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
         courtDistrictApi: ctx.baseEntity.courtDistrictApi,
       },
       publicationsApi: ctx.publications.publicationsApi,
+      usersApi: ctx.usersApi,
+      settlementApi: ctx.settlementApi,
     },
   })
 })

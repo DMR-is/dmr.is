@@ -109,9 +109,8 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
       title: 'Upplýsingar um búið',
       children: (
         <SettlementFields
-          id={advert.id}
-          liquidatorName={advert.settlement?.liquidatorName ?? ''}
-          liquidatorLocation={advert.settlement?.liquidatorLocation ?? ''}
+          advertId={advert.id}
+          settlement={advert.settlement!}
           isBankruptcyRecall={isBankruptcyRecall}
           isDeceasedRecall={isRecallDeceased}
           isDivisionEnding={isDivisionEnding}

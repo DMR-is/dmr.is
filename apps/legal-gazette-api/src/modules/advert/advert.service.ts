@@ -81,6 +81,22 @@ export class AdvertService implements IAdvertService {
             : body.divisionMeetingDate,
         divisionMeetingLocation: body.divisionMeetingLocation,
         communicationChannels: body.communicationChannels,
+        settlement: body.settlement
+          ? {
+              liquidatorLocation: body.settlement.liquidatorLocation,
+              liquidatorName: body.settlement.liquidatorName,
+              settlementAddress: body.settlement.settlementAddress,
+              settlementDateOfDeath: body.settlement.settlementDateOfDeath
+                ? new Date(body.settlement.settlementDateOfDeath)
+                : null,
+              settlementDeadline: body.settlement.settlementDeadline
+                ? new Date(body.settlement.settlementDeadline)
+                : null,
+              settlementName: body.settlement.settlementName,
+              settlementNationalId: body.settlement.settlementNationalId,
+              settlementDeclaredClaims: body.settlement.declaredClaims,
+            }
+          : undefined,
       },
       {
         returning: true,

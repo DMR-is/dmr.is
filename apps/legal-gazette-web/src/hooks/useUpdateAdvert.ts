@@ -415,44 +415,6 @@ export const useUpdateAdvert = (id: string) => {
     [updateAdvert, advert.divisionMeetingDate],
   )
 
-  const updateLiquidorName = useCallback(
-    (liquidatorName: string) => {
-      if (liquidatorName === advert.settlement?.liquidatorName) {
-        return
-      }
-
-      // TODO take out comment when settlement is implemented in trpc
-
-      // return updateAdvert(
-      //   { liquidatorName },
-      //   {
-      //     successMessage: 'Skiptastjóri uppfærður',
-      //     errorMessage: 'Villa við að uppfæra skiptastjóra',
-      //   },
-      // )
-    },
-    [updateAdvert, advert.settlement?.liquidatorName],
-  )
-
-  const updateLiquidorLocation = useCallback(
-    (liquidatorLocation: string) => {
-      if (liquidatorLocation === advert.settlement?.liquidatorLocation) {
-        return
-      }
-
-      // TODO take out comment when settlement is implemented in trpc
-
-      // return updateAdvert(
-      //   { liquidatorLocation },
-      //   {
-      //     successMessage: 'Skiptastjóri uppfærður',
-      //     errorMessage: 'Villa við að uppfæra skiptastjóra',
-      //   },
-      // )
-    },
-    [updateAdvert, advert.settlement?.liquidatorLocation],
-  )
-
   return {
     isUpdatingAdvert,
     changeAdvertStatus,
@@ -473,7 +435,5 @@ export const useUpdateAdvert = (id: string) => {
     updateJudgementDay,
     updateDivisionMeetingLocation,
     updateDivisionMeetingDate,
-    updateLiquidorName,
-    updateLiquidorLocation,
   }
 }
