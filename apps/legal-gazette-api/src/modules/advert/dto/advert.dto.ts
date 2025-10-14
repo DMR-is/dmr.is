@@ -1,6 +1,7 @@
 import { Transform, Type } from 'class-transformer'
 import {
   IsArray,
+  IsBoolean,
   IsDateString,
   IsEnum,
   IsOptional,
@@ -81,6 +82,12 @@ export class AdvertDetailedDto extends AdvertDto {
   @IsOptional()
   @IsUUID()
   caseId?: string
+
+  @ApiProperty({
+    type: Boolean,
+  })
+  @IsBoolean()
+  canEdit!: boolean
 
   @ApiProperty({
     type: String,

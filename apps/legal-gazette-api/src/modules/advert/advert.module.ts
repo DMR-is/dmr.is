@@ -9,6 +9,8 @@ import { AdvertPublicationModule } from '../advert-publications/advert-publicati
 import { CategoryModel } from '../category/category.model'
 import { PdfService } from '../pdf/pdf.service'
 import { StatusModel } from '../status/status.model'
+import { TypesCategoriesModule } from '../type-categories/type-categories.module'
+import { UserModel } from '../users/users.model'
 import { AdvertController } from './controllers/advert.controller'
 import { AdvertPdfController } from './controllers/advert-pdf.controller'
 import { AdvertPublishController } from './controllers/advert-publish.controller'
@@ -20,6 +22,7 @@ import { IAdvertService } from './advert.service.interface'
 @Module({
   imports: [
     SequelizeModule.forFeature([
+      UserModel,
       AdvertModel,
       AdvertPublicationModel,
       StatusModel,
@@ -27,6 +30,7 @@ import { IAdvertService } from './advert.service.interface'
     ]),
     AdvertPublicationModule,
     AdvertPaymentModule,
+    TypesCategoriesModule,
   ],
   controllers: [
     AdvertUpdateController,

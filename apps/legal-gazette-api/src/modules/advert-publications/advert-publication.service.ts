@@ -121,6 +121,14 @@ export class AdvertPublicationService implements IAdvertPublicationService {
   }
 
   async deleteAdvertPublication(id: string, pubId: string): Promise<void> {
+    const count = await this.advertPublicationModel.count({
+      where: { advertId: id },
+    })
+
+    if (count <= 1) {
+      throw new BadRequestException('At least one publication must remain')
+    }
+
     await this.advertPublicationModel.destroy({
       where: {
         id: pubId,
@@ -136,10 +144,6 @@ export class AdvertPublicationService implements IAdvertPublicationService {
         ['publishedAt', 'ASC'],
       ],
     })
-
-    if (publications.length <= 1) {
-      throw new BadRequestException('At least one publication must remain')
-    }
 
     publications.forEach(async (publication, index) => {
       await publication.update({ versionNumber: index + 1 })

@@ -1,0 +1,50 @@
+'use client'
+
+import { isBase64 } from 'class-validator'
+
+import { GridColumn, Input, Stack } from '@dmr.is/ui/components/island-is'
+
+import { GridRow } from '@island.is/island-ui/core'
+
+import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
+import { Editor } from '../editor/HTMLEditor'
+
+type ContentFieldsProps = {
+  id: string
+  caption: string
+  content: string
+}
+
+export const ContentFields = ({ id, caption, content }: ContentFieldsProps) => {
+  const { updateCaption, updateContent } = useUpdateAdvert(id)
+
+  const decodedContent = isBase64(content)
+    ? Buffer.from(content, 'base64').toString('utf-8')
+    : content
+
+  return (
+    <Stack space={[1, 2]}>
+      <GridRow>
+        <GridColumn span="12/12">
+          <Input
+            size="sm"
+            backgroundColor="blue"
+            name="caption"
+            label="Yfirskrift"
+            defaultValue={caption}
+            onBlur={(evt) => updateCaption(evt.target.value)}
+          />
+        </GridColumn>
+      </GridRow>
+
+      <GridRow>
+        <GridColumn span="12/12">
+          <Editor
+            defaultValue={decodedContent}
+            onBlur={(value) => updateContent({ content: value })}
+          />
+        </GridColumn>
+      </GridRow>
+    </Stack>
+  )
+}

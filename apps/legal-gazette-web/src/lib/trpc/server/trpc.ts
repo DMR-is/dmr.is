@@ -7,13 +7,22 @@ import { initTRPC, TRPCError } from '@trpc/server'
 
 export const createTRPCContext = cache(async () => {
   return {
-    advertApi: await getServerClient('AdvertApi'),
+    adverts: {
+      baseApi: await getServerClient('AdvertApi'),
+      updateApi: await getServerClient('AdvertUpdateApi'),
+    },
     baseEntity: {
       typeApi: await getServerClient('TypeApi'),
       categoryApi: await getServerClient('CategoryApi'),
       statusApi: await getServerClient('StatusApi'),
       courtDistrictApi: await getServerClient('CourtDistrictApi'),
     },
+    publications: {
+      publicationsApi: await getServerClient('AdvertPublicationApi'),
+      advertPublishApi: await getServerClient('AdvertPublishApi'),
+    },
+    usersApi: await getServerClient('UsersApi'),
+    settlementApi: await getServerClient('SettlementApi'),
   }
 })
 
@@ -30,11 +39,11 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
     }
   },
 })
+
 export const createCallerFactory = t.createCallerFactory
 export const router = t.router
 export const mergeRouters = t.mergeRouters
 
-// Public procedures should always have client available
 export const publicProcedure = t.procedure.use(({ ctx, next }) => {
   return next({
     ctx: {
@@ -43,17 +52,45 @@ export const publicProcedure = t.procedure.use(({ ctx, next }) => {
   })
 })
 
-// Protected procedures should always have session available
 export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
-  if (!ctx.advertApi) {
+  if (!ctx.adverts.baseApi) {
     throw new TRPCError({ code: 'UNAUTHORIZED' })
   }
 
-  // Type assertion is safe here because we know that the user is set
+  if (!ctx.adverts.updateApi) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' })
+  }
+
+  if (
+    !ctx.baseEntity.categoryApi ||
+    !ctx.baseEntity.typeApi ||
+    !ctx.baseEntity.statusApi ||
+    !ctx.baseEntity.courtDistrictApi
+  ) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' })
+  }
+
+  if (!ctx.publications.publicationsApi) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' })
+  }
+
   return next({
     ctx: {
       ...ctx,
-      advertApi: ctx.advertApi,
+      advertsApi: ctx.adverts.baseApi,
+      updateApi: ctx.adverts.updateApi,
+      baseEntity: {
+        typeApi: ctx.baseEntity.typeApi,
+        categoryApi: ctx.baseEntity.categoryApi,
+        statusApi: ctx.baseEntity.statusApi,
+        courtDistrictApi: ctx.baseEntity.courtDistrictApi,
+      },
+      publications: {
+        publicationsApi: ctx.publications.publicationsApi,
+        advertPublishApi: ctx.publications.advertPublishApi,
+      },
+      usersApi: ctx.usersApi,
+      settlementApi: ctx.settlementApi,
     },
   })
 })

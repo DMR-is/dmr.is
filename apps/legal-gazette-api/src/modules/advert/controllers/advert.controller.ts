@@ -8,6 +8,8 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
+import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
@@ -49,8 +51,8 @@ export class AdvertController {
 
   @Get(':id')
   @LGResponse({ operationId: 'getAdvertById', type: AdvertDetailedDto })
-  getAdvertById(@Param('id') id: string) {
-    return this.advertService.getAdvertById(id)
+  getAdvertById(@Param('id') id: string, @CurrentUser() user: DMRUser) {
+    return this.advertService.getAdvertById(id, user)
   }
 
   @Get('byCaseId/:caseId')
