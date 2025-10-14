@@ -32,7 +32,7 @@ export const publicationsRouter = router({
   createPublication: protectedProcedure
     .input(createPublicationSchema)
     .mutation(async ({ ctx, input }) => {
-      return await ctx.publicationsApi.createAdvertPublication({
+      return await ctx.publications.publicationsApi.createAdvertPublication({
         advertId: input.advertId,
       })
     }),
@@ -40,7 +40,7 @@ export const publicationsRouter = router({
   updatePublication: protectedProcedure
     .input(updatePublicationSchema)
     .mutation(async ({ ctx, input }) => {
-      return await ctx.publicationsApi.updateAdvertPublication({
+      return await ctx.publications.publicationsApi.updateAdvertPublication({
         advertId: input.advertId,
         publicationId: input.publicationId,
         updateAdvertPublicationDto: {
@@ -52,7 +52,7 @@ export const publicationsRouter = router({
   deletePublication: protectedProcedure
     .input(deletePublicationSchema)
     .mutation(async ({ ctx, input }) => {
-      return await ctx.publicationsApi.deleteAdvertPublication({
+      return await ctx.publications.publicationsApi.deleteAdvertPublication({
         advertId: input.advertId,
         publicationId: input.publicationId,
       })
@@ -61,16 +61,25 @@ export const publicationsRouter = router({
   publishPublication: protectedProcedure
     .input(publishPublicationSchema)
     .mutation(async ({ ctx, input }) => {
-      return await ctx.publicationsApi.publishAdvertPublication({
+      return await ctx.publications.publicationsApi.publishAdvertPublication({
         advertId: input.advertId,
         publicationId: input.publicationId,
+      })
+    }),
+  publishAdverts: protectedProcedure
+    .input(z.object({ advertIds: z.array(z.string()) }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.publications.advertPublishApi.publishAdverts({
+        publishAdvertsBody: {
+          advertIds: input.advertIds,
+        },
       })
     }),
 
   getPublication: protectedProcedure
     .input(getPublicationSchema)
     .query(async ({ ctx, input }) => {
-      return await ctx.publicationsApi.getAdvertPublication({
+      return await ctx.publications.publicationsApi.getAdvertPublication({
         advertId: input.advertId,
         version: input.version,
       })
