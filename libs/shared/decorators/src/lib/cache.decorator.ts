@@ -185,7 +185,6 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
               }
               const exp = Date.now() + ttlMs
               const newEnvelope: CachedEnvelope = { data: dataForCache, exp }
-
               await cache.set(key, newEnvelope, ttlMs)
 
               // maintain tag index (if any)
@@ -211,6 +210,10 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
           }, 0)
         }
 
+        if (process.env.NODE_ENV !== 'production') {
+          logger.info('CACHE HIT', { method: propertyKey, key, remaining })
+        }
+
         return ResultWrapper.ok(envelope.data)
       }
 
@@ -227,6 +230,10 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
       const newEnvelope: CachedEnvelope = { data: dataForCache, exp }
 
       await cache.set(key, newEnvelope, ttlMs)
+
+      if (process.env.NODE_ENV !== 'production') {
+        logger.info('CACHE SET', { method: propertyKey, key, exp, ttlMs })
+      }
 
       // tag index for eviction
       if (tagBy.length) {
