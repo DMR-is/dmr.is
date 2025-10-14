@@ -3,16 +3,8 @@ import { useCallback } from 'react'
 
 import { toast } from '@dmr.is/ui/components/island-is'
 
-import {
-  AdvertDetailedDto,
-  AdvertVersionEnum,
-} from '../gen/fetch'
+import { AdvertDetailedDto, AdvertVersionEnum } from '../gen/fetch'
 import { trpc } from '../lib/trpc/client'
-
-type UpdateOptions = {
-  successMessage?: string
-  errorMessage?: string
-}
 
 type PublicationFunction = 'create' | 'update' | 'delete'
 
@@ -83,7 +75,7 @@ const createOptimisticDataForPublication = (
 }
 
 export const useUpdatePublications = (id: string) => {
-  const utils = trpc.useContext()
+  const utils = trpc.useUtils()
 
   const { mutate: createPublicationMutation } =
     trpc.publications.createPublication.useMutation({
