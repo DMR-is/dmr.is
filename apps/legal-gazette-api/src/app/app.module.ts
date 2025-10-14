@@ -33,6 +33,9 @@ import { CommunicationChannelModel } from '../modules/communication-channel/comm
 import { CompanyModule } from '../modules/company/company.module'
 import { CourtDistrictModel } from '../modules/court-district/court-district.model'
 import { FeeCodeModel } from '../modules/fee-code/fee-code.model'
+import { ForeclosureModel } from '../modules/foreclosure/foreclosure.model'
+import { ForeclosureModule } from '../modules/foreclosure/foreclosure.module'
+import { ForeclosurePropertyModel } from '../modules/foreclosure/foreclosure-property.model'
 import { SettlementModel } from '../modules/settlement/settlement.model'
 import { SettlementModule } from '../modules/settlement/settlement.module'
 import { StatusModel } from '../modules/status/status.model'
@@ -86,6 +89,8 @@ import { UsersModule } from '../modules/users/users.module'
             TBRTransactionModel,
             AdvertTypeFeeCodeModel,
             CommentModel,
+            ForeclosureModel,
+            ForeclosurePropertyModel,
           ],
         }),
       ],
@@ -104,6 +109,7 @@ import { UsersModule } from '../modules/users/users.module'
     TypesCategoriesModule,
     SettlementModule,
     CommentModule,
+    ForeclosureModule,
     {
       module: AuthModule,
       global: true,

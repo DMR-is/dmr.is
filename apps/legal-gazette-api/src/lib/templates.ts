@@ -37,6 +37,62 @@ export const getAdvertHTMLMarkup = (
 
   let markup = ''
   switch (model.typeId.toUpperCase()) {
+    case TypeIdEnum.FORECLOSURE: {
+      if (!model.foreclosure) {
+        throw new Error('Foreclosure information is missing')
+      }
+
+      const foreclosure = model.foreclosure
+
+      markup = `
+        <p>Eftirtalin beiðni um nauðungarsölu til fullnustu kröfu um peningagreiðslu verður tekin fyrir á skrifstofu embættisins ${foreclosure.foreclosureAddress}, ${formatDate(foreclosure.foreclosureDate, 'dd. MMMM yyyy')} kl. ${formatDate(foreclosure.foreclosureDate, 'HH:mm')}  hafi hún ekki áður verið felld niður:</p>
+
+        ${foreclosure.properties
+          .map((property, i) => {
+            const padded = (i + 1).toString().padStart(3, '0')
+            const publicationWithIndex = `${model.publicationNumber ? `${model.publicationNumber}-${padded}` : `(Reiknast við útgáfu)-${padded}`}`
+            return `
+          <table>
+            <tbody>
+              <tr>
+                <td>
+                  <i>Heiti eignar:</i> ${property.propertyName}
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <i>Fastanr.:</i> ${property.propertyNumber}
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <i>Gerðarþoli (-ar):</i> ${property.respondent}
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <i>Gerðarbeiðandi (-beiðendur):</i> ${property.claimant}
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <i>Fjárhæðir krafna í kr.:</i> ${property.propertyTotalPrice}
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <i>${publicationWithIndex}</i>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        `
+          })
+          .join('<br/>')}
+      `
+
+      break
+    }
     case TypeIdEnum.RECALL_BANKRUPTCY: {
       if (!model.settlement || !model.settlement.settlementDeadline) {
         throw new Error('Settlement information is missing')
@@ -216,11 +272,20 @@ export const getAdvertHTMLMarkup = (
       break
     }
     default: {
-      markup = model.content
+      const isPublished = !!model.publicationNumber
+      const rawHtml = model.content
         ? isBase64(model.content)
-          ? `${Buffer.from(model.content, 'base64').toString('utf-8')}`
-          : `${model.content}`
+          ? Buffer.from(model.content, 'base64').toString('utf-8')
+          : model.content
         : ''
+
+      // we gotta replace all the (Reiknast við útgáfu) if the advert is published
+      markup = isPublished
+        ? rawHtml.replaceAll(
+            '(Reiknast við útgáfu)',
+            model.publicationNumber || '',
+          )
+        : rawHtml
     }
   }
 

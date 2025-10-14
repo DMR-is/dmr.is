@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { LoggingModule } from '@dmr.is/logging'
-import { createRedisCacheOptions } from '@dmr.is/utils/cache'
 
 import { AdvertInvolvedPartyModel } from '../journal/models'
 import { UserModel } from './models/user.model'
@@ -16,7 +15,6 @@ export { UserController } from './user.controller'
 
 @Module({
   imports: [
-    createRedisCacheOptions('ojoi-user'),
     SequelizeModule.forFeature([
       UserModel,
       UserRoleModel,

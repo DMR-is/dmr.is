@@ -4,6 +4,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { LegalGazetteEvents } from '../../lib/constants'
@@ -26,6 +27,7 @@ import { IAdvertService } from './advert.service.interface'
 @Injectable()
 export class AdvertService implements IAdvertService {
   constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     @Inject(ITypeCategoriesService)
     private readonly typeCategoriesService: ITypeCategoriesService,
@@ -33,7 +35,8 @@ export class AdvertService implements IAdvertService {
     private readonly advertPublicationModel: typeof AdvertPublicationModel,
     private readonly eventEmitter: EventEmitter2,
   ) {}
-  async createAdvert(body: CreateAdvertDto): Promise<void> {
+
+  async createAdvert(body: CreateAdvertDto): Promise<{ id: string }> {
     const includeArr: Includeable[] = []
 
     if (body.communicationChannels) {
@@ -90,11 +93,18 @@ export class AdvertService implements IAdvertService {
       })),
     )
 
+    this.logger.debug('Emitting advert.created event', {
+      advertId: advert.id,
+      statusId: advert.statusId,
+      actorId: advert.createdByNationalId,
+    })
     this.eventEmitter.emit(LegalGazetteEvents.ADVERT_CREATED, {
       advertId: advert.id,
       statusId: advert.statusId,
       actorId: advert.createdByNationalId,
     })
+
+    return { id: advert.id }
   }
 
   async assignAdvertToEmployee(
@@ -125,6 +135,14 @@ export class AdvertService implements IAdvertService {
       { statusId: StatusIdEnum.READY_FOR_PUBLICATION },
       { where: { id: advertId, statusId: StatusIdEnum.DRAFT } },
     )
+  }
+
+  async markAdvertAsWithdrawn(advertId: string): Promise<void> {
+    const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
+      attributes: ['id', 'statusId'],
+    })
+
+    await advert.update({ statusId: StatusIdEnum.WITHDRAWN })
   }
 
   async getAdvertsByCaseId(caseId: string): Promise<GetAdvertsDto> {

@@ -1,6 +1,8 @@
 import { BulkCreateOptions, Op, WhereOptions } from 'sequelize'
 import {
   BeforeBulkCreate,
+  BeforeBulkDestroy,
+  BeforeDestroy,
   BeforeUpdate,
   BelongsTo,
   Column,
@@ -35,6 +37,8 @@ import {
   CommunicationChannelModel,
 } from '../communication-channel/communication-channel.model'
 import { CourtDistrictModel } from '../court-district/court-district.model'
+import { ForeclosureModel } from '../foreclosure/foreclosure.model'
+import { ForeclosurePropertyModel } from '../foreclosure/foreclosure-property.model'
 import {
   SettlementCreateAttributes,
   SettlementModel,
@@ -143,6 +147,7 @@ export enum AdvertVersionEnum {
     { model: CommunicationChannelModel },
     { model: TBRTransactionModel },
     { model: CommentModel },
+    { model: ForeclosureModel, include: [ForeclosurePropertyModel] },
   ],
   order: [
     [
@@ -214,6 +219,7 @@ export enum AdvertVersionEnum {
         { model: CommunicationChannelModel },
         { model: TBRTransactionModel },
         { model: CommentModel },
+        { model: ForeclosureModel },
       ],
       where: whereOptions,
     }
@@ -419,6 +425,9 @@ export class AdvertModel extends BaseModel<
 
   @HasMany(() => CommentModel)
   comments!: CommentModel[]
+
+  @HasOne(() => ForeclosureModel)
+  foreclosure?: ForeclosureModel
 
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
