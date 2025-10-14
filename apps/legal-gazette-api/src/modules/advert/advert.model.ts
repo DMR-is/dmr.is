@@ -525,10 +525,14 @@ export class AdvertModel extends BaseModel<
     return AdvertModel.fromModel(this)
   }
 
-  static fromModelToDetailed(model: AdvertModel): AdvertDetailedDto {
+  static fromModelToDetailed(
+    model: AdvertModel,
+    userId?: string,
+  ): AdvertDetailedDto {
     return {
       ...this.fromModel(model),
       caseId: model.caseId || undefined,
+      canEdit: model.assignedUserId === userId,
       publicationNumber: model.publicationNumber,
       signatureOnBehalfOf: model.signatureOnBehalfOf,
       signatureDate: model.signatureDate?.toISOString(),
@@ -558,7 +562,7 @@ export class AdvertModel extends BaseModel<
     }
   }
 
-  fromModelToDetailed(): AdvertDetailedDto {
-    return AdvertModel.fromModelToDetailed(this)
+  fromModelToDetailed(userId?: string): AdvertDetailedDto {
+    return AdvertModel.fromModelToDetailed(this, userId)
   }
 }

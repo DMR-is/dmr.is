@@ -4,6 +4,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
@@ -13,6 +14,7 @@ import { CommunicationChannelModel } from '../communication-channel/communicatio
 import { SettlementModel } from '../settlement/settlement.model'
 import { StatusIdEnum } from '../status/status.model'
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
+import { UserModel } from '../users/users.model'
 import {
   AdvertDetailedDto,
   CreateAdvertDto,
@@ -28,6 +30,7 @@ import { IAdvertService } from './advert.service.interface'
 export class AdvertService implements IAdvertService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @InjectModel(UserModel) private readonly userModel: typeof UserModel,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     @Inject(ITypeCategoriesService)
     private readonly typeCategoriesService: ITypeCategoriesService,
@@ -263,9 +266,18 @@ export class AdvertService implements IAdvertService {
     }
   }
 
-  async getAdvertById(id: string): Promise<AdvertDetailedDto> {
-    const advert = await this.advertModel.findByPkOrThrow(id)
+  async getAdvertById(
+    id: string,
+    currentUser: DMRUser,
+  ): Promise<AdvertDetailedDto> {
+    const [user, advert] = await Promise.all([
+      this.userModel.unscoped().findOne({
+        attributes: ['id', 'nationalId'],
+        where: { nationalId: currentUser.nationalId },
+      }),
+      this.advertModel.findByPkOrThrow(id),
+    ])
 
-    return advert.fromModelToDetailed()
+    return advert.fromModelToDetailed(user?.id)
   }
 }

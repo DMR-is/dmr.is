@@ -1,3 +1,5 @@
+import { DMRUser } from '@dmr.is/auth/dmrUser'
+
 import {
   AdvertDetailedDto,
   CreateAdvertDto,
@@ -10,7 +12,7 @@ import {
 export interface IAdvertService {
   getAdverts(query: GetAdvertsQueryDto): Promise<GetAdvertsDto>
 
-  getAdvertById(id: string): Promise<AdvertDetailedDto>
+  getAdvertById(id: string, currentUser: DMRUser): Promise<AdvertDetailedDto>
 
   getAdvertsCount(): Promise<GetAdvertsStatusCounterDto>
 
