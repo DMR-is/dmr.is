@@ -12,7 +12,6 @@ import { InputController } from '../../controllers/InputController'
 
 export const RecallSettlementFields = () => {
   const { getValues } = useFormContext<RecallFormSchema>()
-  const { applicationId } = getValues('meta')
   const { recallType: applicationType } = getValues('fields')
 
   const title =
@@ -22,7 +21,13 @@ export const RecallSettlementFields = () => {
 
   const type = applicationType === 'bankruptcy' ? 'þrotabús' : 'dánarbús'
 
-  const { trigger } = useUpdateApplication({ applicationId: applicationId })
+  const {
+    updateSettlementName,
+    updateSettlementDateOfDeath,
+    updateSettlementDeadlineDate,
+    updateSettlementAddress,
+    updateSettlementNationalId,
+  } = useUpdateApplication(getValues('meta.applicationId'))
 
   return (
     <GridRow rowGap={[2, 3]}>
@@ -34,7 +39,7 @@ export const RecallSettlementFields = () => {
           name={RecallFormFields.SETTLEMENT_NAME}
           label={`Nafn ${type}`}
           required
-          onBlur={(val) => trigger({ settlementName: val })}
+          onBlur={(val) => updateSettlementName(val)}
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
@@ -42,7 +47,7 @@ export const RecallSettlementFields = () => {
           name={RecallFormFields.SETTLEMENT_NATIONAL_ID}
           label={`Kennitala ${type}`}
           required
-          onBlur={(val) => trigger({ settlementNationalId: val })}
+          onBlur={(val) => updateSettlementNationalId(val)}
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
@@ -54,7 +59,7 @@ export const RecallSettlementFields = () => {
               : 'Síðasta heimilisfang'
           }
           required
-          onBlur={(val) => trigger({ settlementAddress: val })}
+          onBlur={(val) => updateSettlementAddress(val)}
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
@@ -72,14 +77,10 @@ export const RecallSettlementFields = () => {
           required
           onChange={(val) => {
             if (applicationType === 'bankruptcy') {
-              return trigger({
-                settlementDeadlineDate: val ? val.toISOString() : '',
-              })
+              return updateSettlementDeadlineDate(val.toISOString())
             }
 
-            return trigger({
-              settlementDateOfDeath: val ? val.toISOString() : '',
-            })
+            return updateSettlementDateOfDeath(val.toISOString())
           }}
         />
       </GridColumn>

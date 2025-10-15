@@ -202,11 +202,6 @@ export const CreateDivisionEnding = ({
                                 },
                                 {
                                   onSuccess: () => {
-                                    utils.applicationApi.getApplicationById.invalidate(
-                                      {
-                                        id: id as string,
-                                      },
-                                    )
                                     utils.advertsApi.getAdvertByCaseId.invalidate()
                                     toast.success('Skiptalokum bætt við', {
                                       toastId: 'add-division-ending-success',

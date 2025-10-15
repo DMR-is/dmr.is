@@ -36,15 +36,12 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
         RecallFormFields.DIVISION_MEETING_DATE,
         undefined as unknown as Date,
       )
-      trigger({
-        divisionMeetingDate: undefined,
-      })
+      updateDivisionMeetingDate(null)
     }
   }, [recallDates, isReady, dirtyFields])
 
-  const { trigger } = useUpdateApplication({
-    applicationId,
-  })
+  const { updateDivisionMeetingDate, updateDivisionMeetingLocation } =
+    useUpdateApplication(applicationId)
 
   const minDate = recallDates?.length
     ? addDays(new Date(recallDates[recallDates.length - 1]), TWO_WEEKS)
@@ -64,7 +61,7 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
           required={required}
           name={RecallFormFields.DIVISION_MEETING_LOCATION}
           label="Staðsetning skiptafundar"
-          onBlur={(location) => trigger({ divisionMeetingLocation: location })}
+          onBlur={(location) => updateDivisionMeetingLocation(location)}
         />
       </GridColumn>
       <GridColumn span="6/12">
@@ -76,9 +73,7 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
           minDate={minDate ? getNextWeekday(minDate) : undefined}
           maxDate={maxDate}
           excludeDates={excludeDates}
-          onChange={(date) =>
-            trigger({ divisionMeetingDate: date.toISOString() })
-          }
+          onChange={(date) => updateDivisionMeetingDate(date.toISOString())}
         />
       </GridColumn>
     </GridRow>

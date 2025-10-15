@@ -266,6 +266,231 @@ export const useUpdateApplication = (applicationId: string) => {
     [updateApplication, application?.communicationChannels],
   )
 
+  const updateCourtDistrict = useCallback(
+    (courtDistrictId?: string) => {
+      if (
+        !courtDistrictId ||
+        courtDistrictId === application?.courtDistrictId
+      ) {
+        return
+      }
+
+      updateApplication(
+        { courtDistrictId },
+        {
+          successMessage: 'Dómstóll vistaður',
+          errorMessage: 'Ekki tókst að uppfæra dómstól',
+        },
+      )
+    },
+    [updateApplication, application?.courtDistrictId],
+  )
+
+  const updateJudgmentDate = useCallback(
+    (judgmentDate: string) => {
+      if (judgmentDate === application?.judgmentDate) {
+        return
+      }
+
+      updateApplication(
+        { judgmentDate },
+        {
+          successMessage: 'Úrskurðardagur vistaður',
+          errorMessage: 'Ekki tókst að uppfæra úrskurðardag',
+        },
+      )
+    },
+    [updateApplication, application?.judgmentDate],
+  )
+
+  const updateAdditionalText = useCallback(
+    (additionalText: string) => {
+      if (additionalText === application?.additionalText) {
+        return
+      }
+
+      updateApplication(
+        { additionalText },
+        {
+          successMessage: 'Frjáls texti vistaður',
+          errorMessage: 'Ekki tókst að uppfæra frjálsan texta',
+        },
+      )
+    },
+    [updateApplication, application?.additionalText],
+  )
+
+  const updateDivisionMeetingLocation = useCallback(
+    (divisionMeetingLocation: string) => {
+      if (divisionMeetingLocation === application?.divisionMeetingLocation) {
+        return
+      }
+
+      updateApplication(
+        { divisionMeetingLocation },
+        {
+          successMessage: 'Staðsetning skiptafundar vistuð',
+          errorMessage: 'Ekki tókst að uppfæra staðsetningu skiptafundar',
+        },
+      )
+    },
+    [updateApplication, application?.divisionMeetingLocation],
+  )
+
+  const updateDivisionMeetingDate = useCallback(
+    (divisionMeetingDate?: string | null) => {
+      if (divisionMeetingDate === application?.divisionMeetingDate) {
+        return
+      }
+
+      updateApplication(
+        { divisionMeetingDate },
+        {
+          successMessage: 'Dagsetning skiptafundar vistuð',
+          errorMessage: 'Ekki tókst að uppfæra dagsetningu skiptafundar',
+        },
+      )
+    },
+    [updateApplication, application?.divisionMeetingDate],
+  )
+
+  const updateLiquidatorName = useCallback(
+    (liquidatorName: string) => {
+      if (liquidatorName === application?.liquidatorName) {
+        return
+      }
+
+      updateApplication(
+        { liquidatorName },
+        {
+          successMessage: 'Nafn skiptastjóra vistað',
+          errorMessage: 'Ekki tókst að uppfæra nafn skiptastjóra',
+        },
+      )
+    },
+    [updateApplication, application?.liquidatorName],
+  )
+
+  const updateLiquidatorLocation = useCallback(
+    (liquidatorLocation: string) => {
+      if (liquidatorLocation === application?.liquidatorLocation) {
+        return
+      }
+
+      updateApplication(
+        { liquidatorLocation },
+        {
+          successMessage: 'Staðsetning skiptastjóra vistað',
+          errorMessage: 'Ekki tókst að uppfæra staðsetningu skiptastjóra',
+        },
+      )
+    },
+    [updateApplication, application?.liquidatorLocation],
+  )
+
+  const updateLiquidatorOnBehalfOf = useCallback(
+    (liquidatorOnBehalfOf: string) => {
+      if (liquidatorOnBehalfOf === application?.liquidatorOnBehalfOf) {
+        return
+      }
+
+      updateApplication(
+        { liquidatorOnBehalfOf },
+        {
+          successMessage: 'Undirritun fyrir hönd skiptastjóra vistuð',
+          errorMessage:
+            'Ekki tókst að uppfæra undirritun fyrir hönd skiptastjóra',
+        },
+      )
+    },
+    [updateApplication, application?.liquidatorOnBehalfOf],
+  )
+
+  const updateSettlementName = useCallback(
+    (settlementName: string) => {
+      if (settlementName === application?.settlementName) {
+        return
+      }
+
+      updateApplication(
+        { settlementName },
+        {
+          successMessage: 'Nafn þrotabús vistað',
+          errorMessage: 'Ekki tókst að uppfæra nafn þrotabús',
+        },
+      )
+    },
+    [updateApplication, application?.settlementName],
+  )
+
+  const updateSettlementNationalId = useCallback(
+    (settlementNationalId: string) => {
+      if (settlementNationalId === application?.settlementNationalId) {
+        return
+      }
+
+      updateApplication(
+        { settlementNationalId },
+        {
+          successMessage: 'Kennitala þrotabús vistuð',
+          errorMessage: 'Ekki tókst að uppfæra kennitölu þrotabús',
+        },
+      )
+    },
+    [updateApplication, application?.settlementNationalId],
+  )
+
+  const updateSettlementAddress = useCallback(
+    (settlementAddress: string) => {
+      if (settlementAddress === application?.settlementAddress) {
+        return
+      }
+
+      updateApplication(
+        { settlementAddress },
+        {
+          successMessage: 'Heimilisfang þrotabús vistað',
+          errorMessage: 'Ekki tókst að uppfæra heimilisfang þrotabús',
+        },
+      )
+    },
+    [updateApplication, application?.settlementAddress],
+  )
+
+  const updateSettlementDeadlineDate = useCallback(
+    (settlementDeadlineDate?: string) => {
+      if (settlementDeadlineDate === application?.settlementDeadlineDate) {
+        return
+      }
+
+      updateApplication(
+        { settlementDeadlineDate },
+        {
+          successMessage: 'Frestdagur þrotabús vistaður',
+          errorMessage: 'Ekki tókst að uppfæra frestdag þrotabús',
+        },
+      )
+    },
+    [updateApplication, application?.settlementDeadlineDate],
+  )
+
+  const updateSettlementDateOfDeath = useCallback(
+    (settlementDateOfDeath?: string) => {
+      if (settlementDateOfDeath === application?.settlementDateOfDeath) {
+        return
+      }
+
+      updateApplication(
+        { settlementDateOfDeath },
+        {
+          successMessage: 'Dánardagur vistaður',
+          errorMessage: 'Ekki tókst að uppfæra dánardag',
+        },
+      )
+    },
+    [updateApplication, application?.settlementDateOfDeath],
+  )
+
   return {
     updateType,
     updateCategory,
@@ -277,5 +502,18 @@ export const useUpdateApplication = (applicationId: string) => {
     updateSignatureOnBehalfOf,
     updatePublishingDates,
     updateCommunicationChannels,
+    updateCourtDistrict,
+    updateJudgmentDate,
+    updateAdditionalText,
+    updateDivisionMeetingLocation,
+    updateDivisionMeetingDate,
+    updateLiquidatorName,
+    updateLiquidatorLocation,
+    updateLiquidatorOnBehalfOf,
+    updateSettlementName,
+    updateSettlementNationalId,
+    updateSettlementAddress,
+    updateSettlementDeadlineDate,
+    updateSettlementDateOfDeath,
   }
 }

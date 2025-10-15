@@ -1,3 +1,5 @@
+import { useParams } from 'next/navigation'
+
 import { useState } from 'react'
 
 import {
@@ -46,7 +48,9 @@ export const CreateDivisionMeeting = ({
     })
 
   const canSubmit = Object.entries(createState)
-    .filter(([key]) => key !== 'signatureOnBehalfOf')
+    .filter(
+      ([key]) => key !== 'signatureOnBehalfOf' && key !== 'additionalText',
+    )
     .every(([, value]) => !!value)
 
   return (
@@ -212,12 +216,11 @@ export const CreateDivisionMeeting = ({
                               onClick={() =>
                                 addDivisionMeeting(
                                   {
-                                    applicationId: applicationId,
+                                    applicationId: applicationId as string,
                                     ...createState,
                                   },
                                   {
                                     onSuccess: () => {
-                                      utils.applicationApi.getApplicationById.invalidate()
                                       utils.advertsApi.getAdvertByCaseId.invalidate()
                                       setCreateState({
                                         additionalText: '',

@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { useToggle } from 'react-use'
+import { Fragment, useState } from 'react'
 
 import { formatDate } from '@dmr.is/utils/client'
 
@@ -23,8 +22,7 @@ type Props = {
 
 export const AdvertPublications = ({ advert, detailed = false }: Props) => {
   const [html, setHTML] = useState<string>('')
-
-  const toggles = advert.publications.map(() => useToggle(false))
+  const [openModal, setOpenModal] = useState<number | null>(null)
 
   const { mutate: getAdvertPublication } =
     trpc.publicationApi.getAdvertPublication.useMutation()
@@ -35,10 +33,8 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
         {advert.publications.map((pub, i) => {
           const isPublished = pub.publishedAt !== null
 
-          const [toggle, setToggle] = toggles[i]
-
           return (
-            <>
+            <Fragment key={i}>
               <ActionCard
                 date={
                   pub.publishedAt
@@ -73,7 +69,7 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
                       {
                         onSuccess: (data: AdvertPublicationDetailedDto) => {
                           setHTML(data.html)
-                          setToggle(true)
+                          setOpenModal(i)
                         },
                         onError: () =>
                           toast.error('Ekki tókst að sækja birtingu'),
@@ -85,10 +81,14 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
               <AdvertModal
                 id={advert.id}
                 html={html}
-                onVisiblityChange={setToggle}
-                isVisible={toggle}
+                onVisiblityChange={(visible) => {
+                  if (!visible) {
+                    setOpenModal(null)
+                  }
+                }}
+                isVisible={openModal === i}
               />
-            </>
+            </Fragment>
           )
         })}
       </Stack>
