@@ -13,7 +13,6 @@ import {
 import { PublicationCard } from '../../components/client-components/cards/PublicationCard'
 import { BannerSearch } from '../../components/client-components/front-page/banner-search/BannerSearch'
 import { authOptions } from '../../lib/authOptions'
-import { trpc } from '../../lib/trpc/client'
 import { getTrpcServer } from '../../lib/trpc/server/server'
 
 export default async function HomePage() {

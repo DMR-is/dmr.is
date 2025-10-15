@@ -38,8 +38,6 @@ export const publicationRouter = router({
         ),
       )
 
-      console.log('Filtered input:', filteredInput)
-
       return await ctx.api.getPublications(filteredInput)
     }),
   getRelatedPublications: protectedProcedure
