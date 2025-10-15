@@ -1,9 +1,8 @@
 'use client'
-import { useRouter } from 'next/navigation'
 
 import { FormProvider, useForm } from 'react-hook-form'
 
-import { Stack, Text, toast } from '@island.is/island-ui/core'
+import { Stack, Text } from '@island.is/island-ui/core'
 
 import { useSubmitApplication } from '../../../../hooks/useSubmitApplication'
 import { recallForm } from '../../../../lib/forms/recall-form'
@@ -33,8 +32,6 @@ export const RecallForm = ({
   courtOptions,
   fields,
 }: Props) => {
-  const router = useRouter()
-
   const methods = useForm<RecallFormSchema>(
     recallForm({
       caseId: caseId,
@@ -44,19 +41,7 @@ export const RecallForm = ({
     }),
   )
 
-  const { trigger } = useSubmitApplication({
-    onSuccess: () => router.refresh(),
-  })
-
-  const onValidSubmit = (_data: RecallFormSchema) => {
-    trigger({ applicationId })
-  }
-
-  const onInvalidSubmit = (_errors: unknown) => {
-    toast.error('Umsóknin er ekki gild.', {
-      toastId: 'submit-recall-application-error',
-    })
-  }
+  const { onValidSubmit, onInvalidSubmit } = useSubmitApplication(applicationId)
 
   const isBankruptcy = fields.recallType === 'bankruptcy'
 

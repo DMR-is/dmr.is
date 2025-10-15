@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, useFormState } from 'react-hook-form'
 
 import { GridColumn, GridRow, Stack, Text } from '@island.is/island-ui/core'
 
@@ -16,6 +16,9 @@ import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
 export const CommonAdvertFields = () => {
   const { getValues, setValue, watch } = useFormContext<CommonFormSchema>()
+  const { dirtyFields } = useFormState()
+  const isTypesDirty = dirtyFields.fields?.type === true
+
   const { updateType, updateCategory, updateCaption, updateHTML } =
     useUpdateApplication(getValues('meta.applicationId'))
 
@@ -34,13 +37,13 @@ export const CommonAdvertFields = () => {
   )
 
   useEffect(() => {
-    if (!categoriesData?.categories) return
+    if (!categoriesData?.categories || !isTypesDirty) return
 
     if (categoriesData.categories.length === 1) {
       setValue(CommonFormFields.CATEGORY, categoriesData.categories[0].id)
       updateCategory(categoriesData.categories[0].id)
     }
-  }, [categoriesData?.categories])
+  }, [categoriesData?.categories, isTypesDirty])
 
   const categoryOptions =
     categoriesData?.categories.map((category) => ({

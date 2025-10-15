@@ -106,7 +106,7 @@ export class ApplicationService implements IApplicationService {
       scheduledAt: requiredFields.publishingDates.map((d) => d.toISOString()),
     })
 
-    // await application.update({ status: ApplicationStatusEnum.FINISHED })
+    await application.update({ status: ApplicationStatusEnum.FINISHED })
   }
 
   private async submitRecallApplication(

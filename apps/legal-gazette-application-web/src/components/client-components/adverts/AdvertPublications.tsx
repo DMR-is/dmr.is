@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import useSWR from 'swr'
+import { useToggle } from 'react-use'
 
 import { formatDate } from '@dmr.is/utils/client'
 
@@ -10,11 +10,9 @@ import { ActionCard, Box, Stack, toast } from '@island.is/island-ui/core'
 import {
   AdvertDto,
   AdvertPublicationDetailedDto,
-  ApiErrorDto,
-  GetAdvertPublicationRequest,
   GetAdvertPublicationVersionEnum,
 } from '../../../gen/fetch'
-import { getAdvertPublication } from '../../../lib/fetchers'
+import { trpc } from '../../../lib/trpc/client'
 import { AdvertModal } from '../advert-modal/AdvertModal'
 import * as styles from './advert.css'
 
@@ -25,34 +23,20 @@ type Props = {
 
 export const AdvertPublications = ({ advert, detailed = false }: Props) => {
   const [html, setHTML] = useState<string>('')
-  const [toggle, setToggle] = useState(false)
 
-  const [publicationRequest, setPublicationRequest] =
-    useState<GetAdvertPublicationRequest | null>(null)
+  const [toggles] = useState(advert.publications.map(() => useToggle(false)))
 
-  useSWR<AdvertPublicationDetailedDto, ApiErrorDto>(
-    publicationRequest ? publicationRequest : null,
-    getAdvertPublication,
-    {
-      onSuccess: (data) => {
-        setHTML(data.html)
-        setToggle(true)
-      },
-      onError: (_error) => {
-        toast.error('Ekki tókst að sækja birtingu', {
-          toastId: 'advert-publication-error',
-        })
-        setPublicationRequest(null)
-      },
-      dedupingInterval: 2000,
-    },
-  )
+  const { mutate: getAdvertPublication } =
+    trpc.publicationApi.getAdvertPublication.useMutation()
 
   return (
     <Box padding={[2, 3, 4]} className={styles.advertPublication}>
       <Stack space={[2]}>
         {advert.publications.map((pub, i) => {
           const isPublished = pub.publishedAt !== null
+
+          const [toggle, setToggle] = toggles[i]
+
           return (
             <>
               <ActionCard
@@ -82,10 +66,19 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
 
                   onClick: () => {
                     setToggle(true)
-                    setPublicationRequest({
-                      advertId: advert.id,
-                      version: GetAdvertPublicationVersionEnum[pub.version],
-                    })
+                    getAdvertPublication(
+                      {
+                        advertId: advert.id,
+                        version: GetAdvertPublicationVersionEnum[pub.version],
+                      },
+                      {
+                        onSuccess: (data: AdvertPublicationDetailedDto) => {
+                          setHTML(data.html)
+                        },
+                        onError: () =>
+                          toast.error('Ekki tókst að sækja birtingu'),
+                      },
+                    )
                   },
                 }}
               />
@@ -93,10 +86,7 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
                 id={advert.id}
                 html={html}
                 onVisiblityChange={(vis) => setToggle(vis)}
-                isVisible={
-                  (pub.version as unknown as GetAdvertPublicationVersionEnum) ===
-                    publicationRequest?.version && toggle
-                }
+                isVisible={toggle}
               />
             </>
           )

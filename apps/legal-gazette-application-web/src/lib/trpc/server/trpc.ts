@@ -7,7 +7,7 @@ import { initTRPC, TRPCError } from '@trpc/server'
 
 export const createTRPCContext = cache(async () => {
   return {
-    applicationApi: await getServerClient(),
+    api: await getServerClient(),
   }
 })
 
@@ -38,13 +38,13 @@ export const publicProcedure = t.procedure.use(({ ctx, next }) => {
 })
 
 export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
-  if (!ctx.applicationApi) {
+  if (!ctx.api) {
     throw new TRPCError({ code: 'UNAUTHORIZED' })
   }
   return next({
     ctx: {
       ...ctx,
-      applicationApi: ctx.applicationApi,
+      api: ctx.api,
     },
   })
 })

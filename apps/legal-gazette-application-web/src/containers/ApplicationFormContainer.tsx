@@ -24,6 +24,9 @@ export function ApplicationFormContainer({ application }: Props) {
       { initialData: application },
     )
 
+  const [{ courtDistricts, types }] =
+    trpc.applicationApi.getBaseEntities.useSuspenseQuery()
+
   if (error) {
     return notFound()
   }
@@ -43,8 +46,6 @@ export function ApplicationFormContainer({ application }: Props) {
   }
 
   if (data.status === ApplicationDetailedDtoStatusEnum.DRAFT) {
-    const [{ courtDistricts, types }] =
-      trpc.applicationApi.getBaseEntities.useSuspenseQuery()
     return (
       <ApplicationForm
         application={data}

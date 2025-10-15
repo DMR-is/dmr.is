@@ -54,18 +54,18 @@ export const getApplicationsSchema = z.object({
 
 export const applicationRouter = router({
   getTypes: protectedProcedure.query(async ({ ctx }) => {
-    return await ctx.applicationApi.getTypes()
+    return await ctx.api.getTypes()
   }),
   getCategories: protectedProcedure
     .input(getCategoriesSchema)
     .query(async ({ ctx, input }) => {
-      return await ctx.applicationApi.getCategories({ type: input.typeId })
+      return await ctx.api.getCategories({ type: input.typeId })
     }),
   getBaseEntities: protectedProcedure.query(async ({ ctx }) => {
     const [{ types }, { categories }, { courtDistricts }] = await Promise.all([
-      ctx.applicationApi.getTypes(),
-      ctx.applicationApi.getCategories({}),
-      ctx.applicationApi.getCourtDistricts(),
+      ctx.api.getTypes(),
+      ctx.api.getCategories({}),
+      ctx.api.getCourtDistricts(),
     ])
 
     return { types, categories, courtDistricts }
@@ -74,7 +74,7 @@ export const applicationRouter = router({
     .input(updateApplicationSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, ...updateApplicationDto } = input
-      return await ctx.applicationApi.updateApplication({
+      return await ctx.api.updateApplication({
         applicationId: id,
         updateApplicationDto: updateApplicationDto,
       })
@@ -82,7 +82,7 @@ export const applicationRouter = router({
   getApplications: protectedProcedure
     .input(getApplicationsSchema)
     .query(async ({ ctx, input }) => {
-      return await ctx.applicationApi.getMyApplications({
+      return await ctx.api.getMyApplications({
         page: input.page,
         pageSize: input.pageSize,
       })
@@ -90,15 +90,22 @@ export const applicationRouter = router({
   getApplicationById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      return await ctx.applicationApi.getApplicationById({
+      return await ctx.api.getApplicationById({
         applicationId: input.id,
       })
     }),
   createApplication: protectedProcedure
     .input(createApplicationSchema)
     .mutation(async ({ ctx, input }) => {
-      return await ctx.applicationApi.createApplication({
+      return await ctx.api.createApplication({
         applicationType: input,
+      })
+    }),
+  submitApplication: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.api.submitApplication({
+        applicationId: input.id,
       })
     }),
 })
