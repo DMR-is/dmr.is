@@ -1,5 +1,7 @@
 import { ApiErrorDto, ApiErrorDtoFromJSON } from '../gen/fetch'
 
+import { TRPCError } from '@trpc/server'
+
 type SafeCallReturn<T> =
   | {
       data: T
@@ -30,4 +32,38 @@ export async function safeCall<T>(
       error: errorDto,
     }
   }
+}
+
+export function getStatusFromTRPCError(error: TRPCError): number | null {
+  const cause = (error.cause ?? {}) as any
+
+  // Check if it's the Response object directly
+  if (cause && typeof cause.status === 'number') {
+    return cause.status
+  }
+
+  // Check for Response internals symbol
+  const responseInternals =
+    (cause && cause[Symbol.for('Response internals')]) ||
+    (cause &&
+      Object.getOwnPropertySymbols(cause).find((symbol) =>
+        symbol.toString().includes('Response internals'),
+      ))
+
+  if (responseInternals && cause[responseInternals]) {
+    return cause[responseInternals].status
+  }
+
+  // Try to find status in any symbol property
+  if (cause && typeof cause === 'object') {
+    const symbols = Object.getOwnPropertySymbols(cause)
+    for (const symbol of symbols) {
+      const value = cause[symbol]
+      if (value && typeof value.status === 'number') {
+        return value.status
+      }
+    }
+  }
+
+  return null
 }
