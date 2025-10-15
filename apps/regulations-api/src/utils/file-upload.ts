@@ -98,7 +98,6 @@ const getKey = (req: ExpressRequest, _file: MulterFile) => {
 const storage = multerS3({
   s3: new S3({ region: AWS_REGION_NAME }),
   bucket: AWS_BUCKET_NAME || '',
-  acl: 'public-read',
   contentType: multerS3.AUTO_CONTENT_TYPE,
   key: (req, file, cb) => {
     cb(null, getKey(req as ExpressRequest, file))
