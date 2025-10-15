@@ -1,5 +1,11 @@
 'use client'
 
+import { useQueryState } from 'next-usequerystate'
+
+import { parseAsInteger } from 'nuqs/server'
+
+import { Pagination } from '@dmr.is/ui/components/island-is'
+
 import {
   GridColumn,
   GridContainer,
@@ -8,14 +14,17 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { ApplicationDto } from '../../../gen/fetch'
+import { ApplicationDto, Paging } from '../../../gen/fetch'
 import { ApplicationCard } from './ApplicationCard'
 
 type Props = {
   applications: ApplicationDto[]
+  paging: Paging
 }
 
-export const ApplicationList = ({ applications }: Props) => {
+export const ApplicationList = ({ applications, paging }: Props) => {
+  const [_page, setPage] = useQueryState('page', parseAsInteger)
+
   return (
     <GridContainer>
       <GridRow>
@@ -28,6 +37,17 @@ export const ApplicationList = ({ applications }: Props) => {
             {applications.length === 0 && (
               <Text>Þú hefur ekki skráð neinar umsóknir ennþá.</Text>
             )}
+            <Pagination
+              page={paging.page}
+              itemsPerPage={paging.pageSize}
+              totalItems={paging.totalItems}
+              totalPages={paging.totalPages}
+              renderLink={(page, className, children) => (
+                <button className={className} onClick={() => setPage(page)}>
+                  {children}
+                </button>
+              )}
+            />
           </Stack>
         </GridColumn>
       </GridRow>

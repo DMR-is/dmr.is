@@ -1,10 +1,6 @@
-import { getServerSession } from 'next-auth'
-
-import { ApplicationList } from '../../../components/client-components/application/ApplicationList'
-import { UmsoknirHero } from '../../../components/client-components/hero/UmsoknirHero'
-import { authOptions } from '../../../lib/authOptions'
-import { getClient } from '../../../lib/createClient'
+import { ApplicationsContainer } from '../../../containers/ApplicationsContainer'
 import { loadPagingSearchParams } from '../../../lib/nuqs/search-params'
+import { getTrpcServer } from '../../../lib/trpc/server/server'
 
 export default async function UmsoknirPage({
   searchParams,
@@ -12,20 +8,14 @@ export default async function UmsoknirPage({
   searchParams: { page?: string; pageSize?: string }
 }) {
   const { page, pageSize } = loadPagingSearchParams(searchParams)
-  const session = await getServerSession(authOptions)
 
-  if (!session || !session.idToken) {
-    throw new Error('Þú þarft að vera innskráð/ur til að skoða þessa síðu.')
-  }
+  const { trpc, HydrateClient } = await getTrpcServer()
 
-  const client = getClient(session.idToken)
-
-  const data = await client.getMyApplications({ page, pageSize })
+  void trpc.applicationApi.getApplications.prefetch({ page, pageSize })
 
   return (
-    <>
-      <UmsoknirHero />
-      <ApplicationList applications={data.applications} />
-    </>
+    <HydrateClient>
+      <ApplicationsContainer searchParams={{ page, pageSize }} />
+    </HydrateClient>
   )
 }

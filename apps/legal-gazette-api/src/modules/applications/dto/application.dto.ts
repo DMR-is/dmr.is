@@ -23,6 +23,12 @@ export class ApplicationDto {
   id!: string
 
   @ApiProperty({ type: String })
+  createdAt!: string
+
+  @ApiProperty({ type: String })
+  updatedAt!: string
+
+  @ApiProperty({ type: String })
   caseId!: string
 
   @ApiProperty({ type: String })

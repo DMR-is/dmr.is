@@ -16,7 +16,20 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  const message = error?.message ?? 'Villa kom upp'
+  const message = {
+    title: 'Villa kom upp',
+    message: 'Eitthvað fór úrskeiðis við að sækja gögnin.',
+  }
+
+  if (error.message === 'Umsókn fannst ekki') {
+    message.title = 'Umsókn fannst ekki'
+    message.message = 'Ekki náðist að sækja umsóknina.'
+  }
+
+  if (error.message === 'Failed to fetch') {
+    message.title = 'Villa við tengingu'
+    message.message = 'Ekki náðist að tengjast þjónustunni.'
+  }
 
   return (
     <GridContainer>
@@ -24,10 +37,8 @@ export default function Error({
         <GridColumn span="12/12">
           <Box padding={[1, 2, 3, 4]} background="white">
             <Stack space={[1, 2]}>
-              <Text variant="h2">{message}</Text>
-              {error.message === 'Umsókn fannst ekki' && (
-                <Text>Athugaðu hvort auðkenni slóðarinnar sé rétt.</Text>
-              )}
+              <Text variant="h2">{message.title}</Text>
+              <Text>{message.message}</Text>
             </Stack>
           </Box>
         </GridColumn>
