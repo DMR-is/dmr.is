@@ -1,29 +1,42 @@
-import { QueryTypes } from 'sequelize';
+import { QueryTypes } from 'sequelize'
 
-import { nameToSlug } from '@island.is/regulations-tools/utils';
+import { nameToSlug } from '@island.is/regulations-tools/utils'
 
-import { RegName, RegQueryName } from '../routes/types';
-import { db } from '../utils/sequelize';
+import { RegName, RegQueryName } from '../routes/types'
+import { db } from '../utils/sequelize'
 
 type SQLRedirect = {
-  id: number;
-  name: RegName;
-};
+  id: number
+  name: RegName
+}
 
-type Redirects = Array<RegQueryName>;
+type Redirects = Array<RegQueryName>
 
 export async function getRegulationsRedirects() {
   const sql = `
-  (select name from Regulation where type = 'amending' and status != 'draft')
-  union all
-  (select name from Regulation as r join Task as t on r.id = t.regulationId where t.migrated = true)
-  ;`;
+  (
+    select r.name
+    from regulation r
+    where r.type = 'amending'
+      and r.status <> 'draft'
+  )
+  union
+  (
+    select r.name
+    from regulation r
+    where exists (
+      select 1
+      from task t
+      where t.regulationid = r.id
+        and t.migrated = 1
+  )
+  );`
 
   const redirectsData = await db.query<SQLRedirect>(sql, {
     type: QueryTypes.SELECT,
-  });
+  })
 
-  const redirects: Redirects = redirectsData.map((itm) => nameToSlug(itm.name));
+  const redirects: Redirects = redirectsData.map((itm) => nameToSlug(itm.name))
 
-  return redirects;
+  return redirects
 }
