@@ -4,6 +4,24 @@ import { findAll, findOne, getText } from 'domutils'
 import { parseDocument } from 'htmlparser2'
 import sanitizeHtml from 'sanitize-html'
 
+function despaceIfSpacedOut(input: string): string {
+  const s = input ?? ''
+
+  // do we have long runs of "nonspace space nonspace"?
+  if (!/(\S\s){10,}\S/.test(s)) return s
+
+  const PLACEHOLDER = '\u0007' // unlikely char
+  return (
+    s
+      // 1) Protect original word boundaries
+      .replace(/ {2,}/g, PLACEHOLDER)
+      // 2) Remove all remaining (single) spaces — these are the injected inter-letter spaces
+      .replace(/ /g, '')
+      // 3) Restore single spaces at original word boundaries
+      .replace(new RegExp(PLACEHOLDER, 'g'), ' ')
+  )
+}
+
 const isElement = (n: Node): n is Element => (n as Element).type === 'tag'
 const tag = (n: Node) => (isElement(n) ? n.name.toLowerCase() : '')
 
@@ -263,7 +281,7 @@ const baseOptions: sanitizeHtml.IOptions = {
 }
 
 export function cleanLegacyHtml(input: string): string {
-  const src = input ?? ''
+  const src = despaceIfSpacedOut(input ?? '')
 
   // If there's a real <body> ANYWHERE, use only body innerHTML, sanitize, wrap in <div>
   const { inner } = extractBodyInnerDom(src)
