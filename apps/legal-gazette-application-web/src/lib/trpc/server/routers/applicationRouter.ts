@@ -1,9 +1,6 @@
 import z from 'zod'
 
-import {
-  AddDivisionMeetingAdvertToApplicationRequest,
-  CreateApplicationApplicationTypeEnum,
-} from '../../../../gen/fetch'
+import { CreateApplicationApplicationTypeEnum } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
 export const updateApplicationSchema = z.object({

@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 
 import { Box, Button, Inline, LinkV2 } from '@island.is/island-ui/core'
@@ -9,9 +8,7 @@ import { PageRoutes } from '../../../../lib/constants'
 import * as styles from './application-footer.css'
 
 export const ApplicationFooter = () => {
-  const { formState, trigger } = useFormContext()
-
-  console.log(formState.errors)
+  const { formState } = useFormContext()
 
   return (
     <Box

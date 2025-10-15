@@ -9,13 +9,5 @@ export default async function UmsoknirPage({
 }) {
   const { page, pageSize } = loadPagingSearchParams(searchParams)
 
-  const { trpc, HydrateClient } = await getTrpcServer()
-
-  void trpc.applicationApi.getApplications.prefetch({ page, pageSize })
-
-  return (
-    <HydrateClient>
-      <ApplicationsContainer searchParams={{ page, pageSize }} />
-    </HydrateClient>
-  )
+  return <ApplicationsContainer searchParams={{ page, pageSize }} />
 }
