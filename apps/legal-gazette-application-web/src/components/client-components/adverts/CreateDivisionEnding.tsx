@@ -1,5 +1,6 @@
+import { useParams } from 'next/navigation'
+
 import { useState } from 'react'
-import useSWRMutation from 'swr/mutation'
 
 import {
   Box,
@@ -17,12 +18,8 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
-import {
-  AddDivisionEndingAdvertToApplicationRequest,
-  AddDivisionEndingForApplicationDto,
-} from '../../../gen/fetch'
-import { useApplicationContext } from '../../../hooks/useApplicationContext'
-import { addDivisionEnding } from '../../../lib/fetchers'
+import { AddDivisionEndingForApplicationDto } from '../../../gen/fetch'
+import { trpc } from '../../../lib/trpc/client'
 import { Center } from '../center/Center'
 
 type Props = {
@@ -34,14 +31,10 @@ export const CreateDivisionEnding = ({
   isVisible,
   onVisibilityChange,
 }: Props) => {
-  const application = useApplicationContext()
-  const { trigger, isMutating } = useSWRMutation(
-    'addDivisionEnding',
-    (
-      _key: string,
-      { arg }: { arg: AddDivisionEndingAdvertToApplicationRequest },
-    ) => addDivisionEnding(arg),
-  )
+  const { id } = useParams()
+  const utils = trpc.useUtils()
+  const { mutate: addDivisionEnding, isPending } =
+    trpc.applicationApi.addDivisionEnding.useMutation()
 
   const [createState, setCreateState] =
     useState<AddDivisionEndingForApplicationDto>({
@@ -200,16 +193,21 @@ export const CreateDivisionEnding = ({
                             disabled={!canSubmit}
                             icon="upload"
                             iconType="outline"
-                            loading={isMutating}
+                            loading={isPending}
                             onClick={() => {
-                              trigger(
+                              addDivisionEnding(
                                 {
-                                  applicationId: application.id,
-                                  addDivisionEndingForApplicationDto:
-                                    createState,
+                                  applicationId: id as string,
+                                  ...createState,
                                 },
                                 {
                                   onSuccess: () => {
+                                    utils.applicationApi.getApplicationById.invalidate(
+                                      {
+                                        id: id as string,
+                                      },
+                                    )
+                                    utils.advertsApi.getAdvertByCaseId.invalidate()
                                     toast.success('Skiptalokum bætt við', {
                                       toastId: 'add-division-ending-success',
                                     })

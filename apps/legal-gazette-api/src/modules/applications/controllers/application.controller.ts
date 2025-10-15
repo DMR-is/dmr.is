@@ -18,13 +18,13 @@ import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
-import { CaseDto } from '../../case/dto/case.dto'
 import { ApplicationTypeEnum } from '../application.model'
 import { IApplicationService } from '../application.service.interface'
 import {
   AddDivisionEndingForApplicationDto,
   AddDivisionMeetingForApplicationDto,
   ApplicationDetailedDto,
+  ApplicationDto,
   ApplicationsDto,
   UpdateApplicationDto,
 } from '../dto/application.dto'
@@ -43,12 +43,12 @@ export class ApplicationController {
 
   @Post('createApplication/:applicationType')
   @ApiParam({ enum: ApplicationTypeEnum, name: 'applicationType' })
-  @LGResponse({ operationId: 'createApplication', type: CaseDto })
+  @LGResponse({ operationId: 'createApplication', type: ApplicationDto })
   async createApplication(
     @Param('applicationType', new EnumValidationPipe(ApplicationTypeEnum))
     applicationType: ApplicationTypeEnum,
     @CurrentUser() user: DMRUser,
-  ): Promise<CaseDto> {
+  ): Promise<ApplicationDto> {
     return this.applicationService.createApplication(applicationType, user)
   }
 

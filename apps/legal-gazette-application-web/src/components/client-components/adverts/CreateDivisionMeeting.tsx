@@ -1,7 +1,4 @@
-import { useRouter } from 'next/navigation'
-
 import { useState } from 'react'
-import useSWRMutation from 'swr/mutation'
 
 import {
   Box,
@@ -19,12 +16,8 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
-import {
-  AddDivisionMeetingAdvertToApplicationRequest,
-  AddDivisionMeetingForApplicationDto,
-} from '../../../gen/fetch'
-import { useApplicationContext } from '../../../hooks/useApplicationContext'
-import { addDivisionMeeting } from '../../../lib/fetchers'
+import { AddDivisionMeetingForApplicationDto } from '../../../gen/fetch'
+import { trpc } from '../../../lib/trpc/client'
 import { Center } from '../center/Center'
 
 type Props = {
@@ -36,16 +29,10 @@ export const CreateDivisionMeeting = ({
   isVisible,
   onVisibilityChange,
 }: Props) => {
-  const application = useApplicationContext()
-  const router = useRouter()
-
-  const { trigger, isMutating } = useSWRMutation(
-    'addDivisionMeeting',
-    (
-      _key: string,
-      { arg }: { arg: AddDivisionMeetingAdvertToApplicationRequest },
-    ) => addDivisionMeeting(arg),
-  )
+  const utils = trpc.useUtils()
+  const { id: applicationId } = useParams()
+  const { mutate: addDivisionMeeting, isPending } =
+    trpc.applicationApi.addDivisionMeeting.useMutation()
 
   const [createState, setCreateState] =
     useState<AddDivisionMeetingForApplicationDto>({
@@ -219,18 +206,19 @@ export const CreateDivisionMeeting = ({
                           <Inline alignY="center" align="right" space={2}>
                             <Button
                               disabled={!canSubmit}
-                              loading={isMutating}
+                              loading={isPending}
                               icon="share"
                               iconType="outline"
                               onClick={() =>
-                                trigger(
+                                addDivisionMeeting(
                                   {
-                                    addDivisionMeetingForApplicationDto:
-                                      createState,
-                                    applicationId: application.id,
+                                    applicationId: applicationId,
+                                    ...createState,
                                   },
                                   {
                                     onSuccess: () => {
+                                      utils.applicationApi.getApplicationById.invalidate()
+                                      utils.advertsApi.getAdvertByCaseId.invalidate()
                                       setCreateState({
                                         additionalText: '',
                                         meetingDate: '',
@@ -244,7 +232,6 @@ export const CreateDivisionMeeting = ({
                                         toastId: 'create-division-meeting',
                                       })
                                       closeModal()
-                                      router.refresh()
                                     },
                                     onError: () => {
                                       toast.error(

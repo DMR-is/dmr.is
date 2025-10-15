@@ -1,6 +1,9 @@
 import z from 'zod'
 
-import { CreateApplicationApplicationTypeEnum } from '../../../../gen/fetch'
+import {
+  AddDivisionMeetingAdvertToApplicationRequest,
+  CreateApplicationApplicationTypeEnum,
+} from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
 export const updateApplicationSchema = z.object({
@@ -37,6 +40,39 @@ export const updateApplicationSchema = z.object({
       }),
     )
     .optional(),
+})
+
+const createCommunicationChannelSchema = z.object({
+  email: z.string().email(),
+  name: z.string().optional(),
+  phone: z.string().optional(),
+})
+
+const addDivisionMeetingForApplicationSchema = z.object({
+  applicationId: z.string(),
+  meetingDate: z.string(),
+  meetingLocation: z.string(),
+  signatureLocation: z.string(),
+  signatureDate: z.string(),
+  signatureName: z.string(),
+  signatureOnBehalfOf: z.string().optional(),
+  additionalText: z.string().optional(),
+  communicationChannels: z
+    .array(createCommunicationChannelSchema)
+    .optional()
+    .optional(),
+})
+
+const addDivisionEndingForApplicationSchema = z.object({
+  applicationId: z.string(),
+  signatureLocation: z.string(),
+  signatureDate: z.string(),
+  signatureName: z.string(),
+  signatureOnBehalfOf: z.string().optional(),
+  additionalText: z.string().optional(),
+  communicationChannels: z.array(createCommunicationChannelSchema).optional(),
+  scheduledAt: z.string(),
+  declaredClaims: z.number(),
 })
 
 export const createApplicationSchema = z.enum(
@@ -106,6 +142,24 @@ export const applicationRouter = router({
     .mutation(async ({ ctx, input }) => {
       return await ctx.api.submitApplication({
         applicationId: input.id,
+      })
+    }),
+  addDivisionMeeting: protectedProcedure
+    .input(addDivisionMeetingForApplicationSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { applicationId, ...dto } = input
+      return await ctx.api.addDivisionMeetingAdvertToApplication({
+        applicationId: applicationId,
+        addDivisionMeetingForApplicationDto: dto,
+      })
+    }),
+  addDivisionEnding: protectedProcedure
+    .input(addDivisionEndingForApplicationSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { applicationId, ...dto } = input
+      return await ctx.api.addDivisionEndingAdvertToApplication({
+        applicationId: applicationId,
+        addDivisionEndingForApplicationDto: dto,
       })
     }),
 })

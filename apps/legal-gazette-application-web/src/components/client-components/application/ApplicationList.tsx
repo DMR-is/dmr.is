@@ -37,17 +37,19 @@ export const ApplicationList = ({ applications, paging }: Props) => {
             {applications.length === 0 && (
               <Text>Þú hefur ekki skráð neinar umsóknir ennþá.</Text>
             )}
-            <Pagination
-              page={paging.page}
-              itemsPerPage={paging.pageSize}
-              totalItems={paging.totalItems}
-              totalPages={paging.totalPages}
-              renderLink={(page, className, children) => (
-                <button className={className} onClick={() => setPage(page)}>
-                  {children}
-                </button>
-              )}
-            />
+            {paging.totalPages > 1 && (
+              <Pagination
+                page={paging.page}
+                itemsPerPage={paging.pageSize}
+                totalItems={paging.totalItems}
+                totalPages={paging.totalPages}
+                renderLink={(page, className, children) => (
+                  <button className={className} onClick={() => setPage(page)}>
+                    {children}
+                  </button>
+                )}
+              />
+            )}
           </Stack>
         </GridColumn>
       </GridRow>

@@ -24,7 +24,7 @@ type Props = {
 export const AdvertPublications = ({ advert, detailed = false }: Props) => {
   const [html, setHTML] = useState<string>('')
 
-  const [toggles] = useState(advert.publications.map(() => useToggle(false)))
+  const toggles = advert.publications.map(() => useToggle(false))
 
   const { mutate: getAdvertPublication } =
     trpc.publicationApi.getAdvertPublication.useMutation()
@@ -65,7 +65,6 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
                   buttonType: { variant: 'text' },
 
                   onClick: () => {
-                    setToggle(true)
                     getAdvertPublication(
                       {
                         advertId: advert.id,
@@ -74,6 +73,7 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
                       {
                         onSuccess: (data: AdvertPublicationDetailedDto) => {
                           setHTML(data.html)
+                          setToggle(true)
                         },
                         onError: () =>
                           toast.error('Ekki tókst að sækja birtingu'),
@@ -85,7 +85,7 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
               <AdvertModal
                 id={advert.id}
                 html={html}
-                onVisiblityChange={(vis) => setToggle(vis)}
+                onVisiblityChange={setToggle}
                 isVisible={toggle}
               />
             </>

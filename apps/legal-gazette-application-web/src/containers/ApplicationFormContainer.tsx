@@ -6,13 +6,13 @@ import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
 import { SkeletonLoader } from '@island.is/island-ui/core'
 
-import { ApplicationSubmitted } from '../components/client-components/application/ApplicationSubmitted'
 import { ApplicationForm } from '../components/client-components/form/ApplicationForm'
 import {
   ApplicationDetailedDto,
   ApplicationDetailedDtoStatusEnum,
 } from '../gen/fetch'
 import { trpc } from '../lib/trpc/client'
+import { ApplicationSubmittedContainer } from './ApplicationSubmittedContainer'
 
 type Props = {
   application: ApplicationDetailedDto
@@ -61,6 +61,5 @@ export function ApplicationFormContainer({ application }: Props) {
     )
   }
 
-  // return <ApplicationSubmitted adverts={[]} />
-  return <div>Birta auglysingar</div>
+  return <ApplicationSubmittedContainer application={application} />
 }

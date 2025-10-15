@@ -1918,7 +1918,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/CaseDto" }
+                "schema": { "$ref": "#/components/schemas/ApplicationDto" }
               }
             }
           },

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useToggle } from 'react-use'
 
 import { Box, Stack } from '@island.is/island-ui/core'
 
@@ -13,15 +13,7 @@ type Props = {
 }
 
 export const AdvertList = ({ adverts }: Props) => {
-  const [modalState, setModalState] = useState(() =>
-    adverts.reduce(
-      (acc, advert) => {
-        acc[advert.id] = false
-        return acc
-      },
-      {} as Record<string, boolean>,
-    ),
-  )
+  const toggles = adverts.map(() => useToggle(false))
 
   return (
     <Box borderTopWidth="standard" borderColor="standard">
@@ -30,19 +22,17 @@ export const AdvertList = ({ adverts }: Props) => {
           <AdvertPublications detailed advert={advert} />
         ))}
       </Stack>
-      {adverts.map((advert) => (
-        <AdvertModal
-          id={advert.id}
-          html=""
-          isVisible={modalState[advert.id]}
-          onVisiblityChange={(vis) =>
-            setModalState((prev) => ({
-              ...prev,
-              [advert.id]: vis,
-            }))
-          }
-        />
-      ))}
+      {adverts.map((advert, index) => {
+        const [toggle, setToggle] = toggles[index]
+        return (
+          <AdvertModal
+            id={advert.id}
+            html=""
+            isVisible={toggle}
+            onVisiblityChange={setToggle}
+          />
+        )
+      })}
     </Box>
   )
 }
