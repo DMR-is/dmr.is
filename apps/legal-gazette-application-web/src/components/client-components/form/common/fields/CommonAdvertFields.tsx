@@ -1,55 +1,61 @@
 'use client'
 
-import { useFormContext } from 'react-hook-form'
-import useSWR from 'swr'
+import { useEffect } from 'react'
+import { useFormContext, useFormState } from 'react-hook-form'
 
 import { GridColumn, GridRow, Stack, Text } from '@island.is/island-ui/core'
 
 import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
-import { getCategories } from '../../../../../lib/fetchers'
 import {
   CommonFormFields,
   CommonFormSchema,
 } from '../../../../../lib/forms/schemas/common-schema'
+import { trpc } from '../../../../../lib/trpc/client'
 import { Editor } from '../../../editor/Editor'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
 export const CommonAdvertFields = () => {
   const { getValues, setValue, watch } = useFormContext<CommonFormSchema>()
+  const { dirtyFields } = useFormState()
+  const isTypesDirty = dirtyFields.fields?.type === true
+
+  const { updateType, updateCategory, updateCaption, updateHTML } =
+    useUpdateApplication(getValues('meta.applicationId'))
 
   const { typeOptions } = getValues('meta')
-
-  const { trigger } = useUpdateApplication({
-    applicationId: getValues('meta.applicationId'),
-  })
 
   const typeId = watch('fields.type')
   const categoryId = watch('fields.category')
 
-  const { data, isLoading } = useSWR(
-    typeId ? ['getCategories', typeId] : null,
-    ([_key, type]) => getCategories({ type }),
-    {
-      onSuccess: (data) => {
-        if (data.categories.length === 1) {
-          setValue(CommonFormFields.CATEGORY, data.categories[0].id)
-          return trigger({ categoryId: data.categories[0].id })
-        }
-
-        setValue(CommonFormFields.CATEGORY, '')
-        return trigger({ categoryId: null })
-      },
-    },
+  const {
+    data: categoriesData,
+    isLoading,
+    isPending,
+  } = trpc.applicationApi.getCategories.useQuery(
+    { typeId: typeId },
+    { enabled: !!typeId },
   )
 
+  useEffect(() => {
+    if (!categoriesData?.categories || !isTypesDirty) return
+
+    if (categoriesData.categories.length === 1) {
+      setValue(CommonFormFields.CATEGORY, categoriesData.categories[0].id)
+      updateCategory(categoriesData.categories[0].id)
+    }
+  }, [categoriesData?.categories, isTypesDirty])
+
   const categoryOptions =
-    data?.categories.map((category) => ({
+    categoriesData?.categories.map((category) => ({
       label: category.title,
       value: category.id,
     })) ?? []
 
   const disabledCategories =
-    categoryOptions.length === 0 || categoryOptions.length === 1 || isLoading
+    categoryOptions.length === 0 ||
+    categoryOptions.length === 1 ||
+    isLoading ||
+    isPending
 
   return (
     <Stack space={[1, 2]}>
@@ -61,7 +67,7 @@ export const CommonAdvertFields = () => {
             options={typeOptions}
             name={CommonFormFields.TYPE}
             label="Tegund auglýsingar"
-            onChange={(val) => trigger({ typeId: val })}
+            onChange={(val) => updateType(val)}
           />
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
@@ -72,7 +78,7 @@ export const CommonAdvertFields = () => {
             options={categoryOptions}
             name={CommonFormFields.CATEGORY}
             label="Flokkur"
-            onChange={(val) => trigger({ categoryId: val })}
+            onChange={(val) => updateCategory(val)}
           />
         </GridColumn>
         <GridColumn span="12/12">
@@ -80,7 +86,7 @@ export const CommonAdvertFields = () => {
             name={CommonFormFields.CAPTION}
             label="Yfirskrift"
             required
-            onBlur={(val) => trigger({ caption: val })}
+            onBlur={(val) => updateCaption(val)}
           />
         </GridColumn>
         <GridColumn span="12/12">
@@ -89,10 +95,7 @@ export const CommonAdvertFields = () => {
           </Text>
           <Editor
             defaultValue={getValues('fields.html')}
-            onBlur={(val) => {
-              setValue('fields.html', val)
-              trigger({ html: Buffer.from(val).toString('base64') })
-            }}
+            onChange={(val) => updateHTML(val)}
           />
         </GridColumn>
       </GridRow>

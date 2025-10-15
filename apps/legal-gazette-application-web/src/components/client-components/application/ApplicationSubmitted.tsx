@@ -15,19 +15,18 @@ import {
 } from '@island.is/island-ui/core'
 
 import { AdvertDto, ApplicationTypeEnum } from '../../../gen/fetch'
-import { useApplicationContext } from '../../../hooks/useApplicationContext'
 import { PageRoutes } from '../../../lib/constants'
 import { AddAdvertsToApplicationMenu } from '../adverts/AddAdvertsToApplicationMenu'
 import { AdvertList } from '../adverts/AdvertList'
 import { AdvertTable } from '../adverts/AdvertTable'
 
 type Props = {
+  applicationType: ApplicationTypeEnum
   adverts: AdvertDto[]
 }
 
-export const ApplicationSubmitted = ({ adverts }: Props) => {
+export const ApplicationSubmitted = ({ adverts, applicationType }: Props) => {
   const [showAsCards, setShowAsCards] = useState(false)
-  const { applicationType } = useApplicationContext()
   return (
     <GridContainer>
       <GridRow>
@@ -39,7 +38,7 @@ export const ApplicationSubmitted = ({ adverts }: Props) => {
                   <Text variant="h2">Auglýsingar tengdar umsókninni</Text>
                   <LinkV2 href={PageRoutes.APPLICATIONS}>
                     <Button preTextIcon="arrowBack" variant="text" size="small">
-                      Tilbaka í yfirlit
+                      Tilbaka í umsóknir
                     </Button>
                   </LinkV2>
                 </Inline>

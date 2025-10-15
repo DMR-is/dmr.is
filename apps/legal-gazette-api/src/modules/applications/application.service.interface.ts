@@ -1,11 +1,11 @@
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
-import { CaseDto } from '../case/dto/case.dto'
 import {
   AddDivisionEndingForApplicationDto,
   AddDivisionMeetingForApplicationDto,
   ApplicationDetailedDto,
+  ApplicationDto,
   ApplicationsDto,
   UpdateApplicationDto,
 } from './dto/application.dto'
@@ -14,7 +14,7 @@ import { IslandIsSubmitCommonApplicationDto } from './dto/island-is-application.
 export interface IApplicationService {
   getMyApplications(query: PagingQuery, user: DMRUser): Promise<ApplicationsDto>
 
-  createApplication(categoryId: string, user: DMRUser): Promise<CaseDto>
+  createApplication(categoryId: string, user: DMRUser): Promise<ApplicationDto>
 
   submitIslandIsApplication(
     body: IslandIsSubmitCommonApplicationDto,

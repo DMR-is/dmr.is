@@ -22,6 +22,7 @@ export const commonFormFieldsSchema = z.object({
     .string()
     .min(1, 'Staðsetning undirskriftar er nauðsynleg'),
   signatureDate: z.date('Dagsetning undirskriftar er nauðsynleg'),
+  signatureOnBehalfOf: z.string().optional(),
   publishingDates: z
     .array(publishingDateSchema)
     .refine(
@@ -52,6 +53,7 @@ export enum CommonFormFields {
   HTML = 'fields.html',
   SIGNATURE_NAME = 'fields.signatureName',
   SIGNATURE_LOCATION = 'fields.signatureLocation',
+  SIGNATURE_ON_BEHALF_OF = 'fields.signatureOnBehalfOf',
   SIGNATURE_DATE = 'fields.signatureDate',
   PUBLISHING_DATES = 'fields.publishingDates',
 }

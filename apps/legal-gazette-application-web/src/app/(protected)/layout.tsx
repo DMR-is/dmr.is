@@ -6,6 +6,7 @@ import { Header } from '@dmr.is/ui/components/Header/Header'
 
 import { Providers } from '../../components/client-components/providers/Providers'
 import { authOptions } from '../../lib/authOptions'
+import ProviderTRPC from '../../lib/trpc/client/Provider'
 
 export default async function RootLayout({
   children,
@@ -15,15 +16,13 @@ export default async function RootLayout({
   const session = await getServerSession(authOptions)
 
   return (
-    <html lang="is">
-      <body>
-        <NuqsAdapter>
-          <Providers session={session}>
-            <Header variant="white" />
-            {children}
-          </Providers>
-        </NuqsAdapter>
-      </body>
-    </html>
+    <ProviderTRPC>
+      <NuqsAdapter>
+        <Providers session={session}>
+          <Header variant="white" />
+          {children}
+        </Providers>
+      </NuqsAdapter>
+    </ProviderTRPC>
   )
 }

@@ -24,9 +24,11 @@ export const SelectController = (
     }
   }
 
+  const { ref: _ref, ...fieldWithoutRef } = field
+
   return (
     <Select
-      {...field}
+      {...fieldWithoutRef}
       label={label}
       backgroundColor="blue"
       size="sm"

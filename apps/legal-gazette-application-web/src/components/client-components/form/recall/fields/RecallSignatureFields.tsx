@@ -13,8 +13,9 @@ import { InputController } from '../../controllers/InputController'
 export const RecallSignatureFields = () => {
   const { getValues } = useFormContext<RecallFormSchema>()
 
-  const { applicationId } = getValues('meta')
-  const { trigger } = useUpdateApplication({ applicationId })
+  const { updateSignatureLocation, updateSignatureDate } = useUpdateApplication(
+    getValues('meta.applicationId'),
+  )
 
   return (
     <GridRow rowGap={[2, 3]}>
@@ -27,7 +28,7 @@ export const RecallSignatureFields = () => {
           label="Dagsetning undirritunar"
           name={RecallFormFields.SIGNATURE_DATE}
           maxDate={new Date()}
-          onChange={(date) => trigger({ signatureDate: date.toISOString() })}
+          onChange={(date) => updateSignatureDate(date.toISOString())}
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
@@ -35,7 +36,7 @@ export const RecallSignatureFields = () => {
           required
           label="Staðsetning undirritunar"
           name={RecallFormFields.SIGNATURE_LOCATION}
-          onBlur={(val) => trigger({ signatureLocation: val })}
+          onBlur={(val) => updateSignatureLocation(val)}
         />
       </GridColumn>
     </GridRow>

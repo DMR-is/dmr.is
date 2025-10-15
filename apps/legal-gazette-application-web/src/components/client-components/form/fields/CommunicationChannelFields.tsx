@@ -21,8 +21,9 @@ import { CommunicationChannelSchema } from '../../../../lib/forms/schemas/shared
 export const CommunicationChannelFields = () => {
   const { getValues, setValue, watch } = useFormContext()
 
-  const { applicationId } = getValues('meta')
-  const { trigger } = useUpdateApplication({ applicationId })
+  const { updateCommunicationChannels } = useUpdateApplication(
+    getValues('meta.applicationId'),
+  )
 
   const channels: CommunicationChannelSchema[] = watch(
     'fields.communicationChannels',
@@ -62,7 +63,7 @@ export const CommunicationChannelFields = () => {
     setValue('fields.communicationChannels', channels, {
       shouldValidate: true,
     })
-    trigger({ communicationChannels: channels })
+    updateCommunicationChannels(channels)
     setToggleAdd(false)
     setIsEditing('')
     setCurrentChannel({ email: '', name: '', phone: '' })
@@ -71,7 +72,7 @@ export const CommunicationChannelFields = () => {
   const removeChannel = (index: number) => {
     const updatedChannels = channels.filter((_, i) => i !== index)
     setValue('fields.communicationChannels', updatedChannels)
-    trigger({ communicationChannels: updatedChannels })
+    updateCommunicationChannels(updatedChannels)
   }
 
   return (

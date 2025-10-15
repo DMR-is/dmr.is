@@ -2,98 +2,74 @@
 
 import { useRouter } from 'next/navigation'
 
-import useSWRMutation from 'swr/mutation'
-
-import { DropdownMenu, toast } from '@island.is/island-ui/core'
+import { DropdownMenu, toast } from '@dmr.is/ui/components/island-is'
 
 import {
   ApplicationTypeEnum,
   CreateApplicationApplicationTypeEnum,
 } from '../../../gen/fetch'
 import { PageRoutes } from '../../../lib/constants'
-import { createApplication } from '../../../lib/fetchers'
+import { trpc } from '../../../lib/trpc/client'
 export const CreateApplication = () => {
   const router = useRouter()
 
-  const { trigger: createApplicationTrigger, isMutating } = useSWRMutation(
-    'createRecallCaseAndApplication',
-    (
-      _key: string,
-      {
-        arg,
-      }: {
-        arg: { type: CreateApplicationApplicationTypeEnum }
-      },
-    ) => createApplication({ applicationType: arg.type }),
-    {
-      onSuccess: (data) => {
-        if (!data.applicationType) {
-          toast.error(
-            'Umsóknartegund vantar. Vinsamlegast reyndu aftur síðar.',
-            {
-              toastId: 'createRecallCaseAndApplicationError',
-            },
-          )
+  const utils = trpc.useUtils()
 
-          return
+  const { mutate: createApplication, isPending } =
+    trpc.applicationApi.createApplication.useMutation({
+      onMutate: () => {
+        utils.applicationApi.getApplications.invalidate()
+      },
+      onSuccess: (data) => {
+        if (data.applicationType === ApplicationTypeEnum.RECALLBANKRUPTCY) {
+          router.push(`${PageRoutes.APPLICATION_THROTABU}/${data.id}`)
         }
 
-        let routeToTake
-        if (data.applicationType === ApplicationTypeEnum.RECALLBANKRUPTCY) {
-          routeToTake = PageRoutes.APPLICATION_THROTABU
-        } else if (
-          data.applicationType === ApplicationTypeEnum.RECALLDECEASED
-        ) {
-          routeToTake = PageRoutes.APPLICATION_DANARBU
-        } else if (data.applicationType === ApplicationTypeEnum.COMMON) {
-          routeToTake = PageRoutes.APPLICATION_COMMON
-        } else {
-          throw new Error('Unsupported application type')
+        if (data.applicationType === ApplicationTypeEnum.RECALLDECEASED) {
+          router.push(`${PageRoutes.APPLICATION_DANARBU}/${data.id}`)
+        }
+
+        if (data.applicationType === ApplicationTypeEnum.COMMON) {
+          router.push(`${PageRoutes.APPLICATION_COMMON}/${data.id}`)
         }
 
         router.refresh()
-
-        setTimeout(() => {
-          router.push(`${routeToTake}/${data.id}`)
-        }, 100)
       },
-      onError: (_error) => {
+      onError: (error) => {
         toast.error(
-          'Ekki tókst að stofna umsókn. Vinsamlegast reyndu aftur síðar.',
+          error?.message ||
+            'Ekki tókst að stofna umsókn. Vinsamlegast reyndu aftur síðar.',
           {
-            toastId: 'createRecallCaseAndApplicationError',
+            toastId: 'createApplicationError',
           },
         )
       },
-    },
-  )
+    })
 
   return (
     <DropdownMenu
       title="Stofna umsókn"
       icon="hammer"
-      loading={isMutating}
+      loading={isPending}
       items={[
         {
           title: 'Almenn umsókn',
           onClick: () =>
-            createApplicationTrigger({
-              type: CreateApplicationApplicationTypeEnum.COMMON,
-            }),
+            createApplication(CreateApplicationApplicationTypeEnum.COMMON),
         },
         {
           title: 'Innköllun þrotabús',
           onClick: () =>
-            createApplicationTrigger({
-              type: CreateApplicationApplicationTypeEnum.RECALLBANKRUPTCY,
-            }),
+            createApplication(
+              CreateApplicationApplicationTypeEnum.RECALLBANKRUPTCY,
+            ),
         },
         {
           title: 'Innköllun dánarbús',
           onClick: () =>
-            createApplicationTrigger({
-              type: CreateApplicationApplicationTypeEnum.RECALLDECEASED,
-            }),
+            createApplication(
+              CreateApplicationApplicationTypeEnum.RECALLDECEASED,
+            ),
         },
       ]}
     />

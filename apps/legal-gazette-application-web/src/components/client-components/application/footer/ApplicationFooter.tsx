@@ -8,9 +8,7 @@ import { PageRoutes } from '../../../../lib/constants'
 import * as styles from './application-footer.css'
 
 export const ApplicationFooter = () => {
-  const {
-    formState: { isValid },
-  } = useFormContext()
+  const { formState } = useFormContext()
 
   return (
     <Box
@@ -27,7 +25,7 @@ export const ApplicationFooter = () => {
             Yfirlit
           </Button>
         </LinkV2>
-        <Button type="submit" icon="arrowForward" disabled={!isValid}>
+        <Button type="submit" icon="arrowForward" disabled={!formState.isValid}>
           Senda til birtingar
         </Button>
       </Inline>

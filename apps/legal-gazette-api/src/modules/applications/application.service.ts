@@ -5,6 +5,7 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -31,7 +32,6 @@ import {
 import { AdvertModel } from '../advert/advert.model'
 import { IAdvertService } from '../advert/advert.service.interface'
 import { CaseModel } from '../case/case.model'
-import { CaseDto } from '../case/dto/case.dto'
 import {
   CategoryDefaultIdEnum,
   CategoryModel,
@@ -46,6 +46,7 @@ import {
   AddDivisionEndingForApplicationDto,
   AddDivisionMeetingForApplicationDto,
   ApplicationDetailedDto,
+  ApplicationDto,
   ApplicationsDto,
   UpdateApplicationDto,
 } from './dto/application.dto'
@@ -106,7 +107,7 @@ export class ApplicationService implements IApplicationService {
       scheduledAt: requiredFields.publishingDates.map((d) => d.toISOString()),
     })
 
-    // await application.update({ status: ApplicationStatusEnum.FINISHED })
+    await application.update({ status: ApplicationStatusEnum.FINISHED })
   }
 
   private async submitRecallApplication(
@@ -441,7 +442,7 @@ export class ApplicationService implements IApplicationService {
   async createApplication(
     applicationType: ApplicationTypeEnum,
     user: DMRUser,
-  ): Promise<CaseDto> {
+  ): Promise<ApplicationDto> {
     const caseData = await this.caseModel.create(
       {
         involvedPartyNationalId: user.nationalId,
@@ -456,7 +457,15 @@ export class ApplicationService implements IApplicationService {
       },
     )
 
-    return caseData.fromModel()
+    await caseData.reload()
+
+    const { application } = caseData
+
+    if (!application) {
+      throw new InternalServerErrorException('Failed to create application')
+    }
+
+    return application.fromModel()
   }
 
   async getMyApplications(

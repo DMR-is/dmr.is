@@ -12,9 +12,12 @@ import { InputController } from '../../controllers/InputController'
 
 export const CommonSignatureFields = () => {
   const { getValues } = useFormContext<CommonFormSchema>()
-  const { trigger } = useUpdateApplication({
-    applicationId: getValues('meta.applicationId'),
-  })
+  const {
+    updateSignatureName,
+    updateSignatureLocation,
+    updateSignatureDate,
+    updateSignatureOnBehalfOf,
+  } = useUpdateApplication(getValues('meta.applicationId'))
 
   return (
     <Stack space={[1, 2]}>
@@ -24,7 +27,7 @@ export const CommonSignatureFields = () => {
           <InputController
             name={CommonFormFields.SIGNATURE_NAME}
             label="Nafn undirritara"
-            onBlur={(val) => trigger({ signatureName: val })}
+            onBlur={(val) => updateSignatureName(val)}
             required
           />
         </GridColumn>
@@ -32,15 +35,23 @@ export const CommonSignatureFields = () => {
           <InputController
             name={CommonFormFields.SIGNATURE_LOCATION}
             label="Staðsetning undirritara"
-            onBlur={(val) => trigger({ signatureLocation: val })}
+            onBlur={(val) => updateSignatureLocation(val)}
             required
+          />
+        </GridColumn>
+        <GridColumn span={['12/12', '6/12']}>
+          <InputController
+            name={CommonFormFields.SIGNATURE_ON_BEHALF_OF}
+            label="F.h. undirritara"
+            onBlur={(val) => updateSignatureOnBehalfOf(val)}
+            required={false}
           />
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <DatePickerController
             name={CommonFormFields.SIGNATURE_DATE}
             label="Dagsetning undirritunar"
-            onChange={(date) => trigger({ signatureDate: date.toISOString() })}
+            onChange={(date) => updateSignatureDate(date.toISOString())}
           />
         </GridColumn>
       </GridRow>

@@ -24,16 +24,6 @@ export const commonForm = ({
       applicationId,
       typeOptions: typeOptions,
     },
-    fields: {
-      type: fields.type,
-      caption: fields.caption,
-      category: fields.category,
-      html: fields.html,
-      signatureName: fields.signatureName,
-      signatureLocation: fields.signatureLocation,
-      signatureDate: fields.signatureDate,
-      publishingDates: fields.publishingDates,
-      communicationChannels: fields.communicationChannels,
-    },
+    fields,
   },
 })

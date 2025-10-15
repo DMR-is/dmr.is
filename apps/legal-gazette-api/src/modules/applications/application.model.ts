@@ -91,6 +91,7 @@ export type ApplicationCreateAttributes = {
     { model: CategoryModel, as: 'category' },
     { model: TypeModel, as: 'type' },
   ],
+  order: [['createdAt', 'DESC']],
 }))
 @Scopes(() => ({
   common: {
@@ -401,6 +402,8 @@ export class ApplicationModel extends BaseModel<
   static fromModel(model: ApplicationModel): ApplicationDto {
     return {
       id: model.id,
+      createdAt: model.createdAt.toISOString(),
+      updatedAt: model.updatedAt.toISOString(),
       caseId: model.caseId,
       nationalId: model.submittedByNationalId,
       status: model.status,

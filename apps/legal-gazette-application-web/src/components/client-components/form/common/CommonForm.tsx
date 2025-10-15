@@ -1,10 +1,8 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-
 import { FormProvider, useForm } from 'react-hook-form'
 
-import { SkeletonLoader, Stack, Text, toast } from '@island.is/island-ui/core'
+import { SkeletonLoader, Stack, Text } from '@island.is/island-ui/core'
 
 import { useSubmitApplication } from '../../../../hooks/useSubmitApplication'
 import { commonForm } from '../../../../lib/forms/common-form'
@@ -23,7 +21,6 @@ type Props = {
 }
 
 export const CommonForm = ({ applicationId, caseId, types, fields }: Props) => {
-  const router = useRouter()
   const methods = useForm<CommonFormSchema>(
     commonForm({
       applicationId: applicationId,
@@ -33,19 +30,7 @@ export const CommonForm = ({ applicationId, caseId, types, fields }: Props) => {
     }),
   )
 
-  const { trigger } = useSubmitApplication({
-    onSuccess: () => router.refresh(),
-  })
-
-  const onValidSubmit = (_data: CommonFormSchema) => {
-    trigger({ applicationId: applicationId })
-  }
-
-  const onInvalidSubmit = (_errors: unknown) => {
-    toast.error('Umsókn er ekki rétt útfyllt', {
-      toastId: 'submit-common-application-error',
-    })
-  }
+  const { onValidSubmit, onInvalidSubmit } = useSubmitApplication(applicationId)
 
   return (
     <FormProvider {...methods}>

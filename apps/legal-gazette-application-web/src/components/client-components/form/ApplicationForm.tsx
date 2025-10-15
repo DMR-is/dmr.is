@@ -5,7 +5,6 @@ import { CommonForm } from './common/CommonForm'
 import { RecallForm } from './recall/RecallForm'
 
 export type Props = {
-  caseId: string
   application: ApplicationDetailedDto
   types?: { label: string; value: string }[]
   courtDistricts: { label: string; value: string }[]
@@ -40,10 +39,11 @@ export const ApplicationForm = ({
               : undefined,
             signatureLocation: application.signatureLocation ?? undefined,
             signatureName: application.signatureName ?? undefined,
+            signatureOnBehalfOf: application.signatureOnBehalfOf ?? undefined,
           }}
           types={types}
           applicationId={application.id}
-          caseId={application.id}
+          caseId={application.caseId}
         />
       )
     case ApplicationTypeEnum.RECALLBANKRUPTCY:
@@ -87,9 +87,10 @@ export const ApplicationForm = ({
               ? new Date(application.signatureDate)
               : undefined,
             signatureLocation: application.signatureLocation ?? undefined,
+            signatureOnBehalfOf: application.signatureOnBehalfOf ?? undefined,
           }}
           applicationId={application.id}
-          caseId={application.id}
+          caseId={application.caseId}
           courtOptions={courtDistricts}
         />
       )

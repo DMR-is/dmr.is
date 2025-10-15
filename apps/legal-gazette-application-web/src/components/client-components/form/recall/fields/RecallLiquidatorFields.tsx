@@ -10,8 +10,12 @@ import {
 import { InputController } from '../../controllers/InputController'
 
 export const RecallLiquidatorFields = () => {
-  const { applicationId } = useFormContext<RecallFormSchema>().getValues('meta')
-  const { trigger } = useUpdateApplication({ applicationId })
+  const { getValues } = useFormContext<RecallFormSchema>()
+  const {
+    updateLiquidatorName,
+    updateLiquidatorLocation,
+    updateLiquidatorOnBehalfOf,
+  } = useUpdateApplication(getValues('meta.applicationId'))
 
   return (
     <GridRow rowGap={[2, 3]}>
@@ -22,7 +26,7 @@ export const RecallLiquidatorFields = () => {
         <InputController
           label="Nafn skiptastjóra"
           name={RecallFormFields.LIQUIDATOR_NAME}
-          onBlur={(val) => trigger({ liquidatorName: val })}
+          onBlur={(val) => updateLiquidatorName(val)}
           required
         />
       </GridColumn>
@@ -30,7 +34,7 @@ export const RecallLiquidatorFields = () => {
         <InputController
           label="Staðsetning skiptastjóra"
           name={RecallFormFields.LIQUIDATOR_LOCATION}
-          onBlur={(val) => trigger({ liquidatorLocation: val })}
+          onBlur={(val) => updateLiquidatorLocation(val)}
           required
         />
       </GridColumn>
@@ -38,7 +42,7 @@ export const RecallLiquidatorFields = () => {
         <InputController
           label="Fyrir hönd skiptastjóra"
           name={RecallFormFields.LIQUIDATOR_ON_BEHALF_OF}
-          onBlur={(val) => trigger({ liquidatorOnBehalfOf: val })}
+          onBlur={(val) => updateLiquidatorOnBehalfOf(val)}
         />
       </GridColumn>
     </GridRow>

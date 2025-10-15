@@ -18,9 +18,8 @@ export const RecallAdvertFields = () => {
 
   const { applicationId, courtOptions } = getValues('meta')
 
-  const { trigger } = useUpdateApplication({
-    applicationId: applicationId,
-  })
+  const { updateAdditionalText, updateCourtDistrict, updateJudgmentDate } =
+    useUpdateApplication(applicationId)
 
   return (
     <Stack space={[1, 2]}>
@@ -32,7 +31,7 @@ export const RecallAdvertFields = () => {
             name={RecallFormFields.COURT_ID}
             label="Dómstóll"
             required
-            onChange={(val) => trigger({ courtDistrictId: val })}
+            onChange={(val) => updateCourtDistrict(val)}
           />
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
@@ -40,9 +39,7 @@ export const RecallAdvertFields = () => {
             name={RecallFormFields.JUDGEMENT_DATE}
             label="Úrskurðardagur"
             required
-            onChange={(val) =>
-              trigger({ judgmentDate: val ? val.toISOString() : undefined })
-            }
+            onChange={(val) => updateJudgmentDate(val.toISOString())}
           />
         </GridColumn>
         <GridColumn span="12/12">
@@ -50,7 +47,7 @@ export const RecallAdvertFields = () => {
             textArea
             name={RecallFormFields.ADDITIONAL_TEXT}
             label="Frjáls texti"
-            onBlur={(val) => trigger({ additionalText: val })}
+            onBlur={(val) => updateAdditionalText(val)}
           />
         </GridColumn>
       </GridRow>
