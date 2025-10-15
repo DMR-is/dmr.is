@@ -46,18 +46,17 @@ export function ApplicationFormContainer({ application }: Props) {
     const [{ courtDistricts, types }] =
       trpc.applicationApi.getBaseEntities.useSuspenseQuery()
     return (
-      <div>Birta umsókn</div>
-      // <ApplicationForm
-      //   application={data}
-      //   types={types.map((type) => ({
-      //     label: type.title,
-      //     value: type.id,
-      //   }))}
-      //   courtDistricts={courtDistricts.map((cd) => ({
-      //     label: cd.title,
-      //     value: cd.id,
-      //   }))}
-      // />
+      <ApplicationForm
+        application={data}
+        types={types.map((type) => ({
+          label: type.title,
+          value: type.id,
+        }))}
+        courtDistricts={courtDistricts.map((cd) => ({
+          label: cd.title,
+          value: cd.id,
+        }))}
+      />
     )
   }
 

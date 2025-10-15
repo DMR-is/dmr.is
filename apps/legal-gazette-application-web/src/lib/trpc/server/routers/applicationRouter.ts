@@ -43,12 +43,24 @@ export const createApplicationSchema = z.enum(
   CreateApplicationApplicationTypeEnum,
 )
 
+export const getCategoriesSchema = z.object({
+  typeId: z.string().optional(),
+})
+
 export const getApplicationsSchema = z.object({
   page: z.number().min(1).optional().default(1),
   pageSize: z.number().min(1).max(100).optional().default(10),
 })
 
 export const applicationRouter = router({
+  getTypes: protectedProcedure.query(async ({ ctx }) => {
+    return await ctx.applicationApi.getTypes()
+  }),
+  getCategories: protectedProcedure
+    .input(getCategoriesSchema)
+    .query(async ({ ctx, input }) => {
+      return await ctx.applicationApi.getCategories({ type: input.typeId })
+    }),
   getBaseEntities: protectedProcedure.query(async ({ ctx }) => {
     const [{ types }, { categories }, { courtDistricts }] = await Promise.all([
       ctx.applicationApi.getTypes(),
