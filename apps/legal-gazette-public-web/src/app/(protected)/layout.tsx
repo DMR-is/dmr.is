@@ -4,6 +4,7 @@ import { Header } from '@dmr.is/ui/components/client-components/Header/Header'
 
 import { Providers } from '../../components/client-components/providers/Providers'
 import { authOptions } from '../../lib/authOptions'
+import ProviderTRPC from '../../lib/trpc/client/Provider'
 
 import '../../styles/global.css'
 
@@ -19,13 +20,15 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="is">
-      <body>
-        <Providers session={session}>
-          <Header />
-          {children}
-        </Providers>
-      </body>
-    </html>
+    <ProviderTRPC>
+      <html lang="is">
+        <body>
+          <Providers session={session}>
+            <Header />
+            {children}
+          </Providers>
+        </body>
+      </html>
+    </ProviderTRPC>
   )
 }
