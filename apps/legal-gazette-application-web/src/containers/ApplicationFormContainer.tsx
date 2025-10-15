@@ -1,35 +1,66 @@
 'use client'
 
+import { notFound } from 'next/navigation'
+
+import { AlertMessage } from '@dmr.is/ui/components/island-is'
+
+import { SkeletonLoader } from '@island.is/island-ui/core'
+
 import { ApplicationSubmitted } from '../components/client-components/application/ApplicationSubmitted'
 import { ApplicationForm } from '../components/client-components/form/ApplicationForm'
-import { ApplicationDetailedDtoStatusEnum } from '../gen/fetch'
+import {
+  ApplicationDetailedDto,
+  ApplicationDetailedDtoStatusEnum,
+} from '../gen/fetch'
 import { trpc } from '../lib/trpc/client'
 
 type Props = {
-  id: string
+  application: ApplicationDetailedDto
 }
-export function ApplicationFormContainer({ id }: Props) {
-  const [application] = trpc.applicationApi.getApplicationById.useSuspenseQuery(
-    { id },
-  )
+export function ApplicationFormContainer({ application }: Props) {
+  const { data, error, isLoading } =
+    trpc.applicationApi.getApplicationById.useQuery(
+      { id: application.id },
+      { initialData: application },
+    )
 
-  if (application.status === ApplicationDetailedDtoStatusEnum.DRAFT) {
-    const [{ courtDistricts, types }] =
-      trpc.applicationApi.getBaseEntities.useSuspenseQuery()
+  if (error) {
+    return notFound()
+  }
+
+  if (isLoading) {
+    return <SkeletonLoader height={450} borderRadius="large" />
+  }
+
+  if (!data) {
     return (
-      <ApplicationForm
-        application={application}
-        types={types.map((type) => ({
-          label: type.title,
-          value: type.id,
-        }))}
-        courtDistricts={courtDistricts.map((cd) => ({
-          label: cd.title,
-          value: cd.id,
-        }))}
+      <AlertMessage
+        type="warning"
+        title="Engin gögn fundust fyrir þessa umsókn"
+        message="Vinsamlegast reyndu aftur síðar"
       />
     )
   }
 
-  return <ApplicationSubmitted adverts={[]} />
+  if (data.status === ApplicationDetailedDtoStatusEnum.DRAFT) {
+    const [{ courtDistricts, types }] =
+      trpc.applicationApi.getBaseEntities.useSuspenseQuery()
+    return (
+      <div>Birta umsókn</div>
+      // <ApplicationForm
+      //   application={data}
+      //   types={types.map((type) => ({
+      //     label: type.title,
+      //     value: type.id,
+      //   }))}
+      //   courtDistricts={courtDistricts.map((cd) => ({
+      //     label: cd.title,
+      //     value: cd.id,
+      //   }))}
+      // />
+    )
+  }
+
+  // return <ApplicationSubmitted adverts={[]} />
+  return <div>Birta auglysingar</div>
 }
