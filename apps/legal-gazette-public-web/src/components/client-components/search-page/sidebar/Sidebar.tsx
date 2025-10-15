@@ -2,7 +2,6 @@
 
 import debounce from 'lodash/debounce'
 import { useCallback, useState } from 'react'
-import useSWR from 'swr'
 
 import {
   Button,
@@ -15,11 +14,10 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { useClient } from '../../../../hooks/useClient'
 import { useFilters } from '../../../../hooks/useFilters'
+import { trpc } from '../../../../lib/trpc/client'
 import { isDate } from '../../../../lib/utils'
 export const SearchSidebar = () => {
-  const client = useClient()
   const { filters, setFilters, reset } = useFilters()
   const MIN_DATE = new Date('1970-01-01')
   const [timestamp, setTimestamp] = useState(new Date().getTime())
@@ -42,25 +40,14 @@ export const SearchSidebar = () => {
     setFilters({ ...filters, [key]: date })
   }
 
-  const { data: typeData, isLoading: isLoadingTypes } = useSWR(
-    'getTypes',
-    () => client.getTypes(),
-    {
-      dedupingInterval: 60000,
-      refreshInterval: 0,
-      revalidateOnFocus: false,
-    },
-  )
+  const { data: typeData, isPaused: isLoadingTypes } =
+    trpc.baseEntityApi.getTypes.useQuery()
 
-  const { data: categoryData, isLoading: isLoadingCategories } = useSWR(
-    ['getCategories', filters.typeId],
-    ([_key, typeIds]) => client.getCategories({ type: typeIds }),
-    {
-      dedupingInterval: 60000,
-      refreshInterval: 0,
-      revalidateOnFocus: false,
-    },
-  )
+  const { data: categoryData, isPaused: isLoadingCategories } =
+    trpc.baseEntityApi.getCategories.useQuery(
+      { type: filters.typeId ?? undefined },
+      { enabled: !!filters.typeId },
+    )
 
   const typeOptions = typeData?.types.map((type) => ({
     label: type.title,

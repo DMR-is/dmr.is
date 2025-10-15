@@ -12,7 +12,7 @@ export const useFilters = () => {
     pageSize: parseAsInteger.withDefault(5),
     search: parseAsString.withDefault(''),
     typeId: parseAsString,
-    categoryId: parseAsArrayOf(parseAsString).withDefault([]),
+    categoryId: parseAsArrayOf(parseAsString),
     dateFrom: parseAsIsoDate,
     dateTo: parseAsIsoDate,
   })

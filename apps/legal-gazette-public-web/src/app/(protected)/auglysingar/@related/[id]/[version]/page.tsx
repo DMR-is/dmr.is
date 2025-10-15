@@ -1,5 +1,3 @@
-import { getServerSession } from 'next-auth'
-
 import {
   Box,
   GridColumn,
@@ -13,23 +11,16 @@ import {
 import { theme } from '@island.is/island-ui/theme'
 
 import { PublicationCard } from '../../../../../../components/client-components/cards/PublicationCard'
-import { authOptions } from '../../../../../../lib/authOptions'
-import { getClient } from '../../../../../../lib/createClient'
+import { getTrpcServer } from '../../../../../../lib/trpc/server/server'
 
 export default async function RelatedPublications({
   params,
 }: {
   params: { id: string; version: string }
 }) {
-  const session = await getServerSession(authOptions)
+  const { trpc } = await getTrpcServer()
 
-  if (!session?.idToken) {
-    throw new Error('Unauthorized')
-  }
-
-  const client = getClient(session.idToken)
-
-  const relatedPubs = await client.getPublications({
+  const relatedPubs = await trpc.publicationApi.getRelatedPublications({
     advertId: params.id,
   })
 
