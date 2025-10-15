@@ -1,7 +1,7 @@
-import { Op } from 'sequelize';
+import { Op } from 'sequelize'
 
-import { DB_Ministry, DB_Regulation } from '../models';
-import { Ministry, MinistrySlug } from '../routes/types';
+import { DB_Ministry, DB_Regulation } from '../models'
+import { Ministry, MinistrySlug } from '../routes/types'
 
 export async function getAllMinistries(slugs?: Array<MinistrySlug>) {
   const ministries = await DB_Ministry.findAll({
@@ -11,13 +11,13 @@ export async function getAllMinistries(slugs?: Array<MinistrySlug>) {
         }
       : undefined,
     order: [
-      ['`order`', 'ASC'],
+      ['order', 'ASC'],
       ['name', 'ASC'],
       ['slug', 'DESC'],
     ],
-  });
+  })
 
-  return ministries.map((m) => m.get());
+  return ministries.map((m) => m.get())
 }
 
 export const getMinistry = (id: DB_Regulation['ministryId']) =>
@@ -25,4 +25,4 @@ export const getMinistry = (id: DB_Regulation['ministryId']) =>
     ? (DB_Ministry.findOne({ where: { id } }) as Promise<DB_Ministry>).then(
         ({ slug, name }): Ministry => ({ slug, name }),
       )
-    : Promise.resolve(undefined);
+    : Promise.resolve(undefined)
