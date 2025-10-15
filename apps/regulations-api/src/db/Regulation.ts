@@ -102,10 +102,13 @@ type HistoryData = ReadonlyArray<{
 }>
 
 async function getRegulationHistory(regulation: DB_Regulation) {
-  const historyData = (await db.query('SELECT regulationhistorybyname(:name)', {
-    replacements: { name: regulation.name },
-    type: QueryTypes.SELECT,
-  })) as HistoryData
+  const historyData = (await db.query(
+    'SELECT * FROM regulationhistorybyname(:name)',
+    {
+      replacements: { name: regulation.name },
+      type: QueryTypes.SELECT,
+    },
+  )) as HistoryData
   return (
     historyData
       // strip off the 'root' item
