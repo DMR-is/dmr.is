@@ -226,6 +226,46 @@ export const useUpdateApplication = (applicationId: string) => {
     [updateApplication, application?.signatureOnBehalfOf],
   )
 
+  const updatePublishingDates = useCallback(
+    (publishingDates: string[]) => {
+      updateApplication(
+        { publishingDates },
+        {
+          successMessage: 'Birtingardagsetningar vistaðar',
+          errorMessage: 'Ekki tókst að uppfæra birtingardagsetningar',
+        },
+      )
+    },
+    [updateApplication],
+  )
+
+  const updateCommunicationChannels = useCallback(
+    (
+      communicationChannels: {
+        email: string
+        name?: string | undefined
+        phone?: string | undefined
+      }[],
+    ) => {
+      // we need compare the values deeply since it's an array
+      if (
+        JSON.stringify(communicationChannels) ===
+        JSON.stringify(application?.communicationChannels)
+      ) {
+        return
+      }
+
+      updateApplication(
+        { communicationChannels },
+        {
+          successMessage: 'Samskiptaleiðir vistaðar',
+          errorMessage: 'Ekki tókst að uppfæra samskiptaleiðir',
+        },
+      )
+    },
+    [updateApplication, application?.communicationChannels],
+  )
+
   return {
     updateType,
     updateCategory,
@@ -235,5 +275,7 @@ export const useUpdateApplication = (applicationId: string) => {
     updateSignatureLocation,
     updateSignatureDate,
     updateSignatureOnBehalfOf,
+    updatePublishingDates,
+    updateCommunicationChannels,
   }
 }

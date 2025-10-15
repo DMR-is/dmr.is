@@ -25,7 +25,7 @@ type Props = {
 export const PublishingFields = ({ additionalTitle }: Props) => {
   const { getValues, watch, setValue } = useFormContext()
   const { applicationId } = getValues('meta')
-  const { trigger } = useUpdateApplication({ applicationId })
+  const { updatePublishingDates } = useUpdateApplication(applicationId)
 
   const currentDates: Date[] = watch('fields.publishingDates', [])
 
@@ -40,18 +40,14 @@ export const PublishingFields = ({ additionalTitle }: Props) => {
     const newDates = [...dateState, newDate]
     setDateState(newDates)
     setValue(CommonFormFields.PUBLISHING_DATES, newDates)
-    trigger({
-      publishingDates: newDates.map((date) => new Date(date).toISOString()),
-    })
+    updatePublishingDates(newDates.map((date) => new Date(date).toISOString()))
   }
 
   const removeDate = (index: number) => {
     const newDates = dateState.filter((_, i) => i !== index)
     setValue(CommonFormFields.PUBLISHING_DATES, newDates)
     setDateState(newDates)
-    trigger({
-      publishingDates: newDates.map((date) => new Date(date).toISOString()),
-    })
+    updatePublishingDates(newDates.map((date) => new Date(date).toISOString()))
   }
 
   const onDateChange = (date: Date, index: number) => {
@@ -59,9 +55,7 @@ export const PublishingFields = ({ additionalTitle }: Props) => {
     newDates[index] = date
     setDateState(newDates)
     setValue(CommonFormFields.PUBLISHING_DATES, newDates)
-    trigger({
-      publishingDates: newDates.map((d) => new Date(d).toISOString()),
-    })
+    updatePublishingDates(newDates.map((d) => new Date(d).toISOString()))
   }
 
   return (

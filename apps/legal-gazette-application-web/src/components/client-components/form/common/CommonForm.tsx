@@ -72,9 +72,8 @@ export const CommonForm = ({ applicationId, caseId, types, fields }: Props) => {
               <>
                 <CommonAdvertFields />
                 <CommonSignatureFields />
-                {/*
                 <PublishingFields />
-                <CommunicationChannelFields /> */}
+                <CommunicationChannelFields />
               </>
             )}
           </Stack>
