@@ -2,17 +2,20 @@ import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay
 import { Stack, Text } from '@dmr.is/ui/components/island-is'
 
 import { GetAdvertPublicationVersionEnum } from '../../../../../gen/fetch'
-import { getPublication } from '../../../../../lib/with-cache/publication'
+import { getTrpcServer } from '../../../../../lib/trpc/server/server'
 
 export default async function AdvertPage({
   params,
 }: {
   params: { id: string; version: GetAdvertPublicationVersionEnum }
 }) {
-  const pub = await getPublication(
-    params.id,
-    params.version as GetAdvertPublicationVersionEnum,
-  )
+  const { trpc } = await getTrpcServer()
+
+  const pub = await trpc.publicationApi.getPublication({
+    advertId: params.id,
+    version: params.version as GetAdvertPublicationVersionEnum,
+  })
+
   const title = pub.publication.isLegacy
     ? `${pub.advert.type.title} - ${pub.advert.title}`
     : pub.advert.title

@@ -62,7 +62,7 @@ export const SearchSidebar = () => {
   }))
 
   const defaultCategories = categoryOptions?.filter((c) =>
-    filters.categoryId.includes(c.value),
+    filters.categoryId?.includes(c.value),
   )
 
   const totalResultsOptions = Array.from(
