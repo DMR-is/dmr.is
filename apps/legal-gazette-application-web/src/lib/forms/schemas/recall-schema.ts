@@ -35,7 +35,7 @@ export const recallFormFieldsSchema = z
     signatureLocation: z
       .string()
       .min(1, 'Staðsetning undirskriftar er nauðsynleg'),
-
+    signatureOnBehalfOf: z.string().optional(),
     divisionMeetingDate: z.date().optional(),
     divisionMeetingLocation: z.string().optional(),
     publishingDates: z
@@ -134,6 +134,7 @@ export enum RecallFormFields {
   DIVISION_MEETING_DATE = 'fields.divisionMeetingDate',
   SIGNATURE_DATE = 'fields.signatureDate',
   SIGNATURE_LOCATION = 'fields.signatureLocation',
+  SIGNATURE_ON_BEHALF_OF = 'fields.signatureOnBehalfOf',
   PUBLISHING_DATES = 'fields.publishingDates',
   COMMUNICATION_CHANNELS = 'fields.communicationChannels',
 }

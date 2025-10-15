@@ -1,7 +1,5 @@
 'use client'
 
-import { useParams } from 'next/navigation'
-
 import { useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 
@@ -17,11 +15,9 @@ import { Editor } from '../../../editor/Editor'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
 export const CommonAdvertFields = () => {
-  const { id } = useParams()
-
   const { getValues, setValue, watch } = useFormContext<CommonFormSchema>()
   const { updateType, updateCategory, updateCaption, updateHTML } =
-    useUpdateApplication(id as string)
+    useUpdateApplication(getValues('meta.applicationId'))
 
   const { typeOptions } = getValues('meta')
 

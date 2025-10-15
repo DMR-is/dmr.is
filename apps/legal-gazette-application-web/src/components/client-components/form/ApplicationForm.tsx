@@ -39,6 +39,7 @@ export const ApplicationForm = ({
               : undefined,
             signatureLocation: application.signatureLocation ?? undefined,
             signatureName: application.signatureName ?? undefined,
+            signatureOnBehalfOf: application.signatureOnBehalfOf ?? undefined,
           }}
           types={types}
           applicationId={application.id}
@@ -86,6 +87,7 @@ export const ApplicationForm = ({
               ? new Date(application.signatureDate)
               : undefined,
             signatureLocation: application.signatureLocation ?? undefined,
+            signatureOnBehalfOf: application.signatureOnBehalfOf ?? undefined,
           }}
           applicationId={application.id}
           caseId={application.caseId}

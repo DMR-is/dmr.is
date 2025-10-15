@@ -158,10 +158,82 @@ export const useUpdateApplication = (applicationId: string) => {
     [updateApplication],
   )
 
+  const updateSignatureName = useCallback(
+    (signatureName: string) => {
+      if (signatureName === application?.signatureName) {
+        return
+      }
+
+      updateApplication(
+        { signatureName },
+        {
+          successMessage: 'Nafn undirritara vistað',
+          errorMessage: 'Ekki tókst að uppfæra nafn undirritara',
+        },
+      )
+    },
+    [updateApplication, application?.signatureName],
+  )
+
+  const updateSignatureLocation = useCallback(
+    (signatureLocation: string) => {
+      if (signatureLocation === application?.signatureLocation) {
+        return
+      }
+
+      updateApplication(
+        { signatureLocation },
+        {
+          successMessage: 'Staðsetning undirritara vistuð',
+          errorMessage: 'Ekki tókst að uppfæra staðsetningu undirritara',
+        },
+      )
+    },
+    [updateApplication, application?.signatureLocation],
+  )
+
+  const updateSignatureDate = useCallback(
+    (signatureDate: string) => {
+      if (signatureDate === application?.signatureDate) {
+        return
+      }
+
+      updateApplication(
+        { signatureDate },
+        {
+          successMessage: 'Dagsetning undirritunar vistuð',
+          errorMessage: 'Ekki tókst að uppfæra dagsetningu undirritunar',
+        },
+      )
+    },
+    [updateApplication, application?.signatureDate],
+  )
+
+  const updateSignatureOnBehalfOf = useCallback(
+    (signatureOnBehalfOf: string) => {
+      if (signatureOnBehalfOf === application?.signatureOnBehalfOf) {
+        return
+      }
+
+      updateApplication(
+        { signatureOnBehalfOf },
+        {
+          successMessage: 'Undirritun fyrir hönd vistað',
+          errorMessage: 'Ekki tókst að uppfæra undirritun fyrir hönd',
+        },
+      )
+    },
+    [updateApplication, application?.signatureOnBehalfOf],
+  )
+
   return {
     updateType,
     updateCategory,
     updateCaption,
     updateHTML,
+    updateSignatureName,
+    updateSignatureLocation,
+    updateSignatureDate,
+    updateSignatureOnBehalfOf,
   }
 }

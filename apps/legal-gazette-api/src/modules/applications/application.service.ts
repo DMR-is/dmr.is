@@ -367,6 +367,8 @@ export class ApplicationService implements IApplicationService {
       throw new NotFoundException()
     }
 
+    console.log('body.signatureOnBehalfOf', body.signatureOnBehalfOf)
+
     await application.update({
       typeId: body.typeId,
       additionalText: body.additionalText,
