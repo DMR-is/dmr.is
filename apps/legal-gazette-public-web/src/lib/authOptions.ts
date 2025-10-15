@@ -9,7 +9,7 @@ import { identityServerConfig } from '@dmr.is/auth/identityServerConfig'
 import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
 import { getLogger } from '@dmr.is/logging'
 
-import { getClient } from './createClient'
+import { getTrpcServer } from './trpc/server/server'
 
 type ErrorWithPotentialReqRes = Error & {
   request?: unknown
@@ -25,11 +25,11 @@ async function authorize(nationalId?: string, idToken?: string) {
     return null
   }
 
-  const dmrClient = getClient(idToken)
+  const { trpc } = await getTrpcServer()
 
   try {
     const { data: member, error } = await serverFetcher(() =>
-      dmrClient.getMySubscriber(),
+      trpc.subscriberApi.getMySubscriber(),
     )
     if (!member) {
       const logger = getLogger('authorize')

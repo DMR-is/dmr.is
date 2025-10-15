@@ -1,7 +1,5 @@
 'use client'
 
-import useSWR from 'swr'
-
 import {
   AlertMessage,
   Box,
@@ -11,34 +9,27 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { useClient } from '../../../../hooks/useClient'
 import { useFilters } from '../../../../hooks/useFilters'
+import { trpc } from '../../../../lib/trpc/client'
 import { PublicationCard } from '../../cards/PublicationCard'
 
 export const SearchResults = () => {
-  const client = useClient()
   const { filters, setFilters } = useFilters()
 
-  const { data, isLoading, error } = useSWR(
-    ['getPublications', filters],
-    ([_key, params]) =>
-      client.getPublications({
-        page: params.page,
-        pageSize: params.pageSize,
-        typeId: params.typeId ?? undefined,
-        categoryId:
-          params.categoryId.length > 0 ? params.categoryId : undefined,
-        search: params.search ?? undefined,
-        dateFrom: params.dateFrom?.toISOString(),
-        dateTo: params.dateTo?.toISOString(),
-      }),
-    {
-      keepPreviousData: true,
-      revalidateOnFocus: false,
-      dedupingInterval: 60000,
-      refreshInterval: 0,
-    },
-  )
+  const { data, isLoading, error } =
+    trpc.publicationApi.getPublications.useQuery({
+      page: filters.page,
+      pageSize: filters.pageSize,
+      search: filters.search,
+      categoryId: filters.categoryId ?? undefined,
+      typeId: filters.typeId ?? undefined,
+      dateFrom: filters.dateFrom
+        ? new Date(filters.dateFrom).toISOString()
+        : undefined,
+      dateTo: filters.dateTo
+        ? new Date(filters.dateTo).toISOString()
+        : undefined,
+    })
 
   if (error) {
     return (

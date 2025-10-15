@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer'
 import {
   IsArray,
   IsDateString,
@@ -100,6 +101,12 @@ export class GetPublicationsQueryDto extends PagingQuery {
   @IsOptional()
   @IsArray()
   @IsUUID(undefined, { each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.split(',').map((v) => v.trim())
+    }
+    return value
+  })
   categoryId?: string[]
 
   @ApiProperty({ type: String, required: false })
