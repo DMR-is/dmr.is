@@ -134,7 +134,7 @@ const augmentRegulationList = async (
     augmentedRegulations.push(...augmentedChunk)
     console.info(`Processed ${augmentedRegulations.length} regulations`)
   }
-
+  console.info('Done augmenting regulations list')
   return augmentedRegulations
 }
 
