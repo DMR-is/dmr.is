@@ -418,7 +418,6 @@ const uploadPdf = (fileKey: string, pdfContents: Buffer) =>
     .upload({
       Bucket: AWS_BUCKET_NAME,
       Key: fileKey,
-      ACL: 'public-read',
       ContentType: 'application/pdf',
       Body: pdfContents,
     })
