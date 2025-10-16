@@ -11,6 +11,20 @@ FROM docker.io/node:lts-alpine AS runner
 ENV NODE_ENV=production
 ENV PORT=3000
 WORKDIR /usr/src/app
+
+# Install Chromium and dependencies for pagedjs-cli/Puppeteer
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
+# Tell Puppeteer to use installed Chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=deps /usr/src/app/package.json ./package.json
 COPY ./apps/regulations-api/dist .
