@@ -74,7 +74,7 @@ const augmentRegulationList = async (
   regulations: SQLRegulationsList,
   opts: { text?: boolean; lawChapters?: boolean; ministry?: boolean } = {},
 ) => {
-  const chunkSize = 20
+  const chunkSize = 200
   const augmentedRegulations: Array<RegulationListItemFull> = []
   const today = new Date()
 
@@ -97,9 +97,9 @@ const augmentRegulationList = async (
       } = reg
 
       const { ministry, lawChapters } = await promiseAll({
-        ministry: opts.ministry ? await getMinistry(reg.ministryId) : undefined,
+        ministry: opts.ministry ? getMinistry(reg.ministryId) : undefined,
         lawChapters: opts.lawChapters
-          ? await getRegulationLawChapters(reg.id)
+          ? getRegulationLawChapters(reg.id)
           : undefined,
       })
 
@@ -132,6 +132,7 @@ const augmentRegulationList = async (
     const augmentedChunk = await Promise.all(regProms)
 
     augmentedRegulations.push(...augmentedChunk)
+    console.log(`Processed ${augmentedRegulations.length} regulations`)
   }
 
   return augmentedRegulations
@@ -241,6 +242,8 @@ export async function getAllRegulations(opts?: {
     replacements,
     type: QueryTypes.SELECT,
   })
+
+  console.log(`Fetched ${regulations.length} regulations from DB`)
 
   // FIXME: Remove this block once the Reglugerðagrunnur has been cleaned up
   // so that RegulationCancel.regulationId values are unique
