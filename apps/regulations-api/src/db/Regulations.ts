@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { BindOrReplacements, QueryTypes } from 'sequelize'
 
 import { eliminateComments } from '@island.is/regulations-tools/textHelpers'
@@ -79,7 +80,6 @@ const augmentRegulationList = async (
   const today = new Date()
 
   for (let i = 0; i < regulations.length; i += chunkSize) {
-    // eslint-disable-next-line no-console
     console.info(`- Augmenting chunk ${i} - ${i + chunkSize}`)
     const regChunk = regulations.slice(i, i + chunkSize)
 
