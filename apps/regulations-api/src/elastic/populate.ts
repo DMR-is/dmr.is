@@ -79,15 +79,17 @@ export async function repopulateElastic(client: Client) {
     const regulations: RegulationListItemFull[] =
       fileRegs ??
       (await getAllRegulations({ extra: true, includeRepealed: true }))
-
+    console.info('finished augmenting regulations')
     if (!fileRegs) storeData(regulations, 'backup-json/all-extra.json')
+    console.info('finished storing regulations')
     if (regulations.length === 0) throw new Error('No regulations to index')
     console.info(`${logPrefix} ${regulations.length} regulations found`)
 
     // 2) Build settings/mappings (use *_path packages so body stays small)
+
     const settings = await getSettingsTemplate(logPrefix)
     const mappings = mappingTemplate
-
+    console.info('done getting settings template')
     // Derive steady-state replicas (dev=0, prod(≥2 data nodes)=1)
     let steadyReplicas = 0
     try {
@@ -100,6 +102,7 @@ export async function repopulateElastic(client: Client) {
       )
     } catch {
       /* default 0 ok */
+      console.info('error in health')
     }
 
     // 3) Create new index (cheap)
