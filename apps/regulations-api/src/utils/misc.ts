@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import _formatDate from 'date-fns/format'
 import locale from 'date-fns/locale/is'
 import { FastifyReply, FastifyRequest } from 'fastify'
@@ -111,32 +112,39 @@ const JSONFILE_MAXAGE = 6 * HOUR
 
 /* write json data to disk */
 export const storeData = (data: unknown, path: string) => {
+  console.info('storing data to', path)
   try {
-    const dirName = parse(path).dir
+    // Use /tmp for writable storage in containers
+    const safePath = `/tmp/${path}`
+    console.info('trying to store data to', safePath)
+    const dirName = parse(safePath).dir
     if (!fs.existsSync(dirName)) {
-      fs.mkdirSync(dirName)
+      console.info('creating dir', dirName)
+      fs.mkdirSync(dirName, { recursive: true })
     }
-    fs.writeFileSync(path, JSON.stringify(data))
+    console.info('writing file', safePath)
+    fs.writeFileSync(safePath, JSON.stringify(data))
+    console.info('wrote file', safePath)
   } catch (err) {
-    // eslint-disable-next-line no-console
+    console.info('Failed to store data to', path)
     console.error(err)
   }
 }
 
 export const loadData = <T>(path: string): T | false => {
-  if (!fs.existsSync(path)) {
+  const safePath = `/tmp/${path}`
+  if (!fs.existsSync(safePath)) {
     return false
   }
   try {
-    const lastModified = fs.statSync(path).mtimeMs
+    const lastModified = fs.statSync(safePath).mtimeMs
 
     // return file if it's available and fresh
     if (Date.now() - lastModified <= JSONFILE_MAXAGE) {
-      const data = fs.readFileSync(path, 'utf8')
+      const data = fs.readFileSync(safePath, 'utf8')
       return JSON.parse(data)
     }
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error(err)
   }
   return false
