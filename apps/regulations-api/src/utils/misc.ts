@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import _formatDate from 'date-fns/format'
 import locale from 'date-fns/locale/is'
 import { FastifyReply, FastifyRequest } from 'fastify'
