@@ -155,7 +155,6 @@ const uploadFile = async (fileInfo: FileUrlMapping) => {
       .upload({
         Bucket: AWS_BUCKET_NAME,
         Key: fileKey,
-        ACL: 'public-read',
         ContentType,
         Body,
       })
