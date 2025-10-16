@@ -111,14 +111,20 @@ const JSONFILE_MAXAGE = 6 * HOUR
 
 /* write json data to disk */
 export const storeData = (data: unknown, path: string) => {
+  console.info('storing data to', path)
   try {
+    console.info('trying to store data to', path)
     const dirName = parse(path).dir
     if (!fs.existsSync(dirName)) {
+      console.info('creating dir', dirName)
       fs.mkdirSync(dirName)
     }
+    console.info('writing file', path)
     fs.writeFileSync(path, JSON.stringify(data))
+    console.info('wrote file', path)
   } catch (err) {
     // eslint-disable-next-line no-console
+    console.info('Failed to store data to', path)
     console.error(err)
   }
 }
