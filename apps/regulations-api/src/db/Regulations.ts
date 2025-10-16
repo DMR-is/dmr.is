@@ -132,7 +132,7 @@ const augmentRegulationList = async (
     const augmentedChunk = await Promise.all(regProms)
 
     augmentedRegulations.push(...augmentedChunk)
-    console.log(`Processed ${augmentedRegulations.length} regulations`)
+    console.info(`Processed ${augmentedRegulations.length} regulations`)
   }
 
   return augmentedRegulations
@@ -243,7 +243,7 @@ export async function getAllRegulations(opts?: {
     type: QueryTypes.SELECT,
   })
 
-  console.log(`Fetched ${regulations.length} regulations from DB`)
+  console.info(`Fetched ${regulations.length} regulations from DB`)
 
   // FIXME: Remove this block once the Reglugerðagrunnur has been cleaned up
   // so that RegulationCancel.regulationId values are unique
