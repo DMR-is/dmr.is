@@ -74,7 +74,7 @@ const augmentRegulationList = async (
   regulations: SQLRegulationsList,
   opts: { text?: boolean; lawChapters?: boolean; ministry?: boolean } = {},
 ) => {
-  const chunkSize = 200
+  const chunkSize = 20
   const augmentedRegulations: Array<RegulationListItemFull> = []
   const today = new Date()
 
