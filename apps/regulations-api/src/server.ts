@@ -20,7 +20,6 @@ import fastifyBasicAuth, { FastifyBasicAuthOptions } from '@fastify/basic-auth'
 import fastifyCompress from '@fastify/compress'
 import fastifyMultipart from '@fastify/multipart'
 import FastifyOpenSearch from '@fastify/opensearch'
-import fastifyRateLimiter from '@fastify/rate-limit'
 import fastifyRedis from '@fastify/redis'
 
 // ===========================================================================
@@ -28,10 +27,6 @@ import fastifyRedis from '@fastify/redis'
 const fastify = fast({
   logger: true,
   ignoreTrailingSlash: true,
-})
-fastify.register(fastifyRateLimiter, {
-  max: 100,
-  timeWindow: '1 minute',
 })
 
 const {
