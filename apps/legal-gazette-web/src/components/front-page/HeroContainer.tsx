@@ -30,7 +30,7 @@ export const HeroContainer = () => {
         </GridColumn>
         <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
           <LinkCard
-            href={Route.UTGAFA}
+            href={Route.RITSTJORN + '?tab=utgafa'}
             title="Útgáfa"
             description="Umsýsla frá innsendingu til útgáfu."
             image={{
@@ -40,7 +40,7 @@ export const HeroContainer = () => {
         </GridColumn>
         <GridColumn span={['12/12', '4/12']} paddingBottom={[0]}>
           <LinkCard
-            href={Route.HEILDARYFIRLIT}
+            href={Route.RITSTJORN + '?tab=yfirlit'}
             title="Heildarlisti"
             description="Öll mál, bæði í vinnslu og útgefin."
             image={{
