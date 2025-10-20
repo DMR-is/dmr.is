@@ -6,12 +6,15 @@ import {
   Input,
   Stack,
 } from '@dmr.is/ui/components/island-is'
+import { amountFormat } from '@dmr.is/utils/client'
 
 type ReadOnlyAccordionItemProps = {
   id: string
   publicationNumber: string | null
   createdAt: string
   createdBy: string
+  paid?: boolean
+  totalPrice?: number
 }
 
 export const AdvertReadonlyFields = ({
@@ -19,6 +22,8 @@ export const AdvertReadonlyFields = ({
   publicationNumber,
   createdAt,
   createdBy,
+  paid,
+  totalPrice,
 }: ReadOnlyAccordionItemProps) => {
   return (
     <Stack space={[1, 2]}>
@@ -80,6 +85,27 @@ export const AdvertReadonlyFields = ({
             defaultValue={createdBy}
           />
         </GridColumn>
+        <GridColumn span={['12/12', '6/12']}>
+          <Input
+            readOnly
+            name="payment-status"
+            size="sm"
+            label="Greiðslustaða"
+            defaultValue={paid ? 'Greitt' : 'Ógreitt'}
+            icon={{ name: paid ? 'checkmark' : 'close', type: 'outline' }}
+          />
+        </GridColumn>
+        {totalPrice ? (
+          <GridColumn span={['12/12', '6/12']}>
+            <Input
+              readOnly
+              name="price"
+              size="sm"
+              label="Verð"
+              value={amountFormat(totalPrice)}
+            />
+          </GridColumn>
+        ) : null}
       </GridRow>
     </Stack>
   )

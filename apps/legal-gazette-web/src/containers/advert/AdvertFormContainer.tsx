@@ -50,6 +50,8 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
           publicationNumber={advert.publicationNumber}
           createdAt={formatDate(advert.createdAt, 'dd. MMMM yyyy')}
           createdBy={advert.createdBy}
+          paid={!!advert.paidAt}
+          totalPrice={advert.totalPrice}
         />
       ),
     },
