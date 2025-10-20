@@ -1,4 +1,5 @@
 import { useFormContext } from 'react-hook-form'
+import subDays from 'date-fns/subDays'
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
@@ -7,6 +8,7 @@ import {
   RecallFormFields,
   RecallFormSchema,
 } from '../../../../../lib/forms/schemas/recall-schema'
+import { POSTPONE_LIMIT } from '../../../../../lib/constants'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
@@ -68,6 +70,12 @@ export const RecallSettlementFields = () => {
             applicationType === 'bankruptcy'
               ? RecallFormFields.SETTLEMENT_DEADLINE
               : RecallFormFields.SETTLEMENT_DATE_OF_DEATH
+          }
+          maxDate={applicationType === 'bankruptcy' ? new Date() : undefined}
+          minDate={
+            applicationType === 'bankruptcy'
+              ? subDays(new Date(), POSTPONE_LIMIT)
+              : undefined
           }
           label={
             applicationType === 'bankruptcy'
