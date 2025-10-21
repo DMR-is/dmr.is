@@ -45,12 +45,15 @@ export class CommentService implements ICommentService {
     await this.commentModel.destroy({ where: { id: commentId } })
   }
 
-  async createSubmitComment(body: CreateSubmitCommentDto): Promise<CommentDto> {
+  async createSubmitComment(
+    advertId: string,
+    body: CreateSubmitCommentDto,
+  ): Promise<CommentDto> {
     const actor = await this.findActor(body.actorId)
 
     const newComment = await this.commentModel.create({
       type: CommentTypeEnum.SUBMIT,
-      advertId: body.advertId,
+      advertId: advertId,
       statusId: body.statusId,
       actorId: actor.id,
       actor: actor.fullName,
@@ -60,13 +63,16 @@ export class CommentService implements ICommentService {
     return newComment.fromModel()
   }
 
-  async createAssignComment(body: CreateAssignCommentDto): Promise<CommentDto> {
+  async createAssignComment(
+    advertId: string,
+    body: CreateAssignCommentDto,
+  ): Promise<CommentDto> {
     const actor = await this.findActor(body.actorId)
     const receiver = await this.findActor(body.receiverId)
 
     const newComment = await this.commentModel.create({
       type: CommentTypeEnum.ASSIGN,
-      advertId: body.advertId,
+      advertId: advertId,
       statusId: body.statusId,
       actorId: actor.id,
       actor: actor.fullName,
@@ -79,6 +85,7 @@ export class CommentService implements ICommentService {
   }
 
   async createStatusUpdateComment(
+    advertId: string,
     body: CreateStatusUpdateCommentDto,
   ): Promise<CommentDto> {
     const actor = await this.findActor(body.actorId)
@@ -87,7 +94,7 @@ export class CommentService implements ICommentService {
 
     const newComment = await this.commentModel.create({
       type: CommentTypeEnum.STATUS_UPDATE,
-      advertId: body.advertId,
+      advertId: advertId,
       statusId: body.statusId,
       actorId: actor.id,
       actor: actor.fullName,
@@ -99,12 +106,15 @@ export class CommentService implements ICommentService {
     return newComment.fromModel()
   }
 
-  async createTextComment(body: CreateTextCommentDto): Promise<CommentDto> {
+  async createTextComment(
+    advertId: string,
+    body: CreateTextCommentDto,
+  ): Promise<CommentDto> {
     const actor = await this.findActor(body.actorId)
 
     const newComment = await this.commentModel.create({
       type: CommentTypeEnum.COMMENT,
-      advertId: body.advertId,
+      advertId: advertId,
       statusId: body.statusId,
       actorId: actor.id,
       actor: actor.fullName,

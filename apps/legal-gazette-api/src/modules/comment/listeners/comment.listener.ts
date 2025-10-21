@@ -7,7 +7,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { LegalGazetteEvents } from '../../../lib/constants'
 import { ICommentService } from '../comment.service.interface'
-import { CreateSubmitCommentDto } from '../dto/comment.dto'
+import { CreateSubmitCommentEvent } from '../events/create-submit-comment.event'
 
 @Injectable()
 export class CommentListener {
@@ -18,7 +18,7 @@ export class CommentListener {
   ) {}
 
   @OnEvent(LegalGazetteEvents.ADVERT_CREATED, { async: true })
-  async handleAdvertCreatedEvent(payload: CreateSubmitCommentDto) {
+  async handleAdvertCreatedEvent(payload: CreateSubmitCommentEvent) {
     // we gotta make a new transaction context for CLS to work
     await this.sequelize.transaction(async (_t) => {
       this.logger.info('Handling advert.created event', {
@@ -26,7 +26,10 @@ export class CommentListener {
         context: 'CommentListener',
       })
 
-      await this.commentService.createSubmitComment(payload)
+      await this.commentService.createSubmitComment(payload.advertId, {
+        actorId: payload.actorId,
+        statusId: payload.statusId,
+      })
     })
   }
 }

@@ -36,9 +36,6 @@ export class GetCommentsDto {
 
 class CreateCommentBaseDto {
   @ApiProperty({ type: String })
-  advertId!: string
-
-  @ApiProperty({ type: String })
   statusId!: string
 
   @ApiProperty({ type: String })
