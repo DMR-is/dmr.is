@@ -1,5 +1,5 @@
 name: '🚀 Update Terragrunt Deployment'
-description: 'Deploy using Terragrunt apply in infrastructure repository'
+description: 'Deploy using Terragrunt apply in infrastructure repository (parallel execution with logs)'
 
 inputs:
   PAT:
@@ -55,53 +55,107 @@ runs:
         token: ${{ inputs.PAT }}
         path: infrastructure
 
-    - name: 🚀 Deploy official journal api
+    - name: 🚀 Deploy services in parallel
       shell: bash
       run: |
         cd infrastructure/utgafa
-        ../scripts/update_tag.sh \
-        --environment ${{ inputs.ENV }} \
-        --update-value ${{ inputs.VERSION_TAG }} \
-        --commit false \
-        --ignore-dirty true \
-        --target official_journal_api \
-        --config-var-name official_journal_api_version_tag
-    
-    - name: 🚀 Deploy official journal admin api
-      shell: bash
-      run: |
-        cd infrastructure/utgafa
-        ../scripts/update_tag.sh \
-        --environment ${{ inputs.ENV }} \
-        --update-value ${{ inputs.VERSION_TAG }} \
-        --commit false \
-        --ignore-dirty true \
-        --target official_journal_admin_api \
-        --config-var-name official_journal_admin_api_version_tag
+        
+        # Create log directory
+        mkdir -p /tmp/deploy_logs
+        
+        echo "🚀 Starting parallel deployments..."
+        
+        # Run all deployments in parallel with output capture
+        (
+          echo "[official_journal_api] Starting deployment..."
+          ../scripts/update_tag.sh \
+          --environment ${{ inputs.ENV }} \
+          --update-value ${{ inputs.VERSION_TAG }} \
+          --commit false \
+          --ignore-dirty true \
+          --target official_journal_api \
+          --config-var-name official_journal_api_version_tag 2>&1 | \
+          sed 's/^/[official_journal_api] /'
+          echo "[official_journal_api] Deployment completed with exit code: ${PIPESTATUS[0]}"
+        ) > /tmp/deploy_logs/official_journal_api.log 2>&1 &
+        
+        (
+          echo "[official_journal_admin_api] Starting deployment..."
+          ../scripts/update_tag.sh \
+          --environment ${{ inputs.ENV }} \
+          --update-value ${{ inputs.VERSION_TAG }} \
+          --commit false \
+          --ignore-dirty true \
+          --target official_journal_admin_api \
+          --config-var-name official_journal_admin_api_version_tag 2>&1 | \
+          sed 's/^/[official_journal_admin_api] /'
+          echo "[official_journal_admin_api] Deployment completed with exit code: ${PIPESTATUS[0]}"
+        ) > /tmp/deploy_logs/official_journal_admin_api.log 2>&1 &
+        
+        (
+          echo "[official_journal_application_api] Starting deployment..."
+          ../scripts/update_tag.sh \
+          --environment ${{ inputs.ENV }} \
+          --update-value ${{ inputs.VERSION_TAG }} \
+          --commit false \
+          --ignore-dirty true \
+          --target official_journal_application_api \
+          --config-var-name official_journal_application_api_version_tag 2>&1 | \
+          sed 's/^/[official_journal_application_api] /'
+          echo "[official_journal_application_api] Deployment completed with exit code: ${PIPESTATUS[0]}"
+        ) > /tmp/deploy_logs/official_journal_application_api.log 2>&1 &
+        
+        (
+          echo "[official_journal_web] Starting deployment..."
+          ../scripts/update_tag.sh \
+          --environment ${{ inputs.ENV }} \
+          --update-value ${{ inputs.VERSION_TAG }} \
+          --commit false \
+          --ignore-dirty true \
+          --target official_journal_web \
+          --config-var-name official_journal_web_version_tag 2>&1 | \
+          sed 's/^/[official_journal_web] /'
+          echo "[official_journal_web] Deployment completed with exit code: ${PIPESTATUS[0]}"
+        ) > /tmp/deploy_logs/official_journal_web.log 2>&1 &
+        
+        (
+          echo "[regulations_api] Starting deployment..."
+          ../scripts/update_tag.sh \
+          --environment ${{ inputs.ENV }} \
+          --update-value ${{ inputs.VERSION_TAG }} \
+          --commit false \
+          --ignore-dirty true \
+          --target regulations_api \
+          --config-var-name regulations_api_version_tag 2>&1 | \
+          sed 's/^/[regulations_api] /'
+          echo "[regulations_api] Deployment completed with exit code: ${PIPESTATUS[0]}"
+        ) > /tmp/deploy_logs/regulations_api.log 2>&1 &
+        
+        # Store background job PIDs
+        PIDS="$!"
+        
+        # Wait for all background jobs and show live output
+        while kill -0 $PIDS 2>/dev/null; do
+          for log_file in /tmp/deploy_logs/*.log; do
+            if [[ -f "$log_file" ]]; then
+              tail -n +1 "$log_file" 2>/dev/null || true
+            fi
+          done
+          sleep 2
+          echo "⏳ Deployments in progress..."
+        done
+        
+        # Final output of all logs
+        echo "📋 Final deployment logs:"
+        for log_file in /tmp/deploy_logs/*.log; do
+          if [[ -f "$log_file" ]]; then
+            echo "\n=== $(basename "$log_file" .log) ==="
+            cat "$log_file"
+          fi
+        done
+        
+        echo "✅ All parallel deployments completed"
 
-    - name: 🚀 Deploy official journal application api
-      shell: bash
-      run: |
-        cd infrastructure/utgafa
-        ../scripts/update_tag.sh \
-        --environment ${{ inputs.ENV }} \
-        --update-value ${{ inputs.VERSION_TAG }} \
-        --commit false \
-        --ignore-dirty true \
-        --target official_journal_application_api \
-        --config-var-name official_journal_application_api_version_tag
-
-    - name: 🚀 Deploy official journal web
-      shell: bash
-      run: |
-        cd infrastructure/utgafa
-        ../scripts/update_tag.sh \
-        --environment ${{ inputs.ENV }} \
-        --update-value ${{ inputs.VERSION_TAG }} \
-        --commit false \
-        --ignore-dirty true \
-        --target official_journal_web \
-        --config-var-name official_journal_web_version_tag
 
     - name: 💾 Commit
       uses: stefanzweifel/git-auto-commit-action@v5
