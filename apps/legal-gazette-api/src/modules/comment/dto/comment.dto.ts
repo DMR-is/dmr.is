@@ -36,9 +36,6 @@ export class GetCommentsDto {
 
 class CreateCommentBaseDto {
   @ApiProperty({ type: String })
-  statusId!: string
-
-  @ApiProperty({ type: String })
   actorId!: string
 }
 
@@ -55,6 +52,11 @@ export class CreateStatusUpdateCommentDto extends CreateCommentBaseDto {
 }
 
 export class CreateTextCommentDto extends CreateCommentBaseDto {
+  @ApiProperty({ type: String })
+  comment!: string
+}
+
+export class CreateTextCommentBodyDto {
   @ApiProperty({ type: String })
   comment!: string
 }

@@ -3604,7 +3604,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateTextCommentDto" }
+              "schema": {
+                "$ref": "#/components/schemas/CreateTextCommentBodyDto"
+              }
             }
           }
         },
@@ -5263,15 +5265,7 @@
         },
         "required": ["comments"]
       },
-      "CreateTextCommentDto": {
-        "type": "object",
-        "properties": {
-          "statusId": { "type": "string" },
-          "actorId": { "type": "string" },
-          "comment": { "type": "string" }
-        },
-        "required": ["statusId", "actorId", "comment"]
-      },
+      "CreateTextCommentBodyDto": { "type": "object", "properties": {} },
       "ForeclosurePropertyDto": {
         "type": "object",
         "properties": {

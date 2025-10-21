@@ -28,7 +28,6 @@ export class CommentListener {
 
       await this.commentService.createSubmitComment(payload.advertId, {
         actorId: payload.actorId,
-        statusId: payload.statusId,
       })
     })
   }

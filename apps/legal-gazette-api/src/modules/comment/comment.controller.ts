@@ -13,10 +13,13 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
+import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { CurrentUser } from '@dmr.is/decorators'
+
 import { LGResponse } from '../../decorators/lg-response.decorator'
 import {
   CommentDto,
-  CreateTextCommentDto,
+  CreateTextCommentBodyDto,
   GetCommentsDto,
 } from './dto/comment.dto'
 import { ICommentService } from './comment.service.interface'
@@ -44,8 +47,12 @@ export class CommentController {
   @LGResponse({ operationId: 'postComment', type: CommentDto })
   postComment(
     @Param('advertId') advertId: string,
-    @Body() body: CreateTextCommentDto,
+    @Body() body: CreateTextCommentBodyDto,
+    @CurrentUser() user: DMRUser,
   ): Promise<CommentDto> {
-    return this.commentService.createTextComment(advertId, body)
+    return this.commentService.createTextComment(advertId, {
+      actorId: user.nationalId,
+      comment: body.comment,
+    })
   }
 }
