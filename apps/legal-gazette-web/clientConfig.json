@@ -946,6 +946,68 @@
         "tags": ["Company"]
       }
     },
+    "/api/v1/external/companies/aukatilkynningar": {
+      "post": {
+        "operationId": "createAdditionalAnnouncements",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdditionalAnnouncementsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company"]
+      }
+    },
     "/api/v1/cases": {
       "get": {
         "operationId": "getCases",
@@ -2659,7 +2721,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/CaseDto" }
+                "schema": { "$ref": "#/components/schemas/ApplicationDto" }
               }
             }
           },
@@ -3463,6 +3525,342 @@
         "tags": ["Settlement"]
       }
     },
+    "/api/v1/external/foreclosures/{id}": {
+      "get": {
+        "description": "Get foreclosure by id",
+        "operationId": "getForeclosureById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ForeclosureDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Foreclosure"]
+      }
+    },
+    "/api/v1/external/foreclosures/sale": {
+      "post": {
+        "description": "Creates a new foreclosure advertisement along with its properties",
+        "operationId": "createForeclosureSale",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateForeclosureSaleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ForeclosureDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Foreclosure"]
+      }
+    },
+    "/api/v1/external/foreclosures/sale/{id}": {
+      "delete": {
+        "description": "Deletes a foreclosure sale by its ID, marks the advert as withdrawn",
+        "operationId": "deleteForeclosureSale",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the foreclosure sale",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Foreclosure"]
+      }
+    },
+    "/api/v1/external/foreclosures/sale/{id}/property": {
+      "post": {
+        "description": "Creates a new property for an existing foreclosure sale",
+        "operationId": "createForeclosureProperty",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the foreclosure sale",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForeclosurePropertyDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Foreclosure"]
+      }
+    },
+    "/api/v1/external/foreclosures/sale/{id}/property/{propertyNumber}": {
+      "delete": {
+        "description": "Deletes a property from an existing foreclosure sale",
+        "operationId": "deletePropertyFromForeclosure",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the foreclosure sale",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "propertyNumber",
+            "required": true,
+            "in": "path",
+            "description": "The property number of the property to delete (fastanúmer)",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Foreclosure"]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "HealthController__v1",
@@ -3943,6 +4341,94 @@
           "firmWriting"
         ]
       },
+      "AnnouncementItem": {
+        "type": "number",
+        "enum": [
+          {
+            "A": "A",
+            "B": "B",
+            "C": "C",
+            "D": "D",
+            "E": "E",
+            "F": "F",
+            "G": "G",
+            "H": "H",
+            "J": "J",
+            "K": "K",
+            "L": "L",
+            "M": "M",
+            "N": "N",
+            "O": "O",
+            "P": "P",
+            "R": "R",
+            "S": "S",
+            "T": "T"
+          }
+        ]
+      },
+      "AdditionalAnnouncementsDto": {
+        "type": "object",
+        "properties": {
+          "companyNationalId": {
+            "type": "string",
+            "description": "The national id of the company (Kennitala fyrirtækis)",
+            "example": "1234567890"
+          },
+          "companyName": {
+            "type": "string",
+            "description": "The name of the company (Heiti fyrirtækis)",
+            "example": "HXM ehf."
+          },
+          "companyLocation": {
+            "type": "string",
+            "description": "The location of the company (Staðsetning fyrirtækis)",
+            "example": "Reykjavík"
+          },
+          "announcementItems": {
+            "description": "List of additional announcements to create (Tegundir)",
+            "example": ["A", "J"],
+            "allOf": [{ "$ref": "#/components/schemas/AnnouncementItem" }]
+          }
+        },
+        "required": [
+          "companyNationalId",
+          "companyName",
+          "companyLocation",
+          "announcementItems"
+        ]
+      },
+      "CreateAdditionalAnnouncementsDto": {
+        "type": "object",
+        "properties": {
+          "responsibleParty": {
+            "description": "The party responsible for the additional announcements",
+            "allOf": [{ "$ref": "#/components/schemas/ResponsiblePartyDto" }]
+          },
+          "announcementYear": {
+            "type": "number",
+            "description": "The year of the additional announcements to create (1900 - 2100)",
+            "example": 2024
+          },
+          "announcementMonth": {
+            "type": "number",
+            "description": "The month of the additional announcements to create (0 - 11)",
+            "example": 6
+          },
+          "announcements": {
+            "description": "List of additional announcements to create (Fjöldi tilkynninga)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdditionalAnnouncementsDto"
+            }
+          }
+        },
+        "required": [
+          "responsibleParty",
+          "announcementYear",
+          "announcementMonth",
+          "announcements"
+        ]
+      },
       "ApplicationTypeEnum": {
         "type": "string",
         "enum": ["COMMON", "RECALL_BANKRUPTCY", "RECALL_DECEASED"]
@@ -4088,6 +4574,26 @@
         },
         "required": ["email"]
       },
+      "CommentTypeEnum": {
+        "type": "string",
+        "enum": ["SUBMIT", "ASSIGN", "STATUS_UPDATE", "COMMENT"]
+      },
+      "CommentDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "type": {
+            "allOf": [{ "$ref": "#/components/schemas/CommentTypeEnum" }]
+          },
+          "status": { "$ref": "#/components/schemas/StatusDto" },
+          "advertId": { "type": "string" },
+          "actor": { "type": "string" },
+          "receiver": { "type": "string" },
+          "comment": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "type", "status", "advertId", "actor", "createdAt"]
+      },
       "AdvertDetailedDto": {
         "type": "object",
         "properties": {
@@ -4120,6 +4626,7 @@
             "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
           },
           "caseId": { "type": "string" },
+          "canEdit": { "type": "boolean" },
           "publicationNumber": { "type": "string", "nullable": true },
           "content": { "type": "string", "nullable": true },
           "caption": { "type": "string", "nullable": true },
@@ -4137,7 +4644,11 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
           },
-          "paidAt": { "type": "string" }
+          "paidAt": { "type": "string" },
+          "comments": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CommentDto" }
+          }
         },
         "required": [
           "createdAt",
@@ -4150,6 +4661,7 @@
           "title",
           "createdBy",
           "publications",
+          "canEdit",
           "publicationNumber",
           "content",
           "caption",
@@ -4158,7 +4670,8 @@
           "signatureLocation",
           "signatureOnBehalfOf",
           "signatureDate",
-          "communicationChannels"
+          "communicationChannels",
+          "comments"
         ]
       },
       "AdvertStatusCounterItemDto": {
@@ -4349,6 +4862,8 @@
         "type": "object",
         "properties": {
           "id": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
           "caseId": { "type": "string" },
           "nationalId": { "type": "string" },
           "applicationType": {
@@ -4364,6 +4879,8 @@
         },
         "required": [
           "id",
+          "createdAt",
+          "updatedAt",
           "caseId",
           "nationalId",
           "applicationType",
@@ -4408,6 +4925,8 @@
         "type": "object",
         "properties": {
           "id": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
           "caseId": { "type": "string" },
           "nationalId": { "type": "string" },
           "applicationType": {
@@ -4450,6 +4969,8 @@
         },
         "required": [
           "id",
+          "createdAt",
+          "updatedAt",
           "caseId",
           "nationalId",
           "applicationType",
@@ -4593,6 +5114,176 @@
           "settlementDeadline": { "type": "string", "nullable": true },
           "settlementDateOfDeath": { "type": "string", "nullable": true }
         }
+      },
+      "ForeclosurePropertyDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "foreclosureId": {
+            "type": "string",
+            "description": "The ID of the foreclosure this property belongs to"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the property was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the property was last updated"
+          },
+          "propertyName": {
+            "type": "string",
+            "description": "The name of the property"
+          },
+          "propertyNumber": {
+            "type": "string",
+            "description": "The number of the property (fastanúmer)"
+          },
+          "propertyTotalPrice": {
+            "type": "number",
+            "description": "The total price of the property"
+          },
+          "respondent": {
+            "type": "string",
+            "description": "Respondent name (Gerðarþoli/ar)"
+          },
+          "claimant": {
+            "type": "string",
+            "description": "The name of the claimant (Gerðarbeiðandi)"
+          }
+        },
+        "required": [
+          "id",
+          "foreclosureId",
+          "createdAt",
+          "updatedAt",
+          "propertyName",
+          "propertyNumber",
+          "propertyTotalPrice",
+          "respondent",
+          "claimant"
+        ]
+      },
+      "ForeclosureDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of the foreclosure"
+          },
+          "advertId": {
+            "type": "string",
+            "description": "The ID of the advert the foreclosure belongs to"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the foreclosure was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the foreclosure was last updated"
+          },
+          "foreclosureRegion": {
+            "type": "string",
+            "description": "The land region of where the foreclosure is located"
+          },
+          "foreclosureAddress": {
+            "type": "string",
+            "description": "The address of the foreclosure"
+          },
+          "foreclosureDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date of the foreclosure"
+          },
+          "properties": {
+            "description": "List of all the properties listed in the foreclosure",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ForeclosurePropertyDto" }
+          }
+        },
+        "required": [
+          "id",
+          "advertId",
+          "createdAt",
+          "updatedAt",
+          "foreclosureRegion",
+          "foreclosureAddress",
+          "foreclosureDate",
+          "properties"
+        ]
+      },
+      "CreateForeclosurePropertyDto": {
+        "type": "object",
+        "properties": {
+          "propertyName": {
+            "type": "string",
+            "description": "The name of the property"
+          },
+          "propertyNumber": {
+            "type": "string",
+            "description": "The number of the property (fastanúmer)"
+          },
+          "propertyTotalPrice": {
+            "type": "number",
+            "description": "The total price of the property"
+          },
+          "respondent": {
+            "type": "string",
+            "description": "Respondent name (Gerðarþoli/ar)"
+          },
+          "claimant": {
+            "type": "string",
+            "description": "The name of the claimant (Gerðarbeiðandi)"
+          }
+        },
+        "required": [
+          "propertyName",
+          "propertyNumber",
+          "propertyTotalPrice",
+          "respondent",
+          "claimant"
+        ]
+      },
+      "CreateForeclosureSaleDto": {
+        "type": "object",
+        "properties": {
+          "foreclosureRegion": {
+            "type": "string",
+            "description": "The land region of where the foreclosure is located"
+          },
+          "foreclosureAddress": {
+            "type": "string",
+            "description": "The address of the foreclosure"
+          },
+          "foreclosureDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date of the foreclosure"
+          },
+          "responsibleParty": {
+            "description": "The responsible party for the foreclosure",
+            "allOf": [{ "$ref": "#/components/schemas/ResponsiblePartyDto" }]
+          },
+          "properties": {
+            "description": "List of all the properties listed in the foreclosure",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateForeclosurePropertyDto"
+            }
+          }
+        },
+        "required": [
+          "foreclosureRegion",
+          "foreclosureAddress",
+          "foreclosureDate",
+          "responsibleParty",
+          "properties"
+        ]
       }
     }
   }
