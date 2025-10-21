@@ -5,6 +5,7 @@ import { formatDate } from '@dmr.is/utils/client'
 
 import { AdvertBaseFields } from '../../components/field-set-items/AdvertBaseFields'
 import { AdvertReadonlyFields } from '../../components/field-set-items/AdvertReadonlyFields'
+import { CommentFields } from '../../components/field-set-items/CommentFields'
 import { ContentFields } from '../../components/field-set-items/ContentFields'
 import { CourtAndJudgementFields } from '../../components/field-set-items/CourtAndJudgementFields'
 import { DivisionMeetingFields } from '../../components/field-set-items/DivisionMeetingFields'
@@ -148,6 +149,10 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
           advertStatus={advert.status.title}
         />
       ),
+    },
+    {
+      title: 'Athugasemdir',
+      children: <CommentFields id={advert.id} comments={advert.comments} />,
     },
   ].filter((item) => !item.hidden)
   return (
