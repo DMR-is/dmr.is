@@ -4342,28 +4342,26 @@
         ]
       },
       "AnnouncementItem": {
-        "type": "number",
+        "type": "string",
         "enum": [
-          {
-            "A": "A",
-            "B": "B",
-            "C": "C",
-            "D": "D",
-            "E": "E",
-            "F": "F",
-            "G": "G",
-            "H": "H",
-            "J": "J",
-            "K": "K",
-            "L": "L",
-            "M": "M",
-            "N": "N",
-            "O": "O",
-            "P": "P",
-            "R": "R",
-            "S": "S",
-            "T": "T"
-          }
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F",
+          "G",
+          "H",
+          "J",
+          "K",
+          "L",
+          "M",
+          "N",
+          "O",
+          "P",
+          "R",
+          "S",
+          "T"
         ]
       },
       "AdditionalAnnouncementsDto": {
@@ -4385,9 +4383,10 @@
             "example": "Reykjavík"
           },
           "announcementItems": {
+            "type": "array",
             "description": "List of additional announcements to create (Tegundir)",
             "example": ["A", "J"],
-            "allOf": [{ "$ref": "#/components/schemas/AnnouncementItem" }]
+            "items": { "$ref": "#/components/schemas/AnnouncementItem" }
           }
         },
         "required": [
