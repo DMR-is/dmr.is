@@ -13,12 +13,14 @@ import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 
 type DivisionMeetingFieldsProps = {
   id: string
+  canEdit: boolean
   divisionMeetingLocation: string
   divisionMeetingDate: string
 }
 
 export const DivisionMeetingFields = ({
   id,
+  canEdit,
   divisionMeetingLocation,
   divisionMeetingDate,
 }: DivisionMeetingFieldsProps) => {
@@ -30,6 +32,7 @@ export const DivisionMeetingFields = ({
       <GridRow>
         <GridColumn span={['12/12', '6/12']}>
           <Input
+            disabled={!canEdit}
             name="division-meeting-location"
             label="Staðsetning skiptafundar"
             size="sm"
@@ -42,6 +45,7 @@ export const DivisionMeetingFields = ({
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <DatePicker
+            disabled={!canEdit}
             size="sm"
             backgroundColor="blue"
             locale="is"

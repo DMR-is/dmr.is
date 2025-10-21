@@ -342,6 +342,7 @@ export class AdditionalAnnouncementsDto {
   @ApiProperty({
     enum: AnnouncementItem,
     enumName: 'AnnouncementItem',
+    isArray: true,
     description: 'List of additional announcements to create (Tegundir)',
     example: ['A', 'J'],
   })

@@ -12,6 +12,7 @@ import { TypeSelect } from '../selects/TypeSelect'
 
 type Props = {
   id: string
+  canEdit?: boolean
   types: TypeDto[]
   categories: CategoryDto[]
   typeId: string
@@ -22,6 +23,7 @@ type Props = {
 
 export const AdvertBaseFields = ({
   id,
+  canEdit = false,
   types,
   categories,
   typeId,
@@ -42,6 +44,7 @@ export const AdvertBaseFields = ({
       <GridRow>
         <GridColumn span={['12/12', '6/12']}>
           <TypeSelect
+            disabled={!canEdit}
             types={types.map((t) => t)}
             selectedId={typeId}
             onSelect={(id) => updateType(id ?? '')}
@@ -49,6 +52,7 @@ export const AdvertBaseFields = ({
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <CategorySelect
+            disabled={!canEdit}
             selectedId={categoryId}
             onSelect={(id) => updateCategory(id ?? '')}
             categories={categories}
@@ -59,6 +63,7 @@ export const AdvertBaseFields = ({
       <GridRow>
         <GridColumn span="12/12">
           <Input
+            disabled={!canEdit}
             name="title"
             size="sm"
             backgroundColor="blue"
@@ -71,6 +76,7 @@ export const AdvertBaseFields = ({
       <GridRow>
         <GridColumn span="12/12">
           <Input
+            disabled={!canEdit}
             name="additionalText"
             size="sm"
             backgroundColor="blue"

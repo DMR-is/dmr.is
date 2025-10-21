@@ -25,7 +25,7 @@ export class CommentDto {
   @ApiProperty({ type: String, required: false })
   comment?: string
 
-  @ApiProperty({ type: String, format: 'date-time' })
+  @ApiProperty({ type: String })
   createdAt!: string
 }
 

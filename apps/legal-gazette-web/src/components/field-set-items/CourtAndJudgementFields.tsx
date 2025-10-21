@@ -16,6 +16,7 @@ type CourtAndJudgementFieldsProps = {
   courtDistrictId?: string
   courtDistricts?: CourtDistrictDto[]
   judgementDate?: string
+  canEdit: boolean
 }
 
 export const CourtAndJudgementFields = ({
@@ -23,6 +24,7 @@ export const CourtAndJudgementFields = ({
   courtDistrictId,
   courtDistricts,
   judgementDate,
+  canEdit,
 }: CourtAndJudgementFieldsProps) => {
   const { updateCourtDistrict, updateJudgementDay } = useUpdateAdvert(id)
 
@@ -48,6 +50,7 @@ export const CourtAndJudgementFields = ({
       <GridRow>
         <GridColumn span={['12/12', '6/12']}>
           <Select
+            isDisabled={!canEdit}
             size="sm"
             backgroundColor="blue"
             label="Dómstóll"
@@ -58,6 +61,7 @@ export const CourtAndJudgementFields = ({
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <DatePicker
+            disabled={!canEdit}
             size="sm"
             locale="is"
             backgroundColor="blue"
