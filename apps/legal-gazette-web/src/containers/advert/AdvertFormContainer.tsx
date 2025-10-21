@@ -1,6 +1,6 @@
 'use client'
 
-import { Box, Stack, Text } from '@dmr.is/ui/components/island-is'
+import { AlertMessage, Box, Stack, Text } from '@dmr.is/ui/components/island-is'
 import { formatDate } from '@dmr.is/utils/client'
 
 import { AdvertBaseFields } from '../../components/field-set-items/AdvertBaseFields'
@@ -58,6 +58,7 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
       children: (
         <AdvertBaseFields
           id={advert.id}
+          canEdit={advert.canEdit}
           types={types}
           categories={categoriesForTypes?.categories ?? []}
           typeId={advert.type.id}
@@ -73,6 +74,7 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
       children: (
         <ContentFields
           id={advert.id}
+          canEdit={advert.canEdit}
           caption={advert.caption ?? ''}
           content={advert.content ?? ''}
         />
@@ -85,6 +87,7 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
       children: (
         <CourtAndJudgementFields
           id={advert.id}
+          canEdit={advert.canEdit}
           courtDistrictId={advert.courtDistrict?.id}
           courtDistricts={courtDistricts}
           judgementDate={advert.judgementDate}
@@ -97,6 +100,7 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
       children: (
         <DivisionMeetingFields
           id={advert.id}
+          canEdit={advert.canEdit}
           divisionMeetingLocation={advert.divisionMeetingLocation ?? ''}
           divisionMeetingDate={
             advert.divisionMeetingDate ?? new Date().toISOString()
@@ -110,6 +114,7 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
       children: (
         <SettlementFields
           advertId={advert.id}
+          canEdit={advert.canEdit}
           settlement={advert.settlement!}
           isBankruptcyRecall={isBankruptcyRecall}
           isDeceasedRecall={isRecallDeceased}
@@ -123,6 +128,7 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
       children: (
         <SignatureFields
           id={advert.id}
+          canEdit={advert.canEdit}
           signatureName={advert.signatureName ?? ''}
           signatureOnBehalfOf={advert.signatureOnBehalfOf ?? ''}
           signatureLocation={advert.signatureLocation ?? ''}
@@ -135,6 +141,7 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
       children: (
         <PublicationsFields
           id={advert.id}
+          canEdit={advert.canEdit}
           publications={advert.publications}
           advertStatus={advert.status.title}
         />
@@ -153,6 +160,13 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
             luctus. Donec in nisi et justo luctus egestas.
           </Text>
         </Stack>
+        {advert.canEdit === false && (
+          <AlertMessage
+            type="info"
+            title="Þú ert ekki skráður á auglýsingu"
+            message="Aðeins starfsmenn skráðir á auglýsinguna geta breytt því."
+          />
+        )}
         <AdvertFormAccordion items={items} />
       </Stack>
     </Box>

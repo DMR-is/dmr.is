@@ -10,6 +10,7 @@ type Props = {
   selectedId?: string
   categories: CategoryDto[]
   isClearable?: boolean
+  disabled?: boolean
 }
 
 export const CategorySelect = ({
@@ -18,6 +19,7 @@ export const CategorySelect = ({
   isLoading = false,
   categories = [],
   isClearable,
+  disabled,
 }: Props) => {
   const selected = categories.find((c) => c.id === selectedId)
   const options = categories.map((category) => ({
@@ -31,11 +33,14 @@ export const CategorySelect = ({
     }
   }
 
+  const isDisabled =
+    disabled || categories.length === 0 || categories.length === 1
+
   return (
     <Select
       key={selectedId}
       isLoading={isLoading}
-      isDisabled={categories.length === 0 || categories.length === 1}
+      isDisabled={isDisabled}
       size="sm"
       backgroundColor="blue"
       label="Flokkur auglýsingar"
