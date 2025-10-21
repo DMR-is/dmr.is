@@ -848,6 +848,7 @@ export class CaseService implements ICaseService {
           ],
         },
       ],
+      transaction,
     })
 
     if (!activeCase) {
