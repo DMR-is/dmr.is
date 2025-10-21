@@ -1,8 +1,10 @@
+import subDays from 'date-fns/subDays'
 import { useFormContext } from 'react-hook-form'
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
 import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
+import { POSTPONE_LIMIT } from '../../../../../lib/constants'
 import {
   RecallFormFields,
   RecallFormSchema,
@@ -68,6 +70,12 @@ export const RecallSettlementFields = () => {
             applicationType === 'bankruptcy'
               ? RecallFormFields.SETTLEMENT_DEADLINE
               : RecallFormFields.SETTLEMENT_DATE_OF_DEATH
+          }
+          maxDate={applicationType === 'bankruptcy' ? new Date() : undefined}
+          minDate={
+            applicationType === 'bankruptcy'
+              ? subDays(new Date(), POSTPONE_LIMIT)
+              : undefined
           }
           label={
             applicationType === 'bankruptcy'
