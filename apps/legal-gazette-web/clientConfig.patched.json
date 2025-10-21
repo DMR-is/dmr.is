@@ -5882,6 +5882,9 @@
           "paidAt": {
             "type": "string"
           },
+          "totalPrice": {
+            "type": "number"
+          },
           "comments": {
             "type": "array",
             "items": {

@@ -558,6 +558,9 @@ export class AdvertModel extends BaseModel<
       paidAt: model.transaction?.paidAt
         ? model.transaction.paidAt?.toISOString()
         : undefined,
+      totalPrice: model.transaction?.totalPrice
+        ? model.transaction.totalPrice
+        : undefined,
       comments: model.comments?.map((c) => c.fromModel()) || [],
     }
   }
