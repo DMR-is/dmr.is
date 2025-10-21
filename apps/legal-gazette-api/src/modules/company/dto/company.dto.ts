@@ -340,7 +340,7 @@ export class AdditionalAnnouncementsDto {
   companyLocation!: string
 
   @ApiProperty({
-    enum: [AnnouncementItem],
+    enum: AnnouncementItem,
     enumName: 'AnnouncementItem',
     description: 'List of additional announcements to create (Tegundir)',
     example: ['A', 'J'],

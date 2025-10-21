@@ -181,6 +181,13 @@ export class AdvertDetailedDto extends AdvertDto {
   @IsDateString()
   paidAt?: string
 
+  @ApiProperty({
+    type: Number,
+    required: false,
+  })
+  @IsOptional()
+  totalPrice?: number
+
   @ApiProperty({ type: [CommentDto], required: true })
   @IsArray()
   @Type(() => CommentDto)

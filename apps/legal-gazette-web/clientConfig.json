@@ -4137,6 +4137,7 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
           },
+          "totalPrice": { "type": "number" },
           "paidAt": { "type": "string" }
         },
         "required": [
