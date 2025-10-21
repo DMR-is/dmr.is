@@ -49,6 +49,7 @@ export const CommonSignatureFields = () => {
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <DatePickerController
+            required
             name={CommonFormFields.SIGNATURE_DATE}
             label="Dagsetning undirritunar"
             onChange={(date) => updateSignatureDate(date.toISOString())}
