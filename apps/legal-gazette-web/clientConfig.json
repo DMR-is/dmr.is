@@ -4589,7 +4589,7 @@
           "actor": { "type": "string" },
           "receiver": { "type": "string" },
           "comment": { "type": "string" },
-          "createdAt": { "type": "string", "format": "date-time" }
+          "createdAt": { "type": "string" }
         },
         "required": ["id", "type", "status", "advertId", "actor", "createdAt"]
       },
