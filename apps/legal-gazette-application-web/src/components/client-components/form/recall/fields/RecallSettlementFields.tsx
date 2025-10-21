@@ -1,14 +1,14 @@
-import { useFormContext } from 'react-hook-form'
 import subDays from 'date-fns/subDays'
+import { useFormContext } from 'react-hook-form'
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
 import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
+import { POSTPONE_LIMIT } from '../../../../../lib/constants'
 import {
   RecallFormFields,
   RecallFormSchema,
 } from '../../../../../lib/forms/schemas/recall-schema'
-import { POSTPONE_LIMIT } from '../../../../../lib/constants'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
