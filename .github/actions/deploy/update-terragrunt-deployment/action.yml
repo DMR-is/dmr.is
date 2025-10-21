@@ -58,69 +58,66 @@ runs:
     - name: 🚀 Deploy services in parallel
       shell: bash
       run: |
+        set -euo pipefail
         cd infrastructure/utgafa
-        
+
         echo "🚀 Starting parallel deployments..."
-        
-        # Run all deployments in parallel with prefixed output
-        (
-          ../scripts/update_tag.sh \
+
+        stdbuf -oL -eL ../scripts/update_tag.sh \
           --environment ${{ inputs.ENV }} \
           --update-value ${{ inputs.VERSION_TAG }} \
           --commit false \
           --ignore-dirty true \
           --target official_journal_api \
           --config-var-name official_journal_api_version_tag 2>&1 | \
-          sed 's/^/[official_journal_api] /'
-        ) &
-        
-        (
-          ../scripts/update_tag.sh \
+          stdbuf -oL -eL sed 's/^/[official_journal_api] /' &
+
+        stdbuf -oL -eL ../scripts/update_tag.sh \
           --environment ${{ inputs.ENV }} \
           --update-value ${{ inputs.VERSION_TAG }} \
           --commit false \
           --ignore-dirty true \
           --target official_journal_admin_api \
           --config-var-name official_journal_admin_api_version_tag 2>&1 | \
-          sed 's/^/[official_journal_admin_api] /'
-        ) &
-        
-        (
-          ../scripts/update_tag.sh \
+          stdbuf -oL -eL sed 's/^/[official_journal_admin_api] /' &
+
+        stdbuf -oL -eL ../scripts/update_tag.sh \
           --environment ${{ inputs.ENV }} \
           --update-value ${{ inputs.VERSION_TAG }} \
           --commit false \
           --ignore-dirty true \
           --target official_journal_application_api \
           --config-var-name official_journal_application_api_version_tag 2>&1 | \
-          sed 's/^/[official_journal_application_api] /'
-        ) &
-        
-        (
-          ../scripts/update_tag.sh \
+          stdbuf -oL -eL sed 's/^/[official_journal_application_api] /' &
+
+        stdbuf -oL -eL ../scripts/update_tag.sh \
           --environment ${{ inputs.ENV }} \
           --update-value ${{ inputs.VERSION_TAG }} \
           --commit false \
           --ignore-dirty true \
           --target official_journal_web \
           --config-var-name official_journal_web_version_tag 2>&1 | \
-          sed 's/^/[official_journal_web] /'
-        ) &
-        
-        (
-          ../scripts/update_tag.sh \
+          stdbuf -oL -eL sed 's/^/[official_journal_web] /' &
+
+        stdbuf -oL -eL ../scripts/update_tag.sh \
           --environment ${{ inputs.ENV }} \
           --update-value ${{ inputs.VERSION_TAG }} \
           --commit false \
           --ignore-dirty true \
           --target regulations_api \
           --config-var-name regulations_api_version_tag 2>&1 | \
-          sed 's/^/[regulations_api] /'
-        ) &
-        
-        # Wait for all background jobs to complete
-        wait
-        
+          stdbuf -oL -eL sed 's/^/[regulations_api] /' &
+
+        FAIL=0
+        for pid in $(jobs -p); do
+          wait "$pid" || FAIL=1
+        done
+
+        if [ "$FAIL" -ne 0 ]; then
+          echo "❌ One or more deployments failed"
+          exit 1
+        fi
+
         echo "✅ All parallel deployments completed"
 
 
