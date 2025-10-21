@@ -8,18 +8,21 @@ type Props = {
   onChange?: (value: string) => void
   onBlur?: (value: string) => void
   defaultValue?: string
+  disabled?: boolean
 }
 
-export const Editor = ({ onChange, onBlur, defaultValue }: Props) => {
+export const Editor = ({ onChange, onBlur, defaultValue, disabled }: Props) => {
   return (
     <Box border="standard" borderRadius="large">
       <HTMLEditor
+        disabled={disabled}
         defaultValue={defaultValue}
         handleUpload={() => new Error('File upload not implemented')}
         onChange={onChange}
         onBlur={onBlur}
         config={{
-          toolbar: 'bold italic underline | numlist bullist | link',
+          toolbar:
+            'bold italic underline | numlist bullist table | link | customInsertButton',
         }}
       />
     </Box>

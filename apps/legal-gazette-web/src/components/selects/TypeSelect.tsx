@@ -8,9 +8,15 @@ type Props = {
   onSelect?: (id: string) => void
   selectedId?: string
   types: TypeDto[]
+  disabled?: boolean
 }
 
-export const TypeSelect = ({ onSelect, selectedId, types }: Props) => {
+export const TypeSelect = ({
+  onSelect,
+  selectedId,
+  types,
+  disabled,
+}: Props) => {
   const options = types.map((type) => ({ label: type.title, value: type.id }))
   const selected = types.find((t) => t.id === selectedId)
 
@@ -29,6 +35,7 @@ export const TypeSelect = ({ onSelect, selectedId, types }: Props) => {
       options={options}
       value={selected ? { label: selected.title, value: selected.id } : null}
       onChange={handleChange}
+      isDisabled={disabled}
     />
   )
 }

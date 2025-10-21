@@ -11,11 +11,17 @@ import { Editor } from '../editor/HTMLEditor'
 
 type ContentFieldsProps = {
   id: string
+  canEdit: boolean
   caption: string
   content: string
 }
 
-export const ContentFields = ({ id, caption, content }: ContentFieldsProps) => {
+export const ContentFields = ({
+  id,
+  caption,
+  content,
+  canEdit,
+}: ContentFieldsProps) => {
   const { updateCaption, updateContent } = useUpdateAdvert(id)
 
   const decodedContent = isBase64(content)
@@ -27,6 +33,7 @@ export const ContentFields = ({ id, caption, content }: ContentFieldsProps) => {
       <GridRow>
         <GridColumn span="12/12">
           <Input
+            disabled={!canEdit}
             size="sm"
             backgroundColor="blue"
             name="caption"
@@ -40,6 +47,7 @@ export const ContentFields = ({ id, caption, content }: ContentFieldsProps) => {
       <GridRow>
         <GridColumn span="12/12">
           <Editor
+            disabled={!canEdit}
             defaultValue={decodedContent}
             onBlur={(value) => updateContent({ content: value })}
           />

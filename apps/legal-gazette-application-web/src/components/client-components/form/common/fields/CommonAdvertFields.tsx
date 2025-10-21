@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
+import debounce from 'lodash/debounce'
+import { useCallback, useEffect } from 'react'
 import { useFormContext, useFormState } from 'react-hook-form'
 
 import { GridColumn, GridRow, Stack, Text } from '@island.is/island-ui/core'
@@ -44,6 +45,22 @@ export const CommonAdvertFields = () => {
       updateCategory(categoriesData.categories[0].id)
     }
   }, [categoriesData?.categories, isTypesDirty])
+
+  const updateHtmlOnBlurHandler = useCallback(
+    (val: string) => {
+      setValue('fields.html', val, { shouldValidate: true, shouldDirty: true })
+      updateHTML(val)
+    },
+    [setValue, updateHTML],
+  )
+
+  const updateHtmlOnChangeHandler = useCallback(
+    debounce((val: string) => {
+      setValue('fields.html', val, { shouldValidate: true, shouldDirty: true })
+      updateHTML(val)
+    }, 500),
+    [setValue, updateHTML],
+  )
 
   const categoryOptions =
     categoriesData?.categories.map((category) => ({
@@ -95,7 +112,11 @@ export const CommonAdvertFields = () => {
           </Text>
           <Editor
             defaultValue={getValues('fields.html')}
-            onChange={(val) => updateHTML(val)}
+            onChange={(val) => {
+              updateHtmlOnChangeHandler.cancel()
+              updateHtmlOnChangeHandler(val)
+            }}
+            onBlur={updateHtmlOnBlurHandler}
           />
         </GridColumn>
       </GridRow>

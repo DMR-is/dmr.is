@@ -22,6 +22,7 @@ jobs:
             official-journal-admin-api,
             official-journal-application-api,
             official-journal-web,
+            regulations-api,
           ]
     steps:
       - name: 📁 Checkout
@@ -46,5 +47,5 @@ jobs:
           AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
           VERSION_TAG: ${{ github.ref_name }}
           PAT: ${{ secrets.DMR_ACCOUNT_PAT }}
-          SERVICES: official-journal-api official-journal-admin-api official-journal-application-api official-journal-web
+          SERVICES: official-journal-api official-journal-admin-api official-journal-application-api official-journal-web regulations-api
 

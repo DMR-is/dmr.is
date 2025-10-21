@@ -13,6 +13,7 @@ import { useUpdateSettlement } from '../../hooks/useUpdateSettlement'
 
 type SettlementFieldsProps = {
   advertId: string
+  canEdit: boolean
   settlement: SettlementDto
   isBankruptcyRecall?: boolean
   isDeceasedRecall?: boolean
@@ -21,6 +22,7 @@ type SettlementFieldsProps = {
 
 export const SettlementFields = ({
   advertId,
+  canEdit,
   settlement,
   isBankruptcyRecall,
   isDeceasedRecall,
@@ -42,6 +44,7 @@ export const SettlementFields = ({
       <GridRow>
         <GridColumn span={['12/12', '6/12']}>
           <Input
+            disabled={!canEdit}
             size="sm"
             backgroundColor="blue"
             name="settlement-liquidator-name"
@@ -52,6 +55,7 @@ export const SettlementFields = ({
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <Input
+            disabled={!canEdit}
             size="sm"
             backgroundColor="blue"
             name="settlement-liquidator-location"
@@ -64,6 +68,7 @@ export const SettlementFields = ({
       <GridRow>
         <GridColumn span={['12/12', '6/12']}>
           <Input
+            disabled={!canEdit}
             size="sm"
             backgroundColor="blue"
             name="settlement-name"
@@ -74,6 +79,7 @@ export const SettlementFields = ({
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <Input
+            disabled={!canEdit}
             size="sm"
             backgroundColor="blue"
             name="settlement-national-id"
@@ -86,6 +92,7 @@ export const SettlementFields = ({
       <GridRow>
         <GridColumn span={['12/12', '6/12']}>
           <Input
+            disabled={!canEdit}
             size="sm"
             backgroundColor="blue"
             name="settlement-address"
@@ -97,6 +104,7 @@ export const SettlementFields = ({
         {isBankruptcyRecall && (
           <GridColumn span={['12/12', '6/12']}>
             <DatePicker
+              disabled={!canEdit}
               size="sm"
               placeholderText=""
               backgroundColor="blue"
@@ -117,6 +125,7 @@ export const SettlementFields = ({
         {isDeceasedRecall && (
           <GridColumn span={['12/12', '6/12']}>
             <DatePicker
+              disabled={!canEdit}
               size="sm"
               placeholderText=""
               backgroundColor="blue"
@@ -139,6 +148,7 @@ export const SettlementFields = ({
         {isDivisionEnding && (
           <GridColumn span={['12/12', '6/12']}>
             <Input
+              disabled={!canEdit}
               name="declared-claims"
               size="sm"
               backgroundColor="blue"

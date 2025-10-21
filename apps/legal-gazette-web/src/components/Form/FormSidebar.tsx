@@ -81,6 +81,7 @@ export const AdvertSidebar = ({ advert }: AdvertSidebarProps) => {
         />
         <Box background="white">
           <Input
+            disabled={!advert.canEdit}
             name="advert-status"
             readOnly
             value={advert.status.title}
@@ -95,7 +96,7 @@ export const AdvertSidebar = ({ advert }: AdvertSidebarProps) => {
             fluid
             icon={isSubmitted ? 'arrowForward' : 'arrowBack'}
             iconType="outline"
-            disabled={isChangingAdvertStatus}
+            disabled={isChangingAdvertStatus || !advert.canEdit}
             onClick={() =>
               changeAdvertStatus(
                 isSubmitted

@@ -102,7 +102,7 @@ export const useUpdateApplication = (applicationId: string) => {
         },
       )
     },
-    [updateApplication],
+    [updateApplication, application?.typeId],
   )
 
   const updateCategory = useCallback(
@@ -119,7 +119,7 @@ export const useUpdateApplication = (applicationId: string) => {
         },
       )
     },
-    [updateApplication],
+    [updateApplication, application?.categoryId],
   )
 
   const updateCaption = useCallback(
@@ -136,16 +136,16 @@ export const useUpdateApplication = (applicationId: string) => {
         },
       )
     },
-    [updateApplication],
+    [updateApplication, application?.caption],
   )
 
   const updateHTML = useCallback(
     (html: string) => {
-      if (html === application?.html) {
+      const asBase64 = Buffer.from(html).toString('base64')
+
+      if (asBase64 === application?.html) {
         return
       }
-
-      const asBase64 = Buffer.from(html).toString('base64')
 
       updateApplication(
         { html: asBase64 },
@@ -155,7 +155,7 @@ export const useUpdateApplication = (applicationId: string) => {
         },
       )
     },
-    [updateApplication],
+    [updateApplication, application?.html],
   )
 
   const updateSignatureName = useCallback(
@@ -228,6 +228,13 @@ export const useUpdateApplication = (applicationId: string) => {
 
   const updatePublishingDates = useCallback(
     (publishingDates: string[]) => {
+      if (
+        JSON.stringify(publishingDates) ===
+        JSON.stringify(application?.publishingDates)
+      ) {
+        return
+      }
+
       updateApplication(
         { publishingDates },
         {
@@ -236,7 +243,7 @@ export const useUpdateApplication = (applicationId: string) => {
         },
       )
     },
-    [updateApplication],
+    [updateApplication, application?.publishingDates],
   )
 
   const updateCommunicationChannels = useCallback(

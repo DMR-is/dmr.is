@@ -12,6 +12,7 @@ type Props = {
   config?: React.ComponentProps<typeof Editor>['config']
   onChange?: (value: HTMLText) => void
   onBlur?: (value: HTMLText) => void
+  disabled?: boolean
 }
 
 export const HTMLEditor = ({
@@ -21,6 +22,7 @@ export const HTMLEditor = ({
   onBlur,
   handleUpload,
   config,
+  disabled,
 }: Props) => {
   const valueRef = useRef(() => defaultValue as HTMLText)
 
@@ -30,6 +32,7 @@ export const HTMLEditor = ({
 
   return (
     <Editor
+      disabled={disabled}
       readOnly={readonly}
       valueRef={valueRef}
       fileUploader={handleUpload}

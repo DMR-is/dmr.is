@@ -28,12 +28,14 @@ import { AdvertPublicationModal } from '../modals/AdvertPublicationModal'
 
 type PublicationsFieldsProps = {
   id: string
+  canEdit: boolean
   publications: AdvertPublicationDto[]
   advertStatus: StatusEnum
 }
 
 export const PublicationsFields = ({
   id,
+  canEdit,
   publications,
   advertStatus,
 }: PublicationsFieldsProps) => {
@@ -50,7 +52,7 @@ export const PublicationsFields = ({
     isLoading: isLoadingPublicationData,
   } = trpc.publications.getPublication.useQuery({
     advertId: id,
-    version: GetAdvertPublicationVersionEnum.B,
+    version: GetAdvertPublicationVersionEnum.A,
   })
 
   const [modalVisible, setModalVisible] = useState(false)
@@ -101,6 +103,7 @@ export const PublicationsFields = ({
           <GridRow key={pub.id}>
             <GridColumn span={['12/12', '6/12']}>
               <DatePicker
+                disabled={!canEdit}
                 backgroundColor="blue"
                 name="scheduledAt"
                 label={`Birting ${pub.version}`}
@@ -121,6 +124,7 @@ export const PublicationsFields = ({
             <GridColumn span={['12/12', '6/12']}>
               <Inline space={[1, 2]} flexWrap="nowrap" alignY="center">
                 <Input
+                  disabled={!canEdit}
                   backgroundColor="blue"
                   name="publishedAt"
                   readOnly
@@ -145,6 +149,7 @@ export const PublicationsFields = ({
                   ]}
                 />
                 <DropdownMenu
+                  disabled={!canEdit}
                   icon="settings"
                   iconType="outline"
                   // loading={isUpdatingAdvert}
@@ -168,7 +173,7 @@ export const PublicationsFields = ({
           <GridColumn span="12/12">
             <Inline align="right" alignY="center">
               <Button
-                disabled={publications.length >= 3}
+                disabled={publications.length >= 3 || !canEdit}
                 icon="add"
                 iconType="outline"
                 // loading={isUpdatingAdvert}

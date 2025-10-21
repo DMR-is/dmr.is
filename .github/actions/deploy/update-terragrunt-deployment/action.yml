@@ -1,5 +1,5 @@
 name: '🚀 Update Terragrunt Deployment'
-description: 'Deploy using Terragrunt apply in infrastructure repository'
+description: 'Deploy using Terragrunt apply in infrastructure repository (parallel execution with logs)'
 
 inputs:
   PAT:
@@ -55,53 +55,71 @@ runs:
         token: ${{ inputs.PAT }}
         path: infrastructure
 
-    - name: 🚀 Deploy official journal api
+    - name: 🚀 Deploy services in parallel
       shell: bash
       run: |
+        set -euo pipefail
         cd infrastructure/utgafa
-        ../scripts/update_tag.sh \
-        --environment ${{ inputs.ENV }} \
-        --update-value ${{ inputs.VERSION_TAG }} \
-        --commit false \
-        --ignore-dirty true \
-        --target official_journal_api \
-        --config-var-name official_journal_api_version_tag
-    
-    - name: 🚀 Deploy official journal admin api
-      shell: bash
-      run: |
-        cd infrastructure/utgafa
-        ../scripts/update_tag.sh \
-        --environment ${{ inputs.ENV }} \
-        --update-value ${{ inputs.VERSION_TAG }} \
-        --commit false \
-        --ignore-dirty true \
-        --target official_journal_admin_api \
-        --config-var-name official_journal_admin_api_version_tag
 
-    - name: 🚀 Deploy official journal application api
-      shell: bash
-      run: |
-        cd infrastructure/utgafa
-        ../scripts/update_tag.sh \
-        --environment ${{ inputs.ENV }} \
-        --update-value ${{ inputs.VERSION_TAG }} \
-        --commit false \
-        --ignore-dirty true \
-        --target official_journal_application_api \
-        --config-var-name official_journal_application_api_version_tag
+        echo "🚀 Starting parallel deployments..."
 
-    - name: 🚀 Deploy official journal web
-      shell: bash
-      run: |
-        cd infrastructure/utgafa
-        ../scripts/update_tag.sh \
-        --environment ${{ inputs.ENV }} \
-        --update-value ${{ inputs.VERSION_TAG }} \
-        --commit false \
-        --ignore-dirty true \
-        --target official_journal_web \
-        --config-var-name official_journal_web_version_tag
+        stdbuf -oL -eL ../scripts/update_tag.sh \
+          --environment ${{ inputs.ENV }} \
+          --update-value ${{ inputs.VERSION_TAG }} \
+          --commit false \
+          --ignore-dirty true \
+          --target official_journal_api \
+          --config-var-name official_journal_api_version_tag 2>&1 | \
+          stdbuf -oL -eL sed 's/^/[official_journal_api] /' &
+
+        stdbuf -oL -eL ../scripts/update_tag.sh \
+          --environment ${{ inputs.ENV }} \
+          --update-value ${{ inputs.VERSION_TAG }} \
+          --commit false \
+          --ignore-dirty true \
+          --target official_journal_admin_api \
+          --config-var-name official_journal_admin_api_version_tag 2>&1 | \
+          stdbuf -oL -eL sed 's/^/[official_journal_admin_api] /' &
+
+        stdbuf -oL -eL ../scripts/update_tag.sh \
+          --environment ${{ inputs.ENV }} \
+          --update-value ${{ inputs.VERSION_TAG }} \
+          --commit false \
+          --ignore-dirty true \
+          --target official_journal_application_api \
+          --config-var-name official_journal_application_api_version_tag 2>&1 | \
+          stdbuf -oL -eL sed 's/^/[official_journal_application_api] /' &
+
+        stdbuf -oL -eL ../scripts/update_tag.sh \
+          --environment ${{ inputs.ENV }} \
+          --update-value ${{ inputs.VERSION_TAG }} \
+          --commit false \
+          --ignore-dirty true \
+          --target official_journal_web \
+          --config-var-name official_journal_web_version_tag 2>&1 | \
+          stdbuf -oL -eL sed 's/^/[official_journal_web] /' &
+
+        stdbuf -oL -eL ../scripts/update_tag.sh \
+          --environment ${{ inputs.ENV }} \
+          --update-value ${{ inputs.VERSION_TAG }} \
+          --commit false \
+          --ignore-dirty true \
+          --target regulations_api \
+          --config-var-name regulations_api_version_tag 2>&1 | \
+          stdbuf -oL -eL sed 's/^/[regulations_api] /' &
+
+        FAIL=0
+        for pid in $(jobs -p); do
+          wait "$pid" || FAIL=1
+        done
+
+        if [ "$FAIL" -ne 0 ]; then
+          echo "❌ One or more deployments failed"
+          exit 1
+        fi
+
+        echo "✅ All parallel deployments completed"
+
 
     - name: 💾 Commit
       uses: stefanzweifel/git-auto-commit-action@v5
