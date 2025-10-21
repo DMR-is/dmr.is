@@ -6907,7 +6907,12 @@
       },
       "CreateTextCommentBodyDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "comment": {
+            "type": "string"
+          }
+        },
+        "required": ["comment"]
       },
       "ForeclosurePropertyDto": {
         "type": "object",

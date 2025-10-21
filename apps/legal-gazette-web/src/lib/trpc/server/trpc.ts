@@ -23,6 +23,7 @@ export const createTRPCContext = cache(async () => {
     },
     usersApi: await getServerClient('UsersApi'),
     settlementApi: await getServerClient('SettlementApi'),
+    commentsApi: await getServerClient('CommentApi'),
   }
 })
 
@@ -52,27 +53,27 @@ export const publicProcedure = t.procedure.use(({ ctx, next }) => {
   })
 })
 
+const validateApiAccess = (
+  ctx: Awaited<ReturnType<typeof createTRPCContext>>,
+) => {
+  const requiredApis = [
+    ctx.adverts.baseApi,
+    ctx.adverts.updateApi,
+    ctx.baseEntity.categoryApi,
+    ctx.baseEntity.typeApi,
+    ctx.baseEntity.statusApi,
+    ctx.baseEntity.courtDistrictApi,
+    ctx.publications.publicationsApi,
+    ctx.commentsApi,
+  ]
+
+  if (requiredApis.some((api) => !api)) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' })
+  }
+}
+
 export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
-  if (!ctx.adverts.baseApi) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' })
-  }
-
-  if (!ctx.adverts.updateApi) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' })
-  }
-
-  if (
-    !ctx.baseEntity.categoryApi ||
-    !ctx.baseEntity.typeApi ||
-    !ctx.baseEntity.statusApi ||
-    !ctx.baseEntity.courtDistrictApi
-  ) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' })
-  }
-
-  if (!ctx.publications.publicationsApi) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' })
-  }
+  validateApiAccess(ctx)
 
   return next({
     ctx: {
@@ -91,6 +92,7 @@ export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
       },
       usersApi: ctx.usersApi,
       settlementApi: ctx.settlementApi,
+      commentsApi: ctx.commentsApi,
     },
   })
 })

@@ -5265,7 +5265,11 @@
         },
         "required": ["comments"]
       },
-      "CreateTextCommentBodyDto": { "type": "object", "properties": {} },
+      "CreateTextCommentBodyDto": {
+        "type": "object",
+        "properties": { "comment": { "type": "string" } },
+        "required": ["comment"]
+      },
       "ForeclosurePropertyDto": {
         "type": "object",
         "properties": {
