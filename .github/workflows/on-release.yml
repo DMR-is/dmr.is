@@ -22,6 +22,7 @@ jobs:
             official-journal-admin-api,
             official-journal-application-api,
             official-journal-web,
+            regulations-api,
           ]
     steps:
       - name: 📁 Checkout
