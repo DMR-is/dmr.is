@@ -803,6 +803,10 @@ export class CaseService implements ICaseService {
         ...casesDetailedIncludes,
         CaseChannelModel,
         {
+          model: AdvertModel,
+          attributes: ['documentPdfUrl', 'id'],
+        },
+        {
           model: SignatureModel,
           include: [
             AdvertInvolvedPartyModel,
