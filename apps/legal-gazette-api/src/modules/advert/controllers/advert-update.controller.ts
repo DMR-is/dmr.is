@@ -1,9 +1,18 @@
-import { Body, Controller, Inject, Param, Patch, Post } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Inject,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
-import { ApiParam } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
+import { TokenJwtAuthGuard } from '@dmr.is/modules'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
@@ -16,7 +25,8 @@ import { AdvertDetailedDto, UpdateAdvertDto } from '../dto/advert.dto'
   path: 'adverts/:id',
   version: '1',
 })
-// @UseGuards(AdvertUpdateGuard)
+@ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard)
 export class AdvertUpdateController {
   constructor(
     @Inject(IAdvertService) private readonly advertService: IAdvertService,
@@ -65,7 +75,7 @@ export class AdvertUpdateController {
     return this.advertService.moveAdvertToNextStatus(advertId, currentUser)
   }
 
-  @Post('status/:previous')
+  @Post('status/previous')
   @LGResponse({ operationId: 'moveAdvertToPreviousStatus' })
   async moveAdvertToPreviousStatus(
     @Param('id', new UUIDValidationPipe()) advertId: string,

@@ -1635,150 +1635,11 @@
             }
           }
         },
-        "summary": "",
-        "tags": ["AdvertUpdate"]
-      }
-    },
-    "/api/v1/adverts/{id}/ready": {
-      "post": {
-        "operationId": "markAdvertAsReady",
-        "parameters": [
+        "security": [
           {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
+            "bearer": []
           }
         ],
-        "responses": {
-          "204": {
-            "description": ""
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["AdvertUpdate"]
-      }
-    },
-    "/api/v1/adverts/{id}/submit": {
-      "post": {
-        "operationId": "markAdvertAsSubmitted",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          }
-        },
         "summary": "",
         "tags": ["AdvertUpdate"]
       }
@@ -1859,86 +1720,11 @@
             }
           }
         },
-        "summary": "",
-        "tags": ["AdvertUpdate"]
-      }
-    },
-    "/api/v1/adverts/{id}/status/{statusId}": {
-      "patch": {
-        "operationId": "updateAdvertStatus",
-        "parameters": [
+        "security": [
           {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "statusId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "$ref": "#/components/schemas/StatusIdEnum"
-            }
+            "bearer": []
           }
         ],
-        "responses": {
-          "204": {
-            "description": ""
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorDto"
-                }
-              }
-            }
-          }
-        },
         "summary": "",
         "tags": ["AdvertUpdate"]
       }
@@ -2028,6 +1814,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["AdvertUpdate"]
       },
@@ -2112,6 +1903,160 @@
         ],
         "summary": "",
         "tags": ["Advert"]
+      }
+    },
+    "/api/v1/adverts/{id}/status/next": {
+      "post": {
+        "operationId": "moveAdvertToNextStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "",
+        "tags": ["AdvertUpdate"]
+      }
+    },
+    "/api/v1/adverts/{id}/status/previous": {
+      "post": {
+        "operationId": "moveAdvertToPreviousStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "",
+        "tags": ["AdvertUpdate"]
       }
     },
     "/api/v1/adverts/pdf/{id}": {
@@ -5185,16 +5130,16 @@
       "StatusIdEnum": {
         "type": "string",
         "enum": [
-          "63726fce-edcf-412d-85e8-087e99c592f2",
           "cd3bf301-52a1-493e-8c80-a391c310c840",
+          "7ef679c4-4f66-4892-b6ad-ee05e0be4359",
           "a2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
           "bd835a1d-0ecb-4aa4-9910-b5e60c30dced",
           "f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
           "e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c"
         ],
         "x-enum-varnames": [
-          "DRAFT",
           "SUBMITTED",
+          "IN_PROGRESS",
           "READY_FOR_PUBLICATION",
           "PUBLISHED",
           "REJECTED",
@@ -5204,7 +5149,6 @@
       "StatusEnum": {
         "type": "string",
         "enum": [
-          "Drög",
           "Innsent",
           "Tilbúið til útgáfu",
           "Útgefið",
