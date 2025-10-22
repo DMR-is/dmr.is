@@ -7,7 +7,10 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { LegalGazetteEvents } from '../../../lib/constants'
 import { ICommentService } from '../comment.service.interface'
-import { CreateSubmitCommentEvent } from '../events/create-submit-comment.event'
+import {
+  CreateStatusChangeCommentEvent,
+  CreateSubmitCommentEvent,
+} from '../events/create-submit-comment.event'
 
 @Injectable()
 export class CommentListener {
@@ -28,6 +31,22 @@ export class CommentListener {
 
       await this.commentService.createSubmitComment(payload.advertId, {
         actorId: payload.actorId,
+      })
+    })
+  }
+
+  @OnEvent(LegalGazetteEvents.STATUS_CHANGED, { async: true })
+  async handleStatusChangedEvent(payload: CreateStatusChangeCommentEvent) {
+    // we gotta make a new transaction context for CLS to work
+    await this.sequelize.transaction(async (_t) => {
+      this.logger.info('Handling status.changed event', {
+        payload,
+        context: 'CommentListener',
+      })
+
+      await this.commentService.createStatusUpdateComment(payload.advertId, {
+        actorId: payload.actorId,
+        receiverId: payload.statusId,
       })
     })
   }

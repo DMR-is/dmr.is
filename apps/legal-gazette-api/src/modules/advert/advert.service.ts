@@ -1,6 +1,6 @@
 import { Includeable } from 'sequelize'
 
-import { Inject, Injectable } from '@nestjs/common'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -38,6 +38,100 @@ export class AdvertService implements IAdvertService {
     private readonly advertPublicationModel: typeof AdvertPublicationModel,
     private readonly eventEmitter: EventEmitter2,
   ) {}
+  async moveAdvertToNextStatus(
+    advertId: string,
+    currentUser: DMRUser,
+  ): Promise<void> {
+    const moveableStatuses = [StatusIdEnum.SUBMITTED, StatusIdEnum.IN_PROGRESS]
+
+    const currentStatusId = await this.advertModel
+      .unscoped()
+      .findByPkOrThrow(advertId, {
+        attributes: ['id', 'statusId'],
+      })
+
+    if (!moveableStatuses.includes(currentStatusId.statusId)) {
+      this.logger.warn(
+        `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to next status`,
+      )
+
+      throw new BadRequestException('Advert cannot be moved to next status')
+    }
+
+    let nextStatusId: StatusIdEnum
+
+    switch (currentStatusId.statusId) {
+      case StatusIdEnum.SUBMITTED:
+        nextStatusId = StatusIdEnum.IN_PROGRESS
+        break
+      case StatusIdEnum.IN_PROGRESS:
+        nextStatusId = StatusIdEnum.READY_FOR_PUBLICATION
+        break
+      default:
+        throw new BadRequestException(`Advert cannot be moved to next status`)
+    }
+
+    await this.advertModel.update(
+      { statusId: nextStatusId },
+      { where: { id: advertId } },
+    )
+
+    // emit the event
+    this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
+      advertId,
+      actorId: currentUser.nationalId,
+      statusId: nextStatusId,
+    })
+  }
+  async moveAdvertToPreviousStatus(
+    advertId: string,
+    currentUser: DMRUser,
+  ): Promise<void> {
+    const moveableStatuses = [
+      StatusIdEnum.IN_PROGRESS,
+      StatusIdEnum.READY_FOR_PUBLICATION,
+    ]
+
+    const currentStatusId = await this.advertModel
+      .unscoped()
+      .findByPkOrThrow(advertId, {
+        attributes: ['id', 'statusId'],
+      })
+
+    if (!moveableStatuses.includes(currentStatusId.statusId)) {
+      this.logger.warn(
+        `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to previous status`,
+      )
+
+      throw new BadRequestException('Advert cannot be moved to previous status')
+    }
+
+    let previousStatusId: StatusIdEnum
+
+    switch (currentStatusId.statusId) {
+      case StatusIdEnum.IN_PROGRESS:
+        previousStatusId = StatusIdEnum.SUBMITTED
+        break
+      case StatusIdEnum.READY_FOR_PUBLICATION:
+        previousStatusId = StatusIdEnum.IN_PROGRESS
+        break
+      default:
+        throw new BadRequestException(
+          `Advert cannot be moved to previous status`,
+        )
+    }
+
+    await this.advertModel.update(
+      { statusId: previousStatusId },
+      { where: { id: advertId } },
+    )
+
+    this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
+      advertId,
+      actorId: currentUser.nationalId,
+      statusId: previousStatusId,
+    })
+  }
 
   async createAdvert(body: CreateAdvertDto): Promise<{ id: string }> {
     const includeArr: Includeable[] = []
@@ -134,26 +228,6 @@ export class AdvertService implements IAdvertService {
     await this.advertModel.update(
       { assignedUserId: userId },
       { where: { id: advertId } },
-    )
-  }
-  async markAdvertAsSubmitted(advertId: string): Promise<void> {
-    const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
-      attributes: ['id', 'statusId'],
-    })
-
-    await advert.update(
-      { statusId: StatusIdEnum.SUBMITTED },
-      { where: { id: advertId, statusId: StatusIdEnum.DRAFT } },
-    )
-  }
-  async markAdvertAsReady(advertId: string): Promise<void> {
-    const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
-      attributes: ['id', 'statusId'],
-    })
-
-    await advert.update(
-      { statusId: StatusIdEnum.READY_FOR_PUBLICATION },
-      { where: { id: advertId, statusId: StatusIdEnum.DRAFT } },
     )
   }
 

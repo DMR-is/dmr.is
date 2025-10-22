@@ -8,6 +8,7 @@ export enum RecallTypeEnum {
 export enum LegalGazetteEvents {
   ADVERT_CREATED = 'advert.created',
   ADVERT_PUBLISHED = 'advert.published',
+  STATUS_CHANGED = 'advert.status.changed',
 }
 
 export enum LegalGazetteModels {
