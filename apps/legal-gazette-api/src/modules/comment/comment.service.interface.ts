@@ -10,16 +10,26 @@ import {
 export interface ICommentService {
   getCommentsByAdvertId(advertId: string): Promise<GetCommentsDto>
 
-  deleteComment(commentId: string): Promise<void>
-  createSubmitComment(body: CreateSubmitCommentDto): Promise<CommentDto>
+  deleteComment(advertId: string, commentId: string): Promise<void>
+  createSubmitComment(
+    advertId: string,
+    body: CreateSubmitCommentDto,
+  ): Promise<CommentDto>
 
-  createAssignComment(body: CreateAssignCommentDto): Promise<CommentDto>
+  createAssignComment(
+    advertId: string,
+    body: CreateAssignCommentDto,
+  ): Promise<CommentDto>
 
   createStatusUpdateComment(
+    advertId: string,
     body: CreateStatusUpdateCommentDto,
   ): Promise<CommentDto>
 
-  createTextComment(body: CreateTextCommentDto): Promise<CommentDto>
+  createTextComment(
+    advertId: string,
+    body: CreateTextCommentDto,
+  ): Promise<CommentDto>
 }
 
 export const ICommentService = Symbol('ICommentService')

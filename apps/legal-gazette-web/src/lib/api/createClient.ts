@@ -9,6 +9,7 @@ import {
   ApplicationApi,
   CaseApi,
   CategoryApi,
+  CommentApi,
   Configuration,
   CourtDistrictApi,
   HealthApi,
@@ -35,6 +36,7 @@ const apis = [
   'HealthApi',
   'SubscriberApi',
   'SettlementApi',
+  'CommentApi',
 ] as const
 
 export type ApiKey = (typeof apis)[number]
@@ -55,6 +57,7 @@ export type ApiClientMap = {
   HealthApi: HealthApi
   SubscriberApi: SubscriberApi
   SettlementApi: SettlementApi
+  CommentApi: CommentApi
 }
 
 const ApiConstructors: {
@@ -75,6 +78,7 @@ const ApiConstructors: {
   HealthApi,
   SubscriberApi,
   SettlementApi,
+  CommentApi,
 }
 
 const apiClients: Partial<{

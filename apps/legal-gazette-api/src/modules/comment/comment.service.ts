@@ -3,6 +3,7 @@ import { isUUID } from 'class-validator'
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { AdvertModel } from '../advert/advert.model'
 import { StatusModel } from '../status/status.model'
 import { UserModel } from '../users/users.model'
 import {
@@ -22,7 +23,16 @@ export class CommentService implements ICommentService {
     @InjectModel(CommentModel) private commentModel: typeof CommentModel,
     @InjectModel(UserModel) private userModel: typeof UserModel,
     @InjectModel(StatusModel) private statusModel: typeof StatusModel,
+    @InjectModel(AdvertModel) private advertModel: typeof AdvertModel,
   ) {}
+
+  private async getAdvertStatusId(advertId: string): Promise<string> {
+    const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
+      attributes: ['id', 'statusId'],
+    })
+
+    return advert.statusId
+  }
 
   private async findActor(actorId: string) {
     const isId = isUUID(actorId)
@@ -45,13 +55,19 @@ export class CommentService implements ICommentService {
     await this.commentModel.destroy({ where: { id: commentId } })
   }
 
-  async createSubmitComment(body: CreateSubmitCommentDto): Promise<CommentDto> {
-    const actor = await this.findActor(body.actorId)
+  async createSubmitComment(
+    advertId: string,
+    body: CreateSubmitCommentDto,
+  ): Promise<CommentDto> {
+    const [actor, statusId] = await Promise.all([
+      this.findActor(body.actorId),
+      this.getAdvertStatusId(advertId),
+    ])
 
     const newComment = await this.commentModel.create({
       type: CommentTypeEnum.SUBMIT,
-      advertId: body.advertId,
-      statusId: body.statusId,
+      advertId: advertId,
+      statusId: statusId,
       actorId: actor.id,
       actor: actor.fullName,
     })
@@ -60,14 +76,20 @@ export class CommentService implements ICommentService {
     return newComment.fromModel()
   }
 
-  async createAssignComment(body: CreateAssignCommentDto): Promise<CommentDto> {
-    const actor = await this.findActor(body.actorId)
-    const receiver = await this.findActor(body.receiverId)
+  async createAssignComment(
+    advertId: string,
+    body: CreateAssignCommentDto,
+  ): Promise<CommentDto> {
+    const [actor, receiver, statusId] = await Promise.all([
+      this.findActor(body.actorId),
+      this.findActor(body.receiverId),
+      this.getAdvertStatusId(advertId),
+    ])
 
     const newComment = await this.commentModel.create({
       type: CommentTypeEnum.ASSIGN,
-      advertId: body.advertId,
-      statusId: body.statusId,
+      advertId: advertId,
+      statusId: statusId,
       actorId: actor.id,
       actor: actor.fullName,
       receiverId: receiver.id,
@@ -79,16 +101,20 @@ export class CommentService implements ICommentService {
   }
 
   async createStatusUpdateComment(
+    advertId: string,
     body: CreateStatusUpdateCommentDto,
   ): Promise<CommentDto> {
-    const actor = await this.findActor(body.actorId)
+    const [actor, statusId] = await Promise.all([
+      this.findActor(body.actorId),
+      this.getAdvertStatusId(advertId),
+    ])
 
     const receiver = await this.statusModel.findByPkOrThrow(body.receiverId)
 
     const newComment = await this.commentModel.create({
       type: CommentTypeEnum.STATUS_UPDATE,
-      advertId: body.advertId,
-      statusId: body.statusId,
+      advertId: advertId,
+      statusId: statusId,
       actorId: actor.id,
       actor: actor.fullName,
       receiverId: receiver.id,
@@ -99,13 +125,19 @@ export class CommentService implements ICommentService {
     return newComment.fromModel()
   }
 
-  async createTextComment(body: CreateTextCommentDto): Promise<CommentDto> {
-    const actor = await this.findActor(body.actorId)
+  async createTextComment(
+    advertId: string,
+    body: CreateTextCommentDto,
+  ): Promise<CommentDto> {
+    const [actor, statusId] = await Promise.all([
+      this.findActor(body.actorId),
+      this.getAdvertStatusId(advertId),
+    ])
 
     const newComment = await this.commentModel.create({
       type: CommentTypeEnum.COMMENT,
-      advertId: body.advertId,
-      statusId: body.statusId,
+      advertId: advertId,
+      statusId: statusId,
       actorId: actor.id,
       actor: actor.fullName,
       comment: body.comment,
