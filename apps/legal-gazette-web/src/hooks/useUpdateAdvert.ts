@@ -96,7 +96,7 @@ export const useUpdateAdvert = (id: string) => {
         utils.adverts.getAdvert.invalidate({ id: variables.id })
         utils.commentsApi.getComments.invalidate({ advertId: variables.id })
       },
-      onError: (_, variables, mutateResults) => {
+      onError: (error, variables, mutateResults) => {
         toast.error('Ekki tókst að uppfæra stöðu auglýsingar', {
           toastId: 'changeAdvertStatusError',
         })
@@ -160,27 +160,28 @@ export const useUpdateAdvert = (id: string) => {
     },
   })
 
-  const { mutate: assignUserMutation } = trpc.adverts.assignUser.useMutation({
-    onMutate: async (variables) => {
-      const prevData = utils.adverts.getAdvert.getData({
-        id: variables.id,
-      }) as AdvertDetailedDto
+  const { mutate: assignUserMutation, isPending: isAssigningUser } =
+    trpc.adverts.assignUser.useMutation({
+      onMutate: async (variables) => {
+        const prevData = utils.adverts.getAdvert.getData({
+          id: variables.id,
+        }) as AdvertDetailedDto
 
-      return prevData
-    },
-    onSuccess: (_, variables) => {
-      toast.success('Starfsmaður úthlutaður', {
-        toastId: 'assignUserToAdvert',
-      })
-      utils.adverts.getAdvert.invalidate({ id: variables.id })
-    },
-    onError: (_, variables, mutateResults) => {
-      toast.error('Ekki tókst að úthluta starfsmanni', {
-        toastId: 'assignUserToAdvertError',
-      })
-      utils.adverts.getAdvert.setData({ id: variables.id }, mutateResults)
-    },
-  })
+        return prevData
+      },
+      onSuccess: (_, variables) => {
+        toast.success('Starfsmaður úthlutaður', {
+          toastId: 'assignUserToAdvert',
+        })
+        utils.adverts.getAdvert.invalidate({ id: variables.id })
+      },
+      onError: (_, variables, mutateResults) => {
+        toast.error('Ekki tókst að úthluta starfsmanni', {
+          toastId: 'assignUserToAdvertError',
+        })
+        utils.adverts.getAdvert.setData({ id: variables.id }, mutateResults)
+      },
+    })
 
   const { mutate: updateAdvertMutation, isPending: isUpdatingAdvert } =
     trpc.adverts.updateAdvert.useMutation({
@@ -490,6 +491,7 @@ export const useUpdateAdvert = (id: string) => {
     isUpdatingAdvert,
     isMovingToNextStatus,
     isMovingToPreviousStatus,
+    isAssigningUser,
     moveToNextStatus,
     moveToPreviousStatus,
     assignUser,

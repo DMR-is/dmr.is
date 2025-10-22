@@ -2,7 +2,13 @@
 
 import { useMemo } from 'react'
 
-import { Button, Stack, Text } from '@dmr.is/ui/components/island-is'
+import {
+  Box,
+  Button,
+  Input,
+  Stack,
+  Text,
+} from '@dmr.is/ui/components/island-is'
 
 import { StatusDto, StatusIdEnum } from '../../gen/fetch'
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
@@ -66,6 +72,15 @@ export const ChangeStatusButtons = ({
 
   return (
     <Stack space={2}>
+      <Box background="white" borderRadius="large">
+        <Input
+          name="advert-status"
+          readOnly
+          value={currentStatus.title}
+          size="sm"
+          label="Staða auglýsingar"
+        />
+      </Box>
       <Button
         fluid
         size="small"

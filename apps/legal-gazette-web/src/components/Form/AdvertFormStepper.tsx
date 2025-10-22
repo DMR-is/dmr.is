@@ -1,66 +1,52 @@
 'use client'
 
-import { useParams } from 'next/navigation'
+import { FormStepper, Section, Text } from '@dmr.is/ui/components/island-is'
 
-import { FormStepper, Section } from '@dmr.is/ui/components/island-is'
-import { formatDate } from '@dmr.is/utils/client'
+import { AdvertDetailedDto, CommentDto, StatusEnum } from '../../gen/fetch'
+import { commentStepperMapper } from '../../mappers/commentMapper'
 
-import { StatusEnum } from '../../gen/fetch'
-import { trpc } from '../../lib/trpc/client'
+type Props = {
+  advert: AdvertDetailedDto
+  comments: CommentDto[]
+}
 
-/**
- * Work in progress
- * TODO: update after we have added history tracking/comments to adverts
- */
-export const AdvertFormStepper = () => {
-  const { id } = useParams()
-  const [advert] = trpc.adverts.getAdvert.useSuspenseQuery({ id: id as string })
-
+export const AdvertFormStepper = ({ advert, comments }: Props) => {
   const statusTitle = advert.status.title
 
-  let statusSteps = [
+  const statusSteps = [
     { status: StatusEnum.Innsent },
     { status: StatusEnum.ÍVinnslu },
     { status: StatusEnum.TilbúiðTilÚtgáfu },
-    { status: StatusEnum.ÚTgefið },
   ]
 
-  // If advert has been rejected or cancelled, add that as the final step after "Innsent"
-  const isRejectedOrCancelled =
-    statusTitle === StatusEnum.Hafnað || statusTitle === StatusEnum.Afturkallað
-
-  if (isRejectedOrCancelled) {
-    const exceptionStep = {
-      status: statusTitle as StatusEnum,
-    }
-
-    statusSteps = [statusSteps[0], statusSteps[1], exceptionStep]
+  if (statusTitle === StatusEnum.Hafnað) {
+    statusSteps.push({ status: StatusEnum.Hafnað })
+  } else if (statusTitle === StatusEnum.Afturkallað) {
+    statusSteps.push({ status: StatusEnum.Afturkallað })
+  } else {
+    statusSteps.push({ status: StatusEnum.ÚTgefið })
   }
 
-  const currentStepIndex = statusSteps.findIndex(
-    (step) => step.status === statusTitle,
-  )
-
   const sections = statusSteps.map((step, index) => {
-    const isActive = index === currentStepIndex
+    const isActive = step.status === statusTitle
+    const currentStepIndex = statusSteps.findIndex(
+      (s) => s.status === statusTitle,
+    )
     const isComplete = index < currentStepIndex
 
-    // Build subSections
-    const subSections = []
-    if (step.status === StatusEnum.Innsent && (isActive || isComplete)) {
-      if (advert.createdBy) {
-        subSections.push(<div key="author">Innsent af: {advert.createdBy}</div>)
-      }
+    const commentsForStep = comments
+      .map((comment) =>
+        comment.status.title === step.status
+          ? commentStepperMapper(comment)
+          : null,
+      )
+      .filter((c): c is string => c !== null)
 
-      if (advert.createdAt) {
-        subSections.push(
-          <div key="date">
-            Skráð þann: {formatDate(advert.createdAt, 'dd. MMMM yyyy')}
-          </div>,
-        )
-      }
-    }
-
+    const subSections = commentsForStep.map((c) => (
+      <Text variant="small" fontWeight="medium">
+        {c}
+      </Text>
+    ))
     return (
       <Section
         key={step.status}
