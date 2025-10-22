@@ -92,7 +92,7 @@ async function getRegulationCancel(regulationId: number) {
 
 type HistoryData = ReadonlyArray<{
   reason: 'root' | 'amend' | 'repeal'
-  impactMissing: boolean
+  impactmissing: boolean
   id: number
   title: string
   name: RegName
@@ -119,12 +119,12 @@ async function getRegulationHistory(regulation: DB_Regulation) {
           title,
           reason,
           date,
-          impactMissing,
+          impactmissing,
         }): RegulationHistoryItem => ({
           date: toISODate(date) as ISODate,
           name,
           title,
-          status: impactMissing ? 'pending' : 'published',
+          status: impactmissing ? 'pending' : 'published',
           effect: reason as Exclude<typeof reason, 'root'>, // root has already been hacked off by slice above
         }),
       )
