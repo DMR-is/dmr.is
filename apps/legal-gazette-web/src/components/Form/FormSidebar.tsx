@@ -8,15 +8,15 @@ import {
   Input,
   Select,
   Stack,
-  Text,
 } from '@dmr.is/ui/components/island-is'
 
 import { LinkV2 } from '@island.is/island-ui/core'
 
-import { AdvertDetailedDto, StatusEnum, StatusIdEnum } from '../../gen/fetch'
+import { AdvertDetailedDto } from '../../gen/fetch'
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 import { Route } from '../../lib/constants'
 import { trpc } from '../../lib/trpc/client'
+import { ChangeStatusButtons } from '../buttons/ChangeStatusButtons'
 import { AdvertFormStepper } from './AdvertFormStepper'
 import * as styles from './Form.css'
 
@@ -25,8 +25,7 @@ type AdvertSidebarProps = {
 }
 
 export const AdvertSidebar = ({ advert }: AdvertSidebarProps) => {
-  const { assignUser, changeAdvertStatus, isChangingAdvertStatus } =
-    useUpdateAdvert(advert.id as string)
+  const { assignUser } = useUpdateAdvert(advert.id as string)
   const { data: usersData, isLoading: isLoadingEmployees } =
     trpc.users.getEmployees.useQuery()
 
@@ -44,10 +43,6 @@ export const AdvertSidebar = ({ advert }: AdvertSidebarProps) => {
   const defaultEmployee = usersData?.users?.find(
     (user) => user.id === advert.assignedUser,
   )
-  const isSubmitted = advert?.status.title === StatusEnum.Innsent
-  const shouldShowButton =
-    advert?.status.title === StatusEnum.TilbúiðTilÚtgáfu ||
-    advert?.status.title === StatusEnum.Innsent
 
   return (
     <Box className={styles.advertSideBarStyle}>
@@ -90,26 +85,11 @@ export const AdvertSidebar = ({ advert }: AdvertSidebarProps) => {
           />
         </Box>
 
-        {shouldShowButton && (
-          <Button
-            size="small"
-            fluid
-            icon={isSubmitted ? 'arrowForward' : 'arrowBack'}
-            iconType="outline"
-            disabled={isChangingAdvertStatus || !advert.canEdit}
-            onClick={() =>
-              changeAdvertStatus(
-                isSubmitted
-                  ? StatusIdEnum.READY_FOR_PUBLICATION
-                  : StatusIdEnum.SUBMITTED,
-              )
-            }
-          >
-            <Text color="white" variant="small" fontWeight="semiBold">
-              {isSubmitted ? 'Færa í tilbúið til útgáfu' : 'Færa í innsent'}
-            </Text>
-          </Button>
-        )}
+        <ChangeStatusButtons
+          advertId={advert.id}
+          currentStatus={advert.status}
+          canEdit={advert.canEdit}
+        />
 
         <AdvertFormStepper />
       </Stack>

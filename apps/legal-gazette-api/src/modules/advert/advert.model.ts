@@ -521,6 +521,27 @@ export class AdvertModel extends BaseModel<
     }
   }
 
+  static canEdit(model: AdvertModel, userId?: string): boolean {
+    try {
+      const editableStateIds = [
+        StatusIdEnum.IN_PROGRESS,
+        StatusIdEnum.READY_FOR_PUBLICATION,
+        StatusIdEnum.SUBMITTED,
+      ]
+
+      if (
+        editableStateIds.includes(model.statusId) &&
+        model.assignedUserId === userId
+      ) {
+        return true
+      }
+
+      return false
+    } catch (error) {
+      return false
+    }
+  }
+
   fromModel(): AdvertDto {
     return AdvertModel.fromModel(this)
   }
@@ -532,7 +553,7 @@ export class AdvertModel extends BaseModel<
     return {
       ...this.fromModel(model),
       caseId: model.caseId || undefined,
-      canEdit: model.assignedUserId === userId,
+      canEdit: this.canEdit(model, userId),
       publicationNumber: model.publicationNumber,
       signatureOnBehalfOf: model.signatureOnBehalfOf,
       signatureDate: model.signatureDate?.toISOString(),

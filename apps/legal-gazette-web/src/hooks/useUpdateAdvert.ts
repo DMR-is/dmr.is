@@ -50,36 +50,111 @@ export const useUpdateAdvert = (id: string) => {
 
   const utils = trpc.useUtils()
 
+  const { mutate: moveToNextStatusMutation, isPending: isMovingToNextStatus } =
+    trpc.adverts.moveToNextStatus.useMutation({
+      onMutate: async (variables) => {
+        await utils.adverts.getAdvert.cancel({ id: variables.id })
+        const prevData = utils.adverts.getAdvert.getData({
+          id: variables.id,
+        }) as AdvertDetailedDto
+
+        const currentStatus = prevData.status
+        let nextStatus: StatusIdEnum
+
+        switch (currentStatus.id) {
+          case StatusIdEnum.SUBMITTED: {
+            nextStatus = StatusIdEnum.IN_PROGRESS
+            break
+          }
+          case StatusIdEnum.IN_PROGRESS: {
+            nextStatus = StatusIdEnum.READY_FOR_PUBLICATION
+            break
+          }
+          default:
+            nextStatus = currentStatus.id
+            break
+        }
+
+        const status = statuses.find((status) => status.id === nextStatus)
+        if (!status) {
+          return prevData
+        }
+
+        utils.adverts.getAdvert.setData(
+          { id: variables.id },
+          {
+            ...prevData,
+            status: status as StatusDto,
+          },
+        )
+        return prevData
+      },
+      onSuccess: (_, variables) => {
+        toast.success('Staða auglýsingar uppfærð', {
+          toastId: 'changeAdvertStatus',
+        })
+        utils.adverts.getAdvert.invalidate({ id: variables.id })
+        utils.commentsApi.getComments.invalidate({ advertId: variables.id })
+      },
+      onError: (_, variables, mutateResults) => {
+        toast.error('Ekki tókst að uppfæra stöðu auglýsingar', {
+          toastId: 'changeAdvertStatusError',
+        })
+        utils.adverts.getAdvert.setData({ id: variables.id }, mutateResults)
+      },
+    })
+
   const {
-    mutate: changeAdvertStatusMutation,
-    isPending: isChangingAdvertStatus,
-  } = trpc.adverts.changeAdvertStatus.useMutation({
+    mutate: moveToPreviousStatusMutation,
+    isPending: isMovingToPreviousStatus,
+  } = trpc.adverts.moveToPreviousStatus.useMutation({
     onMutate: async (variables) => {
       await utils.adverts.getAdvert.cancel({ id: variables.id })
       const prevData = utils.adverts.getAdvert.getData({
         id: variables.id,
       }) as AdvertDetailedDto
 
-      const status =
-        (statuses.find(
-          (status) => status.id === variables.statusId,
-        ) as StatusDto) ?? prevData.status
-      const optimisticData = {
-        ...prevData,
-        status,
+      const currentStatus = prevData.status
+      let prevStatus: StatusIdEnum
+
+      switch (currentStatus.id) {
+        case StatusIdEnum.READY_FOR_PUBLICATION: {
+          prevStatus = StatusIdEnum.IN_PROGRESS
+          break
+        }
+        case StatusIdEnum.IN_PROGRESS: {
+          prevStatus = StatusIdEnum.SUBMITTED
+          break
+        }
+        default:
+          prevStatus = currentStatus.id
+          break
       }
-      utils.adverts.getAdvert.setData({ id: variables.id }, optimisticData)
+
+      const status = statuses.find((status) => status.id === prevStatus)
+      if (!status) {
+        return prevData
+      }
+
+      utils.adverts.getAdvert.setData(
+        { id: variables.id },
+        {
+          ...prevData,
+          status: status as StatusDto,
+        },
+      )
       return prevData
     },
     onSuccess: (_, variables) => {
-      toast.success('Auglýsing fær stöðu tilbúin til útgáfu', {
-        toastId: 'markAdvertAsReady',
+      toast.success('Staða auglýsingar uppfærð', {
+        toastId: 'changeAdvertStatus',
       })
       utils.adverts.getAdvert.invalidate({ id: variables.id })
+      utils.commentsApi.getComments.invalidate({ advertId: variables.id })
     },
     onError: (_, variables, mutateResults) => {
-      toast.error('Ekki tókst að færa auglýsingu í stöðu tilbúin til útgáfu', {
-        toastId: 'markAdvertAsReadyError',
+      toast.error('Ekki tókst að uppfæra stöðu auglýsingar', {
+        toastId: 'changeAdvertStatusError',
       })
       utils.adverts.getAdvert.setData({ id: variables.id }, mutateResults)
     },
@@ -155,16 +230,6 @@ export const useUpdateAdvert = (id: string) => {
       )
     },
     [id, updateAdvertMutation],
-  )
-
-  const changeAdvertStatus = useCallback(
-    (statusId: StatusIdEnum) => {
-      if (statusId === advert.status.id) {
-        return
-      }
-      return changeAdvertStatusMutation({ id, statusId })
-    },
-    [id, changeAdvertStatusMutation, advert.status.id],
   )
 
   const assignUser = useCallback(
@@ -413,12 +478,21 @@ export const useUpdateAdvert = (id: string) => {
     [updateAdvert, advert.divisionMeetingDate],
   )
 
+  const moveToNextStatus = useCallback(() => {
+    moveToNextStatusMutation({ id })
+  }, [id, moveToNextStatusMutation])
+
+  const moveToPreviousStatus = useCallback(() => {
+    moveToPreviousStatusMutation({ id })
+  }, [id, moveToPreviousStatusMutation])
+
   return {
     isUpdatingAdvert,
-    changeAdvertStatus,
-    isChangingAdvertStatus,
+    isMovingToNextStatus,
+    isMovingToPreviousStatus,
+    moveToNextStatus,
+    moveToPreviousStatus,
     assignUser,
-
     updateTitle,
     updateCaption,
     updateContent,

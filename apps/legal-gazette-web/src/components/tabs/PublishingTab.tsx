@@ -7,7 +7,6 @@ import { Box } from '@dmr.is/ui/components/island-is'
 
 import { Button, Inline, Stack, toast } from '@island.is/island-ui/core'
 
-import { StatusIdEnum } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
 import { trpc } from '../../lib/trpc/client'
@@ -37,10 +36,10 @@ export const PublishingTab = () => {
       },
     })
 
-  const { mutate: updateAdvertStatus } =
-    trpc.adverts.changeAdvertStatus.useMutation({
+  const { mutate: moveToPreviousStatus } =
+    trpc.adverts.moveToPreviousStatus.useMutation({
       onSuccess: () => {
-        toast.success('Auglýsing færð í stöðuna innsend', {
+        toast.success('Auglýsing færð í stöðuna í vinnslu', {
           toastId: 'update-advert-status-success',
         })
         utils.adverts.getReadyForPublicationAdverts.invalidate({
@@ -89,9 +88,8 @@ export const PublishingTab = () => {
             iconType="outline"
             onClick={() =>
               selectedAdvertIds.forEach((id) => {
-                updateAdvertStatus({
+                moveToPreviousStatus({
                   id: id,
-                  statusId: StatusIdEnum.SUBMITTED,
                 })
               })
             }

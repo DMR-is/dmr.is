@@ -30,7 +30,7 @@ export class ForeclosureService implements IForeclosureService {
   async deleteForclosureSale(id: string): Promise<void> {
     const foreclosure = await this.foreclosureModel.findByPkOrThrow(id)
 
-    await this.advertService.markAdvertAsSubmitted(foreclosure.advertId)
+    await this.advertService.markAdvertAsWithdrawn(foreclosure.advertId)
 
     await this.foreclosurePropertyModel.destroy({
       where: { foreclosureId: id },

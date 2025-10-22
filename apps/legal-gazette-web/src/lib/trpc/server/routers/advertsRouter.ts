@@ -78,13 +78,18 @@ export const advertsRouter = router({
         userId: input.userId,
       })
     }),
-  changeAdvertStatus: protectedProcedure
-    .input(z.object({ id: z.string(), statusId: z.enum(StatusIdEnum) }))
+  moveToNextStatus: protectedProcedure
+    .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      if (input.statusId === StatusIdEnum.READY_FOR_PUBLICATION) {
-        return await ctx.adverts.updateApi.markAdvertAsReady({ id: input.id })
-      } else if (input.statusId === StatusIdEnum.SUBMITTED) {
-        return await ctx.adverts.updateApi.markAdvertAsSubmitted({ id: input.id })
-      }
+      return await ctx.adverts.updateApi.moveAdvertToNextStatus({
+        id: input.id,
+      })
+    }),
+  moveToPreviousStatus: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.adverts.updateApi.moveAdvertToPreviousStatus({
+        id: input.id,
+      })
     }),
 })

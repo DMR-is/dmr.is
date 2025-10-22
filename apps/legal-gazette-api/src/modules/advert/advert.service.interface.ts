@@ -20,9 +20,13 @@ export interface IAdvertService {
 
   getAdvertsByCaseId(caseId: string): Promise<GetAdvertsDto>
 
-  markAdvertAsReady(advertId: string): Promise<void>
+  moveAdvertToNextStatus(advertId: string, currentUser: DMRUser): Promise<void>
 
-  markAdvertAsSubmitted(advertId: string): Promise<void>
+  moveAdvertToPreviousStatus(
+    advertId: string,
+    currentUser: DMRUser,
+  ): Promise<void>
+
   markAdvertAsWithdrawn(advertId: string): Promise<void>
 
   assignAdvertToEmployee(advertId: string, userId: string): Promise<void>
