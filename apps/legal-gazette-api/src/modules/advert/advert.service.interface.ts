@@ -28,6 +28,7 @@ export interface IAdvertService {
   ): Promise<void>
 
   markAdvertAsWithdrawn(advertId: string): Promise<void>
+  rejectAdvert(advertId: string, currentUser: DMRUser): Promise<void>
 
   assignAdvertToEmployee(advertId: string, userId: string): Promise<void>
 

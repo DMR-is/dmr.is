@@ -92,4 +92,11 @@ export const advertsRouter = router({
         id: input.id,
       })
     }),
+  rejectAdvert: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.adverts.updateApi.rejectAdvert({
+        id: input.id,
+      })
+    }),
 })

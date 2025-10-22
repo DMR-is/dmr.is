@@ -1,3 +1,5 @@
+import { IsString } from 'class-validator'
+
 import { ApiProperty } from '@nestjs/swagger'
 
 import { StatusDto } from '../../status/dto/status.dto'
@@ -58,5 +60,6 @@ export class CreateTextCommentDto extends CreateCommentBaseDto {
 
 export class CreateTextCommentBodyDto {
   @ApiProperty({ type: String })
+  @IsString()
   comment!: string
 }

@@ -53,13 +53,25 @@ export const commentMapper = (comment: CommentDto): CommentProps => {
 export const commentStepperMapper = (comment: CommentDto) => {
   switch (comment.type) {
     case CommentTypeEnum.SUBMIT:
-      return `Innsent af: ${comment.actor} þann: ${formatDate(comment.createdAt, 'dd.MM.yyyy')}`
+      return {
+        title: `Auglýsing stofnuð af ${comment.actor}`,
+        date: formatDate(comment.createdAt, 'dd. MMMM yyyy'),
+      }
     case CommentTypeEnum.ASSIGN:
-      return `Skráð á: ${comment.receiver} þann: ${formatDate(comment.createdAt, 'dd.MM.yyyy')}`
+      return {
+        title: `Skráð á: ${comment.receiver}`,
+        date: formatDate(comment.createdAt, 'dd. MMMM yyyy'),
+      }
     case CommentTypeEnum.STATUSUPDATE:
-      return `Staða uppfærð þann: ${formatDate(comment.createdAt, 'dd.MM.yyyy')}`
+      return {
+        title: `Fært í stöðuna : ${comment.status.title}`,
+        date: formatDate(comment.createdAt, 'dd. MMMM yyyy'),
+      }
     case CommentTypeEnum.COMMENT:
-      return `Athugasemd gerð þann: ${formatDate(comment.createdAt, 'dd.MM.yyyy')}`
+      return {
+        title: `${comment.actor} bætti við athugasemd`,
+        date: formatDate(comment.createdAt, 'dd. MMMM yyyy'),
+      }
     default:
       return null
   }

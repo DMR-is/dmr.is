@@ -1,8 +1,14 @@
 'use client'
 
-import { FormStepper, Section, Text } from '@dmr.is/ui/components/island-is'
+import {
+  FormStepper,
+  Section,
+  Stack,
+  Text,
+} from '@dmr.is/ui/components/island-is'
 
 import { AdvertDetailedDto, CommentDto, StatusEnum } from '../../gen/fetch'
+import { trpc } from '../../lib/trpc/client'
 import { commentStepperMapper } from '../../mappers/commentMapper'
 
 type Props = {
@@ -11,6 +17,11 @@ type Props = {
 }
 
 export const AdvertFormStepper = ({ advert, comments }: Props) => {
+  const { data } = trpc.commentsApi.getComments.useQuery(
+    { advertId: advert.id },
+    { initialData: { comments: comments } },
+  )
+
   const statusTitle = advert.status.title
 
   const statusSteps = [
@@ -34,18 +45,21 @@ export const AdvertFormStepper = ({ advert, comments }: Props) => {
     )
     const isComplete = index < currentStepIndex
 
-    const commentsForStep = comments
+    const commentsForStep = data.comments
       .map((comment) =>
         comment.status.title === step.status
           ? commentStepperMapper(comment)
           : null,
       )
-      .filter((c): c is string => c !== null)
+      .filter((c) => c !== null)
 
     const subSections = commentsForStep.map((c) => (
-      <Text variant="small" fontWeight="medium">
-        {c}
-      </Text>
+      <Stack space={0}>
+        <Text variant="small">{c.date}</Text>
+        <Text variant="small" fontWeight="medium">
+          {c.title}
+        </Text>
+      </Stack>
     ))
     return (
       <Section
