@@ -48,7 +48,14 @@ export const Comment = ({
                   <strong>{creator}</strong> {action}
                 </>
               )}
-              {!!receiver && <Text>{receiver}</Text>}
+              {!!receiver && (
+                <>
+                  {' '}
+                  <Text as="span" fontWeight="semiBold">
+                    {receiver}
+                  </Text>
+                </>
+              )}
             </Text>
           </Inline>
           {!!message && <Text>{message}</Text>}

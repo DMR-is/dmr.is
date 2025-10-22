@@ -29,16 +29,6 @@ for (const [schemaName, schema] of Object.entries(schemas)) {
   if (!mapping) continue
 
   const expectedValues = Object.values(mapping)
-  console.log('expectedValues', expectedValues)
-  console.log('schema.enum', schema.enum)
-  console.log(
-    'schema.enum.length === expectedValues.length',
-    schema.enum.length === expectedValues.length,
-  )
-  console.log(
-    'schema.enum.every((v) => expectedValues.includes(v))',
-    schema.enum.every((v) => expectedValues.includes(v)),
-  )
   if (
     Array.isArray(schema.enum) &&
     schema.enum.length === expectedValues.length &&

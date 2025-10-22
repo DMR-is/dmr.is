@@ -4110,6 +4110,7 @@
         "type": "string",
         "enum": [
           "Innsent",
+          "Í vinnslu",
           "Tilbúið til útgáfu",
           "Útgefið",
           "Hafnað",

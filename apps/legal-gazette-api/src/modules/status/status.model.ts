@@ -16,6 +16,7 @@ export enum StatusIdEnum {
 }
 export enum StatusEnum {
   SUBMITTED = 'Innsent',
+  IN_PROGRESS = 'Í vinnslu',
   READY_FOR_PUBLICATION = 'Tilbúið til útgáfu',
   PUBLISHED = 'Útgefið',
   REJECTED = 'Hafnað',

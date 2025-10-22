@@ -19,8 +19,8 @@ export const AdvertFormStepper = () => {
   const statusTitle = advert.status.title
 
   let statusSteps = [
-    { status: StatusEnum.Drög },
     { status: StatusEnum.Innsent },
+    { status: StatusEnum.ÍVinnslu },
     { status: StatusEnum.TilbúiðTilÚtgáfu },
     { status: StatusEnum.ÚTgefið },
   ]
