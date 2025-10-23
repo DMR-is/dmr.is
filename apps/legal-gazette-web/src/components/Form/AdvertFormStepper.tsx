@@ -7,22 +7,25 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { AdvertDetailedDto, CommentDto, StatusEnum } from '../../gen/fetch'
-import { trpc } from '../../lib/trpc/client'
+import { StatusEnum } from '../../gen/fetch'
+import {
+  useSuspenseQuery,
+  useTRPC,
+} from '../../lib/nTrpc/client/trpc'
 import { commentStepperMapper } from '../../mappers/commentMapper'
 
+/**
+ * Work in progress
+ * TODO: update after we have added history tracking/comments to adverts
+ */
 type Props = {
-  advert: AdvertDetailedDto
-  comments: CommentDto[]
+  id: string
 }
+export const AdvertFormStepper = ({ id }: Props) => {
+  const trpc = useTRPC()
+  const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id }))
 
-export const AdvertFormStepper = ({ advert, comments }: Props) => {
-  const { data } = trpc.commentsApi.getComments.useQuery(
-    { advertId: advert.id },
-    { initialData: { comments: comments } },
-  )
-
-  const statusTitle = advert.status.title
+  const statusTitle = advert?.status.title
 
   const statusSteps = [
     { status: StatusEnum.Innsent },
@@ -45,7 +48,7 @@ export const AdvertFormStepper = ({ advert, comments }: Props) => {
     )
     const isComplete = index < currentStepIndex
 
-    const commentsForStep = data.comments
+    const commentsForStep = advert.comments
       .map((comment) =>
         comment.status.title === step.status
           ? commentStepperMapper(comment)

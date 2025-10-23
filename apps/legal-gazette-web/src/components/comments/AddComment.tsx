@@ -9,19 +9,22 @@ import {
   toast,
 } from '@dmr.is/ui/components/island-is'
 
-import { trpc } from '../../lib/trpc/client'
+import { useTRPC } from '../../lib/nTrpc/client/trpc'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = { advertId: string }
 
 export const AddComment = ({ advertId }: Props) => {
   const [newComment, setNewComment] = useState('')
-
-  const utils = trpc.useUtils()
-
-  const { mutate: postComment, isPending } =
-    trpc.commentsApi.postComment.useMutation({
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+  const { mutate: postComment, isPending } = useMutation(
+    trpc.postComment.mutationOptions({
       onSuccess: () => {
-        utils.commentsApi.getComments.invalidate({ advertId: advertId })
+        queryClient.invalidateQueries(
+          trpc.getComments.queryFilter({ advertId: advertId }),
+        )
         setNewComment('')
       },
       onError: () => {
@@ -29,7 +32,8 @@ export const AddComment = ({ advertId }: Props) => {
           toastId: 'post-comment-error',
         })
       },
-    })
+    }),
+  )
 
   return (
     <Stack space={2}>

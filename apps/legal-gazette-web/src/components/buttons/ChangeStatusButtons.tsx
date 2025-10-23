@@ -12,7 +12,9 @@ import {
 
 import { StatusDto, StatusIdEnum } from '../../gen/fetch'
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
-import { trpc } from '../../lib/trpc/client'
+import { useTRPC } from '../../lib/nTrpc/client/trpc'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   advertId: string
@@ -31,9 +33,18 @@ export const ChangeStatusButtons = ({
     isMovingToNextStatus,
     isMovingToPreviousStatus,
   } = useUpdateAdvert(advertId)
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
 
-  const { mutate: rejectAdvert, isPending: isRejecting } =
-    trpc.adverts.rejectAdvert.useMutation()
+  const { mutate: rejectAdvert, isPending: isRejecting } = useMutation(
+    trpc.rejectAdvert.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries(
+          trpc.getAdvert.queryFilter({ id: advertId }),
+        )
+      },
+    }),
+  )
 
   const isLoading =
     isMovingToNextStatus || isMovingToPreviousStatus || isRejecting

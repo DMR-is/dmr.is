@@ -51,7 +51,7 @@ export class AdvertController {
 
   @Get(':id')
   @LGResponse({ operationId: 'getAdvertById', type: AdvertDetailedDto })
-  getAdvertById(@Param('id') id: string, @CurrentUser() user: DMRUser) {
+  getAdvertById(@Param('id', new UUIDValidationPipe()) id: string, @CurrentUser() user: DMRUser) {
     return this.advertService.getAdvertById(id, user)
   }
 

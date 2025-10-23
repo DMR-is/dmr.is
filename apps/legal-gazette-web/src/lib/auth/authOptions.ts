@@ -92,7 +92,9 @@ export const authOptions: AuthOptions = {
         process.env.LEGAL_GAZETTE_WEB_IDENTITY_SERVER_LOGOUT_URL ??
         process.env.IDENTITY_SERVER_LOGOUT_URL
 
-      return refreshAccessToken(token, redirectUri)
+      const refreshedToken = await refreshAccessToken(token, redirectUri)
+
+      return refreshedToken
     },
 
     session: async ({ session, token }) => {

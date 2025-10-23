@@ -12,6 +12,8 @@ import { FilterProvider } from '../../context/filter-context'
 import { allMessages } from '../../lib/messages'
 import { flattenMessages } from '../../lib/utils'
 
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+
 export const Providers = ({
   children,
   session,
@@ -50,6 +52,7 @@ export const Providers = ({
         </SessionProvider>
       </NuqsAdapter>
       <ToastContainer closeButton={true} timeout={2000} />
+      <ReactQueryDevtools />
     </>
   )
 }

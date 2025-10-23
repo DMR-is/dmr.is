@@ -4,38 +4,29 @@ import { useMemo, useState } from 'react'
 
 import { Box, Button, Inline, Stack } from '@dmr.is/ui/components/island-is'
 
-import { CommentDto } from '../../gen/fetch'
-import { trpc } from '../../lib/trpc/client'
+import { useSuspenseQuery, useTRPC } from '../../lib/nTrpc/client/trpc'
 import { commentMapper } from '../../mappers/commentMapper'
 import { AddComment } from '../comments/AddComment'
 import { Comment } from '../comments/Comment'
 
 type Props = {
   id: string
-  comments: CommentDto[]
 }
 
-export const CommentFields = ({ id, comments }: Props) => {
-  const { data } = trpc.commentsApi.getComments.useQuery(
-    {
-      advertId: id,
-    },
-    {
-      initialData: {
-        comments: comments,
-      },
-    },
-  )
+export const CommentFields = ({ id }: Props) => {
+  const trpc = useTRPC()
+  const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id }))
+  const comments = advert.comments
 
   const [order, setOrder] = useState<'asc' | 'desc'>('asc')
 
   const sortedComments = useMemo(() => {
-    return [...data.comments].sort((a, b) => {
+    return [...comments].sort((a, b) => {
       const dateA = new Date(a.createdAt).getTime()
       const dateB = new Date(b.createdAt).getTime()
       return order === 'asc' ? dateA - dateB : dateB - dateA
     })
-  }, [order, data.comments])
+  }, [order, comments])
 
   return (
     <Box padding={4} background="blue100" borderRadius="large">

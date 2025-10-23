@@ -1,11 +1,12 @@
+import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 
 import { Header } from '@dmr.is/ui/components/Header/Header'
 
 import { Providers } from '../../components/providers/Providers'
 import { authOptions } from '../../lib/auth/authOptions'
-import ProviderTRPC from '../../lib/trpc/client/Provider'
-import { getTrpcServer } from '../../lib/trpc/server/server'
+import { TRPCReactProvider } from '../../lib/nTrpc/client/Provider'
+import { HydrateClient, prefetch, trpc } from '../../lib/nTrpc/client/server'
 
 export default async function RootLayout({
   children,
@@ -14,22 +15,20 @@ export default async function RootLayout({
 }) {
   const session = await getServerSession(authOptions)
 
-  if (!session?.idToken) {
-    throw new Error('Unauthorized')
+  if (session?.invalid) {
+    redirect('/innskraning')
   }
 
-  const { trpc, HydrateClient } = await getTrpcServer()
-
-  void trpc.baseEntity.getAllEntities.prefetch()
+  prefetch(trpc.getAllEntities.queryOptions())
 
   return (
-    <ProviderTRPC>
+    <TRPCReactProvider>
       <HydrateClient>
         <Providers session={session}>
           <Header variant="blue" />
           {children}
         </Providers>
       </HydrateClient>
-    </ProviderTRPC>
+    </TRPCReactProvider>
   )
 }

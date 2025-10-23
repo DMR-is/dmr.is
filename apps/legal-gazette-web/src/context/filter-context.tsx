@@ -11,7 +11,8 @@ import { createContext } from 'react'
 import { Tag } from '@island.is/island-ui/core'
 
 import { QueryParams } from '../lib/constants'
-import { trpc } from '../lib/trpc/client'
+import { useSuspenseQuery, useTRPC } from '../lib/nTrpc/client/trpc'
+
 type Option<T = string> = {
   label: string
   value: T
@@ -61,7 +62,10 @@ type FilterProviderProps = {
 }
 
 export const FilterProvider = ({ children }: FilterProviderProps) => {
-  const { data: entities } = trpc.baseEntity.getAllEntities.useQuery()
+  const trpc = useTRPC()
+  const { data: entities } = useSuspenseQuery(
+    trpc.getAllEntities.queryOptions(),
+  )
 
   const categories = {
     categories: entities?.categories || [],

@@ -23,8 +23,10 @@ import {
   StatusEnum,
 } from '../../gen/fetch'
 import { useUpdatePublications } from '../../hooks/useUpdatePublications'
-import { trpc } from '../../lib/trpc/client'
+import { useTRPC } from '../../lib/nTrpc/client/trpc'
 import { AdvertPublicationModal } from '../modals/AdvertPublicationModal'
+
+import { useQuery } from '@tanstack/react-query'
 
 type PublicationsFieldsProps = {
   id: string
@@ -39,6 +41,7 @@ export const PublicationsFields = ({
   publications,
   advertStatus,
 }: PublicationsFieldsProps) => {
+  const trpc = useTRPC()
   const {
     createPublication,
     updatePublication,
@@ -52,14 +55,12 @@ export const PublicationsFields = ({
     data: publicationData,
     error: publicationError,
     isLoading: isLoadingPublicationData,
-  } = trpc.publications.getPublication.useQuery(
-    {
+  } = useQuery(
+    trpc.getPublication.queryOptions({
       advertId: id,
       version: GetAdvertPublicationVersionEnum.A,
-    },
-    {
-      enabled: modalVisible,
-    },
+    }),
+
   )
 
   useEffect(() => {

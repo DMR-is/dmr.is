@@ -13,25 +13,39 @@ import { PublicationsFields } from '../../components/field-set-items/Publication
 import { SettlementFields } from '../../components/field-set-items/SettlementFields'
 import { SignatureFields } from '../../components/field-set-items/SignatureFields'
 import { AdvertFormAccordion } from '../../components/Form/AdvertFormAccordion'
-import { AdvertDetailedDto, StatusIdEnum } from '../../gen/fetch'
+import { StatusIdEnum } from '../../gen/fetch'
 import {
   isBankruptcyRecallAdvert,
   isDeceasedRecallAdvert,
   isDivisionEndingAdvert,
   isDivisionMeetingAdvert,
 } from '../../lib/advert-type-guards'
-import { trpc } from '../../lib/trpc/client'
+import {
+  useQuery,
+  useSuspenseQuery,
+  useTRPC,
+} from '../../lib/nTrpc/client/trpc'
 
 type AdvertContainerProps = {
-  advert: AdvertDetailedDto
+  id: string
 }
 
-export function AdvertFormContainer({ advert }: AdvertContainerProps) {
-  const [{ types }] = trpc.baseEntity.getAllEntities.useSuspenseQuery()
-  const [{ courtDistricts }] = trpc.baseEntity.getAllEntities.useSuspenseQuery()
-  const { data: categoriesForTypes } = trpc.baseEntity.getCategories.useQuery({
-    type: advert.type.id,
-  })
+export function AdvertFormContainer({ id }: AdvertContainerProps) {
+  const trpc = useTRPC()
+  const { data: entities } = useSuspenseQuery(
+    trpc.getAllEntities.queryOptions(),
+  )
+
+  const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id }))
+
+  const { data: categoriesForTypes } = useQuery(
+    trpc.getCategories.queryOptions(
+      {
+        type: advert?.type.id as string,
+      },
+      { enabled: !!advert?.type.id },
+    ),
+  )
 
   const isBankruptcyRecall = isBankruptcyRecallAdvert(advert)
   const isRecallDeceased = isDeceasedRecallAdvert(advert)
@@ -42,119 +56,121 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
     isBankruptcyRecall || isRecallDeceased || isDivisionEnding
   const shouldShowDivisionMeeting = isBankruptcyRecall || isDivisionMeeting
 
-  const items = [
-    {
-      title: 'Upplýsingar um auglýsingu',
-      children: (
-        <AdvertReadonlyFields
-          id={advert.id}
-          publicationNumber={advert.publicationNumber}
-          createdAt={formatDate(advert.createdAt, 'dd. MMMM yyyy')}
-          createdBy={advert.createdBy}
-          paid={!!advert.paidAt}
-          totalPrice={advert.totalPrice}
-        />
-      ),
-    },
-    {
-      title: 'Almennar upplýsingar',
-      children: (
-        <AdvertBaseFields
-          id={advert.id}
-          canEdit={advert.canEdit}
-          types={types}
-          categories={categoriesForTypes?.categories ?? []}
-          typeId={advert.type.id}
-          categoryId={advert.category.id}
-          title={advert.title ?? ''}
-          additionalText={advert.additionalText ?? ''}
-        />
-      ),
-      hidden: false,
-    },
-    {
-      title: 'Efni auglýsingar',
-      children: (
-        <ContentFields
-          id={advert.id}
-          canEdit={advert.canEdit}
-          caption={advert.caption ?? ''}
-          content={advert.content ?? ''}
-        />
-      ),
-      // hidden: !!advert.caption && !!advert.content,
-      hidden: false,
-    },
-    {
-      title: 'Dómstóll og úrskurðardagur',
-      children: (
-        <CourtAndJudgementFields
-          id={advert.id}
-          canEdit={advert.canEdit}
-          courtDistrictId={advert.courtDistrict?.id}
-          courtDistricts={courtDistricts}
-          judgementDate={advert.judgementDate}
-        />
-      ),
-      hidden: !shouldShowCourtAndJudgementFields,
-    },
-    {
-      title: 'Upplýsingar um skiptafund',
-      children: (
-        <DivisionMeetingFields
-          id={advert.id}
-          canEdit={advert.canEdit}
-          divisionMeetingLocation={advert.divisionMeetingLocation ?? ''}
-          divisionMeetingDate={
-            advert.divisionMeetingDate ?? new Date().toISOString()
-          }
-        />
-      ),
-      hidden: !shouldShowDivisionMeeting,
-    },
-    {
-      title: 'Upplýsingar um búið',
-      children: (
-        <SettlementFields
-          advertId={advert.id}
-          canEdit={advert.canEdit}
-          settlement={advert.settlement!}
-          isBankruptcyRecall={isBankruptcyRecall}
-          isDeceasedRecall={isRecallDeceased}
-          isDivisionEnding={isDivisionEnding}
-        />
-      ),
-      hidden: !advert.settlement,
-    },
-    {
-      title: 'Undirritun',
-      children: (
-        <SignatureFields
-          id={advert.id}
-          canEdit={advert.canEdit}
-          signatureName={advert.signatureName ?? ''}
-          signatureOnBehalfOf={advert.signatureOnBehalfOf ?? ''}
-          signatureLocation={advert.signatureLocation ?? ''}
-          signatureDate={advert.signatureDate ?? new Date().toISOString()}
-        />
-      ),
-    },
-    {
-      title: 'Birtingar',
-      children: (
-        <PublicationsFields
-          id={advert.id}
-          canEdit={advert.canEdit}
-          publications={advert.publications}
-          advertStatus={advert.status.title}
-        />
-      ),
-    },
-    {
-      title: 'Athugasemdir',
-      children: <CommentFields id={advert.id} comments={advert.comments} />,
-    },
-  ].filter((item) => !item.hidden)
+  const items = advert
+    ? [
+        {
+          title: 'Upplýsingar um auglýsingu',
+          children: (
+            <AdvertReadonlyFields
+              id={advert.id}
+              publicationNumber={advert.publicationNumber}
+              createdAt={formatDate(advert.createdAt, 'dd. MMMM yyyy')}
+              createdBy={advert.createdBy}
+              paid={!!advert.paidAt}
+              totalPrice={advert.totalPrice}
+            />
+          ),
+        },
+        {
+          title: 'Almennar upplýsingar',
+          children: (
+            <AdvertBaseFields
+              id={advert.id}
+              canEdit={advert.canEdit}
+              types={entities?.types ?? []}
+              categories={categoriesForTypes?.categories ?? []}
+              typeId={advert.type.id}
+              categoryId={advert.category.id}
+              title={advert.title ?? ''}
+              additionalText={advert.additionalText ?? ''}
+            />
+          ),
+          hidden: false,
+        },
+        {
+          title: 'Efni auglýsingar',
+          children: (
+            <ContentFields
+              id={advert.id}
+              canEdit={advert.canEdit}
+              caption={advert.caption ?? ''}
+              content={advert.content ?? ''}
+            />
+          ),
+          // hidden: !!advert.caption && !!advert.content,
+          hidden: false,
+        },
+        {
+          title: 'Dómstóll og úrskurðardagur',
+          children: (
+            <CourtAndJudgementFields
+              id={advert.id}
+              canEdit={advert.canEdit}
+              courtDistrictId={advert.courtDistrict?.id}
+              courtDistricts={entities?.courtDistricts ?? []}
+              judgementDate={advert.judgementDate}
+            />
+          ),
+          hidden: !shouldShowCourtAndJudgementFields,
+        },
+        {
+          title: 'Upplýsingar um skiptafund',
+          children: (
+            <DivisionMeetingFields
+              id={advert.id}
+              canEdit={advert.canEdit}
+              divisionMeetingLocation={advert.divisionMeetingLocation ?? ''}
+              divisionMeetingDate={
+                advert.divisionMeetingDate ?? new Date().toISOString()
+              }
+            />
+          ),
+          hidden: !shouldShowDivisionMeeting,
+        },
+        {
+          title: 'Upplýsingar um búið',
+          children: (
+            <SettlementFields
+              advertId={advert.id}
+              canEdit={advert.canEdit}
+              settlement={advert.settlement!}
+              isBankruptcyRecall={isBankruptcyRecall}
+              isDeceasedRecall={isRecallDeceased}
+              isDivisionEnding={isDivisionEnding}
+            />
+          ),
+          hidden: !advert.settlement,
+        },
+        {
+          title: 'Undirritun',
+          children: (
+            <SignatureFields
+              id={advert.id}
+              canEdit={advert.canEdit}
+              signatureName={advert.signatureName ?? ''}
+              signatureOnBehalfOf={advert.signatureOnBehalfOf ?? ''}
+              signatureLocation={advert.signatureLocation ?? ''}
+              signatureDate={advert.signatureDate ?? new Date().toISOString()}
+            />
+          ),
+        },
+        {
+          title: 'Birtingar',
+          children: (
+            <PublicationsFields
+              id={advert.id}
+              canEdit={advert.canEdit}
+              publications={advert.publications}
+              advertStatus={advert.status.title}
+            />
+          ),
+        },
+        {
+          title: 'Athugasemdir',
+          children: <CommentFields id={advert.id} />,
+        },
+      ].filter((item) => !item.hidden)
+    : []
   return (
     <Box background="white" padding={[4, 6, 8]} borderRadius="large">
       <Stack space={[3, 4]}>

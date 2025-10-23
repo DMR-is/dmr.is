@@ -3,7 +3,9 @@ import { useCallback } from 'react'
 import { toast } from '@dmr.is/ui/components/island-is'
 
 import { AdvertDetailedDto, SettlementDto } from '../gen/fetch'
-import { trpc } from '../lib/trpc/client'
+import { useSuspenseQuery, useTRPC } from '../lib/nTrpc/client/trpc'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const createOptimisticDataForSettlement = (
   prevData: AdvertDetailedDto,
@@ -19,47 +21,59 @@ const createOptimisticDataForSettlement = (
 }
 
 export const useUpdateSettlement = (advertId: string, settlementId: string) => {
-  const utils = trpc.useUtils()
-  const [advert] = trpc.adverts.getAdvert.useSuspenseQuery({ id: advertId })
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+  const { data: advert } = useSuspenseQuery(
+    trpc.getAdvert.queryOptions({ id: advertId }),
+  )
 
   const { mutate: updateSettlementMutation, isPending: isUpdatingSettlement } =
-    trpc.settlement.updateSettlementSchema.useMutation({
-      onMutate: async (variables) => {
-        await utils.adverts.getAdvert.cancel({ id: advertId })
-
-        const prevData = utils.adverts.getAdvert.getData({
-          id: advertId,
-        }) as AdvertDetailedDto
-
-        const filteredSettlementData = Object.fromEntries(
-          Object.entries(variables).filter(([_, value]) => !!value),
-        )
-
-        const optimisticData = createOptimisticDataForSettlement(
-          prevData,
-          filteredSettlementData as unknown as SettlementDto,
-        )
-
-        utils.adverts.getAdvert.setData({ id: variables.id }, optimisticData)
-
-        return prevData
-      },
-      onSuccess: () => {
-        utils.adverts.getAdvert.invalidate({ id: advertId })
-      },
-      onError: (_error, _variables, mutateResults) => {
-        if (mutateResults) {
-          utils.adverts.getAdvert.setData(
-            { id: advertId },
-            mutateResults as AdvertDetailedDto,
+    useMutation(
+      trpc.updateSettlementSchema.mutationOptions({
+        onMutate: async (variables) => {
+          await queryClient.cancelQueries(
+            trpc.getAdvert.queryFilter({ id: advertId }),
           )
-        }
-      },
-    })
+
+          const prevData = queryClient.getQueryData(
+            trpc.getAdvert.queryKey({ id: advertId }),
+          ) as AdvertDetailedDto
+
+          const filteredSettlementData = Object.fromEntries(
+            Object.entries(variables).filter(([_, value]) => !!value),
+          )
+
+          const optimisticData = createOptimisticDataForSettlement(
+            prevData,
+            filteredSettlementData as unknown as SettlementDto,
+          )
+
+          queryClient.setQueryData(
+            trpc.getAdvert.queryKey({ id: variables.id }),
+            optimisticData,
+          )
+
+          return prevData
+        },
+        onSuccess: () => {
+          queryClient.invalidateQueries(
+            trpc.getAdvert.queryFilter({ id: advertId }),
+          )
+        },
+        onError: (_error, _variables, mutateResults) => {
+          if (mutateResults) {
+            queryClient.setQueryData(
+              trpc.getAdvert.queryKey({ id: advertId }),
+              mutateResults as AdvertDetailedDto,
+            )
+          }
+        },
+      }),
+    )
 
   const updateLiquidatorName = useCallback(
     (liquidatorName: string) => {
-      if (advert.settlement?.liquidatorName === liquidatorName) {
+      if (advert?.settlement?.liquidatorName === liquidatorName) {
         return
       }
       updateSettlementMutation(
@@ -82,7 +96,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
 
   const updateLiquidatorLocation = useCallback(
     (liquidatorLocation: string) => {
-      if (advert.settlement?.liquidatorLocation === liquidatorLocation) {
+      if (advert?.settlement?.liquidatorLocation === liquidatorLocation) {
         return
       }
       updateSettlementMutation(
@@ -105,7 +119,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
 
   const updateSettlementName = useCallback(
     (settlementName: string) => {
-      if (advert.settlement?.settlementName === settlementName) {
+      if (advert?.settlement?.settlementName === settlementName) {
         return
       }
       updateSettlementMutation(
@@ -128,7 +142,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
 
   const updateSettlementAddress = useCallback(
     (settlementAddress: string) => {
-      if (advert.settlement?.settlementAddress === settlementAddress) {
+      if (advert?.settlement?.settlementAddress === settlementAddress) {
         return
       }
       updateSettlementMutation(
@@ -151,7 +165,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
 
   const updateSettlementNationalId = useCallback(
     (settlementNationalId: string) => {
-      if (advert.settlement?.settlementNationalId === settlementNationalId) {
+      if (advert?.settlement?.settlementNationalId === settlementNationalId) {
         return
       }
 
@@ -175,7 +189,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
 
   const updateSettlementDeadline = useCallback(
     (settlementDeadline: string) => {
-      if (advert.settlement?.settlementDeadline === settlementDeadline) {
+      if (advert?.settlement?.settlementDeadline === settlementDeadline) {
         return
       }
 
@@ -199,7 +213,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
 
   const updateSettlementDateOfDeath = useCallback(
     (settlementDateOfDeath: string) => {
-      if (advert.settlement?.settlementDateOfDeath === settlementDateOfDeath) {
+      if (advert?.settlement?.settlementDateOfDeath === settlementDateOfDeath) {
         return
       }
 
@@ -223,7 +237,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
 
   const updateDeclaredClaims = useCallback(
     (declaredClaims: number) => {
-      if (advert.settlement?.declaredClaims === declaredClaims) {
+      if (advert?.settlement?.declaredClaims === declaredClaims) {
         return
       }
 

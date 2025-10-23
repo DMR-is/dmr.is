@@ -11,7 +11,9 @@ import {
   TypeDto,
   UpdateAdvertDto,
 } from '../gen/fetch'
-import { trpc } from '../lib/trpc/client'
+import { useSuspenseQuery, useTRPC } from '../lib/nTrpc/client/trpc'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type UpdateOptions = {
   successMessage?: string
@@ -42,130 +44,206 @@ const createOptimisticDataForAdvert = (
 }
 
 export const useUpdateAdvert = (id: string) => {
-  const [advert] = trpc.adverts.getAdvert.useSuspenseQuery({ id })
+  const trpc = useTRPC()
+  const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id }))
 
   // We fetch this to map type, category and courtDistrict to the optimistic data
-  const [{ types, categories, courtDistricts, statuses }] =
-    trpc.baseEntity.getAllEntities.useSuspenseQuery()
+  const { data: entities } = useSuspenseQuery(
+    trpc.getAllEntities.queryOptions(),
+  )
+  const types = entities?.types || []
+  const categories = entities?.categories || []
+  const courtDistricts = entities?.courtDistricts || []
+  const statuses = entities?.statuses || []
 
-  const utils = trpc.useUtils()
+  const queryClient = useQueryClient()
 
   const { mutate: moveToNextStatusMutation, isPending: isMovingToNextStatus } =
-    trpc.adverts.moveToNextStatus.useMutation({
+    useMutation(
+      trpc.moveToNextStatus.mutationOptions({
+        onMutate: async (variables) => {
+          await queryClient.cancelQueries(
+            trpc.getAdvert.queryFilter({ id: variables.id }),
+          )
+          const prevData = queryClient.getQueryData(
+            trpc.getAdvert.queryKey({ id: variables.id }),
+          ) as AdvertDetailedDto
+
+          const currentStatus = prevData.status
+          let nextStatus: StatusIdEnum
+
+          switch (currentStatus.id) {
+            case StatusIdEnum.SUBMITTED: {
+              nextStatus = StatusIdEnum.IN_PROGRESS
+              break
+            }
+            case StatusIdEnum.IN_PROGRESS: {
+              nextStatus = StatusIdEnum.READY_FOR_PUBLICATION
+              break
+            }
+            default:
+              nextStatus = currentStatus.id
+              break
+          }
+
+          const status = statuses.find((status) => status.id === nextStatus)
+          if (!status) {
+            return prevData
+          }
+
+          queryClient.setQueryData(
+            trpc.getAdvert.queryKey({ id: variables.id }),
+            {
+              ...prevData,
+              status: status as StatusDto,
+            },
+          )
+          return prevData
+        },
+        onSuccess: (_, variables) => {
+          toast.success('Staða auglýsingar uppfærð', {
+            toastId: 'changeAdvertStatus',
+          })
+          queryClient.invalidateQueries(
+            trpc.getAdvert.queryFilter({ id: variables.id }),
+          )
+        },
+        onError: (error, variables, mutateResults) => {
+          toast.error('Ekki tókst að uppfæra stöðu auglýsingar', {
+            toastId: 'changeAdvertStatusError',
+          })
+          queryClient.setQueryData(
+            trpc.getAdvert.queryKey({ id: variables.id }),
+            mutateResults,
+          )
+        },
+      }),
+    )
+
+  const {
+    mutate: moveToPreviousStatusMutation,
+    isPending: isMovingToPreviousStatus,
+  } = useMutation(
+    trpc.moveToPreviousStatus.mutationOptions({
       onMutate: async (variables) => {
-        await utils.adverts.getAdvert.cancel({ id: variables.id })
-        const prevData = utils.adverts.getAdvert.getData({
-          id: variables.id,
-        }) as AdvertDetailedDto
+        await queryClient.cancelQueries(
+          trpc.getAdvert.queryFilter({ id: variables.id }),
+        )
+        const prevData = queryClient.getQueryData(
+          trpc.getAdvert.queryKey({ id: variables.id }),
+        ) as AdvertDetailedDto
 
         const currentStatus = prevData.status
-        let nextStatus: StatusIdEnum
+        let prevStatus: StatusIdEnum
 
         switch (currentStatus.id) {
-          case StatusIdEnum.SUBMITTED: {
-            nextStatus = StatusIdEnum.IN_PROGRESS
+          case StatusIdEnum.READY_FOR_PUBLICATION: {
+            prevStatus = StatusIdEnum.IN_PROGRESS
             break
           }
           case StatusIdEnum.IN_PROGRESS: {
-            nextStatus = StatusIdEnum.READY_FOR_PUBLICATION
+            prevStatus = StatusIdEnum.SUBMITTED
             break
           }
           default:
-            nextStatus = currentStatus.id
+            prevStatus = currentStatus.id
             break
         }
 
-        const status = statuses.find((status) => status.id === nextStatus)
+        const status = statuses.find((status) => status.id === prevStatus)
         if (!status) {
           return prevData
         }
 
-        utils.adverts.getAdvert.setData(
-          { id: variables.id },
+        queryClient.setQueryData(
+          trpc.getAdvert.queryKey({ id: variables.id }),
           {
             ...prevData,
             status: status as StatusDto,
           },
         )
+
         return prevData
       },
       onSuccess: (_, variables) => {
         toast.success('Staða auglýsingar uppfærð', {
           toastId: 'changeAdvertStatus',
         })
-        utils.adverts.getAdvert.invalidate({ id: variables.id })
-        utils.commentsApi.getComments.invalidate({ advertId: variables.id })
+        queryClient.invalidateQueries(
+          trpc.getAdvert.queryFilter({ id: variables.id }),
+        )
+        queryClient.invalidateQueries(
+          trpc.getComments.queryFilter({ advertId: variables.id }),
+        )
       },
-      onError: (error, variables, mutateResults) => {
+      onError: (_, variables, mutateResults) => {
         toast.error('Ekki tókst að uppfæra stöðu auglýsingar', {
           toastId: 'changeAdvertStatusError',
         })
-        utils.adverts.getAdvert.setData({ id: variables.id }, mutateResults)
+        queryClient.setQueryData(
+          trpc.getAdvert.queryKey({ id: variables.id }),
+          mutateResults,
+        )
       },
-    })
+    }),
+  )
 
-  const {
-    mutate: moveToPreviousStatusMutation,
-    isPending: isMovingToPreviousStatus,
-  } = trpc.adverts.moveToPreviousStatus.useMutation({
-    onMutate: async (variables) => {
-      await utils.adverts.getAdvert.cancel({ id: variables.id })
-      const prevData = utils.adverts.getAdvert.getData({
-        id: variables.id,
-      }) as AdvertDetailedDto
+  const { mutate: updateAdvertMutation, isPending: isUpdatingAdvert } =
+    useMutation(
+      trpc.updateAdvert.mutationOptions({
+        onMutate: async (variables) => {
+          await queryClient.cancelQueries(
+            trpc.getAdvert.queryFilter({ id: variables.id }),
+          )
+          const prevData = queryClient.getQueryData(
+            trpc.getAdvert.queryKey({ id: variables.id }),
+          ) as AdvertDetailedDto
 
-      const currentStatus = prevData.status
-      let prevStatus: StatusIdEnum
-
-      switch (currentStatus.id) {
-        case StatusIdEnum.READY_FOR_PUBLICATION: {
-          prevStatus = StatusIdEnum.IN_PROGRESS
-          break
-        }
-        case StatusIdEnum.IN_PROGRESS: {
-          prevStatus = StatusIdEnum.SUBMITTED
-          break
-        }
-        default:
-          prevStatus = currentStatus.id
-          break
-      }
-
-      const status = statuses.find((status) => status.id === prevStatus)
-      if (!status) {
-        return prevData
-      }
-
-      utils.adverts.getAdvert.setData(
-        { id: variables.id },
-        {
-          ...prevData,
-          status: status as StatusDto,
+          const optimisticData = createOptimisticDataForAdvert(
+            prevData,
+            variables,
+            types,
+            categories,
+            courtDistricts,
+          )
+          queryClient.setQueryData(
+            trpc.getAdvert.queryKey({ id: variables.id }),
+            optimisticData,
+          )
+          return prevData
         },
-      )
-      return prevData
-    },
-    onSuccess: (_, variables) => {
-      toast.success('Staða auglýsingar uppfærð', {
-        toastId: 'changeAdvertStatus',
-      })
-      utils.adverts.getAdvert.invalidate({ id: variables.id })
-      utils.commentsApi.getComments.invalidate({ advertId: variables.id })
-    },
-    onError: (_, variables, mutateResults) => {
-      toast.error('Ekki tókst að uppfæra stöðu auglýsingar', {
-        toastId: 'changeAdvertStatusError',
-      })
-      utils.adverts.getAdvert.setData({ id: variables.id }, mutateResults)
-    },
-  })
+        onSuccess: (_, variables) => {
+          toast.success('Auglýsing fær stöðu tilbúin til útgáfu', {
+            toastId: 'markAdvertAsReady',
+          })
+          queryClient.invalidateQueries(
+            trpc.getAdvert.queryFilter({ id: variables.id }),
+          )
+        },
+        onError: (_, variables, mutateResults) => {
+          toast.error(
+            'Ekki tókst að færa auglýsingu í stöðu tilbúin til útgáfu',
+            {
+              toastId: 'markAdvertAsReadyError',
+            },
+          )
+          queryClient.setQueryData(
+            trpc.getAdvert.queryKey({ id: variables.id }),
+            mutateResults,
+          )
+        },
+      }),
+    )
 
-  const { mutate: assignUserMutation, isPending: isAssigningUser } =
-    trpc.adverts.assignUser.useMutation({
+  const { mutate: assignUserMutation, isPending: isAssigningUser } = useMutation(
+    trpc.assignUser.mutationOptions({
       onMutate: async (variables) => {
-        const prevData = utils.adverts.getAdvert.getData({
-          id: variables.id,
-        }) as AdvertDetailedDto
+        await queryClient.cancelQueries(
+          trpc.getAdvert.queryFilter({ id: variables.id }),
+        )
+        const prevData = queryClient.getQueryData(
+          trpc.getAdvert.queryKey({ id: variables.id }),
+        ) as AdvertDetailedDto
 
         return prevData
       },
@@ -173,39 +251,21 @@ export const useUpdateAdvert = (id: string) => {
         toast.success('Starfsmaður úthlutaður', {
           toastId: 'assignUserToAdvert',
         })
-        utils.adverts.getAdvert.invalidate({ id: variables.id })
+        queryClient.invalidateQueries(
+          trpc.getAdvert.queryFilter({ id: variables.id }),
+        )
       },
       onError: (_, variables, mutateResults) => {
         toast.error('Ekki tókst að úthluta starfsmanni', {
           toastId: 'assignUserToAdvertError',
         })
-        utils.adverts.getAdvert.setData({ id: variables.id }, mutateResults)
-      },
-    })
-
-  const { mutate: updateAdvertMutation, isPending: isUpdatingAdvert } =
-    trpc.adverts.updateAdvert.useMutation({
-      onMutate: async (variables) => {
-        await utils.adverts.getAdvert.cancel({ id: variables.id })
-
-        const prevData = utils.adverts.getAdvert.getData({
-          id: variables.id,
-        }) as AdvertDetailedDto
-
-        const optimisticData = createOptimisticDataForAdvert(
-          prevData,
-          variables,
-          types,
-          categories,
-          courtDistricts,
+        queryClient.setQueryData(
+          trpc.getAdvert.queryKey({ id: variables.id }),
+          mutateResults,
         )
-
-        utils.adverts.getAdvert.setData({ id: variables.id }, optimisticData)
-
-        // We return the previous data so that we can use it to revert the optimistic update
-        return prevData
       },
-    })
+    }),
+  )
 
   const updateAdvert = useCallback(
     (data: UpdateAdvertDto, options: UpdateOptions = {}) => {
@@ -221,10 +281,15 @@ export const useUpdateAdvert = (id: string) => {
               toast.success(successMessage)
             }
 
-            await utils.adverts.getAdvert.invalidate({ id })
+            await queryClient.invalidateQueries(
+              trpc.getAdvert.queryFilter({ id }),
+            )
           },
           onError: (_error, _variables, mutateResults) => {
-            utils.adverts.getAdvert.setData({ id }, mutateResults)
+            queryClient.setQueryData(
+              trpc.getAdvert.queryKey({ id }),
+              mutateResults,
+            )
             toast.error(errorMessage)
           },
         },
@@ -235,17 +300,17 @@ export const useUpdateAdvert = (id: string) => {
 
   const assignUser = useCallback(
     (userId: string) => {
-      if (userId === advert.assignedUser) {
+      if (userId === advert?.assignedUser) {
         return
       }
       return assignUserMutation({ id, userId })
     },
-    [id, assignUserMutation, advert.assignedUser],
+    [id, assignUserMutation, advert?.assignedUser],
   )
 
   const updateTitle = useCallback(
     (title: string) => {
-      if (title === advert.title) {
+      if (title === advert?.title) {
         return
       }
 
@@ -257,12 +322,12 @@ export const useUpdateAdvert = (id: string) => {
         },
       )
     },
-    [updateAdvert, advert.title],
+    [updateAdvert, advert?.title],
   )
 
   const updateCaption = useCallback(
     (caption: string) => {
-      if (caption === advert.caption) {
+      if (caption === advert?.caption) {
         return
       }
 
@@ -274,12 +339,12 @@ export const useUpdateAdvert = (id: string) => {
         },
       )
     },
-    [updateAdvert, advert.caption],
+    [updateAdvert, advert?.caption],
   )
 
   const updateContent = useCallback(
     ({ content }: { content: string }) => {
-      if (content === advert.content) {
+      if (content === advert?.content) {
         return
       }
 
@@ -291,12 +356,12 @@ export const useUpdateAdvert = (id: string) => {
         },
       )
     },
-    [updateAdvert, advert.content],
+    [updateAdvert, advert?.content],
   )
 
   const updateAdditionalText = useCallback(
     ({ additionalText }: { additionalText: string }) => {
-      if (additionalText === advert.additionalText) {
+      if (additionalText === advert?.additionalText) {
         return
       }
       return updateAdvert(
@@ -307,12 +372,12 @@ export const useUpdateAdvert = (id: string) => {
         },
       )
     },
-    [updateAdvert, advert.additionalText],
+    [updateAdvert, advert?.additionalText],
   )
 
   const updateType = useCallback(
     (typeId: string) => {
-      if (typeId === advert.type.id) {
+      if (typeId === advert?.type.id) {
         return
       }
       return updateAdvert(
@@ -323,12 +388,12 @@ export const useUpdateAdvert = (id: string) => {
         },
       )
     },
-    [updateAdvert, advert.type.id],
+    [updateAdvert, advert?.type.id],
   )
 
   const updateCategory = useCallback(
     (categoryId?: string) => {
-      if (categoryId === advert.category.id) {
+      if (categoryId === advert?.category.id) {
         return
       }
 
@@ -340,12 +405,12 @@ export const useUpdateAdvert = (id: string) => {
         },
       )
     },
-    [updateAdvert, advert.category.id],
+    [updateAdvert, advert?.category.id],
   )
 
   const updateSignatureName = useCallback(
     (signatureName?: string) => {
-      if (signatureName === advert.signatureName) {
+      if (signatureName === advert?.signatureName) {
         return
       }
 
@@ -357,12 +422,12 @@ export const useUpdateAdvert = (id: string) => {
         },
       )
     },
-    [updateAdvert, advert.category.id],
+    [updateAdvert, advert?.category.id],
   )
 
   const updateSignatureOnBehalfOf = useCallback(
     (signatureOnBehalfOf: string) => {
-      if (signatureOnBehalfOf === advert.signatureOnBehalfOf) {
+      if (signatureOnBehalfOf === advert?.signatureOnBehalfOf) {
         return
       }
 
@@ -379,7 +444,7 @@ export const useUpdateAdvert = (id: string) => {
 
   const updateSignatureLocation = useCallback(
     (signatureLocation: string) => {
-      if (signatureLocation === advert.signatureLocation) {
+      if (signatureLocation === advert?.signatureLocation) {
         return
       }
 
@@ -396,7 +461,7 @@ export const useUpdateAdvert = (id: string) => {
 
   const updateSignatureDate = useCallback(
     (signatureDate: string) => {
-      if (signatureDate === advert.signatureDate) {
+      if (signatureDate === advert?.signatureDate) {
         return
       }
 
@@ -413,7 +478,7 @@ export const useUpdateAdvert = (id: string) => {
 
   const updateCourtDistrict = useCallback(
     (courtDistrictId: string) => {
-      if (courtDistrictId === advert.courtDistrict?.id) {
+      if (courtDistrictId === advert?.courtDistrict?.id) {
         return
       }
 
@@ -425,12 +490,12 @@ export const useUpdateAdvert = (id: string) => {
         },
       )
     },
-    [updateAdvert, advert.courtDistrict?.id],
+    [updateAdvert, advert?.courtDistrict?.id],
   )
 
   const updateJudgementDay = useCallback(
     (judgementDate: string) => {
-      if (judgementDate === advert.judgementDate) {
+      if (judgementDate === advert?.judgementDate) {
         return
       }
 
@@ -447,7 +512,7 @@ export const useUpdateAdvert = (id: string) => {
 
   const updateDivisionMeetingLocation = useCallback(
     (divisionMeetingLocation: string) => {
-      if (divisionMeetingLocation === advert.divisionMeetingLocation) {
+      if (divisionMeetingLocation === advert?.divisionMeetingLocation) {
         return
       }
 
@@ -459,12 +524,12 @@ export const useUpdateAdvert = (id: string) => {
         },
       )
     },
-    [updateAdvert, advert.divisionMeetingLocation],
+    [updateAdvert, advert?.divisionMeetingLocation],
   )
 
   const updateDivisionMeetingDate = useCallback(
     (divisionMeetingDate: string) => {
-      if (divisionMeetingDate === advert.divisionMeetingDate) {
+      if (divisionMeetingDate === advert?.divisionMeetingDate) {
         return
       }
 
@@ -476,7 +541,7 @@ export const useUpdateAdvert = (id: string) => {
         },
       )
     },
-    [updateAdvert, advert.divisionMeetingDate],
+    [updateAdvert, advert?.divisionMeetingDate],
   )
 
   const moveToNextStatus = useCallback(() => {
