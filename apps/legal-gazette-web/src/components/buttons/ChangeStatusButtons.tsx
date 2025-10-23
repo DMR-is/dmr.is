@@ -2,10 +2,17 @@
 
 import { useMemo } from 'react'
 
-import { Button, Stack, Text } from '@dmr.is/ui/components/island-is'
+import {
+  Box,
+  Button,
+  Input,
+  Stack,
+  Text,
+} from '@dmr.is/ui/components/island-is'
 
 import { StatusDto, StatusIdEnum } from '../../gen/fetch'
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
+import { trpc } from '../../lib/trpc/client'
 
 type Props = {
   advertId: string
@@ -25,7 +32,11 @@ export const ChangeStatusButtons = ({
     isMovingToPreviousStatus,
   } = useUpdateAdvert(advertId)
 
-  const isLoading = isMovingToNextStatus || isMovingToPreviousStatus
+  const { mutate: rejectAdvert, isPending: isRejecting } =
+    trpc.adverts.rejectAdvert.useMutation()
+
+  const isLoading =
+    isMovingToNextStatus || isMovingToPreviousStatus || isRejecting
 
   const prevMovableStatuses = [
     StatusIdEnum.READY_FOR_PUBLICATION,
@@ -66,6 +77,15 @@ export const ChangeStatusButtons = ({
 
   return (
     <Stack space={2}>
+      <Box background="white" borderRadius="large">
+        <Input
+          name="advert-status"
+          readOnly
+          value={currentStatus.title}
+          size="sm"
+          label="Staða auglýsingar"
+        />
+      </Box>
       <Button
         fluid
         size="small"
@@ -88,6 +108,17 @@ export const ChangeStatusButtons = ({
       >
         <Text color="white" variant="small" fontWeight="semiBold">
           {nextText}
+        </Text>
+      </Button>
+      <Button
+        disabled={!canEdit}
+        colorScheme="destructive"
+        size="small"
+        fluid
+        onClick={() => rejectAdvert({ id: advertId })}
+      >
+        <Text color="white" fontWeight="semiBold" variant="small">
+          Hafna auglýsingu
         </Text>
       </Button>
     </Stack>

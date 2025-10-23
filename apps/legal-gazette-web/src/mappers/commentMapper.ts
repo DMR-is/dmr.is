@@ -1,4 +1,8 @@
-import { getDaysAgo, getIcelandicDative } from '@dmr.is/utils/client'
+import {
+  formatDate,
+  getDaysAgo,
+  getIcelandicDative,
+} from '@dmr.is/utils/client'
 
 import { CommentProps } from '../components/comments/Comment'
 import { CommentDto, CommentTypeEnum } from '../gen/fetch'
@@ -44,4 +48,31 @@ export const commentMapper = (comment: CommentDto): CommentProps => {
   }
 
   return cmt
+}
+
+export const commentStepperMapper = (comment: CommentDto) => {
+  switch (comment.type) {
+    case CommentTypeEnum.SUBMIT:
+      return {
+        title: `Auglýsing stofnuð af ${comment.actor}`,
+        date: formatDate(comment.createdAt, 'dd. MMMM yyyy'),
+      }
+    case CommentTypeEnum.ASSIGN:
+      return {
+        title: `Skráð á: ${comment.receiver}`,
+        date: formatDate(comment.createdAt, 'dd. MMMM yyyy'),
+      }
+    case CommentTypeEnum.STATUSUPDATE:
+      return {
+        title: `Fært í stöðuna : ${comment.status.title}`,
+        date: formatDate(comment.createdAt, 'dd. MMMM yyyy'),
+      }
+    case CommentTypeEnum.COMMENT:
+      return {
+        title: `${comment.actor} bætti við athugasemd`,
+        date: formatDate(comment.createdAt, 'dd. MMMM yyyy'),
+      }
+    default:
+      return null
+  }
 }

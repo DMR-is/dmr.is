@@ -13,11 +13,10 @@ import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
-import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
+import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
 import { CategoryModel } from '../../category/category.model'
-import { StatusIdEnum, StatusModel } from '../../status/status.model'
 import { IAdvertService } from '../advert.service.interface'
 import { AdvertDetailedDto, UpdateAdvertDto } from '../dto/advert.dto'
 
@@ -32,8 +31,6 @@ export class AdvertUpdateController {
     @Inject(IAdvertService) private readonly advertService: IAdvertService,
     @InjectModel(CategoryModel)
     private readonly advertCategoryModel: typeof CategoryModel,
-    @InjectModel(StatusModel)
-    private readonly statusModel: typeof StatusModel,
   ) {}
 
   @Post('assign/:userId')
@@ -82,5 +79,14 @@ export class AdvertUpdateController {
     @CurrentUser() currentUser: DMRUser,
   ): Promise<void> {
     return this.advertService.moveAdvertToPreviousStatus(advertId, currentUser)
+  }
+
+  @Post('reject')
+  @LGResponse({ operationId: 'rejectAdvert' })
+  async rejectAdvert(
+    @Param('id', new UUIDValidationPipe()) advertId: string,
+    @CurrentUser() currentUser: DMRUser,
+  ): Promise<void> {
+    return this.advertService.rejectAdvert(advertId, currentUser)
   }
 }

@@ -542,6 +542,10 @@ export class AdvertModel extends BaseModel<
     }
   }
 
+  canEdit(userId?: string): boolean {
+    return AdvertModel.canEdit(this, userId)
+  }
+
   fromModel(): AdvertDto {
     return AdvertModel.fromModel(this)
   }

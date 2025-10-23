@@ -38,6 +38,35 @@ export class AdvertService implements IAdvertService {
     private readonly advertPublicationModel: typeof AdvertPublicationModel,
     private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  async rejectAdvert(advertId: string, currentUser: DMRUser): Promise<void> {
+    const user = await this.userModel.unscoped().findOneOrThrow({
+      attributes: ['id', 'nationalId'],
+      where: { nationalId: currentUser.nationalId },
+    })
+    const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
+      attributes: ['id', 'statusId', 'assignedUserId'],
+    })
+
+    const isEditable = advert.canEdit(user.id)
+
+    if (!isEditable) {
+      this.logger.warn(
+        `User with id ${user.id} is not allowed to reject advert with id ${advertId}`,
+      )
+
+      throw new BadRequestException('User is not allowed to reject this advert')
+    }
+
+    await advert.update({ statusId: StatusIdEnum.REJECTED })
+
+    this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
+      advertId,
+      actorId: currentUser.nationalId,
+      statusId: StatusIdEnum.REJECTED,
+    })
+  }
+
   async moveAdvertToNextStatus(
     advertId: string,
     currentUser: DMRUser,

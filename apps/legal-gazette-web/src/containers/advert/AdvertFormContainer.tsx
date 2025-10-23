@@ -13,7 +13,7 @@ import { PublicationsFields } from '../../components/field-set-items/Publication
 import { SettlementFields } from '../../components/field-set-items/SettlementFields'
 import { SignatureFields } from '../../components/field-set-items/SignatureFields'
 import { AdvertFormAccordion } from '../../components/Form/AdvertFormAccordion'
-import { AdvertDetailedDto } from '../../gen/fetch'
+import { AdvertDetailedDto, StatusIdEnum } from '../../gen/fetch'
 import {
   isBankruptcyRecallAdvert,
   isDeceasedRecallAdvert,
@@ -169,9 +169,17 @@ export function AdvertFormContainer({ advert }: AdvertContainerProps) {
         </Stack>
         {advert.canEdit === false && (
           <AlertMessage
-            type="info"
-            title="Þú ert ekki skráður á auglýsingu"
-            message="Aðeins starfsmenn skráðir á auglýsinguna geta breytt því."
+            type={advert.status.id === StatusIdEnum.REJECTED ? 'error' : 'info'}
+            title={
+              advert.status.id === StatusIdEnum.REJECTED
+                ? 'Auglýsingin var hafnað'
+                : 'Þú ert ekki skráður sem starfsmaður á þessari auglýsingu'
+            }
+            message={
+              advert.status.id === StatusIdEnum.REJECTED
+                ? 'Ekki er hægt að eiga við hafnaðar auglýsingar.'
+                : 'Aðeins starfsfólk sem er skráð á auglýsinguna getur unnið í henni.'
+            }
           />
         )}
         <AdvertFormAccordion items={items} />

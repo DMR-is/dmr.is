@@ -46,16 +46,22 @@ export const PublicationsFields = ({
     publishPublication,
   } = useUpdatePublications(id)
 
+  const [modalVisible, setModalVisible] = useState(false)
+
   const {
     data: publicationData,
     error: publicationError,
     isLoading: isLoadingPublicationData,
-  } = trpc.publications.getPublication.useQuery({
-    advertId: id,
-    version: GetAdvertPublicationVersionEnum.A,
-  })
+  } = trpc.publications.getPublication.useQuery(
+    {
+      advertId: id,
+      version: GetAdvertPublicationVersionEnum.A,
+    },
+    {
+      enabled: modalVisible,
+    },
+  )
 
-  const [modalVisible, setModalVisible] = useState(false)
   useEffect(() => {
     if (publicationError && !isLoadingPublicationData) {
       toast.error('Ekki tókst að sækja birtingu')
