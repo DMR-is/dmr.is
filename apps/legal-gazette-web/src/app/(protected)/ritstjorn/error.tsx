@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 
 import { useEffect } from "react"
 
-import { forceLogin, useLogOut } from "@dmr.is/auth/useLogOut"
+import { forceLogin } from "@dmr.is/auth/useLogOut"
 
 export default function Error({ error }: { error: Error }) {
   const pathName = usePathname()

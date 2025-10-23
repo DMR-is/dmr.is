@@ -12,7 +12,6 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
-import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
 import { IAdvertService } from '../advert.service.interface'

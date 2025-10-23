@@ -2,6 +2,7 @@ import { cache } from 'react'
 
 import { appRouter } from '../server/routers/_app'
 import { createTRPCContext } from '../server/trpc'
+import { handleTRPCError } from '../utils/errorHandler'
 import { makeQueryClient } from './query-client'
 
 import 'server-only' // <-- ensure this file cannot be imported from the client
@@ -10,7 +11,6 @@ import {
   createTRPCOptionsProxy,
   TRPCQueryOptions,
 } from '@trpc/tanstack-react-query'
-import { handleTRPCError } from '../utils/errorHandler'
 // IMPORTANT: Create a stable getter for the query client that
 //            will return the same client during the same request.
 export const getQueryClient = cache(makeQueryClient)
@@ -41,6 +41,7 @@ export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function fetchQuery<T extends ReturnType<TRPCQueryOptions<any>>>(
   queryOptions: T,
 ) {
@@ -48,6 +49,7 @@ export function fetchQuery<T extends ReturnType<TRPCQueryOptions<any>>>(
   return queryClient.fetchQuery(queryOptions)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function fetchQueryWithHandler<T extends ReturnType<TRPCQueryOptions<any>>>(
   queryOptions: T,
 ) {
