@@ -22,15 +22,25 @@ export const createTRPCContext = cache(async () => {
       typeApi: await getServerClient('TypeApi', session.idToken),
       categoryApi: await getServerClient('CategoryApi', session.idToken),
       statusApi: await getServerClient('StatusApi', session.idToken),
-      courtDistrictApi: await getServerClient('CourtDistrictApi', session.idToken),
+      courtDistrictApi: await getServerClient(
+        'CourtDistrictApi',
+        session.idToken,
+      ),
     },
     publications: {
-      publicationsApi: await getServerClient('AdvertPublicationApi', session.idToken),
-      advertPublishApi: await getServerClient('AdvertPublishApi', session.idToken),
+      publicationsApi: await getServerClient(
+        'AdvertPublicationApi',
+        session.idToken,
+      ),
+      advertPublishApi: await getServerClient(
+        'AdvertPublishApi',
+        session.idToken,
+      ),
     },
     usersApi: await getServerClient('UsersApi', session.idToken),
     settlementApi: await getServerClient('SettlementApi', session.idToken),
     commentsApi: await getServerClient('CommentApi', session.idToken),
+    channelsApi: await getServerClient('CommunicationChannelApi'),
   }
 })
 
@@ -100,6 +110,7 @@ export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
       usersApi: ctx.usersApi,
       settlementApi: ctx.settlementApi,
       commentsApi: ctx.commentsApi,
+      channelsApi: ctx.channelsApi,
     },
   })
 })
