@@ -4011,7 +4011,7 @@
     },
     "/api/v1/{advertId}/communication-channels": {
       "get": {
-        "operationId": "CommunicationChannelController_getChannelsByAdvertId_v1",
+        "operationId": "getCommunicationChannels",
         "parameters": [
           {
             "name": "advertId",
@@ -4020,12 +4020,64 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "200": { "description": "" } },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCommunicationChannelsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
         "security": [{ "bearer": [] }],
+        "summary": "",
         "tags": ["CommunicationChannel"]
       },
       "post": {
-        "operationId": "CommunicationChannelController_createChannel_v1",
+        "operationId": "createCommunicationChannel",
         "parameters": [
           {
             "name": "advertId",
@@ -4044,14 +4096,66 @@
             }
           }
         },
-        "responses": { "201": { "description": "" } },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationChannelDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
         "security": [{ "bearer": [] }],
+        "summary": "",
         "tags": ["CommunicationChannel"]
       }
     },
     "/api/v1/{advertId}/communication-channels/{channelId}": {
       "patch": {
-        "operationId": "CommunicationChannelController_updateChannel_v1",
+        "operationId": "updateCommunicationChannel",
         "parameters": [
           {
             "name": "advertId",
@@ -4076,12 +4180,64 @@
             }
           }
         },
-        "responses": { "200": { "description": "" } },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationChannelDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
         "security": [{ "bearer": [] }],
+        "summary": "",
         "tags": ["CommunicationChannel"]
       },
       "delete": {
-        "operationId": "CommunicationChannelController_deleteChannel_v1",
+        "operationId": "deleteCommunicationChannel",
         "parameters": [
           {
             "name": "advertId",
@@ -4096,8 +4252,51 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "200": { "description": "" } },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
         "security": [{ "bearer": [] }],
+        "summary": "",
         "tags": ["CommunicationChannel"]
       }
     }
@@ -4801,9 +5000,11 @@
         "properties": {
           "email": { "type": "string" },
           "name": { "type": "string" },
-          "phone": { "type": "string" }
+          "phone": { "type": "string" },
+          "id": { "type": "string" },
+          "advertId": { "type": "string" }
         },
-        "required": ["email"]
+        "required": ["email", "id", "advertId"]
       },
       "CommentTypeEnum": {
         "type": "string",
@@ -5531,6 +5732,16 @@
           "responsibleParty",
           "properties"
         ]
+      },
+      "GetCommunicationChannelsDto": {
+        "type": "object",
+        "properties": {
+          "channels": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
+          }
+        },
+        "required": ["channels"]
       },
       "UpdateCommunicationChannelDto": {
         "type": "object",
