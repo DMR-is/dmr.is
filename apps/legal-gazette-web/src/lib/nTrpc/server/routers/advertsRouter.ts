@@ -1,7 +1,9 @@
 import { z } from 'zod'
 
 import { StatusIdEnum } from '../../../../gen/fetch'
+import { createTRPCError } from '../../utils/errorHandler'
 import { protectedProcedure, router } from '../trpc'
+
 
 const getAdvertsRequestSchema = z.object({
   page: z.number().optional(),
@@ -37,7 +39,14 @@ export const advertsRouter = router({
   getAdvert: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      return await ctx.advertsApi.getAdvertById({ id: input.id })
+      // return await ctx.advertsApi.getAdvertById({ id: input.id })
+      try {
+        const advert = await ctx.advertsApi.getAdvertById({ id: input.id })
+        return advert
+      } catch (error) {
+        const trpcError = await createTRPCError(error)
+        throw trpcError
+      }
     }),
   getAdvertsCount: protectedProcedure.query(async ({ ctx }) => {
     return await ctx.advertsApi.getAdvertsCount()

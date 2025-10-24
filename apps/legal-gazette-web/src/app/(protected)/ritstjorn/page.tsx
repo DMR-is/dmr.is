@@ -1,10 +1,10 @@
 import { PageContainer } from '../../../components/ritstjorn/PageContainer'
-import { getTrpcServer } from '../../../lib/trpc/server/server'
-
+import {
+  fetchQuery,
+  trpc,
+} from '../../../lib/nTrpc/client/server'
 export default async function Ritstjorn() {
-  const { trpc } = await getTrpcServer()
-
-  const count = await trpc.adverts.getAdvertsCount()
+  const count = await fetchQuery(trpc.getAdvertsCount.queryOptions())
 
   return <PageContainer advertCount={count} />
 }

@@ -6,7 +6,7 @@ const getCommentsSchema = z.object({ advertId: z.uuid() })
 
 const postCommentSchema = z.object({
   advertId: z.uuid(),
-  comment: z.string().min(2).max(1000),
+  comment: z.string().min(1).max(1000),
 })
 
 export const commentRouter = router({

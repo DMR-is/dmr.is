@@ -11,21 +11,26 @@ import { Tag } from '@island.is/island-ui/core'
 import { StatusEnum, StatusIdEnum } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
-import { trpc } from '../../lib/trpc/client'
+import { useTRPC } from '../../lib/nTrpc/client/trpc'
+
+import { useQuery } from '@tanstack/react-query'
 
 export const AdvertsInProgress = () => {
   const { params, setParams } = useFilterContext()
 
   const { formatMessage } = useIntl()
 
-  const { data, isLoading, error } = trpc.adverts.getSubmittedAdverts.useQuery({
-    categoryId: params.categoryId,
-    typeId: params.typeId,
-    statusId: params.statusId as StatusIdEnum[],
-    search: params.search,
-    page: params.page,
-    pageSize: params.pageSize,
-  })
+  const trpc = useTRPC()
+  const { data, isLoading, error } = useQuery(
+    trpc.getSubmittedAdverts.queryOptions({
+      categoryId: params.categoryId,
+      typeId: params.typeId,
+      statusId: params.statusId as StatusIdEnum[],
+      search: params.search,
+      page: params.page,
+      pageSize: params.pageSize,
+    }),
+  )
 
   const rows = data?.adverts.map((advert) => ({
     birting: formatDate(advert.scheduledAt),

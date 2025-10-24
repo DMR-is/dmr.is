@@ -23,8 +23,10 @@ import {
   StatusEnum,
 } from '../../gen/fetch'
 import { useUpdatePublications } from '../../hooks/useUpdatePublications'
-import { trpc } from '../../lib/trpc/client'
+import { useTRPC } from '../../lib/nTrpc/client/trpc'
 import { AdvertPublicationModal } from '../modals/AdvertPublicationModal'
+
+import { useQuery } from '@tanstack/react-query'
 
 type PublicationsFieldsProps = {
   id: string
@@ -39,6 +41,7 @@ export const PublicationsFields = ({
   publications,
   advertStatus,
 }: PublicationsFieldsProps) => {
+  const trpc = useTRPC()
   const {
     createPublication,
     updatePublication,
@@ -52,14 +55,12 @@ export const PublicationsFields = ({
     data: publicationData,
     error: publicationError,
     isLoading: isLoadingPublicationData,
-  } = trpc.publications.getPublication.useQuery(
-    {
+  } = useQuery(
+    trpc.getPublication.queryOptions({
       advertId: id,
       version: GetAdvertPublicationVersionEnum.A,
-    },
-    {
-      enabled: modalVisible,
-    },
+    }),
+
   )
 
   useEffect(() => {
@@ -105,7 +106,7 @@ export const PublicationsFields = ({
           </GridColumn>
         </GridRow>
 
-        {publications.map((pub) => (
+        {publications.map((pub, index) => (
           <GridRow key={pub.id}>
             <GridColumn span={['12/12', '6/12']}>
               <DatePicker
@@ -164,10 +165,14 @@ export const PublicationsFields = ({
                       title: 'Gefa út birtingu',
                       onClick: () => handlePublishPublication(pub),
                     },
-                    {
-                      title: 'Fjarlægja birtingu',
-                      onClick: () => handleDeletePublication(pub.id),
-                    },
+                    ...(index !== 0
+                      ? [
+                          {
+                            title: 'Fjarlægja birtingu',
+                            onClick: () => handleDeletePublication(pub.id),
+                          },
+                        ]
+                      : []),
                   ]}
                 />
               </Inline>

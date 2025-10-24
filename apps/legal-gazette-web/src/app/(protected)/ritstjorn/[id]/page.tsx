@@ -1,5 +1,10 @@
 import { AdvertContainer } from '../../../../containers/advert/AdvertContainer'
-import { getTrpcServer } from '../../../../lib/trpc/server/server'
+import {
+  fetchQueryWithHandler,
+  HydrateClient,
+  prefetch,
+  trpc,
+} from '../../../../lib/nTrpc/client/server'
 
 type Props = {
   params: {
@@ -9,10 +14,9 @@ type Props = {
 
 export default async function AdvertDetails({ params }: Props) {
   const { id } = params
-  const { trpc, HydrateClient } = await getTrpcServer()
 
-  void trpc.adverts.getAdvert.prefetch({ id: params.id })
-  void trpc.baseEntity.getAllEntities.prefetch()
+  prefetch(trpc.getAllEntities.queryOptions())
+  await fetchQueryWithHandler(trpc.getAdvert.queryOptions({ id }))
 
   return (
     <HydrateClient>

@@ -9,20 +9,24 @@ import { formatDate } from '@dmr.is/utils/client'
 import { StatusIdEnum } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
-import { trpc } from '../../lib/trpc/client'
+import { useTRPC } from '../../lib/nTrpc/client/trpc'
 
+import { useQuery } from '@tanstack/react-query'
 export const AdvertsCompleted = () => {
   const { params } = useFilterContext()
   const { formatMessage } = useIntl()
 
-  const { data, isLoading } = trpc.adverts.getCompletedAdverts.useQuery({
-    categoryId: params.categoryId,
-    typeId: params.typeId,
-    statusId: params.statusId as StatusIdEnum[],
-    search: params.search,
-    page: params.page,
-    pageSize: params.pageSize,
-  })
+  const trpc = useTRPC()
+  const { data, isLoading } = useQuery(
+    trpc.getCompletedAdverts.queryOptions({
+      categoryId: params.categoryId,
+      typeId: params.typeId,
+      statusId: params.statusId as StatusIdEnum[],
+      search: params.search,
+      page: params.page,
+      pageSize: params.pageSize,
+    }),
+  )
 
   const rows = data?.adverts?.map((advert) => ({
     birting: formatDate(advert.scheduledAt),

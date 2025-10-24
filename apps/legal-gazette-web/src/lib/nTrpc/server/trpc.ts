@@ -1,29 +1,36 @@
+import { getServerSession } from 'next-auth'
+
 import { cache } from 'react'
 
 import { getServerClient } from '../../api/serverClient'
-import { makeQueryClient } from '../client/query-client'
+import { authOptions } from '../../auth/authOptions'
 
 import { initTRPC, TRPCError } from '@trpc/server'
 
 export const createTRPCContext = cache(async () => {
+  const session = await getServerSession(authOptions)
+  if (session?.invalid || !session?.idToken) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' })
+  }
   return {
+    session,
     adverts: {
-      baseApi: await getServerClient('AdvertApi'),
-      updateApi: await getServerClient('AdvertUpdateApi'),
+      baseApi: await getServerClient('AdvertApi', session.idToken),
+      updateApi: await getServerClient('AdvertUpdateApi', session.idToken),
     },
     baseEntity: {
-      typeApi: await getServerClient('TypeApi'),
-      categoryApi: await getServerClient('CategoryApi'),
-      statusApi: await getServerClient('StatusApi'),
-      courtDistrictApi: await getServerClient('CourtDistrictApi'),
+      typeApi: await getServerClient('TypeApi', session.idToken),
+      categoryApi: await getServerClient('CategoryApi', session.idToken),
+      statusApi: await getServerClient('StatusApi', session.idToken),
+      courtDistrictApi: await getServerClient('CourtDistrictApi', session.idToken),
     },
     publications: {
-      publicationsApi: await getServerClient('AdvertPublicationApi'),
-      advertPublishApi: await getServerClient('AdvertPublishApi'),
+      publicationsApi: await getServerClient('AdvertPublicationApi', session.idToken),
+      advertPublishApi: await getServerClient('AdvertPublishApi', session.idToken),
     },
-    usersApi: await getServerClient('UsersApi'),
-    settlementApi: await getServerClient('SettlementApi'),
-    commentsApi: await getServerClient('CommentApi'),
+    usersApi: await getServerClient('UsersApi', session.idToken),
+    settlementApi: await getServerClient('SettlementApi', session.idToken),
+    commentsApi: await getServerClient('CommentApi', session.idToken),
   }
 })
 
@@ -96,5 +103,3 @@ export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
     },
   })
 })
-
-export const getQueryClient = cache(makeQueryClient)

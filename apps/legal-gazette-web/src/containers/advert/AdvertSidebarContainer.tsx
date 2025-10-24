@@ -4,23 +4,30 @@ import { ChangeStatusButtons } from '../../components/buttons/ChangeStatusButton
 import { EmployeeSelect } from '../../components/employee-select/EmployeeSelect'
 import { AdvertFormStepper } from '../../components/Form/AdvertFormStepper'
 import { AdvertSidebar } from '../../components/Form/FormSidebar'
-import { AdvertDetailedDto } from '../../gen/fetch'
-import { trpc } from '../../lib/trpc/client'
+import {
+  useQuery,
+  useSuspenseQuery,
+  useTRPC,
+} from '../../lib/nTrpc/client/trpc'
 
 type AdvertContainerProps = {
-  advert: AdvertDetailedDto
+  id: string
 }
 
-export function AdvertSidebarContainer({ advert }: AdvertContainerProps) {
-  const { data, isLoading } = trpc.users.getEmployees.useQuery()
+export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
+  const trpc = useTRPC()
+  const { data: usersData, isLoading: isLoadingEmployees } = useQuery(
+    trpc.getEmployees.queryOptions(),
+  )
+  const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id }))
 
   return (
     <AdvertSidebar>
       <EmployeeSelect
-        isLoading={isLoading}
+        isLoading={isLoadingEmployees}
         advertId={advert.id}
         assignedUserId={advert.assignedUser}
-        options={data?.users.map((user) => ({
+        options={usersData?.users.map((user) => ({
           label: user.name,
           value: user.id,
         }))}
@@ -30,7 +37,7 @@ export function AdvertSidebarContainer({ advert }: AdvertContainerProps) {
         currentStatus={advert.status}
         canEdit={advert.canEdit}
       />
-      <AdvertFormStepper advert={advert} comments={advert.comments} />
+      <AdvertFormStepper id={id} />
     </AdvertSidebar>
   )
 }

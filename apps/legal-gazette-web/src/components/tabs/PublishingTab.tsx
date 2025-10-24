@@ -9,60 +9,71 @@ import { Button, Inline, Stack, toast } from '@island.is/island-ui/core'
 
 import { useFilterContext } from '../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
-import { trpc } from '../../lib/trpc/client'
+import { useTRPC } from '../../lib/nTrpc/client/trpc'
 import AdvertsToBePublished from '../Tables/AdvertsToBePublished'
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 export const PublishingTab = () => {
   const [selectedAdvertIds, setSelectedAdvertIds] = useState<string[]>([])
   const { formatMessage } = useIntl()
   const { params } = useFilterContext()
-  const utils = trpc.useUtils()
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
 
-  const { mutate: publishAdverts } =
-    trpc.publications.publishAdverts.useMutation({
+  const { mutate: publishAdverts } = useMutation(
+    trpc.publishAdverts.mutationOptions({
       onSuccess: () => {
         toast.success('Auglýsing birt', { toastId: 'publish-advert-success' })
-        utils.adverts.getReadyForPublicationAdverts.invalidate({
-          categoryId: params.categoryId,
-          page: params.page,
-          pageSize: params.pageSize,
-          search: params.search,
-          typeId: params.typeId,
-        })
+        queryClient.invalidateQueries(
+          trpc.getReadyForPublicationAdverts.queryFilter({
+            categoryId: params.categoryId,
+            page: params.page,
+            pageSize: params.pageSize,
+            search: params.search,
+            typeId: params.typeId,
+          }),
+        )
         setSelectedAdvertIds([])
       },
       onError: () => {
         toast.error('Ekki tókst að birta auglýsingu')
       },
-    })
+    }),
+  )
 
-  const { mutate: moveToPreviousStatus } =
-    trpc.adverts.moveToPreviousStatus.useMutation({
+  const { mutate: moveToPreviousStatus } = useMutation(
+    trpc.moveToPreviousStatus.mutationOptions({
       onSuccess: () => {
         toast.success('Auglýsing færð í stöðuna í vinnslu', {
           toastId: 'update-advert-status-success',
         })
-        utils.adverts.getReadyForPublicationAdverts.invalidate({
-          categoryId: params.categoryId,
-          page: params.page,
-          pageSize: params.pageSize,
-          search: params.search,
-          typeId: params.typeId,
-        })
+        queryClient.invalidateQueries(
+          trpc.getReadyForPublicationAdverts.queryFilter({
+            categoryId: params.categoryId,
+            page: params.page,
+            pageSize: params.pageSize,
+            search: params.search,
+            typeId: params.typeId,
+          }),
+        )
         setSelectedAdvertIds([])
       },
       onError: () => {
         toast.error('Ekki tókst að uppfæra stöðu auglýsingar')
       },
-    })
+    }),
+  )
 
-  const { data } = trpc.adverts.getReadyForPublicationAdverts.useQuery({
-    categoryId: params.categoryId,
-    page: params.page,
-    pageSize: params.pageSize,
-    search: params.search,
-    typeId: params.typeId,
-  })
+  const { data } = useQuery(
+    trpc.getReadyForPublicationAdverts.queryOptions({
+      categoryId: params.categoryId,
+      page: params.page,
+      pageSize: params.pageSize,
+      search: params.search,
+      typeId: params.typeId,
+    }),
+  )
 
   const handleAdvertToggle = (id: string) => {
     setSelectedAdvertIds((prevSelected) =>

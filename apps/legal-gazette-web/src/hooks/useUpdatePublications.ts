@@ -3,8 +3,13 @@ import { useCallback } from 'react'
 
 import { toast } from '@dmr.is/ui/components/island-is'
 
-import { AdvertDetailedDto, AdvertVersionEnum } from '../gen/fetch'
-import { trpc } from '../lib/trpc/client'
+import {
+  AdvertDetailedDto,
+  AdvertVersionEnum,
+} from '../gen/fetch'
+import { useTRPC } from '../lib/nTrpc/client/trpc'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type PublicationFunction = 'create' | 'update' | 'delete'
 
@@ -75,27 +80,25 @@ const createOptimisticDataForPublication = (
 }
 
 export const useUpdatePublications = (id: string) => {
-  const utils = trpc.useUtils()
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
 
-  const { mutate: createPublicationMutation } =
-    trpc.publications.createPublication.useMutation({
+  const { mutate: createPublicationMutation } = useMutation(
+    trpc.createPublication.mutationOptions({
       onMutate: async (_variables) => {
-        await utils.adverts.getAdvert.cancel({
-          id,
-        })
-        const prevData = utils.adverts.getAdvert.getData({
-          id,
-        }) as AdvertDetailedDto
+        await queryClient.cancelQueries(trpc.getAdvert.queryFilter({ id }))
+
+        const prevData = queryClient.getQueryData(
+          trpc.getAdvert.queryKey({ id }),
+        ) as AdvertDetailedDto
 
         const optimisticData = createOptimisticDataForPublication(
           prevData,
           'create',
         )
 
-        utils.adverts.getAdvert.setData(
-          {
-            id,
-          },
+        queryClient.setQueryData(
+          trpc.getAdvert.queryKey({ id }),
           optimisticData,
         )
 
@@ -103,30 +106,22 @@ export const useUpdatePublications = (id: string) => {
       },
       onSuccess: async () => {
         toast.success('Birting bætt við')
-        await utils.adverts.getAdvert.invalidate({
-          id,
-        })
+        await queryClient.invalidateQueries(trpc.getAdvert.queryFilter({ id }))
       },
       onError: (e, variables, mutateResults) => {
         toast.error('Ekki tókst að bæta við birtingu')
-        utils.adverts.getAdvert.setData(
-          {
-            id,
-          },
-          mutateResults,
-        )
+        queryClient.setQueryData(trpc.getAdvert.queryKey({ id }), mutateResults)
       },
-    })
+    }),
+  )
 
-  const { mutate: updatePublicationMutation } =
-    trpc.publications.updatePublication.useMutation({
+  const { mutate: updatePublicationMutation } = useMutation(
+    trpc.updatePublication.mutationOptions({
       onMutate: async (variables) => {
-        await utils.adverts.getAdvert.cancel({
-          id,
-        })
-        const prevData = utils.adverts.getAdvert.getData({
-          id,
-        }) as AdvertDetailedDto
+        await queryClient.cancelQueries(trpc.getAdvert.queryFilter({ id }))
+        const prevData = queryClient.getQueryData(
+          trpc.getAdvert.queryKey({ id }),
+        ) as AdvertDetailedDto
 
         const optimisticData = createOptimisticDataForPublication(
           prevData,
@@ -134,10 +129,8 @@ export const useUpdatePublications = (id: string) => {
           variables,
         )
 
-        utils.adverts.getAdvert.setData(
-          {
-            id,
-          },
+        queryClient.setQueryData(
+          trpc.getAdvert.queryKey({ id }),
           optimisticData,
         )
 
@@ -147,30 +140,22 @@ export const useUpdatePublications = (id: string) => {
       },
       onSuccess: async () => {
         toast.success('Birting uppfærð')
-        await utils.adverts.getAdvert.invalidate({
-          id,
-        })
+        await queryClient.invalidateQueries(trpc.getAdvert.queryFilter({ id }))
       },
       onError: (_, _variables, mutateResults) => {
-        utils.adverts.getAdvert.setData(
-          {
-            id,
-          },
-          mutateResults,
-        )
+        queryClient.setQueryData(trpc.getAdvert.queryKey({ id }), mutateResults)
         toast.error('Ekki tókst að uppfæra birtingu')
       },
-    })
+    }),
+  )
 
-  const { mutate: deletePublicationMutation } =
-    trpc.publications.deletePublication.useMutation({
+  const { mutate: deletePublicationMutation } = useMutation(
+    trpc.deletePublication.mutationOptions({
       onMutate: async (variables) => {
-        await utils.adverts.getAdvert.cancel({
-          id,
-        })
-        const prevData = utils.adverts.getAdvert.getData({
-          id,
-        }) as AdvertDetailedDto
+        await queryClient.cancelQueries(trpc.getAdvert.queryFilter({ id }))
+        const prevData = queryClient.getQueryData(
+          trpc.getAdvert.queryKey({ id }),
+        ) as AdvertDetailedDto
 
         const optimisticData = createOptimisticDataForPublication(
           prevData,
@@ -178,10 +163,8 @@ export const useUpdatePublications = (id: string) => {
           variables,
         )
 
-        utils.adverts.getAdvert.setData(
-          {
-            id,
-          },
+        queryClient.setQueryData(
+          trpc.getAdvert.queryKey({ id }),
           optimisticData,
         )
 
@@ -189,33 +172,26 @@ export const useUpdatePublications = (id: string) => {
       },
       onSuccess: async () => {
         toast.success('Birting fjarlægð')
-        await utils.adverts.getAdvert.invalidate({
-          id,
-        })
+        await queryClient.invalidateQueries(trpc.getAdvert.queryFilter({ id }))
       },
       onError: (_, _variables, mutateResults) => {
-        utils.adverts.getAdvert.setData(
-          {
-            id,
-          },
-          mutateResults,
-        )
+        queryClient.setQueryData(trpc.getAdvert.queryKey({ id }), mutateResults)
         toast.error('Ekki tókst að fjarlægja birtingu')
       },
-    })
+    }),
+  )
 
-  const { mutate: publishPublicationMutation } =
-    trpc.publications.publishPublication.useMutation({
+  const { mutate: publishPublicationMutation } = useMutation(
+    trpc.publishPublication.mutationOptions({
       onSuccess: async () => {
         toast.success('Birting gefin út')
-        await utils.adverts.getAdvert.invalidate({
-          id,
-        })
+        await queryClient.invalidateQueries(trpc.getAdvert.queryFilter({ id }))
       },
       onError: () => {
         toast.error('Ekki tókst að gefa út birtingu')
       },
-    })
+    }),
+  )
 
   const createPublication = useCallback(() => {
     return createPublicationMutation({ advertId: id })
