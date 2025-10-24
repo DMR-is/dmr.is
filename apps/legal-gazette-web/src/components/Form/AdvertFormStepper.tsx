@@ -8,16 +8,9 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { StatusEnum } from '../../gen/fetch'
-import {
-  useSuspenseQuery,
-  useTRPC,
-} from '../../lib/nTrpc/client/trpc'
+import { useSuspenseQuery, useTRPC } from '../../lib/nTrpc/client/trpc'
 import { commentStepperMapper } from '../../mappers/commentMapper'
 
-/**
- * Work in progress
- * TODO: update after we have added history tracking/comments to adverts
- */
 type Props = {
   id: string
 }
