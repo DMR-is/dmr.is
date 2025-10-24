@@ -6,6 +6,7 @@ import { formatDate } from '@dmr.is/utils/client'
 import { AdvertBaseFields } from '../../components/field-set-items/AdvertBaseFields'
 import { AdvertReadonlyFields } from '../../components/field-set-items/AdvertReadonlyFields'
 import { CommentFields } from '../../components/field-set-items/CommentFields'
+import { CommunicationChannelFields } from '../../components/field-set-items/CommunicationChannelFields'
 import { ContentFields } from '../../components/field-set-items/ContentFields'
 import { CourtAndJudgementFields } from '../../components/field-set-items/CourtAndJudgementFields'
 import { DivisionMeetingFields } from '../../components/field-set-items/DivisionMeetingFields'
@@ -166,11 +167,20 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
           ),
         },
         {
+          title: 'Samskiptaleiðir',
+          children: (
+            <CommunicationChannelFields
+              channels={advert.communicationChannels}
+            />
+          ),
+        },
+        {
           title: 'Athugasemdir',
           children: <CommentFields id={advert.id} />,
         },
       ].filter((item) => !item.hidden)
     : []
+
   return (
     <Box background="white" padding={[4, 6, 8]} borderRadius="large">
       <Stack space={[3, 4]}>
