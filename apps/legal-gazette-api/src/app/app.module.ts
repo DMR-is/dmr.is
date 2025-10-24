@@ -30,6 +30,7 @@ import { CategoryModel } from '../modules/category/category.model'
 import { CommentModel } from '../modules/comment/comment.model'
 import { CommentModule } from '../modules/comment/comment.module'
 import { CommunicationChannelModel } from '../modules/communication-channel/communication-channel.model'
+import { CommunicationChannelModule } from '../modules/communication-channel/communication-channel.module'
 import { CompanyModule } from '../modules/company/company.module'
 import { CourtDistrictModel } from '../modules/court-district/court-district.model'
 import { FeeCodeModel } from '../modules/fee-code/fee-code.model'
@@ -119,6 +120,7 @@ import { UsersModule } from '../modules/users/users.module'
     ExternalSystemsModule,
     IslandIsApplicationModule,
     PublicWebModule,
+    CommunicationChannelModule,
   ],
   controllers: [],
   providers: [

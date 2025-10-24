@@ -12,6 +12,7 @@ import { AdvertModel } from '../advert/advert.model'
 import { CommunicationChannelDto } from './dto/communication-channel.dto'
 
 type CommunicationChannelAttributes = {
+  advertId: string
   email: string
   name: string | null
   phone: string | null
@@ -19,6 +20,7 @@ type CommunicationChannelAttributes = {
 
 export type CommunicationChannelCreateAttributes = {
   email: string
+  advertId?: string
   name?: string | null
   phone?: string | null
 }

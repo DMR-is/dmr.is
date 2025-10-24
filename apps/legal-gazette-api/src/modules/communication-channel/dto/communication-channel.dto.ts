@@ -1,12 +1,15 @@
+import { Type } from 'class-transformer'
 import {
+  IsArray,
   IsEmail,
   IsOptional,
   IsString,
   MaxLength,
   MinLength,
+  ValidateNested,
 } from 'class-validator'
 
-import { ApiProperty, IntersectionType } from '@nestjs/swagger'
+import { ApiProperty, IntersectionType, PartialType } from '@nestjs/swagger'
 
 import { DetailedDto } from '../../../dto/detailed.dto'
 
@@ -40,7 +43,21 @@ export class CreateCommunicationChannelDto {
 
 export class CommunicationChannelDto extends CreateCommunicationChannelDto {}
 
+export class GetCommunicationChannelsDto {
+  @ApiProperty({
+    type: [CommunicationChannelDto],
+  })
+  @IsArray()
+  @Type(() => CommunicationChannelDto)
+  @ValidateNested({ each: true })
+  channels!: CommunicationChannelDto[]
+}
+
 export class CommunicationChannelDetailedDto extends IntersectionType(
   CommunicationChannelDto,
   DetailedDto,
+) {}
+
+export class UpdateCommunicationChannelDto extends PartialType(
+  CreateCommunicationChannelDto,
 ) {}
