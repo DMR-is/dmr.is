@@ -213,9 +213,6 @@ export const useUpdateAdvert = (id: string) => {
           return prevData
         },
         onSuccess: (_, variables) => {
-          toast.success('Auglýsing fær stöðu tilbúin til útgáfu', {
-            toastId: 'markAdvertAsReady',
-          })
           queryClient.invalidateQueries(
             trpc.getAdvert.queryFilter({ id: variables.id }),
           )
@@ -235,37 +232,38 @@ export const useUpdateAdvert = (id: string) => {
       }),
     )
 
-  const { mutate: assignUserMutation, isPending: isAssigningUser } = useMutation(
-    trpc.assignUser.mutationOptions({
-      onMutate: async (variables) => {
-        await queryClient.cancelQueries(
-          trpc.getAdvert.queryFilter({ id: variables.id }),
-        )
-        const prevData = queryClient.getQueryData(
-          trpc.getAdvert.queryKey({ id: variables.id }),
-        ) as AdvertDetailedDto
+  const { mutate: assignUserMutation, isPending: isAssigningUser } =
+    useMutation(
+      trpc.assignUser.mutationOptions({
+        onMutate: async (variables) => {
+          await queryClient.cancelQueries(
+            trpc.getAdvert.queryFilter({ id: variables.id }),
+          )
+          const prevData = queryClient.getQueryData(
+            trpc.getAdvert.queryKey({ id: variables.id }),
+          ) as AdvertDetailedDto
 
-        return prevData
-      },
-      onSuccess: (_, variables) => {
-        toast.success('Starfsmaður úthlutaður', {
-          toastId: 'assignUserToAdvert',
-        })
-        queryClient.invalidateQueries(
-          trpc.getAdvert.queryFilter({ id: variables.id }),
-        )
-      },
-      onError: (_, variables, mutateResults) => {
-        toast.error('Ekki tókst að úthluta starfsmanni', {
-          toastId: 'assignUserToAdvertError',
-        })
-        queryClient.setQueryData(
-          trpc.getAdvert.queryKey({ id: variables.id }),
-          mutateResults,
-        )
-      },
-    }),
-  )
+          return prevData
+        },
+        onSuccess: (_, variables) => {
+          toast.success('Starfsmaður úthlutaður', {
+            toastId: 'assignUserToAdvert',
+          })
+          queryClient.invalidateQueries(
+            trpc.getAdvert.queryFilter({ id: variables.id }),
+          )
+        },
+        onError: (_, variables, mutateResults) => {
+          toast.error('Ekki tókst að úthluta starfsmanni', {
+            toastId: 'assignUserToAdvertError',
+          })
+          queryClient.setQueryData(
+            trpc.getAdvert.queryKey({ id: variables.id }),
+            mutateResults,
+          )
+        },
+      }),
+    )
 
   const updateAdvert = useCallback(
     (data: UpdateAdvertDto, options: UpdateOptions = {}) => {
@@ -422,7 +420,7 @@ export const useUpdateAdvert = (id: string) => {
         },
       )
     },
-    [updateAdvert, advert?.category.id],
+    [updateAdvert, advert?.signatureName],
   )
 
   const updateSignatureOnBehalfOf = useCallback(
@@ -439,7 +437,7 @@ export const useUpdateAdvert = (id: string) => {
         },
       )
     },
-    [updateAdvert],
+    [updateAdvert, advert?.signatureOnBehalfOf],
   )
 
   const updateSignatureLocation = useCallback(
@@ -456,7 +454,7 @@ export const useUpdateAdvert = (id: string) => {
         },
       )
     },
-    [updateAdvert],
+    [updateAdvert, advert?.signatureLocation],
   )
 
   const updateSignatureDate = useCallback(
@@ -473,7 +471,7 @@ export const useUpdateAdvert = (id: string) => {
         },
       )
     },
-    [updateAdvert],
+    [updateAdvert, advert?.signatureDate],
   )
 
   const updateCourtDistrict = useCallback(
@@ -507,7 +505,7 @@ export const useUpdateAdvert = (id: string) => {
         },
       )
     },
-    [updateAdvert],
+    [updateAdvert, advert?.judgementDate],
   )
 
   const updateDivisionMeetingLocation = useCallback(

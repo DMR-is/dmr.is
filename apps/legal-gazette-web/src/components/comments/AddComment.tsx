@@ -1,4 +1,6 @@
 'use client'
+import { useSession } from 'next-auth/react'
+
 import { useState } from 'react'
 
 import {
@@ -9,6 +11,7 @@ import {
   toast,
 } from '@dmr.is/ui/components/island-is'
 
+import { AdvertDetailedDto, CommentDto, CommentTypeEnum } from '../../gen/fetch'
 import { useTRPC } from '../../lib/nTrpc/client/trpc'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -19,15 +22,49 @@ export const AddComment = ({ advertId }: Props) => {
   const [newComment, setNewComment] = useState('')
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const session = useSession()
   const { mutate: postComment, isPending } = useMutation(
     trpc.postComment.mutationOptions({
+      onMutate: async (variables) => {
+        await queryClient.cancelQueries(
+          trpc.getAdvert.queryFilter({ id: variables.advertId }),
+        )
+        const prevData = queryClient.getQueryData(
+          trpc.getAdvert.queryKey({ id: variables.advertId }),
+        ) as AdvertDetailedDto
+
+        const newComment = {
+          advertId: variables.advertId,
+          comment: variables.comment,
+          type: CommentTypeEnum.COMMENT,
+          id: '1337',
+          actor: session.data?.user?.name ?? '',
+          status: prevData.status,
+          createdAt: new Date().toISOString(),
+        }
+        const newComments = [newComment, ...prevData.comments]
+
+        queryClient.setQueryData(
+          trpc.getAdvert.queryKey({ id: variables.advertId }),
+          {
+            ...prevData,
+            comments: newComments as CommentDto[],
+          },
+        )
+
+        return prevData
+      },
       onSuccess: () => {
         queryClient.invalidateQueries(
-          trpc.getComments.queryFilter({ advertId: advertId }),
+          trpc.getAdvert.queryFilter({ id: advertId }),
         )
         setNewComment('')
       },
-      onError: () => {
+      onError: (_error, _variables, mutateResults) => {
+        queryClient.setQueryData(
+          trpc.getAdvert.queryKey({ id: advertId }),
+          mutateResults,
+        )
         toast.error('Villa við að vista athugasemd: ', {
           toastId: 'post-comment-error',
         })

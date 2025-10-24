@@ -106,7 +106,7 @@ export const PublicationsFields = ({
           </GridColumn>
         </GridRow>
 
-        {publications.map((pub) => (
+        {publications.map((pub, index) => (
           <GridRow key={pub.id}>
             <GridColumn span={['12/12', '6/12']}>
               <DatePicker
@@ -165,10 +165,14 @@ export const PublicationsFields = ({
                       title: 'Gefa út birtingu',
                       onClick: () => handlePublishPublication(pub),
                     },
-                    {
-                      title: 'Fjarlægja birtingu',
-                      onClick: () => handleDeletePublication(pub.id),
-                    },
+                    ...(index !== 0
+                      ? [
+                          {
+                            title: 'Fjarlægja birtingu',
+                            onClick: () => handleDeletePublication(pub.id),
+                          },
+                        ]
+                      : []),
                   ]}
                 />
               </Inline>
