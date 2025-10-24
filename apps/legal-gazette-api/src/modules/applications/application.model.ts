@@ -12,7 +12,10 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { LegalGazetteModels } from '../../lib/constants'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
-import { CommunicationChannelCreateAttributes } from '../communication-channel/communication-channel.model'
+import {
+  CommunicationChannelCreateAttributes,
+  CommunicationChannelModel,
+} from '../communication-channel/communication-channel.model'
 import { CourtDistrictModel } from '../court-district/court-district.model'
 import { TypeModel } from '../type/type.model'
 import { ApplicationDetailedDto, ApplicationDto } from './dto/application.dto'
@@ -361,7 +364,7 @@ export class ApplicationModel extends BaseModel<
     allowNull: true,
     defaultValue: [],
   })
-  communicationChannels!: CommunicationChannelCreateAttributes[]
+  communicationChannels!: CommunicationChannelModel[]
 
   @BelongsTo(() => CategoryModel)
   category?: CategoryModel
@@ -454,11 +457,9 @@ export class ApplicationModel extends BaseModel<
         : null,
       divisionMeetingLocation: model.divisionMeetingLocation,
       publishingDates: model.publishingDates.map((date) => date.toISOString()),
-      communicationChannels: model.communicationChannels.map((ch) => ({
-        email: ch.email,
-        name: ch.name ?? undefined,
-        phone: ch.phone ?? undefined,
-      })),
+      communicationChannels: model.communicationChannels.map((ch) =>
+        ch.fromModel(),
+      ),
     }
   }
 
