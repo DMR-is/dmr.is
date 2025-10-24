@@ -13,8 +13,11 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
+import { LGResponse } from '../../decorators/lg-response.decorator'
 import {
+  CommunicationChannelDto,
   CreateCommunicationChannelDto,
+  GetCommunicationChannelsDto,
   UpdateCommunicationChannelDto,
 } from './dto/communication-channel.dto'
 import { ICommunicationChannelService } from './communication-channel.service.interface'
@@ -32,24 +35,39 @@ export class CommunicationChannelController {
   ) {}
 
   @Get()
-  async getChannelsByAdvertId(@Param('advertId') advertId: string) {
+  @LGResponse({
+    operationId: 'getCommunicationChannels',
+    type: GetCommunicationChannelsDto,
+  })
+  async getChannelsByAdvertId(
+    @Param('advertId') advertId: string,
+  ): Promise<GetCommunicationChannelsDto> {
     return this.communicationChannelService.getChannelsByAdvertId(advertId)
   }
 
   @Post()
+  @LGResponse({
+    operationId: 'createCommunicationChannel',
+    type: CommunicationChannelDto,
+    status: 201,
+  })
   async createChannel(
     @Param('advertId') advertId: string,
     @Body() body: CreateCommunicationChannelDto,
-  ) {
+  ): Promise<CommunicationChannelDto> {
     return this.communicationChannelService.createChannel(advertId, body)
   }
 
   @Patch(':channelId')
+  @LGResponse({
+    operationId: 'updateCommunicationChannel',
+    type: CommunicationChannelDto,
+  })
   async updateChannel(
     @Param('advertId') advertId: string,
     @Param('channelId') channelId: string,
     @Body() body: UpdateCommunicationChannelDto,
-  ) {
+  ): Promise<CommunicationChannelDto> {
     return this.communicationChannelService.updateChannel(
       advertId,
       channelId,
@@ -58,10 +76,13 @@ export class CommunicationChannelController {
   }
 
   @Delete(':channelId')
+  @LGResponse({
+    operationId: 'deleteCommunicationChannel',
+  })
   async deleteChannel(
     @Param('advertId') advertId: string,
     @Param('channelId') channelId: string,
-  ) {
+  ): Promise<void> {
     return this.communicationChannelService.deleteChannel(advertId, channelId)
   }
 }

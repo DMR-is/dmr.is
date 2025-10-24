@@ -4,6 +4,7 @@ import {
   IsEmail,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   MinLength,
   ValidateNested,
@@ -41,7 +42,15 @@ export class CreateCommunicationChannelDto {
   phone?: string
 }
 
-export class CommunicationChannelDto extends CreateCommunicationChannelDto {}
+export class CommunicationChannelDto extends CreateCommunicationChannelDto {
+  @ApiProperty({ type: String })
+  @IsUUID()
+  id!: string
+
+  @ApiProperty({ type: String })
+  @IsUUID()
+  advertId!: string
+}
 
 export class GetCommunicationChannelsDto {
   @ApiProperty({

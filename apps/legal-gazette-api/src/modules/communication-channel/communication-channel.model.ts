@@ -27,7 +27,7 @@ export type CommunicationChannelCreateAttributes = {
 
 @BaseTable({ tableName: LegalGazetteModels.COMMUNICATION_CHANNEL })
 @DefaultScope(() => ({
-  attributes: ['id', 'email', 'name', 'phone'],
+  attributes: ['id', 'advertId', 'email', 'name', 'phone'],
   order: [['name', 'ASC']],
 }))
 export class CommunicationChannelModel extends BaseModel<
@@ -57,6 +57,8 @@ export class CommunicationChannelModel extends BaseModel<
 
   static fromModel(model: CommunicationChannelModel): CommunicationChannelDto {
     return {
+      id: model.id,
+      advertId: model.advertId,
       email: model.email,
       name: model.name ?? undefined,
       phone: model.phone ?? undefined,
