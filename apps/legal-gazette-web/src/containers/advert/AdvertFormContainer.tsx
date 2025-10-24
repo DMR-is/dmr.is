@@ -170,6 +170,7 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
           title: 'Samskiptaleiðir',
           children: (
             <CommunicationChannelFields
+              advertId={advert.id}
               channels={advert.communicationChannels}
             />
           ),

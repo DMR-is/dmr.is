@@ -4,13 +4,14 @@ import { CommunicationChannelDto } from '../../gen/fetch'
 import { CommunicationChannelTable } from '../communication-channel/CommunicationChannelTable'
 
 type Props = {
+  advertId: string
   channels: CommunicationChannelDto[]
 }
 
-export const CommunicationChannelFields = ({ channels }: Props) => {
+export const CommunicationChannelFields = ({ advertId, channels }: Props) => {
   return (
     <Stack space={2}>
-      <CommunicationChannelTable channels={channels} />
+      <CommunicationChannelTable advertId={advertId} channels={channels} />
     </Stack>
   )
 }
