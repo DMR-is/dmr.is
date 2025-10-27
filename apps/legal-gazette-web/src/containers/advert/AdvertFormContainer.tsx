@@ -150,7 +150,11 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
               signatureName={advert.signatureName ?? ''}
               signatureOnBehalfOf={advert.signatureOnBehalfOf ?? ''}
               signatureLocation={advert.signatureLocation ?? ''}
-              signatureDate={advert.signatureDate ?? new Date().toISOString()}
+              signatureDate={
+                advert.signatureDate
+                  ? new Date(advert.signatureDate)
+                  : undefined
+              }
             />
           ),
         },
