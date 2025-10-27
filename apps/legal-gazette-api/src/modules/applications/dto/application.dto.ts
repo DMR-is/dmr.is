@@ -1,4 +1,11 @@
-import { IsDateString, IsNumber, IsOptional, IsString } from 'class-validator'
+import { Type } from 'class-transformer'
+import {
+  IsDateString,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator'
 
 import {
   ApiProperty,
@@ -17,6 +24,28 @@ import {
 import { TypeDto } from '../../type/dto/type.dto'
 import { ApplicationTypeEnum } from '../application.model'
 import { ApplicationStatusEnum } from '../contants'
+
+export class ApplicationSignatureDto {
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  name?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  onBehalfOf?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  location?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  date?: string
+}
 
 export class ApplicationDto {
   @ApiProperty({ type: String })
@@ -75,17 +104,10 @@ export class ApplicationFieldsDto {
   @ApiProperty({ type: String, required: false, nullable: true })
   html?: string | null
 
-  @ApiProperty({ type: String, required: false, nullable: true })
-  signatureName?: string | null
-
-  @ApiProperty({ type: String, required: false, nullable: true })
-  signatureOnBehalfOf?: string | null
-
-  @ApiProperty({ type: String, required: false, nullable: true })
-  signatureLocation?: string | null
-
-  @ApiProperty({ type: String, required: false, nullable: true })
-  signatureDate?: string | null
+  @ApiProperty({ type: ApplicationSignatureDto })
+  @ValidateNested()
+  @Type(() => ApplicationSignatureDto)
+  signature!: ApplicationSignatureDto
 
   @ApiProperty({ type: String, required: false, nullable: true })
   liquidatorName?: string | null
@@ -145,22 +167,11 @@ export class AddDivisionMeetingForApplicationDto {
   @IsString()
   meetingLocation!: string
 
-  @ApiProperty({ type: String })
-  @IsString()
-  signatureLocation!: string
-
-  @ApiProperty({ type: String })
-  @IsDateString()
-  signatureDate!: string
-
-  @ApiProperty({ type: String })
-  @IsString()
-  signatureName!: string
-
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: ApplicationSignatureDto, required: false })
   @IsOptional()
-  @IsString()
-  signatureOnBehalfOf?: string
+  @ValidateNested()
+  @Type(() => ApplicationSignatureDto)
+  signature?: ApplicationSignatureDto
 
   @ApiProperty({ type: String, required: false })
   @IsOptional()

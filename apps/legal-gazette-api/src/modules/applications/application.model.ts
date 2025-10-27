@@ -256,28 +256,28 @@ export class ApplicationModel extends BaseModel<
     allowNull: true,
     defaultValue: null,
   })
-  signatureName!: string | null
+  signatureName?: string | null
 
   @Column({
     type: DataType.TEXT,
     allowNull: true,
     defaultValue: null,
   })
-  signatureOnBehalfOf!: string | null
+  signatureOnBehalfOf?: string | null
 
   @Column({
     type: DataType.TEXT,
     allowNull: true,
     defaultValue: null,
   })
-  signatureLocation!: string | null
+  signatureLocation?: string | null
 
   @Column({
     type: DataType.DATE,
     allowNull: true,
     defaultValue: null,
   })
-  signatureDate!: Date | null
+  signatureDate?: Date | null
 
   @Column({
     type: DataType.TEXT,
@@ -431,12 +431,12 @@ export class ApplicationModel extends BaseModel<
         ? model.judgmentDate.toISOString()
         : null,
       html: model.html,
-      signatureName: model.signatureName,
-      signatureOnBehalfOf: model.signatureOnBehalfOf,
-      signatureLocation: model.signatureLocation,
-      signatureDate: model.signatureDate
-        ? model.signatureDate.toISOString()
-        : null,
+      signature: {
+        name: model.signatureName ?? undefined,
+        onBehalfOf: model.signatureOnBehalfOf ?? undefined,
+        location: model.signatureLocation ?? undefined,
+        date: model.signatureDate?.toISOString(),
+      },
       settlementName: model.settlementName,
       settlementNationalId: model.settlementNationalId,
       settlementAddress: model.settlementAddress,
