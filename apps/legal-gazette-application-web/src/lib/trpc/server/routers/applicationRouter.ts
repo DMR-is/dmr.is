@@ -45,14 +45,18 @@ const createCommunicationChannelSchema = z.object({
   phone: z.string().optional(),
 })
 
+const signatureSchema = z.object({
+  name: z.string().optional(),
+  location: z.string().optional(),
+  date: z.string().optional(),
+  onBehalfOf: z.string().optional(),
+})
+
 const addDivisionMeetingForApplicationSchema = z.object({
   applicationId: z.string(),
   meetingDate: z.string(),
   meetingLocation: z.string(),
-  signatureLocation: z.string(),
-  signatureDate: z.string(),
-  signatureName: z.string(),
-  signatureOnBehalfOf: z.string().optional(),
+  signature: signatureSchema.optional(),
   additionalText: z.string().optional(),
   communicationChannels: z
     .array(createCommunicationChannelSchema)
@@ -62,12 +66,9 @@ const addDivisionMeetingForApplicationSchema = z.object({
 
 const addDivisionEndingForApplicationSchema = z.object({
   applicationId: z.string(),
-  signatureLocation: z.string(),
-  signatureDate: z.string(),
-  signatureName: z.string(),
-  signatureOnBehalfOf: z.string().optional(),
   additionalText: z.string().optional(),
   communicationChannels: z.array(createCommunicationChannelSchema).optional(),
+  signature: signatureSchema.optional(),
   scheduledAt: z.string(),
   declaredClaims: z.number(),
 })

@@ -160,70 +160,77 @@ export const useUpdateApplication = (applicationId: string) => {
 
   const updateSignatureName = useCallback(
     (signatureName: string) => {
-      if (signatureName === application?.signatureName) {
+      if (signatureName === application?.signature.name) {
         return
       }
 
       updateApplication(
-        { signatureName },
+        { signature: { ...application?.signature, name: signatureName } },
         {
           successMessage: 'Nafn undirritara vistað',
           errorMessage: 'Ekki tókst að uppfæra nafn undirritara',
         },
       )
     },
-    [updateApplication, application?.signatureName],
+    [updateApplication, application?.signature.name],
   )
 
   const updateSignatureLocation = useCallback(
     (signatureLocation: string) => {
-      if (signatureLocation === application?.signatureLocation) {
+      if (signatureLocation === application?.signature.location) {
         return
       }
 
       updateApplication(
-        { signatureLocation },
+        {
+          signature: { ...application?.signature, location: signatureLocation },
+        },
         {
           successMessage: 'Staðsetning undirritara vistuð',
           errorMessage: 'Ekki tókst að uppfæra staðsetningu undirritara',
         },
       )
     },
-    [updateApplication, application?.signatureLocation],
+    [updateApplication, application?.signature.location],
   )
 
   const updateSignatureDate = useCallback(
     (signatureDate: string) => {
-      if (signatureDate === application?.signatureDate) {
+      if (signatureDate === application?.signature.date) {
         return
       }
 
       updateApplication(
-        { signatureDate },
+        { signature: { ...application?.signature, date: signatureDate } },
         {
           successMessage: 'Dagsetning undirritunar vistuð',
           errorMessage: 'Ekki tókst að uppfæra dagsetningu undirritunar',
         },
       )
     },
-    [updateApplication, application?.signatureDate],
+    [updateApplication, application?.signature.date],
   )
 
   const updateSignatureOnBehalfOf = useCallback(
     (signatureOnBehalfOf: string) => {
-      if (signatureOnBehalfOf === application?.signatureOnBehalfOf) {
+      if (signatureOnBehalfOf === application?.signature.onBehalfOf) {
         return
       }
 
       updateApplication(
-        { signatureOnBehalfOf },
+        {
+          signature: {
+            ...application?.signature,
+            onBehalfOf: signatureOnBehalfOf,
+          },
+        },
         {
           successMessage: 'Undirritun fyrir hönd vistað',
           errorMessage: 'Ekki tókst að uppfæra undirritun fyrir hönd',
         },
       )
     },
-    [updateApplication, application?.signatureOnBehalfOf],
+    [updateApplication, application?.signature.onBehalfOf],
   )
 
   const updatePublishingDates = useCallback(

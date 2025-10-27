@@ -28,7 +28,7 @@ export const createCommonAdvertFromApplicationSchema = z.object({
   html: z.string(),
   communicationChannels: z.array(communicationChannelSchema).min(1),
   publishingDates: z.array(z.date()).min(1),
-  signature: signatureSchema,
+  signature: signatureSchema.optional(),
 })
 
 export const createCommonAdvertFromIslandIsApplicationSchema = z.object({
@@ -40,7 +40,7 @@ export const createCommonAdvertFromIslandIsApplicationSchema = z.object({
   html: z.string(),
   communicationChannels: z.array(communicationChannelSchema).min(1),
   publishingDates: z.array(z.date()).min(1),
-  signature: signatureSchema,
+  signature: signatureSchema.optional(),
 })
 
 export const createRecallAdvertFromApplicationSchema = z.object({
@@ -56,5 +56,5 @@ export const createRecallAdvertFromApplicationSchema = z.object({
   divisionMeetingDate: z.date().optional().nullable(),
   judgementDate: z.date(),
   communicationChannels: z.array(communicationChannelSchema).min(1),
-  signature: signatureSchema,
+  signature: signatureSchema.optional(),
 })

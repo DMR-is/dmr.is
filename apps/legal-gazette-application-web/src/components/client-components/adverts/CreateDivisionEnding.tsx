@@ -39,10 +39,12 @@ export const CreateDivisionEnding = ({
   const [createState, setCreateState] =
     useState<AddDivisionEndingForApplicationDto>({
       declaredClaims: 0,
-      signatureDate: '',
-      signatureLocation: '',
-      signatureName: '',
-      signatureOnBehalfOf: '',
+      signature: {
+        name: '',
+        location: '',
+        date: '',
+        onBehalfOf: '',
+      },
       additionalText: '',
       scheduledAt: '',
     })
@@ -134,7 +136,10 @@ export const CreateDivisionEnding = ({
                           onChange={(e) =>
                             setCreateState({
                               ...createState,
-                              signatureName: e.target.value,
+                              signature: {
+                                ...createState.signature,
+                                name: e.target.value,
+                              },
                             })
                           }
                         />
@@ -149,7 +154,10 @@ export const CreateDivisionEnding = ({
                           onChange={(e) =>
                             setCreateState({
                               ...createState,
-                              signatureLocation: e.target.value,
+                              signature: {
+                                ...createState.signature,
+                                location: e.target.value,
+                              },
                             })
                           }
                         />
@@ -166,7 +174,10 @@ export const CreateDivisionEnding = ({
                           handleChange={(date) =>
                             setCreateState({
                               ...createState,
-                              signatureDate: date.toISOString(),
+                              signature: {
+                                ...createState.signature,
+                                date: date.toISOString(),
+                              },
                             })
                           }
                         />
@@ -180,7 +191,10 @@ export const CreateDivisionEnding = ({
                           onChange={(e) =>
                             setCreateState({
                               ...createState,
-                              signatureOnBehalfOf: e.target.value,
+                              signature: {
+                                ...createState.signature,
+                                onBehalfOf: e.target.value,
+                              },
                             })
                           }
                         />

@@ -17,11 +17,9 @@ export const commonFormFieldsSchema = z.object({
   category: z.string().min(1, 'Flokkur er nauðsynlegur'),
   caption: z.string().min(1, 'Yfirskrift er nauðsynleg'),
   html: z.string().min(1, 'Meginmál er nauðsynlegt'),
-  signatureName: z.string().min(1, 'Undirskrift er nauðsynleg'),
-  signatureLocation: z
-    .string()
-    .min(1, 'Staðsetning undirskriftar er nauðsynleg'),
-  signatureDate: z.date('Dagsetning undirskriftar er nauðsynleg'),
+  signatureName: z.string().optional(),
+  signatureLocation: z.string().optional(),
+  signatureDate: z.date().optional(),
   signatureOnBehalfOf: z.string().optional(),
   publishingDates: z
     .array(publishingDateSchema)

@@ -41,17 +41,13 @@ export const CreateDivisionMeeting = ({
       additionalText: '',
       meetingDate: '',
       meetingLocation: '',
-      signatureDate: '',
-      signatureLocation: '',
-      signatureName: '',
-      signatureOnBehalfOf: '',
+      signature: {
+        date: '',
+        location: '',
+        name: '',
+        onBehalfOf: '',
+      },
     })
-
-  const canSubmit = Object.entries(createState)
-    .filter(
-      ([key]) => key !== 'signatureOnBehalfOf' && key !== 'additionalText',
-    )
-    .every(([, value]) => !!value)
 
   return (
     <ModalBase
@@ -153,7 +149,10 @@ export const CreateDivisionMeeting = ({
                             onChange={(e) =>
                               setCreateState({
                                 ...createState,
-                                signatureName: e.target.value,
+                                signature: {
+                                  ...createState.signature,
+                                  name: e.target.value,
+                                },
                               })
                             }
                           />
@@ -168,7 +167,10 @@ export const CreateDivisionMeeting = ({
                             onChange={(e) =>
                               setCreateState({
                                 ...createState,
-                                signatureLocation: e.target.value,
+                                signature: {
+                                  ...createState.signature,
+                                  location: e.target.value,
+                                },
                               })
                             }
                           />
@@ -185,7 +187,10 @@ export const CreateDivisionMeeting = ({
                             handleChange={(date) =>
                               setCreateState({
                                 ...createState,
-                                signatureDate: date.toISOString(),
+                                signature: {
+                                  ...createState.signature,
+                                  date: date.toISOString(),
+                                },
                               })
                             }
                           />
@@ -199,7 +204,10 @@ export const CreateDivisionMeeting = ({
                             onChange={(e) =>
                               setCreateState({
                                 ...createState,
-                                signatureOnBehalfOf: e.target.value,
+                                signature: {
+                                  ...createState.signature,
+                                  onBehalfOf: e.target.value,
+                                },
                               })
                             }
                           />
@@ -209,7 +217,6 @@ export const CreateDivisionMeeting = ({
                         <GridColumn span="12/12">
                           <Inline alignY="center" align="right" space={2}>
                             <Button
-                              disabled={!canSubmit}
                               loading={isPending}
                               icon="share"
                               iconType="outline"
@@ -226,10 +233,12 @@ export const CreateDivisionMeeting = ({
                                         additionalText: '',
                                         meetingDate: '',
                                         meetingLocation: '',
-                                        signatureDate: '',
-                                        signatureName: '',
-                                        signatureLocation: '',
-                                        signatureOnBehalfOf: '',
+                                        signature: {
+                                          date: '',
+                                          location: '',
+                                          name: '',
+                                          onBehalfOf: '',
+                                        },
                                       })
                                       toast.success('Skiptafundur stofnaður', {
                                         toastId: 'create-division-meeting',

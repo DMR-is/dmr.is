@@ -10,8 +10,8 @@ import { CommonFormSchema } from '../../../../lib/forms/schemas/common-schema'
 import { ApplicationShell } from '../../application/ApplicationShell'
 import { CommunicationChannelFields } from '../fields/CommunicationChannelFields'
 import { PublishingFields } from '../fields/PublishingFields'
+import { SignatureFields } from '../fields/SignatureFields'
 import { CommonAdvertFields } from './fields/CommonAdvertFields'
-import { CommonSignatureFields } from './fields/CommonSignatureFields'
 
 type Props = {
   applicationId: string
@@ -56,7 +56,7 @@ export const CommonForm = ({ applicationId, caseId, types, fields }: Props) => {
             ) : (
               <>
                 <CommonAdvertFields />
-                <CommonSignatureFields />
+                <SignatureFields />
                 <PublishingFields />
                 <CommunicationChannelFields />
               </>
