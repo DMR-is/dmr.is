@@ -1134,122 +1134,7 @@
             }
           }
         },
-        "summary": "",
-        "tags": ["Legal gazette - application web API"]
-      }
-    },
-    "/api/v1/adverts/{id}/ready": {
-      "post": {
-        "operationId": "markAdvertAsReady",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Legal gazette - application web API"]
-      }
-    },
-    "/api/v1/adverts/{id}/submit": {
-      "post": {
-        "operationId": "markAdvertAsSubmitted",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1314,70 +1199,7 @@
             }
           }
         },
-        "summary": "",
-        "tags": ["Legal gazette - application web API"]
-      }
-    },
-    "/api/v1/adverts/{id}/status/{statusId}": {
-      "patch": {
-        "operationId": "updateAdvertStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "statusId",
-            "required": true,
-            "in": "path",
-            "schema": { "$ref": "#/components/schemas/StatusIdEnum" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1451,6 +1273,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       },
@@ -1473,6 +1296,183 @@
               }
             }
           },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/adverts/{id}/status/next": {
+      "post": {
+        "operationId": "moveAdvertToNextStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/adverts/{id}/status/previous": {
+      "post": {
+        "operationId": "moveAdvertToPreviousStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/adverts/{id}/reject": {
+      "post": {
+        "operationId": "rejectAdvert",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
@@ -3035,8 +3035,8 @@
       "StatusIdEnum": {
         "type": "string",
         "enum": [
-          "63726fce-edcf-412d-85e8-087e99c592f2",
           "cd3bf301-52a1-493e-8c80-a391c310c840",
+          "7ef679c4-4f66-4892-b6ad-ee05e0be4359",
           "a2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
           "bd835a1d-0ecb-4aa4-9910-b5e60c30dced",
           "f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
@@ -3046,8 +3046,8 @@
       "StatusEnum": {
         "type": "string",
         "enum": [
-          "Drög",
           "Innsent",
+          "Í vinnslu",
           "Tilbúið til útgáfu",
           "Útgefið",
           "Hafnað",
@@ -3255,7 +3255,7 @@
           "actor": { "type": "string" },
           "receiver": { "type": "string" },
           "comment": { "type": "string" },
-          "createdAt": { "type": "string", "format": "date-time" }
+          "createdAt": { "type": "string" }
         },
         "required": ["id", "type", "status", "advertId", "actor", "createdAt"]
       },
@@ -3298,7 +3298,7 @@
           "additionalText": { "type": "string", "nullable": true },
           "signatureName": { "type": "string" },
           "signatureLocation": { "type": "string" },
-          "signatureOnBehalfOf": { "type": "string", "nullable": true },
+          "signatureOnBehalfOf": { "type": "string" },
           "signatureDate": { "type": "string" },
           "judgementDate": { "type": "string" },
           "divisionMeetingDate": { "type": "string" },
@@ -3332,10 +3332,6 @@
           "content",
           "caption",
           "additionalText",
-          "signatureName",
-          "signatureLocation",
-          "signatureOnBehalfOf",
-          "signatureDate",
           "communicationChannels",
           "comments"
         ]
@@ -3501,6 +3497,15 @@
           "applications"
         ]
       },
+      "ApplicationSignatureDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "onBehalfOf": { "type": "string" },
+          "location": { "type": "string" },
+          "date": { "type": "string" }
+        }
+      },
       "ApplicationDetailedDto": {
         "type": "object",
         "properties": {
@@ -3527,10 +3532,9 @@
           "additionalText": { "type": "string", "nullable": true },
           "judgmentDate": { "type": "string", "nullable": true },
           "html": { "type": "string", "nullable": true },
-          "signatureName": { "type": "string", "nullable": true },
-          "signatureOnBehalfOf": { "type": "string", "nullable": true },
-          "signatureLocation": { "type": "string", "nullable": true },
-          "signatureDate": { "type": "string", "nullable": true },
+          "signature": {
+            "$ref": "#/components/schemas/ApplicationSignatureDto"
+          },
           "liquidatorName": { "type": "string", "nullable": true },
           "liquidatorLocation": { "type": "string", "nullable": true },
           "liquidatorOnBehalfOf": { "type": "string", "nullable": true },
@@ -3556,6 +3560,7 @@
           "applicationType",
           "status",
           "title",
+          "signature",
           "publishingDates",
           "communicationChannels"
         ]
@@ -3571,10 +3576,9 @@
           "additionalText": { "type": "string", "nullable": true },
           "judgmentDate": { "type": "string", "nullable": true },
           "html": { "type": "string", "nullable": true },
-          "signatureName": { "type": "string", "nullable": true },
-          "signatureOnBehalfOf": { "type": "string", "nullable": true },
-          "signatureLocation": { "type": "string", "nullable": true },
-          "signatureDate": { "type": "string", "nullable": true },
+          "signature": {
+            "$ref": "#/components/schemas/ApplicationSignatureDto"
+          },
           "liquidatorName": { "type": "string", "nullable": true },
           "liquidatorLocation": { "type": "string", "nullable": true },
           "liquidatorOnBehalfOf": { "type": "string", "nullable": true },
@@ -3606,10 +3610,9 @@
         "properties": {
           "meetingDate": { "type": "string" },
           "meetingLocation": { "type": "string" },
-          "signatureLocation": { "type": "string" },
-          "signatureDate": { "type": "string" },
-          "signatureName": { "type": "string" },
-          "signatureOnBehalfOf": { "type": "string" },
+          "signature": {
+            "$ref": "#/components/schemas/ApplicationSignatureDto"
+          },
           "additionalText": { "type": "string" },
           "communicationChannels": {
             "type": "array",
@@ -3618,21 +3621,14 @@
             }
           }
         },
-        "required": [
-          "meetingDate",
-          "meetingLocation",
-          "signatureLocation",
-          "signatureDate",
-          "signatureName"
-        ]
+        "required": ["meetingDate", "meetingLocation"]
       },
       "AddDivisionEndingForApplicationDto": {
         "type": "object",
         "properties": {
-          "signatureLocation": { "type": "string" },
-          "signatureDate": { "type": "string" },
-          "signatureName": { "type": "string" },
-          "signatureOnBehalfOf": { "type": "string" },
+          "signature": {
+            "$ref": "#/components/schemas/ApplicationSignatureDto"
+          },
           "additionalText": { "type": "string" },
           "communicationChannels": {
             "type": "array",
@@ -3643,13 +3639,7 @@
           "scheduledAt": { "type": "string" },
           "declaredClaims": { "type": "number" }
         },
-        "required": [
-          "signatureLocation",
-          "signatureDate",
-          "signatureName",
-          "scheduledAt",
-          "declaredClaims"
-        ]
+        "required": ["scheduledAt", "declaredClaims"]
       },
       "PublishedPublicationDto": {
         "type": "object",
