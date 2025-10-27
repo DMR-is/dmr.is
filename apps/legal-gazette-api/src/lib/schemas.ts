@@ -12,6 +12,13 @@ export const communicationChannelSchema = z.object({
   phone: z.string().optional(),
 })
 
+export const signatureSchema = z.object({
+  name: z.string().optional(),
+  onBehalfOf: z.string().optional(),
+  location: z.string().optional(),
+  date: z.date().optional(),
+})
+
 export const createCommonAdvertFromApplicationSchema = z.object({
   caseId: z.uuid(),
   type: baseEntitySchema,
@@ -19,12 +26,9 @@ export const createCommonAdvertFromApplicationSchema = z.object({
   caption: z.string(),
   additionalText: z.string().nullable().optional(),
   html: z.string(),
-  signatureName: z.string(),
-  signatureOnBehalfOf: z.string().nullable().optional(),
-  signatureLocation: z.string(),
-  signatureDate: z.date(),
   communicationChannels: z.array(communicationChannelSchema).min(1),
   publishingDates: z.array(z.date()).min(1),
+  signature: signatureSchema,
 })
 
 export const createCommonAdvertFromIslandIsApplicationSchema = z.object({
@@ -34,12 +38,9 @@ export const createCommonAdvertFromIslandIsApplicationSchema = z.object({
   caption: z.string(),
   additionalText: z.string().nullable().optional(),
   html: z.string(),
-  signatureName: z.string(),
-  signatureOnBehalfOf: z.string().nullable().optional(),
-  signatureLocation: z.string(),
-  signatureDate: z.date(),
   communicationChannels: z.array(communicationChannelSchema).min(1),
   publishingDates: z.array(z.date()).min(1),
+  signature: signatureSchema,
 })
 
 export const createRecallAdvertFromApplicationSchema = z.object({
@@ -49,13 +50,11 @@ export const createRecallAdvertFromApplicationSchema = z.object({
   settlementAddress: z.string(),
   settlementDeadlineDate: z.date().nullable().optional(),
   settlementDateOfDeath: z.date().optional().nullable(),
+  liquidatorName: z.string(),
   liquidatorLocation: z.string(),
-  signatureName: z.string(),
-  signatureDate: z.date(),
-  signatureLocation: z.string(),
-  signatureOnBehalfOf: z.string().nullable().optional(),
   divisionMeetingLocation: z.string().optional().nullable(),
   divisionMeetingDate: z.date().optional().nullable(),
   judgementDate: z.date(),
   communicationChannels: z.array(communicationChannelSchema).min(1),
+  signature: signatureSchema,
 })
