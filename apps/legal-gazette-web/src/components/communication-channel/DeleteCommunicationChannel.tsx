@@ -1,6 +1,9 @@
 import { Button, toast } from '@dmr.is/ui/components/island-is'
 
-import { trpc } from '../../lib/trpc/client'
+import { AdvertDetailedDto } from '../../gen/fetch'
+import { useTRPC } from '../../lib/nTrpc/client/trpc'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   advertId: string
@@ -8,14 +11,19 @@ type Props = {
 }
 
 export const DeleteCommunicationChannel = ({ advertId, channelId }: Props) => {
-  const utils = trpc.useUtils()
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
 
-  const { mutate: deleteChannel, isPending: isDeletingChannel } =
-    trpc.channelsApi.deleteChannel.useMutation({
+  const { mutate: deleteChannel, isPending: isDeletingChannel } = useMutation(
+    trpc.deleteChannel.mutationOptions({
       onMutate: async (variables) => {
-        await utils.adverts.getAdvert.cancel({ id: advertId })
+        await queryClient.cancelQueries(
+          trpc.getAdvert.queryFilter({ id: advertId }),
+        )
 
-        const prevData = utils.adverts.getAdvert.getData({ id: advertId })
+        const prevData = queryClient.getQueryData(
+          trpc.getAdvert.queryKey({ id: advertId }),
+        ) as AdvertDetailedDto
 
         const currentChannels = prevData?.communicationChannels ?? []
 
@@ -23,31 +31,36 @@ export const DeleteCommunicationChannel = ({ advertId, channelId }: Props) => {
           (channel) => channel.id !== variables.channelId,
         )
 
-        utils.adverts.getAdvert.setData({ id: advertId }, (prev) =>
-          prev
-            ? {
-                ...prev,
-                communicationChannels: newChannels,
-              }
-            : undefined,
+        queryClient.setQueryData(
+          trpc.getAdvert.queryKey({ id: variables.advertId }),
+          {
+            ...prevData,
+            communicationChannels: newChannels,
+          },
         )
 
         return prevData
       },
       onSuccess: () => {
-        toast.success('Samskiptaleið var eytt')
-        utils.adverts.getAdvert.invalidate({ id: advertId })
+        queryClient.invalidateQueries(
+          trpc.getAdvert.queryFilter({ id: advertId }),
+        )
       },
       onError: (_, variables, mutateResults) => {
         toast.error('Ekki tókst að eyða samskiptaleið')
-        utils.adverts.getAdvert.setData({ id: advertId }, mutateResults)
+        queryClient.setQueryData(
+          trpc.getAdvert.queryKey({ id: variables.advertId }),
+          mutateResults,
+        )
       },
-    })
+    }),
+  )
 
   return (
     <Button
       icon="trash"
       size="small"
+      circle
       loading={isDeletingChannel}
       colorScheme="destructive"
       onClick={() => deleteChannel({ advertId, channelId })}

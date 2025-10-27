@@ -1,6 +1,8 @@
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { CommunicationChannelDto } from '../../gen/fetch'
+import { CreateCommunicationChannel } from './CreateCommunicationChannel'
+import { DeleteCommunicationChannel } from './DeleteCommunicationChannel'
 import { UpdateCommunicationChannel } from './UpdateCommunicationChannel'
 
 type Props = {
@@ -22,6 +24,11 @@ export const CommunicationChannelTable = ({ advertId, channels }: Props) => {
       field: 'phone',
       children: 'Símanúmer',
     },
+    {
+      field: 'options',
+      children: <CreateCommunicationChannel advertId={advertId} />,
+      size: 'tiny' as const,
+    },
   ]
 
   const rows = channels.map((channel) => ({
@@ -32,6 +39,9 @@ export const CommunicationChannelTable = ({ advertId, channels }: Props) => {
     email: channel.email,
     name: channel.name,
     phone: channel.phone,
+    options: (
+      <DeleteCommunicationChannel advertId={advertId} channelId={channel.id} />
+    ),
   }))
 
   return <DataTable columns={columns} rows={[...rows]} />

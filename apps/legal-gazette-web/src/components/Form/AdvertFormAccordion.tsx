@@ -29,14 +29,14 @@ export const AdvertFormAccordion = ({ items }: Props) => {
   const toggles = items.map(() => useToggle(false))
 
   const expandAll = () => {
-    toggles.forEach((toggle) => toggle.setExpanded(true))
+    toggles.forEach(([_tog, setToggle]) => setToggle(true))
   }
 
   const closeAll = () => {
-    toggles.forEach((toggle) => toggle.setExpanded(false))
+    toggles.forEach(([_tog, setToggle]) => setToggle(false))
   }
 
-  const isSomeOpen = toggles.some((toggle) => toggle.expanded)
+  const isSomeOpen = toggles.some(([tog]) => tog)
 
   return (
     <Box>
@@ -69,8 +69,8 @@ export const AdvertFormAccordion = ({ items }: Props) => {
               <AccordionItem
                 id={`accordion-item-${index}`}
                 key={index}
-                expanded={toggles[index].expanded}
-                onToggle={toggles[index].setExpanded}
+                expanded={toggles[index][0]}
+                onToggle={toggles[index][1]}
                 label={accordionItem.title}
                 labelVariant="h5"
                 iconVariant="small"
