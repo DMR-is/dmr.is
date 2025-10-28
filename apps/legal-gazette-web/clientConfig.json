@@ -4008,6 +4008,98 @@
         "responses": { "200": { "description": "Health check endpoint." } },
         "tags": ["Health"]
       }
+    },
+    "/api/v1/{advertId}/communication-channels": {
+      "get": {
+        "operationId": "CommunicationChannelController_getChannelsByAdvertId_v1",
+        "parameters": [
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "200": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "tags": ["CommunicationChannel"]
+      },
+      "post": {
+        "operationId": "CommunicationChannelController_createChannel_v1",
+        "parameters": [
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "tags": ["CommunicationChannel"]
+      }
+    },
+    "/api/v1/{advertId}/communication-channels/{channelId}": {
+      "patch": {
+        "operationId": "CommunicationChannelController_updateChannel_v1",
+        "parameters": [
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommunicationChannelDto"
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "tags": ["CommunicationChannel"]
+      },
+      "delete": {
+        "operationId": "CommunicationChannelController_deleteChannel_v1",
+        "parameters": [
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "200": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "tags": ["CommunicationChannel"]
+      }
     }
   },
   "info": {
@@ -5435,6 +5527,14 @@
           "responsibleParty",
           "properties"
         ]
+      },
+      "UpdateCommunicationChannelDto": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "phone": { "type": "string" }
+        }
       }
     }
   }
