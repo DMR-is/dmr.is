@@ -12,4 +12,4 @@ import { ISESService } from './services/ses/ses.service.interface'
   ],
   exports: [ISESService],
 })
-export class AWSModule {}
+export class ISESModule {}

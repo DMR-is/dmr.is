@@ -33,6 +33,9 @@ export class AdvertPublicationDto {
 
   @ApiProperty({ type: Boolean })
   isLegacy!: boolean
+
+  @ApiProperty({ type: String, nullable: true })
+  pdfUrl?: string | null
 }
 
 export class UpdateAdvertPublicationDto {
@@ -71,6 +74,9 @@ export class PublishedPublicationDto {
 
   @ApiProperty({ type: Boolean })
   isLegacy!: boolean
+
+  @ApiProperty({ type: String, nullable: true })
+  pdfUrl?: string | null
 }
 
 export class GetPublicationsDto {
@@ -123,4 +129,9 @@ export class GetPublicationsQueryDto extends PagingQuery {
   @IsOptional()
   @IsDateString()
   dateTo?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  pdfUrl?: string
 }

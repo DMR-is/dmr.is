@@ -5,8 +5,6 @@ import {
   Controller,
   Get,
   Inject,
-  NotFoundException,
-  NotImplementedException,
   Param,
   Res,
 } from '@nestjs/common'
@@ -48,15 +46,24 @@ export class AdvertPdfController {
       throw new BadGatewayException('Advert is not published')
     }
 
-    const version = publications[publications.length - 1].version
+    const publication = publications[publications.length - 1]
+    const publicationId = publication.id
+    const version = publication.versionLetter
+    const publicationPdf = publication.pdfUrl
 
     const html = advert.htmlMarkup(version)
 
-    const pdf = await this.pdfService.generatePdfFromHtml(html)
+    const pdf = await this.pdfService.handleAdvertPdf(
+      id,
+      publicationId,
+      html,
+      publicationPdf,
+      advert.title,
+    )
 
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="advert-${advert.publicationNumber}.pdf"`,
+      'Content-Disposition': `inline; filename="advert-${advert.publicationNumber}.pdf"`,
       'Content-Length': pdf.length,
     })
 

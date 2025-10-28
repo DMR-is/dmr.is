@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { AwsModule } from '@dmr.is/modules'
+
 import { AdvertUpdateGuard } from '../../guards/advert-update.guard'
 import { PublishingService } from '../../services/publishing/publishing.service'
 import { AdvertPaymentModule } from '../advert-payment/advert-payment.module'
@@ -31,6 +33,7 @@ import { IAdvertService } from './advert.service.interface'
     AdvertPublicationModule,
     AdvertPaymentModule,
     TypesCategoriesModule,
+    AwsModule,
   ],
   controllers: [
     AdvertUpdateController,
