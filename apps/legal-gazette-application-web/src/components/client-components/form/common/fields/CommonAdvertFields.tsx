@@ -19,16 +19,15 @@ import { SelectController } from '../../controllers/SelectController'
 export const CommonAdvertFields = () => {
   const { getValues, setValue, watch } =
     useFormContext<CommonApplicationSchema>()
-  const { dirtyFields } = useFormState()
-  const isTypesDirty = dirtyFields.fields?.type === true
+  const formState = useFormState()
 
   const metadata = getValues('metadata')
 
   const { updateType, updateCategory, updateCaption, updateHTML } =
     useUpdateApplication(metadata.applicationId)
 
-  const typeId = watch('fields.type')
-  const categoryId = watch('fields.category')
+  const typeId = watch(CommonApplicationInputFields.TYPE)
+  const categoryId = watch(CommonApplicationInputFields.CATEGORY)
 
   const {
     data: categoriesData,
@@ -40,7 +39,7 @@ export const CommonAdvertFields = () => {
   )
 
   useEffect(() => {
-    if (!categoriesData?.categories || !isTypesDirty) return
+    if (!categoriesData?.categories || !formState.isDirty) return
 
     if (categoriesData.categories.length === 1) {
       setValue(
@@ -49,7 +48,7 @@ export const CommonAdvertFields = () => {
       )
       updateCategory(categoriesData.categories[0].id)
     }
-  }, [categoriesData?.categories, isTypesDirty])
+  }, [categoriesData?.categories, formState.isDirty])
 
   const updateHtmlOnBlurHandler = useCallback(
     (val: string) => {

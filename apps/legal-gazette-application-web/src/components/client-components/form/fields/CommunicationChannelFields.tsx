@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import { ApplicationInputFields } from '@dmr.is/legal-gazette/schemas'
+import {
+  ApplicationInputFields,
+  BaseApplicationSchema,
+  CommunicationChannelSchema,
+} from '@dmr.is/legal-gazette/schemas'
 
 import {
   Box,
@@ -18,13 +22,12 @@ import {
 } from '@island.is/island-ui/core'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
-import { CommunicationChannelSchema } from '../../../../lib/forms/schemas/shared'
 
 export const CommunicationChannelFields = () => {
-  const { getValues, setValue, watch } = useFormContext()
+  const { getValues, setValue, watch } = useFormContext<BaseApplicationSchema>()
 
   const { updateCommunicationChannels } = useUpdateApplication(
-    getValues('meta.applicationId'),
+    getValues(ApplicationInputFields.APPLICATION_ID),
   )
 
   const channels: CommunicationChannelSchema[] = watch(

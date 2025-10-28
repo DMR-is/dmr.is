@@ -1,7 +1,10 @@
 import z from 'zod'
 
-import { baseApplicationSchema } from './base'
-import { commonApplicationFields, commonApplicationSchema } from './common'
+import {
+  baseApplicationSchema,
+  commonApplicationFields,
+  commonApplicationSchema,
+} from './base'
 import {
   applicationMetaDataSchema,
   baseEntitySchema,

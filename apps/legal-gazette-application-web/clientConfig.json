@@ -2500,6 +2500,12 @@
             "required": false,
             "in": "query",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "pdfUrl",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -3195,7 +3201,8 @@
           "version": {
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersionEnum" }]
           },
-          "isLegacy": { "type": "boolean" }
+          "isLegacy": { "type": "boolean" },
+          "pdfUrl": { "type": "string", "nullable": true }
         },
         "required": [
           "id",
@@ -3203,7 +3210,8 @@
           "scheduledAt",
           "publishedAt",
           "version",
-          "isLegacy"
+          "isLegacy",
+          "pdfUrl"
         ]
       },
       "SettlementDto": {
@@ -3235,9 +3243,11 @@
         "properties": {
           "email": { "type": "string" },
           "name": { "type": "string" },
-          "phone": { "type": "string" }
+          "phone": { "type": "string" },
+          "id": { "type": "string" },
+          "advertId": { "type": "string" }
         },
-        "required": ["email"]
+        "required": ["email", "id", "advertId"]
       },
       "CommentTypeEnum": {
         "type": "string",
@@ -3555,6 +3565,15 @@
         "properties": { "publishingDate": { "type": "string" } },
         "required": ["publishingDate"]
       },
+      "CreateCommunicationChannelDto": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "phone": { "type": "string" }
+        },
+        "required": ["email"]
+      },
       "ApplicationDetailedDto": {
         "type": "object",
         "properties": {
@@ -3600,7 +3619,9 @@
           },
           "communicationChannels": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
           }
         },
         "required": [
@@ -3652,18 +3673,11 @@
           },
           "communicationChannels": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
           }
         }
-      },
-      "CreateCommunicationChannelDto": {
-        "type": "object",
-        "properties": {
-          "email": { "type": "string" },
-          "name": { "type": "string" },
-          "phone": { "type": "string" }
-        },
-        "required": ["email"]
       },
       "AddDivisionMeetingForApplicationDto": {
         "type": "object",
@@ -3715,7 +3729,8 @@
           },
           "publicationNumber": { "type": "string" },
           "createdBy": { "type": "string" },
-          "isLegacy": { "type": "boolean" }
+          "isLegacy": { "type": "boolean" },
+          "pdfUrl": { "type": "string", "nullable": true }
         },
         "required": [
           "id",
@@ -3727,7 +3742,8 @@
           "version",
           "publicationNumber",
           "createdBy",
-          "isLegacy"
+          "isLegacy",
+          "pdfUrl"
         ]
       },
       "GetPublicationsDto": {

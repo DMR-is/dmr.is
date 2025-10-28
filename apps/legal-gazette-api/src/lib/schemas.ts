@@ -19,18 +19,6 @@ export const signatureSchema = z.object({
   date: z.date().nullable().optional(),
 })
 
-export const createCommonAdvertFromApplicationSchema = z.object({
-  caseId: z.uuid(),
-  type: baseEntitySchema,
-  category: baseEntitySchema,
-  caption: z.string(),
-  additionalText: z.string().nullable().optional(),
-  html: z.string(),
-  communicationChannels: z.array(communicationChannelSchema).min(1),
-  publishingDates: z.array(z.date()).min(1),
-  signature: signatureSchema.optional(),
-})
-
 export const createCommonAdvertFromIslandIsApplicationSchema = z.object({
   islandIsApplicationId: z.string(),
   categoryId: z.string(),
@@ -57,4 +45,18 @@ export const createRecallAdvertFromApplicationSchema = z.object({
   judgementDate: z.date(),
   communicationChannels: z.array(communicationChannelSchema).min(1),
   signature: signatureSchema.optional(),
+})
+
+export const applicationSchema = z.object({
+  id: z.uuid(),
+  type: baseEntitySchema,
+  category: baseEntitySchema.nullable(),
+  caption: z.string(),
+  additionalText: z.string().nullable().optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+})
+
+export const applicationDetailedSchema = applicationSchema.extend({
+  html: z.string(),
 })

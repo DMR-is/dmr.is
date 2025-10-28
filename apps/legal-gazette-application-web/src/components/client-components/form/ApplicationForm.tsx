@@ -41,17 +41,8 @@ export const ApplicationForm = ({
             })(),
           }}
           communicationChannels={application.communicationChannels}
-          publishingDates={application.publishingDates.map(
-            ({ publishingDate }) => ({
-              publishingDate: new Date(publishingDate),
-            }),
-          )}
-          signature={{
-            ...application.signature,
-            date: application.signature?.date
-              ? new Date(application.signature.date)
-              : undefined,
-          }}
+          publishingDates={application.publishingDates}
+          signature={application.signature}
         />
       )
     case ApplicationTypeEnum.RECALLBANKRUPTCY:

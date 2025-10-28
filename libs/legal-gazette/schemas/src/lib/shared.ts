@@ -15,12 +15,12 @@ export const communicationChannelSchema = z.object({
 export const signatureSchema = z.object({
   name: z.string().optional(),
   location: z.string().optional(),
-  date: z.date().optional(),
+  date: z.iso.datetime().optional(),
   onBehalfOf: z.string().optional(),
 })
 
 export const publishingDatesSchema = z.object({
-  publishingDate: z.date(),
+  publishingDate: z.iso.datetime(),
 })
 
 export const optionSchema = z.object({

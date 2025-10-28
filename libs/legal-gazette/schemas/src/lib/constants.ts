@@ -1,11 +1,16 @@
 export enum CommonApplicationInputFields {
-  TYPE = 'fields.type',
-  CATEGORY = 'fields.category',
+  TYPE = 'fields.typeId',
+  CATEGORY = 'fields.categoryId',
   CAPTION = 'fields.caption',
   HTML = 'fields.html',
 }
 
 export enum ApplicationInputFields {
+  APPLICATION_ID = 'metadata.applicationId',
+  CASE_ID = 'metadata.caseId',
+  TYPE_OPTIONS = 'metadata.typeOptions',
+  COURT_DISTRICT_OPTIONS = 'metadata.courtDistrictOptions',
+  ADDITIONAL_TEXT = 'additionalText',
   COMMUNICATION_CHANNELS = 'communicationChannels',
   SIGNATURE_NAME = 'signature.name',
   SIGNATURE_LOCATION = 'signature.location',

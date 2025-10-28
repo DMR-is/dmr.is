@@ -48,7 +48,7 @@ export const PublishingFields = ({ additionalTitle }: Props) => {
         ? new Date(dateState[dateState.length - 1].publishingDate)
         : new Date()
     const newDate = getNextWeekday(addDays(lastDate, TWO_WEEKS))
-    const newDates = [...dateState, { publishingDate: newDate }]
+    const newDates = [...dateState, { publishingDate: newDate.toISOString() }]
     setDateState(newDates)
     setValue(ApplicationInputFields.PUBLISHING_DATES, newDates)
     updatePublishingDates(
@@ -71,7 +71,7 @@ export const PublishingFields = ({ additionalTitle }: Props) => {
 
   const onDateChange = (date: Date, index: number) => {
     const newDates = [...dateState]
-    newDates[index] = { publishingDate: date }
+    newDates[index] = { publishingDate: date.toISOString() }
     setDateState(newDates)
     setValue(ApplicationInputFields.PUBLISHING_DATES, newDates)
     updatePublishingDates(
@@ -114,9 +114,9 @@ export const PublishingFields = ({ additionalTitle }: Props) => {
                 <DatePickerController
                   maxDate={getNextWeekday(maxDate)}
                   label={`Birtingardagur ${index + 1}`}
-                  name={`${ApplicationInputFields.PUBLISHING_DATES}.${index}`}
+                  name={`${ApplicationInputFields.PUBLISHING_DATES}[${index}].publishingDate`}
                   required={index === 0}
-                  defaultValue={date}
+                  defaultValue={date.publishingDate}
                   minDate={getNextWeekday(minDate)}
                   excludeDates={excludeDates}
                   onChange={(date) => onDateChange(date, index)}

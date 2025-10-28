@@ -2,10 +2,10 @@ import { z } from 'zod'
 
 import {
   communicationChannelSchema,
-  formSchema,
   optionSchema,
-  publishingDateSchema,
-} from './shared'
+} from '@dmr.is/legal-gazette/schemas'
+
+import { formSchema, publishingDateSchema } from './shared'
 
 export const recallFormMetaSchema = z.object({
   caseId: z.string(),

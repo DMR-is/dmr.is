@@ -1,62 +1,32 @@
 import z from 'zod'
 
+import {
+  communicationChannelSchema,
+  signatureSchema,
+  updateApplicationSchema,
+} from '@dmr.is/legal-gazette/schemas'
+
 import { CreateApplicationApplicationTypeEnum } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
-const createCommunicationChannelSchema = z.object({
-  email: z.email(),
-  name: z.string().optional(),
-  phone: z.string().optional(),
-})
-
-const signatureSchema = z.object({
-  name: z.string().optional(),
-  location: z.string().optional(),
-  date: z.string().optional(),
-  onBehalfOf: z.string().optional(),
-})
-
-export const updateApplicationSchema = z.object({
+const updateApplicationSchemaWithId = updateApplicationSchema.extend({
   id: z.string(),
-  typeId: z.string().nullable().optional(),
-  categoryId: z.string().nullable().optional(),
-  courtDistrictId: z.string().nullable().optional(),
-  islandIsApplicationId: z.string().nullable().optional(),
-  caption: z.string().nullable().optional(),
-  additionalText: z.string().nullable().optional(),
-  judgmentDate: z.string().nullable().optional(),
-  html: z.string().nullable().optional(),
-  liquidatorName: z.string().nullable().optional(),
-  liquidatorLocation: z.string().nullable().optional(),
-  settlementName: z.string().nullable().optional(),
-  settlementNationalId: z.string().nullable().optional(),
-  settlementAddress: z.string().nullable().optional(),
-  settlementDeadlineDate: z.string().nullable().optional(),
-  settlementDateOfDeath: z.string().nullable().optional(),
-  divisionMeetingDate: z.string().nullable().optional(),
-  divisionMeetingLocation: z.string().nullable().optional(),
-  publishingDates: z.array(z.string()).optional(),
-  signature: signatureSchema.optional(),
-  communicationChannels: z.array(createCommunicationChannelSchema).optional(),
 })
 
 const addDivisionMeetingForApplicationSchema = z.object({
   applicationId: z.string(),
-  meetingDate: z.string(),
+  meetingDate: z.iso.datetime(),
   meetingLocation: z.string(),
-  signature: signatureSchema.optional(),
+  signature: signatureSchema,
   additionalText: z.string().optional(),
-  communicationChannels: z
-    .array(createCommunicationChannelSchema)
-    .optional()
-    .optional(),
+  communicationChannels: z.array(communicationChannelSchema).optional(),
 })
 
 const addDivisionEndingForApplicationSchema = z.object({
   applicationId: z.string(),
   additionalText: z.string().optional(),
-  communicationChannels: z.array(createCommunicationChannelSchema).optional(),
-  signature: signatureSchema.optional(),
+  communicationChannels: z.array(communicationChannelSchema).optional(),
+  signature: signatureSchema,
   scheduledAt: z.string(),
   declaredClaims: z.number(),
 })
@@ -93,20 +63,20 @@ export const applicationRouter = router({
     return { types, categories, courtDistricts }
   }),
   updateApplication: protectedProcedure
-    .input(updateApplicationSchema)
+    .input(updateApplicationSchemaWithId)
     .mutation(async ({ ctx, input }) => {
       const { id, ...updateApplicationDto } = input
       return await ctx.api.updateApplication({
         applicationId: id,
-        updateApplicationDto: updateApplicationDto,
+        updateApplicationDto: { ...updateApplicationDto },
       })
     }),
   getApplications: protectedProcedure
-    .input(getApplicationsSchema)
+    .input(getApplicationsSchema.optional())
     .query(async ({ ctx, input }) => {
       return await ctx.api.getMyApplications({
-        page: input.page,
-        pageSize: input.pageSize,
+        page: input?.page,
+        pageSize: input?.pageSize,
       })
     }),
   getApplicationById: protectedProcedure

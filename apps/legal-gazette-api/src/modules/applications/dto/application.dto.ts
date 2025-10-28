@@ -23,6 +23,7 @@ import { CategoryDto } from '../../category/dto/category.dto'
 import {
   CommunicationChannelDto,
   CreateCommunicationChannelDto,
+  UpdateCommunicationChannelDto,
 } from '../../communication-channel/dto/communication-channel.dto'
 import { TypeDto } from '../../type/dto/type.dto'
 import { ApplicationTypeEnum } from '../application.model'
@@ -227,8 +228,8 @@ export class ApplicationFieldsDto {
   @ApiProperty({ type: [ApplicationPublishingDatesDto] })
   publishingDates!: ApplicationPublishingDatesDto[]
 
-  @ApiProperty({ type: [CommunicationChannelDto] })
-  communicationChannels!: CommunicationChannelDto[]
+  @ApiProperty({ type: [CreateCommunicationChannelDto] })
+  communicationChannels!: CreateCommunicationChannelDto[]
 }
 
 export class ApplicationDetailedDto extends IntersectionType(
@@ -236,7 +237,15 @@ export class ApplicationDetailedDto extends IntersectionType(
   ApplicationFieldsDto,
 ) {}
 
-export class UpdateApplicationDto extends PartialType(ApplicationFieldsDto) {}
+export class UpdateApplicationDto extends PartialType(
+  OmitType(ApplicationFieldsDto, ['communicationChannels']),
+) {
+  @ApiProperty({ type: [CreateCommunicationChannelDto], required: false })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateCommunicationChannelDto)
+  communicationChannels?: CreateCommunicationChannelDto[]
+}
 
 export class ApplicationsDto extends Paging {
   @ApiProperty({ type: [ApplicationDto] })

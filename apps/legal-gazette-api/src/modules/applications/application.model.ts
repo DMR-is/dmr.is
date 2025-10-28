@@ -7,6 +7,7 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
+import { CommunicationChannelSchema } from '@dmr.is/legal-gazette/schemas'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
@@ -364,7 +365,7 @@ export class ApplicationModel extends BaseModel<
     allowNull: true,
     defaultValue: [],
   })
-  communicationChannels!: CommunicationChannelModel[]
+  communicationChannels!: CommunicationChannelSchema[]
 
   @BelongsTo(() => CategoryModel)
   category?: CategoryModel
@@ -469,37 +470,20 @@ export class ApplicationModel extends BaseModel<
           ? model.settlementDateOfDeath.toISOString()
           : undefined,
       },
-      communicationChannels: model.communicationChannels.map((channel) => ({
-        email: channel.email,
-        name: channel.name ?? undefined,
-        phone: channel.phone ?? undefined,
-      })),
       signature: {
         name: model.signatureName ?? undefined,
         onBehalfOf: model.signatureOnBehalfOf ?? undefined,
         location: model.signatureLocation ?? undefined,
         date: model.signatureDate?.toISOString(),
       },
-      settlementName: model.settlementName,
-      settlementNationalId: model.settlementNationalId,
-      settlementAddress: model.settlementAddress,
-      settlementDeadlineDate: model.settlementDeadlineDate
-        ? model.settlementDeadlineDate.toISOString()
-        : null,
-      settlementDateOfDeath: model.settlementDateOfDeath
-        ? model.settlementDateOfDeath.toISOString()
-        : null,
-      liquidatorName: model.liquidatorName,
-      liquidatorLocation: model.liquidatorLocation,
-      liquidatorOnBehalfOf: model.liquidatorOnBehalfOf,
-      divisionMeetingDate: model.divisionMeetingDate
-        ? model.divisionMeetingDate.toISOString()
-        : null,
-      divisionMeetingLocation: model.divisionMeetingLocation,
-      publishingDates: model.publishingDates.map((date) => date.toISOString()),
-      communicationChannels: model.communicationChannels.map((ch) =>
-        ch.fromModel(),
-      ),
+      publishingDates: model.publishingDates.map((date) => ({
+        publishingDate: date.toISOString(),
+      })),
+      communicationChannels: model.communicationChannels.map((ch) => ({
+        email: ch.email,
+        name: ch.name ?? undefined,
+        phone: ch.phone ?? undefined,
+      })),
     }
   }
 
