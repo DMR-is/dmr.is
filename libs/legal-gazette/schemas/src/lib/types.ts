@@ -1,5 +1,6 @@
 import z from 'zod'
 
+import { baseApplicationSchema } from './base'
 import { commonApplicationFields, commonApplicationSchema } from './common'
 import {
   applicationMetaDataSchema,
@@ -31,6 +32,8 @@ export type CommonApplicationFieldsSchema = z.infer<
 >
 
 export type CommonApplicationSchema = z.infer<typeof commonApplicationSchema>
+
+export type BaseApplicationSchema = z.infer<typeof baseApplicationSchema>
 
 export type DeepPartial<T> = T extends object
   ? {

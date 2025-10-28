@@ -1,11 +1,6 @@
 import z from 'zod'
 
-import {
-  applicationMetaDataSchema,
-  communicationChannelSchema,
-  publishingDatesSchema,
-  signatureSchema,
-} from './shared'
+import { baseApplicationSchema } from './base'
 
 export const commonApplicationFields = z.object({
   type: z.string(),
@@ -14,10 +9,6 @@ export const commonApplicationFields = z.object({
   html: z.string(),
 })
 
-export const commonApplicationSchema = z.object({
-  metadata: applicationMetaDataSchema,
+export const commonApplicationSchema = baseApplicationSchema.extend({
   fields: commonApplicationFields,
-  signature: signatureSchema,
-  publishingDates: z.array(publishingDatesSchema),
-  communicationChannels: z.array(communicationChannelSchema),
 })
