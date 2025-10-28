@@ -13,7 +13,7 @@ type Props = {
 
 export const Editor = ({ onChange, onBlur, defaultValue, disabled }: Props) => {
   return (
-    <Box border="standard" borderRadius="large">
+    <Box border="standard" position="relative" zIndex={10} borderRadius="large">
       <HTMLEditor
         disabled={disabled}
         defaultValue={defaultValue}

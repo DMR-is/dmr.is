@@ -50,7 +50,7 @@ export const AdvertModal = ({
                         icon="close"
                       />
                     </Inline>
-                    <AdvertDisplay html={html} />
+                    <AdvertDisplay html={html} withStyles />
                   </Stack>
                 </Box>
               </Box>

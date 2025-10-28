@@ -12,7 +12,7 @@ type Props = {
 
 export const Editor = ({ onChange, onBlur, defaultValue }: Props) => {
   return (
-    <Box border="standard" borderRadius="large">
+    <Box border="standard" position="relative" zIndex={10} borderRadius="large">
       <HTMLEditor
         defaultValue={defaultValue}
         handleUpload={() => new Error('File upload not implemented')}

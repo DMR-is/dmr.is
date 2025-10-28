@@ -21,9 +21,9 @@ export const PublicationCard = ({ publication }: Props) => {
     <Box padding={3} background="white" borderRadius="large" border="standard">
       <Stack space={2}>
         <Inline justifyContent="spaceBetween">
-          <Text color="purple400" variant="eyebrow">
+          {/* <Text color="purple400" variant="eyebrow">
             {publication.createdBy}
-          </Text>
+          </Text> */}
           <Text color="purple400" variant="eyebrow">
             Útgáfudagur:{' '}
             {format(new Date(publication.publishedAt), 'dd. MMMM yyyy', {
@@ -32,8 +32,8 @@ export const PublicationCard = ({ publication }: Props) => {
           </Text>
         </Inline>
         <Stack space={0}>
-          <Text variant="h3">{publication.publicationNumber}</Text>
-          <Text variant="default">{publication.title}</Text>
+          <Text variant="h3">{publication.title}</Text>
+          <Text variant="default">{publication.publicationNumber}</Text>
         </Stack>
         <Inline justifyContent="spaceBetween">
           <Inline space={1} alignY="center">
