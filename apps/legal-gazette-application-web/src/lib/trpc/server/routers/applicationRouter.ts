@@ -28,7 +28,6 @@ export const updateApplicationSchema = z.object({
   html: z.string().nullable().optional(),
   liquidatorName: z.string().nullable().optional(),
   liquidatorLocation: z.string().nullable().optional(),
-  liquidatorOnBehalfOf: z.string().nullable().optional(),
   settlementName: z.string().nullable().optional(),
   settlementNationalId: z.string().nullable().optional(),
   settlementAddress: z.string().nullable().optional(),

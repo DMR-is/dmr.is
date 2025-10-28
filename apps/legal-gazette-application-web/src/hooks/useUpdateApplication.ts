@@ -402,24 +402,6 @@ export const useUpdateApplication = (applicationId: string) => {
     [updateApplication, application?.liquidatorLocation],
   )
 
-  const updateLiquidatorOnBehalfOf = useCallback(
-    (liquidatorOnBehalfOf: string) => {
-      if (liquidatorOnBehalfOf === application?.liquidatorOnBehalfOf) {
-        return
-      }
-
-      updateApplication(
-        { liquidatorOnBehalfOf },
-        {
-          successMessage: 'Undirritun fyrir hönd skiptastjóra vistuð',
-          errorMessage:
-            'Ekki tókst að uppfæra undirritun fyrir hönd skiptastjóra',
-        },
-      )
-    },
-    [updateApplication, application?.liquidatorOnBehalfOf],
-  )
-
   const updateSettlementName = useCallback(
     (settlementName: string) => {
       if (settlementName === application?.settlementName) {
@@ -523,7 +505,6 @@ export const useUpdateApplication = (applicationId: string) => {
     updateDivisionMeetingDate,
     updateLiquidatorName,
     updateLiquidatorLocation,
-    updateLiquidatorOnBehalfOf,
     updateSettlementName,
     updateSettlementNationalId,
     updateSettlementAddress,
