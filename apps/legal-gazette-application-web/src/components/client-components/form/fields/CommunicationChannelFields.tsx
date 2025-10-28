@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
+import { ApplicationInputFields } from '@dmr.is/legal-gazette/schemas'
+
 import {
   Box,
   Button,
@@ -26,7 +28,7 @@ export const CommunicationChannelFields = () => {
   )
 
   const channels: CommunicationChannelSchema[] = watch(
-    'fields.communicationChannels',
+    ApplicationInputFields.COMMUNICATION_CHANNELS,
     [],
   )
 
@@ -60,7 +62,7 @@ export const CommunicationChannelFields = () => {
       channels.push(channel)
     }
 
-    setValue('fields.communicationChannels', channels, {
+    setValue(ApplicationInputFields.COMMUNICATION_CHANNELS, channels, {
       shouldValidate: true,
     })
     updateCommunicationChannels(channels)
@@ -71,7 +73,7 @@ export const CommunicationChannelFields = () => {
 
   const removeChannel = (index: number) => {
     const updatedChannels = channels.filter((_, i) => i !== index)
-    setValue('fields.communicationChannels', updatedChannels)
+    setValue(ApplicationInputFields.COMMUNICATION_CHANNELS, updatedChannels)
     updateCommunicationChannels(updatedChannels)
   }
 

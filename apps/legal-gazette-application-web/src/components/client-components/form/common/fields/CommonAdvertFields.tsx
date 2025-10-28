@@ -4,26 +4,28 @@ import debounce from 'lodash/debounce'
 import { useCallback, useEffect } from 'react'
 import { useFormContext, useFormState } from 'react-hook-form'
 
+import {
+  CommonApplicationInputFields,
+  CommonApplicationSchema,
+} from '@dmr.is/legal-gazette/schemas'
+
 import { GridColumn, GridRow, Stack, Text } from '@island.is/island-ui/core'
 
 import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
-import {
-  CommonFormFields,
-  CommonFormSchema,
-} from '../../../../../lib/forms/schemas/common-schema'
 import { trpc } from '../../../../../lib/trpc/client'
 import { Editor } from '../../../editor/Editor'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
 export const CommonAdvertFields = () => {
-  const { getValues, setValue, watch } = useFormContext<CommonFormSchema>()
+  const { getValues, setValue, watch } =
+    useFormContext<CommonApplicationSchema>()
   const { dirtyFields } = useFormState()
   const isTypesDirty = dirtyFields.fields?.type === true
 
-  const { updateType, updateCategory, updateCaption, updateHTML } =
-    useUpdateApplication(getValues('meta.applicationId'))
+  const metadata = getValues('metadata')
 
-  const { typeOptions } = getValues('meta')
+  const { updateType, updateCategory, updateCaption, updateHTML } =
+    useUpdateApplication(metadata.applicationId)
 
   const typeId = watch('fields.type')
   const categoryId = watch('fields.category')
@@ -41,7 +43,10 @@ export const CommonAdvertFields = () => {
     if (!categoriesData?.categories || !isTypesDirty) return
 
     if (categoriesData.categories.length === 1) {
-      setValue(CommonFormFields.CATEGORY, categoriesData.categories[0].id)
+      setValue(
+        CommonApplicationInputFields.CATEGORY,
+        categoriesData.categories[0].id,
+      )
       updateCategory(categoriesData.categories[0].id)
     }
   }, [categoriesData?.categories, isTypesDirty])
@@ -81,8 +86,8 @@ export const CommonAdvertFields = () => {
         <GridColumn span={['12/12', '6/12']}>
           <SelectController
             required
-            options={typeOptions}
-            name={CommonFormFields.TYPE}
+            options={metadata.typeOptions}
+            name={CommonApplicationInputFields.TYPE}
             label="Tegund auglýsingar"
             onChange={(val) => updateType(val)}
           />
@@ -93,14 +98,14 @@ export const CommonAdvertFields = () => {
             key={`${typeId}-${categoryId}`}
             disabled={disabledCategories}
             options={categoryOptions}
-            name={CommonFormFields.CATEGORY}
+            name={CommonApplicationInputFields.CATEGORY}
             label="Flokkur"
             onChange={(val) => updateCategory(val)}
           />
         </GridColumn>
         <GridColumn span="12/12">
           <InputController
-            name={CommonFormFields.CAPTION}
+            name={CommonApplicationInputFields.CAPTION}
             label="Yfirskrift"
             required
             onBlur={(val) => updateCaption(val)}

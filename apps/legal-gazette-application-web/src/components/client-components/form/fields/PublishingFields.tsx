@@ -4,6 +4,11 @@ import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
 import {
+  ApplicationInputFields,
+  BaseApplicationSchema,
+} from '@dmr.is/legal-gazette/schemas'
+
+import {
   Button,
   GridColumn,
   GridRow,
@@ -14,7 +19,6 @@ import {
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { ONE_DAY, TWO_WEEKS } from '../../../../lib/constants'
-import { CommonFormFields } from '../../../../lib/forms/schemas/common-schema'
 import { getNextWeekday, getWeekendDays } from '../../../../lib/utils'
 import { DatePickerController } from '../controllers/DatePickerController'
 
@@ -23,41 +27,58 @@ type Props = {
 }
 
 export const PublishingFields = ({ additionalTitle }: Props) => {
-  const { getValues, watch, setValue } = useFormContext()
-  const { applicationId } = getValues('meta')
-  const { updatePublishingDates } = useUpdateApplication(applicationId)
-  const currentDates: Date[] =
-    watch('fields.publishingDates', getValues('fields.publishingDates')) || []
+  const { getValues, watch, setValue } = useFormContext<BaseApplicationSchema>()
+  const { updatePublishingDates } = useUpdateApplication(
+    getValues('metadata.applicationId'),
+  )
 
-  const [dateState, setDateState] = useState<Date[]>(currentDates)
+  const currentDates =
+    watch(
+      ApplicationInputFields.PUBLISHING_DATES,
+      getValues(ApplicationInputFields.PUBLISHING_DATES),
+    ) || []
+
+  const [dateState, setDateState] = useState(currentDates)
 
   const addDate = () => {
     if (dateState.length >= 3) return
 
     const lastDate =
       dateState.length > 0
-        ? new Date(dateState[dateState.length - 1])
+        ? new Date(dateState[dateState.length - 1].publishingDate)
         : new Date()
     const newDate = getNextWeekday(addDays(lastDate, TWO_WEEKS))
-    const newDates = [...dateState, newDate]
+    const newDates = [...dateState, { publishingDate: newDate }]
     setDateState(newDates)
-    setValue(CommonFormFields.PUBLISHING_DATES, newDates)
-    updatePublishingDates(newDates.map((date) => new Date(date).toISOString()))
+    setValue(ApplicationInputFields.PUBLISHING_DATES, newDates)
+    updatePublishingDates(
+      newDates.map(({ publishingDate }) =>
+        new Date(publishingDate).toISOString(),
+      ),
+    )
   }
 
   const removeDate = (index: number) => {
     const newDates = dateState.filter((_, i) => i !== index)
-    setValue(CommonFormFields.PUBLISHING_DATES, newDates)
+    setValue(ApplicationInputFields.PUBLISHING_DATES, newDates)
     setDateState(newDates)
-    updatePublishingDates(newDates.map((date) => new Date(date).toISOString()))
+    updatePublishingDates(
+      newDates.map(({ publishingDate }) =>
+        new Date(publishingDate).toISOString(),
+      ),
+    )
   }
 
   const onDateChange = (date: Date, index: number) => {
     const newDates = [...dateState]
-    newDates[index] = date
+    newDates[index] = { publishingDate: date }
     setDateState(newDates)
-    setValue(CommonFormFields.PUBLISHING_DATES, newDates)
-    updatePublishingDates(newDates.map((d) => new Date(d).toISOString()))
+    setValue(ApplicationInputFields.PUBLISHING_DATES, newDates)
+    updatePublishingDates(
+      newDates.map(({ publishingDate }) =>
+        new Date(publishingDate).toISOString(),
+      ),
+    )
   }
 
   return (
@@ -68,7 +89,8 @@ export const PublishingFields = ({ additionalTitle }: Props) => {
       <GridColumn span="12/12">
         <Stack space={[2, 3]}>
           {currentDates.map((date, index) => {
-            const prevDate = index === 0 ? null : currentDates[index - 1]
+            const prevDate =
+              index === 0 ? null : currentDates[index - 1].publishingDate
             const maxDate = addYears(new Date(), ONE_DAY)
 
             const minDate =
@@ -92,7 +114,7 @@ export const PublishingFields = ({ additionalTitle }: Props) => {
                 <DatePickerController
                   maxDate={getNextWeekday(maxDate)}
                   label={`Birtingardagur ${index + 1}`}
-                  name={`${CommonFormFields.PUBLISHING_DATES}.${index}`}
+                  name={`${ApplicationInputFields.PUBLISHING_DATES}.${index}`}
                   required={index === 0}
                   defaultValue={date}
                   minDate={getNextWeekday(minDate)}
