@@ -2,7 +2,7 @@
   "compilerOptions": {
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "module": "esnext", // Ensure all dependencies and build tools support ES modules
+    "module": "esnext",
     "target": "es2015",
     "baseUrl": ".",
     "declaration": false,
@@ -78,6 +78,9 @@
       ],
       "@island.is/shared/utils": [
         "submodules/island.is/libs/shared/utils/src/index.ts"
+      ],
+      "@dmr.is/legal-gazette/schemas": [
+        "libs/legal-gazette/schemas/src/index.ts"
       ]
     }
   },
