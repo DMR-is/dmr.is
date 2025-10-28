@@ -26,15 +26,14 @@ export const recallFormFieldsSchema = z
     settlementDateOfDeath: z
       .date('Dánardagur dánarbús er nauðsynlegur')
       .optional(),
-    liquidatorName: z.string().min(1, 'Nafn skiptastjóra er nauðsynlegt'), // Þetta er nafn undirritunar
+    liquidatorName: z.string().min(1, 'Nafn skiptastjóra er nauðsynlegt'),
     liquidatorLocation: z
       .string()
       .min(1, 'Staðsetning skiptastjóra er nauðsynleg'),
     liquidatorOnBehalfOf: z.string().optional(),
-    signatureDate: z.date('Dagsetning undirskriftar er nauðsynleg'),
-    signatureLocation: z
-      .string()
-      .min(1, 'Staðsetning undirskriftar er nauðsynleg'),
+    signatureName: z.string().optional(),
+    signatureDate: z.date().optional(),
+    signatureLocation: z.string().optional(),
     signatureOnBehalfOf: z.string().optional(),
     divisionMeetingDate: z.date().optional(),
     divisionMeetingLocation: z.string().optional(),
@@ -132,9 +131,10 @@ export enum RecallFormFields {
   LIQUIDATOR_ON_BEHALF_OF = 'fields.liquidatorOnBehalfOf',
   DIVISION_MEETING_LOCATION = 'fields.divisionMeetingLocation',
   DIVISION_MEETING_DATE = 'fields.divisionMeetingDate',
-  SIGNATURE_DATE = 'fields.signatureDate',
+  SIGNATURE_NAME = 'fields.signatureName',
   SIGNATURE_LOCATION = 'fields.signatureLocation',
   SIGNATURE_ON_BEHALF_OF = 'fields.signatureOnBehalfOf',
+  SIGNATURE_DATE = 'fields.signatureDate',
   PUBLISHING_DATES = 'fields.publishingDates',
   COMMUNICATION_CHANNELS = 'fields.communicationChannels',
 }

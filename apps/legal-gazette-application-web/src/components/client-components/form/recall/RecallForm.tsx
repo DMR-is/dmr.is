@@ -13,11 +13,11 @@ import {
 import { ApplicationShell } from '../../application/ApplicationShell'
 import { CommunicationChannelFields } from '../fields/CommunicationChannelFields'
 import { PublishingFields } from '../fields/PublishingFields'
+import { SignatureFields } from '../fields/SignatureFields'
 import { RecallAdvertFields } from './fields/RecallAdvertFields'
 import { RecallDivisionFields } from './fields/RecallDivisionFields'
 import { RecallLiquidatorFields } from './fields/RecallLiquidatorFields'
 import { RecallSettlementFields } from './fields/RecallSettlementFields'
-import { RecallSignatureFields } from './fields/RecallSignatureFields'
 
 type Props = {
   caseId: string
@@ -66,7 +66,7 @@ export const RecallForm = ({
             <RecallLiquidatorFields />
             <PublishingFields additionalTitle="innköllunar" />
             <RecallDivisionFields required={isBankruptcy} />
-            <RecallSignatureFields />
+            <SignatureFields />
             <CommunicationChannelFields />
           </Stack>
         </ApplicationShell>
