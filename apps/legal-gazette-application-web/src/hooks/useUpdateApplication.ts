@@ -160,7 +160,7 @@ export const useUpdateApplication = (applicationId: string) => {
 
   const updateSignatureName = useCallback(
     (signatureName: string) => {
-      if (signatureName === application?.signature.name) {
+      if (signatureName === application?.signature?.name) {
         return
       }
 
@@ -172,12 +172,12 @@ export const useUpdateApplication = (applicationId: string) => {
         },
       )
     },
-    [updateApplication, application?.signature.name],
+    [updateApplication, application?.signature?.name],
   )
 
   const updateSignatureLocation = useCallback(
     (signatureLocation: string) => {
-      if (signatureLocation === application?.signature.location) {
+      if (signatureLocation === application?.signature?.location) {
         return
       }
 
@@ -191,12 +191,12 @@ export const useUpdateApplication = (applicationId: string) => {
         },
       )
     },
-    [updateApplication, application?.signature.location],
+    [updateApplication, application?.signature?.location],
   )
 
   const updateSignatureDate = useCallback(
     (signatureDate: string) => {
-      if (signatureDate === application?.signature.date) {
+      if (signatureDate === application?.signature?.date) {
         return
       }
 
@@ -208,12 +208,12 @@ export const useUpdateApplication = (applicationId: string) => {
         },
       )
     },
-    [updateApplication, application?.signature.date],
+    [updateApplication, application?.signature?.date],
   )
 
   const updateSignatureOnBehalfOf = useCallback(
     (signatureOnBehalfOf: string) => {
-      if (signatureOnBehalfOf === application?.signature.onBehalfOf) {
+      if (signatureOnBehalfOf === application?.signature?.onBehalfOf) {
         return
       }
 
@@ -230,7 +230,7 @@ export const useUpdateApplication = (applicationId: string) => {
         },
       )
     },
-    [updateApplication, application?.signature.onBehalfOf],
+    [updateApplication, application?.signature?.onBehalfOf],
   )
 
   const updatePublishingDates = useCallback(

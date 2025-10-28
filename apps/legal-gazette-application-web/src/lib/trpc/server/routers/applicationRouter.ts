@@ -3,6 +3,19 @@ import z from 'zod'
 import { CreateApplicationApplicationTypeEnum } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
+const createCommunicationChannelSchema = z.object({
+  email: z.email(),
+  name: z.string().optional(),
+  phone: z.string().optional(),
+})
+
+const signatureSchema = z.object({
+  name: z.string().optional(),
+  location: z.string().optional(),
+  date: z.string().optional(),
+  onBehalfOf: z.string().optional(),
+})
+
 export const updateApplicationSchema = z.object({
   id: z.string(),
   typeId: z.string().nullable().optional(),
@@ -13,10 +26,6 @@ export const updateApplicationSchema = z.object({
   additionalText: z.string().nullable().optional(),
   judgmentDate: z.string().nullable().optional(),
   html: z.string().nullable().optional(),
-  signatureName: z.string().nullable().optional(),
-  signatureOnBehalfOf: z.string().nullable().optional(),
-  signatureLocation: z.string().nullable().optional(),
-  signatureDate: z.string().nullable().optional(),
   liquidatorName: z.string().nullable().optional(),
   liquidatorLocation: z.string().nullable().optional(),
   liquidatorOnBehalfOf: z.string().nullable().optional(),
@@ -28,28 +37,8 @@ export const updateApplicationSchema = z.object({
   divisionMeetingDate: z.string().nullable().optional(),
   divisionMeetingLocation: z.string().nullable().optional(),
   publishingDates: z.array(z.string()).optional(),
-  communicationChannels: z
-    .array(
-      z.object({
-        email: z.string(),
-        name: z.string().optional(),
-        phone: z.string().optional(),
-      }),
-    )
-    .optional(),
-})
-
-const createCommunicationChannelSchema = z.object({
-  email: z.string().email(),
-  name: z.string().optional(),
-  phone: z.string().optional(),
-})
-
-const signatureSchema = z.object({
-  name: z.string().optional(),
-  location: z.string().optional(),
-  date: z.string().optional(),
-  onBehalfOf: z.string().optional(),
+  signature: signatureSchema.optional(),
+  communicationChannels: z.array(createCommunicationChannelSchema).optional(),
 })
 
 const addDivisionMeetingForApplicationSchema = z.object({

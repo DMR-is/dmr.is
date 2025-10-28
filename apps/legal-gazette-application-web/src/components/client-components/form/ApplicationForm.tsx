@@ -34,12 +34,12 @@ export const ApplicationForm = ({
               (d) => new Date(d),
             ),
             communicationChannels: application.communicationChannels ?? [],
-            signatureDate: application.signature.date
-              ? new Date(application.signature.date)
+            signatureDate: application.signature?.date
+              ? new Date(application.signature?.date)
               : undefined,
-            signatureLocation: application.signature.location ?? undefined,
-            signatureName: application.signature.name ?? undefined,
-            signatureOnBehalfOf: application.signature.onBehalfOf ?? undefined,
+            signatureLocation: application.signature?.location ?? undefined,
+            signatureName: application.signature?.name ?? undefined,
+            signatureOnBehalfOf: application.signature?.onBehalfOf ?? undefined,
           }}
           types={types}
           applicationId={application.id}
@@ -83,11 +83,11 @@ export const ApplicationForm = ({
             publishingDates: application.publishingDates.map(
               (d) => new Date(d),
             ),
-            signatureDate: application.signature.date
-              ? new Date(application.signature.date)
+            signatureDate: application.signature?.date
+              ? new Date(application.signature?.date)
               : undefined,
-            signatureLocation: application.signature.location ?? undefined,
-            signatureOnBehalfOf: application.signature.onBehalfOf ?? undefined,
+            signatureLocation: application.signature?.location ?? undefined,
+            signatureOnBehalfOf: application.signature?.onBehalfOf ?? undefined,
           }}
           applicationId={application.id}
           caseId={application.caseId}

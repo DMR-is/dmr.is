@@ -104,10 +104,8 @@ export class ApplicationFieldsDto {
   @ApiProperty({ type: String, required: false, nullable: true })
   html?: string | null
 
-  @ApiProperty({ type: ApplicationSignatureDto })
-  @ValidateNested()
-  @Type(() => ApplicationSignatureDto)
-  signature!: ApplicationSignatureDto
+  @ApiProperty({ type: ApplicationSignatureDto, required: false })
+  signature?: ApplicationSignatureDto
 
   @ApiProperty({ type: String, required: false, nullable: true })
   liquidatorName?: string | null
@@ -149,7 +147,13 @@ export class ApplicationFieldsDto {
 export class ApplicationDetailedDto extends IntersectionType(
   ApplicationDto,
   ApplicationFieldsDto,
-) {}
+) {
+  @ApiProperty({ type: ApplicationSignatureDto, required: false })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ApplicationSignatureDto)
+  signature?: ApplicationSignatureDto
+}
 
 export class UpdateApplicationDto extends PartialType(ApplicationFieldsDto) {}
 

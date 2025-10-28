@@ -13,10 +13,10 @@ export const communicationChannelSchema = z.object({
 })
 
 export const signatureSchema = z.object({
-  name: z.string().optional(),
-  onBehalfOf: z.string().optional(),
-  location: z.string().optional(),
-  date: z.date().optional(),
+  name: z.string().nullable().optional(),
+  onBehalfOf: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  date: z.date().nullable().optional(),
 })
 
 export const createCommonAdvertFromApplicationSchema = z.object({
