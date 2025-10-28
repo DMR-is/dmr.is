@@ -4772,7 +4772,7 @@
           "additionalText": { "type": "string", "nullable": true },
           "signatureName": { "type": "string" },
           "signatureLocation": { "type": "string" },
-          "signatureOnBehalfOf": { "type": "string", "nullable": true },
+          "signatureOnBehalfOf": { "type": "string" },
           "signatureDate": { "type": "string" },
           "judgementDate": { "type": "string" },
           "divisionMeetingDate": { "type": "string" },
@@ -4806,10 +4806,6 @@
           "content",
           "caption",
           "additionalText",
-          "signatureName",
-          "signatureLocation",
-          "signatureOnBehalfOf",
-          "signatureDate",
           "communicationChannels",
           "comments"
         ]

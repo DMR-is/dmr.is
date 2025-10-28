@@ -1,8 +1,6 @@
 import { BulkCreateOptions, Op, WhereOptions } from 'sequelize'
 import {
   BeforeBulkCreate,
-  BeforeBulkDestroy,
-  BeforeDestroy,
   BeforeUpdate,
   BelongsTo,
   Column,
@@ -66,12 +64,13 @@ type AdvertAttributes = {
   createdBy: string
   createdByNationalId: string
   legacyHtml: string | null
-  paid: boolean
-  signatureName: string
-  signatureOnBehalfOf: string | null
-  signatureLocation: string
-  signatureDate: Date
   legacyId: string | null
+
+  // signature
+  signatureName?: string | null
+  signatureOnBehalfOf?: string | null
+  signatureLocation?: string | null
+  signatureDate?: Date | null
 
   // Common specific properties
   caption: string | null
@@ -105,10 +104,12 @@ export type AdvertCreateAttributes = {
   legacyHtml?: string
   createdBy: string
   createdByNationalId: string
-  signatureName: string
+
+  // signature
+  signatureName?: string | null
   signatureOnBehalfOf?: string | null
-  signatureLocation: string
-  signatureDate: Date
+  signatureLocation?: string | null
+  signatureDate?: Date | null
 
   // Common specific properties
   additionalText: string | null
@@ -332,27 +333,27 @@ export class AdvertModel extends BaseModel<
 
   @Column({
     type: DataType.STRING(100),
-    allowNull: false,
+    allowNull: true,
   })
-  signatureName!: string
+  signatureName?: string | null
 
   @Column({
     type: DataType.STRING(100),
     allowNull: true,
   })
-  signatureOnBehalfOf!: string | null
+  signatureOnBehalfOf?: string | null
 
   @Column({
     type: DataType.TEXT,
-    allowNull: false,
+    allowNull: true,
   })
-  signatureLocation!: string
+  signatureLocation?: string | null
 
   @Column({
     type: DataType.DATE,
-    allowNull: false,
+    allowNull: true,
   })
-  signatureDate!: Date
+  signatureDate?: Date | null
 
   @Column({
     type: DataType.TEXT,
@@ -559,10 +560,10 @@ export class AdvertModel extends BaseModel<
       caseId: model.caseId || undefined,
       canEdit: this.canEdit(model, userId),
       publicationNumber: model.publicationNumber,
-      signatureOnBehalfOf: model.signatureOnBehalfOf,
+      signatureOnBehalfOf: model.signatureOnBehalfOf ?? undefined,
       signatureDate: model.signatureDate?.toISOString(),
-      signatureLocation: model.signatureLocation,
-      signatureName: model.signatureName,
+      signatureLocation: model.signatureLocation ?? undefined,
+      signatureName: model.signatureName ?? undefined,
       caption: model.caption,
       content: model.content,
       additionalText: model.additionalText,

@@ -13,19 +13,19 @@ import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 type SignatureFieldsProps = {
   id: string
   canEdit: boolean
-  signatureName: string
+  signatureName?: string
   signatureOnBehalfOf?: string
-  signatureLocation: string
-  signatureDate: string
+  signatureLocation?: string
+  signatureDate?: Date
 }
 
 export const SignatureFields = ({
   id,
   canEdit,
-  signatureName,
+  signatureName = '',
+  signatureLocation = '',
+  signatureOnBehalfOf = '',
   signatureDate,
-  signatureLocation,
-  signatureOnBehalfOf,
 }: SignatureFieldsProps) => {
   const {
     updateSignatureName,
@@ -81,7 +81,7 @@ export const SignatureFields = ({
             placeholderText=""
             size="sm"
             label="Dagsetning undirritunar"
-            selected={new Date(signatureDate)}
+            selected={signatureDate}
             disabled={isDisabled}
             handleChange={(date) =>
               updateSignatureDate(date?.toISOString() || '')

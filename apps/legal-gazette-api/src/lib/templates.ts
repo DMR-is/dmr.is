@@ -8,6 +8,50 @@ import { formatDate } from '@dmr.is/utils'
 import { AdvertModel, AdvertVersionEnum } from '../modules/advert/advert.model'
 import { TypeIdEnum } from '../modules/type/type.model'
 
+export const getSignatureMarkup = ({
+  name,
+  onBehalfOf,
+  location,
+  date,
+}: {
+  name?: string | null
+  onBehalfOf?: string | null
+  location?: string | null
+  date?: Date | null
+}) => {
+  if (!name || !location || !date) {
+    return ''
+  }
+
+  const getLocationAndDateMarkup = () => {
+    if (location && date) {
+      return `<p>${location}, ${formatDate(date, 'dd. MMMM yyyy')}</p>`
+    }
+
+    if (location) {
+      return `<p>${location}</p>`
+    }
+
+    if (date) {
+      return `<p>${formatDate(date, 'dd. MMMM yyyy')}</p>`
+    }
+
+    return ''
+  }
+
+  const locationMarkup = getLocationAndDateMarkup()
+  const onBehalfOfMarkup = onBehalfOf ? `<p>f.h. ${onBehalfOf}</p>` : ''
+  const nameMarkup = name ? `<p><strong>${name}</strong></p>` : ''
+
+  return `
+    <div class="advertSignature">
+      ${locationMarkup}
+      ${onBehalfOfMarkup}
+      ${nameMarkup}
+    </div>
+  `
+}
+
 export const getAdvertHTMLMarkup = (
   model: AdvertModel,
   version: AdvertVersionEnum,
@@ -300,11 +344,13 @@ export const getAdvertHTMLMarkup = (
       ${markup}
     </div>
 
-    <div class="advertSignature">
-      <p>${model.signatureLocation}, ${formatDate(model.signatureDate, 'dd. MMMM yyyy')}</p>
-      ${model.signatureOnBehalfOf ? `<p>f.h. ${model.signatureOnBehalfOf}</p>` : ''}
-      <p><strong>${model.signatureName}</strong></p>
-    </div>
+
+      ${getSignatureMarkup({
+        name: model.signatureName,
+        onBehalfOf: model.signatureOnBehalfOf,
+        location: model.signatureLocation,
+        date: model.signatureDate,
+      })}
     ${model.publicationNumber ? `<p class="advertSerial">${model.publicationNumber}${version}</p>` : `<p class="advertSerial">(Reiknast við útgáfu)${version}</p>`}
   </div>
   `

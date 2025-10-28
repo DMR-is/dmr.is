@@ -6050,8 +6050,7 @@
             "type": "string"
           },
           "signatureOnBehalfOf": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "signatureDate": {
             "type": "string"
@@ -6106,10 +6105,6 @@
           "content",
           "caption",
           "additionalText",
-          "signatureName",
-          "signatureLocation",
-          "signatureOnBehalfOf",
-          "signatureDate",
           "communicationChannels",
           "comments"
         ]

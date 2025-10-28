@@ -132,21 +132,25 @@ export class AdvertDetailedDto extends AdvertDto {
   @ApiProperty({ type: String, nullable: true })
   additionalText!: string | null
 
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
   @IsString()
-  signatureName!: string
+  signatureName?: string
 
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
   @IsString()
-  signatureLocation!: string
+  signatureLocation?: string
 
-  @ApiProperty({ type: String, nullable: true })
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
   @IsString()
-  signatureOnBehalfOf!: string | null
+  signatureOnBehalfOf?: string
 
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
   @IsDateString()
-  signatureDate!: string
+  signatureDate?: string
 
   @ApiProperty({ type: String, required: false })
   @IsOptional()
@@ -489,9 +493,15 @@ export class CreateAdvertDto {
   @IsString()
   createdByNationalId!: string
 
-  @ApiProperty({ type: String, description: 'Signature name' })
+  @ApiProperty({
+    type: String,
+    description: 'Signature name',
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
   @IsString()
-  signatureName!: string
+  signatureName?: string | null
 
   @ApiProperty({
     type: String,
@@ -506,17 +516,23 @@ export class CreateAdvertDto {
   @ApiProperty({
     type: String,
     description: 'Location where the signature was provided',
+    nullable: true,
+    required: false,
   })
+  @IsOptional()
   @IsString()
-  signatureLocation!: string
+  signatureLocation?: string | null
 
   @ApiProperty({
     type: String,
     format: 'date-time',
     description: 'Date of signature',
+    required: false,
+    nullable: true,
   })
+  @IsOptional()
   @IsDateString()
-  signatureDate!: string
+  signatureDate?: string | null
 
   // Common specific properties
   @ApiProperty({
