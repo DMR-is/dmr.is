@@ -373,43 +373,46 @@ export class ApplicationService implements IApplicationService {
     }
 
     await application.update({
-      typeId: body.typeId,
       additionalText: body.additionalText,
-      caption: body.caption,
-      html: body.html,
+      typeId: body.commonFields?.typeId,
+      categoryId: body.commonFields?.categoryId,
+      caption: body.commonFields?.caption,
+      html: body.commonFields?.html,
+
       signatureDate: body.signature?.date
         ? new Date(body.signature.date)
         : undefined,
       signatureLocation: body.signature?.location,
       signatureName: body.signature?.name,
       signatureOnBehalfOf: body.signature?.onBehalfOf,
-      courtDistrictId: body.courtDistrictId,
-      categoryId: body.categoryId,
-      judgmentDate:
-        typeof body.judgmentDate === 'string'
-          ? new Date(body.judgmentDate)
-          : body.judgmentDate,
-      publishingDates: body.publishingDates?.map((d) => new Date(d)),
+
+      courtDistrictId: body.courtAndJudgmentFields?.courtDistrictId,
+      judgmentDate: body.courtAndJudgmentFields?.judgmentDate
+        ? new Date(body.courtAndJudgmentFields.judgmentDate)
+        : undefined,
+
+      publishingDates: body.publishingDates?.map(
+        ({ publishingDate }) => new Date(publishingDate),
+      ),
       communicationChannels: body.communicationChannels,
-      liquidatorLocation: body.liquidatorLocation,
-      liquidatorName: body.liquidatorName,
-      liquidatorOnBehalfOf: body.liquidatorOnBehalfOf,
-      divisionMeetingDate:
-        typeof body.divisionMeetingDate === 'string'
-          ? new Date(body.divisionMeetingDate)
-          : body.divisionMeetingDate,
-      divisionMeetingLocation: body.divisionMeetingLocation,
-      settlementName: body.settlementName,
-      settlementNationalId: body.settlementNationalId,
-      settlementAddress: body.settlementAddress,
-      settlementDateOfDeath:
-        typeof body.settlementDateOfDeath === 'string'
-          ? new Date(body.settlementDateOfDeath)
-          : body.settlementDateOfDeath,
-      settlementDeadlineDate:
-        typeof body.settlementDeadlineDate === 'string'
-          ? new Date(body.settlementDeadlineDate)
-          : body.settlementDeadlineDate,
+
+      liquidatorName: body.liquidatorFields?.name,
+      liquidatorLocation: body.liquidatorFields?.location,
+
+      divisionMeetingDate: body.divisionMeetingFields?.meetingDate
+        ? new Date(body.divisionMeetingFields.meetingDate)
+        : undefined,
+      divisionMeetingLocation: body.divisionMeetingFields?.meetingLocation,
+
+      settlementName: body.settlementFields?.name,
+      settlementNationalId: body.settlementFields?.nationalId,
+      settlementAddress: body.settlementFields?.address,
+      settlementDateOfDeath: body.settlementFields?.dateOfDeath
+        ? new Date(body.settlementFields.dateOfDeath)
+        : undefined,
+      settlementDeadlineDate: body.settlementFields?.deadlineDate
+        ? new Date(body.settlementFields.deadlineDate)
+        : undefined,
     })
     return application.fromModelToDetailedDto()
   }

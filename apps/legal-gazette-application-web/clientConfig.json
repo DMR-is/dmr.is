@@ -3434,31 +3434,35 @@
         },
         "required": ["advertIds"]
       },
+      "ApplicationStatusEnum": {
+        "type": "string",
+        "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
+      },
       "ApplicationDto": {
         "type": "object",
         "properties": {
           "id": { "type": "string" },
+          "caseId": { "type": "string" },
+          "islandIsApplicationId": { "type": "string" },
           "createdAt": { "type": "string" },
           "updatedAt": { "type": "string" },
-          "caseId": { "type": "string" },
-          "nationalId": { "type": "string" },
+          "submittedByNationalId": { "type": "string" },
           "applicationType": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": {
-            "type": "string",
-            "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
+            "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
           },
           "title": { "type": "string" }
         },
         "required": [
           "id",
+          "caseId",
           "createdAt",
           "updatedAt",
-          "caseId",
-          "nationalId",
+          "submittedByNationalId",
           "applicationType",
           "status",
           "title"
@@ -3497,6 +3501,46 @@
           "applications"
         ]
       },
+      "CommonApplicationFieldsDto": {
+        "type": "object",
+        "properties": {
+          "typeId": { "type": "string" },
+          "categoryId": { "type": "string" },
+          "caption": { "type": "string" },
+          "html": { "type": "string" }
+        }
+      },
+      "ApplicationSettlementDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "address": { "type": "string" },
+          "deadlineDate": { "type": "string" },
+          "dateOfDeath": { "type": "string" }
+        }
+      },
+      "ApplicationDivisionMeetingFieldsDto": {
+        "type": "object",
+        "properties": {
+          "meetingDate": { "type": "string" },
+          "meetingLocation": { "type": "string" }
+        }
+      },
+      "CourtAndJudgmentFieldsDto": {
+        "type": "object",
+        "properties": {
+          "courtDistrictId": { "type": "string" },
+          "judgmentDate": { "type": "string" }
+        }
+      },
+      "ApplicationLiquidationFieldsDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "location": { "type": "string" }
+        }
+      },
       "ApplicationSignatureDto": {
         "type": "object",
         "properties": {
@@ -3506,46 +3550,54 @@
           "date": { "type": "string" }
         }
       },
+      "ApplicationPublishingDatesDto": {
+        "type": "object",
+        "properties": { "publishingDate": { "type": "string" } },
+        "required": ["publishingDate"]
+      },
       "ApplicationDetailedDto": {
         "type": "object",
         "properties": {
           "id": { "type": "string" },
+          "caseId": { "type": "string" },
+          "islandIsApplicationId": { "type": "string" },
           "createdAt": { "type": "string" },
           "updatedAt": { "type": "string" },
-          "caseId": { "type": "string" },
-          "nationalId": { "type": "string" },
+          "submittedByNationalId": { "type": "string" },
           "applicationType": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": {
-            "type": "string",
-            "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
+            "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
           },
           "title": { "type": "string" },
-          "typeId": { "type": "string", "nullable": true },
-          "categoryId": { "type": "string", "nullable": true },
-          "courtDistrictId": { "type": "string", "nullable": true },
-          "islandIsApplicationId": { "type": "string", "nullable": true },
-          "caption": { "type": "string", "nullable": true },
-          "additionalText": { "type": "string", "nullable": true },
-          "judgmentDate": { "type": "string", "nullable": true },
-          "html": { "type": "string", "nullable": true },
+          "commonFields": {
+            "$ref": "#/components/schemas/CommonApplicationFieldsDto"
+          },
+          "settlementFields": {
+            "$ref": "#/components/schemas/ApplicationSettlementDto"
+          },
+          "divisionMeetingFields": {
+            "$ref": "#/components/schemas/ApplicationDivisionMeetingFieldsDto"
+          },
+          "additionalText": { "type": "string" },
+          "courtAndJudgmentFields": {
+            "$ref": "#/components/schemas/CourtAndJudgmentFieldsDto"
+          },
+          "liquidatorFields": {
+            "$ref": "#/components/schemas/ApplicationLiquidationFieldsDto"
+          },
           "signature": {
             "$ref": "#/components/schemas/ApplicationSignatureDto"
           },
-          "liquidatorName": { "type": "string", "nullable": true },
-          "liquidatorLocation": { "type": "string", "nullable": true },
-          "liquidatorOnBehalfOf": { "type": "string", "nullable": true },
-          "settlementName": { "type": "string", "nullable": true },
-          "settlementNationalId": { "type": "string", "nullable": true },
-          "settlementAddress": { "type": "string", "nullable": true },
-          "settlementDeadlineDate": { "type": "string", "nullable": true },
-          "settlementDateOfDeath": { "type": "string", "nullable": true },
-          "divisionMeetingDate": { "type": "string", "nullable": true },
-          "divisionMeetingLocation": { "type": "string", "nullable": true },
-          "publishingDates": { "type": "array", "items": { "type": "string" } },
+          "publishingDates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationPublishingDatesDto"
+            }
+          },
           "communicationChannels": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
@@ -3553,13 +3605,19 @@
         },
         "required": [
           "id",
+          "caseId",
           "createdAt",
           "updatedAt",
-          "caseId",
-          "nationalId",
+          "submittedByNationalId",
           "applicationType",
           "status",
           "title",
+          "commonFields",
+          "settlementFields",
+          "divisionMeetingFields",
+          "courtAndJudgmentFields",
+          "liquidatorFields",
+          "signature",
           "publishingDates",
           "communicationChannels"
         ]
@@ -3567,28 +3625,31 @@
       "UpdateApplicationDto": {
         "type": "object",
         "properties": {
-          "typeId": { "type": "string", "nullable": true },
-          "categoryId": { "type": "string", "nullable": true },
-          "courtDistrictId": { "type": "string", "nullable": true },
-          "islandIsApplicationId": { "type": "string", "nullable": true },
-          "caption": { "type": "string", "nullable": true },
-          "additionalText": { "type": "string", "nullable": true },
-          "judgmentDate": { "type": "string", "nullable": true },
-          "html": { "type": "string", "nullable": true },
+          "commonFields": {
+            "$ref": "#/components/schemas/CommonApplicationFieldsDto"
+          },
+          "settlementFields": {
+            "$ref": "#/components/schemas/ApplicationSettlementDto"
+          },
+          "divisionMeetingFields": {
+            "$ref": "#/components/schemas/ApplicationDivisionMeetingFieldsDto"
+          },
+          "additionalText": { "type": "string" },
+          "courtAndJudgmentFields": {
+            "$ref": "#/components/schemas/CourtAndJudgmentFieldsDto"
+          },
+          "liquidatorFields": {
+            "$ref": "#/components/schemas/ApplicationLiquidationFieldsDto"
+          },
           "signature": {
             "$ref": "#/components/schemas/ApplicationSignatureDto"
           },
-          "liquidatorName": { "type": "string", "nullable": true },
-          "liquidatorLocation": { "type": "string", "nullable": true },
-          "liquidatorOnBehalfOf": { "type": "string", "nullable": true },
-          "settlementName": { "type": "string", "nullable": true },
-          "settlementNationalId": { "type": "string", "nullable": true },
-          "settlementAddress": { "type": "string", "nullable": true },
-          "settlementDeadlineDate": { "type": "string", "nullable": true },
-          "settlementDateOfDeath": { "type": "string", "nullable": true },
-          "divisionMeetingDate": { "type": "string", "nullable": true },
-          "divisionMeetingLocation": { "type": "string", "nullable": true },
-          "publishingDates": { "type": "array", "items": { "type": "string" } },
+          "publishingDates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationPublishingDatesDto"
+            }
+          },
           "communicationChannels": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
@@ -3620,7 +3681,7 @@
             }
           }
         },
-        "required": ["meetingDate", "meetingLocation"]
+        "required": ["meetingDate", "meetingLocation", "signature"]
       },
       "AddDivisionEndingForApplicationDto": {
         "type": "object",
@@ -3638,7 +3699,7 @@
           "scheduledAt": { "type": "string" },
           "declaredClaims": { "type": "number" }
         },
-        "required": ["scheduledAt", "declaredClaims"]
+        "required": ["signature", "scheduledAt", "declaredClaims"]
       },
       "PublishedPublicationDto": {
         "type": "object",

@@ -408,7 +408,7 @@ export class ApplicationModel extends BaseModel<
       createdAt: model.createdAt.toISOString(),
       updatedAt: model.updatedAt.toISOString(),
       caseId: model.caseId,
-      nationalId: model.submittedByNationalId,
+      submittedByNationalId: model.submittedByNationalId,
       status: model.status,
       title: model.title,
       type: model.type?.fromModel(),
@@ -425,15 +425,55 @@ export class ApplicationModel extends BaseModel<
     model: ApplicationModel,
   ): ApplicationDetailedDto {
     return {
-      ...this.fromModel(model),
-      courtDistrictId: model.courtDistrictId,
-      islandIsApplicationId: model.islandIsApplicationId,
-      caption: model.caption,
-      additionalText: model.additionalText,
-      judgmentDate: model.judgmentDate
-        ? model.judgmentDate.toISOString()
-        : null,
-      html: model.html,
+      id: model.id,
+      createdAt: model.createdAt.toISOString(),
+      updatedAt: model.updatedAt.toISOString(),
+      caseId: model.caseId,
+      submittedByNationalId: model.submittedByNationalId,
+      status: model.status,
+      title: model.title,
+      type: model.type?.fromModel(),
+      category: model.category?.fromModel(),
+      applicationType: model.applicationType,
+      additionalText: model.additionalText ?? undefined,
+      commonFields: {
+        caption: model.caption ?? undefined,
+        typeId: model.typeId ?? undefined,
+        categoryId: model.categoryId ?? undefined,
+        html: model.html ?? undefined,
+      },
+      liquidatorFields: {
+        name: model.liquidatorName ?? undefined,
+        location: model.liquidatorLocation ?? undefined,
+      },
+      courtAndJudgmentFields: {
+        courtDistrictId: model.courtDistrictId ?? undefined,
+        judgmentDate: model.judgmentDate
+          ? model.judgmentDate.toISOString()
+          : undefined,
+      },
+      divisionMeetingFields: {
+        meetingDate: model.divisionMeetingDate
+          ? model.divisionMeetingDate.toISOString()
+          : undefined,
+        meetingLocation: model.divisionMeetingLocation ?? undefined,
+      },
+      settlementFields: {
+        name: model.settlementName ?? undefined,
+        nationalId: model.settlementNationalId ?? undefined,
+        address: model.settlementAddress ?? undefined,
+        deadlineDate: model.settlementDeadlineDate
+          ? model.settlementDeadlineDate.toISOString()
+          : undefined,
+        dateOfDeath: model.settlementDateOfDeath
+          ? model.settlementDateOfDeath.toISOString()
+          : undefined,
+      },
+      communicationChannels: model.communicationChannels.map((channel) => ({
+        email: channel.email,
+        name: channel.name ?? undefined,
+        phone: channel.phone ?? undefined,
+      })),
       signature: {
         name: model.signatureName ?? undefined,
         onBehalfOf: model.signatureOnBehalfOf ?? undefined,
