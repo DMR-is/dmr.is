@@ -1,5 +1,11 @@
 import z from 'zod'
 
+export const baseEntitySchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  slug: z.string(),
+})
+
 export const communicationChannelSchema = z.object({
   email: z.email(),
   name: z.string().optional(),
