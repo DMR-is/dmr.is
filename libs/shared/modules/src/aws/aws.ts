@@ -13,6 +13,7 @@ import { IAWSService } from './aws.service.interface'
       provide: IAWSService,
       useClass: AWSService,
     },
+    AwsModule,
   ],
   exports: [IAWSService],
 })

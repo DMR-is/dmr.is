@@ -4,4 +4,5 @@ import { AdvertPublicationDto } from '../dto/advert-publication.dto'
 export class AdvertPublishedEvent {
   advert!: AdvertDetailedDto
   publication!: AdvertPublicationDto
+  html!: string
 }

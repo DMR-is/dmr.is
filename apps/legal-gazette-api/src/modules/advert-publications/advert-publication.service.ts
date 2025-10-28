@@ -252,6 +252,7 @@ export class AdvertPublicationService implements IAdvertPublicationService {
         const payload: AdvertPublishedEvent = {
           advert: advert.fromModelToDetailed(),
           publication: publication.fromModel(),
+          html: advert.htmlMarkup(publication.versionLetter),
         }
 
         this.eventEmitter.emit(LegalGazetteEvents.ADVERT_PUBLISHED, payload)

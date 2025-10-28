@@ -7,6 +7,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { LegalGazetteEvents } from '../../../lib/constants'
 import { AdvertVersionEnum } from '../../advert/advert.model'
 import { ISESService } from '../../aws/services/ses/ses.service.interface'
+import { PdfService } from '../../pdf/pdf.service'
 import { IPriceCalculatorService } from '../../price-calculator/price-calculator.service.interface'
 import { ITBRService } from '../../tbr/tbr.service.interface'
 import { TBRTransactionModel } from '../../tbr-transaction/tbr-transactions.model'
@@ -19,6 +20,7 @@ export class AdvertPublishedListener {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(ISESService) private readonly sesService: ISESService,
+    @Inject(PdfService) private readonly pdfService: PdfService,
     @Inject(IPriceCalculatorService)
     private readonly priceCalculatorService: IPriceCalculatorService,
 
@@ -110,5 +112,32 @@ export class AdvertPublishedListener {
         context: LOGGING_CONTEXT,
       })
     })
+  }
+
+  @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED, { async: true })
+  async generatePdf({ advert, publication, html }: AdvertPublishedEvent) {
+    this.logger.info('Generating PDF for advert', {
+      advertId: publication.advertId,
+      publicationId: publication.id,
+      version: publication.version,
+      context: LOGGING_CONTEXT,
+    })
+
+    await this.pdfService
+      .generatePdfAndSaveToS3(
+        html,
+        publication.advertId,
+        publication.id,
+        advert.title,
+      )
+      .catch((error) => {
+        this.logger.error('Failed to generate PDF after publication', {
+          error: error,
+          advertId: publication.advertId,
+          publicationId: publication.id,
+          version: publication.version,
+          context: LOGGING_CONTEXT,
+        })
+      })
   }
 }

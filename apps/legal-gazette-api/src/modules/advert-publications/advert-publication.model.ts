@@ -29,6 +29,7 @@ export type AdvertPublicationsAttributes = {
   scheduledAt: Date
   publishedAt: Date | null
   versionNumber: number
+  pdfUrl: string
 }
 
 export type AdvertPublicationsCreateAttributes = {
@@ -36,6 +37,7 @@ export type AdvertPublicationsCreateAttributes = {
   scheduledAt: Date
   publishedAt?: Date | null
   versionNumber?: number
+  pdfUrl?: string
 }
 
 @BaseTable({ tableName: LegalGazetteModels.ADVERT_PUBLICATION })
@@ -178,6 +180,9 @@ export class AdvertPublicationModel extends BaseModel<
   @Column({ type: DataType.INTEGER, defaultValue: '1' })
   versionNumber!: number
 
+  @Column({ field: 'pdf_url', allowNull: true })
+  pdfUrl?: string
+
   @Column({ type: DataType.VIRTUAL })
   get isPublished(): boolean {
     return this.publishedAt !== null
@@ -244,6 +249,7 @@ export class AdvertPublicationModel extends BaseModel<
       publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
       version: model.versionLetter,
       isLegacy: model.advert?.legacyId ? true : false,
+      pdfUrl: model.pdfUrl ? model.pdfUrl : null,
     }
   }
 
@@ -273,6 +279,7 @@ export class AdvertPublicationModel extends BaseModel<
       publicationNumber: model.advert.publicationNumber,
       createdBy: model.advert.createdBy,
       isLegacy: model.advert.legacyId ? true : false,
+      pdfUrl: model.pdfUrl ? model.pdfUrl : null,
     }
   }
 

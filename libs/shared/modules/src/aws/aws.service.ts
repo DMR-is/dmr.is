@@ -327,6 +327,54 @@ export class AWSService implements IAWSService {
     return ResultWrapper.ok(url)
   }
 
+  /**
+   * Fetches an object buffer based on key in S3 bucket
+   * @param key key to which object to retrieve
+   * @returns Buffer of the object
+   */
+  @LogAndHandle()
+  async getObjectBuffer(
+    key: string,
+    s3Bucket?: string,
+  ): Promise<ResultWrapper<Buffer>> {
+    const bucket = s3Bucket || getS3Bucket()
+
+    // check if key starts with slash
+    if (key.startsWith('/')) {
+      key = key.substring(1)
+    }
+
+    const fileName = key.split('/').pop()
+
+    if (!fileName) {
+      throw new InternalServerErrorException('Failed to get file name from key')
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      ResponseContentDisposition: `attachment; filename="${fileName}"`,
+    })
+    const download = await this.client.send(command)
+
+    if (!download.Body) {
+      this.logger.error('Failed to get object body from S3', {
+        category: LOGGING_CATEGORY,
+        bucket,
+        key,
+      })
+      throw new InternalServerErrorException('Failed to get object from S3')
+    }
+
+    const chunks: Uint8Array[] = []
+    for await (const chunk of download.Body as any) {
+      chunks.push(chunk)
+    }
+    const buffer = Buffer.concat(chunks)
+
+    return ResultWrapper.ok(buffer)
+  }
+
   @LogAndHandle()
   async sendMail(message: Mail.Options): Promise<SentMessageInfo> {
     const transporter = nodemailer.createTransport({

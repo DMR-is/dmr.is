@@ -30,6 +30,8 @@ export interface IAWSService {
 
   getObject(key: string): Promise<ResultWrapper<string>>
 
+  getObjectBuffer(key: string, s3Bucket: string): Promise<ResultWrapper<Buffer>>
+
   uploadObject(
     bucket: string,
     key: string,
