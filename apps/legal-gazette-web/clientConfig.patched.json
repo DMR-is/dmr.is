@@ -6264,8 +6264,7 @@
           "scheduledAt",
           "publishedAt",
           "version",
-          "isLegacy",
-          "pdfUrl"
+          "isLegacy"
         ]
       },
       "SettlementDto": {
