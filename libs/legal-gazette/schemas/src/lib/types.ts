@@ -52,7 +52,7 @@ export type CommonApplicationSchema = z.infer<typeof commonApplicationSchema>
 
 export type BaseApplicationSchema = z.infer<typeof baseApplicationSchema>
 
-export type courtAndJudgmentFieldsSchema = z.infer<
+export type CourtAndJudgmentFieldsSchema = z.infer<
   typeof courtAndJudgmentFieldsSchema
 >
 

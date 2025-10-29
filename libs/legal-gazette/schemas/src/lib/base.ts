@@ -35,13 +35,31 @@ export const applicationMetaDataSchema = z.object({
   courtDistrictOptions: z.array(optionSchema),
 })
 
-export const baseApplicationSchema = z.object({
-  metadata: applicationMetaDataSchema,
-  signature: signatureSchema,
-  publishingDates: z.array(publishingDatesSchema),
-  communicationChannels: z.array(communicationChannelSchema),
-})
-
 export const baseFieldsSchema = z.object({
   additionalText: z.string().optional(),
+})
+
+export const baseApplicationSchema = z.object({
+  metadata: applicationMetaDataSchema,
+  signature: signatureSchema.refine(
+    ({ name, date, location }) => {
+      return name !== undefined || location !== undefined || date !== undefined
+    },
+    {
+      path: ['name', 'location', 'date'],
+      message:
+        'Nafn, staður eða dagsetning undirritunar verður að vera til staðar',
+    },
+  ),
+  publishingDates: z
+    .array(publishingDatesSchema)
+    .min(1, {
+      message: 'Að minnsta kosti einn birtingardagur verður að vera til staðar',
+    })
+    .max(3, {
+      message: 'Hámark þrír birtingardagar mega vera til staðar',
+    }),
+  communicationChannels: z.array(communicationChannelSchema).min(1, {
+    message: 'Að minnsta kosti einn samskiptaleið verður að vera til staðar',
+  }),
 })
