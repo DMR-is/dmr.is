@@ -5,6 +5,20 @@ export enum CommonApplicationInputFields {
   HTML = 'fields.html',
 }
 
+export enum RecallApplicationInputFields {
+  COURT_DISTRICT_ID = 'fields.courtAndJudgment.courtDistrictId',
+  JUDGEMENT_DATE = 'fields.courtAndJudgment.judgementDate',
+  SETTLEMENT_NAME = 'fields.settlement.name',
+  SETTLEMENT_NATIONAL_ID = 'fields.settlement.nationalId',
+  SETTLEMENT_ADDRESS = 'fields.settlement.address',
+  SETTLEMENT_DEADLINE_DATE = 'fields.settlement.deadlineDate',
+  SETTLEMENT_DATE_OF_DEATH = 'fields.settlement.dateOfDeath',
+  LIQUIDATOR_NAME = 'fields.liquidator.name',
+  LIQUIDATOR_LOCATION = 'fields.liquidator.location',
+  DIVISION_MEETING_DATE = 'fields.divisionMeeting.meetingDate',
+  DIVISION_MEETING_LOCATION = 'fields.divisionMeeting.meetingLocation',
+}
+
 export enum ApplicationInputFields {
   APPLICATION_ID = 'metadata.applicationId',
   CASE_ID = 'metadata.caseId',
