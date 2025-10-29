@@ -1,6 +1,10 @@
 import z from 'zod'
 
-import { baseApplicationSchema, baseFieldsSchema } from './base'
+import {
+  baseApplicationSchema,
+  baseFieldsSchema,
+  publishingDatesSchema,
+} from './base'
 import { RecallApplicationInputFields } from './constants'
 
 export const courtAndJudgmentFieldsSchema = z.object({
@@ -87,4 +91,10 @@ export const recallApplicationFieldsSchema = z.discriminatedUnion('type', [
 
 export const recallApplicationSchema = baseApplicationSchema.extend({
   fields: recallApplicationFieldsSchema,
+  publishingDates: z
+    .array(publishingDatesSchema)
+    .refine((dates) => dates.length >= 2 && dates.length <= 3, {
+      message:
+        'Að minnsta kosti tveir og mest þrír birtingardagar verða að vera til staðar',
+    }),
 })

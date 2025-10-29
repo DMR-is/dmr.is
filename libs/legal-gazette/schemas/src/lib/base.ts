@@ -1,7 +1,5 @@
 import z from 'zod'
 
-import { ApplicationInputFields } from './constants'
-
 export const baseEntitySchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -48,30 +46,20 @@ export const baseApplicationSchema = z.object({
       return name !== undefined || location !== undefined || date !== undefined
     },
     {
-      path: [
-        ApplicationInputFields.SIGNATURE_NAME,
-        ApplicationInputFields.SIGNATURE_LOCATION,
-        ApplicationInputFields.SIGNATURE_DATE,
-      ],
+      path: ['name', 'location', 'date'],
       message:
         'Nafn, staður eða dagsetning undirritunar verður að vera til staðar',
     },
   ),
   publishingDates: z
     .array(publishingDatesSchema)
-    .refine((dates) => dates.length < 1, {
-      path: [ApplicationInputFields.PUBLISHING_DATES],
-      message:
-        'Að minnsta kosti ein birtingardagsetning verður að vera til staðar',
+    .min(1, {
+      message: 'Að minnsta kosti einn birtingardagur verður að vera til staðar',
     })
-    .refine((dates) => dates.length > 3, {
-      path: [ApplicationInputFields.PUBLISHING_DATES],
-      message: 'Hámark þrjár birtingardagsetningar eru leyfðar',
+    .max(3, {
+      message: 'Hámark þrír birtingardagar mega vera til staðar',
     }),
-  communicationChannels: z
-    .array(communicationChannelSchema)
-    .refine((channels) => channels.length < 1, {
-      path: [ApplicationInputFields.COMMUNICATION_CHANNELS],
-      message: 'Að minnsta kosti einn samskiptaleið verður að vera til staðar',
-    }),
+  communicationChannels: z.array(communicationChannelSchema).min(1, {
+    message: 'Að minnsta kosti einn samskiptaleið verður að vera til staðar',
+  }),
 })
