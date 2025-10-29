@@ -1,4 +1,5 @@
-import { IsOptional, IsUUID } from 'class-validator'
+import { Transform } from 'class-transformer'
+import { IsBoolean, IsOptional, IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -13,6 +14,16 @@ export class GetCategoriesQueryDto {
   @IsOptional()
   @IsUUID()
   type?: string
+
+  @ApiProperty({
+    type: Boolean,
+    required: false,
+    description: 'Filter out unassignable advert types',
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true')
+  excludeUnassignable?: boolean
 }
 
 export class CategoryDto extends BaseEntityDto {}

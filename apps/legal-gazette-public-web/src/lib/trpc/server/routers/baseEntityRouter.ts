@@ -10,7 +10,7 @@ const getCategoriesSchema = z
 
 export const baseEntityRouter = router({
   getTypes: protectedProcedure.query(async ({ ctx }) => {
-    return await ctx.api.getTypes()
+    return await ctx.api.getTypes({})
   }),
   getCategories: protectedProcedure
     .input(getCategoriesSchema)

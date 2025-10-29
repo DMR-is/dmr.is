@@ -8,7 +8,7 @@ const getCategoriesSchema = z.object({
 
 export const baseEntityRouter = router({
   getTypes: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.baseEntity.typeApi.getTypes()
+    return ctx.baseEntity.typeApi.getTypes({})
   }),
   getCategories: protectedProcedure
     .input(getCategoriesSchema)
@@ -24,7 +24,7 @@ export const baseEntityRouter = router({
   getAllEntities: protectedProcedure.query(async ({ ctx }) => {
     const [{ types }, { categories }, { statuses }, { courtDistricts }] =
       await Promise.all([
-        ctx.baseEntity.typeApi.getTypes(),
+        ctx.baseEntity.typeApi.getTypes({}),
         ctx.baseEntity.categoryApi.getCategories({}),
         ctx.baseEntity.statusApi.getStatuses(),
         ctx.baseEntity.courtDistrictApi.getCourtDistricts(),

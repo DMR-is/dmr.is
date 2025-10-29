@@ -232,7 +232,17 @@
     "/api/v1/types": {
       "get": {
         "operationId": "getTypes",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "excludeUnassignable",
+            "required": false,
+            "in": "query",
+            "description": "Filter out unassignable advert types",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -468,6 +478,15 @@
             "schema": {
               "nullable": true,
               "type": "string"
+            }
+          },
+          {
+            "name": "excludeUnassignable",
+            "required": false,
+            "in": "query",
+            "description": "Filter out unassignable advert types",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -2692,6 +2711,14 @@
           },
           {
             "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pdfUrl",
             "required": false,
             "in": "query",
             "schema": {
@@ -6225,6 +6252,10 @@
           },
           "isLegacy": {
             "type": "boolean"
+          },
+          "pdfUrl": {
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
@@ -6233,7 +6264,8 @@
           "scheduledAt",
           "publishedAt",
           "version",
-          "isLegacy"
+          "isLegacy",
+          "pdfUrl"
         ]
       },
       "SettlementDto": {
@@ -6641,6 +6673,10 @@
           },
           "isLegacy": {
             "type": "boolean"
+          },
+          "pdfUrl": {
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
@@ -6653,7 +6689,8 @@
           "version",
           "publicationNumber",
           "createdBy",
-          "isLegacy"
+          "isLegacy",
+          "pdfUrl"
         ]
       },
       "GetPublicationsDto": {
