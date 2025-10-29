@@ -29,7 +29,7 @@ export type AdvertPublicationsAttributes = {
   scheduledAt: Date
   publishedAt: Date | null
   versionNumber: number
-  pdfUrl: string
+  pdfUrl?: string
 }
 
 export type AdvertPublicationsCreateAttributes = {

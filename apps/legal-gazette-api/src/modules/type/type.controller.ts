@@ -1,11 +1,14 @@
 import { Op } from 'sequelize'
 
-import { Controller, Get, Param } from '@nestjs/common'
+import { Controller, Get, Param, Query } from '@nestjs/common'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
-import { COMMON_ADVERT_TYPES_IDS } from '../../lib/constants'
+import {
+  COMMON_ADVERT_TYPES_IDS,
+  UNASSIGNABLE_TYPE_IDS,
+} from '../../lib/constants'
 import { BaseEntityController } from '../base-entity/base-entity.controller'
-import { GetTypesDto, TypeDto } from './dto/type.dto'
+import { GetTypesDto, GetTypesQueryDto, TypeDto } from './dto/type.dto'
 import { TypeModel } from './type.model'
 
 @Controller({ path: 'types', version: '1' })
@@ -43,8 +46,14 @@ export class TypeController extends BaseEntityController<
 
   @Get()
   @LGResponse({ operationId: 'getTypes', type: GetTypesDto })
-  async findAll(): Promise<GetTypesDto> {
-    const types = await super.findAll()
+  async getTypes(@Query() query?: GetTypesQueryDto): Promise<GetTypesDto> {
+    const types = await super.findAll({
+      where: query?.excludeUnassignable
+        ? {
+            id: { [Op.notIn]: UNASSIGNABLE_TYPE_IDS },
+          }
+        : undefined,
+    })
 
     return {
       types: types,

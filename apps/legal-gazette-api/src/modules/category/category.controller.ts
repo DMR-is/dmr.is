@@ -1,6 +1,9 @@
+import { Op } from 'sequelize'
+
 import { Controller, Get, Param, Query } from '@nestjs/common'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
+import { UNASSIGNABLE_CATEGORY_IDS } from '../../lib/constants'
 import { BaseEntityController } from '../base-entity/base-entity.controller'
 import { TypeModel } from '../type/type.model'
 import {
@@ -40,6 +43,11 @@ export class CategoryController extends BaseEntityController<
     @Query() query: GetCategoriesQueryDto,
   ): Promise<GetCategoriesDto> {
     const categories = await super.findAll({
+      where: query.excludeUnassignable
+        ? {
+            id: { [Op.notIn]: UNASSIGNABLE_CATEGORY_IDS },
+          }
+        : undefined,
       include: [
         {
           model: TypeModel,

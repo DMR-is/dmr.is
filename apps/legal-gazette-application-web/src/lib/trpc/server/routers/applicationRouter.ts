@@ -77,16 +77,23 @@ export const getApplicationsSchema = z.object({
 
 export const applicationRouter = router({
   getTypes: protectedProcedure.query(async ({ ctx }) => {
-    return await ctx.api.getTypes()
+    return await ctx.api.getTypes({
+      excludeUnassignable: true,
+    })
   }),
   getCategories: protectedProcedure
     .input(getCategoriesSchema)
     .query(async ({ ctx, input }) => {
-      return await ctx.api.getCategories({ type: input.typeId })
+      return await ctx.api.getCategories({
+        type: input.typeId,
+        excludeUnassignable: true,
+      })
     }),
   getBaseEntities: protectedProcedure.query(async ({ ctx }) => {
     const [{ types }, { categories }, { courtDistricts }] = await Promise.all([
-      ctx.api.getTypes(),
+      ctx.api.getTypes({
+        excludeUnassignable: true,
+      }),
       ctx.api.getCategories({}),
       ctx.api.getCourtDistricts(),
     ])
