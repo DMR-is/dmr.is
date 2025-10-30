@@ -1,5 +1,6 @@
 import addDays from 'date-fns/addDays'
 import { Op } from 'sequelize'
+import z from 'zod'
 
 import {
   BadRequestException,
@@ -11,7 +12,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { commonApplicationSchema } from '@dmr.is/legal-gazette/schemas'
+import { commonApplicationValidationSchema } from '@dmr.is/legal-gazette/schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared/dto'
 import {
@@ -74,27 +75,33 @@ export class ApplicationService implements IApplicationService {
     application: ApplicationModel,
     user: DMRUser,
   ) {
-    const check = commonApplicationSchema.safeParse({
-      typeId: application.typeId,
-      categoryId: application.categoryId,
-      caption: application.caption,
-      additionalText: application.additionalText,
-      html: application.html,
+    const check = commonApplicationValidationSchema.safeParse({
+      metadata: {},
       signature: {
         name: application.signatureName,
         onBehalfOf: application.signatureOnBehalfOf,
         location: application.signatureLocation,
         date: application.signatureDate,
       },
+      publishingDates: application.publishingDates.map((d) => ({
+        publishingDate: d.toISOString(),
+      })),
       communicationChannels: application.communicationChannels,
-      publishingDates: application.publishingDates,
+      fields: {
+        typeId: application.typeId,
+        categoryId: application.categoryId,
+        caption: application.caption,
+        additionalText: application.additionalText,
+        html: application.html,
+      },
     })
 
     if (!check.success) {
+      const formattedErrors = z.treeifyError(check.error)
       this.logger.warn(
         `Failed to validate common application before submission`,
         {
-          error: check.error,
+          errors: formattedErrors,
         },
       )
       throw new BadRequestException('Invalid application data')
