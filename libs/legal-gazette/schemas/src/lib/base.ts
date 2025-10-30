@@ -13,10 +13,10 @@ export const communicationChannelSchema = z.object({
 })
 
 export const signatureSchema = z.object({
-  name: z.string().optional(),
-  location: z.string().optional(),
-  date: z.iso.datetime().optional(),
-  onBehalfOf: z.string().optional(),
+  name: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+  date: z.iso.datetime().optional().nullable(),
+  onBehalfOf: z.string().optional().nullable(),
 })
 
 export const publishingDatesSchema = z.object({
@@ -36,15 +36,13 @@ export const applicationMetaDataSchema = z.object({
 })
 
 export const baseFieldsSchema = z.object({
-  additionalText: z.string().optional(),
+  additionalText: z.string().optional().nullable(),
 })
 
 export const baseApplicationSchema = z.object({
-  metadata: applicationMetaDataSchema,
+  metadata: applicationMetaDataSchema.refine(() => true),
   signature: signatureSchema.refine(
-    ({ name, date, location }) => {
-      return name !== undefined || location !== undefined || date !== undefined
-    },
+    ({ name, date, location }) => name || date || location,
     {
       path: ['name', 'location', 'date'],
       message:

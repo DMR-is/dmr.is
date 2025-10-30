@@ -21,3 +21,7 @@ export const commonApplicationFieldsScehma = baseFieldsSchema.extend({
 export const commonApplicationSchema = baseApplicationSchema.extend({
   fields: commonApplicationFieldsScehma,
 })
+
+export const commonApplicationValidationSchema = commonApplicationSchema.omit({
+  metadata: true,
+})
