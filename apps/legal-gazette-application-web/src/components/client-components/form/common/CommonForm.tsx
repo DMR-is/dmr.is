@@ -2,35 +2,24 @@
 
 import { FormProvider, useForm } from 'react-hook-form'
 
+import { CommonApplicationSchema } from '@dmr.is/legal-gazette/schemas'
+
 import { SkeletonLoader, Stack, Text } from '@island.is/island-ui/core'
 
 import { useSubmitApplication } from '../../../../hooks/useSubmitApplication'
-import { commonForm } from '../../../../lib/forms/common-form'
-import { CommonFormSchema } from '../../../../lib/forms/schemas/common-schema'
+import { commonForm, CommonFormProps } from '../../../../lib/forms/common-form'
 import { ApplicationShell } from '../../application/ApplicationShell'
 import { CommunicationChannelFields } from '../fields/CommunicationChannelFields'
 import { PublishingFields } from '../fields/PublishingFields'
 import { SignatureFields } from '../fields/SignatureFields'
 import { CommonAdvertFields } from './fields/CommonAdvertFields'
 
-type Props = {
-  applicationId: string
-  caseId: string
-  types?: { label: string; value: string }[]
-  fields: Partial<CommonFormSchema['fields']>
-}
+export const CommonForm = (props: CommonFormProps) => {
+  const methods = useForm<CommonApplicationSchema>(commonForm(props))
 
-export const CommonForm = ({ applicationId, caseId, types, fields }: Props) => {
-  const methods = useForm<CommonFormSchema>(
-    commonForm({
-      applicationId: applicationId,
-      caseId: caseId,
-      typeOptions: types,
-      fields: fields,
-    }),
+  const { onValidSubmit, onInvalidSubmit } = useSubmitApplication(
+    props.metadata.applicationId,
   )
-
-  const { onValidSubmit, onInvalidSubmit } = useSubmitApplication(applicationId)
 
   return (
     <FormProvider {...methods}>

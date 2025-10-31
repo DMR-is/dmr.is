@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 
+import { CommunicationChannelSchema } from '@dmr.is/legal-gazette/schemas'
 import { toast } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationDetailedDto, UpdateApplicationDto } from '../gen/fetch'
@@ -8,10 +9,39 @@ import { trpc } from '../lib/trpc/client'
 const createOptimisticUpdateForApplication = (
   prevData: ApplicationDetailedDto,
   variables: UpdateApplicationDto,
-) => {
+): ApplicationDetailedDto => {
   return {
     ...prevData,
-    ...variables,
+    additionalText: variables?.additionalText ?? prevData?.additionalText,
+    commonFields: {
+      ...prevData?.commonFields,
+      ...variables?.commonFields,
+    },
+    courtAndJudgmentFields: {
+      ...prevData?.courtAndJudgmentFields,
+      ...variables?.courtAndJudgmentFields,
+    },
+    divisionMeetingFields: {
+      ...prevData?.divisionMeetingFields,
+      ...variables?.divisionMeetingFields,
+    },
+    liquidatorFields: {
+      ...prevData?.liquidatorFields,
+      ...variables?.liquidatorFields,
+    },
+    settlementFields: {
+      ...prevData?.settlementFields,
+      ...variables?.settlementFields,
+    },
+    signature: {
+      ...prevData?.signature,
+      ...variables?.signature,
+    },
+    publishingDates: variables?.publishingDates
+      ? variables?.publishingDates.map(({ publishingDate }) => ({
+          publishingDate: publishingDate,
+        }))
+      : prevData?.publishingDates,
   }
 }
 
@@ -40,7 +70,7 @@ export const useUpdateApplication = (applicationId: string) => {
 
         const optimisticData = createOptimisticUpdateForApplication(
           prevData as ApplicationDetailedDto,
-          variables,
+          variables as UpdateApplicationDto,
         )
 
         utils.applicationApi.getApplicationById.setData(
@@ -57,7 +87,10 @@ export const useUpdateApplication = (applicationId: string) => {
       const { successMessage, errorMessage } = options
 
       return updateApplicationMutation(
-        { id: applicationId, ...data },
+        {
+          id: applicationId,
+          ...data,
+        },
         {
           onSuccess: () => {
             utils.applicationApi.getApplicationById.invalidate({
@@ -90,72 +123,72 @@ export const useUpdateApplication = (applicationId: string) => {
 
   const updateType = useCallback(
     (typeId?: string) => {
-      if (!typeId || typeId === application?.typeId) {
+      if (!typeId || typeId === application?.commonFields.typeId) {
         return
       }
 
       updateApplication(
-        { typeId: typeId },
+        { commonFields: { typeId: typeId } },
         {
           successMessage: 'Tegund vistuð',
           errorMessage: 'Ekki tókst að uppfæra tegund',
         },
       )
     },
-    [updateApplication, application?.typeId],
+    [updateApplication, application?.commonFields.typeId],
   )
 
   const updateCategory = useCallback(
     (categoryId?: string) => {
-      if (!categoryId || categoryId === application?.categoryId) {
+      if (!categoryId || categoryId === application?.commonFields.categoryId) {
         return
       }
 
       updateApplication(
-        { categoryId: categoryId },
+        { commonFields: { categoryId: categoryId } },
         {
           successMessage: 'Flokkur vistaður',
           errorMessage: 'Ekki tókst að uppfæra flokk',
         },
       )
     },
-    [updateApplication, application?.categoryId],
+    [updateApplication, application?.commonFields.categoryId],
   )
 
   const updateCaption = useCallback(
     (caption: string) => {
-      if (caption === application?.caption) {
+      if (caption === application?.commonFields.caption) {
         return
       }
 
       updateApplication(
-        { caption: caption },
+        { commonFields: { caption: caption } },
         {
           successMessage: 'Yfirskrift vistuð',
           errorMessage: 'Ekki tókst að uppfæra yfirskrift',
         },
       )
     },
-    [updateApplication, application?.caption],
+    [updateApplication, application?.commonFields.caption],
   )
 
   const updateHTML = useCallback(
     (html: string) => {
       const asBase64 = Buffer.from(html).toString('base64')
 
-      if (asBase64 === application?.html) {
+      if (asBase64 === application?.commonFields.html) {
         return
       }
 
       updateApplication(
-        { html: asBase64 },
+        { commonFields: { html: asBase64 } },
         {
           successMessage: 'Meginmál vistað',
           errorMessage: 'Ekki tókst að uppfæra meginmál',
         },
       )
     },
-    [updateApplication, application?.html],
+    [updateApplication, application?.commonFields.html],
   )
 
   const updateSignatureName = useCallback(
@@ -243,7 +276,11 @@ export const useUpdateApplication = (applicationId: string) => {
       }
 
       updateApplication(
-        { publishingDates },
+        {
+          publishingDates: publishingDates.map((date) => ({
+            publishingDate: date,
+          })),
+        },
         {
           successMessage: 'Birtingardagsetningar vistaðar',
           errorMessage: 'Ekki tókst að uppfæra birtingardagsetningar',
@@ -254,23 +291,16 @@ export const useUpdateApplication = (applicationId: string) => {
   )
 
   const updateCommunicationChannels = useCallback(
-    (
-      communicationChannels: {
-        email: string
-        name?: string | undefined
-        phone?: string | undefined
-      }[],
-    ) => {
-      // we need compare the values deeply since it's an array
+    (channels: CommunicationChannelSchema[]) => {
       if (
-        JSON.stringify(communicationChannels) ===
+        JSON.stringify(channels) ===
         JSON.stringify(application?.communicationChannels)
       ) {
         return
       }
 
       updateApplication(
-        { communicationChannels },
+        { communicationChannels: channels },
         {
           successMessage: 'Samskiptaleiðir vistaðar',
           errorMessage: 'Ekki tókst að uppfæra samskiptaleiðir',
@@ -284,37 +314,37 @@ export const useUpdateApplication = (applicationId: string) => {
     (courtDistrictId?: string) => {
       if (
         !courtDistrictId ||
-        courtDistrictId === application?.courtDistrictId
+        courtDistrictId === application?.courtAndJudgmentFields.courtDistrictId
       ) {
         return
       }
 
       updateApplication(
-        { courtDistrictId },
+        { courtAndJudgmentFields: { courtDistrictId } },
         {
           successMessage: 'Dómstóll vistaður',
           errorMessage: 'Ekki tókst að uppfæra dómstól',
         },
       )
     },
-    [updateApplication, application?.courtDistrictId],
+    [updateApplication, application?.courtAndJudgmentFields.courtDistrictId],
   )
 
   const updateJudgmentDate = useCallback(
     (judgmentDate: string) => {
-      if (judgmentDate === application?.judgmentDate) {
+      if (judgmentDate === application?.courtAndJudgmentFields.judgmentDate) {
         return
       }
 
       updateApplication(
-        { judgmentDate },
+        { courtAndJudgmentFields: { judgmentDate } },
         {
           successMessage: 'Úrskurðardagur vistaður',
           errorMessage: 'Ekki tókst að uppfæra úrskurðardag',
         },
       )
     },
-    [updateApplication, application?.judgmentDate],
+    [updateApplication, application?.courtAndJudgmentFields.judgmentDate],
   )
 
   const updateAdditionalText = useCallback(
@@ -336,173 +366,168 @@ export const useUpdateApplication = (applicationId: string) => {
 
   const updateDivisionMeetingLocation = useCallback(
     (divisionMeetingLocation: string) => {
-      if (divisionMeetingLocation === application?.divisionMeetingLocation) {
+      if (
+        divisionMeetingLocation ===
+        application?.divisionMeetingFields.meetingLocation
+      ) {
         return
       }
 
       updateApplication(
-        { divisionMeetingLocation },
+        { divisionMeetingFields: { meetingLocation: divisionMeetingLocation } },
         {
           successMessage: 'Staðsetning skiptafundar vistuð',
           errorMessage: 'Ekki tókst að uppfæra staðsetningu skiptafundar',
         },
       )
     },
-    [updateApplication, application?.divisionMeetingLocation],
+    [updateApplication, application?.divisionMeetingFields.meetingLocation],
   )
 
   const updateDivisionMeetingDate = useCallback(
     (divisionMeetingDate?: string | null) => {
-      if (divisionMeetingDate === application?.divisionMeetingDate) {
+      if (
+        divisionMeetingDate === application?.divisionMeetingFields.meetingDate
+      ) {
         return
       }
 
       updateApplication(
-        { divisionMeetingDate },
+        {
+          divisionMeetingFields: {
+            meetingDate: divisionMeetingDate ?? undefined,
+          },
+        },
         {
           successMessage: 'Dagsetning skiptafundar vistuð',
           errorMessage: 'Ekki tókst að uppfæra dagsetningu skiptafundar',
         },
       )
     },
-    [updateApplication, application?.divisionMeetingDate],
+    [updateApplication, application?.divisionMeetingFields.meetingDate],
   )
 
   const updateLiquidatorName = useCallback(
     (liquidatorName: string) => {
-      if (liquidatorName === application?.liquidatorName) {
+      if (liquidatorName === application?.liquidatorFields.name) {
         return
       }
 
       updateApplication(
-        { liquidatorName },
+        { liquidatorFields: { name: liquidatorName } },
         {
           successMessage: 'Nafn skiptastjóra vistað',
           errorMessage: 'Ekki tókst að uppfæra nafn skiptastjóra',
         },
       )
     },
-    [updateApplication, application?.liquidatorName],
+    [updateApplication, application?.liquidatorFields.name],
   )
 
   const updateLiquidatorLocation = useCallback(
     (liquidatorLocation: string) => {
-      if (liquidatorLocation === application?.liquidatorLocation) {
+      if (liquidatorLocation === application?.liquidatorFields.location) {
         return
       }
 
       updateApplication(
-        { liquidatorLocation },
+        { liquidatorFields: { location: liquidatorLocation } },
         {
           successMessage: 'Staðsetning skiptastjóra vistað',
           errorMessage: 'Ekki tókst að uppfæra staðsetningu skiptastjóra',
         },
       )
     },
-    [updateApplication, application?.liquidatorLocation],
-  )
-
-  const updateLiquidatorOnBehalfOf = useCallback(
-    (liquidatorOnBehalfOf: string) => {
-      if (liquidatorOnBehalfOf === application?.liquidatorOnBehalfOf) {
-        return
-      }
-
-      updateApplication(
-        { liquidatorOnBehalfOf },
-        {
-          successMessage: 'Undirritun fyrir hönd skiptastjóra vistuð',
-          errorMessage:
-            'Ekki tókst að uppfæra undirritun fyrir hönd skiptastjóra',
-        },
-      )
-    },
-    [updateApplication, application?.liquidatorOnBehalfOf],
+    [updateApplication, application?.liquidatorFields.location],
   )
 
   const updateSettlementName = useCallback(
     (settlementName: string) => {
-      if (settlementName === application?.settlementName) {
+      if (settlementName === application?.settlementFields?.name) {
         return
       }
 
       updateApplication(
-        { settlementName },
+        { settlementFields: { name: settlementName } },
         {
           successMessage: 'Nafn þrotabús vistað',
           errorMessage: 'Ekki tókst að uppfæra nafn þrotabús',
         },
       )
     },
-    [updateApplication, application?.settlementName],
+    [updateApplication, application?.settlementFields?.name],
   )
 
   const updateSettlementNationalId = useCallback(
     (settlementNationalId: string) => {
-      if (settlementNationalId === application?.settlementNationalId) {
+      if (settlementNationalId === application?.settlementFields?.nationalId) {
         return
       }
 
       updateApplication(
-        { settlementNationalId },
+        { settlementFields: { nationalId: settlementNationalId } },
         {
           successMessage: 'Kennitala þrotabús vistuð',
           errorMessage: 'Ekki tókst að uppfæra kennitölu þrotabús',
         },
       )
     },
-    [updateApplication, application?.settlementNationalId],
+    [updateApplication, application?.settlementFields?.nationalId],
   )
 
   const updateSettlementAddress = useCallback(
     (settlementAddress: string) => {
-      if (settlementAddress === application?.settlementAddress) {
+      if (settlementAddress === application?.settlementFields.address) {
         return
       }
 
       updateApplication(
-        { settlementAddress },
+        { settlementFields: { address: settlementAddress } },
         {
           successMessage: 'Heimilisfang þrotabús vistað',
           errorMessage: 'Ekki tókst að uppfæra heimilisfang þrotabús',
         },
       )
     },
-    [updateApplication, application?.settlementAddress],
+    [updateApplication, application?.settlementFields?.address],
   )
 
   const updateSettlementDeadlineDate = useCallback(
     (settlementDeadlineDate?: string) => {
-      if (settlementDeadlineDate === application?.settlementDeadlineDate) {
+      if (
+        settlementDeadlineDate === application?.settlementFields?.deadlineDate
+      ) {
         return
       }
 
       updateApplication(
-        { settlementDeadlineDate },
+        { settlementFields: { deadlineDate: settlementDeadlineDate } },
         {
           successMessage: 'Frestdagur þrotabús vistaður',
           errorMessage: 'Ekki tókst að uppfæra frestdag þrotabús',
         },
       )
     },
-    [updateApplication, application?.settlementDeadlineDate],
+    [updateApplication, application?.settlementFields?.deadlineDate],
   )
 
   const updateSettlementDateOfDeath = useCallback(
     (settlementDateOfDeath?: string) => {
-      if (settlementDateOfDeath === application?.settlementDateOfDeath) {
+      if (
+        settlementDateOfDeath === application?.settlementFields?.dateOfDeath
+      ) {
         return
       }
 
       updateApplication(
-        { settlementDateOfDeath },
+        { settlementFields: { dateOfDeath: settlementDateOfDeath } },
         {
           successMessage: 'Dánardagur vistaður',
           errorMessage: 'Ekki tókst að uppfæra dánardag',
         },
       )
     },
-    [updateApplication, application?.settlementDateOfDeath],
+    [updateApplication, application?.settlementFields?.dateOfDeath],
   )
 
   return {
@@ -523,7 +548,6 @@ export const useUpdateApplication = (applicationId: string) => {
     updateDivisionMeetingDate,
     updateLiquidatorName,
     updateLiquidatorLocation,
-    updateLiquidatorOnBehalfOf,
     updateSettlementName,
     updateSettlementNationalId,
     updateSettlementAddress,

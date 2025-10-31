@@ -2,6 +2,12 @@ import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
 import {
+  ApplicationInputFields,
+  BaseApplicationSchema,
+  CommunicationChannelSchema,
+} from '@dmr.is/legal-gazette/schemas'
+
+import {
   Box,
   Button,
   GridColumn,
@@ -16,17 +22,16 @@ import {
 } from '@island.is/island-ui/core'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
-import { CommunicationChannelSchema } from '../../../../lib/forms/schemas/shared'
 
 export const CommunicationChannelFields = () => {
-  const { getValues, setValue, watch } = useFormContext()
+  const { getValues, setValue, watch } = useFormContext<BaseApplicationSchema>()
 
   const { updateCommunicationChannels } = useUpdateApplication(
-    getValues('meta.applicationId'),
+    getValues(ApplicationInputFields.APPLICATION_ID),
   )
 
   const channels: CommunicationChannelSchema[] = watch(
-    'fields.communicationChannels',
+    ApplicationInputFields.COMMUNICATION_CHANNELS,
     [],
   )
 
@@ -60,7 +65,7 @@ export const CommunicationChannelFields = () => {
       channels.push(channel)
     }
 
-    setValue('fields.communicationChannels', channels, {
+    setValue(ApplicationInputFields.COMMUNICATION_CHANNELS, channels, {
       shouldValidate: true,
     })
     updateCommunicationChannels(channels)
@@ -71,7 +76,7 @@ export const CommunicationChannelFields = () => {
 
   const removeChannel = (index: number) => {
     const updatedChannels = channels.filter((_, i) => i !== index)
-    setValue('fields.communicationChannels', updatedChannels)
+    setValue(ApplicationInputFields.COMMUNICATION_CHANNELS, updatedChannels)
     updateCommunicationChannels(updatedChannels)
   }
 

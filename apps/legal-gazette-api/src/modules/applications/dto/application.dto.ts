@@ -1,9 +1,12 @@
-import { Type } from 'class-transformer'
+import { Transform, Type } from 'class-transformer'
 import {
+  isBase64,
   IsDateString,
+  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   ValidateNested,
 } from 'class-validator'
 
@@ -20,6 +23,7 @@ import { CategoryDto } from '../../category/dto/category.dto'
 import {
   CommunicationChannelDto,
   CreateCommunicationChannelDto,
+  UpdateCommunicationChannelDto,
 } from '../../communication-channel/dto/communication-channel.dto'
 import { TypeDto } from '../../type/dto/type.dto'
 import { ApplicationTypeEnum } from '../application.model'
@@ -47,115 +51,201 @@ export class ApplicationSignatureDto {
   date?: string
 }
 
+export class CommonApplicationFieldsDto {
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsUUID()
+  typeId?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  caption?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => {
+    if (!isBase64(value)) {
+      return value
+    }
+
+    return Buffer.from(value, 'base64').toString('utf-8')
+  })
+  html?: string
+}
+
+export class ApplicationSettlementDto {
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  name?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  nationalId?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  address?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  deadlineDate?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  dateOfDeath?: string
+}
+
+export class ApplicationDivisionMeetingFieldsDto {
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  meetingDate?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  meetingLocation?: string
+}
+
+export class CourtAndJudgmentFieldsDto {
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsUUID()
+  courtDistrictId?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  judgmentDate?: string
+}
+
+export class ApplicationLiquidationFieldsDto {
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  name?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  location?: string
+}
+
+export class ApplicationPublishingDatesDto {
+  @ApiProperty({ type: String })
+  @IsDateString()
+  publishingDate!: string
+}
+
 export class ApplicationDto {
   @ApiProperty({ type: String })
+  @IsUUID()
   id!: string
 
   @ApiProperty({ type: String })
+  @IsUUID()
+  caseId!: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsUUID()
+  islandIsApplicationId?: string | null
+
+  @ApiProperty({ type: String })
+  @IsDateString()
   createdAt!: string
 
   @ApiProperty({ type: String })
+  @IsDateString()
   updatedAt!: string
 
   @ApiProperty({ type: String })
-  caseId!: string
-
-  @ApiProperty({ type: String })
-  nationalId!: string
+  @IsString()
+  submittedByNationalId!: string
 
   @ApiProperty({ enum: ApplicationTypeEnum, enumName: 'ApplicationTypeEnum' })
+  @IsEnum(ApplicationTypeEnum)
   applicationType!: ApplicationTypeEnum
 
   @ApiProperty({ type: CategoryDto, required: false })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CategoryDto)
   category?: CategoryDto
 
   @ApiProperty({ type: TypeDto, required: false })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => TypeDto)
   type?: TypeDto
 
-  @ApiProperty({ enum: ApplicationStatusEnum })
+  @ApiProperty({
+    enum: ApplicationStatusEnum,
+    enumName: 'ApplicationStatusEnum',
+  })
+  @IsEnum(ApplicationStatusEnum)
   status!: ApplicationStatusEnum
 
   @ApiProperty({ type: String })
+  @IsString()
   title!: string
 }
 
 export class ApplicationFieldsDto {
-  @ApiProperty({ type: String, required: false, nullable: true })
-  typeId?: string | null
+  @ApiProperty({ type: CommonApplicationFieldsDto })
+  commonFields!: CommonApplicationFieldsDto
 
-  @ApiProperty({ type: String, required: false, nullable: true })
-  categoryId?: string | null
+  @ApiProperty({ type: ApplicationSettlementDto })
+  settlementFields!: ApplicationSettlementDto
 
-  @ApiProperty({ type: String, required: false, nullable: true })
-  courtDistrictId?: string | null
+  @ApiProperty({ type: ApplicationDivisionMeetingFieldsDto })
+  divisionMeetingFields!: ApplicationDivisionMeetingFieldsDto
 
-  @ApiProperty({ type: String, required: false, nullable: true })
-  islandIsApplicationId?: string | null
+  @ApiProperty({ type: String, required: false })
+  additionalText?: string
 
-  @ApiProperty({ type: String, required: false, nullable: true })
-  caption?: string | null
+  @ApiProperty({ type: CourtAndJudgmentFieldsDto })
+  courtAndJudgmentFields!: CourtAndJudgmentFieldsDto
 
-  @ApiProperty({ type: String, required: false, nullable: true })
-  additionalText?: string | null
+  @ApiProperty({ type: ApplicationLiquidationFieldsDto })
+  liquidatorFields!: ApplicationLiquidationFieldsDto
 
-  @ApiProperty({ type: String, required: false, nullable: true })
-  judgmentDate?: string | null
+  @ApiProperty({ type: ApplicationSignatureDto })
+  signature!: ApplicationSignatureDto
 
-  @ApiProperty({ type: String, required: false, nullable: true })
-  html?: string | null
+  @ApiProperty({ type: [ApplicationPublishingDatesDto] })
+  publishingDates!: ApplicationPublishingDatesDto[]
 
-  @ApiProperty({ type: ApplicationSignatureDto, required: false })
-  signature?: ApplicationSignatureDto
-
-  @ApiProperty({ type: String, required: false, nullable: true })
-  liquidatorName?: string | null
-
-  @ApiProperty({ type: String, required: false, nullable: true })
-  liquidatorLocation?: string | null
-
-  @ApiProperty({ type: String, required: false, nullable: true })
-  liquidatorOnBehalfOf?: string | null
-
-  @ApiProperty({ type: String, required: false, nullable: true })
-  settlementName?: string | null
-
-  @ApiProperty({ type: String, required: false, nullable: true })
-  settlementNationalId?: string | null
-
-  @ApiProperty({ type: String, required: false, nullable: true })
-  settlementAddress?: string | null
-
-  @ApiProperty({ type: String, required: false, nullable: true })
-  settlementDeadlineDate?: string | null
-
-  @ApiProperty({ type: String, required: false, nullable: true })
-  settlementDateOfDeath?: string | null
-
-  @ApiProperty({ type: String, required: false, nullable: true })
-  divisionMeetingDate?: string | null
-
-  @ApiProperty({ type: String, required: false, nullable: true })
-  divisionMeetingLocation?: string | null
-
-  @ApiProperty({ type: [String] })
-  publishingDates!: string[]
-
-  @ApiProperty({ type: [CommunicationChannelDto] })
-  communicationChannels!: CommunicationChannelDto[]
+  @ApiProperty({ type: [CreateCommunicationChannelDto] })
+  communicationChannels!: CreateCommunicationChannelDto[]
 }
 
 export class ApplicationDetailedDto extends IntersectionType(
   ApplicationDto,
   ApplicationFieldsDto,
-) {
-  @ApiProperty({ type: ApplicationSignatureDto, required: false })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => ApplicationSignatureDto)
-  signature?: ApplicationSignatureDto
-}
+) {}
 
-export class UpdateApplicationDto extends PartialType(ApplicationFieldsDto) {}
+export class UpdateApplicationDto extends PartialType(
+  OmitType(ApplicationFieldsDto, ['communicationChannels']),
+) {
+  @ApiProperty({ type: [CreateCommunicationChannelDto], required: false })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateCommunicationChannelDto)
+  communicationChannels?: CreateCommunicationChannelDto[]
+}
 
 export class ApplicationsDto extends Paging {
   @ApiProperty({ type: [ApplicationDto] })
@@ -171,11 +261,10 @@ export class AddDivisionMeetingForApplicationDto {
   @IsString()
   meetingLocation!: string
 
-  @ApiProperty({ type: ApplicationSignatureDto, required: false })
-  @IsOptional()
+  @ApiProperty({ type: ApplicationSignatureDto })
   @ValidateNested()
   @Type(() => ApplicationSignatureDto)
-  signature?: ApplicationSignatureDto
+  signature!: ApplicationSignatureDto
 
   @ApiProperty({ type: String, required: false })
   @IsOptional()

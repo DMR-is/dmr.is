@@ -2,10 +2,10 @@ import { z } from 'zod'
 
 import {
   communicationChannelSchema,
-  formSchema,
   optionSchema,
-  publishingDateSchema,
-} from './shared'
+} from '@dmr.is/legal-gazette/schemas'
+
+import { formSchema, publishingDateSchema } from './shared'
 
 export const recallFormMetaSchema = z.object({
   caseId: z.string(),
@@ -30,7 +30,6 @@ export const recallFormFieldsSchema = z
     liquidatorLocation: z
       .string()
       .min(1, 'Staðsetning skiptastjóra er nauðsynleg'),
-    liquidatorOnBehalfOf: z.string().optional(),
     signatureName: z.string().optional(),
     signatureDate: z.date().optional(),
     signatureLocation: z.string().optional(),
@@ -128,7 +127,6 @@ export enum RecallFormFields {
   SETTLEMENT_DATE_OF_DEATH = 'fields.settlementDateOfDeath',
   LIQUIDATOR_NAME = 'fields.liquidatorName',
   LIQUIDATOR_LOCATION = 'fields.liquidatorLocation',
-  LIQUIDATOR_ON_BEHALF_OF = 'fields.liquidatorOnBehalfOf',
   DIVISION_MEETING_LOCATION = 'fields.divisionMeetingLocation',
   DIVISION_MEETING_DATE = 'fields.divisionMeetingDate',
   SIGNATURE_NAME = 'fields.signatureName',

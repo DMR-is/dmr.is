@@ -11,11 +11,8 @@ import { InputController } from '../../controllers/InputController'
 
 export const RecallLiquidatorFields = () => {
   const { getValues } = useFormContext<RecallFormSchema>()
-  const {
-    updateLiquidatorName,
-    updateLiquidatorLocation,
-    updateLiquidatorOnBehalfOf,
-  } = useUpdateApplication(getValues('meta.applicationId'))
+  const { updateLiquidatorName, updateLiquidatorLocation } =
+    useUpdateApplication(getValues('meta.applicationId'))
 
   return (
     <GridRow rowGap={[2, 3]}>
@@ -36,13 +33,6 @@ export const RecallLiquidatorFields = () => {
           name={RecallFormFields.LIQUIDATOR_LOCATION}
           onBlur={(val) => updateLiquidatorLocation(val)}
           required
-        />
-      </GridColumn>
-      <GridColumn span={['12/12', '6/12']}>
-        <InputController
-          label="Fyrir hönd skiptastjóra"
-          name={RecallFormFields.LIQUIDATOR_ON_BEHALF_OF}
-          onBlur={(val) => updateLiquidatorOnBehalfOf(val)}
         />
       </GridColumn>
     </GridRow>

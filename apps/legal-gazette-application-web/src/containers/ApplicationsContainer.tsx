@@ -13,10 +13,7 @@ type Props = {
 
 export function ApplicationsContainer({ searchParams }: Props) {
   const { data, isLoading, error } =
-    trpc.applicationApi.getApplications.useQuery({
-      page: searchParams.page,
-      pageSize: searchParams.pageSize,
-    })
+    trpc.applicationApi.getApplications.useQuery()
 
   if (isLoading) {
     return (

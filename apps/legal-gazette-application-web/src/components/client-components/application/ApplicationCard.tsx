@@ -14,7 +14,7 @@ import {
 
 import {
   ApplicationDto,
-  ApplicationDtoStatusEnum,
+  ApplicationStatusEnum,
   ApplicationTypeEnum,
 } from '../../../gen/fetch'
 import { PageRoutes } from '../../../lib/constants'
@@ -32,9 +32,7 @@ export const ApplicationCard = ({ application }: Props) => {
         : `${PageRoutes.APPLICATION_DANARBU}/${application.id}`
 
   const statusText =
-    application.status === ApplicationDtoStatusEnum.DRAFT
-      ? 'Í vinnslu'
-      : 'Innsend'
+    application.status === ApplicationStatusEnum.DRAFT ? 'Í vinnslu' : 'Innsend'
 
   return (
     <Box borderRadius="large" border="standard" padding={3} background="white">

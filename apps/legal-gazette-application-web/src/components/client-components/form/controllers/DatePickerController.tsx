@@ -26,11 +26,14 @@ export const DatePickerController = (props: Props) => {
     }
   }
 
+  const asDate =
+    typeof field.value === 'string' ? new Date(field.value) : field.value
+
   return (
     <DatePicker
       name={field.name}
       handleChange={handleChange}
-      selected={field.value}
+      selected={asDate}
       label={label}
       backgroundColor="blue"
       size="sm"
