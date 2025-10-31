@@ -6,7 +6,7 @@ function handler(request: Request) {
 
   if (process.env.NODE_ENV !== 'production') {
     return Response.redirect(
-      `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/endsession?id_token_hint=${idToken}&post_logout_redirect_uri=http://localhost:${process.env.LEGAL_GAZETTE_WEB_PORT}`,
+      `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/endsession?id_token_hint=${idToken}&post_logout_redirect_uri=${process.env.LG_WEB_URL}`,
     )
   }
 

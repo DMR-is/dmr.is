@@ -26,8 +26,7 @@ const nextConfig = {
   },
   env: {
     API_MOCKS: process.env.API_MOCKS || '',
-    NEXTAUTH_URL:
-      process.env.LEGAL_GAZETTE_WEB_NEXTAUTH_URL ?? process.env.NEXTAUTH_URL,
+    NEXTAUTH_URL: process.env.NODE_ENV !== 'production' ? `${process.env.LG_WEB_URL}/api/auth` : process.env.NEXTAUTH_URL
   },
 }
 
