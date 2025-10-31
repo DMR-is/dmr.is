@@ -1,9 +1,8 @@
 import z from 'zod'
 
 import {
-  communicationChannelSchema,
-  courtAndJudgmentFieldsInput,
-  signatureSchema,
+  addDivisionEndingInputSchema,
+  addDivisionMeetingInputSchema,
   updateApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
 
@@ -12,24 +11,6 @@ import { protectedProcedure, router } from '../trpc'
 
 const updateApplicationSchemaWithId = updateApplicationSchema.extend({
   id: z.string(),
-})
-
-const addDivisionMeetingForApplicationSchema = z.object({
-  applicationId: z.string(),
-  meetingDate: z.iso.datetime(),
-  meetingLocation: z.string(),
-  signature: signatureSchema,
-  additionalText: z.string().optional(),
-  communicationChannels: z.array(communicationChannelSchema).optional(),
-})
-
-const addDivisionEndingForApplicationSchema = z.object({
-  applicationId: z.string(),
-  additionalText: z.string().optional(),
-  communicationChannels: z.array(communicationChannelSchema).optional(),
-  signature: signatureSchema,
-  scheduledAt: z.string(),
-  declaredClaims: z.number(),
 })
 
 export const createApplicationSchema = z.enum(
@@ -110,7 +91,7 @@ export const applicationRouter = router({
       })
     }),
   addDivisionMeeting: protectedProcedure
-    .input(addDivisionMeetingForApplicationSchema)
+    .input(addDivisionMeetingInputSchema)
     .mutation(async ({ ctx, input }) => {
       const { applicationId, ...dto } = input
       return await ctx.api.addDivisionMeetingAdvertToApplication({
@@ -119,7 +100,7 @@ export const applicationRouter = router({
       })
     }),
   addDivisionEnding: protectedProcedure
-    .input(addDivisionEndingForApplicationSchema)
+    .input(addDivisionEndingInputSchema)
     .mutation(async ({ ctx, input }) => {
       const { applicationId, ...dto } = input
       return await ctx.api.addDivisionEndingAdvertToApplication({
