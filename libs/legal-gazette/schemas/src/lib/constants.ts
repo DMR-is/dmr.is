@@ -6,17 +6,17 @@ export enum CommonApplicationInputFields {
 }
 
 export enum RecallApplicationInputFields {
-  COURT_DISTRICT_ID = 'fields.courtAndJudgment.courtDistrictId',
-  JUDGEMENT_DATE = 'fields.courtAndJudgment.judgementDate',
-  SETTLEMENT_NAME = 'fields.settlement.name',
-  SETTLEMENT_NATIONAL_ID = 'fields.settlement.nationalId',
-  SETTLEMENT_ADDRESS = 'fields.settlement.address',
-  SETTLEMENT_DEADLINE_DATE = 'fields.settlement.deadlineDate',
-  SETTLEMENT_DATE_OF_DEATH = 'fields.settlement.dateOfDeath',
-  LIQUIDATOR_NAME = 'fields.liquidator.name',
-  LIQUIDATOR_LOCATION = 'fields.liquidator.location',
-  DIVISION_MEETING_DATE = 'fields.divisionMeeting.meetingDate',
-  DIVISION_MEETING_LOCATION = 'fields.divisionMeeting.meetingLocation',
+  COURT_DISTRICT_ID = 'fields.courtAndJudgmentFields.courtDistrictId',
+  JUDGMENT_DATE = 'fields.courtAndJudgmentFields.judgmentDate',
+  SETTLEMENT_NAME = 'fields.settlementFields.name',
+  SETTLEMENT_NATIONAL_ID = 'fields.settlementFields.nationalId',
+  SETTLEMENT_ADDRESS = 'fields.settlementFields.address',
+  SETTLEMENT_DEADLINE_DATE = 'fields.settlementFields.deadlineDate',
+  SETTLEMENT_DATE_OF_DEATH = 'fields.settlementFields.dateOfDeath',
+  LIQUIDATOR_NAME = 'fields.liquidatorFields.name',
+  LIQUIDATOR_LOCATION = 'fields.liquidatorFields.location',
+  DIVISION_MEETING_DATE = 'fields.divisionMeetingFields.meetingDate',
+  DIVISION_MEETING_LOCATION = 'fields.divisionMeetingFields.meetingLocation',
 }
 
 export enum ApplicationInputFields {

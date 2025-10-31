@@ -49,6 +49,7 @@ export const ApplicationForm = ({
           communicationChannels={application.communicationChannels}
           publishingDates={application.publishingDates}
           signature={application.signature}
+          additionalText={application.additionalText}
         />
       )
     case ApplicationTypeEnum.RECALLBANKRUPTCY:
@@ -68,6 +69,7 @@ export const ApplicationForm = ({
           communicationChannels={application.communicationChannels}
           publishingDates={application.publishingDates}
           signature={application.signature}
+          additionalText={application.additionalText}
         />
       )
     default:

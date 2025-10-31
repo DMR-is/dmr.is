@@ -6,24 +6,38 @@ import {
   strictSignatureSchema,
 } from './base'
 import { commonApplicationFieldsScehma } from './common'
-import {
-  courtAndJudgmentFieldsSchema,
-  divisionMeetingFieldsSchema,
-  liquidatorFieldsSchema,
-  settlementFieldsSchema,
-} from './recall'
+
+const courtAndJudgmentFieldsInput = z.object({
+  courtDistrictId: z.string().optional(),
+  judgementDate: z.iso.datetime().optional(),
+})
+
+const settlementFieldsInput = z.object({
+  name: z.string().optional(),
+  nationalId: z.string().optional(),
+  address: z.string().optional(),
+})
+
+const liquidatorFieldsInput = z.object({
+  name: z.string().optional(),
+  location: z.string().optional(),
+})
+
+const divisionMeetingFieldsInput = z.object({
+  meetingDate: z.iso.datetime().optional(),
+  meetingLocation: z.string().optional(),
+})
 
 export const recallUpdateApplicationSchema = z.object({
-  courtAndJudgmentFields: courtAndJudgmentFieldsSchema.partial().optional(),
-  settlementFields: settlementFieldsSchema
+  courtAndJudgmentFields: courtAndJudgmentFieldsInput.optional(),
+  settlementFields: settlementFieldsInput
     .extend({
       deadlineDate: z.iso.datetime().optional(),
       dateOfDeath: z.iso.datetime().optional(),
     })
-    .partial()
     .optional(),
-  liquidatorFields: liquidatorFieldsSchema.partial().optional(),
-  divisionMeetingFields: divisionMeetingFieldsSchema.partial().optional(),
+  liquidatorFields: liquidatorFieldsInput.partial().optional(),
+  divisionMeetingFields: divisionMeetingFieldsInput.partial().optional(),
 })
 
 export const updateApplicationSchema = z.object({

@@ -19,6 +19,7 @@ export type RecallFormProps = {
   signature: SignatureSchema
   publishingDates: PublishingDatesSchema[]
   communicationChannels: CommunicationChannelSchema[]
+  additionalText?: string
 }
 
 export const recallForm = ({
@@ -27,6 +28,7 @@ export const recallForm = ({
   signature,
   communicationChannels,
   publishingDates,
+  additionalText,
 }: RecallFormProps): UseFormProps<RecallApplicationSchema> => ({
   mode: 'onChange',
   resolver: zodResolver(recallApplicationSchema),
@@ -36,5 +38,6 @@ export const recallForm = ({
     signature,
     communicationChannels,
     publishingDates,
+    additionalText,
   },
 })

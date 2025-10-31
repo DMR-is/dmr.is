@@ -350,7 +350,7 @@ export const useUpdateApplication = (applicationId: string) => {
 
   const updateAdditionalText = useCallback(
     (additionalText: string) => {
-      if (additionalText === application?.recallFields?.additionalText) {
+      if (additionalText === application?.additionalText) {
         return
       }
 
@@ -362,7 +362,7 @@ export const useUpdateApplication = (applicationId: string) => {
         },
       )
     },
-    [updateApplication, application?.recallFields?.additionalText],
+    [updateApplication, application?.additionalText],
   )
 
   const updateDivisionMeetingLocation = useCallback(

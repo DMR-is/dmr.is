@@ -38,7 +38,7 @@ export const RecallAdvertFields = () => {
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <DatePickerController
-            name={RecallApplicationInputFields.JUDGEMENT_DATE}
+            name={RecallApplicationInputFields.JUDGMENT_DATE}
             label="Úrskurðardagur"
             required
             onChange={(val) => updateJudgmentDate(val.toISOString())}

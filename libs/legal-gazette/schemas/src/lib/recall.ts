@@ -6,7 +6,7 @@ export const courtAndJudgmentFieldsSchema = z.object({
   courtDistrictId: z.string().refine((id) => id.length > 0, {
     message: 'Staður er nauðsynlegur',
   }),
-  judgementDate: z.iso.datetime().refine((date) => date !== undefined, {
+  judgmentDate: z.iso.datetime().refine((date) => date !== undefined, {
     message: 'Úrskurðar dagsetning er nauðsynlegur',
   }),
 })

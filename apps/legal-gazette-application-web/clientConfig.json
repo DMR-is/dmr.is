@@ -3517,8 +3517,7 @@
           "typeId": { "type": "string" },
           "categoryId": { "type": "string" },
           "caption": { "type": "string" },
-          "html": { "type": "string" },
-          "additionalText": { "type": "string" }
+          "html": { "type": "string" }
         }
       },
       "CourtAndJudgmentFieldsDto": {
@@ -3566,8 +3565,7 @@
           },
           "divisionMeetingFields": {
             "$ref": "#/components/schemas/ApplicationDivisionMeetingFieldsDto"
-          },
-          "additionalText": { "type": "string" }
+          }
         },
         "required": [
           "courtAndJudgmentFields",
@@ -3617,6 +3615,7 @@
             "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
           },
           "title": { "type": "string" },
+          "additionalText": { "type": "string" },
           "commonFields": {
             "$ref": "#/components/schemas/CommonApplicationFieldsDto"
           },
@@ -3698,8 +3697,7 @@
           },
           "divisionMeetingFields": {
             "$ref": "#/components/schemas/UpdateApplicationDivisionMeetingFieldsDto"
-          },
-          "additionalText": { "type": "string" }
+          }
         }
       },
       "UpdateApplicationDto": {
