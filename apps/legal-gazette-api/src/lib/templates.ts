@@ -1,4 +1,4 @@
-import { isBase64 } from 'class-validator'
+import { isBase64, isDefined } from 'class-validator'
 
 import { InternalServerErrorException } from '@nestjs/common'
 
@@ -19,7 +19,7 @@ export const getSignatureMarkup = ({
   location?: string | null
   date?: Date | null
 }) => {
-  if (!name || !location || !date) {
+  if (!isDefined(name) && !isDefined(location) && !isDefined(date)) {
     return ''
   }
 
@@ -333,6 +333,13 @@ export const getAdvertHTMLMarkup = (
     }
   }
 
+  const signatureMarkup = getSignatureMarkup({
+    name: model.signatureName,
+    onBehalfOf: model.signatureOnBehalfOf,
+    location: model.signatureLocation,
+    date: model.signatureDate,
+  })
+
   return `
   <div class="advert legal-gazette">
     <p class="advertSerial">${publishing.publishedAt ? `Útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}` : `Áætlaður útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}`}</p>
@@ -344,13 +351,7 @@ export const getAdvertHTMLMarkup = (
       ${markup}
     </div>
 
-
-      ${getSignatureMarkup({
-        name: model.signatureName,
-        onBehalfOf: model.signatureOnBehalfOf,
-        location: model.signatureLocation,
-        date: model.signatureDate,
-      })}
+    ${signatureMarkup}
     ${model.publicationNumber ? `<p class="advertSerial">${model.publicationNumber}${version}</p>` : `<p class="advertSerial">(Reiknast við útgáfu)${version}</p>`}
   </div>
   `

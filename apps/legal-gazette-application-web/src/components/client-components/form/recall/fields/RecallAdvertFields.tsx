@@ -2,21 +2,23 @@
 
 import { useFormContext } from 'react-hook-form'
 
+import {
+  ApplicationInputFields,
+  RecallApplicationInputFields,
+  RecallApplicationSchema,
+} from '@dmr.is/legal-gazette/schemas'
+
 import { GridColumn, GridRow, Stack, Text } from '@island.is/island-ui/core'
 
 import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
-import {
-  RecallFormFields,
-  RecallFormSchema,
-} from '../../../../../lib/forms/schemas/recall-schema'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
 
 export const RecallAdvertFields = () => {
-  const { getValues } = useFormContext<RecallFormSchema>()
+  const { getValues } = useFormContext<RecallApplicationSchema>()
 
-  const { applicationId, courtOptions } = getValues('meta')
+  const { applicationId, courtDistrictOptions } = getValues('metadata')
 
   const { updateAdditionalText, updateCourtDistrict, updateJudgmentDate } =
     useUpdateApplication(applicationId)
@@ -27,8 +29,8 @@ export const RecallAdvertFields = () => {
       <GridRow rowGap={[2, 3]}>
         <GridColumn span={['12/12', '6/12']}>
           <SelectController
-            options={courtOptions}
-            name={RecallFormFields.COURT_ID}
+            options={courtDistrictOptions}
+            name={RecallApplicationInputFields.COURT_DISTRICT_ID}
             label="Dómstóll"
             required
             onChange={(val) => updateCourtDistrict(val)}
@@ -36,7 +38,7 @@ export const RecallAdvertFields = () => {
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <DatePickerController
-            name={RecallFormFields.JUDGEMENT_DATE}
+            name={RecallApplicationInputFields.JUDGMENT_DATE}
             label="Úrskurðardagur"
             required
             onChange={(val) => updateJudgmentDate(val.toISOString())}
@@ -45,7 +47,7 @@ export const RecallAdvertFields = () => {
         <GridColumn span="12/12">
           <InputController
             textArea
-            name={RecallFormFields.ADDITIONAL_TEXT}
+            name={ApplicationInputFields.ADDITIONAL_TEXT}
             label="Frjáls texti"
             onBlur={(val) => updateAdditionalText(val)}
           />

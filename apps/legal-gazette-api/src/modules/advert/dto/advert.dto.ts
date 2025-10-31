@@ -597,17 +597,10 @@ export class CreateAdvertDto {
   @IsDateString()
   judgementDate?: string | null
 
-  @ApiProperty({
-    type: String,
-    format: 'date-time',
-    required: false,
-    nullable: true,
-    description: 'Division meeting date',
-  })
+  @ApiProperty({ type: String })
   @IsOptional()
-  @Type(() => Date)
   @IsDateString()
-  divisionMeetingDate?: Date | null
+  divisionMeetingDate?: string | null
 
   @ApiProperty({
     type: String,

@@ -19,6 +19,7 @@ export type CommonFormProps = {
   signature: SignatureSchema
   publishingDates: PublishingDatesSchema[]
   communicationChannels: CommunicationChannelSchema[]
+  additionalText?: string
 }
 export const commonForm = ({
   metadata,
@@ -26,6 +27,7 @@ export const commonForm = ({
   signature,
   publishingDates,
   communicationChannels,
+  additionalText,
 }: CommonFormProps): UseFormProps<CommonApplicationSchema> => ({
   mode: 'onChange',
   resolver: zodResolver(commonApplicationSchema),
@@ -35,5 +37,6 @@ export const commonForm = ({
     signature,
     publishingDates,
     communicationChannels,
+    additionalText,
   },
 })

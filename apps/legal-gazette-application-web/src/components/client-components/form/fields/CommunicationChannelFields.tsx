@@ -6,6 +6,7 @@ import {
   BaseApplicationSchema,
   CommunicationChannelSchema,
 } from '@dmr.is/legal-gazette/schemas'
+import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
 import {
   Box,
@@ -24,7 +25,8 @@ import {
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 
 export const CommunicationChannelFields = () => {
-  const { getValues, setValue, watch } = useFormContext<BaseApplicationSchema>()
+  const { getValues, setValue, watch, formState, trigger } =
+    useFormContext<BaseApplicationSchema>()
 
   const { updateCommunicationChannels } = useUpdateApplication(
     getValues(ApplicationInputFields.APPLICATION_ID),
@@ -78,6 +80,7 @@ export const CommunicationChannelFields = () => {
     const updatedChannels = channels.filter((_, i) => i !== index)
     setValue(ApplicationInputFields.COMMUNICATION_CHANNELS, updatedChannels)
     updateCommunicationChannels(updatedChannels)
+    trigger(ApplicationInputFields.COMMUNICATION_CHANNELS)
   }
 
   return (
@@ -87,6 +90,13 @@ export const CommunicationChannelFields = () => {
       </GridColumn>
       <GridColumn span="12/12">
         <Stack space={[2, 3]}>
+          {formState.errors?.communicationChannels && (
+            <AlertMessage
+              type="error"
+              title="Engin samskiptaleið valin"
+              message={formState.errors.communicationChannels.message}
+            />
+          )}
           {toggleAdd && (
             <Box background="blue100" padding={[2, 3]} borderRadius="large">
               <Stack space={[1, 2]}>

@@ -1,27 +1,28 @@
 import subDays from 'date-fns/subDays'
 import { useFormContext } from 'react-hook-form'
 
+import {
+  RecallApplicationInputFields,
+  RecallApplicationSchema,
+} from '@dmr.is/legal-gazette/schemas'
+
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
 import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
 import { POSTPONE_LIMIT } from '../../../../../lib/constants'
-import {
-  RecallFormFields,
-  RecallFormSchema,
-} from '../../../../../lib/forms/schemas/recall-schema'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
 export const RecallSettlementFields = () => {
-  const { getValues } = useFormContext<RecallFormSchema>()
-  const { recallType: applicationType } = getValues('fields')
+  const { getValues } = useFormContext<RecallApplicationSchema>()
+  const { type } = getValues('fields')
 
   const title =
-    applicationType === 'bankruptcy'
+    type === 'RECALL_BANKRUPTCY'
       ? 'Upplýsingar um þrotabúið'
       : 'Upplýsingar um dánarbúið'
 
-  const type = applicationType === 'bankruptcy' ? 'þrotabús' : 'dánarbús'
+  const settlementType = type === 'RECALL_BANKRUPTCY' ? 'þrotabús' : 'dánarbús'
 
   const {
     updateSettlementName,
@@ -29,7 +30,7 @@ export const RecallSettlementFields = () => {
     updateSettlementDeadlineDate,
     updateSettlementAddress,
     updateSettlementNationalId,
-  } = useUpdateApplication(getValues('meta.applicationId'))
+  } = useUpdateApplication(getValues('metadata.applicationId'))
 
   return (
     <GridRow rowGap={[2, 3]}>
@@ -38,25 +39,25 @@ export const RecallSettlementFields = () => {
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
         <InputController
-          name={RecallFormFields.SETTLEMENT_NAME}
-          label={`Nafn ${type}`}
+          name={RecallApplicationInputFields.SETTLEMENT_NAME}
+          label={`Nafn ${settlementType}`}
           required
           onBlur={(val) => updateSettlementName(val)}
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
         <InputController
-          name={RecallFormFields.SETTLEMENT_NATIONAL_ID}
-          label={`Kennitala ${type}`}
+          name={RecallApplicationInputFields.SETTLEMENT_NATIONAL_ID}
+          label={`Kennitala ${settlementType}`}
           required
           onBlur={(val) => updateSettlementNationalId(val)}
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
         <InputController
-          name={RecallFormFields.SETTLEMENT_ADDRESS}
+          name={RecallApplicationInputFields.SETTLEMENT_ADDRESS}
           label={
-            applicationType === 'bankruptcy'
+            settlementType === 'þrotabús'
               ? 'Heimilisfang þrotabús'
               : 'Síðasta heimilisfang'
           }
@@ -67,24 +68,22 @@ export const RecallSettlementFields = () => {
       <GridColumn span={['12/12', '6/12']}>
         <DatePickerController
           name={
-            applicationType === 'bankruptcy'
-              ? RecallFormFields.SETTLEMENT_DEADLINE
-              : RecallFormFields.SETTLEMENT_DATE_OF_DEATH
+            type === 'RECALL_BANKRUPTCY'
+              ? RecallApplicationInputFields.SETTLEMENT_DEADLINE_DATE
+              : RecallApplicationInputFields.SETTLEMENT_DATE_OF_DEATH
           }
-          maxDate={applicationType === 'bankruptcy' ? new Date() : undefined}
+          maxDate={type === 'RECALL_BANKRUPTCY' ? new Date() : undefined}
           minDate={
-            applicationType === 'bankruptcy'
+            type === 'RECALL_BANKRUPTCY'
               ? subDays(new Date(), POSTPONE_LIMIT)
               : undefined
           }
           label={
-            applicationType === 'bankruptcy'
-              ? 'Frestdagur þrotabús'
-              : 'Dánardagur'
+            type === 'RECALL_BANKRUPTCY' ? 'Frestdagur þrotabús' : 'Dánardagur'
           }
           required
           onChange={(val) => {
-            if (applicationType === 'bankruptcy') {
+            if (type === 'RECALL_BANKRUPTCY') {
               return updateSettlementDeadlineDate(val.toISOString())
             }
 
