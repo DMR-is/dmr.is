@@ -34,6 +34,8 @@ export const AdvertsToBePublished = ({
     efni: advert.title,
     utgafudagur: formatDate(advert.scheduledAt),
     owner: advert.createdBy,
+    href: `/ritstjorn/${advert.id}`,
+    hasLink: true,
   }))
 
   return (
