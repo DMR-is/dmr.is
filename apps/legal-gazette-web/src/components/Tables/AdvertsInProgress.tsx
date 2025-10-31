@@ -44,6 +44,7 @@ export const AdvertsInProgress = () => {
     ),
     tegund: advert.type.title,
     efni: advert.title,
+    owner: advert.createdBy,
     href: `/ritstjorn/${advert.id}`,
     hasLink: true,
   }))
@@ -92,6 +93,10 @@ export const AdvertsInProgress = () => {
         {
           field: 'efni',
           children: formatMessage(ritstjornTableMessages.columns.content),
+        },
+        {
+          field: 'owner',
+          children: formatMessage(ritstjornTableMessages.columns.owner),
         },
       ]}
       rows={rows}
