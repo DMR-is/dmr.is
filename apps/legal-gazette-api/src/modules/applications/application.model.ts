@@ -382,15 +382,15 @@ export class ApplicationModel extends BaseModel<
   get title() {
     switch (this.applicationType) {
       case ApplicationTypeEnum.RECALL_BANKRUPTCY:
-        if (this.settlementName) {
+        if (this.settlementName !== null) {
           return `Innköllun þrotabús - ${this.settlementName}`
         }
         return `Innköllun þrotabús`
       case ApplicationTypeEnum.RECALL_DECEASED:
-        if (this.settlementName) {
+        if (this.settlementName !== null) {
           return `Innköllun dánarbús - ${this.settlementName}`
         }
-        return `Innköllun dánarbús - ${this.settlementName}`
+        return `Innköllun dánarbús`
       default:
         if (this.caption) {
           return `Almenn umsókn - ${this.caption}`

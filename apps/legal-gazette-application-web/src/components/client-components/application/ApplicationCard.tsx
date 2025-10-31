@@ -32,7 +32,11 @@ export const ApplicationCard = ({ application }: Props) => {
         : `${PageRoutes.APPLICATION_DANARBU}/${application.id}`
 
   const statusText =
-    application.status === ApplicationStatusEnum.DRAFT ? 'Í vinnslu' : 'Innsend'
+    application.status === ApplicationStatusEnum.DRAFT
+      ? 'Í vinnslu hjá notanda'
+      : ApplicationStatusEnum.SUBMITTED
+        ? 'Í vinnslu hjá ritstjórn'
+        : 'Lokið'
 
   return (
     <Box borderRadius="large" border="standard" padding={3} background="white">
@@ -43,7 +47,17 @@ export const ApplicationCard = ({ application }: Props) => {
               application.updatedAt,
             )}`}
           </Text>
-          <Tag variant="blue">{statusText}</Tag>
+          <Tag
+            variant={
+              application.status === ApplicationStatusEnum.DRAFT
+                ? 'blue'
+                : ApplicationStatusEnum.SUBMITTED
+                  ? 'blueberry'
+                  : 'mint'
+            }
+          >
+            {statusText}
+          </Tag>
         </Inline>
 
         <Stack space={1}>

@@ -12,7 +12,7 @@ import {
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
 import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
-import { TWO_WEEKS } from '../../../../../lib/constants'
+import { ONE_WEEK, TWO_WEEKS } from '../../../../../lib/constants'
 import { getNextWeekday, getWeekendDays } from '../../../../../lib/utils'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
@@ -46,7 +46,7 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
   const minDate = recallDates?.length
     ? addDays(
         new Date(recallDates[recallDates.length - 1].publishingDate),
-        TWO_WEEKS,
+        ONE_WEEK * 9,
       )
     : addDays(new Date(), TWO_WEEKS)
 
