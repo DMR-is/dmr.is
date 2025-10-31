@@ -5,7 +5,7 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { decode } from 'jsonwebtoken'
 
 import { serverFetcher } from '@dmr.is/api-client/fetchers'
-import { identityServerConfig } from '@dmr.is/auth/identityServerConfig'
+import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
 import { getLogger } from '@dmr.is/logging'
 
@@ -19,6 +19,15 @@ type ErrorWithPotentialReqRes = Error & {
 const SESION_TIMEOUT = 60 * 60 // 1 hour
 
 const LOGGING_CATEGORY = 'next-auth'
+
+export const identityServerConfig = {
+  id: identityServerId,
+  name: 'Iceland authentication service',
+  scope: `openid offline_access profile`,
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  clientId: process.env.LG_PUBLIC_WEB_CLIENT_ID!,
+  clientSecret: process.env.LG_PUBLIC_WEB_CLIENT_SECRET ?? '',
+}
 
 async function authorize(nationalId?: string, idToken?: string) {
   if (!idToken || !nationalId) {
@@ -98,10 +107,14 @@ export const authOptions: AuthOptions = {
       // On failure, return token.invalid = true
 
       const redirectUri =
-        process.env.LEGAL_GAZETTE_PUBLIC_WEB_IDENTITY_SERVER_LOGOUT_URL ??
-        process.env.IDENTITY_SERVER_LOGOUT_URL
+        process.env.LG_PUBLIC_WEB_URL ?? process.env.IDENTITY_SERVER_LOGOUT_URL
 
-      return refreshAccessToken(token, redirectUri)
+      return refreshAccessToken(
+        token,
+        redirectUri,
+        identityServerConfig.clientId,
+        identityServerConfig.clientSecret,
+      )
     },
 
     session: async ({ session, token }) => {
