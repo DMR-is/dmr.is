@@ -381,25 +381,21 @@ export class ApplicationModel extends BaseModel<
 
   get title() {
     switch (this.applicationType) {
-      case ApplicationTypeEnum.COMMON: {
-        let title = 'Almenn umsókn'
-        if (this.caption && this.type) {
-          title = `${this.type.title} - ${this.caption}`
-        }
-
-        return title
-      }
       case ApplicationTypeEnum.RECALL_BANKRUPTCY:
-      case ApplicationTypeEnum.RECALL_DECEASED: {
-        let title = 'Innköllun þrotabús'
-        if (this.settlementName) {
-          title = `Innköllun þrotabús - ${this.settlementName}`
+        if (this.settlementName !== null) {
+          return `Innköllun þrotabús - ${this.settlementName}`
         }
-
-        return title
-      }
+        return `Innköllun þrotabús`
+      case ApplicationTypeEnum.RECALL_DECEASED:
+        if (this.settlementName !== null) {
+          return `Innköllun dánarbús - ${this.settlementName}`
+        }
+        return `Innköllun dánarbús`
       default:
-        return 'Almenn umsókn'
+        if (this.caption) {
+          return `Almenn umsókn - ${this.caption}`
+        }
+        return `Almenn umsókn`
     }
   }
 
@@ -443,32 +439,34 @@ export class ApplicationModel extends BaseModel<
         categoryId: model.categoryId ?? undefined,
         html: model.html ?? undefined,
       },
-      liquidatorFields: {
-        name: model.liquidatorName ?? undefined,
-        location: model.liquidatorLocation ?? undefined,
-      },
-      courtAndJudgmentFields: {
-        courtDistrictId: model.courtDistrictId ?? undefined,
-        judgmentDate: model.judgmentDate
-          ? model.judgmentDate.toISOString()
-          : undefined,
-      },
-      divisionMeetingFields: {
-        meetingDate: model.divisionMeetingDate
-          ? model.divisionMeetingDate.toISOString()
-          : undefined,
-        meetingLocation: model.divisionMeetingLocation ?? undefined,
-      },
-      settlementFields: {
-        name: model.settlementName ?? undefined,
-        nationalId: model.settlementNationalId ?? undefined,
-        address: model.settlementAddress ?? undefined,
-        deadlineDate: model.settlementDeadlineDate
-          ? model.settlementDeadlineDate.toISOString()
-          : undefined,
-        dateOfDeath: model.settlementDateOfDeath
-          ? model.settlementDateOfDeath.toISOString()
-          : undefined,
+      recallFields: {
+        liquidatorFields: {
+          name: model.liquidatorName ?? undefined,
+          location: model.liquidatorLocation ?? undefined,
+        },
+        courtAndJudgmentFields: {
+          courtDistrictId: model.courtDistrictId ?? undefined,
+          judgmentDate: model.judgmentDate
+            ? model.judgmentDate.toISOString()
+            : undefined,
+        },
+        divisionMeetingFields: {
+          meetingDate: model.divisionMeetingDate
+            ? model.divisionMeetingDate.toISOString()
+            : undefined,
+          meetingLocation: model.divisionMeetingLocation ?? undefined,
+        },
+        settlementFields: {
+          name: model.settlementName ?? undefined,
+          nationalId: model.settlementNationalId ?? undefined,
+          address: model.settlementAddress ?? undefined,
+          deadlineDate: model.settlementDeadlineDate
+            ? model.settlementDeadlineDate.toISOString()
+            : undefined,
+          dateOfDeath: model.settlementDateOfDeath
+            ? model.settlementDateOfDeath.toISOString()
+            : undefined,
+        },
       },
       signature: {
         name: model.signatureName ?? undefined,

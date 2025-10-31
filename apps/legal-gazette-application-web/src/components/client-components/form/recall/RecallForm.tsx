@@ -2,14 +2,13 @@
 
 import { FormProvider, useForm } from 'react-hook-form'
 
+import { RecallApplicationSchema } from '@dmr.is/legal-gazette/schemas'
+import { AlertMessage } from '@dmr.is/ui/components/island-is'
+
 import { Stack, Text } from '@island.is/island-ui/core'
 
 import { useSubmitApplication } from '../../../../hooks/useSubmitApplication'
-import { recallForm } from '../../../../lib/forms/recall-form'
-import {
-  RecallFormFieldsSchema,
-  RecallFormSchema,
-} from '../../../../lib/forms/schemas/recall-schema'
+import { recallForm, RecallFormProps } from '../../../../lib/forms/recall-form'
 import { ApplicationShell } from '../../application/ApplicationShell'
 import { CommunicationChannelFields } from '../fields/CommunicationChannelFields'
 import { PublishingFields } from '../fields/PublishingFields'
@@ -19,31 +18,14 @@ import { RecallDivisionFields } from './fields/RecallDivisionFields'
 import { RecallLiquidatorFields } from './fields/RecallLiquidatorFields'
 import { RecallSettlementFields } from './fields/RecallSettlementFields'
 
-type Props = {
-  caseId: string
-  applicationId: string
-  courtOptions: { label: string; value: string }[]
-  fields: Partial<RecallFormFieldsSchema>
-}
+export const RecallForm = (props: RecallFormProps) => {
+  const methods = useForm<RecallApplicationSchema>(recallForm(props))
 
-export const RecallForm = ({
-  caseId,
-  applicationId,
-  courtOptions,
-  fields,
-}: Props) => {
-  const methods = useForm<RecallFormSchema>(
-    recallForm({
-      caseId: caseId,
-      applicationId: applicationId,
-      courtOptions: courtOptions,
-      fields: fields,
-    }),
+  const { onValidSubmit, onInvalidSubmit } = useSubmitApplication(
+    props.metadata.applicationId,
   )
 
-  const { onValidSubmit, onInvalidSubmit } = useSubmitApplication(applicationId)
-
-  const isBankruptcy = fields.recallType === 'bankruptcy'
+  const isBankruptcy = props.fields.type === 'RECALL_BANKRUPTCY'
 
   return (
     <FormProvider {...methods}>
@@ -64,7 +46,16 @@ export const RecallForm = ({
             <RecallAdvertFields />
             <RecallSettlementFields />
             <RecallLiquidatorFields />
-            <PublishingFields additionalTitle="innköllunar" />
+            <PublishingFields
+              additionalTitle="innköllunar"
+              alert={
+                <AlertMessage
+                  type="info"
+                  title="Minnst tveir birtingardagar eru nauðsynlegir"
+                  message="Bættu við birtingardögum fyrir innköllunina hér fyrir neðan."
+                />
+              }
+            />
             <RecallDivisionFields required={isBankruptcy} />
             <SignatureFields />
             <CommunicationChannelFields />

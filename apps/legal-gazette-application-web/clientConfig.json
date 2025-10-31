@@ -3535,6 +3535,20 @@
           "html": { "type": "string" }
         }
       },
+      "CourtAndJudgmentFieldsDto": {
+        "type": "object",
+        "properties": {
+          "courtDistrictId": { "type": "string" },
+          "judgmentDate": { "type": "string" }
+        }
+      },
+      "ApplicationLiquidationFieldsDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "location": { "type": "string" }
+        }
+      },
       "ApplicationSettlementDto": {
         "type": "object",
         "properties": {
@@ -3552,19 +3566,28 @@
           "meetingLocation": { "type": "string" }
         }
       },
-      "CourtAndJudgmentFieldsDto": {
+      "RecallFieldsDto": {
         "type": "object",
         "properties": {
-          "courtDistrictId": { "type": "string" },
-          "judgmentDate": { "type": "string" }
-        }
-      },
-      "ApplicationLiquidationFieldsDto": {
-        "type": "object",
-        "properties": {
-          "name": { "type": "string" },
-          "location": { "type": "string" }
-        }
+          "courtAndJudgmentFields": {
+            "$ref": "#/components/schemas/CourtAndJudgmentFieldsDto"
+          },
+          "liquidatorFields": {
+            "$ref": "#/components/schemas/ApplicationLiquidationFieldsDto"
+          },
+          "settlementFields": {
+            "$ref": "#/components/schemas/ApplicationSettlementDto"
+          },
+          "divisionMeetingFields": {
+            "$ref": "#/components/schemas/ApplicationDivisionMeetingFieldsDto"
+          }
+        },
+        "required": [
+          "courtAndJudgmentFields",
+          "liquidatorFields",
+          "settlementFields",
+          "divisionMeetingFields"
+        ]
       },
       "ApplicationSignatureDto": {
         "type": "object",
@@ -3607,22 +3630,11 @@
             "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
           },
           "title": { "type": "string" },
+          "additionalText": { "type": "string" },
           "commonFields": {
             "$ref": "#/components/schemas/CommonApplicationFieldsDto"
           },
-          "settlementFields": {
-            "$ref": "#/components/schemas/ApplicationSettlementDto"
-          },
-          "divisionMeetingFields": {
-            "$ref": "#/components/schemas/ApplicationDivisionMeetingFieldsDto"
-          },
-          "additionalText": { "type": "string" },
-          "courtAndJudgmentFields": {
-            "$ref": "#/components/schemas/CourtAndJudgmentFieldsDto"
-          },
-          "liquidatorFields": {
-            "$ref": "#/components/schemas/ApplicationLiquidationFieldsDto"
-          },
+          "recallFields": { "$ref": "#/components/schemas/RecallFieldsDto" },
           "signature": {
             "$ref": "#/components/schemas/ApplicationSignatureDto"
           },
@@ -3649,33 +3661,69 @@
           "status",
           "title",
           "commonFields",
-          "settlementFields",
-          "divisionMeetingFields",
-          "courtAndJudgmentFields",
-          "liquidatorFields",
+          "recallFields",
           "signature",
           "publishingDates",
           "communicationChannels"
         ]
       },
+      "UpdateCourtAndJudgmentFieldsDto": {
+        "type": "object",
+        "properties": {
+          "courtDistrictId": { "type": "string" },
+          "judgmentDate": { "type": "string" }
+        }
+      },
+      "UpdateApplicationLiquidationFieldsDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "location": { "type": "string" }
+        }
+      },
+      "UpdateApplicationSettlementDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "address": { "type": "string" },
+          "deadlineDate": { "type": "string" },
+          "dateOfDeath": { "type": "string" }
+        }
+      },
+      "UpdateApplicationDivisionMeetingFieldsDto": {
+        "type": "object",
+        "properties": {
+          "meetingDate": { "type": "string" },
+          "meetingLocation": { "type": "string" }
+        }
+      },
+      "UpdateRecallFieldsDto": {
+        "type": "object",
+        "properties": {
+          "courtAndJudgmentFields": {
+            "$ref": "#/components/schemas/UpdateCourtAndJudgmentFieldsDto"
+          },
+          "liquidatorFields": {
+            "$ref": "#/components/schemas/UpdateApplicationLiquidationFieldsDto"
+          },
+          "settlementFields": {
+            "$ref": "#/components/schemas/UpdateApplicationSettlementDto"
+          },
+          "divisionMeetingFields": {
+            "$ref": "#/components/schemas/UpdateApplicationDivisionMeetingFieldsDto"
+          }
+        }
+      },
       "UpdateApplicationDto": {
         "type": "object",
         "properties": {
+          "additionalText": { "type": "string" },
           "commonFields": {
             "$ref": "#/components/schemas/CommonApplicationFieldsDto"
           },
-          "settlementFields": {
-            "$ref": "#/components/schemas/ApplicationSettlementDto"
-          },
-          "divisionMeetingFields": {
-            "$ref": "#/components/schemas/ApplicationDivisionMeetingFieldsDto"
-          },
-          "additionalText": { "type": "string" },
-          "courtAndJudgmentFields": {
-            "$ref": "#/components/schemas/CourtAndJudgmentFieldsDto"
-          },
-          "liquidatorFields": {
-            "$ref": "#/components/schemas/ApplicationLiquidationFieldsDto"
+          "recallFields": {
+            "$ref": "#/components/schemas/UpdateRecallFieldsDto"
           },
           "signature": {
             "$ref": "#/components/schemas/ApplicationSignatureDto"

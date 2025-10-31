@@ -1,9 +1,10 @@
 import { isUUID } from 'class-validator'
 import z from 'zod'
 
-import { baseApplicationSchema, baseFieldsSchema } from './base'
+import { baseApplicationSchema } from './base'
 
-export const commonApplicationFieldsScehma = baseFieldsSchema.extend({
+export const commonApplicationFieldsScehma = z.object({
+  type: z.literal('COMMON'),
   typeId: z.uuid().refine((id) => isUUID(id), {
     message: 'Tegund auglýsingar er nauðsynleg',
   }),
