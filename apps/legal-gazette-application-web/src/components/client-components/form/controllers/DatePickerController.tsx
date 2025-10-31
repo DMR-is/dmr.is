@@ -20,7 +20,7 @@ export const DatePickerController = (props: Props) => {
   const error = fieldState.error
 
   const handleChange = (date: Date) => {
-    field.onChange(date)
+    field.onChange(date.toISOString())
     if (onChange) {
       onChange(date)
     }

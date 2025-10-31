@@ -76,18 +76,18 @@ export class ApplicationService implements IApplicationService {
     user: DMRUser,
   ) {
     const check = commonApplicationValidationSchema.safeParse({
-      metadata: {},
       signature: {
         name: application.signatureName,
         onBehalfOf: application.signatureOnBehalfOf,
         location: application.signatureLocation,
-        date: application.signatureDate,
+        date: application.signatureDate?.toISOString(),
       },
       publishingDates: application.publishingDates.map((d) => ({
         publishingDate: d.toISOString(),
       })),
       communicationChannels: application.communicationChannels,
       fields: {
+        type: application.applicationType,
         typeId: application.typeId,
         categoryId: application.categoryId,
         caption: application.caption,
@@ -114,7 +114,7 @@ export class ApplicationService implements IApplicationService {
       typeId: requiredFields.fields.typeId,
       categoryId: requiredFields.fields.categoryId,
       caption: requiredFields.fields.caption,
-      additionalText: requiredFields.fields.additionalText,
+      additionalText: requiredFields.additionalText,
       createdBy: user.fullName,
       createdByNationalId: user.nationalId,
       signatureName: requiredFields.signature?.name,
@@ -405,28 +405,30 @@ export class ApplicationService implements IApplicationService {
       signatureLocation: body.signature?.location,
       signatureName: body.signature?.name,
       signatureOnBehalfOf: body.signature?.onBehalfOf,
-      courtDistrictId: body.courtAndJudgmentFields?.courtDistrictId,
-      judgmentDate: body.courtAndJudgmentFields?.judgmentDate
-        ? new Date(body.courtAndJudgmentFields.judgmentDate)
+      courtDistrictId:
+        body.recallFields?.courtAndJudgmentFields?.courtDistrictId,
+      judgmentDate: body.recallFields?.courtAndJudgmentFields?.judgmentDate
+        ? new Date(body.recallFields.courtAndJudgmentFields.judgmentDate)
         : undefined,
       publishingDates: body.publishingDates?.map(
         ({ publishingDate }) => new Date(publishingDate),
       ),
       communicationChannels: body.communicationChannels,
-      liquidatorName: body.liquidatorFields?.name,
-      liquidatorLocation: body.liquidatorFields?.location,
-      divisionMeetingDate: body.divisionMeetingFields?.meetingDate
-        ? new Date(body.divisionMeetingFields.meetingDate)
+      liquidatorName: body.recallFields?.liquidatorFields?.name,
+      liquidatorLocation: body.recallFields?.liquidatorFields?.location,
+      divisionMeetingDate: body.recallFields?.divisionMeetingFields?.meetingDate
+        ? new Date(body.recallFields.divisionMeetingFields.meetingDate)
         : undefined,
-      divisionMeetingLocation: body.divisionMeetingFields?.meetingLocation,
-      settlementName: body.settlementFields?.name,
-      settlementNationalId: body.settlementFields?.nationalId,
-      settlementAddress: body.settlementFields?.address,
-      settlementDateOfDeath: body.settlementFields?.dateOfDeath
-        ? new Date(body.settlementFields.dateOfDeath)
+      divisionMeetingLocation:
+        body.recallFields?.divisionMeetingFields?.meetingLocation,
+      settlementName: body.recallFields?.settlementFields?.name,
+      settlementNationalId: body.recallFields?.settlementFields?.nationalId,
+      settlementAddress: body.recallFields?.settlementFields?.address,
+      settlementDateOfDeath: body.recallFields?.settlementFields?.dateOfDeath
+        ? new Date(body.recallFields?.settlementFields.dateOfDeath)
         : undefined,
-      settlementDeadlineDate: body.settlementFields?.deadlineDate
-        ? new Date(body.settlementFields.deadlineDate)
+      settlementDeadlineDate: body.recallFields?.settlementFields?.deadlineDate
+        ? new Date(body.recallFields?.settlementFields.deadlineDate)
         : undefined,
     })
     return application.fromModelToDetailedDto()

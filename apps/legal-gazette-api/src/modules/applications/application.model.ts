@@ -443,32 +443,34 @@ export class ApplicationModel extends BaseModel<
         categoryId: model.categoryId ?? undefined,
         html: model.html ?? undefined,
       },
-      liquidatorFields: {
-        name: model.liquidatorName ?? undefined,
-        location: model.liquidatorLocation ?? undefined,
-      },
-      courtAndJudgmentFields: {
-        courtDistrictId: model.courtDistrictId ?? undefined,
-        judgmentDate: model.judgmentDate
-          ? model.judgmentDate.toISOString()
-          : undefined,
-      },
-      divisionMeetingFields: {
-        meetingDate: model.divisionMeetingDate
-          ? model.divisionMeetingDate.toISOString()
-          : undefined,
-        meetingLocation: model.divisionMeetingLocation ?? undefined,
-      },
-      settlementFields: {
-        name: model.settlementName ?? undefined,
-        nationalId: model.settlementNationalId ?? undefined,
-        address: model.settlementAddress ?? undefined,
-        deadlineDate: model.settlementDeadlineDate
-          ? model.settlementDeadlineDate.toISOString()
-          : undefined,
-        dateOfDeath: model.settlementDateOfDeath
-          ? model.settlementDateOfDeath.toISOString()
-          : undefined,
+      recallFields: {
+        liquidatorFields: {
+          name: model.liquidatorName ?? undefined,
+          location: model.liquidatorLocation ?? undefined,
+        },
+        courtAndJudgmentFields: {
+          courtDistrictId: model.courtDistrictId ?? undefined,
+          judgmentDate: model.judgmentDate
+            ? model.judgmentDate.toISOString()
+            : undefined,
+        },
+        divisionMeetingFields: {
+          meetingDate: model.divisionMeetingDate
+            ? model.divisionMeetingDate.toISOString()
+            : undefined,
+          meetingLocation: model.divisionMeetingLocation ?? undefined,
+        },
+        settlementFields: {
+          name: model.settlementName ?? undefined,
+          nationalId: model.settlementNationalId ?? undefined,
+          address: model.settlementAddress ?? undefined,
+          deadlineDate: model.settlementDeadlineDate
+            ? model.settlementDeadlineDate.toISOString()
+            : undefined,
+          dateOfDeath: model.settlementDateOfDeath
+            ? model.settlementDateOfDeath.toISOString()
+            : undefined,
+        },
       },
       signature: {
         name: model.signatureName ?? undefined,

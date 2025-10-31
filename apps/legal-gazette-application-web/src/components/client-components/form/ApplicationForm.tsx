@@ -1,5 +1,7 @@
 'use client'
 
+import { isBase64 } from 'class-validator'
+
 import { OptionSchema } from '@dmr.is/legal-gazette/schemas'
 
 import { ApplicationDetailedDto, ApplicationTypeEnum } from '../../../gen/fetch'
@@ -30,15 +32,19 @@ export const ApplicationForm = ({
           fields={{
             ...application.commonFields,
             html: (() => {
-              if (application.commonFields.html) {
+              if (
+                application.commonFields.html &&
+                isBase64(application.commonFields.html)
+              ) {
                 return Buffer.from(
                   application.commonFields.html,
                   'base64',
                 ).toString('utf-8')
               }
 
-              return ''
+              return application.commonFields.html
             })(),
+            type: application.applicationType,
           }}
           communicationChannels={application.communicationChannels}
           publishingDates={application.publishingDates}
@@ -49,47 +55,19 @@ export const ApplicationForm = ({
     case ApplicationTypeEnum.RECALLDECEASED:
       return (
         <RecallForm
-          applicationId={application.id}
-          caseId={application.caseId}
-          courtOptions={courtDistricts}
-          fields={{
-            recallType:
-              application.applicationType ===
-              ApplicationTypeEnum.RECALLBANKRUPTCY
-                ? 'bankruptcy'
-                : 'deceased',
-            additionalText: application.additionalText,
-            communicationChannels: application.communicationChannels,
-            courtId: application.courtAndJudgmentFields.courtDistrictId,
-            judgementDate: application.courtAndJudgmentFields.judgmentDate
-              ? new Date(application.courtAndJudgmentFields.judgmentDate)
-              : undefined,
-            divisionMeetingDate: application.divisionMeetingFields?.meetingDate
-              ? new Date(application.divisionMeetingFields.meetingDate)
-              : undefined,
-            divisionMeetingLocation:
-              application.divisionMeetingFields.meetingLocation,
-            settlementName: application.settlementFields.name,
-            settlementNationalId: application.settlementFields.nationalId,
-            settlementAddress: application.settlementFields.address,
-            settlementDateOfDeath: application.settlementFields.dateOfDeath
-              ? new Date(application.settlementFields.dateOfDeath)
-              : undefined,
-            settlementDeadline: application.settlementFields.deadlineDate
-              ? new Date(application.settlementFields.deadlineDate)
-              : undefined,
-            liquidatorName: application.liquidatorFields.name,
-            liquidatorLocation: application.liquidatorFields.location,
-            signatureName: application.signature?.name,
-            signatureDate: application.signature?.date
-              ? new Date(application.signature.date)
-              : undefined,
-            signatureLocation: application.signature?.location,
-            signatureOnBehalfOf: application.signature?.onBehalfOf,
-            publishingDates: application.publishingDates.map(
-              ({ publishingDate }) => new Date(publishingDate),
-            ),
+          metadata={{
+            applicationId: application.id,
+            caseId: application.caseId,
+            courtDistrictOptions: courtDistricts,
+            typeOptions: types,
           }}
+          fields={{
+            ...application.recallFields,
+            type: application.applicationType,
+          }}
+          communicationChannels={application.communicationChannels}
+          publishingDates={application.publishingDates}
+          signature={application.signature}
         />
       )
     default:
