@@ -26,7 +26,7 @@ const nextConfig = {
   },
   env: {
     API_MOCKS: process.env.API_MOCKS || '',
-    NEXTAUTH_URL: `${process.env.OFFICIAL_JOURNAL_WEB_URL ?? process.env.IDENTITY_SERVER_LOGOUT_URL}/api/auth`,
+    NEXTAUTH_URL: process.env.NODE_ENV !== 'production' ? `${process.env.OFFICIAL_JOURNAL_WEB_URL}/api/auth` : process.env.NEXTAUTH_URL,
   },
 }
 
