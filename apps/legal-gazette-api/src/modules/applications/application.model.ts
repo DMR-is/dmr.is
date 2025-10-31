@@ -381,25 +381,21 @@ export class ApplicationModel extends BaseModel<
 
   get title() {
     switch (this.applicationType) {
-      case ApplicationTypeEnum.COMMON: {
-        let title = 'Almenn umsókn'
-        if (this.caption && this.type) {
-          title = `${this.type.title} - ${this.caption}`
-        }
-
-        return title
-      }
       case ApplicationTypeEnum.RECALL_BANKRUPTCY:
-      case ApplicationTypeEnum.RECALL_DECEASED: {
-        let title = 'Innköllun þrotabús'
         if (this.settlementName) {
-          title = `Innköllun þrotabús - ${this.settlementName}`
+          return `Innköllun þrotabús - ${this.settlementName}`
         }
-
-        return title
-      }
+        return `Innköllun þrotabús`
+      case ApplicationTypeEnum.RECALL_DECEASED:
+        if (this.settlementName) {
+          return `Innköllun dánarbús - ${this.settlementName}`
+        }
+        return `Innköllun dánarbús - ${this.settlementName}`
       default:
-        return 'Almenn umsókn'
+        if (this.caption) {
+          return `Almenn umsókn - ${this.caption}`
+        }
+        return `Almenn umsókn`
     }
   }
 
