@@ -48,3 +48,21 @@ export const updateApplicationSchema = z.object({
   publishingDates: z.array(publishingDatesSchema).optional(),
   communicationChannels: z.array(communicationChannelSchema).optional(),
 })
+
+export const addDivisionMeetingInputSchema = z.object({
+  applicationId: z.string(),
+  meetingDate: z.iso.datetime(),
+  meetingLocation: z.string(),
+  signature: strictSignatureSchema,
+  additionalText: z.string().optional(),
+  communicationChannels: z.array(communicationChannelSchema).optional(),
+})
+
+export const addDivisionEndingInputSchema = z.object({
+  applicationId: z.string(),
+  additionalText: z.string().optional(),
+  communicationChannels: z.array(communicationChannelSchema).optional(),
+  signature: strictSignatureSchema,
+  scheduledAt: z.iso.datetime(),
+  declaredClaims: z.number(),
+})
