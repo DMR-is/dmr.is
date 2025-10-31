@@ -3,6 +3,7 @@
 import { FormProvider, useForm } from 'react-hook-form'
 
 import { RecallApplicationSchema } from '@dmr.is/legal-gazette/schemas'
+import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
 import { Stack, Text } from '@island.is/island-ui/core'
 
@@ -45,7 +46,16 @@ export const RecallForm = (props: RecallFormProps) => {
             <RecallAdvertFields />
             <RecallSettlementFields />
             <RecallLiquidatorFields />
-            <PublishingFields additionalTitle="innköllunar" />
+            <PublishingFields
+              additionalTitle="innköllunar"
+              alert={
+                <AlertMessage
+                  type="info"
+                  title="Minnst tveir birtingardagar eru nauðsynlegir"
+                  message="Bættu við birtingardögum fyrir innköllunina hér fyrir neðan."
+                />
+              }
+            />
             <RecallDivisionFields required={isBankruptcy} />
             <SignatureFields />
             <CommunicationChannelFields />

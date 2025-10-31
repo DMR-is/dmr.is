@@ -3,12 +3,18 @@ import z from 'zod'
 import { baseApplicationSchema, publishingDatesSchema } from './base'
 
 export const courtAndJudgmentFieldsSchema = z.object({
-  courtDistrictId: z.string().refine((id) => id.length > 0, {
-    message: 'Staður er nauðsynlegur',
-  }),
-  judgmentDate: z.iso.datetime().refine((date) => date !== undefined, {
-    message: 'Úrskurðar dagsetning er nauðsynlegur',
-  }),
+  courtDistrictId: z
+    .string()
+    .optional()
+    .refine((id) => id && id.length > 0, {
+      message: 'Staður er nauðsynlegur',
+    }),
+  judgmentDate: z.iso
+    .datetime()
+    .optional()
+    .refine((date) => date !== undefined, {
+      message: 'Úrskurðar dagsetning er nauðsynlegur',
+    }),
 })
 
 export const settlementFieldsSchema = z.object({

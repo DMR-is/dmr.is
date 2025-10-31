@@ -2,6 +2,7 @@ import z from 'zod'
 
 import {
   communicationChannelSchema,
+  courtAndJudgmentFieldsInput,
   signatureSchema,
   updateApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
@@ -66,6 +67,7 @@ export const applicationRouter = router({
     .input(updateApplicationSchemaWithId)
     .mutation(async ({ ctx, input }) => {
       const { id, ...updateApplicationDto } = input
+
       return await ctx.api.updateApplication({
         applicationId: id,
         updateApplicationDto: { ...updateApplicationDto },

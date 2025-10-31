@@ -7,9 +7,9 @@ import {
 } from './base'
 import { commonApplicationFieldsScehma } from './common'
 
-const courtAndJudgmentFieldsInput = z.object({
+export const courtAndJudgmentFieldsInput = z.object({
   courtDistrictId: z.string().optional(),
-  judgementDate: z.iso.datetime().optional(),
+  judgmentDate: z.iso.datetime().optional(),
 })
 
 const settlementFieldsInput = z.object({

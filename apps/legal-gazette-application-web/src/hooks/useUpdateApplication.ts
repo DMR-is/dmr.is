@@ -326,16 +326,20 @@ export const useUpdateApplication = (applicationId: string) => {
   )
 
   const updateJudgmentDate = useCallback(
-    (judgmentDate: string) => {
+    (judgementDate: string) => {
       if (
-        judgmentDate ===
+        judgementDate ===
         application?.recallFields?.courtAndJudgmentFields?.judgmentDate
       ) {
         return
       }
 
       updateApplication(
-        { recallFields: { courtAndJudgmentFields: { judgmentDate } } },
+        {
+          recallFields: {
+            courtAndJudgmentFields: { judgmentDate: judgementDate },
+          },
+        },
         {
           successMessage: 'Úrskurðardagur vistaður',
           errorMessage: 'Ekki tókst að uppfæra úrskurðardag',
