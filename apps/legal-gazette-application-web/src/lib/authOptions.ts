@@ -5,22 +5,24 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { decode } from 'jsonwebtoken'
 
 import { identityServerId } from '@dmr.is/auth/identityProvider'
+import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
 import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
 
 const SESION_TIMEOUT = 60 * 60 // 1 hour
 
-export const identityServerConfig = {
+export const localIdentityServerConfig = {
   id: identityServerId,
   name: 'Iceland authentication service',
   scope: `openid offline_access profile`,
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  clientId:
-    process.env.LG_APPLICATION_WEB_CLIENT_ID ??
-    process.env.ISLAND_IS_DMR_WEB_CLIENT_ID,
-  clientSecret:
-    process.env.LG_APPLICATION_WEB_CLIENT_SECRET ??
-    process.env.ISLAND_IS_DMR_WEB_CLIENT_SECRET,
+  clientId: process.env.LG_APPLICATION_WEB_CLIENT_ID!,
+  clientSecret: process.env.LG_APPLICATION_WEB_CLIENT_SECRET ?? '',
 }
+
+export const identityServerConfig =
+  process.env.NODE_ENV !== 'production'
+    ? localIdentityServerConfig
+    : sharedIdentityServerConfig
 
 export const authOptions: AuthOptions = {
   pages: {
