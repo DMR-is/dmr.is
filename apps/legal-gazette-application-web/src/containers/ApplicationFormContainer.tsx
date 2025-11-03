@@ -2,9 +2,7 @@
 
 import { notFound } from 'next/navigation'
 
-import { AlertMessage } from '@dmr.is/ui/components/island-is'
-
-import { SkeletonLoader } from '@island.is/island-ui/core'
+import { AlertMessage, SkeletonLoader } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationForm } from '../components/client-components/form/ApplicationForm'
 import { ApplicationDetailedDto, ApplicationStatusEnum } from '../gen/fetch'
