@@ -11,7 +11,7 @@ import {
   TypeDto,
   UpdateAdvertDto,
 } from '../gen/fetch'
-import { useSuspenseQuery, useTRPC } from '../lib/nTrpc/client/trpc'
+import { useSuspenseQuery, useTRPC } from '../lib/trpc/client/trpc'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 

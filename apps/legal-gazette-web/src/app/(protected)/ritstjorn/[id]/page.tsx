@@ -4,7 +4,7 @@ import {
   HydrateClient,
   prefetch,
   trpc,
-} from '../../../../lib/nTrpc/client/server'
+} from '../../../../lib/trpc/client/server'
 
 type Props = {
   params: {

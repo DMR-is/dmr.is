@@ -5,7 +5,7 @@ import {
   GridRow,
 } from '@dmr.is/ui/components/island-is'
 
-import { HydrateClient } from '../../lib/nTrpc/client/server'
+import { HydrateClient } from '../../lib/trpc/client/server'
 import { AdvertFormContainer } from './AdvertFormContainer'
 import { AdvertSidebarContainer } from './AdvertSidebarContainer'
 type AdvertContainerProps = {

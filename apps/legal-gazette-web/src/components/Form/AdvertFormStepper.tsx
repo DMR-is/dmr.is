@@ -8,7 +8,7 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { StatusEnum } from '../../gen/fetch'
-import { useSuspenseQuery, useTRPC } from '../../lib/nTrpc/client/trpc'
+import { useSuspenseQuery, useTRPC } from '../../lib/trpc/client/trpc'
 import { commentStepperMapper } from '../../mappers/commentMapper'
 
 type Props = {

@@ -15,7 +15,7 @@ import {
 import { StatusDto, StatusIdEnum } from '../../gen/fetch'
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 import { Route } from '../../lib/constants'
-import { useTRPC } from '../../lib/nTrpc/client/trpc'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 

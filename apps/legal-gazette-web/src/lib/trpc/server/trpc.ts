@@ -123,3 +123,5 @@ export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
     },
   })
 })
+
+export type Router = typeof router

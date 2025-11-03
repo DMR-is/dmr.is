@@ -32,7 +32,7 @@ import {
   useQuery,
   useSuspenseQuery,
   useTRPC,
-} from '../../lib/nTrpc/client/trpc'
+} from '../../lib/trpc/client/trpc'
 
 type AdvertContainerProps = {
   id: string

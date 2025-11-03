@@ -12,7 +12,7 @@ import { Tag } from '@island.is/island-ui/core'
 
 import { BaseEntityDto } from '../gen/fetch'
 import { QueryParams } from '../lib/constants'
-import { useSuspenseQuery, useTRPC } from '../lib/nTrpc/client/trpc'
+import { useSuspenseQuery, useTRPC } from '../lib/trpc/client/trpc'
 
 type Option<T = string> = {
   label: string
