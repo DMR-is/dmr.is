@@ -38,6 +38,10 @@ export class AdvertDto extends DetailedDto {
   @IsUUID()
   id!: string
 
+  @ApiProperty({ type: Boolean })
+  @IsBoolean()
+  hasInternalComments!: boolean
+
   @ApiProperty({ type: String })
   @IsDateString()
   scheduledAt!: string

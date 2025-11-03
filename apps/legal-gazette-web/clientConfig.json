@@ -4032,7 +4032,7 @@
     },
     "/api/v1/{advertId}/communication-channels": {
       "get": {
-        "operationId": "CommunicationChannelController_getChannelsByAdvertId_v1",
+        "operationId": "getCommunicationChannels",
         "parameters": [
           {
             "name": "advertId",
@@ -4041,12 +4041,64 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "200": { "description": "" } },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCommunicationChannelsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
         "security": [{ "bearer": [] }],
+        "summary": "",
         "tags": ["CommunicationChannel"]
       },
       "post": {
-        "operationId": "CommunicationChannelController_createChannel_v1",
+        "operationId": "createCommunicationChannel",
         "parameters": [
           {
             "name": "advertId",
@@ -4065,14 +4117,66 @@
             }
           }
         },
-        "responses": { "201": { "description": "" } },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationChannelDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
         "security": [{ "bearer": [] }],
+        "summary": "",
         "tags": ["CommunicationChannel"]
       }
     },
     "/api/v1/{advertId}/communication-channels/{channelId}": {
       "patch": {
-        "operationId": "CommunicationChannelController_updateChannel_v1",
+        "operationId": "updateCommunicationChannel",
         "parameters": [
           {
             "name": "advertId",
@@ -4097,12 +4201,64 @@
             }
           }
         },
-        "responses": { "200": { "description": "" } },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationChannelDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
         "security": [{ "bearer": [] }],
+        "summary": "",
         "tags": ["CommunicationChannel"]
       },
       "delete": {
-        "operationId": "CommunicationChannelController_deleteChannel_v1",
+        "operationId": "deleteCommunicationChannel",
         "parameters": [
           {
             "name": "advertId",
@@ -4117,8 +4273,51 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "200": { "description": "" } },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
         "security": [{ "bearer": [] }],
+        "summary": "",
         "tags": ["CommunicationChannel"]
       }
     }
@@ -4823,9 +5022,11 @@
         "properties": {
           "email": { "type": "string" },
           "name": { "type": "string" },
-          "phone": { "type": "string" }
+          "phone": { "type": "string" },
+          "id": { "type": "string" },
+          "advertId": { "type": "string" }
         },
-        "required": ["email"]
+        "required": ["email", "id", "advertId"]
       },
       "CommentTypeEnum": {
         "type": "string",
@@ -4867,6 +5068,7 @@
             "nullable": true
           },
           "id": { "type": "string" },
+          "hasInternalComments": { "type": "boolean" },
           "scheduledAt": { "type": "string" },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
@@ -4908,6 +5110,7 @@
           "createdAt",
           "updatedAt",
           "id",
+          "hasInternalComments",
           "scheduledAt",
           "category",
           "type",
@@ -4979,6 +5182,7 @@
             "nullable": true
           },
           "id": { "type": "string" },
+          "hasInternalComments": { "type": "boolean" },
           "scheduledAt": { "type": "string" },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
@@ -4995,6 +5199,7 @@
           "createdAt",
           "updatedAt",
           "id",
+          "hasInternalComments",
           "scheduledAt",
           "category",
           "type",
@@ -5049,8 +5254,7 @@
           "version",
           "publicationNumber",
           "createdBy",
-          "isLegacy",
-          "pdfUrl"
+          "isLegacy"
         ]
       },
       "GetPublicationsDto": {
@@ -5110,31 +5314,35 @@
         },
         "required": ["users"]
       },
+      "ApplicationStatusEnum": {
+        "type": "string",
+        "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
+      },
       "ApplicationDto": {
         "type": "object",
         "properties": {
           "id": { "type": "string" },
+          "caseId": { "type": "string" },
+          "islandIsApplicationId": { "type": "string" },
           "createdAt": { "type": "string" },
           "updatedAt": { "type": "string" },
-          "caseId": { "type": "string" },
-          "nationalId": { "type": "string" },
+          "submittedByNationalId": { "type": "string" },
           "applicationType": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": {
-            "type": "string",
-            "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
+            "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
           },
           "title": { "type": "string" }
         },
         "required": [
           "id",
+          "caseId",
           "createdAt",
           "updatedAt",
-          "caseId",
-          "nationalId",
+          "submittedByNationalId",
           "applicationType",
           "status",
           "title"
@@ -5173,96 +5381,82 @@
           "applications"
         ]
       },
-      "ApplicationDetailedDto": {
+      "CommonApplicationFieldsDto": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "createdAt": { "type": "string" },
-          "updatedAt": { "type": "string" },
-          "caseId": { "type": "string" },
+          "typeId": { "type": "string" },
+          "categoryId": { "type": "string" },
+          "caption": { "type": "string" },
+          "html": { "type": "string" }
+        }
+      },
+      "CourtAndJudgmentFieldsDto": {
+        "type": "object",
+        "properties": {
+          "courtDistrictId": { "type": "string" },
+          "judgmentDate": { "type": "string" }
+        }
+      },
+      "ApplicationLiquidationFieldsDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "location": { "type": "string" }
+        }
+      },
+      "ApplicationSettlementDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
           "nationalId": { "type": "string" },
-          "applicationType": {
-            "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
+          "address": { "type": "string" },
+          "deadlineDate": { "type": "string" },
+          "dateOfDeath": { "type": "string" }
+        }
+      },
+      "ApplicationDivisionMeetingFieldsDto": {
+        "type": "object",
+        "properties": {
+          "meetingDate": { "type": "string" },
+          "meetingLocation": { "type": "string" }
+        }
+      },
+      "RecallFieldsDto": {
+        "type": "object",
+        "properties": {
+          "courtAndJudgmentFields": {
+            "$ref": "#/components/schemas/CourtAndJudgmentFieldsDto"
           },
-          "category": { "$ref": "#/components/schemas/CategoryDto" },
-          "type": { "$ref": "#/components/schemas/TypeDto" },
-          "status": {
-            "type": "string",
-            "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
+          "liquidatorFields": {
+            "$ref": "#/components/schemas/ApplicationLiquidationFieldsDto"
           },
-          "title": { "type": "string" },
-          "typeId": { "type": "string", "nullable": true },
-          "categoryId": { "type": "string", "nullable": true },
-          "courtDistrictId": { "type": "string", "nullable": true },
-          "islandIsApplicationId": { "type": "string", "nullable": true },
-          "caption": { "type": "string", "nullable": true },
-          "additionalText": { "type": "string", "nullable": true },
-          "judgmentDate": { "type": "string", "nullable": true },
-          "html": { "type": "string", "nullable": true },
-          "signatureName": { "type": "string", "nullable": true },
-          "signatureOnBehalfOf": { "type": "string", "nullable": true },
-          "signatureLocation": { "type": "string", "nullable": true },
-          "signatureDate": { "type": "string", "nullable": true },
-          "liquidatorName": { "type": "string", "nullable": true },
-          "liquidatorLocation": { "type": "string", "nullable": true },
-          "liquidatorOnBehalfOf": { "type": "string", "nullable": true },
-          "settlementName": { "type": "string", "nullable": true },
-          "settlementNationalId": { "type": "string", "nullable": true },
-          "settlementAddress": { "type": "string", "nullable": true },
-          "settlementDeadlineDate": { "type": "string", "nullable": true },
-          "settlementDateOfDeath": { "type": "string", "nullable": true },
-          "divisionMeetingDate": { "type": "string", "nullable": true },
-          "divisionMeetingLocation": { "type": "string", "nullable": true },
-          "publishingDates": { "type": "array", "items": { "type": "string" } },
-          "communicationChannels": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
+          "settlementFields": {
+            "$ref": "#/components/schemas/ApplicationSettlementDto"
+          },
+          "divisionMeetingFields": {
+            "$ref": "#/components/schemas/ApplicationDivisionMeetingFieldsDto"
           }
         },
         "required": [
-          "id",
-          "createdAt",
-          "updatedAt",
-          "caseId",
-          "nationalId",
-          "applicationType",
-          "status",
-          "title",
-          "publishingDates",
-          "communicationChannels"
+          "courtAndJudgmentFields",
+          "liquidatorFields",
+          "settlementFields",
+          "divisionMeetingFields"
         ]
       },
-      "UpdateApplicationDto": {
+      "ApplicationSignatureDto": {
         "type": "object",
         "properties": {
-          "typeId": { "type": "string", "nullable": true },
-          "categoryId": { "type": "string", "nullable": true },
-          "courtDistrictId": { "type": "string", "nullable": true },
-          "islandIsApplicationId": { "type": "string", "nullable": true },
-          "caption": { "type": "string", "nullable": true },
-          "additionalText": { "type": "string", "nullable": true },
-          "judgmentDate": { "type": "string", "nullable": true },
-          "html": { "type": "string", "nullable": true },
-          "signatureName": { "type": "string", "nullable": true },
-          "signatureOnBehalfOf": { "type": "string", "nullable": true },
-          "signatureLocation": { "type": "string", "nullable": true },
-          "signatureDate": { "type": "string", "nullable": true },
-          "liquidatorName": { "type": "string", "nullable": true },
-          "liquidatorLocation": { "type": "string", "nullable": true },
-          "liquidatorOnBehalfOf": { "type": "string", "nullable": true },
-          "settlementName": { "type": "string", "nullable": true },
-          "settlementNationalId": { "type": "string", "nullable": true },
-          "settlementAddress": { "type": "string", "nullable": true },
-          "settlementDeadlineDate": { "type": "string", "nullable": true },
-          "settlementDateOfDeath": { "type": "string", "nullable": true },
-          "divisionMeetingDate": { "type": "string", "nullable": true },
-          "divisionMeetingLocation": { "type": "string", "nullable": true },
-          "publishingDates": { "type": "array", "items": { "type": "string" } },
-          "communicationChannels": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
-          }
+          "name": { "type": "string" },
+          "onBehalfOf": { "type": "string" },
+          "location": { "type": "string" },
+          "date": { "type": "string" }
         }
+      },
+      "ApplicationPublishingDatesDto": {
+        "type": "object",
+        "properties": { "publishingDate": { "type": "string" } },
+        "required": ["publishingDate"]
       },
       "CreateCommunicationChannelDto": {
         "type": "object",
@@ -5273,16 +5467,38 @@
         },
         "required": ["email"]
       },
-      "AddDivisionMeetingForApplicationDto": {
+      "ApplicationDetailedDto": {
         "type": "object",
         "properties": {
-          "meetingDate": { "type": "string" },
-          "meetingLocation": { "type": "string" },
-          "signatureLocation": { "type": "string" },
-          "signatureDate": { "type": "string" },
-          "signatureName": { "type": "string" },
-          "signatureOnBehalfOf": { "type": "string" },
+          "id": { "type": "string" },
+          "caseId": { "type": "string" },
+          "islandIsApplicationId": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "submittedByNationalId": { "type": "string" },
+          "applicationType": {
+            "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
+          },
+          "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "type": { "$ref": "#/components/schemas/TypeDto" },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
+          },
+          "title": { "type": "string" },
           "additionalText": { "type": "string" },
+          "commonFields": {
+            "$ref": "#/components/schemas/CommonApplicationFieldsDto"
+          },
+          "recallFields": { "$ref": "#/components/schemas/RecallFieldsDto" },
+          "signature": {
+            "$ref": "#/components/schemas/ApplicationSignatureDto"
+          },
+          "publishingDates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationPublishingDatesDto"
+            }
+          },
           "communicationChannels": {
             "type": "array",
             "items": {
@@ -5291,20 +5507,120 @@
           }
         },
         "required": [
-          "meetingDate",
-          "meetingLocation",
-          "signatureLocation",
-          "signatureDate",
-          "signatureName"
+          "id",
+          "caseId",
+          "createdAt",
+          "updatedAt",
+          "submittedByNationalId",
+          "applicationType",
+          "status",
+          "title",
+          "commonFields",
+          "recallFields",
+          "signature",
+          "publishingDates",
+          "communicationChannels"
         ]
+      },
+      "UpdateCourtAndJudgmentFieldsDto": {
+        "type": "object",
+        "properties": {
+          "courtDistrictId": { "type": "string" },
+          "judgmentDate": { "type": "string" }
+        }
+      },
+      "UpdateApplicationLiquidationFieldsDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "location": { "type": "string" }
+        }
+      },
+      "UpdateApplicationSettlementDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "address": { "type": "string" },
+          "deadlineDate": { "type": "string" },
+          "dateOfDeath": { "type": "string" }
+        }
+      },
+      "UpdateApplicationDivisionMeetingFieldsDto": {
+        "type": "object",
+        "properties": {
+          "meetingDate": { "type": "string" },
+          "meetingLocation": { "type": "string" }
+        }
+      },
+      "UpdateRecallFieldsDto": {
+        "type": "object",
+        "properties": {
+          "courtAndJudgmentFields": {
+            "$ref": "#/components/schemas/UpdateCourtAndJudgmentFieldsDto"
+          },
+          "liquidatorFields": {
+            "$ref": "#/components/schemas/UpdateApplicationLiquidationFieldsDto"
+          },
+          "settlementFields": {
+            "$ref": "#/components/schemas/UpdateApplicationSettlementDto"
+          },
+          "divisionMeetingFields": {
+            "$ref": "#/components/schemas/UpdateApplicationDivisionMeetingFieldsDto"
+          }
+        }
+      },
+      "UpdateApplicationDto": {
+        "type": "object",
+        "properties": {
+          "additionalText": { "type": "string" },
+          "commonFields": {
+            "$ref": "#/components/schemas/CommonApplicationFieldsDto"
+          },
+          "recallFields": {
+            "$ref": "#/components/schemas/UpdateRecallFieldsDto"
+          },
+          "signature": {
+            "$ref": "#/components/schemas/ApplicationSignatureDto"
+          },
+          "publishingDates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationPublishingDatesDto"
+            }
+          },
+          "communicationChannels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
+          }
+        }
+      },
+      "AddDivisionMeetingForApplicationDto": {
+        "type": "object",
+        "properties": {
+          "meetingDate": { "type": "string" },
+          "meetingLocation": { "type": "string" },
+          "signature": {
+            "$ref": "#/components/schemas/ApplicationSignatureDto"
+          },
+          "additionalText": { "type": "string" },
+          "communicationChannels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
+          }
+        },
+        "required": ["meetingDate", "meetingLocation", "signature"]
       },
       "AddDivisionEndingForApplicationDto": {
         "type": "object",
         "properties": {
-          "signatureLocation": { "type": "string" },
-          "signatureDate": { "type": "string" },
-          "signatureName": { "type": "string" },
-          "signatureOnBehalfOf": { "type": "string" },
+          "signature": {
+            "$ref": "#/components/schemas/ApplicationSignatureDto"
+          },
           "additionalText": { "type": "string" },
           "communicationChannels": {
             "type": "array",
@@ -5315,13 +5631,7 @@
           "scheduledAt": { "type": "string" },
           "declaredClaims": { "type": "number" }
         },
-        "required": [
-          "signatureLocation",
-          "signatureDate",
-          "signatureName",
-          "scheduledAt",
-          "declaredClaims"
-        ]
+        "required": ["signature", "scheduledAt", "declaredClaims"]
       },
       "TypeWithCategoriesDto": {
         "type": "object",
@@ -5551,6 +5861,16 @@
           "responsibleParty",
           "properties"
         ]
+      },
+      "GetCommunicationChannelsDto": {
+        "type": "object",
+        "properties": {
+          "channels": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
+          }
+        },
+        "required": ["channels"]
       },
       "UpdateCommunicationChannelDto": {
         "type": "object",
