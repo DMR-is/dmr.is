@@ -4,7 +4,6 @@ import { StatusIdEnum } from '../../../../gen/fetch'
 import { createTRPCError } from '../../utils/errorHandler'
 import { protectedProcedure, router } from '../trpc'
 
-
 const getAdvertsRequestSchema = z.object({
   page: z.number().optional(),
   pageSize: z.number().optional(),
@@ -55,7 +54,7 @@ export const advertsRouter = router({
     async ({ ctx, input }) =>
       await ctx.advertsApi.getAdverts({
         ...input,
-        statusId: [StatusIdEnum.SUBMITTED],
+        statusId: [StatusIdEnum.SUBMITTED, StatusIdEnum.IN_PROGRESS],
       }),
   ),
   getReadyForPublicationAdverts: protectedProcedure

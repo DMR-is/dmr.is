@@ -368,8 +368,11 @@ export class AdvertService implements IAdvertService {
     const results = await this.advertModel
       .scope([{ method: ['withQuery', query] }])
       .findAndCountAll({
+        col: 'AdvertModel.id',
+        distinct: true,
         limit,
         offset,
+        logging: (sql) => console.log(sql),
       })
 
     const migrated = results.rows.map((advert) => advert.fromModel())
