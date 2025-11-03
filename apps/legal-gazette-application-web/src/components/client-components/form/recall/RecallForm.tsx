@@ -28,7 +28,7 @@ export const RecallForm = (props: RecallFormProps) => {
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onValidSubmit, onInvalidSubmit)}>
-        <ApplicationShell applicationId={props.metadata.applicationId}>
+        <ApplicationShell>
           <Stack space={[2, 3, 4]}>
             <Stack space={[1, 2]}>
               <Text variant="h2">

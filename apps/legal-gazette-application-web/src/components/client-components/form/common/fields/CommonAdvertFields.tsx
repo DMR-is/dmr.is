@@ -52,7 +52,6 @@ export const CommonAdvertFields = () => {
 
   const updateHtmlOnBlurHandler = useCallback(
     (val: string) => {
-      console.log('onBlur', val)
       setValue('fields.html', val, {
         shouldValidate: true,
         shouldDirty: true,
