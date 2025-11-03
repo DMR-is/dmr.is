@@ -11,6 +11,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { commonApplicationSchema } from '@dmr.is/legal-gazette/schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared/dto'
 import {
@@ -25,7 +26,6 @@ import {
   RECALL_DECEASED_ADVERT_TYPE_ID,
 } from '../../lib/constants'
 import {
-  createCommonAdvertFromApplicationSchema,
   createCommonAdvertFromIslandIsApplicationSchema,
   createRecallAdvertFromApplicationSchema,
 } from '../../lib/schemas'
@@ -74,10 +74,9 @@ export class ApplicationService implements IApplicationService {
     application: ApplicationModel,
     user: DMRUser,
   ) {
-    const requiredFields = createCommonAdvertFromApplicationSchema.parse({
-      caseId: application.caseId,
-      type: application.type,
-      category: application.category,
+    const check = commonApplicationSchema.safeParse({
+      typeId: application.typeId,
+      categoryId: application.categoryId,
       caption: application.caption,
       additionalText: application.additionalText,
       html: application.html,
@@ -91,22 +90,36 @@ export class ApplicationService implements IApplicationService {
       publishingDates: application.publishingDates,
     })
 
+    if (!check.success) {
+      this.logger.warn(
+        `Failed to validate common application before submission`,
+        {
+          error: check.error,
+        },
+      )
+      throw new BadRequestException('Invalid application data')
+    }
+
+    const requiredFields = check.data
+
     await this.advertService.createAdvert({
-      caseId: requiredFields.caseId,
-      typeId: requiredFields.type.id,
-      caption: requiredFields.caption,
-      categoryId: requiredFields.category.id,
-      additionalText: requiredFields.additionalText,
+      caseId: application.caseId,
+      typeId: requiredFields.fields.typeId,
+      categoryId: requiredFields.fields.categoryId,
+      caption: requiredFields.fields.caption,
+      additionalText: requiredFields.fields.additionalText,
       createdBy: user.fullName,
       createdByNationalId: user.nationalId,
       signatureName: requiredFields.signature?.name,
       signatureOnBehalfOf: requiredFields.signature?.onBehalfOf,
       signatureLocation: requiredFields.signature?.location,
-      signatureDate: requiredFields.signature?.date?.toISOString(),
-      content: requiredFields.html,
-      title: `${requiredFields.category.title} - ${requiredFields.caption}`,
+      signatureDate: requiredFields.signature?.date,
+      content: requiredFields.fields.html,
+      title: `${application.category?.title} - ${requiredFields.fields.caption}`,
       communicationChannels: requiredFields.communicationChannels,
-      scheduledAt: requiredFields.publishingDates.map((d) => d.toISOString()),
+      scheduledAt: requiredFields.publishingDates.map(
+        ({ publishingDate }) => publishingDate,
+      ),
     })
 
     await application.update({ status: ApplicationStatusEnum.FINISHED })
@@ -373,43 +386,41 @@ export class ApplicationService implements IApplicationService {
     }
 
     await application.update({
-      typeId: body.typeId,
       additionalText: body.additionalText,
-      caption: body.caption,
-      html: body.html,
+      typeId: body.commonFields?.typeId,
+      categoryId: body.commonFields?.categoryId,
+      caption: body.commonFields?.caption,
+      html: body.commonFields?.html,
+
       signatureDate: body.signature?.date
         ? new Date(body.signature.date)
         : undefined,
       signatureLocation: body.signature?.location,
       signatureName: body.signature?.name,
       signatureOnBehalfOf: body.signature?.onBehalfOf,
-      courtDistrictId: body.courtDistrictId,
-      categoryId: body.categoryId,
-      judgmentDate:
-        typeof body.judgmentDate === 'string'
-          ? new Date(body.judgmentDate)
-          : body.judgmentDate,
-      publishingDates: body.publishingDates?.map((d) => new Date(d)),
+      courtDistrictId: body.courtAndJudgmentFields?.courtDistrictId,
+      judgmentDate: body.courtAndJudgmentFields?.judgmentDate
+        ? new Date(body.courtAndJudgmentFields.judgmentDate)
+        : undefined,
+      publishingDates: body.publishingDates?.map(
+        ({ publishingDate }) => new Date(publishingDate),
+      ),
       communicationChannels: body.communicationChannels,
-      liquidatorLocation: body.liquidatorLocation,
-      liquidatorName: body.liquidatorName,
-      liquidatorOnBehalfOf: body.liquidatorOnBehalfOf,
-      divisionMeetingDate:
-        typeof body.divisionMeetingDate === 'string'
-          ? new Date(body.divisionMeetingDate)
-          : body.divisionMeetingDate,
-      divisionMeetingLocation: body.divisionMeetingLocation,
-      settlementName: body.settlementName,
-      settlementNationalId: body.settlementNationalId,
-      settlementAddress: body.settlementAddress,
-      settlementDateOfDeath:
-        typeof body.settlementDateOfDeath === 'string'
-          ? new Date(body.settlementDateOfDeath)
-          : body.settlementDateOfDeath,
-      settlementDeadlineDate:
-        typeof body.settlementDeadlineDate === 'string'
-          ? new Date(body.settlementDeadlineDate)
-          : body.settlementDeadlineDate,
+      liquidatorName: body.liquidatorFields?.name,
+      liquidatorLocation: body.liquidatorFields?.location,
+      divisionMeetingDate: body.divisionMeetingFields?.meetingDate
+        ? new Date(body.divisionMeetingFields.meetingDate)
+        : undefined,
+      divisionMeetingLocation: body.divisionMeetingFields?.meetingLocation,
+      settlementName: body.settlementFields?.name,
+      settlementNationalId: body.settlementFields?.nationalId,
+      settlementAddress: body.settlementFields?.address,
+      settlementDateOfDeath: body.settlementFields?.dateOfDeath
+        ? new Date(body.settlementFields.dateOfDeath)
+        : undefined,
+      settlementDeadlineDate: body.settlementFields?.deadlineDate
+        ? new Date(body.settlementFields.deadlineDate)
+        : undefined,
     })
     return application.fromModelToDetailedDto()
   }

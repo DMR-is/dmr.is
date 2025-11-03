@@ -1,0 +1,23 @@
+{
+  "name": "schemas",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/legal-gazette/schemas/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/legal-gazette/schemas",
+        "tsConfig": "libs/legal-gazette/schemas/tsconfig.lib.json",
+        "packageJson": "libs/legal-gazette/schemas/package.json",
+        "main": "libs/legal-gazette/schemas/src/index.ts",
+        "assets": ["libs/legal-gazette/schemas/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

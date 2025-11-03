@@ -7,10 +7,7 @@ import { AlertMessage } from '@dmr.is/ui/components/island-is'
 import { SkeletonLoader } from '@island.is/island-ui/core'
 
 import { ApplicationForm } from '../components/client-components/form/ApplicationForm'
-import {
-  ApplicationDetailedDto,
-  ApplicationDetailedDtoStatusEnum,
-} from '../gen/fetch'
+import { ApplicationDetailedDto, ApplicationStatusEnum } from '../gen/fetch'
 import { trpc } from '../lib/trpc/client'
 import { ApplicationSubmittedContainer } from './ApplicationSubmittedContainer'
 
@@ -45,7 +42,7 @@ export function ApplicationFormContainer({ application }: Props) {
     )
   }
 
-  if (data.status === ApplicationDetailedDtoStatusEnum.DRAFT) {
+  if (data.status === ApplicationStatusEnum.DRAFT) {
     return (
       <ApplicationForm
         application={data}

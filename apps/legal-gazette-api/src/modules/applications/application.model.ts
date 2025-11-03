@@ -7,6 +7,7 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
+import { CommunicationChannelSchema } from '@dmr.is/legal-gazette/schemas'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
@@ -364,7 +365,7 @@ export class ApplicationModel extends BaseModel<
     allowNull: true,
     defaultValue: [],
   })
-  communicationChannels!: CommunicationChannelModel[]
+  communicationChannels!: CommunicationChannelSchema[]
 
   @BelongsTo(() => CategoryModel)
   category?: CategoryModel
@@ -408,7 +409,7 @@ export class ApplicationModel extends BaseModel<
       createdAt: model.createdAt.toISOString(),
       updatedAt: model.updatedAt.toISOString(),
       caseId: model.caseId,
-      nationalId: model.submittedByNationalId,
+      submittedByNationalId: model.submittedByNationalId,
       status: model.status,
       title: model.title,
       type: model.type?.fromModel(),
@@ -425,41 +426,64 @@ export class ApplicationModel extends BaseModel<
     model: ApplicationModel,
   ): ApplicationDetailedDto {
     return {
-      ...this.fromModel(model),
-      courtDistrictId: model.courtDistrictId,
-      islandIsApplicationId: model.islandIsApplicationId,
-      caption: model.caption,
-      additionalText: model.additionalText,
-      judgmentDate: model.judgmentDate
-        ? model.judgmentDate.toISOString()
-        : null,
-      html: model.html,
+      id: model.id,
+      createdAt: model.createdAt.toISOString(),
+      updatedAt: model.updatedAt.toISOString(),
+      caseId: model.caseId,
+      submittedByNationalId: model.submittedByNationalId,
+      status: model.status,
+      title: model.title,
+      type: model.type?.fromModel(),
+      category: model.category?.fromModel(),
+      applicationType: model.applicationType,
+      additionalText: model.additionalText ?? undefined,
+      commonFields: {
+        caption: model.caption ?? undefined,
+        typeId: model.typeId ?? undefined,
+        categoryId: model.categoryId ?? undefined,
+        html: model.html ?? undefined,
+      },
+      liquidatorFields: {
+        name: model.liquidatorName ?? undefined,
+        location: model.liquidatorLocation ?? undefined,
+      },
+      courtAndJudgmentFields: {
+        courtDistrictId: model.courtDistrictId ?? undefined,
+        judgmentDate: model.judgmentDate
+          ? model.judgmentDate.toISOString()
+          : undefined,
+      },
+      divisionMeetingFields: {
+        meetingDate: model.divisionMeetingDate
+          ? model.divisionMeetingDate.toISOString()
+          : undefined,
+        meetingLocation: model.divisionMeetingLocation ?? undefined,
+      },
+      settlementFields: {
+        name: model.settlementName ?? undefined,
+        nationalId: model.settlementNationalId ?? undefined,
+        address: model.settlementAddress ?? undefined,
+        deadlineDate: model.settlementDeadlineDate
+          ? model.settlementDeadlineDate.toISOString()
+          : undefined,
+        dateOfDeath: model.settlementDateOfDeath
+          ? model.settlementDateOfDeath.toISOString()
+          : undefined,
+      },
       signature: {
         name: model.signatureName ?? undefined,
         onBehalfOf: model.signatureOnBehalfOf ?? undefined,
         location: model.signatureLocation ?? undefined,
         date: model.signatureDate?.toISOString(),
       },
-      settlementName: model.settlementName,
-      settlementNationalId: model.settlementNationalId,
-      settlementAddress: model.settlementAddress,
-      settlementDeadlineDate: model.settlementDeadlineDate
-        ? model.settlementDeadlineDate.toISOString()
-        : null,
-      settlementDateOfDeath: model.settlementDateOfDeath
-        ? model.settlementDateOfDeath.toISOString()
-        : null,
-      liquidatorName: model.liquidatorName,
-      liquidatorLocation: model.liquidatorLocation,
-      liquidatorOnBehalfOf: model.liquidatorOnBehalfOf,
-      divisionMeetingDate: model.divisionMeetingDate
-        ? model.divisionMeetingDate.toISOString()
-        : null,
-      divisionMeetingLocation: model.divisionMeetingLocation,
-      publishingDates: model.publishingDates.map((date) => date.toISOString()),
-      communicationChannels: model.communicationChannels.map((ch) =>
-        ch.fromModel(),
-      ),
+      publishingDates: model.publishingDates.map((date) => ({
+        publishingDate: date.toISOString(),
+      })),
+      communicationChannels: model.communicationChannels.map((ch) => ({
+        email: ch.email,
+        name: ch.name ?? undefined,
+        phone: ch.phone ?? undefined,
+      })),
     }
   }
 
