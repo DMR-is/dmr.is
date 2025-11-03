@@ -13,10 +13,7 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { LegalGazetteModels } from '../../lib/constants'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
-import {
-  CommunicationChannelCreateAttributes,
-  CommunicationChannelModel,
-} from '../communication-channel/communication-channel.model'
+import { CommunicationChannelCreateAttributes } from '../communication-channel/communication-channel.model'
 import { CourtDistrictModel } from '../court-district/court-district.model'
 import { TypeModel } from '../type/type.model'
 import { ApplicationDetailedDto, ApplicationDto } from './dto/application.dto'
