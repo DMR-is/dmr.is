@@ -325,6 +325,9 @@ export class AdvertService implements IAdvertService {
     const submittedCount = this.advertModel
       .unscoped()
       .countByStatus(StatusIdEnum.SUBMITTED)
+    const inProgressCount = this.advertModel
+      .unscoped()
+      .countByStatus(StatusIdEnum.IN_PROGRESS)
     const readyForPublicationCount = this.advertModel
       .unscoped()
       .countByStatus(StatusIdEnum.READY_FOR_PUBLICATION)
@@ -341,17 +344,27 @@ export class AdvertService implements IAdvertService {
       .unscoped()
       .countByStatus(StatusIdEnum.WITHDRAWN)
 
-    const [submitted, readyForPublication, published, rejected, withdrawn] =
-      await Promise.all([
-        submittedCount,
-        readyForPublicationCount,
-        publishedCount,
-        rejectedCount,
-        withdrawnCount,
-      ])
+    const [
+      submitted,
+      inProgress,
+      readyForPublication,
+      published,
+      rejected,
+      withdrawn,
+    ] = await Promise.all([
+      submittedCount,
+      inProgressCount,
+      readyForPublicationCount,
+      publishedCount,
+      rejectedCount,
+      withdrawnCount,
+    ])
 
     return {
-      submitted,
+      submitted: {
+        ...submitted,
+        count: submitted.count + inProgress.count,
+      },
       readyForPublication,
       rejected,
       published,
