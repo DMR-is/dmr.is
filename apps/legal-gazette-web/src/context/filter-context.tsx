@@ -6,10 +6,11 @@ import {
   parseAsStringEnum,
   useQueryStates,
 } from 'nuqs'
-import { createContext } from 'react'
+import { createContext, useState } from 'react'
 
 import { Tag } from '@island.is/island-ui/core'
 
+import { BaseEntityDto } from '../gen/fetch'
 import { QueryParams } from '../lib/constants'
 import { useSuspenseQuery, useTRPC } from '../lib/nTrpc/client/trpc'
 
@@ -41,6 +42,12 @@ export type FilterContextState = {
   typeOptions: Option[]
   categoryOptions: Option[]
   statusOptions: Option[]
+  setTypeOptions: (options: Option[]) => void
+  setCategoryOptions: (options: Option[]) => void
+  setStatusOptions: (options: Option[]) => void
+  resetTypeOptions: () => void
+  resetCategoryOptions: () => void
+  resetStatusOptions: () => void
   params: Params
   setParams: (params: Partial<Params>) => Promise<URLSearchParams>
   activeFilters: ActiveFilters[]
@@ -51,6 +58,12 @@ export const FilterContext = createContext<FilterContextState>({
   typeOptions: [],
   categoryOptions: [],
   statusOptions: [],
+  setTypeOptions: () => undefined,
+  setCategoryOptions: () => undefined,
+  setStatusOptions: () => undefined,
+  resetTypeOptions: () => undefined,
+  resetCategoryOptions: () => undefined,
+  resetStatusOptions: () => undefined,
   params: {} as Params,
   setParams: async () => new URLSearchParams(),
   activeFilters: [],
@@ -203,20 +216,50 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
     [] as ActiveFilters[],
   )
 
-  const typeOptions = types.types.map((type) => ({
-    label: type.title,
-    value: type.id,
-  }))
+  const [typeOptions, setInternalTypeOptions] = useState(
+    types.types.map((type) => ({
+      label: type.title,
+      value: type.id,
+    })),
+  )
 
-  const categoryOptions = categories.categories.map((category) => ({
-    label: category.title,
-    value: category.id,
-  }))
+  const [categoryOptions, setInternalCategoryOptions] = useState(
+    categories.categories.map((category) => ({
+      label: category.title,
+      value: category.id,
+    })),
+  )
 
-  const statusOptions = statuses.statuses.map((status) => ({
-    label: status.title,
-    value: status.id,
-  }))
+  const [statusOptions, setInternalStatusOptions] = useState(
+    statuses.statuses.map((status) => ({
+      label: status.title,
+      value: status.id,
+    })),
+  )
+
+  const resetOptions = <T extends BaseEntityDto>(
+    source: T[],
+    setter: (options: Option[]) => void,
+  ) => {
+    setter(
+      source.map((item) => ({
+        label: item.title,
+        value: item.id,
+      })),
+    )
+  }
+
+  const resetStatusOptions = () => {
+    resetOptions(statuses.statuses, setInternalStatusOptions)
+  }
+
+  const resetCategoryOptions = () => {
+    resetOptions(categories.categories, setInternalCategoryOptions)
+  }
+
+  const resetTypeOptions = () => {
+    resetOptions(types.types, setInternalTypeOptions)
+  }
 
   const setParams = (params: Partial<Params>) => {
     const updatedParams = {
@@ -230,9 +273,15 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
   return (
     <FilterContext.Provider
       value={{
-        typeOptions,
-        categoryOptions,
         statusOptions,
+        categoryOptions,
+        typeOptions,
+        setStatusOptions: setInternalStatusOptions,
+        setCategoryOptions: setInternalCategoryOptions,
+        setTypeOptions: setInternalTypeOptions,
+        resetCategoryOptions,
+        resetTypeOptions,
+        resetStatusOptions,
         params: searchParams as FilterContextState['params'],
         setParams: setParams,
         activeFilters: activeFilters,

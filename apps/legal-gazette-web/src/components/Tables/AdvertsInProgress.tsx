@@ -22,7 +22,7 @@ export const AdvertsInProgress = () => {
 
   const trpc = useTRPC()
   const { data, isLoading, error } = useQuery(
-    trpc.getSubmittedAdverts.queryOptions({
+    trpc.getAdvertsInProgress.queryOptions({
       categoryId: params.categoryId,
       typeId: params.typeId,
       statusId: params.statusId as StatusIdEnum[],

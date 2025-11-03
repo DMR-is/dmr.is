@@ -1,6 +1,7 @@
 'use client'
 
 import { parseAsStringEnum, useQueryState } from 'nuqs'
+import { useEffect } from 'react'
 
 import {
   GridColumn,
@@ -9,8 +10,9 @@ import {
   Tabs,
 } from '@island.is/island-ui/core'
 
-import { GetAdvertsStatusCounterDto } from '../../gen/fetch'
+import { GetAdvertsStatusCounterDto, StatusIdEnum } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
+import { useSuspenseQuery, useTRPC } from '../../lib/nTrpc/client/trpc'
 import { RitstjornHero } from '../ritstjorn/Hero'
 import AdvertsCompleted from '../Tables/AdvertsCompleted'
 import PublishingTab from '../tabs/PublishingTab'
@@ -23,16 +25,53 @@ type Props = {
 const TabIds = ['innsendar', 'utgafa', 'yfirlit']
 
 export const PageContainer = ({ advertCount }: Props) => {
-  const [tab, setTab] = useQueryState(
-    'tab',
-    parseAsStringEnum(TabIds).withDefault('innsendar'),
-  )
-  const { setParams } = useFilterContext()
+  const [tab, setTab] = useQueryState('tab', parseAsStringEnum(TabIds))
+  const { setParams, setStatusOptions, resetStatusOptions } = useFilterContext()
+
+  const trpc = useTRPC()
+  const { data, isPending } = useSuspenseQuery(trpc.getStatuses.queryOptions())
 
   const handleTabChange = (tab: string) => {
+    resetStatusOptions()
     setTab(tab)
     setParams({ page: 1 })
   }
+
+  useEffect(() => {
+    if (isPending) return
+    switch (tab) {
+      case 'innsendar':
+        setStatusOptions(
+          data.statuses
+            .filter((status) =>
+              [StatusIdEnum.SUBMITTED, StatusIdEnum.IN_PROGRESS].includes(
+                status.id as StatusIdEnum,
+              ),
+            )
+            .map((opt) => ({
+              label: opt.title,
+              value: opt.id,
+            })),
+        )
+        break
+      case 'utgafa':
+        setStatusOptions(
+          data.statuses
+            .filter((status) =>
+              [StatusIdEnum.READY_FOR_PUBLICATION].includes(
+                status.id as StatusIdEnum,
+              ),
+            )
+            .map((opt) => ({
+              label: opt.title,
+              value: opt.id,
+            })),
+        )
+        break
+      default:
+        break
+    }
+  }, [tab, isPending, setStatusOptions, data])
 
   const completedCount =
     advertCount.rejected.count +
@@ -47,8 +86,9 @@ export const PageContainer = ({ advertCount }: Props) => {
           <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
             <Tabs
               label=""
-              selected={tab}
+              selected={tab ?? 'innsendar'}
               onChange={handleTabChange}
+              onlyRenderSelectedTab={true}
               tabs={[
                 {
                   id: 'innsendar',

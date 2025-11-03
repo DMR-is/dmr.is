@@ -372,7 +372,6 @@ export class AdvertService implements IAdvertService {
         distinct: true,
         limit,
         offset,
-        logging: (sql) => console.log(sql),
       })
 
     const migrated = results.rows.map((advert) => advert.fromModel())

@@ -50,13 +50,21 @@ export const advertsRouter = router({
   getAdvertsCount: protectedProcedure.query(async ({ ctx }) => {
     return await ctx.advertsApi.getAdvertsCount()
   }),
-  getSubmittedAdverts: protectedProcedure.input(getAdvertsRequestSchema).query(
-    async ({ ctx, input }) =>
-      await ctx.advertsApi.getAdverts({
+  getAdvertsInProgress: protectedProcedure
+    .input(getAdvertsRequestSchema)
+    .query(async ({ ctx, input }) => {
+      const allowedStatuses = [StatusIdEnum.SUBMITTED, StatusIdEnum.IN_PROGRESS]
+
+      const matchingStatuses = allowedStatuses.filter((status) =>
+        input.statusId?.includes(status),
+      )
+
+      return await ctx.advertsApi.getAdverts({
         ...input,
-        statusId: [StatusIdEnum.SUBMITTED, StatusIdEnum.IN_PROGRESS],
-      }),
-  ),
+        statusId:
+          matchingStatuses.length > 0 ? matchingStatuses : allowedStatuses,
+      })
+    }),
   getReadyForPublicationAdverts: protectedProcedure
     .input(getAdvertsRequestSchema)
     .query(
