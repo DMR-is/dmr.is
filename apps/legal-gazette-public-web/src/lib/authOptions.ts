@@ -6,6 +6,7 @@ import { decode } from 'jsonwebtoken'
 
 import { serverFetcher } from '@dmr.is/api-client/fetchers'
 import { identityServerId } from '@dmr.is/auth/identityProvider'
+import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
 import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
 import { getLogger } from '@dmr.is/logging'
 
@@ -20,14 +21,19 @@ const SESION_TIMEOUT = 60 * 60 // 1 hour
 
 const LOGGING_CATEGORY = 'next-auth'
 
-export const identityServerConfig = {
+export const localIdentityServerConfig = {
   id: identityServerId,
   name: 'Iceland authentication service',
   scope: `openid offline_access profile`,
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  clientId: process.env.LG_PUBLIC_WEB_CLIENT_ID ?? process.env.ISLAND_IS_DMR_WEB_CLIENT_ID!,
-  clientSecret: process.env.LG_PUBLIC_WEB_CLIENT_SECRET ?? process.env.ISLAND_IS_DMR_WEB_CLIENT_SECRET ?? '',
+  clientId: process.env.LG_PUBLIC_WEB_CLIENT_ID!,
+  clientSecret: process.env.LG_PUBLIC_WEB_CLIENT_SECRET ?? '',
 }
+
+export const identityServerConfig =
+  process.env.NODE_ENV !== 'production'
+    ? localIdentityServerConfig
+    : sharedIdentityServerConfig
 
 async function authorize(nationalId?: string, idToken?: string) {
   if (!idToken || !nationalId) {
