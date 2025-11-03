@@ -6,7 +6,9 @@ import { Box } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { formatDate } from '@dmr.is/utils/client'
 
-import { StatusIdEnum } from '../../gen/fetch'
+import { Tag } from '@island.is/island-ui/core'
+
+import { StatusEnum, StatusIdEnum } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
 import { useTRPC } from '../../lib/nTrpc/client/trpc'
@@ -31,9 +33,19 @@ export const AdvertsCompleted = () => {
   const rows = data?.adverts?.map((advert) => ({
     birting: formatDate(advert.scheduledAt),
     skraning: formatDate(advert.createdAt),
+    status: (
+      <Tag
+        variant={advert.status.title === StatusEnum.Innsent ? 'blue' : 'mint'}
+      >
+        {advert.status.title}
+      </Tag>
+    ),
+    efni: advert.title,
     tegund: advert.type.title,
     flokkur: advert.category.title,
-    efni: advert.title,
+    owner: advert.createdBy,
+    href: `/ritstjorn/${advert.id}`,
+    hasLink: true,
   }))
 
   return (
@@ -60,6 +72,16 @@ export const AdvertsCompleted = () => {
               sortable: true,
             },
             {
+              field: 'status',
+              children: formatMessage(ritstjornTableMessages.columns.status),
+              size: 'tiny',
+            },
+            {
+              field: 'efni',
+              children: formatMessage(ritstjornTableMessages.columns.content),
+              fluid: true,
+            },
+            {
               field: 'tegund',
               children: formatMessage(ritstjornTableMessages.columns.type),
               width: '200px',
@@ -70,9 +92,8 @@ export const AdvertsCompleted = () => {
               size: 'small',
             },
             {
-              field: 'efni',
-              children: formatMessage(ritstjornTableMessages.columns.content),
-              fluid: true,
+              field: 'owner',
+              children: formatMessage(ritstjornTableMessages.columns.owner),
             },
           ] as const
         }
