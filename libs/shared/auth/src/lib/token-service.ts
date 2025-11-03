@@ -23,7 +23,7 @@ export const isExpired = (
   return false
 }
 
-export const refreshAccessToken = async (token: JWT, redirectUri?: string) => {
+export const refreshAccessToken = async (token: JWT, redirectUri?: string, clientId?: string, clientSecret?: string) => {
   try {
     if (!token.refreshToken) {
       logger.error('Refresh token missing', {
@@ -41,8 +41,8 @@ export const refreshAccessToken = async (token: JWT, redirectUri?: string) => {
         },
         method: 'POST',
         body: new URLSearchParams({
-          client_id: identityServerConfig.clientId,
-          client_secret: identityServerConfig.clientSecret,
+          client_id: clientId ?? identityServerConfig.clientId,
+          client_secret: clientSecret ?? identityServerConfig.clientSecret,
           grant_type: 'refresh_token',
           redirect_uri:
             redirectUri ?? process.env.IDENTITY_SERVER_LOGOUT_URL ?? '',

@@ -4,10 +4,23 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 
 import { decode } from 'jsonwebtoken'
 
-import { identityServerConfig } from '@dmr.is/auth/identityServerConfig'
+import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
 
 const SESION_TIMEOUT = 60 * 60 // 1 hour
+
+export const identityServerConfig = {
+  id: identityServerId,
+  name: 'Iceland authentication service',
+  scope: `openid offline_access profile`,
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  clientId:
+    process.env.LG_APPLICATION_WEB_CLIENT_ID ??
+    process.env.ISLAND_IS_DMR_WEB_CLIENT_ID,
+  clientSecret:
+    process.env.LG_APPLICATION_WEB_CLIENT_SECRET ??
+    process.env.ISLAND_IS_DMR_WEB_CLIENT_SECRET,
+}
 
 export const authOptions: AuthOptions = {
   pages: {
@@ -42,10 +55,15 @@ export const authOptions: AuthOptions = {
       // On failure, return token.invalid = true
 
       const redirectUri =
-        process.env.LEGAL_GAZETTE_APPLICATION_WEB_IDENTITY_SERVER_LOGOUT_URL ??
+        process.env.LG_APPLICATION_WEB_URL ??
         process.env.IDENTITY_SERVER_LOGOUT_URL
 
-      return refreshAccessToken(token, redirectUri)
+      return refreshAccessToken(
+        token,
+        redirectUri,
+        identityServerConfig.clientId,
+        identityServerConfig.clientSecret,
+      )
     },
 
     session: async ({ session, token }) => {
