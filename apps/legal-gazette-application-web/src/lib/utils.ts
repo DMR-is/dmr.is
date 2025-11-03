@@ -54,3 +54,36 @@ export const isValidFormType = (type?: string): boolean => {
   const validTypes = Object.values(FormTypes)
   return validTypes.includes(type as FormTypes)
 }
+
+export const getErrors = (
+  obj: any,
+  path: string[] = [],
+): { path: string; errors: string[] }[] => {
+  let result: { path: string; errors: string[] }[] = []
+
+  if (obj.errors && obj.errors.length > 0) {
+    result.push({ path: path.join('.'), errors: obj.errors })
+  }
+
+  if (obj.properties) {
+    for (const key in obj.properties) {
+      const child = obj.properties[key]
+      result = result.concat(getErrors(child, [...path, key]))
+    }
+  }
+
+  return result
+}
+
+export function getDotNotationPaths(
+  obj: Record<string, any>,
+  prefix = '',
+): string[] {
+  return Object.entries(obj).flatMap(([key, value]) => {
+    const path = prefix ? `${prefix}.${key}` : key
+    if (typeof value === 'object' && value !== null) {
+      return getDotNotationPaths(value, path)
+    }
+    return value ? [path] : []
+  })
+}

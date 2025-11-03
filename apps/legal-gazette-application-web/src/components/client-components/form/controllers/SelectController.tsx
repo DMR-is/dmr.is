@@ -24,21 +24,29 @@ export const SelectController = (
     }
   }
 
+  const handleFirstBlur = () => {
+    if (!fieldState.isTouched) {
+      field.onBlur()
+    }
+  }
+
   const { ref: _ref, ...fieldWithoutRef } = field
 
   return (
-    <Select
-      {...fieldWithoutRef}
-      label={label}
-      backgroundColor="blue"
-      size="sm"
-      options={options}
-      value={options.find((opt) => opt.value === field.value)}
-      hasError={!!error}
-      errorMessage={error ? error.message : undefined}
-      required={required}
-      onChange={(opt) => handleChange(opt?.value)}
-      isDisabled={props.disabled}
-    />
+    <div onBlur={handleFirstBlur}>
+      <Select
+        {...fieldWithoutRef}
+        label={label}
+        backgroundColor="blue"
+        size="sm"
+        options={options}
+        value={options.find((opt) => opt.value === field.value)}
+        hasError={!!error}
+        errorMessage={error ? error.message : undefined}
+        required={required}
+        onChange={(opt) => handleChange(opt?.value)}
+        isDisabled={props.disabled}
+      />
+    </div>
   )
 }

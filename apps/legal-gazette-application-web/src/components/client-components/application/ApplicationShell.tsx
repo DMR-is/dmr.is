@@ -5,18 +5,17 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
-} from '@island.is/island-ui/core'
+} from '@dmr.is/ui/components/island-is'
 
 import { ApplicationFooter } from './footer/ApplicationFooter'
 import * as styles from './application.css'
+import { ApplicationSidebar } from './ApplicationSidebar'
 
-export const ApplicationShell = ({
-  children,
-  sidebar,
-}: {
+type Props = {
   children: React.ReactNode
-  sidebar?: React.ReactNode
-}) => {
+}
+
+export const ApplicationShell = ({ children }: Props) => {
   return (
     <GridContainer>
       <GridRow>
@@ -32,11 +31,9 @@ export const ApplicationShell = ({
           </Box>
           <ApplicationFooter />
         </GridColumn>
-        {sidebar && (
-          <GridColumn span={['12/12', '12/12', '3/12']}>
-            <Box paddingY={[2, 4]}>{sidebar}</Box>
-          </GridColumn>
-        )}
+        <GridColumn span={['12/12', '12/12', '3/12']}>
+          <ApplicationSidebar />
+        </GridColumn>
       </GridRow>
     </GridContainer>
   )

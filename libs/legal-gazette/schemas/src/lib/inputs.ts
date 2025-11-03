@@ -5,7 +5,6 @@ import {
   publishingDatesSchema,
   strictSignatureSchema,
 } from './base'
-import { commonApplicationFieldsScehma } from './common'
 
 export const courtAndJudgmentFieldsInput = z.object({
   courtDistrictId: z.string().optional(),
@@ -28,6 +27,13 @@ const divisionMeetingFieldsInput = z.object({
   meetingLocation: z.string().optional(),
 })
 
+export const commonUpdateApplicationSchema = z.object({
+  typeId: z.string().optional(),
+  categoryId: z.string().optional(),
+  caption: z.string().optional(),
+  html: z.string().optional(),
+})
+
 export const recallUpdateApplicationSchema = z.object({
   courtAndJudgmentFields: courtAndJudgmentFieldsInput.optional(),
   settlementFields: settlementFieldsInput
@@ -42,7 +48,7 @@ export const recallUpdateApplicationSchema = z.object({
 
 export const updateApplicationSchema = z.object({
   additionalText: z.string().optional(),
-  commonFields: commonApplicationFieldsScehma.partial().optional(),
+  commonFields: commonUpdateApplicationSchema.partial().optional(),
   recallFields: recallUpdateApplicationSchema.partial().optional(),
   signature: strictSignatureSchema.partial().optional(),
   publishingDates: z.array(publishingDatesSchema).optional(),

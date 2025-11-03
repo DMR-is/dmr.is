@@ -3,9 +3,7 @@
 import { FormProvider, useForm } from 'react-hook-form'
 
 import { RecallApplicationSchema } from '@dmr.is/legal-gazette/schemas'
-import { AlertMessage } from '@dmr.is/ui/components/island-is'
-
-import { Stack, Text } from '@island.is/island-ui/core'
+import { AlertMessage, Stack, Text } from '@dmr.is/ui/components/island-is'
 
 import { useSubmitApplication } from '../../../../hooks/useSubmitApplication'
 import { recallForm, RecallFormProps } from '../../../../lib/forms/recall-form'
@@ -30,7 +28,7 @@ export const RecallForm = (props: RecallFormProps) => {
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onValidSubmit, onInvalidSubmit)}>
-        <ApplicationShell sidebar={<Text variant="h4">Texti hér</Text>}>
+        <ApplicationShell>
           <Stack space={[2, 3, 4]}>
             <Stack space={[1, 2]}>
               <Text variant="h2">

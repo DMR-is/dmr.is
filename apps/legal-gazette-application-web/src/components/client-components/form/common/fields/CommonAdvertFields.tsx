@@ -52,7 +52,11 @@ export const CommonAdvertFields = () => {
 
   const updateHtmlOnBlurHandler = useCallback(
     (val: string) => {
-      setValue('fields.html', val, { shouldValidate: true, shouldDirty: true })
+      setValue('fields.html', val, {
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true,
+      })
       updateHTML(val)
     },
     [setValue, updateHTML],
@@ -60,7 +64,11 @@ export const CommonAdvertFields = () => {
 
   const updateHtmlOnChangeHandler = useCallback(
     debounce((val: string) => {
-      setValue('fields.html', val, { shouldValidate: true, shouldDirty: true })
+      setValue('fields.html', val, {
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true,
+      })
       updateHTML(val)
     }, 500),
     [setValue, updateHTML],

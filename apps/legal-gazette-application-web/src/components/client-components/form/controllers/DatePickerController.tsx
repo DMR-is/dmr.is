@@ -26,25 +26,33 @@ export const DatePickerController = (props: Props) => {
     }
   }
 
+  const handleFirstBlur = () => {
+    if (!fieldState.isTouched) {
+      field.onBlur()
+    }
+  }
+
   const asDate =
     typeof field.value === 'string' ? new Date(field.value) : field.value
 
   return (
-    <DatePicker
-      name={field.name}
-      handleChange={handleChange}
-      selected={asDate}
-      label={label}
-      backgroundColor="blue"
-      size="sm"
-      showTimeInput={props.withTime}
-      errorMessage={error ? error.message : undefined}
-      required={required}
-      locale="is"
-      placeholderText={undefined}
-      maxDate={maxDate}
-      minDate={minDate}
-      excludeDates={excludeDates}
-    />
+    <div onBlur={handleFirstBlur}>
+      <DatePicker
+        name={field.name}
+        handleChange={handleChange}
+        selected={asDate}
+        label={label}
+        backgroundColor="blue"
+        size="sm"
+        showTimeInput={props.withTime}
+        errorMessage={error ? error.message : undefined}
+        required={required}
+        locale="is"
+        placeholderText={undefined}
+        maxDate={maxDate}
+        minDate={minDate}
+        excludeDates={excludeDates}
+      />
+    </div>
   )
 }
