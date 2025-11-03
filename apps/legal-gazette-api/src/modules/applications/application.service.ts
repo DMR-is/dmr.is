@@ -1,5 +1,6 @@
 import addDays from 'date-fns/addDays'
 import { Op } from 'sequelize'
+import z from 'zod'
 
 import {
   BadRequestException,
@@ -11,7 +12,10 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { commonApplicationSchema } from '@dmr.is/legal-gazette/schemas'
+import {
+  commonApplicationValidationSchema,
+  recallApplicationValidationSchema,
+} from '@dmr.is/legal-gazette/schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared/dto'
 import {
@@ -25,10 +29,7 @@ import {
   RECALL_CATEGORY_ID,
   RECALL_DECEASED_ADVERT_TYPE_ID,
 } from '../../lib/constants'
-import {
-  createCommonAdvertFromIslandIsApplicationSchema,
-  createRecallAdvertFromApplicationSchema,
-} from '../../lib/schemas'
+import { createCommonAdvertFromIslandIsApplicationSchema } from '../../lib/schemas'
 import { AdvertModel } from '../advert/advert.model'
 import { IAdvertService } from '../advert/advert.service.interface'
 import { CaseModel } from '../case/case.model'
@@ -74,27 +75,33 @@ export class ApplicationService implements IApplicationService {
     application: ApplicationModel,
     user: DMRUser,
   ) {
-    const check = commonApplicationSchema.safeParse({
-      typeId: application.typeId,
-      categoryId: application.categoryId,
-      caption: application.caption,
-      additionalText: application.additionalText,
-      html: application.html,
+    const check = commonApplicationValidationSchema.safeParse({
       signature: {
         name: application.signatureName,
         onBehalfOf: application.signatureOnBehalfOf,
         location: application.signatureLocation,
-        date: application.signatureDate,
+        date: application.signatureDate?.toISOString(),
       },
+      publishingDates: application.publishingDates.map((d) => ({
+        publishingDate: d.toISOString(),
+      })),
       communicationChannels: application.communicationChannels,
-      publishingDates: application.publishingDates,
+      fields: {
+        type: application.applicationType,
+        typeId: application.typeId,
+        categoryId: application.categoryId,
+        caption: application.caption,
+        additionalText: application.additionalText,
+        html: application.html,
+      },
     })
 
     if (!check.success) {
+      const formattedErrors = z.treeifyError(check.error)
       this.logger.warn(
         `Failed to validate common application before submission`,
         {
-          error: check.error,
+          errors: formattedErrors,
         },
       )
       throw new BadRequestException('Invalid application data')
@@ -107,7 +114,7 @@ export class ApplicationService implements IApplicationService {
       typeId: requiredFields.fields.typeId,
       categoryId: requiredFields.fields.categoryId,
       caption: requiredFields.fields.caption,
-      additionalText: requiredFields.fields.additionalText,
+      additionalText: requiredFields.additionalText,
       createdBy: user.fullName,
       createdByNationalId: user.nationalId,
       signatureName: requiredFields.signature?.name,
@@ -129,75 +136,95 @@ export class ApplicationService implements IApplicationService {
     application: ApplicationModel,
     user: DMRUser,
   ) {
-    const requiredFields = createRecallAdvertFromApplicationSchema.parse({
-      settlementName: application.settlementName,
-      settlementNationalId: application.settlementNationalId,
-      settlementAddress: application.settlementAddress,
-      settlementDateOfDeath: application.settlementDateOfDeath,
-      settlementDeadlineDate: application.settlementDeadlineDate,
-      liquidatorName: application.liquidatorName,
-      liquidatorLocation: application.liquidatorLocation,
+    const check = recallApplicationValidationSchema.safeParse({
       signature: {
         name: application.signatureName,
         onBehalfOf: application.signatureOnBehalfOf,
         location: application.signatureLocation,
-        date: application.signatureDate,
+        date: application.signatureDate?.toISOString(),
       },
-      divisionMeetingDate: application.divisionMeetingDate,
-      divisionMeetingLocation: application.divisionMeetingLocation,
-      judgementDate: application.judgmentDate,
-      courtDistrictId: application.courtDistrictId,
+      publishingDates: application.publishingDates.map((d) => ({
+        publishingDate: d.toISOString(),
+      })),
       communicationChannels: application.communicationChannels,
+      fields: {
+        type: application.applicationType,
+        courtAndJudgmentFields: {
+          courtDistrictId: application.courtDistrictId,
+          judgmentDate: application.judgmentDate?.toISOString(),
+        },
+        settlementFields: {
+          name: application.settlementName,
+          nationalId: application.settlementNationalId,
+          address: application.settlementAddress,
+          dateOfDeath: application.settlementDateOfDeath?.toISOString(),
+          deadlineDate: application.settlementDeadlineDate?.toISOString(),
+        },
+        liquidatorFields: {
+          name: application.liquidatorName,
+          location: application.liquidatorLocation,
+        },
+        divisionMeetingFields: {
+          meetingDate: application.divisionMeetingDate?.toISOString(),
+          meetingLocation: application.divisionMeetingLocation,
+        },
+      },
     })
 
-    const applicationType = application.applicationType
-
-    const isBankruptcy =
-      applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
-
-    if (isBankruptcy && !requiredFields.settlementDeadlineDate) {
-      throw new BadRequestException(
-        'Settlement deadline date is required for bankruptcy recall applications',
+    if (!check.success) {
+      const formattedErrors = z.treeifyError(check.error)
+      this.logger.warn(
+        `Failed to validate recall application before submission`,
+        {
+          errors: formattedErrors,
+        },
       )
+      throw new BadRequestException('Invalid application data')
     }
 
-    if (!isBankruptcy && !requiredFields.settlementDateOfDeath) {
-      throw new BadRequestException(
-        'Settlement date of death is required for bankruptcy recall applications',
-      )
-    }
+    const requiredFields = check.data
 
-    const title = isBankruptcy
-      ? `Innköllun þrotabús - ${requiredFields.settlementName}`
-      : `Innköllun dánarbús - ${requiredFields.settlementName}`
+    const title =
+      application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
+        ? `Innköllun þrotabús - ${requiredFields.fields.settlementFields.name}`
+        : `Innköllun dánarbús - ${requiredFields.fields.settlementFields.name}`
 
     await this.advertService.createAdvert({
       caseId: application.caseId,
-      typeId: isBankruptcy
-        ? RECALL_BANKRUPTCY_ADVERT_TYPE_ID
-        : RECALL_DECEASED_ADVERT_TYPE_ID,
+      typeId:
+        requiredFields.fields.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
+          ? RECALL_BANKRUPTCY_ADVERT_TYPE_ID
+          : RECALL_DECEASED_ADVERT_TYPE_ID,
       categoryId: RECALL_CATEGORY_ID,
       createdBy: user.fullName,
       createdByNationalId: user.nationalId,
       signatureName: requiredFields.signature?.name,
       signatureOnBehalfOf: requiredFields.signature?.onBehalfOf,
       signatureLocation: requiredFields.signature?.location,
-      signatureDate: requiredFields.signature?.date?.toISOString(),
+      signatureDate: requiredFields.signature?.date,
       title: title,
-      divisionMeetingDate: requiredFields.divisionMeetingDate,
-      divisionMeetingLocation: requiredFields.divisionMeetingLocation,
-      judgementDate: requiredFields.judgementDate.toISOString(),
-      courtDistrictId: requiredFields.courtDistrictId,
+      divisionMeetingDate:
+        requiredFields.fields.divisionMeetingFields?.meetingDate,
+      divisionMeetingLocation:
+        requiredFields.fields.divisionMeetingFields?.meetingLocation,
+      judgementDate: requiredFields.fields.courtAndJudgmentFields?.judgmentDate,
+      courtDistrictId:
+        requiredFields.fields.courtAndJudgmentFields?.courtDistrictId,
       settlement: {
-        liquidatorName: requiredFields.liquidatorName,
-        liquidatorLocation: requiredFields.liquidatorLocation,
-        settlementAddress: requiredFields.settlementAddress,
-        settlementName: requiredFields.settlementName,
-        settlementNationalId: requiredFields.settlementNationalId,
+        liquidatorName: requiredFields.fields.liquidatorFields?.name,
+        liquidatorLocation: requiredFields.fields.liquidatorFields?.location,
+        settlementAddress: requiredFields.fields.settlementFields?.address,
+        settlementName: requiredFields.fields.settlementFields?.name,
+        settlementNationalId:
+          requiredFields.fields.settlementFields?.nationalId,
         settlementDateOfDeath:
-          requiredFields.settlementDateOfDeath?.toISOString(),
+          application.applicationType === ApplicationTypeEnum.RECALL_DECEASED
+            ? application.settlementDateOfDeath?.toISOString()
+            : undefined,
         settlementDeadline:
-          requiredFields.settlementDeadlineDate?.toISOString(),
+          application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
+            ? application.settlementDeadlineDate?.toISOString()
+            : undefined,
       },
       communicationChannels: requiredFields.communicationChannels,
       scheduledAt: application.publishingDates.map((d) => d.toISOString()),
@@ -269,7 +296,7 @@ export class ApplicationService implements IApplicationService {
       signatureDate: body.signature?.date,
       signatureLocation: body.signature?.location,
       signatureOnBehalfOf: body.signature?.onBehalfOf,
-      divisionMeetingDate: new Date(body.meetingDate),
+      divisionMeetingDate: body.meetingDate,
       divisionMeetingLocation: body.meetingLocation,
       typeId: TypeIdEnum.DIVISION_MEETING,
       title: `Skiptafundur - ${application.settlementName}`,
@@ -398,28 +425,30 @@ export class ApplicationService implements IApplicationService {
       signatureLocation: body.signature?.location,
       signatureName: body.signature?.name,
       signatureOnBehalfOf: body.signature?.onBehalfOf,
-      courtDistrictId: body.courtAndJudgmentFields?.courtDistrictId,
-      judgmentDate: body.courtAndJudgmentFields?.judgmentDate
-        ? new Date(body.courtAndJudgmentFields.judgmentDate)
+      courtDistrictId:
+        body.recallFields?.courtAndJudgmentFields?.courtDistrictId,
+      judgmentDate: body.recallFields?.courtAndJudgmentFields?.judgmentDate
+        ? new Date(body.recallFields.courtAndJudgmentFields.judgmentDate)
         : undefined,
       publishingDates: body.publishingDates?.map(
         ({ publishingDate }) => new Date(publishingDate),
       ),
       communicationChannels: body.communicationChannels,
-      liquidatorName: body.liquidatorFields?.name,
-      liquidatorLocation: body.liquidatorFields?.location,
-      divisionMeetingDate: body.divisionMeetingFields?.meetingDate
-        ? new Date(body.divisionMeetingFields.meetingDate)
+      liquidatorName: body.recallFields?.liquidatorFields?.name,
+      liquidatorLocation: body.recallFields?.liquidatorFields?.location,
+      divisionMeetingDate: body.recallFields?.divisionMeetingFields?.meetingDate
+        ? new Date(body.recallFields.divisionMeetingFields.meetingDate)
         : undefined,
-      divisionMeetingLocation: body.divisionMeetingFields?.meetingLocation,
-      settlementName: body.settlementFields?.name,
-      settlementNationalId: body.settlementFields?.nationalId,
-      settlementAddress: body.settlementFields?.address,
-      settlementDateOfDeath: body.settlementFields?.dateOfDeath
-        ? new Date(body.settlementFields.dateOfDeath)
+      divisionMeetingLocation:
+        body.recallFields?.divisionMeetingFields?.meetingLocation,
+      settlementName: body.recallFields?.settlementFields?.name,
+      settlementNationalId: body.recallFields?.settlementFields?.nationalId,
+      settlementAddress: body.recallFields?.settlementFields?.address,
+      settlementDateOfDeath: body.recallFields?.settlementFields?.dateOfDeath
+        ? new Date(body.recallFields?.settlementFields.dateOfDeath)
         : undefined,
-      settlementDeadlineDate: body.settlementFields?.deadlineDate
-        ? new Date(body.settlementFields.deadlineDate)
+      settlementDeadlineDate: body.recallFields?.settlementFields?.deadlineDate
+        ? new Date(body.recallFields?.settlementFields.deadlineDate)
         : undefined,
     })
     return application.fromModelToDetailedDto()

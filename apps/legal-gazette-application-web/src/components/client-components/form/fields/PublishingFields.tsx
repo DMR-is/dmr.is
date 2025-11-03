@@ -7,6 +7,7 @@ import {
   ApplicationInputFields,
   BaseApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
+import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
 import {
   Button,
@@ -24,9 +25,10 @@ import { DatePickerController } from '../controllers/DatePickerController'
 
 type Props = {
   additionalTitle?: string
+  alert?: React.ReactElement<typeof AlertMessage>
 }
 
-export const PublishingFields = ({ additionalTitle }: Props) => {
+export const PublishingFields = ({ additionalTitle, alert }: Props) => {
   const { getValues, watch, setValue } = useFormContext<BaseApplicationSchema>()
   const { updatePublishingDates } = useUpdateApplication(
     getValues('metadata.applicationId'),
@@ -86,6 +88,7 @@ export const PublishingFields = ({ additionalTitle }: Props) => {
       <GridColumn span="12/12">
         <Text variant="h3">{`Birting${additionalTitle ? ` ${additionalTitle}` : ''}`}</Text>
       </GridColumn>
+      {alert && <GridColumn span="12/12">{alert}</GridColumn>}
       <GridColumn span="12/12">
         <Stack space={[2, 3]}>
           {currentDates.map((date, index) => {
