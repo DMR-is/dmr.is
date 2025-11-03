@@ -29,7 +29,6 @@ import {
   RECALL_CATEGORY_ID,
   RECALL_DECEASED_ADVERT_TYPE_ID,
 } from '../../lib/constants'
-import { createCommonAdvertFromIslandIsApplicationSchema } from '../../lib/schemas'
 import { AdvertModel } from '../advert/advert.model'
 import { IAdvertService } from '../advert/advert.service.interface'
 import { CaseModel } from '../case/case.model'
@@ -545,45 +544,25 @@ export class ApplicationService implements IApplicationService {
       { returning: ['id'] },
     )
 
-    const requiredFields =
-      createCommonAdvertFromIslandIsApplicationSchema.parse({
-        islandIsApplicationId: body.islandIsApplicationId,
-        typeId: body.typeId,
-        categoryId: body.categoryId,
-        caption: body.caption,
-        additionalText: body.additionalText,
-        html: body.html,
-        signature: {
-          name: body.signatureName,
-          onBehalfOf: body.signatureOnBehalfOf,
-          location: body.signatureLocation,
-          date: body.signatureDate,
-        },
-        communicationChannels: body.communicationChannels,
-        publishingDates: body.publishingDates.map((date) => new Date(date)),
-      })
-
-    const category = await this.categoryModel.findByPkOrThrow(
-      requiredFields.categoryId,
-    )
+    const category = await this.categoryModel.findByPkOrThrow(body.categoryId)
 
     await this.advertService.createAdvert({
       caseId: newCase.id,
-      typeId: requiredFields.typeId,
-      categoryId: requiredFields.categoryId,
-      islandIsApplicationId: requiredFields.islandIsApplicationId,
+      typeId: body.typeId,
+      categoryId: body.categoryId,
+      islandIsApplicationId: body.islandIsApplicationId,
       createdBy: user.fullName,
       createdByNationalId: user.nationalId,
-      signatureName: requiredFields.signature?.name,
-      signatureDate: requiredFields.signature?.date?.toISOString(),
-      signatureLocation: requiredFields.signature?.location,
-      signatureOnBehalfOf: requiredFields.signature?.onBehalfOf,
-      title: `${category.title} - ${requiredFields.caption}`,
-      caption: requiredFields.caption,
-      additionalText: requiredFields.additionalText,
-      content: requiredFields.html,
-      communicationChannels: requiredFields.communicationChannels,
-      scheduledAt: requiredFields.publishingDates.map((d) => d.toISOString()),
+      signatureName: body.signatureName,
+      signatureDate: body.signatureDate,
+      signatureLocation: body.signatureLocation,
+      signatureOnBehalfOf: body.signatureOnBehalfOf,
+      title: `${category.title} - ${body.caption}`,
+      caption: body.caption,
+      additionalText: body.additionalText,
+      content: body.html,
+      communicationChannels: body.communicationChannels,
+      scheduledAt: body.publishingDates,
     })
   }
   async submitApplication(applicationId: string, user: DMRUser): Promise<void> {
