@@ -171,7 +171,13 @@ export class StatisticsService implements IStatisticsService {
     const pastDueCountPromise = this.advertModel.unscoped().count({
       attributes: ['statusId'],
       where: {
-        statusId: StatusIdEnum.READY_FOR_PUBLICATION,
+        statusId: {
+          [Op.in]: [
+            StatusIdEnum.SUBMITTED,
+            StatusIdEnum.IN_PROGRESS,
+            StatusIdEnum.READY_FOR_PUBLICATION,
+          ],
+        },
       },
       include: [
         {
