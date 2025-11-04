@@ -18,6 +18,9 @@
     "types": ["node", "Multer", "../../node_modules/@types/node"],
     "typeRoots": ["node_modules/@types"],
     "paths": {
+      "@dmr.is/clients/national-registry": [
+        "libs/clients/national-registry/index.ts"
+      ],
       "@dmr.is/api-client/*": ["libs/shared/api-client/src/lib/*"],
       "@dmr.is/apm": ["libs/apm/src/index.ts"],
       "@dmr.is/auth/*": ["libs/shared/auth/src/lib/*"],

@@ -1,0 +1,3 @@
+export { NationalRegistryModule } from './national-registry.module'
+
+export { PersonDto, GetPersonDto } from './national-registry.dto'
