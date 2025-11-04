@@ -4320,6 +4320,189 @@
         "summary": "",
         "tags": ["CommunicationChannel"]
       }
+    },
+    "/api/v1/statistics": {
+      "get": {
+        "operationId": "getCountByStatuses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCountByStatusesDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Statistics"]
+      }
+    },
+    "/api/v1/statistics/in-progress": {
+      "get": {
+        "operationId": "getAdvertsInProgressStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetAdvertsInProgressStatsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Statistics"]
+      }
+    },
+    "/api/v1/statistics/to-be-published": {
+      "get": {
+        "operationId": "getAdvertsToBePublishedStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetAdvertsToBePublishedStatsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Statistics"]
+      }
     }
   },
   "info": {
@@ -5879,6 +6062,38 @@
           "name": { "type": "string" },
           "phone": { "type": "string" }
         }
+      },
+      "GetCountByStatusesDto": {
+        "type": "object",
+        "properties": {
+          "submittedCount": { "type": "number" },
+          "inprogressCount": { "type": "number" },
+          "tobePublishedCount": { "type": "number" }
+        },
+        "required": ["submittedCount", "inprogressCount", "tobePublishedCount"]
+      },
+      "GetAdvertsInProgressStatsDto": {
+        "type": "object",
+        "properties": {
+          "unassignedCount": { "type": "number" },
+          "withCommentsCount": { "type": "number" },
+          "submittedTodayCount": { "type": "number" },
+          "totalInProgressCount": { "type": "number" }
+        },
+        "required": [
+          "unassignedCount",
+          "withCommentsCount",
+          "submittedTodayCount",
+          "totalInProgressCount"
+        ]
+      },
+      "GetAdvertsToBePublishedStatsDto": {
+        "type": "object",
+        "properties": {
+          "tobePublishedTodayCount": { "type": "number" },
+          "pastDueCount": { "type": "number" }
+        },
+        "required": ["tobePublishedTodayCount", "pastDueCount"]
       }
     }
   }
