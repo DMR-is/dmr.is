@@ -15,6 +15,7 @@ const CACHE_TTL = 5 * 60_000
 const TAG_INDEX_TTL = 24 * 60_60_000 // 24h
 
 const CACHE_DEBUG = process.env.CACHE_DEBUG === 'true'
+const LOGGING_CONTEXT = 'CacheDecorator'
 
 type CachedEnvelope<T = unknown> = {
   data: T // the actual cached payload (unwrapped)
@@ -208,6 +209,7 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
               logger.error('Failed to background-refresh cache', {
                 cacheKey: key,
                 error,
+                context: LOGGING_CONTEXT,
               })
             }
           }, 0)
@@ -215,10 +217,11 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
 
         if (CACHE_DEBUG) {
           const json = JSON.stringify(envelope.data)
-          logger.info('DECORATOR: CACHE HIT', {
+          logger.info('CACHE HIT', {
             method: propertyKey,
             key,
             sha1: sha1(json),
+            context: LOGGING_CONTEXT,
           })
         }
         return ResultWrapper.ok(envelope.data)
@@ -255,6 +258,7 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
           method: propertyKey,
           key,
           sha1: sha1(json),
+          context: LOGGING_CONTEXT,
         })
       }
 
