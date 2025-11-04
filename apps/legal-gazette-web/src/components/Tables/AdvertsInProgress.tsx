@@ -2,11 +2,9 @@
 
 import { useIntl } from 'react-intl'
 
-import { AlertMessage } from '@dmr.is/ui/components/island-is'
+import { AlertMessage, Tag, Tooltip } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { formatDate } from '@dmr.is/utils/client'
-
-import { Tag } from '@island.is/island-ui/core'
 
 import { StatusEnum, StatusIdEnum } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
@@ -33,6 +31,15 @@ export const AdvertsInProgress = () => {
   )
 
   const rows = data?.adverts.map((advert) => ({
+    icon: advert.hasInternalComments ? (
+      <Tooltip
+        iconSize="medium"
+        color="blue400"
+        as="button"
+        placement="top"
+        text="Þessi auglýsing er með skráðar athugasemdir frá ritstjóra"
+      />
+    ) : undefined,
     birting: formatDate(advert.scheduledAt),
     skraning: formatDate(advert.createdAt),
     status: (
@@ -67,6 +74,11 @@ export const AdvertsInProgress = () => {
       loading={isLoading}
       layout="auto"
       columns={[
+        {
+          field: 'icon',
+          children: '',
+          size: 'tiny',
+        },
         {
           field: 'birting',
           children: formatMessage(ritstjornTableMessages.columns.scheduledAt),

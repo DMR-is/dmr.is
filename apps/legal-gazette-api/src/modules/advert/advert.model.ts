@@ -29,7 +29,7 @@ import {
 } from '../advert-publications/advert-publication.model'
 import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
-import { CommentModel } from '../comment/comment.model'
+import { CommentModel, CommentTypeEnum } from '../comment/comment.model'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
@@ -430,6 +430,12 @@ export class AdvertModel extends BaseModel<
   @HasOne(() => ForeclosureModel)
   foreclosure?: ForeclosureModel
 
+  get hasInternalComments(): boolean {
+    const found = this.comments.find((c) => c.type === CommentTypeEnum.COMMENT)
+
+    return found ? true : false
+  }
+
   @BeforeUpdate
   static validateUpdate(instance: AdvertModel) {
     // validateAdvertStatus(instance)
@@ -507,6 +513,7 @@ export class AdvertModel extends BaseModel<
         id: model.id,
         createdAt: model.createdAt.toISOString(),
         updatedAt: model.updatedAt.toISOString(),
+        hasInternalComments: model.hasInternalComments,
         deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
         category: model.category.fromModel(),
         type: model.type.fromModel(),

@@ -6392,6 +6392,9 @@
           "id": {
             "type": "string"
           },
+          "hasInternalComments": {
+            "type": "boolean"
+          },
           "scheduledAt": {
             "type": "string"
           },
@@ -6491,6 +6494,7 @@
           "createdAt",
           "updatedAt",
           "id",
+          "hasInternalComments",
           "scheduledAt",
           "category",
           "type",
@@ -6568,6 +6572,9 @@
           "id": {
             "type": "string"
           },
+          "hasInternalComments": {
+            "type": "boolean"
+          },
           "scheduledAt": {
             "type": "string"
           },
@@ -6600,6 +6607,7 @@
           "createdAt",
           "updatedAt",
           "id",
+          "hasInternalComments",
           "scheduledAt",
           "category",
           "type",
@@ -6688,8 +6696,7 @@
           "version",
           "publicationNumber",
           "createdBy",
-          "isLegacy",
-          "pdfUrl"
+          "isLegacy"
         ]
       },
       "GetPublicationsDto": {
@@ -6779,10 +6786,20 @@
         },
         "required": ["users"]
       },
+      "ApplicationStatusEnum": {
+        "type": "string",
+        "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
+      },
       "ApplicationDto": {
         "type": "object",
         "properties": {
           "id": {
+            "type": "string"
+          },
+          "caseId": {
+            "type": "string"
+          },
+          "islandIsApplicationId": {
             "type": "string"
           },
           "createdAt": {
@@ -6791,10 +6808,7 @@
           "updatedAt": {
             "type": "string"
           },
-          "caseId": {
-            "type": "string"
-          },
-          "nationalId": {
+          "submittedByNationalId": {
             "type": "string"
           },
           "applicationType": {
@@ -6811,8 +6825,11 @@
             "$ref": "#/components/schemas/TypeDto"
           },
           "status": {
-            "type": "string",
-            "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationStatusEnum"
+              }
+            ]
           },
           "title": {
             "type": "string"
@@ -6820,10 +6837,10 @@
         },
         "required": [
           "id",
+          "caseId",
           "createdAt",
           "updatedAt",
-          "caseId",
-          "nationalId",
+          "submittedByNationalId",
           "applicationType",
           "status",
           "title"
@@ -6887,262 +6904,124 @@
           "applications"
         ]
       },
-      "ApplicationDetailedDto": {
+      "CommonApplicationFieldsDto": {
         "type": "object",
         "properties": {
-          "id": {
+          "typeId": {
             "type": "string"
           },
-          "createdAt": {
+          "categoryId": {
             "type": "string"
           },
-          "updatedAt": {
+          "caption": {
             "type": "string"
           },
-          "caseId": {
+          "html": {
+            "type": "string"
+          }
+        }
+      },
+      "CourtAndJudgmentFieldsDto": {
+        "type": "object",
+        "properties": {
+          "courtDistrictId": {
+            "type": "string"
+          },
+          "judgmentDate": {
+            "type": "string"
+          }
+        }
+      },
+      "ApplicationLiquidationFieldsDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          }
+        }
+      },
+      "ApplicationSettlementDto": {
+        "type": "object",
+        "properties": {
+          "name": {
             "type": "string"
           },
           "nationalId": {
             "type": "string"
           },
-          "applicationType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ApplicationTypeEnum"
-              }
-            ]
-          },
-          "category": {
-            "$ref": "#/components/schemas/CategoryDto"
-          },
-          "type": {
-            "$ref": "#/components/schemas/TypeDto"
-          },
-          "status": {
-            "type": "string",
-            "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
-          },
-          "title": {
+          "address": {
             "type": "string"
           },
-          "typeId": {
-            "type": "string",
-            "nullable": true
+          "deadlineDate": {
+            "type": "string"
           },
-          "categoryId": {
-            "type": "string",
-            "nullable": true
+          "dateOfDeath": {
+            "type": "string"
+          }
+        }
+      },
+      "ApplicationDivisionMeetingFieldsDto": {
+        "type": "object",
+        "properties": {
+          "meetingDate": {
+            "type": "string"
           },
-          "courtDistrictId": {
-            "type": "string",
-            "nullable": true
+          "meetingLocation": {
+            "type": "string"
+          }
+        }
+      },
+      "RecallFieldsDto": {
+        "type": "object",
+        "properties": {
+          "courtAndJudgmentFields": {
+            "$ref": "#/components/schemas/CourtAndJudgmentFieldsDto"
           },
-          "islandIsApplicationId": {
-            "type": "string",
-            "nullable": true
+          "liquidatorFields": {
+            "$ref": "#/components/schemas/ApplicationLiquidationFieldsDto"
           },
-          "caption": {
-            "type": "string",
-            "nullable": true
+          "settlementFields": {
+            "$ref": "#/components/schemas/ApplicationSettlementDto"
           },
-          "additionalText": {
-            "type": "string",
-            "nullable": true
-          },
-          "judgmentDate": {
-            "type": "string",
-            "nullable": true
-          },
-          "html": {
-            "type": "string",
-            "nullable": true
-          },
-          "signatureName": {
-            "type": "string",
-            "nullable": true
-          },
-          "signatureOnBehalfOf": {
-            "type": "string",
-            "nullable": true
-          },
-          "signatureLocation": {
-            "type": "string",
-            "nullable": true
-          },
-          "signatureDate": {
-            "type": "string",
-            "nullable": true
-          },
-          "liquidatorName": {
-            "type": "string",
-            "nullable": true
-          },
-          "liquidatorLocation": {
-            "type": "string",
-            "nullable": true
-          },
-          "liquidatorOnBehalfOf": {
-            "type": "string",
-            "nullable": true
-          },
-          "settlementName": {
-            "type": "string",
-            "nullable": true
-          },
-          "settlementNationalId": {
-            "type": "string",
-            "nullable": true
-          },
-          "settlementAddress": {
-            "type": "string",
-            "nullable": true
-          },
-          "settlementDeadlineDate": {
-            "type": "string",
-            "nullable": true
-          },
-          "settlementDateOfDeath": {
-            "type": "string",
-            "nullable": true
-          },
-          "divisionMeetingDate": {
-            "type": "string",
-            "nullable": true
-          },
-          "divisionMeetingLocation": {
-            "type": "string",
-            "nullable": true
-          },
-          "publishingDates": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "communicationChannels": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CommunicationChannelDto"
-            }
+          "divisionMeetingFields": {
+            "$ref": "#/components/schemas/ApplicationDivisionMeetingFieldsDto"
           }
         },
         "required": [
-          "id",
-          "createdAt",
-          "updatedAt",
-          "caseId",
-          "nationalId",
-          "applicationType",
-          "status",
-          "title",
-          "publishingDates",
-          "communicationChannels"
+          "courtAndJudgmentFields",
+          "liquidatorFields",
+          "settlementFields",
+          "divisionMeetingFields"
         ]
       },
-      "UpdateApplicationDto": {
+      "ApplicationSignatureDto": {
         "type": "object",
         "properties": {
-          "typeId": {
-            "type": "string",
-            "nullable": true
+          "name": {
+            "type": "string"
           },
-          "categoryId": {
-            "type": "string",
-            "nullable": true
+          "onBehalfOf": {
+            "type": "string"
           },
-          "courtDistrictId": {
-            "type": "string",
-            "nullable": true
+          "location": {
+            "type": "string"
           },
-          "islandIsApplicationId": {
-            "type": "string",
-            "nullable": true
-          },
-          "caption": {
-            "type": "string",
-            "nullable": true
-          },
-          "additionalText": {
-            "type": "string",
-            "nullable": true
-          },
-          "judgmentDate": {
-            "type": "string",
-            "nullable": true
-          },
-          "html": {
-            "type": "string",
-            "nullable": true
-          },
-          "signatureName": {
-            "type": "string",
-            "nullable": true
-          },
-          "signatureOnBehalfOf": {
-            "type": "string",
-            "nullable": true
-          },
-          "signatureLocation": {
-            "type": "string",
-            "nullable": true
-          },
-          "signatureDate": {
-            "type": "string",
-            "nullable": true
-          },
-          "liquidatorName": {
-            "type": "string",
-            "nullable": true
-          },
-          "liquidatorLocation": {
-            "type": "string",
-            "nullable": true
-          },
-          "liquidatorOnBehalfOf": {
-            "type": "string",
-            "nullable": true
-          },
-          "settlementName": {
-            "type": "string",
-            "nullable": true
-          },
-          "settlementNationalId": {
-            "type": "string",
-            "nullable": true
-          },
-          "settlementAddress": {
-            "type": "string",
-            "nullable": true
-          },
-          "settlementDeadlineDate": {
-            "type": "string",
-            "nullable": true
-          },
-          "settlementDateOfDeath": {
-            "type": "string",
-            "nullable": true
-          },
-          "divisionMeetingDate": {
-            "type": "string",
-            "nullable": true
-          },
-          "divisionMeetingLocation": {
-            "type": "string",
-            "nullable": true
-          },
-          "publishingDates": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "communicationChannels": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CommunicationChannelDto"
-            }
+          "date": {
+            "type": "string"
           }
         }
+      },
+      "ApplicationPublishingDatesDto": {
+        "type": "object",
+        "properties": {
+          "publishingDate": {
+            "type": "string"
+          }
+        },
+        "required": ["publishingDate"]
       },
       "CreateCommunicationChannelDto": {
         "type": "object",
@@ -7159,6 +7038,190 @@
         },
         "required": ["email"]
       },
+      "ApplicationDetailedDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "caseId": {
+            "type": "string"
+          },
+          "islandIsApplicationId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "submittedByNationalId": {
+            "type": "string"
+          },
+          "applicationType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationTypeEnum"
+              }
+            ]
+          },
+          "category": {
+            "$ref": "#/components/schemas/CategoryDto"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TypeDto"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationStatusEnum"
+              }
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "additionalText": {
+            "type": "string"
+          },
+          "commonFields": {
+            "$ref": "#/components/schemas/CommonApplicationFieldsDto"
+          },
+          "recallFields": {
+            "$ref": "#/components/schemas/RecallFieldsDto"
+          },
+          "signature": {
+            "$ref": "#/components/schemas/ApplicationSignatureDto"
+          },
+          "publishingDates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationPublishingDatesDto"
+            }
+          },
+          "communicationChannels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "caseId",
+          "createdAt",
+          "updatedAt",
+          "submittedByNationalId",
+          "applicationType",
+          "status",
+          "title",
+          "commonFields",
+          "recallFields",
+          "signature",
+          "publishingDates",
+          "communicationChannels"
+        ]
+      },
+      "UpdateCourtAndJudgmentFieldsDto": {
+        "type": "object",
+        "properties": {
+          "courtDistrictId": {
+            "type": "string"
+          },
+          "judgmentDate": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateApplicationLiquidationFieldsDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateApplicationSettlementDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "nationalId": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "deadlineDate": {
+            "type": "string"
+          },
+          "dateOfDeath": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateApplicationDivisionMeetingFieldsDto": {
+        "type": "object",
+        "properties": {
+          "meetingDate": {
+            "type": "string"
+          },
+          "meetingLocation": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateRecallFieldsDto": {
+        "type": "object",
+        "properties": {
+          "courtAndJudgmentFields": {
+            "$ref": "#/components/schemas/UpdateCourtAndJudgmentFieldsDto"
+          },
+          "liquidatorFields": {
+            "$ref": "#/components/schemas/UpdateApplicationLiquidationFieldsDto"
+          },
+          "settlementFields": {
+            "$ref": "#/components/schemas/UpdateApplicationSettlementDto"
+          },
+          "divisionMeetingFields": {
+            "$ref": "#/components/schemas/UpdateApplicationDivisionMeetingFieldsDto"
+          }
+        }
+      },
+      "UpdateApplicationDto": {
+        "type": "object",
+        "properties": {
+          "additionalText": {
+            "type": "string"
+          },
+          "commonFields": {
+            "$ref": "#/components/schemas/CommonApplicationFieldsDto"
+          },
+          "recallFields": {
+            "$ref": "#/components/schemas/UpdateRecallFieldsDto"
+          },
+          "signature": {
+            "$ref": "#/components/schemas/ApplicationSignatureDto"
+          },
+          "publishingDates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationPublishingDatesDto"
+            }
+          },
+          "communicationChannels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
+          }
+        }
+      },
       "AddDivisionMeetingForApplicationDto": {
         "type": "object",
         "properties": {
@@ -7168,17 +7231,8 @@
           "meetingLocation": {
             "type": "string"
           },
-          "signatureLocation": {
-            "type": "string"
-          },
-          "signatureDate": {
-            "type": "string"
-          },
-          "signatureName": {
-            "type": "string"
-          },
-          "signatureOnBehalfOf": {
-            "type": "string"
+          "signature": {
+            "$ref": "#/components/schemas/ApplicationSignatureDto"
           },
           "additionalText": {
             "type": "string"
@@ -7190,28 +7244,13 @@
             }
           }
         },
-        "required": [
-          "meetingDate",
-          "meetingLocation",
-          "signatureLocation",
-          "signatureDate",
-          "signatureName"
-        ]
+        "required": ["meetingDate", "meetingLocation", "signature"]
       },
       "AddDivisionEndingForApplicationDto": {
         "type": "object",
         "properties": {
-          "signatureLocation": {
-            "type": "string"
-          },
-          "signatureDate": {
-            "type": "string"
-          },
-          "signatureName": {
-            "type": "string"
-          },
-          "signatureOnBehalfOf": {
-            "type": "string"
+          "signature": {
+            "$ref": "#/components/schemas/ApplicationSignatureDto"
           },
           "additionalText": {
             "type": "string"
@@ -7229,13 +7268,7 @@
             "type": "number"
           }
         },
-        "required": [
-          "signatureLocation",
-          "signatureDate",
-          "signatureName",
-          "scheduledAt",
-          "declaredClaims"
-        ]
+        "required": ["signature", "scheduledAt", "declaredClaims"]
       },
       "TypeWithCategoriesDto": {
         "type": "object",
