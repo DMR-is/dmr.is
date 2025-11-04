@@ -1,5 +1,7 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
 import { useMemo } from 'react'
 
 import {
@@ -12,6 +14,7 @@ import {
 
 import { StatusDto, StatusIdEnum } from '../../gen/fetch'
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
+import { Route } from '../../lib/constants'
 import { useTRPC } from '../../lib/nTrpc/client/trpc'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -35,6 +38,7 @@ export const ChangeStatusButtons = ({
   } = useUpdateAdvert(advertId)
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const router = useRouter()
 
   const { mutate: rejectAdvert, isPending: isRejecting } = useMutation(
     trpc.rejectAdvert.mutationOptions({
@@ -121,6 +125,22 @@ export const ChangeStatusButtons = ({
           {nextText}
         </Text>
       </Button>
+
+      <Box borderRadius="large" background="white">
+        <Button
+          disabled={currentStatus.id !== StatusIdEnum.READY_FOR_PUBLICATION}
+          onClick={() => router.push(Route.UTGAFA)}
+          variant="ghost"
+          size="small"
+          icon="open"
+          iconType="outline"
+          fluid
+        >
+          <Text color="blue400" fontWeight="semiBold" variant="small">
+            Opna útgáfu
+          </Text>
+        </Button>
+      </Box>
       <Button
         disabled={!canEdit}
         colorScheme="destructive"

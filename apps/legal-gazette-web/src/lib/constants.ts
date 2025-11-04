@@ -34,7 +34,7 @@ export enum Route {
   STJORNBORD = '/',
   RITSTJORN = '/ritstjorn',
   RITSTJORN_ID = '/ritstjorn/[id]',
-  UTGAFA = '/utgafa',
+  UTGAFA = '/ritstjorn?tab=utgafa',
   HEILDARYFIRLIT = '/heildaryfirlit',
   LOGIN = '/innskraning',
 }
