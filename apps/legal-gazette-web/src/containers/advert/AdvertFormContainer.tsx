@@ -1,6 +1,12 @@
 'use client'
 
-import { AlertMessage, Box, Stack, Text } from '@dmr.is/ui/components/island-is'
+import {
+  AlertMessage,
+  Box,
+  Breadcrumbs,
+  Stack,
+  Text,
+} from '@dmr.is/ui/components/island-is'
 import { formatDate } from '@dmr.is/utils/client'
 
 import { AdvertBaseFields } from '../../components/field-set-items/AdvertBaseFields'
@@ -21,6 +27,7 @@ import {
   isDivisionEndingAdvert,
   isDivisionMeetingAdvert,
 } from '../../lib/advert-type-guards'
+import { Route } from '../../lib/constants'
 import {
   useQuery,
   useSuspenseQuery,
@@ -189,6 +196,21 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
   return (
     <Box background="white" padding={[4, 6, 8]} borderRadius="large">
       <Stack space={[3, 4]}>
+        <Breadcrumbs
+          items={[
+            {
+              title: 'Stjórnborð',
+              href: Route.STJORNBORD,
+            },
+            {
+              title: 'Ritstjórn',
+              href: Route.RITSTJORN,
+            },
+            {
+              title: advert.title,
+            },
+          ]}
+        />
         <Stack space={[1, 2]}>
           <Text variant="h2">Vinnslusvæði Lögbirtingablaðsins</Text>
           <Text>

@@ -4,7 +4,6 @@ import { StatusIdEnum } from '../../../../gen/fetch'
 import { createTRPCError } from '../../utils/errorHandler'
 import { protectedProcedure, router } from '../trpc'
 
-
 const getAdvertsRequestSchema = z.object({
   page: z.number().optional(),
   pageSize: z.number().optional(),
@@ -51,13 +50,21 @@ export const advertsRouter = router({
   getAdvertsCount: protectedProcedure.query(async ({ ctx }) => {
     return await ctx.advertsApi.getAdvertsCount()
   }),
-  getSubmittedAdverts: protectedProcedure.input(getAdvertsRequestSchema).query(
-    async ({ ctx, input }) =>
-      await ctx.advertsApi.getAdverts({
+  getAdvertsInProgress: protectedProcedure
+    .input(getAdvertsRequestSchema)
+    .query(async ({ ctx, input }) => {
+      const allowedStatuses = [StatusIdEnum.SUBMITTED, StatusIdEnum.IN_PROGRESS]
+
+      const matchingStatuses = allowedStatuses.filter((status) =>
+        input.statusId?.includes(status),
+      )
+
+      return await ctx.advertsApi.getAdverts({
         ...input,
-        statusId: [StatusIdEnum.SUBMITTED],
-      }),
-  ),
+        statusId:
+          matchingStatuses.length > 0 ? matchingStatuses : allowedStatuses,
+      })
+    }),
   getReadyForPublicationAdverts: protectedProcedure
     .input(getAdvertsRequestSchema)
     .query(
