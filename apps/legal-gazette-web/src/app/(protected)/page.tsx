@@ -7,24 +7,28 @@ export default async function IndexPage() {
   const countByStatusPromise = fetchQuery(
     trpc.getCountByStatuses.queryOptions(),
   )
-  const advertsInprogressStats = fetchQuery(
+  const advertsInprogressPromise = fetchQuery(
     trpc.getAdvertsInProgressStats.queryOptions(),
   )
-  const readyForPublishingStats = fetchQuery(
+  const readyForPublishingPromise = fetchQuery(
     trpc.getAdvertsToBePublishedStats.queryOptions(),
   )
 
-  const [countByStatus, inprogressStats, readyForPublishing] =
+  const [countByStatusStats, inprogressStats, readyForPublishingStats] =
     await Promise.all([
       countByStatusPromise,
-      advertsInprogressStats,
-      readyForPublishingStats,
+      advertsInprogressPromise,
+      readyForPublishingPromise,
     ])
 
   return (
     <>
       <HeroContainer />
-      <SectionContainer />
+      <SectionContainer
+        inprogressStats={inprogressStats}
+        statusStats={countByStatusStats}
+        toBePublishedStats={readyForPublishingStats}
+      />
       <ApplicationContainer />
     </>
   )
