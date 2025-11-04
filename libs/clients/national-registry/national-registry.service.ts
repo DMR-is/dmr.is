@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { INationalRegistryService } from './national-registry.service.interface'
-import { GetPersonDto } from './national-registry.dto'
+import { GetPersonDto, NationalRegistryError } from './national-registry.dto'
 
 @Injectable()
 export class NationalRegistryService implements INationalRegistryService {
@@ -34,10 +34,13 @@ export class NationalRegistryService implements INationalRegistryService {
       return
     }
 
-    const repsonse = await fetch(
+    const response = await fetch(
       'https://api.syslumenn.is/staging/v1/Innskraning',
       {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           notandi: process.env.NATIONAL_REGISTRY_CLIENT_USER,
           lykilord: process.env.NATIONAL_REGISTRY_CLIENT_PASSWORD,
@@ -45,17 +48,23 @@ export class NationalRegistryService implements INationalRegistryService {
       },
     )
 
-    if (!repsonse.ok) {
-      console.error(
-        `National registry authentication failed with status ${repsonse.status}`,
-      )
-      throw new Error('National registry authentication failed')
+    if (!response.ok) {
+      const error = await response.json()
+
+      console.error(error)
+
+      throw new NationalRegistryError({
+        type: error.type,
+        title: error.title,
+        status: error.status,
+        detail: error.detail,
+      })
     }
 
-    const data = await repsonse.json()
+    const data = await response.json()
 
     this.audkenni = data.audkenni
-    this.token = data.token
+    this.token = data.accessToken
   }
 
   async getPersonByNationalId(nationalId: string): Promise<GetPersonDto> {
@@ -65,6 +74,10 @@ export class NationalRegistryService implements INationalRegistryService {
       'https://api.syslumenn.is/api/api/LeitaAdKennitoluIThjodskra',
       {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.token}`,
+        },
         body: JSON.stringify({
           audkenni: this.audkenni,
           kennitala: nationalId,
@@ -73,10 +86,14 @@ export class NationalRegistryService implements INationalRegistryService {
     )
 
     if (!response.ok) {
-      console.error(
-        `National registry getPersonByNationalId failed with status ${response.status}`,
-      )
-      throw new Error('National registry getPersonByNationalId failed')
+      const error = await response.json()
+
+      throw new NationalRegistryError({
+        type: error.type,
+        title: error.title,
+        status: error.status,
+        detail: error.detail,
+      })
     }
 
     const person = await response.json()

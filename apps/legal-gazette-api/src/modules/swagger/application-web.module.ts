@@ -5,6 +5,7 @@ import { AdvertPublicationModule } from '../advert-publications/advert-publicati
 import { ApplicationModule } from '../applications/application.module'
 import { BaseEntityModule } from '../base-entity/base-entity.module'
 import { CaseModule } from '../case/case.module'
+import { LGNationalRegistryModule } from '../national-registry/national-registry.module'
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { CaseModule } from '../case/case.module'
     AdvertModule,
     ApplicationModule,
     AdvertPublicationModule,
+    LGNationalRegistryModule,
   ],
   controllers: [],
   providers: [],

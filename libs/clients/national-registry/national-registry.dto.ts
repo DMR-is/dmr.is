@@ -1,5 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger'
 
+export class NationalRegistryError extends Error {
+  constructor(partial: Partial<NationalRegistryError>) {
+    super()
+    Object.assign(this, partial)
+
+    Object.setPrototypeOf(this, NationalRegistryError.prototype)
+  }
+
+  type!: string
+  title!: string
+  status!: number
+  detail!: string
+}
+
 export class PersonDto {
   @ApiProperty({ type: String })
   stada!: string
@@ -22,6 +36,6 @@ export class PersonDto {
 }
 
 export class GetPersonDto {
-  @ApiProperty({ type: PersonDto })
-  person!: PersonDto
+  @ApiProperty({ type: PersonDto, nullable: true })
+  person!: PersonDto | null
 }

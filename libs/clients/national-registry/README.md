@@ -1,1 +1,1 @@
-Sjá skjölun í notion hér https://www.notion.so/hugsmidjan-is/Augl-singar-r-rum-kerfum-1f9602625f8b80fcbacdd1247c50e1a2
+Sjá skjölun í notion hér https://www.notion.so/hugsmidjan-is/Tengingar-vi-j-skr-2a1602625f8b8020a00eed0470688577
