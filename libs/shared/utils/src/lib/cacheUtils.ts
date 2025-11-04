@@ -63,6 +63,9 @@ export const createRedisCacheOptions = (namespace: StoreKeyMapper) => {
       const keyv = new Keyv({
         store: redisStore,
         namespace,
+        serialize: (v: unknown): string => JSON.stringify(v),
+        deserialize: (v) =>
+          JSON.parse(Buffer.isBuffer(v) ? v.toString('utf8') : (v as string)),
       })
 
       keyv.on('error', (err) =>

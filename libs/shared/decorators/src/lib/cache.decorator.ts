@@ -5,6 +5,7 @@ import { getLogger } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
 
 const logger = getLogger('cache.decorator')
+const sha1 = (s: string) => createHash('sha1').update(s, 'utf8').digest('hex')
 
 // Near-expiry refresh threshold: 1 minute
 const REFRESH_THRESHOLD = 60_000
@@ -12,6 +13,9 @@ const REFRESH_THRESHOLD = 60_000
 const CACHE_TTL = 5 * 60_000
 // Tag index TTL (so orphan indexes don’t live forever).
 const TAG_INDEX_TTL = 24 * 60_60_000 // 24h
+
+const CACHE_DEBUG = process.env.CACHE_DEBUG === 'true'
+const LOGGING_CONTEXT = 'CacheDecorator'
 
 type CachedEnvelope<T = unknown> = {
   data: T // the actual cached payload (unwrapped)
@@ -205,11 +209,21 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
               logger.error('Failed to background-refresh cache', {
                 cacheKey: key,
                 error,
+                context: LOGGING_CONTEXT,
               })
             }
           }, 0)
         }
 
+        if (CACHE_DEBUG) {
+          const json = JSON.stringify(envelope.data)
+          logger.info('CACHE HIT', {
+            method: propertyKey,
+            key,
+            sha1: sha1(json),
+            context: LOGGING_CONTEXT,
+          })
+        }
         return ResultWrapper.ok(envelope.data)
       }
 
@@ -236,6 +250,16 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
       const resolvedTopics = [...(topic ? [topic] : []), ...(topics ?? [])]
       if (resolvedTopics.length) {
         await indexKeyByTopics(cache, key, resolvedTopics)
+      }
+
+      if (CACHE_DEBUG) {
+        const json = JSON.stringify(newEnvelope.data)
+        logger.info('DECORATOR: CACHE SET', {
+          method: propertyKey,
+          key,
+          sha1: sha1(json),
+          context: LOGGING_CONTEXT,
+        })
       }
 
       return result
