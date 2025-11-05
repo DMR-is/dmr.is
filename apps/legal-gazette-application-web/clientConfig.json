@@ -2907,6 +2907,72 @@
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
+    },
+    "/api/v1/national-registry/person/{nationalId}": {
+      "get": {
+        "operationId": "getPersonByNationalId",
+        "parameters": [
+          {
+            "name": "nationalId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetPersonDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
     }
   },
   "info": {
@@ -3225,8 +3291,7 @@
           "scheduledAt",
           "publishedAt",
           "version",
-          "isLegacy",
-          "pdfUrl"
+          "isLegacy"
         ]
       },
       "SettlementDto": {
@@ -3304,6 +3369,7 @@
             "nullable": true
           },
           "id": { "type": "string" },
+          "hasInternalComments": { "type": "boolean" },
           "scheduledAt": { "type": "string" },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
@@ -3345,6 +3411,7 @@
           "createdAt",
           "updatedAt",
           "id",
+          "hasInternalComments",
           "scheduledAt",
           "category",
           "type",
@@ -3416,6 +3483,7 @@
             "nullable": true
           },
           "id": { "type": "string" },
+          "hasInternalComments": { "type": "boolean" },
           "scheduledAt": { "type": "string" },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
@@ -3432,6 +3500,7 @@
           "createdAt",
           "updatedAt",
           "id",
+          "hasInternalComments",
           "scheduledAt",
           "category",
           "type",
@@ -3805,8 +3874,7 @@
           "version",
           "publicationNumber",
           "createdBy",
-          "isLegacy",
-          "pdfUrl"
+          "isLegacy"
         ]
       },
       "GetPublicationsDto": {
@@ -3835,6 +3903,41 @@
         "type": "object",
         "properties": { "scheduledAt": { "type": "string" } },
         "required": ["scheduledAt"]
+      },
+      "PersonDto": {
+        "type": "object",
+        "properties": {
+          "stada": { "type": "string" },
+          "kennitala": { "type": "string" },
+          "nafn": { "type": "string" },
+          "loghHusk": { "type": "string" },
+          "heimili": { "type": "string" },
+          "postaritun": { "type": "string" },
+          "sveitarfelag": { "type": "string" },
+          "svfNr": { "type": "string" },
+          "kynkodi": { "type": "number" }
+        },
+        "required": [
+          "stada",
+          "kennitala",
+          "nafn",
+          "loghHusk",
+          "heimili",
+          "postaritun",
+          "sveitarfelag",
+          "svfNr",
+          "kynkodi"
+        ]
+      },
+      "GetPersonDto": {
+        "type": "object",
+        "properties": {
+          "person": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/PersonDto" }]
+          }
+        },
+        "required": ["person"]
       }
     }
   }

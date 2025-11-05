@@ -8,6 +8,7 @@ type Props = UseControllerProps & {
   label?: string
   required?: boolean
   textArea?: boolean
+  readonly?: boolean
   onChange?: (value: string) => void
   onBlur?: (value: string) => void
 }
@@ -40,6 +41,7 @@ export const InputController = (props: Props) => {
     <Input
       {...field}
       label={label}
+      readOnly={props.readonly}
       backgroundColor="blue"
       size="sm"
       textarea={props.textArea}

@@ -1,8 +1,9 @@
-import { Controller, Get, Inject, UseGuards } from '@nestjs/common'
+import { Controller, Get, Inject, Param, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { GetPersonDto } from '@dmr.is/clients/national-registry'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { NationalIdValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
 import { ILGNationalRegistryService } from './national-registry.service.interface'
@@ -21,7 +22,9 @@ export class LGNationalRegistryController {
 
   @Get('/person/:nationalId')
   @LGResponse({ operationId: 'getPersonByNationalId', type: GetPersonDto })
-  getPersonByNationalId(nationalId: string) {
+  getPersonByNationalId(
+    @Param('nationalId', new NationalIdValidationPipe()) nationalId: string,
+  ) {
     return this.nationalRegistryService.getPersonByNationalId(nationalId)
   }
 }
