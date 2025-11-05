@@ -39,6 +39,7 @@ import { ForeclosureModule } from '../modules/foreclosure/foreclosure.module'
 import { ForeclosurePropertyModel } from '../modules/foreclosure/foreclosure-property.model'
 import { SettlementModel } from '../modules/settlement/settlement.model'
 import { SettlementModule } from '../modules/settlement/settlement.module'
+import { StatisticsModule } from '../modules/statistics/statistics.module'
 import { StatusModel } from '../modules/status/status.model'
 import { SubscriberModel } from '../modules/subscribers/subscriber.model'
 import { SubscriberModule } from '../modules/subscribers/subscriber.module'
@@ -121,6 +122,7 @@ import { UsersModule } from '../modules/users/users.module'
     IslandIsApplicationModule,
     PublicWebModule,
     CommunicationChannelModule,
+    StatisticsModule,
   ],
   controllers: [],
   providers: [
