@@ -8,6 +8,18 @@ export class NationalRegistryService implements INationalRegistryService {
   private token: string | null = null
 
   constructor() {
+    if (!process.env.NATIONAL_REGISTRY_API_LOGIN_PATH) {
+      console.error(
+        'National registry login path not set in env NATIONAL_REGISTRY_API_LOGIN_PATH',
+      )
+    }
+
+    if (!process.env.NATIONAL_REGISTRY_API_LOOKUP_PATH) {
+      console.error(
+        'National registry lookup path not set in env NATIONAL_REGISTRY_API_LOOKUP_PATH',
+      )
+    }
+
     if (!process.env.NATIONAL_REGISTRY_CLIENT_USER) {
       console.error(
         'National registry user not set in env NATIONAL_REGISTRY_CLIENT_USER',
@@ -35,7 +47,7 @@ export class NationalRegistryService implements INationalRegistryService {
     }
 
     const response = await fetch(
-      'https://api.syslumenn.is/staging/v1/Innskraning',
+      `${process.env.NATIONAL_REGISTRY_API_LOGIN_PATH}`,
       {
         method: 'POST',
         headers: {
@@ -71,7 +83,7 @@ export class NationalRegistryService implements INationalRegistryService {
     await this.authenticate()
 
     const response = await fetch(
-      'https://api.syslumenn.is/api/api/LeitaAdKennitoluIThjodskra',
+      `${process.env.NATIONAL_REGISTRY_API_LOOKUP_PATH}`,
       {
         method: 'POST',
         headers: {
