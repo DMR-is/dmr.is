@@ -79,6 +79,14 @@ export class ForeclosureDto {
 
   @ApiProperty({
     type: String,
+    description: 'The ID of the foreclosure',
+    nullable: true,
+  })
+  @IsString()
+  caseNumberIdentifier!: string | null
+
+  @ApiProperty({
+    type: String,
     description: 'The ID of the advert the foreclosure belongs to',
   })
   @IsUUID()
