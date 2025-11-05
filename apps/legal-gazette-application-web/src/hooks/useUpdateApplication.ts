@@ -587,6 +587,7 @@ export const useUpdateApplication = (applicationId: string) => {
   )
 
   return {
+    updateApplication,
     updateType,
     updateCategory,
     updateCaption,
