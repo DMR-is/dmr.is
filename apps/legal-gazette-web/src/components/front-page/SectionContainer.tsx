@@ -12,9 +12,34 @@ import {
   Stack,
 } from '@island.is/island-ui/core'
 
+import {
+  GetAdvertsInProgressStatsDto,
+  GetAdvertsToBePublishedStatsDto,
+  GetCountByStatusesDto,
+} from '../../gen/fetch'
 import { Route } from '../../lib/constants'
 
-export const SectionContainer = () => {
+type Props = {
+  statusStats: GetCountByStatusesDto
+  inprogressStats: GetAdvertsInProgressStatsDto
+  toBePublishedStats: GetAdvertsToBePublishedStatsDto
+}
+
+export const SectionContainer = ({
+  statusStats,
+  inprogressStats,
+  toBePublishedStats,
+}: Props) => {
+  const totalCount = Object.values(statusStats).reduce(
+    (acc, curr) => acc + curr,
+    0,
+  )
+
+  const replacedZero = (value: number) => (value === 0 ? 'Engar' : value)
+
+  const calculatePercentage = (count: number, total: number) =>
+    total === 0 ? 0 : Math.round((count / total) * 100)
+
   return (
     <Section bleed variant="blue">
       <GridContainer>
@@ -28,11 +53,17 @@ export const SectionContainer = () => {
               >
                 <TrackerTable
                   rows={[
-                    { text: '12 innsend mál hafa ekki verið opnuð' },
-                    { text: 'Borist hafa ný svör í 4 málum' },
-                    { text: '4 innsend mál eru með ósk um hraðbirtingu' },
                     {
-                      text: '0 mál í yfirlestri eru með ósk um hraðbirtingu',
+                      text: `${replacedZero(inprogressStats.submittedTodayCount)} innsendar auglýsingar í dag`,
+                    },
+                    {
+                      text: `${replacedZero(inprogressStats.totalInProgressCount)} auglýsingar skráðar í vinnslu`,
+                    },
+                    {
+                      text: `${replacedZero(inprogressStats.withCommentsCount)} auglýsingar með skráðar athugasemdir`,
+                    },
+                    {
+                      text: `${replacedZero(inprogressStats.unassignedCount)} auglýsingar með engan skráðan starfsmann`,
                     },
                   ]}
                 />
@@ -44,9 +75,11 @@ export const SectionContainer = () => {
               >
                 <TrackerTable
                   rows={[
-                    { text: '9 tilbúin mál eru áætluð til útgáfu í dag.' },
                     {
-                      text: '2 mál í yfirlestri eru með liðinn birtingardag.',
+                      text: `${replacedZero(toBePublishedStats.tobePublishedTodayCount)} auglýsingar tilbúnar til útgáfu með útgáfugáfu í dag.`,
+                    },
+                    {
+                      text: `${replacedZero(toBePublishedStats.tobePublishedTodayCount)} auglýsingar eru með liðinn birtingardag.`,
                     },
                   ]}
                 />
@@ -54,33 +87,36 @@ export const SectionContainer = () => {
             </Stack>
           </GridColumn>
           <GridColumn span={['12/12', '5/12']}>
-            <Wrapper title="Tölfræði" link="#" linkText="Sjá alla tölfræði">
+            <Wrapper title="Tölfræði">
               <PieChart
                 intro="Staða óútgefinna mála."
                 items={[
                   {
-                    color: 'dark400',
+                    color: 'purple400',
                     title: 'Innsent',
-                    count: 1,
-                    percentage: 50,
+                    count: statusStats.submittedCount,
+                    percentage: calculatePercentage(
+                      statusStats.submittedCount,
+                      totalCount,
+                    ),
                   },
                   {
                     color: 'blue400',
-                    title: 'Grunnvinnsla',
-                    count: 2,
-                    percentage: 50,
+                    title: 'Í vinnslu',
+                    count: statusStats.inprogressCount,
+                    percentage: calculatePercentage(
+                      statusStats.inprogressCount,
+                      totalCount,
+                    ),
                   },
                   {
                     color: 'mint400',
-                    title: 'Yfirlestur',
-                    count: 1,
-                    percentage: 50,
-                  },
-                  {
-                    color: 'roseTinted400',
-                    title: 'Tilbúið',
-                    count: 1,
-                    percentage: 50,
+                    title: 'Tilbúið til útgáfu',
+                    count: statusStats.tobePublishedCount,
+                    percentage: calculatePercentage(
+                      statusStats.tobePublishedCount,
+                      totalCount,
+                    ),
                   },
                 ]}
               />

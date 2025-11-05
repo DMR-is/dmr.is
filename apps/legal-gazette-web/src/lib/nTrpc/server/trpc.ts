@@ -44,6 +44,7 @@ export const createTRPCContext = cache(async () => {
       'CommunicationChannelApi',
       session.idToken,
     ),
+    statisticsApi: await getServerClient('StatisticsApi', session.idToken),
   }
 })
 
@@ -86,6 +87,9 @@ const validateApiAccess = (
     ctx.publications.publicationsApi,
     ctx.commentsApi,
     ctx.channelsApi,
+    ctx.settlementApi,
+    ctx.usersApi,
+    ctx.statisticsApi,
   ]
 
   if (requiredApis.some((api) => !api)) {
@@ -115,6 +119,7 @@ export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
       settlementApi: ctx.settlementApi,
       commentsApi: ctx.commentsApi,
       channelsApi: ctx.channelsApi,
+      statisticsApi: ctx.statisticsApi,
     },
   })
 })
