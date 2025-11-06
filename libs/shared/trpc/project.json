@@ -5,15 +5,12 @@
   "projectType": "library",
   "tags": [],
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+    "tsc": {
+      "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/libs/shared/trpc",
-        "tsConfig": "libs/shared/trpc/tsconfig.lib.json",
-        "packageJson": "libs/shared/trpc/package.json",
-        "main": "libs/shared/trpc/src/index.ts",
-        "assets": ["libs/shared/trpc/*.md"]
+        "commands": ["tsc -p tsconfig.lib.json --noEmit"],
+        "cwd": "libs/shared/trpc",
+        "forwardAllArgs": false
       }
     },
     "lint": {

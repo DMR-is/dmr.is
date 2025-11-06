@@ -11,7 +11,7 @@ import {
   useQuery as useQueryTanstack,
   useSuspenseQuery as useSuspenseQueryTanstack,
 } from '@tanstack/react-query'
-import { AnyTRPCRouter } from '@trpc/server'
+import type { AnyTRPCRouter } from '@trpc/server'
 import { createTRPCContext as createTrpcContextTanstack } from '@trpc/tanstack-react-query'
 import type { CreateTRPCContextResult } from '@trpc/tanstack-react-query/src/internals/Context'
 
