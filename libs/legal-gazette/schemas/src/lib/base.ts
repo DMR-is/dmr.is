@@ -1,3 +1,4 @@
+import { isString } from 'class-validator'
 import z from 'zod'
 
 export const baseEntitySchema = z.object({
@@ -45,14 +46,6 @@ export const applicationMetaDataSchema = z.object({
 export const baseApplicationSchema = z.object({
   metadata: applicationMetaDataSchema.refine(() => true),
   additionalText: z.string().optional(),
-  signature: signatureSchema.refine(
-    ({ name, date, location }) => name || date || location,
-    {
-      path: ['name', 'location', 'date'],
-      message:
-        'Nafn, staður eða dagsetning undirritunar verður að vera til staðar',
-    },
-  ),
   publishingDates: z
     .array(publishingDatesSchema)
     .min(1, {
@@ -61,7 +54,22 @@ export const baseApplicationSchema = z.object({
     .max(3, {
       message: 'Hámark þrír birtingardagar mega vera til staðar',
     }),
+  signature: signatureSchema.superRefine((schema, context) => {
+    const check = (val: any) => isString(val) && val.length > 0
+
+    const isAnySet =
+      check(schema.name) || check(schema.location) || check(schema.date)
+
+    if (!isAnySet) {
+      context.addIssue({
+        code: 'custom',
+        message:
+          'Nafn, staðsetning eða dagsetning undirritunar verður að vera til staðar',
+        path: [],
+      })
+    }
+  }),
   communicationChannels: z.array(communicationChannelSchema).min(1, {
-    message: 'Að minnsta kosti einn samskiptaleið verður að vera til staðar',
+    message: 'Að minnsta kosti ein samskiptaleið verður að vera til staðar',
   }),
 })

@@ -10,7 +10,6 @@ import {
   AlertMessage,
   Box,
   Button,
-  FocusableBox,
   GridColumn,
   GridContainer,
   GridRow,
@@ -98,7 +97,7 @@ export const CommunicationChannelFields = () => {
   }
 
   return (
-    <Box component="div" onFocus={handleFirstFocus}>
+    <Box id="communicationChannels" component="div" onFocus={handleFirstFocus}>
       <GridRow rowGap={[2, 3]}>
         <GridColumn span="12/12">
           <Text variant="h3">Samskiptaleiðir</Text>

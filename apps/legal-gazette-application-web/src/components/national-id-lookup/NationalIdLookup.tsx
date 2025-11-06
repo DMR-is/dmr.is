@@ -2,7 +2,9 @@
 
 import Kennitala from 'kennitala'
 import { useEffect, useMemo, useState } from 'react'
+import { useFormContext } from 'react-hook-form'
 
+import { RecallApplicationSchema } from '@dmr.is/legal-gazette/schemas'
 import { Input, toast } from '@dmr.is/ui/components/island-is'
 
 import { trpc } from '../../lib/trpc/client'
@@ -28,6 +30,7 @@ export const NationalIdLookup = ({
   onReset,
   onError: setErrorMessage,
 }: Props) => {
+  const { formState } = useFormContext<RecallApplicationSchema>()
   const { mutate, isPending } =
     trpc.nationalRegistryApi.getPersonByNationalId.useMutation({
       onMutate: () => {
@@ -62,6 +65,9 @@ export const NationalIdLookup = ({
 
   const isValidId = useMemo(() => Kennitala.isValid(nationalId), [nationalId])
 
+  const errorMessage =
+    formState.errors.fields?.settlementFields?.nationalId?.message
+
   useEffect(() => {
     if (isValidId) {
       mutate({ nationalId })
@@ -80,7 +86,7 @@ export const NationalIdLookup = ({
       label="Kennitala"
       placeholder="Sláðu inn kennitölu"
       maxLength={10}
-      errorMessage={errorLabel}
+      errorMessage={errorLabel || errorMessage}
       name="national-id-lookup"
       value={nationalId}
       onChange={(e) => setNationalId(e.target.value)}

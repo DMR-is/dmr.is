@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import AnimateHeight from 'react-animate-height'
 import { useFormContext } from 'react-hook-form'
 import z from 'zod'
 
@@ -10,30 +10,27 @@ import {
   RecallApplicationSchema,
   recallApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
-import {
-  Box,
-  Bullet,
-  BulletList,
-  Button,
-  Stack,
-  Text,
-  toast,
-} from '@dmr.is/ui/components/island-is'
+import { Box, Button, Stack, Text } from '@dmr.is/ui/components/island-is'
 
-import { getDotNotationPaths, getErrors } from '../../lib/utils'
+import { getErrors } from '../../lib/utils'
 import * as styles from './application.css'
 
 export const ApplicationSidebar = () => {
-  const [didTrigger, setDidTrigger] = useState(false)
-  const [isValidating, setIsValidating] = useState(false)
-  const { getValues, formState, trigger, setValue } = useFormContext<
+  const [showValidation, setShowValidation] = useState(true)
+  const { getValues, formState } = useFormContext<
     RecallApplicationSchema | CommonApplicationSchema
   >()
 
   const application = getValues()
 
-  const commonResult = commonApplicationSchema.safeParse(application)
-  const recallResult = recallApplicationSchema.safeParse(application)
+  const commonResult = useMemo(
+    () => commonApplicationSchema.safeParse(application),
+    [application],
+  )
+  const recallResult = useMemo(
+    () => recallApplicationSchema.safeParse(application),
+    [application],
+  )
 
   const validatedErrors = useMemo(() => {
     const errors = getErrors(
@@ -46,103 +43,54 @@ export const ApplicationSidebar = () => {
           : [],
     ).flatMap((err) => err)
 
-    const dottedPaths = getDotNotationPaths(formState.touchedFields)
+    return errors
+  }, [commonResult.error, recallResult.error, application.fields.type])
 
-    const filteredErrors = errors.filter((error) =>
-      dottedPaths.includes(error.path),
-    )
-
-    return filteredErrors
-  }, [
-    formState.touchedFields,
-    commonResult.error,
-    recallResult.error,
-    application.fields.type,
-  ])
-
-  const triggerValidation = useCallback(async () => {
-    const validate = async () => {
-      try {
-        setIsValidating(true)
-        const isValid = await trigger()
-
-        if (isValid) {
-          return
-        }
-      } catch (e) {
-        toast.error('Ekki tókst að yfirfara gögnin')
-      } finally {
-        setIsValidating(false)
-      }
+  const handleScrollToField = (path: string) => {
+    const element = document.getElementById(path)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
-
-    await validate()
-  }, [trigger])
-
-  useEffect(() => {
-    if (didTrigger) {
-      setDidTrigger(false)
-    }
-
-    const errors = Object.values(formState.errors)
-
-    const paths = errors
-      .map((error) => {
-        const paths = getDotNotationPaths(error as object)
-        const pathsToUse = paths.map((p) => `fields.${p}`)
-        const formattedPaths = pathsToUse.map((path) => {
-          const parts = path.split('.')
-          // Remove last element
-          parts.pop()
-          if (parts[parts.length - 1] === 'ref') {
-            parts.pop()
-          }
-          return parts.join('.')
-        })
-
-        return formattedPaths
-      })
-      .flat()
-
-    const uniquePaths = Array.from(new Set(paths))
-
-    uniquePaths.forEach((path) => {
-      const currentValue = getValues(path as any) || ''
-
-      setValue(path as any, currentValue, {
-        shouldValidate: true,
-        shouldDirty: true,
-        shouldTouch: true,
-      })
-    })
-  }, [formState.errors, didTrigger])
+  }
 
   return (
     <Box className={styles.sidebarStyles}>
-      <Stack space={2}>
-        <Text variant="h4">Athugsemdir</Text>
-        {validatedErrors.length === 0 && <Text>Engar athugasemdir</Text>}
-        <BulletList>
-          <Stack space={1}>
-            {validatedErrors.map((err, i) => (
-              <Bullet key={i}>
-                <div>{err.errors.join(', ')}</div>
-              </Bullet>
-            ))}
-          </Stack>
-        </BulletList>
+      <Stack space={3}>
+        <Stack space={2}>
+          <Text variant="h4">Athugsemdir</Text>
+          {validatedErrors.length === 0 && <Text>Engar athugasemdir</Text>}
+          <AnimateHeight height={showValidation ? 'auto' : 0}>
+            <ul>
+              <Stack space={1}>
+                {validatedErrors.map((err, i) => (
+                  <li key={i}>
+                    <Button
+                      size="small"
+                      icon="arrowForward"
+                      iconType="outline"
+                      variant="text"
+                      colorScheme="destructive"
+                      onClick={() => handleScrollToField(err.path)}
+                    >
+                      {err.errors.join(', ')}
+                    </Button>
+                  </li>
+                ))}
+              </Stack>
+            </ul>
+          </AnimateHeight>
+        </Stack>
         <Button
           fluid
-          loading={isValidating}
+          disabled={!formState.isReady}
           size="small"
-          icon="checkmarkCircle"
+          icon={showValidation ? 'eyeOff' : 'eye'}
           iconType="outline"
-          onClick={async () => {
-            await triggerValidation()
-            setDidTrigger(true)
-          }}
+          onClick={() => setShowValidation((prev) => !prev)}
         >
-          Yfirfara athugasemdir
+          <Text fontWeight="semiBold" color="white" variant="medium">
+            {showValidation ? 'Fela athugasemdir' : 'Sjá athugsemdir'}
+          </Text>
         </Button>
       </Stack>
     </Box>

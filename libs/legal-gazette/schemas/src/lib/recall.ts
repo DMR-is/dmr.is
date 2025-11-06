@@ -11,10 +11,10 @@ export const courtAndJudgmentFieldsSchema = z.object({
     .refine((id) => id && isUUID(id), {
       message: 'Dómstóll er nauðsynlegur',
     }),
-  judgmentDate: z.iso
-    .datetime()
+  judgmentDate: z
+    .string()
     .optional()
-    .refine((date) => isDateString(date), {
+    .refine((date) => date && isDateString(date), {
       message: 'Úrskurðar dagsetning er nauðsynlegur',
     }),
 })
@@ -86,10 +86,10 @@ export const liquidatorValidationFieldsSchema = z.object({
 })
 
 export const divisionMeetingFieldsSchema = z.object({
-  meetingDate: z.iso
-    .datetime()
+  meetingDate: z
+    .string()
     .optional()
-    .refine((date) => isDateString(date), {
+    .refine((date) => date && isDateString(date), {
       message: 'Fundardagur er nauðsynlegur',
     }),
   meetingLocation: z
@@ -115,8 +115,8 @@ export const recallBankruptcyApplicationFieldsSchema = z.object({
   type: z.literal('bankruptcy'),
   courtAndJudgmentFields: courtAndJudgmentFieldsSchema,
   settlementFields: settlementFieldsSchema.extend({
-    deadlineDate: z.iso
-      .datetime()
+    deadlineDate: z
+      .string()
       .optional()
       .refine((date) => isDateString(date), {
         message: 'Frestdagur bús er nauðsynlegur',
