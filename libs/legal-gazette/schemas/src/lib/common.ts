@@ -6,15 +6,15 @@ import { baseApplicationSchema } from './base'
 export const commonApplicationFieldsScehma = z.object({
   type: z.literal('COMMON'),
   typeId: z
-    .uuid()
+    .string()
     .optional()
-    .refine((id) => isUUID(id), {
+    .refine((id) => id && isUUID(id), {
       message: 'Tegund auglýsingar er nauðsynleg',
     }),
   categoryId: z
-    .uuid()
+    .string()
     .optional()
-    .refine((id) => isUUID(id), {
+    .refine((id) => id && isUUID(id), {
       message: 'Flokkur auglýsingar er nauðsynlegur',
     }),
   caption: z
