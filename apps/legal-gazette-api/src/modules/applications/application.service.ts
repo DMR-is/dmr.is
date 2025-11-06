@@ -435,6 +435,10 @@ export class ApplicationService implements IApplicationService {
       communicationChannels: body.communicationChannels,
       liquidatorName: body.recallFields?.liquidatorFields?.name,
       liquidatorLocation: body.recallFields?.liquidatorFields?.location,
+      liquidatorRecallStatementLocation:
+        body.recallFields?.liquidatorFields?.recallRequirementStatementLocation,
+      liquidatorRecallStatementType:
+        body.recallFields?.liquidatorFields?.recallRequirementStatementType,
       divisionMeetingDate: body.recallFields?.divisionMeetingFields?.meetingDate
         ? new Date(body.recallFields.divisionMeetingFields.meetingDate)
         : undefined,

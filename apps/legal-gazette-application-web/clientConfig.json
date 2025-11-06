@@ -3225,8 +3225,7 @@
           "scheduledAt",
           "publishedAt",
           "version",
-          "isLegacy",
-          "pdfUrl"
+          "isLegacy"
         ]
       },
       "SettlementDto": {
@@ -3542,12 +3541,33 @@
           "judgmentDate": { "type": "string" }
         }
       },
+      "ApplicationRequirementStatementEnum": {
+        "type": "string",
+        "enum": [
+          "LIQUIDATOR_LOCATION",
+          "CUSTOM_LIQUIDATOR_LOCATION",
+          "CUSTOM_LIQUIDATOR_EMAIL"
+        ]
+      },
       "ApplicationLiquidationFieldsDto": {
         "type": "object",
         "properties": {
           "name": { "type": "string" },
-          "location": { "type": "string" }
-        }
+          "location": { "type": "string" },
+          "recallRequirementStatementType": {
+            "default": "LIQUIDATOR_LOCATION",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationRequirementStatementEnum"
+              }
+            ]
+          },
+          "recallRequirementStatementLocation": {
+            "type": "string",
+            "description": "Location to send recall requirement (Kröfulýsing)"
+          }
+        },
+        "required": ["recallRequirementStatementType"]
       },
       "ApplicationSettlementDto": {
         "type": "object",
@@ -3678,7 +3698,19 @@
         "type": "object",
         "properties": {
           "name": { "type": "string" },
-          "location": { "type": "string" }
+          "location": { "type": "string" },
+          "recallRequirementStatementType": {
+            "default": "LIQUIDATOR_LOCATION",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationRequirementStatementEnum"
+              }
+            ]
+          },
+          "recallRequirementStatementLocation": {
+            "type": "string",
+            "description": "Location to send recall requirement (Kröfulýsing)"
+          }
         }
       },
       "UpdateApplicationSettlementDto": {
@@ -3805,8 +3837,7 @@
           "version",
           "publicationNumber",
           "createdBy",
-          "isLegacy",
-          "pdfUrl"
+          "isLegacy"
         ]
       },
       "GetPublicationsDto": {

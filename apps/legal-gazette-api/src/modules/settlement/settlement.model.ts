@@ -1,5 +1,6 @@
 import { Column, DataType, HasMany } from 'sequelize-typescript'
 
+import { ApplicationRequirementStatementEnum } from '@dmr.is/legal-gazette/schemas'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
@@ -41,6 +42,20 @@ export class SettlementModel extends BaseModel<
     allowNull: false,
   })
   liquidatorLocation!: string
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    defaultValue: null,
+  })
+  liquidatorRecallStatementLocation!: string | null
+
+  @Column({
+    type: DataType.ENUM(...Object.values(ApplicationRequirementStatementEnum)),
+    defaultValue: ApplicationRequirementStatementEnum.LIQUIDATORLOCATION,
+    allowNull: false,
+  })
+  liquidatorRecallStatementType!: ApplicationRequirementStatementEnum
 
   @Column({
     type: DataType.TEXT,

@@ -17,6 +17,8 @@ export enum RecallApplicationInputFields {
   LIQUIDATOR_LOCATION = 'fields.liquidatorFields.location',
   DIVISION_MEETING_DATE = 'fields.divisionMeetingFields.meetingDate',
   DIVISION_MEETING_LOCATION = 'fields.divisionMeetingFields.meetingLocation',
+  RECALL_REQUIREMENT_STATEMENT_TYPE = 'fields.liquidatorFields.recallRequirementStatementType',
+  RECALL_REQUIREMENT_STATEMENT_LOCATION = 'fields.liquidatorFields.recallRequirementStatementLocation',
 }
 
 export enum ApplicationInputFields {
@@ -31,4 +33,10 @@ export enum ApplicationInputFields {
   SIGNATURE_ON_BEHALF_OF = 'signature.onBehalfOf',
   SIGNATURE_DATE = 'signature.date',
   PUBLISHING_DATES = 'publishingDates',
+}
+
+export enum ApplicationRequirementStatementEnum {
+  LIQUIDATORLOCATION = 'LIQUIDATOR_LOCATION',
+  CUSTOMLIQUIDATORLOCATION = 'CUSTOM_LIQUIDATOR_LOCATION',
+  CUSTOMLIQUIDATOREMAIL = 'CUSTOM_LIQUIDATOR_EMAIL',
 }

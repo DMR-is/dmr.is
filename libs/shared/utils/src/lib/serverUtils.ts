@@ -651,6 +651,7 @@ export const getPublicationTemplate = (
 export const DateFormats = [
   'dd.MM.yyyy',
   'dd. MMMM yyyy',
+  'd. MMMM yyyy',
   'HH:mm',
   'MMMM yyyy',
   'MMMM',

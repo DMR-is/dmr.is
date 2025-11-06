@@ -2,6 +2,7 @@ import { isDateString, isString, isUUID } from 'class-validator'
 import z from 'zod'
 
 import { baseApplicationSchema, publishingDatesSchema } from './base'
+import { ApplicationRequirementStatementEnum } from './constants'
 
 export const courtAndJudgmentFieldsSchema = z.object({
   courtDistrictId: z
@@ -71,6 +72,10 @@ export const liquidatorFieldsSchema = z.object({
     .refine((location) => isString(location) && location.length > 0, {
       message: 'Staðsetning skiptastjóra er nauðsynleg',
     }),
+  recallRequirementStatementType: z
+    .enum(ApplicationRequirementStatementEnum)
+    .optional(),
+  recallRequirementStatementLocation: z.string().optional(),
 })
 
 export const liquidatorValidationFieldsSchema = z.object({

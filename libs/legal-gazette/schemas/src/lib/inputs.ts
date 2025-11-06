@@ -5,6 +5,7 @@ import {
   publishingDatesSchema,
   strictSignatureSchema,
 } from './base'
+import { ApplicationRequirementStatementEnum } from './constants'
 
 export const courtAndJudgmentFieldsInput = z.object({
   courtDistrictId: z.string().optional(),
@@ -20,6 +21,10 @@ const settlementFieldsInput = z.object({
 const liquidatorFieldsInput = z.object({
   name: z.string().optional(),
   location: z.string().optional(),
+  recallRequirementStatementType: z
+    .enum(ApplicationRequirementStatementEnum)
+    .optional(),
+  recallRequirementStatementLocation: z.string().optional(),
 })
 
 const divisionMeetingFieldsInput = z.object({
