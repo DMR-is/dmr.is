@@ -1,4 +1,4 @@
-import { theme } from '@dmr.is/ui/components/island-is'
+import { theme } from '@dmr.is/ui/island-is/theme'
 
 import { style } from '@vanilla-extract/css'
 
