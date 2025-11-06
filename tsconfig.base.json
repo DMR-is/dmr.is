@@ -41,6 +41,9 @@
       "@dmr.is/shared/models/base": ["libs/shared/models/base/src/index.ts"],
       "@dmr.is/types": ["libs/shared/types/types/src/index.ts"],
       "@dmr.is/ui/components/*": ["libs/shared/dmr-ui/src/lib/components/*"],
+      "@dmr.is/ui/island-is/theme": [
+        "libs/shared/dmr-ui/src/lib/island-is/theme/index.ts"
+      ],
       "@dmr.is/ui/components/island-is": [
         "libs/shared/dmr-ui/src/lib/island-is/index.ts"
       ],

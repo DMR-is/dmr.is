@@ -1,10 +1,11 @@
-import { AppRouter } from '../server/routers/_app';
+import { AppRouter } from '../server/routers/_app'
 
-import { createTRPCReact, TRPCClientError } from '@trpc/react-query';
+import { createTRPCReact, TRPCClientError } from '@trpc/react-query'
 
+export const trpc = createTRPCReact<AppRouter>()
 
-export const trpc = createTRPCReact<AppRouter>();
-
-export function isTRPCClientError(cause: unknown): cause is TRPCClientError<AppRouter> {
-  return cause instanceof TRPCClientError;
+export function isTRPCClientError(
+  cause: unknown,
+): cause is TRPCClientError<AppRouter> {
+  return cause instanceof TRPCClientError
 }
