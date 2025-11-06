@@ -21,7 +21,6 @@ import {
   Table as T,
   Text,
 } from '@dmr.is/ui/components/island-is'
-
 import {} from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'

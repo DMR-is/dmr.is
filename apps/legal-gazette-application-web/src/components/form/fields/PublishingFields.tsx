@@ -8,7 +8,6 @@ import {
   BaseApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
-
 import {
   Button,
   GridColumn,

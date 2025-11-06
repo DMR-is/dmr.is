@@ -5,7 +5,6 @@ import { useQueryState } from 'next-usequerystate'
 import { parseAsInteger } from 'nuqs/server'
 
 import { Pagination } from '@dmr.is/ui/components/island-is'
-
 import {
   GridColumn,
   GridContainer,

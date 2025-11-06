@@ -1,7 +1,5 @@
 'use client'
 
-import { formatDate } from '@dmr.is/utils/client'
-
 import {
   Box,
   Button,
@@ -11,6 +9,7 @@ import {
   Tag,
   Text,
 } from '@dmr.is/ui/components/island-is'
+import { formatDate } from '@dmr.is/utils/client'
 
 import {
   ApplicationDto,

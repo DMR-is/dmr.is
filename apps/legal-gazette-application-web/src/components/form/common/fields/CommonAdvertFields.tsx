@@ -8,7 +8,6 @@ import {
   CommonApplicationInputFields,
   CommonApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
-
 import {
   GridColumn,
   GridRow,

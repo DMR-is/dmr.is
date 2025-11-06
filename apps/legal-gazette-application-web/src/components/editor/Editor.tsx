@@ -1,7 +1,6 @@
 'use client'
 
 import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
-
 import { Box } from '@dmr.is/ui/components/island-is'
 
 type Props = {

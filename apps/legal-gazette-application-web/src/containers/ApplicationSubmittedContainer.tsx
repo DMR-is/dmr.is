@@ -1,7 +1,6 @@
 'use client'
 
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
-
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationSubmitted } from '../components/application/ApplicationSubmitted'

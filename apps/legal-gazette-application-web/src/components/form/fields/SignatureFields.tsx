@@ -4,7 +4,6 @@ import {
   ApplicationInputFields,
   BaseApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
-
 import {
   GridColumn,
   GridRow,

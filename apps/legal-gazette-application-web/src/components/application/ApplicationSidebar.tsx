@@ -10,7 +10,6 @@ import {
   recallApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import { Box, Stack, Text } from '@dmr.is/ui/components/island-is'
-
 import { Bullet, BulletList } from '@dmr.is/ui/components/island-is'
 
 import { getDotNotationPaths, getErrors } from '../../lib/utils'

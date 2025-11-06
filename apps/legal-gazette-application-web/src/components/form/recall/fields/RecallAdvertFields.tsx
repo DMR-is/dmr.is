@@ -7,7 +7,6 @@ import {
   RecallApplicationInputFields,
   RecallApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
-
 import {
   GridColumn,
   GridRow,
