@@ -8,9 +8,9 @@ import {
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
-import { ApplicationRequirementStatementEnum } from '../../../../../gen/fetch'
-import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
-import { requirementsStatementOptions } from '../../../../../lib/constants'
+import { ApplicationRequirementStatementEnum } from '../../../../gen/fetch'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { requirementsStatementOptions } from '../../../../lib/constants'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
 
