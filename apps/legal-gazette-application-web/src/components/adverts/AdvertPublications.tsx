@@ -2,6 +2,8 @@
 
 import { Fragment, useState } from 'react'
 
+import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay'
+import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import { formatDate } from '@dmr.is/utils/client'
 
 import { ActionCard, Box, Stack, toast } from '@island.is/island-ui/core'
@@ -12,7 +14,6 @@ import {
   GetAdvertPublicationVersionEnum,
 } from '../../gen/fetch'
 import { trpc } from '../../lib/trpc/client'
-import { AdvertModal } from '../advert-modal/AdvertModal'
 import * as styles from './advert.css'
 
 type Props = {
@@ -78,16 +79,17 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
                   },
                 }}
               />
-              <AdvertModal
-                id={advert.id}
-                html={html}
-                onVisiblityChange={(visible) => {
-                  if (!visible) {
+              <Modal
+                baseId={advert.id}
+                isVisible={openModal === i}
+                onVisibilityChange={(isVisible) => {
+                  if (!isVisible) {
                     setOpenModal(null)
                   }
                 }}
-                isVisible={openModal === i}
-              />
+              >
+                <AdvertDisplay withStyles html={html} />
+              </Modal>
             </Fragment>
           )
         })}

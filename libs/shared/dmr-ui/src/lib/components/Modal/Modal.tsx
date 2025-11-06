@@ -17,7 +17,10 @@ type Props = {
   isVisible?: boolean
   title?: string
   onVisibilityChange?: (isVisible: boolean) => void
-  disclosure: React.ReactElement<any, string | React.JSXElementConstructor<any>>
+  disclosure?: React.ReactElement<
+    any,
+    string | React.JSXElementConstructor<any>
+  >
   children: React.ReactNode
   toggleClose?: () => void
 }
