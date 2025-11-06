@@ -11,7 +11,7 @@ import {
 } from '@dmr.is/legal-gazette/schemas'
 import { Box, Stack, Text } from '@dmr.is/ui/components/island-is'
 
-import { Bullet, BulletList } from '@island.is/island-ui/core'
+import { Bullet, BulletList } from '@dmr.is/ui/components/island-is'
 
 import { getDotNotationPaths, getErrors } from '../../lib/utils'
 import * as styles from './application.css'

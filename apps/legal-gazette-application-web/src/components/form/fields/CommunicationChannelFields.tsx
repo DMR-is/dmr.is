@@ -22,7 +22,7 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import {} from '@island.is/island-ui/core'
+import {} from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 

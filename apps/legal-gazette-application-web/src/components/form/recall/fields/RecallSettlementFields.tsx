@@ -8,7 +8,7 @@ import {
 } from '@dmr.is/legal-gazette/schemas'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
-import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
+import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { POSTPONE_LIMIT } from '../../../../lib/constants'

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { DropdownMenu } from '@island.is/island-ui/core'
+import { DropdownMenu } from '@dmr.is/ui/components/island-is'
 
 import { CreateDivisionEnding } from './CreateDivisionEnding'
 import { CreateDivisionMeeting } from './CreateDivisionMeeting'

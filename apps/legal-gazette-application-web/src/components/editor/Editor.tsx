@@ -2,7 +2,7 @@
 
 import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
 
-import { Box } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is'
 
 type Props = {
   onChange?: (value: string) => void

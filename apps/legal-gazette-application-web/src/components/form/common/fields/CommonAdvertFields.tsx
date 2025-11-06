@@ -9,7 +9,12 @@ import {
   CommonApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
 
-import { GridColumn, GridRow, Stack, Text } from '@island.is/island-ui/core'
+import {
+  GridColumn,
+  GridRow,
+  Stack,
+  Text,
+} from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { trpc } from '../../../../lib/trpc/client'

@@ -4,7 +4,7 @@ import { FormProvider, useForm } from 'react-hook-form'
 
 import { CommonApplicationSchema } from '@dmr.is/legal-gazette/schemas'
 
-import { SkeletonLoader, Stack, Text } from '@island.is/island-ui/core'
+import { SkeletonLoader, Stack, Text } from '@dmr.is/ui/components/island-is'
 
 import { useSubmitApplication } from '../../../hooks/useSubmitApplication'
 import { commonForm, CommonFormProps } from '../../../lib/forms/common-form'

@@ -2,7 +2,7 @@
 
 import { useFormContext } from 'react-hook-form'
 
-import { Box, Button, Inline, LinkV2 } from '@island.is/island-ui/core'
+import { Box, Button, Inline, LinkV2 } from '@dmr.is/ui/components/island-is'
 
 import { PageRoutes } from '../../../lib/constants'
 import * as styles from './application-footer.css'

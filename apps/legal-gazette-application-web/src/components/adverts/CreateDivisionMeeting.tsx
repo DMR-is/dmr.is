@@ -16,7 +16,7 @@ import {
   Stack,
   Text,
   toast,
-} from '@island.is/island-ui/core'
+} from '@dmr.is/ui/components/island-is'
 
 import { AddDivisionMeetingForApplicationDto } from '../../gen/fetch'
 import { trpc } from '../../lib/trpc/client'

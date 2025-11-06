@@ -1,4 +1,4 @@
-import { Box } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is'
 
 import * as styles from './center.css'
 type Props = {

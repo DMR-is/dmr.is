@@ -2,7 +2,7 @@
 
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
-import { SkeletonLoader } from '@island.is/island-ui/core'
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationSubmitted } from '../components/application/ApplicationSubmitted'
 import { ApplicationDetailedDto } from '../gen/fetch'

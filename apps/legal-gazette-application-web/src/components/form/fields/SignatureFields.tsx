@@ -5,7 +5,12 @@ import {
   BaseApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
 
-import { GridColumn, GridRow, Stack, Text } from '@island.is/island-ui/core'
+import {
+  GridColumn,
+  GridRow,
+  Stack,
+  Text,
+} from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 import { DatePickerController } from '../controllers/DatePickerController'

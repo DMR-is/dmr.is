@@ -7,7 +7,7 @@ import {
   LinkV2,
   Stack,
   Text,
-} from '@island.is/island-ui/core'
+} from '@dmr.is/ui/components/island-is'
 
 type Props = {
   title: string

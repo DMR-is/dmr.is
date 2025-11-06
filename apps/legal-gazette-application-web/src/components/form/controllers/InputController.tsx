@@ -2,7 +2,7 @@
 
 import { useController, UseControllerProps } from 'react-hook-form'
 
-import { Input } from '@island.is/island-ui/core'
+import { Input } from '@dmr.is/ui/components/island-is'
 
 type Props = UseControllerProps & {
   label?: string

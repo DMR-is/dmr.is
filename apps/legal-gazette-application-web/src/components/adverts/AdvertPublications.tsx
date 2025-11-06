@@ -6,7 +6,7 @@ import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import { formatDate } from '@dmr.is/utils/client'
 
-import { ActionCard, Box, Stack, toast } from '@island.is/island-ui/core'
+import { ActionCard, Box, Stack, toast } from '@dmr.is/ui/components/island-is'
 
 import {
   AdvertDto,

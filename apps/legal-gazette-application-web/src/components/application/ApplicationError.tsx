@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertMessage } from '@island.is/island-ui/core'
+import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
 type Props = {
   title: string

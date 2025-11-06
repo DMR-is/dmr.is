@@ -1,6 +1,6 @@
 'use client'
 
-import { Box, Stack } from '@island.is/island-ui/core'
+import { Box, Stack } from '@dmr.is/ui/components/island-is'
 
 import { AdvertDto } from '../../gen/fetch'
 import { AdvertPublications } from './AdvertPublications'

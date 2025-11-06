@@ -5,7 +5,7 @@ import {
   RecallApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
 
-import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
+import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { InputController } from '../../controllers/InputController'

@@ -7,7 +7,7 @@ import {
   GridRow,
   Stack,
   Text,
-} from '@island.is/island-ui/core'
+} from '@dmr.is/ui/components/island-is'
 
 export default function Error({
   error,

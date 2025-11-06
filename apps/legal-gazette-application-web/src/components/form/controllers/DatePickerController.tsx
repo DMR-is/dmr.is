@@ -1,6 +1,6 @@
 import { useController, UseControllerProps } from 'react-hook-form'
 
-import { DatePicker } from '@island.is/island-ui/core'
+import { DatePicker } from '@dmr.is/ui/components/island-is'
 
 type Props = UseControllerProps & {
   label: string

@@ -1,6 +1,10 @@
 'use client'
 
-import { AlertMessage, SkeletonLoader, Stack } from '@island.is/island-ui/core'
+import {
+  AlertMessage,
+  SkeletonLoader,
+  Stack,
+} from '@dmr.is/ui/components/island-is'
 
 import { ApplicationList } from '../components/application/ApplicationList'
 import { UmsoknirHero } from '../components/hero/UmsoknirHero'
