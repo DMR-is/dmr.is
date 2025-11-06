@@ -19,6 +19,7 @@ import {
 
 type ForeclosureModelAttributes = {
   advertId: string
+  caseNumberIdentifier: string | null
   foreclosureRegion: string
   foreclosureAddress: string
   foreclosureDate: Date
@@ -26,6 +27,7 @@ type ForeclosureModelAttributes = {
 
 type ForeclosureModelCreateAttributes = {
   advertId?: string
+  caseNumberIdentifier?: string | null
   foreclosureRegion: string
   foreclosureAddress: string
   foreclosureDate: Date
@@ -49,6 +51,9 @@ export class ForeclosureModel extends BaseModel<
   @ForeignKey(() => AdvertModel)
   advertId!: string
 
+  @Column({ type: DataType.TEXT, allowNull: true, defaultValue: null })
+  caseNumberIdentifier!: string | null
+
   @Column({ type: DataType.STRING, allowNull: false })
   foreclosureRegion!: string
 
@@ -67,6 +72,7 @@ export class ForeclosureModel extends BaseModel<
   static fromModel(model: ForeclosureModel): ForeclosureDto {
     return {
       id: model.id,
+      caseNumberIdentifier: model.caseNumberIdentifier,
       createdAt: model.createdAt.toISOString(),
       updatedAt: model.updatedAt.toISOString(),
       advertId: model.advertId,

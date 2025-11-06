@@ -37,8 +37,10 @@ import { FeeCodeModel } from '../modules/fee-code/fee-code.model'
 import { ForeclosureModel } from '../modules/foreclosure/foreclosure.model'
 import { ForeclosureModule } from '../modules/foreclosure/foreclosure.module'
 import { ForeclosurePropertyModel } from '../modules/foreclosure/foreclosure-property.model'
+import { LGNationalRegistryModule } from '../modules/national-registry/national-registry.module'
 import { SettlementModel } from '../modules/settlement/settlement.model'
 import { SettlementModule } from '../modules/settlement/settlement.module'
+import { StatisticsModule } from '../modules/statistics/statistics.module'
 import { StatusModel } from '../modules/status/status.model'
 import { SubscriberModel } from '../modules/subscribers/subscriber.model'
 import { SubscriberModule } from '../modules/subscribers/subscriber.module'
@@ -121,6 +123,8 @@ import { UsersModule } from '../modules/users/users.module'
     IslandIsApplicationModule,
     PublicWebModule,
     CommunicationChannelModule,
+    StatisticsModule,
+    LGNationalRegistryModule,
   ],
   controllers: [],
   providers: [

@@ -225,12 +225,27 @@ export const getAdvertHTMLMarkup = (
       break
     }
     case TypeIdEnum.DIVISION_MEETING: {
-      if (!model.divisionMeetingDate || !model.divisionMeetingLocation) {
-        throw new Error('Division meeting information is missing')
-      }
+      if (
+        !model.divisionMeetingDate ||
+        !model.divisionMeetingLocation ||
+        !model.settlement
+      ) {
+        const isPublished = !!model.publicationNumber
+        const rawHtml = model.content
+          ? isBase64(model.content)
+            ? Buffer.from(model.content, 'base64').toString('utf-8')
+            : model.content
+          : ''
 
-      if (!model.settlement) {
-        throw new Error('Settlement information is missing')
+        // we gotta replace all the (Reiknast við útgáfu) if the advert is published
+        markup = isPublished
+          ? rawHtml.replaceAll(
+              '(Reiknast við útgáfu)',
+              model.publicationNumber || '',
+            )
+          : rawHtml
+
+        break
       }
 
       if (model.settlement.settlementDateOfDeath) {

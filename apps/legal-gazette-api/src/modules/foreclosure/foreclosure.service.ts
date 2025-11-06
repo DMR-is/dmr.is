@@ -65,6 +65,7 @@ export class ForeclosureService implements IForeclosureService {
     const newForeClosure = await this.foreclosureModel.create(
       {
         advertId: advertId,
+        caseNumberIdentifier: body.caseNumberIdentifier,
         foreclosureAddress: body.foreclosureAddress,
         foreclosureDate: new Date(body.foreclosureDate),
         foreclosureRegion: body.foreclosureRegion,

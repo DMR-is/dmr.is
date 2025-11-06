@@ -15,7 +15,7 @@ import { CaseModel } from '../case/case.model'
 import { CategoryModel } from '../category/category.model'
 import { CommunicationChannelCreateAttributes } from '../communication-channel/communication-channel.model'
 import { CourtDistrictModel } from '../court-district/court-district.model'
-import { TypeModel } from '../type/type.model'
+import { TypeIdEnum, TypeModel } from '../type/type.model'
 import { ApplicationDetailedDto, ApplicationDto } from './dto/application.dto'
 import {
   ApplicationRequirementStatementEnum,
@@ -398,6 +398,10 @@ export class ApplicationModel extends BaseModel<
   case!: CaseModel
 
   get title() {
+    if (this.typeId === TypeIdEnum.DIVISION_MEETING) {
+      return `Skipta/veðhafafundur`
+    }
+
     switch (this.applicationType) {
       case ApplicationTypeEnum.RECALL_BANKRUPTCY:
         if (this.settlementName !== null) {

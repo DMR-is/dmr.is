@@ -18,6 +18,9 @@
     "types": ["node", "Multer", "../../node_modules/@types/node"],
     "typeRoots": ["node_modules/@types"],
     "paths": {
+      "@dmr.is/clients/national-registry": [
+        "libs/clients/national-registry/index.ts"
+      ],
       "@dmr.is/api-client/*": ["libs/shared/api-client/src/lib/*"],
       "@dmr.is/apm": ["libs/apm/src/index.ts"],
       "@dmr.is/auth/*": ["libs/shared/auth/src/lib/*"],
@@ -38,6 +41,9 @@
       "@dmr.is/shared/models/base": ["libs/shared/models/base/src/index.ts"],
       "@dmr.is/types": ["libs/shared/types/types/src/index.ts"],
       "@dmr.is/ui/components/*": ["libs/shared/dmr-ui/src/lib/components/*"],
+      "@dmr.is/ui/island-is/theme": [
+        "libs/shared/dmr-ui/src/lib/island-is/theme/index.ts"
+      ],
       "@dmr.is/ui/components/island-is": [
         "libs/shared/dmr-ui/src/lib/island-is/index.ts"
       ],

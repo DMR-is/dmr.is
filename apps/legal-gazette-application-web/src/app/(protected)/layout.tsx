@@ -4,7 +4,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
 import { Header } from '@dmr.is/ui/components/Header/Header'
 
-import { Providers } from '../../components/client-components/providers/Providers'
+import { Providers } from '../../components/providers/Providers'
 import { authOptions } from '../../lib/authOptions'
 import ProviderTRPC from '../../lib/trpc/client/Provider'
 

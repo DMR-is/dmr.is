@@ -108,6 +108,11 @@ export class ApplicationService implements IApplicationService {
 
     const requiredFields = check.data
 
+    const title =
+      requiredFields.fields.typeId === TypeIdEnum.DIVISION_MEETING
+        ? `Skipta/veðhafafundur`
+        : `${application.category?.title} - ${requiredFields.fields.caption}`
+
     await this.advertService.createAdvert({
       caseId: application.caseId,
       typeId: requiredFields.fields.typeId,
@@ -121,7 +126,7 @@ export class ApplicationService implements IApplicationService {
       signatureLocation: requiredFields.signature?.location,
       signatureDate: requiredFields.signature?.date,
       content: requiredFields.fields.html,
-      title: `${application.category?.title} - ${requiredFields.fields.caption}`,
+      title: title,
       communicationChannels: requiredFields.communicationChannels,
       scheduledAt: requiredFields.publishingDates.map(
         ({ publishingDate }) => publishingDate,
