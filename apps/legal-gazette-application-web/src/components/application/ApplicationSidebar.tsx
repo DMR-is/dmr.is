@@ -121,6 +121,7 @@ export const ApplicationSidebar = () => {
     <Box className={styles.sidebarStyles}>
       <Stack space={2}>
         <Text variant="h4">Athugsemdir</Text>
+        {validatedErrors.length === 0 && <Text>Engar athugasemdir</Text>}
         <BulletList>
           <Stack space={1}>
             {validatedErrors.map((err, i) => (

@@ -1,4 +1,5 @@
 import { isDateString, isString, isUUID } from 'class-validator'
+import Kennitala from 'kennitala'
 import z from 'zod'
 
 import { baseApplicationSchema, publishingDatesSchema } from './base'
@@ -29,8 +30,8 @@ export const settlementFieldsSchema = z.object({
     .string()
     .optional()
     .refine(
-      (id) => {
-        return isUUID(id)
+      (nationalId) => {
+        return nationalId && Kennitala.isValid(nationalId)
       },
       {
         message: 'Kennitala bús er nauðsynleg',
@@ -48,7 +49,7 @@ export const settlementValidationFieldsSchema = z.object({
   name: z.string().refine((name) => isString(name) && name.length > 0, {
     message: 'Nafn bús er nauðsynlegt',
   }),
-  nationalId: z.string().refine((id) => isUUID(id), {
+  nationalId: z.string().refine((nationalId) => Kennitala.isValid(nationalId), {
     message: 'Kennitala bús er nauðsynleg',
   }),
   address: z
