@@ -8,6 +8,7 @@
 /tmp
 /out-tsc
 **/tsconfig.tsbuildinfo
+**/tsconfig.lib.tsbuildinfo
 # Contentful extensions
 libs/contentful-extensions/translation/build
 libs/contentful-extensions/translation/.cache
