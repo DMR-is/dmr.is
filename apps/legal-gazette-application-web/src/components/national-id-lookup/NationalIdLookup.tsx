@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { Input, toast } from '@dmr.is/ui/components/island-is'
 
-import { trpc } from '../../../lib/trpc/client'
+import { trpc } from '../../lib/trpc/client'
 
 export type NationalIdLookupResults = {
   nationalId: string

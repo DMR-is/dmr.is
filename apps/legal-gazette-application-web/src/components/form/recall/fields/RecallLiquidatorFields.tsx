@@ -7,7 +7,7 @@ import {
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
-import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { InputController } from '../../controllers/InputController'
 
 export const RecallLiquidatorFields = () => {

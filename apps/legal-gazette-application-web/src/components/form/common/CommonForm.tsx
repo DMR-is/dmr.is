@@ -6,8 +6,8 @@ import { CommonApplicationSchema } from '@dmr.is/legal-gazette/schemas'
 
 import { SkeletonLoader, Stack, Text } from '@island.is/island-ui/core'
 
-import { useSubmitApplication } from '../../../../hooks/useSubmitApplication'
-import { commonForm, CommonFormProps } from '../../../../lib/forms/common-form'
+import { useSubmitApplication } from '../../../hooks/useSubmitApplication'
+import { commonForm, CommonFormProps } from '../../../lib/forms/common-form'
 import { ApplicationShell } from '../../application/ApplicationShell'
 import { CommunicationChannelFields } from '../fields/CommunicationChannelFields'
 import { PublishingFields } from '../fields/PublishingFields'

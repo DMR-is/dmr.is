@@ -4,7 +4,7 @@ import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
 import { SkeletonLoader } from '@island.is/island-ui/core'
 
-import { ApplicationSubmitted } from '../components/client-components/application/ApplicationSubmitted'
+import { ApplicationSubmitted } from '../components/application/ApplicationSubmitted'
 import { ApplicationDetailedDto } from '../gen/fetch'
 import { trpc } from '../lib/trpc/client'
 

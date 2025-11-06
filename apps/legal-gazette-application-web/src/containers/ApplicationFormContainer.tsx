@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 
 import { AlertMessage, SkeletonLoader } from '@dmr.is/ui/components/island-is'
 
-import { ApplicationForm } from '../components/client-components/form/ApplicationForm'
+import { ApplicationForm } from '../components/form/ApplicationForm'
 import { ApplicationDetailedDto, ApplicationStatusEnum } from '../gen/fetch'
 import { trpc } from '../lib/trpc/client'
 import { ApplicationSubmittedContainer } from './ApplicationSubmittedContainer'

@@ -2,8 +2,8 @@
 
 import { AlertMessage, SkeletonLoader, Stack } from '@island.is/island-ui/core'
 
-import { ApplicationList } from '../components/client-components/application/ApplicationList'
-import { UmsoknirHero } from '../components/client-components/hero/UmsoknirHero'
+import { ApplicationList } from '../components/application/ApplicationList'
+import { UmsoknirHero } from '../components/hero/UmsoknirHero'
 import { GetMyApplicationsRequest } from '../gen/fetch'
 import { trpc } from '../lib/trpc/client'
 

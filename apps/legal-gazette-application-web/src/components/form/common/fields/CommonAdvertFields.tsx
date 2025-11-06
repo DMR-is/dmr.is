@@ -11,8 +11,8 @@ import {
 
 import { GridColumn, GridRow, Stack, Text } from '@island.is/island-ui/core'
 
-import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
-import { trpc } from '../../../../../lib/trpc/client'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { trpc } from '../../../../lib/trpc/client'
 import { Editor } from '../../../editor/Editor'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'

@@ -18,8 +18,8 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
-import { AddDivisionEndingForApplicationDto } from '../../../gen/fetch'
-import { trpc } from '../../../lib/trpc/client'
+import { AddDivisionEndingForApplicationDto } from '../../gen/fetch'
+import { trpc } from '../../lib/trpc/client'
 import { Center } from '../center/Center'
 
 type Props = {

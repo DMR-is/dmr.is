@@ -7,7 +7,7 @@ import {
 
 import { GridColumn, GridRow, Stack, Text } from '@island.is/island-ui/core'
 
-import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 import { DatePickerController } from '../controllers/DatePickerController'
 import { InputController } from '../controllers/InputController'
 

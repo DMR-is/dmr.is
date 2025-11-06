@@ -24,7 +24,7 @@ import {
 
 import {} from '@island.is/island-ui/core'
 
-import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 
 export const CommunicationChannelFields = () => {
   const { getValues, setValue, watch, formState, trigger } =

@@ -14,7 +14,7 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { ApplicationDto, Paging } from '../../../gen/fetch'
+import { ApplicationDto, Paging } from '../../gen/fetch'
 import { ApplicationCard } from './ApplicationCard'
 
 type Props = {

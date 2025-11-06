@@ -18,9 +18,9 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
-import { ONE_DAY, TWO_WEEKS } from '../../../../lib/constants'
-import { getNextWeekday, getWeekendDays } from '../../../../lib/utils'
+import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
+import { ONE_DAY, TWO_WEEKS } from '../../../lib/constants'
+import { getNextWeekday, getWeekendDays } from '../../../lib/utils'
 import { DatePickerController } from '../controllers/DatePickerController'
 
 type Props = {

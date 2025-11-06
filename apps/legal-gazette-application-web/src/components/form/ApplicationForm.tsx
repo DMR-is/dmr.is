@@ -4,7 +4,7 @@ import { isBase64 } from 'class-validator'
 
 import { OptionSchema } from '@dmr.is/legal-gazette/schemas'
 
-import { ApplicationDetailedDto, ApplicationTypeEnum } from '../../../gen/fetch'
+import { ApplicationDetailedDto, ApplicationTypeEnum } from '../../gen/fetch'
 import { CommonForm } from './common/CommonForm'
 import { RecallForm } from './recall/RecallForm'
 

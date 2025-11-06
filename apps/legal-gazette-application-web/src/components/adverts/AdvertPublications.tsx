@@ -10,8 +10,8 @@ import {
   AdvertDto,
   AdvertPublicationDetailedDto,
   GetAdvertPublicationVersionEnum,
-} from '../../../gen/fetch'
-import { trpc } from '../../../lib/trpc/client'
+} from '../../gen/fetch'
+import { trpc } from '../../lib/trpc/client'
 import { AdvertModal } from '../advert-modal/AdvertModal'
 import * as styles from './advert.css'
 

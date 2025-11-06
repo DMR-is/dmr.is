@@ -14,8 +14,8 @@ import {
   Text,
 } from '@island.is/island-ui/core'
 
-import { AdvertDto, ApplicationTypeEnum } from '../../../gen/fetch'
-import { PageRoutes } from '../../../lib/constants'
+import { AdvertDto, ApplicationTypeEnum } from '../../gen/fetch'
+import { PageRoutes } from '../../lib/constants'
 import { AddAdvertsToApplicationMenu } from '../adverts/AddAdvertsToApplicationMenu'
 import { AdvertList } from '../adverts/AdvertList'
 import { AdvertTable } from '../adverts/AdvertTable'

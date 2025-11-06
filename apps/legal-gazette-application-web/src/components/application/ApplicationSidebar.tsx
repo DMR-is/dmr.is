@@ -13,7 +13,7 @@ import { Box, Stack, Text } from '@dmr.is/ui/components/island-is'
 
 import { Bullet, BulletList } from '@island.is/island-ui/core'
 
-import { getDotNotationPaths, getErrors } from '../../../lib/utils'
+import { getDotNotationPaths, getErrors } from '../../lib/utils'
 import * as styles from './application.css'
 
 export const ApplicationSidebar = () => {

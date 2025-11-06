@@ -16,8 +16,8 @@ import {
   ApplicationDto,
   ApplicationStatusEnum,
   ApplicationTypeEnum,
-} from '../../../gen/fetch'
-import { PageRoutes } from '../../../lib/constants'
+} from '../../gen/fetch'
+import { PageRoutes } from '../../lib/constants'
 
 type Props = {
   application: ApplicationDto

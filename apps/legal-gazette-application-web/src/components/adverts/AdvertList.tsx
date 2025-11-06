@@ -2,7 +2,7 @@
 
 import { Box, Stack } from '@island.is/island-ui/core'
 
-import { AdvertDto } from '../../../gen/fetch'
+import { AdvertDto } from '../../gen/fetch'
 import { AdvertPublications } from './AdvertPublications'
 
 type Props = {

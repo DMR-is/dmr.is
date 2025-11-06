@@ -10,8 +10,8 @@ import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
-import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
-import { POSTPONE_LIMIT } from '../../../../../lib/constants'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { POSTPONE_LIMIT } from '../../../../lib/constants'
 import {
   NationalIdLookup,
   NationalIdLookupResults,

@@ -7,9 +7,9 @@ import { DropdownMenu, toast } from '@dmr.is/ui/components/island-is'
 import {
   ApplicationTypeEnum,
   CreateApplicationApplicationTypeEnum,
-} from '../../../gen/fetch'
-import { PageRoutes } from '../../../lib/constants'
-import { trpc } from '../../../lib/trpc/client'
+} from '../../gen/fetch'
+import { PageRoutes } from '../../lib/constants'
+import { trpc } from '../../lib/trpc/client'
 export const CreateApplication = () => {
   const router = useRouter()
 

@@ -11,9 +11,9 @@ import {
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
-import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
-import { ONE_WEEK, TWO_WEEKS } from '../../../../../lib/constants'
-import { getNextWeekday, getWeekendDays } from '../../../../../lib/utils'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { ONE_WEEK, TWO_WEEKS } from '../../../../lib/constants'
+import { getNextWeekday, getWeekendDays } from '../../../../lib/utils'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
