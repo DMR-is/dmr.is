@@ -3,9 +3,9 @@
 import { useState } from 'react'
 
 import { makeQueryClient } from '@dmr.is/trpc/client/query-client'
-import { createTrpcContext } from '@dmr.is/trpc/client/trpc'
 
 import type { AppRouter } from '../server/routers/_app'
+import { TRPCProvider } from './trpc'
 
 import type { QueryClient } from '@tanstack/react-query'
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -38,7 +38,6 @@ export function TRPCReactProvider(
     children: React.ReactNode
   }>,
 ) {
-  const { TRPCProvider } = createTrpcContext<AppRouter>()
   // NOTE: Avoid useState when initializing the query client if you don't
   //       have a suspense boundary between this and the code that may
   //       suspend because React will throw away the client on the initial

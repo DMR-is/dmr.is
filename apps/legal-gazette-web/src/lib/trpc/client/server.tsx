@@ -5,13 +5,6 @@ import { createTRPCContext } from '../server/trpc'
 
 import 'server-only' // <-- ensure this file cannot be imported from the client
 import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query'
-
-export {
-  HydrateClient,
-  prefetch,
-  fetchQuery,
-  fetchQueryWithHandler,
-} from '@dmr.is/trpc/client/server'
 // IMPORTANT: Create a stable getter for the query client that
 //            will return the same client during the same request.
 
@@ -20,7 +13,3 @@ export const trpc = createTRPCOptionsProxy({
   router: appRouter,
   queryClient: getQueryClient,
 })
-
-export const getCaller = async () => {
-  return appRouter.createCaller(await createTRPCContext())
-}

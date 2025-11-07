@@ -1,10 +1,11 @@
-import { AdvertContainer } from '../../../../containers/advert/AdvertContainer'
 import {
   fetchQueryWithHandler,
   HydrateClient,
   prefetch,
-  trpc,
-} from '../../../../lib/trpc/client/server'
+} from '@dmr.is/trpc/client/server'
+
+import { AdvertContainer } from '../../../../containers/advert/AdvertContainer'
+import { trpc } from '../../../../lib/trpc/client/server'
 
 type Props = {
   params: {
