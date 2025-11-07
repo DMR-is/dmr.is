@@ -1,7 +1,8 @@
 import { cache } from 'react'
 
+import { makeQueryClient } from '@dmr.is/trpc/client/query-client'
+
 import { getServerClient } from '../../api/serverClient'
-import { makeQueryClient } from '../client/query-client'
 
 import { initTRPC, TRPCError } from '@trpc/server'
 

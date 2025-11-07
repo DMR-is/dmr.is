@@ -1,3 +1,4 @@
+'use client'
 import { useParams } from 'next/navigation'
 
 import { useState } from 'react'
@@ -19,22 +20,26 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { AddDivisionEndingForApplicationDto } from '../../gen/fetch'
-import { trpc } from '../../lib/trpc/client'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { Center } from '../center/Center'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   isVisible: boolean
-  onVisibilityChange: (isVisible: boolean) => void
+  onVisibilityChange(isVisible: boolean): void
 }
 
 export const CreateDivisionEnding = ({
   isVisible,
   onVisibilityChange,
 }: Props) => {
+  const trpc = useTRPC()
   const { id } = useParams()
-  const utils = trpc.useUtils()
-  const { mutate: addDivisionEnding, isPending } =
-    trpc.applicationApi.addDivisionEnding.useMutation()
+  const queryClient = useQueryClient()
+  const { mutate: addDivisionEnding, isPending } = useMutation(
+    trpc.applicationApi.addDivisionEnding.mutationOptions(),
+  )
 
   const [createState, setCreateState] =
     useState<AddDivisionEndingForApplicationDto>({
@@ -216,7 +221,11 @@ export const CreateDivisionEnding = ({
                                 },
                                 {
                                   onSuccess: () => {
-                                    utils.advertsApi.getAdvertByCaseId.invalidate()
+                                    queryClient.invalidateQueries(
+                                      trpc.advertsApi.getAdvertByCaseId.queryFilter(
+                                        { caseId: id as string },
+                                      ),
+                                    )
                                     toast.success('Skiptalokum bætt við', {
                                       toastId: 'add-division-ending-success',
                                     })

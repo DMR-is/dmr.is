@@ -19,8 +19,10 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { AddDivisionMeetingForApplicationDto } from '../../gen/fetch'
-import { trpc } from '../../lib/trpc/client'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { Center } from '../center/Center'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   isVisible: boolean
@@ -31,10 +33,12 @@ export const CreateDivisionMeeting = ({
   isVisible,
   onVisibilityChange,
 }: Props) => {
-  const utils = trpc.useUtils()
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
   const { id: applicationId } = useParams()
-  const { mutate: addDivisionMeeting, isPending } =
-    trpc.applicationApi.addDivisionMeeting.useMutation()
+  const { mutate: addDivisionMeeting, isPending } = useMutation(
+    trpc.applicationApi.addDivisionMeeting.mutationOptions(),
+  )
 
   const [createState, setCreateState] =
     useState<AddDivisionMeetingForApplicationDto>({
@@ -228,7 +232,7 @@ export const CreateDivisionMeeting = ({
                                   },
                                   {
                                     onSuccess: () => {
-                                      utils.advertsApi.getAdvertByCaseId.invalidate()
+                                      queryClient.invalidateQueries(trpc.advertsApi.getAdvertByCaseId.queryFilter({ caseId: applicationId as string }))
                                       setCreateState({
                                         additionalText: '',
                                         meetingDate: '',

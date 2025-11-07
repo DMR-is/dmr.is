@@ -12,8 +12,10 @@ import {
   AdvertPublicationDetailedDto,
   GetAdvertPublicationVersionEnum,
 } from '../../gen/fetch'
-import { trpc } from '../../lib/trpc/client'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import * as styles from './advert.css'
+
+import { useMutation } from '@tanstack/react-query'
 
 type Props = {
   advert: AdvertDto
@@ -21,11 +23,13 @@ type Props = {
 }
 
 export const AdvertPublications = ({ advert, detailed = false }: Props) => {
+  const trpc = useTRPC()
   const [html, setHTML] = useState<string>('')
   const [openModal, setOpenModal] = useState<number | null>(null)
 
-  const { mutate: getAdvertPublication } =
-    trpc.publicationApi.getAdvertPublication.useMutation()
+  const { mutate: getAdvertPublication } = useMutation(
+    trpc.publicationApi.getAdvertPublication.mutationOptions()
+  )
 
   return (
     <Box padding={[2, 3, 4]} className={styles.advertPublication}>
