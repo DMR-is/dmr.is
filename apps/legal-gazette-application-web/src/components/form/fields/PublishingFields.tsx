@@ -7,8 +7,9 @@ import {
   ApplicationInputFields,
   BaseApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
-import { AlertMessage } from '@dmr.is/ui/components/island-is'
 import {
+  AlertMessage,
+  Box,
   Button,
   GridColumn,
   GridRow,
@@ -83,70 +84,72 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
   }
 
   return (
-    <GridRow rowGap={[2, 3]}>
-      <GridColumn span="12/12">
-        <Text variant="h3">{`Birting${additionalTitle ? ` ${additionalTitle}` : ''}`}</Text>
-      </GridColumn>
-      {alert && <GridColumn span="12/12">{alert}</GridColumn>}
-      <GridColumn span="12/12">
-        <Stack space={[2, 3]}>
-          {currentDates.map((date, index) => {
-            const prevDate =
-              index === 0 ? null : currentDates[index - 1].publishingDate
-            const maxDate = addYears(new Date(), ONE_DAY)
+    <Box id="publishingDates">
+      <GridRow rowGap={[2, 3]}>
+        <GridColumn span="12/12">
+          <Text variant="h3">{`Birting${additionalTitle ? ` ${additionalTitle}` : ''}`}</Text>
+        </GridColumn>
+        {alert && <GridColumn span="12/12">{alert}</GridColumn>}
+        <GridColumn span="12/12">
+          <Stack space={[2, 3]}>
+            {currentDates.map((date, index) => {
+              const prevDate =
+                index === 0 ? null : currentDates[index - 1].publishingDate
+              const maxDate = addYears(new Date(), ONE_DAY)
 
-            const minDate =
-              index === 0
-                ? getNextWeekday(addDays(new Date(), TWO_WEEKS))
-                : getNextWeekday(
-                    addDays(
-                      prevDate ? new Date(prevDate) : new Date(),
-                      TWO_WEEKS,
-                    ),
-                  )
-            const excludeDates = getWeekendDays(minDate, maxDate)
+              const minDate =
+                index === 0
+                  ? getNextWeekday(addDays(new Date(), TWO_WEEKS))
+                  : getNextWeekday(
+                      addDays(
+                        prevDate ? new Date(prevDate) : new Date(),
+                        TWO_WEEKS,
+                      ),
+                    )
+              const excludeDates = getWeekendDays(minDate, maxDate)
 
-            return (
-              <Inline
-                space={[1, 2]}
-                flexWrap="wrap"
-                alignY="center"
-                key={index}
-              >
-                <DatePickerController
-                  maxDate={getNextWeekday(maxDate)}
-                  label={`Birtingardagur ${index + 1}`}
-                  name={`${ApplicationInputFields.PUBLISHING_DATES}[${index}].publishingDate`}
-                  required={index === 0}
-                  defaultValue={date.publishingDate}
-                  minDate={getNextWeekday(minDate)}
-                  excludeDates={excludeDates}
-                  onChange={(date) => onDateChange(date, index)}
-                />
-                <Button
-                  circle
-                  icon="trash"
-                  iconType="outline"
-                  size="default"
-                  colorScheme="destructive"
-                  disabled={dateState.length <= 1}
-                  onClick={() => removeDate(index)}
-                />
-              </Inline>
-            )
-          })}
-          <Button
-            variant="utility"
-            icon="add"
-            iconType="outline"
-            size="small"
-            onClick={addDate}
-            disabled={dateState.length >= 3}
-          >
-            Bæta við birtingardegi
-          </Button>
-        </Stack>
-      </GridColumn>
-    </GridRow>
+              return (
+                <Inline
+                  space={[1, 2]}
+                  flexWrap="wrap"
+                  alignY="center"
+                  key={index}
+                >
+                  <DatePickerController
+                    maxDate={getNextWeekday(maxDate)}
+                    label={`Birtingardagur ${index + 1}`}
+                    name={`${ApplicationInputFields.PUBLISHING_DATES}[${index}].publishingDate`}
+                    required={index === 0}
+                    defaultValue={date.publishingDate}
+                    minDate={getNextWeekday(minDate)}
+                    excludeDates={excludeDates}
+                    onChange={(date) => onDateChange(date, index)}
+                  />
+                  <Button
+                    circle
+                    icon="trash"
+                    iconType="outline"
+                    size="default"
+                    colorScheme="destructive"
+                    disabled={dateState.length <= 1}
+                    onClick={() => removeDate(index)}
+                  />
+                </Inline>
+              )
+            })}
+            <Button
+              variant="utility"
+              icon="add"
+              iconType="outline"
+              size="small"
+              onClick={addDate}
+              disabled={dateState.length >= 3}
+            >
+              Bæta við birtingardegi
+            </Button>
+          </Stack>
+        </GridColumn>
+      </GridRow>
+    </Box>
   )
 }

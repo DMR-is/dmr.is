@@ -33,6 +33,8 @@ export const RecallSettlementFields = () => {
     updateApplication,
     updateSettlementDeadlineDate,
     updateSettlementDateOfDeath,
+    updateSettlementName,
+    updateSettlementAddress,
   } = useUpdateApplication(getValues('metadata.applicationId'))
 
   const [onLookupError, setOnLookupError] = useState<{
@@ -65,14 +67,10 @@ export const RecallSettlementFields = () => {
   }
 
   const resetLookupFields = () => {
-    setValue(RecallApplicationInputFields.SETTLEMENT_NAME, '')
-    setValue(RecallApplicationInputFields.SETTLEMENT_ADDRESS, '')
     setValue(RecallApplicationInputFields.SETTLEMENT_NATIONAL_ID, '')
     updateApplication({
       recallFields: {
         settlementFields: {
-          name: '',
-          address: '',
           nationalId: '',
         },
       },
@@ -128,7 +126,7 @@ export const RecallSettlementFields = () => {
           name={RecallApplicationInputFields.SETTLEMENT_NAME}
           label={`Nafn ${settlementType}`}
           required
-          readonly={true}
+          onChange={(val) => updateSettlementName(val)}
         />
       </GridColumn>
 
@@ -141,7 +139,7 @@ export const RecallSettlementFields = () => {
               : 'Síðasta heimilisfang'
           }
           required
-          readonly={true}
+          onChange={(val) => updateSettlementAddress(val)}
         />
       </GridColumn>
     </GridRow>
