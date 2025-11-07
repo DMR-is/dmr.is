@@ -13,8 +13,12 @@ import {
   toast,
 } from '@island.is/island-ui/core'
 
+import {
+  useCreateAppendix,
+  useDeleteAppendix,
+  useUpdateAppendix,
+} from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
-import { getDmrClient } from '../../lib/api/createClient'
 import { useFileUploader } from '../../lib/utils'
 import { HTMLEditor } from '../editor/Editor'
 import { OJOIInput } from '../select/OJOIInput'
@@ -29,33 +33,69 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
   const { data: session } = useSession()
 
   const { currentCase, refetch, canEdit } = useCaseContext()
-  const dmrClient = getDmrClient(session?.idToken as string)
+  const { createAppendix } = useCreateAppendix({
+    caseId: currentCase.id,
+    options: {
+      onSuccess: () => {
+        refetch()
+        toast.success('Viðauka bætt við', {
+          toastId: 'updateAppendix',
+        })
+      },
+      onError: () => {
+        toast.error('Villa við að bæta við viðauka', {
+          toastId: 'updateAppendix',
+        })
+      },
+    },
+  })
+
+  const { updateAdAppendix } = useUpdateAppendix({
+    caseId: currentCase.id,
+    options: {
+      onSuccess: () => {
+        refetch()
+        toast.success('Viðauki uppfærður', {
+          toastId: 'updateAppendix',
+        })
+      },
+      onError: () => {
+        toast.error('Villa við að uppfæra viðauka', {
+          toastId: 'updateAppendix',
+        })
+      },
+    },
+  })
+
+  const { deleteAppendix } = useDeleteAppendix({
+    caseId: currentCase.id,
+    options: {
+      onSuccess: () => {
+        refetch()
+        toast.success('Viðauki fjarlægður', {
+          toastId: 'updateAppendix',
+        })
+      },
+      onError: () => {
+        toast.error('Villa við að eyða viðauka', {
+          toastId: 'updateAppendix',
+        })
+      },
+    },
+  })
 
   const updateAppendix = async (
     id: string,
     body: { content?: string; title?: string; order?: number },
   ) => {
-    await dmrClient
-      .updateAdvertAppendix({
-        id: currentCase.id,
-        updateAdvertAppendixBody: {
-          content: body.content ?? null,
-          title: body.title ?? null,
-          additionId: id,
-          order: typeof body.order === 'number' ? body.order.toString() : null,
-        },
-      })
-      .then(() => {
-        refetch()
-        toast.success('Viðaukar uppfærðir', {
-          toastId: 'updateAppendix',
-        })
-      })
-      .catch((err) => {
-        toast.error('Villa við uppfærslu viðauka', {
-          toastId: 'updateAppendix',
-        })
-      })
+    await updateAdAppendix({
+      updateAdvertAppendixBody: {
+        content: body.content ?? null,
+        title: body.title ?? null,
+        additionId: id,
+        order: typeof body.order === 'number' ? body.order.toString() : null,
+      },
+    })
   }
 
   const onChangeHandler = useCallback(debounce(updateAppendix, 500), [])
@@ -123,20 +163,12 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
                     iconType="outline"
                     size="small"
                     disabled={!canEdit}
-                    onClick={async () =>
-                      await dmrClient
-                        .deleteAdvertAppendix({
-                          id: currentCase.id,
-                          deleteAdvertAppendixBody: {
-                            additionId: addition.id,
-                          },
-                        })
-                        .then(() => {
-                          refetch()
-                          toast.success('Viðauki fjarlægður', {
-                            toastId: 'updateAppendix',
-                          })
-                        })
+                    onClick={() =>
+                      deleteAppendix({
+                        deleteAdvertAppendixBody: {
+                          additionId: addition.id,
+                        },
+                      })
                     }
                   >
                     Fjarlægja viðauka
@@ -148,11 +180,11 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
                       icon="arrowUp"
                       circle={true}
                       disabled={additionIndex === 0 || !canEdit}
-                      onClick={() =>
+                      onClick={() => {
                         onChangeHandler(addition.id, {
                           order: addition.order - 1,
                         })
-                      }
+                      }}
                     />
                     <Box marginX={1} />
                     <Button
@@ -165,11 +197,11 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
                         additionIndex === currentCase.additions.length - 1 ||
                         !canEdit
                       }
-                      onClick={() =>
+                      onClick={() => {
                         onChangeHandler(addition.id, {
                           order: addition.order + 1,
                         })
-                      }
+                      }}
                     />
                   </Box>
                 </Box>
@@ -183,18 +215,13 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
             variant="utility"
             icon="add"
             size="small"
-            onClick={async () =>
-              await dmrClient
-                .createAdvertAppendix({
-                  id: currentCase.id,
-                  createAdvertAppendixBody: {
-                    content: '',
-                    title: `Viðauki ${currentCase.additions ? currentCase.additions.length + 1 : ''}`,
-                  },
-                })
-                .then(() => {
-                  refetch()
-                })
+            onClick={() =>
+              createAppendix({
+                createAdvertAppendixBody: {
+                  content: '',
+                  title: `Viðauki ${currentCase.additions ? currentCase.additions.length + 1 : ''}`,
+                },
+              })
             }
           >
             Bæta við nýjum viðauka
