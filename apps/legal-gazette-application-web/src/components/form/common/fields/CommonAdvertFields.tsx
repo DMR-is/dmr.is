@@ -15,7 +15,7 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { useUpdateCommonApplication } from '../../../../hooks/useUpdateCommonApplication'
 import { trpc } from '../../../../lib/trpc/client'
 import { Editor } from '../../../editor/Editor'
 import { InputController } from '../../controllers/InputController'
@@ -28,7 +28,7 @@ export const CommonAdvertFields = () => {
   const metadata = getValues('metadata')
 
   const { updateType, updateCategory, updateCaption, updateHTML } =
-    useUpdateApplication(metadata.applicationId)
+    useUpdateCommonApplication(metadata.applicationId)
 
   const typeId = watch(CommonApplicationInputFields.TYPE)
   const categoryId = watch(CommonApplicationInputFields.CATEGORY)

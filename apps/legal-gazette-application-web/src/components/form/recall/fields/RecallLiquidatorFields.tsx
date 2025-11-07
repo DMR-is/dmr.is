@@ -6,13 +6,13 @@ import {
 } from '@dmr.is/legal-gazette/schemas'
 import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { useUpdateRecallApplication } from '../../../../hooks/useUpdateRecallApplication'
 import { InputController } from '../../controllers/InputController'
 
 export const RecallLiquidatorFields = () => {
   const { getValues } = useFormContext<RecallApplicationSchema>()
   const { updateLiquidatorName, updateLiquidatorLocation } =
-    useUpdateApplication(getValues('metadata.applicationId'))
+    useUpdateRecallApplication(getValues('metadata.applicationId'))
 
   return (
     <GridRow rowGap={[2, 3]}>

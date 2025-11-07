@@ -9,7 +9,7 @@ import {
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { useUpdateRecallApplication } from '../../../../hooks/useUpdateRecallApplication'
 import { POSTPONE_LIMIT } from '../../../../lib/constants'
 import {
   NationalIdLookup,
@@ -30,12 +30,12 @@ export const RecallSettlementFields = () => {
   const settlementType = type === 'RECALL_BANKRUPTCY' ? 'þrotabús' : 'dánarbús'
 
   const {
-    updateApplication,
-    updateSettlementDeadlineDate,
-    updateSettlementDateOfDeath,
+    updateRecallApplication,
     updateSettlementName,
     updateSettlementAddress,
-  } = useUpdateApplication(getValues('metadata.applicationId'))
+    updateSettlementDeadlineDate,
+    updateSettlementDateOfDeath,
+  } = useUpdateRecallApplication(getValues('metadata.applicationId'))
 
   const [onLookupError, setOnLookupError] = useState<{
     title: string
@@ -55,24 +55,22 @@ export const RecallSettlementFields = () => {
       `${address}, ${zipCode} ${city}`,
     )
     setValue(RecallApplicationInputFields.SETTLEMENT_NATIONAL_ID, nationalId)
-    updateApplication({
-      recallFields: {
-        settlementFields: {
-          name: name,
-          address: `${address}, ${zipCode} ${city}`,
-          nationalId: nationalId,
-        },
+    updateRecallApplication({
+      settlementFields: {
+        name: name,
+        address: `${address}, ${zipCode} ${city}`,
+        nationalId: nationalId,
       },
     })
   }
 
   const resetLookupFields = () => {
     setValue(RecallApplicationInputFields.SETTLEMENT_NATIONAL_ID, '')
-    updateApplication({
-      recallFields: {
-        settlementFields: {
-          nationalId: '',
-        },
+    updateRecallApplication({
+      settlementFields: {
+        name: '',
+        address: '',
+        nationalId: '',
       },
     })
   }

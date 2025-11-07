@@ -15,6 +15,7 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { useUpdateRecallApplication } from '../../../../hooks/useUpdateRecallApplication'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
@@ -24,8 +25,10 @@ export const RecallAdvertFields = () => {
 
   const { applicationId, courtDistrictOptions } = getValues('metadata')
 
-  const { updateAdditionalText, updateCourtDistrict, updateJudgmentDate } =
-    useUpdateApplication(applicationId)
+  const { updateAdditionalText } = useUpdateApplication(applicationId)
+
+  const { updateCourtDistrict, updateJudgmentDate } =
+    useUpdateRecallApplication(applicationId)
 
   return (
     <Stack space={[1, 2]}>
