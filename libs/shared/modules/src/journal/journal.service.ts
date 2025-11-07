@@ -52,7 +52,7 @@ import {
   UpdateMainCategory,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { cleanLegacyHtml, generatePaging } from '@dmr.is/utils'
+import { cleanLegacyHtml, generatePaging, toUtf8 } from '@dmr.is/utils'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAWSService } from '../aws/aws.service.interface'
@@ -893,7 +893,7 @@ export class JournalService implements IJournalService {
 
     const ad = advertMigrate(advert)
 
-    let html = advert.documentHtml
+    let html = ad.document.html ?? advert.documentHtml
     if (advert.isLegacy) {
       try {
         const timeoutPromise = new Promise((_, reject) => {
@@ -941,17 +941,20 @@ export class JournalService implements IJournalService {
           .sort((a, b) => a.order - b.order)
       : undefined
 
-    return ResultWrapper.ok({
+    const finalHtml = toUtf8(advert.isLegacy ? html : ad.document.html)
+    const dto: GetAdvertResponse = {
       advert: {
         ...ad,
         additions: orderedAdditions,
         document: {
           isLegacy: advert.isLegacy,
-          html,
-          pdfUrl: `${advert.documentPdfUrl}`,
+          html: finalHtml,
+          pdfUrl: `${ad.document.pdfUrl}`,
         },
       },
-    })
+    }
+
+    return ResultWrapper.ok(dto)
   }
 
   @LogAndHandle()
