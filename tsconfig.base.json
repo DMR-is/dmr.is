@@ -88,7 +88,7 @@
       "@island.is/shared/utils": [
         "submodules/island.is/libs/shared/utils/src/index.ts"
       ],
-      "@dmr.is/trpc/client/*": ["libs/shared/trpc/src/lib/client/*.tsx"]
+      "@dmr.is/trpc/client/*": ["libs/shared/trpc/src/lib/client/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

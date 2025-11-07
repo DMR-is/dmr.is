@@ -12,7 +12,7 @@ import {
 
 import { GetAdvertsStatusCounterDto, StatusIdEnum } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
-import { useSuspenseQuery, useTRPC } from '../../lib/nTrpc/client/trpc'
+import { useSuspenseQuery, useTRPC } from '../../lib/trpc/client/trpc'
 import { RitstjornHero } from '../ritstjorn/Hero'
 import AdvertsCompleted from '../Tables/AdvertsCompleted'
 import PublishingTab from '../tabs/PublishingTab'

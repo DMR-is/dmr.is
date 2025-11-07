@@ -1,7 +1,7 @@
 import { ApplicationContainer } from '../../components/front-page/ApplicationContainer'
 import { HeroContainer } from '../../components/front-page/HeroContainer'
 import { SectionContainer } from '../../components/front-page/SectionContainer'
-import { fetchQuery, trpc } from '../../lib/nTrpc/client/server'
+import { fetchQuery, trpc } from '../../lib/trpc/client/server'
 
 export default async function IndexPage() {
   const countByStatusPromise = fetchQuery(
