@@ -1,10 +1,13 @@
 import { useCallback } from 'react'
 
 import { CommunicationChannelSchema } from '@dmr.is/legal-gazette/schemas'
+import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { toast } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationDetailedDto, UpdateApplicationDto } from '../gen/fetch'
-import { trpc } from '../lib/trpc/client'
+import { useTRPC } from '../lib/trpc/client/trpc'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const createOptimisticUpdateForApplication = (
   prevData: ApplicationDetailedDto,
@@ -30,36 +33,43 @@ export type UpdateOptions = {
 }
 
 export const useUpdateApplication = (applicationId: string) => {
-  const utils = trpc.useUtils()
-  const { data: application } = trpc.applicationApi.getApplicationById.useQuery(
-    { id: applicationId },
-    { enabled: !!applicationId },
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+  const { data: application } = useSuspenseQuery(
+    trpc.applicationApi.getApplicationById.queryOptions({ id: applicationId }),
   )
 
-  const { mutate: updateApplicationMutation } =
-    trpc.applicationApi.updateApplication.useMutation({
+  const { mutate: updateApplicationMutation } = useMutation(
+    trpc.applicationApi.updateApplication.mutationOptions({
       onMutate: async (variables) => {
-        await utils.applicationApi.getApplicationById.cancel({
-          id: applicationId,
-        })
+        await queryClient.cancelQueries(
+          trpc.applicationApi.getApplicationById.queryFilter({
+            id: applicationId,
+          }),
+        )
 
-        const prevData = utils.applicationApi.getApplicationById.getData({
-          id: applicationId,
-        })
+        const prevData = queryClient.getQueryData(
+          trpc.applicationApi.getApplicationById.queryKey({
+            id: applicationId,
+          }),
+        )
 
         const optimisticData = createOptimisticUpdateForApplication(
           prevData as ApplicationDetailedDto,
           variables as UpdateApplicationDto,
         )
 
-        utils.applicationApi.getApplicationById.setData(
-          { id: applicationId },
+        queryClient.setQueryData(
+          trpc.applicationApi.getApplicationById.queryKey({
+            id: applicationId,
+          }),
           optimisticData,
         )
 
         return prevData
       },
-    })
+    }),
+  )
 
   const updateApplication = useCallback(
     (data: UpdateApplicationDto, options: UpdateOptions = {}) => {
@@ -72,9 +82,11 @@ export const useUpdateApplication = (applicationId: string) => {
         },
         {
           onSuccess: () => {
-            utils.applicationApi.getApplicationById.invalidate({
-              id: applicationId,
-            })
+            queryClient.invalidateQueries(
+              trpc.applicationApi.getApplicationById.queryFilter({
+                id: applicationId,
+              }),
+            )
             if (successMessage) {
               toast.success(successMessage, {
                 toastId: 'update-application-success',
@@ -83,8 +95,10 @@ export const useUpdateApplication = (applicationId: string) => {
           },
           onError: (_error, _variables, context) => {
             if (context) {
-              utils.applicationApi.getApplicationById.setData(
-                { id: applicationId },
+              queryClient.setQueryData(
+                trpc.applicationApi.getApplicationById.queryKey({
+                  id: applicationId,
+                }),
                 context,
               )
             }

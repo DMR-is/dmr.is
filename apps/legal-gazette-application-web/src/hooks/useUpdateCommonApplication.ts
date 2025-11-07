@@ -1,13 +1,15 @@
 import { useCallback } from 'react'
 
+import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
+
 import { CommonApplicationFieldsDto } from '../gen/fetch'
-import { trpc } from '../lib/trpc/client'
+import { useTRPC } from '../lib/trpc/client/trpc'
 import { UpdateOptions, useUpdateApplication } from './useUpdateApplication'
 
 export const useUpdateCommonApplication = (applicationId: string) => {
-  const { data: application } = trpc.applicationApi.getApplicationById.useQuery(
-    { id: applicationId },
-    { enabled: !!applicationId },
+  const trpc = useTRPC()
+  const { data: application } = useSuspenseQuery(
+    trpc.applicationApi.getApplicationById.queryOptions({ id: applicationId }),
   )
   const { updateApplication } = useUpdateApplication(applicationId)
 

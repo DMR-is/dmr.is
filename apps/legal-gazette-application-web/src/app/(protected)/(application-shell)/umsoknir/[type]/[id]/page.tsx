@@ -1,11 +1,9 @@
-import { notFound } from 'next/navigation'
+import { HydrateClient } from '@dmr.is/trpc/client/server'
+import { fetchQueryWithHandler, prefetch } from '@dmr.is/trpc/client/server'
 
 import { ApplicationFormContainer } from '../../../../../../containers/ApplicationFormContainer'
 import { ALLOWED_FORM_TYPES, FormTypes } from '../../../../../../lib/constants'
-import { getStatusFromTRPCError } from '../../../../../../lib/serverUtils'
-import { getTrpcServer } from '../../../../../../lib/trpc/server/server'
-
-import { TRPCError } from '@trpc/server'
+import { trpc } from '../../../../../../lib/trpc/client/server'
 
 export default async function ApplicationPage({
   params,
@@ -16,27 +14,15 @@ export default async function ApplicationPage({
     throw new Error('Tegund umsóknar finnst ekki')
   }
 
-  const { trpc, HydrateClient } = await getTrpcServer()
-
-  try {
-    void trpc.applicationApi.getBaseEntities.prefetch()
-    const data = await trpc.applicationApi.getApplicationById({
+  void prefetch(trpc.applicationApi.getBaseEntities.queryOptions())
+  const data = await fetchQueryWithHandler(
+    trpc.applicationApi.getApplicationById.queryOptions({
       id: params.id,
-    })
-    return (
-      <HydrateClient>
-        <ApplicationFormContainer application={data} />
-      </HydrateClient>
-    )
-  } catch (error) {
-    if (error instanceof TRPCError) {
-      const status = getStatusFromTRPCError(error)
-
-      if (status === 404) {
-        notFound()
-      }
-    }
-
-    throw new Error('Eitthvað fór úrskeiðis við að sækja umsóknina')
-  }
+    }),
+  )
+  return (
+    <HydrateClient>
+      <ApplicationFormContainer application={data} />
+    </HydrateClient>
+  )
 }

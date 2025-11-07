@@ -1,20 +1,22 @@
 'use client'
 
+import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationSubmitted } from '../components/application/ApplicationSubmitted'
 import { ApplicationDetailedDto } from '../gen/fetch'
-import { trpc } from '../lib/trpc/client'
+import { useTRPC } from '../lib/trpc/client/trpc'
 
 type Props = {
   application: ApplicationDetailedDto
 }
 export const ApplicationSubmittedContainer = ({ application }: Props) => {
-  const { data, error, isLoading } = trpc.advertsApi.getAdvertByCaseId.useQuery(
-    {
+  const trpc = useTRPC()
+  const { data, error, isLoading } = useSuspenseQuery(
+    trpc.advertsApi.getAdvertByCaseId.queryOptions({
       caseId: application.caseId,
-    },
+    }),
   )
 
   if (isLoading) {

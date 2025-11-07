@@ -1,20 +1,25 @@
+'use client'
 import { toast } from 'react-toastify'
 
-import { trpc } from '../lib/trpc/client'
+import { useTRPC } from '../lib/trpc/client/trpc'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 export const useSubmitApplication = (applicationId: string) => {
-  const utils = trpc.useUtils()
-  const { mutate: submitApplication } =
-    trpc.applicationApi.submitApplication.useMutation()
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+  const { mutate: submitApplication } = useMutation(
+    trpc.applicationApi.submitApplication.mutationOptions(),
+  )
 
   const onValidSubmit = () => {
     submitApplication(
       { id: applicationId },
       {
         onSuccess: () => {
-          utils.applicationApi.getApplicationById.invalidate({
+          queryClient.invalidateQueries(trpc.applicationApi.getApplicationById.queryFilter({
             id: applicationId,
-          })
+          }))
           toast.success('Umsókn hefur verið send inn', {
             toastId: 'submit-common-application-success',
           })

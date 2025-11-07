@@ -7,7 +7,9 @@ import { useFormContext } from 'react-hook-form'
 import { RecallApplicationSchema } from '@dmr.is/legal-gazette/schemas'
 import { Input, toast } from '@dmr.is/ui/components/island-is'
 
-import { trpc } from '../../lib/trpc/client'
+import { useTRPC } from '../../lib/trpc/client/trpc'
+
+import { useMutation } from '@tanstack/react-query'
 
 export type NationalIdLookupResults = {
   nationalId: string
@@ -30,9 +32,10 @@ export const NationalIdLookup = ({
   onReset,
   onError: setErrorMessage,
 }: Props) => {
+  const trpc = useTRPC()
   const { formState } = useFormContext<RecallApplicationSchema>()
-  const { mutate, isPending } =
-    trpc.nationalRegistryApi.getPersonByNationalId.useMutation({
+  const { mutate, isPending } = useMutation(
+    trpc.nationalRegistryApi.getPersonByNationalId.mutationOptions({
       onMutate: () => {
         setErrorMessage?.(null)
       },
@@ -60,7 +63,8 @@ export const NationalIdLookup = ({
         })
         onReset?.()
       },
-    })
+    }),
+  )
   const [nationalId, setNationalId] = useState(defaultValue)
 
   const isValidId = useMemo(() => Kennitala.isValid(nationalId), [nationalId])
