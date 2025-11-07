@@ -1,5 +1,6 @@
 'use client'
 
+import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import {
   FormStepper,
   Section,
@@ -8,7 +9,7 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { StatusEnum } from '../../gen/fetch'
-import { useSuspenseQuery, useTRPC } from '../../lib/trpc/client/trpc'
+import {  useTRPC } from '../../lib/trpc/client/trpc'
 import { commentStepperMapper } from '../../mappers/commentMapper'
 
 type Props = {

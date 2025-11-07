@@ -1,5 +1,6 @@
 import { getServerSession } from 'next-auth'
 
+import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 import {
   Box,
@@ -13,7 +14,7 @@ import {
 import { PublicationCard } from '../../components/client-components/cards/PublicationCard'
 import { BannerSearch } from '../../components/client-components/front-page/banner-search/BannerSearch'
 import { authOptions } from '../../lib/authOptions'
-import { getTrpcServer } from '../../lib/trpc/server/server'
+import { trpc } from '../../lib/trpc/client/server'
 
 export default async function HomePage() {
   const session = await getServerSession(authOptions)
@@ -48,12 +49,12 @@ export default async function HomePage() {
     ],
   }
 
-  const { trpc } = await getTrpcServer()
-
-  const latestPublications = await trpc.publicationApi.getPublications({
-    page: 1,
-    pageSize: 5,
-  })
+  const latestPublications = await fetchQueryWithHandler(
+    trpc.getPublications.queryOptions({
+      page: 1,
+      pageSize: 5,
+    }),
+  )
 
   return (
     <>

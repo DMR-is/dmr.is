@@ -1,7 +1,8 @@
 import { z } from 'zod'
 
+import { createTRPCError } from '@dmr.is/trpc/utils/errorHandler'
+
 import { StatusIdEnum } from '../../../../gen/fetch'
-import { createTRPCError } from '../../utils/errorHandler'
 import { protectedProcedure, router } from '../trpc'
 
 const getAdvertsRequestSchema = z.object({

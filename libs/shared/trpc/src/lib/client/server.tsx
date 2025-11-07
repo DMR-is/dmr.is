@@ -4,8 +4,12 @@ import { handleTRPCError } from '../utils/errorHandler'
 import { makeQueryClient } from './query-client'
 
 import 'server-only' // <-- ensure this file cannot be imported from the client
+import type {
+  DefaultError,
+  FetchQueryOptions,
+  QueryKey,
+} from '@tanstack/react-query'
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
-import { TRPCQueryOptions } from '@trpc/tanstack-react-query'
 // IMPORTANT: Create a stable getter for the query client that
 //            will return the same client during the same request.
 export const getQueryClient = cache(makeQueryClient)
@@ -18,31 +22,33 @@ export function HydrateClient(props: { children: React.ReactNode }) {
     </HydrationBoundary>
   )
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
-  queryOptions: T,
-) {
+export function prefetch<
+  TQueryFnData = unknown,
+  TError = DefaultError,
+  TData = TQueryFnData,
+  TQueryKey extends QueryKey = QueryKey,
+>(queryOptions: FetchQueryOptions<TQueryFnData, TError, TData, TQueryKey>) {
   const queryClient = getQueryClient()
-  if (queryOptions.queryKey[1]?.type === 'infinite') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    void queryClient.prefetchInfiniteQuery(queryOptions as any)
-  } else {
-    void queryClient.prefetchQuery(queryOptions)
-  }
+
+  void queryClient.prefetchQuery(queryOptions)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function fetchQuery<T extends ReturnType<TRPCQueryOptions<any>>>(
-  queryOptions: T,
-) {
+export function fetchQuery<
+  TQueryFnData = unknown,
+  TError = DefaultError,
+  TData = TQueryFnData,
+  TQueryKey extends QueryKey = QueryKey,
+>(queryOptions: FetchQueryOptions<TQueryFnData, TError, TData, TQueryKey>) {
   const queryClient = getQueryClient()
   return queryClient.fetchQuery(queryOptions)
 }
 
 export async function fetchQueryWithHandler<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends ReturnType<TRPCQueryOptions<any>>,
->(queryOptions: T) {
+  TQueryFnData = unknown,
+  TError = DefaultError,
+  TData = TQueryFnData,
+  TQueryKey extends QueryKey = QueryKey,
+>(queryOptions: FetchQueryOptions<TQueryFnData, TError, TData, TQueryKey>) {
   const queryClient = getQueryClient()
   try {
     const result = await queryClient.fetchQuery({
@@ -51,6 +57,6 @@ export async function fetchQueryWithHandler<
     })
     return result
   } catch (error) {
-    handleTRPCError(error)
+    return handleTRPCError(error)
   }
 }
