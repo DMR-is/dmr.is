@@ -1,5 +1,13 @@
-import { Expose, Transform } from 'class-transformer'
-import { IsBase64, IsString, IsUUID } from 'class-validator'
+import { Expose, Transform, Type } from 'class-transformer'
+import {
+  ArrayMinSize,
+  IsArray,
+  IsBase64,
+  IsDateString,
+  IsString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -42,31 +50,33 @@ export class IslandIsSubmitCommonApplicationDto {
   @IsString()
   additionalText?: string | null
 
-  @ApiProperty({ type: String, required: true })
+  @ApiProperty({ type: String, required: false })
   @IsString()
-  signatureName!: string
+  signatureName?: string
 
-  @ApiProperty({ type: String, required: false, nullable: true })
+  @ApiProperty({ type: String, required: false })
   @IsString()
-  signatureOnBehalfOf?: string | null
+  signatureOnBehalfOf?: string
 
-  @ApiProperty({ type: String, required: true })
+  @ApiProperty({ type: String, required: false })
   @IsString()
-  signatureLocation!: string
+  signatureLocation?: string
 
-  @ApiProperty({ type: String, required: true, format: 'date-time' })
-  @IsString()
-  signatureDate!: string
+  @ApiProperty({ type: String, required: false })
+  @IsDateString()
+  signatureDate?: string
 
   @ApiProperty({ type: [CreateCommunicationChannelDto], required: true })
+  @IsArray()
+  @Type(() => CreateCommunicationChannelDto)
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
   communicationChannels!: CreateCommunicationChannelDto[]
 
-  @ApiProperty({
-    type: [String],
-    required: true,
-    format: 'date-time',
-    isArray: true,
-  })
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @IsDateString()
+  @ValidateNested({ each: true })
   publishingDates!: string[]
 }
 
