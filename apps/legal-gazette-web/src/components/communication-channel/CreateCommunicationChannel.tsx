@@ -19,7 +19,7 @@ import {
   CreateCommunicationChannelDto,
 } from '../../gen/fetch'
 import { useToggle } from '../../hooks/useToggle'
-import { useTRPC } from '../../lib/nTrpc/client/trpc'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 

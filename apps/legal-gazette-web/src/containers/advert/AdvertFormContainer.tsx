@@ -1,5 +1,6 @@
 'use client'
 
+import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import {
   AlertMessage,
   Box,
@@ -28,11 +29,7 @@ import {
   isDivisionMeetingAdvert,
 } from '../../lib/advert-type-guards'
 import { Route } from '../../lib/constants'
-import {
-  useQuery,
-  useSuspenseQuery,
-  useTRPC,
-} from '../../lib/nTrpc/client/trpc'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 
 type AdvertContainerProps = {
   id: string

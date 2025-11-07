@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 
+import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { toast } from '@dmr.is/ui/components/island-is'
 
 import {
@@ -11,7 +12,7 @@ import {
   TypeDto,
   UpdateAdvertDto,
 } from '../gen/fetch'
-import { useSuspenseQuery, useTRPC } from '../lib/nTrpc/client/trpc'
+import {  useTRPC } from '../lib/trpc/client/trpc'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 

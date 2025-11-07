@@ -1,5 +1,3 @@
-import type { AppRouter } from '../server/routers/_app'
-
 import {
   DefaultError,
   QueryClient,
@@ -13,9 +11,6 @@ import {
   useQuery as useQueryTanstack,
   useSuspenseQuery as useSuspenseQueryTanstack,
 } from '@tanstack/react-query'
-import { createTRPCContext } from '@trpc/tanstack-react-query'
-export const { TRPCProvider, useTRPC, useTRPCClient } =
-  createTRPCContext<AppRouter>()
 
 export function useQuery<
   TQueryFnData = unknown,

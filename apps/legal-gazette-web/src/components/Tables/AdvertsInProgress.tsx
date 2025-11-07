@@ -9,7 +9,7 @@ import { formatDate } from '@dmr.is/utils/client'
 import { StatusEnum, StatusIdEnum } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
-import { useTRPC } from '../../lib/nTrpc/client/trpc'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useQuery } from '@tanstack/react-query'
 

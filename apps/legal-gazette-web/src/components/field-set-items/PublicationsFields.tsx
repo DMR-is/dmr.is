@@ -23,7 +23,7 @@ import {
   StatusEnum,
 } from '../../gen/fetch'
 import { useUpdatePublications } from '../../hooks/useUpdatePublications'
-import { useTRPC } from '../../lib/nTrpc/client/trpc'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { AdvertPublicationModal } from '../modals/AdvertPublicationModal'
 
 import { useQuery } from '@tanstack/react-query'

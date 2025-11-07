@@ -1,7 +1,6 @@
 import { cache } from 'react'
 
 import { getServerClient } from '../../api/serverClient'
-import { makeQueryClient } from '../client/query-client'
 
 import { initTRPC, TRPCError } from '@trpc/server'
 
@@ -48,5 +47,3 @@ export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
     },
   })
 })
-
-export const getQueryClient = cache(makeQueryClient)

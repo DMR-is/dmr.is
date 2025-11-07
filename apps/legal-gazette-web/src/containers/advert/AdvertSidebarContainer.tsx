@@ -1,14 +1,14 @@
 'use client'
 
+import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
+
 import { ChangeStatusButtons } from '../../components/buttons/ChangeStatusButtons'
 import { EmployeeSelect } from '../../components/employee-select/EmployeeSelect'
 import { AdvertFormStepper } from '../../components/Form/AdvertFormStepper'
 import { AdvertSidebar } from '../../components/Form/FormSidebar'
 import {
-  useQuery,
-  useSuspenseQuery,
   useTRPC,
-} from '../../lib/nTrpc/client/trpc'
+} from '../../lib/trpc/client/trpc'
 
 type AdvertContainerProps = {
   id: string
