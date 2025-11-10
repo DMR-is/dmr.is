@@ -3636,8 +3636,7 @@
             "type": "string",
             "description": "Location to send recall requirement (Kröfulýsing)"
           }
-        },
-        "required": ["recallRequirementStatementType"]
+        }
       },
       "ApplicationSettlementDto": {
         "type": "object",

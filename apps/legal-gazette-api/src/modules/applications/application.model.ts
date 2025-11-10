@@ -467,7 +467,8 @@ export class ApplicationModel extends BaseModel<
           location: model.liquidatorLocation ?? undefined,
           recallRequirementStatementLocation:
             model.liquidatorRecallStatementLocation ?? undefined,
-          recallRequirementStatementType: model.liquidatorRecallStatementType,
+          recallRequirementStatementType:
+            model.liquidatorRecallStatementType ?? undefined,
         },
         courtAndJudgmentFields: {
           courtDistrictId: model.courtDistrictId ?? undefined,

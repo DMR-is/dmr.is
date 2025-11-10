@@ -128,6 +128,7 @@ export class ApplicationLiquidationFieldsDto {
     enum: ApplicationRequirementStatementEnum,
     enumName: 'ApplicationRequirementStatementEnum',
     default: ApplicationRequirementStatementEnum.LIQUIDATORLOCATION,
+    required: false,
   })
   @IsEnum(ApplicationRequirementStatementEnum)
   @IsOptional()

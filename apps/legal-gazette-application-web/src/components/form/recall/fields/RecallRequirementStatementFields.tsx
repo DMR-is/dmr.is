@@ -9,7 +9,7 @@ import {
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
 import { ApplicationRequirementStatementEnum } from '../../../../gen/fetch'
-import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { useUpdateRecallApplication } from '../../../../hooks/useUpdateRecallApplication'
 import { requirementsStatementOptions } from '../../../../lib/constants'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
@@ -19,7 +19,7 @@ export const RecallRequirementStatementFields = () => {
   const {
     updateLiquidatorRecallRequirementStatementType,
     updateLiquidatorRecallRequirementStatementLocation,
-  } = useUpdateApplication(getValues('metadata.applicationId'))
+  } = useUpdateRecallApplication(getValues('metadata.applicationId'))
 
   useEffect(() => {
     const liquidatorLocation = getValues(
