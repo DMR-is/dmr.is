@@ -13,7 +13,7 @@ import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { Scopes, ScopesGuard, TokenJwtAuthGuard } from '@dmr.is/modules'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
@@ -30,7 +30,7 @@ import {
 } from '../dto/application.dto'
 
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, ScopesGuard)
 @Controller({
   path: 'applications',
   version: '1',
@@ -61,6 +61,8 @@ export class ApplicationController {
     return this.applicationService.submitApplication(applicationId, user)
   }
 
+  @UseGuards(ScopesGuard)
+  @Scopes('@dmr.is/lg-application-web')
   @Get('getMyApplications')
   @LGResponse({ operationId: 'getMyApplications', type: ApplicationsDto })
   async getMyApplications(
