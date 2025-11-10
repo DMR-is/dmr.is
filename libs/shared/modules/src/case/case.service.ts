@@ -1493,7 +1493,13 @@ export class CaseService implements ICaseService {
     }
 
     const caseAdditions = additions.map((a) => {
-      return a.caseAddition
+      return {
+        id: a.caseAddition.id,
+        title: a.caseAddition.title,
+        content: a.caseAddition.content,
+        type: a.caseAddition.type,
+        CaseAdditionsModel: { order: a.order },
+      }
     }) as CaseAdditionModel[]
 
     const returnableCase = {

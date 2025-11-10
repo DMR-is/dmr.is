@@ -32,7 +32,7 @@ export function handleTRPCError(error: unknown) {
     const status = getHTTPStatusCodeFromError(error)
 
     if (status === 404) {
-      notFound()
+      return notFound()
     }
 
     throw error.cause ?? error

@@ -41,6 +41,7 @@ export const InputController = (props: Props) => {
     <Input
       {...field}
       label={label}
+      id={field.name}
       readOnly={props.readonly}
       backgroundColor="blue"
       size="sm"

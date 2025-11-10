@@ -692,3 +692,6 @@ export const getBodyHTMLlength = (
   }
   return bodyLength + additionsLength
 }
+
+export const toUtf8 = (v: unknown) =>
+  Buffer.isBuffer(v) ? v.toString('utf8') : (v as string)

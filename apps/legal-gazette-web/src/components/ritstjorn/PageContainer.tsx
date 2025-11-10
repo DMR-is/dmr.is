@@ -3,6 +3,8 @@
 import { parseAsStringEnum, useQueryState } from 'nuqs'
 import { useEffect } from 'react'
 
+import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
+
 import {
   GridColumn,
   GridContainer,
@@ -12,7 +14,7 @@ import {
 
 import { GetAdvertsStatusCounterDto, StatusIdEnum } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
-import { useSuspenseQuery, useTRPC } from '../../lib/nTrpc/client/trpc'
+import {  useTRPC } from '../../lib/trpc/client/trpc'
 import { RitstjornHero } from '../ritstjorn/Hero'
 import AdvertsCompleted from '../Tables/AdvertsCompleted'
 import PublishingTab from '../tabs/PublishingTab'

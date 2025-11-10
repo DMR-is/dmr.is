@@ -9,7 +9,7 @@ import { Button, Inline, Stack, toast } from '@island.is/island-ui/core'
 
 import { useFilterContext } from '../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
-import { useTRPC } from '../../lib/nTrpc/client/trpc'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import AdvertsToBePublished from '../Tables/AdvertsToBePublished'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'

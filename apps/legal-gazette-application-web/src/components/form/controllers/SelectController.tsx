@@ -35,6 +35,7 @@ export const SelectController = (
   return (
     <div onBlur={handleFirstBlur}>
       <Select
+        id={field.name}
         {...fieldWithoutRef}
         label={label}
         backgroundColor="blue"

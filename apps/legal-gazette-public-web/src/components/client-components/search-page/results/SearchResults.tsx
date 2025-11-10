@@ -10,14 +10,17 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { useFilters } from '../../../../hooks/useFilters'
-import { trpc } from '../../../../lib/trpc/client'
+import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { PublicationCard } from '../../cards/PublicationCard'
+
+import { useQuery } from '@tanstack/react-query'
 
 export const SearchResults = () => {
   const { filters, setFilters } = useFilters()
+  const trpc = useTRPC()
 
   const { data, isLoading, error } =
-    trpc.publicationApi.getPublications.useQuery({
+    useQuery(trpc.getPublications.queryOptions({
       page: filters.page,
       pageSize: filters.pageSize,
       search: filters.search,
@@ -29,7 +32,8 @@ export const SearchResults = () => {
       dateTo: filters.dateTo
         ? new Date(filters.dateTo).toISOString()
         : undefined,
-    })
+    }),
+  )
 
   if (error) {
     return (

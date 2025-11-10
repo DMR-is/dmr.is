@@ -10,7 +10,7 @@ import {
 } from '@dmr.is/legal-gazette/schemas'
 import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { useUpdateRecallApplication } from '../../../../hooks/useUpdateRecallApplication'
 import { ONE_WEEK, TWO_WEEKS } from '../../../../lib/constants'
 import { getNextWeekday, getWeekendDays } from '../../../../lib/utils'
 import { DatePickerController } from '../../controllers/DatePickerController'
@@ -40,7 +40,7 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
   }, [recallDates, isReady, dirtyFields])
 
   const { updateDivisionMeetingDate, updateDivisionMeetingLocation } =
-    useUpdateApplication(applicationId)
+    useUpdateRecallApplication(applicationId)
 
   const minDate = recallDates?.length
     ? addDays(

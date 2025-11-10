@@ -8,6 +8,7 @@ import {
   CommonApplicationInputFields,
   CommonApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   GridColumn,
   GridRow,
@@ -15,12 +16,13 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
-import { trpc } from '../../../../lib/trpc/client'
+import { useUpdateCommonApplication } from '../../../../hooks/useUpdateCommonApplication'
+import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { Editor } from '../../../editor/Editor'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
 export const CommonAdvertFields = () => {
+  const trpc = useTRPC()
   const { getValues, setValue, watch } =
     useFormContext<CommonApplicationSchema>()
   const formState = useFormState()
@@ -28,7 +30,7 @@ export const CommonAdvertFields = () => {
   const metadata = getValues('metadata')
 
   const { updateType, updateCategory, updateCaption, updateHTML } =
-    useUpdateApplication(metadata.applicationId)
+    useUpdateCommonApplication(metadata.applicationId)
 
   const typeId = watch(CommonApplicationInputFields.TYPE)
   const categoryId = watch(CommonApplicationInputFields.CATEGORY)
@@ -37,9 +39,11 @@ export const CommonAdvertFields = () => {
     data: categoriesData,
     isLoading,
     isPending,
-  } = trpc.applicationApi.getCategories.useQuery(
-    { typeId: typeId },
-    { enabled: !!typeId },
+  } = useQuery(
+    trpc.applicationApi.getCategories.queryOptions(
+      { typeId: typeId },
+      { enabled: !!typeId },
+    ),
   )
 
   useEffect(() => {

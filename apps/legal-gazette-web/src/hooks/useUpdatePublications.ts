@@ -7,7 +7,7 @@ import {
   AdvertDetailedDto,
   AdvertVersionEnum,
 } from '../gen/fetch'
-import { useTRPC } from '../lib/nTrpc/client/trpc'
+import { useTRPC } from '../lib/trpc/client/trpc'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 

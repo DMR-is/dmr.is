@@ -9,7 +9,7 @@ import {
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { useUpdateRecallApplication } from '../../../../hooks/useUpdateRecallApplication'
 import { POSTPONE_LIMIT } from '../../../../lib/constants'
 import {
   NationalIdLookup,
@@ -30,10 +30,12 @@ export const RecallSettlementFields = () => {
   const settlementType = type === 'RECALL_BANKRUPTCY' ? 'þrotabús' : 'dánarbús'
 
   const {
-    updateApplication,
+    updateRecallApplication,
+    updateSettlementName,
+    updateSettlementAddress,
     updateSettlementDeadlineDate,
     updateSettlementDateOfDeath,
-  } = useUpdateApplication(getValues('metadata.applicationId'))
+  } = useUpdateRecallApplication(getValues('metadata.applicationId'))
 
   const [onLookupError, setOnLookupError] = useState<{
     title: string
@@ -53,28 +55,22 @@ export const RecallSettlementFields = () => {
       `${address}, ${zipCode} ${city}`,
     )
     setValue(RecallApplicationInputFields.SETTLEMENT_NATIONAL_ID, nationalId)
-    updateApplication({
-      recallFields: {
-        settlementFields: {
-          name: name,
-          address: `${address}, ${zipCode} ${city}`,
-          nationalId: nationalId,
-        },
+    updateRecallApplication({
+      settlementFields: {
+        name: name,
+        address: `${address}, ${zipCode} ${city}`,
+        nationalId: nationalId,
       },
     })
   }
 
   const resetLookupFields = () => {
-    setValue(RecallApplicationInputFields.SETTLEMENT_NAME, '')
-    setValue(RecallApplicationInputFields.SETTLEMENT_ADDRESS, '')
     setValue(RecallApplicationInputFields.SETTLEMENT_NATIONAL_ID, '')
-    updateApplication({
-      recallFields: {
-        settlementFields: {
-          name: '',
-          address: '',
-          nationalId: '',
-        },
+    updateRecallApplication({
+      settlementFields: {
+        name: '',
+        address: '',
+        nationalId: '',
       },
     })
   }
@@ -128,7 +124,7 @@ export const RecallSettlementFields = () => {
           name={RecallApplicationInputFields.SETTLEMENT_NAME}
           label={`Nafn ${settlementType}`}
           required
-          readonly={true}
+          onChange={(val) => updateSettlementName(val)}
         />
       </GridColumn>
 
@@ -141,7 +137,7 @@ export const RecallSettlementFields = () => {
               : 'Síðasta heimilisfang'
           }
           required
-          readonly={true}
+          onChange={(val) => updateSettlementAddress(val)}
         />
       </GridColumn>
     </GridRow>

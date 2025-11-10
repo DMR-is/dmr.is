@@ -1,5 +1,6 @@
 'use client'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   AlertMessage,
   SkeletonLoader,
@@ -9,15 +10,17 @@ import {
 import { ApplicationList } from '../components/application/ApplicationList'
 import { UmsoknirHero } from '../components/hero/UmsoknirHero'
 import { GetMyApplicationsRequest } from '../gen/fetch'
-import { trpc } from '../lib/trpc/client'
+import { useTRPC } from '../lib/trpc/client/trpc'
 
 type Props = {
   searchParams: GetMyApplicationsRequest
 }
 
 export function ApplicationsContainer({ searchParams }: Props) {
-  const { data, isLoading, error } =
-    trpc.applicationApi.getApplications.useQuery()
+  const trpc = useTRPC()
+  const { data, isLoading, error } = useQuery(
+    trpc.applicationApi.getApplications.queryOptions(),
+  )
 
   if (isLoading) {
     return (

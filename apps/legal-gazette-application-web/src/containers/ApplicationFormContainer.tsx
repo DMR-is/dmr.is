@@ -1,34 +1,27 @@
 'use client'
 
-import { notFound } from 'next/navigation'
-
-import { AlertMessage, SkeletonLoader } from '@dmr.is/ui/components/island-is'
+import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
+import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationForm } from '../components/form/ApplicationForm'
 import { ApplicationDetailedDto, ApplicationStatusEnum } from '../gen/fetch'
-import { trpc } from '../lib/trpc/client'
+import { useTRPC } from '../lib/trpc/client/trpc'
 import { ApplicationSubmittedContainer } from './ApplicationSubmittedContainer'
 
 type Props = {
   application: ApplicationDetailedDto
 }
 export function ApplicationFormContainer({ application }: Props) {
-  const { data, error, isLoading } =
-    trpc.applicationApi.getApplicationById.useQuery(
-      { id: application.id },
-      { initialData: application },
-    )
+  const trpc = useTRPC()
+  const { data } = useSuspenseQuery(
+    trpc.applicationApi.getApplicationById.queryOptions({ id: application.id }),
+  )
 
-  const [{ courtDistricts, types }] =
-    trpc.applicationApi.getBaseEntities.useSuspenseQuery()
+  const { data: baseEntities } = useSuspenseQuery(
+    trpc.applicationApi.getBaseEntities.queryOptions(),
+  )
 
-  if (error) {
-    return notFound()
-  }
-
-  if (isLoading) {
-    return <SkeletonLoader height={450} borderRadius="large" />
-  }
+  const { courtDistricts, types } = baseEntities
 
   if (!data) {
     return (

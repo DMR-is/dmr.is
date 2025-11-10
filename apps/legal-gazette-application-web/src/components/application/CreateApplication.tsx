@@ -9,16 +9,20 @@ import {
   CreateApplicationApplicationTypeEnum,
 } from '../../gen/fetch'
 import { PageRoutes } from '../../lib/constants'
-import { trpc } from '../../lib/trpc/client'
+import { useTRPC } from '../../lib/trpc/client/trpc'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 export const CreateApplication = () => {
   const router = useRouter()
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
 
-  const utils = trpc.useUtils()
-
-  const { mutate: createApplication, isPending } =
-    trpc.applicationApi.createApplication.useMutation({
+  const { mutate: createApplication, isPending } = useMutation(
+    trpc.applicationApi.createApplication.mutationOptions({
       onMutate: () => {
-        utils.applicationApi.getApplications.invalidate()
+        queryClient.invalidateQueries(
+          trpc.applicationApi.getApplications.queryFilter(),
+        )
       },
       onSuccess: (data) => {
         if (data.applicationType === ApplicationTypeEnum.RECALLBANKRUPTCY) {
@@ -44,7 +48,8 @@ export const CreateApplication = () => {
           },
         )
       },
-    })
+    }),
+  )
 
   return (
     <DropdownMenu

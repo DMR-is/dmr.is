@@ -1,4 +1,5 @@
 import { Advert, AdvertAttachment } from '@dmr.is/shared/dto'
+import { toUtf8 } from '@dmr.is/utils'
 
 import { advertTypeMigrate } from '../../advert-type/migrations'
 import { AdvertModel } from '../models'
@@ -18,14 +19,19 @@ export function advertMigrate(model: AdvertModel): Advert {
     return result
   })
 
+  const titleType = model.type ? toUtf8(model.type.title) : ''
+  const subject = toUtf8(model.subject)
+  const html = toUtf8(model.documentHtml)
+  const pdfUrl = toUtf8(model.documentPdfUrl)
+
   const advert: Advert = {
     id: model.id,
-    title: `${model.type.title} ${model.subject}`,
+    title: `${titleType} ${model.subject}`,
     department: model.department
       ? advertDepartmentMigrate(model.department)
       : null,
     type: model.type ? advertTypeMigrate(model.type) : null,
-    subject: model.subject,
+    subject: subject,
     status: advertStatusMigrate(model.status),
     publicationNumber: {
       full: `${model.serialNumber}/${model.publicationYear}`,
@@ -42,9 +48,9 @@ export function advertMigrate(model: AdvertModel): Advert {
     involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
     document: {
       //no migrate because this is not a database table.
-      html: model.documentHtml,
+      html: html,
       isLegacy: model.isLegacy,
-      pdfUrl: model.documentPdfUrl,
+      pdfUrl: pdfUrl,
     },
     signature: null,
     attachments: attachmentsmodel.map((item) => ({ ...item, type: '' })),

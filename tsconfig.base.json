@@ -28,6 +28,9 @@
       "@dmr.is/db": ["libs/shared/sequelize/src/index.ts"],
       "@dmr.is/decorators": ["libs/shared/decorators/src/index.ts"],
       "@dmr.is/legal-gazette/dto": ["libs/legal-gazette/dto/src/index.ts"],
+      "@dmr.is/legal-gazette/schemas": [
+        "libs/legal-gazette/schemas/src/index.ts"
+      ],
       "@dmr.is/logging": ["libs/logging/src/index.ts"],
       "@dmr.is/middleware": ["libs/shared/middleware/src/index.ts"],
       "@dmr.is/mocks": ["libs/mocks/src/index.ts"],
@@ -85,9 +88,8 @@
       "@island.is/shared/utils": [
         "submodules/island.is/libs/shared/utils/src/index.ts"
       ],
-      "@dmr.is/legal-gazette/schemas": [
-        "libs/legal-gazette/schemas/src/index.ts"
-      ]
+      "@dmr.is/trpc/client/*": ["libs/shared/trpc/src/lib/client/*"],
+      "@dmr.is/trpc/utils/*": ["libs/shared/trpc/src/lib/utils/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

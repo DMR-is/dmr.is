@@ -38,6 +38,7 @@ export const DatePickerController = (props: Props) => {
   return (
     <div onBlur={handleFirstBlur}>
       <DatePicker
+        id={field.name}
         name={field.name}
         handleChange={handleChange}
         selected={asDate}

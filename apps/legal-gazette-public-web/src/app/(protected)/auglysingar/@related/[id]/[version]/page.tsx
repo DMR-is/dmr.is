@@ -1,3 +1,4 @@
+import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
 import {
   Box,
   GridColumn,
@@ -11,18 +12,20 @@ import {
 import { theme } from '@island.is/island-ui/theme'
 
 import { PublicationCard } from '../../../../../../components/client-components/cards/PublicationCard'
-import { getTrpcServer } from '../../../../../../lib/trpc/server/server'
+import { trpc } from '../../../../../../lib/trpc/client/server'
 
 export default async function RelatedPublications({
   params,
 }: {
   params: { id: string; version: string }
 }) {
-  const { trpc } = await getTrpcServer()
 
-  const relatedPubs = await trpc.publicationApi.getRelatedPublications({
-    advertId: params.id,
-  })
+
+  const relatedPubs = await fetchQueryWithHandler(
+    trpc.getRelatedPublications.queryOptions({
+      advertId: params.id,
+    }),
+  )
 
   const filtered = relatedPubs.publications.filter(
     (pub) => !(pub.advertId === params.id && pub.version === params.version),
