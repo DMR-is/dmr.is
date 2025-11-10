@@ -1,7 +1,9 @@
+'use client'
 import { useParams } from 'next/navigation'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
+import { addDivisionMeetingValidationSchema } from '@dmr.is/legal-gazette/schemas'
 import {
   Box,
   Button,
@@ -18,6 +20,8 @@ import {
   toast,
 } from '@dmr.is/ui/components/island-is'
 
+import { AlertMessage } from '@island.is/island-ui/core'
+
 import { AddDivisionMeetingForApplicationDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { Center } from '../center/Center'
@@ -27,6 +31,18 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 type Props = {
   isVisible: boolean
   onVisibilityChange: (isVisible: boolean) => void
+}
+
+const initFormState: AddDivisionMeetingForApplicationDto = {
+  additionalText: '',
+  meetingDate: '',
+  meetingLocation: '',
+  signature: {
+    date: undefined,
+    location: '',
+    name: '',
+    onBehalfOf: '',
+  },
 }
 
 export const CreateDivisionMeeting = ({
@@ -40,18 +56,68 @@ export const CreateDivisionMeeting = ({
     trpc.applicationApi.addDivisionMeeting.mutationOptions(),
   )
 
-  const [createState, setCreateState] =
-    useState<AddDivisionMeetingForApplicationDto>({
-      additionalText: '',
-      meetingDate: '',
-      meetingLocation: '',
-      signature: {
-        date: '',
-        location: '',
-        name: '',
-        onBehalfOf: '',
-      },
-    })
+  const [submitClicked, setSubmitClicked] = useState(false)
+
+  const [formState, setFormState] =
+    useState<AddDivisionMeetingForApplicationDto>(initFormState)
+
+  const [fieldErrors, setFieldErrors] = useState<
+    { [key: string]: string[] } | undefined
+  >(undefined)
+
+  useEffect(() => {
+    setSubmitClicked(false)
+  }, [])
+
+  useEffect(() => {
+    if (submitClicked) {
+      setAndGetFormValidation()
+    }
+  }, [formState])
+
+  const setAndGetFormValidation = async () => {
+    const formValidation =
+      addDivisionMeetingValidationSchema.safeParse(formState)
+    const formErrors = formValidation.error?.flatten().fieldErrors
+    setFieldErrors(formErrors)
+
+    return formValidation
+  }
+
+  const validateAndSubmit = async () => {
+    setSubmitClicked(true)
+    const formValidation = await setAndGetFormValidation()
+
+    if (formValidation.success) {
+      addDivisionMeeting(
+        {
+          applicationId: applicationId as string,
+          ...formState,
+        },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries(
+              trpc.advertsApi.getAdvertByCaseId.queryFilter({
+                caseId: applicationId as string,
+              }),
+            )
+            setSubmitClicked(false)
+            setFormState(initFormState)
+
+            toast.success('Skiptafundur stofnaður', {
+              toastId: 'create-division-meeting',
+            })
+            onVisibilityChange(false)
+          },
+          onError: () => {
+            toast.error('Ekki tókst að stofna skiptafund, reyndu aftur síðar', {
+              toastId: 'create-division-meeting',
+            })
+          },
+        },
+      )
+    }
+  }
 
   return (
     <ModalBase
@@ -92,8 +158,8 @@ export const CreateDivisionMeeting = ({
                             rows={4}
                             size="sm"
                             onChange={(e) =>
-                              setCreateState({
-                                ...createState,
+                              setFormState({
+                                ...formState,
                                 additionalText: e.target.value,
                               })
                             }
@@ -111,9 +177,10 @@ export const CreateDivisionMeeting = ({
                             backgroundColor="blue"
                             label="Staðsetning skiptafundar"
                             size="sm"
+                            errorMessage={fieldErrors?.meetingLocation?.[0]}
                             onChange={(e) =>
-                              setCreateState({
-                                ...createState,
+                              setFormState({
+                                ...formState,
                                 meetingLocation: e.target.value,
                               })
                             }
@@ -130,9 +197,15 @@ export const CreateDivisionMeeting = ({
                             timeInputLabel="Klukkan"
                             showTimeInput={true}
                             placeholderText=""
+                            selected={
+                              formState.meetingDate
+                                ? new Date(formState.meetingDate)
+                                : null
+                            }
+                            errorMessage={fieldErrors?.meetingDate?.[0]}
                             handleChange={(date) =>
-                              setCreateState({
-                                ...createState,
+                              setFormState({
+                                ...formState,
                                 meetingDate: date.toISOString(),
                               })
                             }
@@ -151,10 +224,10 @@ export const CreateDivisionMeeting = ({
                             size="sm"
                             label="Nafn undirritara"
                             onChange={(e) =>
-                              setCreateState({
-                                ...createState,
+                              setFormState({
+                                ...formState,
                                 signature: {
-                                  ...createState.signature,
+                                  ...formState.signature,
                                   name: e.target.value,
                                 },
                               })
@@ -169,10 +242,10 @@ export const CreateDivisionMeeting = ({
                             size="sm"
                             label="Staðsetning undirritunar"
                             onChange={(e) =>
-                              setCreateState({
-                                ...createState,
+                              setFormState({
+                                ...formState,
                                 signature: {
-                                  ...createState.signature,
+                                  ...formState.signature,
                                   location: e.target.value,
                                 },
                               })
@@ -188,15 +261,20 @@ export const CreateDivisionMeeting = ({
                             label="Dagsetning undirritunar"
                             size="sm"
                             placeholderText=""
-                            handleChange={(date) =>
-                              setCreateState({
-                                ...createState,
+                            selected={
+                              formState.signature.date
+                                ? new Date(formState.signature.date)
+                                : null
+                            }
+                            handleChange={(date) => {
+                              setFormState({
+                                ...formState,
                                 signature: {
-                                  ...createState.signature,
+                                  ...formState.signature,
                                   date: date.toISOString(),
                                 },
                               })
-                            }
+                            }}
                           />
                         </GridColumn>
                         <GridColumn span={['12/12', '6/12']}>
@@ -206,10 +284,10 @@ export const CreateDivisionMeeting = ({
                             size="sm"
                             label="Fyrir hönd undirritara"
                             onChange={(e) =>
-                              setCreateState({
-                                ...createState,
+                              setFormState({
+                                ...formState,
                                 signature: {
-                                  ...createState.signature,
+                                  ...formState.signature,
                                   onBehalfOf: e.target.value,
                                 },
                               })
@@ -217,6 +295,12 @@ export const CreateDivisionMeeting = ({
                           />
                         </GridColumn>
                       </GridRow>
+                      {fieldErrors?.signature && (
+                        <AlertMessage
+                          message={fieldErrors.signature?.[0]}
+                          type="error"
+                        />
+                      )}
                       <GridRow>
                         <GridColumn span="12/12">
                           <Inline alignY="center" align="right" space={2}>
@@ -224,40 +308,7 @@ export const CreateDivisionMeeting = ({
                               loading={isPending}
                               icon="share"
                               iconType="outline"
-                              onClick={() =>
-                                addDivisionMeeting(
-                                  {
-                                    applicationId: applicationId as string,
-                                    ...createState,
-                                  },
-                                  {
-                                    onSuccess: () => {
-                                      queryClient.invalidateQueries(trpc.advertsApi.getAdvertByCaseId.queryFilter({ caseId: applicationId as string }))
-                                      setCreateState({
-                                        additionalText: '',
-                                        meetingDate: '',
-                                        meetingLocation: '',
-                                        signature: {
-                                          date: '',
-                                          location: '',
-                                          name: '',
-                                          onBehalfOf: '',
-                                        },
-                                      })
-                                      toast.success('Skiptafundur stofnaður', {
-                                        toastId: 'create-division-meeting',
-                                      })
-                                      closeModal()
-                                    },
-                                    onError: () => {
-                                      toast.error(
-                                        'Ekki tókst að stofna skiptafund, reyndu aftur síðar',
-                                        { toastId: 'create-division-meeting' },
-                                      )
-                                    },
-                                  },
-                                )
-                              }
+                              onClick={validateAndSubmit}
                             >
                               Stofna skiptafund
                             </Button>
