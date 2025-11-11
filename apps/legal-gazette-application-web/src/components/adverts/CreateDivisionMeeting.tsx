@@ -1,7 +1,9 @@
+'use client'
 import { useParams } from 'next/navigation'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
+import { addDivisionMeetingValidationSchema } from '@dmr.is/legal-gazette/schemas'
 import {
   Box,
   Button,
@@ -29,6 +31,18 @@ type Props = {
   onVisibilityChange: (isVisible: boolean) => void
 }
 
+const initFormState: AddDivisionMeetingForApplicationDto = {
+  additionalText: '',
+  meetingDate: '',
+  meetingLocation: '',
+  signature: {
+    date: undefined,
+    location: '',
+    name: '',
+    onBehalfOf: '',
+  },
+}
+
 export const CreateDivisionMeeting = ({
   isVisible,
   onVisibilityChange,
@@ -39,19 +53,65 @@ export const CreateDivisionMeeting = ({
   const { mutate: addDivisionMeeting, isPending } = useMutation(
     trpc.applicationApi.addDivisionMeeting.mutationOptions(),
   )
+  const [submitClicked, setSubmitClicked] = useState(false)
 
-  const [createState, setCreateState] =
-    useState<AddDivisionMeetingForApplicationDto>({
-      additionalText: '',
-      meetingDate: '',
-      meetingLocation: '',
-      signature: {
-        date: '',
-        location: '',
-        name: '',
-        onBehalfOf: '',
-      },
-    })
+  const [formState, setFormState] =
+    useState<AddDivisionMeetingForApplicationDto>(initFormState)
+
+  const [fieldErrors, setFieldErrors] = useState<
+    { [key: string]: string[] } | undefined
+  >(undefined)
+
+  useEffect(() => {
+    if (submitClicked) {
+      setAndGetFormValidation()
+    }
+  }, [formState])
+
+  const setAndGetFormValidation = async () => {
+    const formValidation =
+      addDivisionMeetingValidationSchema.safeParse(formState)
+    const formErrors = formValidation.error?.flatten().fieldErrors
+
+    setFieldErrors(formErrors)
+
+    return formValidation
+  }
+
+  const validateAndSubmit = async () => {
+    setSubmitClicked(true)
+    const formValidation = await setAndGetFormValidation()
+
+    if (formValidation.success) {
+      addDivisionMeeting(
+        {
+          applicationId: applicationId as string,
+          ...formState,
+        },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries(
+              trpc.advertsApi.getAdvertByCaseId.queryFilter({
+                caseId: applicationId as string,
+              }),
+            )
+            setSubmitClicked(false)
+            setFormState(initFormState)
+
+            toast.success('Skiptafundur stofnaður', {
+              toastId: 'create-division-meeting',
+            })
+            onVisibilityChange(false)
+          },
+          onError: () => {
+            toast.error('Ekki tókst að stofna skiptafund, reyndu aftur síðar', {
+              toastId: 'create-division-meeting',
+            })
+          },
+        },
+      )
+    }
+  }
 
   return (
     <ModalBase
@@ -63,213 +123,219 @@ export const CreateDivisionMeeting = ({
     >
       {({ closeModal }) => (
         <Center fullHeight={true}>
-          <GridContainer>
-            <GridRow rowGap={[2, 3, 4]}>
-              <GridColumn span={['12/12', '8/12']} offset={['0', '2/12']}>
-                <Box padding={[2, 3, 4]} width="full" background="white">
-                  <Stack space={[3, 4]}>
-                    <Stack space={[1, 2]}>
-                      <Inline
-                        align="right"
-                        alignY="center"
-                        justifyContent="spaceBetween"
-                        space={[1, 2]}
-                      >
-                        <Text variant="h3">Bæta við skiptafundi</Text>
-                        <button onClick={closeModal}>
-                          <Icon icon="close" />
-                        </button>
-                      </Inline>
-                    </Stack>
-                    <Stack space={[1, 2]}>
-                      <GridRow>
-                        <GridColumn span="12/12">
-                          <Input
-                            name="additionalText"
-                            label="Frjáls texti"
-                            textarea
-                            backgroundColor="blue"
-                            rows={4}
-                            size="sm"
-                            onChange={(e) =>
-                              setCreateState({
-                                ...createState,
-                                additionalText: e.target.value,
-                              })
-                            }
-                          />
-                        </GridColumn>
-                      </GridRow>
-                      <GridRow rowGap={[1, 2]}>
-                        <GridColumn span="12/12">
-                          <Text variant="h4">Skiptafundur</Text>
-                        </GridColumn>
-                        <GridColumn span={['12/12', '6/12']}>
-                          <Input
-                            required
-                            name="meetingLocation"
-                            backgroundColor="blue"
-                            label="Staðsetning skiptafundar"
-                            size="sm"
-                            onChange={(e) =>
-                              setCreateState({
-                                ...createState,
-                                meetingLocation: e.target.value,
-                              })
-                            }
-                          />
-                        </GridColumn>
-                        <GridColumn span={['12/12', '6/12']}>
-                          <DatePicker
-                            locale="is"
-                            required
-                            name="meetingDate"
-                            backgroundColor="blue"
-                            label="Dagsetning og tími skiptafundar"
-                            size="sm"
-                            timeInputLabel="Klukkan"
-                            showTimeInput={true}
-                            placeholderText=""
-                            handleChange={(date) =>
-                              setCreateState({
-                                ...createState,
-                                meetingDate: date.toISOString(),
-                              })
-                            }
-                          />
-                        </GridColumn>
-                      </GridRow>
-                      <GridRow rowGap={[1, 2]}>
-                        <GridColumn span="12/12">
-                          <Text variant="h4">Undirritun</Text>
-                        </GridColumn>
-                        <GridColumn span={['12/12', '6/12']}>
-                          <Input
-                            required
-                            name="signatureName"
-                            backgroundColor="blue"
-                            size="sm"
-                            label="Nafn undirritara"
-                            onChange={(e) =>
-                              setCreateState({
-                                ...createState,
-                                signature: {
-                                  ...createState.signature,
-                                  name: e.target.value,
-                                },
-                              })
-                            }
-                          />
-                        </GridColumn>
-                        <GridColumn span={['12/12', '6/12']}>
-                          <Input
-                            required
-                            name="signatureLocation"
-                            backgroundColor="blue"
-                            size="sm"
-                            label="Staðsetning undirritunar"
-                            onChange={(e) =>
-                              setCreateState({
-                                ...createState,
-                                signature: {
-                                  ...createState.signature,
-                                  location: e.target.value,
-                                },
-                              })
-                            }
-                          />
-                        </GridColumn>
-                        <GridColumn span={['12/12', '6/12']}>
-                          <DatePicker
-                            locale="is"
-                            required
-                            name="signatureDate"
-                            backgroundColor="blue"
-                            label="Dagsetning undirritunar"
-                            size="sm"
-                            placeholderText=""
-                            handleChange={(date) =>
-                              setCreateState({
-                                ...createState,
-                                signature: {
-                                  ...createState.signature,
-                                  date: date.toISOString(),
-                                },
-                              })
-                            }
-                          />
-                        </GridColumn>
-                        <GridColumn span={['12/12', '6/12']}>
-                          <Input
-                            name="signatureOnBehalfOf"
-                            backgroundColor="blue"
-                            size="sm"
-                            label="Fyrir hönd undirritara"
-                            onChange={(e) =>
-                              setCreateState({
-                                ...createState,
-                                signature: {
-                                  ...createState.signature,
-                                  onBehalfOf: e.target.value,
-                                },
-                              })
-                            }
-                          />
-                        </GridColumn>
-                      </GridRow>
-                      <GridRow>
-                        <GridColumn span="12/12">
-                          <Inline alignY="center" align="right" space={2}>
-                            <Button
-                              loading={isPending}
-                              icon="share"
-                              iconType="outline"
-                              onClick={() =>
-                                addDivisionMeeting(
-                                  {
-                                    applicationId: applicationId as string,
-                                    ...createState,
-                                  },
-                                  {
-                                    onSuccess: () => {
-                                      queryClient.invalidateQueries(trpc.advertsApi.getAdvertByCaseId.queryFilter({ caseId: applicationId as string }))
-                                      setCreateState({
-                                        additionalText: '',
-                                        meetingDate: '',
-                                        meetingLocation: '',
-                                        signature: {
-                                          date: '',
-                                          location: '',
-                                          name: '',
-                                          onBehalfOf: '',
-                                        },
-                                      })
-                                      toast.success('Skiptafundur stofnaður', {
-                                        toastId: 'create-division-meeting',
-                                      })
-                                      closeModal()
-                                    },
-                                    onError: () => {
-                                      toast.error(
-                                        'Ekki tókst að stofna skiptafund, reyndu aftur síðar',
-                                        { toastId: 'create-division-meeting' },
-                                      )
-                                    },
-                                  },
-                                )
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              validateAndSubmit()
+            }}
+          >
+            <GridContainer>
+              <GridRow rowGap={[2, 3, 4]}>
+                <GridColumn span={['12/12', '8/12']} offset={['0', '2/12']}>
+                  <Box padding={[2, 3, 4]} width="full" background="white">
+                    <Stack space={[3, 4]}>
+                      <Stack space={[1, 2]}>
+                        <Inline
+                          align="right"
+                          alignY="center"
+                          justifyContent="spaceBetween"
+                          space={[1, 2]}
+                        >
+                          <Text variant="h3">Bæta við skiptafundi</Text>
+                          <button onClick={closeModal} type="button">
+                            <Icon icon="close" />
+                          </button>
+                        </Inline>
+                      </Stack>
+                      <Stack space={[1, 2]}>
+                        <GridRow>
+                          <GridColumn span="12/12">
+                            <Input
+                              name="additionalText"
+                              label="Frjáls texti"
+                              textarea
+                              backgroundColor="blue"
+                              rows={4}
+                              size="sm"
+                              onChange={(e) =>
+                                setFormState({
+                                  ...formState,
+                                  additionalText: e.target.value,
+                                })
+                              }
+                            />
+                          </GridColumn>
+                        </GridRow>
+                        <GridRow rowGap={[1, 2]}>
+                          <GridColumn span="12/12">
+                            <Text variant="h4">Skiptafundur</Text>
+                          </GridColumn>
+                          <GridColumn span={['12/12', '6/12']}>
+                            <Input
+                              required
+                              name="meetingLocation"
+                              backgroundColor="blue"
+                              label="Staðsetning skiptafundar"
+                              size="sm"
+                              errorMessage={fieldErrors?.meetingLocation?.[0]}
+                              onChange={(e) =>
+                                setFormState({
+                                  ...formState,
+                                  meetingLocation: e.target.value,
+                                })
+                              }
+                            />
+                          </GridColumn>
+                          <GridColumn span={['12/12', '6/12']}>
+                            <DatePicker
+                              locale="is"
+                              required
+                              name="meetingDate"
+                              backgroundColor="blue"
+                              label="Dagsetning og tími skiptafundar"
+                              size="sm"
+                              timeInputLabel="Klukkan"
+                              showTimeInput={true}
+                              placeholderText=""
+                              selected={
+                                formState.meetingDate
+                                  ? new Date(formState.meetingDate)
+                                  : null
+                              }
+                              errorMessage={fieldErrors?.meetingDate?.[0]}
+                              handleChange={(date) =>
+                                setFormState({
+                                  ...formState,
+                                  meetingDate: date.toISOString(),
+                                })
+                              }
+                            />
+                          </GridColumn>
+                        </GridRow>
+                        <GridRow rowGap={[1, 2]}>
+                          <GridColumn span="12/12">
+                            <Text variant="h4">
+                              Undirritun{' '}
+                              <Text
+                                fontWeight="regular"
+                                color="red600"
+                                as="span"
+                              >
+                                *
+                              </Text>
+                            </Text>
+                            <Text
+                              variant="small"
+                              fontWeight={
+                                fieldErrors?.signature ? 'semiBold' : 'regular'
+                              }
+                              color={
+                                (fieldErrors?.signature && 'red600') ||
+                                'dark400'
                               }
                             >
-                              Stofna skiptafund
-                            </Button>
-                          </Inline>
-                        </GridColumn>
-                      </GridRow>
+                              Fylla þarf út nafn, staðsetningu eða dagsetningu
+                              undirritunar
+                            </Text>
+                          </GridColumn>
+                          <GridColumn span={['12/12', '6/12']}>
+                            <Input
+                              name="signatureName"
+                              backgroundColor="blue"
+                              size="sm"
+                              label="Nafn undirritara"
+                              onChange={(e) =>
+                                setFormState({
+                                  ...formState,
+                                  signature: {
+                                    ...formState.signature,
+                                    name: e.target.value,
+                                  },
+                                })
+                              }
+                            />
+                          </GridColumn>
+                          <GridColumn span={['12/12', '6/12']}>
+                            <Input
+                              name="signatureLocation"
+                              backgroundColor="blue"
+                              size="sm"
+                              label="Staðsetning undirritunar"
+                              onChange={(e) =>
+                                setFormState({
+                                  ...formState,
+                                  signature: {
+                                    ...formState.signature,
+                                    location: e.target.value,
+                                  },
+                                })
+                              }
+                            />
+                          </GridColumn>
+                          <GridColumn span={['12/12', '6/12']}>
+                            <DatePicker
+                              locale="is"
+                              name="signatureDate"
+                              backgroundColor="blue"
+                              label="Dagsetning undirritunar"
+                              size="sm"
+                              placeholderText=""
+                              selected={
+                                formState.signature.date
+                                  ? new Date(formState.signature.date)
+                                  : null
+                              }
+                              handleChange={(date) => {
+                                setFormState({
+                                  ...formState,
+                                  signature: {
+                                    ...formState.signature,
+                                    date: date.toISOString(),
+                                  },
+                                })
+                              }}
+                            />
+                          </GridColumn>
+                          <GridColumn span={['12/12', '6/12']}>
+                            <Input
+                              name="signatureOnBehalfOf"
+                              backgroundColor="blue"
+                              size="sm"
+                              label="Fyrir hönd undirritara"
+                              onChange={(e) =>
+                                setFormState({
+                                  ...formState,
+                                  signature: {
+                                    ...formState.signature,
+                                    onBehalfOf: e.target.value,
+                                  },
+                                })
+                              }
+                            />
+                          </GridColumn>
+                        </GridRow>
+
+                        <GridRow>
+                          <GridColumn span="12/12">
+                            <Inline alignY="center" align="right" space={2}>
+                              <Button
+                                type="submit"
+                                loading={isPending}
+                                icon="share"
+                                iconType="outline"
+                              >
+                                Stofna skiptafund
+                              </Button>
+                            </Inline>
+                          </GridColumn>
+                        </GridRow>
+                      </Stack>
                     </Stack>
-                  </Stack>
-                </Box>
-              </GridColumn>
-            </GridRow>
-          </GridContainer>
+                  </Box>
+                </GridColumn>
+              </GridRow>
+            </GridContainer>
+          </form>
         </Center>
       )}
     </ModalBase>
