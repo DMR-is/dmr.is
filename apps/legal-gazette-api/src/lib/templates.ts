@@ -2,11 +2,14 @@ import { isBase64, isDefined } from 'class-validator'
 
 import { InternalServerErrorException } from '@nestjs/common'
 
+import { ApplicationRequirementStatementEnum } from '@dmr.is/legal-gazette/schemas'
 import { getLogger } from '@dmr.is/logging'
 import { formatDate } from '@dmr.is/utils'
 
 import { AdvertModel, AdvertVersionEnum } from '../modules/advert/advert.model'
 import { TypeIdEnum } from '../modules/type/type.model'
+
+const fullDateFormat = 'd. MMMM yyyy'
 
 export const getSignatureMarkup = ({
   name,
@@ -25,7 +28,7 @@ export const getSignatureMarkup = ({
 
   const getLocationAndDateMarkup = () => {
     if (location && date) {
-      return `<p>${location}, ${formatDate(date, 'dd. MMMM yyyy')}</p>`
+      return `<p>${location}, ${formatDate(date, fullDateFormat)}</p>`
     }
 
     if (location) {
@@ -33,7 +36,7 @@ export const getSignatureMarkup = ({
     }
 
     if (date) {
-      return `<p>${formatDate(date, 'dd. MMMM yyyy')}</p>`
+      return `<p>${formatDate(date, fullDateFormat)}</p>`
     }
 
     return ''
@@ -89,7 +92,7 @@ export const getAdvertHTMLMarkup = (
       const foreclosure = model.foreclosure
 
       markup = `
-        <p>Eftirtalin beiðni um nauðungarsölu til fullnustu kröfu um peningagreiðslu verður tekin fyrir á skrifstofu embættisins ${foreclosure.foreclosureAddress}, ${formatDate(foreclosure.foreclosureDate, 'dd. MMMM yyyy')} kl. ${formatDate(foreclosure.foreclosureDate, 'HH:mm')}  hafi hún ekki áður verið felld niður:</p>
+        <p>Eftirtalin beiðni um nauðungarsölu til fullnustu kröfu um peningagreiðslu verður tekin fyrir á skrifstofu embættisins ${foreclosure.foreclosureAddress}, ${formatDate(foreclosure.foreclosureDate, fullDateFormat)} kl. ${formatDate(foreclosure.foreclosureDate, 'HH:mm')}  hafi hún ekki áður verið felld niður:</p>
 
         ${foreclosure.properties
           .map((property, i) => {
@@ -151,7 +154,7 @@ export const getAdvertHTMLMarkup = (
       }
 
       markup = `
-          <p>Með úrskurði ${model.courtDistrict?.title} uppkveðnum ${formatDate(model.judgementDate, 'dd. MMMM yyyy')} var eftirtalið bú tekið til gjaldþrotaskipta. Sama dag var undirritaður skipaður skiptastjóri í búinu. Frestdagur við gjaldþrotaskiptin er tilgreindur við nafn viðkomandi bús.</p>
+          <p>Með úrskurði ${model.courtDistrict?.title} uppkveðnum ${formatDate(model.judgementDate, fullDateFormat)} var eftirtalið bú tekið til gjaldþrotaskipta. Sama dag var undirritaður skipaður skiptastjóri í búinu. Frestdagur við gjaldþrotaskiptin er tilgreindur við nafn viðkomandi bús.</p>
           <table>
             <tbody>
               <tr>
@@ -169,12 +172,12 @@ export const getAdvertHTMLMarkup = (
                   <br />
                 </td>
                 <td align="left">
-                  ${formatDate(model.settlement.settlementDeadline, 'dd. MMMM yyyy')}
+                  ${formatDate(model.settlement.settlementDeadline, fullDateFormat)}
                 </td>
                 <td align="left">
                   ${formatDate(model.divisionMeetingDate, 'EEEE')}
                   <br />
-                  ${formatDate(model.divisionMeetingDate, 'dd. MMMM yyyy')}
+                  ${formatDate(model.divisionMeetingDate, fullDateFormat)}
                   <br />
                   kl. ${formatDate(model.divisionMeetingDate, 'HH:mm')}
                   <br />
@@ -183,7 +186,7 @@ export const getAdvertHTMLMarkup = (
             </tbody>
           </table>
           <p>Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur búinu eða eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu innköllunar þessarar.</p>
-          <p>Kröfulýsingar skulu sendar skiptastjóra að ${model.settlement.liquidatorLocation}</p>
+          <p>Kröfulýsingar skulu sendar skiptastjóra ${model.settlement.liquidatorRecallStatementType === ApplicationRequirementStatementEnum.CUSTOMLIQUIDATOREMAIL ? 'með rafrænum hætti á' : 'að'} ${model.settlement.liquidatorRecallStatementLocation}</p>
           <p>Skiptafundur til að fjalla um skrá um lýstar kröfur og ráðstöfun á eignum og réttindum búsins verður haldinn á skrifstofu skiptastjóra að ${model.divisionMeetingLocation}, á ofangreindum tíma.</p>
           <p>Komi ekkert fram um eignir í búinu mun skiptum lokið á þeim skiptafundi með vísan til 155. gr. laga nr. 21/1991 um gjaldþrotaskipti o.fl. Skrá um lýstar kröfur mun liggja frammi á skrifstofu skiptastjóra síðustu viku fyrir skiptafundinn.</p>
           `
@@ -199,7 +202,7 @@ export const getAdvertHTMLMarkup = (
       }
 
       markup = `
-          <p>Með úrskurði ${model.courtDistrict?.title} uppkveðnum ${formatDate(model.judgementDate, 'dd. MMMM yyyy')} var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:</p>
+          <p>Með úrskurði ${model.courtDistrict?.title} uppkveðnum ${formatDate(model.judgementDate, fullDateFormat)} var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:</p>
           <table>
             <tbody>
               <tr>
@@ -213,11 +216,11 @@ export const getAdvertHTMLMarkup = (
                   síðasta heimilisfang:<br />
                   ${model.settlement.settlementAddress}
                 </td>
-                <td>${formatDate(model.settlement.settlementDateOfDeath, 'dd. MMMM yyyy')}</td>
+                <td>${formatDate(model.settlement.settlementDateOfDeath, fullDateFormat)}</td>
               </tr>
             </tbody>
           </table>
-          <p>Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur framangreindu dánarbúi eða telja til eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu þessarar innköllunar. Kröfulýsingar skulu sendar skiptastjóra að ${model.settlement.liquidatorLocation}.</p>
+          <p>Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur framangreindu dánarbúi eða telja til eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu þessarar innköllunar. Kröfulýsingar skulu sendar skiptastjóra ${model.settlement.liquidatorRecallStatementType === ApplicationRequirementStatementEnum.CUSTOMLIQUIDATOREMAIL ? 'með rafrænum hætti á' : 'að'} ${model.settlement.liquidatorRecallStatementLocation}.</p>
           `
       break
     }
@@ -256,7 +259,7 @@ export const getAdvertHTMLMarkup = (
             </tr>
             <tr>
               <td>${model.settlement.settlementName}</td>
-              <td>${formatDate(model.divisionMeetingDate, 'dd. MMMM yyyy')}</td>
+              <td>${formatDate(model.divisionMeetingDate, fullDateFormat)}</td>
             </tr>
             <tr>
               <td>kt: ${model.settlement.settlementNationalId}</td>
@@ -288,7 +291,7 @@ export const getAdvertHTMLMarkup = (
                 kt: ${model.settlement.settlementNationalId},<br />
                 ${model.settlement.settlementAddress}</td>
               <td>
-                ${formatDate(model.divisionMeetingDate, 'dd. MMMM yyyy')},<br />
+                ${formatDate(model.divisionMeetingDate, fullDateFormat)},<br />
                 kl. ${formatDate(model.divisionMeetingDate, 'HH:mm')}
               </td>
             </tr>
@@ -307,7 +310,7 @@ export const getAdvertHTMLMarkup = (
       }
 
       markup = `
-        <p>Með úrskurði héraðsdóms Reykjavíkur uppkveðnum ${formatDate(model.judgementDate, 'dd. MMMM yyyy')} var neðangreint bú tekið til gjaldþrotaskipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri í þrotabúinu.</p>
+        <p>Með úrskurði héraðsdóms Reykjavíkur uppkveðnum ${formatDate(model.judgementDate, fullDateFormat)} var neðangreint bú tekið til gjaldþrotaskipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri í þrotabúinu.</p>
         <p>Engar eignir fundust í búinu og var skiptum í því lokið 17. janúar 2025 samkvæmt 155. gr. laga nr. 21/1991 án þess að greiðsla fengist upp í lýstar kröfur, auk áfallinna vaxta og kostnaðar eftir úrskurðardag gjaldþrotaskipta.</p>
         <table>
           <tbody>
@@ -357,7 +360,7 @@ export const getAdvertHTMLMarkup = (
 
   return `
   <div class="advert legal-gazette">
-    <p class="advertSerial">${publishing.publishedAt ? `Útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}` : `Áætlaður útgáfud.: ${formatDate(publishingDate, 'dd. MMMM yyyy')}`}</p>
+    <p class="advertSerial">${publishing.publishedAt ? `Útgáfud.: ${formatDate(publishingDate, fullDateFormat)}` : `Áætlaður útgáfud.: ${formatDate(publishingDate, fullDateFormat)}`}</p>
     <h1 class="advertHeading">${model.title}</h1>
 
     ${additionalMarkup}

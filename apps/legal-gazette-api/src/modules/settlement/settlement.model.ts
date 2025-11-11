@@ -1,5 +1,6 @@
 import { Column, DataType, HasMany } from 'sequelize-typescript'
 
+import { ApplicationRequirementStatementEnum } from '@dmr.is/legal-gazette/schemas'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../../lib/constants'
@@ -15,6 +16,8 @@ type SettlementAttributes = {
   settlementDeadline: Date | null
   settlementDateOfDeath: Date | null
   settlementDeclaredClaims: number | null
+  liquidatorRecallStatementLocation?: string | null
+  liquidatorRecallStatementType?: string | null
 }
 
 export type SettlementCreateAttributes = Omit<
@@ -41,6 +44,20 @@ export class SettlementModel extends BaseModel<
     allowNull: false,
   })
   liquidatorLocation!: string
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    defaultValue: null,
+  })
+  liquidatorRecallStatementLocation!: string | null
+
+  @Column({
+    type: DataType.ENUM(...Object.values(ApplicationRequirementStatementEnum)),
+    defaultValue: ApplicationRequirementStatementEnum.LIQUIDATORLOCATION,
+    allowNull: false,
+  })
+  liquidatorRecallStatementType!: ApplicationRequirementStatementEnum
 
   @Column({
     type: DataType.TEXT,
@@ -94,6 +111,9 @@ export class SettlementModel extends BaseModel<
       id: model.id,
       liquidatorName: model.liquidatorName,
       liquidatorLocation: model.liquidatorLocation,
+      liquidatorRecallStatementLocation:
+        model.liquidatorRecallStatementLocation ?? undefined,
+      liquidatorRecallStatementType: model.liquidatorRecallStatementType,
       settlementName: model.settlementName,
       settlementNationalId: model.settlementNationalId,
       settlementAddress: model.settlementAddress,

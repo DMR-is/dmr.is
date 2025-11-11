@@ -167,6 +167,10 @@ export class ApplicationService implements IApplicationService {
         liquidatorFields: {
           name: application.liquidatorName,
           location: application.liquidatorLocation,
+          recallRequirementStatementLocation:
+            application.liquidatorRecallStatementLocation,
+          recallRequirementStatementType:
+            application.liquidatorRecallStatementType,
         },
         divisionMeetingFields: {
           meetingDate: application.divisionMeetingDate?.toISOString(),
@@ -217,6 +221,12 @@ export class ApplicationService implements IApplicationService {
       settlement: {
         liquidatorName: requiredFields.fields.liquidatorFields?.name,
         liquidatorLocation: requiredFields.fields.liquidatorFields?.location,
+        liquidatorRecallStatementType:
+          requiredFields.fields.liquidatorFields
+            ?.recallRequirementStatementType,
+        liquidatorRecallStatementLocation:
+          requiredFields.fields.liquidatorFields
+            ?.recallRequirementStatementLocation,
         settlementAddress: requiredFields.fields.settlementFields?.address,
         settlementName: requiredFields.fields.settlementFields?.name,
         settlementNationalId:
@@ -440,6 +450,10 @@ export class ApplicationService implements IApplicationService {
       communicationChannels: body.communicationChannels,
       liquidatorName: body.recallFields?.liquidatorFields?.name,
       liquidatorLocation: body.recallFields?.liquidatorFields?.location,
+      liquidatorRecallStatementLocation:
+        body.recallFields?.liquidatorFields?.recallRequirementStatementLocation,
+      liquidatorRecallStatementType:
+        body.recallFields?.liquidatorFields?.recallRequirementStatementType,
       divisionMeetingDate: body.recallFields?.divisionMeetingFields?.meetingDate
         ? new Date(body.recallFields.divisionMeetingFields.meetingDate)
         : undefined,

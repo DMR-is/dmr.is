@@ -17,7 +17,10 @@ import { CommunicationChannelCreateAttributes } from '../communication-channel/c
 import { CourtDistrictModel } from '../court-district/court-district.model'
 import { TypeIdEnum, TypeModel } from '../type/type.model'
 import { ApplicationDetailedDto, ApplicationDto } from './dto/application.dto'
-import { ApplicationStatusEnum } from './contants'
+import {
+  ApplicationRequirementStatementEnum,
+  ApplicationStatusEnum,
+} from './contants'
 
 export enum ApplicationTypeEnum {
   COMMON = 'COMMON',
@@ -54,6 +57,8 @@ export type ApplicationAttributes = {
   divisionMeetingLocation: string | null
   publishingDates: Date[]
   communicationChannels: CommunicationChannelCreateAttributes[]
+  liquidatorRecallStatementLocation?: string | null
+  liquidatorRecallStatementType?: ApplicationRequirementStatementEnum | null
 }
 
 export type ApplicationCreateAttributes = {
@@ -84,6 +89,8 @@ export type ApplicationCreateAttributes = {
   divisionMeetingLocation?: string | null
   publishingDates?: Date[]
   communicationChannels?: CommunicationChannelCreateAttributes[]
+  liquidatorRecallStatementLocation?: string | null
+  liquidatorRecallStatementType?: ApplicationRequirementStatementEnum | null
 }
 
 @BaseTable({ tableName: LegalGazetteModels.APPLICATION })
@@ -334,6 +341,20 @@ export class ApplicationModel extends BaseModel<
     allowNull: true,
     defaultValue: null,
   })
+  liquidatorRecallStatementLocation!: string | null
+
+  @Column({
+    type: DataType.ENUM(...Object.values(ApplicationRequirementStatementEnum)),
+    defaultValue: ApplicationRequirementStatementEnum.LIQUIDATORLOCATION,
+    allowNull: false,
+  })
+  liquidatorRecallStatementType!: ApplicationRequirementStatementEnum
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    defaultValue: null,
+  })
   liquidatorOnBehalfOf!: string | null
 
   @Column({
@@ -444,6 +465,10 @@ export class ApplicationModel extends BaseModel<
         liquidatorFields: {
           name: model.liquidatorName ?? undefined,
           location: model.liquidatorLocation ?? undefined,
+          recallRequirementStatementLocation:
+            model.liquidatorRecallStatementLocation ?? undefined,
+          recallRequirementStatementType:
+            model.liquidatorRecallStatementType ?? undefined,
         },
         courtAndJudgmentFields: {
           courtDistrictId: model.courtDistrictId ?? undefined,

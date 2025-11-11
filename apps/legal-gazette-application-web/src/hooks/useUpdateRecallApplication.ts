@@ -2,7 +2,10 @@ import { useCallback } from 'react'
 
 import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 
-import { UpdateRecallFieldsDto } from '../gen/fetch'
+import {
+  ApplicationRequirementStatementEnum,
+  UpdateRecallFieldsDto,
+} from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
 import { UpdateOptions, useUpdateApplication } from './useUpdateApplication'
 
@@ -155,6 +158,78 @@ export const useUpdateRecallApplication = (applicationId: string) => {
     ],
   )
 
+  const updateLiquidatorRecallRequirementStatementType = useCallback(
+    (recallRequirementStatementType?: ApplicationRequirementStatementEnum) => {
+      if (
+        recallRequirementStatementType ===
+        application?.recallFields?.liquidatorFields
+          ?.recallRequirementStatementType
+      ) {
+        return
+      }
+
+      if (
+        recallRequirementStatementType ===
+        ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
+      ) {
+        const liquidatorLocation =
+          application?.recallFields?.liquidatorFields?.location
+
+        updateLiquidatorRecallRequirementStatementLocation(liquidatorLocation)
+      } else {
+        updateLiquidatorRecallRequirementStatementLocation('')
+      }
+
+      updateApplication(
+        {
+          recallFields: {
+            liquidatorFields: {
+              recallRequirementStatementType: recallRequirementStatementType,
+            },
+          },
+        },
+        {
+          successMessage: 'Staðsetning kröfulýsingar uppfærð',
+          errorMessage: 'Ekki tókst að uppfæra kröfulýsingar staðsetningu',
+        },
+      )
+    },
+    [
+      updateApplication,
+      application?.recallFields?.liquidatorFields
+        ?.recallRequirementStatementType,
+    ],
+  )
+
+  const updateLiquidatorRecallRequirementStatementLocation = useCallback(
+    (recallRequirementStatementLocation?: string) => {
+      if (
+        recallRequirementStatementLocation ===
+        application?.recallFields?.liquidatorFields
+          ?.recallRequirementStatementLocation
+      ) {
+        return
+      }
+
+      updateApplication(
+        {
+          recallFields: {
+            liquidatorFields: { recallRequirementStatementLocation },
+          },
+        },
+        {
+          successMessage: 'Staðsetning kröfulýsingar uppfærð',
+          errorMessage: 'Ekki tókst að uppfæra kröfulýsingar staðsetningu',
+        },
+      )
+    },
+    [
+      updateApplication,
+      application?.recallFields?.liquidatorFields
+        ?.recallRequirementStatementLocation,
+    ],
+  )
+
   const updateSettlementName = useCallback(
     (name: string, options?: UpdateOptions) => {
       if (name === application?.recallFields.settlementFields.name) {
@@ -266,6 +341,8 @@ export const useUpdateRecallApplication = (applicationId: string) => {
     updateDivisionMeetingLocation,
     updateLiquidatorName,
     updateLiquidatorLocation,
+    updateLiquidatorRecallRequirementStatementType,
+    updateLiquidatorRecallRequirementStatementLocation,
     updateSettlementName,
     updateSettlementNationalId,
     updateSettlementAddress,

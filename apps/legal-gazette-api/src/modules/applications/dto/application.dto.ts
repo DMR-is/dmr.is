@@ -23,7 +23,10 @@ import { CategoryDto } from '../../category/dto/category.dto'
 import { CreateCommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
 import { TypeDto } from '../../type/dto/type.dto'
 import { ApplicationTypeEnum } from '../application.model'
-import { ApplicationStatusEnum } from '../contants'
+import {
+  ApplicationRequirementStatementEnum,
+  ApplicationStatusEnum,
+} from '../contants'
 
 export class ApplicationSignatureDto {
   @ApiProperty({ type: String, required: false })
@@ -120,6 +123,25 @@ export class ApplicationLiquidationFieldsDto {
   @IsOptional()
   @IsString()
   location?: string
+
+  @ApiProperty({
+    enum: ApplicationRequirementStatementEnum,
+    enumName: 'ApplicationRequirementStatementEnum',
+    default: ApplicationRequirementStatementEnum.LIQUIDATORLOCATION,
+    required: false,
+  })
+  @IsEnum(ApplicationRequirementStatementEnum)
+  @IsOptional()
+  recallRequirementStatementType?: ApplicationRequirementStatementEnum
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    description: 'Location to send recall requirement (Kröfulýsing)',
+  })
+  @IsOptional()
+  @IsString()
+  recallRequirementStatementLocation?: string
 }
 
 export class UpdateApplicationLiquidationFieldsDto extends PartialType(

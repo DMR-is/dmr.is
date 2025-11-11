@@ -3305,7 +3305,9 @@
           "settlementAddress": { "type": "string" },
           "declaredClaims": { "type": "number" },
           "settlementDeadline": { "type": "string", "nullable": true },
-          "settlementDateOfDeath": { "type": "string", "nullable": true }
+          "settlementDateOfDeath": { "type": "string", "nullable": true },
+          "liquidatorRecallStatementLocation": { "type": "string" },
+          "liquidatorRecallStatementType": { "type": "string" }
         },
         "required": [
           "id",
@@ -3611,11 +3613,31 @@
           "judgmentDate": { "type": "string" }
         }
       },
+      "ApplicationRequirementStatementEnum": {
+        "type": "string",
+        "enum": [
+          "LIQUIDATOR_LOCATION",
+          "CUSTOM_LIQUIDATOR_LOCATION",
+          "CUSTOM_LIQUIDATOR_EMAIL"
+        ]
+      },
       "ApplicationLiquidationFieldsDto": {
         "type": "object",
         "properties": {
           "name": { "type": "string" },
-          "location": { "type": "string" }
+          "location": { "type": "string" },
+          "recallRequirementStatementType": {
+            "default": "LIQUIDATOR_LOCATION",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationRequirementStatementEnum"
+              }
+            ]
+          },
+          "recallRequirementStatementLocation": {
+            "type": "string",
+            "description": "Location to send recall requirement (Kröfulýsing)"
+          }
         }
       },
       "ApplicationSettlementDto": {
@@ -3747,7 +3769,19 @@
         "type": "object",
         "properties": {
           "name": { "type": "string" },
-          "location": { "type": "string" }
+          "location": { "type": "string" },
+          "recallRequirementStatementType": {
+            "default": "LIQUIDATOR_LOCATION",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationRequirementStatementEnum"
+              }
+            ]
+          },
+          "recallRequirementStatementLocation": {
+            "type": "string",
+            "description": "Location to send recall requirement (Kröfulýsing)"
+          }
         }
       },
       "UpdateApplicationSettlementDto": {

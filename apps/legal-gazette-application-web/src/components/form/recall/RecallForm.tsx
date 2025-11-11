@@ -14,6 +14,7 @@ import { SignatureFields } from '../fields/SignatureFields'
 import { RecallAdvertFields } from './fields/RecallAdvertFields'
 import { RecallDivisionFields } from './fields/RecallDivisionFields'
 import { RecallLiquidatorFields } from './fields/RecallLiquidatorFields'
+import { RecallRequirementStatementFields } from './fields/RecallRequirementStatementFields'
 import { RecallSettlementFields } from './fields/RecallSettlementFields'
 
 export const RecallForm = (props: RecallFormProps) => {
@@ -44,6 +45,7 @@ export const RecallForm = (props: RecallFormProps) => {
             <RecallAdvertFields />
             <RecallSettlementFields />
             <RecallLiquidatorFields />
+            <RecallRequirementStatementFields />
             <PublishingFields
               additionalTitle="innköllunar"
               alert={
