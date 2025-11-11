@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { NationalRegistryModule } from '@dmr.is/clients/national-registry'
+
 import { AdvertModel } from '../advert/advert.model'
 import { AdvertModule } from '../advert/advert.module'
 import { CaseModel } from '../case/case.model'
@@ -14,6 +16,7 @@ import { IApplicationService } from './application.service.interface'
 @Module({
   imports: [
     AdvertModule,
+    NationalRegistryModule,
     SequelizeModule.forFeature([
       CaseModel,
       AdvertModel,

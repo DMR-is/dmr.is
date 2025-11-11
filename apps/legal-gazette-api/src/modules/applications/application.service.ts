@@ -13,6 +13,10 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import {
+  INationalRegistryService,
+  PersonDto,
+} from '@dmr.is/clients/national-registry'
+import {
   commonApplicationValidationSchema,
   recallApplicationValidationSchema,
 } from '@dmr.is/legal-gazette/schemas'
@@ -60,6 +64,8 @@ export class ApplicationService implements IApplicationService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IAdvertService) private readonly advertService: IAdvertService,
+    @Inject(INationalRegistryService)
+    private readonly nationalRegistryService: INationalRegistryService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     @InjectModel(ApplicationModel)
@@ -72,7 +78,7 @@ export class ApplicationService implements IApplicationService {
 
   private async submitCommonApplication(
     application: ApplicationModel,
-    user: DMRUser,
+    submittee: PersonDto,
   ) {
     const check = commonApplicationValidationSchema.safeParse({
       signature: {
@@ -119,8 +125,8 @@ export class ApplicationService implements IApplicationService {
       categoryId: requiredFields.fields.categoryId,
       caption: requiredFields.fields.caption,
       additionalText: requiredFields.additionalText,
-      createdBy: user.fullName,
-      createdByNationalId: user.nationalId,
+      createdBy: submittee.nafn,
+      createdByNationalId: submittee.kennitala,
       signatureName: requiredFields.signature?.name,
       signatureOnBehalfOf: requiredFields.signature?.onBehalfOf,
       signatureLocation: requiredFields.signature?.location,
@@ -138,7 +144,7 @@ export class ApplicationService implements IApplicationService {
 
   private async submitRecallApplication(
     application: ApplicationModel,
-    user: DMRUser,
+    submittee: PersonDto,
   ) {
     const check = recallApplicationValidationSchema.safeParse({
       signature: {
@@ -204,8 +210,8 @@ export class ApplicationService implements IApplicationService {
           ? RECALL_BANKRUPTCY_ADVERT_TYPE_ID
           : RECALL_DECEASED_ADVERT_TYPE_ID,
       categoryId: RECALL_CATEGORY_ID,
-      createdBy: user.fullName,
-      createdByNationalId: user.nationalId,
+      createdBy: submittee.nafn,
+      createdByNationalId: submittee.kennitala,
       signatureName: requiredFields.signature?.name,
       signatureOnBehalfOf: requiredFields.signature?.onBehalfOf,
       signatureLocation: requiredFields.signature?.location,
@@ -589,13 +595,24 @@ export class ApplicationService implements IApplicationService {
       where: { id: applicationId, submittedByNationalId: user.nationalId },
     })
 
+    const { person: submittee } =
+      await this.nationalRegistryService.getPersonByNationalId(user.nationalId)
+
+    if (!submittee) {
+      this.logger.warn(`Could not find submittee in national registry`, {
+        context: 'ApplicationService',
+        category: 'legal-gazette',
+      })
+      throw new InternalServerErrorException('Could not verify submittee')
+    }
+
     switch (application.applicationType) {
       case ApplicationTypeEnum.COMMON:
-        await this.submitCommonApplication(application, user)
+        await this.submitCommonApplication(application, submittee)
         break
       case ApplicationTypeEnum.RECALL_BANKRUPTCY:
       case ApplicationTypeEnum.RECALL_DECEASED:
-        await this.submitRecallApplication(application, user)
+        await this.submitRecallApplication(application, submittee)
         break
       default:
         this.logger.warn(
