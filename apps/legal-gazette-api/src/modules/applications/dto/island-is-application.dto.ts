@@ -1,9 +1,11 @@
 import { Expose, Transform, Type } from 'class-transformer'
 import {
+  ArrayMaxSize,
   ArrayMinSize,
   IsArray,
   IsBase64,
   IsDateString,
+  IsOptional,
   IsString,
   IsUUID,
   ValidateNested,
@@ -46,23 +48,28 @@ export class IslandIsSubmitCommonApplicationDto {
   @IsString()
   caption!: string
 
-  @ApiProperty({ type: String, required: false, nullable: true })
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
   @IsString()
-  additionalText?: string | null
+  additionalText?: string
 
   @ApiProperty({ type: String, required: false })
+  @IsOptional()
   @IsString()
   signatureName?: string
 
   @ApiProperty({ type: String, required: false })
+  @IsOptional()
   @IsString()
   signatureOnBehalfOf?: string
 
   @ApiProperty({ type: String, required: false })
+  @IsOptional()
   @IsString()
   signatureLocation?: string
 
   @ApiProperty({ type: String, required: false })
+  @IsOptional()
   @IsDateString()
   signatureDate?: string
 
@@ -75,8 +82,9 @@ export class IslandIsSubmitCommonApplicationDto {
 
   @ApiProperty({ type: [String] })
   @IsArray()
-  @IsDateString()
-  @ValidateNested({ each: true })
+  @IsDateString({}, { each: true })
+  @ArrayMinSize(1)
+  @ArrayMaxSize(3)
   publishingDates!: string[]
 }
 
