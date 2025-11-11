@@ -15,14 +15,15 @@ import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
 
 export const RecallRequirementStatementFields = () => {
-  const { getValues, setValue } = useFormContext<RecallApplicationSchema>()
+  const { getValues, setValue, watch } =
+    useFormContext<RecallApplicationSchema>()
   const {
     updateLiquidatorRecallRequirementStatementType,
     updateLiquidatorRecallRequirementStatementLocation,
   } = useUpdateRecallApplication(getValues('metadata.applicationId'))
 
   useEffect(() => {
-    const liquidatorLocation = getValues(
+    const liquidatorLocation = watch(
       RecallApplicationInputFields.LIQUIDATOR_LOCATION,
     )
     const customLiquidatorType = getValues(
@@ -39,7 +40,7 @@ export const RecallRequirementStatementFields = () => {
       RecallApplicationInputFields.RECALL_REQUIREMENT_STATEMENT_LOCATION,
       liquidatorLocation,
     )
-  }, [getValues(RecallApplicationInputFields.LIQUIDATOR_LOCATION)])
+  }, [watch(RecallApplicationInputFields.LIQUIDATOR_LOCATION)])
 
   return (
     <GridRow rowGap={[2, 3]}>
