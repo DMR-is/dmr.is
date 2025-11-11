@@ -45,7 +45,7 @@ export const RecallRequirementStatementFields = () => {
   return (
     <GridRow rowGap={[2, 3]}>
       <GridColumn span="12/12">
-        <Text variant="h3">Hvert skal senda kröfulýsingar</Text>
+        <Text variant="h4">Hvert skal senda kröfulýsingar</Text>
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
         <SelectController

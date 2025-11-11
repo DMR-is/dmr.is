@@ -96,7 +96,7 @@ export const CommonAdvertFields = () => {
 
   return (
     <Stack space={[1, 2]}>
-      <Text variant="h3">Grunnupplýsingar</Text>
+      <Text variant="h4">Grunnupplýsingar</Text>
       <GridRow rowGap={[2, 3]}>
         <GridColumn span={['12/12', '6/12']}>
           <SelectController
@@ -127,7 +127,7 @@ export const CommonAdvertFields = () => {
           />
         </GridColumn>
         <GridColumn span="12/12">
-          <Text marginBottom={1} variant="h3">
+          <Text marginBottom={1} variant="h4">
             Meginmál
           </Text>
           <Editor

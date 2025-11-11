@@ -31,7 +31,7 @@ export const SignatureFields = () => {
   return (
     <Box id="signature">
       <Stack space={[1, 2]}>
-        <Text variant="h3">Undirritun</Text>
+        <Text variant="h4">Undirritun</Text>
         {signatureError && (
           <AlertMessage
             type="error"

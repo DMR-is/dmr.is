@@ -100,7 +100,7 @@ export const CommunicationChannelFields = () => {
     <Box id="communicationChannels" component="div" onFocus={handleFirstFocus}>
       <GridRow rowGap={[2, 3]}>
         <GridColumn span="12/12">
-          <Text variant="h3">Samskiptaleiðir</Text>
+          <Text variant="h4">Samskiptaleiðir</Text>
         </GridColumn>
         <GridColumn span="12/12">
           <Stack space={[2, 3]}>
@@ -257,7 +257,11 @@ export const CommunicationChannelFields = () => {
             ) : (
               <Text>Engar samskiptaleiðir valdar</Text>
             )}
-            <Button onClick={() => setToggleAdd(true)}>
+            <Button
+              size="medium"
+              icon="filter"
+              onClick={() => setToggleAdd(true)}
+            >
               Bæta við samskiptaleið
             </Button>
           </Stack>

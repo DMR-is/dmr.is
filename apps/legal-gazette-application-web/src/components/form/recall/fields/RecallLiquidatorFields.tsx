@@ -21,7 +21,7 @@ export const RecallLiquidatorFields = () => {
   return (
     <GridRow rowGap={[2, 3]}>
       <GridColumn span="12/12">
-        <Text variant="h3">Upplýsingar um skiptastjóra</Text>
+        <Text variant="h4">Upplýsingar um skiptastjóra</Text>
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
         <InputController
