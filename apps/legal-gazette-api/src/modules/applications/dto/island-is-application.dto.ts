@@ -82,10 +82,9 @@ export class IslandIsSubmitCommonApplicationDto {
 
   @ApiProperty({ type: [String] })
   @IsArray()
-  @IsDateString()
+  @IsDateString({}, { each: true })
   @ArrayMinSize(1)
   @ArrayMaxSize(3)
-  @ValidateNested({ each: true })
   publishingDates!: string[]
 }
 
