@@ -109,6 +109,11 @@ export const divisionMeetingFieldsSchema = z.object({
     }),
 })
 
+export const recallDeceasedDivisionMeetingFieldsSchema = z.object({
+  meetingDate: z.string().nullable().optional(),
+  meetingLocation: z.string().nullable().optional(),
+})
+
 export const divisionMeetingValidationFieldsSchema = z.object({
   meetingDate: z.iso.datetime().refine((date) => isDateString(date), {
     message: 'Fundardagur er nauðsynlegur',
@@ -161,7 +166,7 @@ export const recallDeceasedApplicationFieldsSchema = z.object({
       }),
   }),
   liquidatorFields: liquidatorFieldsSchema,
-  divisionMeetingFields: divisionMeetingFieldsSchema.optional(),
+  divisionMeetingFields: recallDeceasedDivisionMeetingFieldsSchema.optional(),
 })
 
 export const recallDeceasedApplicationValidationFieldsSchema = z.object({
@@ -175,7 +180,7 @@ export const recallDeceasedApplicationValidationFieldsSchema = z.object({
       }),
   }),
   liquidatorFields: liquidatorValidationFieldsSchema,
-  divisionMeetingFields: divisionMeetingValidationFieldsSchema.optional(),
+  divisionMeetingFields: recallDeceasedDivisionMeetingFieldsSchema.optional(),
 })
 
 export const recallApplicationFieldsSchema = z.discriminatedUnion('type', [

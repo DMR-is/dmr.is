@@ -19,6 +19,7 @@ import {
   liquidatorFieldsSchema,
   recallApplicationFieldsSchema,
   recallApplicationSchema,
+  recallDeceasedDivisionMeetingFieldsSchema,
   settlementFieldsSchema,
 } from './recall'
 
@@ -62,6 +63,10 @@ export type LiquidatorFieldsSchema = z.infer<typeof liquidatorFieldsSchema>
 
 export type DivisionMeetingFieldsSchema = z.infer<
   typeof divisionMeetingFieldsSchema
+>
+
+export type RecallDeceasedDivisionMeetingFieldsSchema = z.infer<
+  typeof recallDeceasedDivisionMeetingFieldsSchema
 >
 
 export type RecallApplicationFieldsSchema = z.infer<
