@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { StatusController } from './status.controller'
-import { StatusModel } from './status.model'
+import { StatusModel } from '../../models/status.model'
 
 @Module({
   imports: [SequelizeModule.forFeature([StatusModel])],

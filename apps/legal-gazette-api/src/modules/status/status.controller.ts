@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
 import { GetStatusesDto, StatusDto } from './dto/status.dto'
-import { StatusModel } from './status.model'
+import { StatusModel } from '../../models/status.model'
 
 @Controller({
   path: 'statuses',

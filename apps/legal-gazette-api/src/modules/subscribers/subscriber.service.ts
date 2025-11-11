@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { SubscriberDto } from './dto/subscriber.dto'
-import { SubscriberModel } from './subscriber.model'
+import { SubscriberModel } from '../../models/subscriber.model'
 import { ISubscriberService } from './subscriber.service.interface'
 
 @Injectable()
@@ -18,9 +18,7 @@ export class SubscriberService implements ISubscriberService {
     })
 
     if (!subscriber) {
-      throw new NotFoundException(
-        `Subscriber not found`,
-      )
+      throw new NotFoundException(`Subscriber not found`)
     }
 
     return subscriber.fromModel()

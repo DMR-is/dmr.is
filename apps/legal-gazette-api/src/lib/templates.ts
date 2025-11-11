@@ -6,8 +6,8 @@ import { ApplicationRequirementStatementEnum } from '@dmr.is/legal-gazette/schem
 import { getLogger } from '@dmr.is/logging'
 import { formatDate } from '@dmr.is/utils'
 
-import { AdvertModel, AdvertVersionEnum } from '../modules/advert/advert.model'
-import { TypeIdEnum } from '../modules/type/type.model'
+import { AdvertModel, AdvertVersionEnum } from '../models/advert.model'
+import { TypeIdEnum } from '../models/type.model'
 
 const fullDateFormat = 'd. MMMM yyyy'
 

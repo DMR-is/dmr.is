@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { SettlementController } from './settlement.controller'
-import { SettlementModel } from './settlement.model'
+import { SettlementModel } from '../../models/settlement.model'
 import { SettlementService } from './settlement.service'
 import { ISettlementService } from './settlement.service.interface'
 

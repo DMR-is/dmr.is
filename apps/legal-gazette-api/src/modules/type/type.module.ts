@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { TypeController } from './type.controller'
-import { TypeModel } from './type.model'
+import { TypeModel } from '../../models/type.model'
 
 @Module({
   imports: [SequelizeModule.forFeature([TypeModel])],

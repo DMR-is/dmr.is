@@ -7,7 +7,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ITBRService } from '../tbr/tbr.service.interface'
-import { TBRTransactionModel } from '../tbr-transaction/tbr-transactions.model'
+import { TBRTransactionModel } from '../../models/tbr-transactions.model'
 
 const LOGGING_CONTEXT = 'AdvertPaymentService'
 

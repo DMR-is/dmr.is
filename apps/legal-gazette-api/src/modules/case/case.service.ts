@@ -9,7 +9,7 @@ import {
   CreateCaseDto,
   GetCasesDto,
 } from './dto/case.dto'
-import { CaseModel } from './case.model'
+import { CaseModel } from '../../models/case.model'
 import { ICaseService } from './case.service.interface'
 
 @Injectable()

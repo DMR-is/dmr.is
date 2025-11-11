@@ -5,13 +5,13 @@ import { Controller, Get, Param, Query } from '@nestjs/common'
 import { LGResponse } from '../../decorators/lg-response.decorator'
 import { UNASSIGNABLE_CATEGORY_IDS } from '../../lib/constants'
 import { BaseEntityController } from '../base-entity/base-entity.controller'
-import { TypeModel } from '../type/type.model'
+import { TypeModel } from '../../models/type.model'
 import {
   CategoryDto,
   GetCategoriesDto,
   GetCategoriesQueryDto,
 } from './dto/category.dto'
-import { CategoryModel } from './category.model'
+import { CategoryModel } from '../../models/category.model'
 
 @Controller({
   path: 'categories',

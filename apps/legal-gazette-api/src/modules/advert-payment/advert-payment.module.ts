@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { TBRModule } from '../tbr/tbr.module'
-import { TBRTransactionModel } from '../tbr-transaction/tbr-transactions.model'
+import { TBRTransactionModel } from '../../models/tbr-transactions.model'
 import { AdvertPaymentService } from './advert-payment.service'
 
 @Module({

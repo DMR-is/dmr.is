@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CategoryController } from './category.controller'
-import { CategoryModel } from './category.model'
+import { CategoryModel } from '../../models/category.model'
 
 @Module({
   imports: [SequelizeModule.forFeature([CategoryModel])],

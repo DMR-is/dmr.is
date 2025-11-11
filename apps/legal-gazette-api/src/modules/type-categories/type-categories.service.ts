@@ -3,8 +3,8 @@ import { Op } from 'sequelize'
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { CategoryModel } from '../category/category.model'
-import { TypeModel } from '../type/type.model'
+import { CategoryModel } from '../../models/category.model'
+import { TypeModel } from '../../models/type.model'
 import {
   TypesWithCategoriesResponseDto,
   TypeWithCategoriesQueryDto,

@@ -11,8 +11,8 @@ import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { LegalGazetteEvents } from '../../lib/constants'
 import { mapVersionToIndex } from '../../lib/utils'
-import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
-import { StatusIdEnum } from '../status/status.model'
+import { AdvertModel, AdvertVersionEnum } from '../../models/advert.model'
+import { StatusIdEnum } from '../../models/status.model'
 import {
   GetPublicationsDto,
   GetPublicationsQueryDto,
@@ -20,7 +20,7 @@ import {
 } from './dto/advert-publication.dto'
 import { AdvertPublicationDetailedDto } from './dto/advert-publication-detailed.dto'
 import { AdvertPublishedEvent } from './events/advert-published.event'
-import { AdvertPublicationModel } from './advert-publication.model'
+import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import { IAdvertPublicationService } from './advert-publication.service.interface'
 @Injectable()
 export class AdvertPublicationService implements IAdvertPublicationService {

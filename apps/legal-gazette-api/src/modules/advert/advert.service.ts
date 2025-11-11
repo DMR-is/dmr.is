@@ -9,12 +9,12 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { LegalGazetteEvents } from '../../lib/constants'
-import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
-import { CommunicationChannelModel } from '../communication-channel/communication-channel.model'
-import { SettlementModel } from '../settlement/settlement.model'
-import { StatusIdEnum } from '../status/status.model'
+import { AdvertPublicationModel } from '../../models/advert-publication.model'
+import { CommunicationChannelModel } from '../../models/communication-channel.model'
+import { SettlementModel } from '../../models/settlement.model'
+import { StatusIdEnum } from '../../models/status.model'
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
-import { UserModel } from '../users/users.model'
+import { UserModel } from '../../models/users.model'
 import {
   AdvertDetailedDto,
   CreateAdvertDto,
@@ -23,7 +23,7 @@ import {
   GetAdvertsStatusCounterDto,
   UpdateAdvertDto,
 } from './dto/advert.dto'
-import { AdvertModel } from './advert.model'
+import { AdvertModel } from '../../models/advert.model'
 import { IAdvertService } from './advert.service.interface'
 
 @Injectable()

@@ -9,7 +9,7 @@ import {
 } from '../../lib/constants'
 import { BaseEntityController } from '../base-entity/base-entity.controller'
 import { GetTypesDto, GetTypesQueryDto, TypeDto } from './dto/type.dto'
-import { TypeModel } from './type.model'
+import { TypeModel } from '../../models/type.model'
 
 @Controller({ path: 'types', version: '1' })
 export class TypeController extends BaseEntityController<

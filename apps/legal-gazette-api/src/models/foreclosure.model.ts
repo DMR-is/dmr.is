@@ -9,13 +9,13 @@ import {
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { AdvertModel } from '../advert/advert.model'
-import { ForeclosureDto } from './dto/foreclosure.dto'
+import { LegalGazetteModels } from '../lib/constants'
+import { ForeclosureDto } from '../modules/foreclosure/dto/foreclosure.dto'
 import {
   ForeclosurePropertyModel,
   ForeclosurePropertyModelCreateAttributes,
 } from './foreclosure-property.model'
+import { AdvertModel } from './advert.model'
 
 type ForeclosureModelAttributes = {
   advertId: string

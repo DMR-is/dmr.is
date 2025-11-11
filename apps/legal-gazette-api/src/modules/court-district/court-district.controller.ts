@@ -6,7 +6,7 @@ import {
   CourtDistrictDto,
   GetCourtDistrictsDto,
 } from './dto/court-district.dto'
-import { CourtDistrictModel } from './court-district.model'
+import { CourtDistrictModel } from '../../models/court-district.model'
 
 @Controller({
   path: 'court-districts',

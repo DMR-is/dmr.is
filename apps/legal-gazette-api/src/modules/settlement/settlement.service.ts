@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { UpdateSettlementDto } from './dto/settlement.dto'
-import { SettlementModel } from './settlement.model'
+import { SettlementModel } from '../../models/settlement.model'
 
 @Injectable()
 export class SettlementService {

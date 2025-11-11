@@ -3,7 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AwsModule } from '@dmr.is/modules'
 
-import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
+import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import { PdfService } from './pdf.service'
 
 @Module({

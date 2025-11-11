@@ -14,7 +14,7 @@ import { ApiParam } from '@nestjs/swagger'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
-import { AdvertVersionEnum } from '../advert/advert.model'
+import { AdvertVersionEnum } from '../../models/advert.model'
 import {
   GetPublicationsDto,
   GetPublicationsQueryDto,

@@ -3,13 +3,13 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { NationalRegistryModule } from '@dmr.is/clients/national-registry'
 
-import { AdvertModel } from '../advert/advert.model'
+import { AdvertModel } from '../../models/advert.model'
 import { AdvertModule } from '../advert/advert.module'
-import { CaseModel } from '../case/case.model'
-import { CategoryModel } from '../category/category.model'
-import { SettlementModel } from '../settlement/settlement.model'
+import { CaseModel } from '../../models/case.model'
+import { CategoryModel } from '../../models/category.model'
+import { SettlementModel } from '../../models/settlement.model'
 import { ApplicationController } from './controllers/application.controller'
-import { ApplicationModel } from './application.model'
+import { ApplicationModel } from '../../models/application.model'
 import { ApplicationService } from './application.service'
 import { IApplicationService } from './application.service.interface'
 

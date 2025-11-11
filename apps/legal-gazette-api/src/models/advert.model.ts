@@ -21,36 +21,33 @@ import { getLogger } from '@dmr.is/logging'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { cleanLegacyHtml } from '@dmr.is/utils'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { getAdvertHTMLMarkup } from '../../lib/templates'
-import {
-  AdvertPublicationModel,
-  AdvertPublicationsCreateAttributes,
-} from '../advert-publications/advert-publication.model'
-import { CaseModel } from '../case/case.model'
-import { CategoryModel } from '../category/category.model'
-import { CommentModel, CommentTypeEnum } from '../comment/comment.model'
-import {
-  CommunicationChannelCreateAttributes,
-  CommunicationChannelModel,
-} from '../communication-channel/communication-channel.model'
-import { CourtDistrictModel } from '../court-district/court-district.model'
-import { ForeclosureModel } from '../foreclosure/foreclosure.model'
-import { ForeclosurePropertyModel } from '../foreclosure/foreclosure-property.model'
-import {
-  SettlementCreateAttributes,
-  SettlementModel,
-} from '../settlement/settlement.model'
-import { StatusIdEnum, StatusModel } from '../status/status.model'
-import { TBRTransactionModel } from '../tbr-transaction/tbr-transactions.model'
-import { TypeIdEnum, TypeModel } from '../type/type.model'
-import { UserModel } from '../users/users.model'
+import { LegalGazetteModels } from '../lib/constants'
+import { getAdvertHTMLMarkup } from '../lib/templates'
 import {
   AdvertDetailedDto,
   AdvertDto,
   AdvertStatusCounterItemDto,
   GetAdvertsQueryDto,
-} from './dto/advert.dto'
+} from '../modules/advert/dto/advert.dto'
+import {
+  AdvertPublicationModel,
+  AdvertPublicationsCreateAttributes,
+} from './advert-publication.model'
+import {
+  CommunicationChannelCreateAttributes,
+  CommunicationChannelModel,
+} from './communication-channel.model'
+import { CourtDistrictModel } from './court-district.model'
+import { ForeclosurePropertyModel } from './foreclosure-property.model'
+import { TBRTransactionModel } from './tbr-transactions.model'
+import { CaseModel } from './case.model'
+import { CategoryModel } from './category.model'
+import { CommentModel, CommentTypeEnum } from './comment.model'
+import { ForeclosureModel } from './foreclosure.model'
+import { SettlementCreateAttributes, SettlementModel } from './settlement.model'
+import { StatusIdEnum, StatusModel } from './status.model'
+import { TypeIdEnum, TypeModel } from './type.model'
+import { UserModel } from './users.model'
 
 type AdvertAttributes = {
   caseId: string | null

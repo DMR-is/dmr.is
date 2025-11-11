@@ -3,15 +3,15 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AwsModule } from '@dmr.is/modules'
 
-import { AdvertModel } from '../advert/advert.model'
+import { AdvertModel } from '../../models/advert.model'
 import { ISESModule } from '../aws/aws.module'
 import { PdfModule } from '../pdf/pdf.module'
 import { PriceCalculatorModule } from '../price-calculator/price-calculator.module'
 import { TBRModule } from '../tbr/tbr.module'
-import { TBRTransactionModel } from '../tbr-transaction/tbr-transactions.model'
+import { TBRTransactionModel } from '../../models/tbr-transactions.model'
 import { AdvertPublishedListener } from './listeners/advert-published.listener'
 import { AdvertPublicationController } from './advert-publication.controller'
-import { AdvertPublicationModel } from './advert-publication.model'
+import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import { AdvertPublicationService } from './advert-publication.service'
 import { IAdvertPublicationService } from './advert-publication.service.interface'
 

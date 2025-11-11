@@ -30,7 +30,7 @@ import {
   SettlementDto,
 } from '../../settlement/dto/settlement.dto'
 import { StatusDto } from '../../status/dto/status.dto'
-import { StatusIdEnum } from '../../status/status.model'
+import { StatusIdEnum } from '../../../models/status.model'
 import { TypeDto } from '../../type/dto/type.dto'
 
 export class AdvertDto extends DetailedDto {

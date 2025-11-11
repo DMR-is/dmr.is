@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { CategoryModel } from '../category/category.model'
-import { TypeModel } from '../type/type.model'
+import { CategoryModel } from '../../models/category.model'
+import { TypeModel } from '../../models/type.model'
 import { TypeWithCategoriesController } from './type-categories.controller'
-import { TypeCategoriesModel } from './type-categories.model'
+import { TypeCategoriesModel } from '../../models/type-categories.model'
 import { TypeCategoriesService } from './type-categories.service'
 import { ITypeCategoriesService } from './type-categories.service.interface'
 

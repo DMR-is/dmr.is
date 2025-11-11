@@ -10,17 +10,20 @@ import {
 import { CommunicationChannelSchema } from '@dmr.is/legal-gazette/schemas'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { CaseModel } from '../case/case.model'
-import { CategoryModel } from '../category/category.model'
-import { CommunicationChannelCreateAttributes } from '../communication-channel/communication-channel.model'
-import { CourtDistrictModel } from '../court-district/court-district.model'
-import { TypeIdEnum, TypeModel } from '../type/type.model'
-import { ApplicationDetailedDto, ApplicationDto } from './dto/application.dto'
+import { LegalGazetteModels } from '../lib/constants'
 import {
   ApplicationRequirementStatementEnum,
   ApplicationStatusEnum,
-} from './contants'
+} from '../modules/applications/contants'
+import {
+  ApplicationDetailedDto,
+  ApplicationDto,
+} from '../modules/applications/dto/application.dto'
+import { CommunicationChannelCreateAttributes } from './communication-channel.model'
+import { CourtDistrictModel } from './court-district.model'
+import { CaseModel } from './case.model'
+import { CategoryModel } from './category.model'
+import { TypeIdEnum, TypeModel } from './type.model'
 
 export enum ApplicationTypeEnum {
   COMMON = 'COMMON',
