@@ -122,6 +122,7 @@ export class AWSService implements IAWSService {
       const end = Math.min(start + chunkSize, file.size)
 
       const part = file.buffer.subarray(start, end)
+      const isPdf = file.originalname.toLowerCase().endsWith('.pdf')
 
       const partCommand = new UploadPartCommand({
         Bucket: bucket,
@@ -129,6 +130,12 @@ export class AWSService implements IAWSService {
         PartNumber: i + 1,
         UploadId: multipartUpload.UploadId,
         Body: part,
+        ...(isPdf
+          ? {
+              ContentType: 'application/pdf',
+              ContentDisposition: `inline; filename="${file.originalname}"`,
+            }
+          : {}),
       })
 
       uploadPromises.push(this.client.send(partCommand))
