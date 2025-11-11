@@ -53,6 +53,18 @@ export class SettlementDto {
   @ValidateIf((o) => o.settlementDateOfDeath !== null)
   @IsDateString()
   settlementDateOfDeath!: string | null
+
+  @ApiProperty({ type: String, required: false })
+  @IsString()
+  @MaxLength(255)
+  @IsOptional()
+  liquidatorRecallStatementLocation?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsString()
+  @MaxLength(255)
+  @IsOptional()
+  liquidatorRecallStatementType?: string
 }
 
 export class CreateSettlementDto {
@@ -65,6 +77,18 @@ export class CreateSettlementDto {
   @IsString()
   @MaxLength(255)
   liquidatorLocation!: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsString()
+  @MaxLength(255)
+  @IsOptional()
+  liquidatorRecallStatementLocation?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsString()
+  @MaxLength(255)
+  @IsOptional()
+  liquidatorRecallStatementType?: string
 
   @ApiProperty({ type: String, required: true })
   @IsString()

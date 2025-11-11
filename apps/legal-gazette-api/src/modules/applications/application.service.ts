@@ -167,6 +167,10 @@ export class ApplicationService implements IApplicationService {
         liquidatorFields: {
           name: application.liquidatorName,
           location: application.liquidatorLocation,
+          recallRequirementStatementLocation:
+            application.liquidatorRecallStatementLocation,
+          recallRequirementStatementType:
+            application.liquidatorRecallStatementType,
         },
         divisionMeetingFields: {
           meetingDate: application.divisionMeetingDate?.toISOString(),
@@ -217,6 +221,12 @@ export class ApplicationService implements IApplicationService {
       settlement: {
         liquidatorName: requiredFields.fields.liquidatorFields?.name,
         liquidatorLocation: requiredFields.fields.liquidatorFields?.location,
+        liquidatorRecallStatementType:
+          requiredFields.fields.liquidatorFields
+            ?.recallRequirementStatementType,
+        liquidatorRecallStatementLocation:
+          requiredFields.fields.liquidatorFields
+            ?.recallRequirementStatementLocation,
         settlementAddress: requiredFields.fields.settlementFields?.address,
         settlementName: requiredFields.fields.settlementFields?.name,
         settlementNationalId:

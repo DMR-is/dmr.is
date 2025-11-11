@@ -88,6 +88,10 @@ export const liquidatorValidationFieldsSchema = z.object({
     .refine((location) => isString(location) && location.length > 0, {
       message: 'Staðsetning skiptastjóra er nauðsynleg',
     }),
+  recallRequirementStatementType: z
+    .enum(ApplicationRequirementStatementEnum)
+    .optional(),
+  recallRequirementStatementLocation: z.string().optional(),
 })
 
 export const divisionMeetingFieldsSchema = z.object({

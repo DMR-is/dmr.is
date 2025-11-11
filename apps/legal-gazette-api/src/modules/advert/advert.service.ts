@@ -209,6 +209,10 @@ export class AdvertService implements IAdvertService {
           ? {
               liquidatorLocation: body.settlement.liquidatorLocation,
               liquidatorName: body.settlement.liquidatorName,
+              liquidatorRecallStatementType:
+                body.settlement.liquidatorRecallStatementType,
+              liquidatorRecallStatementLocation:
+                body.settlement.liquidatorRecallStatementLocation,
               settlementAddress: body.settlement.settlementAddress,
               settlementDateOfDeath: body.settlement.settlementDateOfDeath
                 ? new Date(body.settlement.settlementDateOfDeath)

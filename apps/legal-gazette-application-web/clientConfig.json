@@ -3305,7 +3305,9 @@
           "settlementAddress": { "type": "string" },
           "declaredClaims": { "type": "number" },
           "settlementDeadline": { "type": "string", "nullable": true },
-          "settlementDateOfDeath": { "type": "string", "nullable": true }
+          "settlementDateOfDeath": { "type": "string", "nullable": true },
+          "liquidatorRecallStatementLocation": { "type": "string" },
+          "liquidatorRecallStatementType": { "type": "string" }
         },
         "required": [
           "id",
