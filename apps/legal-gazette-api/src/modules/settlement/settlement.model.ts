@@ -10,22 +10,22 @@ type SettlementAttributes = {
   advertId: string
   liquidatorName: string
   liquidatorLocation: string
-  settlementName: string
-  settlementNationalId: string
-  settlementAddress: string
-  settlementDeadline: Date | null
-  settlementDateOfDeath: Date | null
-  settlementDeclaredClaims: number | null
+  name: string
+  nationalId: string
+  address: string
+  deadline: Date | null
+  dateOfDeath: Date | null
+  declaredClaims: number | null
   liquidatorRecallStatementLocation?: string | null
   liquidatorRecallStatementType?: string | null
 }
 
 export type SettlementCreateAttributes = Omit<
   SettlementAttributes,
-  'advertId' | 'settlementDeclaredClaims'
+  'advertId' | 'declaredClaims'
 > & {
   advertId?: string
-  settlementDeclaredClaims?: number | null
+  declaredClaims?: number | null
 }
 
 @BaseTable({ tableName: LegalGazetteModels.SETTLEMENT })
@@ -64,21 +64,21 @@ export class SettlementModel extends BaseModel<
     allowNull: false,
     field: 'name',
   })
-  settlementName!: string
+  name!: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: false,
     field: 'national_id',
   })
-  settlementNationalId!: string
+  nationalId!: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: false,
     field: 'address',
   })
-  settlementAddress!: string
+  address!: string
 
   @Column({
     type: DataType.DATE,
@@ -86,7 +86,7 @@ export class SettlementModel extends BaseModel<
     defaultValue: null,
     field: 'deadline_date',
   })
-  settlementDeadline!: Date | null
+  deadline!: Date | null
 
   @Column({
     type: DataType.DATE,
@@ -94,7 +94,7 @@ export class SettlementModel extends BaseModel<
     defaultValue: null,
     field: 'date_of_death',
   })
-  settlementDateOfDeath!: Date | null
+  dateOfDeath!: Date | null
 
   @Column({
     type: DataType.INTEGER,
@@ -114,14 +114,12 @@ export class SettlementModel extends BaseModel<
       liquidatorRecallStatementLocation:
         model.liquidatorRecallStatementLocation ?? undefined,
       liquidatorRecallStatementType: model.liquidatorRecallStatementType,
-      settlementName: model.settlementName,
-      settlementNationalId: model.settlementNationalId,
-      settlementAddress: model.settlementAddress,
-      settlementDeadline: model.settlementDeadline
-        ? model.settlementDeadline.toISOString()
-        : null,
-      settlementDateOfDeath: model.settlementDateOfDeath
-        ? model.settlementDateOfDeath.toISOString()
+      settlementName: model.name,
+      settlementNationalId: model.nationalId,
+      settlementAddress: model.address,
+      settlementDeadline: model.deadline ? model.deadline.toISOString() : null,
+      settlementDateOfDeath: model.dateOfDeath
+        ? model.dateOfDeath.toISOString()
         : null,
       declaredClaims: model.declaredClaims,
     }
