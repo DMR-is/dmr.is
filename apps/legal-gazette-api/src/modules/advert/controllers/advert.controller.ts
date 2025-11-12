@@ -14,13 +14,13 @@ import { TokenJwtAuthGuard } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
-import { IAdvertService } from '../advert.service.interface'
 import {
   AdvertDetailedDto,
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
-} from '../dto/advert.dto'
+} from '../../../models/advert.model'
+import { IAdvertService } from '../advert.service.interface'
 
 @Controller({
   path: 'adverts',
@@ -50,7 +50,10 @@ export class AdvertController {
 
   @Get(':id')
   @LGResponse({ operationId: 'getAdvertById', type: AdvertDetailedDto })
-  getAdvertById(@Param('id', new UUIDValidationPipe()) id: string, @CurrentUser() user: DMRUser) {
+  getAdvertById(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @CurrentUser() user: DMRUser,
+  ) {
     return this.advertService.getAdvertById(id, user)
   }
 

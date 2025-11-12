@@ -7,7 +7,7 @@ import {
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
   UpdateAdvertDto,
-} from './dto/advert.dto'
+} from '../../models/advert.model'
 
 export interface IAdvertService {
   getAdverts(query: GetAdvertsQueryDto): Promise<GetAdvertsDto>

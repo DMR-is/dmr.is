@@ -16,9 +16,12 @@ import { TokenJwtAuthGuard } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
+import {
+  AdvertDetailedDto,
+  UpdateAdvertDto,
+} from '../../../models/advert.model'
 import { CategoryModel } from '../../../models/category.model'
 import { IAdvertService } from '../advert.service.interface'
-import { AdvertDetailedDto, UpdateAdvertDto } from '../dto/advert.dto'
 
 @Controller({
   path: 'adverts/:id',

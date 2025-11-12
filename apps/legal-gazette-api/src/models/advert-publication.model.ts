@@ -24,10 +24,9 @@ import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../lib/constants'
-import { AdvertDto } from '../modules/advert/dto/advert.dto'
 import { CategoryDto } from '../modules/category/dto/category.dto'
 import { TypeDto } from '../modules/type/dto/type.dto'
-import { AdvertModel, AdvertVersionEnum } from './advert.model'
+import { AdvertDto, AdvertModel, AdvertVersionEnum } from './advert.model'
 import { CategoryModel } from './category.model'
 import { TypeIdEnum, TypeModel } from './type.model'
 
