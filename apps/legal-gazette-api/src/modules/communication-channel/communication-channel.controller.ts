@@ -19,7 +19,7 @@ import {
   CreateCommunicationChannelDto,
   GetCommunicationChannelsDto,
   UpdateCommunicationChannelDto,
-} from './dto/communication-channel.dto'
+} from '../../models/communication-channel.model'
 import { ICommunicationChannelService } from './communication-channel.service.interface'
 
 @Controller({

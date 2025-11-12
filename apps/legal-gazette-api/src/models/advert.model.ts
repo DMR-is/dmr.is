@@ -42,10 +42,6 @@ import { cleanLegacyHtml } from '@dmr.is/utils'
 import { DetailedDto } from '../dto/detailed.dto'
 import { LegalGazetteModels } from '../lib/constants'
 import { getAdvertHTMLMarkup } from '../lib/templates'
-import {
-  CommunicationChannelDto,
-  CreateCommunicationChannelDto,
-} from '../modules/communication-channel/dto/communication-channel.dto'
 import { CourtDistrictDto } from '../modules/court-district/dto/court-district.dto'
 import {
   CreateSettlementDto,
@@ -63,7 +59,9 @@ import { CategoryDto, CategoryModel } from './category.model'
 import { CommentDto, CommentModel, CommentTypeEnum } from './comment.model'
 import {
   CommunicationChannelCreateAttributes,
+  CommunicationChannelDto,
   CommunicationChannelModel,
+  CreateCommunicationChannelDto,
 } from './communication-channel.model'
 import { CourtDistrictModel } from './court-district.model'
 import { ForeclosureModel } from './foreclosure.model'
