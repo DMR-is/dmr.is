@@ -392,4 +392,9 @@ export class GetPublicationsQueryDto extends PagingQuery {
   @IsOptional()
   @IsUUID('4', { each: true })
   categoryId?: string[]
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  pdfUrl?: string
 }
