@@ -18,7 +18,7 @@ import {
   CommentDto,
   CreateTextCommentBodyDto,
   GetCommentsDto,
-} from './dto/comment.dto'
+} from '../../models/comment.model'
 import { ICommentService } from './comment.service.interface'
 
 @Controller({
