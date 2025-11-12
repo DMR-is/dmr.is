@@ -79,7 +79,7 @@ export class AdvertPublishedListener {
       context: LOGGING_CONTEXT,
     })
 
-    const emails = advert.communicationChannels.map((ch) => ch.email)
+    const emails = advert.communicationChannels?.map((ch) => ch.email)
 
     if (!emails || emails.length === 0) {
       this.logger.warn(
