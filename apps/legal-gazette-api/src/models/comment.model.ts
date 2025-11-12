@@ -1,3 +1,4 @@
+import { IsString } from 'class-validator'
 import {
   BelongsTo,
   Column,
@@ -6,10 +7,12 @@ import {
   ForeignKey,
 } from 'sequelize-typescript'
 
+import { ApiProperty, PickType } from '@nestjs/swagger'
+
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../lib/constants'
-import { CommentDto } from '../modules/comment/dto/comment.dto'
+import { StatusDto } from '../modules/status/dto/status.dto'
 import { AdvertModel } from './advert.model'
 import { StatusModel } from './status.model'
 
@@ -78,6 +81,7 @@ export class CommentModel extends BaseModel<
     type: DataType.ENUM(...Object.values(CommentTypeEnum)),
     allowNull: false,
   })
+  @ApiProperty({ enum: CommentTypeEnum, enumName: 'CommentTypeEnum' })
   type!: CommentTypeEnum
 
   @Column({
@@ -85,6 +89,7 @@ export class CommentModel extends BaseModel<
     allowNull: false,
   })
   @ForeignKey(() => StatusModel)
+  @ApiProperty({ type: String })
   statusId!: string
 
   @Column({
@@ -92,36 +97,42 @@ export class CommentModel extends BaseModel<
     allowNull: false,
   })
   @ForeignKey(() => AdvertModel)
+  @ApiProperty({ type: String })
   advertId!: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: false,
   })
+  @ApiProperty({ type: String })
   actorId!: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: false,
   })
+  @ApiProperty({ type: String })
   actor!: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: true,
   })
+  @ApiProperty({ type: String, required: false })
   receiverId?: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: true,
   })
+  @ApiProperty({ type: String, required: false })
   receiver?: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: true,
   })
+  @ApiProperty({ type: String, required: false })
   comment?: string
 
   @BelongsTo(() => AdvertModel)
@@ -146,4 +157,52 @@ export class CommentModel extends BaseModel<
   fromModel(): CommentDto {
     return CommentModel.fromModel(this)
   }
+}
+
+export class CommentDto extends PickType(CommentModel, [
+  'id',
+  'type',
+  'advertId',
+  'actor',
+  'receiver',
+  'comment',
+] as const) {
+  @ApiProperty({ type: StatusDto })
+  status!: StatusDto
+
+  @ApiProperty({ type: String })
+  createdAt!: string
+}
+
+export class GetCommentsDto {
+  @ApiProperty({ type: [CommentDto] })
+  comments!: CommentDto[]
+}
+
+class CreateCommentBaseDto {
+  @ApiProperty({ type: String })
+  actorId!: string
+}
+
+export class CreateSubmitCommentDto extends CreateCommentBaseDto {}
+
+export class CreateAssignCommentDto extends CreateCommentBaseDto {
+  @ApiProperty({ type: String })
+  receiverId!: string
+}
+
+export class CreateStatusUpdateCommentDto extends CreateCommentBaseDto {
+  @ApiProperty({ type: String })
+  receiverId!: string
+}
+
+export class CreateTextCommentDto extends CreateCommentBaseDto {
+  @ApiProperty({ type: String })
+  comment!: string
+}
+
+export class CreateTextCommentBodyDto {
+  @ApiProperty({ type: String })
+  @IsString()
+  comment!: string
 }

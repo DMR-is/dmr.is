@@ -5,7 +5,7 @@ import {
   CreateSubmitCommentDto,
   CreateTextCommentDto,
   GetCommentsDto,
-} from './dto/comment.dto'
+} from '../../models/comment.model'
 
 export interface ICommentService {
   getCommentsByAdvertId(advertId: string): Promise<GetCommentsDto>
