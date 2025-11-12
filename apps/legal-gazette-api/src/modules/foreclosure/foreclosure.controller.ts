@@ -17,8 +17,8 @@ import { MachineClientGuard } from '../../guards/machine-client.guard'
 import {
   CreateForeclosureSaleDto,
   ForeclosureDto,
-  ForeclosurePropertyDto,
-} from './dto/foreclosure.dto'
+} from '../../models/foreclosure.model'
+import { ForeclosurePropertyDto } from '../../models/foreclosure-property.model'
 import { IForeclosureService } from './foreclosure.service.interface'
 
 @Controller({
