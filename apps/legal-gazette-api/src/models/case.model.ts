@@ -12,12 +12,12 @@ import {
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../lib/constants'
+import { CaseDto } from '../modules/case/dto/case.dto'
 import { AdvertCreateAttributes, AdvertModel } from './advert.model'
 import {
   ApplicationCreateAttributes,
   ApplicationModel,
 } from './application.model'
-import { CaseDto } from '../modules/case/dto/case.dto'
 import { StatusIdEnum } from './status.model'
 
 type CaseAttributes = {

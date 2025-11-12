@@ -6,9 +6,9 @@ import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../lib/constants'
 import { CategoryDto } from '../modules/category/dto/category.dto'
-import { TypeCategoriesModel } from './type-categories.model'
 import { AdvertModel } from './advert.model'
 import { TypeModel } from './type.model'
+import { TypeCategoriesModel } from './type-categories.model'
 
 export enum CategoryDefaultIdEnum {
   RECALLS = '7D0E4B20-2FDD-4CA9-895B-9E7792ECA6E5',

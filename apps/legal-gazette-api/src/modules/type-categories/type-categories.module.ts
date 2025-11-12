@@ -3,8 +3,8 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CategoryModel } from '../../models/category.model'
 import { TypeModel } from '../../models/type.model'
-import { TypeWithCategoriesController } from './type-categories.controller'
 import { TypeCategoriesModel } from '../../models/type-categories.model'
+import { TypeWithCategoriesController } from './type-categories.controller'
 import { TypeCategoriesService } from './type-categories.service'
 import { ITypeCategoriesService } from './type-categories.service.interface'
 

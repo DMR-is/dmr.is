@@ -3,13 +3,13 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
+import { CaseModel } from '../../models/case.model'
 import {
   CaseDto,
   CaseQueryDto,
   CreateCaseDto,
   GetCasesDto,
 } from './dto/case.dto'
-import { CaseModel } from '../../models/case.model'
 import { ICaseService } from './case.service.interface'
 
 @Injectable()

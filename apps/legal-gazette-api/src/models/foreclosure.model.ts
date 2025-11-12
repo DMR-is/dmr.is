@@ -11,11 +11,11 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../lib/constants'
 import { ForeclosureDto } from '../modules/foreclosure/dto/foreclosure.dto'
+import { AdvertModel } from './advert.model'
 import {
   ForeclosurePropertyModel,
   ForeclosurePropertyModelCreateAttributes,
 } from './foreclosure-property.model'
-import { AdvertModel } from './advert.model'
 
 type ForeclosureModelAttributes = {
   advertId: string

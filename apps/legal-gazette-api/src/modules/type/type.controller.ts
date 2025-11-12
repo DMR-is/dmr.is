@@ -7,9 +7,9 @@ import {
   COMMON_ADVERT_TYPES_IDS,
   UNASSIGNABLE_TYPE_IDS,
 } from '../../lib/constants'
+import { TypeModel } from '../../models/type.model'
 import { BaseEntityController } from '../base-entity/base-entity.controller'
 import { GetTypesDto, GetTypesQueryDto, TypeDto } from './dto/type.dto'
-import { TypeModel } from '../../models/type.model'
 
 @Controller({ path: 'types', version: '1' })
 export class TypeController extends BaseEntityController<

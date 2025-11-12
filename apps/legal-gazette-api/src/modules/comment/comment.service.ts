@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { AdvertModel } from '../../models/advert.model'
+import { CommentModel, CommentTypeEnum } from '../../models/comment.model'
 import { StatusModel } from '../../models/status.model'
 import { UserModel } from '../../models/users.model'
 import {
@@ -14,7 +15,6 @@ import {
   CreateTextCommentDto,
   GetCommentsDto,
 } from './dto/comment.dto'
-import { CommentModel, CommentTypeEnum } from '../../models/comment.model'
 import { ICommentService } from './comment.service.interface'
 
 @Injectable()

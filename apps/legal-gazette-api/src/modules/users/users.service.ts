@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { GetUsersResponse, UserDto } from './dto/user.dto'
 import { UserModel } from '../../models/users.model'
+import { GetUsersResponse, UserDto } from './dto/user.dto'
 import { IUsersService } from './users.service.interface'
 
 @Injectable()

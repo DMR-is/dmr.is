@@ -3,18 +3,18 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { IAdvertService } from '../advert/advert.service.interface'
 import { CategoryDefaultIdEnum } from '../../models/category.model'
+import { ForeclosureModel } from '../../models/foreclosure.model'
+import { ForeclosurePropertyModel } from '../../models/foreclosure-property.model'
 import { TypeIdEnum } from '../../models/type.model'
+import { IAdvertService } from '../advert/advert.service.interface'
 import {
   CreateForeclosurePropertyDto,
   CreateForeclosureSaleDto,
   ForeclosureDto,
   ForeclosurePropertyDto,
 } from './dto/foreclosure.dto'
-import { ForeclosureModel } from '../../models/foreclosure.model'
 import { IForeclosureService } from './foreclosure.service.interface'
-import { ForeclosurePropertyModel } from '../../models/foreclosure-property.model'
 
 @Injectable()
 export class ForeclosureService implements IForeclosureService {

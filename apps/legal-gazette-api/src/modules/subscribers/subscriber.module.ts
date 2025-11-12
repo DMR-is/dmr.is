@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { SubscriberController } from './subscriber.controller'
 import { SubscriberModel } from '../../models/subscriber.model'
+import { SubscriberController } from './subscriber.controller'
 import { SubscriberService } from './subscriber.service'
 import { ISubscriberService } from './subscriber.service.interface'
 

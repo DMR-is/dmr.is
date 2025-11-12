@@ -19,10 +19,10 @@ import {
   ApplicationDetailedDto,
   ApplicationDto,
 } from '../modules/applications/dto/application.dto'
-import { CommunicationChannelCreateAttributes } from './communication-channel.model'
-import { CourtDistrictModel } from './court-district.model'
 import { CaseModel } from './case.model'
 import { CategoryModel } from './category.model'
+import { CommunicationChannelCreateAttributes } from './communication-channel.model'
+import { CourtDistrictModel } from './court-district.model'
 import { TypeIdEnum, TypeModel } from './type.model'
 
 export enum ApplicationTypeEnum {

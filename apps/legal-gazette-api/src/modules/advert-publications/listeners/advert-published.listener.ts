@@ -6,11 +6,11 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { LegalGazetteEvents } from '../../../lib/constants'
 import { AdvertVersionEnum } from '../../../models/advert.model'
+import { TBRTransactionModel } from '../../../models/tbr-transactions.model'
 import { ISESService } from '../../aws/services/ses/ses.service.interface'
 import { PdfService } from '../../pdf/pdf.service'
 import { IPriceCalculatorService } from '../../price-calculator/price-calculator.service.interface'
 import { ITBRService } from '../../tbr/tbr.service.interface'
-import { TBRTransactionModel } from '../../../models/tbr-transactions.model'
 import { AdvertPublishedEvent } from '../events/advert-published.event'
 
 const LOGGING_CONTEXT = 'AdvertPublishedListener'

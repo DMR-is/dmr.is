@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { SubscriberDto } from './dto/subscriber.dto'
 import { SubscriberModel } from '../../models/subscriber.model'
+import { SubscriberDto } from './dto/subscriber.dto'
 import { ISubscriberService } from './subscriber.service.interface'
 
 @Injectable()

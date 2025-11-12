@@ -1,12 +1,12 @@
 import { InjectModel } from '@nestjs/sequelize'
 
+import { CommunicationChannelModel } from '../../models/communication-channel.model'
 import {
   CommunicationChannelDto,
   CreateCommunicationChannelDto,
   GetCommunicationChannelsDto,
   UpdateCommunicationChannelDto,
 } from './dto/communication-channel.dto'
-import { CommunicationChannelModel } from '../../models/communication-channel.model'
 import { ICommunicationChannelService } from './communication-channel.service.interface'
 
 export class CommunicationChannelService

@@ -33,19 +33,19 @@ import {
   AdvertPublicationModel,
   AdvertPublicationsCreateAttributes,
 } from './advert-publication.model'
+import { CaseModel } from './case.model'
+import { CategoryModel } from './category.model'
+import { CommentModel, CommentTypeEnum } from './comment.model'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
 } from './communication-channel.model'
 import { CourtDistrictModel } from './court-district.model'
-import { ForeclosurePropertyModel } from './foreclosure-property.model'
-import { TBRTransactionModel } from './tbr-transactions.model'
-import { CaseModel } from './case.model'
-import { CategoryModel } from './category.model'
-import { CommentModel, CommentTypeEnum } from './comment.model'
 import { ForeclosureModel } from './foreclosure.model'
+import { ForeclosurePropertyModel } from './foreclosure-property.model'
 import { SettlementCreateAttributes, SettlementModel } from './settlement.model'
 import { StatusIdEnum, StatusModel } from './status.model'
+import { TBRTransactionModel } from './tbr-transactions.model'
 import { TypeIdEnum, TypeModel } from './type.model'
 import { UserModel } from './users.model'
 

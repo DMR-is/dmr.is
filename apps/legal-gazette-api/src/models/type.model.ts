@@ -3,11 +3,11 @@ import { BelongsToMany, Column, DataType } from 'sequelize-typescript'
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../lib/constants'
+import { TypeDto } from '../modules/type/dto/type.dto'
+import { TypeWithCategoriesDto } from '../modules/type-categories/dto/type-categories.dto'
 import { AdvertTypeFeeCodeModel } from './advert-type-fee-code.model'
 import { CategoryModel } from './category.model'
 import { FeeCodeModel } from './fee-code.model'
-import { TypeDto } from '../modules/type/dto/type.dto'
-import { TypeWithCategoriesDto } from '../modules/type-categories/dto/type-categories.dto'
 import { TypeCategoriesModel } from './type-categories.model'
 
 export enum TypeIdEnum {
