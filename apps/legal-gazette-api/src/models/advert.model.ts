@@ -42,7 +42,6 @@ import { cleanLegacyHtml } from '@dmr.is/utils'
 import { DetailedDto } from '../dto/detailed.dto'
 import { LegalGazetteModels } from '../lib/constants'
 import { getAdvertHTMLMarkup } from '../lib/templates'
-import { CourtDistrictDto } from '../modules/court-district/dto/court-district.dto'
 import {
   CreateSettlementDto,
   SettlementDto,
@@ -63,7 +62,7 @@ import {
   CommunicationChannelModel,
   CreateCommunicationChannelDto,
 } from './communication-channel.model'
-import { CourtDistrictModel } from './court-district.model'
+import { CourtDistrictDto, CourtDistrictModel } from './court-district.model'
 import { ForeclosureModel } from './foreclosure.model'
 import { ForeclosurePropertyModel } from './foreclosure-property.model'
 import { SettlementCreateAttributes, SettlementModel } from './settlement.model'
