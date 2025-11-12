@@ -1,4 +1,4 @@
-import { FeeCodeDto, GetFeeCodesResponse } from './dto/fee-codes.dto'
+import { FeeCodeDto, GetFeeCodesResponse } from '../../models/fee-code.model'
 
 export interface IFeeCodeService {
   getFeeCodes(): Promise<GetFeeCodesResponse>
