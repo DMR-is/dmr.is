@@ -1,3 +1,10 @@
+import {
+  IsDateString,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator'
 import { BulkCreateOptions, Op, WhereOptions } from 'sequelize'
 import {
   BeforeBulkCreate,
@@ -11,15 +18,15 @@ import {
 } from 'sequelize-typescript'
 
 import { BadRequestException } from '@nestjs/common'
+import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
 
+import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../lib/constants'
-import {
-  AdvertPublicationDto,
-  GetPublicationsQueryDto,
-  PublishedPublicationDto,
-} from '../modules/advert-publications/dto/advert-publication.dto'
+import { AdvertDto } from '../modules/advert/dto/advert.dto'
+import { CategoryDto } from '../modules/category/dto/category.dto'
+import { TypeDto } from '../modules/type/dto/type.dto'
 import { AdvertModel, AdvertVersionEnum } from './advert.model'
 import { CategoryModel } from './category.model'
 import { TypeIdEnum, TypeModel } from './type.model'
@@ -169,18 +176,23 @@ export class AdvertPublicationModel extends BaseModel<
 > {
   @Column({ type: DataType.UUID, allowNull: false })
   @ForeignKey(() => AdvertModel)
+  @ApiProperty({ type: String })
   advertId!: string
 
   @Column({ type: DataType.DATE, allowNull: false })
+  @ApiProperty({ type: String })
   scheduledAt!: Date
 
   @Column({ type: DataType.DATE })
+  @ApiProperty({ type: String, required: false })
   publishedAt!: Date | null
 
   @Column({ type: DataType.INTEGER, defaultValue: '1' })
+  @ApiProperty({ type: Number, default: 1 })
   versionNumber!: number
 
   @Column({ field: 'pdf_url', allowNull: true })
+  @ApiProperty({ type: String, required: false })
   pdfUrl?: string
 
   @Column({ type: DataType.VIRTUAL })
@@ -189,6 +201,7 @@ export class AdvertPublicationModel extends BaseModel<
   }
 
   @Column({ type: DataType.VIRTUAL })
+  @ApiProperty({ enum: AdvertVersionEnum, enumName: 'AdvertVersionEnum' })
   get versionLetter(): AdvertVersionEnum {
     const letter = String.fromCharCode(64 + this.versionNumber)
 
@@ -246,10 +259,10 @@ export class AdvertPublicationModel extends BaseModel<
       id: model.id,
       advertId: model.advertId,
       scheduledAt: model.scheduledAt.toISOString(),
-      publishedAt: model.publishedAt ? model.publishedAt.toISOString() : null,
+      publishedAt: model.publishedAt?.toISOString(),
       version: model.versionLetter,
       isLegacy: model.advert?.legacyId ? true : false,
-      pdfUrl: model.pdfUrl ? model.pdfUrl : null,
+      pdfUrl: model?.pdfUrl,
     }
   }
 
@@ -269,21 +282,120 @@ export class AdvertPublicationModel extends BaseModel<
     }
 
     return {
-      id: model.id,
-      advertId: model.advertId,
-      publishedAt: model.publishedAt.toISOString(),
-      version: model.versionLetter,
+      ...this.fromModel(model),
       category: model.advert.category.fromModel(),
       type: model.advert.type.fromModel(),
       title: model.advert.title,
+      publishedAt: model.publishedAt.toISOString(),
       publicationNumber: model.advert.publicationNumber,
       createdBy: model.advert.createdBy,
-      isLegacy: model.advert.legacyId ? true : false,
-      pdfUrl: model.pdfUrl ? model.pdfUrl : null,
     }
   }
 
   fromModelToPublishedDto(): PublishedPublicationDto {
     return AdvertPublicationModel.fromModelToPublishedDto(this)
   }
+}
+
+export class AdvertPublicationDto extends PickType(AdvertPublicationModel, [
+  'id',
+  'advertId',
+  'version',
+  'pdfUrl',
+] as const) {
+  @ApiProperty({ type: String })
+  scheduledAt!: string
+
+  @ApiProperty({ type: String, required: false })
+  publishedAt?: string
+
+  @ApiProperty({ type: Boolean })
+  isLegacy!: boolean
+}
+
+export class AdvertPublicationDetailedDto {
+  @ApiProperty({ type: AdvertPublicationDto })
+  publication!: AdvertPublicationDto
+
+  @ApiProperty({ type: AdvertDto })
+  advert!: AdvertDto
+
+  @ApiProperty({ type: String })
+  html!: string
+}
+
+export class PublishedPublicationDto extends OmitType(AdvertPublicationDto, [
+  'scheduledAt',
+  'publishedAt',
+] as const) {
+  @ApiProperty({ type: String })
+  publishedAt!: string
+
+  @ApiProperty({ type: TypeDto })
+  type!: TypeDto
+
+  @ApiProperty({ type: CategoryDto })
+  category!: CategoryDto
+
+  @ApiProperty({ type: String })
+  title!: string
+
+  @ApiProperty({ type: String })
+  publicationNumber!: string
+
+  @ApiProperty({ type: String })
+  createdBy!: string
+}
+
+export class UpdateAdvertPublicationDto extends PickType(AdvertPublicationDto, [
+  'scheduledAt',
+] as const) {}
+
+export class GetPublicationsDto {
+  @ApiProperty({ type: [PublishedPublicationDto] })
+  publications!: PublishedPublicationDto[]
+
+  @ApiProperty({ type: Paging })
+  paging!: Paging
+}
+
+export class GetRelatedPublicationsDto extends PickType(GetPublicationsDto, [
+  'publications',
+] as const) {}
+
+export class GetPublicationsQueryDto extends PagingQuery {
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsUUID()
+  advertId?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  search?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  dateFrom?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  dateTo?: string
+
+  @ApiProperty({ enum: TypeIdEnum, enumName: 'TypeIdEnum', required: false })
+  @IsOptional()
+  @IsEnum(TypeIdEnum)
+  typeId?: TypeIdEnum
+
+  @ApiProperty({ type: [String], required: false })
+  @IsOptional()
+  @IsUUID('4', { each: true })
+  categoryId?: string[]
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  pdfUrl?: string
 }

@@ -1,11 +1,10 @@
 import { AdvertVersionEnum } from '../../models/advert.model'
 import {
+  AdvertPublicationDetailedDto,
   GetPublicationsDto,
   GetPublicationsQueryDto,
-  GetRelatedPublicationsDto,
   UpdateAdvertPublicationDto,
-} from './dto/advert-publication.dto'
-import { AdvertPublicationDetailedDto } from './dto/advert-publication-detailed.dto'
+} from '../../models/advert-publication.model'
 
 export interface IAdvertPublicationService {
   createAdvertPublication(advertId: string): Promise<void>
