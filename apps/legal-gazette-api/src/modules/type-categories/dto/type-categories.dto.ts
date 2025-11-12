@@ -2,7 +2,7 @@ import { IsOptional, IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { CategoryDto } from '../../category/dto/category.dto'
+import { CategoryDto } from '../../../models/category.model'
 
 export class TypeWithCategoriesQueryDto {
   @ApiProperty({ type: String, required: false })
