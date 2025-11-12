@@ -42,7 +42,6 @@ import { cleanLegacyHtml } from '@dmr.is/utils'
 import { DetailedDto } from '../dto/detailed.dto'
 import { LegalGazetteModels } from '../lib/constants'
 import { getAdvertHTMLMarkup } from '../lib/templates'
-import { CategoryDto } from '../modules/category/dto/category.dto'
 import { CommentDto } from '../modules/comment/dto/comment.dto'
 import {
   CommunicationChannelDto,
@@ -61,7 +60,7 @@ import {
   AdvertPublicationsCreateAttributes,
 } from './advert-publication.model'
 import { CaseModel } from './case.model'
-import { CategoryModel } from './category.model'
+import { CategoryDto, CategoryModel } from './category.model'
 import { CommentModel, CommentTypeEnum } from './comment.model'
 import {
   CommunicationChannelCreateAttributes,

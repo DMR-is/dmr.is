@@ -10,9 +10,8 @@ import {
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../lib/constants'
-import { CategoryDto } from '../modules/category/dto/category.dto'
 import { TypeDto } from '../modules/type/dto/type.dto'
-import { CategoryModel } from './category.model'
+import { CategoryDto, CategoryModel } from './category.model'
 import { TypeModel } from './type.model'
 
 type TypeCategoriesAttributes = {
