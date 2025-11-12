@@ -22,7 +22,10 @@ export const localIdentityServerConfig = {
 export const identityServerConfig =
   process.env.NODE_ENV !== 'production'
     ? localIdentityServerConfig
-    : sharedIdentityServerConfig
+    : {
+        ...sharedIdentityServerConfig,
+        scope: `openid offline_access profile @dmr.is/lg-application-web`,
+      }
 
 export const authOptions: AuthOptions = {
   pages: {
