@@ -17,8 +17,8 @@ import { ApiProperty } from '@nestjs/swagger'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
 import { DetailedDto } from '../../../dto/detailed.dto'
+import { AdvertPublicationDto } from '../../../models/advert-publication.model'
 import { StatusIdEnum } from '../../../models/status.model'
-import { AdvertPublicationDto } from '../../advert-publications/dto/advert-publication.dto'
 import { CategoryDto } from '../../category/dto/category.dto'
 import { CommentDto } from '../../comment/dto/comment.dto'
 import {

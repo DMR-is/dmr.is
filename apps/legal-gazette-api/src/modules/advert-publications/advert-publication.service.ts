@@ -12,14 +12,14 @@ import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 import { LegalGazetteEvents } from '../../lib/constants'
 import { mapVersionToIndex } from '../../lib/utils'
 import { AdvertModel, AdvertVersionEnum } from '../../models/advert.model'
-import { AdvertPublicationModel } from '../../models/advert-publication.model'
-import { StatusIdEnum } from '../../models/status.model'
 import {
+  AdvertPublicationDetailedDto,
+  AdvertPublicationModel,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,
-} from './dto/advert-publication.dto'
-import { AdvertPublicationDetailedDto } from './dto/advert-publication-detailed.dto'
+} from '../../models/advert-publication.model'
+import { StatusIdEnum } from '../../models/status.model'
 import { AdvertPublishedEvent } from './events/advert-published.event'
 import { IAdvertPublicationService } from './advert-publication.service.interface'
 @Injectable()
