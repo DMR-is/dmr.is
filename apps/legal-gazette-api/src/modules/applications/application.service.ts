@@ -258,12 +258,12 @@ export class ApplicationService implements IApplicationService {
   async addDivisionMeetingAdvertToApplication(
     applicationId: string,
     body: AddDivisionMeetingForApplicationDto,
-    user: DMRUser,
+    submittee: PersonDto,
   ): Promise<void> {
     const application = await this.applicationModel.findOneOrThrow({
       where: {
         id: applicationId,
-        submittedByNationalId: user.nationalId,
+        submittedByNationalId: submittee.kennitala,
         applicationType: {
           [Op.or]: [
             ApplicationTypeEnum.RECALL_BANKRUPTCY,
@@ -312,8 +312,8 @@ export class ApplicationService implements IApplicationService {
     await this.advertService.createAdvert({
       caseId: application.caseId,
       categoryId: CategoryDefaultIdEnum.DIVISION_MEETINGS,
-      createdBy: user.fullName,
-      createdByNationalId: user.nationalId,
+      createdBy: submittee.nafn,
+      createdByNationalId: submittee.kennitala,
       signatureName: body.signature?.name,
       signatureDate: body.signature?.date,
       signatureLocation: body.signature?.location,
@@ -336,12 +336,12 @@ export class ApplicationService implements IApplicationService {
   async addDivisionEndingAdvertToApplication(
     applicationId: string,
     body: AddDivisionEndingForApplicationDto,
-    user: DMRUser,
+    submittee: PersonDto,
   ): Promise<void> {
     const application = await this.applicationModel.findOneOrThrow({
       where: {
         id: applicationId,
-        submittedByNationalId: user.nationalId,
+        submittedByNationalId: submittee.kennitala,
         status: ApplicationStatusEnum.SUBMITTED,
         applicationType: {
           [Op.or]: [
@@ -401,8 +401,8 @@ export class ApplicationService implements IApplicationService {
     await this.advertService.createAdvert({
       caseId: application.caseId,
       categoryId: CategoryDefaultIdEnum.DIVISION_ENDINGS,
-      createdBy: user.fullName,
-      createdByNationalId: user.nationalId,
+      createdBy: submittee.nafn,
+      createdByNationalId: submittee.kennitala,
       signatureName: body.signature?.name,
       signatureDate: body.signature?.date,
       signatureLocation: body.signature?.location,
@@ -564,10 +564,10 @@ export class ApplicationService implements IApplicationService {
 
   async submitIslandIsApplication(
     body: IslandIsSubmitCommonApplicationDto,
-    user: DMRUser,
+    submittee: PersonDto,
   ): Promise<void> {
     const newCase = await this.caseModel.create(
-      { involvedPartyNationalId: user.nationalId },
+      { involvedPartyNationalId: submittee.kennitala },
       { returning: ['id'] },
     )
 
@@ -578,8 +578,8 @@ export class ApplicationService implements IApplicationService {
       typeId: body.typeId,
       categoryId: body.categoryId,
       islandIsApplicationId: body.islandIsApplicationId,
-      createdBy: user.fullName,
-      createdByNationalId: user.nationalId,
+      createdBy: submittee.nafn,
+      createdByNationalId: submittee.kennitala,
       signatureName: body.signature.name,
       signatureDate: body.signature.date,
       signatureLocation: body.signature.location,
