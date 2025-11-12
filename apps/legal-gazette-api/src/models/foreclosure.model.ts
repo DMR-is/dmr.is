@@ -1,3 +1,11 @@
+import { Type } from 'class-transformer'
+import {
+  IsArray,
+  IsDateString,
+  IsString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator'
 import {
   BelongsTo,
   Column,
@@ -7,12 +15,16 @@ import {
   HasMany,
 } from 'sequelize-typescript'
 
+import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
+
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { ResponsiblePartyDto } from '../dto/external-systems.dto'
 import { LegalGazetteModels } from '../lib/constants'
-import { ForeclosureDto } from '../modules/foreclosure/dto/foreclosure.dto'
 import { AdvertModel } from './advert.model'
 import {
+  CreateForeclosurePropertyDto,
+  ForeclosurePropertyDto,
   ForeclosurePropertyModel,
   ForeclosurePropertyModelCreateAttributes,
 } from './foreclosure-property.model'
@@ -49,18 +61,39 @@ export class ForeclosureModel extends BaseModel<
 > {
   @Column({ type: DataType.UUID, allowNull: false })
   @ForeignKey(() => AdvertModel)
+  @ApiProperty({ type: String })
   advertId!: string
 
   @Column({ type: DataType.TEXT, allowNull: true, defaultValue: null })
+  @ApiProperty({
+    type: String,
+    description: 'The ID of the foreclosure',
+    nullable: true,
+  })
+  @IsString()
   caseNumberIdentifier!: string | null
 
-  @Column({ type: DataType.STRING, allowNull: false })
+  @ApiProperty({
+    type: String,
+    description: 'The ID of the advert the foreclosure belongs to',
+  })
+  @ApiProperty({
+    type: String,
+    description: 'The land region of where the foreclosure is located',
+  })
   foreclosureRegion!: string
 
   @Column({ type: DataType.STRING, allowNull: false })
+  @ApiProperty({ type: String, description: 'The address of the foreclosure' })
   foreclosureAddress!: string
 
   @Column({ type: DataType.DATE, allowNull: false })
+  @ApiProperty({
+    type: String,
+    format: 'date-time',
+    description: 'The date of the foreclosure',
+  })
+  @IsDateString()
   foreclosureDate!: Date
 
   @BelongsTo(() => AdvertModel)
@@ -86,4 +119,70 @@ export class ForeclosureModel extends BaseModel<
   fromModel(): ForeclosureDto {
     return ForeclosureModel.fromModel(this)
   }
+}
+
+export class ForeclosureDto extends PickType(ForeclosureModel, [
+  'id',
+  'advertId',
+  'caseNumberIdentifier',
+  'foreclosureRegion',
+  'foreclosureAddress',
+] as const) {
+  @ApiProperty({ type: String })
+  @IsDateString()
+  foreclosureDate!: string
+
+  @ApiProperty({ type: String })
+  createdAt!: string
+
+  @ApiProperty({ type: String })
+  updatedAt!: string
+
+  @ApiProperty({
+    type: [ForeclosurePropertyDto],
+    description: 'List of all the properties listed in the foreclosure',
+  })
+  @IsArray()
+  @Type(() => ForeclosurePropertyDto)
+  @ValidateNested({ each: true })
+  properties!: ForeclosurePropertyDto[]
+}
+
+export class CreateForeclosureSaleDto extends PickType(ForeclosureDto, [
+  'properties',
+] as const) {
+  @ApiProperty({
+    type: String,
+    description: 'The ID of the foreclosure',
+    nullable: true,
+  })
+  @IsString()
+  caseNumberIdentifier!: string | null
+
+  @ApiProperty({
+    type: String,
+    description: 'The land region of where the foreclosure is located',
+  })
+  @IsString()
+  foreclosureRegion!: string
+
+  @ApiProperty({ type: String, description: 'The address of the foreclosure' })
+  @IsString()
+  foreclosureAddress!: string
+
+  @ApiProperty({
+    type: String,
+    format: 'date-time',
+    description: 'The date of the foreclosure',
+  })
+  @IsDateString()
+  foreclosureDate!: string
+
+  @ApiProperty({
+    type: ResponsiblePartyDto,
+    description: 'The responsible party for the foreclosure',
+  })
+  @ValidateNested()
+  @Type(() => ResponsiblePartyDto)
+  responsibleParty!: ResponsiblePartyDto
 }
