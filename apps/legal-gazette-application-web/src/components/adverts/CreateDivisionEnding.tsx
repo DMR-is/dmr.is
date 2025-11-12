@@ -1,8 +1,9 @@
 'use client'
 import { useParams } from 'next/navigation'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
+import { addDivisionEndingValidationSchema } from '@dmr.is/legal-gazette/schemas'
 import {
   Box,
   Button,
@@ -22,12 +23,25 @@ import {
 import { AddDivisionEndingForApplicationDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { Center } from '../center/Center'
+import { DivisionSignatureFields } from '../form/fields/DivisionSignatureFields'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   isVisible: boolean
   onVisibilityChange(isVisible: boolean): void
+}
+
+const initFormState: AddDivisionEndingForApplicationDto = {
+  declaredClaims: -1,
+  additionalText: '',
+  scheduledAt: '',
+  signature: {
+    date: undefined,
+    location: '',
+    name: '',
+    onBehalfOf: '',
+  },
 }
 
 export const CreateDivisionEnding = ({
@@ -41,30 +55,61 @@ export const CreateDivisionEnding = ({
     trpc.applicationApi.addDivisionEnding.mutationOptions(),
   )
 
-  const [createState, setCreateState] =
-    useState<AddDivisionEndingForApplicationDto>({
-      declaredClaims: 0,
-      signature: {
-        name: '',
-        location: '',
-        date: '',
-        onBehalfOf: '',
-      },
-      additionalText: '',
-      scheduledAt: '',
-    })
+  const [submitClicked, setSubmitClicked] = useState(false)
 
-  const canSubmit = Object.entries(createState)
-    .filter(
-      ([key]) => key !== 'signatureOnBehalfOf' && key !== 'additionalText',
-    )
-    .every(([key, value]) => {
-      if (key === 'declaredClaims') {
-        return value !== 0
-      }
+  const [formState, setFormState] =
+    useState<AddDivisionEndingForApplicationDto>(initFormState)
 
-      return !!value
-    })
+  const [fieldErrors, setFieldErrors] = useState<
+    { [key: string]: string[] } | undefined
+  >(undefined)
+
+  useEffect(() => {
+    if (submitClicked) {
+      setAndGetFormValidation()
+    }
+  }, [formState])
+
+  const setAndGetFormValidation = async () => {
+    const formValidation =
+      addDivisionEndingValidationSchema.safeParse(formState)
+    const formErrors = formValidation.error?.flatten().fieldErrors
+
+    setFieldErrors(formErrors)
+
+    return formValidation
+  }
+
+  const validateAndSubmit = async () => {
+    setSubmitClicked(true)
+    const formValidation = await setAndGetFormValidation()
+
+    if (formValidation.success) {
+      addDivisionEnding(
+        {
+          applicationId: id as string,
+          ...formState,
+        },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries(
+              trpc.advertsApi.getAdvertByCaseId.queryFilter({
+                caseId: id as string,
+              }),
+            )
+            toast.success('Skiptalokum bætt við', {
+              toastId: 'add-division-ending-success',
+            })
+            onVisibilityChange(false)
+          },
+          onError: () =>
+            toast.error('Ekki tókst að bæta við skiptalokum', {
+              toastId: 'add-division-ending-error',
+            }),
+        },
+      )
+    }
+  }
 
   return (
     <ModalBase
@@ -74,182 +119,97 @@ export const CreateDivisionEnding = ({
     >
       {({ closeModal }) => (
         <Center fullHeight={true}>
-          <GridContainer>
-            <GridRow rowGap={[2, 3, 4]}>
-              <GridColumn span={['12/12', '8/12']} offset={['0', '2/12']}>
-                <Box padding={[2, 3, 4]} width="full" background="white">
-                  <Inline
-                    space={2}
-                    alignY="center"
-                    justifyContent="spaceBetween"
-                  >
-                    <Text marginBottom={[1, 2]} variant="h3">
-                      Bæta við skiptalokum
-                    </Text>
-                    <button onClick={closeModal}>
-                      <Icon icon="close" />
-                    </button>
-                  </Inline>
-                  <Stack space={[2, 3]}>
-                    <GridRow rowGap={[1, 2]}>
-                      <GridColumn span="12/12">
-                        <Text variant="h4">Birting og kröfur</Text>
-                      </GridColumn>
-                      <GridColumn span={['12/12', '6/12']}>
-                        <DatePicker
-                          size="sm"
-                          locale="is"
-                          backgroundColor="blue"
-                          name="declaredClaims"
-                          label="Birting"
-                          placeholderText=""
-                          handleChange={(date) =>
-                            setCreateState({
-                              ...createState,
-                              scheduledAt: date.toISOString(),
-                            })
-                          }
-                        />
-                      </GridColumn>
-                      <GridColumn span={['12/12', '6/12']}>
-                        <Input
-                          size="sm"
-                          backgroundColor="blue"
-                          type="number"
-                          name="declaredClaims"
-                          label="Lýstar kröfur"
-                          onChange={(e) =>
-                            setCreateState({
-                              ...createState,
-                              declaredClaims: Number(e.target.value),
-                            })
-                          }
-                        />
-                      </GridColumn>
-                    </GridRow>
-                    <GridRow rowGap={[1, 2]}>
-                      <GridColumn span="12/12">
-                        <Text variant="h4">Undirritun</Text>
-                      </GridColumn>
-                      <GridColumn span={['12/12', '6/12']}>
-                        <Input
-                          required
-                          name="signatureName"
-                          backgroundColor="blue"
-                          size="sm"
-                          label="Nafn undirritara"
-                          onChange={(e) =>
-                            setCreateState({
-                              ...createState,
-                              signature: {
-                                ...createState.signature,
-                                name: e.target.value,
-                              },
-                            })
-                          }
-                        />
-                      </GridColumn>
-                      <GridColumn span={['12/12', '6/12']}>
-                        <Input
-                          required
-                          name="signatureLocation"
-                          backgroundColor="blue"
-                          size="sm"
-                          label="Staðsetning undirritunar"
-                          onChange={(e) =>
-                            setCreateState({
-                              ...createState,
-                              signature: {
-                                ...createState.signature,
-                                location: e.target.value,
-                              },
-                            })
-                          }
-                        />
-                      </GridColumn>
-                      <GridColumn span={['12/12', '6/12']}>
-                        <DatePicker
-                          locale="is"
-                          required
-                          name="signatureDate"
-                          backgroundColor="blue"
-                          label="Dagsetning undirritunar"
-                          size="sm"
-                          placeholderText=""
-                          handleChange={(date) =>
-                            setCreateState({
-                              ...createState,
-                              signature: {
-                                ...createState.signature,
-                                date: date.toISOString(),
-                              },
-                            })
-                          }
-                        />
-                      </GridColumn>
-                      <GridColumn span={['12/12', '6/12']}>
-                        <Input
-                          name="signatureOnBehalfOf"
-                          backgroundColor="blue"
-                          size="sm"
-                          label="Fyrir hönd undirritara"
-                          onChange={(e) =>
-                            setCreateState({
-                              ...createState,
-                              signature: {
-                                ...createState.signature,
-                                onBehalfOf: e.target.value,
-                              },
-                            })
-                          }
-                        />
-                      </GridColumn>
-                    </GridRow>
-                    <GridRow>
-                      <GridColumn span="12/12">
-                        <Inline align="right" alignY="center">
-                          <Button
-                            disabled={!canSubmit}
-                            icon="upload"
-                            iconType="outline"
-                            loading={isPending}
-                            onClick={() => {
-                              addDivisionEnding(
-                                {
-                                  applicationId: id as string,
-                                  ...createState,
-                                },
-                                {
-                                  onSuccess: () => {
-                                    queryClient.invalidateQueries(
-                                      trpc.advertsApi.getAdvertByCaseId.queryFilter(
-                                        { caseId: id as string },
-                                      ),
-                                    )
-                                    toast.success('Skiptalokum bætt við', {
-                                      toastId: 'add-division-ending-success',
-                                    })
-                                    closeModal()
-                                  },
-                                  onError: () =>
-                                    toast.error(
-                                      'Ekki tókst að bæta við skiptalokum',
-                                      { toastId: 'add-division-ending-error' },
-                                    ),
-                                },
-                              )
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              validateAndSubmit()
+            }}
+          >
+            <GridContainer>
+              <GridRow rowGap={[2, 3, 4]}>
+                <GridColumn span={['12/12', '8/12']} offset={['0', '2/12']}>
+                  <Box padding={[2, 3, 4]} width="full" background="white">
+                    <Inline
+                      space={2}
+                      alignY="center"
+                      justifyContent="spaceBetween"
+                    >
+                      <Text marginBottom={[1, 2]} variant="h3">
+                        Bæta við skiptalokum
+                      </Text>
+                      <button onClick={closeModal} type="button">
+                        <Icon icon="close" />
+                      </button>
+                    </Inline>
+                    <Stack space={[2, 3]}>
+                      <GridRow rowGap={[1, 2]}>
+                        <GridColumn span="12/12">
+                          <Text variant="h4">Birting og kröfur</Text>
+                        </GridColumn>
+                        <GridColumn span={['12/12', '6/12']}>
+                          <DatePicker
+                            required
+                            size="sm"
+                            locale="is"
+                            backgroundColor="blue"
+                            name="declaredClaims"
+                            label="Birting"
+                            placeholderText=""
+                            errorMessage={fieldErrors?.scheduledAt?.[0]}
+                            handleChange={(date) =>
+                              setFormState({
+                                ...formState,
+                                scheduledAt: date.toISOString(),
+                              })
+                            }
+                          />
+                        </GridColumn>
+                        <GridColumn span={['12/12', '6/12']}>
+                          <Input
+                            required
+                            size="sm"
+                            backgroundColor="blue"
+                            type="number"
+                            name="declaredClaims"
+                            label="Lýstar kröfur"
+                            errorMessage={fieldErrors?.declaredClaims?.[0]}
+                            onChange={(e) => {
+                              const value = e.target.value
+                                ? Number(e.target.value)
+                                : -1
+                              setFormState({
+                                ...formState,
+                                declaredClaims: value,
+                              })
                             }}
-                          >
-                            Bæta við skiptalokum
-                          </Button>
-                        </Inline>
-                      </GridColumn>
-                    </GridRow>
-                  </Stack>
-                </Box>
-              </GridColumn>
-            </GridRow>
-          </GridContainer>
+                          />
+                        </GridColumn>
+                      </GridRow>
+                      <DivisionSignatureFields
+                        formState={formState}
+                        setFormState={setFormState}
+                        fieldErrors={fieldErrors}
+                      />
+                      <GridRow>
+                        <GridColumn span="12/12">
+                          <Inline align="right" alignY="center">
+                            <Button
+                              type="submit"
+                              icon="upload"
+                              iconType="outline"
+                              loading={isPending}
+                            >
+                              Bæta við skiptalokum
+                            </Button>
+                          </Inline>
+                        </GridColumn>
+                      </GridRow>
+                    </Stack>
+                  </Box>
+                </GridColumn>
+              </GridRow>
+            </GridContainer>
+          </form>
         </Center>
       )}
     </ModalBase>
