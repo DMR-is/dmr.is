@@ -6,13 +6,16 @@ import {
   AddDivisionMeetingForApplicationDto,
   ApplicationDetailedDto,
   ApplicationDto,
-  ApplicationsDto,
+  GetApplicationsDto,
+  IslandIsSubmitCommonApplicationDto,
   UpdateApplicationDto,
-} from './dto/application.dto'
-import { IslandIsSubmitCommonApplicationDto } from './dto/island-is-application.dto'
+} from '../../models/application.model'
 
 export interface IApplicationService {
-  getMyApplications(query: PagingQuery, user: DMRUser): Promise<ApplicationsDto>
+  getMyApplications(
+    query: PagingQuery,
+    user: DMRUser,
+  ): Promise<GetApplicationsDto>
 
   createApplication(categoryId: string, user: DMRUser): Promise<ApplicationDto>
 

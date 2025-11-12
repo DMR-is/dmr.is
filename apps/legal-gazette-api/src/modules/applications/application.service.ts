@@ -35,8 +35,16 @@ import {
 } from '../../lib/constants'
 import { AdvertModel } from '../../models/advert.model'
 import {
+  AddDivisionEndingForApplicationDto,
+  AddDivisionMeetingForApplicationDto,
+  ApplicationDetailedDto,
+  ApplicationDto,
   ApplicationModel,
+  ApplicationStatusEnum,
   ApplicationTypeEnum,
+  GetApplicationsDto,
+  IslandIsSubmitCommonApplicationDto,
+  UpdateApplicationDto,
 } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
 import {
@@ -50,17 +58,7 @@ import {
 import { SettlementModel } from '../../models/settlement.model'
 import { TypeIdEnum } from '../../models/type.model'
 import { IAdvertService } from '../advert/advert.service.interface'
-import {
-  AddDivisionEndingForApplicationDto,
-  AddDivisionMeetingForApplicationDto,
-  ApplicationDetailedDto,
-  ApplicationDto,
-  ApplicationsDto,
-  UpdateApplicationDto,
-} from './dto/application.dto'
-import { IslandIsSubmitCommonApplicationDto } from './dto/island-is-application.dto'
 import { IApplicationService } from './application.service.interface'
-import { ApplicationStatusEnum } from './contants'
 
 @Injectable()
 export class ApplicationService implements IApplicationService {
@@ -541,7 +539,7 @@ export class ApplicationService implements IApplicationService {
   async getMyApplications(
     query: PagingQuery,
     user: DMRUser,
-  ): Promise<ApplicationsDto> {
+  ): Promise<GetApplicationsDto> {
     const { limit, offset } = getLimitAndOffset(query)
     const applications = await this.applicationModel.findAndCountAll({
       limit,
@@ -560,7 +558,7 @@ export class ApplicationService implements IApplicationService {
       applications.count,
     )
 
-    return { applications: mapped, ...paging }
+    return { applications: mapped, paging: paging }
   }
 
   async submitIslandIsApplication(
@@ -581,10 +579,10 @@ export class ApplicationService implements IApplicationService {
       islandIsApplicationId: body.islandIsApplicationId,
       createdBy: user.fullName,
       createdByNationalId: user.nationalId,
-      signatureName: body.signatureName,
-      signatureDate: body.signatureDate,
-      signatureLocation: body.signatureLocation,
-      signatureOnBehalfOf: body.signatureOnBehalfOf,
+      signatureName: body.signature.name,
+      signatureDate: body.signature.date,
+      signatureLocation: body.signature.location,
+      signatureOnBehalfOf: body.signature.onBehalfOf,
       title: `${category.title} - ${body.caption}`,
       caption: body.caption,
       additionalText: body.additionalText,

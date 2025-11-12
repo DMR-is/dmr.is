@@ -6,8 +6,8 @@ import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { IslandIsSubmitCommonApplicationDto } from '../../../models/application.model'
 import { IApplicationService } from '../application.service.interface'
-import { IslandIsSubmitCommonApplicationDto } from '../dto/island-is-application.dto'
 
 @Controller({
   path: 'applications/island-is',
