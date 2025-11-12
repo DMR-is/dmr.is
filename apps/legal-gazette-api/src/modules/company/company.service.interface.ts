@@ -2,7 +2,7 @@ import {
   CreateAdditionalAnnouncementsDto,
   RegisterCompanyFirmaskraDto,
   RegisterCompanyHlutafelagDto,
-} from './dto/company.dto'
+} from '../../dto/external-systems.dto'
 
 export interface ICompanyService {
   registerCompanyHlutafelag(body: RegisterCompanyHlutafelagDto): Promise<void>

@@ -10,7 +10,7 @@ import {
 
 import { ApiProperty, OmitType } from '@nestjs/swagger'
 
-import { ResponsiblePartyDto } from '../../company/dto/company.dto'
+import { ResponsiblePartyDto } from '../../../dto/external-systems.dto'
 
 export class ForeclosurePropertyDto {
   @ApiProperty({ type: String })
