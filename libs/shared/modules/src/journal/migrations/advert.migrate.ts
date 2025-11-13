@@ -62,9 +62,10 @@ export function advertMigrate(model: AdvertModel): Advert {
 }
 
 export function advertMigrateLean(model: AdvertModel): any {
+  const titleType = model.type ? toUtf8(model.type.title) : ''
   return {
     id: model.id ?? '',
-    title: `${model.type?.title ?? ''} ${model.subject ?? ''}`.trim(),
+    title: `${titleType} ${model.subject ?? ''}`.trim(),
     department: model.department
       ? advertDepartmentMigrate(model.department)
       : null,
@@ -72,6 +73,7 @@ export function advertMigrateLean(model: AdvertModel): any {
       ? {
           id: model.type.id,
           title: model.type.title,
+          slug: model.type.slug ?? '',
         }
       : null,
     subject: model.subject ?? '',
@@ -84,6 +86,7 @@ export function advertMigrateLean(model: AdvertModel): any {
     publicationDate: model.publicationDate.toISOString(),
     involvedParty: {
       title: model.involvedParty?.title ?? '',
+      slug: model.involvedParty?.slug ?? '',
     },
     categories: model.categories
       ? model.categories.map((item) => advertCategoryMigrate(item))

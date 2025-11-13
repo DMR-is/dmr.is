@@ -8,8 +8,10 @@ import {
   InternalServerErrorException,
   NotFoundException,
   Param,
+  Post,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common'
 import { ApiExcludeEndpoint, ApiOperation, ApiResponse } from '@nestjs/swagger'
 
@@ -20,7 +22,12 @@ import {
   DEFAULT_PAGE_SIZE,
 } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ICaseService, IJournalService } from '@dmr.is/modules'
+import {
+  AdminGuard,
+  ICaseService,
+  IJournalService,
+  ReindexRunnerService,
+} from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   CaseStatusEnum,
@@ -44,6 +51,8 @@ import { ResultWrapper } from '@dmr.is/types'
 
 import { AdvertsToRss } from '../../util/AdvertsToRss'
 
+import { Client } from '@opensearch-project/opensearch'
+
 @Controller({
   version: '1',
 })
@@ -51,6 +60,8 @@ export class JournalController {
   constructor(
     @Inject(IJournalService) private readonly journalService: IJournalService,
     @Inject(ICaseService) private readonly caseService: ICaseService,
+    @Inject(ReindexRunnerService) private readonly runner: ReindexRunnerService,
+    private readonly openSearch: Client,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -289,5 +300,133 @@ export class JournalController {
     }
     //redirect to the pdf url
     return res.redirect(301, url)
+  }
+
+  @UseGuards(AdminGuard)
+  @Post('reindex-adverts')
+  async reindex(@Query('max') max?: string) {
+    return this.runner.start(max ? Number(max) : undefined)
+  }
+
+  @UseGuards(AdminGuard)
+  @Get('reindex-adverts/status')
+  status() {
+    return this.runner.getStatus()
+  }
+
+  @Get('search-adverts')
+  async search(@Query() qp: GetAdvertsQueryParams) {
+    const INDEX_ALIAS = process.env.ADVERTS_SEARCH_ALIAS ?? 'ojoi_test'
+    const q = qp.search?.trim() ?? ''
+    const fromValue = qp.pageSize
+      ? (qp.page ?? 0) * qp.pageSize
+      : qp.page
+        ? qp.page * 20
+        : 0
+    const from = Math.max(0, fromValue)
+    const size = Math.min(Math.max(1, qp.pageSize ?? 20), 100)
+
+    // Build filters
+    const filters: any[] = []
+    if (qp.department)
+      filters.push({ term: { 'department.slug': qp.department } })
+    if (qp.year) {
+      filters.push({ term: { 'publicationNumber.year': qp.year } })
+    }
+    if (qp.type) {
+      filters.push({ term: { 'type.slug': qp.type } })
+    }
+    if (qp.category) {
+      filters.push({ term: { 'categories.slug': qp.category } })
+    }
+    if (qp.involvedParty) {
+      filters.push({ term: { 'involvedParty.slug': qp.involvedParty } })
+    }
+    if (qp.dateFrom || qp.dateTo) {
+      filters.push({
+        range: { publicationDate: { gte: qp.dateFrom, lte: qp.dateTo } },
+      })
+    }
+
+    // Detect "number/year"
+    const m = q.match(/^\s*(\d+)\s*\/\s*(\d{4})\s*$/)
+    const should: any[] = []
+    if (m) {
+      const number = String(parseInt(m[1], 10))
+      const year = m[2]
+      const full = `${number}/${year}`
+
+      // Strong boosts on exact fields
+      should.push({
+        term: { 'publicationNumber.full': { value: full, boost: 400 } },
+      })
+      should.push({
+        term: { 'publicationNumber.number': { value: number, boost: 45 } },
+      })
+      should.push({
+        term: { 'publicationNumber.year': { value: year, boost: 30 } },
+      })
+
+      // Weaker boosts if the pair appears in bodyText as adjacent tokens
+      should.push({
+        match_phrase: { bodyText: { query: `${number} ${year}`, boost: 50 } },
+      })
+    }
+
+    // Direct lookup by 11‑digit internal case number
+    const isInternalCase = /^\d{11}$/.test(qp.search ?? '')
+    if (isInternalCase) {
+      should.push({
+        term: { caseNumber: { value: qp.search, boost: 400 } },
+      })
+    }
+
+    // Query
+    const body: any = {
+      from,
+      size,
+      query: {
+        bool: {
+          must: qp.search
+            ? [
+                {
+                  multi_match: {
+                    query: qp.search,
+                    type: 'best_fields',
+                    fields: [
+                      'title^3',
+                      'title.stemmed',
+                      'title.compound',
+                      'department.title.stemmed^0.2',
+                      'bodyText',
+                      'caseNumber',
+                    ],
+                  },
+                },
+              ]
+            : [{ match_all: {} }],
+          filter: filters,
+          should,
+          minimum_should_match: 0,
+        },
+      },
+
+      // Don’t send back these fields.
+      _source: { excludes: ['bodyText', 'caseNumber'] },
+    }
+
+    const res: any = await this.openSearch.search({ index: INDEX_ALIAS, body })
+    const hits = (res.body ?? res).hits
+    return {
+      total: hits.total?.value ?? 0,
+      from,
+      size,
+      items: hits.hits.map((h: any) => ({
+        id: h._id,
+        score: h._score,
+        ...h._source,
+        highlight: h.highlight,
+      })),
+    }
   }
 }
