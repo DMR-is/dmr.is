@@ -8,8 +8,8 @@ import {
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { ForeclosurePropertyDto } from './dto/foreclosure.dto'
+import { LegalGazetteModels } from '../lib/constants'
+import { ForeclosurePropertyDto } from '../modules/foreclosure/dto/foreclosure.dto'
 import { ForeclosureModel } from './foreclosure.model'
 
 export type ForeclosurePropertyModelAttributes = {

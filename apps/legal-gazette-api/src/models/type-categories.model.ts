@@ -9,11 +9,11 @@ import {
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { CategoryModel } from '../category/category.model'
-import { CategoryDto } from '../category/dto/category.dto'
-import { TypeDto } from '../type/dto/type.dto'
-import { TypeModel } from '../type/type.model'
+import { LegalGazetteModels } from '../lib/constants'
+import { CategoryDto } from '../modules/category/dto/category.dto'
+import { TypeDto } from '../modules/type/dto/type.dto'
+import { CategoryModel } from './category.model'
+import { TypeModel } from './type.model'
 
 type TypeCategoriesAttributes = {
   typeId: string

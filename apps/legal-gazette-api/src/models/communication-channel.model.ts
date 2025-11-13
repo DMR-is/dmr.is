@@ -7,9 +7,9 @@ import {
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { AdvertModel } from '../advert/advert.model'
-import { CommunicationChannelDto } from './dto/communication-channel.dto'
+import { LegalGazetteModels } from '../lib/constants'
+import { CommunicationChannelDto } from '../modules/communication-channel/dto/communication-channel.dto'
+import { AdvertModel } from './advert.model'
 
 type CommunicationChannelAttributes = {
   advertId: string

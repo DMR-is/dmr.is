@@ -4,11 +4,11 @@ import { NotFoundException } from '@nestjs/common'
 
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { AdvertModel } from '../advert/advert.model'
-import { TypeModel } from '../type/type.model'
-import { TypeCategoriesModel } from '../type-categories/type-categories.model'
-import { CategoryDto } from './dto/category.dto'
+import { LegalGazetteModels } from '../lib/constants'
+import { CategoryDto } from '../modules/category/dto/category.dto'
+import { AdvertModel } from './advert.model'
+import { TypeModel } from './type.model'
+import { TypeCategoriesModel } from './type-categories.model'
 
 export enum CategoryDefaultIdEnum {
   RECALLS = '7D0E4B20-2FDD-4CA9-895B-9E7792ECA6E5',

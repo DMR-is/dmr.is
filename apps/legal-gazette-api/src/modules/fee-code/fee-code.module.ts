@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { FeeCodeModel } from '../../models/fee-code.model'
 import { FeeCodeController } from './fee-code.controller'
-import { FeeCodeModel } from './fee-code.model'
 import { FeeCodeService } from './fee-code.service'
 import { IFeeCodeService } from './fee-code.service.interface'
 

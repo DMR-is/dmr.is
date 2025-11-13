@@ -2,7 +2,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { AdvertModel } from '../advert/advert.model'
+import { AdvertModel } from '../../models/advert.model'
 import { PriceCalculatorService } from './price-calculator.service'
 import { IPriceCalculatorService } from './price-calculator.service.interface'
 

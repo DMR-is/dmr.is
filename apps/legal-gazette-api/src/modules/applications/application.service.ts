@@ -33,19 +33,23 @@ import {
   RECALL_CATEGORY_ID,
   RECALL_DECEASED_ADVERT_TYPE_ID,
 } from '../../lib/constants'
-import { AdvertModel } from '../advert/advert.model'
-import { IAdvertService } from '../advert/advert.service.interface'
-import { CaseModel } from '../case/case.model'
+import { AdvertModel } from '../../models/advert.model'
+import {
+  ApplicationModel,
+  ApplicationTypeEnum,
+} from '../../models/application.model'
+import { CaseModel } from '../../models/case.model'
 import {
   CategoryDefaultIdEnum,
   CategoryModel,
-} from '../category/category.model'
+} from '../../models/category.model'
 import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelModel,
-} from '../communication-channel/communication-channel.model'
-import { SettlementModel } from '../settlement/settlement.model'
-import { TypeIdEnum } from '../type/type.model'
+} from '../../models/communication-channel.model'
+import { SettlementModel } from '../../models/settlement.model'
+import { TypeIdEnum } from '../../models/type.model'
+import { IAdvertService } from '../advert/advert.service.interface'
 import {
   AddDivisionEndingForApplicationDto,
   AddDivisionMeetingForApplicationDto,
@@ -55,7 +59,6 @@ import {
   UpdateApplicationDto,
 } from './dto/application.dto'
 import { IslandIsSubmitCommonApplicationDto } from './dto/island-is-application.dto'
-import { ApplicationModel, ApplicationTypeEnum } from './application.model'
 import { IApplicationService } from './application.service.interface'
 import { ApplicationStatusEnum } from './contants'
 

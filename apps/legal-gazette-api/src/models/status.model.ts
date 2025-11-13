@@ -2,9 +2,9 @@ import { Column, DataType, HasMany } from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { AdvertModel } from '../advert/advert.model'
-import { StatusDto } from './dto/status.dto'
+import { LegalGazetteModels } from '../lib/constants'
+import { StatusDto } from '../modules/status/dto/status.dto'
+import { AdvertModel } from './advert.model'
 
 export enum StatusIdEnum {
   SUBMITTED = 'cd3bf301-52a1-493e-8c80-a391c310c840',

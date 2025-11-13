@@ -9,9 +9,9 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { getHtmlTextLength } from '@dmr.is/utils'
 
-import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
-import { FeeCodeModel } from '../fee-code/fee-code.model'
-import { TypeModel } from '../type/type.model'
+import { AdvertModel, AdvertVersionEnum } from '../../models/advert.model'
+import { FeeCodeModel } from '../../models/fee-code.model'
+import { TypeModel } from '../../models/type.model'
 import { GetPaymentDataResponseDto } from './dto/price-calculator.dto'
 import { IPriceCalculatorService } from './price-calculator.service.interface'
 

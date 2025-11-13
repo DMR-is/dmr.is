@@ -11,14 +11,14 @@ import {
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { AdvertCreateAttributes, AdvertModel } from '../advert/advert.model'
+import { LegalGazetteModels } from '../lib/constants'
+import { CaseDto } from '../modules/case/dto/case.dto'
+import { AdvertCreateAttributes, AdvertModel } from './advert.model'
 import {
   ApplicationCreateAttributes,
   ApplicationModel,
-} from '../applications/application.model'
-import { StatusIdEnum } from '../status/status.model'
-import { CaseDto } from './dto/case.dto'
+} from './application.model'
+import { StatusIdEnum } from './status.model'
 
 type CaseAttributes = {
   caseNumber: string

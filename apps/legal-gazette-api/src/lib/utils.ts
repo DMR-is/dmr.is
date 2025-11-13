@@ -5,8 +5,8 @@ import {
 
 import { getLogger } from '@dmr.is/logging'
 
-import { AdvertModel, AdvertVersionEnum } from '../modules/advert/advert.model'
-import { StatusIdEnum } from '../modules/status/status.model'
+import { AdvertModel, AdvertVersionEnum } from '../models/advert.model'
+import { StatusIdEnum } from '../models/status.model'
 
 export const mapIndexToVersion = (index: number): AdvertVersionEnum => {
   switch (index) {

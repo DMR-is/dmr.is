@@ -10,9 +10,9 @@ import {
 
 import { BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { FeeCodeModel } from '../fee-code/fee-code.model'
-import { TypeModel } from '../type/type.model'
+import { LegalGazetteModels } from '../lib/constants'
+import { FeeCodeModel } from './fee-code.model'
+import { TypeModel } from './type.model'
 
 type AdvertTypeFeeCodeAttributes = {
   advertTypeId: number

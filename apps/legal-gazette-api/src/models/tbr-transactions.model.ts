@@ -8,9 +8,9 @@ import {
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { AdvertModel } from '../advert/advert.model'
-import { FeeCodeModel } from '../fee-code/fee-code.model'
+import { LegalGazetteModels } from '../lib/constants'
+import { AdvertModel } from './advert.model'
+import { FeeCodeModel } from './fee-code.model'
 
 export type TBRTransactionAttributes = {
   advertId: string

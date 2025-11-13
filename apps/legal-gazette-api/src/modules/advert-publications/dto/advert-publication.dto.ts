@@ -11,7 +11,7 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 
-import { AdvertVersionEnum } from '../../advert/advert.model'
+import { AdvertVersionEnum } from '../../../models/advert.model'
 import { CategoryDto } from '../../category/dto/category.dto'
 import { TypeDto } from '../../type/dto/type.dto'
 

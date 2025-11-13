@@ -3,9 +3,9 @@ import { Column, DataType, HasMany } from 'sequelize-typescript'
 import { ApplicationRequirementStatementEnum } from '@dmr.is/legal-gazette/schemas'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { AdvertModel } from '../advert/advert.model'
-import { SettlementDto } from './dto/settlement.dto'
+import { LegalGazetteModels } from '../lib/constants'
+import { SettlementDto } from '../modules/settlement/dto/settlement.dto'
+import { AdvertModel } from './advert.model'
 type SettlementAttributes = {
   advertId: string
   liquidatorName: string

@@ -8,8 +8,8 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { AdvertModel } from '../modules/advert/advert.model'
-import { StatusIdEnum } from '../modules/status/status.model'
+import { AdvertModel } from '../models/advert.model'
+import { StatusIdEnum } from '../models/status.model'
 
 const LOGGIN_CONTEXT = 'AdvertUpdateGuard'
 const LOGGING_CATEGORY = 'advert-update-guard'
