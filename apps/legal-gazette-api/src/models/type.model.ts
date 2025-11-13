@@ -8,11 +8,13 @@ import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
 import { BaseEntityDto } from '../dto/base-entity.dto'
 import { LegalGazetteModels } from '../lib/constants'
-import { TypeWithCategoriesDto } from '../modules/type-categories/dto/type-categories.dto'
 import { AdvertTypeFeeCodeModel } from './advert-type-fee-code.model'
 import { CategoryModel } from './category.model'
 import { FeeCodeModel } from './fee-code.model'
-import { TypeCategoriesModel } from './type-categories.model'
+import {
+  TypeCategoriesModel,
+  TypeWithCategoriesDto,
+} from './type-categories.model'
 
 export enum TypeIdEnum {
   RECALL_BANKRUPTCY = '065C3FD9-58D1-436F-9FB8-C1F5C214FA50',
