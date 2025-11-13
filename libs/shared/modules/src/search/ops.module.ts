@@ -1,0 +1,32 @@
+import { Module } from '@nestjs/common'
+import { ScheduleModule } from '@nestjs/schedule'
+import { SequelizeModule } from '@nestjs/sequelize'
+
+import { AdvertTypeModel } from '../advert-type/models'
+import {
+  AdvertCategoryModel,
+  AdvertDepartmentModel,
+  AdvertInvolvedPartyModel,
+  AdvertModel,
+  AdvertStatusModel,
+} from '../journal/models'
+import { ReindexRunnerService } from './reindex-runner.service'
+import { OpenSearchModule } from './search.module'
+
+@Module({
+  imports: [
+    ScheduleModule.forRoot(),
+    OpenSearchModule,
+    SequelizeModule.forFeature([
+      AdvertModel,
+      AdvertDepartmentModel,
+      AdvertCategoryModel,
+      AdvertInvolvedPartyModel,
+      AdvertStatusModel,
+      AdvertTypeModel,
+    ]),
+  ],
+  providers: [ReindexRunnerService],
+  exports: [ReindexRunnerService],
+})
+export class OpsModule {}
