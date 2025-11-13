@@ -12,9 +12,8 @@ import { ApiProperty, PickType } from '@nestjs/swagger'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../lib/constants'
-import { StatusDto } from '../modules/status/dto/status.dto'
 import { AdvertModel } from './advert.model'
-import { StatusModel } from './status.model'
+import { StatusDto, StatusModel } from './status.model'
 
 export enum CommentTypeEnum {
   SUBMIT = 'SUBMIT',

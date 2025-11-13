@@ -1,9 +1,10 @@
 import { Column, DataType, HasMany } from 'sequelize-typescript'
 
+import { ApiProperty, PickType } from '@nestjs/swagger'
+
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../lib/constants'
-import { StatusDto } from '../modules/status/dto/status.dto'
 import { AdvertModel } from './advert.model'
 
 export enum StatusIdEnum {
@@ -36,18 +37,21 @@ export class StatusModel extends BaseModel<StatusAttributes, StatusAttributes> {
     allowNull: false,
     primaryKey: true,
   })
+  @ApiProperty({ type: String, enum: StatusIdEnum, enumName: 'StatusIdEnum' })
   id!: StatusIdEnum
 
   @Column({
     type: DataType.ENUM(...Object.values(StatusEnum)),
     allowNull: false,
   })
+  @ApiProperty({ type: String, enum: StatusEnum, enumName: 'StatusEnum' })
   title!: StatusEnum
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
+  @ApiProperty({ type: String })
   slug!: string
 
   @HasMany(() => AdvertModel, {
@@ -75,4 +79,17 @@ export class StatusModel extends BaseModel<StatusAttributes, StatusAttributes> {
   fromModel(): StatusDto {
     return StatusModel.fromModel(this)
   }
+}
+
+export class StatusDto extends PickType(StatusModel, [
+  'id',
+  'title',
+  'slug',
+] as const) {}
+
+export class GetStatusesDto {
+  @ApiProperty({
+    type: [StatusDto],
+  })
+  statuses!: StatusDto[]
 }
