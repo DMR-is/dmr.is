@@ -78,7 +78,7 @@ export const RecallSettlementFields = () => {
   return (
     <GridRow rowGap={[2, 3]}>
       <GridColumn span="12/12">
-        <Text variant="h3">{title}</Text>
+        <Text variant="h4">{title}</Text>
       </GridColumn>
       {onLookupError && (
         <GridColumn span="12/12">

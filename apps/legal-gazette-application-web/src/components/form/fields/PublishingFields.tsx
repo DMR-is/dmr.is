@@ -87,7 +87,7 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
     <Box id="publishingDates">
       <GridRow rowGap={[2, 3]}>
         <GridColumn span="12/12">
-          <Text variant="h3">{`Birting${additionalTitle ? ` ${additionalTitle}` : ''}`}</Text>
+          <Text variant="h4">{`Birting${additionalTitle ? ` ${additionalTitle}` : ''}`}</Text>
         </GridColumn>
         {alert && <GridColumn span="12/12">{alert}</GridColumn>}
         <GridColumn span="12/12">
