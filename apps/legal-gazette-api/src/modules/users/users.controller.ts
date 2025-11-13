@@ -5,7 +5,7 @@ import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
-import { GetUsersResponse, UserDto } from './dto/user.dto'
+import { GetUsersResponse, UserDto } from '../../models/users.model'
 import { IUsersService } from './users.service.interface'
 
 @ApiBearerAuth()
