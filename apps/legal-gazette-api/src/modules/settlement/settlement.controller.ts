@@ -3,7 +3,7 @@ import { Body, Controller, Inject, Param, Patch } from '@nestjs/common'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
-import { UpdateSettlementDto } from './dto/settlement.dto'
+import { UpdateSettlementDto } from '../../models/settlement.model'
 import { ISettlementService } from './settlement.service.interface'
 
 @Controller({
