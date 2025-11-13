@@ -24,10 +24,9 @@ import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../lib/constants'
-import { TypeDto } from '../modules/type/dto/type.dto'
 import { AdvertDto, AdvertModel, AdvertVersionEnum } from './advert.model'
 import { CategoryDto, CategoryModel } from './category.model'
-import { TypeIdEnum, TypeModel } from './type.model'
+import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
 
 export type AdvertPublicationsAttributes = {
   advertId: string

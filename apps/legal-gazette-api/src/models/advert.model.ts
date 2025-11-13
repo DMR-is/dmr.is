@@ -42,7 +42,6 @@ import { cleanLegacyHtml } from '@dmr.is/utils'
 import { DetailedDto } from '../dto/detailed.dto'
 import { LegalGazetteModels } from '../lib/constants'
 import { getAdvertHTMLMarkup } from '../lib/templates'
-import { TypeDto } from '../modules/type/dto/type.dto'
 import {
   AdvertPublicationDto,
   AdvertPublicationModel,
@@ -68,7 +67,7 @@ import {
 } from './settlement.model'
 import { StatusDto, StatusIdEnum, StatusModel } from './status.model'
 import { TBRTransactionModel } from './tbr-transactions.model'
-import { TypeIdEnum, TypeModel } from './type.model'
+import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
 import { UserModel } from './users.model'
 
 type AdvertAttributes = {
