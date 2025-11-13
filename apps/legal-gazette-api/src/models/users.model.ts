@@ -1,10 +1,11 @@
+import { IsString } from 'class-validator'
 import { Column, DataType, DefaultScope } from 'sequelize-typescript'
+
+import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../lib/constants'
-import { UserDto } from '../modules/users/dto/user.dto'
-
 export type UserAttributes = {
   id: string
   nationalId: string
@@ -38,18 +39,21 @@ export class UserModel extends BaseModel<UserAttributes, UserCreateAttributes> {
     allowNull: false,
     unique: true,
   })
+  @ApiProperty({ type: String })
   nationalId!: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: false,
   })
+  @ApiProperty({ type: String })
   firstName!: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: false,
   })
+  @ApiProperty({ type: String })
   lastName!: string
 
   @Column({
@@ -57,6 +61,7 @@ export class UserModel extends BaseModel<UserAttributes, UserCreateAttributes> {
     allowNull: false,
     unique: true,
   })
+  @ApiProperty({ type: String })
   email!: string
 
   @Column({
@@ -64,7 +69,8 @@ export class UserModel extends BaseModel<UserAttributes, UserCreateAttributes> {
     allowNull: true,
     defaultValue: null,
   })
-  phone!: string | null
+  @ApiProperty({ type: String, required: false })
+  phone?: string | null
 
   get fullName(): string {
     return `${this.firstName} ${this.lastName}`
@@ -76,11 +82,38 @@ export class UserModel extends BaseModel<UserAttributes, UserCreateAttributes> {
       nationalId: model.nationalId,
       name: `${model.firstName} ${model.lastName}`,
       email: model.email,
-      phone: model.phone,
+      phone: model?.phone ?? undefined,
     }
   }
 
   fromModel() {
     return UserModel.fromModel(this)
   }
+}
+
+export class UserDto extends PickType(UserModel, [
+  'id',
+  'nationalId',
+  'email',
+  'phone',
+] as const) {
+  @ApiProperty({
+    type: String,
+  })
+  @IsString()
+  name!: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsString()
+  phone?: string
+}
+
+export class GetUsersResponse {
+  @ApiProperty({
+    type: [UserDto],
+  })
+  users!: UserDto[]
 }
