@@ -35,7 +35,6 @@ import { Paging } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../lib/constants'
-import { TypeDto } from '../modules/type/dto/type.dto'
 import { CaseModel } from './case.model'
 import { CategoryDto, CategoryModel } from './category.model'
 import {
@@ -43,7 +42,7 @@ import {
   CreateCommunicationChannelDto,
 } from './communication-channel.model'
 import { CourtDistrictModel } from './court-district.model'
-import { TypeIdEnum, TypeModel } from './type.model'
+import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
 
 export enum ApplicationStatusEnum {
   DRAFT = 'DRAFT',
