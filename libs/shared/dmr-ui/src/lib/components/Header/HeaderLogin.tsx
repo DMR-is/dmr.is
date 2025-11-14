@@ -1,16 +1,18 @@
 'use client'
 
 import {
+  Box,
   DropdownMenu,
+  FocusableBox,
   GridColumn,
   GridContainer,
   GridRow,
   Hidden,
   Inline,
-  Logo,
   useBreakpoint,
 } from '@island.is/island-ui/core'
 
+import skjaldarmerki from './images/skjaldarmerki.svg'
 import * as styles from './Header.css'
 
 export type HeaderProps = {
@@ -27,27 +29,43 @@ export const HeaderLogin = ({ variant = 'blue' }: HeaderProps) => {
           <GridRow>
             <GridColumn span="12/12">
               <Inline alignY="center" justifyContent="spaceBetween">
-                <Logo
-                  id="header-logo"
-                  width={lg ? 160 : 30}
-                  iconOnly={lg ? false : true}
-                />
-                <DropdownMenu
-                  icon="person"
-                  items={[
-                    {
-                      href: '/innskraning',
-                      title: 'Skrá inn',
-                    },
-                    {
-                      // eslint-disable-next-line @typescript-eslint/no-empty-function
-                      onClick: () => {},
-                      title: 'Stofna aðgang',
-                    },
-                  ]}
-                  openOnHover
-                  title="Innskráning"
-                />
+                <Inline
+                  alignY="center"
+                  justifyContent="flexStart"
+                  space={[2, 2, 4]}
+                >
+                  <FocusableBox href={'/'} data-testid="link-back-home">
+                    <img
+                      src={skjaldarmerki}
+                      alt="Skjaldarmerki"
+                      width={lg ? 70 : 50}
+                      height={lg ? 40 : 32}
+                    />
+                  </FocusableBox>
+                </Inline>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="flexEnd"
+                  width="full"
+                >
+                  <DropdownMenu
+                    icon="person"
+                    items={[
+                      {
+                        href: '/innskraning',
+                        title: 'Skrá inn',
+                      },
+                      {
+                        // eslint-disable-next-line @typescript-eslint/no-empty-function
+                        onClick: () => {},
+                        title: 'Stofna aðgang',
+                      },
+                    ]}
+                    openOnHover
+                    title="Innskráning"
+                  />
+                </Box>
               </Inline>
             </GridColumn>
           </GridRow>
