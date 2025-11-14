@@ -1,9 +1,7 @@
-import { HydrateClient,prefetch } from '@dmr.is/trpc/client/server'
+import { HydrateClient, prefetch } from '@dmr.is/trpc/client/server'
 import { Header } from '@dmr.is/ui/components/Header/Header'
 
-import { Providers } from '../../components/providers/Providers'
-import { TRPCReactProvider } from '../../lib/trpc/client/Provider'
-import {  trpc } from '../../lib/trpc/client/server'
+import { trpc } from '../../lib/trpc/client/server'
 
 export default async function RootLayout({
   children,
@@ -13,13 +11,9 @@ export default async function RootLayout({
   prefetch(trpc.getAllEntities.queryOptions())
 
   return (
-    <TRPCReactProvider>
-      <HydrateClient>
-        <Providers>
-          <Header variant="blue" />
-          {children}
-        </Providers>
-      </HydrateClient>
-    </TRPCReactProvider>
+    <HydrateClient>
+      <Header variant="blue" />
+      {children}
+    </HydrateClient>
   )
 }
