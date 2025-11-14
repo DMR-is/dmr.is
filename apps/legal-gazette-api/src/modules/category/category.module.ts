@@ -8,4 +8,4 @@ import { CategoryController } from './category.controller'
   imports: [SequelizeModule.forFeature([CategoryModel])],
   controllers: [CategoryController],
 })
-export class CategoryModule {}
+export class CategoryControllerModule {}

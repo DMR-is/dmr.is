@@ -2,14 +2,12 @@ import { Transform } from 'class-transformer'
 import { IsBoolean, IsOptional, IsUUID } from 'class-validator'
 import { BelongsToMany } from 'sequelize-typescript'
 
-import { NotFoundException } from '@nestjs/common'
 import { ApiProperty } from '@nestjs/swagger'
 
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
 import { BaseEntityDto } from '../dto/base-entity.dto'
 import { LegalGazetteModels } from '../lib/constants'
-import { AdvertModel } from './advert.model'
 import { TypeModel } from './type.model'
 import { TypeCategoriesModel } from './type-categories.model'
 
@@ -26,18 +24,6 @@ export enum CategoryDefaultIdEnum {
 export class CategoryModel extends BaseEntityModel<CategoryDto> {
   @BelongsToMany(() => TypeModel, { through: () => TypeCategoriesModel })
   types!: TypeModel[]
-  static async setAdvertCategory(advertId: string, categoryId: string) {
-    const advert = await AdvertModel.unscoped().findByPk(advertId, {
-      attributes: ['id', 'statusId'],
-    })
-
-    if (!advert) {
-      throw new NotFoundException(`Advert not found`)
-    }
-
-    advert.categoryId = categoryId
-    await advert.save()
-  }
 }
 
 export class GetCategoriesQueryDto {

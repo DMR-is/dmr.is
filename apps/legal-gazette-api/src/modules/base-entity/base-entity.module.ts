@@ -29,4 +29,4 @@ import { TypeController } from '../type/type.controller'
   providers: [],
   exports: [],
 })
-export class BaseEntityModule {}
+export class BaseEntityControllerModule {}

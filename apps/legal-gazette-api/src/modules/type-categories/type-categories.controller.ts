@@ -8,7 +8,7 @@ import {
   TypeWithCategoriesQueryDto,
   TypeWithCategoriesResponseDto,
 } from '../../models/type-categories.model'
-import { ITypeCategoriesService } from './type-categories.service.interface'
+import { ITypeCategoriesService } from '../../services/type-categories/type-categories.service.interface'
 
 @Controller({
   path: 'type-categories',

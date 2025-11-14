@@ -6,7 +6,7 @@ import {
   UpdateAdvertPublicationDto,
 } from '../../models/advert-publication.model'
 
-export interface IAdvertPublicationService {
+export interface IPublicationService {
   createAdvertPublication(advertId: string): Promise<void>
 
   updateAdvertPublication(
@@ -24,6 +24,10 @@ export interface IAdvertPublicationService {
 
   getPublications(query?: GetPublicationsQueryDto): Promise<GetPublicationsDto>
 
+  getPublishedPublicationsByAdvertId(
+    advertId: string,
+  ): Promise<AdvertPublicationDetailedDto[]>
+
   publishAdvertPublication(
     advertId: string,
     publicationId: string,
@@ -32,4 +36,4 @@ export interface IAdvertPublicationService {
   publishAdverts(advertIds: string[]): Promise<void>
 }
 
-export const IAdvertPublicationService = Symbol('IAdvertPublicationService')
+export const IPublicationService = Symbol('IPublicationService')

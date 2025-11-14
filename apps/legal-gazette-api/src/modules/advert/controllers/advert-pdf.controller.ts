@@ -1,24 +1,23 @@
 import { Response } from 'express'
 
-import {
-  BadGatewayException,
-  Controller,
-  Get,
-  Inject,
-  Param,
-  Res,
-} from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
-import { ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { Controller, Get, Inject, Param, Res, UseGuards } from '@nestjs/common'
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 
-import { AdvertModel } from '../../../models/advert.model'
-import { PdfService } from '../../pdf/pdf.service'
+import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { CurrentUser } from '@dmr.is/decorators'
+import { TokenJwtAuthGuard } from '@dmr.is/modules'
+
+import { PdfService } from '../../../services/pdf/pdf.service'
+import { IPublicationService } from '../../../services/publication/publication.service.interface'
 
 @Controller({ path: 'adverts/pdf', version: '1' })
+@ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard)
 export class AdvertPdfController {
   constructor(
     @Inject(PdfService) private readonly pdfService: PdfService,
-    @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    @Inject(IPublicationService)
+    private readonly publicationService: IPublicationService,
   ) {}
 
   @Get(':id')
@@ -35,35 +34,30 @@ export class AdvertPdfController {
       },
     },
   })
-  async getAdvertPdf(@Param('id') id: string, @Res() res: Response) {
-    const advert = await this.advertModel.findByPkOrThrow(id)
+  async getAdvertPdf(
+    @Param('id') id: string,
+    @CurrentUser() user: DMRUser,
+    @Res() res: Response,
+  ) {
+    const publications =
+      await this.publicationService.getPublishedPublicationsByAdvertId(id)
 
-    const publications = advert.publications.filter(
-      (pub) => pub.publishedAt !== null,
-    )
+    const latest = publications[publications.length - 1]
 
-    if (publications.length === 0 || !advert.publicationNumber) {
-      throw new BadGatewayException('Advert is not published')
-    }
-
-    const publication = publications[publications.length - 1]
-    const publicationId = publication.id
-    const version = publication.versionLetter
-    const publicationPdf = publication.pdfUrl
-
-    const html = advert.htmlMarkup(version)
+    const publicationId = latest.publication.id
+    const publicationPdf = latest.publication.pdfUrl
 
     const pdf = await this.pdfService.handleAdvertPdf(
       id,
       publicationId,
-      html,
+      latest.html,
       publicationPdf,
-      advert.title,
+      latest.advert.title,
     )
 
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="advert-${advert.publicationNumber}.pdf"`,
+      'Content-Disposition': `inline; filename="advert-${latest.advert.publicationNumber}.pdf"`,
       'Content-Length': pdf.length,
     })
 

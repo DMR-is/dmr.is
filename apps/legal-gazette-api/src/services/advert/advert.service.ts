@@ -25,7 +25,6 @@ import { StatusIdEnum } from '../../models/status.model'
 import { UserModel } from '../../models/users.model'
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
 import { IAdvertService } from './advert.service.interface'
-
 @Injectable()
 export class AdvertService implements IAdvertService {
   constructor(

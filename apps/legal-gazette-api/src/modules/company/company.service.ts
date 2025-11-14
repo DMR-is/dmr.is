@@ -7,7 +7,7 @@ import {
   RegisterCompanyFirmaskraDto,
   RegisterCompanyHlutafelagDto,
 } from '../../dto/external-systems.dto'
-import { IAdvertService } from '../advert/advert.service.interface'
+import { IAdvertService } from '../../services/advert/advert.service.interface'
 import { ICompanyService } from './company.service.interface'
 import {
   formatCompanyAnnouncement as getCompanyAnnouncementMarkup,
@@ -18,7 +18,8 @@ import {
 @Injectable()
 export class CompanyService implements ICompanyService {
   constructor(
-    @Inject(IAdvertService) private readonly advertService: IAdvertService,
+    @Inject(IAdvertService)
+    private readonly advertService: IAdvertService,
   ) {}
 
   async createAdditionalAnnouncements(

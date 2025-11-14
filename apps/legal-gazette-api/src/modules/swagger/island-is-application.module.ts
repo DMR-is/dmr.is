@@ -8,14 +8,15 @@ import { ApplicationModel } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
 import { CategoryModel } from '../../models/category.model'
 import { SettlementModel } from '../../models/settlement.model'
-import { AdvertModule } from '../advert/advert.module'
+import { AdvertModule } from '../../services/advert/advert.module'
 import { ApplicationService } from '../applications/application.service'
 import { IApplicationService } from '../applications/application.service.interface'
 import { IslandIsApplicationController } from '../applications/controllers/island-is-application.controller'
-import { BaseEntityModule } from '../base-entity/base-entity.module'
+import { BaseEntityControllerModule } from '../base-entity/base-entity.module'
 
 @Module({
   imports: [
+    AdvertModule,
     NationalRegistryModule,
     SequelizeModule.forFeature([
       CaseModel,
@@ -24,8 +25,7 @@ import { BaseEntityModule } from '../base-entity/base-entity.module'
       SettlementModel,
       AdvertModel,
     ]),
-    BaseEntityModule,
-    AdvertModule,
+    BaseEntityControllerModule,
   ],
   controllers: [IslandIsApplicationController],
   providers: [

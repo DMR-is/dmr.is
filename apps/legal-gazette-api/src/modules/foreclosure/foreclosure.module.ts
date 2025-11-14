@@ -3,7 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ForeclosureModel } from '../../models/foreclosure.model'
 import { ForeclosurePropertyModel } from '../../models/foreclosure-property.model'
-import { AdvertModule } from '../advert/advert.module'
+import { AdvertModule } from '../../services/advert/advert.module'
 import { ForeclosureController } from './foreclosure.controller'
 import { ForeclosureService } from './foreclosure.service'
 import { IForeclosureService } from './foreclosure.service.interface'

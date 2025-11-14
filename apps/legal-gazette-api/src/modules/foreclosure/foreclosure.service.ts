@@ -15,14 +15,15 @@ import {
   ForeclosurePropertyModel,
 } from '../../models/foreclosure-property.model'
 import { TypeIdEnum } from '../../models/type.model'
-import { IAdvertService } from '../advert/advert.service.interface'
+import { IAdvertService } from '../../services/advert/advert.service.interface'
 import { IForeclosureService } from './foreclosure.service.interface'
 
 @Injectable()
 export class ForeclosureService implements IForeclosureService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @Inject(IAdvertService) private readonly advertService: IAdvertService,
+    @Inject(IAdvertService)
+    private readonly advertService: IAdvertService,
     @InjectModel(ForeclosureModel)
     private readonly foreclosureModel: typeof ForeclosureModel,
     @InjectModel(ForeclosurePropertyModel)
