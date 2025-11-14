@@ -256,12 +256,12 @@ export class ApplicationService implements IApplicationService {
   async addDivisionMeetingAdvertToApplication(
     applicationId: string,
     body: AddDivisionMeetingForApplicationDto,
-    user: DMRUser,
+    submittee: PersonDto,
   ): Promise<void> {
     const application = await this.applicationModel.findOneOrThrow({
       where: {
         id: applicationId,
-        submittedByNationalId: user.nationalId,
+        submittedByNationalId: submittee.kennitala,
         applicationType: {
           [Op.or]: [
             ApplicationTypeEnum.RECALL_BANKRUPTCY,
@@ -310,8 +310,8 @@ export class ApplicationService implements IApplicationService {
     await this.advertService.createAdvert({
       caseId: application.caseId,
       categoryId: CategoryDefaultIdEnum.DIVISION_MEETINGS,
-      createdBy: user.fullName,
-      createdByNationalId: user.nationalId,
+      createdBy: submittee.nafn,
+      createdByNationalId: submittee.kennitala,
       signatureName: body.signature?.name,
       signatureDate: body.signature?.date,
       signatureLocation: body.signature?.location,
@@ -334,12 +334,12 @@ export class ApplicationService implements IApplicationService {
   async addDivisionEndingAdvertToApplication(
     applicationId: string,
     body: AddDivisionEndingForApplicationDto,
-    user: DMRUser,
+    submittee: PersonDto,
   ): Promise<void> {
     const application = await this.applicationModel.findOneOrThrow({
       where: {
         id: applicationId,
-        submittedByNationalId: user.nationalId,
+        submittedByNationalId: submittee.kennitala,
         status: ApplicationStatusEnum.SUBMITTED,
         applicationType: {
           [Op.or]: [
@@ -366,41 +366,31 @@ export class ApplicationService implements IApplicationService {
       advertSettlement.settlementId,
     )
 
-    await settlement.update({ settlementDeclaredClaims: body.declaredClaims })
+    await settlement.update({ declaredClaims: body.declaredClaims })
 
-    let communicationChannels: CommunicationChannelCreateAttributes[] = []
+    const recallAdvert = await this.advertModel.unscoped().findOneOrThrow({
+      attributes: ['id', 'judgementDate'],
+      include: [{ model: CommunicationChannelModel }],
+      where: {
+        caseId: application.caseId,
+        categoryId: RECALL_CATEGORY_ID,
+      },
+    })
 
-    if (body.communicationChannels && body.communicationChannels.length > 0) {
-      communicationChannels = body.communicationChannels
-    } else {
-      const recallAdvert = await this.advertModel.unscoped().findOneOrThrow({
-        attributes: ['id'],
-        include: [{ model: CommunicationChannelModel }],
-        where: {
-          caseId: application.caseId,
-          categoryId: RECALL_CATEGORY_ID,
-        },
-      })
-
-      if (
-        recallAdvert.communicationChannels &&
-        recallAdvert.communicationChannels.length
-      ) {
-        communicationChannels = recallAdvert.communicationChannels.map(
-          (ch) => ({
+    const communicationChannels: CommunicationChannelCreateAttributes[] =
+      body.communicationChannels
+        ? body.communicationChannels
+        : recallAdvert.communicationChannels.map((ch) => ({
             email: ch.email,
             name: ch.name,
             phone: ch.phone,
-          }),
-        )
-      }
-    }
+          }))
 
     await this.advertService.createAdvert({
       caseId: application.caseId,
       categoryId: CategoryDefaultIdEnum.DIVISION_ENDINGS,
-      createdBy: user.fullName,
-      createdByNationalId: user.nationalId,
+      createdBy: submittee.nafn,
+      createdByNationalId: submittee.kennitala,
       signatureName: body.signature?.name,
       signatureDate: body.signature?.date,
       signatureLocation: body.signature?.location,
@@ -409,6 +399,7 @@ export class ApplicationService implements IApplicationService {
       title: `Skiptalok - ${application.settlementName}`,
       additionalText: body.additionalText,
       settlementId: settlement.id,
+      judgementDate: recallAdvert?.judgementDate?.toISOString(),
       communicationChannels: communicationChannels.map((ch) => ({
         email: ch.email,
         name: ch.name ?? undefined,
@@ -562,10 +553,10 @@ export class ApplicationService implements IApplicationService {
 
   async submitIslandIsApplication(
     body: IslandIsSubmitCommonApplicationDto,
-    user: DMRUser,
+    submittee: PersonDto,
   ): Promise<void> {
     const newCase = await this.caseModel.create(
-      { involvedPartyNationalId: user.nationalId },
+      { involvedPartyNationalId: submittee.kennitala },
       { returning: ['id'] },
     )
 
@@ -576,8 +567,8 @@ export class ApplicationService implements IApplicationService {
       typeId: body.typeId,
       categoryId: body.categoryId,
       islandIsApplicationId: body.islandIsApplicationId,
-      createdBy: user.fullName,
-      createdByNationalId: user.nationalId,
+      createdBy: submittee.nafn,
+      createdByNationalId: submittee.kennitala,
       signatureName: body.signatureName,
       signatureDate: body.signatureDate,
       signatureLocation: body.signatureLocation,

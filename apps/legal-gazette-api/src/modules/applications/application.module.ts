@@ -3,6 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { NationalRegistryModule } from '@dmr.is/clients/national-registry'
 
+import { CurrentNationalRegistryPersonGuard } from '../../guards/current-submitte.guard'
 import { AdvertModel } from '../advert/advert.model'
 import { AdvertModule } from '../advert/advert.module'
 import { CaseModel } from '../case/case.model'
@@ -31,6 +32,7 @@ import { IApplicationService } from './application.service.interface'
       provide: IApplicationService,
       useClass: ApplicationService,
     },
+    CurrentNationalRegistryPersonGuard,
   ],
   exports: [],
 })

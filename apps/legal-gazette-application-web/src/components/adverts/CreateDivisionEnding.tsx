@@ -47,7 +47,7 @@ export const CreateDivisionEnding = ({
       signature: {
         name: '',
         location: '',
-        date: '',
+        date: undefined,
         onBehalfOf: '',
       },
       additionalText: '',
