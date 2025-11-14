@@ -16,4 +16,4 @@ import { IPriceCalculatorService } from './price-calculator.service.interface'
   ],
   exports: [IPriceCalculatorService],
 })
-export class PriceCalculatorModule {}
+export class PriceCalculatorProviderModule {}

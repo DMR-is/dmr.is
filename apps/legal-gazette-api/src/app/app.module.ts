@@ -36,6 +36,7 @@ import { TypeModel } from '../models/type.model'
 import { TypeCategoriesModel } from '../models/type-categories.model'
 import { UserModel } from '../models/users.model'
 import { AdvertControllerModule } from '../modules/advert/advert.controller.module'
+import { PublicationControllerModule } from '../modules/advert/publications/publication.controller.module'
 import { StatisticsControllerModule } from '../modules/advert/statistics/statistics.controller.module'
 import { ApplictionControllerModule } from '../modules/applications/application.controller.module'
 import { BaseEntityControllerModule } from '../modules/base-entity/base-entity.controller.module'
@@ -45,7 +46,6 @@ import { CommunicationChannelControllerModule } from '../modules/communication-c
 import { CompanyControllerModule } from '../modules/external-systems/company/company.controller.module'
 import { ForeclosureControllerModule } from '../modules/external-systems/foreclosure/foreclosure.controller.module'
 import { LGNationalRegistryControllerModule } from '../modules/national-registry/national-registry.controller.module'
-import { AdvertPublicationControllerModule } from '../modules/publications/publication.controller.module'
 import { SettlementControllerModule } from '../modules/settlement/settlement.controller.module'
 import { SubscriberControllerModule } from '../modules/subscribers/subscriber.controller.module'
 import { ApplicationWebModule } from '../modules/swagger/application-web.module'
@@ -105,7 +105,7 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
     CompanyControllerModule,
     CaseControllerModule,
     AdvertControllerModule,
-    AdvertPublicationControllerModule,
+    PublicationControllerModule,
     SubscriberControllerModule,
     UserControllerModule,
     ApplictionControllerModule,

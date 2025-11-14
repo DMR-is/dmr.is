@@ -9,4 +9,4 @@ import { PublicationProviderModule } from './publication.provider.module'
   providers: [],
   exports: [],
 })
-export class AdvertPublicationControllerModule {}
+export class PublicationControllerModule {}

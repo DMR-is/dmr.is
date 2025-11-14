@@ -5,7 +5,7 @@ import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { PublishAdvertsBody } from '../../../models/advert.model'
-import { IPublicationService } from '../../publications/publication.service.interface'
+import { IPublicationService } from '../publications/publication.service.interface'
 
 @Controller({
   path: 'adverts',

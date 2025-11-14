@@ -9,17 +9,17 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
-import { LegalGazetteEvents } from '../../core/constants'
-import { mapIndexToVersion, mapVersionToIndex } from '../../core/utils'
-import { AdvertModel, AdvertVersionEnum } from '../../models/advert.model'
+import { LegalGazetteEvents } from '../../../core/constants'
+import { mapIndexToVersion, mapVersionToIndex } from '../../../core/utils'
+import { AdvertModel, AdvertVersionEnum } from '../../../models/advert.model'
 import {
   AdvertPublicationDetailedDto,
   AdvertPublicationModel,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,
-} from '../../models/advert-publication.model'
-import { StatusIdEnum } from '../../models/status.model'
+} from '../../../models/advert-publication.model'
+import { StatusIdEnum } from '../../../models/status.model'
 import { AdvertPublishedEvent } from './events/advert-published.event'
 import { IPublicationService } from './publication.service.interface'
 @Injectable()

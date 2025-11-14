@@ -2,12 +2,12 @@ import { Inject, Injectable } from '@nestjs/common'
 
 import { formatDate } from '@dmr.is/utils'
 
+import { IAdvertService } from '../../advert/advert.service.interface'
 import {
   CreateAdditionalAnnouncementsDto,
   RegisterCompanyFirmaskraDto,
   RegisterCompanyHlutafelagDto,
 } from '../external-systems.dto'
-import { IAdvertService } from '../../advert/advert.service.interface'
 import { ICompanyService } from './company.service.interface'
 import {
   formatCompanyAnnouncement as getCompanyAnnouncementMarkup,

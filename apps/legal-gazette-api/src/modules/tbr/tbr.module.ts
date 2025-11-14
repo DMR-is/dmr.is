@@ -1,7 +1,5 @@
 import { DynamicModule, Module } from '@nestjs/common'
-import { SequelizeModule } from '@nestjs/sequelize'
 
-import { TBRTransactionModel } from '../../models/tbr-transactions.model'
 import { ITBRConfig } from './tbr.config'
 import { TBRService } from './tbr.service'
 import { ITBRService } from './tbr.service.interface'
@@ -10,11 +8,11 @@ import { ITBRService } from './tbr.service.interface'
 export class TBRModule {
   static forRoot(config: ITBRConfig): DynamicModule {
     return {
-      imports: [SequelizeModule.forFeature([TBRTransactionModel])],
+      imports: [],
       module: TBRModule,
       providers: [
         {
-          provide: ITBRService,
+          provide: ITBRConfig,
           useValue: config,
         },
         {

@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common'
 
+import { PublicationControllerModule } from '../advert/publications/publication.controller.module'
 import { BaseEntityControllerModule } from '../base-entity/base-entity.controller.module'
-import { AdvertPublicationControllerModule } from '../publications/publication.controller.module'
 import { SubscriberControllerModule } from '../subscribers/subscriber.controller.module'
 
 @Module({
   imports: [
     BaseEntityControllerModule,
     SubscriberControllerModule,
-    AdvertPublicationControllerModule,
+    PublicationControllerModule,
   ],
   controllers: [],
   providers: [],

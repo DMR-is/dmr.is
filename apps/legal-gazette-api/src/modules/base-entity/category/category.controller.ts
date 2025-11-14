@@ -2,8 +2,8 @@ import { Op } from 'sequelize'
 
 import { Controller, Get, Param, Query } from '@nestjs/common'
 
-import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { UNASSIGNABLE_CATEGORY_IDS } from '../../../core/constants'
+import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import {
   CategoryDto,
   CategoryModel,

@@ -3,10 +3,10 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AwsModule } from '@dmr.is/modules'
 
-import { PriceCalculatorModule } from '../advert/calculator/price-calculator.module'
-import { AdvertModel } from '../../models/advert.model'
-import { AdvertPublicationModel } from '../../models/advert-publication.model'
-import { TBRTransactionModel } from '../../models/tbr-transactions.model'
+import { AdvertModel } from '../../../models/advert.model'
+import { AdvertPublicationModel } from '../../../models/advert-publication.model'
+import { TBRTransactionModel } from '../../../models/tbr-transactions.model'
+import { PriceCalculatorProviderModule } from '../calculator/price-calculator.provider.module'
 import { PublicationService } from './publication.service'
 import { IPublicationService } from './publication.service.interface'
 
@@ -18,7 +18,7 @@ import { IPublicationService } from './publication.service.interface'
       TBRTransactionModel,
     ]),
     AwsModule,
-    PriceCalculatorModule,
+    PriceCalculatorProviderModule,
   ],
   controllers: [],
   providers: [

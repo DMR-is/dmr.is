@@ -2,8 +2,8 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
-import { BaseEntityDto } from '../modules/base-entity/base-entity.dto'
 import { LegalGazetteModels } from '../core/constants'
+import { BaseEntityDto } from '../modules/base-entity/base-entity.dto'
 
 @BaseEntityTable({ tableName: LegalGazetteModels.COURT_DISTRICT })
 export class CourtDistrictModel extends BaseEntityModel<CourtDistrictDto> {}

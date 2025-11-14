@@ -13,14 +13,14 @@ import { ApiParam } from '@nestjs/swagger'
 
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 
-import { LGResponse } from '../../core/decorators/lg-response.decorator'
-import { AdvertVersionEnum } from '../../models/advert.model'
+import { LGResponse } from '../../../core/decorators/lg-response.decorator'
+import { AdvertVersionEnum } from '../../../models/advert.model'
 import {
   AdvertPublicationDetailedDto,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,
-} from '../../models/advert-publication.model'
+} from '../../../models/advert-publication.model'
 import { IPublicationService } from './publication.service.interface'
 
 @Controller({
