@@ -10,7 +10,7 @@ import {
   useBreakpoint,
 } from '@island.is/island-ui/core'
 
-import * as styles from '../Header/Header.css'
+import * as styles from './Header.css'
 
 export type HeaderProps = {
   variant?: 'blue' | 'white'
