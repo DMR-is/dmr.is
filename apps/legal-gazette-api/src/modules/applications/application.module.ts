@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 
-import { ApplicationProviderModule } from './application.provider.module'
 import { ApplicationController } from './application.controller'
+import { ApplicationProviderModule } from './application.provider.module'
 
 @Module({
   imports: [ApplicationProviderModule],

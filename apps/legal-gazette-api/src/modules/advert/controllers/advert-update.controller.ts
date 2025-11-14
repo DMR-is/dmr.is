@@ -7,7 +7,6 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
