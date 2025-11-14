@@ -1,6 +1,4 @@
-import { getServerSession } from 'next-auth'
-
-import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
+import { HeaderLogin } from '@dmr.is/ui/components/Header/HeaderLogin'
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 import {
   Box,
@@ -11,18 +9,9 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { PublicationCard } from '../../components/client-components/cards/PublicationCard'
-import { BannerSearch } from '../../components/client-components/front-page/banner-search/BannerSearch'
-import { authOptions } from '../../lib/authOptions'
-import { trpc } from '../../lib/trpc/client/server'
+import { BannerSearch } from '../../../components/client-components/front-page/banner-search/BannerSearch'
 
-export default async function HomePage() {
-  const session = await getServerSession(authOptions)
-
-  if (!session?.idToken) {
-    throw new Error('Unauthorized')
-  }
-
+export const LandingPage = async () => {
   const quickLinks: React.ComponentProps<typeof BannerSearch>['quickLinks'] = [
     {
       title: 'Allar auglýsingar',
@@ -49,18 +38,12 @@ export default async function HomePage() {
     ],
   }
 
-  const latestPublications = await fetchQueryWithHandler(
-    trpc.getPublications.queryOptions({
-      page: 1,
-      pageSize: 5,
-    }),
-  )
-
   return (
     <>
+      <HeaderLogin />
       <Hero
-        title="Lögbirtingablaðið"
-        description="Um útgáfu Lögbirtingablaðsins gilda lög um Stjórnartíðindi og Lögbirtingarblaðsins nr. 15/2005"
+        title="Lögbirtingablaðið frontpage"
+        description="Frontpage útgáfu Lögbirtingablaðsins gilda lög um Stjórnartíðindi og Lögbirtingarblaðsins nr. 15/2005"
         withOffset={false}
         contentSpan={['1/1', '1/1', '1/1', '9/12', '7/12']}
         imageSpan={'3/12'}
@@ -77,9 +60,6 @@ export default async function HomePage() {
             <GridColumn span={['1/1', '1/1', '1/1', '12/12']}>
               <Stack space={[2, 3, 4]}>
                 <Text variant="h2">Nýjustu auglýsingar</Text>
-                {latestPublications.publications.map((pub) => (
-                  <PublicationCard publication={pub} key={pub.id} />
-                ))}
               </Stack>
             </GridColumn>
           </GridRow>
