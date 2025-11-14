@@ -6,7 +6,7 @@ import { AwsModule } from '@dmr.is/modules'
 import { AdvertModel } from '../../models/advert.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import { TBRTransactionModel } from '../../models/tbr-transactions.model'
-import { PriceCalculatorModule } from '../../modules/price-calculator/price-calculator.module'
+import { PriceCalculatorModule } from '../price-calculator/price-calculator.module'
 import { PublicationService } from './publication.service'
 import { IPublicationService } from './publication.service.interface'
 
@@ -29,4 +29,4 @@ import { IPublicationService } from './publication.service.interface'
   ],
   exports: [IPublicationService],
 })
-export class PublicationModule {}
+export class PublicationProviderModule {}

@@ -16,4 +16,4 @@ import { ITypeCategoriesService } from './type-categories.service.interface'
   ],
   exports: [ITypeCategoriesService],
 })
-export class TypeCategoriesModule {}
+export class TypeCategoriesProviderModule {}

@@ -20,7 +20,7 @@ import {
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
 } from '../../../models/advert.model'
-import { IAdvertService } from '../../../services/advert/advert.service.interface'
+import { IAdvertService } from '../../../modules/advert/advert.service.interface'
 
 @Controller({
   path: 'adverts',

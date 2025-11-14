@@ -21,7 +21,7 @@ import {
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,
 } from '../../models/advert-publication.model'
-import { IPublicationService } from '../../services/publication/publication.service.interface'
+import { IPublicationService } from './publication.service.interface'
 
 @Controller({
   path: '/publications',

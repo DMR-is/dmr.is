@@ -7,7 +7,6 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
@@ -20,7 +19,7 @@ import {
   AdvertDetailedDto,
   UpdateAdvertDto,
 } from '../../../models/advert.model'
-import { IAdvertService } from '../../../services/advert/advert.service.interface'
+import { IAdvertService } from '../../../modules/advert/advert.service.interface'
 
 @Controller({
   path: 'adverts/:id',
