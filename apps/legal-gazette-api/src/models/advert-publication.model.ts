@@ -297,7 +297,6 @@ export class AdvertPublicationModel extends BaseModel<
 export class AdvertPublicationDto extends PickType(AdvertPublicationModel, [
   'id',
   'advertId',
-  'version',
   'pdfUrl',
 ] as const) {
   @ApiProperty({ type: String })
@@ -308,6 +307,9 @@ export class AdvertPublicationDto extends PickType(AdvertPublicationModel, [
 
   @ApiProperty({ type: Boolean })
   isLegacy!: boolean
+
+  @ApiProperty({ enum: AdvertVersionEnum, enumName: 'AdvertVersionEnum' })
+  version!: AdvertVersionEnum
 }
 
 export class AdvertPublicationDetailedDto {

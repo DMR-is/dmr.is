@@ -57,14 +57,15 @@ import {
 } from '../../models/communication-channel.model'
 import { SettlementModel } from '../../models/settlement.model'
 import { TypeIdEnum } from '../../models/type.model'
-import { IAdvertService } from '../advert/advert.service.interface'
+import { IAdvertService } from '../../services/advert/advert.service.interface'
 import { IApplicationService } from './application.service.interface'
 
 @Injectable()
 export class ApplicationService implements IApplicationService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @Inject(IAdvertService) private readonly advertService: IAdvertService,
+    @Inject(IAdvertService)
+    private readonly advertService: IAdvertService,
     @Inject(INationalRegistryService)
     private readonly nationalRegistryService: INationalRegistryService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,

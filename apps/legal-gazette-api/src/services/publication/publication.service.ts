@@ -10,7 +10,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { LegalGazetteEvents } from '../../lib/constants'
-import { mapVersionToIndex } from '../../lib/utils'
+import { mapIndexToVersion, mapVersionToIndex } from '../../lib/utils'
 import { AdvertModel, AdvertVersionEnum } from '../../models/advert.model'
 import {
   AdvertPublicationDetailedDto,
@@ -21,9 +21,9 @@ import {
 } from '../../models/advert-publication.model'
 import { StatusIdEnum } from '../../models/status.model'
 import { AdvertPublishedEvent } from './events/advert-published.event'
-import { IAdvertPublicationService } from './advert-publication.service.interface'
+import { IPublicationService } from './publication.service.interface'
 @Injectable()
-export class AdvertPublicationService implements IAdvertPublicationService {
+export class PublicationService implements IPublicationService {
   constructor(
     @InjectModel(AdvertPublicationModel)
     readonly advertPublicationModel: typeof AdvertPublicationModel,
@@ -33,6 +33,27 @@ export class AdvertPublicationService implements IAdvertPublicationService {
     private eventEmitter: EventEmitter2,
     private sequelize: Sequelize,
   ) {}
+  async getPublishedPublicationsByAdvertId(
+    advertId: string,
+  ): Promise<AdvertPublicationDetailedDto[]> {
+    const advert = await this.advertModel.findByPkOrThrow(advertId, {
+      include: [
+        {
+          model: AdvertPublicationModel,
+          as: 'publications',
+          where: { publishedAt: { [Op.ne]: null } },
+        },
+      ],
+    })
+
+    return advert.publications.map((publication, index) => {
+      return {
+        advert: advert.fromModel(),
+        html: advert.htmlMarkup(mapIndexToVersion(index)),
+        publication: publication.fromModel(),
+      }
+    })
+  }
 
   async getPublications(
     query: GetPublicationsQueryDto,

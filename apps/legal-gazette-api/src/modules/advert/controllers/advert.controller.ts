@@ -20,7 +20,7 @@ import {
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
 } from '../../../models/advert.model'
-import { IAdvertService } from '../advert.service.interface'
+import { IAdvertService } from '../../../services/advert/advert.service.interface'
 
 @Controller({
   path: 'adverts',
@@ -30,7 +30,8 @@ import { IAdvertService } from '../advert.service.interface'
 @UseGuards(TokenJwtAuthGuard)
 export class AdvertController {
   constructor(
-    @Inject(IAdvertService) private readonly advertService: IAdvertService,
+    @Inject(IAdvertService)
+    private readonly advertService: IAdvertService,
   ) {}
 
   @Get('count')

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common'
 
-import { AdvertModule } from '../advert/advert.module'
+import { AdvertModule } from '../../services/advert/advert.module'
 import { CompanyController } from './company.controller'
 import { CompanyService } from './company.service'
 import { ICompanyService } from './company.service.interface'

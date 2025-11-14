@@ -35,7 +35,7 @@ import { TBRTransactionModel } from '../models/tbr-transactions.model'
 import { TypeModel } from '../models/type.model'
 import { TypeCategoriesModel } from '../models/type-categories.model'
 import { UserModel } from '../models/users.model'
-import { AdvertModule } from '../modules/advert/advert.module'
+import { AdvertControllerModule } from '../modules/advert/advert.module'
 import { AdvertPublicationModule } from '../modules/advert-publications/advert-publication.module'
 import { ApplicationModule } from '../modules/applications/application.module'
 import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
@@ -52,7 +52,7 @@ import { ApplicationWebModule } from '../modules/swagger/application-web.module'
 import { ExternalSystemsModule } from '../modules/swagger/external-systems.module'
 import { IslandIsApplicationModule } from '../modules/swagger/island-is-application.module'
 import { PublicWebModule } from '../modules/swagger/public-web.module'
-import { TypesCategoriesModule } from '../modules/type-categories/type-categories.module'
+import { TypesCategoriesControllerModule } from '../modules/type-categories/type-categories.module'
 import { UsersModule } from '../modules/users/users.module'
 
 @Module({
@@ -104,12 +104,12 @@ import { UsersModule } from '../modules/users/users.module'
     BaseEntityModule,
     CompanyModule,
     CaseModule,
-    AdvertModule,
+    AdvertControllerModule,
     AdvertPublicationModule,
     SubscriberModule,
     UsersModule,
     ApplicationModule,
-    TypesCategoriesModule,
+    TypesCategoriesControllerModule,
     SettlementModule,
     CommentModule,
     ForeclosureModule,

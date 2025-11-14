@@ -21,7 +21,7 @@ import {
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,
 } from '../../models/advert-publication.model'
-import { IAdvertPublicationService } from './advert-publication.service.interface'
+import { IPublicationService } from '../../services/publication/publication.service.interface'
 
 @Controller({
   path: '/publications',
@@ -29,8 +29,8 @@ import { IAdvertPublicationService } from './advert-publication.service.interfac
 })
 export class AdvertPublicationController {
   constructor(
-    @Inject(IAdvertPublicationService)
-    readonly advertPublicationService: IAdvertPublicationService,
+    @Inject(IPublicationService)
+    readonly advertPublicationService: IPublicationService,
   ) {}
 
   @Get()

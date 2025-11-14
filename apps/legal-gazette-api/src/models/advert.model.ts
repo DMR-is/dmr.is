@@ -585,6 +585,7 @@ export class AdvertModel extends BaseModel<
         title: model.title,
         assignedUser: model.assignedUser?.id,
         publications: model.publications.map((p) => p.fromModel()),
+        publicationNumber: model.publicationNumber,
       }
     } catch (error) {
       throw new InternalServerErrorException()
@@ -723,6 +724,7 @@ export class AdvertDto extends PickType(AdvertDetailedDto, [
   'scheduledAt',
   'assignedUser',
   'publications',
+  'publicationNumber',
 ] as const) {}
 
 export class GetAdvertsDto {

@@ -20,8 +20,7 @@ import {
   AdvertDetailedDto,
   UpdateAdvertDto,
 } from '../../../models/advert.model'
-import { CategoryModel } from '../../../models/category.model'
-import { IAdvertService } from '../advert.service.interface'
+import { IAdvertService } from '../../../services/advert/advert.service.interface'
 
 @Controller({
   path: 'adverts/:id',
@@ -31,9 +30,8 @@ import { IAdvertService } from '../advert.service.interface'
 @UseGuards(TokenJwtAuthGuard)
 export class AdvertUpdateController {
   constructor(
-    @Inject(IAdvertService) private readonly advertService: IAdvertService,
-    @InjectModel(CategoryModel)
-    private readonly advertCategoryModel: typeof CategoryModel,
+    @Inject(IAdvertService)
+    private readonly advertService: IAdvertService,
   ) {}
 
   @Post('assign/:userId')
@@ -54,7 +52,7 @@ export class AdvertUpdateController {
     @Param('categoryId', new UUIDValidationPipe())
     categoryId: string,
   ): Promise<void> {
-    await this.advertCategoryModel.setAdvertCategory(advertId, categoryId)
+    await this.advertService.updateAdvert(advertId, { categoryId })
   }
 
   @Patch()
