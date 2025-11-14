@@ -20,4 +20,4 @@ import { LGNationalRegistryControllerModule } from '../national-registry/nationa
   providers: [],
   exports: [],
 })
-export class ApplicationWebModule {}
+export class ApplicationWebSwaggerModule {}

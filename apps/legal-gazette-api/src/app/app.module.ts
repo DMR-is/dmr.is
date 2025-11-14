@@ -48,10 +48,10 @@ import { ForeclosureControllerModule } from '../modules/external-systems/foreclo
 import { LGNationalRegistryControllerModule } from '../modules/national-registry/national-registry.controller.module'
 import { SettlementControllerModule } from '../modules/settlement/settlement.controller.module'
 import { SubscriberControllerModule } from '../modules/subscribers/subscriber.controller.module'
-import { ApplicationWebModule } from '../modules/swagger/application-web.module'
-import { ExternalSystemsModule } from '../modules/swagger/external-systems.module'
-import { IslandIsApplicationModule } from '../modules/swagger/island-is-application.module'
-import { PublicWebModule } from '../modules/swagger/public-web.module'
+import { ApplicationWebSwaggerModule } from '../modules/swagger/application-web.swagger.module'
+import { ExternalSystemsSwaggerModule } from '../modules/swagger/external-systems.swagger.module'
+import { IslandIsApplicationSwaggerModule } from '../modules/swagger/island-is-application.swagger.module'
+import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.module'
 import { TypesCategoriesControllerModule } from '../modules/type-categories/type-categories.module'
 import { UserControllerModule } from '../modules/users/users.controller.module'
 
@@ -118,10 +118,10 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
       global: true,
     },
     HealthModule,
-    ApplicationWebModule,
-    ExternalSystemsModule,
-    IslandIsApplicationModule,
-    PublicWebModule,
+    ApplicationWebSwaggerModule,
+    ExternalSystemsSwaggerModule,
+    IslandIsApplicationSwaggerModule,
+    PublicWebSwaggerModule,
     CommunicationChannelControllerModule,
     StatisticsControllerModule,
     LGNationalRegistryControllerModule,

@@ -23,4 +23,4 @@ import { ForeclosureControllerModule } from '../external-systems/foreclosure/for
   exports: [],
   providers: [],
 })
-export class ExternalSystemsModule {}
+export class ExternalSystemsSwaggerModule {}

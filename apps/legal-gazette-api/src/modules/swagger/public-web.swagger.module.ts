@@ -14,4 +14,4 @@ import { SubscriberControllerModule } from '../subscribers/subscriber.controller
   providers: [],
   exports: [],
 })
-export class PublicWebModule {}
+export class PublicWebSwaggerModule {}
