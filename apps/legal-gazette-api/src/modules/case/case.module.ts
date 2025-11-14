@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common'
 
-import { CaseModule } from '../../services/case/case.module'
 import { CaseController } from './case.controller'
+import { CaseProviderModule } from './case.provider.module'
 
 @Module({
-  imports: [CaseModule],
+  imports: [CaseProviderModule],
   controllers: [CaseController],
   providers: [],
   exports: [],

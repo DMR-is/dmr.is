@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common'
 
-import { AdvertModule } from '../../services/advert/advert.module'
+import { AdvertProviderModule } from '../advert/advert.provider.module'
 import { CompanyController } from './company.controller'
 import { CompanyService } from './company.service'
 import { ICompanyService } from './company.service.interface'
 
 @Module({
-  imports: [AdvertModule],
+  imports: [AdvertProviderModule],
   controllers: [CompanyController],
   providers: [
     {

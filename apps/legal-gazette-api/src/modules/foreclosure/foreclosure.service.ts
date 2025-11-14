@@ -15,7 +15,7 @@ import {
   ForeclosurePropertyModel,
 } from '../../models/foreclosure-property.model'
 import { TypeIdEnum } from '../../models/type.model'
-import { IAdvertService } from '../../services/advert/advert.service.interface'
+import { IAdvertService } from '../advert/advert.service.interface'
 import { IForeclosureService } from './foreclosure.service.interface'
 
 @Injectable()

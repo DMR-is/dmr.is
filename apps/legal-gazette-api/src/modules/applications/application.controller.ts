@@ -27,7 +27,7 @@ import {
   GetApplicationsDto,
   UpdateApplicationDto,
 } from '../../models/application.model'
-import { IApplicationService } from '../../services/application/application.service.interface'
+import { IApplicationService } from './application.service.interface'
 
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, ScopesGuard)

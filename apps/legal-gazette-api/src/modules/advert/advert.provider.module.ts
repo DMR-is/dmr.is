@@ -4,13 +4,13 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { AdvertModel } from '../../models/advert.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import { UserModel } from '../../models/users.model'
-import { TypeCategoriesModule } from '../type-categories/type-categories.module'
+import { TypeCategoriesProviderModule } from '../type-categories/type-categories.provider.module'
 import { AdvertService } from './advert.service'
 import { IAdvertService } from './advert.service.interface'
 
 @Module({
   imports: [
-    TypeCategoriesModule,
+    TypeCategoriesProviderModule,
     SequelizeModule.forFeature([
       UserModel,
       AdvertModel,
@@ -26,4 +26,4 @@ import { IAdvertService } from './advert.service.interface'
   ],
   exports: [IAdvertService],
 })
-export class AdvertModule {}
+export class AdvertProviderModule {}

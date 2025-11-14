@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 
-import { AdvertModule } from '../../services/advert/advert.module'
-import { AdvertPublicationControllerModule } from '../advert-publications/advert-publication.module'
+import { AdvertProviderModule } from '../advert/advert.provider.module'
+import { AdvertPublicationControllerModule } from '../publications/publication.module'
 import { ApplictionControllerModule } from '../applications/application.module'
 import { BaseEntityControllerModule } from '../base-entity/base-entity.module'
 import { CaseControllerModule } from '../case/case.module'
@@ -9,7 +9,7 @@ import { LGNationalRegistryModule } from '../national-registry/national-registry
 
 @Module({
   imports: [
-    AdvertModule,
+    AdvertProviderModule,
     BaseEntityControllerModule,
     CaseControllerModule,
     ApplictionControllerModule,

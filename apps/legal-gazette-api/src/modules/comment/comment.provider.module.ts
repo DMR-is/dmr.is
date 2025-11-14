@@ -28,4 +28,4 @@ import { ICommentService } from './comment.service.interface'
   controllers: [],
   exports: [ICommentService],
 })
-export class CommentModule {}
+export class CommentProviderModule {}

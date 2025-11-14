@@ -19,7 +19,7 @@ import {
   CreateTextCommentBodyDto,
   GetCommentsDto,
 } from '../../models/comment.model'
-import { ICommentService } from '../../services/comment/comment.service.interface'
+import { ICommentService } from './comment.service.interface'
 
 @Controller({
   path: 'comments',

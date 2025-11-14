@@ -16,4 +16,4 @@ import { ICaseService } from './case.service.interface'
   ],
   exports: [ICaseService],
 })
-export class CaseModule {}
+export class CaseProviderModule {}

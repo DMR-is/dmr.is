@@ -57,7 +57,7 @@ import {
 } from '../../models/communication-channel.model'
 import { SettlementModel } from '../../models/settlement.model'
 import { TypeIdEnum } from '../../models/type.model'
-import { IAdvertService } from '../../services/advert/advert.service.interface'
+import { IAdvertService } from '../advert/advert.service.interface'
 import { IApplicationService } from './application.service.interface'
 
 @Injectable()

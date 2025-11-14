@@ -8,13 +8,13 @@ import { ApplicationModel } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
 import { CategoryModel } from '../../models/category.model'
 import { SettlementModel } from '../../models/settlement.model'
-import { AdvertModule } from '../../services/advert/advert.module'
+import { AdvertProviderModule } from '../advert/advert.provider.module'
 import { ApplicationService } from './application.service'
 import { IApplicationService } from './application.service.interface'
 
 @Module({
   imports: [
-    AdvertModule,
+    AdvertProviderModule,
     NationalRegistryModule,
     SequelizeModule.forFeature([
       CaseModel,
@@ -33,4 +33,4 @@ import { IApplicationService } from './application.service.interface'
   ],
   exports: [IApplicationService],
 })
-export class ApplicationModule {}
+export class ApplicationProviderModule {}

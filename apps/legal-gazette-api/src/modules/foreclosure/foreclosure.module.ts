@@ -3,14 +3,14 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ForeclosureModel } from '../../models/foreclosure.model'
 import { ForeclosurePropertyModel } from '../../models/foreclosure-property.model'
-import { AdvertModule } from '../../services/advert/advert.module'
+import { AdvertProviderModule } from '../advert/advert.provider.module'
 import { ForeclosureController } from './foreclosure.controller'
 import { ForeclosureService } from './foreclosure.service'
 import { IForeclosureService } from './foreclosure.service.interface'
 
 @Module({
   imports: [
-    AdvertModule,
+    AdvertProviderModule,
     SequelizeModule.forFeature([ForeclosureModel, ForeclosurePropertyModel]),
   ],
   controllers: [ForeclosureController],
