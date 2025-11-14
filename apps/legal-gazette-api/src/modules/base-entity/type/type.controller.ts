@@ -2,7 +2,7 @@ import { Op } from 'sequelize'
 
 import { Controller, Get, Param, Query } from '@nestjs/common'
 
-import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import {
   COMMON_ADVERT_TYPES_IDS,
   UNASSIGNABLE_TYPE_IDS,

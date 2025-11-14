@@ -2,7 +2,7 @@ import { Op } from 'sequelize'
 
 import { Controller, Get, Param, Query } from '@nestjs/common'
 
-import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { UNASSIGNABLE_CATEGORY_IDS } from '../../../lib/constants'
 import {
   CategoryDto,

@@ -1,7 +1,7 @@
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import {
   GetStatusesDto,
   StatusDto,

@@ -1,6 +1,6 @@
 import { Controller, Get, Param } from '@nestjs/common'
 
-import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import {
   CourtDistrictDto,
   CourtDistrictModel,

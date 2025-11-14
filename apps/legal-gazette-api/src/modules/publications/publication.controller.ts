@@ -13,7 +13,7 @@ import { ApiParam } from '@nestjs/swagger'
 
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 
-import { LGResponse } from '../../decorators/lg-response.decorator'
+import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AdvertVersionEnum } from '../../models/advert.model'
 import {
   AdvertPublicationDetailedDto,
