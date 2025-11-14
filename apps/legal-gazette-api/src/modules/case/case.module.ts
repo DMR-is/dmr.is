@@ -1,20 +1,12 @@
 import { Module } from '@nestjs/common'
-import { SequelizeModule } from '@nestjs/sequelize'
 
-import { CaseModel } from '../../models/case.model'
+import { CaseModule } from '../../services/case/case.module'
 import { CaseController } from './case.controller'
-import { CaseService } from './case.service'
-import { ICaseService } from './case.service.interface'
 
 @Module({
-  imports: [SequelizeModule.forFeature([CaseModel])],
+  imports: [CaseModule],
   controllers: [CaseController],
-  providers: [
-    {
-      provide: ICaseService,
-      useClass: CaseService,
-    },
-  ],
-  exports: [ICaseService],
+  providers: [],
+  exports: [],
 })
-export class CaseModule {}
+export class CaseControllerModule {}

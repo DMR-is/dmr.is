@@ -39,7 +39,7 @@ import { AdvertControllerModule } from '../modules/advert/advert.module'
 import { AdvertPublicationModule } from '../modules/advert-publications/advert-publication.module'
 import { ApplicationModule } from '../modules/applications/application.module'
 import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
-import { CaseModule } from '../modules/case/case.module'
+import { CaseControllerModule } from '../modules/case/case.module'
 import { CommentModule } from '../modules/comment/comment.module'
 import { CommunicationChannelModule } from '../modules/communication-channel/communication-channel.module'
 import { CompanyModule } from '../modules/company/company.module'
@@ -103,7 +103,7 @@ import { UsersModule } from '../modules/users/users.module'
     }),
     BaseEntityModule,
     CompanyModule,
-    CaseModule,
+    CaseControllerModule,
     AdvertControllerModule,
     AdvertPublicationModule,
     SubscriberModule,
