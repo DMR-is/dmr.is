@@ -7,7 +7,7 @@ import {
   GetAdvertsInProgressStatsDto,
   GetAdvertsToBePublishedStatsDto,
   GetCountByStatusesDto,
-} from '../../../dto/statistics.dto'
+} from './statistics.dto'
 import { AdvertModel } from '../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
 import { CommentModel, CommentTypeEnum } from '../../../models/comment.model'

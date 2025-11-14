@@ -8,7 +8,7 @@ import {
   GetAdvertsInProgressStatsDto,
   GetAdvertsToBePublishedStatsDto,
   GetCountByStatusesDto,
-} from '../../../dto/statistics.dto'
+} from './statistics.dto'
 import { IStatisticsService } from './statistics.service.interface'
 
 @Controller({

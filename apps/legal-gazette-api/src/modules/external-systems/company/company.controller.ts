@@ -8,7 +8,7 @@ import {
   CreateAdditionalAnnouncementsDto,
   RegisterCompanyFirmaskraDto,
   RegisterCompanyHlutafelagDto,
-} from '../../../dto/external-systems.dto'
+} from '../external-systems.dto'
 import { MachineClientGuard } from '../../../core/guards/machine-client.guard'
 import { ICompanyService } from './company.service.interface'
 

@@ -24,7 +24,7 @@ import {
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { DetailedDto } from '../dto/detailed.dto'
+import { DetailedDto } from '../core/dto/detailed.dto'
 import { LegalGazetteModels } from '../core/constants'
 import { AdvertModel } from './advert.model'
 

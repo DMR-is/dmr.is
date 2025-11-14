@@ -6,7 +6,7 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
-import { BaseEntityDto } from '../dto/base-entity.dto'
+import { BaseEntityDto } from '../modules/base-entity/base-entity.dto'
 import { LegalGazetteModels } from '../core/constants'
 import { AdvertTypeFeeCodeModel } from './advert-type-fee-code.model'
 import { CategoryModel } from './category.model'

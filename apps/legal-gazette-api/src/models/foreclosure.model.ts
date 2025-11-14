@@ -19,7 +19,7 @@ import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { ResponsiblePartyDto } from '../dto/external-systems.dto'
+import { ResponsiblePartyDto } from '../modules/external-systems/external-systems.dto'
 import { LegalGazetteModels } from '../core/constants'
 import { AdvertModel } from './advert.model'
 import {

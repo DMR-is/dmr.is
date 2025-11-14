@@ -39,7 +39,7 @@ import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { cleanLegacyHtml } from '@dmr.is/utils'
 
-import { DetailedDto } from '../dto/detailed.dto'
+import { DetailedDto } from '../core/dto/detailed.dto'
 import { LegalGazetteModels } from '../core/constants'
 import { getAdvertHTMLMarkup } from '../core/templates'
 import {

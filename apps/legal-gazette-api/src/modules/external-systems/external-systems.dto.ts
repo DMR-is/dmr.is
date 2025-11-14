@@ -15,7 +15,7 @@ import {
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
-import { ApplicationSignatureDto } from '../models/application.model'
+import { ApplicationSignatureDto } from '../../models/application.model'
 
 export enum AnnouncementItem {
   A = 'A',

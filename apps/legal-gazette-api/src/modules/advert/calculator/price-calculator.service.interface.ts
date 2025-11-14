@@ -1,4 +1,4 @@
-import { GetPaymentDataResponseDto } from '../../../dto/tbr.dto'
+import { GetPaymentDataResponseDto } from '../../tbr/tbr.dto'
 
 type NewType = Promise<GetPaymentDataResponseDto>
 
