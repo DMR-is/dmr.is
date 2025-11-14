@@ -7,12 +7,12 @@ import {
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { ITBRConfig } from './tbr.config'
 import {
   TBRGetPaymentQueryDto,
   TBRGetPaymentResponseDto,
   TBRPostPaymentBodyDto,
-} from '../../dto/tbr.dto'
-import { ITBRConfig } from './tbr.config'
+} from './tbr.dto'
 import { ITBRService } from './tbr.service.interface'
 
 type TBRPaymentJSON = {

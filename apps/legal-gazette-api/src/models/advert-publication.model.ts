@@ -23,7 +23,7 @@ import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../lib/constants'
+import { LegalGazetteModels } from '../core/constants'
 import { AdvertDto, AdvertModel, AdvertVersionEnum } from './advert.model'
 import { CategoryDto, CategoryModel } from './category.model'
 import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
@@ -297,7 +297,6 @@ export class AdvertPublicationModel extends BaseModel<
 export class AdvertPublicationDto extends PickType(AdvertPublicationModel, [
   'id',
   'advertId',
-  'version',
   'pdfUrl',
 ] as const) {
   @ApiProperty({ type: String })
@@ -308,6 +307,9 @@ export class AdvertPublicationDto extends PickType(AdvertPublicationModel, [
 
   @ApiProperty({ type: Boolean })
   isLegacy!: boolean
+
+  @ApiProperty({ enum: AdvertVersionEnum, enumName: 'AdvertVersionEnum' })
+  version!: AdvertVersionEnum
 }
 
 export class AdvertPublicationDetailedDto {

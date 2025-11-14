@@ -16,8 +16,8 @@ import { ApiProperty, IntersectionType, PickType } from '@nestjs/swagger'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { DetailedDto } from '../dto/detailed.dto'
-import { LegalGazetteModels } from '../lib/constants'
+import { LegalGazetteModels } from '../core/constants'
+import { DetailedDto } from '../core/dto/detailed.dto'
 import { AdvertCreateAttributes, AdvertModel } from './advert.model'
 import {
   ApplicationCreateAttributes,

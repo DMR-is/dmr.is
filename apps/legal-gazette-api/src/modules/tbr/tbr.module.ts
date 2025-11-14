@@ -8,6 +8,7 @@ import { ITBRService } from './tbr.service.interface'
 export class TBRModule {
   static forRoot(config: ITBRConfig): DynamicModule {
     return {
+      imports: [],
       module: TBRModule,
       providers: [
         {

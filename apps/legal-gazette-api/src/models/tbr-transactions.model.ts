@@ -8,7 +8,7 @@ import {
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../lib/constants'
+import { LegalGazetteModels } from '../core/constants'
 import { AdvertModel } from './advert.model'
 import { FeeCodeModel } from './fee-code.model'
 
