@@ -1,9 +1,11 @@
 import {
-  CreateForeclosurePropertyDto,
   CreateForeclosureSaleDto,
   ForeclosureDto,
+} from '../../models/foreclosure.model'
+import {
+  CreateForeclosurePropertyDto,
   ForeclosurePropertyDto,
-} from './dto/foreclosure.dto'
+} from '../../models/foreclosure-property.model'
 
 export interface IForeclosureService {
   getForeclosureById(id: string): Promise<ForeclosureDto>

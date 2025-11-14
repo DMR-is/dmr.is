@@ -11,7 +11,7 @@ import {
   TBRGetPaymentQueryDto,
   TBRGetPaymentResponseDto,
   TBRPostPaymentBodyDto,
-} from './dto/tbr.dto'
+} from '../../dto/tbr.dto'
 import { ITBRConfig } from './tbr.config'
 import { ITBRService } from './tbr.service.interface'
 

@@ -15,6 +15,8 @@ import {
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
+import { ApplicationSignatureDto } from '../models/application.model'
+
 export enum AnnouncementItem {
   A = 'A',
   B = 'B',
@@ -36,6 +38,8 @@ export enum AnnouncementItem {
   T = 'T',
 }
 
+export class ResponsiblePartySignature extends ApplicationSignatureDto {}
+
 export class ResponsiblePartyDto {
   @ApiProperty({
     type: String,
@@ -53,41 +57,11 @@ export class ResponsiblePartyDto {
   @IsString()
   nationalId!: string
 
-  @ApiProperty({
-    type: String,
-    description: 'The name of the institution signing the advert',
-    example: 'Ríkisskattstjóri, hlutafélagaskrá',
-  })
-  @IsString()
-  signatureName!: string
-
-  @ApiProperty({
-    type: String,
-    description: 'Where the signature took place',
-    example: 'Reykjavík',
-  })
-  @IsString()
-  signatureLocation!: string
-
-  @ApiProperty({
-    type: String,
-    description:
-      'The date when the responsible party signed the advert in ISO 8601 format',
-    example: '2023-10-01T12:00:00Z',
-  })
-  @IsDateString()
-  signatureDate!: string
-
-  @ApiProperty({
-    type: String,
-    description:
-      'The name of the person signing on behalf of the responsible party prefixed with f.h.',
-    example: 'Jón Jónsson',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  signatureOnBehalfOf?: string
+  @ApiProperty({ type: ResponsiblePartySignature })
+  @IsDefined()
+  @Type(() => ResponsiblePartySignature)
+  @ValidateNested()
+  signature!: ResponsiblePartySignature
 }
 
 export class PartyEntityDto {

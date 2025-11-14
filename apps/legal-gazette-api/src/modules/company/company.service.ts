@@ -2,12 +2,12 @@ import { Inject, Injectable } from '@nestjs/common'
 
 import { formatDate } from '@dmr.is/utils'
 
-import { IAdvertService } from '../advert/advert.service.interface'
 import {
   CreateAdditionalAnnouncementsDto,
   RegisterCompanyFirmaskraDto,
   RegisterCompanyHlutafelagDto,
-} from './dto/company.dto'
+} from '../../dto/external-systems.dto'
+import { IAdvertService } from '../advert/advert.service.interface'
 import { ICompanyService } from './company.service.interface'
 import {
   formatCompanyAnnouncement as getCompanyAnnouncementMarkup,
@@ -155,10 +155,10 @@ export class CompanyService implements ICompanyService {
       createdBy: body.responsibleParty.name,
       createdByNationalId: body.responsibleParty.nationalId,
       content: htmlContent,
-      signatureDate: body.responsibleParty.signatureDate,
-      signatureName: body.responsibleParty.signatureName,
-      signatureLocation: body.responsibleParty.signatureLocation,
-      signatureOnBehalfOf: body.responsibleParty.signatureOnBehalfOf,
+      signatureDate: body.responsibleParty.signature.date,
+      signatureName: body.responsibleParty.signature.name,
+      signatureLocation: body.responsibleParty.signature.location,
+      signatureOnBehalfOf: body.responsibleParty.signature.onBehalfOf,
       scheduledAt: [nextWednesday.toISOString()],
       caption: `${formatDate(date, 'MMMM yyyy')}`,
     })
@@ -261,10 +261,10 @@ export class CompanyService implements ICompanyService {
       createdByNationalId: body.responsibleParty.nationalId,
       caption: body.name,
       content: htmlContent,
-      signatureDate: body.responsibleParty.signatureDate,
-      signatureName: body.responsibleParty.signatureName,
-      signatureLocation: body.responsibleParty.signatureLocation,
-      signatureOnBehalfOf: body.responsibleParty.signatureOnBehalfOf,
+      signatureDate: body.responsibleParty.signature.date,
+      signatureName: body.responsibleParty.signature.name,
+      signatureLocation: body.responsibleParty.signature.location,
+      signatureOnBehalfOf: body.responsibleParty.signature.onBehalfOf,
       scheduledAt: [nextWednesday.toISOString()],
     })
   }
@@ -390,10 +390,10 @@ export class CompanyService implements ICompanyService {
       createdByNationalId: body.responsibleParty.nationalId,
       caption: body.name,
       content: htmlContent,
-      signatureDate: body.responsibleParty.signatureDate,
-      signatureName: body.responsibleParty.signatureName,
-      signatureLocation: body.responsibleParty.signatureLocation,
-      signatureOnBehalfOf: body.responsibleParty.signatureOnBehalfOf,
+      signatureDate: body.responsibleParty.signature.date,
+      signatureName: body.responsibleParty.signature.name,
+      signatureLocation: body.responsibleParty.signature.location,
+      signatureOnBehalfOf: body.responsibleParty.signature.onBehalfOf,
       scheduledAt: [nextWednesday.toISOString()],
     })
   }

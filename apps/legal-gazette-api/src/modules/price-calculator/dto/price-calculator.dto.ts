@@ -1,4 +1,4 @@
-import { TBRPostPaymentBodyDto } from '../../tbr/dto/tbr.dto'
+import { TBRPostPaymentBodyDto } from '../../../dto/tbr.dto'
 
 export class GetPaymentDataResponseDto {
   feeCodeId!: string

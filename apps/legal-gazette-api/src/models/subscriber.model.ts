@@ -1,10 +1,11 @@
+import { IsBoolean, IsString, IsUUID } from 'class-validator'
 import { Column, DataType, DefaultScope } from 'sequelize-typescript'
+
+import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../lib/constants'
-import { SubscriberDto } from '../modules/subscribers/dto/subscriber.dto'
-
 export type SubscriberAttributes = {
   id: string
   nationalId: string
@@ -37,6 +38,7 @@ export class SubscriberModel extends BaseModel<
     allowNull: false,
     unique: true,
   })
+  @ApiProperty({ type: String })
   nationalId!: string
 
   @Column({
@@ -45,6 +47,7 @@ export class SubscriberModel extends BaseModel<
     allowNull: false,
     defaultValue: true,
   })
+  @ApiProperty({ type: Boolean })
   isActive!: boolean
 
   static fromModel(model: SubscriberModel): SubscriberDto {
@@ -59,3 +62,9 @@ export class SubscriberModel extends BaseModel<
     return SubscriberModel.fromModel(this)
   }
 }
+
+export class SubscriberDto extends PickType(SubscriberModel, [
+  'id',
+  'nationalId',
+  'isActive',
+]) {}

@@ -1,5 +1,5 @@
-import { AdvertDetailedDto } from '../../advert/dto/advert.dto'
-import { AdvertPublicationDto } from '../dto/advert-publication.dto'
+import { AdvertDetailedDto } from '../../../models/advert.model'
+import { AdvertPublicationDto } from '../../../models/advert-publication.model'
 
 export class AdvertPublishedEvent {
   advert!: AdvertDetailedDto

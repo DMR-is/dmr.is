@@ -3,7 +3,7 @@ import {
   CaseQueryDto,
   CreateCaseDto,
   GetCasesDto,
-} from './dto/case.dto'
+} from '../../models/case.model'
 
 export interface ICaseService {
   getCases(query: CaseQueryDto): Promise<GetCasesDto>

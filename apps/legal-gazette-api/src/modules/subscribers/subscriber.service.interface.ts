@@ -1,4 +1,4 @@
-import { SubscriberDto } from './dto/subscriber.dto'
+import { SubscriberDto } from '../../models/subscriber.model'
 
 export interface ISubscriberService {
   getUserByNationalId(nationalId: string): Promise<SubscriberDto>

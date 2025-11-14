@@ -3,7 +3,7 @@ import {
   CreateCommunicationChannelDto,
   GetCommunicationChannelsDto,
   UpdateCommunicationChannelDto,
-} from './dto/communication-channel.dto'
+} from '../../models/communication-channel.model'
 
 export interface ICommunicationChannelService {
   getChannelsByAdvertId(advertId: string): Promise<GetCommunicationChannelsDto>

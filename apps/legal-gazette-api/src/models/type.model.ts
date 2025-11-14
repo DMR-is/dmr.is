@@ -1,14 +1,20 @@
-import { BelongsToMany, Column, DataType } from 'sequelize-typescript'
+import { Transform } from 'class-transformer'
+import { IsBoolean, IsOptional } from 'class-validator'
+import { BelongsToMany } from 'sequelize-typescript'
+
+import { ApiProperty } from '@nestjs/swagger'
 
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
+import { BaseEntityDto } from '../dto/base-entity.dto'
 import { LegalGazetteModels } from '../lib/constants'
-import { TypeDto } from '../modules/type/dto/type.dto'
-import { TypeWithCategoriesDto } from '../modules/type-categories/dto/type-categories.dto'
 import { AdvertTypeFeeCodeModel } from './advert-type-fee-code.model'
 import { CategoryModel } from './category.model'
 import { FeeCodeModel } from './fee-code.model'
-import { TypeCategoriesModel } from './type-categories.model'
+import {
+  TypeCategoriesModel,
+  TypeWithCategoriesDto,
+} from './type-categories.model'
 
 export enum TypeIdEnum {
   RECALL_BANKRUPTCY = '065C3FD9-58D1-436F-9FB8-C1F5C214FA50',
@@ -24,13 +30,6 @@ export enum TypeIdEnum {
 export class TypeModel extends BaseEntityModel<TypeDto> {
   @BelongsToMany(() => CategoryModel, { through: () => TypeCategoriesModel })
   categories!: CategoryModel[]
-
-  @Column({
-    type: DataType.TEXT,
-    field: 'title',
-    allowNull: false,
-  })
-  title!: string
 
   // This is always a array with one element, we need to use BelongsToMany to get the join table
   @BelongsToMany(() => FeeCodeModel, { through: () => AdvertTypeFeeCodeModel })
@@ -48,4 +47,23 @@ export class TypeModel extends BaseEntityModel<TypeDto> {
   fromModelWithCategories(): TypeWithCategoriesDto {
     return TypeModel.fromModelWithCategories(this)
   }
+}
+
+export class TypeDto extends BaseEntityDto {}
+
+export class GetTypesDto {
+  @ApiProperty({ type: [TypeDto] })
+  types!: TypeDto[]
+}
+
+export class GetTypesQueryDto {
+  @ApiProperty({
+    type: Boolean,
+    required: false,
+    description: 'Filter out unassignable advert types',
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true')
+  excludeUnassignable?: boolean
 }
