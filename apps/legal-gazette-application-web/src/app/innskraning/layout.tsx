@@ -6,11 +6,9 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="is">
-      <body>
-        <HeaderNoAuth variant="white" />
-        {children}
-      </body>
-    </html>
+    <>
+      <HeaderNoAuth variant="white" />
+      {children}
+    </>
   )
 }
