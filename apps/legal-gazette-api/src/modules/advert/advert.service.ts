@@ -8,7 +8,7 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
-import { LegalGazetteEvents } from '../../lib/constants'
+import { LegalGazetteEvents } from '../../core/constants'
 import {
   AdvertDetailedDto,
   AdvertModel,

@@ -34,7 +34,7 @@ import { CommunicationChannelSchema } from '@dmr.is/legal-gazette/schemas'
 import { Paging } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../lib/constants'
+import { LegalGazetteModels } from '../core/constants'
 import { CaseModel } from './case.model'
 import { CategoryDto, CategoryModel } from './category.model'
 import {

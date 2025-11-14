@@ -6,7 +6,7 @@ import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import {
   COMMON_ADVERT_TYPES_IDS,
   UNASSIGNABLE_TYPE_IDS,
-} from '../../../lib/constants'
+} from '../../../core/constants'
 import {
   GetTypesDto,
   GetTypesQueryDto,

@@ -40,8 +40,8 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { cleanLegacyHtml } from '@dmr.is/utils'
 
 import { DetailedDto } from '../dto/detailed.dto'
-import { LegalGazetteModels } from '../lib/constants'
-import { getAdvertHTMLMarkup } from '../lib/templates'
+import { LegalGazetteModels } from '../core/constants'
+import { getAdvertHTMLMarkup } from '../core/templates'
 import {
   AdvertPublicationDto,
   AdvertPublicationModel,

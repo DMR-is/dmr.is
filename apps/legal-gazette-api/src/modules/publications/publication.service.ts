@@ -9,8 +9,8 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
-import { LegalGazetteEvents } from '../../lib/constants'
-import { mapIndexToVersion, mapVersionToIndex } from '../../lib/utils'
+import { LegalGazetteEvents } from '../../core/constants'
+import { mapIndexToVersion, mapVersionToIndex } from '../../core/utils'
 import { AdvertModel, AdvertVersionEnum } from '../../models/advert.model'
 import {
   AdvertPublicationDetailedDto,

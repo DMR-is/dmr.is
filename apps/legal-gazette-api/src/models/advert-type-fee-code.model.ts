@@ -10,7 +10,7 @@ import {
 
 import { BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../lib/constants'
+import { LegalGazetteModels } from '../core/constants'
 import { FeeCodeModel } from './fee-code.model'
 import { TypeModel } from './type.model'
 
