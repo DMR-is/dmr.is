@@ -1,37 +1,11 @@
 import { Module } from '@nestjs/common'
-import { SequelizeModule } from '@nestjs/sequelize'
 
-import { NationalRegistryModule } from '@dmr.is/clients/national-registry'
-
-import { AdvertModel } from '../../models/advert.model'
-import { ApplicationModel } from '../../models/application.model'
-import { CaseModel } from '../../models/case.model'
-import { CategoryModel } from '../../models/category.model'
-import { SettlementModel } from '../../models/settlement.model'
-import { AdvertModule } from '../../services/advert/advert.module'
-import { ApplicationController } from './controllers/application.controller'
-import { ApplicationService } from './application.service'
-import { IApplicationService } from './application.service.interface'
+import { ApplicationModule } from '../../services/application/application.module'
+import { ApplicationController } from './application.controller'
 
 @Module({
-  imports: [
-    AdvertModule,
-    NationalRegistryModule,
-    SequelizeModule.forFeature([
-      CaseModel,
-      AdvertModel,
-      ApplicationModel,
-      SettlementModel,
-      CategoryModel,
-    ]),
-  ],
+  imports: [ApplicationModule],
   controllers: [ApplicationController],
-  providers: [
-    {
-      provide: IApplicationService,
-      useClass: ApplicationService,
-    },
-  ],
   exports: [],
 })
-export class ApplicationModule {}
+export class ApplictionControllerModule {}

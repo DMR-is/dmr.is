@@ -5,9 +5,9 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
-import { LGResponse } from '../../../decorators/lg-response.decorator'
-import { IslandIsSubmitCommonApplicationDto } from '../../../models/application.model'
-import { IApplicationService } from '../application.service.interface'
+import { LGResponse } from '../../decorators/lg-response.decorator'
+import { IslandIsSubmitCommonApplicationDto } from '../../models/application.model'
+import { IApplicationService } from '../../services/application/application.service.interface'
 
 @Controller({
   path: 'applications/island-is',
