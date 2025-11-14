@@ -8,4 +8,4 @@ import { TypeController } from './type.controller'
   imports: [SequelizeModule.forFeature([TypeModel])],
   controllers: [TypeController],
 })
-export class TypeModule {}
+export class TypeControllerModule {}

@@ -10,4 +10,4 @@ import { StatusController } from './status.controller'
   providers: [],
   exports: [],
 })
-export class StatusModule {}
+export class StatusControllerModule {}
