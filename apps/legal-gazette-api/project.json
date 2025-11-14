@@ -23,7 +23,6 @@
         "outputPath": "apps/legal-gazette-api/dist",
         "main": "apps/legal-gazette-api/src/main.ts",
         "tsConfig": "apps/legal-gazette-api/tsconfig.app.json",
-        "assets": ["apps/legal-gazette-api/src/assets"],
         "webpackConfig": "apps/legal-gazette-api/webpack.config.js",
         "generatePackageJson": true
       },
