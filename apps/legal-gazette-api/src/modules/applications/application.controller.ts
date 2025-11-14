@@ -17,7 +17,7 @@ import { Scopes, ScopesGuard, TokenJwtAuthGuard } from '@dmr.is/modules'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
-import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { LGResponse } from '../../decorators/lg-response.decorator'
 import {
   AddDivisionEndingForApplicationDto,
   AddDivisionMeetingForApplicationDto,
@@ -26,8 +26,8 @@ import {
   ApplicationTypeEnum,
   GetApplicationsDto,
   UpdateApplicationDto,
-} from '../../../models/application.model'
-import { IApplicationService } from '../application.service.interface'
+} from '../../models/application.model'
+import { IApplicationService } from '../../services/application/application.service.interface'
 
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, ScopesGuard)
