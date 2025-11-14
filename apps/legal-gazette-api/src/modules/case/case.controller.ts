@@ -16,7 +16,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
-import { LGResponse } from '../../decorators/lg-response.decorator'
+import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { CaseDto, CaseQueryDto, GetCasesDto } from '../../models/case.model'
 import { ICaseService } from './case.service.interface'
 

@@ -14,7 +14,7 @@ import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
-import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import {
   AdvertDetailedDto,
   UpdateAdvertDto,

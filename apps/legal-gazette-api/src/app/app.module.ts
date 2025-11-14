@@ -36,24 +36,24 @@ import { TypeModel } from '../models/type.model'
 import { TypeCategoriesModel } from '../models/type-categories.model'
 import { UserModel } from '../models/users.model'
 import { AdvertControllerModule } from '../modules/advert/advert.controller.module'
-import { ApplictionControllerModule } from '../modules/applications/application.module'
-import { BaseEntityControllerModule } from '../modules/base-entity/base-entity.module'
-import { CaseControllerModule } from '../modules/case/case.module'
-import { CommentControllerModule } from '../modules/comment/comment.module'
-import { CommunicationChannelModule } from '../modules/communication-channel/communication-channel.module'
-import { CompanyModule } from '../modules/company/company.module'
-import { ForeclosureModule } from '../modules/foreclosure/foreclosure.module'
-import { LGNationalRegistryModule } from '../modules/national-registry/national-registry.module'
-import { AdvertPublicationControllerModule } from '../modules/publications/publication.module'
-import { SettlementModule } from '../modules/settlement/settlement.module'
-import { StatisticsModule } from '../modules/statistics/statistics.module'
-import { SubscriberModule } from '../modules/subscribers/subscriber.module'
+import { PublicationControllerModule } from '../modules/advert/publications/publication.controller.module'
+import { StatisticsControllerModule } from '../modules/advert/statistics/statistics.controller.module'
+import { ApplictionControllerModule } from '../modules/applications/application.controller.module'
+import { BaseEntityControllerModule } from '../modules/base-entity/base-entity.controller.module'
+import { CaseControllerModule } from '../modules/case/case.controller.module'
+import { CommentControllerModule } from '../modules/comment/comment.controller.module'
+import { CommunicationChannelControllerModule } from '../modules/communication-channel/communication-channel.module'
+import { CompanyControllerModule } from '../modules/external-systems/company/company.controller.module'
+import { ForeclosureControllerModule } from '../modules/external-systems/foreclosure/foreclosure.controller.module'
+import { LGNationalRegistryControllerModule } from '../modules/national-registry/national-registry.controller.module'
+import { SettlementControllerModule } from '../modules/settlement/settlement.controller.module'
+import { SubscriberControllerModule } from '../modules/subscribers/subscriber.controller.module'
 import { ApplicationWebModule } from '../modules/swagger/application-web.module'
 import { ExternalSystemsModule } from '../modules/swagger/external-systems.module'
 import { IslandIsApplicationModule } from '../modules/swagger/island-is-application.module'
 import { PublicWebModule } from '../modules/swagger/public-web.module'
 import { TypesCategoriesControllerModule } from '../modules/type-categories/type-categories.module'
-import { UsersModule } from '../modules/users/users.module'
+import { UserControllerModule } from '../modules/users/users.controller.module'
 
 @Module({
   imports: [
@@ -102,17 +102,17 @@ import { UsersModule } from '../modules/users/users.module'
       inject: [DMRSequelizeConfigService],
     }),
     BaseEntityControllerModule,
-    CompanyModule,
+    CompanyControllerModule,
     CaseControllerModule,
     AdvertControllerModule,
-    AdvertPublicationControllerModule,
-    SubscriberModule,
-    UsersModule,
+    PublicationControllerModule,
+    SubscriberControllerModule,
+    UserControllerModule,
     ApplictionControllerModule,
     TypesCategoriesControllerModule,
-    SettlementModule,
+    SettlementControllerModule,
     CommentControllerModule,
-    ForeclosureModule,
+    ForeclosureControllerModule,
     {
       module: AuthModule,
       global: true,
@@ -122,9 +122,9 @@ import { UsersModule } from '../modules/users/users.module'
     ExternalSystemsModule,
     IslandIsApplicationModule,
     PublicWebModule,
-    CommunicationChannelModule,
-    StatisticsModule,
-    LGNationalRegistryModule,
+    CommunicationChannelControllerModule,
+    StatisticsControllerModule,
+    LGNationalRegistryControllerModule,
   ],
   controllers: [],
   providers: [

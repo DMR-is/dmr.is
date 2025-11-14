@@ -17,7 +17,7 @@ import { Scopes, ScopesGuard, TokenJwtAuthGuard } from '@dmr.is/modules'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
-import { LGResponse } from '../../decorators/lg-response.decorator'
+import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import {
   AddDivisionEndingForApplicationDto,
   AddDivisionMeetingForApplicationDto,

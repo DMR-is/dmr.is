@@ -32,7 +32,7 @@ import {
   RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
   RECALL_CATEGORY_ID,
   RECALL_DECEASED_ADVERT_TYPE_ID,
-} from '../../lib/constants'
+} from '../../core/constants'
 import { AdvertModel } from '../../models/advert.model'
 import {
   AddDivisionEndingForApplicationDto,

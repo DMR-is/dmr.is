@@ -5,7 +5,7 @@ import { GetPersonDto } from '@dmr.is/clients/national-registry'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 import { NationalIdValidationPipe } from '@dmr.is/pipelines'
 
-import { LGResponse } from '../../decorators/lg-response.decorator'
+import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { ILGNationalRegistryService } from './national-registry.service.interface'
 
 @Controller({

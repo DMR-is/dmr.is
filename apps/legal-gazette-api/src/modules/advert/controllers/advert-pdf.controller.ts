@@ -7,8 +7,8 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
-import { PdfService } from '../../../services/pdf/pdf.service'
-import { IPublicationService } from '../../publications/publication.service.interface'
+import { PdfService } from '../pdf/pdf.service'
+import { IPublicationService } from '../publications/publication.service.interface'
 
 @Controller({ path: 'adverts/pdf', version: '1' })
 @ApiBearerAuth()

@@ -2,7 +2,7 @@ import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
-import { LGResponse } from '../../decorators/lg-response.decorator'
+import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import {
   TypesWithCategoriesResponseDto,
   TypeWithCategoriesQueryDto,
