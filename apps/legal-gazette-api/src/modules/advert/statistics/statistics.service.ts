@@ -7,11 +7,11 @@ import {
   GetAdvertsInProgressStatsDto,
   GetAdvertsToBePublishedStatsDto,
   GetCountByStatusesDto,
-} from '../../dto/statistics.dto'
-import { AdvertModel } from '../../models/advert.model'
-import { AdvertPublicationModel } from '../../models/advert-publication.model'
-import { CommentModel, CommentTypeEnum } from '../../models/comment.model'
-import { StatusIdEnum } from '../../models/status.model'
+} from '../../../dto/statistics.dto'
+import { AdvertModel } from '../../../models/advert.model'
+import { AdvertPublicationModel } from '../../../models/advert-publication.model'
+import { CommentModel, CommentTypeEnum } from '../../../models/comment.model'
+import { StatusIdEnum } from '../../../models/status.model'
 import { IStatisticsService } from './statistics.service.interface'
 
 @Injectable()

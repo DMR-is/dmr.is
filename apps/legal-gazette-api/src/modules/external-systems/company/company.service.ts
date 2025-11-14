@@ -6,8 +6,8 @@ import {
   CreateAdditionalAnnouncementsDto,
   RegisterCompanyFirmaskraDto,
   RegisterCompanyHlutafelagDto,
-} from '../../dto/external-systems.dto'
-import { IAdvertService } from '../../modules/advert/advert.service.interface'
+} from '../../../dto/external-systems.dto'
+import { IAdvertService } from '../../advert/advert.service.interface'
 import { ICompanyService } from './company.service.interface'
 import {
   formatCompanyAnnouncement as getCompanyAnnouncementMarkup,

@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common'
 import { RouterModule } from '@nestjs/core'
 
-import { CompanyControllerModule } from '../company/company.controller.module'
-import { ForeclosureControllerModule } from '../foreclosure/foreclosure.controller.module'
+import { CompanyControllerModule } from '../external-systems/company/company.controller.module'
+import { ForeclosureControllerModule } from '../external-systems/foreclosure/foreclosure.controller.module'
 
 @Module({
   imports: [

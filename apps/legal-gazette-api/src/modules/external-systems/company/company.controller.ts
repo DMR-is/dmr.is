@@ -3,13 +3,13 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
-import { LGResponse } from '../../decorators/lg-response.decorator'
+import { LGResponse } from '../../../decorators/lg-response.decorator'
 import {
   CreateAdditionalAnnouncementsDto,
   RegisterCompanyFirmaskraDto,
   RegisterCompanyHlutafelagDto,
-} from '../../dto/external-systems.dto'
-import { MachineClientGuard } from '../../guards/machine-client.guard'
+} from '../../../dto/external-systems.dto'
+import { MachineClientGuard } from '../../../guards/machine-client.guard'
 import { ICompanyService } from './company.service.interface'
 
 @Controller({

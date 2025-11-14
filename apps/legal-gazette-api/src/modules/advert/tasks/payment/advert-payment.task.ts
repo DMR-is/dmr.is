@@ -6,13 +6,14 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { TBRTransactionModel } from '../../../models/tbr-transactions.model'
-import { ITBRService } from '../../tbr/tbr.service.interface'
+import { TBRTransactionModel } from '../../../../models/tbr-transactions.model'
+import { ITBRService } from '../../../tbr/tbr.service.interface'
+import { IAdvertPaymentTaskService } from './advert-payment.task.interface'
 
 const LOGGING_CONTEXT = 'AdvertPaymentService'
 
 @Injectable()
-export class AdvertPaymentService {
+export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
   private readonly chunkSize: number = 25
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,

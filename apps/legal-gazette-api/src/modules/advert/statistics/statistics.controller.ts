@@ -3,12 +3,12 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
-import { LGResponse } from '../../decorators/lg-response.decorator'
+import { LGResponse } from '../../../decorators/lg-response.decorator'
 import {
   GetAdvertsInProgressStatsDto,
   GetAdvertsToBePublishedStatsDto,
   GetCountByStatusesDto,
-} from '../../dto/statistics.dto'
+} from '../../../dto/statistics.dto'
 import { IStatisticsService } from './statistics.service.interface'
 
 @Controller({
