@@ -72,3 +72,9 @@ export class TBRPostPaymentBodyDto {
   })
   expenses!: TBRPaymentExpensesDto[]
 }
+
+export class GetPaymentDataResponseDto {
+  feeCodeId!: string
+
+  paymentData!: TBRPostPaymentBodyDto
+}
