@@ -12,7 +12,7 @@ import { AdvertModule } from '../../services/advert/advert.module'
 import { ApplicationService } from '../applications/application.service'
 import { IApplicationService } from '../applications/application.service.interface'
 import { IslandIsApplicationController } from '../applications/controllers/island-is-application.controller'
-import { BaseEntityModule } from '../base-entity/base-entity.module'
+import { BaseEntityControllerModule } from '../base-entity/base-entity.module'
 
 @Module({
   imports: [
@@ -25,7 +25,7 @@ import { BaseEntityModule } from '../base-entity/base-entity.module'
       SettlementModel,
       AdvertModel,
     ]),
-    BaseEntityModule,
+    BaseEntityControllerModule,
   ],
   controllers: [IslandIsApplicationController],
   providers: [

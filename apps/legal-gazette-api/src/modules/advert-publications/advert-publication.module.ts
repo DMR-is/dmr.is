@@ -9,4 +9,4 @@ import { AdvertPublicationController } from './advert-publication.controller'
   providers: [],
   exports: [],
 })
-export class AdvertPublicationModule {}
+export class AdvertPublicationControllerModule {}

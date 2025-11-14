@@ -1,19 +1,19 @@
 import { Module } from '@nestjs/common'
 
 import { AdvertModule } from '../../services/advert/advert.module'
-import { AdvertPublicationModule } from '../advert-publications/advert-publication.module'
+import { AdvertPublicationControllerModule } from '../advert-publications/advert-publication.module'
 import { ApplicationModule } from '../applications/application.module'
-import { BaseEntityModule } from '../base-entity/base-entity.module'
+import { BaseEntityControllerModule } from '../base-entity/base-entity.module'
 import { CaseControllerModule } from '../case/case.module'
 import { LGNationalRegistryModule } from '../national-registry/national-registry.module'
 
 @Module({
   imports: [
     AdvertModule,
-    BaseEntityModule,
+    BaseEntityControllerModule,
     CaseControllerModule,
     ApplicationModule,
-    AdvertPublicationModule,
+    AdvertPublicationControllerModule,
     LGNationalRegistryModule,
   ],
   controllers: [],

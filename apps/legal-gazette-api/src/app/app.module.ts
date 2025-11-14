@@ -36,9 +36,9 @@ import { TypeModel } from '../models/type.model'
 import { TypeCategoriesModel } from '../models/type-categories.model'
 import { UserModel } from '../models/users.model'
 import { AdvertControllerModule } from '../modules/advert/advert.module'
-import { AdvertPublicationModule } from '../modules/advert-publications/advert-publication.module'
+import { AdvertPublicationControllerModule } from '../modules/advert-publications/advert-publication.module'
 import { ApplicationModule } from '../modules/applications/application.module'
-import { BaseEntityModule } from '../modules/base-entity/base-entity.module'
+import { BaseEntityControllerModule } from '../modules/base-entity/base-entity.module'
 import { CaseControllerModule } from '../modules/case/case.module'
 import { CommentModule } from '../modules/comment/comment.module'
 import { CommunicationChannelModule } from '../modules/communication-channel/communication-channel.module'
@@ -101,11 +101,11 @@ import { UsersModule } from '../modules/users/users.module'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    BaseEntityModule,
+    BaseEntityControllerModule,
     CompanyModule,
     CaseControllerModule,
     AdvertControllerModule,
-    AdvertPublicationModule,
+    AdvertPublicationControllerModule,
     SubscriberModule,
     UsersModule,
     ApplicationModule,
