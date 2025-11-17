@@ -32,7 +32,6 @@ export type SearchQueryParams = {
 const cleanQuery = (q: string | undefined) =>
   q && xss(q).replace(/\s+/g, ' ').trim().toLowerCase()
 
-
 export async function searchElastic(client: Client, query: SearchQueryParams) {
   let searchQuery = cleanQuery(query.q)
 

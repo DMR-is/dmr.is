@@ -13,7 +13,7 @@ type RegulationAttributes = {
   updateComment?: string
   status: 'draft' | 'text_locked' | 'migrated'
   type?: 'base' | 'amending'
-  ministryId?: number
+  ministryid?: number
   originalDoc?: string
 }
 
@@ -87,7 +87,7 @@ export class DB_Regulation
     allowNull: true,
     comment: 'The ministry this Regulation belongs to currently',
   })
-  ministryId?: number
+  ministryid?: number
 
   @Column({ type: DataType.SMALLINT })
   repealedBeacuseReasons!: number

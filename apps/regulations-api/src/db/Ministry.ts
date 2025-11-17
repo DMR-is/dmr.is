@@ -20,7 +20,7 @@ export async function getAllMinistries(slugs?: Array<MinistrySlug>) {
   return ministries.map((m) => m.get())
 }
 
-export const getMinistry = (id: DB_Regulation['ministryId']) =>
+export const getMinistry = (id: DB_Regulation['ministryid']) =>
   id
     ? (DB_Ministry.findOne({ where: { id } }) as Promise<DB_Ministry>).then(
         ({ slug, name }): Ministry => ({ slug, name }),

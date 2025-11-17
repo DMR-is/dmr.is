@@ -214,7 +214,7 @@ const augmentRegulation = async (
     lastAmendDate,
     repealedDate,
   } = await promiseAll({
-    ministry: getMinistry(regulation.ministryId),
+    ministry: getMinistry(regulation.ministryid),
     history: getRegulationHistory(regulation),
     effects: getRegulationEffects(id),
     lawChapters: getRegulationLawChapters(id),
