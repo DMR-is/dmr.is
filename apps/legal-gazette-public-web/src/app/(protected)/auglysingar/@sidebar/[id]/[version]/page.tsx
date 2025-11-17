@@ -1,7 +1,7 @@
 import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
 
 import { PublicationSidebar } from '../../../../../../components/client-components/detailed-page/Sidebar/PublicationSidebar'
-import { GetAdvertPublicationVersionEnum } from '../../../../../../gen/fetch'
+import { AdvertVersionEnum } from '../../../../../../gen/fetch'
 import { trpc } from '../../../../../../lib/trpc/client/server'
 
 export default async function AdvertPageSidebar({
@@ -12,7 +12,7 @@ export default async function AdvertPageSidebar({
   const pub = await fetchQueryWithHandler(
     trpc.getPublication.queryOptions({
       advertId: params.id,
-      version: params.version as GetAdvertPublicationVersionEnum,
+      version: params.version as AdvertVersionEnum,
     }),
   )
 

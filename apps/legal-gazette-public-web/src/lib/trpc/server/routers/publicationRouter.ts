@@ -1,11 +1,11 @@
 import z from 'zod'
 
-import { GetAdvertPublicationVersionEnum } from '../../../../gen/fetch'
+import { AdvertVersionEnum } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
 const getAdvertPublicationSchema = z.object({
   advertId: z.uuid(),
-  version: z.enum(GetAdvertPublicationVersionEnum),
+  version: z.enum(AdvertVersionEnum),
 })
 
 const getPublicationsSchema = z.object({
