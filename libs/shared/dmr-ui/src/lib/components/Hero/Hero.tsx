@@ -1,10 +1,13 @@
 'use client'
+import { justifyContent } from 'submodules/island.is/libs/island-ui/core/src/lib/Box/useBoxStyles.css'
+
 import {
   Box,
   Breadcrumbs,
   GridColumn,
   GridContainer,
   GridRow,
+  ResponsiveProp,
   Stack,
   Text,
 } from '@island.is/island-ui/core'
@@ -23,6 +26,8 @@ export type HeroProps = {
   withOffset?: boolean
   contentSpan?: SpanType
   imageSpan?: SpanType
+  button?: React.ReactNode
+  alignHeader?: ResponsiveProp<keyof typeof justifyContent>
 }
 
 export const BANNER_PORTAL_ID = 'banner-portal'
@@ -43,6 +48,8 @@ export const Hero = ({
     noImageFullWidth ? '12/12' : '6/12',
   ],
   imageSpan = ['12/12', '12/12', '12/12', '4/12'],
+  button,
+  alignHeader = 'flexStart',
 }: HeroProps) => {
   const hasTitleOrDescription = !!(title || description || breadcrumbs)
   const hasImage = !!(image && image.src)
@@ -54,21 +61,22 @@ export const Hero = ({
   return (
     <GridContainer>
       <Stack space={4}>
-        <GridRow>
+        <GridRow align={alignHeader}>
           {hasTitleOrDescription && (
             <GridColumn offset={offset} span={contentSpan}>
               <Box height="full" display="flex" alignItems="center">
-                <Stack space={4}>
+                <Stack space={2}>
                   {breadcrumbs && <Breadcrumbs {...breadcrumbs} />}
 
-                  <Stack space={2}>
-                    <Stack space={1}>
-                      {title && (
-                        <Text variant={isDefault ? 'h1' : 'h2'}>{title}</Text>
-                      )}
-                      {description && <Text>{description}</Text>}
-                    </Stack>
+                  <Stack space={4}>
+                    {title && (
+                      <Text variant={isDefault ? 'h1' : 'h2'}>{title}</Text>
+                    )}
+
+                    {description && <Text variant="intro">{description}</Text>}
+                    {button && <Box>{button}</Box>}
                   </Stack>
+
                   {!isDefault && children && children}
                 </Stack>
               </Box>

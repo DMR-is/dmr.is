@@ -1,14 +1,11 @@
-import { fa } from 'zod/v4/locales'
-
 import { HeaderLogin } from '@dmr.is/ui/components/Header/HeaderLogin'
-import { Hero } from '@dmr.is/ui/components/Hero/Hero'
+import Hero from '@dmr.is/ui/components/Hero/Hero'
 import {
   Box,
   Button,
   GridColumn,
   GridContainer,
   GridRow,
-  Inline,
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
@@ -18,7 +15,7 @@ import { BannerSearch } from '../../client-components/front-page/banner-search/B
 export const LandingPage = async () => {
   const quickLinks: React.ComponentProps<typeof BannerSearch>['quickLinks'] = [
     {
-      title: 'Umsóknarkerfi',
+      title: 'Umsóknarkerfi auglýsanda',
       href: '/auglysingar?type=innkollun-throtabu',
       variant: 'blue',
     },
@@ -34,20 +31,26 @@ export const LandingPage = async () => {
 
   return (
     <>
-      <HeaderLogin />
+      <HeaderLogin variant="white" />
       <Box paddingY={4} rowGap={8} display="flex" flexDirection="column">
         <Hero
           title="Lögbirtingablaðið"
-          contentSpan={'6/12'}
+          contentSpan={['12/12', '12/12', '12/12', '6/12']}
           imageSpan={'4/12'}
-          withOffset={false}
+          withOffset={true}
           image={{ src: '/images/hero-page-image.svg' }}
           breadcrumbs={breadcrumbItems}
           description="Dómsmálaráðuneytið gefur út Lögbirtingablað. Það kom fyrst út í prentuðu formi í ársbyrjun 1908, skv. lögum nr. 32/1907 og var þá gefið út einu sinni í viku 2 eða 4 bls. eftir þörfum í stærðinni A4. Síðan hefur Lögbirtingablað verið gefið út óslitið til dagsins í dag."
+          button={quickLinks?.map((link, i) => (
+            <Button key={i} size="small" icon="open" iconType="outline">
+              {link.title}
+            </Button>
+          ))}
+          alignHeader={'spaceBetween'}
         >
           <GridContainer>
             <GridRow>
-              <GridColumn>
+              <GridColumn offset={['0', '0', '0', '1/12']}>
                 <Text variant="default">
                   Samkvæmt lögum nr. 15/2005 skal birta í Lögbirtingablaði
                   dómsmálaauglýsingar, svo sem stefnur til dóms, úrskurði um
@@ -64,9 +67,9 @@ export const LandingPage = async () => {
             </GridRow>
           </GridContainer>
         </Hero>
-        <GridContainer>
+        {/* <GridContainer>
           <GridRow>
-            <GridColumn>
+            <GridColumn offset={['0', '0', '0', '1/12']}>
               <Stack space={1}>
                 <Inline space={4}>
                   {quickLinks?.map((link, i) => (
@@ -78,7 +81,7 @@ export const LandingPage = async () => {
               </Stack>
             </GridColumn>
           </GridRow>
-        </GridContainer>
+        </GridContainer> */}
         <Box background="blue100" paddingY={8}>
           <GridContainer>
             <GridRow>
