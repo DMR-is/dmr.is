@@ -10,7 +10,7 @@ import { formatDate } from '@dmr.is/utils/client'
 import {
   AdvertDto,
   AdvertPublicationDetailedDto,
-  GetAdvertPublicationVersionEnum,
+  AdvertVersionEnum,
 } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import * as styles from './advert.css'
@@ -28,7 +28,7 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
   const [openModal, setOpenModal] = useState<number | null>(null)
 
   const { mutate: getAdvertPublication } = useMutation(
-    trpc.publicationApi.getAdvertPublication.mutationOptions()
+    trpc.publicationApi.getAdvertPublication.mutationOptions(),
   )
 
   return (
@@ -68,7 +68,7 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
                     getAdvertPublication(
                       {
                         advertId: advert.id,
-                        version: GetAdvertPublicationVersionEnum[pub.version],
+                        version: AdvertVersionEnum[pub.version],
                       },
                       {
                         onSuccess: (data: AdvertPublicationDetailedDto) => {

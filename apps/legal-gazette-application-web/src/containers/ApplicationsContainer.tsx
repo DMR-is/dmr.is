@@ -42,7 +42,7 @@ export function ApplicationsContainer({ searchParams }: Props) {
     return <AlertMessage type="info" title="Engar umsóknir fundust" />
   }
 
-  const { applications, ...paging } = data
+  const { applications, paging } = data
 
   return (
     <Stack space={4}>
