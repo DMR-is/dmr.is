@@ -49,7 +49,7 @@ type SQLRegulationsItem = Pick<
   | 'name'
   | 'type'
   | 'title'
-  | 'ministryId'
+  | 'ministryid'
   | 'publishedDate'
   | 'effectiveDate'
   | 'repealedBeacuseReasons'
@@ -97,7 +97,7 @@ const augmentRegulationList = async (
       } = reg
 
       const { ministry, lawChapters } = await promiseAll({
-        ministry: opts.ministry ? getMinistry(reg.ministryId) : undefined,
+        ministry: opts.ministry ? getMinistry(reg.ministryid) : undefined, //
         lawChapters: opts.lawChapters
           ? getRegulationLawChapters(reg.id)
           : undefined,
@@ -155,7 +155,7 @@ export async function getNewestRegulations(opts: {
       'title',
       'publishedDate',
       'effectiveDate',
-      'ministryId',
+      'ministryid',
     ],
     order: [
       ['publishedDate', 'DESC'],
@@ -226,7 +226,7 @@ export async function getAllRegulations(opts?: {
       }
       t.done as migrated,
       r.type,
-      r.ministryId,
+      r.ministryid,
       r.publishedDate,
       r.effectiveDate,
       c.date as repealedDate,
