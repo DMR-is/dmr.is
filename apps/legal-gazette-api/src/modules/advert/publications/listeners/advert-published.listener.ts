@@ -6,7 +6,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IAWSService } from '@dmr.is/modules'
 
 import { LegalGazetteEvents } from '../../../../core/constants'
-import { AdvertVersionEnum } from '../../../../models/advert.model'
+import { AdvertVersionEnum } from '../../../../models/advert-publication.model'
 import { TBRTransactionModel } from '../../../../models/tbr-transactions.model'
 import { ITBRService } from '../../../tbr/tbr.service.interface'
 import { IPriceCalculatorService } from '../../calculator/price-calculator.service.interface'

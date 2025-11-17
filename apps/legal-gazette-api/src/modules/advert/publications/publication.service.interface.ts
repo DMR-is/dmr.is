@@ -1,6 +1,6 @@
-import { AdvertVersionEnum } from '../../../models/advert.model'
 import {
   AdvertPublicationDetailedDto,
+  AdvertVersionEnum,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,

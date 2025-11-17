@@ -11,10 +11,11 @@ import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { LegalGazetteEvents } from '../../../core/constants'
 import { mapIndexToVersion, mapVersionToIndex } from '../../../core/utils'
-import { AdvertModel, AdvertVersionEnum } from '../../../models/advert.model'
+import { AdvertModel } from '../../../models/advert.model'
 import {
   AdvertPublicationDetailedDto,
   AdvertPublicationModel,
+  AdvertVersionEnum,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,

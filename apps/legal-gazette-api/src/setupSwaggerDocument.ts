@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common'
 import { SwaggerModule } from '@nestjs/swagger'
 
+import { BaseEntityDto } from './modules/base-entity/base-entity.dto'
 import { openApi } from './openApi'
 
 export type SetupSwaggerOptions = {
@@ -19,6 +20,7 @@ export const setupSwaggerDocument = (
   const document = SwaggerModule.createDocument(app, openApi, {
     deepScanRoutes: true,
     include: options.modules,
+    extraModels: [BaseEntityDto],
     autoTagControllers: options.autoTagControllers ?? false,
   })
 

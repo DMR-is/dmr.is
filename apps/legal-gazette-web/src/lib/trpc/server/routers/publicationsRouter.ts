@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { GetAdvertPublicationVersionEnum } from '../../../../gen/fetch'
+import { AdvertVersionEnum } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
 const createPublicationSchema = z.object({
@@ -25,7 +25,7 @@ const publishPublicationSchema = z.object({
 
 const getPublicationSchema = z.object({
   advertId: z.string(),
-  version: z.nativeEnum(GetAdvertPublicationVersionEnum),
+  version: z.enum(AdvertVersionEnum),
 })
 
 export const publicationsRouter = router({

@@ -7,7 +7,7 @@
   "targets": {
     "tsc": {
       "executor": "nx:run-commands",
-      "dependsOn": ["codegen"],
+      // "dependsOn": ["codegen"],
       "options": {
         "commands": ["tsc -p tsconfig.json --noEmit"],
         "cwd": "apps/legal-gazette-web",
@@ -81,6 +81,14 @@
           "prettier --write clientConfig.patched.json"
         ],
         "parallel": true,
+        "cwd": "apps/legal-gazette-web"
+      }
+    },
+    "update-client": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["update-openapi-schema", "codegen"],
+      "options": {
+        "commands": [],
         "cwd": "apps/legal-gazette-web"
       }
     },

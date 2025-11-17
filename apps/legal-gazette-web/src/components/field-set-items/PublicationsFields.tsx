@@ -19,7 +19,7 @@ import { Inline, toast } from '@island.is/island-ui/core'
 
 import {
   AdvertPublicationDto,
-  GetAdvertPublicationVersionEnum,
+  AdvertVersionEnum,
   StatusEnum,
 } from '../../gen/fetch'
 import { useUpdatePublications } from '../../hooks/useUpdatePublications'
@@ -58,9 +58,8 @@ export const PublicationsFields = ({
   } = useQuery(
     trpc.getPublication.queryOptions({
       advertId: id,
-      version: GetAdvertPublicationVersionEnum.A,
+      version: AdvertVersionEnum.A,
     }),
-
   )
 
   useEffect(() => {

@@ -14,9 +14,9 @@ import { ApiParam } from '@nestjs/swagger'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
-import { AdvertVersionEnum } from '../../../models/advert.model'
 import {
   AdvertPublicationDetailedDto,
+  AdvertVersionEnum,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,
@@ -48,6 +48,7 @@ export class AdvertPublicationController {
   @ApiParam({
     name: 'version',
     enum: AdvertVersionEnum,
+    enumName: 'AdvertVersionEnum',
   })
   @LGResponse({
     operationId: 'getAdvertPublication',

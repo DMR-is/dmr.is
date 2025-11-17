@@ -93,7 +93,7 @@ export class TypeWithCategoriesQueryDto {
 }
 
 export class TypeWithCategoriesDto extends BaseEntityDto {
-  @ApiProperty({ type: [CategoryDto] })
+  @ApiProperty({ type: () => [CategoryDto] })
   categories!: CategoryDto[]
 }
 

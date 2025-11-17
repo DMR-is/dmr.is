@@ -10,7 +10,7 @@ import { amountFormat } from '@dmr.is/utils/client'
 
 type ReadOnlyAccordionItemProps = {
   id: string
-  publicationNumber: string | null
+  publicationNumber?: string
   createdAt: string
   createdBy: string
   paid?: boolean

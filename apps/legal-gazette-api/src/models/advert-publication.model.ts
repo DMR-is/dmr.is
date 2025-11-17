@@ -24,9 +24,15 @@ import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'
-import { AdvertDto, AdvertModel, AdvertVersionEnum } from './advert.model'
+import { AdvertDto, AdvertModel } from './advert.model'
 import { CategoryDto, CategoryModel } from './category.model'
 import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
+
+export enum AdvertVersionEnum {
+  A = 'A',
+  B = 'B',
+  C = 'C',
+}
 
 export type AdvertPublicationsAttributes = {
   advertId: string
@@ -185,7 +191,7 @@ export class AdvertPublicationModel extends BaseModel<
   publishedAt!: Date | null
 
   @Column({ type: DataType.INTEGER, defaultValue: '1' })
-  @ApiProperty({ type: Number, default: 1 })
+  @ApiProperty({ type: Number })
   versionNumber!: number
 
   @Column({ field: 'pdf_url', allowNull: true })
@@ -198,7 +204,6 @@ export class AdvertPublicationModel extends BaseModel<
   }
 
   @Column({ type: DataType.VIRTUAL })
-  @ApiProperty({ enum: AdvertVersionEnum, enumName: 'AdvertVersionEnum' })
   get versionLetter(): AdvertVersionEnum {
     const letter = String.fromCharCode(64 + this.versionNumber)
 
