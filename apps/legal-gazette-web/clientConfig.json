@@ -5172,28 +5172,21 @@
       "UpdateAdvertDto": {
         "type": "object",
         "properties": {
-          "courtDistrictId": { "type": "string", "nullable": true },
-          "typeId": { "type": "string" },
-          "categoryId": { "type": "string" },
           "title": { "type": "string" },
-          "signatureName": { "type": "string", "nullable": true },
-          "signatureOnBehalfOf": { "type": "string", "nullable": true },
-          "signatureLocation": { "type": "string", "nullable": true },
-          "additionalText": { "type": "string", "nullable": true },
-          "caption": { "type": "string", "nullable": true },
+          "caption": { "type": "string" },
           "content": { "type": "string" },
-          "divisionMeetingLocation": { "type": "string", "nullable": true },
-          "signatureDate": {
-            "type": "string",
-            "description": "Date of signature"
-          },
+          "additionalText": { "type": "string" },
+          "signatureLocation": { "type": "string" },
+          "signatureName": { "type": "string" },
+          "signatureOnBehalfOf": { "type": "string" },
+          "signatureDate": { "type": "string" },
           "judgementDate": { "type": "string" },
           "divisionMeetingDate": { "type": "string" },
-          "scheduledAt": {
-            "description": "List of scheduled publication dates",
-            "type": "array",
-            "items": { "type": "string" }
-          }
+          "divisionMeetingLocation": { "type": "string" },
+          "scheduledAt": { "type": "array", "items": { "type": "string" } },
+          "categoryId": { "type": "string" },
+          "typeId": { "type": "string" },
+          "courtDistrictId": { "type": "string" }
         }
       },
       "ApplicationRequirementStatementEnum": {

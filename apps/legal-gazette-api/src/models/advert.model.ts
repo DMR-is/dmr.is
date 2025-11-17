@@ -986,11 +986,8 @@ export class CreateAdvertDto extends PickType(AdvertModel, [
 }
 
 export class UpdateAdvertDto extends PartialType(
-  PickType(CreateAdvertDto, [
-    'scheduledAt',
+  PickType(AdvertDetailedDto, [
     'content',
-    'categoryId',
-    'typeId',
     'additionalText',
     'caption',
     'signatureName',
@@ -1000,10 +997,41 @@ export class UpdateAdvertDto extends PartialType(
     'divisionMeetingDate',
     'divisionMeetingLocation',
     'judgementDate',
-    'courtDistrictId',
     'title',
   ] as const),
-) {}
+) {
+  @ApiProperty({ type: [String], required: false })
+  @IsOptional()
+  @IsArray()
+  @IsDateString(undefined, { each: true })
+  @MinLength(1, { each: true })
+  @MaxLength(3, { each: true })
+  scheduledAt?: string[]
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  typeId?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  courtDistrictId?: string
+}
 
 export class PublishAdvertsBody {
   @ApiProperty({
