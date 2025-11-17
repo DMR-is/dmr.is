@@ -1,5 +1,5 @@
 import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
-import { Header } from '@dmr.is/ui/components/client-components/Header/Header'
+import { Header } from '@dmr.is/ui/components/Header/Header'
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 import {
   Box,
@@ -36,7 +36,7 @@ export const HomePage = async () => {
   const breadcrumbItems: React.ComponentProps<typeof Hero>['breadcrumbs'] = {
     items: [
       {
-        title: 'Lögbirtingablaðið',
+        title: 'Dómsmálaráðuneytið',
       },
     ],
   }

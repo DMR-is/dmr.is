@@ -3,25 +3,21 @@
 import {
   Box,
   DropdownMenu,
-  FocusableBox,
   GridColumn,
   GridContainer,
   GridRow,
   Hidden,
   Inline,
-  useBreakpoint,
 } from '@island.is/island-ui/core'
 
-import skjaldarmerki from './images/skjaldarmerki.svg'
 import * as styles from './Header.css'
+import { HeaderLogo } from './HeaderLogo'
 
 export type HeaderProps = {
   variant?: 'blue' | 'white'
 }
 
 export const HeaderLogin = ({ variant = 'blue' }: HeaderProps) => {
-  const { lg } = useBreakpoint()
-
   return (
     <Hidden print={true}>
       <header className={styles.header({ variant })}>
@@ -34,14 +30,7 @@ export const HeaderLogin = ({ variant = 'blue' }: HeaderProps) => {
                   justifyContent="flexStart"
                   space={[2, 2, 4]}
                 >
-                  <FocusableBox href={'/'} data-testid="link-back-home">
-                    <img
-                      src={skjaldarmerki}
-                      alt="Skjaldarmerki"
-                      width={lg ? 70 : 50}
-                      height={lg ? 40 : 32}
-                    />
-                  </FocusableBox>
+                  <HeaderLogo />
                 </Inline>
                 <Box
                   display="flex"

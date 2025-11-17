@@ -8,7 +8,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { ToastContainer } from '@dmr.is/ui/components/island-is'
 
 type Props = {
-  session: Session | null
+  session: Session
   children?: React.ReactNode
 }
 

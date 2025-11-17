@@ -10,18 +10,16 @@ import { forceLogin, useLogOut } from '@dmr.is/auth/useLogOut'
 import {
   Box,
   DropdownMenu,
-  FocusableBox,
   GridColumn,
   GridContainer,
   GridRow,
   Hidden,
   Inline,
-  Logo,
-  useBreakpoint,
 } from '@island.is/island-ui/core'
 
 import { ControlPanel, ControlPanelProps } from '../ControlPanel/ControlPanel'
 import * as styles from './Header.css'
+import { HeaderLogo } from './HeaderLogo'
 
 export type HeaderProps = {
   controlPanel?: ControlPanelProps
@@ -29,7 +27,6 @@ export type HeaderProps = {
 }
 
 export const Header = ({ controlPanel, variant = 'blue' }: HeaderProps) => {
-  const { lg } = useBreakpoint()
   const { data: session, status } = useSession()
   const logOut = useLogOut()
   const pathName = usePathname()
@@ -54,13 +51,7 @@ export const Header = ({ controlPanel, variant = 'blue' }: HeaderProps) => {
                   justifyContent="flexStart"
                   space={[2, 2, 4]}
                 >
-                  <FocusableBox href={'/'} data-testid="link-back-home">
-                    <Logo
-                      id="header-logo"
-                      width={lg ? 160 : 30}
-                      iconOnly={lg ? false : true}
-                    />
-                  </FocusableBox>
+                  <HeaderLogo />
                   {controlPanel && <ControlPanel {...controlPanel} />}
                 </Inline>
                 <Box
