@@ -8,7 +8,6 @@ import { IntlProvider } from 'react-intl'
 
 import { ToastContainer } from '@dmr.is/ui/components/island-is'
 
-import { FilterProvider } from '../../context/filter-context'
 import { allMessages } from '../../lib/messages'
 import { TRPCReactProvider } from '../../lib/trpc/client/Provider'
 import { flattenMessages } from '../../lib/utils'
@@ -46,7 +45,7 @@ export const RootProviders = ({
               console.error('Error in IntlProvider', { exception: err })
             }}
           >
-            <FilterProvider>{children}</FilterProvider>
+            {children}
           </IntlProvider>
         </SessionProvider>
       </NuqsAdapter>
