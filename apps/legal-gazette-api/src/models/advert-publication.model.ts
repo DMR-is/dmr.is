@@ -351,9 +351,11 @@ export class PublishedPublicationDto extends OmitType(AdvertPublicationDto, [
   createdBy!: string
 }
 
-export class UpdateAdvertPublicationDto extends PickType(AdvertPublicationDto, [
-  'scheduledAt',
-] as const) {}
+export class UpdateAdvertPublicationDto {
+  @ApiProperty({ type: String })
+  @IsDateString()
+  scheduledAt!: string
+}
 
 export class GetPublicationsDto {
   @ApiProperty({ type: [PublishedPublicationDto] })

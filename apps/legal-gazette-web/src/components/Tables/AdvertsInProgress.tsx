@@ -14,20 +14,26 @@ import { useTRPC } from '../../lib/trpc/client/trpc'
 import { useQuery } from '@tanstack/react-query'
 
 export const AdvertsInProgress = () => {
-  const { params, setParams } = useFilterContext()
+  const { params, setParams, handleSort } = useFilterContext()
 
   const { formatMessage } = useIntl()
 
   const trpc = useTRPC()
+
   const { data, isLoading, error } = useQuery(
-    trpc.getAdvertsInProgress.queryOptions({
-      categoryId: params.categoryId,
-      typeId: params.typeId,
-      statusId: params.statusId as StatusIdEnum[],
-      search: params.search,
-      page: params.page,
-      pageSize: params.pageSize,
-    }),
+    trpc.getAdvertsInProgress.queryOptions(
+      {
+        categoryId: params.categoryId,
+        typeId: params.typeId,
+        statusId: params.statusId as StatusIdEnum[],
+        search: params.search,
+        page: params.page,
+        pageSize: params.pageSize,
+        direction: params.direction ?? undefined,
+        sortBy: params.sortBy ?? undefined,
+      },
+      { placeholderData: (prev) => prev },
+    ),
   )
 
   const rows = data?.adverts.map((advert) => ({
@@ -84,12 +90,14 @@ export const AdvertsInProgress = () => {
           children: formatMessage(ritstjornTableMessages.columns.scheduledAt),
           sortable: true,
           size: 'tiny',
+          onSort: handleSort,
         },
         {
           field: 'skraning',
           children: formatMessage(ritstjornTableMessages.columns.createdAt),
           size: 'tiny',
           sortable: true,
+          onSort: handleSort,
         },
 
         {

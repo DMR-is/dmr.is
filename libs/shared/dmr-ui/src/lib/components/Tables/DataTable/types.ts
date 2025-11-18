@@ -8,6 +8,7 @@ export type DataTableColumnProps = {
   sortBy?: string
   sortable?: boolean
   direction?: 'asc' | 'desc'
+  onSort?: (field: string) => void
 }
 
 export type DataTableCellProps = {

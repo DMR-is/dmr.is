@@ -1826,6 +1826,36 @@
             "schema": { "default": 10, "example": 10, "type": "number" }
           },
           {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "direction",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/SortDirectionEnum" }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
             "name": "categoryId",
             "required": false,
             "in": "query",
@@ -1845,24 +1875,6 @@
             "required": false,
             "in": "query",
             "schema": { "type": "array", "items": { "type": "string" } }
-          },
-          {
-            "name": "dateFrom",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateTo",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -5211,22 +5223,16 @@
               }
             ]
           },
-          "settlementName": { "type": "string" },
-          "settlementNationalId": { "type": "string" },
-          "settlementAddress": { "type": "string" },
           "declaredClaims": { "type": "number" },
-          "settlementDeadline": { "type": "string", "nullable": true },
-          "settlementDateOfDeath": { "type": "string", "nullable": true }
+          "deadline": { "type": "string", "nullable": true },
+          "dateOfDeath": { "type": "string", "nullable": true }
         },
         "required": [
           "id",
           "liquidatorName",
           "liquidatorLocation",
           "liquidatorRecallStatementType",
-          "settlementName",
-          "settlementNationalId",
-          "settlementAddress",
-          "settlementDeadline"
+          "deadline"
         ]
       },
       "CommunicationChannelDto": {
@@ -5386,6 +5392,7 @@
           "published"
         ]
       },
+      "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
       "AdvertDto": {
         "type": "object",
         "properties": {
@@ -5509,7 +5516,7 @@
           "publication": {
             "$ref": "#/components/schemas/AdvertPublicationDto"
           },
-          "advert": { "type": "object" },
+          "advert": { "$ref": "#/components/schemas/AdvertDto" },
           "html": { "type": "string" }
         },
         "required": ["publication", "advert", "html"]
@@ -5569,7 +5576,8 @@
           "createdAt": { "type": "string" },
           "updatedAt": { "type": "string" },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
-          "type": { "$ref": "#/components/schemas/TypeDto" }
+          "type": { "$ref": "#/components/schemas/TypeDto" },
+          "title": { "type": "string" }
         },
         "required": [
           "id",
@@ -5578,7 +5586,8 @@
           "applicationType",
           "status",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "title"
         ]
       },
       "GetApplicationsDto": {
@@ -5707,6 +5716,7 @@
           "updatedAt": { "type": "string" },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
+          "title": { "type": "string" },
           "additionalText": { "type": "string" },
           "commonFields": {
             "$ref": "#/components/schemas/CommonApplicationFieldsDto"
@@ -5736,6 +5746,7 @@
           "status",
           "createdAt",
           "updatedAt",
+          "title",
           "commonFields",
           "recallFields",
           "signature",
@@ -5922,12 +5933,9 @@
               }
             ]
           },
-          "settlementName": { "type": "string" },
-          "settlementNationalId": { "type": "string" },
-          "settlementAddress": { "type": "string" },
           "declaredClaims": { "type": "number" },
-          "settlementDeadline": { "type": "string", "nullable": true },
-          "settlementDateOfDeath": { "type": "string", "nullable": true }
+          "deadline": { "type": "string", "nullable": true },
+          "dateOfDeath": { "type": "string", "nullable": true }
         }
       },
       "GetCommentsDto": {

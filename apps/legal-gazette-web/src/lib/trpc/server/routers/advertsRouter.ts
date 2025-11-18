@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import { createTRPCError } from '@dmr.is/trpc/utils/errorHandler'
 
-import { StatusIdEnum } from '../../../../gen/fetch'
+import { SortDirectionEnum, StatusIdEnum } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
 const getAdvertsRequestSchema = z.object({
@@ -14,6 +14,8 @@ const getAdvertsRequestSchema = z.object({
   statusId: z.array(z.enum(StatusIdEnum)).optional(),
   fromDate: z.string().optional(),
   toDate: z.string().optional(),
+  sortBy: z.string().optional(),
+  direction: z.enum(SortDirectionEnum).optional(),
 })
 
 const updateAdvertDtoSchema = z.object({
