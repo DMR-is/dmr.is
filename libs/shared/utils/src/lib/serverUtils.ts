@@ -26,6 +26,8 @@ import {
   PDF_RETRY_DELAY,
 } from '@dmr.is/constants'
 import { logger } from '@dmr.is/logging'
+import { cleanupSingleEditorOutput } from '@dmr.is/regulations-tools/cleanupEditorOutput'
+import { HTMLText } from '@dmr.is/regulations-tools/types'
 import {
   AdvertTemplateDetails,
   AdvertTemplateTypeEnums,
@@ -38,9 +40,6 @@ import {
   GetAdvertTemplateResponse,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-
-import { cleanupSingleEditorOutput } from '@dmr.is/regulations-tools/cleanupEditorOutput'
-import { HTMLText } from '@dmr.is/regulations-tools/types'
 
 import {
   templateAuglysing,
