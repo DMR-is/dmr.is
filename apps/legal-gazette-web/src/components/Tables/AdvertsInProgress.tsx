@@ -2,14 +2,15 @@
 
 import { useIntl } from 'react-intl'
 
-import { AlertMessage, Tag, Tooltip } from '@dmr.is/ui/components/island-is'
+import { AlertMessage, Tooltip } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { formatDate } from '@dmr.is/utils/client'
 
-import { StatusEnum, StatusIdEnum } from '../../gen/fetch'
+import { StatusIdEnum } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { StatusTag } from '../status-tag/StatusTag'
 
 import { useQuery } from '@tanstack/react-query'
 
@@ -48,13 +49,7 @@ export const AdvertsInProgress = () => {
     ) : undefined,
     birting: formatDate(advert.scheduledAt),
     skraning: formatDate(advert.createdAt),
-    status: (
-      <Tag
-        variant={advert.status.title === StatusEnum.Innsent ? 'blue' : 'mint'}
-      >
-        {advert.status.title}
-      </Tag>
-    ),
+    status: <StatusTag status={advert.status} />,
     tegund: advert.type.title,
     efni: advert.title,
     owner: advert.createdBy,

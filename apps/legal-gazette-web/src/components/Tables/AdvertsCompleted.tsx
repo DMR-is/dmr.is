@@ -6,12 +6,11 @@ import { Box } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { formatDate } from '@dmr.is/utils/client'
 
-import { Tag } from '@island.is/island-ui/core'
-
-import { StatusEnum, StatusIdEnum } from '../../gen/fetch'
+import { StatusIdEnum } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { StatusTag } from '../status-tag/StatusTag'
 
 import { useQuery } from '@tanstack/react-query'
 export const AdvertsCompleted = () => {
@@ -38,13 +37,7 @@ export const AdvertsCompleted = () => {
   const rows = data?.adverts?.map((advert) => ({
     birting: formatDate(advert.scheduledAt),
     skraning: formatDate(advert.createdAt),
-    status: (
-      <Tag
-        variant={advert.status.title === StatusEnum.Innsent ? 'blue' : 'mint'}
-      >
-        {advert.status.title}
-      </Tag>
-    ),
+    status: <StatusTag status={advert.status} />,
     efni: advert.title,
     tegund: advert.type.title,
     flokkur: advert.category.title,
