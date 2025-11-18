@@ -13,7 +13,7 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
-import { LGResponse } from '../../decorators/lg-response.decorator'
+import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import {
   CommunicationChannelDto,
   CreateCommunicationChannelDto,

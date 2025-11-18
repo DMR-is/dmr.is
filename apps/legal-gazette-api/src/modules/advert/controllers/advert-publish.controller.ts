@@ -3,9 +3,9 @@ import { ApiParam } from '@nestjs/swagger'
 
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
-import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { PublishAdvertsBody } from '../../../models/advert.model'
-import { IAdvertPublicationService } from '../../advert-publications/advert-publication.service.interface'
+import { IPublicationService } from '../publications/publication.service.interface'
 
 @Controller({
   path: 'adverts',
@@ -13,8 +13,8 @@ import { IAdvertPublicationService } from '../../advert-publications/advert-publ
 })
 export class AdvertPublishController {
   constructor(
-    @Inject(IAdvertPublicationService)
-    private readonly advertPublicationService: IAdvertPublicationService,
+    @Inject(IPublicationService)
+    private readonly advertPublicationService: IPublicationService,
   ) {}
 
   @Post('publish')

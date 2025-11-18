@@ -1,24 +1,12 @@
 import { Module } from '@nestjs/common'
-import { SequelizeModule } from '@nestjs/sequelize'
 
-import { CategoryModel } from '../../models/category.model'
-import { TypeModel } from '../../models/type.model'
-import { TypeCategoriesModel } from '../../models/type-categories.model'
 import { TypeWithCategoriesController } from './type-categories.controller'
-import { TypeCategoriesService } from './type-categories.service'
-import { ITypeCategoriesService } from './type-categories.service.interface'
+import { TypeCategoriesProviderModule } from './type-categories.provider.module'
 
 @Module({
-  imports: [
-    SequelizeModule.forFeature([TypeCategoriesModel, CategoryModel, TypeModel]),
-  ],
+  imports: [TypeCategoriesProviderModule],
   controllers: [TypeWithCategoriesController],
-  providers: [
-    {
-      provide: ITypeCategoriesService,
-      useClass: TypeCategoriesService,
-    },
-  ],
-  exports: [ITypeCategoriesService],
+  providers: [],
+  exports: [],
 })
-export class TypesCategoriesModule {}
+export class TypesCategoriesControllerModule {}

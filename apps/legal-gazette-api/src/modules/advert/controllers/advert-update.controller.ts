@@ -7,7 +7,6 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
@@ -15,13 +14,12 @@ import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
-import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import {
   AdvertDetailedDto,
   UpdateAdvertDto,
 } from '../../../models/advert.model'
-import { CategoryModel } from '../../../models/category.model'
-import { IAdvertService } from '../advert.service.interface'
+import { IAdvertService } from '../../../modules/advert/advert.service.interface'
 
 @Controller({
   path: 'adverts/:id',
@@ -31,9 +29,8 @@ import { IAdvertService } from '../advert.service.interface'
 @UseGuards(TokenJwtAuthGuard)
 export class AdvertUpdateController {
   constructor(
-    @Inject(IAdvertService) private readonly advertService: IAdvertService,
-    @InjectModel(CategoryModel)
-    private readonly advertCategoryModel: typeof CategoryModel,
+    @Inject(IAdvertService)
+    private readonly advertService: IAdvertService,
   ) {}
 
   @Post('assign/:userId')
@@ -54,7 +51,7 @@ export class AdvertUpdateController {
     @Param('categoryId', new UUIDValidationPipe())
     categoryId: string,
   ): Promise<void> {
-    await this.advertCategoryModel.setAdvertCategory(advertId, categoryId)
+    await this.advertService.updateAdvert(advertId, { categoryId })
   }
 
   @Patch()

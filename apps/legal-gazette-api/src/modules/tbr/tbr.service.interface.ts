@@ -2,7 +2,7 @@ import {
   TBRGetPaymentQueryDto,
   TBRGetPaymentResponseDto,
   TBRPostPaymentBodyDto,
-} from '../../dto/tbr.dto'
+} from './tbr.dto'
 
 export interface ITBRService {
   postPayment(body: TBRPostPaymentBodyDto): Promise<void>

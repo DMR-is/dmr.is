@@ -13,14 +13,14 @@ import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
-import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import {
   AdvertDetailedDto,
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
 } from '../../../models/advert.model'
-import { IAdvertService } from '../advert.service.interface'
+import { IAdvertService } from '../../../modules/advert/advert.service.interface'
 
 @Controller({
   path: 'adverts',
@@ -30,7 +30,8 @@ import { IAdvertService } from '../advert.service.interface'
 @UseGuards(TokenJwtAuthGuard)
 export class AdvertController {
   constructor(
-    @Inject(IAdvertService) private readonly advertService: IAdvertService,
+    @Inject(IAdvertService)
+    private readonly advertService: IAdvertService,
   ) {}
 
   @Get('count')

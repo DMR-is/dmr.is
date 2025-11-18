@@ -13,7 +13,7 @@ import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
 import { ApplicationRequirementStatementEnum } from '@dmr.is/legal-gazette/schemas'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../lib/constants'
+import { LegalGazetteModels } from '../core/constants'
 import { AdvertModel } from './advert.model'
 type SettlementAttributes = {
   advertId: string

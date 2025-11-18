@@ -32,7 +32,7 @@ import {
   RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
   RECALL_CATEGORY_ID,
   RECALL_DECEASED_ADVERT_TYPE_ID,
-} from '../../lib/constants'
+} from '../../core/constants'
 import { AdvertModel } from '../../models/advert.model'
 import {
   AddDivisionEndingForApplicationDto,
@@ -64,7 +64,8 @@ import { IApplicationService } from './application.service.interface'
 export class ApplicationService implements IApplicationService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @Inject(IAdvertService) private readonly advertService: IAdvertService,
+    @Inject(IAdvertService)
+    private readonly advertService: IAdvertService,
     @Inject(INationalRegistryService)
     private readonly nationalRegistryService: INationalRegistryService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,

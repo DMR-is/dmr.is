@@ -8,7 +8,7 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
-import { LegalGazetteEvents } from '../../lib/constants'
+import { LegalGazetteEvents } from '../../core/constants'
 import {
   AdvertDetailedDto,
   AdvertModel,
@@ -25,7 +25,6 @@ import { StatusIdEnum } from '../../models/status.model'
 import { UserModel } from '../../models/users.model'
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
 import { IAdvertService } from './advert.service.interface'
-
 @Injectable()
 export class AdvertService implements IAdvertService {
   constructor(

@@ -1,6 +1,6 @@
 import { Controller, Get, Inject, Param } from '@nestjs/common'
 
-import { LGResponse } from '../../decorators/lg-response.decorator'
+import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { FeeCodeDto, GetFeeCodesResponse } from '../../models/fee-code.model'
 import { IFeeCodeService } from './fee-code.service.interface'
 

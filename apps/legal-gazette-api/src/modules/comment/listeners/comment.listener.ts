@@ -5,7 +5,7 @@ import { OnEvent } from '@nestjs/event-emitter'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { LegalGazetteEvents } from '../../../lib/constants'
+import { LegalGazetteEvents } from '../../../core/constants'
 import { ICommentService } from '../comment.service.interface'
 import {
   CreateStatusChangeCommentEvent,
