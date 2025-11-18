@@ -10,7 +10,6 @@ import { logger } from '@dmr.is/logging'
 /**
  * Get the national registry person of the current user
  */
-
 export const CurrentSubmittee = createParamDecorator(
   async (data: unknown, ctx: ExecutionContext): Promise<PersonDto> => {
     const request = ctx.switchToHttp().getRequest()
