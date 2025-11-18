@@ -382,11 +382,11 @@ export class ApplicationService implements IApplicationService {
     const communicationChannels: CommunicationChannelCreateAttributes[] =
       body.communicationChannels
         ? body.communicationChannels
-        : recallAdvert.communicationChannels.map((ch) => ({
+        : (recallAdvert.communicationChannels?.map((ch) => ({
             email: ch.email,
             name: ch.name,
             phone: ch.phone,
-          }))
+          })) ?? [])
 
     await this.advertService.createAdvert({
       caseId: application.caseId,
