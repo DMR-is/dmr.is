@@ -1,12 +1,12 @@
 import { Controller, Get, Param } from '@nestjs/common'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
-import { CourtDistrictModel } from '../../models/court-district.model'
-import { BaseEntityController } from '../base-entity/base-entity.controller'
 import {
   CourtDistrictDto,
+  CourtDistrictModel,
   GetCourtDistrictsDto,
-} from './dto/court-district.dto'
+} from '../../models/court-district.model'
+import { BaseEntityController } from '../base-entity/base-entity.controller'
 
 @Controller({
   path: 'court-districts',

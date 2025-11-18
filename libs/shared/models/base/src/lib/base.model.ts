@@ -12,6 +12,7 @@ import {
 } from 'sequelize-typescript'
 
 import { NotFoundException } from '@nestjs/common'
+import { ApiProperty } from '@nestjs/swagger'
 
 import { getLogger } from '@dmr.is/logging'
 
@@ -36,6 +37,7 @@ export class BaseModel<
     type: DataType.UUIDV4,
     defaultValue: DataType.UUIDV4,
   })
+  @ApiProperty({ type: String })
   id!: string
 
   @CreatedAt

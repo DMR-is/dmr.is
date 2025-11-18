@@ -4,8 +4,8 @@ import { ApiParam } from '@nestjs/swagger'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
+import { PublishAdvertsBody } from '../../../models/advert.model'
 import { IAdvertPublicationService } from '../../advert-publications/advert-publication.service.interface'
-import { PublishAdvertsBody } from '../dto/advert.dto'
 
 @Controller({
   path: 'adverts',

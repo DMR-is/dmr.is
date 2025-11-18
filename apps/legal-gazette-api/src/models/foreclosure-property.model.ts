@@ -1,3 +1,4 @@
+import { IsNumber, IsString } from 'class-validator'
 import {
   BelongsTo,
   Column,
@@ -6,10 +7,11 @@ import {
   ForeignKey,
 } from 'sequelize-typescript'
 
+import { ApiProperty, PickType } from '@nestjs/swagger'
+
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../lib/constants'
-import { ForeclosurePropertyDto } from '../modules/foreclosure/dto/foreclosure.dto'
 import { ForeclosureModel } from './foreclosure.model'
 
 export type ForeclosurePropertyModelAttributes = {
@@ -41,21 +43,27 @@ export class ForeclosurePropertyModel extends BaseModel<
 > {
   @Column({ type: DataType.UUID, allowNull: false })
   @ForeignKey(() => ForeclosureModel)
+  @ApiProperty({ type: String })
   foreclosureId!: string
 
   @Column({ type: DataType.TEXT, allowNull: false })
+  @ApiProperty({ type: String })
   propertyName!: string
 
   @Column({ type: DataType.TEXT, allowNull: false })
+  @ApiProperty({ type: String })
   propertyNumber!: string
 
   @Column({ type: DataType.INTEGER, allowNull: false })
+  @ApiProperty({ type: Number })
   propertyTotalPrice!: number
 
   @Column({ type: DataType.TEXT, allowNull: false })
+  @ApiProperty({ type: String })
   claimant!: string
 
   @Column({ type: DataType.TEXT, allowNull: false })
+  @ApiProperty({ type: String })
   respondent!: string
 
   @BelongsTo(() => ForeclosureModel)
@@ -78,4 +86,42 @@ export class ForeclosurePropertyModel extends BaseModel<
   fromModel() {
     return ForeclosurePropertyModel.fromModel(this)
   }
+}
+
+export class ForeclosurePropertyDto extends PickType(ForeclosurePropertyModel, [
+  'id',
+  'foreclosureId',
+  'propertyName',
+  'propertyNumber',
+  'propertyTotalPrice',
+  'claimant',
+  'respondent',
+] as const) {
+  @ApiProperty({ type: String })
+  createdAt!: string
+
+  @ApiProperty({ type: String })
+  updatedAt!: string
+}
+
+export class CreateForeclosurePropertyDto {
+  @ApiProperty({ type: String })
+  @IsString()
+  propertyName!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  propertyNumber!: string
+
+  @ApiProperty({ type: Number })
+  @IsNumber()
+  propertyTotalPrice!: number
+
+  @ApiProperty({ type: String })
+  @IsString()
+  claimant!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  respondent!: string
 }

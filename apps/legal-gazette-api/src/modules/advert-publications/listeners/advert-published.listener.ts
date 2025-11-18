@@ -3,11 +3,11 @@ import { OnEvent } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { IAWSService } from '@dmr.is/modules'
 
 import { LegalGazetteEvents } from '../../../lib/constants'
 import { AdvertVersionEnum } from '../../../models/advert.model'
 import { TBRTransactionModel } from '../../../models/tbr-transactions.model'
-import { ISESService } from '../../aws/services/ses/ses.service.interface'
 import { PdfService } from '../../pdf/pdf.service'
 import { IPriceCalculatorService } from '../../price-calculator/price-calculator.service.interface'
 import { ITBRService } from '../../tbr/tbr.service.interface'
@@ -19,7 +19,7 @@ const LOGGING_CONTEXT = 'AdvertPublishedListener'
 export class AdvertPublishedListener {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @Inject(ISESService) private readonly sesService: ISESService,
+    @Inject(IAWSService) private readonly sesService: IAWSService,
     @Inject(PdfService) private readonly pdfService: PdfService,
     @Inject(IPriceCalculatorService)
     private readonly priceCalculatorService: IPriceCalculatorService,
@@ -79,7 +79,7 @@ export class AdvertPublishedListener {
       context: LOGGING_CONTEXT,
     })
 
-    const emails = advert.communicationChannels.map((ch) => ch.email)
+    const emails = advert.communicationChannels?.map((ch) => ch.email)
 
     if (!emails || emails.length === 0) {
       this.logger.warn(

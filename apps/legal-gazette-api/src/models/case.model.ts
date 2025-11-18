@@ -1,3 +1,5 @@
+import { Type } from 'class-transformer'
+import { IsArray, IsString, ValidateNested } from 'class-validator'
 import { Op } from 'sequelize'
 import {
   BeforeCreate,
@@ -9,14 +11,18 @@ import {
   HasOne,
 } from 'sequelize-typescript'
 
+import { ApiProperty, IntersectionType, PickType } from '@nestjs/swagger'
+
+import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { DetailedDto } from '../dto/detailed.dto'
 import { LegalGazetteModels } from '../lib/constants'
-import { CaseDto } from '../modules/case/dto/case.dto'
 import { AdvertCreateAttributes, AdvertModel } from './advert.model'
 import {
   ApplicationCreateAttributes,
   ApplicationModel,
+  ApplicationTypeEnum,
 } from './application.model'
 import { StatusIdEnum } from './status.model'
 
@@ -54,6 +60,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     field: 'case_number',
     defaultValue: ''.padEnd(10, '0'), // Placeholder for case number
   })
+  @ApiProperty({ type: String })
   caseNumber!: string
 
   @Column({
@@ -61,6 +68,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     field: 'involved_party_national_id',
     allowNull: false,
   })
+  @ApiProperty({ type: String })
   involvedPartyNationalId!: string
 
   @HasMany(() => AdvertModel, 'caseId')
@@ -132,4 +140,37 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   fromModel(): CaseDto {
     return CaseModel.fromModel(this)
   }
+}
+
+export class CaseQueryDto extends PagingQuery {}
+
+export class CreateCaseDto {
+  @ApiProperty({ type: String })
+  @IsString()
+  involvedPartyNationalId!: string
+}
+
+export class CaseDto extends IntersectionType(
+  DetailedDto,
+  PickType(CaseModel, ['id', 'caseNumber'] as const),
+) {
+  @ApiProperty({
+    enum: ApplicationTypeEnum,
+    required: false,
+    enumName: 'ApplicationTypeEnum',
+  })
+  applicationType?: ApplicationTypeEnum
+}
+
+export class GetCasesDto {
+  @ApiProperty({ type: [CaseDto] })
+  @IsArray()
+  @Type(() => CaseDto)
+  @ValidateNested({ each: true })
+  cases!: CaseDto[]
+
+  @ApiProperty({ type: Paging })
+  @Type(() => Paging)
+  @ValidateNested()
+  paging!: Paging
 }

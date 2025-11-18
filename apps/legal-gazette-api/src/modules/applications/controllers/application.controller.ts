@@ -18,16 +18,16 @@ import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
-import { ApplicationTypeEnum } from '../../../models/application.model'
-import { IApplicationService } from '../application.service.interface'
 import {
   AddDivisionEndingForApplicationDto,
   AddDivisionMeetingForApplicationDto,
   ApplicationDetailedDto,
   ApplicationDto,
-  ApplicationsDto,
+  ApplicationTypeEnum,
+  GetApplicationsDto,
   UpdateApplicationDto,
-} from '../dto/application.dto'
+} from '../../../models/application.model'
+import { IApplicationService } from '../application.service.interface'
 
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, ScopesGuard)
@@ -64,11 +64,11 @@ export class ApplicationController {
   @UseGuards(ScopesGuard)
   @Scopes('@dmr.is/lg-application-web')
   @Get('getMyApplications')
-  @LGResponse({ operationId: 'getMyApplications', type: ApplicationsDto })
+  @LGResponse({ operationId: 'getMyApplications', type: GetApplicationsDto })
   async getMyApplications(
     @Query() query: PagingQuery,
     @CurrentUser() user: DMRUser,
-  ): Promise<ApplicationsDto> {
+  ): Promise<GetApplicationsDto> {
     return this.applicationService.getMyApplications(query, user)
   }
 

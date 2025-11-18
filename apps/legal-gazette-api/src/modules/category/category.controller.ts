@@ -4,14 +4,14 @@ import { Controller, Get, Param, Query } from '@nestjs/common'
 
 import { LGResponse } from '../../decorators/lg-response.decorator'
 import { UNASSIGNABLE_CATEGORY_IDS } from '../../lib/constants'
-import { CategoryModel } from '../../models/category.model'
-import { TypeModel } from '../../models/type.model'
-import { BaseEntityController } from '../base-entity/base-entity.controller'
 import {
   CategoryDto,
+  CategoryModel,
   GetCategoriesDto,
   GetCategoriesQueryDto,
-} from './dto/category.dto'
+} from '../../models/category.model'
+import { TypeModel } from '../../models/type.model'
+import { BaseEntityController } from '../base-entity/base-entity.controller'
 
 @Controller({
   path: 'categories',

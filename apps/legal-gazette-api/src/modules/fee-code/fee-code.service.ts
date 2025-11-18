@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { FeeCodeModel } from '../../models/fee-code.model'
-import { FeeCodeDto, GetFeeCodesResponse } from './dto/fee-codes.dto'
+import {
+  FeeCodeDto,
+  FeeCodeModel,
+  GetFeeCodesResponse,
+} from '../../models/fee-code.model'
 import { IFeeCodeService } from './fee-code.service.interface'
 
 @Injectable()

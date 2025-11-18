@@ -3,15 +3,15 @@ import { Op } from 'sequelize'
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { AdvertModel } from '../../models/advert.model'
-import { AdvertPublicationModel } from '../../models/advert-publication.model'
-import { CommentModel, CommentTypeEnum } from '../../models/comment.model'
-import { StatusIdEnum } from '../../models/status.model'
 import {
   GetAdvertsInProgressStatsDto,
   GetAdvertsToBePublishedStatsDto,
   GetCountByStatusesDto,
-} from './dto/statistics.dto'
+} from '../../dto/statistics.dto'
+import { AdvertModel } from '../../models/advert.model'
+import { AdvertPublicationModel } from '../../models/advert-publication.model'
+import { CommentModel, CommentTypeEnum } from '../../models/comment.model'
+import { StatusIdEnum } from '../../models/status.model'
 import { IStatisticsService } from './statistics.service.interface'
 
 @Injectable()
