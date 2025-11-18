@@ -18,7 +18,7 @@ import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { LGResponse } from '../../../decorators/lg-response.decorator'
-import { ApplicationTypeEnum } from '../application.model'
+import { ApplicationTypeEnum } from '../../../models/application.model'
 import { IApplicationService } from '../application.service.interface'
 import {
   AddDivisionEndingForApplicationDto,

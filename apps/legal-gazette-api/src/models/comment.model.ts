@@ -8,10 +8,10 @@ import {
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { AdvertModel } from '../advert/advert.model'
-import { StatusModel } from '../status/status.model'
-import { CommentDto } from './dto/comment.dto'
+import { LegalGazetteModels } from '../lib/constants'
+import { CommentDto } from '../modules/comment/dto/comment.dto'
+import { AdvertModel } from './advert.model'
+import { StatusModel } from './status.model'
 
 export enum CommentTypeEnum {
   SUBMIT = 'SUBMIT',

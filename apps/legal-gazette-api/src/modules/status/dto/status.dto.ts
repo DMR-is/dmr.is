@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 
 import { BaseEntityDto } from '../../../dto/base-entity.dto'
-import { StatusEnum, StatusIdEnum } from '../status.model'
+import { StatusEnum, StatusIdEnum } from '../../../models/status.model'
 
 export class GetStatusesDto {
   @ApiProperty({

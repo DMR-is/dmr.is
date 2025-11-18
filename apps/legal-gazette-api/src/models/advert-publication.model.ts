@@ -14,15 +14,15 @@ import { BadRequestException } from '@nestjs/common'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { AdvertModel, AdvertVersionEnum } from '../advert/advert.model'
-import { CategoryModel } from '../category/category.model'
-import { TypeIdEnum, TypeModel } from '../type/type.model'
+import { LegalGazetteModels } from '../lib/constants'
 import {
   AdvertPublicationDto,
   GetPublicationsQueryDto,
   PublishedPublicationDto,
-} from './dto/advert-publication.dto'
+} from '../modules/advert-publications/dto/advert-publication.dto'
+import { AdvertModel, AdvertVersionEnum } from './advert.model'
+import { CategoryModel } from './category.model'
+import { TypeIdEnum, TypeModel } from './type.model'
 
 export type AdvertPublicationsAttributes = {
   advertId: string

@@ -2,8 +2,8 @@ import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { UserDto } from './dto/user.dto'
+import { LegalGazetteModels } from '../lib/constants'
+import { UserDto } from '../modules/users/dto/user.dto'
 
 export type UserAttributes = {
   id: string

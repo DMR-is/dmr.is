@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { TypeModel } from '../../models/type.model'
 import { TypeController } from './type.controller'
-import { TypeModel } from './type.model'
 
 @Module({
   imports: [SequelizeModule.forFeature([TypeModel])],

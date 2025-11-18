@@ -2,8 +2,8 @@ import { IsString } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
+import { CommentTypeEnum } from '../../../models/comment.model'
 import { StatusDto } from '../../status/dto/status.dto'
-import { CommentTypeEnum } from '../comment.model'
 
 export class CommentDto {
   @ApiProperty({ type: String })

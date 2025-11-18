@@ -3,16 +3,16 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { NationalRegistryModule } from '@dmr.is/clients/national-registry'
 
-import { AdvertModel } from '../advert/advert.model'
+import { AdvertModel } from '../../models/advert.model'
+import { ApplicationModel } from '../../models/application.model'
+import { CaseModel } from '../../models/case.model'
+import { CategoryModel } from '../../models/category.model'
+import { SettlementModel } from '../../models/settlement.model'
 import { AdvertModule } from '../advert/advert.module'
-import { ApplicationModel } from '../applications/application.model'
 import { ApplicationService } from '../applications/application.service'
 import { IApplicationService } from '../applications/application.service.interface'
 import { IslandIsApplicationController } from '../applications/controllers/island-is-application.controller'
 import { BaseEntityModule } from '../base-entity/base-entity.module'
-import { CaseModel } from '../case/case.model'
-import { CategoryModel } from '../category/category.model'
-import { SettlementModel } from '../settlement/settlement.model'
 
 @Module({
   imports: [

@@ -11,8 +11,8 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
+import { AdvertModel } from '../../../models/advert.model'
 import { PdfService } from '../../pdf/pdf.service'
-import { AdvertModel } from '../advert.model'
 
 @Controller({ path: 'adverts/pdf', version: '1' })
 export class AdvertPdfController {

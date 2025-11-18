@@ -3,9 +3,10 @@ import { isUUID } from 'class-validator'
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { AdvertModel } from '../advert/advert.model'
-import { StatusModel } from '../status/status.model'
-import { UserModel } from '../users/users.model'
+import { AdvertModel } from '../../models/advert.model'
+import { CommentModel, CommentTypeEnum } from '../../models/comment.model'
+import { StatusModel } from '../../models/status.model'
+import { UserModel } from '../../models/users.model'
 import {
   CommentDto,
   CreateAssignCommentDto,
@@ -14,7 +15,6 @@ import {
   CreateTextCommentDto,
   GetCommentsDto,
 } from './dto/comment.dto'
-import { CommentModel, CommentTypeEnum } from './comment.model'
 import { ICommentService } from './comment.service.interface'
 
 @Injectable()

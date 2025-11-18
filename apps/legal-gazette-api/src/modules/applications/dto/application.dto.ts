@@ -19,10 +19,10 @@ import {
 
 import { Paging } from '@dmr.is/shared/dto'
 
+import { ApplicationTypeEnum } from '../../../models/application.model'
 import { CategoryDto } from '../../category/dto/category.dto'
 import { CreateCommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
 import { TypeDto } from '../../type/dto/type.dto'
-import { ApplicationTypeEnum } from '../application.model'
 import {
   ApplicationRequirementStatementEnum,
   ApplicationStatusEnum,

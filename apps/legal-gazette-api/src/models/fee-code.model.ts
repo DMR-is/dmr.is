@@ -2,8 +2,8 @@ import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { FeeCodeDto } from './dto/fee-codes.dto'
+import { LegalGazetteModels } from '../lib/constants'
+import { FeeCodeDto } from '../modules/fee-code/dto/fee-codes.dto'
 
 export interface FeeCodeAttributes {
   feeCode: string

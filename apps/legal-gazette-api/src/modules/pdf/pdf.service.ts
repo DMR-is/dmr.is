@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IAWSService } from '@dmr.is/modules'
 
-import { AdvertPublicationModel } from '../advert-publications/advert-publication.model'
+import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import { getBrowser } from './lib/browser'
 import { pdfStyles } from './lib/pdf.css'
 

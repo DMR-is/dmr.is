@@ -2,13 +2,13 @@ import { BelongsToMany, Column, DataType } from 'sequelize-typescript'
 
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
 
-import { LegalGazetteModels } from '../../lib/constants'
-import { AdvertTypeFeeCodeModel } from '../advert-type-fee-code/advert-type-fee-code.model'
-import { CategoryModel } from '../category/category.model'
-import { FeeCodeModel } from '../fee-code/fee-code.model'
-import { TypeWithCategoriesDto } from '../type-categories/dto/type-categories.dto'
-import { TypeCategoriesModel } from '../type-categories/type-categories.model'
-import { TypeDto } from './dto/type.dto'
+import { LegalGazetteModels } from '../lib/constants'
+import { TypeDto } from '../modules/type/dto/type.dto'
+import { TypeWithCategoriesDto } from '../modules/type-categories/dto/type-categories.dto'
+import { AdvertTypeFeeCodeModel } from './advert-type-fee-code.model'
+import { CategoryModel } from './category.model'
+import { FeeCodeModel } from './fee-code.model'
+import { TypeCategoriesModel } from './type-categories.model'
 
 export enum TypeIdEnum {
   RECALL_BANKRUPTCY = '065C3FD9-58D1-436F-9FB8-C1F5C214FA50',
