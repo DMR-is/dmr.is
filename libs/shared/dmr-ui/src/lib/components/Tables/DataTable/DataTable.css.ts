@@ -56,7 +56,7 @@ export const linkTableHeaderCell = style({
 export const seeMoreTableCellLink = recipe({
   base: {
     display: 'block',
-    background: 'inherit',
+    background: 'white',
     padding: theme.spacing[2],
 
     '@media': {
