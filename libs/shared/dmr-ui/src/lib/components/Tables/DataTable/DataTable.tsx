@@ -16,6 +16,9 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
   loading = false,
   layout = 'auto',
   noDataMessage,
+  onPageChange,
+  onPageSizeChange,
+  showPageSizeSelect = true,
 }: DataTableProps<T>) => {
   if (loading) {
     return (
@@ -49,7 +52,14 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
           noDataMessage={noDataMessage}
         />
       </T.Table>
-      {paging && <DataTablePagination paging={paging} />}
+      {paging && (
+        <DataTablePagination
+          paging={paging}
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          showPageSizeSelect={showPageSizeSelect}
+        />
+      )}
     </Stack>
   )
 }

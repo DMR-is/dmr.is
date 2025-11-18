@@ -8,6 +8,7 @@ import { DataTablePaginationProps } from './types'
 
 export const DataTablePagination = ({
   paging,
+  showPageSizeSelect = true,
   onPageChange,
   onPageSizeChange,
 }: DataTablePaginationProps) => {
@@ -29,7 +30,11 @@ export const DataTablePagination = ({
   }
 
   return (
-    <div className={styles.dataTablePagination({ size: 'small' })}>
+    <div
+      className={styles.dataTablePagination({
+        size: showPageSizeSelect ? 'small' : 'fluid',
+      })}
+    >
       <Pagination
         page={paging.page}
         itemsPerPage={paging.pageSize}
@@ -41,15 +46,17 @@ export const DataTablePagination = ({
           </button>
         )}
       />
-      <Select
-        size="xs"
-        value={{
-          label: paging.pageSize.toString(),
-          value: paging.pageSize,
-        }}
-        onChange={(e) => handlePageSizeChange(e?.value)}
-        options={PAGE_SIZE_OPTIONS}
-      />
+      {showPageSizeSelect && (
+        <Select
+          size="xs"
+          value={{
+            label: paging.pageSize.toString(),
+            value: paging.pageSize,
+          }}
+          onChange={(e) => handlePageSizeChange(e?.value)}
+          options={PAGE_SIZE_OPTIONS}
+        />
+      )}
     </div>
   )
 }

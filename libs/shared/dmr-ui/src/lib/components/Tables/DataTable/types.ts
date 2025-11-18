@@ -50,6 +50,7 @@ export type DataTablePaginationProps = {
   paging: DataTablePagingProps
   onPageChange?: (page: number) => void
   onPageSizeChange?: (pageSize: number) => void
+  showPageSizeSelect?: boolean
 }
 
 export type DataTableProps<T extends readonly DataTableColumnProps[]> = {
@@ -60,5 +61,6 @@ export type DataTableProps<T extends readonly DataTableColumnProps[]> = {
   paging?: DataTablePagingProps
   onPageChange?: (page: number) => void
   onPageSizeChange?: (pageSize: number) => void
+  showPageSizeSelect?: boolean
   noDataMessage?: string
 }

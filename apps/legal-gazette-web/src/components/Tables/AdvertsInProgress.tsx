@@ -123,6 +123,7 @@ export const AdvertsInProgress = () => {
       paging={data?.paging}
       onPageChange={(page) => setParams({ page: page })}
       onPageSizeChange={(pageSize) => setParams({ pageSize: pageSize })}
+      showPageSizeSelect={true}
     />
   )
 }
