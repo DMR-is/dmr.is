@@ -13,6 +13,10 @@ import {
   AdvertModel,
   AdvertStatusModel,
 } from '../journal/models'
+import {
+  IReindexRunnerService,
+  ReindexStatus,
+} from './reindex-runner.service.interface'
 import { SearchService } from './search.service'
 import {
   advertMappingTemplate,
@@ -20,17 +24,8 @@ import {
 } from './search.template'
 import { SearchAdvertType } from './types'
 
-type ReindexStatus = {
-  state: 'idle' | 'running' | 'succeeded' | 'failed'
-  progress: number
-  message?: string
-  result?: any
-  startedAt?: number
-  finishedAt?: number
-}
-
 @Injectable()
-export class ReindexRunnerService {
+export class ReindexRunnerService implements IReindexRunnerService {
   private status: ReindexStatus = { state: 'idle', progress: 0 }
   private lock = false
   private lastJobId = 0

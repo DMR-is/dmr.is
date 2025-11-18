@@ -26,7 +26,7 @@ import {
   AdminGuard,
   ICaseService,
   IJournalService,
-  ReindexRunnerService,
+  IReindexRunnerService,
 } from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
@@ -60,7 +60,8 @@ export class JournalController {
   constructor(
     @Inject(IJournalService) private readonly journalService: IJournalService,
     @Inject(ICaseService) private readonly caseService: ICaseService,
-    @Inject(ReindexRunnerService) private readonly runner: ReindexRunnerService,
+    @Inject(IReindexRunnerService)
+    private readonly runner: IReindexRunnerService,
     private readonly openSearch: Client,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}

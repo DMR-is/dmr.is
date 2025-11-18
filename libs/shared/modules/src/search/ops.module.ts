@@ -11,6 +11,7 @@ import {
   AdvertStatusModel,
 } from '../journal/models'
 import { ReindexRunnerService } from './reindex-runner.service'
+import { IReindexRunnerService } from './reindex-runner.service.interface'
 import { OpenSearchModule } from './search.module'
 
 @Module({
@@ -26,7 +27,12 @@ import { OpenSearchModule } from './search.module'
       AdvertTypeModel,
     ]),
   ],
-  providers: [ReindexRunnerService],
-  exports: [ReindexRunnerService],
+  providers: [
+    {
+      provide: IReindexRunnerService,
+      useClass: ReindexRunnerService,
+    },
+  ],
+  exports: [IReindexRunnerService],
 })
 export class OpsModule {}
