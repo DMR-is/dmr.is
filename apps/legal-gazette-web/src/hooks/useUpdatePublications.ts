@@ -3,10 +3,7 @@ import { useCallback } from 'react'
 
 import { toast } from '@dmr.is/ui/components/island-is'
 
-import {
-  AdvertDetailedDto,
-  AdvertVersionEnum,
-} from '../gen/fetch'
+import { AdvertDetailedDto, AdvertVersionEnum } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -71,7 +68,7 @@ const createOptimisticDataForPublication = (
         scheduledAt: scheduledAt.toISOString(),
         advertId: prevData.id,
         version: versionEnum,
-        publishedAt: null,
+        publishedAt: undefined,
         isLegacy: false,
       },
     ],

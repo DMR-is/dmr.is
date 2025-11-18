@@ -132,7 +132,7 @@ export class ApplicationService implements IApplicationService {
       signatureName: requiredFields.signature?.name,
       signatureOnBehalfOf: requiredFields.signature?.onBehalfOf,
       signatureLocation: requiredFields.signature?.location,
-      signatureDate: requiredFields.signature?.date,
+      signatureDate: requiredFields.signature?.date ?? undefined,
       content: requiredFields.fields.html,
       title: title,
       communicationChannels: requiredFields.communicationChannels,
@@ -217,7 +217,7 @@ export class ApplicationService implements IApplicationService {
       signatureName: requiredFields.signature?.name,
       signatureOnBehalfOf: requiredFields.signature?.onBehalfOf,
       signatureLocation: requiredFields.signature?.location,
-      signatureDate: requiredFields.signature?.date,
+      signatureDate: requiredFields.signature?.date ?? undefined,
       title: title,
       divisionMeetingDate:
         requiredFields.fields.divisionMeetingFields?.meetingDate,

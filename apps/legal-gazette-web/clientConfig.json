@@ -1,6 +1,208 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/categories/slug/{slug}": {
+      "get": {
+        "operationId": "getCategoryBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategoryDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Category"]
+      }
+    },
+    "/api/v1/categories/{id}": {
+      "get": {
+        "operationId": "getCategory",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategoryDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Category"]
+      }
+    },
+    "/api/v1/categories": {
+      "get": {
+        "operationId": "getCategories",
+        "parameters": [
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": { "nullable": true, "type": "string" }
+          },
+          {
+            "name": "excludeUnassignable",
+            "required": false,
+            "in": "query",
+            "description": "Filter out unassignable advert types",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetCategoriesDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Category"]
+      }
+    },
     "/api/v1/types/slug/{slug}": {
       "get": {
         "operationId": "getTypeBySlug",
@@ -253,208 +455,6 @@
         },
         "summary": "",
         "tags": ["Type"]
-      }
-    },
-    "/api/v1/categories/slug/{slug}": {
-      "get": {
-        "operationId": "getCategoryBySlug",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CategoryDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Category"]
-      }
-    },
-    "/api/v1/categories/{id}": {
-      "get": {
-        "operationId": "getCategory",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CategoryDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Category"]
-      }
-    },
-    "/api/v1/categories": {
-      "get": {
-        "operationId": "getCategories",
-        "parameters": [
-          {
-            "name": "type",
-            "required": false,
-            "in": "query",
-            "schema": { "nullable": true, "type": "string" }
-          },
-          {
-            "name": "excludeUnassignable",
-            "required": false,
-            "in": "query",
-            "description": "Filter out unassignable advert types",
-            "schema": { "type": "boolean" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetCategoriesDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "summary": "",
-        "tags": ["Category"]
       }
     },
     "/api/v1/statuses": {
@@ -1743,6 +1743,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["AdvertPdf"]
       }
@@ -2131,18 +2132,6 @@
             "schema": { "type": "string" }
           },
           {
-            "name": "categoryId",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "array", "items": { "type": "string" } }
-          },
-          {
-            "name": "typeId",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
             "name": "dateFrom",
             "required": false,
             "in": "query",
@@ -2153,6 +2142,18 @@
             "required": false,
             "in": "query",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "typeId",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/TypeIdEnum" }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
             "name": "pdfUrl",
@@ -2229,7 +2230,7 @@
             "name": "version",
             "required": true,
             "in": "path",
-            "schema": { "enum": ["A", "B", "C"], "type": "string" }
+            "schema": { "$ref": "#/components/schemas/AdvertVersionEnum" }
           }
         ],
         "responses": {
@@ -2873,7 +2874,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApplicationsDto" }
+                "schema": { "$ref": "#/components/schemas/GetApplicationsDto" }
               }
             }
           },
@@ -4503,6 +4504,72 @@
         "summary": "",
         "tags": ["Statistics"]
       }
+    },
+    "/api/v1/national-registry/person/{nationalId}": {
+      "get": {
+        "operationId": "getPersonByNationalId",
+        "parameters": [
+          {
+            "name": "nationalId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetPersonDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["LGNationalRegistry"]
+      }
     }
   },
   "info": {
@@ -4518,7 +4585,27 @@
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
-      "TypeModel": { "type": "object", "properties": {} },
+      "CategoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUIDV4 of the entity",
+            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the entity",
+            "example": "Base entity"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the entity",
+            "example": "base-entity"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
       "ApiErrorDto": {
         "type": "object",
         "properties": {
@@ -4556,6 +4643,21 @@
         },
         "required": ["statusCode", "timestamp"]
       },
+      "GetCategoriesDto": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CategoryDto" }
+          }
+        },
+        "required": ["categories"]
+      },
+      "TypeModel": {
+        "type": "object",
+        "properties": { "id": { "type": "string" } },
+        "required": ["id"]
+      },
       "TypeDto": {
         "type": "object",
         "properties": {
@@ -4586,68 +4688,6 @@
           }
         },
         "required": ["types"]
-      },
-      "CategoryDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the entity",
-            "example": "Base entity"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "GetCategoriesDto": {
-        "type": "object",
-        "properties": {
-          "categories": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CategoryDto" }
-          }
-        },
-        "required": ["categories"]
-      },
-      "BaseEntityDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the entity",
-            "example": "Base entity"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "GetStatusesDto": {
-        "type": "object",
-        "properties": {
-          "statuses": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/BaseEntityDto" }
-          }
-        },
-        "required": ["statuses"]
       },
       "StatusIdEnum": {
         "type": "string",
@@ -4680,6 +4720,16 @@
         },
         "required": ["id", "title", "slug"]
       },
+      "GetStatusesDto": {
+        "type": "object",
+        "properties": {
+          "statuses": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/StatusDto" }
+          }
+        },
+        "required": ["statuses"]
+      },
       "CourtDistrictDto": {
         "type": "object",
         "properties": {
@@ -4711,6 +4761,15 @@
         },
         "required": ["courtDistricts"]
       },
+      "ResponsiblePartySignature": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "location": { "type": "string" },
+          "date": { "type": "string" },
+          "onBehalfOf": { "type": "string" }
+        }
+      },
       "ResponsiblePartyDto": {
         "type": "object",
         "properties": {
@@ -4724,34 +4783,11 @@
             "description": "The national id of who is responsible for the advert",
             "example": "1234567890"
           },
-          "signatureName": {
-            "type": "string",
-            "description": "The name of the institution signing the advert",
-            "example": "Ríkisskattstjóri, hlutafélagaskrá"
-          },
-          "signatureLocation": {
-            "type": "string",
-            "description": "Where the signature took place",
-            "example": "Reykjavík"
-          },
-          "signatureDate": {
-            "type": "string",
-            "description": "The date when the responsible party signed the advert in ISO 8601 format",
-            "example": "2023-10-01T12:00:00Z"
-          },
-          "signatureOnBehalfOf": {
-            "type": "string",
-            "description": "The name of the person signing on behalf of the responsible party prefixed with f.h.",
-            "example": "Jón Jónsson"
+          "signature": {
+            "$ref": "#/components/schemas/ResponsiblePartySignature"
           }
         },
-        "required": [
-          "name",
-          "nationalId",
-          "signatureName",
-          "signatureLocation",
-          "signatureDate"
-        ]
+        "required": ["name", "nationalId", "signature"]
       },
       "PartyEntityDto": {
         "type": "object",
@@ -5136,44 +5172,29 @@
       "UpdateAdvertDto": {
         "type": "object",
         "properties": {
-          "scheduledAt": { "type": "string" },
           "title": { "type": "string" },
-          "content": { "type": "string" },
-          "categoryId": { "type": "string" },
-          "typeId": { "type": "string" },
-          "additionalText": { "type": "string" },
           "caption": { "type": "string" },
-          "signatureName": { "type": "string" },
+          "content": { "type": "string" },
+          "additionalText": { "type": "string" },
           "signatureLocation": { "type": "string" },
+          "signatureName": { "type": "string" },
           "signatureOnBehalfOf": { "type": "string" },
           "signatureDate": { "type": "string" },
-          "divisionMeetingLocation": { "type": "string" },
-          "divisionMeetingDate": { "type": "string" },
           "judgementDate": { "type": "string" },
+          "divisionMeetingDate": { "type": "string" },
+          "divisionMeetingLocation": { "type": "string" },
+          "scheduledAt": { "type": "array", "items": { "type": "string" } },
+          "categoryId": { "type": "string" },
+          "typeId": { "type": "string" },
           "courtDistrictId": { "type": "string" }
         }
       },
-      "AdvertVersionEnum": { "type": "string", "enum": ["A", "B", "C"] },
-      "AdvertPublicationDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "advertId": { "type": "string" },
-          "scheduledAt": { "type": "string" },
-          "publishedAt": { "type": "string", "nullable": true },
-          "version": {
-            "allOf": [{ "$ref": "#/components/schemas/AdvertVersionEnum" }]
-          },
-          "isLegacy": { "type": "boolean" },
-          "pdfUrl": { "type": "string", "nullable": true }
-        },
-        "required": [
-          "id",
-          "advertId",
-          "scheduledAt",
-          "publishedAt",
-          "version",
-          "isLegacy"
+      "ApplicationRequirementStatementEnum": {
+        "type": "string",
+        "enum": [
+          "LIQUIDATOR_LOCATION",
+          "CUSTOM_LIQUIDATOR_LOCATION",
+          "CUSTOM_LIQUIDATOR_EMAIL"
         ]
       },
       "SettlementDto": {
@@ -5182,6 +5203,14 @@
           "id": { "type": "string" },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
+          "liquidatorRecallStatementLocation": { "type": "string" },
+          "liquidatorRecallStatementType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationRequirementStatementEnum"
+              }
+            ]
+          },
           "settlementName": { "type": "string" },
           "settlementNationalId": { "type": "string" },
           "settlementAddress": { "type": "string" },
@@ -5193,23 +5222,39 @@
           "id",
           "liquidatorName",
           "liquidatorLocation",
+          "liquidatorRecallStatementType",
           "settlementName",
           "settlementNationalId",
           "settlementAddress",
-          "declaredClaims",
           "settlementDeadline"
         ]
       },
       "CommunicationChannelDto": {
         "type": "object",
         "properties": {
+          "id": { "type": "string" },
+          "advertId": { "type": "string" },
           "email": { "type": "string" },
           "name": { "type": "string" },
-          "phone": { "type": "string" },
-          "id": { "type": "string" },
-          "advertId": { "type": "string" }
+          "phone": { "type": "string" }
         },
-        "required": ["email", "id", "advertId"]
+        "required": ["id", "advertId", "email"]
+      },
+      "AdvertVersionEnum": { "type": "string", "enum": ["A", "B", "C"] },
+      "AdvertPublicationDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "advertId": { "type": "string" },
+          "pdfUrl": { "type": "string" },
+          "scheduledAt": { "type": "string" },
+          "publishedAt": { "type": "string" },
+          "isLegacy": { "type": "boolean" },
+          "version": {
+            "allOf": [{ "$ref": "#/components/schemas/AdvertVersionEnum" }]
+          }
+        },
+        "required": ["id", "advertId", "scheduledAt", "isLegacy", "version"]
       },
       "CommentTypeEnum": {
         "type": "string",
@@ -5222,14 +5267,14 @@
           "type": {
             "allOf": [{ "$ref": "#/components/schemas/CommentTypeEnum" }]
           },
-          "status": { "$ref": "#/components/schemas/StatusDto" },
           "advertId": { "type": "string" },
           "actor": { "type": "string" },
           "receiver": { "type": "string" },
           "comment": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/StatusDto" },
           "createdAt": { "type": "string" }
         },
-        "required": ["id", "type", "status", "advertId", "actor", "createdAt"]
+        "required": ["id", "type", "advertId", "actor", "status", "createdAt"]
       },
       "AdvertDetailedDto": {
         "type": "object",
@@ -5251,62 +5296,58 @@
             "nullable": true
           },
           "id": { "type": "string" },
-          "hasInternalComments": { "type": "boolean" },
-          "scheduledAt": { "type": "string" },
-          "category": { "$ref": "#/components/schemas/CategoryDto" },
-          "type": { "$ref": "#/components/schemas/TypeDto" },
-          "status": { "$ref": "#/components/schemas/StatusDto" },
+          "caseId": { "type": "string" },
           "title": { "type": "string" },
           "createdBy": { "type": "string" },
-          "assignedUser": { "type": "string" },
-          "publications": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
-          },
-          "caseId": { "type": "string" },
-          "canEdit": { "type": "boolean" },
-          "publicationNumber": { "type": "string", "nullable": true },
-          "content": { "type": "string", "nullable": true },
-          "caption": { "type": "string", "nullable": true },
-          "additionalText": { "type": "string", "nullable": true },
-          "signatureName": { "type": "string" },
+          "caption": { "type": "string" },
+          "content": { "type": "string" },
+          "publicationNumber": { "type": "string" },
+          "additionalText": { "type": "string" },
           "signatureLocation": { "type": "string" },
+          "signatureName": { "type": "string" },
           "signatureOnBehalfOf": { "type": "string" },
           "signatureDate": { "type": "string" },
           "judgementDate": { "type": "string" },
           "divisionMeetingDate": { "type": "string" },
           "divisionMeetingLocation": { "type": "string" },
-          "settlement": { "$ref": "#/components/schemas/SettlementDto" },
+          "canEdit": { "type": "boolean" },
           "courtDistrict": { "$ref": "#/components/schemas/CourtDistrictDto" },
+          "settlement": { "$ref": "#/components/schemas/SettlementDto" },
           "communicationChannels": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
           },
-          "paidAt": { "type": "string" },
-          "totalPrice": { "type": "number" },
+          "publications": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
+          },
+          "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "type": { "$ref": "#/components/schemas/TypeDto" },
+          "status": { "$ref": "#/components/schemas/StatusDto" },
+          "scheduledAt": { "type": "string" },
+          "assignedUser": { "type": "string" },
+          "hasInternalComments": { "type": "boolean" },
           "comments": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/CommentDto" }
-          }
+          },
+          "paidAt": { "type": "string" },
+          "totalPrice": { "type": "number" }
         },
         "required": [
           "createdAt",
           "updatedAt",
           "id",
-          "hasInternalComments",
-          "scheduledAt",
+          "title",
+          "createdBy",
+          "canEdit",
+          "communicationChannels",
+          "publications",
           "category",
           "type",
           "status",
-          "title",
-          "createdBy",
-          "publications",
-          "canEdit",
-          "publicationNumber",
-          "content",
-          "caption",
-          "additionalText",
-          "communicationChannels",
+          "scheduledAt",
+          "hasInternalComments",
           "comments"
         ]
       },
@@ -5365,31 +5406,32 @@
             "nullable": true
           },
           "id": { "type": "string" },
-          "hasInternalComments": { "type": "boolean" },
-          "scheduledAt": { "type": "string" },
-          "category": { "$ref": "#/components/schemas/CategoryDto" },
-          "type": { "$ref": "#/components/schemas/TypeDto" },
-          "status": { "$ref": "#/components/schemas/StatusDto" },
           "title": { "type": "string" },
           "createdBy": { "type": "string" },
-          "assignedUser": { "type": "string" },
+          "publicationNumber": { "type": "string" },
           "publications": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
-          }
+          },
+          "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "type": { "$ref": "#/components/schemas/TypeDto" },
+          "status": { "$ref": "#/components/schemas/StatusDto" },
+          "scheduledAt": { "type": "string" },
+          "assignedUser": { "type": "string" },
+          "hasInternalComments": { "type": "boolean" }
         },
         "required": [
           "createdAt",
           "updatedAt",
           "id",
-          "hasInternalComments",
-          "scheduledAt",
+          "title",
+          "createdBy",
+          "publications",
           "category",
           "type",
           "status",
-          "title",
-          "createdBy",
-          "publications"
+          "scheduledAt",
+          "hasInternalComments"
         ]
       },
       "GetAdvertsDto": {
@@ -5410,34 +5452,44 @@
         },
         "required": ["advertIds"]
       },
+      "TypeIdEnum": {
+        "type": "string",
+        "enum": [
+          "065C3FD9-58D1-436F-9FB8-C1F5C214FA50",
+          "BC6384F4-91B0-48FE-9A3A-B528B0AA6468",
+          "F1A7CE20-37BE-451B-8AA7-BC90B8A7E7BD",
+          "D40BED80-6D9C-4388-AEA8-445B27614D8A",
+          "6BD9C89E-8658-4EA0-A1CE-1948656EB4E7"
+        ]
+      },
       "PublishedPublicationDto": {
         "type": "object",
         "properties": {
           "id": { "type": "string" },
           "advertId": { "type": "string" },
-          "publishedAt": { "type": "string" },
-          "title": { "type": "string" },
-          "type": { "$ref": "#/components/schemas/TypeDto" },
-          "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "pdfUrl": { "type": "string" },
+          "isLegacy": { "type": "boolean" },
           "version": {
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersionEnum" }]
           },
+          "publishedAt": { "type": "string" },
+          "type": { "$ref": "#/components/schemas/TypeDto" },
+          "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "title": { "type": "string" },
           "publicationNumber": { "type": "string" },
-          "createdBy": { "type": "string" },
-          "isLegacy": { "type": "boolean" },
-          "pdfUrl": { "type": "string", "nullable": true }
+          "createdBy": { "type": "string" }
         },
         "required": [
           "id",
           "advertId",
+          "isLegacy",
+          "version",
           "publishedAt",
-          "title",
           "type",
           "category",
-          "version",
+          "title",
           "publicationNumber",
-          "createdBy",
-          "isLegacy"
+          "createdBy"
         ]
       },
       "GetPublicationsDto": {
@@ -5457,7 +5509,7 @@
           "publication": {
             "$ref": "#/components/schemas/AdvertPublicationDto"
           },
-          "advert": { "$ref": "#/components/schemas/AdvertDto" },
+          "advert": { "type": "object" },
           "html": { "type": "string" }
         },
         "required": ["publication", "advert", "html"]
@@ -5481,11 +5533,11 @@
         "properties": {
           "id": { "type": "string" },
           "nationalId": { "type": "string" },
-          "name": { "type": "string" },
           "email": { "type": "string" },
-          "phone": { "type": "string" }
+          "phone": { "type": "string" },
+          "name": { "type": "string" }
         },
-        "required": ["id", "nationalId", "name", "email"]
+        "required": ["id", "nationalId", "email", "name"]
       },
       "GetUsersResponse": {
         "type": "object",
@@ -5506,63 +5558,39 @@
         "properties": {
           "id": { "type": "string" },
           "caseId": { "type": "string" },
-          "islandIsApplicationId": { "type": "string" },
-          "createdAt": { "type": "string" },
-          "updatedAt": { "type": "string" },
           "submittedByNationalId": { "type": "string" },
           "applicationType": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           },
-          "category": { "$ref": "#/components/schemas/CategoryDto" },
-          "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
           },
-          "title": { "type": "string" }
+          "islandIsApplicationId": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "type": { "$ref": "#/components/schemas/TypeDto" }
         },
         "required": [
           "id",
           "caseId",
-          "createdAt",
-          "updatedAt",
           "submittedByNationalId",
           "applicationType",
           "status",
-          "title"
+          "createdAt",
+          "updatedAt"
         ]
       },
-      "ApplicationsDto": {
+      "GetApplicationsDto": {
         "type": "object",
         "properties": {
-          "page": { "type": "number", "example": 1 },
-          "totalPages": { "type": "number", "example": 10 },
-          "totalItems": { "type": "number", "example": 1000 },
-          "nextPage": { "type": "number", "example": 2, "nullable": true },
-          "previousPage": { "type": "number", "example": 1, "nullable": true },
-          "pageSize": {
-            "type": "number",
-            "example": 10,
-            "minimum": 1,
-            "maximum": 100
-          },
-          "hasNextPage": { "type": "boolean", "example": true },
-          "hasPreviousPage": { "type": "boolean", "example": false },
           "applications": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/ApplicationDto" }
-          }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
         },
-        "required": [
-          "page",
-          "totalPages",
-          "totalItems",
-          "nextPage",
-          "previousPage",
-          "pageSize",
-          "hasNextPage",
-          "hasPreviousPage",
-          "applications"
-        ]
+        "required": ["applications", "paging"]
       },
       "CommonApplicationFieldsDto": {
         "type": "object",
@@ -5584,7 +5612,19 @@
         "type": "object",
         "properties": {
           "name": { "type": "string" },
-          "location": { "type": "string" }
+          "location": { "type": "string" },
+          "recallRequirementStatementType": {
+            "default": "LIQUIDATOR_LOCATION",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationRequirementStatementEnum"
+              }
+            ]
+          },
+          "recallRequirementStatementLocation": {
+            "type": "string",
+            "description": "Location to send recall requirement (Kröfulýsing)"
+          }
         }
       },
       "ApplicationSettlementDto": {
@@ -5631,9 +5671,9 @@
         "type": "object",
         "properties": {
           "name": { "type": "string" },
-          "onBehalfOf": { "type": "string" },
           "location": { "type": "string" },
-          "date": { "type": "string" }
+          "date": { "type": "string" },
+          "onBehalfOf": { "type": "string" }
         }
       },
       "ApplicationPublishingDatesDto": {
@@ -5655,19 +5695,18 @@
         "properties": {
           "id": { "type": "string" },
           "caseId": { "type": "string" },
-          "islandIsApplicationId": { "type": "string" },
-          "createdAt": { "type": "string" },
-          "updatedAt": { "type": "string" },
           "submittedByNationalId": { "type": "string" },
           "applicationType": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           },
-          "category": { "$ref": "#/components/schemas/CategoryDto" },
-          "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
           },
-          "title": { "type": "string" },
+          "islandIsApplicationId": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "type": { "$ref": "#/components/schemas/TypeDto" },
           "additionalText": { "type": "string" },
           "commonFields": {
             "$ref": "#/components/schemas/CommonApplicationFieldsDto"
@@ -5692,12 +5731,11 @@
         "required": [
           "id",
           "caseId",
-          "createdAt",
-          "updatedAt",
           "submittedByNationalId",
           "applicationType",
           "status",
-          "title",
+          "createdAt",
+          "updatedAt",
           "commonFields",
           "recallFields",
           "signature",
@@ -5716,7 +5754,19 @@
         "type": "object",
         "properties": {
           "name": { "type": "string" },
-          "location": { "type": "string" }
+          "location": { "type": "string" },
+          "recallRequirementStatementType": {
+            "default": "LIQUIDATOR_LOCATION",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationRequirementStatementEnum"
+              }
+            ]
+          },
+          "recallRequirementStatementLocation": {
+            "type": "string",
+            "description": "Location to send recall requirement (Kröfulýsing)"
+          }
         }
       },
       "UpdateApplicationSettlementDto": {
@@ -5783,12 +5833,12 @@
       "AddDivisionMeetingForApplicationDto": {
         "type": "object",
         "properties": {
+          "additionalText": { "type": "string" },
           "meetingDate": { "type": "string" },
           "meetingLocation": { "type": "string" },
           "signature": {
             "$ref": "#/components/schemas/ApplicationSignatureDto"
           },
-          "additionalText": { "type": "string" },
           "communicationChannels": {
             "type": "array",
             "items": {
@@ -5801,10 +5851,10 @@
       "AddDivisionEndingForApplicationDto": {
         "type": "object",
         "properties": {
+          "additionalText": { "type": "string" },
           "signature": {
             "$ref": "#/components/schemas/ApplicationSignatureDto"
           },
-          "additionalText": { "type": "string" },
           "communicationChannels": {
             "type": "array",
             "items": {
@@ -5819,9 +5869,21 @@
       "TypeWithCategoriesDto": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "title": { "type": "string" },
-          "slug": { "type": "string" },
+          "id": {
+            "type": "string",
+            "description": "UUIDV4 of the entity",
+            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the entity",
+            "example": "Base entity"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the entity",
+            "example": "base-entity"
+          },
           "categories": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/CategoryDto" }
@@ -5852,6 +5914,14 @@
           "id": { "type": "string" },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
+          "liquidatorRecallStatementLocation": { "type": "string" },
+          "liquidatorRecallStatementType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationRequirementStatementEnum"
+              }
+            ]
+          },
           "settlementName": { "type": "string" },
           "settlementNationalId": { "type": "string" },
           "settlementAddress": { "type": "string" },
@@ -5879,87 +5949,48 @@
         "type": "object",
         "properties": {
           "id": { "type": "string" },
-          "foreclosureId": {
-            "type": "string",
-            "description": "The ID of the foreclosure this property belongs to"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date and time when the property was created"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date and time when the property was last updated"
-          },
-          "propertyName": {
-            "type": "string",
-            "description": "The name of the property"
-          },
-          "propertyNumber": {
-            "type": "string",
-            "description": "The number of the property (fastanúmer)"
-          },
-          "propertyTotalPrice": {
-            "type": "number",
-            "description": "The total price of the property"
-          },
-          "respondent": {
-            "type": "string",
-            "description": "Respondent name (Gerðarþoli/ar)"
-          },
-          "claimant": {
-            "type": "string",
-            "description": "The name of the claimant (Gerðarbeiðandi)"
-          }
+          "foreclosureId": { "type": "string" },
+          "propertyName": { "type": "string" },
+          "propertyNumber": { "type": "string" },
+          "propertyTotalPrice": { "type": "number" },
+          "claimant": { "type": "string" },
+          "respondent": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
         },
         "required": [
           "id",
           "foreclosureId",
-          "createdAt",
-          "updatedAt",
           "propertyName",
           "propertyNumber",
           "propertyTotalPrice",
+          "claimant",
           "respondent",
-          "claimant"
+          "createdAt",
+          "updatedAt"
         ]
       },
       "ForeclosureDto": {
         "type": "object",
         "properties": {
-          "id": {
+          "id": { "type": "string" },
+          "advertId": { "type": "string" },
+          "caseNumberIdentifier": {
             "type": "string",
-            "description": "The ID of the foreclosure"
-          },
-          "advertId": {
-            "type": "string",
-            "description": "The ID of the advert the foreclosure belongs to"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date and time when the foreclosure was created"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date and time when the foreclosure was last updated"
+            "description": "The ID of the foreclosure",
+            "nullable": true
           },
           "foreclosureRegion": {
             "type": "string",
-            "description": "The land region of where the foreclosure is located"
+            "description": "The ID of the advert the foreclosure belongs to"
           },
           "foreclosureAddress": {
             "type": "string",
             "description": "The address of the foreclosure"
           },
-          "foreclosureDate": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date of the foreclosure"
-          },
+          "foreclosureDate": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
           "properties": {
             "description": "List of all the properties listed in the foreclosure",
             "type": "array",
@@ -5969,49 +6000,28 @@
         "required": [
           "id",
           "advertId",
-          "createdAt",
-          "updatedAt",
+          "caseNumberIdentifier",
           "foreclosureRegion",
           "foreclosureAddress",
           "foreclosureDate",
+          "createdAt",
+          "updatedAt",
           "properties"
-        ]
-      },
-      "CreateForeclosurePropertyDto": {
-        "type": "object",
-        "properties": {
-          "propertyName": {
-            "type": "string",
-            "description": "The name of the property"
-          },
-          "propertyNumber": {
-            "type": "string",
-            "description": "The number of the property (fastanúmer)"
-          },
-          "propertyTotalPrice": {
-            "type": "number",
-            "description": "The total price of the property"
-          },
-          "respondent": {
-            "type": "string",
-            "description": "Respondent name (Gerðarþoli/ar)"
-          },
-          "claimant": {
-            "type": "string",
-            "description": "The name of the claimant (Gerðarbeiðandi)"
-          }
-        },
-        "required": [
-          "propertyName",
-          "propertyNumber",
-          "propertyTotalPrice",
-          "respondent",
-          "claimant"
         ]
       },
       "CreateForeclosureSaleDto": {
         "type": "object",
         "properties": {
+          "properties": {
+            "description": "List of all the properties listed in the foreclosure",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ForeclosurePropertyDto" }
+          },
+          "caseNumberIdentifier": {
+            "type": "string",
+            "description": "The ID of the foreclosure",
+            "nullable": true
+          },
           "foreclosureRegion": {
             "type": "string",
             "description": "The land region of where the foreclosure is located"
@@ -6028,21 +6038,15 @@
           "responsibleParty": {
             "description": "The responsible party for the foreclosure",
             "allOf": [{ "$ref": "#/components/schemas/ResponsiblePartyDto" }]
-          },
-          "properties": {
-            "description": "List of all the properties listed in the foreclosure",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CreateForeclosurePropertyDto"
-            }
           }
         },
         "required": [
+          "properties",
+          "caseNumberIdentifier",
           "foreclosureRegion",
           "foreclosureAddress",
           "foreclosureDate",
-          "responsibleParty",
-          "properties"
+          "responsibleParty"
         ]
       },
       "GetCommunicationChannelsDto": {
@@ -6094,6 +6098,62 @@
           "pastDueCount": { "type": "number" }
         },
         "required": ["tobePublishedTodayCount", "pastDueCount"]
+      },
+      "PersonDto": {
+        "type": "object",
+        "properties": {
+          "stada": { "type": "string" },
+          "kennitala": { "type": "string" },
+          "nafn": { "type": "string" },
+          "loghHusk": { "type": "string" },
+          "heimili": { "type": "string" },
+          "postaritun": { "type": "string" },
+          "sveitarfelag": { "type": "string" },
+          "svfNr": { "type": "string" },
+          "kynkodi": { "type": "number" }
+        },
+        "required": [
+          "stada",
+          "kennitala",
+          "nafn",
+          "loghHusk",
+          "heimili",
+          "postaritun",
+          "sveitarfelag",
+          "svfNr",
+          "kynkodi"
+        ]
+      },
+      "GetPersonDto": {
+        "type": "object",
+        "properties": {
+          "person": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/PersonDto" }]
+          }
+        },
+        "required": ["person"]
+      },
+      "BaseEntityDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUIDV4 of the entity",
+            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the entity",
+            "example": "Base entity"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the entity",
+            "example": "base-entity"
+          }
+        },
+        "required": ["id", "title", "slug"]
       }
     }
   }

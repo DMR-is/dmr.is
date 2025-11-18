@@ -84,6 +84,14 @@
         "cwd": "apps/legal-gazette-web"
       }
     },
+    "update-client": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["update-openapi-schema", "codegen"],
+      "options": {
+        "commands": [],
+        "cwd": "apps/legal-gazette-web"
+      }
+    },
     "codegen": {
       "executor": "nx:run-commands",
       "options": {

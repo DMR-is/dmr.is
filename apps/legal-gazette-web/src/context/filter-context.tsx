@@ -14,8 +14,7 @@ import { Tag } from '@island.is/island-ui/core'
 
 import { BaseEntityDto } from '../gen/fetch'
 import { QueryParams } from '../lib/constants'
-import {  useTRPC } from '../lib/trpc/client/trpc'
-
+import { useTRPC } from '../lib/trpc/client/trpc'
 
 type Option<T = string> = {
   label: string
@@ -234,7 +233,7 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
   )
 
   const [statusOptions, setInternalStatusOptions] = useState(
-    statuses.statuses.map((status) => ({
+    statuses.statuses.map((status: BaseEntityDto) => ({
       label: status.title,
       value: status.id,
     })),

@@ -40,6 +40,10 @@ import { PublicationControllerModule } from '../modules/advert/publications/publ
 import { StatisticsControllerModule } from '../modules/advert/statistics/statistics.controller.module'
 import { ApplictionControllerModule } from '../modules/applications/application.controller.module'
 import { BaseEntityControllerModule } from '../modules/base-entity/base-entity.controller.module'
+import { CategoryControllerModule } from '../modules/base-entity/category/category.controller.module'
+import { CourtDistrictControllerModule } from '../modules/base-entity/court-district/court-district.controller.module'
+import { StatusControllerModule } from '../modules/base-entity/status/status.controller.module'
+import { TypeControllerModule } from '../modules/base-entity/type/type.controller.module'
 import { CaseControllerModule } from '../modules/case/case.controller.module'
 import { CommentControllerModule } from '../modules/comment/comment.controller.module'
 import { CommunicationChannelControllerModule } from '../modules/communication-channel/communication-channel.module'
@@ -101,6 +105,10 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
+    CategoryControllerModule,
+    TypeControllerModule,
+    StatusControllerModule,
+    CourtDistrictControllerModule,
     BaseEntityControllerModule,
     CompanyControllerModule,
     CaseControllerModule,
@@ -113,10 +121,6 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
     SettlementControllerModule,
     CommentControllerModule,
     ForeclosureControllerModule,
-    {
-      module: AuthModule,
-      global: true,
-    },
     HealthModule,
     ApplicationWebSwaggerModule,
     ExternalSystemsSwaggerModule,
@@ -125,6 +129,10 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
     CommunicationChannelControllerModule,
     StatisticsControllerModule,
     LGNationalRegistryControllerModule,
+    {
+      module: AuthModule,
+      global: true,
+    },
   ],
   controllers: [],
   providers: [

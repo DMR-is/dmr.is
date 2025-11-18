@@ -12,7 +12,7 @@ import {
   TypeDto,
   UpdateAdvertDto,
 } from '../gen/fetch'
-import {  useTRPC } from '../lib/trpc/client/trpc'
+import { useTRPC } from '../lib/trpc/client/trpc'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -28,7 +28,12 @@ const createOptimisticDataForAdvert = (
   categories: CategoryDto[],
   courtDistricts: CourtDistrictDto[],
 ): AdvertDetailedDto => {
-  const { typeId, categoryId, courtDistrictId, ...rest } = variables
+  const filteredVariables = Object.fromEntries(
+    Object.entries(variables).filter(([_, value]) => value !== null),
+  )
+
+  const { typeId, categoryId, courtDistrictId, scheduledAt, ...rest } =
+    filteredVariables
 
   const type = types.find((type) => type.id === typeId)
   const category = categories.find((category) => category.id === categoryId)
@@ -38,6 +43,10 @@ const createOptimisticDataForAdvert = (
   return {
     ...prevData,
     ...rest,
+    scheduledAt:
+      Array.isArray(scheduledAt) && scheduledAt.length > 0
+        ? scheduledAt[0]
+        : prevData.scheduledAt,
     type: type ?? prevData.type,
     category: category ?? prevData.category,
     courtDistrict: courtDistrict ?? prevData.courtDistrict,
@@ -273,7 +282,7 @@ export const useUpdateAdvert = (id: string) => {
         errorMessage = 'Villa við að uppfæra breytingar',
       } = options
       return updateAdvertMutation(
-        { id, ...data },
+        { id: id, ...data },
         {
           onSuccess: async () => {
             if (successMessage) {

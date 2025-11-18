@@ -18,7 +18,7 @@ const getAdvertsRequestSchema = z.object({
 
 const updateAdvertDtoSchema = z.object({
   id: z.string(),
-  scheduledAt: z.string().optional(),
+  scheduledAt: z.array(z.string()).optional(),
   title: z.string().optional(),
   content: z.string().optional(),
   categoryId: z.string().optional(),

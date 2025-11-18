@@ -1,8 +1,10 @@
 import { Transform, Type } from 'class-transformer'
 import {
   IsArray,
+  IsBoolean,
   IsDateString,
   IsEnum,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
@@ -46,6 +48,7 @@ import {
   AdvertPublicationDto,
   AdvertPublicationModel,
   AdvertPublicationsCreateAttributes,
+  AdvertVersionEnum,
 } from './advert-publication.model'
 import { CaseModel } from './case.model'
 import { CategoryDto, CategoryModel } from './category.model'
@@ -127,7 +130,7 @@ export type AdvertCreateAttributes = {
   signatureName?: string | null
   signatureOnBehalfOf?: string | null
   signatureLocation?: string | null
-  signatureDate?: Date | null
+  signatureDate?: Date
 
   // Common specific properties
   additionalText?: string | null
@@ -145,12 +148,6 @@ export type AdvertCreateAttributes = {
   publications?: AdvertPublicationsCreateAttributes[]
   settlement?: SettlementCreateAttributes
   communicationChannels?: CommunicationChannelCreateAttributes[]
-}
-
-export enum AdvertVersionEnum {
-  A = 'A',
-  B = 'B',
-  C = 'C',
 }
 
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
@@ -331,7 +328,7 @@ export class AdvertModel extends BaseModel<
     unique: true,
     defaultValue: null,
   })
-  @ApiProperty({ type: String, required: false, nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   publicationNumber!: string | null
 
   @Column({
@@ -409,7 +406,7 @@ export class AdvertModel extends BaseModel<
     type: DataType.TEXT,
     allowNull: true,
   })
-  @ApiProperty({ type: String, required: false, nullable: true })
+  @ApiProperty({ type: String, required: false })
   content?: string | null
 
   @Column({
@@ -433,14 +430,14 @@ export class AdvertModel extends BaseModel<
     allowNull: true,
     defaultValue: null,
   })
-  @ApiProperty({ type: String, required: false, nullable: true })
+  @ApiProperty({ type: String, required: false })
   judgementDate?: Date | null
 
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
   case!: CaseModel
 
   @HasMany(() => CommunicationChannelModel)
-  communicationChannels!: CommunicationChannelModel[]
+  communicationChannels?: CommunicationChannelModel[]
 
   @BelongsTo(() => TypeModel)
   type!: TypeModel
@@ -585,7 +582,6 @@ export class AdvertModel extends BaseModel<
         title: model.title,
         assignedUser: model.assignedUser?.id,
         publications: model.publications.map((p) => p.fromModel()),
-        publicationNumber: model.publicationNumber,
       }
     } catch (error) {
       throw new InternalServerErrorException()
@@ -604,28 +600,23 @@ export class AdvertModel extends BaseModel<
       ...this.fromModel(model),
       caseId: model.caseId ?? undefined,
       canEdit: this.canEdit(model, userId),
-      publicationNumber: model.publicationNumber,
+      publicationNumber: model.publicationNumber ?? undefined,
       signatureOnBehalfOf: model.signatureOnBehalfOf ?? undefined,
       signatureDate: model.signatureDate?.toISOString(),
       signatureLocation: model.signatureLocation ?? undefined,
       signatureName: model.signatureName ?? undefined,
-      caption: model.caption,
-      content: model.content,
-      additionalText: model.additionalText,
+      caption: model.caption ?? undefined,
+      content: model.content ?? undefined,
+      additionalText: model.additionalText ?? undefined,
       courtDistrict: model.courtDistrict?.fromModel()
         ? model.courtDistrict.fromModel()
         : undefined,
-      judgementDate: model.judgementDate
-        ? model.judgementDate?.toISOString()
-        : undefined,
-      divisionMeetingDate: model.divisionMeetingDate
-        ? model.divisionMeetingDate?.toISOString()
-        : undefined,
+      judgementDate: model.judgementDate?.toISOString(),
+      divisionMeetingDate: model.divisionMeetingDate?.toISOString(),
       divisionMeetingLocation: model.divisionMeetingLocation ?? undefined,
       settlement: model.settlement?.fromModel(),
-      communicationChannels: model.communicationChannels?.map((c) =>
-        c.fromModel(),
-      ),
+      communicationChannels:
+        model.communicationChannels?.map((c) => c.fromModel()) ?? [],
       paidAt: model.transaction?.paidAt
         ? model.transaction.paidAt?.toISOString()
         : undefined,
@@ -641,72 +632,149 @@ export class AdvertModel extends BaseModel<
   }
 }
 
-export class AdvertDetailedDto extends IntersectionType(
-  DetailedDto,
-  PickType(AdvertModel, [
-    'id',
-    'title',
-    'hasInternalComments',
-    'createdBy',
-    'caption',
-    'content',
-    'publicationNumber',
-    'additionalText',
-    'signatureLocation',
-    'signatureName',
-    'signatureOnBehalfOf',
-    'divisionMeetingLocation',
-  ] as const),
-) {
-  @ApiProperty({ type: String, required: false })
-  caseId?: string
+export class AdvertDetailedDto extends DetailedDto {
+  @ApiProperty({ type: String })
+  @IsUUID()
+  id!: string
 
   @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsUUID()
+  caseId?: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  title!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  createdBy!: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  caption?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  content?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  publicationNumber?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  additionalText?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  signatureLocation?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  signatureName?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  signatureOnBehalfOf?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
   signatureDate?: string
 
   @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
   judgementDate?: string
 
   @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
   divisionMeetingDate?: string
 
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  divisionMeetingLocation?: string
+
   @ApiProperty({ type: Boolean })
+  @IsBoolean()
   canEdit!: boolean
 
   @ApiProperty({ type: CourtDistrictDto, required: false })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CourtDistrictDto)
   courtDistrict?: CourtDistrictDto
 
   @ApiProperty({ type: SettlementDto, required: false })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => SettlementDto)
   settlement?: SettlementDto
 
-  @ApiProperty({ type: [CommunicationChannelDto], required: false })
-  communicationChannels?: CommunicationChannelDto[]
+  @ApiProperty({ type: [CommunicationChannelDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CommunicationChannelDto)
+  communicationChannels!: CommunicationChannelDto[]
 
   @ApiProperty({ type: [AdvertPublicationDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AdvertPublicationDto)
   publications!: AdvertPublicationDto[]
 
   @ApiProperty({ type: CategoryDto })
+  @ValidateNested()
+  @Type(() => CategoryDto)
   category!: CategoryDto
 
   @ApiProperty({ type: TypeDto })
+  @ValidateNested()
+  @Type(() => TypeDto)
   type!: TypeDto
 
   @ApiProperty({ type: StatusDto })
+  @ValidateNested()
+  @Type(() => StatusDto)
   status!: StatusDto
 
   @ApiProperty({ type: String })
+  @IsDateString()
   scheduledAt!: string
 
   @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
   assignedUser?: string
 
+  @ApiProperty({ type: Boolean })
+  @IsBoolean()
+  hasInternalComments!: boolean
+
   @ApiProperty({ type: [CommentDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CommentDto)
   comments!: CommentDto[]
 
   @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
   paidAt?: string
 
   @ApiProperty({ type: Number, required: false })
+  @IsOptional()
+  @IsNumber()
   totalPrice?: number
 }
 
@@ -857,14 +925,12 @@ export class CreateAdvertDto extends PickType(AdvertModel, [
 ] as const) {
   @ApiProperty({
     type: String,
-    format: 'date-time',
     description: 'Date of signature',
     required: false,
-    nullable: true,
   })
   @IsOptional()
   @IsDateString()
-  signatureDate?: string | null
+  signatureDate?: string
 
   @ApiProperty({
     enum: StatusIdEnum,
@@ -878,16 +944,13 @@ export class CreateAdvertDto extends PickType(AdvertModel, [
 
   @ApiProperty({
     type: String,
-    format: 'date-time',
     required: false,
-    nullable: true,
-    description: 'Date of judgement',
   })
   @IsOptional()
   @IsDateString()
   judgementDate?: string | null
 
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: String, required: false })
   @IsOptional()
   @IsDateString()
   divisionMeetingDate?: string | null
@@ -923,11 +986,8 @@ export class CreateAdvertDto extends PickType(AdvertModel, [
 }
 
 export class UpdateAdvertDto extends PartialType(
-  PickType(CreateAdvertDto, [
-    'scheduledAt',
+  PickType(AdvertDetailedDto, [
     'content',
-    'categoryId',
-    'typeId',
     'additionalText',
     'caption',
     'signatureName',
@@ -937,10 +997,41 @@ export class UpdateAdvertDto extends PartialType(
     'divisionMeetingDate',
     'divisionMeetingLocation',
     'judgementDate',
-    'courtDistrictId',
     'title',
   ] as const),
-) {}
+) {
+  @ApiProperty({ type: [String], required: false })
+  @IsOptional()
+  @IsArray()
+  @IsDateString(undefined, { each: true })
+  @MinLength(1, { each: true })
+  @MaxLength(3, { each: true })
+  scheduledAt?: string[]
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  typeId?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  courtDistrictId?: string
+}
 
 export class PublishAdvertsBody {
   @ApiProperty({
