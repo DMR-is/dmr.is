@@ -1,6 +1,6 @@
 'use client'
 
-import { HeaderNoAuth } from '@dmr.is/ui/components/HeaderNoAuth/HeaderNoAuth'
+import { HeaderNoAuth } from '@dmr.is/ui/components/Header/HeaderNoAuth'
 
 import '../../styles/global.css'
 
@@ -10,11 +10,9 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="is">
-      <body>
-        <HeaderNoAuth />
-        {children}
-      </body>
-    </html>
+    <>
+      <HeaderNoAuth />
+      {children}
+    </>
   )
 }

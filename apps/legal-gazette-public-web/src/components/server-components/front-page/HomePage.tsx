@@ -1,6 +1,5 @@
-import { getServerSession } from 'next-auth'
-
 import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
+import { Header } from '@dmr.is/ui/components/Header/Header'
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 import {
   Box,
@@ -11,18 +10,11 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { PublicationCard } from '../../components/client-components/cards/PublicationCard'
-import { BannerSearch } from '../../components/client-components/front-page/banner-search/BannerSearch'
-import { authOptions } from '../../lib/authOptions'
-import { trpc } from '../../lib/trpc/client/server'
+import { trpc } from '../../../lib/trpc/client/server'
+import { PublicationCard } from '../../client-components/cards/PublicationCard'
+import { BannerSearch } from '../../client-components/front-page/banner-search/BannerSearch'
 
-export default async function HomePage() {
-  const session = await getServerSession(authOptions)
-
-  if (!session?.idToken) {
-    throw new Error('Unauthorized')
-  }
-
+export const HomePage = async () => {
   const quickLinks: React.ComponentProps<typeof BannerSearch>['quickLinks'] = [
     {
       title: 'Allar auglýsingar',
@@ -44,7 +36,7 @@ export default async function HomePage() {
   const breadcrumbItems: React.ComponentProps<typeof Hero>['breadcrumbs'] = {
     items: [
       {
-        title: 'Lögbirtingablaðið',
+        title: 'Dómsmálaráðuneytið',
       },
     ],
   }
@@ -58,6 +50,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <Header />
       <Hero
         title="Lögbirtingablaðið"
         description="Um útgáfu Lögbirtingablaðsins gilda lög um Stjórnartíðindi og Lögbirtingarblaðsins nr. 15/2005"

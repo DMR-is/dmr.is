@@ -1,6 +1,6 @@
 'use client'
 
-import { HeaderNoAuth } from '@dmr.is/ui/components/HeaderNoAuth/HeaderNoAuth'
+import { HeaderNoAuth } from '@dmr.is/ui/components/Header/HeaderNoAuth'
 
 type Props = React.ComponentProps<typeof HeaderNoAuth>
 
