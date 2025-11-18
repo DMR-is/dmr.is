@@ -318,10 +318,10 @@ export class AdvertPublicationDto extends PickType(AdvertPublicationModel, [
 }
 
 export class AdvertPublicationDetailedDto {
-  @ApiProperty({ type: AdvertPublicationDto })
+  @ApiProperty({ type: () => AdvertPublicationDto })
   publication!: AdvertPublicationDto
 
-  @ApiProperty({ type: AdvertDto })
+  @ApiProperty({ type: () => AdvertDto })
   advert!: AdvertDto
 
   @ApiProperty({ type: String })

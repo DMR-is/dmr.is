@@ -2,18 +2,18 @@ import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
 import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay'
 import { Stack, Text } from '@dmr.is/ui/components/island-is'
 
-import { GetAdvertPublicationVersionEnum } from '../../../../../gen/fetch'
+import { AdvertVersionEnum } from '../../../../../gen/fetch'
 import { trpc } from '../../../../../lib/trpc/client/server'
 
 export default async function AdvertPage({
   params,
 }: {
-  params: { id: string; version: GetAdvertPublicationVersionEnum }
+  params: { id: string; version: AdvertVersionEnum }
 }) {
   const pub = await fetchQueryWithHandler(
     trpc.getPublication.queryOptions({
       advertId: params.id,
-      version: params.version as GetAdvertPublicationVersionEnum,
+      version: params.version as AdvertVersionEnum,
     }),
   )
 
