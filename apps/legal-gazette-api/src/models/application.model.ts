@@ -799,7 +799,6 @@ export class ApplicationDto extends PickType(ApplicationModel, [
   'islandIsApplicationId',
   'submittedByNationalId',
   'applicationType',
-  'title',
   'status',
 ] as const) {
   @ApiProperty({ type: String })
@@ -821,6 +820,10 @@ export class ApplicationDto extends PickType(ApplicationModel, [
   @ValidateNested()
   @Type(() => TypeDto)
   type?: TypeDto
+
+  @ApiProperty({ type: String })
+  @IsString()
+  title!: string
 }
 
 export class ApplicationFieldsDto extends PickType(
