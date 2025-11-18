@@ -5,7 +5,7 @@ import {
   ensureNameSlug,
   ensureRegName,
   slugToName,
-} from '@island.is/regulations-tools/utils'
+} from '@dmr.is/regulations-tools/utils'
 
 import { getAllRegulations, RegulationListItemFull } from '../db/Regulations'
 import { ISODate, RegName } from '../routes/types'

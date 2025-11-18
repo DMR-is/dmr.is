@@ -41,7 +41,7 @@
             "output": "static-diffs"
           }
         ],
-        "external": ["@island.is/regulations-tools"],
+        "external": ["@dmr.is/regulations-tools"],
         "esbuildOptions": {
           "sourcemap": true,
           "outExtension": {

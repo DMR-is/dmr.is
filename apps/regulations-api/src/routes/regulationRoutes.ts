@@ -4,7 +4,7 @@ import {
   ensureISODate,
   ensureNameSlug,
   slugToName,
-} from '@island.is/regulations-tools/utils'
+} from '@dmr.is/regulations-tools/utils'
 
 import { getRegulation } from '../db/Regulation'
 import { makeDraftPdf, makePublishedPdf } from '../db/RegulationPdf'

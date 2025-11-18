@@ -6,7 +6,7 @@ import multerS3 from 'multer-s3-transform'
 import sharp from 'sharp'
 import { Readable } from 'stream'
 
-import { ensureRegName, nameToSlug } from '@island.is/regulations-tools/utils'
+import { ensureRegName, nameToSlug } from '@dmr.is/regulations-tools/utils'
 
 import {
   AWS_BUCKET_NAME,

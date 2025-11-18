@@ -3,9 +3,9 @@ import { readFileSync } from 'fs'
 import path from 'path'
 import { FindAttributeOptions, QueryTypes } from 'sequelize'
 
-import { execute as htmldiff } from '@island.is/regulations-tools/htmldiff-js'
-import { extractAppendixesAndComments } from '@island.is/regulations-tools/textHelpers'
-import { nameToSlug, toISODate } from '@island.is/regulations-tools/utils'
+import { execute as htmldiff } from '@dmr.is/regulations-tools/htmldiff-js'
+import { extractAppendixesAndComments } from '@dmr.is/regulations-tools/textHelpers'
+import { nameToSlug, toISODate } from '@dmr.is/regulations-tools/utils'
 
 import { FILE_SERVER } from '../constants'
 import {

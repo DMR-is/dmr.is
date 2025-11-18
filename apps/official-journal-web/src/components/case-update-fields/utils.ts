@@ -2,7 +2,7 @@ import addDays from 'date-fns/addDays'
 import addYears from 'date-fns/addYears'
 import { getHolidays, Holiday } from 'fridagar'
 
-import { toISODate } from '@island.is/regulations-tools/utils'
+import { toISODate } from '@dmr.is/regulations-tools/utils'
 
 export const MINIMUM_WEEKDAYS = 10
 type IsHolidayMap = Record<string, true | undefined>

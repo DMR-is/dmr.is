@@ -4,12 +4,12 @@ import { FastifyPluginCallback } from 'fastify'
 import {
   IntPositive,
   RegulationOptionList,
-} from '@island.is/regulations-tools/types'
+} from '@dmr.is/regulations-tools/types'
 import {
   ensurePosInt,
   ensureRegName,
   isNonNull,
-} from '@island.is/regulations-tools/utils'
+} from '@dmr.is/regulations-tools/utils'
 
 import {
   getAllRegulations,
