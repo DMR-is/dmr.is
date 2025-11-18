@@ -19,15 +19,11 @@ export class SettlementService {
     await settlement.update({
       liquidatorName: body.liquidatorName,
       liquidatorLocation: body.liquidatorLocation,
-      name: body.settlementName,
-      nationalId: body.settlementNationalId,
-      address: body.settlementAddress,
-      deadline: body.settlementDeadline
-        ? new Date(body.settlementDeadline)
-        : null,
-      dateOfDeath: body.settlementDateOfDeath
-        ? new Date(body.settlementDateOfDeath)
-        : null,
+      name: body.name,
+      nationalId: body.nationalId,
+      address: body.address,
+      deadline: body.deadline ? new Date(body.deadline) : null,
+      dateOfDeath: body.dateOfDeath ? new Date(body.dateOfDeath) : null,
       declaredClaims: body.declaredClaims,
     })
   }
