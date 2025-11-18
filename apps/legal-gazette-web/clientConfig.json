@@ -5223,6 +5223,9 @@
               }
             ]
           },
+          "name": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "address": { "type": "string" },
           "declaredClaims": { "type": "number" },
           "deadline": { "type": "string", "nullable": true },
           "dateOfDeath": { "type": "string", "nullable": true }
@@ -5232,6 +5235,9 @@
           "liquidatorName",
           "liquidatorLocation",
           "liquidatorRecallStatementType",
+          "name",
+          "nationalId",
+          "address",
           "deadline"
         ]
       },
@@ -5933,6 +5939,9 @@
               }
             ]
           },
+          "name": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "address": { "type": "string" },
           "declaredClaims": { "type": "number" },
           "deadline": { "type": "string", "nullable": true },
           "dateOfDeath": { "type": "string", "nullable": true }

@@ -80,6 +80,7 @@ export class SettlementModel extends BaseModel<
     allowNull: false,
     field: 'name',
   })
+  @ApiProperty({ type: String })
   name!: string
 
   @Column({
@@ -87,6 +88,7 @@ export class SettlementModel extends BaseModel<
     allowNull: false,
     field: 'national_id',
   })
+  @ApiProperty({ type: String })
   nationalId!: string
 
   @Column({
@@ -94,6 +96,7 @@ export class SettlementModel extends BaseModel<
     allowNull: false,
     field: 'address',
   })
+  @ApiProperty({ type: String })
   address!: string
 
   @Column({
@@ -102,6 +105,7 @@ export class SettlementModel extends BaseModel<
     defaultValue: null,
     field: 'deadline_date',
   })
+  @ApiProperty({ type: String, required: false, nullable: true })
   deadline!: Date | null
 
   @Column({
@@ -110,6 +114,7 @@ export class SettlementModel extends BaseModel<
     defaultValue: null,
     field: 'date_of_death',
   })
+  @ApiProperty({ type: String, required: false, nullable: true })
   dateOfDeath!: Date | null
 
   @Column({
@@ -157,11 +162,11 @@ export class SettlementDto extends PickType(SettlementModel, [
   'declaredClaims',
 ] as const) {
   @ApiProperty({ type: String, required: true, nullable: true })
-  @ValidateIf((o) => o.settlementDeadline !== null)
+  @ValidateIf((o) => o.deadline !== null)
   @IsDateString()
   deadline!: string | null
   @ApiProperty({ type: String, required: false, nullable: true })
-  @ValidateIf((o) => o.settlementDateOfDeath !== null)
+  @ValidateIf((o) => o.dateOfDeath !== null)
   @IsDateString()
   dateOfDeath!: string | null
 }

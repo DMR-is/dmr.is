@@ -6563,6 +6563,15 @@
               }
             ]
           },
+          "name": {
+            "type": "string"
+          },
+          "nationalId": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
           "declaredClaims": {
             "type": "number"
           },
@@ -6580,6 +6589,9 @@
           "liquidatorName",
           "liquidatorLocation",
           "liquidatorRecallStatementType",
+          "name",
+          "nationalId",
+          "address",
           "deadline"
         ]
       },
@@ -7637,6 +7649,15 @@
                 "$ref": "#/components/schemas/ApplicationRequirementStatementEnum"
               }
             ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "nationalId": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
           },
           "declaredClaims": {
             "type": "number"
