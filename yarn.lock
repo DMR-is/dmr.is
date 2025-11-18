@@ -3973,7 +3973,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dmr.is/regulations-tools@npm:^0.10.0":
+"@dmr.is/regulations-tools@npm:0.10.0":
   version: 0.10.0
   resolution: "@dmr.is/regulations-tools@npm:0.10.0"
   dependencies:
@@ -14757,7 +14757,7 @@ __metadata:
     "@aws-sdk/s3-request-presigner": "npm:^3.744.0"
     "@babel/core": "npm:^7.27.4"
     "@babel/preset-react": "npm:^7.27.1"
-    "@dmr.is/regulations-tools": "npm:^0.10.0"
+    "@dmr.is/regulations-tools": "npm:0.10.0"
     "@elastic/elasticsearch": "npm:^7.15.0"
     "@fastify/autoload": "npm:6.0.3"
     "@fastify/basic-auth": "npm:5.1.1"
