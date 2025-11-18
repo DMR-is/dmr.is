@@ -19,22 +19,22 @@ type SettlementAttributes = {
   advertId: string
   liquidatorName: string
   liquidatorLocation: string
-  settlementName: string
-  settlementNationalId: string
-  settlementAddress: string
-  settlementDeadline: Date | null
-  settlementDateOfDeath: Date | null
-  settlementDeclaredClaims: number | null
+  name: string
+  nationalId: string
+  address: string
+  deadline: Date | null
+  dateOfDeath: Date | null
+  declaredClaims: number | null
   liquidatorRecallStatementLocation?: string | null
   liquidatorRecallStatementType?: string | null
 }
 
 export type SettlementCreateAttributes = Omit<
   SettlementAttributes,
-  'advertId' | 'settlementDeclaredClaims'
+  'advertId' | 'declaredClaims'
 > & {
   advertId?: string
-  settlementDeclaredClaims?: number | null
+  declaredClaims?: number | null
 }
 
 @BaseTable({ tableName: LegalGazetteModels.SETTLEMENT })
@@ -80,24 +80,21 @@ export class SettlementModel extends BaseModel<
     allowNull: false,
     field: 'name',
   })
-  @ApiProperty({ type: String })
-  settlementName!: string
+  name!: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: false,
     field: 'national_id',
   })
-  @ApiProperty({ type: String })
-  settlementNationalId!: string
+  nationalId!: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: false,
     field: 'address',
   })
-  @ApiProperty({ type: String })
-  settlementAddress!: string
+  address!: string
 
   @Column({
     type: DataType.DATE,
@@ -105,8 +102,7 @@ export class SettlementModel extends BaseModel<
     defaultValue: null,
     field: 'deadline_date',
   })
-  @ApiProperty({ type: String, required: false })
-  settlementDeadline!: Date | null
+  deadline!: Date | null
 
   @Column({
     type: DataType.DATE,
@@ -114,8 +110,7 @@ export class SettlementModel extends BaseModel<
     defaultValue: null,
     field: 'date_of_death',
   })
-  @ApiProperty({ type: String, required: false })
-  settlementDateOfDeath!: Date | null
+  dateOfDeath!: Date | null
 
   @Column({
     type: DataType.INTEGER,
@@ -136,15 +131,11 @@ export class SettlementModel extends BaseModel<
       liquidatorRecallStatementLocation:
         model.liquidatorRecallStatementLocation,
       liquidatorRecallStatementType: model.liquidatorRecallStatementType,
-      settlementName: model.settlementName,
-      settlementNationalId: model.settlementNationalId,
-      settlementAddress: model.settlementAddress,
-      settlementDeadline: model.settlementDeadline
-        ? model.settlementDeadline.toISOString()
-        : null,
-      settlementDateOfDeath: model.settlementDateOfDeath
-        ? model.settlementDateOfDeath.toISOString()
-        : null,
+      name: model.name,
+      nationalId: model.nationalId,
+      address: model.address,
+      deadline: model.deadline ? model.deadline.toISOString() : null,
+      dateOfDeath: model.dateOfDeath ? model.dateOfDeath.toISOString() : null,
       declaredClaims: model.declaredClaims,
     }
   }
@@ -160,19 +151,19 @@ export class SettlementDto extends PickType(SettlementModel, [
   'liquidatorLocation',
   'liquidatorRecallStatementLocation',
   'liquidatorRecallStatementType',
-  'settlementName',
-  'settlementNationalId',
-  'settlementAddress',
+  'name',
+  'nationalId',
+  'address',
   'declaredClaims',
 ] as const) {
   @ApiProperty({ type: String, required: true, nullable: true })
   @ValidateIf((o) => o.settlementDeadline !== null)
   @IsDateString()
-  settlementDeadline!: string | null
+  deadline!: string | null
   @ApiProperty({ type: String, required: false, nullable: true })
   @ValidateIf((o) => o.settlementDateOfDeath !== null)
   @IsDateString()
-  settlementDateOfDeath!: string | null
+  dateOfDeath!: string | null
 }
 
 export class CreateSettlementDto {

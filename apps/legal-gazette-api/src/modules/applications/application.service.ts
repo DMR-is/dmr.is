@@ -368,35 +368,25 @@ export class ApplicationService implements IApplicationService {
       advertSettlement.settlementId,
     )
 
-    await settlement.update({ settlementDeclaredClaims: body.declaredClaims })
+    await settlement.update({ declaredClaims: body.declaredClaims })
 
-    let communicationChannels: CommunicationChannelCreateAttributes[] = []
+    const recallAdvert = await this.advertModel.unscoped().findOneOrThrow({
+      attributes: ['id', 'judgementDate'],
+      include: [{ model: CommunicationChannelModel }],
+      where: {
+        caseId: application.caseId,
+        categoryId: RECALL_CATEGORY_ID,
+      },
+    })
 
-    if (body.communicationChannels && body.communicationChannels.length > 0) {
-      communicationChannels = body.communicationChannels
-    } else {
-      const recallAdvert = await this.advertModel.unscoped().findOneOrThrow({
-        attributes: ['id'],
-        include: [{ model: CommunicationChannelModel }],
-        where: {
-          caseId: application.caseId,
-          categoryId: RECALL_CATEGORY_ID,
-        },
-      })
-
-      if (
-        recallAdvert.communicationChannels &&
-        recallAdvert.communicationChannels.length
-      ) {
-        communicationChannels = recallAdvert.communicationChannels.map(
-          (ch) => ({
+    const communicationChannels: CommunicationChannelCreateAttributes[] =
+      body.communicationChannels
+        ? body.communicationChannels
+        : recallAdvert.communicationChannels.map((ch) => ({
             email: ch.email,
             name: ch.name,
             phone: ch.phone,
-          }),
-        )
-      }
-    }
+          }))
 
     await this.advertService.createAdvert({
       caseId: application.caseId,
@@ -411,6 +401,7 @@ export class ApplicationService implements IApplicationService {
       title: `Skiptalok - ${application.settlementName}`,
       additionalText: body.additionalText,
       settlementId: settlement.id,
+      judgementDate: recallAdvert?.judgementDate?.toISOString(),
       communicationChannels: communicationChannels.map((ch) => ({
         email: ch.email,
         name: ch.name ?? undefined,

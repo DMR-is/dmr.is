@@ -212,16 +212,16 @@ export class AdvertService implements IAdvertService {
                 body.settlement.liquidatorRecallStatementType,
               liquidatorRecallStatementLocation:
                 body.settlement.liquidatorRecallStatementLocation,
-              settlementAddress: body.settlement.settlementAddress,
-              settlementDateOfDeath: body.settlement.settlementDateOfDeath
+              address: body.settlement.settlementAddress,
+              dateOfDeath: body.settlement.settlementDateOfDeath
                 ? new Date(body.settlement.settlementDateOfDeath)
                 : null,
-              settlementDeadline: body.settlement.settlementDeadline
+              deadline: body.settlement.settlementDeadline
                 ? new Date(body.settlement.settlementDeadline)
                 : null,
-              settlementName: body.settlement.settlementName,
-              settlementNationalId: body.settlement.settlementNationalId,
-              settlementDeclaredClaims: body.settlement.declaredClaims,
+              name: body.settlement.settlementName,
+              nationalId: body.settlement.settlementNationalId,
+              declaredClaims: body.settlement.declaredClaims ?? null,
             }
           : undefined,
       },
