@@ -1,7 +1,7 @@
 import esb from 'elastic-builder'
 import xss from 'xss'
 
-import { ensureReasonableYear } from '@island.is/regulations-tools/utils'
+import { ensureReasonableYear } from '@dmr.is/regulations-tools/utils'
 
 import { PER_PAGE } from '../db/Regulations'
 import {

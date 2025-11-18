@@ -1,4 +1,4 @@
-import { RegName } from '@island.is/regulations-tools/types'
+import { RegName } from '@dmr.is/regulations-tools/types'
 
 import { DRAFTS_FOLDER, FILE_SERVER, MEDIA_BUCKET_FOLDER } from '../constants'
 import { _fileUrlsMapper } from './file-upload-urls'

@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { BindOrReplacements, QueryTypes } from 'sequelize'
 
-import { eliminateComments } from '@island.is/regulations-tools/textHelpers'
+import { eliminateComments } from '@dmr.is/regulations-tools/textHelpers'
 
 import { DB_Regulation, DB_Task } from '../models'
 import {

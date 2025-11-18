@@ -3,40 +3,40 @@ import type {
   Ministry,
   RegName,
   Year,
-} from '@island.is/regulations-tools/types';
+} from '@dmr.is/regulations-tools/types'
 
 // ---------------------------------------------------------------------------
 
 // Years
-export type RegulationYears = Array<Year>;
+export type RegulationYears = Array<Year>
 
 // ---------------------------------------------------------------------------
 
 // Regulations list
 export type RegulationListItem = {
   /** Publication name */
-  name: RegName;
+  name: RegName
   /** The title of the Regulation */
-  title: string;
+  title: string
   /** The ministry that the regulation is linked to */
-  ministry?: Ministry;
+  ministry?: Ministry
   /** Publication date of this regulation */
-  publishedDate: ISODate;
-};
+  publishedDate: ISODate
+}
 
 export type RegulationSearchResults = {
   /** The number of the current page, 1-based  */
-  page: number;
+  page: number
   /** Total number of pages available for this query */
-  perPage: number;
+  perPage: number
   /** Total number of pages available for this query */
-  totalPages: number;
+  totalPages: number
   /** Total number of items found for this query */
-  totalItems: number;
+  totalItems: number
   /** ReguationListItems for this page */
-  data: Array<RegulationListItem>;
-};
+  data: Array<RegulationListItem>
+}
 
 // ---------------------------------------------------------------------------
 
-export * from '@island.is/regulations-tools/types';
+export * from '@dmr.is/regulations-tools/types'

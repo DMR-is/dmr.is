@@ -39,8 +39,8 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { cleanupSingleEditorOutput } from '@island.is/regulations-tools/cleanupEditorOutput'
-import { HTMLText } from '@island.is/regulations-tools/types'
+import { cleanupSingleEditorOutput } from '@dmr.is/regulations-tools/cleanupEditorOutput'
+import { HTMLText } from '@dmr.is/regulations-tools/types'
 
 import {
   templateAuglysing,

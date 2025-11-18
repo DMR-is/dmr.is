@@ -3,7 +3,7 @@ import {
   diffStyling,
   regulationContentStyling,
 } from '@island.is/regulations/styling'
-import type { EditorClasses } from '@island.is/regulations-tools/Editor'
+import type { EditorClasses } from '@dmr.is/regulations-tools/Editor'
 
 import {
   containerDisabled,
@@ -67,8 +67,8 @@ const addLegened = (
   const content = !$legend
     ? undefined
     : typeof $legend === 'string'
-    ? `"${$legend}"`
-    : $legend.value
+      ? `"${$legend}"`
+      : $legend.value
 
   return {
     position: 'absolute',

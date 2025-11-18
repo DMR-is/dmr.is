@@ -4,7 +4,7 @@ import file_type from 'file-type'
 import fetch from 'node-fetch'
 import { PassThrough, Readable } from 'stream'
 
-import { RegName, URLString } from '@island.is/regulations-tools/types'
+import { RegName, URLString } from '@dmr.is/regulations-tools/types'
 
 import {
   AWS_BUCKET_NAME,

@@ -6,8 +6,8 @@ import { readFile, unlink, writeFile } from 'fs/promises'
 import fetch from 'node-fetch'
 import path from 'path'
 
-import { cleanTitle } from '@island.is/regulations-tools/cleanTitle'
-import { cleanupAllEditorOutputs } from '@island.is/regulations-tools/cleanupEditorOutput'
+import { cleanTitle } from '@dmr.is/regulations-tools/cleanTitle'
+import { cleanupAllEditorOutputs } from '@dmr.is/regulations-tools/cleanupEditorOutput'
 import {
   ensureISODate,
   ensureRegName,
@@ -17,7 +17,7 @@ import {
   slugToName,
   toISODate,
   toISODateTime,
-} from '@island.is/regulations-tools/utils'
+} from '@dmr.is/regulations-tools/utils'
 
 import {
   AWS_BUCKET_NAME,

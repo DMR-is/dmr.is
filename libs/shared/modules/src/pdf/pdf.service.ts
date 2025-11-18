@@ -19,8 +19,8 @@ import {
   retryAsync,
 } from '@dmr.is/utils'
 
-import { cleanupSingleEditorOutput } from '@island.is/regulations-tools/cleanupEditorOutput'
-import { HTMLText } from '@island.is/regulations-tools/types'
+import { cleanupSingleEditorOutput } from '@dmr.is/regulations-tools/cleanupEditorOutput'
+import { HTMLText } from '@dmr.is/regulations-tools/types'
 
 import { caseDetailedMigrate } from '../case/migrations/case-detailed.migrate'
 import { IUtilityService } from '../utility/utility.module'

@@ -1,6 +1,6 @@
 import { FastifyPluginCallback } from 'fastify'
 
-import { ensureRegName } from '@island.is/regulations-tools/utils'
+import { ensureRegName } from '@dmr.is/regulations-tools/utils'
 
 import { DRAFTS_FOLDER, FILE_SERVER } from '../constants'
 import { fileUploader, MulterS3StorageFile } from '../utils/file-upload'

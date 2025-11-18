@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 
-import { Editor, EditorFileUploader } from '@island.is/regulations-tools/Editor'
-import { HTMLText } from '@island.is/regulations-tools/types'
+import { Editor, EditorFileUploader } from '@dmr.is/regulations-tools/Editor'
+import { HTMLText } from '@dmr.is/regulations-tools/types'
 
 import { classes } from './Editor.css'
 

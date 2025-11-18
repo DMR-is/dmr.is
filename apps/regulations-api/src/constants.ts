@@ -1,4 +1,4 @@
-import { ensurePosInt } from '@island.is/regulations-tools/utils'
+import { ensurePosInt } from '@dmr.is/regulations-tools/utils'
 
 const AWS_PRESIGNED_POST_EXPIRES_DEFAULT = 600
 
@@ -34,7 +34,7 @@ export const API_URL = API_SERVER + '/api/v1/regulation'
 
 export const PDF_TEMPLATE_UPDATED = '2022-02-26T15:40'
 
-export { FILE_SERVER } from '@island.is/regulations-tools/constants'
+export { FILE_SERVER } from '@dmr.is/regulations-tools/constants'
 
 /** prefix/root-folder for uploading files/documents for draft regulations */
 export const DRAFTS_FOLDER = 'admin-drafts'
