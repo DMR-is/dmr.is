@@ -12,12 +12,15 @@ import {
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { PersonDto } from '@dmr.is/clients/national-registry'
 import { CurrentUser } from '@dmr.is/decorators'
 import { Scopes, ScopesGuard, TokenJwtAuthGuard } from '@dmr.is/modules'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
+import { CurrentSubmittee } from '../../core/decorators/current-submittee.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
+import { CurrentNationalRegistryPersonGuard } from '../../core/guards/current-submitte.guard'
 import {
   AddDivisionEndingForApplicationDto,
   AddDivisionMeetingForApplicationDto,
@@ -111,29 +114,31 @@ export class ApplicationController {
 
   @Post(':applicationId/addDivisionMeetingAdvertToApplication')
   @LGResponse({ operationId: 'addDivisionMeetingAdvertToApplication' })
+  @UseGuards(CurrentNationalRegistryPersonGuard)
   async addDivisionMeetingAdvert(
     @Param('applicationId') applicationId: string,
     @Body() body: AddDivisionMeetingForApplicationDto,
-    @CurrentUser() user: DMRUser,
+    @CurrentSubmittee() submittee: PersonDto,
   ): Promise<void> {
     return this.applicationService.addDivisionMeetingAdvertToApplication(
       applicationId,
       body,
-      user,
+      submittee,
     )
   }
 
   @Post(':applicationId/addDivisionEndingAdvertToApplication')
   @LGResponse({ operationId: 'addDivisionEndingAdvertToApplication' })
+  @UseGuards(CurrentNationalRegistryPersonGuard)
   async addDivisionEndingAdvertToApplication(
     @Param('applicationId') applicationId: string,
     @Body() body: AddDivisionEndingForApplicationDto,
-    @CurrentUser() user: DMRUser,
+    @CurrentSubmittee() submittee: PersonDto,
   ): Promise<void> {
     return this.applicationService.addDivisionEndingAdvertToApplication(
       applicationId,
       body,
-      user,
+      submittee,
     )
   }
 }
