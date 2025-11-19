@@ -30,7 +30,7 @@ import {
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common'
-import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
+import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
 
 import { getLogger } from '@dmr.is/logging'
 import { Paging } from '@dmr.is/shared/dto'
@@ -919,7 +919,7 @@ export class GetAdvertsStatusCounterDto {
   published!: AdvertStatusCounterItemDto
 }
 
-export class CreateAdvertDto extends PickType(AdvertModel, [
+export class CreateAdvertInternalDto extends PickType(AdvertModel, [
   'caseId',
   'islandIsApplicationId',
   'typeId',
@@ -1000,6 +1000,13 @@ export class CreateAdvertDto extends PickType(AdvertModel, [
   settlement?: CreateSettlementDto | null
 }
 
+export class CreateAdvertDto extends OmitType(CreateAdvertInternalDto, [
+  'statusId',
+  'createdBy',
+  'createdByNationalId',
+  'islandIsApplicationId',
+] as const) {}
+
 export class UpdateAdvertDto extends PartialType(
   PickType(AdvertDetailedDto, [
     'content',
@@ -1055,4 +1062,9 @@ export class PublishAdvertsBody {
   @IsArray()
   @IsUUID(undefined, { each: true })
   advertIds!: string[]
+}
+
+export class CreateAdvertResponseDto {
+  @ApiProperty({ type: String })
+  id!: string
 }

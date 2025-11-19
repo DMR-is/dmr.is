@@ -12,7 +12,7 @@ import { LegalGazetteEvents } from '../../core/constants'
 import {
   AdvertDetailedDto,
   AdvertModel,
-  CreateAdvertDto,
+  CreateAdvertInternalDto,
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
@@ -161,7 +161,7 @@ export class AdvertService implements IAdvertService {
     })
   }
 
-  async createAdvert(body: CreateAdvertDto): Promise<{ id: string }> {
+  async createAdvert(body: CreateAdvertInternalDto): Promise<{ id: string }> {
     const includeArr: Includeable[] = []
 
     if (body.communicationChannels) {

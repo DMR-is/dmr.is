@@ -2115,6 +2115,23 @@
         "tags": ["AdvertPublish"]
       }
     },
+    "/api/v1/adverts/create": {
+      "post": {
+        "operationId": "AdvertCreateController_createAdvert_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateAdvertDto" }
+            }
+          }
+        },
+        "responses": { "201": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "tags": ["AdvertCreate"]
+      }
+    },
     "/api/v1/publications": {
       "get": {
         "operationId": "getPublications",
@@ -5465,6 +5482,82 @@
         },
         "required": ["advertIds"]
       },
+      "CreateCommunicationChannelDto": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "phone": { "type": "string" }
+        },
+        "required": ["email"]
+      },
+      "CreateSettlementDto": {
+        "type": "object",
+        "properties": {
+          "liquidatorName": { "type": "string" },
+          "liquidatorLocation": { "type": "string" },
+          "liquidatorRecallStatementLocation": { "type": "string" },
+          "liquidatorRecallStatementType": { "type": "string" },
+          "settlementName": { "type": "string" },
+          "settlementNationalId": { "type": "string" },
+          "settlementAddress": { "type": "string" },
+          "declaredClaims": { "type": "number" },
+          "settlementDeadline": { "type": "string" },
+          "settlementDateOfDeath": { "type": "string" }
+        },
+        "required": [
+          "liquidatorName",
+          "liquidatorLocation",
+          "settlementName",
+          "settlementNationalId",
+          "settlementAddress"
+        ]
+      },
+      "CreateAdvertDto": {
+        "type": "object",
+        "properties": {
+          "caseId": { "type": "string", "nullable": true },
+          "courtDistrictId": { "type": "string", "nullable": true },
+          "settlementId": { "type": "string", "nullable": true },
+          "typeId": { "type": "string" },
+          "categoryId": { "type": "string" },
+          "title": { "type": "string" },
+          "legacyHtml": { "type": "string", "nullable": true },
+          "signatureName": { "type": "string", "nullable": true },
+          "signatureOnBehalfOf": { "type": "string", "nullable": true },
+          "signatureLocation": { "type": "string", "nullable": true },
+          "additionalText": { "type": "string", "nullable": true },
+          "caption": { "type": "string", "nullable": true },
+          "content": { "type": "string" },
+          "divisionMeetingLocation": { "type": "string", "nullable": true },
+          "signatureDate": {
+            "type": "string",
+            "description": "Date of signature"
+          },
+          "judgementDate": { "type": "string" },
+          "divisionMeetingDate": { "type": "string" },
+          "scheduledAt": {
+            "description": "List of scheduled publication dates",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "communicationChannels": {
+            "description": "List of communication channels for notifications",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
+          },
+          "settlement": { "$ref": "#/components/schemas/CreateSettlementDto" }
+        },
+        "required": [
+          "typeId",
+          "categoryId",
+          "title",
+          "scheduledAt",
+          "communicationChannels"
+        ]
+      },
       "TypeIdEnum": {
         "type": "string",
         "enum": [
@@ -5695,15 +5788,6 @@
         "type": "object",
         "properties": { "publishingDate": { "type": "string" } },
         "required": ["publishingDate"]
-      },
-      "CreateCommunicationChannelDto": {
-        "type": "object",
-        "properties": {
-          "email": { "type": "string" },
-          "name": { "type": "string" },
-          "phone": { "type": "string" }
-        },
-        "required": ["email"]
       },
       "ApplicationDetailedDto": {
         "type": "object",
