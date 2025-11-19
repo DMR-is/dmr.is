@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { communicationChannelSchema } from '@dmr.is/legal-gazette/schemas'
 import { createTRPCError } from '@dmr.is/trpc/utils/errorHandler'
 
 import { SortDirectionEnum, StatusIdEnum } from '../../../../gen/fetch'
@@ -37,7 +38,23 @@ const updateAdvertDtoSchema = z.object({
   courtDistrictId: z.string().optional(),
 })
 
+export const createAdvertDtoSchema = z.object({
+  typeId: z.string(),
+  categoryId: z.string(),
+  title: z.string(),
+  content: z.string(),
+  scheduledAt: z.array(z.string()),
+  communicationChannels: z.array(communicationChannelSchema),
+})
+
 export const advertsRouter = router({
+  createAdvert: protectedProcedure
+    .input(createAdvertDtoSchema)
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.adverts.createApi.createAdvert({
+        createAdvertDto: input,
+      })
+    }),
   getAdvert: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {

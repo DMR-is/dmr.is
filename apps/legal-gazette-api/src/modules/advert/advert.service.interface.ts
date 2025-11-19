@@ -2,7 +2,7 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 
 import {
   AdvertDetailedDto,
-  CreateAdvertDto,
+  CreateAdvertInternalDto,
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
@@ -32,7 +32,7 @@ export interface IAdvertService {
 
   assignAdvertToEmployee(advertId: string, userId: string): Promise<void>
 
-  createAdvert(body: CreateAdvertDto): Promise<{ id: string }>
+  createAdvert(body: CreateAdvertInternalDto): Promise<{ id: string }>
 }
 
 export const IAdvertService = Symbol('IAdvertService')

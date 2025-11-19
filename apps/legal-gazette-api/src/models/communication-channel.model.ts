@@ -99,7 +99,7 @@ export class CreateCommunicationChannelDto {
   @ApiProperty({ type: String, required: false })
   @IsOptional()
   @IsString()
-  @MinLength(1)
+  @MinLength(0)
   @MaxLength(255)
   name?: string
 
@@ -109,7 +109,7 @@ export class CreateCommunicationChannelDto {
   })
   @IsOptional()
   @IsString()
-  @MinLength(1)
+  @MinLength(0)
   @MaxLength(255)
   phone?: string
 }

@@ -1,5 +1,7 @@
 import { Transform, Type } from 'class-transformer'
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
   IsArray,
   IsBoolean,
   IsDateString,
@@ -30,7 +32,7 @@ import {
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common'
-import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
+import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
 
 import { getLogger } from '@dmr.is/logging'
 import { Paging } from '@dmr.is/shared/dto'
@@ -343,6 +345,7 @@ export class AdvertModel extends BaseModel<
   })
   @ForeignKey(() => TypeModel)
   @ApiProperty({ type: String })
+  @IsString()
   typeId!: TypeIdEnum | string
 
   @Column({
@@ -352,6 +355,7 @@ export class AdvertModel extends BaseModel<
   })
   @ForeignKey(() => CategoryModel)
   @ApiProperty({ type: String })
+  @IsString()
   categoryId!: string
 
   @Column({
@@ -377,6 +381,7 @@ export class AdvertModel extends BaseModel<
     allowNull: false,
   })
   @ApiProperty({ type: String })
+  @IsString()
   title!: string
 
   @Column({
@@ -448,6 +453,8 @@ export class AdvertModel extends BaseModel<
     allowNull: true,
   })
   @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
   content?: string | null
 
   @Column({
@@ -919,7 +926,7 @@ export class GetAdvertsStatusCounterDto {
   published!: AdvertStatusCounterItemDto
 }
 
-export class CreateAdvertDto extends PickType(AdvertModel, [
+export class CreateAdvertInternalDto extends PickType(AdvertModel, [
   'caseId',
   'islandIsApplicationId',
   'typeId',
@@ -976,8 +983,8 @@ export class CreateAdvertDto extends PickType(AdvertModel, [
   })
   @IsArray()
   @IsDateString(undefined, { each: true })
-  @MinLength(1, { each: true })
-  @MaxLength(3, { each: true })
+  @ArrayMinSize(1)
+  @ArrayMaxSize(3)
   scheduledAt!: string[]
 
   @ApiProperty({
@@ -999,6 +1006,13 @@ export class CreateAdvertDto extends PickType(AdvertModel, [
   @Type(() => CreateSettlementDto)
   settlement?: CreateSettlementDto | null
 }
+
+export class CreateAdvertDto extends OmitType(CreateAdvertInternalDto, [
+  'statusId',
+  'createdBy',
+  'createdByNationalId',
+  'islandIsApplicationId',
+] as const) {}
 
 export class UpdateAdvertDto extends PartialType(
   PickType(AdvertDetailedDto, [
@@ -1055,4 +1069,9 @@ export class PublishAdvertsBody {
   @IsArray()
   @IsUUID(undefined, { each: true })
   advertIds!: string[]
+}
+
+export class CreateAdvertResponseDto {
+  @ApiProperty({ type: String })
+  id!: string
 }

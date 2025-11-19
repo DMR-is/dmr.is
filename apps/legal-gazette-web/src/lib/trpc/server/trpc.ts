@@ -17,6 +17,7 @@ export const createTRPCContext = cache(async () => {
     adverts: {
       baseApi: await getServerClient('AdvertApi', session.idToken),
       updateApi: await getServerClient('AdvertUpdateApi', session.idToken),
+      createApi: await getServerClient('AdvertCreateApi', session.idToken),
     },
     baseEntity: {
       typeApi: await getServerClient('TypeApi', session.idToken),
