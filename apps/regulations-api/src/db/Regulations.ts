@@ -61,16 +61,12 @@ type SQLRegulationsItem = Pick<
 
 export type SQLRegulationsList = ReadonlyArray<SQLRegulationsItem>
 
-export type RegulationListItemFull = Omit<
-  RegulationListItem,
-  'ministry' | 'publishedDate'
-> & {
+export type RegulationListItemFull = Omit<RegulationListItem, 'ministry'> & {
   type: 'amending' | 'base'
   ministry?: RegulationListItem['ministry']
   text?: DB_Regulation['text']
-  effectivedate: ISODate
-  publisheddate: ISODate
-  repealeddate?: ISODate | null
+  effectiveDate: ISODate
+  repealedDate?: ISODate | null
   repealed?: boolean | null
   lawChapters?: ReadonlyArray<LawChapter>
 }
@@ -121,9 +117,9 @@ const augmentRegulationList = async (
         title,
         text: textWithoutComments,
         name,
-        publisheddate,
-        effectivedate,
-        repealeddate: repealeddate ?? undefined,
+        publishedDate: publisheddate,
+        effectiveDate: effectivedate,
+        repealedDate: repealeddate ?? undefined,
         repealed: repealeddate
           ? new Date(repealeddate) <= today
           : !!repealedbeacusereasons,
