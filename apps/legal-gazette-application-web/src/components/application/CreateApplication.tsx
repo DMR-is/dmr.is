@@ -18,10 +18,10 @@ export const CreateApplication = () => {
   const queryClient = useQueryClient()
 
   const { mutate: createApplication, isPending } = useMutation(
-    trpc.applicationApi.createApplication.mutationOptions({
+    trpc.createApplication.mutationOptions({
       onMutate: () => {
         queryClient.invalidateQueries(
-          trpc.applicationApi.getApplications.queryFilter(),
+          trpc.getApplications.queryFilter(),
         )
       },
       onSuccess: (data) => {

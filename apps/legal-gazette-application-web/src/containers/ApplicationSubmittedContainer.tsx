@@ -14,7 +14,7 @@ type Props = {
 export const ApplicationSubmittedContainer = ({ application }: Props) => {
   const trpc = useTRPC()
   const { data, error, isLoading } = useSuspenseQuery(
-    trpc.advertsApi.getAdvertByCaseId.queryOptions({
+    trpc.getAdvertByCaseId.queryOptions({
       caseId: application.caseId,
     }),
   )

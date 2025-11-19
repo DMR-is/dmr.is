@@ -19,7 +19,7 @@ type Props = {
 export function ApplicationsContainer({ searchParams }: Props) {
   const trpc = useTRPC()
   const { data, isLoading, error } = useQuery(
-    trpc.applicationApi.getApplications.queryOptions(),
+    trpc.getApplications.queryOptions(),
   )
 
   if (isLoading) {

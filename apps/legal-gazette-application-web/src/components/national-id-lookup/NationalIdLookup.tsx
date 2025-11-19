@@ -35,7 +35,7 @@ export const NationalIdLookup = ({
   const trpc = useTRPC()
   const { formState } = useFormContext<RecallApplicationSchema>()
   const { mutate, isPending } = useMutation(
-    trpc.nationalRegistryApi.getPersonByNationalId.mutationOptions({
+    trpc.getPersonByNationalId.mutationOptions({
       onMutate: () => {
         setErrorMessage?.(null)
       },

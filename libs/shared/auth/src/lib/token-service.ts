@@ -23,7 +23,12 @@ export const isExpired = (
   return false
 }
 
-export const refreshAccessToken = async (token: JWT, redirectUri?: string, clientId?: string, clientSecret?: string) => {
+export const refreshAccessToken = async (
+  token: JWT,
+  redirectUri?: string,
+  clientId?: string,
+  clientSecret?: string,
+) => {
   try {
     if (!token.refreshToken) {
       logger.error('Refresh token missing', {
@@ -67,7 +72,7 @@ export const refreshAccessToken = async (token: JWT, redirectUri?: string, clien
     logger.info('Token refreshed', {
       metadata: {
         timeNow: new Date().toISOString(),
-        prevExpires: new Date(token.exp as number).toISOString(),
+        prevExpires: new Date((token.exp as number) * 1000).toISOString(),
         newExpires: new Date(expiresIn).toISOString(),
       },
       category: LOGGING_CATEGORY,

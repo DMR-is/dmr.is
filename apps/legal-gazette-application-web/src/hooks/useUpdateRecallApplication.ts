@@ -13,7 +13,7 @@ export const useUpdateRecallApplication = (applicationId: string) => {
   const trpc = useTRPC()
   const { updateApplication } = useUpdateApplication(applicationId)
   const { data: application } = useSuspenseQuery(
-    trpc.applicationApi.getApplicationById.queryOptions({ id: applicationId }),
+    trpc.getApplicationById.queryOptions({ id: applicationId }),
   )
 
   const updateRecallApplication = useCallback(

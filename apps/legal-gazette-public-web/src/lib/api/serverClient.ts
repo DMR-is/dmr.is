@@ -10,5 +10,5 @@ export async function getServerClient() {
     throw new Error('No session found')
   }
 
-  return getClient(session.idToken)
+  return getClient(session.accessToken)
 }
