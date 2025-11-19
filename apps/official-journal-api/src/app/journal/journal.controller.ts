@@ -317,7 +317,7 @@ export class JournalController {
 
   @Get('search-adverts')
   async search(@Query() qp: GetAdvertsQueryParams) {
-    const INDEX_ALIAS = process.env.ADVERTS_SEARCH_ALIAS ?? 'ojoi_test'
+    const INDEX_ALIAS = process.env.ADVERTS_SEARCH_ALIAS ?? 'ojoi_search'
     const q = qp.search?.trim() ?? ''
     const fromValue = qp.pageSize
       ? (qp.page ?? 0) * qp.pageSize

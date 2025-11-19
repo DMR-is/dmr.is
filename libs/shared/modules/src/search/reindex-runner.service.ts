@@ -130,7 +130,7 @@ export class ReindexRunnerService implements IReindexRunnerService {
   }
 
   private async run(jobId: number, maxDocs: number) {
-    const alias = 'ojoi_test'
+    const alias = 'ojoi_search'
     try {
       const startedAt = Date.now()
       const watchdog = setInterval(() => {
