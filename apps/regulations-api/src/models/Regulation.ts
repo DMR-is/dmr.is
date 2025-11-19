@@ -7,14 +7,14 @@ type RegulationAttributes = {
   title: string
   name: RegName
   text: HTMLText
-  signatureDate: ISODate
-  publishedDate: ISODate
-  effectiveDate: ISODate
+  signaturedate: ISODate
+  publisheddate: ISODate
+  effectivedate: ISODate
   updateComment?: string
   status: 'draft' | 'text_locked' | 'migrated'
   type?: 'base' | 'amending'
   ministryid?: number
-  originalDoc?: string
+  originaldoc?: string
 }
 
 @Table({ tableName: 'Regulation', timestamps: false })
@@ -55,19 +55,19 @@ export class DB_Regulation
     comment:
       'Date of physical/official signature by the minister and/or other officials',
   })
-  signatureDate!: ISODate
+  signaturedate!: ISODate
 
   @Column({
     type: DataType.DATEONLY,
     comment: 'Official date of publication in Stjórnartíðindi',
   })
-  publishedDate!: ISODate
+  publisheddate!: ISODate
 
   @Column({
     type: DataType.DATEONLY,
     comment: 'NOTE: This date is for informational purposes only',
   })
-  effectiveDate!: ISODate
+  effectivedate!: ISODate
 
   @Column({
     type: DataType.ENUM('draft', 'text_locked', 'migrated'),
@@ -90,7 +90,7 @@ export class DB_Regulation
   ministryid?: number
 
   @Column({ type: DataType.SMALLINT })
-  repealedBeacuseReasons!: number
+  repealedbeacusereasons!: number
 
   @Column({
     type: DataType.STRING,
@@ -98,5 +98,5 @@ export class DB_Regulation
     comment:
       "URL of the official/original PDF version in Stjórnartíðindi's document store (mostly relevant for older regluations)",
   })
-  originalDoc?: string
+  originaldoc?: string
 }

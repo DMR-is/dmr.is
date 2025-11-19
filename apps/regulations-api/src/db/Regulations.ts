@@ -50,11 +50,11 @@ type SQLRegulationsItem = Pick<
   | 'type'
   | 'title'
   | 'ministryid'
-  | 'publishedDate'
-  | 'effectiveDate'
-  | 'repealedBeacuseReasons'
+  | 'publisheddate'
+  | 'effectivedate'
+  | 'repealedbeacusereasons'
 > & {
-  repealedDate?: ISODate | null
+  repealeddate?: ISODate | null
   text?: DB_Regulation['text']
   migrated?: DB_Task['done']
 }
@@ -90,10 +90,10 @@ const augmentRegulationList = async (
         name,
         title,
         text,
-        publishedDate,
-        effectiveDate,
-        repealedDate,
-        repealedBeacuseReasons,
+        publisheddate,
+        effectivedate,
+        repealeddate,
+        repealedbeacusereasons,
       } = reg
 
       const { ministry, lawChapters } = await promiseAll({
@@ -117,12 +117,12 @@ const augmentRegulationList = async (
         title,
         text: textWithoutComments,
         name,
-        publishedDate,
-        effectiveDate,
-        repealedDate: repealedDate ?? undefined,
-        repealed: repealedDate
-          ? new Date(repealedDate) <= today
-          : !!repealedBeacuseReasons,
+        publishedDate: publisheddate,
+        effectiveDate: effectivedate,
+        repealedDate: repealeddate ?? undefined,
+        repealed: repealeddate
+          ? new Date(repealeddate) <= today
+          : !!repealedbeacusereasons,
         ministry,
         lawChapters,
       }
@@ -297,8 +297,8 @@ export async function getRegulationsOptionsList(
       | 'title'
       | 'type'
       | 'migrated'
-      | 'repealedDate'
-      | 'repealedBeacuseReasons'
+      | 'repealeddate'
+      | 'repealedbeacusereasons'
     >
   >(sql, {
     replacements: { nameFilter },
@@ -312,8 +312,8 @@ export async function getRegulationsOptionsList(
       type: opt.type,
       migrated: !!opt.migrated,
       repealed:
-        (opt.repealedDate && new Date(opt.repealedDate) <= today) ||
-        !!opt.repealedBeacuseReasons
+        (opt.repealeddate && new Date(opt.repealeddate) <= today) ||
+        !!opt.repealedbeacusereasons
           ? true
           : undefined,
       // LawChapters used for suggesting chapters in admin

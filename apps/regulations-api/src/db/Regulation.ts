@@ -199,11 +199,11 @@ const augmentRegulation = async (
     id,
     type,
     name,
-    signatureDate,
-    publishedDate,
-    effectiveDate,
-    originalDoc,
-    repealedBeacuseReasons,
+    signaturedate,
+    publisheddate,
+    effectivedate,
+    originaldoc,
+    repealedbeacusereasons,
   } = regulation
 
   const {
@@ -219,7 +219,7 @@ const augmentRegulation = async (
     effects: getRegulationEffects(id),
     lawChapters: getRegulationLawChapters(id),
     lastAmendDate: getLatestRegulationChange(id).then((change) => change?.date),
-    repealedDate: repealedBeacuseReasons
+    repealedDate: repealedbeacusereasons
       ? undefined
       : getRegulationCancel(id).then((cancel) => {
           const date = cancel?.date
@@ -242,17 +242,17 @@ const augmentRegulation = async (
     text,
     appendixes,
     comments,
-    signatureDate,
-    publishedDate,
-    effectiveDate,
+    signatureDate: signaturedate,
+    publishedDate: publisheddate,
+    effectiveDate: effectivedate,
     ministry,
-    repealed: !!repealedDate || !!repealedBeacuseReasons,
+    repealed: !!repealedDate || !!repealedbeacusereasons,
     repealedDate,
     lastAmendDate,
     lawChapters,
     history,
     effects,
-    originalDoc,
+    originalDoc: originaldoc,
     pdfVersion,
     // timelineDate: undefined,
     // showingDiff: undefined,
@@ -262,13 +262,13 @@ const augmentRegulation = async (
 const getRegulationRedirect = (
   regulation: DB_Regulation,
 ): RegulationRedirect => {
-  const { name, title, originalDoc } = regulation
+  const { name, title, originaldoc } = regulation
   return {
     name,
     title,
     redirectUrl:
       'https://www.reglugerd.is/reglugerdir/allar/nr/' + nameToSlug(name),
-    originalDoc: originalDoc,
+    originalDoc: originaldoc,
   }
 }
 
@@ -308,7 +308,7 @@ export const fetchModifiedDate = async (
     date !== 'current' &&
     (await getLatestRegulationChange(reg.id, date, ['date']))
   // FIXME: The database should be updated to contain lastModified/created timestamps
-  return ((change ? change.date : reg.publishedDate) +
+  return ((change ? change.date : reg.publisheddate) +
     'T08:00:00') as ISODateTime
 }
 
@@ -543,8 +543,8 @@ export async function getRegulation(
 
     diffedRegulation.showingDiff = {
       // from: earlierState.date || regulation.publishedDate,
-      from: fromChange ? fromChange.date : regulation.publishedDate,
-      to: regulationChange ? regulationChange.date : regulation.publishedDate,
+      from: fromChange ? fromChange.date : regulation.publisheddate,
+      to: regulationChange ? regulationChange.date : regulation.publisheddate,
     }
 
     if (_isDateMismatch(diffedRegulation, opts)) {
