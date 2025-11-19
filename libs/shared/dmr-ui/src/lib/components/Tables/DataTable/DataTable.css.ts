@@ -29,23 +29,22 @@ export const emptyRow = style({
 
 export const emptyRowMessageWrapper = style({
   paddingInline: theme.spacing[5],
-  background: theme.color.white,
   position: 'absolute',
   top: '100%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
+
+  '@media': {
+    [`screen and (max-width: ${theme.breakpoints.lg}px)`]: {
+      background: theme.color.white,
+    },
+  },
 })
 export const linkTableCell = style({
   borderBottom: `1px solid ${theme.color.blue200}`,
   position: 'sticky',
   right: -1,
   top: 0,
-
-  '@media': {
-    [`screen and (max-width: ${theme.breakpoints.xl - 1}px)`]: {
-      background: 'inherit',
-    },
-  },
 })
 
 export const linkTableHeaderCell = style({
@@ -56,10 +55,12 @@ export const linkTableHeaderCell = style({
 export const seeMoreTableCellLink = recipe({
   base: {
     display: 'block',
-    background: 'inherit',
     padding: theme.spacing[2],
 
     '@media': {
+      [`screen and (max-width: ${theme.breakpoints.xl}px)`]: {
+        background: theme.color.white,
+      },
       [`screen and (min-width: ${theme.breakpoints.xl}px)`]: {
         visibility: 'hidden',
       },
@@ -71,7 +72,6 @@ export const seeMoreTableCellLink = recipe({
         '@media': {
           [`screen and (min-width: ${theme.breakpoints.xl}px)`]: {
             visibility: 'visible',
-            background: theme.color.blue100,
           },
         },
       },

@@ -12,7 +12,7 @@ import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 
 import { Tag } from '@island.is/island-ui/core'
 
-import { BaseEntityDto } from '../gen/fetch'
+import { BaseEntityDto, SortDirectionEnum } from '../gen/fetch'
 import { QueryParams } from '../lib/constants'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
@@ -31,7 +31,7 @@ interface Params {
   [QueryParams.DATE_FROM]?: Date | null
   [QueryParams.DATE_TO]?: Date | null
   [QueryParams.SORT_BY]?: string | null
-  [QueryParams.DIRECTION]: 'asc' | 'desc'
+  [QueryParams.DIRECTION]?: SortDirectionEnum | null
 }
 
 type ActiveFilters = {
@@ -54,6 +54,7 @@ export type FilterContextState = {
   setParams: (params: Partial<Params>) => Promise<URLSearchParams>
   activeFilters: ActiveFilters[]
   resetParams: () => void
+  handleSort: (field: string) => void
 }
 
 export const FilterContext = createContext<FilterContextState>({
@@ -70,6 +71,7 @@ export const FilterContext = createContext<FilterContextState>({
   setParams: async () => new URLSearchParams(),
   activeFilters: [],
   resetParams: () => undefined,
+  handleSort: () => undefined,
 })
 
 type FilterProviderProps = {
@@ -103,8 +105,8 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
       [QueryParams.DATE_FROM]: parseAsIsoDate,
       [QueryParams.DATE_TO]: parseAsIsoDate,
       [QueryParams.SORT_BY]: parseAsString,
-      [QueryParams.DIRECTION]: parseAsStringEnum(['asc', 'desc']).withDefault(
-        'desc',
+      [QueryParams.DIRECTION]: parseAsStringEnum(
+        Object.values(SortDirectionEnum),
       ),
     },
     {
@@ -115,7 +117,6 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
       },
     },
   )
-
   const resetSearchParams = () => {
     setSearchParams({
       [QueryParams.SEARCH]: '',
@@ -127,7 +128,7 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
       [QueryParams.DATE_FROM]: null,
       [QueryParams.DATE_TO]: null,
       [QueryParams.SORT_BY]: null,
-      [QueryParams.DIRECTION]: 'asc',
+      [QueryParams.DIRECTION]: SortDirectionEnum.Asc,
     })
   }
 
@@ -272,6 +273,28 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
     return setSearchParams(updatedParams)
   }
 
+  const handleSort = (field: string) => {
+    const isSameField = searchParams.sortBy === field
+
+    if (isSameField) {
+      return setSearchParams((prev) => ({
+        ...prev,
+        page: 1,
+        direction:
+          searchParams.direction === SortDirectionEnum.Asc
+            ? SortDirectionEnum.Desc
+            : SortDirectionEnum.Asc,
+      }))
+    }
+
+    setSearchParams((prev) => ({
+      ...prev,
+      sortBy: field,
+      direction: SortDirectionEnum.Asc,
+      page: 1,
+    }))
+  }
+
   return (
     <FilterContext.Provider
       value={{
@@ -288,6 +311,7 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
         setParams: setParams,
         activeFilters: activeFilters,
         resetParams: resetSearchParams,
+        handleSort,
       }}
     >
       {children}

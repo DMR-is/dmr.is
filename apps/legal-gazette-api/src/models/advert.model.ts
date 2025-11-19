@@ -12,7 +12,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator'
-import { BulkCreateOptions, Op, WhereOptions } from 'sequelize'
+import { BulkCreateOptions, Op, OrderItem, WhereOptions } from 'sequelize'
 import {
   BeforeBulkCreate,
   BelongsTo,
@@ -23,26 +23,23 @@ import {
   HasMany,
   HasOne,
   Scopes,
+  Sequelize,
 } from 'sequelize-typescript'
 
 import {
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common'
-import {
-  ApiProperty,
-  IntersectionType,
-  PartialType,
-  PickType,
-} from '@nestjs/swagger'
+import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
 
 import { getLogger } from '@dmr.is/logging'
-import { Paging, PagingQuery } from '@dmr.is/shared/dto'
+import { Paging } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { cleanLegacyHtml } from '@dmr.is/utils'
 
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'
+import { QueryDto } from '../core/dto/query.dto'
 import { getAdvertHTMLMarkup } from '../core/templates'
 import {
   AdvertPublicationDto,
@@ -223,6 +220,49 @@ export type AdvertCreateAttributes = {
       })
     }
 
+    const sortByKey = query.sortBy || 'birting'
+    const direction = query.direction || 'ASC'
+
+    if (sortByKey === 'birting') {
+      return {
+        include: [
+          { model: StatusModel },
+          { model: CategoryModel },
+          { model: CourtDistrictModel },
+          { model: TypeModel },
+          { model: UserModel },
+          {
+            model: AdvertPublicationModel,
+            where: {
+              publishedAt: null,
+              deletedAt: null,
+            },
+            required: false,
+            separate: true,
+          },
+          { model: SettlementModel },
+          { model: CommunicationChannelModel, separate: true },
+          { model: TBRTransactionModel },
+          { model: CommentModel, separate: true },
+          { model: ForeclosureModel },
+        ],
+        where: whereOptions,
+        order: [
+          [
+            Sequelize.literal(`(
+          SELECT MIN("publications"."scheduled_at")
+          FROM "advert_publication" AS "publications"
+          WHERE "publications"."advert_id" = "AdvertModel"."id"
+          AND "publications"."deleted_at" IS NULL
+          AND "publications"."published_at" IS NULL
+        )`),
+            direction,
+          ],
+        ],
+        subQuery: false,
+      }
+    }
+
     return {
       include: [
         { model: StatusModel },
@@ -238,6 +278,7 @@ export type AdvertCreateAttributes = {
         { model: ForeclosureModel },
       ],
       where: whereOptions,
+      order: [['createdAt', direction]],
     }
   },
 }))
@@ -803,7 +844,7 @@ export class GetAdvertsDto {
   paging!: Paging
 }
 
-export class GetAdvertsQueryDto extends PagingQuery {
+export class GetAdvertsQueryDto extends QueryDto {
   @ApiProperty({
     type: [String],
     required: false,
@@ -851,32 +892,6 @@ export class GetAdvertsQueryDto extends PagingQuery {
   @IsArray()
   @IsUUID(undefined, { each: true })
   typeId?: string[]
-
-  @ApiProperty({
-    type: String,
-    required: false,
-  })
-  @IsOptional()
-  @IsDateString()
-  @Transform(({ value }) => (value ? new Date(value).toISOString() : null))
-  dateFrom?: string
-
-  @ApiProperty({
-    type: String,
-    required: false,
-  })
-  @IsOptional()
-  @IsDateString()
-  @Transform(({ value }) => (value ? new Date(value).toISOString() : null))
-  dateTo?: string
-
-  @ApiProperty({
-    type: String,
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  search?: string
 }
 
 export class AdvertStatusCounterItemDto {

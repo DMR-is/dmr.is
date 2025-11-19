@@ -109,6 +109,7 @@ export const FilterMenu = () => {
                       )
                       return (
                         <Checkbox
+                          id={`checkbox-filter-${filter.queryParam}-${j}`}
                           checked={isChecked}
                           key={j}
                           label={option.label}

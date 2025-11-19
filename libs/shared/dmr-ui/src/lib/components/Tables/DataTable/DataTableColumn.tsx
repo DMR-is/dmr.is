@@ -13,6 +13,7 @@ export const DataTableColumn = ({
   children,
   size,
   sortable = false,
+  onSort,
 }: DataTableColumnProps) => {
   const { params, setParams } = useFilters()
   const handleSort = (field: string) => {
@@ -70,7 +71,12 @@ export const DataTableColumn = ({
         textAlign: align,
       }}
     >
-      <Wrapper onClick={() => sortable && handleSort(field)}>
+      <Wrapper
+        onClick={() => {
+          if (!sortable) return
+          onSort ? onSort(field) : handleSort(field)
+        }}
+      >
         <Inline space={1} flexWrap="nowrap" alignY="center">
           {typeof children === 'string' ? (
             <Text variant="medium" fontWeight="semiBold">

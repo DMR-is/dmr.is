@@ -73,7 +73,7 @@ export const SettlementFields = ({
             backgroundColor="blue"
             name="settlement-name"
             label="Heiti bús"
-            defaultValue={settlement.settlementName}
+            defaultValue={settlement.name}
             onBlur={(evt) => updateSettlementName(evt.target.value)}
           />
         </GridColumn>
@@ -84,7 +84,7 @@ export const SettlementFields = ({
             backgroundColor="blue"
             name="settlement-national-id"
             label="Kennitala bús"
-            defaultValue={settlement.settlementNationalId}
+            defaultValue={settlement.nationalId}
             onBlur={(evt) => updateSettlementNationalId(evt.target.value)}
           />
         </GridColumn>
@@ -97,7 +97,7 @@ export const SettlementFields = ({
             backgroundColor="blue"
             name="settlement-address"
             label="Heimilisfang bús"
-            defaultValue={settlement.settlementAddress}
+            defaultValue={settlement.address}
             onBlur={(evt) => updateSettlementAddress(evt.target.value)}
           />
         </GridColumn>
@@ -112,9 +112,7 @@ export const SettlementFields = ({
               label="Frestur til að gera kröfu"
               locale="is"
               selected={
-                settlement.settlementDeadline
-                  ? new Date(settlement.settlementDeadline)
-                  : undefined
+                settlement.deadline ? new Date(settlement.deadline) : undefined
               }
               handleChange={(date) => {
                 updateSettlementDeadline(date.toISOString())
@@ -133,8 +131,8 @@ export const SettlementFields = ({
               label="Dánardagur"
               locale="is"
               selected={
-                settlement.settlementDateOfDeath
-                  ? new Date(settlement.settlementDateOfDeath)
+                settlement.dateOfDeath
+                  ? new Date(settlement.dateOfDeath)
                   : undefined
               }
               handleChange={(date) => {
