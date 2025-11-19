@@ -4,8 +4,8 @@ export const dataTablePagination = recipe({
   base: {
     display: 'grid',
     gridTemplateColumns: '9fr 2fr',
-    gap: '0px',
-    alignItems: 'center',
+    gap: '16px',
+    alignItems: 'baseline',
     padding: '0px 16px',
   },
   variants: {
@@ -18,6 +18,9 @@ export const dataTablePagination = recipe({
       },
       large: {
         gridTemplateColumns: '9fr 2fr',
+      },
+      fluid: {
+        gridTemplateColumns: '1fr',
       },
     },
   },

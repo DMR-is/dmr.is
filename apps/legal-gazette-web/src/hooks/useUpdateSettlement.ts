@@ -120,7 +120,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
 
   const updateSettlementName = useCallback(
     (settlementName: string) => {
-      if (advert?.settlement?.settlementName === settlementName) {
+      if (advert?.settlement?.name === settlementName) {
         return
       }
       updateSettlementMutation(
@@ -143,7 +143,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
 
   const updateSettlementAddress = useCallback(
     (settlementAddress: string) => {
-      if (advert?.settlement?.settlementAddress === settlementAddress) {
+      if (advert?.settlement?.address === settlementAddress) {
         return
       }
       updateSettlementMutation(
@@ -166,7 +166,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
 
   const updateSettlementNationalId = useCallback(
     (settlementNationalId: string) => {
-      if (advert?.settlement?.settlementNationalId === settlementNationalId) {
+      if (advert?.settlement?.nationalId === settlementNationalId) {
         return
       }
 
@@ -190,7 +190,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
 
   const updateSettlementDeadline = useCallback(
     (settlementDeadline: string) => {
-      if (advert?.settlement?.settlementDeadline === settlementDeadline) {
+      if (advert?.settlement?.deadline === settlementDeadline) {
         return
       }
 
@@ -214,7 +214,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
 
   const updateSettlementDateOfDeath = useCallback(
     (settlementDateOfDeath: string) => {
-      if (advert?.settlement?.settlementDateOfDeath === settlementDateOfDeath) {
+      if (advert?.settlement?.dateOfDeath === settlementDateOfDeath) {
         return
       }
 
