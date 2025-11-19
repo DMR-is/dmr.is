@@ -7,9 +7,13 @@ const getCategoriesSchema = z.object({
 })
 
 export const baseEntityRouter = router({
-  getTypes: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.baseEntity.typeApi.getTypes({})
-  }),
+  getTypes: protectedProcedure
+    .input(z.object({ excludeUnassignable: z.boolean().optional() }).optional())
+    .query(async ({ input, ctx }) => {
+      return ctx.baseEntity.typeApi.getTypes({
+        excludeUnassignable: input?.excludeUnassignable,
+      })
+    }),
   getCategories: protectedProcedure
     .input(getCategoriesSchema)
     .query(async ({ input, ctx }) => {

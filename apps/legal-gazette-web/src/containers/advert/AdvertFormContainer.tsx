@@ -144,7 +144,6 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
               isDivisionEnding={isDivisionEnding}
             />
           ),
-          hidden: !advert.settlement,
         },
         {
           title: 'Undirritun',

@@ -409,18 +409,7 @@ export const classes: EditorClasses = {
   }),
 }
 
-const { wrapper: _wrapperClass, ...rest } = classes
-
-const wrapperNoMinHeight = style({
-  minHeight: 'auto',
-  maxHeight: 'auto',
-})
-
-export const classesNoMinHeight: EditorClasses = {
-  ...rest,
-  wrapper: wrapperNoMinHeight,
-}
-
+const { wrapper: _wrapperClass } = classes
 // ---------------------------------------------------------------------------
 
 globalStyle(`${classes.toolbar} .tox .tox-menu`, {

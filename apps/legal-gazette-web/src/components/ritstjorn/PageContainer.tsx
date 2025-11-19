@@ -4,6 +4,8 @@ import { parseAsStringEnum, useQueryState } from 'nuqs'
 import { useEffect } from 'react'
 
 import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
+import { Drawer } from '@dmr.is/ui/components/Drawer/Drawer'
+import { Button, Stack } from '@dmr.is/ui/components/island-is'
 
 import {
   GridColumn,
@@ -14,7 +16,8 @@ import {
 
 import { GetAdvertsStatusCounterDto, StatusIdEnum } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
-import {  useTRPC } from '../../lib/trpc/client/trpc'
+import { useTRPC } from '../../lib/trpc/client/trpc'
+import { CreateAdvert } from '../create-advert/CreateAdvert'
 import { RitstjornHero } from '../ritstjorn/Hero'
 import AdvertsCompleted from '../Tables/AdvertsCompleted'
 import PublishingTab from '../tabs/PublishingTab'
@@ -86,29 +89,45 @@ export const PageContainer = ({ advertCount }: Props) => {
       <GridContainer>
         <GridRow>
           <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
-            <Tabs
-              label=""
-              selected={tab ?? 'innsendar'}
-              onChange={handleTabChange}
-              onlyRenderSelectedTab={true}
-              tabs={[
-                {
-                  id: 'innsendar',
-                  label: `Innsendar (${advertCount.submitted.count})`,
-                  content: <SubmittedTab key="submitted-tab" />,
-                },
-                {
-                  id: 'utgafa',
-                  label: `Útgáfa (${advertCount.readyForPublication.count})`,
-                  content: <PublishingTab key="publishing-tab" />,
-                },
-                {
-                  id: 'yfirlit',
-                  label: `Yfirlit (${completedCount})`,
-                  content: <AdvertsCompleted key="overview-tab" />,
-                },
-              ]}
-            />
+            <Stack space={[2, 3, 4]}>
+              <Drawer
+                disclosure={
+                  <Button
+                    variant="utility"
+                    size="small"
+                    icon="document"
+                    iconType="outline"
+                  >
+                    Stofna auglýsingu
+                  </Button>
+                }
+              >
+                <CreateAdvert />
+              </Drawer>
+              <Tabs
+                label=""
+                selected={tab ?? 'innsendar'}
+                onChange={handleTabChange}
+                onlyRenderSelectedTab={true}
+                tabs={[
+                  {
+                    id: 'innsendar',
+                    label: `Innsendar (${advertCount.submitted.count})`,
+                    content: <SubmittedTab key="submitted-tab" />,
+                  },
+                  {
+                    id: 'utgafa',
+                    label: `Útgáfa (${advertCount.readyForPublication.count})`,
+                    content: <PublishingTab key="publishing-tab" />,
+                  },
+                  {
+                    id: 'yfirlit',
+                    label: `Yfirlit (${completedCount})`,
+                    content: <AdvertsCompleted key="overview-tab" />,
+                  },
+                ]}
+              />
+            </Stack>
           </GridColumn>
         </GridRow>
       </GridContainer>

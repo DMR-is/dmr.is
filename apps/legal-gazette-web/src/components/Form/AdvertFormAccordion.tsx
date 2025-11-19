@@ -5,7 +5,6 @@ import React from 'react'
 import {
   Accordion,
   AccordionItem,
-  Button,
   Inline,
 } from '@dmr.is/ui/components/island-is'
 import { Stack } from '@dmr.is/ui/components/island-is'
@@ -47,15 +46,6 @@ export const AdvertFormAccordion = ({ items }: Props) => {
           flexWrap="wrap"
           justifyContent="spaceBetween"
         >
-          <Button
-            onClick={() => alert('í vinnslu')}
-            variant="utility"
-            size="small"
-            icon="open"
-            iconType="outline"
-          >
-            Stofna auglýsingu
-          </Button>
           <OpenCloseButton
             label={isSomeOpen ? 'Loka fellilista' : 'Opna fellista'}
             onClick={() => (isSomeOpen ? closeAll() : expandAll())}

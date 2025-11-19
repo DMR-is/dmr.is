@@ -1,5 +1,7 @@
 import { Transform, Type } from 'class-transformer'
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
   IsArray,
   IsBoolean,
   IsDateString,
@@ -343,6 +345,7 @@ export class AdvertModel extends BaseModel<
   })
   @ForeignKey(() => TypeModel)
   @ApiProperty({ type: String })
+  @IsString()
   typeId!: TypeIdEnum | string
 
   @Column({
@@ -352,6 +355,7 @@ export class AdvertModel extends BaseModel<
   })
   @ForeignKey(() => CategoryModel)
   @ApiProperty({ type: String })
+  @IsString()
   categoryId!: string
 
   @Column({
@@ -377,6 +381,7 @@ export class AdvertModel extends BaseModel<
     allowNull: false,
   })
   @ApiProperty({ type: String })
+  @IsString()
   title!: string
 
   @Column({
@@ -448,6 +453,8 @@ export class AdvertModel extends BaseModel<
     allowNull: true,
   })
   @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
   content?: string | null
 
   @Column({
@@ -976,8 +983,8 @@ export class CreateAdvertInternalDto extends PickType(AdvertModel, [
   })
   @IsArray()
   @IsDateString(undefined, { each: true })
-  @MinLength(1, { each: true })
-  @MaxLength(3, { each: true })
+  @ArrayMinSize(1)
+  @ArrayMaxSize(3)
   scheduledAt!: string[]
 
   @ApiProperty({
