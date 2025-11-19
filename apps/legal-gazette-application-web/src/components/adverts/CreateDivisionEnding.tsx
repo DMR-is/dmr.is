@@ -52,7 +52,7 @@ export const CreateDivisionEnding = ({
   const { id } = useParams()
   const queryClient = useQueryClient()
   const { mutate: addDivisionEnding, isPending } = useMutation(
-    trpc.applicationApi.addDivisionEnding.mutationOptions(),
+    trpc.addDivisionEnding.mutationOptions(),
   )
 
   const [submitClicked, setSubmitClicked] = useState(false)
@@ -93,7 +93,7 @@ export const CreateDivisionEnding = ({
         {
           onSuccess: () => {
             queryClient.invalidateQueries(
-              trpc.advertsApi.getAdvertByCaseId.queryFilter({
+              trpc.getAdvertByCaseId.queryFilter({
                 caseId: id as string,
               }),
             )

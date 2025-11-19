@@ -40,7 +40,7 @@ export const CommonAdvertFields = () => {
     isLoading,
     isPending,
   } = useQuery(
-    trpc.applicationApi.getCategories.queryOptions(
+    trpc.getCategories.queryOptions(
       { typeId: typeId },
       { enabled: !!typeId },
     ),

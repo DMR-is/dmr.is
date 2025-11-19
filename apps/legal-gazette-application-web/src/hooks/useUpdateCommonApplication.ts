@@ -9,7 +9,7 @@ import { UpdateOptions, useUpdateApplication } from './useUpdateApplication'
 export const useUpdateCommonApplication = (applicationId: string) => {
   const trpc = useTRPC()
   const { data: application } = useSuspenseQuery(
-    trpc.applicationApi.getApplicationById.queryOptions({ id: applicationId }),
+    trpc.getApplicationById.queryOptions({ id: applicationId }),
   )
   const { updateApplication } = useUpdateApplication(applicationId)
 

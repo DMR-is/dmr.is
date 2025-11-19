@@ -14,11 +14,11 @@ type Props = {
 export function ApplicationFormContainer({ application }: Props) {
   const trpc = useTRPC()
   const { data } = useSuspenseQuery(
-    trpc.applicationApi.getApplicationById.queryOptions({ id: application.id }),
+    trpc.getApplicationById.queryOptions({ id: application.id }),
   )
 
   const { data: baseEntities } = useSuspenseQuery(
-    trpc.applicationApi.getBaseEntities.queryOptions(),
+    trpc.getBaseEntities.queryOptions(),
   )
 
   const { courtDistricts, types } = baseEntities

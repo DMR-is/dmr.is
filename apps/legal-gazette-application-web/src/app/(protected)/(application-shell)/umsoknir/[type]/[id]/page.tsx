@@ -14,9 +14,9 @@ export default async function ApplicationPage({
     throw new Error('Tegund umsóknar finnst ekki')
   }
 
-  void prefetch(trpc.applicationApi.getBaseEntities.queryOptions())
+  void prefetch(trpc.getBaseEntities.queryOptions())
   const data = await fetchQueryWithHandler(
-    trpc.applicationApi.getApplicationById.queryOptions({
+    trpc.getApplicationById.queryOptions({
       id: params.id,
     }),
   )

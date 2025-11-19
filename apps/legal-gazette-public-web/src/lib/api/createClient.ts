@@ -4,12 +4,12 @@ import { Configuration, LegalGazettePublicAPIApi } from '../../gen/fetch'
 
 let client: LegalGazettePublicAPIApi | undefined
 
-export const getClient = (idToken: string) => {
-  if (typeof window === 'undefined' || !idToken) {
-    return new LegalGazettePublicAPIApi(config(Configuration, idToken, 'LGWeb'))
+export const getClient = (accessToken: string) => {
+  if (typeof window === 'undefined' || !accessToken) {
+    return new LegalGazettePublicAPIApi(config(Configuration, accessToken, 'LGWeb'))
   }
 
   return (client ??= new LegalGazettePublicAPIApi(
-    config(Configuration, idToken, 'LGWeb'),
+    config(Configuration, accessToken, 'LGWeb'),
   ))
 }

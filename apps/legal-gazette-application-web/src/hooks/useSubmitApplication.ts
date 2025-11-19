@@ -9,7 +9,7 @@ export const useSubmitApplication = (applicationId: string) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const { mutate: submitApplication } = useMutation(
-    trpc.applicationApi.submitApplication.mutationOptions(),
+    trpc.submitApplication.mutationOptions(),
   )
 
   const onValidSubmit = () => {
@@ -17,7 +17,7 @@ export const useSubmitApplication = (applicationId: string) => {
       { id: applicationId },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries(trpc.applicationApi.getApplicationById.queryFilter({
+          queryClient.invalidateQueries(trpc.getApplicationById.queryFilter({
             id: applicationId,
           }))
           toast.success('Umsókn hefur verið send inn', {

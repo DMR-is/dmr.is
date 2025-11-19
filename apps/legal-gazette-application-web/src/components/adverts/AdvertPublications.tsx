@@ -28,7 +28,7 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
   const [openModal, setOpenModal] = useState<number | null>(null)
 
   const { mutate: getAdvertPublication } = useMutation(
-    trpc.publicationApi.getAdvertPublication.mutationOptions(),
+    trpc.getAdvertPublication.mutationOptions(),
   )
 
   return (

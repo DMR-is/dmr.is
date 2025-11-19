@@ -52,7 +52,7 @@ export const CreateDivisionMeeting = ({
   const queryClient = useQueryClient()
   const { id: applicationId } = useParams()
   const { mutate: addDivisionMeeting, isPending } = useMutation(
-    trpc.applicationApi.addDivisionMeeting.mutationOptions(),
+    trpc.addDivisionMeeting.mutationOptions(),
   )
   const [submitClicked, setSubmitClicked] = useState(false)
 
@@ -92,7 +92,7 @@ export const CreateDivisionMeeting = ({
         {
           onSuccess: () => {
             queryClient.invalidateQueries(
-              trpc.advertsApi.getAdvertByCaseId.queryFilter({
+              trpc.getAdvertByCaseId.queryFilter({
                 caseId: applicationId as string,
               }),
             )

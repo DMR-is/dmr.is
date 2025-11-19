@@ -36,20 +36,20 @@ export const useUpdateApplication = (applicationId: string) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const { data: application } = useSuspenseQuery(
-    trpc.applicationApi.getApplicationById.queryOptions({ id: applicationId }),
+    trpc.getApplicationById.queryOptions({ id: applicationId }),
   )
 
   const { mutate: updateApplicationMutation } = useMutation(
-    trpc.applicationApi.updateApplication.mutationOptions({
+    trpc.updateApplication.mutationOptions({
       onMutate: async (variables) => {
         await queryClient.cancelQueries(
-          trpc.applicationApi.getApplicationById.queryFilter({
+          trpc.getApplicationById.queryFilter({
             id: applicationId,
           }),
         )
 
         const prevData = queryClient.getQueryData(
-          trpc.applicationApi.getApplicationById.queryKey({
+          trpc.getApplicationById.queryKey({
             id: applicationId,
           }),
         )
@@ -60,7 +60,7 @@ export const useUpdateApplication = (applicationId: string) => {
         )
 
         queryClient.setQueryData(
-          trpc.applicationApi.getApplicationById.queryKey({
+          trpc.getApplicationById.queryKey({
             id: applicationId,
           }),
           optimisticData,
@@ -83,7 +83,7 @@ export const useUpdateApplication = (applicationId: string) => {
         {
           onSuccess: () => {
             queryClient.invalidateQueries(
-              trpc.applicationApi.getApplicationById.queryFilter({
+              trpc.getApplicationById.queryFilter({
                 id: applicationId,
               }),
             )
@@ -96,7 +96,7 @@ export const useUpdateApplication = (applicationId: string) => {
           onError: (_error, _variables, context) => {
             if (context) {
               queryClient.setQueryData(
-                trpc.applicationApi.getApplicationById.queryKey({
+                trpc.getApplicationById.queryKey({
                   id: applicationId,
                 }),
                 context,
