@@ -2,6 +2,7 @@ import { config } from '@dmr.is/api-client/createClient'
 
 import {
   AdvertApi,
+  AdvertCreateApi,
   AdvertPdfApi,
   AdvertPublicationApi,
   AdvertPublishApi,
@@ -41,6 +42,7 @@ const apis = [
   'SettlementApi',
   'CommentApi',
   'CommunicationChannelApi',
+  'AdvertCreateApi',
 ] as const
 
 export type ApiKey = (typeof apis)[number]
@@ -64,6 +66,7 @@ export type ApiClientMap = {
   SettlementApi: SettlementApi
   CommentApi: CommentApi
   CommunicationChannelApi: CommunicationChannelApi
+  AdvertCreateApi: AdvertCreateApi
 }
 
 const ApiConstructors: {
@@ -87,6 +90,7 @@ const ApiConstructors: {
   SettlementApi,
   CommentApi,
   CommunicationChannelApi,
+  AdvertCreateApi,
 }
 
 const apiClients: Partial<{

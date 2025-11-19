@@ -38,6 +38,18 @@ const updateAdvertDtoSchema = z.object({
 })
 
 export const advertsRouter = router({
+  createAdvert: protectedProcedure.mutation(async ({ ctx }) => {
+    return await ctx.adverts.createApi.createAdvert({
+      createAdvertDto: {
+        typeId: '',
+        categoryId: '',
+        title: '',
+        content: '',
+        scheduledAt: [],
+        communicationChannels: [],
+      },
+    })
+  }),
   getAdvert: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
