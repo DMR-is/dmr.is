@@ -275,6 +275,41 @@ export const useUpdateAdvert = (id: string) => {
       }),
     )
 
+  const {
+    mutate: assignAndUpdateStatus,
+    isPending: isAssigningAndUpdatingStatus,
+  } = useMutation(
+    trpc.assignAndUpdateStatus.mutationOptions({
+      onMutate: async (variables) => {
+        await queryClient.cancelQueries(
+          trpc.getAdvert.queryFilter({ id: variables.id }),
+        )
+        const prevData = queryClient.getQueryData(
+          trpc.getAdvert.queryKey({ id: variables.id }),
+        ) as AdvertDetailedDto
+
+        return prevData
+      },
+      onSuccess: (_, variables) => {
+        toast.success('Starfsmaður úthlutaður', {
+          toastId: 'assignUserToAdvert',
+        })
+        queryClient.invalidateQueries(
+          trpc.getAdvert.queryFilter({ id: variables.id }),
+        )
+      },
+      onError: (_, variables, mutateResults) => {
+        toast.error('Ekki tókst að úthluta starfsmanni', {
+          toastId: 'assignUserToAdvertError',
+        })
+        queryClient.setQueryData(
+          trpc.getAdvert.queryKey({ id: variables.id }),
+          mutateResults,
+        )
+      },
+    }),
+  )
+
   const updateAdvert = useCallback(
     (data: UpdateAdvertDto, options: UpdateOptions = {}) => {
       const {
@@ -565,6 +600,8 @@ export const useUpdateAdvert = (id: string) => {
     isMovingToNextStatus,
     isMovingToPreviousStatus,
     isAssigningUser,
+    isAssigningAndUpdatingStatus,
+    assignAndUpdateStatus,
     moveToNextStatus,
     moveToPreviousStatus,
     assignUser,

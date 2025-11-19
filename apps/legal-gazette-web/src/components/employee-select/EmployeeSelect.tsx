@@ -2,10 +2,12 @@
 
 import { Select, SkeletonLoader } from '@dmr.is/ui/components/island-is'
 
+import { StatusIdEnum } from '../../gen/fetch'
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 
 type Props = {
   advertId: string
+  currentStatusId?: string
   assignedUserId?: string
   options?: { label: string; value: string }[]
   isLoading?: boolean
@@ -13,11 +15,13 @@ type Props = {
 
 export const EmployeeSelect = ({
   advertId,
+  currentStatusId,
   assignedUserId,
   options,
   isLoading,
 }: Props) => {
-  const { assignUser, isAssigningUser } = useUpdateAdvert(advertId)
+  const { assignUser, isAssigningUser, assignAndUpdateStatus } =
+    useUpdateAdvert(advertId)
 
   if (isLoading) {
     return (
@@ -40,6 +44,9 @@ export const EmployeeSelect = ({
       defaultValue={selected}
       onChange={(opt) => {
         if (!opt) return
+        if (currentStatusId === StatusIdEnum.SUBMITTED) {
+          return assignAndUpdateStatus({ userId: opt.value, id: advertId })
+        }
         return assignUser(opt.value)
       }}
     />

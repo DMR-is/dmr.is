@@ -6,9 +6,7 @@ import { ChangeStatusButtons } from '../../components/buttons/ChangeStatusButton
 import { EmployeeSelect } from '../../components/employee-select/EmployeeSelect'
 import { AdvertFormStepper } from '../../components/Form/AdvertFormStepper'
 import { AdvertSidebar } from '../../components/Form/FormSidebar'
-import {
-  useTRPC,
-} from '../../lib/trpc/client/trpc'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 
 type AdvertContainerProps = {
   id: string
@@ -24,6 +22,7 @@ export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
   return (
     <AdvertSidebar>
       <EmployeeSelect
+        currentStatusId={advert.status.id}
         isLoading={isLoadingEmployees}
         advertId={advert.id}
         assignedUserId={advert.assignedUser}
