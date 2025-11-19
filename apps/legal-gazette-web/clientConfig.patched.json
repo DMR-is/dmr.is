@@ -2665,7 +2665,7 @@
     },
     "/api/v1/adverts/create": {
       "post": {
-        "operationId": "AdvertCreateController_createAdvert_v1",
+        "operationId": "createAdvert",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -2678,8 +2678,65 @@
           }
         },
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateAdvertResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2687,6 +2744,7 @@
             "bearer": []
           }
         ],
+        "summary": "",
         "tags": ["AdvertCreate"]
       }
     },
@@ -7136,6 +7194,15 @@
           "scheduledAt",
           "communicationChannels"
         ]
+      },
+      "CreateAdvertResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": ["id"]
       },
       "TypeIdEnum": {
         "type": "string",

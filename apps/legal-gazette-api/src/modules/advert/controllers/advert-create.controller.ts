@@ -5,6 +5,7 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
+import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import {
   CreateAdvertDto,
   CreateAdvertResponseDto,
@@ -23,6 +24,7 @@ export class AdvertCreateController {
   ) {}
 
   @Post()
+  @LGResponse({ operationId: 'createAdvert', type: CreateAdvertResponseDto })
   createAdvert(
     @Body() body: CreateAdvertDto,
     @CurrentUser() user: DMRUser,
