@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common'
 
 import { getAdvertSettingsTemplate } from './search.template'
+import { SearchAdvertType } from './types'
 
 import { Client } from '@opensearch-project/opensearch'
 
@@ -57,6 +58,53 @@ export class SearchService {
       onDrop: (it: any) => this.log.error(`Dropped: ${it?.error || it}`),
     })
     return res?.total ?? 0
+  }
+
+  async deleteItemFromIndex(id: string, index: string) {
+    try {
+      this.log.log(`deleting ${id} from index...`)
+      await this.os.deleteByQuery({
+        index,
+        body: {
+          query: {
+            query_string: {
+              query: '"' + id + '"',
+              fields: ['id'],
+            },
+          },
+        },
+      })
+      await this.os.indices.refresh({ index })
+    } catch (e) {
+      this.log.error(`Failed to delete item ${id} in index ${index}: ${e}`)
+      throw e
+    }
+  }
+
+  async updateItem(data: SearchAdvertType, index: string) {
+    try {
+      this.log.log(`deleting ${data.id} from index...`)
+      await this.os.deleteByQuery({
+        index,
+        body: {
+          query: {
+            query_string: {
+              query: '"' + data.id + '"',
+              fields: ['id'],
+            },
+          },
+        },
+      })
+      this.log.log(`adding ${data.id} to index...`)
+      await this.os.index({
+        index: index,
+        body: data,
+      })
+      await this.os.indices.refresh({ index })
+    } catch (e) {
+      this.log.error(`Failed to update item ${data.id} in index ${index}: ${e}`)
+      throw e
+    }
   }
 
   private asBool(r: any) {

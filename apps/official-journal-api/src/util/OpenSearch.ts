@@ -27,33 +27,33 @@ export const getOsPaging = (
 }
 
 export const getOsBody = (
-  qp: GetAdvertsQueryParams,
+  qp?: GetAdvertsQueryParams,
 ): { body: any; alias: string; page: number; size: number } => {
   const INDEX_ALIAS = process.env.ADVERTS_SEARCH_ALIAS ?? 'ojoi_search'
-  const q = qp.search?.trim() ?? ''
+  const q = qp?.search?.trim() ?? ''
 
-  const pageSize = Math.min(Math.max(1, qp.pageSize ?? 20), 100)
-  const page = Math.max(1, Number(qp.page ?? 1))
+  const pageSize = Math.min(Math.max(1, qp?.pageSize ?? 20), 100)
+  const page = Math.max(1, Number(qp?.page ?? 1))
   const from = (page - 1) * pageSize
   const size = pageSize
 
   // Build filters
   const filters: any[] = []
-  if (qp.department)
+  if (qp?.department)
     filters.push({ term: { 'department.slug': qp.department } })
-  if (qp.year) {
+  if (qp?.year) {
     filters.push({ term: { 'publicationNumber.year': qp.year } })
   }
-  if (qp.type) {
+  if (qp?.type) {
     filters.push({ term: { 'type.slug': qp.type } })
   }
-  if (qp.category) {
+  if (qp?.category) {
     filters.push({ term: { 'categories.slug': qp.category } })
   }
-  if (qp.involvedParty) {
+  if (qp?.involvedParty) {
     filters.push({ term: { 'involvedParty.slug': qp.involvedParty } })
   }
-  if (qp.dateFrom || qp.dateTo) {
+  if (qp?.dateFrom || qp?.dateTo) {
     filters.push({
       range: {
         publicationDate: {
@@ -90,10 +90,10 @@ export const getOsBody = (
   }
 
   // Direct lookup by 11‑digit internal case number
-  const isInternalCase = /^\d{11}$/.test(qp.search ?? '')
+  const isInternalCase = /^\d{11}$/.test(qp?.search ?? '')
   if (isInternalCase) {
     should.push({
-      term: { caseNumber: { value: qp.search, boost: 400 } },
+      term: { caseNumber: { value: qp?.search, boost: 400 } },
     })
   }
 
@@ -115,18 +115,18 @@ export const getOsBody = (
     size,
     query: {
       bool: {
-        must: qp.search
+        must: qp?.search
           ? [
               {
                 multi_match: {
-                  query: qp.search,
+                  query: qp?.search,
                   type: 'best_fields',
                   fields: [
-                    'title^3',
-                    'title.stemmed',
-                    'title.compound',
+                    'title^5',
+                    'title.stemmed^3',
+                    'title.compound^3',
                     'department.title.stemmed^0.2',
-                    'bodyText',
+                    'bodyText^0.9',
                     'caseNumber',
                   ],
                 },
@@ -135,7 +135,6 @@ export const getOsBody = (
           : [{ match_all: {} }],
         filter: filters,
         should,
-        minimum_should_match: 0,
       },
     },
     track_total_hits: true,

@@ -1,3 +1,5 @@
+import { UpdateAdvertInIndexRes } from './types'
+
 export type ReindexStatus = {
   state?: 'idle' | 'running' | 'succeeded' | 'failed'
   progress: number
@@ -14,6 +16,8 @@ export interface IReindexRunnerService {
   }
 
   start(maxDocs?: number): Promise<{ jobId: number }>
+  updateItemInIndex(advertId: string): Promise<UpdateAdvertInIndexRes>
+  deleteItemFromIndex(advertId: string): Promise<UpdateAdvertInIndexRes>
 }
 
 export const IReindexRunnerService = Symbol('IReindexRunnerService')

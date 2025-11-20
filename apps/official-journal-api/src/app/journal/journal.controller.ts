@@ -93,6 +93,21 @@ export class JournalController {
     return ResultWrapper.unwrap(await this.journalService.getAdverts(params))
   }
 
+  @Get('/adverts-lean')
+  @ApiOperation({ operationId: 'getAdvertsLean' })
+  @ApiResponse({ status: 200, type: GetLeanAdvertsResponse })
+  async advertsLean(
+    @Query() params?: GetAdvertsQueryParams,
+  ): Promise<GetLeanAdvertsResponse> {
+    const useV2 = process.env.SEARCH_V2_ENABLED === 'true'
+    if (useV2) {
+      return this.search(params)
+    }
+    return ResultWrapper.unwrap(
+      await this.journalService.getAdvertsLean(params),
+    )
+  }
+
   @Get('/departments/:id')
   @ApiOperation({ operationId: 'getDepartmentById' })
   @ApiResponse({ status: 200, type: GetDepartmentResponse })
@@ -306,11 +321,29 @@ export class JournalController {
     return this.runner.getStatus()
   }
 
-  @Get('/adverts-lean')
-  @ApiOperation({ operationId: 'getAdvertsLean' })
-  @ApiResponse({ status: 200, type: GetLeanAdvertsResponse })
-  async search(
-    @Query() qp: GetAdvertsQueryParams,
+  @UseGuards(AdminGuard)
+  @ApiExcludeEndpoint()
+  @Get('delete-indexed-advert/:id')
+  deleteIndexedAdvert(@Param('id') paramId?: string) {
+    if (!paramId) {
+      throw new Error('Missing id')
+    }
+    return this.runner.deleteItemFromIndex(paramId)
+  }
+
+  @UseGuards(AdminGuard)
+  @ApiExcludeEndpoint()
+  @Get('add-advert-to-index/:id')
+  addAdvertToIndex(@Param('id') paramId?: string) {
+    // The service updateItemInIndex method is called on publish. But is available here for manual reindexing if needed.
+    if (!paramId) {
+      throw new Error('Missing id')
+    }
+    return this.runner.updateItemInIndex(paramId)
+  }
+
+  private async search(
+    @Query() qp?: GetAdvertsQueryParams,
   ): Promise<GetLeanAdvertsResponse> {
     const { body, alias, page, size } = getOsBody(qp)
 

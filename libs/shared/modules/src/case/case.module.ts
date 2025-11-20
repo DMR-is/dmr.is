@@ -14,6 +14,7 @@ import { AdvertDepartmentModel } from '../journal/models'
 import advertModels from '../journal/models'
 import { PdfModule } from '../pdf/pdf.module'
 import { PriceModule } from '../price/price.module'
+import { OpenSearchModule, OpsModule } from '../search'
 import { SignatureModule } from '../signature/signature.module'
 import { UtilityModule } from '../utility/utility.module'
 import { CaseCreateService } from './services/create/case-create.service'
@@ -57,6 +58,8 @@ const API_MOCK = process.env.API_MOCK === 'true'
     SignatureModule,
     CommentModuleV2,
     ExternalModule,
+    OpenSearchModule,
+    OpsModule,
     forwardRef(() => PriceModule),
     forwardRef(() => PdfModule),
     forwardRef(() => AwsModule),

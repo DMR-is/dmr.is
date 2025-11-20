@@ -1,4 +1,5 @@
 // reindex-runner.service.ts
+
 import { Inject, Injectable } from '@nestjs/common'
 import { SchedulerRegistry } from '@nestjs/schedule'
 import { InjectModel } from '@nestjs/sequelize'
@@ -24,9 +25,10 @@ import {
   advertMappingTemplate,
   getAdvertSettingsTemplate,
 } from './search.template'
-import { SearchAdvertType } from './types'
+import { SearchAdvertType, UpdateAdvertInIndexRes } from './types'
 
 const LOGGING_CONTEXT = 'ReindexRunnerService'
+const INDEX_ALIAS = process.env.ADVERTS_SEARCH_ALIAS ?? 'ojoi_search'
 
 @Injectable()
 export class ReindexRunnerService implements IReindexRunnerService {
@@ -68,6 +70,91 @@ export class ReindexRunnerService implements IReindexRunnerService {
     return { jobId }
   }
 
+  private getIncludeModels() {
+    return [
+      {
+        model: AdvertDepartmentModel,
+        as: 'department',
+        attributes: ['id', 'title', 'slug'],
+        required: false,
+      },
+      {
+        model: AdvertCategoryModel,
+        as: 'categories',
+        attributes: ['id', 'title', 'slug'],
+        through: { attributes: [] },
+        required: false,
+      },
+      {
+        model: AdvertInvolvedPartyModel,
+        as: 'involvedParty',
+        attributes: ['id', 'title', 'slug'],
+        required: false,
+      },
+      {
+        model: AdvertStatusModel,
+        as: 'status',
+        attributes: ['id', 'title'],
+        required: false,
+      },
+      {
+        model: AdvertTypeModel,
+        as: 'type',
+        attributes: ['id', 'title', 'slug'],
+        required: false,
+      },
+      {
+        model: CaseModel,
+        as: 'case',
+        attributes: ['id', 'caseNumber'],
+        required: false,
+      },
+    ]
+  }
+
+  async updateItemInIndex(advertId: string): Promise<UpdateAdvertInIndexRes> {
+    const include = this.getIncludeModels()
+    const advert = await this.advertModel.findOne({
+      where: { id: advertId },
+      include,
+    })
+
+    if (!advert) {
+      this.logger.warn(`Advert ${advertId} not found for update`, {
+        context: LOGGING_CONTEXT,
+      })
+      return { advertId, success: false }
+    }
+
+    const migrated = this.advertToDoc(advert)
+
+    try {
+      await this.search.updateItem(migrated, INDEX_ALIAS)
+    } catch (e) {
+      this.logger.error(
+        `Failed to update advert ${advertId} in OpenSearch: ${e}`,
+        { context: LOGGING_CONTEXT },
+      )
+      return { advertId, success: false }
+    }
+
+    return { advertId, success: true }
+  }
+
+  async deleteItemFromIndex(advertId: string): Promise<UpdateAdvertInIndexRes> {
+    try {
+      await this.search.deleteItemFromIndex(advertId, INDEX_ALIAS)
+    } catch (e) {
+      this.logger.error(
+        `Failed to update advert ${advertId} in OpenSearch: ${e}`,
+        { context: LOGGING_CONTEXT },
+      )
+      return { advertId, success: false }
+    }
+
+    return { advertId, success: true }
+  }
+
   private advertToDoc(a: AdvertModel): SearchAdvertType {
     return {
       ...advertMigrateLean(a),
@@ -80,47 +167,10 @@ export class ReindexRunnerService implements IReindexRunnerService {
     let offset = 0,
       emitted = 0
     while (emitted < maxDocs) {
+      const include = this.getIncludeModels()
       const rows = await this.advertModel.findAll({
         offset,
-        include: [
-          {
-            model: AdvertDepartmentModel,
-            as: 'department',
-            attributes: ['id', 'title', 'slug'],
-            required: false,
-          },
-          {
-            model: AdvertCategoryModel,
-            as: 'categories',
-            attributes: ['id', 'title', 'slug'],
-            through: { attributes: [] },
-            required: false,
-          },
-          {
-            model: AdvertInvolvedPartyModel,
-            as: 'involvedParty',
-            attributes: ['id', 'title', 'slug'],
-            required: false,
-          },
-          {
-            model: AdvertStatusModel,
-            as: 'status',
-            attributes: ['id', 'title'],
-            required: false,
-          },
-          {
-            model: AdvertTypeModel,
-            as: 'type',
-            attributes: ['id', 'title', 'slug'],
-            required: false,
-          },
-          {
-            model: CaseModel,
-            as: 'case',
-            attributes: ['id', 'caseNumber'],
-            required: false,
-          },
-        ],
+        include,
         limit: Math.min(pageSize, maxDocs - emitted),
         order: [['id', 'ASC']],
       })
@@ -134,7 +184,7 @@ export class ReindexRunnerService implements IReindexRunnerService {
   }
 
   private async run(jobId: number, maxDocs: number) {
-    const alias = 'ojoi_search'
+    const alias = INDEX_ALIAS
     try {
       this.logger.info('reindexing: starting...', {
         context: LOGGING_CONTEXT,
@@ -235,6 +285,10 @@ export class ReindexRunnerService implements IReindexRunnerService {
         startedAt: this.status.startedAt,
         finishedAt: Date.now(),
       }
+      this.logger.info('reindexing: failed', {
+        context: LOGGING_CONTEXT,
+        ...this.status,
+      })
     } finally {
       this.lock = false
     }
