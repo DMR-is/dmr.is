@@ -179,7 +179,9 @@ export class AdvertLean extends PickType(Advert, [
   'publicationDate',
   'categories',
   'involvedParty',
-] as const) {}
+] as const) {
+  score!: number
+}
 
 export class CreateAdvert {
   @ApiProperty({

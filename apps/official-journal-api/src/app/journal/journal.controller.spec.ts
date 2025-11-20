@@ -5,10 +5,14 @@ import {
   CaseServiceMock,
   ICaseService,
   IJournalService,
+  IReindexRunnerService,
   MockJournalService,
+  MockRunnerService,
 } from '@dmr.is/modules'
 
 import { JournalController } from './journal.controller'
+
+import { Client } from '@opensearch-project/opensearch'
 
 describe('JournalController', () => {
   let journal: TestingModule
@@ -27,6 +31,10 @@ describe('JournalController', () => {
           useClass: CaseServiceMock,
         },
         {
+          provide: IReindexRunnerService,
+          useClass: MockRunnerService,
+        },
+        {
           provide: LOGGER_PROVIDER,
           useValue: {
             debug: jest.fn(),
@@ -34,6 +42,10 @@ describe('JournalController', () => {
             warn: jest.fn(),
             error: jest.fn(),
           },
+        },
+        {
+          provide: Client,
+          useValue: {},
         },
       ],
     }).compile()

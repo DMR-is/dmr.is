@@ -88,6 +88,7 @@ import {
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
 import { IPriceService } from '../price/price.service.interface'
+import { IReindexRunnerService } from '../search'
 import { SignatureModel } from '../signature/models/signature.model'
 import { SignatureMemberModel } from '../signature/models/signature-member.model'
 import { SignatureRecordModel } from '../signature/models/signature-record.model'
@@ -171,6 +172,9 @@ export class CaseService implements ICaseService {
     @InjectModel(CaseAdditionsModel)
     private readonly caseAdditionsModel: typeof CaseAdditionsModel,
     private readonly sequelize: Sequelize,
+
+    @Inject(IReindexRunnerService)
+    private readonly runner: IReindexRunnerService,
   ) {
     this.logger.info('Using CaseService')
   }
@@ -1269,6 +1273,16 @@ export class CaseService implements ICaseService {
       },
       include: [AdvertTypeModel],
     })
+
+    try {
+      this.runner.updateItemInIndex(advertCreateResult.result.value.advert.id)
+    } catch (error) {
+      this.logger.error('Failed to reindex advert', {
+        error,
+        advertId: advertCreateResult.result.value.advert.id,
+        category: LOGGING_CATEGORY,
+      })
+    }
 
     //here we are going to post directly to regulations if the advert is in the correct category.
     const flatTypes = maintypes.flatMap((type) => {

@@ -8,8 +8,10 @@ import {
   InternalServerErrorException,
   NotFoundException,
   Param,
+  Post,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common'
 import { ApiExcludeEndpoint, ApiOperation, ApiResponse } from '@nestjs/swagger'
 
@@ -20,7 +22,12 @@ import {
   DEFAULT_PAGE_SIZE,
 } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { ICaseService, IJournalService } from '@dmr.is/modules'
+import {
+  AdminGuard,
+  ICaseService,
+  IJournalService,
+  IReindexRunnerService,
+} from '@dmr.is/modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   CaseStatusEnum,
@@ -42,7 +49,9 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { AdvertsToRss } from '../../util/AdvertsToRss'
+import { AdvertsToRss, getOsBody, getOsPaging } from '../../util'
+
+import { Client } from '@opensearch-project/opensearch'
 
 @Controller({
   version: '1',
@@ -51,6 +60,9 @@ export class JournalController {
   constructor(
     @Inject(IJournalService) private readonly journalService: IJournalService,
     @Inject(ICaseService) private readonly caseService: ICaseService,
+    @Inject(IReindexRunnerService)
+    private readonly runner: IReindexRunnerService,
+    private readonly openSearch: Client,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -87,6 +99,10 @@ export class JournalController {
   async advertsLean(
     @Query() params?: GetAdvertsQueryParams,
   ): Promise<GetLeanAdvertsResponse> {
+    const useV2 = process.env.SEARCH_V2_ENABLED === 'true'
+    if (useV2) {
+      return this.search(params)
+    }
     return ResultWrapper.unwrap(
       await this.journalService.getAdvertsLean(params),
     )
@@ -289,5 +305,63 @@ export class JournalController {
     }
     //redirect to the pdf url
     return res.redirect(301, url)
+  }
+
+  @UseGuards(AdminGuard)
+  @ApiExcludeEndpoint()
+  @Post('reindex-adverts')
+  async reindex(@Query('max') max?: string) {
+    return this.runner.start(max ? Number(max) : undefined)
+  }
+
+  @UseGuards(AdminGuard)
+  @ApiExcludeEndpoint()
+  @Get('reindex-adverts/status')
+  status() {
+    return this.runner.getStatus()
+  }
+
+  @UseGuards(AdminGuard)
+  @ApiExcludeEndpoint()
+  @Get('delete-indexed-advert/:id')
+  deleteIndexedAdvert(@Param('id') paramId?: string) {
+    if (!paramId) {
+      throw new Error('Missing id')
+    }
+    return this.runner.deleteItemFromIndex(paramId)
+  }
+
+  @UseGuards(AdminGuard)
+  @ApiExcludeEndpoint()
+  @Get('add-advert-to-index/:id')
+  addAdvertToIndex(@Param('id') paramId?: string) {
+    // The service updateItemInIndex method is called on publish. But is available here for manual reindexing if needed.
+    if (!paramId) {
+      throw new Error('Missing id')
+    }
+    return this.runner.updateItemInIndex(paramId)
+  }
+
+  private async search(
+    @Query() qp?: GetAdvertsQueryParams,
+  ): Promise<GetLeanAdvertsResponse> {
+    const { body, alias, page, size } = getOsBody(qp)
+
+    const res: any = await this.openSearch.search({ index: alias, body })
+
+    const hits = (res.body ?? res).hits
+    const totalItems = hits.total?.value ?? 0
+
+    const paging = getOsPaging(totalItems, page, size)
+
+    return {
+      adverts: hits.hits.map((h: any) => ({
+        id: h._id,
+        score: h._score,
+        ...h._source,
+        highlight: h.highlight,
+      })),
+      paging,
+    }
   }
 }
