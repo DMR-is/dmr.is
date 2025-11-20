@@ -23,6 +23,7 @@ import {
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
 import { IPriceService } from '../price/price.service.interface'
+import { IReindexRunnerService } from '../search'
 import { ISignatureService } from '../signature/signature.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { CaseCategoriesModel } from './models/case-categories.model'
@@ -88,6 +89,10 @@ describe('CaseService', () => {
         },
         {
           provide: ISignatureService,
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: IReindexRunnerService,
           useClass: jest.fn(() => ({})),
         },
         {
