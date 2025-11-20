@@ -49,7 +49,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { AdvertsToRss } from '../../util/AdvertsToRss'
+import { AdvertsToRss, getOsBody, getOsPaging } from '../../util'
 
 import { Client } from '@opensearch-project/opensearch'
 
@@ -91,17 +91,6 @@ export class JournalController {
     @Query() params?: GetAdvertsQueryParams,
   ): Promise<GetAdvertsResponse> {
     return ResultWrapper.unwrap(await this.journalService.getAdverts(params))
-  }
-
-  @Get('/adverts-lean')
-  @ApiOperation({ operationId: 'getAdvertsLean' })
-  @ApiResponse({ status: 200, type: GetLeanAdvertsResponse })
-  async advertsLean(
-    @Query() params?: GetAdvertsQueryParams,
-  ): Promise<GetLeanAdvertsResponse> {
-    return ResultWrapper.unwrap(
-      await this.journalService.getAdvertsLean(params),
-    )
   }
 
   @Get('/departments/:id')
@@ -304,130 +293,42 @@ export class JournalController {
   }
 
   @UseGuards(AdminGuard)
+  @ApiExcludeEndpoint()
   @Post('reindex-adverts')
   async reindex(@Query('max') max?: string) {
     return this.runner.start(max ? Number(max) : undefined)
   }
 
   @UseGuards(AdminGuard)
+  @ApiExcludeEndpoint()
   @Get('reindex-adverts/status')
   status() {
     return this.runner.getStatus()
   }
 
-  @Get('search-adverts')
-  async search(@Query() qp: GetAdvertsQueryParams) {
-    const INDEX_ALIAS = process.env.ADVERTS_SEARCH_ALIAS ?? 'ojoi_search'
-    const q = qp.search?.trim() ?? ''
-    const fromValue = qp.pageSize
-      ? (qp.page ?? 0) * qp.pageSize
-      : qp.page
-        ? qp.page * 20
-        : 0
-    const from = Math.max(0, fromValue)
-    const size = Math.min(Math.max(1, qp.pageSize ?? 20), 100)
+  @Get('/adverts-lean')
+  @ApiOperation({ operationId: 'getAdvertsLean' })
+  @ApiResponse({ status: 200, type: GetLeanAdvertsResponse })
+  async search(
+    @Query() qp: GetAdvertsQueryParams,
+  ): Promise<GetLeanAdvertsResponse> {
+    const { body, alias, page, size } = getOsBody(qp)
 
-    // Build filters
-    const filters: any[] = []
-    if (qp.department)
-      filters.push({ term: { 'department.slug': qp.department } })
-    if (qp.year) {
-      filters.push({ term: { 'publicationNumber.year': qp.year } })
-    }
-    if (qp.type) {
-      filters.push({ term: { 'type.slug': qp.type } })
-    }
-    if (qp.category) {
-      filters.push({ term: { 'categories.slug': qp.category } })
-    }
-    if (qp.involvedParty) {
-      filters.push({ term: { 'involvedParty.slug': qp.involvedParty } })
-    }
-    if (qp.dateFrom || qp.dateTo) {
-      filters.push({
-        range: { publicationDate: { gte: qp.dateFrom, lte: qp.dateTo } },
-      })
-    }
+    const res: any = await this.openSearch.search({ index: alias, body })
 
-    // Detect "number/year"
-    const m = q.match(/^\s*(\d+)\s*\/\s*(\d{4})\s*$/)
-    const should: any[] = []
-    if (m) {
-      const number = String(parseInt(m[1], 10))
-      const year = m[2]
-      const full = `${number}/${year}`
-
-      // Strong boosts on exact fields
-      should.push({
-        term: { 'publicationNumber.full': { value: full, boost: 400 } },
-      })
-      should.push({
-        term: { 'publicationNumber.number': { value: number, boost: 45 } },
-      })
-      should.push({
-        term: { 'publicationNumber.year': { value: year, boost: 30 } },
-      })
-
-      // Weaker boosts if the pair appears in bodyText as adjacent tokens
-      should.push({
-        match_phrase: { bodyText: { query: `${number} ${year}`, boost: 50 } },
-      })
-    }
-
-    // Direct lookup by 11‑digit internal case number
-    const isInternalCase = /^\d{11}$/.test(qp.search ?? '')
-    if (isInternalCase) {
-      should.push({
-        term: { caseNumber: { value: qp.search, boost: 400 } },
-      })
-    }
-
-    // Query
-    const body: any = {
-      from,
-      size,
-      query: {
-        bool: {
-          must: qp.search
-            ? [
-                {
-                  multi_match: {
-                    query: qp.search,
-                    type: 'best_fields',
-                    fields: [
-                      'title^3',
-                      'title.stemmed',
-                      'title.compound',
-                      'department.title.stemmed^0.2',
-                      'bodyText',
-                      'caseNumber',
-                    ],
-                  },
-                },
-              ]
-            : [{ match_all: {} }],
-          filter: filters,
-          should,
-          minimum_should_match: 0,
-        },
-      },
-
-      // Don’t send back these fields.
-      _source: { excludes: ['bodyText', 'caseNumber'] },
-    }
-
-    const res: any = await this.openSearch.search({ index: INDEX_ALIAS, body })
     const hits = (res.body ?? res).hits
+    const totalItems = hits.total?.value ?? 0
+
+    const paging = getOsPaging(totalItems, page, size)
+
     return {
-      total: hits.total?.value ?? 0,
-      from,
-      size,
-      items: hits.hits.map((h: any) => ({
+      adverts: hits.hits.map((h: any) => ({
         id: h._id,
         score: h._score,
         ...h._source,
         highlight: h.highlight,
       })),
+      paging,
     }
   }
 }

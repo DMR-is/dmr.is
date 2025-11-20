@@ -1,7 +1,9 @@
 // reindex-runner.service.ts
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { SchedulerRegistry } from '@nestjs/schedule'
 import { InjectModel } from '@nestjs/sequelize'
+
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { AdvertTypeModel } from '../advert-type/models'
 import { CaseModel } from '../case/models'
@@ -24,6 +26,8 @@ import {
 } from './search.template'
 import { SearchAdvertType } from './types'
 
+const LOGGING_CONTEXT = 'ReindexRunnerService'
+
 @Injectable()
 export class ReindexRunnerService implements IReindexRunnerService {
   private status: ReindexStatus = { state: 'idle', progress: 0 }
@@ -40,6 +44,7 @@ export class ReindexRunnerService implements IReindexRunnerService {
     private advertCategoryModel: typeof AdvertCategoryModel, // ensures association metadata is ready
     @InjectModel(AdvertInvolvedPartyModel)
     private advertInvolvedPartyModel: typeof AdvertInvolvedPartyModel,
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
   getStatus() {
@@ -63,7 +68,6 @@ export class ReindexRunnerService implements IReindexRunnerService {
     return { jobId }
   }
 
-  // ---- mirrors your command ----
   private advertToDoc(a: AdvertModel): SearchAdvertType {
     return {
       ...advertMigrateLean(a),
@@ -95,7 +99,7 @@ export class ReindexRunnerService implements IReindexRunnerService {
           {
             model: AdvertInvolvedPartyModel,
             as: 'involvedParty',
-            attributes: ['id', 'title'],
+            attributes: ['id', 'title', 'slug'],
             required: false,
           },
           {
@@ -132,6 +136,9 @@ export class ReindexRunnerService implements IReindexRunnerService {
   private async run(jobId: number, maxDocs: number) {
     const alias = 'ojoi_search'
     try {
+      this.logger.info('reindexing: starting...', {
+        context: LOGGING_CONTEXT,
+      })
       const startedAt = Date.now()
       const watchdog = setInterval(() => {
         const stalled =
@@ -152,6 +159,10 @@ export class ReindexRunnerService implements IReindexRunnerService {
       this.status = { ...this.status, progress: 1, message: 'run() entered' } // <— visible tick
       const settings = getAdvertSettingsTemplate()
       const mappings = advertMappingTemplate
+      this.logger.info('reindexing: mappings and settings set', {
+        context: LOGGING_CONTEXT,
+        ...this.status,
+      })
 
       // 1) create versioned index (cheap)
       this.status = { ...this.status, progress: 5, message: 'creating index' }
@@ -164,6 +175,10 @@ export class ReindexRunnerService implements IReindexRunnerService {
         progress: 10,
         message: `created ${index}`,
       }
+      this.logger.info('reindexing: create versioned index', {
+        context: LOGGING_CONTEXT,
+        ...this.status,
+      })
 
       // 2) bulk backfill (cap with maxDocs)
       const total = await this.search.bulkIndex(
@@ -175,6 +190,10 @@ export class ReindexRunnerService implements IReindexRunnerService {
         progress: 70,
         message: `indexed ${total}`,
       }
+      this.logger.info('reindexing: bulk backfill', {
+        context: LOGGING_CONTEXT,
+        ...this.status,
+      })
 
       // 3) restore steady-state & alias cutover
       const replicas = await this.search.deriveReplicas(0)
@@ -182,11 +201,19 @@ export class ReindexRunnerService implements IReindexRunnerService {
         ...this.status,
         progress: 80,
       }
+      this.logger.info('reindexing: restore steady-state & alias cutover', {
+        context: LOGGING_CONTEXT,
+        ...this.status,
+      })
       await this.search.restoreSteadyState(index, replicas, '1s')
       this.status = {
         ...this.status,
         progress: 90,
       }
+      this.logger.info('reindexing: restore steady-state finished', {
+        context: LOGGING_CONTEXT,
+        ...this.status,
+      })
       await this.search.aliasCutover(alias, index, true)
 
       this.status = {
@@ -196,6 +223,10 @@ export class ReindexRunnerService implements IReindexRunnerService {
         startedAt: this.status.startedAt,
         finishedAt: Date.now(),
       }
+      this.logger.info('reindexing: succeeded', {
+        context: LOGGING_CONTEXT,
+        ...this.status,
+      })
     } catch (e: any) {
       this.status = {
         state: 'failed',

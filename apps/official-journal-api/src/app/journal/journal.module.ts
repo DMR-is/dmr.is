@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common'
 
-// import { ScheduleModule } from '@nestjs/schedule'
 import {
   AdvertTypeController,
   AdvertTypeModule,
@@ -18,7 +17,6 @@ import { JournalController } from './journal.controller'
     AdvertTypeModule,
     OpenSearchModule,
     OpsModule,
-    // ScheduleModule.forRoot(),
   ],
   controllers: [JournalController, AdvertTypeController],
 })
