@@ -25,22 +25,12 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
   return (
     <>
       <tr
-        onFocus={() => hasLink && setHovered(true)}
-        onBlur={() => hasLink && setHovered(false)}
         onMouseOver={() => hasLink && setHovered(true)}
         onMouseLeave={() => hasLink && setHovered(false)}
         role={isExpandable ? 'button' : 'div'}
         className={styles.dataTableRow({
           expandable: !!isExpandable || hasLink,
         })}
-        onClick={() => {
-          if (isExpandable) {
-            setExpanded(!expanded)
-          }
-          if (hasLink && row.href) {
-            window.location.href = row.href
-          }
-        }}
       >
         {columns.map((column, i) => {
           const children = row[column.field as keyof typeof row]
