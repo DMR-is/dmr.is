@@ -14,7 +14,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator'
-import { BulkCreateOptions, Op, OrderItem, WhereOptions } from 'sequelize'
+import { BulkCreateOptions, Op, WhereOptions } from 'sequelize'
 import {
   BeforeBulkCreate,
   BelongsTo,
@@ -72,8 +72,18 @@ import { TBRTransactionModel } from './tbr-transactions.model'
 import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
 import { UserModel } from './users.model'
 
+export enum AdvertTemplateType {
+  COMMON = 'common',
+  RECALL_BANKRUPTCY = 'recall_bankruptcy',
+  RECALL_DECEASED = 'recall_deceased',
+  DIVISION_MEETING_BANKRUPTCY = 'division_meeting_bankruptcy',
+  DIVISION_MEETING_DECEASED = 'division_meeting_deceased',
+  DIVISION_ENDING = 'division_ending',
+}
+
 type AdvertAttributes = {
   caseId: string | null
+  templateType: AdvertTemplateType
   islandIsApplicationId: string | null
   typeId: string
   categoryId: string
@@ -116,6 +126,7 @@ type AdvertAttributes = {
 
 export type AdvertCreateAttributes = {
   caseId?: string | null
+  templateType?: AdvertTemplateType
   islandIsApplicationId?: string | null
   typeId: string
   categoryId: string
@@ -288,6 +299,14 @@ export class AdvertModel extends BaseModel<
   AdvertAttributes,
   AdvertCreateAttributes
 > {
+  @Column({
+    type: DataType.ENUM(...Object.values(AdvertTemplateType)),
+    defaultValue: AdvertTemplateType.COMMON,
+    allowNull: false,
+  })
+  @ApiProperty({ enum: AdvertTemplateType, enumName: 'AdvertTemplateType' })
+  templateType!: AdvertTemplateType
+
   @Column({
     type: DataType.UUID,
     defaultValue: null,
@@ -647,6 +666,7 @@ export class AdvertModel extends BaseModel<
     return {
       ...this.fromModel(model),
       caseId: model.caseId ?? undefined,
+      templateType: model.templateType,
       canEdit: this.canEdit(model, userId),
       publicationNumber: model.publicationNumber ?? undefined,
       signatureOnBehalfOf: model.signatureOnBehalfOf ?? undefined,
@@ -684,6 +704,10 @@ export class AdvertDetailedDto extends DetailedDto {
   @ApiProperty({ type: String })
   @IsUUID()
   id!: string
+
+  @ApiProperty({ enum: AdvertTemplateType, enumName: 'AdvertTemplateType' })
+  @IsEnum(AdvertTemplateType)
+  templateType!: AdvertTemplateType
 
   @ApiProperty({ type: String, required: false })
   @IsOptional()
@@ -945,6 +969,16 @@ export class CreateAdvertInternalDto extends PickType(AdvertModel, [
   'settlementId',
   'divisionMeetingLocation',
 ] as const) {
+  @ApiProperty({
+    enum: AdvertTemplateType,
+    enumName: 'AdvertTemplateType',
+    required: false,
+    description: 'Template type of the advert',
+  })
+  @IsOptional()
+  @IsEnum(AdvertTemplateType)
+  templateType?: AdvertTemplateType
+
   @ApiProperty({
     type: String,
     description: 'Date of signature',
