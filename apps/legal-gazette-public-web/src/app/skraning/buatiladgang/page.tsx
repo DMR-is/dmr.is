@@ -1,0 +1,141 @@
+'use client'
+
+import { useSession } from 'next-auth/react'
+
+import { useEffect, useState } from 'react'
+
+import {
+  Box,
+  Button,
+  GridColumn,
+  GridContainer,
+  GridRow,
+  Inline,
+  Input,
+  Stack,
+  Text,
+} from '@dmr.is/ui/components/island-is'
+
+export default function Signup() {
+  const { data: session } = useSession()
+
+  const [createState, setCreateState] = useState<any>({
+    title: '',
+    nationalId: '',
+  })
+
+  return (
+    <GridContainer>
+      <GridRow marginTop={[2, 2, 3]}>
+        <GridColumn
+          paddingBottom={[2, 2, 3]}
+          offset={['0', '1/12']}
+          span={['12/12', '5/12']}
+        >
+          <Box component="img" src="/images/image-with-text-1.svg" />
+        </GridColumn>
+        <GridColumn paddingBottom={[2, 2, 3]} span={['12/12', '5/12']}>
+          <Box
+            display="flex"
+            flexDirection="column"
+            height="full"
+            justifyContent="center"
+          >
+            <Stack space={2}>
+              <Text variant="h2">Gerast áskrifandi</Text>
+              <Text variant="intro">
+                Velkomin á skráningarvef fyrir rafræna áskrift Lögbirtingablaðs
+              </Text>
+              <Text>
+                Við skráninguna verður til greiðsluseðill að fjárhæð 3.000 kr.
+                sem er ársáskriftargjald sem greitt er fyrirfram. Það opnast
+                fyrir aðgang að kerfinu í eitt ár daginn eftir að sú upphæð
+                hefur verið greidd. Hefjið skráningarferlið með því að skrá inn
+                með rafrænum skilríkjum.
+              </Text>
+              <Box marginTop={[2, 2, 3]}>
+                <Text>
+                  Vinsamlegast fyllið formið út og ýtið á hnappinn “Vista” neðst
+                  á síðunni.
+                </Text>
+              </Box>
+            </Stack>
+          </Box>
+        </GridColumn>
+      </GridRow>
+
+      <form
+      // onSubmit={(e) => {
+      //   e.preventDefault()
+      //   // validateAndSubmit()
+      // }}
+      >
+        <GridRow rowGap={[2, 3]} marginBottom={[4, 8]}>
+          <GridColumn span={['12/12', '5/12']} offset={['0', '6/12']}>
+            <Stack space={[2, 4]}>
+              <Input
+                name="name"
+                type="text"
+                label="Nafn"
+                placeholder="Sláðu inn nafn"
+                backgroundColor="blue"
+                value={session?.user.name ?? createState.name}
+                onChange={(e) =>
+                  setCreateState({
+                    ...createState,
+                    name: e.target.value,
+                  })
+                }
+                required
+              />
+              <Input
+                name="kennitala"
+                type="text"
+                label="Kennitala"
+                placeholder="Sláðu inn kennitölu"
+                backgroundColor="blue"
+                value={session?.user?.nationalId ?? createState.nationalId}
+                onChange={(e) =>
+                  setCreateState({
+                    ...createState,
+                    nationalId: e.target.value,
+                  })
+                }
+                required
+              />
+              <Input
+                name="netfang"
+                type="text"
+                label="Netfang"
+                placeholder="Sláðu inn netfang"
+                backgroundColor="blue"
+                value={createState.email}
+                onChange={(e) =>
+                  setCreateState({
+                    ...createState,
+                    email: e.target.value,
+                  })
+                }
+                required
+              />
+            </Stack>
+          </GridColumn>
+          <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
+            <Inline space={2} justifyContent="flexEnd">
+              <Button
+                icon="arrowForward"
+                iconType="outline"
+                // loading={isCreatingInstitution}
+
+                variant="primary"
+                // onClick={() => createInstitution(createState)}
+              >
+                Vista
+              </Button>
+            </Inline>
+          </GridColumn>
+        </GridRow>
+      </form>
+    </GridContainer>
+  )
+}
