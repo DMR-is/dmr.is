@@ -9,8 +9,6 @@ import {
   InstitutionAdminController,
   InstitutionController,
   InstitutionModule,
-  OpenSearchModule,
-  OpsModule,
   PriceModule,
   SharedCaseModule,
   SharedJournalModule,
@@ -33,8 +31,6 @@ import { CaseController } from './case.controller'
     AdvertTypeModule,
     UserModule,
     PriceModule,
-    OpenSearchModule,
-    OpsModule,
   ],
   controllers: [
     CaseController,
