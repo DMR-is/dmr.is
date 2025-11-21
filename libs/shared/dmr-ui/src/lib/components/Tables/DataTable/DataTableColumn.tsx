@@ -13,6 +13,7 @@ export const DataTableColumn = ({
   children,
   size,
   sortable = false,
+  background,
   onSort,
 }: DataTableColumnProps) => {
   const { params, setParams } = useFilters()
@@ -55,6 +56,7 @@ export const DataTableColumn = ({
   const inlineStyles = {
     minWidth: width ? width : '100px',
     width: width ? width : 'auto',
+    background: background ? background : undefined,
 
     ...(size === 'tiny' && tinyTableCellStyles),
     ...(size === 'small' && smallTableCellStyles),
@@ -63,6 +65,7 @@ export const DataTableColumn = ({
   return (
     <T.HeadData
       style={inlineStyles}
+      color="red400"
       box={{
         paddingLeft: [1, 2],
         paddingRight: [1, 2],

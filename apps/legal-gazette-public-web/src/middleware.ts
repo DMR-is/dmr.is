@@ -20,4 +20,6 @@ export default withAuth({
 // - any route that includes a dot in its path (such as static files like images, scripts, etc.)
 // - the "/innskraning" (login) route
 // In other words, authentication will be enforced on every page except for API requests, static assets, and the login page.
-export const config = { matcher: ['/((?!api/.*|.*\\.|innskraning|$).*)'] }
+export const config = {
+  matcher: ['/((?!api/.*|.*\\.|innskraning|$|skraning|$).*)'],
+}

@@ -1,8 +1,14 @@
 'use client'
 
+import { signIn } from 'next-auth/react'
+
+import { useState } from 'react'
+
+import { identityServerId } from '@dmr.is/auth/identityProvider'
+
 import {
   Box,
-  DropdownMenu,
+  Button,
   GridColumn,
   GridContainer,
   GridRow,
@@ -18,6 +24,7 @@ export type HeaderProps = {
 }
 
 export const HeaderLogin = ({ variant = 'blue' }: HeaderProps) => {
+  const [loading, setLoading] = useState(false)
   return (
     <Hidden print={true}>
       <header className={styles.header({ variant })}>
@@ -38,7 +45,7 @@ export const HeaderLogin = ({ variant = 'blue' }: HeaderProps) => {
                   justifyContent="flexEnd"
                   width="full"
                 >
-                  <DropdownMenu
+                  {/* <DropdownMenu
                     icon="person"
                     items={[
                       {
@@ -46,14 +53,31 @@ export const HeaderLogin = ({ variant = 'blue' }: HeaderProps) => {
                         title: 'Skrá inn',
                       },
                       {
-                        // eslint-disable-next-line @typescript-eslint/no-empty-function
-                        onClick: () => {},
+                        href: '/skraning',
                         title: 'Gerast áskrifandi',
                       },
                     ]}
                     openOnHover
                     title="Áskrift innskráning"
-                  />
+                  /> */}
+                  <Button
+                    variant="utility"
+                    size="small"
+                    icon="person"
+                    iconType="outline"
+                    // loading={loading}
+                    onClick={async (e) => {
+                      e.preventDefault()
+                      try {
+                        setLoading(true)
+                        await signIn(identityServerId, { callbackUrl: '/' })
+                      } catch (error) {
+                        setLoading(false)
+                      }
+                    }}
+                  >
+                    Innskráning
+                  </Button>
                 </Box>
               </Inline>
             </GridColumn>

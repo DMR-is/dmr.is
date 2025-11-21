@@ -8,6 +8,7 @@ export type DataTableColumnProps = {
   sortBy?: string
   sortable?: boolean
   direction?: 'asc' | 'desc'
+  background?: string
   onSort?: (field: string) => void
 }
 
@@ -63,4 +64,5 @@ export type DataTableProps<T extends readonly DataTableColumnProps[]> = {
   onPageSizeChange?: (pageSize: number) => void
   showPageSizeSelect?: boolean
   noDataMessage?: string
+  headerBackground?: string
 }
