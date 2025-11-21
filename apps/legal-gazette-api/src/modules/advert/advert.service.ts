@@ -173,6 +173,7 @@ export class AdvertService implements IAdvertService {
 
     const advert = await this.advertModel.create(
       {
+        templateType: body.templateType,
         typeId: body.typeId,
         categoryId: body.categoryId,
         caseId: body.caseId,

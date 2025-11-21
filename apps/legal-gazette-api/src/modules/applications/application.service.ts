@@ -33,7 +33,7 @@ import {
   RECALL_CATEGORY_ID,
   RECALL_DECEASED_ADVERT_TYPE_ID,
 } from '../../core/constants'
-import { AdvertModel } from '../../models/advert.model'
+import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
 import {
   AddDivisionEndingForApplicationDto,
   AddDivisionMeetingForApplicationDto,
@@ -206,6 +206,10 @@ export class ApplicationService implements IApplicationService {
         : `Innköllun dánarbús - ${requiredFields.fields.settlementFields.name}`
 
     await this.advertService.createAdvert({
+      templateType:
+        application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
+          ? AdvertTemplateType.RECALL_BANKRUPTCY
+          : AdvertTemplateType.RECALL_DECEASED,
       caseId: application.caseId,
       typeId:
         requiredFields.fields.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
@@ -273,13 +277,16 @@ export class ApplicationService implements IApplicationService {
       },
     })
 
-    const settlement = await this.advertModel.unscoped().findOneOrThrow({
-      attributes: ['id', 'settlementId'],
-      where: {
-        caseId: application.caseId,
-        settlementId: { [Op.not]: null },
-      },
-    })
+    const advertWithSettlement = await this.advertModel
+      .unscoped()
+      .findOneOrThrow({
+        attributes: ['id', 'settlementId'],
+        where: {
+          caseId: application.caseId,
+          settlementId: { [Op.not]: null },
+        },
+        include: [{ model: SettlementModel }],
+      })
 
     let communicationChannels: CommunicationChannelCreateAttributes[] = []
 
@@ -310,6 +317,9 @@ export class ApplicationService implements IApplicationService {
     }
 
     await this.advertService.createAdvert({
+      templateType: advertWithSettlement.settlement?.dateOfDeath
+        ? AdvertTemplateType.DIVISION_MEETING_DECEASED
+        : AdvertTemplateType.DIVISION_MEETING_BANKRUPTCY,
       caseId: application.caseId,
       categoryId: CategoryDefaultIdEnum.DIVISION_MEETINGS,
       createdBy: submittee.nafn,
@@ -323,7 +333,7 @@ export class ApplicationService implements IApplicationService {
       typeId: TypeIdEnum.DIVISION_MEETING,
       title: `Skiptafundur - ${application.settlementName}`,
       additionalText: body.additionalText,
-      settlementId: settlement.settlementId,
+      settlementId: advertWithSettlement.settlementId,
       communicationChannels: communicationChannels.map((ch) => ({
         email: ch.email,
         name: ch.name ?? undefined,
@@ -389,6 +399,7 @@ export class ApplicationService implements IApplicationService {
           })) ?? [])
 
     await this.advertService.createAdvert({
+      templateType: AdvertTemplateType.DIVISION_ENDING,
       caseId: application.caseId,
       categoryId: CategoryDefaultIdEnum.DIVISION_ENDINGS,
       createdBy: submittee.nafn,
