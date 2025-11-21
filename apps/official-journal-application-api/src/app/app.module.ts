@@ -14,6 +14,8 @@ import {
   AdvertTypeModule,
   ApplicationModule,
   HealthModule,
+  OpenSearchModule,
+  OpsModule,
   PdfModule,
   RoleGuard,
   SignatureModule,
@@ -49,6 +51,8 @@ import { PartyGuard } from './guards/party.guard'
     UtilityModule,
     AdvertTypeModule,
     UserModule,
+    OpenSearchModule,
+    OpsModule,
   ],
   controllers: [ApplicationController, AdvertTypeController],
   providers: [
