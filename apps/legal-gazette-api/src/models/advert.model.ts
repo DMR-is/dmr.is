@@ -42,7 +42,7 @@ import { cleanLegacyHtml } from '@dmr.is/utils'
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'
 import { QueryDto } from '../core/dto/query.dto'
-import { getAdvertHTMLMarkup } from '../core/templates'
+import { getAdvertHtmlMarkup } from '../core/templates/html'
 import {
   AdvertPublicationDto,
   AdvertPublicationModel,
@@ -73,12 +73,12 @@ import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
 import { UserModel } from './users.model'
 
 export enum AdvertTemplateType {
-  COMMON = 'common',
-  RECALL_BANKRUPTCY = 'recall_bankruptcy',
-  RECALL_DECEASED = 'recall_deceased',
-  DIVISION_MEETING_BANKRUPTCY = 'division_meeting_bankruptcy',
-  DIVISION_MEETING_DECEASED = 'division_meeting_deceased',
-  DIVISION_ENDING = 'division_ending',
+  COMMON = 'COMMON',
+  RECALL_BANKRUPTCY = 'RECALL_BANKRUPTCY',
+  RECALL_DECEASED = 'RECALL_DECEASED',
+  DIVISION_MEETING_BANKRUPTCY = 'DIVISION_MEETING_BANKRUPTCY',
+  DIVISION_MEETING_DECEASED = 'DIVISION_MEETING_DECEASED',
+  DIVISION_ENDING = 'DIVISION_ENDING',
 }
 
 type AdvertAttributes = {
@@ -548,7 +548,7 @@ export class AdvertModel extends BaseModel<
     }
 
     try {
-      return getAdvertHTMLMarkup(this, version)
+      return getAdvertHtmlMarkup(this, version)
     } catch (error) {
       const logger = getLogger('AdvertModel')
       const message = error instanceof Error ? error.message : 'Unknown error'

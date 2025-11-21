@@ -36,7 +36,9 @@ export function getSignatureMarkup({
   }
 
   const locationMarkup = getElement(formatDateAndLocation(location, date))
-  const onBehalfOfMarkup = getElement(`f.h. ${onBehalfOf}`)
+  const onBehalfOfMarkup = isDefined(onBehalfOf)
+    ? getElement(`f.h. ${onBehalfOf}`)
+    : ''
   const nameMarkup = getElement(`<strong>${name}</strong>`, {
     className: 'advertSignatureName',
   })
