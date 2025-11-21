@@ -114,6 +114,24 @@ export const advertsRouter = router({
         userId: input.userId,
       })
     }),
+  assignAndUpdateStatus: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        userId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await Promise.all([
+        await ctx.adverts.updateApi.assignAdvertToEmployee({
+          id: input.id,
+          userId: input.userId,
+        }),
+        await ctx.adverts.updateApi.moveAdvertToNextStatus({
+          id: input.id,
+        }),
+      ])
+    }),
   moveToNextStatus: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
