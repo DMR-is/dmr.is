@@ -47,17 +47,58 @@ export class SearchService {
     return index
   }
 
-  async bulkIndex(index: string, datasource: any): Promise<number> {
-    const res = await (this.os as any).helpers.bulk({
-      datasource,
-      onDocument: (doc: any) => ({ index: { _index: index, _id: doc.id } }),
-      concurrency: 2,
-      flushBytes: 5_000_000,
-      retries: 5,
-      wait: 2000,
-      onDrop: (it: any) => this.log.error(`Dropped: ${it?.error || it}`),
-    })
-    return res?.total ?? 0
+  async bulkIndex(
+    index: string,
+    datasource: AsyncIterable<SearchAdvertType>,
+    batchSize = 100,
+  ): Promise<number> {
+    let body: any[] = []
+    let total = 0
+    let batchStart = 0
+
+    for await (const doc of datasource) {
+      if (total === batchStart) {
+        this.log.log(
+          `Indexing batch (${batchStart}-${batchStart + batchSize - 1})...`,
+        )
+      }
+
+      body.push({ index: { _index: index, _id: doc.id } })
+      body.push(doc)
+      total++
+
+      if (total - batchStart >= batchSize) {
+        await this.flushBulk(index, body)
+        body = []
+        batchStart = total
+      }
+    }
+
+    if (body.length > 0) {
+      this.log.log(`Indexing final batch (${batchStart}-${total - 1})...`)
+      await this.flushBulk(index, body)
+    }
+
+    this.log.log(`Finished bulk index. Total docs: ${total}`)
+    return total
+  }
+
+  private async flushBulk(index: string, body: any[]) {
+    if (!body.length) return
+
+    const res = await this.os.bulk({ index, body })
+
+    if (res.body?.errors) {
+      const items = res.body.items ?? []
+      for (const item of items) {
+        const op = item.index || item.create || item.update || item.delete
+        if (op?.error) {
+          this.log.error(
+            `Bulk error [${op.status}]: ${JSON.stringify(op.error)}`,
+          )
+        }
+      }
+    }
   }
 
   async deleteItemFromIndex(id: string, index: string) {
