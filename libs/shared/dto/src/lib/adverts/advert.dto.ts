@@ -180,7 +180,7 @@ export class AdvertLean extends PickType(Advert, [
   'categories',
   'involvedParty',
 ] as const) {
-  score!: number
+  score?: number
 }
 
 export class CreateAdvert {
