@@ -3,6 +3,39 @@ import startOfDay from 'date-fns/startOfDay'
 
 import { GetAdvertsQueryParams, Paging } from '@dmr.is/shared/dto'
 
+function normalizeToArray(value: string | string[]): string[] {
+  if (Array.isArray(value)) return value
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((v) => v.trim())
+      .filter(Boolean)
+  }
+
+  return []
+}
+
+function termFilter(rawValue: string | string[], field: string) {
+  const values = normalizeToArray(rawValue)
+
+  if (values.length === 0) return
+
+  if (values.length === 1) {
+    return {
+      term: {
+        [field]: values[0],
+      },
+    }
+  } else {
+    return {
+      terms: {
+        [field]: values,
+      },
+    }
+  }
+}
+
 export const getOsPaging = (
   totalItems: number,
   page: number,
@@ -39,19 +72,18 @@ export const getOsBody = (
 
   // Build filters
   const filters: any[] = []
-  if (qp?.department)
-    filters.push({ term: { 'department.slug': qp.department } })
-  if (qp?.year) {
-    filters.push({ term: { 'publicationNumber.year': qp.year } })
-  }
+  if (qp?.department) filters.push(termFilter(qp.department, 'department.slug'))
   if (qp?.type) {
-    filters.push({ term: { 'type.slug': qp.type } })
+    filters.push(termFilter(qp.type, 'type.slug'))
   }
   if (qp?.category) {
-    filters.push({ term: { 'categories.slug': qp.category } })
+    filters.push(termFilter(qp.category, 'categories.slug'))
   }
   if (qp?.involvedParty) {
-    filters.push({ term: { 'involvedParty.slug': qp.involvedParty } })
+    filters.push(termFilter(qp.involvedParty, 'involvedParty.slug'))
+  }
+  if (qp?.year) {
+    filters.push({ term: { 'publicationNumber.year': qp.year } })
   }
   if (qp?.dateFrom || qp?.dateTo) {
     filters.push({
