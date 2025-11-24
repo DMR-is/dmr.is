@@ -163,7 +163,7 @@ export class ReindexRunnerService implements IReindexRunnerService {
     }
   }
 
-  private async *pagedAdverts(pageSize = 100, maxDocs = Infinity) {
+  private async *pagedAdverts(pageSize = 50, maxDocs = Infinity) {
     let offset = 0,
       emitted = 0
     while (emitted < maxDocs) {
@@ -173,7 +173,16 @@ export class ReindexRunnerService implements IReindexRunnerService {
         include,
         limit: Math.min(pageSize, maxDocs - emitted),
         order: [['id', 'ASC']],
+        attributes: [
+          'id',
+          'subject',
+          'serialNumber',
+          'publicationYear',
+          'publicationDate',
+          'documentHtml',
+        ],
       })
+
       if (!rows.length) break
       for (const r of rows) {
         yield this.advertToDoc(r)
@@ -233,8 +242,8 @@ export class ReindexRunnerService implements IReindexRunnerService {
       // 2) bulk backfill (cap with maxDocs)
       const total = await this.search.bulkIndex(
         index,
-        this.pagedAdverts(100, maxDocs),
-        100,
+        this.pagedAdverts(50, maxDocs),
+        50,
       )
       this.status = {
         ...this.status,
