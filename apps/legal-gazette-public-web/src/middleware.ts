@@ -1,25 +1,40 @@
-import { withAuth } from 'next-auth/middleware'
+import { NextMiddleware, NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
-export default withAuth({
-  callbacks: {
-    authorized: async ({ token }) => {
-      if (token && !token.invalid) {
-        return true
-      }
-      return false
-    },
-  },
-  pages: {
-    signIn: '/',
-    error: '/error',
-  },
-})
+import { tryToUpdateCookie } from '@dmr.is/auth/middleware-helpers'
+import { isExpired } from '@dmr.is/auth/token-service'
 
-// This matcher applies the middleware to all routes except:
-// - any route under "/api/"
-// - any route that includes a dot in its path (such as static files like images, scripts, etc.)
-// - the "/innskraning" (login) route
-// In other words, authentication will be enforced on every page except for API requests, static assets, and the login page.
+import { identityServerConfig } from './lib/authOptions'
+
+const DEFAULT_URL = '/'
+
+export const middleware: NextMiddleware = async (req) => {
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+  const isAuthenticated = !!token
+  let response = NextResponse.next()
+
+  if (DEFAULT_URL === req.nextUrl.pathname && !isAuthenticated) {
+    return response
+  }
+  if (!isAuthenticated) {
+    const loginUrl = new URL('/', req.url)
+    return NextResponse.redirect(loginUrl)
+  }
+  if (isExpired(token.accessToken as string, !!token.invalid)) {
+    response = await tryToUpdateCookie(
+      identityServerConfig.clientId,
+      identityServerConfig.clientSecret,
+      req,
+      token,
+      response,
+    )
+  }
+  return response
+}
+
 export const config = {
-  matcher: ['/((?!api/.*|.*\\.|innskraning|$|skraning|$).*)'],
+  matcher: [
+    '/((?!api/.*|.*\\.|innskraning|$).*)',
+    '/api/trpc/:path*', // All tRPC routes
+  ],
 }
