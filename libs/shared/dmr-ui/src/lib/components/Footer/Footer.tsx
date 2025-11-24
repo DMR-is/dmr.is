@@ -13,6 +13,7 @@ import {
 } from '@island.is/island-ui/core'
 
 import { HeaderLogo } from '../Header/HeaderLogo'
+import * as styles from './footer.css'
 
 export const Footer = () => {
   const hlekkir = [
@@ -58,7 +59,7 @@ export const Footer = () => {
       <Box width="full" background="blue100" paddingY={6}>
         <GridContainer>
           <GridRow>
-            <GridColumn span="4/12">
+            <GridColumn span={['12/12', '12/12', '6/12', '4/12']}>
               <Inline alignY="top" space={3}>
                 <HeaderLogo />
                 <Stack space={2}>
@@ -84,20 +85,13 @@ export const Footer = () => {
                   </Stack>
                 </Stack>
               </Inline>
-              <div
-                style={{
-                  borderLeft: '1px solid #ccdfff',
-                  height: '100%',
-                  position: 'absolute',
-                  top: '0',
-                  right: '20px',
-                }}
-              />
+              {}
+              <div className={styles.footerDivider} />
             </GridColumn>
 
-            <GridColumn span="6/12">
+            <GridColumn span={['12/12', '6/12', '6/12', '6/12']}>
               <Stack space={2}>
-                <Text variant="eyebrow" color="dark350" paddingTop={4}>
+                <Text variant="eyebrow" color="blue400" paddingTop={4}>
                   Hlekkir
                 </Text>
                 <Inline space={8}>
@@ -130,7 +124,7 @@ export const Footer = () => {
       <Box paddingY={4}>
         <GridContainer>
           <Box paddingBottom={2}>
-            <Text variant="eyebrow" color="dark350">
+            <Text variant="eyebrow" color="blue400">
               Aðrir vefir
             </Text>
           </Box>

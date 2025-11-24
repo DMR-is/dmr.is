@@ -7,12 +7,13 @@ export const DataTableBody = <T extends readonly DataTableColumnProps[]>({
   rows,
   columns,
   noDataMessage = 'Engin gögn fundust, líklegast þarf að breyta síu',
+  background,
 }: DataTableBodyProps<T>) => {
   return (
     <T.Body>
       {!rows || rows.length === 0 ? (
         <>
-          <tr className={styles.emptyRow}>
+          <tr className={styles.emptyRow} style={{ background: background }}>
             <td colSpan={columns.length}>
               <div className={styles.emptyRowMessageWrapper}>
                 <Text color="dark400">
@@ -23,7 +24,10 @@ export const DataTableBody = <T extends readonly DataTableColumnProps[]>({
               </div>
             </td>
           </tr>
-          <tr className={styles.emptyRow}></tr>
+          <tr
+            className={styles.emptyRow}
+            style={{ background: background }}
+          ></tr>
         </>
       ) : (
         rows.map((row, rowIndex) => {
@@ -32,6 +36,7 @@ export const DataTableBody = <T extends readonly DataTableColumnProps[]>({
               key={row.uniqueKey ? row.uniqueKey : rowIndex}
               {...row}
               columns={columns}
+              background={background}
             />
           )
         })

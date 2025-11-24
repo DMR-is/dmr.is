@@ -32,6 +32,7 @@ export type DataTableRowProps<T extends readonly DataTableColumnProps[]> = {
 } & {
   columns: T
   uniqueKey?: string
+  background?: string
 } & DataTableRowExpandableProps &
   DataTableRowHasLinkProps
 export type DataTablePagingProps = {
@@ -45,6 +46,7 @@ export type DataTableBodyProps<T extends readonly DataTableColumnProps[]> = {
   columns: T
   rows?: Array<DataTableRowProps<T>>
   noDataMessage?: string
+  background?: string
 }
 
 export type DataTablePaginationProps = {
@@ -64,5 +66,5 @@ export type DataTableProps<T extends readonly DataTableColumnProps[]> = {
   onPageSizeChange?: (pageSize: number) => void
   showPageSizeSelect?: boolean
   noDataMessage?: string
-  headerBackground?: string
+  tableBackground?: string
 }

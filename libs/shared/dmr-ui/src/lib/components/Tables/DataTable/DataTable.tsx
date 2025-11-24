@@ -19,7 +19,7 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
   onPageChange,
   onPageSizeChange,
   showPageSizeSelect = true,
-  headerBackground,
+  tableBackground,
 }: DataTableProps<T>) => {
   if (loading) {
     return (
@@ -41,18 +41,10 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
         <T.Head>
           <T.Row>
             {columns.map((column, i) => (
-              <DataTableColumn
-                key={i}
-                {...column}
-                background={headerBackground}
-              />
+              <DataTableColumn key={i} {...column} />
             ))}
             {(hasLinkRows || hasExpandableRows) && (
-              <DataTableColumn
-                width="65px"
-                field=""
-                background={headerBackground}
-              />
+              <DataTableColumn width="65px" field="" />
             )}
           </T.Row>
         </T.Head>
@@ -60,6 +52,7 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
           rows={rows as DataTableRowProps<T>[]}
           columns={columns}
           noDataMessage={noDataMessage}
+          background={tableBackground}
         />
       </T.Table>
       {paging && (
