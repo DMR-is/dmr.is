@@ -3,9 +3,12 @@ import { encode, JWT } from 'next-auth/jwt'
 
 import { refreshAccessToken } from './token-service'
 
-const SESSION_COOKIE = 'next-auth.session-token'
-const SESSION_TIMEOUT = 60 * 60 // 1 hour
+
+
 const SESSION_SECURE = process.env.NODE_ENV === 'production'
+const SESSION_COOKIE = SESSION_SECURE ? '__Secure.next-auth.session-token' : 'next-auth.session-token.dev'
+const SESSION_TIMEOUT = 60 * 60 // 1 hour
+
 
 export function updateCookie(
   sessionToken: string | null,
