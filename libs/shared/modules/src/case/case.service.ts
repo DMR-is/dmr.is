@@ -1275,7 +1275,10 @@ export class CaseService implements ICaseService {
     })
 
     try {
-      this.runner.updateItemInIndex(advertCreateResult.result.value.advert.id)
+      const advertId = advertCreateResult.result.value.advert.id
+      transaction?.afterCommit(async () => {
+        await this.runner.updateItemInIndex(advertId)
+      })
     } catch (error) {
       this.logger.error('Failed to reindex advert', {
         error,
