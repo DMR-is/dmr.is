@@ -34,7 +34,7 @@ export const middleware: NextMiddleware = async (req) => {
 
 export const config = {
   matcher: [
-    '/((?!api/.*|.*\\.|innskraning|$).*)',
-    '/api/trpc/:path*', // All tRPC routes
+    // All routes except static files, auth pages, and non-trpc API routes
+    '/((?!_next/static|_next/image|favicon.ico|innskraning$|skraning/|api/(?!trpc)|.*\\.).*)',
   ],
 }
