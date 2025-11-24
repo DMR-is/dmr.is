@@ -1,11 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import {
-  AlertMessage,
   Box,
-  Pagination,
   SkeletonLoader,
   Stack,
   Text,
@@ -15,59 +13,62 @@ import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { Icon, Link } from '@island.is/island-ui/core'
 
 import { useFilters } from '../../../../hooks/useFilters'
-import { useTRPC } from '../../../../lib/trpc/client/trpc'
+import { issues } from '../dummyData'
 
-import { useQuery } from '@tanstack/react-query'
-
-export const SearchIssuesResults = () => {
+export const SearchIssuesResults = ({
+  setTotalItems,
+}: {
+  setTotalItems: (count: number) => void
+}) => {
   const { filters, setFilters } = useFilters()
-  const trpc = useTRPC()
-
   const [isLoading, setIsLoading] = useState(false)
 
-  // const { data, isLoading, error } = useQuery(
-  //   trpc.getPublications.queryOptions({
-  //     page: filters.page,
-  //     pageSize: filters.pageSize,
-  //     search: filters.search,
-  //     categoryId: filters.categoryId ?? undefined,
-  //     typeId: filters.typeId ?? undefined,
-  //     dateFrom: filters.dateFrom
-  //       ? new Date(filters.dateFrom).toISOString()
-  //       : undefined,
-  //     dateTo: filters.dateTo
-  //       ? new Date(filters.dateTo).toISOString()
-  //       : undefined,
-  //   }),
-  // )
+  const getFilteredData = () => {
+    let thisData = [...issues]
+    if (filters.dateFrom && filters.dateTo) {
+      thisData = thisData.filter((issue) => {
+        if (issue.date < filters.dateFrom! || issue.date > filters.dateTo!) {
+          return false
+        }
+        return true
+      })
+    } else {
+      thisData = thisData.filter((issue) => {
+        if (issue.date.getFullYear() !== filters.yearId) {
+          return false
+        }
+        return true
+      })
+    }
+    setTotalItems(thisData.length)
+    return {
+      data: thisData.filter((issue, index) => {
+        if (
+          index >= (filters.page - 1) * filters.pageSize &&
+          index < filters.page * filters.pageSize
+        ) {
+          return true
+        }
+        return false
+      }),
 
-  const data = [
-    {
-      nr: 37,
-      date: '19.11.2025',
-      link: '/auglysingar?type=innkollun-throtabu',
-    },
-    {
-      nr: 36,
-      date: '18.11.2025',
-      link: '/auglysingar?type=innkollun-throtabu',
-    },
-    {
-      nr: 35,
-      date: '14.11.2025',
-      link: '/auglysingar?type=innkollun-throtabu',
-    },
-    {
-      nr: 34,
-      date: '15.10.2025',
-      link: '/auglysingar?type=innkollun-throtabu',
-    },
-    {
-      nr: 33,
-      date: '15.10.2025',
-      link: '/auglysingar?type=innkollun-throtabu',
-    },
-  ]
+      paging: {
+        pageSize: filters.pageSize,
+        totalPages:
+          filters.pageSize > 0
+            ? Math.ceil(thisData.length / filters.pageSize)
+            : 1,
+        page: filters.page,
+        totalItems: thisData.length,
+      },
+    }
+  }
+  const [filteredData, setFilteredData] = useState(getFilteredData())
+
+  useEffect(() => {
+    // console.log('changed', data.amount)
+    setFilteredData(getFilteredData())
+  }, [filters])
 
   // if (error) {
   //   return (
@@ -88,17 +89,16 @@ export const SearchIssuesResults = () => {
           repeat={5}
           space={[2, 3, 4]}
         />
-      ) : (data?.length || 0) > 0 ? (
-        <Box background={'white'} paddingBottom={3} borderRadius="large">
+      ) : (filteredData.data?.length || 0) > 0 ? (
+        <Box paddingBottom={3} borderRadius="large">
           <DataTable
-            paging={{
-              pageSize: 3,
-              totalPages: 2,
-              page: 1,
-              totalItems: 6,
-            }}
-            headerBackground="#ccdfff"
+            paging={filteredData.paging}
+            onPageChange={(page) => setFilters((prev) => ({ ...prev, page }))}
+            onPageSizeChange={(pageSize) =>
+              setFilters((prev) => ({ ...prev, pageSize, page: 1 }))
+            }
             showPageSizeSelect={false}
+            tableBackground="white"
             columns={[
               {
                 field: 'nr',
@@ -116,9 +116,9 @@ export const SearchIssuesResults = () => {
               },
             ]}
             rows={
-              data?.map((publication) => ({
+              filteredData.data?.map((publication) => ({
                 nr: publication.nr,
-                date: publication.date,
+                date: publication.date.toLocaleDateString('en-GB'),
                 link: (
                   <Link
                     href={publication.link ?? ''}
@@ -142,27 +142,11 @@ export const SearchIssuesResults = () => {
           />
         </Box>
       ) : (
-        <Box padding={[2, 3, 4]} borderRadius="large" border="standard">
-          <Text variant="h3">Engar birtingar fundust</Text>
-          <Text>Vinsamlegast endurskoðaðu leitarskilyrði</Text>
+        <Box padding={[2, 3, 4]} borderRadius="md" background={'white'}>
+          <Text variant="h3">Engin tölublöð fundust</Text>
+          <Text>Vinsamlegast endurskoðaðu síunar</Text>
         </Box>
       )}
-      {/* {(data?.paging.totalItems || 0) > 0 && (
-        <Pagination
-          page={filters.page}
-          itemsPerPage={filters.pageSize}
-          totalItems={data?.paging.totalItems}
-          totalPages={data?.paging.totalPages}
-          renderLink={(page, className, children) => (
-            <button
-              className={className}
-              onClick={() => setFilters((prev) => ({ ...prev, page }))}
-            >
-              {children}
-            </button>
-          )}
-        />
-      )} */}
     </Stack>
   )
 }

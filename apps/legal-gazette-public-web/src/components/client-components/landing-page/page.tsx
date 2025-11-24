@@ -18,6 +18,7 @@ import { Icon, Inline, Link, LinkContext } from '@island.is/island-ui/core'
 
 import { BannerSearch } from '../../client-components/front-page/banner-search/BannerSearch'
 import { SearchIssuesResults } from '../search-issues-page/results/SearchIssuesResults'
+import { SearchIssuesPage } from '../search-issues-page/SearchIssuesPage'
 import { SearchIssuesSidebar } from '../search-issues-page/sidebar/SearchIssuesSidebar'
 import { SearchSidebar } from '../search-page/sidebar/Sidebar'
 
@@ -33,7 +34,13 @@ export const LandingPageContent = () => {
   return (
     <>
       <HeaderLogin variant="white" />
-      <Box marginBottom={12} rowGap={8} display="flex" flexDirection="column">
+      <Box
+        marginBottom={12}
+        marginTop={[4, 4, 4, 0]}
+        rowGap={8}
+        display="flex"
+        flexDirection="column"
+      >
         <GridContainer>
           <GridRow>
             <GridColumn
@@ -80,8 +87,8 @@ export const LandingPageContent = () => {
 
         <Box background="blue100" paddingY={8}>
           <GridContainer>
-            <Box marginBottom={3}>
-              <Text marginBottom={1} variant="h2">
+            <Box marginBottom={4}>
+              <Text marginBottom={2} variant="h2">
                 Nýjustu tölublöð
               </Text>
               <Text>
@@ -95,18 +102,7 @@ export const LandingPageContent = () => {
                 .
               </Text>
             </Box>
-            <GridRow>
-              <GridColumn span={['12/12', '12/12', '12/12', '3/12']}>
-                <Box>
-                  <Box padding={3} background="blue200" borderRadius="md">
-                    <SearchIssuesSidebar />
-                  </Box>
-                </Box>
-              </GridColumn>
-              <GridColumn span={['12/12', '12/12', '12/12', '9/12']}>
-                <SearchIssuesResults />
-              </GridColumn>
-            </GridRow>
+            <SearchIssuesPage />
           </GridContainer>
         </Box>
       </Box>

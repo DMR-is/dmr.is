@@ -31,6 +31,7 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
         className={styles.dataTableRow({
           expandable: !!isExpandable || hasLink,
         })}
+        style={{ background: row.background }}
       >
         {columns.map((column, i) => {
           const children = row[column.field as keyof typeof row]
@@ -76,7 +77,7 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
         )}
       </tr>
       {isExpandable && (
-        <tr>
+        <tr style={{ background: row.background }}>
           <td colSpan={colSpan}>
             <AnimateHeight duration={300} height={expanded ? 'auto' : 0}>
               {row.children}
