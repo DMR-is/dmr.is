@@ -50,11 +50,16 @@ export class SearchService {
   async bulkIndex(
     index: string,
     datasource: AsyncIterable<SearchAdvertType>,
-    batchSize = 100,
+    batchSize = 50,
   ): Promise<number> {
     let body: any[] = []
     let total = 0
     let batchStart = 0
+
+    const formatMB = (bytes: number) => (bytes / 1024 / 1024).toFixed(1) + 'MB'
+
+    const sleep = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms))
 
     for await (const doc of datasource) {
       if (total === batchStart) {
@@ -68,9 +73,17 @@ export class SearchService {
       total++
 
       if (total - batchStart >= batchSize) {
+        const mem = process.memoryUsage()
+        this.log.log(
+          `Flushing batch (${batchStart}-${total - 1}). ` +
+            `RSS=${formatMB(mem.rss)}, HeapUsed=${formatMB(mem.heapUsed)}`,
+        )
+
         await this.flushBulk(index, body)
         body = []
         batchStart = total
+
+        await sleep(30)
       }
     }
 
