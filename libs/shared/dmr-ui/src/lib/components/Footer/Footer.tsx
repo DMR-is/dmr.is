@@ -42,7 +42,7 @@ export const Footer = () => {
     },
     {
       title: 'Gerast áskrifandi',
-      href: 'skraning',
+      href: '/skraning',
     },
   ]
 
