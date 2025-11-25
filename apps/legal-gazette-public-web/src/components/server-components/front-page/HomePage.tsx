@@ -1,5 +1,4 @@
 import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
-import { Header } from '@dmr.is/ui/components/Header/Header'
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 import {
   Box,
@@ -50,7 +49,6 @@ export const HomePage = async () => {
 
   return (
     <>
-      <Header />
       <Hero
         title="Lögbirtingablaðið"
         description="Um útgáfu Lögbirtingablaðsins gilda lög um Stjórnartíðindi og Lögbirtingarblaðsins nr. 15/2005"

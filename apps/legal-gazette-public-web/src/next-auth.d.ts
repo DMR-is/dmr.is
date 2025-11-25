@@ -1,4 +1,4 @@
-import { SubscriberDto } from './src/gen/fetch'
+import { SubscriberDto } from './gen/fetch'
 
 declare module 'next-auth' {
   interface User extends DefaultUser, SubscriberDto {
@@ -26,6 +26,7 @@ declare module 'next-auth/jwt' {
     refreshToken?: string
     idToken?: string
     nationalId?: string
+    isActive?: boolean
     name?: string
     invalid?: boolean
     error?: string

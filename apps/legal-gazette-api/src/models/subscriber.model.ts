@@ -1,4 +1,3 @@
-import { IsBoolean, IsString, IsUUID } from 'class-validator'
 import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
@@ -20,7 +19,8 @@ export type SubscriberCreateAttributes = {
   nationalId: string
   firstName: string
   lastName: string
-  email: string
+  isActive?: false
+  email?: string | null
   phone?: string | null
 }
 

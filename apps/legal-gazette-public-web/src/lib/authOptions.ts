@@ -44,9 +44,7 @@ async function authorize(nationalId?: string, idToken?: string) {
   const client = getClient(idToken)
 
   try {
-    const { data: member } = await serverFetcher(() =>
-      client.getMySubscriber(),
-    )
+    const { data: member } = await serverFetcher(() => client.getMySubscriber())
     if (!member) {
       // TODO: Enable logging when we have a logger that works in both server and edge runtimes
       // const logger = getLogger('authorize')
@@ -56,16 +54,6 @@ async function authorize(nationalId?: string, idToken?: string) {
       //   category: LOGGING_CATEGORY,
       // })
       throw new Error('Member not found')
-    }
-
-    if (!member.isActive) {
-      // TODO: Enable logging when we have a logger that works in both server and edge runtimes
-      // const logger = getLogger('authorize')
-      // logger.error('Subscriber is not active', {
-      //   nationalId,
-      //   category: LOGGING_CATEGORY,
-      // })
-      throw new Error('Subscriber is not active')
     }
 
     return member
@@ -105,6 +93,7 @@ export const authOptions: AuthOptions = {
           refreshToken: account.refresh_token,
           userId: user.id,
           idToken: account.id_token,
+          isActive: user.isActive,
         } as JWT
       }
 
@@ -134,6 +123,7 @@ export const authOptions: AuthOptions = {
         name: token.name as string,
         nationalId: token.nationalId,
         id: token.userId as string,
+        isActive: token.isActive as boolean,
       }
 
       // Add tokens to session
@@ -166,6 +156,7 @@ export const authOptions: AuthOptions = {
         // Mutate user object to include roles, nationalId and displayName
         user.nationalId = authMember.nationalId
         user.id = authMember.id
+        user.isActive = authMember.isActive
         return true
       }
 

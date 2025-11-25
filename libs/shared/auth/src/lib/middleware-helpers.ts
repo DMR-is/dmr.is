@@ -3,12 +3,11 @@ import { encode, JWT } from 'next-auth/jwt'
 
 import { refreshAccessToken } from './token-service'
 
-
-
 const SESSION_SECURE = process.env.NODE_ENV === 'production'
-const SESSION_COOKIE = SESSION_SECURE ? '__Secure-next-auth.session-token' : 'next-auth.session-token'
+const SESSION_COOKIE = SESSION_SECURE
+  ? '__Secure-next-auth.session-token'
+  : 'next-auth.session-token'
 const SESSION_TIMEOUT = 60 * 60 // 1 hour
-
 
 export function updateCookie(
   sessionToken: string | null,
@@ -55,14 +54,20 @@ export async function tryToUpdateCookie(
     const redirectUri =
       process.env.LG_PUBLIC_WEB_URL ?? process.env.IDENTITY_SERVER_LOGOUT_URL
 
+    const newToken = await refreshAccessToken(
+      token as JWT,
+      redirectUri,
+      clientId,
+      clientSecret,
+    )
+
+    if (newToken.invalid) {
+      return updateCookie(null, req, response)
+    }
+
     const newSessionToken = await encode({
       secret: process.env.NEXTAUTH_SECRET as string,
-      token: await refreshAccessToken(
-        token as JWT,
-        redirectUri,
-        clientId,
-        clientSecret,
-      ),
+      token: newToken,
       maxAge: SESSION_TIMEOUT,
     })
     return updateCookie(newSessionToken, req, response)
