@@ -1,19 +1,12 @@
-'use client'
-
-import { signIn } from 'next-auth/react'
-
-import { identityServerId } from '@dmr.is/auth/identityProvider'
 import {
-  Box,
-  Button,
+  Bullet,
+  BulletList,
   GridColumn,
   GridContainer,
   GridRow,
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
-
-import { Bullet, BulletList } from '@island.is/island-ui/core'
 
 export default function Page() {
   return (

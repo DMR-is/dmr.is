@@ -1,15 +1,10 @@
-'use client'
-
 import {
-  Box,
   GridColumn,
   GridContainer,
   GridRow,
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
-
-import { Link } from '@island.is/island-ui/core'
 
 export default function Page() {
   return (

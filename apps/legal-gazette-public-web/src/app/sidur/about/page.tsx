@@ -1,15 +1,11 @@
-'use client'
-
 import {
-  Box,
   GridColumn,
   GridContainer,
   GridRow,
+  LinkV2,
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
-
-import { Link } from '@island.is/island-ui/core'
 
 export default function Page() {
   return (
@@ -91,18 +87,18 @@ export default function Page() {
               <Text variant="h5">Lög og reglugerðir:</Text>
 
               <Stack space={1}>
-                <Link
+                <LinkV2
                   color="blue600"
                   href="http://www.althingi.is/altext/stjt/2005.015.html"
                 >
                   Lög nr. 15/2005 um Stjórnartíðindi og Lögbirtingablað
-                </Link>
-                <Link
+                </LinkV2>
+                <LinkV2
                   color="blue600"
                   href="http://www.reglugerd.is/interpro/dkm/WebGuard.nsf/key2/623-2005"
                 >
                   Reglugerð um útgáfu Lögbirtingablaðs nr. 623/2005
-                </Link>
+                </LinkV2>
               </Stack>
             </Stack>
             <Stack space={0}>
@@ -111,39 +107,39 @@ export default function Page() {
               <Stack space={0}>
                 <div>
                   <Text as="span">Reglugerðavefurinn: </Text>
-                  <Link color="blue600" href="http://reglugerd.is">
+                  <LinkV2 color="blue600" href="http://reglugerd.is">
                     reglugerd.is
-                  </Link>
+                  </LinkV2>
                 </div>
                 <div>
                   <Text as="span">Réttarheimildir: </Text>
-                  <Link color="blue600" href="http://rettarheimild.is">
+                  <LinkV2 color="blue600" href="http://rettarheimild.is">
                     rettarheimild.is
-                  </Link>
+                  </LinkV2>
                 </div>
                 <div>
                   <Text as="span">Stjórnartíðindi: </Text>
-                  <Link color="blue600" href="http://stjornartidindi.is">
+                  <LinkV2 color="blue600" href="http://stjornartidindi.is">
                     stjornartidindi.is
-                  </Link>
+                  </LinkV2>
                 </div>
                 <div>
                   <Text as="span">Danmörk: </Text>
-                  <Link color="blue600" href="http://statstidende.dk">
+                  <LinkV2 color="blue600" href="http://statstidende.dk">
                     statstidende.dk
-                  </Link>
+                  </LinkV2>
                 </div>
                 <div>
                   <Text as="span">Finnland: </Text>
-                  <Link color="blue600" href="http://virallinenlehti.fi">
+                  <LinkV2 color="blue600" href="http://virallinenlehti.fi">
                     virallinenlehti.fi
-                  </Link>
+                  </LinkV2>
                 </div>
                 <div>
                   <Text as="span">Noregur: </Text>
-                  <Link color="blue600" href="http://norsk.lysingsblad.no">
+                  <LinkV2 color="blue600" href="http://norsk.lysingsblad.no">
                     norsk.lysingsblad.no
-                  </Link>
+                  </LinkV2>
                 </div>
               </Stack>
             </Stack>
