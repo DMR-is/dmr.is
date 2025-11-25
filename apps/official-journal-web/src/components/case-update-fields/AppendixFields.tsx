@@ -20,6 +20,7 @@ import {
 } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFileUploader } from '../../lib/utils'
+import { Attachments } from '../attachments/Attachments'
 import { HTMLEditor } from '../editor/Editor'
 import { OJOIInput } from '../select/OJOIInput'
 import * as styles from './AdvertFields.css'
@@ -227,6 +228,7 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
             Bæta við nýjum viðauka
           </Button>
         </Inline>
+        <Attachments displayExternal />
       </Stack>
     </AccordionItem>
   )
