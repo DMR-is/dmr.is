@@ -1,6 +1,7 @@
 import { Controller, Get, Inject, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
+import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules'
 
@@ -25,7 +26,7 @@ export class SubscriberController {
     operationId: 'getMySubscriber',
     type: SubscriberDto,
   })
-  getMySubscriber(@CurrentUser() user: SubscriberDto) {
-    return this.subscriberService.getUserByNationalId(user.nationalId)
+  getMySubscriber(@CurrentUser() user: DMRUser): Promise<SubscriberDto> {
+    return this.subscriberService.getUserByNationalId(user)
   }
 }

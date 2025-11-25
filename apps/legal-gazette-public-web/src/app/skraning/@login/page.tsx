@@ -53,7 +53,7 @@ export default function Signup() {
                     try {
                       setLoading(true)
                       await signIn(identityServerId, {
-                        callbackUrl: '/skraning/buatiladgang',
+                        callbackUrl: '/skraning',
                       })
                     } catch (error) {
                       setLoading(false)

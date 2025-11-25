@@ -1,18 +1,38 @@
-'use client'
+import { redirect } from 'next/navigation'
+import { getServerSession } from 'next-auth'
 
+import { Header } from '@dmr.is/ui/components/Header/Header'
 import { HeaderLogin } from '@dmr.is/ui/components/Header/HeaderLogin'
+
+import { authOptions } from '../../lib/authOptions'
 
 import '../../styles/global.css'
 
 export default async function RootLayout({
-  children,
+  register,
+  login,
 }: {
-  children: React.ReactNode
+  register: React.ReactNode
+  login: React.ReactNode
 }) {
+  const session = await getServerSession(authOptions)
+
+  if (session && session.user.isActive) {
+    redirect('/')
+  }
   return (
     <>
-      <HeaderLogin />
-      {children}
+      {session ? (
+        <>
+          <Header />
+          {register}
+        </>
+      ) : (
+        <>
+          <HeaderLogin />
+          {login}
+        </>
+      )}
     </>
   )
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   AlertMessage,
   Box,
@@ -13,14 +14,12 @@ import { useFilters } from '../../../../hooks/useFilters'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { PublicationCard } from '../../cards/PublicationCard'
 
-import { useQuery } from '@tanstack/react-query'
-
 export const SearchResults = () => {
   const { filters, setFilters } = useFilters()
   const trpc = useTRPC()
 
-  const { data, isLoading, error } =
-    useQuery(trpc.getPublications.queryOptions({
+  const { data, isLoading, error } = useQuery(
+    trpc.getPublications.queryOptions({
       page: filters.page,
       pageSize: filters.pageSize,
       search: filters.search,

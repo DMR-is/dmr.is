@@ -1,7 +1,8 @@
 'use client'
 
+import { useSession } from 'next-auth/react'
+
 import { Footer } from '@dmr.is/ui/components/Footer/Footer'
-import { HeaderLogin } from '@dmr.is/ui/components/Header/HeaderLogin'
 import Hero from '@dmr.is/ui/components/Hero/Hero'
 import {
   Box,
@@ -9,31 +10,36 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
-  Stack,
+  LinkV2,
   Text,
 } from '@dmr.is/ui/components/island-is'
-import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
-import { Icon, Inline, Link, LinkContext } from '@island.is/island-ui/core'
+import { Link } from '@island.is/island-ui/core'
 
 import { BannerSearch } from '../../client-components/front-page/banner-search/BannerSearch'
-import { SearchIssuesResults } from '../search-issues-page/results/SearchIssuesResults'
 import { SearchIssuesPage } from '../search-issues-page/SearchIssuesPage'
-import { SearchIssuesSidebar } from '../search-issues-page/sidebar/SearchIssuesSidebar'
-import { SearchSidebar } from '../search-page/sidebar/Sidebar'
 
 export const LandingPageContent = () => {
-  const quickLinks: React.ComponentProps<typeof BannerSearch>['quickLinks'] = [
-    {
-      title: 'Umsóknarkerfi auglýsanda',
-      href: '/auglysingar?type=innkollun-throtabu',
-      variant: 'blue',
-    },
-  ]
+  const { data: session } = useSession()
+  const quickLinks: React.ComponentProps<typeof BannerSearch>['quickLinks'] =
+    session
+      ? [
+          {
+            title: 'Sækja um áskrift',
+            href: '/skraning',
+            variant: 'blue',
+          },
+        ]
+      : [
+          {
+            title: 'Umsóknarkerfi auglýsanda',
+            href: '/auglysingar?type=innkollun-throtabu',
+            variant: 'blue',
+          },
+        ]
 
   return (
     <>
-      <HeaderLogin variant="white" />
       <Box
         marginBottom={12}
         marginTop={[4, 4, 4, 0]}
@@ -56,7 +62,9 @@ export const LandingPageContent = () => {
                 description="Dómsmálaráðuneytið gefur út Lögbirtingablaðið. Það kom fyrst út í prentuðu formi í árið 1908 og í dag er blaðið einnig aðgengilegt á netinu þar sem hægt er að nálgast öll tölublöð sem komið hafa út frá 1. janúar 2001."
                 button={quickLinks?.map((link, i) => (
                   <Button key={i} size="small" icon="open" iconType="outline">
-                    {link.title}
+                    <LinkV2 key={i} href={link.href}>
+                      {link.title}
+                    </LinkV2>
                   </Button>
                 ))}
                 alignHeader={'spaceBetween'}
