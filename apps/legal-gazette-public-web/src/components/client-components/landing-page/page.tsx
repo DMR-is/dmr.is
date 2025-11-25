@@ -10,11 +10,8 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
-  LinkV2,
   Text,
 } from '@dmr.is/ui/components/island-is'
-
-import { Link } from '@island.is/island-ui/core'
 
 import { BannerSearch } from '../../client-components/front-page/banner-search/BannerSearch'
 import { SearchIssuesPage } from '../search-issues-page/SearchIssuesPage'
@@ -97,17 +94,11 @@ export const LandingPageContent = () => {
           <GridContainer>
             <Box marginBottom={4}>
               <Text marginBottom={2} variant="h2">
-                Nýjustu tölublöð
+                Prentuð útgáfa
               </Text>
               <Text>
-                Tölublöð Lögbirtingablaðsins eru á PDF sniði, en til að skoða
-                slík skjöl er hægt að nota{' '}
-                <Link href="https://get.adobe.com/reader/">
-                  <Text as="span" color="blue600">
-                    Acrobat Reader
-                  </Text>
-                </Link>
-                .
+                Hér er hægt að finna nýjustu tölublöð Lögbirtingablaðsins á PDF
+                sniði.
               </Text>
             </Box>
             <SearchIssuesPage />

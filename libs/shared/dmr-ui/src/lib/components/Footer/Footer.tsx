@@ -19,27 +19,31 @@ export const Footer = () => {
   const hlekkir = [
     {
       title: 'Auglýsingarflokkar',
-      href: '/auglysingar?type=innkollun-throtabu',
+      href: '/sidur/auglysingaflokkar',
     },
     {
       title: 'Gjaldskrá',
-      href: '/gjaldskra',
+      href: '/sidur/gjaldskra',
     },
     {
       title: 'Um Lögbirtingablaðið',
-      href: '/about',
+      href: '/sidur/about',
     },
     {
       title: 'Áskriftarskilmálar',
-      href: '/skilmalar',
+      href: '/sidur/skilmalar',
+    },
+    {
+      title: 'Prentuð útgáfa',
+      href: '/sidur/prentudutgafa',
     },
     {
       title: 'Leiðbeiningar',
-      href: '/leidbeiningar',
+      href: '/sidur/leidbeiningar',
     },
     {
       title: 'Gerast áskrifandi',
-      href: '/skraning',
+      href: 'skraning',
     },
   ]
 

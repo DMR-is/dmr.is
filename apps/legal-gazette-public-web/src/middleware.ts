@@ -48,7 +48,7 @@ export default withAuth(
 // create a config that matches all routes except static files, /innskraning and non-trpc API routes
 export const config = {
   matcher: [
-    '/((?!api|skraning|_next/static|_next/image|images|fonts|.well-known|favicon.ico).*)',
-    '/api/trpc/(.*)',
+    // All routes except static files, auth pages, and non-trpc API routes
+    '/((?!_next/static|_next/image|favicon.ico|innskraning$|skraning$|sidur.*|api/(?!trpc)|.*\\.).*)',
   ],
 }

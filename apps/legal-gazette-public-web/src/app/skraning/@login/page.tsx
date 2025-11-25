@@ -15,10 +15,12 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
+import * as styles from './skraning.css'
+
 export default function Signup() {
   const [loading, setLoading] = useState(false)
   return (
-    <GridContainer>
+    <GridContainer className={styles.contentContainer}>
       <GridRow marginTop={[2, 2, 3]}>
         <GridColumn
           paddingBottom={[2, 2, 3]}
