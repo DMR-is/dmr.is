@@ -7,6 +7,7 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
+  Inline,
   ResponsiveProp,
   Stack,
   Text,
@@ -74,7 +75,7 @@ export const Hero = ({
                     )}
 
                     {description && <Text variant="intro">{description}</Text>}
-                    {button && <Box>{button}</Box>}
+                    {button && <Inline space={2}>{button}</Inline>}
                   </Stack>
 
                   {!isDefault && children && children}

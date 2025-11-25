@@ -6,8 +6,7 @@ import {
   GridContainer,
   GridRow,
   Inline,
-  Link,
-  LinkContext,
+  LinkV2,
   Stack,
   Text,
 } from '@island.is/island-ui/core'
@@ -133,23 +132,15 @@ export const Footer = () => {
             </Text>
           </Box>
           <Box>
-            <LinkContext.Provider
-              value={{
-                linkRenderer: (href, children) => (
-                  <Link href={href} underline="normal">
-                    {children}
-                  </Link>
-                ),
-              }}
-            >
-              <Inline space={[2, 2, 4]}>
-                {adridVefir.map(({ title, href }, index) => (
-                  <Text key={index} variant="small" color="blue600">
-                    <a href={href}>{title}</a>
+            <Inline space={[2, 2, 4]}>
+              {adridVefir.map(({ title, href }) => (
+                <LinkV2 href={href} underline="normal" newTab>
+                  <Text variant="small" color="blue600">
+                    {title}
                   </Text>
-                ))}
-              </Inline>
-            </LinkContext.Provider>
+                </LinkV2>
+              ))}
+            </Inline>
           </Box>
         </GridContainer>
       </Box>

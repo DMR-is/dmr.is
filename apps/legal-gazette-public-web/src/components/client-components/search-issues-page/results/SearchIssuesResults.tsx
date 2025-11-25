@@ -112,7 +112,7 @@ export const SearchIssuesResults = ({
               {
                 field: 'link',
                 children: 'Útgáfusnið',
-                width: '150px',
+                width: '18%',
               },
             ]}
             rows={
