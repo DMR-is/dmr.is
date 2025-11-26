@@ -2,8 +2,11 @@ import { isDateString, isString, isUUID } from 'class-validator'
 import Kennitala from 'kennitala'
 import z from 'zod'
 
-import { baseApplicationSchema, publishingDatesSchema } from './base'
-import { ApplicationRequirementStatementEnum } from './constants'
+import { baseApplicationSchema } from './base'
+import {
+  ApplicationRequirementStatementEnum,
+  ApplicationTypeSchema,
+} from './constants'
 
 export const courtAndJudgmentFieldsSchema = z.object({
   courtDistrictId: z
@@ -126,7 +129,7 @@ export const divisionMeetingValidationFieldsSchema = z.object({
 })
 
 export const recallBankruptcyApplicationFieldsSchema = z.object({
-  type: z.literal('bankruptcy'),
+  type: ApplicationTypeSchema.enum.RECALL_BANKRUPTCY,
   courtAndJudgmentFields: courtAndJudgmentFieldsSchema,
   settlementFields: settlementFieldsSchema.extend({
     deadlineDate: z
@@ -141,7 +144,7 @@ export const recallBankruptcyApplicationFieldsSchema = z.object({
 })
 
 export const recallBankruptcyApplicationValidationFieldsSchema = z.object({
-  type: z.literal('bankruptcy'),
+  type: ApplicationTypeSchema.enum.RECALL_BANKRUPTCY,
   courtAndJudgmentFields: courtAndJudgmentFieldsSchema,
   settlementFields: settlementValidationFieldsSchema.extend({
     deadlineDate: z.iso
@@ -185,10 +188,10 @@ export const recallDeceasedApplicationValidationFieldsSchema = z.object({
 
 export const recallApplicationFieldsSchema = z.discriminatedUnion('type', [
   recallBankruptcyApplicationFieldsSchema.extend({
-    type: z.literal('RECALL_BANKRUPTCY'),
+    type: ApplicationTypeSchema.enum.RECALL_BANKRUPTCY,
   }),
   recallDeceasedApplicationFieldsSchema.extend({
-    type: z.literal('RECALL_DECEASED'),
+    type: ApplicationTypeSchema.enum.RECALL_DECEASED,
   }),
 ])
 
@@ -196,34 +199,42 @@ export const recallApplicationValidationFieldsSchema = z.discriminatedUnion(
   'type',
   [
     recallBankruptcyApplicationValidationFieldsSchema.extend({
-      type: z.literal('RECALL_BANKRUPTCY'),
+      type: ApplicationTypeSchema.enum.RECALL_BANKRUPTCY,
     }),
     recallDeceasedApplicationValidationFieldsSchema.extend({
-      type: z.literal('RECALL_DECEASED'),
+      type: ApplicationTypeSchema.enum.RECALL_DECEASED,
     }),
   ],
 )
 
-export const recallApplicationSchema = baseApplicationSchema.extend({
-  fields: recallApplicationFieldsSchema,
+export const recallPublishingDatesSchema = z.object({
   publishingDates: z
-    .array(publishingDatesSchema)
+    .array(z.iso.datetime())
     .refine((dates) => dates.length >= 2 && dates.length <= 3, {
       message:
         'Að minnsta kosti tveir og mest þrír birtingardagar verða að vera til staðar',
     }),
 })
 
-export const recallApplicationValidationSchema = baseApplicationSchema
-  .omit({
-    metadata: true,
-  })
-  .extend({
-    fields: recallApplicationValidationFieldsSchema,
-    publishingDates: z
-      .array(publishingDatesSchema)
-      .refine((dates) => dates.length >= 2 && dates.length <= 3, {
-        message:
-          'Að minnsta kosti tveir og mest þrír birtingardagar verða að vera til staðar',
-      }),
-  })
+export const recallApplicationSchema = z.discriminatedUnion('type', [
+  baseApplicationSchema.extend({
+    type: ApplicationTypeSchema.enum.RECALL_BANKRUPTCY,
+    fields: recallBankruptcyApplicationFieldsSchema,
+    publishingDates: recallPublishingDatesSchema,
+  }),
+  baseApplicationSchema.extend({
+    type: ApplicationTypeSchema.enum.RECALL_DECEASED,
+    fields: recallDeceasedApplicationFieldsSchema,
+    publishingDates: recallPublishingDatesSchema,
+  }),
+])
+
+export const recallApplicationValidationSchema = baseApplicationSchema.extend({
+  fields: recallApplicationValidationFieldsSchema,
+  publishingDates: z
+    .array(z.iso.datetime())
+    .refine((dates) => dates.length >= 2 && dates.length <= 3, {
+      message:
+        'Að minnsta kosti tveir og mest þrír birtingardagar verða að vera til staðar',
+    }),
+})

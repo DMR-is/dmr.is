@@ -1,6 +1,8 @@
 import { isString } from 'class-validator'
 import z from 'zod'
 
+import { ApplicationTypeSchema } from './constants'
+
 export const baseEntitySchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -27,27 +29,11 @@ export const strictSignatureSchema = z.object({
   onBehalfOf: z.string().optional(),
 })
 
-export const publishingDatesSchema = z.object({
-  publishingDate: z.iso.datetime(),
-})
-
-export const optionSchema = z.object({
-  label: z.string(),
-  value: z.string(),
-})
-
-export const applicationMetaDataSchema = z.object({
-  caseId: z.string(),
-  applicationId: z.string(),
-  typeOptions: z.array(optionSchema),
-  courtDistrictOptions: z.array(optionSchema),
-})
-
 export const baseApplicationSchema = z.object({
-  metadata: applicationMetaDataSchema.refine(() => true),
   additionalText: z.string().optional(),
+  type: ApplicationTypeSchema.enum.COMMON,
   publishingDates: z
-    .array(publishingDatesSchema)
+    .array(z.iso.datetime())
     .min(1, {
       message: 'Að minnsta kosti einn birtingardagur verður að vera til staðar',
     })

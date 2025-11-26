@@ -1,10 +1,6 @@
 import z from 'zod'
 
-import {
-  communicationChannelSchema,
-  publishingDatesSchema,
-  strictSignatureSchema,
-} from './base'
+import { communicationChannelSchema, strictSignatureSchema } from './base'
 import { ApplicationRequirementStatementEnum } from './constants'
 
 export const courtAndJudgmentFieldsInput = z.object({
@@ -56,7 +52,7 @@ export const updateApplicationSchema = z.object({
   commonFields: commonUpdateApplicationSchema.partial().optional(),
   recallFields: recallUpdateApplicationSchema.partial().optional(),
   signature: strictSignatureSchema.partial().optional(),
-  publishingDates: z.array(publishingDatesSchema).optional(),
+  publishingDates: z.array(z.iso.datetime()).optional(),
   communicationChannels: z.array(communicationChannelSchema).optional(),
 })
 
