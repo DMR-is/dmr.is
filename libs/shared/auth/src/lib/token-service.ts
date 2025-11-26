@@ -1,9 +1,10 @@
 import { decode } from 'jsonwebtoken'
 import { JWT } from 'next-auth/jwt'
+import { getLogger } from '@dmr.is/logging-next'
 
 import { identityServerConfig } from './identityServerConfig'
 
-// const LOGGING_CATEGORY = 'refreshAccessToken'
+const LOGGING_CATEGORY = 'refreshAccessToken'
 
 const renewalSeconds = 10 // seconds
 
@@ -28,15 +29,14 @@ export const refreshAccessToken = async (
   clientId?: string,
   clientSecret?: string,
 ) => {
+  const logger = getLogger(LOGGING_CATEGORY)
   try {
     if (!token.refreshToken) {
-      // TODO: Enable logging when we have a logger that works in both server and edge runtimes
-      // logger.error('Refresh token missing', {
-      //   error: 'RefreshTokenMissing',
-      //   category: LOGGING_CATEGORY,
-      // })
-      // eslint-disable-next-line no-console
-      console.log('Refresh token missing')
+      logger.error('Refresh token missing', {
+        error: 'RefreshTokenMissing',
+        category: LOGGING_CATEGORY,
+      })
+
       return { ...token, error: 'RefreshTokenMissing', invalid: true }
     }
 
@@ -69,26 +69,22 @@ export const refreshAccessToken = async (
       expires_in: number
     }
 
-    // const expiresIn = Math.floor(Date.now() + newTokens.expires_in * 1000)
+    const expiresIn = Math.floor(Date.now() + newTokens.expires_in * 1000)
 
-    // TODO: Enable logging when we have a logger that works in both server and edge runtimes
-    // logger.info('Token refreshed', {
-    //   metadata: {
-    //     timeNow: new Date().toISOString(),
-    //     prevExpires: new Date((token.exp as number) * 1000).toISOString(),
-    //     newExpires: new Date(expiresIn).toISOString(),
-    //   },
-    //   category: LOGGING_CATEGORY,
-    // })
-    // eslint-disable-next-line no-console
-    console.log('Token refreshed')
+    logger.info('Token refreshed', {
+      metadata: {
+        timeNow: new Date().toISOString(),
+        prevExpires: new Date((token.exp as number) * 1000).toISOString(),
+        newExpires: new Date(expiresIn).toISOString(),
+      },
+      category: LOGGING_CATEGORY,
+    })
 
     if (!newTokens.access_token || !newTokens.id_token) {
-      // TODO: Enable logging when we have a logger that works in both server and edge runtimes
-      // logger.error('Access token or ID token missing', {
-      //   error: 'AccessTokenOrIdTokenMissing',
-      //   category: LOGGING_CATEGORY,
-      // })
+      logger.error('Access token or ID token missing', {
+        error: 'AccessTokenOrIdTokenMissing',
+        category: LOGGING_CATEGORY,
+      })
       return { ...token, error: 'AccessTokenOrIdTokenMissing', invalid: true }
     }
 
@@ -99,13 +95,10 @@ export const refreshAccessToken = async (
       refreshToken: newTokens.refresh_token ?? token.refreshToken,
     }
   } catch (error) {
-    // TODO: Enable logging when we have a logger that works in both server and edge runtimes
-    // logger.error('Refreshing failed', {
-    //   error: error as Error,
-    //   category: LOGGING_CATEGORY,
-    // })
-    // eslint-disable-next-line no-console
-    console.log('Refreshing failed', error)
+    logger.error('Refreshing failed', {
+      error: error as Error,
+      category: LOGGING_CATEGORY,
+    })
     return { ...token, error: 'RefreshAccessTokenError', invalid: true }
   }
 }
