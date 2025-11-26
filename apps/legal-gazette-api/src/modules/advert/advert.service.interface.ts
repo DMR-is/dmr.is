@@ -32,7 +32,7 @@ export interface IAdvertService {
 
   assignAdvertToEmployee(advertId: string, userId: string): Promise<void>
 
-  createAdvert(body: CreateAdvertInternalDto): Promise<{ id: string }>
+  createAdvert(body: CreateAdvertInternalDto): Promise<AdvertDetailedDto>
 }
 
 export const IAdvertService = Symbol('IAdvertService')

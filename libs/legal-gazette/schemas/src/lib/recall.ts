@@ -5,6 +5,7 @@ import z from 'zod'
 import { baseApplicationSchema } from './base'
 import {
   ApplicationRequirementStatementEnum,
+  ApplicationTypeEnum,
   ApplicationTypeSchema,
 } from './constants'
 
@@ -21,6 +22,15 @@ export const courtAndJudgmentFieldsSchema = z.object({
     .refine((date) => date && isDateString(date), {
       message: 'Úrskurðar dagsetning er nauðsynlegur',
     }),
+})
+
+export const curtAndJudgmentValidationFieldsSchema = z.object({
+  courtDistrictId: z.string().refine((id) => isUUID(id), {
+    message: 'Dómstóll er nauðsynlegur',
+  }),
+  judgmentDate: z.iso.datetime().refine((date) => isDateString(date), {
+    message: 'Úrskurðar dagsetning er nauðsynlegur',
+  }),
 })
 
 export const settlementFieldsSchema = z.object({
@@ -47,6 +57,22 @@ export const settlementFieldsSchema = z.object({
     .refine((address) => isString(address) && address.length > 0, {
       message: 'Heimilisfang bús er nauðsynlegt',
     }),
+  liquidatorName: z
+    .string()
+    .optional()
+    .refine((name) => isString(name) && name.length > 0, {
+      message: 'Nafn skiptastjóra er nauðsynlegt',
+    }),
+  liquidatorLocation: z
+    .string()
+    .optional()
+    .refine((location) => isString(location) && location.length > 0, {
+      message: 'Staðsetning skiptastjóra er nauðsynleg',
+    }),
+  recallRequirementStatementType: z
+    .enum(ApplicationRequirementStatementEnum)
+    .optional(),
+  recallRequirementStatementLocation: z.string().optional(),
 })
 
 export const settlementValidationFieldsSchema = z.object({
@@ -61,6 +87,20 @@ export const settlementValidationFieldsSchema = z.object({
     .refine((address) => isString(address) && address.length > 0, {
       message: 'Heimilisfang bús er nauðsynlegt',
     }),
+  liquidatorName: z
+    .string()
+    .refine((name) => isString(name) && name.length > 0, {
+      message: 'Nafn skiptastjóra er nauðsynlegt',
+    }),
+  liquidatorLocation: z
+    .string()
+    .refine((location) => isString(location) && location.length > 0, {
+      message: 'Staðsetning skiptastjóra er nauðsynleg',
+    }),
+  recallRequirementStatementType: z
+    .enum(ApplicationRequirementStatementEnum)
+    .optional(),
+  recallRequirementStatementLocation: z.string().optional(),
 })
 
 export const liquidatorFieldsSchema = z.object({
@@ -73,21 +113,6 @@ export const liquidatorFieldsSchema = z.object({
   location: z
     .string()
     .optional()
-    .refine((location) => isString(location) && location.length > 0, {
-      message: 'Staðsetning skiptastjóra er nauðsynleg',
-    }),
-  recallRequirementStatementType: z
-    .enum(ApplicationRequirementStatementEnum)
-    .optional(),
-  recallRequirementStatementLocation: z.string().optional(),
-})
-
-export const liquidatorValidationFieldsSchema = z.object({
-  name: z.string().refine((name) => isString(name) && name.length > 0, {
-    message: 'Nafn skiptastjóra er nauðsynlegt',
-  }),
-  location: z
-    .string()
     .refine((location) => isString(location) && location.length > 0, {
       message: 'Staðsetning skiptastjóra er nauðsynleg',
     }),
@@ -145,7 +170,7 @@ export const recallBankruptcyApplicationFieldsSchema = z.object({
 
 export const recallBankruptcyApplicationValidationFieldsSchema = z.object({
   type: ApplicationTypeSchema.enum.RECALL_BANKRUPTCY,
-  courtAndJudgmentFields: courtAndJudgmentFieldsSchema,
+  courtAndJudgmentFields: curtAndJudgmentValidationFieldsSchema,
   settlementFields: settlementValidationFieldsSchema.extend({
     deadlineDate: z.iso
       .datetime()
@@ -154,12 +179,11 @@ export const recallBankruptcyApplicationValidationFieldsSchema = z.object({
         message: 'Frestdagur bús er nauðsynlegur',
       }),
   }),
-  liquidatorFields: liquidatorValidationFieldsSchema,
   divisionMeetingFields: divisionMeetingValidationFieldsSchema,
 })
 
 export const recallDeceasedApplicationFieldsSchema = z.object({
-  courtAndJudgmentFields: courtAndJudgmentFieldsSchema,
+  courtAndJudgmentFields: curtAndJudgmentValidationFieldsSchema,
   settlementFields: settlementFieldsSchema.extend({
     dateOfDeath: z.iso
       .datetime()
@@ -182,7 +206,6 @@ export const recallDeceasedApplicationValidationFieldsSchema = z.object({
         message: 'Dánardagur bús er nauðsynlegur',
       }),
   }),
-  liquidatorFields: liquidatorValidationFieldsSchema,
   divisionMeetingFields: recallDeceasedDivisionMeetingFieldsSchema.optional(),
 })
 
@@ -218,23 +241,73 @@ export const recallPublishingDatesSchema = z.object({
 
 export const recallApplicationSchema = z.discriminatedUnion('type', [
   baseApplicationSchema.extend({
-    type: ApplicationTypeSchema.enum.RECALL_BANKRUPTCY,
-    fields: recallBankruptcyApplicationFieldsSchema,
+    type: ApplicationTypeEnum.RECALL_BANKRUPTCY,
+    answers: recallBankruptcyApplicationFieldsSchema,
     publishingDates: recallPublishingDatesSchema,
   }),
   baseApplicationSchema.extend({
-    type: ApplicationTypeSchema.enum.RECALL_DECEASED,
-    fields: recallDeceasedApplicationFieldsSchema,
+    type: ApplicationTypeEnum.RECALL_DECEASED,
+    answers: recallDeceasedApplicationFieldsSchema,
     publishingDates: recallPublishingDatesSchema,
   }),
 ])
 
-export const recallApplicationValidationSchema = baseApplicationSchema.extend({
-  fields: recallApplicationValidationFieldsSchema,
-  publishingDates: z
-    .array(z.iso.datetime())
-    .refine((dates) => dates.length >= 2 && dates.length <= 3, {
-      message:
-        'Að minnsta kosti tveir og mest þrír birtingardagar verða að vera til staðar',
-    }),
-})
+export const recallApplicationValidationSchema = z.discriminatedUnion('type', [
+  baseApplicationSchema.extend({
+    type: ApplicationTypeEnum.RECALL_BANKRUPTCY,
+    answers: recallBankruptcyApplicationValidationFieldsSchema,
+    publishingDates: z
+      .array(z.iso.datetime())
+      .refine((dates) => dates.length >= 2 && dates.length <= 3, {
+        message:
+          'Að minnsta kosti tveir og mest þrír birtingardagar verða að vera til staðar',
+      }),
+  }),
+  baseApplicationSchema.extend({
+    type: ApplicationTypeEnum.RECALL_DECEASED,
+    answers: recallDeceasedApplicationValidationFieldsSchema,
+    publishingDates: z
+      .array(z.iso.datetime())
+      .refine((dates) => dates.length >= 2 && dates.length <= 3, {
+        message:
+          'Að minnsta kosti tveir og mest þrír birtingardagar verða að vera til staðar',
+      }),
+  }),
+])
+
+export const isRecallBankruptcyApplication = (
+  application: z.infer<typeof recallApplicationSchema>,
+): application is z.infer<typeof recallApplicationSchema> & {
+  type: ApplicationTypeEnum.RECALL_BANKRUPTCY
+  answers: z.infer<typeof recallBankruptcyApplicationFieldsSchema>
+} => {
+  return application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
+}
+
+export const isRecallDeceasedApplication = (
+  application: z.infer<typeof recallApplicationSchema>,
+): application is z.infer<typeof recallApplicationSchema> & {
+  type: ApplicationTypeEnum.RECALL_DECEASED
+  answers: z.infer<typeof recallDeceasedApplicationFieldsSchema>
+} => {
+  return application.type === ApplicationTypeEnum.RECALL_DECEASED
+}
+
+export const isValidatedRecallBankruptcyApplication = (
+  application: z.infer<typeof recallApplicationValidationSchema>,
+): application is z.infer<typeof recallApplicationValidationSchema> & {
+  type: ApplicationTypeEnum.RECALL_BANKRUPTCY
+  answers: z.infer<typeof recallBankruptcyApplicationValidationFieldsSchema>
+} => {
+  return application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
+}
+
+export const isValidatedRecallDeceasedApplication = (
+  application: z.infer<typeof recallApplicationValidationSchema>,
+): application is z.infer<typeof recallApplicationValidationSchema> & {
+  type: ApplicationTypeEnum.RECALL_DECEASED
+  answers: z.infer<typeof recallDeceasedApplicationValidationFieldsSchema>
+} => {
+  return application.type === ApplicationTypeEnum.RECALL_DECEASED
+}
+// ...existing code...

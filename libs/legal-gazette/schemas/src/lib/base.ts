@@ -1,8 +1,6 @@
 import { isString } from 'class-validator'
 import z from 'zod'
 
-import { ApplicationTypeSchema } from './constants'
-
 export const baseEntitySchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -16,13 +14,6 @@ export const communicationChannelSchema = z.object({
 })
 
 export const signatureSchema = z.object({
-  name: z.string().optional().nullable(),
-  location: z.string().optional().nullable(),
-  date: z.iso.datetime().optional().nullable(),
-  onBehalfOf: z.string().optional().nullable(),
-})
-
-export const strictSignatureSchema = z.object({
   name: z.string().optional(),
   location: z.string().optional(),
   date: z.iso.datetime().optional(),
@@ -31,7 +22,6 @@ export const strictSignatureSchema = z.object({
 
 export const baseApplicationSchema = z.object({
   additionalText: z.string().optional(),
-  type: ApplicationTypeSchema.enum.COMMON,
   publishingDates: z
     .array(z.iso.datetime())
     .min(1, {

@@ -1,3 +1,16 @@
+import { Transform, Type } from 'class-transformer'
+import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsDateString,
+  IsDefined,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator'
 import {
   BelongsTo,
   Column,
@@ -5,21 +18,24 @@ import {
   DefaultScope,
   ForeignKey,
 } from 'sequelize-typescript'
+import { isBase64 } from 'validator'
 
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import {
   ApplicationTypeEnum,
-  CommonApplicationFieldsSchema,
-  RecallBankruptcyApplicationFieldsSchema,
-  RecallDeceasedApplicationFieldsSchema,
+  CommonApplicationSchema,
+  RecallApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
+import { Paging } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'
+import { DetailedDto } from '../core/dto/detailed.dto'
 import { CaseModel } from './case.model'
-import { CategoryModel } from './category.model'
-import { TypeModel } from './type.model'
+import { CreateCommunicationChannelDto } from './communication-channel.model'
+import { SettlementModel } from './settlement.model'
+import { CreateSignatureDto } from './signature.model'
 
 export enum ApplicationStatusEnum {
   DRAFT = 'DRAFT',
@@ -39,32 +55,37 @@ export enum IslandIsCommonApplicationEventsEnum {
 
 type BaseApplicationAttributes = {
   caseId: string
+  settlementId: string | null
   submittedByNationalId: string
   type: ApplicationTypeEnum
   status: ApplicationStatusEnum
 }
 
-type ApplicationAttributes = BaseApplicationAttributes &
+export type ApplicationAttributes = BaseApplicationAttributes &
   (
     | ({
         type: ApplicationTypeEnum.COMMON
-      } & { answers: CommonApplicationFieldsSchema })
+      } & { answers: CommonApplicationSchema })
     | ({
         type: ApplicationTypeEnum.RECALL_BANKRUPTCY
-      } & { answers: RecallBankruptcyApplicationFieldsSchema })
+      } & { answers: RecallApplicationSchema })
     | ({
         type: ApplicationTypeEnum.RECALL_DECEASED
-      } & { answers: RecallDeceasedApplicationFieldsSchema })
+      } & { answers: RecallApplicationSchema })
   )
 
-type ApplicationCreateAttributes = ApplicationAttributes
+export type ApplicationCreateAttributes = {
+  caseId?: string
+  settlementId?: string | null
+  submittedByNationalId: string
+  type: ApplicationTypeEnum
+  status?: ApplicationStatusEnum
+  answers: Partial<ApplicationAttributes['answers']>
+}
 
 @BaseTable({ tableName: LegalGazetteModels.APPLICATION })
 @DefaultScope(() => ({
-  include: [
-    { model: CategoryModel, as: 'category' },
-    { model: TypeModel, as: 'type' },
-  ],
+  include: [{ model: SettlementModel, as: 'settlement' }],
   order: [['createdAt', 'DESC']],
 }))
 export class ApplicationModel extends BaseModel<
@@ -78,6 +99,14 @@ export class ApplicationModel extends BaseModel<
   @ForeignKey(() => CaseModel)
   @ApiProperty({ type: String })
   caseId!: string
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    defaultValue: null,
+  })
+  @ForeignKey(() => SettlementModel)
+  settlementId!: string | null
 
   @Column({
     type: DataType.TEXT,
@@ -109,6 +138,9 @@ export class ApplicationModel extends BaseModel<
   @BelongsTo(() => CaseModel)
   case!: CaseModel
 
+  @BelongsTo(() => SettlementModel)
+  settlement?: SettlementModel
+
   get title() {
     if (this.type === ApplicationTypeEnum.RECALL_DECEASED) {
       return 'Innköllun dánarbús'
@@ -121,9 +153,10 @@ export class ApplicationModel extends BaseModel<
     return 'Almenn umsókn'
   }
 
-  static fromModel(model: ApplicationModel) {
+  static fromModel(model: ApplicationModel): ApplicationDto {
     return {
       id: model.id,
+      deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
       createdAt: model.createdAt.toISOString(),
       updatedAt: model.updatedAt.toISOString(),
       caseId: model.caseId,
@@ -134,7 +167,7 @@ export class ApplicationModel extends BaseModel<
     }
   }
 
-  fromModel() {
+  fromModel(): ApplicationDto {
     return ApplicationModel.fromModel(this)
   }
 
@@ -156,12 +189,132 @@ export class ApplicationModel extends BaseModel<
   }
 }
 
-const test: ApplicationAttributes = {
-  caseId: 'some-uuid',
-  submittedByNationalId: '1234567890',
-  type: ApplicationTypeEnum.COMMON,
-  status: ApplicationStatusEnum.DRAFT,
-  answers: {
-    caption: 'Some caption',
-  },
+export class ApplicationDto extends DetailedDto {
+  @ApiProperty({ type: String })
+  id!: string
+
+  @ApiProperty({ type: String })
+  caseId!: string
+
+  @ApiProperty({ type: String })
+  submittedByNationalId!: string
+
+  @ApiProperty({
+    enum: ApplicationStatusEnum,
+    enumName: 'ApplicationStatusEnum',
+  })
+  status!: ApplicationStatusEnum
+
+  @ApiProperty({ type: String })
+  title!: string
+
+  @ApiProperty({ enum: ApplicationTypeEnum, enumName: 'ApplicationTypeEnum' })
+  type!: ApplicationTypeEnum
+}
+
+export class GetApplicationsDto {
+  @ApiProperty({ type: [ApplicationDto] })
+  applications!: ApplicationDto[]
+
+  @ApiProperty({ type: Paging })
+  paging!: Paging
+}
+
+export class ApplicationDetailedDto {
+  @ApiProperty({ type: String })
+  caseId!: string
+
+  @ApiProperty({ type: String })
+  submittedByNationalId!: string
+
+  @ApiProperty({
+    enum: ApplicationStatusEnum,
+    enumName: 'ApplicationStatusEnum',
+  })
+  status!: ApplicationStatusEnum
+
+  @ApiProperty({ type: String })
+  title!: string
+
+  @ApiProperty({ enum: ApplicationTypeEnum, enumName: 'ApplicationTypeEnum' })
+  type!: ApplicationTypeEnum
+}
+
+export class UpdateApplicationDto {
+  @ApiProperty({ type: Object, default: {} })
+  @IsOptional()
+  @IsObject()
+  answers?: Record<string, any>
+}
+
+export class CreateDivisionMeetingDto {
+  @ApiProperty({ type: String })
+  @IsOptional()
+  @IsString()
+  additionalText?: string
+
+  @ApiProperty({ type: String })
+  @IsDateString()
+  meetingDate!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  meetingLocation!: string
+
+  @ApiProperty({ type: CreateSignatureDto })
+  @IsDefined()
+  @Type(() => CreateSignatureDto)
+  @ValidateNested()
+  signature!: CreateSignatureDto
+
+  @ApiProperty({ type: [CreateCommunicationChannelDto] })
+  @IsOptional()
+  @Type(() => CreateCommunicationChannelDto)
+  @ValidateNested({ each: true })
+  @ArrayMinSize(1)
+  communicationChannels!: CreateCommunicationChannelDto[]
+}
+
+export class CreateDivisionEndingDto extends CreateDivisionMeetingDto {
+  @ApiProperty({ type: Number })
+  @IsNumber()
+  declaredClaims!: number
+}
+
+export class IslandIsSubmitApplicationDto extends PickType(
+  CreateDivisionMeetingDto,
+  ['signature', 'communicationChannels', 'additionalText'] as const,
+) {
+  @ApiProperty({ type: String })
+  @IsUUID()
+  islandIsApplicationId!: string
+
+  @ApiProperty({ type: String })
+  @IsUUID()
+  typeId!: string
+
+  @ApiProperty({ type: String })
+  @IsUUID()
+  categoryId!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  caption!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  @Transform(({ value }) => {
+    if (isBase64(value)) {
+      return Buffer.from(value, 'base64').toString('utf-8')
+    }
+    return value
+  })
+  html!: string
+
+  @ApiProperty({ type: [String] })
+  @IsOptional()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(3)
+  @IsDateString(undefined, { each: true })
+  publishingDates!: string[]
 }
