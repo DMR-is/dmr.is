@@ -104,7 +104,7 @@ export const LandingPageContent = () => {
           <GridContainer>
             <Box marginBottom={4}>
               <Text marginBottom={1} variant="h3">
-                Prentuð útgáfa
+                Útgefin tölublöð
               </Text>
               <Text>
                 Hér er hægt að finna nýjustu tölublöð Lögbirtingablaðsins á PDF

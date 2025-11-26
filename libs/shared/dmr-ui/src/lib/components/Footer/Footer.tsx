@@ -33,8 +33,8 @@ export const Footer = () => {
       href: '/sidur/skilmalar',
     },
     {
-      title: 'Prentuð útgáfa',
-      href: '/sidur/prentudutgafa',
+      title: 'Útgefin tölublöð',
+      href: '/sidur/utgefintolublod',
     },
     {
       title: 'Leiðbeiningar',

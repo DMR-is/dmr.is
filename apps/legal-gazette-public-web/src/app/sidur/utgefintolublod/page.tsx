@@ -18,7 +18,7 @@ export default function Page() {
             offset={['0', '0', '0', '1/12']}
           >
             <Text variant="h2" as="h1" marginBottom={2}>
-              Prentuð útgáfa
+              Útgefin tölublöð
             </Text>
             <Text variant="intro">
               Hér er hægt að finna nýjustu tölublöð Lögbirtingablaðsins á PDF

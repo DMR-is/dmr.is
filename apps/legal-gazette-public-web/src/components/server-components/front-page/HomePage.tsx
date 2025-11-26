@@ -32,7 +32,7 @@ export const HomePage = async () => {
       variant: 'purple',
     },
     {
-      title: 'Prentuð útgáfa',
+      title: 'Útgefin tölublöð',
       href: '/sidur/prentudutgafa',
       variant: 'darkerBlue',
     },
