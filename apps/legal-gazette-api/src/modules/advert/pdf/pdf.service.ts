@@ -31,6 +31,8 @@ const cdnUrl =
   process.env.LEGAL_GAZETTE_CDN_URL ||
   'https://files.legal-gazette.dev.dmr-dev.cloud'
 
+const CUTOFF_YEAR = 2025
+
 @Injectable()
 export class PdfService {
   constructor(
@@ -183,7 +185,7 @@ export class PdfService {
       issueNr: number
       issueYear: number
       yearsIssued: number
-      runningPageNumberStart: number
+      pageNumberDisplayStart: number
       fullDate: string
       syslumadur: string
     },
@@ -229,7 +231,7 @@ export class PdfService {
 
       const issueBufferInfo = await mergePdfBuffers(
         [firstPageBuffer, restBuffer],
-        constants.runningPageNumberStart,
+        constants.pageNumberDisplayStart,
       )
 
       await browers.close()
@@ -331,8 +333,27 @@ export class PdfService {
 
       const currentYear = now.getFullYear()
 
-      const nextIssueNumber = lastIssue ? lastIssue.issue + 1 : 1
+      const startOfYear = new Date(currentYear, 0, 1)
+      const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59, 999)
+
+      const issuesThisYear = await this.issueModel.count({
+        where: {
+          publishDate: {
+            [Op.gte]: startOfYear,
+            [Op.lte]: endOfYear,
+          },
+        },
+      })
+
+      // During cutoff year, continue with last issue number from previous system.
+      const lastIssueNr =
+        currentYear === CUTOFF_YEAR ? lastIssue.issue : issuesThisYear
+
+      const nextIssueNumber = lastIssueNr + 1
       const publishDate = now
+
+      const totalPagesThisYear =
+        nextIssueNumber === 1 ? 0 : lastIssue.runningPageNumber
 
       const pdfGenInfo = await this.generatePdfIssueFromHtml(
         `${pdfMetaTitle(title)}${combinedHtml}`,
@@ -342,9 +363,7 @@ export class PdfService {
           yearsIssued: currentYear - YEAR_ESTABLISHED,
           fullDate: formatDate(now, 'd. MMMM yyyy'),
           syslumadur: 'Kristín Þórðardóttir',
-          runningPageNumberStart: lastIssue?.runningPageNumber
-            ? lastIssue.runningPageNumber + 2
-            : 2,
+          pageNumberDisplayStart: totalPagesThisYear + 2,
         },
       )
 
@@ -361,7 +380,7 @@ export class PdfService {
         title: title,
         issue: nextIssueNumber,
         year: now.getFullYear(),
-        runningPageNumber: pdfGenInfo.nextRunningPageNr,
+        runningPageNumber: pdfGenInfo.totalPages + totalPagesThisYear,
         url: uploadRes.s3Url,
       })
 

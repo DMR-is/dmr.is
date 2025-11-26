@@ -5,7 +5,7 @@ type PageNumberOptions = {
   skipFirst?: boolean
 }
 
-export type PdfBufferInformation = { buffer: Buffer; nextRunningPageNr: number }
+export type PdfBufferInformation = { buffer: Buffer; totalPages: number }
 
 export async function mergePdfBuffers(
   buffers: Buffer[],
@@ -31,8 +31,7 @@ export async function mergePdfBuffers(
     skipFirst: true,
   })
 
-  const nextRunningPageNr = startNum + totalPages
-  return { buffer: Buffer.from(finalBytes), nextRunningPageNr }
+  return { buffer: Buffer.from(finalBytes), totalPages }
 }
 
 export async function addPageNumbers(
