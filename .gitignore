@@ -59,6 +59,10 @@ testem.log
 /debug.log
 *.log
 
+# Planning files
+plan-*.md
+plan-*.prompt.md
+
 # System Files
 .DS_Store
 Thumbs.db

@@ -17,7 +17,17 @@
   ],
   "reportUnusedDisableDirectives": true,
   "rules": {
-
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "@dmr.is/logging",
+            "message": "Use @dmr.is/logging-next in Next.js applications for Edge Runtime compatibility"
+          }
+        ]
+      }
+    ],
     "no-unused-vars": "off",
     "unused-imports/no-unused-imports": "error",
     "unused-imports/no-unused-vars": [
