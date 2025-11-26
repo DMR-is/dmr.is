@@ -49,6 +49,8 @@ import { CommentControllerModule } from '../modules/comment/comment.controller.m
 import { CommunicationChannelControllerModule } from '../modules/communication-channel/communication-channel.module'
 import { CompanyControllerModule } from '../modules/external-systems/company/company.controller.module'
 import { ForeclosureControllerModule } from '../modules/external-systems/foreclosure/foreclosure.controller.module'
+import { IssueModel } from '../modules/issues/issues.model'
+import { IssuesModule } from '../modules/issues/issues.module'
 import { LGNationalRegistryControllerModule } from '../modules/national-registry/national-registry.controller.module'
 import { SettlementControllerModule } from '../modules/settlement/settlement.controller.module'
 import { SubscriberControllerModule } from '../modules/subscribers/subscriber.controller.module'
@@ -98,6 +100,7 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
             CommentModel,
             ForeclosureModel,
             ForeclosurePropertyModel,
+            IssueModel,
           ],
         }),
       ],
@@ -129,6 +132,7 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
     CommunicationChannelControllerModule,
     StatisticsControllerModule,
     LGNationalRegistryControllerModule,
+    IssuesModule,
     {
       module: AuthModule,
       global: true,

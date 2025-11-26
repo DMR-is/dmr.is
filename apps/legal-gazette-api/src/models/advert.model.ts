@@ -542,19 +542,47 @@ export class AdvertModel extends BaseModel<
     return found ? true : false
   }
 
-  htmlMarkup(version: AdvertVersionEnum): string {
+  htmlMarkup(version?: AdvertVersionEnum): string {
     if (this.legacyHtml) {
       return cleanLegacyHtml(this.legacyHtml)
     }
 
     try {
-      return getAdvertHtmlMarkup(this, version)
+      if (version) {
+        return getAdvertHtmlMarkup(this, version)
+      }
+
+      const latestPub = this.publications
+        .filter((pub) => pub.publishedAt !== null)
+        .sort((a, b) => b.publishedAt!.getTime() - a.publishedAt!.getTime())[0]
+
+      if (!latestPub) {
+        throw new InternalServerErrorException(
+          'No published advert publications found',
+        )
+      }
+
+      return this.htmlMarkup(latestPub.versionLetter)
     } catch (error) {
       const logger = getLogger('AdvertModel')
       const message = error instanceof Error ? error.message : 'Unknown error'
       logger.error('Error generating HTML markup,', { message })
       throw new InternalServerErrorException()
     }
+  }
+  static htmlMarkup(model: AdvertModel): string {
+    // find the lastest publishedAt date
+    const latestPub = model.publications
+      .filter((pub) => pub.publishedAt !== null)
+      .sort((a, b) => b.publishedAt!.getTime() - a.publishedAt!.getTime())[0]
+
+    if (!latestPub) {
+      throw new InternalServerErrorException(
+        'No published advert publications found',
+      )
+    }
+
+    return model.htmlMarkup(latestPub.versionLetter)
   }
 
   @BeforeBulkCreate
