@@ -18,12 +18,12 @@
     "types": ["node", "Multer", "../../node_modules/@types/node"],
     "typeRoots": ["node_modules/@types"],
     "paths": {
-      "@dmr.is/clients/national-registry": [
-        "libs/clients/national-registry/index.ts"
-      ],
       "@dmr.is/api-client/*": ["libs/shared/api-client/src/lib/*"],
       "@dmr.is/apm": ["libs/apm/src/index.ts"],
       "@dmr.is/auth/*": ["libs/shared/auth/src/lib/*"],
+      "@dmr.is/clients/national-registry": [
+        "libs/clients/national-registry/index.ts"
+      ],
       "@dmr.is/constants": ["libs/shared/constants/src/index.ts"],
       "@dmr.is/db": ["libs/shared/sequelize/src/index.ts"],
       "@dmr.is/decorators": ["libs/shared/decorators/src/index.ts"],
@@ -32,6 +32,7 @@
         "libs/legal-gazette/schemas/src/index.ts"
       ],
       "@dmr.is/logging": ["libs/logging/src/index.ts"],
+      "@dmr.is/logging-next": ["libs/logging-next/src/index.ts"],
       "@dmr.is/middleware": ["libs/shared/middleware/src/index.ts"],
       "@dmr.is/mocks": ["libs/mocks/src/index.ts"],
       "@dmr.is/modules": ["libs/shared/modules/src/index.ts"],
@@ -42,15 +43,17 @@
       "@dmr.is/shared/interceptors": ["libs/shared/interceptors/src/index.ts"],
       "@dmr.is/shared/middleware": ["libs/shared/middleware/src/index.ts"],
       "@dmr.is/shared/models/base": ["libs/shared/models/base/src/index.ts"],
+      "@dmr.is/trpc/client/*": ["libs/shared/trpc/src/lib/client/*"],
+      "@dmr.is/trpc/utils/*": ["libs/shared/trpc/src/lib/utils/*"],
       "@dmr.is/types": ["libs/shared/types/types/src/index.ts"],
       "@dmr.is/ui/components/*": ["libs/shared/dmr-ui/src/lib/components/*"],
-      "@dmr.is/ui/island-is/theme": [
-        "libs/shared/dmr-ui/src/lib/island-is/theme/index.ts"
-      ],
       "@dmr.is/ui/components/island-is": [
         "libs/shared/dmr-ui/src/lib/island-is/index.ts"
       ],
       "@dmr.is/ui/hooks/*": ["libs/shared/dmr-ui/src/lib/hooks/*"],
+      "@dmr.is/ui/island-is/theme": [
+        "libs/shared/dmr-ui/src/lib/island-is/theme/index.ts"
+      ],
       "@dmr.is/ui/lazy/components/*": [
         "libs/shared/dmr-ui-lazy/src/lib/components/*"
       ],
@@ -87,9 +90,7 @@
       ],
       "@island.is/shared/utils": [
         "submodules/island.is/libs/shared/utils/src/index.ts"
-      ],
-      "@dmr.is/trpc/client/*": ["libs/shared/trpc/src/lib/client/*"],
-      "@dmr.is/trpc/utils/*": ["libs/shared/trpc/src/lib/utils/*"]
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]
