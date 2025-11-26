@@ -8,6 +8,7 @@ import { serverFetcher } from '@dmr.is/api-client/fetchers'
 import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
 import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
+import { getLogger } from '@dmr.is/logging-next'
 
 import { getClient } from './api/createClient'
 
@@ -18,7 +19,7 @@ type ErrorWithPotentialReqRes = Error & {
 
 const SESION_TIMEOUT = 60 * 60 // 1 hour
 
-// const LOGGING_CATEGORY = 'next-auth'
+const LOGGING_CATEGORY = 'next-auth'
 
 export const localIdentityServerConfig = {
   id: identityServerId,
@@ -44,15 +45,15 @@ async function authorize(nationalId?: string, idToken?: string) {
   const client = getClient(idToken)
 
   try {
-    const { data: member } = await serverFetcher(() => client.getMySubscriber())
+    const { data: member, error } = await serverFetcher(() => client.getMySubscriber())
     if (!member) {
-      // TODO: Enable logging when we have a logger that works in both server and edge runtimes
-      // const logger = getLogger('authorize')
 
-      // logger.error('Failure authenticating', {
-      //   error: error,
-      //   category: LOGGING_CATEGORY,
-      // })
+      const logger = getLogger('authorize')
+
+      logger.error('Failure authenticating', {
+        error: error,
+        category: LOGGING_CATEGORY,
+      })
       throw new Error('Member not found')
     }
 
