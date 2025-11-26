@@ -2,6 +2,7 @@
 
 
 .cursor
+.claude
 
 # compiled output
 /dist
