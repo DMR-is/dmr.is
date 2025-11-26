@@ -11,6 +11,7 @@ const { middleware, config } = createAuthMiddleware({
   matcherExclusions: [
     'api',
     'skraning',
+    'sidur',
     '_next/static',
     '_next/image',
     'images',

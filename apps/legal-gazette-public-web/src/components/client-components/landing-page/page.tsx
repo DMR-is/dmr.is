@@ -14,29 +14,30 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { Link } from '@island.is/island-ui/core'
-
-import { BannerSearch } from '../../client-components/front-page/banner-search/BannerSearch'
 import { SearchIssuesPage } from '../search-issues-page/SearchIssuesPage'
 
+type QuickLink = {
+  title: string
+  href: string
+  variant: 'primary' | 'ghost' | 'text' | 'utility'
+}
 export const LandingPageContent = () => {
   const { data: session } = useSession()
-  const quickLinks: React.ComponentProps<typeof BannerSearch>['quickLinks'] =
-    session
-      ? [
-          {
-            title: 'Sækja um áskrift',
-            href: '/skraning',
-            variant: 'blue',
-          },
-        ]
-      : [
-          {
-            title: 'Umsóknarkerfi auglýsanda',
-            href: '/auglysingar?type=innkollun-throtabu',
-            variant: 'blue',
-          },
-        ]
+
+  const quickLinks: QuickLink[] = [
+    {
+      title: 'Umsóknarkerfi auglýsanda',
+      href: '/auglysingar?type=innkollun-throtabu',
+      variant: 'primary',
+    },
+  ]
+  if (session) {
+    quickLinks.push({
+      title: 'Gerast áskrifandi',
+      href: '/skraning',
+      variant: 'ghost',
+    })
+  }
 
   return (
     <>
@@ -61,7 +62,13 @@ export const LandingPageContent = () => {
                 image={{ src: '/images/hero-page-image.svg' }}
                 description="Dómsmálaráðuneytið gefur út Lögbirtingablaðið. Það kom fyrst út í prentuðu formi í árið 1908 og í dag er blaðið einnig aðgengilegt á netinu þar sem hægt er að nálgast öll tölublöð sem komið hafa út frá 1. janúar 2001."
                 button={quickLinks?.map((link, i) => (
-                  <Button key={i} size="small" icon="open" iconType="outline">
+                  <Button
+                    key={i}
+                    size="small"
+                    icon="open"
+                    iconType="outline"
+                    variant={link.variant}
+                  >
                     <LinkV2 key={i} href={link.href}>
                       {link.title}
                     </LinkV2>
@@ -96,18 +103,12 @@ export const LandingPageContent = () => {
         <Box background="blue100" paddingY={8}>
           <GridContainer>
             <Box marginBottom={4}>
-              <Text marginBottom={2} variant="h2">
-                Nýjustu tölublöð
+              <Text marginBottom={1} variant="h3">
+                Útgefin tölublöð
               </Text>
               <Text>
-                Tölublöð Lögbirtingablaðsins eru á PDF sniði, en til að skoða
-                slík skjöl er hægt að nota{' '}
-                <Link href="https://get.adobe.com/reader/">
-                  <Text as="span" color="blue600">
-                    Acrobat Reader
-                  </Text>
-                </Link>
-                .
+                Hér er hægt að finna nýjustu tölublöð Lögbirtingablaðsins á PDF
+                sniði.
               </Text>
             </Box>
             <SearchIssuesPage />

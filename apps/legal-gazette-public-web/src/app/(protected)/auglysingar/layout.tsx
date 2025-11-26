@@ -1,3 +1,4 @@
+import { Footer } from '@dmr.is/ui/components/Footer/Footer'
 import { Box, GridContainer, Stack } from '@dmr.is/ui/components/island-is'
 
 import { Breadcrumbs } from '../../../components/client-components/breadcrumbs/Breadcrumbs'
@@ -32,6 +33,7 @@ export default async function Layout({
         </Box>
       </GridContainer>
       {related && <Box>{related}</Box>}
+      <Footer />
     </>
   )
 }

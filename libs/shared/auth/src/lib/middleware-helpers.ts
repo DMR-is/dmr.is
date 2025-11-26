@@ -145,11 +145,9 @@ export function createAuthMiddleware(config: CreateAuthMiddlewareConfig) {
     },
   )
 
+  console.log('matcherExclusions:', matcherExclusions)
   const middlewareConfig = {
-    matcher: [
-      `/((?!${matcherExclusions.join('|')}).*)`,
-      '/api/trpc/(.*)',
-    ],
+    matcher: [`/((?!${matcherExclusions.join('|')}).*)`, '/api/trpc/(.*)'],
   }
 
   return { middleware, config: middlewareConfig }

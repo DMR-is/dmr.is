@@ -1,4 +1,4 @@
-import { Header } from '@dmr.is/ui/components/client-components/Header/Header'
+import { Header } from '@dmr.is/ui/components/Header/Header'
 
 export default async function RootLayout({
   children,
