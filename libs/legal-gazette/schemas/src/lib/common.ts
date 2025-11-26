@@ -2,9 +2,9 @@ import { isString, isUUID } from 'class-validator'
 import z from 'zod'
 
 import { baseApplicationSchema } from './base'
+import { ApplicationTypeSchema } from './constants'
 
 export const commonApplicationFieldsScehma = z.object({
-  type: z.literal('COMMON'),
   typeId: z
     .string()
     .optional()
@@ -50,11 +50,10 @@ export const commonApplicationValidationFieldsSchema = z.object({
 })
 
 export const commonApplicationSchema = baseApplicationSchema.extend({
+  type: ApplicationTypeSchema.enum.COMMON,
   fields: commonApplicationFieldsScehma,
 })
 
-export const commonApplicationValidationSchema = baseApplicationSchema
-  .omit({ metadata: true })
-  .extend({
-    fields: commonApplicationValidationFieldsSchema,
-  })
+export const commonApplicationValidationSchema = baseApplicationSchema.extend({
+  fields: commonApplicationValidationFieldsSchema,
+})
