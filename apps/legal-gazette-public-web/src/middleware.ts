@@ -16,7 +16,7 @@ export const config = {
     // Exclude specific paths from authentication
     // This should be statically defined as dynamic values do not work
     // for each route to exclude, add it to the list in following patterns: |<route>|
-    `/((?!api|skraning|_next/static|_next/image|images|fonts|.well-known|favicon.ico).*)`,
+    `/((?!api|skraning|sidur.*|_next/static|_next/image|images|fonts|.well-known|favicon.ico).*)`,
     '/api/trpc/(.*)',
   ],
 }
