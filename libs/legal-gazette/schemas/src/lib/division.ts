@@ -1,9 +1,9 @@
 import { isString } from 'class-validator'
 import z from 'zod'
 
-import { communicationChannelSchema, strictSignatureSchema } from './base'
+import { communicationChannelSchema, signatureSchema } from './base'
 
-const divisionSignatureSchema = strictSignatureSchema.superRefine(
+const divisionSignatureSchema = signatureSchema.superRefine(
   (schema, context) => {
     const check = (val?: string) => isString(val) && val.length > 0
 

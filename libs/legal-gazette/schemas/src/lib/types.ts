@@ -7,7 +7,7 @@ import {
   signatureSchema,
 } from './base'
 import {
-  commonApplicationFieldsScehma,
+  commonApplicationFieldsSchema,
   commonApplicationSchema,
 } from './common'
 import {
@@ -36,7 +36,7 @@ export type CommunicationChannelSchema = z.infer<
 export type SignatureSchema = z.infer<typeof signatureSchema>
 
 export type CommonApplicationFieldsSchema = z.infer<
-  typeof commonApplicationFieldsScehma
+  typeof commonApplicationFieldsSchema
 >
 
 export type CommonApplicationSchema = z.infer<typeof commonApplicationSchema>
@@ -61,18 +61,6 @@ export type RecallBankruptcyApplicationFieldsSchema = z.infer<
 
 export type RecallDeceasedApplicationFieldsSchema = z.infer<
   typeof recallDeceasedApplicationFieldsSchema
->
-
-export type RecallBankruptcyApplicationSchema = z.infer<
-  typeof recallApplicationSchema
->
-
-export type RecallDeceasedDivisionMeetingFieldsSchema = z.infer<
-  typeof recallDeceasedDivisionMeetingFieldsSchema
->
-
-export type RecallApplicationFieldsSchema = z.infer<
-  typeof recallApplicationFieldsSchema
 >
 
 export type RecallApplicationSchema = z.infer<typeof recallApplicationSchema>

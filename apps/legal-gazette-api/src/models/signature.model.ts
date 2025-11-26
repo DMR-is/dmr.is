@@ -72,3 +72,5 @@ export class SignatureDto {
   @IsString()
   onBehalfOf?: string
 }
+
+export class CreateSignatureDto extends SignatureDto {}
