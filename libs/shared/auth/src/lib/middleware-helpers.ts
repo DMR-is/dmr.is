@@ -85,7 +85,6 @@ export interface CreateAuthMiddlewareConfig {
   redirectUriEnvVar: string
   fallbackRedirectUri: string
   signInPath: string
-  matcherExclusions: string[]
   checkIsActive?: boolean
 }
 
@@ -96,7 +95,6 @@ export function createAuthMiddleware(config: CreateAuthMiddlewareConfig) {
     redirectUriEnvVar,
     fallbackRedirectUri,
     signInPath,
-    matcherExclusions,
     checkIsActive = false,
   } = config
 
@@ -135,6 +133,7 @@ export function createAuthMiddleware(config: CreateAuthMiddlewareConfig) {
             return true
           }
 
+
           if (checkIsActive) {
             return !!token && !token.invalid && !!token.isActive
           }
@@ -145,12 +144,5 @@ export function createAuthMiddleware(config: CreateAuthMiddlewareConfig) {
     },
   )
 
-  const middlewareConfig = {
-    matcher: [
-      `/((?!${matcherExclusions.join('|')}).*)`,
-      '/api/trpc/(.*)',
-    ],
-  }
-
-  return { middleware, config: middlewareConfig }
+  return middleware
 }
