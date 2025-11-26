@@ -49,11 +49,9 @@ export async function tryToUpdateCookie(
   req: NextRequest,
   token: JWT,
   response: NextResponse,
+  redirectUri: string,
 ): Promise<NextResponse> {
   try {
-    const redirectUri =
-      process.env.LG_PUBLIC_WEB_URL ?? process.env.IDENTITY_SERVER_LOGOUT_URL
-
     const newToken = await refreshAccessToken(
       token as JWT,
       redirectUri,

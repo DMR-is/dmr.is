@@ -15,12 +15,16 @@ export default withAuth(
     const token = req.nextauth.token
 
     if (token && isExpired(token.accessToken as string, !!token.invalid)) {
+      const redirectUri =
+        process.env.LG_PUBLIC_WEB_URL ??
+        (process.env.IDENTITY_SERVER_LOGOUT_URL as string)
       response = await tryToUpdateCookie(
         identityServerConfig.clientId,
         identityServerConfig.clientSecret,
         req,
         token,
         response,
+        redirectUri,
       )
     }
     return response
