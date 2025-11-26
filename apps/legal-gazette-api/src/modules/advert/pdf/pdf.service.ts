@@ -24,14 +24,13 @@ import { mergePdfBuffers, PdfBufferInformation } from './lib/mergeBuffer'
 import { pdfStyles } from './lib/pdf.css'
 
 const YEAR_ESTABLISHED = 1907
+const CUTOFF_YEAR = 2025
 const LOGGING_CONTEXT = 'PdfService'
 const bucket =
   process.env.LEGAL_GAZETTE_BUCKET || 'legal-gazette-files-bucket-dev'
 const cdnUrl =
   process.env.LEGAL_GAZETTE_CDN_URL ||
   'https://files.legal-gazette.dev.dmr-dev.cloud'
-
-const CUTOFF_YEAR = 2025
 
 @Injectable()
 export class PdfService {
