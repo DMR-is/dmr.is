@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { encode, JWT } from 'next-auth/jwt'
+import type { NextRequestWithAuth } from 'next-auth/middleware'
+import { withAuth } from 'next-auth/middleware'
 
 import { refreshAccessToken } from './token-service'
+import { isExpired } from './token-service'
 
 const SESSION_SECURE = process.env.NODE_ENV === 'production'
 const SESSION_COOKIE = SESSION_SECURE
@@ -72,4 +75,82 @@ export async function tryToUpdateCookie(
   } catch (error) {
     return updateCookie(null, req, response)
   }
+}
+
+const DEFAULT_URL = '/'
+
+export interface CreateAuthMiddlewareConfig {
+  clientId: string
+  clientSecret: string
+  redirectUriEnvVar: string
+  fallbackRedirectUri: string
+  signInPath: string
+  matcherExclusions: string[]
+  checkIsActive?: boolean
+}
+
+export function createAuthMiddleware(config: CreateAuthMiddlewareConfig) {
+  const {
+    clientId,
+    clientSecret,
+    redirectUriEnvVar,
+    fallbackRedirectUri,
+    signInPath,
+    matcherExclusions,
+    checkIsActive = false,
+  } = config
+
+  const middleware = withAuth(
+    async function middleware(req: NextRequestWithAuth) {
+      let response = NextResponse.next()
+
+      const token = req.nextauth.token
+
+      if (token && isExpired(token.accessToken as string, !!token.invalid)) {
+        const redirectUri =
+          process.env[redirectUriEnvVar] ?? fallbackRedirectUri
+        response = await tryToUpdateCookie(
+          clientId,
+          clientSecret,
+          req,
+          token,
+          response,
+          redirectUri,
+        )
+      }
+      return response
+    },
+    {
+      pages: {
+        signIn: signInPath,
+      },
+      callbacks: {
+        authorized: ({ token, req }) => {
+          const requestedPath = req.nextUrl.pathname
+
+          if (
+            DEFAULT_URL === requestedPath ||
+            requestedPath.includes('/api/trpc')
+          ) {
+            return true
+          }
+
+          if (checkIsActive) {
+            return !!token && !token.invalid && !!token.isActive
+          }
+
+          return !!token && !token.invalid
+        },
+      },
+    },
+  )
+
+  const middlewareConfig = {
+    matcher: [
+      `/((?!${matcherExclusions.join('|')}).*)`,
+      '/api/trpc/(.*)',
+    ],
+  }
+
+  return { middleware, config: middlewareConfig }
 }
