@@ -54,6 +54,7 @@ export const authOptions: AuthOptions = {
       if (!isExpired(token.accessToken, !!token.invalid)) {
         return token
       }
+      return token
 
       // If token is expired, try to refresh it
       // Returning new access, refresh and id tokens
