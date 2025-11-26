@@ -8,7 +8,6 @@ export default createAuthMiddleware({
   redirectUriEnvVar: 'LG_PUBLIC_WEB_URL',
   fallbackRedirectUri: process.env.IDENTITY_SERVER_LOGOUT_URL as string,
   signInPath: '/skraning',
-
   checkIsActive: true,
 })
 
