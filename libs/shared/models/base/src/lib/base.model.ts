@@ -73,11 +73,11 @@ export class BaseModel<
   static async findOneOrThrow<T extends BaseModel<any, any, any>>(
     this: ModelStatic<T>,
     options: FindOptions<T>,
+    errorMessage?: string,
   ): Promise<T> {
     const result = await this.findOne(options)
 
-    if (!result) throw new NotFoundException('Entity not found')
-
+    if (!result) throw new NotFoundException(errorMessage ?? 'Entity not found')
     return result as T
   }
 

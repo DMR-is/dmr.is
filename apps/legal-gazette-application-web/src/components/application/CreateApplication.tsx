@@ -20,20 +20,18 @@ export const CreateApplication = () => {
   const { mutate: createApplication, isPending } = useMutation(
     trpc.createApplication.mutationOptions({
       onMutate: () => {
-        queryClient.invalidateQueries(
-          trpc.getApplications.queryFilter(),
-        )
+        queryClient.invalidateQueries(trpc.getApplications.queryFilter())
       },
       onSuccess: (data) => {
-        if (data.applicationType === ApplicationTypeEnum.RECALLBANKRUPTCY) {
+        if (data.type === ApplicationTypeEnum.RECALLBANKRUPTCY) {
           router.push(`${PageRoutes.APPLICATION_THROTABU}/${data.id}`)
         }
 
-        if (data.applicationType === ApplicationTypeEnum.RECALLDECEASED) {
+        if (data.type === ApplicationTypeEnum.RECALLDECEASED) {
           router.push(`${PageRoutes.APPLICATION_DANARBU}/${data.id}`)
         }
 
-        if (data.applicationType === ApplicationTypeEnum.COMMON) {
+        if (data.type === ApplicationTypeEnum.COMMON) {
           router.push(`${PageRoutes.APPLICATION_COMMON}/${data.id}`)
         }
 

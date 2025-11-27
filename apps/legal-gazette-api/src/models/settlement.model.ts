@@ -186,28 +186,28 @@ export class CreateSettlementDto {
   @IsString()
   @MaxLength(255)
   @IsOptional()
-  liquidatorRecallStatementLocation?: string
+  recallStatementLocation?: string
 
   @ApiProperty({ type: String, required: false })
   @IsString()
   @MaxLength(255)
   @IsOptional()
-  liquidatorRecallStatementType?: string
+  recallStatementType?: string
 
   @ApiProperty({ type: String, required: true })
   @IsString()
   @MaxLength(255)
-  settlementName!: string
+  name!: string
 
   @ApiProperty({ type: String, required: true })
   @IsString()
   @MaxLength(255)
-  settlementNationalId!: string
+  nationalId!: string
 
   @ApiProperty({ type: String, required: true })
   @IsString()
   @MaxLength(255)
-  settlementAddress!: string
+  address!: string
 
   @ApiProperty({ type: Number, required: false })
   @IsOptional()
@@ -217,12 +217,12 @@ export class CreateSettlementDto {
   @ApiProperty({ type: String, required: false })
   @IsOptional()
   @IsDateString()
-  settlementDeadline?: string
+  deadline?: string
 
   @ApiProperty({ type: String, required: false })
   @IsOptional()
   @IsDateString()
-  settlementDateOfDeath?: string
+  dateOfDeath?: string
 }
 
 export class UpdateSettlementDto extends PartialType(SettlementDto) {}

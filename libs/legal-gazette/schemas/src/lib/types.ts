@@ -1,16 +1,13 @@
 import z from 'zod'
 
 import {
-  applicationMetaDataSchema,
   baseApplicationSchema,
   baseEntitySchema,
   communicationChannelSchema,
-  optionSchema,
-  publishingDatesSchema,
   signatureSchema,
 } from './base'
 import {
-  commonApplicationFieldsScehma,
+  commonApplicationFieldsSchema,
   commonApplicationSchema,
 } from './common'
 import {
@@ -19,6 +16,7 @@ import {
   liquidatorFieldsSchema,
   recallApplicationFieldsSchema,
   recallApplicationSchema,
+  recallDeceasedApplicationFieldsSchema,
   recallDeceasedDivisionMeetingFieldsSchema,
   settlementFieldsSchema,
 } from './recall'
@@ -35,18 +33,10 @@ export type CommunicationChannelSchema = z.infer<
   typeof communicationChannelSchema
 >
 
-export type OptionSchema = z.infer<typeof optionSchema>
-
-export type ApplicationMetaDataSchema = z.infer<
-  typeof applicationMetaDataSchema
->
-
 export type SignatureSchema = z.infer<typeof signatureSchema>
 
-export type PublishingDatesSchema = z.infer<typeof publishingDatesSchema>
-
 export type CommonApplicationFieldsSchema = z.infer<
-  typeof commonApplicationFieldsScehma
+  typeof commonApplicationFieldsSchema
 >
 
 export type CommonApplicationSchema = z.infer<typeof commonApplicationSchema>
@@ -65,12 +55,12 @@ export type DivisionMeetingFieldsSchema = z.infer<
   typeof divisionMeetingFieldsSchema
 >
 
-export type RecallDeceasedDivisionMeetingFieldsSchema = z.infer<
-  typeof recallDeceasedDivisionMeetingFieldsSchema
+export type RecallBankruptcyApplicationFieldsSchema = z.infer<
+  typeof recallApplicationFieldsSchema
 >
 
-export type RecallApplicationFieldsSchema = z.infer<
-  typeof recallApplicationFieldsSchema
+export type RecallDeceasedApplicationFieldsSchema = z.infer<
+  typeof recallDeceasedApplicationFieldsSchema
 >
 
 export type RecallApplicationSchema = z.infer<typeof recallApplicationSchema>

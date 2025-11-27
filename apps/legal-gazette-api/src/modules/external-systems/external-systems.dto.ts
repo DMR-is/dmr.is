@@ -15,7 +15,7 @@ import {
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
-import { ApplicationSignatureDto } from '../../models/application.model'
+import { CreateSignatureDto } from '../../models/signature.model'
 
 export enum AnnouncementItem {
   A = 'A',
@@ -38,7 +38,7 @@ export enum AnnouncementItem {
   T = 'T',
 }
 
-export class ResponsiblePartySignature extends ApplicationSignatureDto {}
+export class ResponsiblePartySignature extends CreateSignatureDto {}
 
 export class ResponsiblePartyDto {
   @ApiProperty({

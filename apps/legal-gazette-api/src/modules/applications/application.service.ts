@@ -1,4 +1,3 @@
-import addDays from 'date-fns/addDays'
 import { Op } from 'sequelize'
 import z from 'zod'
 
@@ -17,33 +16,34 @@ import {
   PersonDto,
 } from '@dmr.is/clients/national-registry'
 import {
+  ApplicationTypeEnum,
+  commonApplicationSchema,
   commonApplicationValidationSchema,
+  isValidatedRecallBankruptcyApplication,
+  isValidatedRecallDeceasedApplication,
+  recallApplicationSchema,
   recallApplicationValidationSchema,
+  updateApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared/dto'
-import {
-  generatePaging,
-  getLimitAndOffset,
-  getNextWeekDay,
-} from '@dmr.is/utils'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import {
   RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
   RECALL_CATEGORY_ID,
   RECALL_DECEASED_ADVERT_TYPE_ID,
 } from '../../core/constants'
-import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
+import { AdvertTemplateType } from '../../models/advert.model'
 import {
-  AddDivisionEndingForApplicationDto,
-  AddDivisionMeetingForApplicationDto,
   ApplicationDetailedDto,
   ApplicationDto,
   ApplicationModel,
   ApplicationStatusEnum,
-  ApplicationTypeEnum,
+  CreateDivisionEndingDto,
+  CreateDivisionMeetingDto,
   GetApplicationsDto,
-  IslandIsSubmitCommonApplicationDto,
+  IslandIsSubmitApplicationDto,
   UpdateApplicationDto,
 } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
@@ -51,11 +51,6 @@ import {
   CategoryDefaultIdEnum,
   CategoryModel,
 } from '../../models/category.model'
-import {
-  CommunicationChannelCreateAttributes,
-  CommunicationChannelModel,
-} from '../../models/communication-channel.model'
-import { SettlementModel } from '../../models/settlement.model'
 import { TypeIdEnum } from '../../models/type.model'
 import { IAdvertService } from '../advert/advert.service.interface'
 import { IApplicationService } from './application.service.interface'
@@ -69,76 +64,41 @@ export class ApplicationService implements IApplicationService {
     @Inject(INationalRegistryService)
     private readonly nationalRegistryService: INationalRegistryService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
-    @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     @InjectModel(ApplicationModel)
     private readonly applicationModel: typeof ApplicationModel,
     @InjectModel(CategoryModel)
     private readonly categoryModel: typeof CategoryModel,
-    @InjectModel(SettlementModel)
-    private readonly settlementModel: typeof SettlementModel,
   ) {}
 
   private async submitCommonApplication(
     application: ApplicationModel,
     submittee: PersonDto,
   ) {
-    const check = commonApplicationValidationSchema.safeParse({
-      signature: {
-        name: application.signatureName,
-        onBehalfOf: application.signatureOnBehalfOf,
-        location: application.signatureLocation,
-        date: application.signatureDate?.toISOString(),
-      },
-      publishingDates: application.publishingDates.map((d) => ({
-        publishingDate: d.toISOString(),
-      })),
-      communicationChannels: application.communicationChannels,
-      fields: {
-        type: application.applicationType,
-        typeId: application.typeId,
-        categoryId: application.categoryId,
-        caption: application.caption,
-        additionalText: application.additionalText,
-        html: application.html,
-      },
-    })
+    const parsedApplication = commonApplicationValidationSchema.parse(
+      application.answers,
+    )
 
-    if (!check.success) {
-      const formattedErrors = z.treeifyError(check.error)
-      this.logger.warn(
-        `Failed to validate common application before submission`,
-        {
-          errors: formattedErrors,
-        },
-      )
-      throw new BadRequestException('Invalid application data')
-    }
-
-    const requiredFields = check.data
-
-    const title =
-      requiredFields.fields.typeId === TypeIdEnum.DIVISION_MEETING
-        ? `Skipta/veðhafafundur`
-        : `${application.category?.title} - ${requiredFields.fields.caption}`
+    const category = await this.categoryModel.findByPkOrThrow(
+      parsedApplication.answers.categoryId,
+    )
 
     await this.advertService.createAdvert({
       caseId: application.caseId,
-      typeId: requiredFields.fields.typeId,
-      categoryId: requiredFields.fields.categoryId,
-      caption: requiredFields.fields.caption,
-      additionalText: requiredFields.additionalText,
+      applicationId: application.id,
       createdBy: submittee.nafn,
       createdByNationalId: submittee.kennitala,
-      signatureName: requiredFields.signature?.name,
-      signatureOnBehalfOf: requiredFields.signature?.onBehalfOf,
-      signatureLocation: requiredFields.signature?.location,
-      signatureDate: requiredFields.signature?.date ?? undefined,
-      content: requiredFields.fields.html,
-      title: title,
-      communicationChannels: requiredFields.communicationChannels,
-      scheduledAt: requiredFields.publishingDates.map(
-        ({ publishingDate }) => publishingDate,
-      ),
+      typeId: parsedApplication.answers.typeId,
+      categoryId: parsedApplication.answers.categoryId,
+      caption: parsedApplication.answers.caption,
+      additionalText: parsedApplication.additionalText,
+      signatureName: parsedApplication.signature?.name,
+      signatureOnBehalfOf: parsedApplication.signature?.onBehalfOf,
+      signatureLocation: parsedApplication.signature?.location,
+      signatureDate: parsedApplication.signature?.date,
+      content: parsedApplication.answers.html,
+      title: `${category.title} - ${parsedApplication.answers.caption}`,
+      communicationChannels: parsedApplication.communicationChannels,
+      scheduledAt: parsedApplication.publishingDates,
     })
 
     await application.update({ status: ApplicationStatusEnum.FINISHED })
@@ -148,127 +108,84 @@ export class ApplicationService implements IApplicationService {
     application: ApplicationModel,
     submittee: PersonDto,
   ) {
-    const check = recallApplicationValidationSchema.safeParse({
-      signature: {
-        name: application.signatureName,
-        onBehalfOf: application.signatureOnBehalfOf,
-        location: application.signatureLocation,
-        date: application.signatureDate?.toISOString(),
-      },
-      publishingDates: application.publishingDates.map((d) => ({
-        publishingDate: d.toISOString(),
-      })),
-      communicationChannels: application.communicationChannels,
-      fields: {
-        type: application.applicationType,
-        courtAndJudgmentFields: {
-          courtDistrictId: application.courtDistrictId,
-          judgmentDate: application.judgmentDate?.toISOString(),
-        },
-        settlementFields: {
-          name: application.settlementName,
-          nationalId: application.settlementNationalId,
-          address: application.settlementAddress,
-          dateOfDeath: application.settlementDateOfDeath?.toISOString(),
-          deadlineDate: application.settlementDeadlineDate?.toISOString(),
-        },
-        liquidatorFields: {
-          name: application.liquidatorName,
-          location: application.liquidatorLocation,
-          recallRequirementStatementLocation:
-            application.liquidatorRecallStatementLocation,
-          recallRequirementStatementType:
-            application.liquidatorRecallStatementType,
-        },
-        divisionMeetingFields: {
-          meetingDate: application.divisionMeetingDate?.toISOString(),
-          meetingLocation: application.divisionMeetingLocation,
-        },
-      },
-    })
-
-    if (!check.success) {
-      const formattedErrors = z.treeifyError(check.error)
-      this.logger.warn(
-        `Failed to validate recall application before submission`,
-        {
-          errors: formattedErrors,
-        },
-      )
-      throw new BadRequestException('Invalid application data')
-    }
-
-    const requiredFields = check.data
+    const parsedApplication = recallApplicationValidationSchema.parse(
+      application.answers,
+    )
 
     const title =
-      application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
-        ? `Innköllun þrotabús - ${requiredFields.fields.settlementFields.name}`
-        : `Innköllun dánarbús - ${requiredFields.fields.settlementFields.name}`
+      application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
+        ? `Innköllun þrotabús - ${parsedApplication.answers.settlementFields.name}`
+        : `Innköllun dánarbús - ${parsedApplication.answers.settlementFields.name}`
 
-    await this.advertService.createAdvert({
+    const createObj = {
+      applicationId: application.id,
       templateType:
-        application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
+        application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
           ? AdvertTemplateType.RECALL_BANKRUPTCY
           : AdvertTemplateType.RECALL_DECEASED,
       caseId: application.caseId,
       typeId:
-        requiredFields.fields.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
+        application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
           ? RECALL_BANKRUPTCY_ADVERT_TYPE_ID
           : RECALL_DECEASED_ADVERT_TYPE_ID,
       categoryId: RECALL_CATEGORY_ID,
       createdBy: submittee.nafn,
       createdByNationalId: submittee.kennitala,
-      signatureName: requiredFields.signature?.name,
-      signatureOnBehalfOf: requiredFields.signature?.onBehalfOf,
-      signatureLocation: requiredFields.signature?.location,
-      signatureDate: requiredFields.signature?.date ?? undefined,
+      signatureName: parsedApplication.signature?.name,
+      signatureOnBehalfOf: parsedApplication.signature?.onBehalfOf,
+      signatureLocation: parsedApplication.signature?.location,
+      signatureDate: parsedApplication.signature?.date ?? undefined,
       title: title,
       divisionMeetingDate:
-        requiredFields.fields.divisionMeetingFields?.meetingDate,
+        parsedApplication.answers.divisionMeetingFields?.meetingDate,
       divisionMeetingLocation:
-        requiredFields.fields.divisionMeetingFields?.meetingLocation,
-      judgementDate: requiredFields.fields.courtAndJudgmentFields?.judgmentDate,
+        parsedApplication.answers.divisionMeetingFields?.meetingLocation,
+      judgementDate:
+        parsedApplication.answers.courtAndJudgmentFields?.judgmentDate,
       courtDistrictId:
-        requiredFields.fields.courtAndJudgmentFields?.courtDistrictId,
-      settlement: {
-        liquidatorName: requiredFields.fields.liquidatorFields?.name,
-        liquidatorLocation: requiredFields.fields.liquidatorFields?.location,
-        liquidatorRecallStatementType:
-          requiredFields.fields.liquidatorFields
-            ?.recallRequirementStatementType,
-        liquidatorRecallStatementLocation:
-          requiredFields.fields.liquidatorFields
-            ?.recallRequirementStatementLocation,
-        settlementAddress: requiredFields.fields.settlementFields?.address,
-        settlementName: requiredFields.fields.settlementFields?.name,
-        settlementNationalId:
-          requiredFields.fields.settlementFields?.nationalId,
-        settlementDateOfDeath:
-          application.applicationType === ApplicationTypeEnum.RECALL_DECEASED
-            ? application.settlementDateOfDeath?.toISOString()
-            : undefined,
-        settlementDeadline:
-          application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
-            ? application.settlementDeadlineDate?.toISOString()
-            : undefined,
-      },
-      communicationChannels: requiredFields.communicationChannels,
-      scheduledAt: application.publishingDates.map((d) => d.toISOString()),
-    })
+        parsedApplication.answers.courtAndJudgmentFields?.courtDistrictId,
+      communicationChannels: parsedApplication.communicationChannels,
+      scheduledAt: parsedApplication.publishingDates,
+    }
 
-    await application.update({ status: ApplicationStatusEnum.SUBMITTED })
+    if (isValidatedRecallBankruptcyApplication(parsedApplication)) {
+      Object.assign(createObj, {
+        settlement: {
+          ...parsedApplication.answers.settlementFields,
+          deadlineDate: parsedApplication.answers.settlementFields.deadlineDate,
+        },
+      })
+    }
+
+    if (isValidatedRecallDeceasedApplication(parsedApplication)) {
+      const deceasedFields = parsedApplication.answers.settlementFields
+      Object.assign(createObj, {
+        settlement: {
+          ...deceasedFields,
+          dateOfDeath: deceasedFields.dateOfDeath,
+        },
+      })
+    }
+
+    const advert = await this.advertService.createAdvert(createObj)
+
+    await application.update({
+      status: ApplicationStatusEnum.SUBMITTED,
+      settlementId: advert.settlement?.id,
+    })
   }
 
   async addDivisionMeetingAdvertToApplication(
     applicationId: string,
-    body: AddDivisionMeetingForApplicationDto,
+    body: CreateDivisionMeetingDto,
     submittee: PersonDto,
   ): Promise<void> {
     const application = await this.applicationModel.findOneOrThrow({
       where: {
         id: applicationId,
         submittedByNationalId: submittee.kennitala,
-        applicationType: {
+        status: ApplicationStatusEnum.SUBMITTED,
+        type: {
           [Op.or]: [
             ApplicationTypeEnum.RECALL_BANKRUPTCY,
             ApplicationTypeEnum.RECALL_DECEASED,
@@ -277,49 +194,12 @@ export class ApplicationService implements IApplicationService {
       },
     })
 
-    const advertWithSettlement = await this.advertModel
-      .unscoped()
-      .findOneOrThrow({
-        attributes: ['id', 'settlementId'],
-        where: {
-          caseId: application.caseId,
-          settlementId: { [Op.not]: null },
-        },
-        include: [{ model: SettlementModel }],
-      })
-
-    let communicationChannels: CommunicationChannelCreateAttributes[] = []
-
-    if (body.communicationChannels && body.communicationChannels.length > 0) {
-      communicationChannels = body.communicationChannels
-    } else {
-      const recallAdvert = await this.advertModel.unscoped().findOneOrThrow({
-        attributes: ['id'],
-        include: [{ model: CommunicationChannelModel }],
-        where: {
-          caseId: application.caseId,
-          categoryId: RECALL_CATEGORY_ID,
-        },
-      })
-
-      if (
-        recallAdvert.communicationChannels &&
-        recallAdvert.communicationChannels.length
-      ) {
-        communicationChannels = recallAdvert.communicationChannels.map(
-          (ch) => ({
-            email: ch.email,
-            name: ch.name,
-            phone: ch.phone,
-          }),
-        )
-      }
-    }
-
     await this.advertService.createAdvert({
-      templateType: advertWithSettlement.settlement?.dateOfDeath
-        ? AdvertTemplateType.DIVISION_MEETING_DECEASED
-        : AdvertTemplateType.DIVISION_MEETING_BANKRUPTCY,
+      applicationId: application.id,
+      templateType:
+        application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
+          ? AdvertTemplateType.DIVISION_MEETING_BANKRUPTCY
+          : AdvertTemplateType.DIVISION_MEETING_DECEASED,
       caseId: application.caseId,
       categoryId: CategoryDefaultIdEnum.DIVISION_MEETINGS,
       createdBy: submittee.nafn,
@@ -331,21 +211,17 @@ export class ApplicationService implements IApplicationService {
       divisionMeetingDate: body.meetingDate,
       divisionMeetingLocation: body.meetingLocation,
       typeId: TypeIdEnum.DIVISION_MEETING,
-      title: `Skiptafundur - ${application.settlementName}`,
+      title: `Skiptafundur - ${application.settlement?.name}`,
       additionalText: body.additionalText,
-      settlementId: advertWithSettlement.settlementId,
-      communicationChannels: communicationChannels.map((ch) => ({
-        email: ch.email,
-        name: ch.name ?? undefined,
-        phone: ch.phone ?? undefined,
-      })),
+      settlementId: application.settlement?.id,
+      communicationChannels: body.communicationChannels,
       scheduledAt: [body.meetingDate],
     })
   }
 
   async addDivisionEndingAdvertToApplication(
     applicationId: string,
-    body: AddDivisionEndingForApplicationDto,
+    body: CreateDivisionEndingDto,
     submittee: PersonDto,
   ): Promise<void> {
     const application = await this.applicationModel.findOneOrThrow({
@@ -353,7 +229,7 @@ export class ApplicationService implements IApplicationService {
         id: applicationId,
         submittedByNationalId: submittee.kennitala,
         status: ApplicationStatusEnum.SUBMITTED,
-        applicationType: {
+        type: {
           [Op.or]: [
             ApplicationTypeEnum.RECALL_BANKRUPTCY,
             ApplicationTypeEnum.RECALL_DECEASED,
@@ -362,65 +238,35 @@ export class ApplicationService implements IApplicationService {
       },
     })
 
-    const advertSettlement = await this.advertModel.unscoped().findOneOrThrow({
-      attributes: ['id', 'settlementId'],
-      where: {
-        caseId: application.caseId,
-        settlementId: { [Op.not]: null },
-      },
-    })
-
-    if (!advertSettlement.settlementId) {
-      throw new NotFoundException('Settlement not found for application')
+    if (!application.settlement) {
+      throw new BadRequestException(
+        'Application is missing settlement information',
+      )
     }
 
-    const settlement = await this.settlementModel.findByPkOrThrow(
-      advertSettlement.settlementId,
-    )
-
-    await settlement.update({ declaredClaims: body.declaredClaims })
-
-    const recallAdvert = await this.advertModel.unscoped().findOneOrThrow({
-      attributes: ['id', 'judgementDate'],
-      include: [{ model: CommunicationChannelModel }],
-      where: {
-        caseId: application.caseId,
-        categoryId: RECALL_CATEGORY_ID,
-      },
-    })
-
-    const communicationChannels: CommunicationChannelCreateAttributes[] =
-      body.communicationChannels
-        ? body.communicationChannels
-        : (recallAdvert.communicationChannels?.map((ch) => ({
-            email: ch.email,
-            name: ch.name,
-            phone: ch.phone,
-          })) ?? [])
+    const parsed = recallApplicationValidationSchema.parse(application.answers)
 
     await this.advertService.createAdvert({
-      templateType: AdvertTemplateType.DIVISION_ENDING,
+      applicationId: application.id,
       caseId: application.caseId,
+      typeId: TypeIdEnum.DIVISION_ENDING,
       categoryId: CategoryDefaultIdEnum.DIVISION_ENDINGS,
+      templateType: AdvertTemplateType.DIVISION_ENDING,
       createdBy: submittee.nafn,
       createdByNationalId: submittee.kennitala,
       signatureName: body.signature?.name,
       signatureDate: body.signature?.date,
       signatureLocation: body.signature?.location,
       signatureOnBehalfOf: body.signature?.onBehalfOf,
-      typeId: TypeIdEnum.DIVISION_ENDING,
-      title: `Skiptalok - ${application.settlementName}`,
+      title: `Skiptalok - ${application.settlement.name}`,
       additionalText: body.additionalText,
-      settlementId: settlement.id,
-      judgementDate: recallAdvert?.judgementDate?.toISOString(),
-      communicationChannels: communicationChannels.map((ch) => ({
-        email: ch.email,
-        name: ch.name ?? undefined,
-        phone: ch.phone ?? undefined,
-      })),
-      scheduledAt: [body.scheduledAt],
-    }),
-      await application.update({ status: ApplicationStatusEnum.FINISHED })
+      settlementId: application.settlement.id,
+      judgementDate: parsed.answers.courtAndJudgmentFields.judgmentDate,
+      communicationChannels: body.communicationChannels,
+      scheduledAt: [body.meetingDate],
+    })
+
+    await application.update({ status: ApplicationStatusEnum.FINISHED })
   }
 
   async updateApplication(
@@ -428,57 +274,34 @@ export class ApplicationService implements IApplicationService {
     body: UpdateApplicationDto,
     user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
-    const application = await this.applicationModel.findOne({
+    const application = await this.applicationModel.findOneOrThrow({
       where: { id: applicationId, submittedByNationalId: user.nationalId },
     })
 
-    if (!application) {
-      throw new NotFoundException()
+    const parsed = updateApplicationSchema.parse({
+      type: application.type,
+      answers: body.answers,
+    })
+
+    switch (parsed.type) {
+      case ApplicationTypeEnum.COMMON: {
+        const parsedAnswers = commonApplicationSchema.parse(parsed.answers)
+        await application.update({ answers: parsedAnswers })
+        break
+      }
+      case ApplicationTypeEnum.RECALL_DECEASED:
+      case ApplicationTypeEnum.RECALL_BANKRUPTCY: {
+        const parsedAnswers = recallApplicationSchema.parse(parsed.answers)
+        await application.update({ answers: parsedAnswers })
+        break
+      }
+      default:
+        this.logger.warn(
+          `Attempted to update application with unknown type: ${application.type}`,
+        )
+        throw new BadRequestException()
     }
 
-    await application.update({
-      additionalText: body.additionalText,
-      typeId: body.commonFields?.typeId,
-      categoryId: body.commonFields?.categoryId,
-      caption: body.commonFields?.caption,
-      html: body.commonFields?.html,
-
-      signatureDate: body.signature?.date
-        ? new Date(body.signature.date)
-        : undefined,
-      signatureLocation: body.signature?.location,
-      signatureName: body.signature?.name,
-      signatureOnBehalfOf: body.signature?.onBehalfOf,
-      courtDistrictId:
-        body.recallFields?.courtAndJudgmentFields?.courtDistrictId,
-      judgmentDate: body.recallFields?.courtAndJudgmentFields?.judgmentDate
-        ? new Date(body.recallFields.courtAndJudgmentFields.judgmentDate)
-        : undefined,
-      publishingDates: body.publishingDates?.map(
-        ({ publishingDate }) => new Date(publishingDate),
-      ),
-      communicationChannels: body.communicationChannels,
-      liquidatorName: body.recallFields?.liquidatorFields?.name,
-      liquidatorLocation: body.recallFields?.liquidatorFields?.location,
-      liquidatorRecallStatementLocation:
-        body.recallFields?.liquidatorFields?.recallRequirementStatementLocation,
-      liquidatorRecallStatementType:
-        body.recallFields?.liquidatorFields?.recallRequirementStatementType,
-      divisionMeetingDate: body.recallFields?.divisionMeetingFields?.meetingDate
-        ? new Date(body.recallFields.divisionMeetingFields.meetingDate)
-        : undefined,
-      divisionMeetingLocation:
-        body.recallFields?.divisionMeetingFields?.meetingLocation,
-      settlementName: body.recallFields?.settlementFields?.name,
-      settlementNationalId: body.recallFields?.settlementFields?.nationalId,
-      settlementAddress: body.recallFields?.settlementFields?.address,
-      settlementDateOfDeath: body.recallFields?.settlementFields?.dateOfDeath
-        ? new Date(body.recallFields?.settlementFields.dateOfDeath)
-        : undefined,
-      settlementDeadlineDate: body.recallFields?.settlementFields?.deadlineDate
-        ? new Date(body.recallFields?.settlementFields.deadlineDate)
-        : undefined,
-    })
     return application.fromModelToDetailedDto()
   }
   async getApplicationByCaseId(
@@ -511,16 +334,18 @@ export class ApplicationService implements IApplicationService {
   }
 
   async createApplication(
-    applicationType: ApplicationTypeEnum,
+    type: ApplicationTypeEnum,
     user: DMRUser,
   ): Promise<ApplicationDto> {
+    // TODO accept update application dto? to enables us to copy applications
+
     const caseData = await this.caseModel.create(
       {
         involvedPartyNationalId: user.nationalId,
         application: {
-          applicationType: applicationType,
+          type: type,
           submittedByNationalId: user.nationalId,
-          publishingDates: [addDays(getNextWeekDay(new Date()), 14)],
+          answers: {},
         },
       },
       {
@@ -565,7 +390,7 @@ export class ApplicationService implements IApplicationService {
   }
 
   async submitIslandIsApplication(
-    body: IslandIsSubmitCommonApplicationDto,
+    body: IslandIsSubmitApplicationDto,
     submittee: PersonDto,
   ): Promise<void> {
     const newCase = await this.caseModel.create(
@@ -610,7 +435,7 @@ export class ApplicationService implements IApplicationService {
       throw new InternalServerErrorException('Could not verify submittee')
     }
 
-    switch (application.applicationType) {
+    switch (application.type) {
       case ApplicationTypeEnum.COMMON:
         await this.submitCommonApplication(application, submittee)
         break
@@ -620,7 +445,7 @@ export class ApplicationService implements IApplicationService {
         break
       default:
         this.logger.warn(
-          `Attempted to submit application with unknown type: ${application.applicationType}`,
+          `Attempted to submit application with unknown type: ${application.type}`,
         )
         throw new BadRequestException()
     }
