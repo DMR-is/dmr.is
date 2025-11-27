@@ -1,7 +1,14 @@
-import { Controller, Get, Inject, Param, UseGuards } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
-import { GetIssuesDto } from '../../../models/issues.model'
+import { GetIssuesDto, GetIssuesQuery } from '../../../models/issues.model'
 import { IIssuesService } from './issues.service.interface'
 
 @Controller({
@@ -14,12 +21,12 @@ export class IssuesController {
     private readonly issuesService: IIssuesService,
   ) {}
 
-  @Get('all/:year')
+  @Get('all')
   @LGResponse({
-    operationId: 'getAllIssuesByYear',
+    operationId: 'getAllPublishedIssues',
     type: GetIssuesDto,
   })
-  getAllIssuesByYear(@Param('year') year: string): Promise<GetIssuesDto> {
-    return this.issuesService.getAllIssuesByYear(year)
+  getAllPublishedIssues(@Query() query: GetIssuesQuery): Promise<GetIssuesDto> {
+    return this.issuesService.getAllPublishedIssues(query)
   }
 }

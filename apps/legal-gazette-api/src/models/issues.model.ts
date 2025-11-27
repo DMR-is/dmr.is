@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsDateString,
   IsNumber,
   IsOptional,
@@ -9,6 +10,7 @@ import { Column, DataType, HasMany } from 'sequelize-typescript'
 
 import { ApiProperty } from '@nestjs/swagger'
 
+import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'
@@ -20,9 +22,12 @@ export interface IssueAttributes {
   issue: number
   year: number
   runningPageNumber: number
+  isLegacy: boolean
 }
 
-type IssueCreateAttributes = IssueAttributes
+type IssueCreateAttributes = Omit<IssueAttributes, 'isLegacy'> & {
+  isLegacy?: boolean
+}
 
 @BaseTable({ tableName: LegalGazetteModels.DOCUMENT_ISSUES })
 export class IssueModel extends BaseModel<
@@ -47,6 +52,9 @@ export class IssueModel extends BaseModel<
   @Column({ type: DataType.INTEGER })
   runningPageNumber!: number
 
+  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false })
+  isLegacy!: boolean
+
   static fromModel(model: IssueModel): IssueDto {
     return {
       id: model.id,
@@ -56,6 +64,7 @@ export class IssueModel extends BaseModel<
       issue: model.issue,
       year: model.year,
       runningPageNumber: model.runningPageNumber,
+      isLegacy: model.isLegacy,
     }
   }
 
@@ -105,6 +114,10 @@ export class IssueDto {
   @ApiProperty({ type: Number })
   @IsNumber()
   runningPageNumber!: number
+
+  @ApiProperty({ type: Boolean })
+  @IsBoolean()
+  isLegacy!: boolean
 }
 
 export class GetIssuesDto {
@@ -112,4 +125,24 @@ export class GetIssuesDto {
     type: [IssueDto],
   })
   issues!: IssueDto[]
+
+  @ApiProperty({ type: Paging })
+  paging!: Paging
+}
+
+export class GetIssuesQuery extends PagingQuery {
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  dateFrom?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  dateTo?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsDateString()
+  year?: string
 }
