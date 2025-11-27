@@ -48,11 +48,14 @@ export class IssuesTaskService implements IIssuesTask {
         order: [['createdAt', 'DESC']],
       })
 
-      if (!lastIssue || !lastIssue.publishDate) {
+      if (!lastIssue || !lastIssue.publishDate || lastIssue.isLegacy) {
         this.logger.info(
-          `No issue found, skipping PDF generation.
-          Manually create an issue to start auto publishing.
-          Manual issue should contain issueNr and publish information from previous systems most recent issue.`,
+          `
+            No issue available, skipping PDF generation.
+            Manually create an issue to start auto publishing.
+            Manual issue should contain issueNr and publish information from previous systems most recent issue.
+            ${lastIssue?.isLegacy ? 'Manual issue must not be marked as legacy.' : ''}
+          `,
           {
             context: LOGGING_CONTEXT,
           },

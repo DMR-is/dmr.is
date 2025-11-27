@@ -1,7 +1,7 @@
-import { GetIssuesDto } from '../../../models/issues.model'
+import { GetIssuesDto, GetIssuesQuery } from '../../../models/issues.model'
 
 export interface IIssuesService {
-  getAllIssuesByYear(year: string): Promise<GetIssuesDto>
+  getAllPublishedIssues(q: GetIssuesQuery): Promise<GetIssuesDto>
 }
 
 export const IIssuesService = 'IIssuesService'
