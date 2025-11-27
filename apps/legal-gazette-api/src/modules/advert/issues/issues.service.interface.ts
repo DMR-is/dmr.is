@@ -1,4 +1,4 @@
-import { GetIssuesDto } from './dto/issues.dto'
+import { GetIssuesDto } from '../../../models/issues.model'
 
 export interface IIssuesService {
   getAllIssuesByYear(year: string): Promise<GetIssuesDto>

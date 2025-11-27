@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { GetIssuesDto } from './dto/issues.dto'
-import { IssueModel } from './issues.model'
+import { GetIssuesDto, IssueModel } from '../../../models/issues.model'
 import { IIssuesService } from './issues.service.interface'
 
 @Injectable()
