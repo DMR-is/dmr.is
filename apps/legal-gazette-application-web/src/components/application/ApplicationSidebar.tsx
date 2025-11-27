@@ -12,6 +12,7 @@ import {
 } from '@dmr.is/legal-gazette/schemas'
 import { Box, Button, Stack, Text } from '@dmr.is/ui/components/island-is'
 
+import { ApplicationTypeEnum } from '../../gen/fetch'
 import { getErrors } from '../../lib/utils'
 import * as styles from './application.css'
 
@@ -34,7 +35,7 @@ export const ApplicationSidebar = () => {
 
   const validatedErrors = useMemo(() => {
     const errors = getErrors(
-      application.fields.type === 'COMMON'
+      application.type === ApplicationTypeEnum.COMMON
         ? commonResult.error
           ? z.treeifyError(commonResult.error)
           : []
@@ -44,7 +45,7 @@ export const ApplicationSidebar = () => {
     ).flatMap((err) => err)
 
     return errors
-  }, [commonResult.error, recallResult.error, application.fields.type])
+  }, [commonResult.error, recallResult.error, application.type])
 
   const handleScrollToField = (path: string) => {
     const element = document.getElementById(path)

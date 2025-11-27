@@ -3,11 +3,24 @@ import z from 'zod'
 import {
   addDivisionEndingInputSchema,
   addDivisionMeetingInputSchema,
+  CommonApplicationSchema,
+  commonApplicationSchema,
+  isCommonApplication,
+  isUpdateCommonApplication,
+  RecallApplicationSchema,
+  recallApplicationSchema,
+  recallBankruptcyApplicationSchema,
+  recallDeceasedApplicationSchema,
   updateApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
 
-import { CreateApplicationApplicationTypeEnum } from '../../../../gen/fetch'
+import {
+  ApplicationTypeEnum,
+  CreateApplicationApplicationTypeEnum,
+} from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
+
+import { TRPCError } from '@trpc/server'
 
 export const updateApplicationInputSchema = z.object({
   id: z.string(),
@@ -71,9 +84,27 @@ export const applicationRouter = router({
   getApplicationById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      return await ctx.api.getApplicationById({
+      const application = await ctx.api.getApplicationById({
         applicationId: input.id,
       })
+
+      switch (application.type) {
+        case ApplicationTypeEnum.COMMON: {
+          return commonApplicationSchema.parse(application)
+        }
+        case ApplicationTypeEnum.RECALLBANKRUPTCY: {
+          return recallBankruptcyApplicationSchema.parse(application)
+        }
+        case ApplicationTypeEnum.RECALLDECEASED: {
+          return recallDeceasedApplicationSchema.parse(application)
+        }
+        default: {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `Application type ${application.type} is not supported in the application web`,
+          })
+        }
+      }
     }),
   createApplication: protectedProcedure
     .input(createApplicationSchema)

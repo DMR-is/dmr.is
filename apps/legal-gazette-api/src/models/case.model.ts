@@ -132,7 +132,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
       caseNumber: model.caseNumber,
       createdAt: model.createdAt.toISOString(),
       updatedAt: model.updatedAt.toISOString(),
-      deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+      deletedAt: model.deletedAt?.toISOString(),
       applicationType: model.application?.type ?? undefined,
     }
   }

@@ -29,5 +29,5 @@ export class DetailedDto {
     required: false,
     nullable: true,
   })
-  readonly deletedAt!: string | null
+  readonly deletedAt?: string
 }

@@ -1,5 +1,4 @@
 import { Op } from 'sequelize'
-import z from 'zod'
 
 import {
   BadRequestException,
@@ -17,11 +16,7 @@ import {
 } from '@dmr.is/clients/national-registry'
 import {
   ApplicationTypeEnum,
-  commonApplicationSchema,
   commonApplicationValidationSchema,
-  isValidatedRecallBankruptcyApplication,
-  isValidatedRecallDeceasedApplication,
-  recallApplicationSchema,
   recallApplicationValidationSchema,
   updateApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
@@ -34,7 +29,10 @@ import {
   RECALL_CATEGORY_ID,
   RECALL_DECEASED_ADVERT_TYPE_ID,
 } from '../../core/constants'
-import { AdvertTemplateType } from '../../models/advert.model'
+import {
+  AdvertTemplateType,
+  CreateAdvertInternalDto,
+} from '../../models/advert.model'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
@@ -74,12 +72,12 @@ export class ApplicationService implements IApplicationService {
     application: ApplicationModel,
     submittee: PersonDto,
   ) {
-    const parsedApplication = commonApplicationValidationSchema.parse(
+    const { answers } = commonApplicationValidationSchema.parse(
       application.answers,
     )
 
     const category = await this.categoryModel.findByPkOrThrow(
-      parsedApplication.answers.categoryId,
+      answers.fields.categoryId,
     )
 
     await this.advertService.createAdvert({
@@ -87,18 +85,18 @@ export class ApplicationService implements IApplicationService {
       applicationId: application.id,
       createdBy: submittee.nafn,
       createdByNationalId: submittee.kennitala,
-      typeId: parsedApplication.answers.typeId,
-      categoryId: parsedApplication.answers.categoryId,
-      caption: parsedApplication.answers.caption,
-      additionalText: parsedApplication.additionalText,
-      signatureName: parsedApplication.signature?.name,
-      signatureOnBehalfOf: parsedApplication.signature?.onBehalfOf,
-      signatureLocation: parsedApplication.signature?.location,
-      signatureDate: parsedApplication.signature?.date,
-      content: parsedApplication.answers.html,
-      title: `${category.title} - ${parsedApplication.answers.caption}`,
-      communicationChannels: parsedApplication.communicationChannels,
-      scheduledAt: parsedApplication.publishingDates,
+      typeId: answers.fields.typeId,
+      categoryId: answers.fields.categoryId,
+      caption: answers.fields.caption,
+      additionalText: answers.additionalText,
+      signatureName: answers.signature?.name,
+      signatureOnBehalfOf: answers.signature?.onBehalfOf,
+      signatureLocation: answers.signature?.location,
+      signatureDate: answers.signature?.date,
+      content: answers.fields.html,
+      title: `${category.title} - ${answers.fields.caption}`,
+      communicationChannels: answers.communicationChannels,
+      scheduledAt: answers.publishingDates,
     })
 
     await application.update({ status: ApplicationStatusEnum.FINISHED })
@@ -108,16 +106,27 @@ export class ApplicationService implements IApplicationService {
     application: ApplicationModel,
     submittee: PersonDto,
   ) {
-    const parsedApplication = recallApplicationValidationSchema.parse(
-      application.answers,
-    )
+    let data
+    switch (application.type) {
+      case ApplicationTypeEnum.RECALL_BANKRUPTCY:
+        data = recallApplicationValidationSchema.parse(application.answers)
+        break
+      case ApplicationTypeEnum.RECALL_DECEASED:
+        data = recallApplicationValidationSchema.parse(application.answers)
+        break
+      default:
+        this.logger.warn(
+          `Attempted to submit recall application with unknown type: ${application.type}`,
+        )
+        throw new BadRequestException()
+    }
 
     const title =
       application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
-        ? `Innköllun þrotabús - ${parsedApplication.answers.settlementFields.name}`
-        : `Innköllun dánarbús - ${parsedApplication.answers.settlementFields.name}`
+        ? `Innköllun þrotabús - ${data.answers.settlementFields.name}`
+        : `Innköllun dánarbús - ${data.answers.settlementFields.name}`
 
-    const createObj = {
+    const createObj: CreateAdvertInternalDto = {
       applicationId: application.id,
       templateType:
         application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
@@ -131,40 +140,19 @@ export class ApplicationService implements IApplicationService {
       categoryId: RECALL_CATEGORY_ID,
       createdBy: submittee.nafn,
       createdByNationalId: submittee.kennitala,
-      signatureName: parsedApplication.signature?.name,
-      signatureOnBehalfOf: parsedApplication.signature?.onBehalfOf,
-      signatureLocation: parsedApplication.signature?.location,
-      signatureDate: parsedApplication.signature?.date ?? undefined,
+      signatureName: data.signature?.name,
+      signatureOnBehalfOf: data.signature?.onBehalfOf,
+      signatureLocation: data.signature?.location,
+      signatureDate: data.signature?.date ?? undefined,
       title: title,
-      divisionMeetingDate:
-        parsedApplication.answers.divisionMeetingFields?.meetingDate,
+      divisionMeetingDate: data.answers.divisionMeetingFields?.meetingDate,
       divisionMeetingLocation:
-        parsedApplication.answers.divisionMeetingFields?.meetingLocation,
-      judgementDate:
-        parsedApplication.answers.courtAndJudgmentFields?.judgmentDate,
-      courtDistrictId:
-        parsedApplication.answers.courtAndJudgmentFields?.courtDistrictId,
-      communicationChannels: parsedApplication.communicationChannels,
-      scheduledAt: parsedApplication.publishingDates,
-    }
-
-    if (isValidatedRecallBankruptcyApplication(parsedApplication)) {
-      Object.assign(createObj, {
-        settlement: {
-          ...parsedApplication.answers.settlementFields,
-          deadlineDate: parsedApplication.answers.settlementFields.deadlineDate,
-        },
-      })
-    }
-
-    if (isValidatedRecallDeceasedApplication(parsedApplication)) {
-      const deceasedFields = parsedApplication.answers.settlementFields
-      Object.assign(createObj, {
-        settlement: {
-          ...deceasedFields,
-          dateOfDeath: deceasedFields.dateOfDeath,
-        },
-      })
+        data.answers.divisionMeetingFields?.meetingLocation,
+      judgementDate: data.answers.courtAndJudgmentFields?.judgmentDate,
+      courtDistrictId: data.answers.courtAndJudgmentFields?.courtDistrictId,
+      communicationChannels: data.communicationChannels,
+      scheduledAt: data.publishingDates,
+      settlement: { ...data.answers.settlementFields },
     }
 
     const advert = await this.advertService.createAdvert(createObj)
@@ -278,32 +266,23 @@ export class ApplicationService implements IApplicationService {
       where: { id: applicationId, submittedByNationalId: user.nationalId },
     })
 
-    const parsed = updateApplicationSchema.parse({
+    const parsedAnswers = updateApplicationSchema.parse({
       type: application.type,
-      answers: body.answers,
+      answers: {
+        ...application.answers,
+        ...body.answers,
+      },
     })
 
-    switch (parsed.type) {
-      case ApplicationTypeEnum.COMMON: {
-        const parsedAnswers = commonApplicationSchema.parse(parsed.answers)
-        await application.update({ answers: parsedAnswers })
-        break
-      }
-      case ApplicationTypeEnum.RECALL_DECEASED:
-      case ApplicationTypeEnum.RECALL_BANKRUPTCY: {
-        const parsedAnswers = recallApplicationSchema.parse(parsed.answers)
-        await application.update({ answers: parsedAnswers })
-        break
-      }
-      default:
-        this.logger.warn(
-          `Attempted to update application with unknown type: ${application.type}`,
-        )
-        throw new BadRequestException()
-    }
+    await application.update({
+      answers: { ...parsedAnswers.answers, type: application.type },
+    })
+
+    await application.reload()
 
     return application.fromModelToDetailedDto()
   }
+
   async getApplicationByCaseId(
     caseId: string,
     user: DMRUser,
@@ -345,7 +324,7 @@ export class ApplicationService implements IApplicationService {
         application: {
           type: type,
           submittedByNationalId: user.nationalId,
-          answers: {},
+          answers: { type: type },
         },
       },
       {

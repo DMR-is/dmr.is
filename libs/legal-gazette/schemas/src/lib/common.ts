@@ -1,37 +1,17 @@
 import { isString, isUUID } from 'class-validator'
 import z from 'zod'
 
-import { baseApplicationSchema } from './base'
+import { baseApplicationSchema, baseApplicationValidationSchema } from './base'
 import { ApplicationTypeEnum } from './constants'
 
-export const commonApplicationFieldsSchema = z.object({
-  typeId: z
-    .string()
-    .optional()
-    .refine((id) => id && isUUID(id), {
-      message: 'Tegund auglýsingar er nauðsynleg',
-    }),
-  categoryId: z
-    .string()
-    .optional()
-    .refine((id) => id && isUUID(id), {
-      message: 'Flokkur auglýsingar er nauðsynlegur',
-    }),
-  caption: z
-    .string()
-    .optional()
-    .refine((caption) => isString(caption) && caption.length > 0, {
-      message: 'Yfirskrift er nauðsynleg',
-    }),
-  html: z
-    .string()
-    .optional()
-    .refine((html) => isString(html) && html.length > 0, {
-      message: 'Efni auglýsingar er nauðsynlegt',
-    }),
+export const commonFieldsSchema = z.object({
+  typeId: z.string().optional(),
+  categoryId: z.string().optional(),
+  caption: z.string().optional(),
+  html: z.string().optional(),
 })
 
-export const commonApplicationValidationFieldsSchema = z.object({
+export const commonFieldsValidationSchema = z.object({
   typeId: z.uuid().refine((id) => isUUID(id), {
     message: 'Tegund auglýsingar er nauðsynleg',
   }),
@@ -48,12 +28,29 @@ export const commonApplicationValidationFieldsSchema = z.object({
   }),
 })
 
-export const commonApplicationSchema = baseApplicationSchema.extend({
+export const commonApplicationSchema = z.object({
   type: ApplicationTypeEnum.COMMON,
-  answers: commonApplicationFieldsSchema,
+  answers: baseApplicationSchema
+    .extend({
+      fields: commonFieldsSchema,
+    })
+    .optional(),
 })
 
-export const commonApplicationValidationSchema = baseApplicationSchema.extend({
+export const commonApplicationValidationSchema = z.object({
   type: ApplicationTypeEnum.COMMON,
-  answers: commonApplicationValidationFieldsSchema,
+  answers: baseApplicationValidationSchema.extend({
+    fields: commonFieldsValidationSchema,
+  }),
 })
+
+export const isCommonApplication = (
+  application: z.infer<typeof commonApplicationSchema>,
+): application is z.infer<typeof commonApplicationSchema> & {
+  type: ApplicationTypeEnum.COMMON
+  answers: z.infer<typeof commonApplicationSchema>['answers'] & {
+    fields: z.infer<typeof commonFieldsSchema>
+  }
+} => {
+  return application.type === ApplicationTypeEnum.COMMON
+}

@@ -22,6 +22,13 @@ export const signatureSchema = z.object({
 
 export const baseApplicationSchema = z.object({
   additionalText: z.string().optional(),
+  publishingDates: z.array(z.iso.datetime()).optional(),
+  signature: signatureSchema.optional(),
+  communicationChannels: z.array(communicationChannelSchema).optional(),
+})
+
+export const baseApplicationValidationSchema = z.object({
+  additionalText: z.string().optional(),
   publishingDates: z
     .array(z.iso.datetime())
     .min(1, {

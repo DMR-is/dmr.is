@@ -20,7 +20,7 @@ import {
   toast,
 } from '@dmr.is/ui/components/island-is'
 
-import { AddDivisionEndingForApplicationDto } from '../../gen/fetch'
+import { CreateDivisionEndingDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { Center } from '../center/Center'
 import { DivisionSignatureFields } from '../form/fields/DivisionSignatureFields'
@@ -32,10 +32,12 @@ type Props = {
   onVisibilityChange(isVisible: boolean): void
 }
 
-const initFormState: AddDivisionEndingForApplicationDto = {
+const initFormState: CreateDivisionEndingDto = {
   declaredClaims: -1,
   additionalText: '',
-  scheduledAt: '',
+  meetingDate: '',
+  meetingLocation: '',
+  communicationChannels: [],
   signature: {
     date: undefined,
     location: '',
@@ -58,7 +60,7 @@ export const CreateDivisionEnding = ({
   const [submitClicked, setSubmitClicked] = useState(false)
 
   const [formState, setFormState] =
-    useState<AddDivisionEndingForApplicationDto>(initFormState)
+    useState<CreateDivisionEndingDto>(initFormState)
 
   const [fieldErrors, setFieldErrors] = useState<
     { [key: string]: string[] } | undefined

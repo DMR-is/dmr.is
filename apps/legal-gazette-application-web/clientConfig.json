@@ -2792,6 +2792,27 @@
       "ApplicationDetailedDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "ISO representation of the creation date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "ISO representation of the updated date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": "string",
+            "description": "ISO representation of the deletion date",
+            "example": "2021-08-31T12:00:00.000Z",
+            "nullable": true
+          },
           "caseId": { "type": "string" },
           "submittedByNationalId": { "type": "string" },
           "status": {
@@ -2800,14 +2821,19 @@
           "title": { "type": "string" },
           "type": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
-          }
+          },
+          "answers": { "type": "object", "default": {} }
         },
         "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
           "caseId",
           "submittedByNationalId",
           "status",
           "title",
-          "type"
+          "type",
+          "answers"
         ]
       },
       "UpdateApplicationDto": {

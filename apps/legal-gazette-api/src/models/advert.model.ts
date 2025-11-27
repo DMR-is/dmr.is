@@ -652,7 +652,7 @@ export class AdvertModel extends BaseModel<
         createdAt: model.createdAt.toISOString(),
         updatedAt: model.updatedAt.toISOString(),
         hasInternalComments: model.hasInternalComments,
-        deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+        deletedAt: model.deletedAt?.toISOString(),
         category: model.category.fromModel(),
         type: model.type.fromModel(),
         status: model.status.fromModel(),

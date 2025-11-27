@@ -25,7 +25,8 @@ import { ApiProperty, PickType } from '@nestjs/swagger'
 import {
   ApplicationTypeEnum,
   CommonApplicationSchema,
-  RecallApplicationSchema,
+  RecallBankruptcyApplicationSchema,
+  RecallDeceasedApplicationSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import { Paging } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
@@ -61,18 +62,19 @@ type BaseApplicationAttributes = {
   status: ApplicationStatusEnum
 }
 
+type ApplicationAnswers =
+  | ({ type: ApplicationTypeEnum.COMMON } & {
+      answers?: CommonApplicationSchema
+    })
+  | ({ type: ApplicationTypeEnum.RECALL_BANKRUPTCY } & {
+      answers?: RecallBankruptcyApplicationSchema
+    })
+  | ({ type: ApplicationTypeEnum.RECALL_DECEASED } & {
+      answers?: RecallDeceasedApplicationSchema
+    })
+
 export type ApplicationAttributes = BaseApplicationAttributes &
-  (
-    | ({
-        type: ApplicationTypeEnum.COMMON
-      } & { answers: CommonApplicationSchema })
-    | ({
-        type: ApplicationTypeEnum.RECALL_BANKRUPTCY
-      } & { answers: RecallApplicationSchema })
-    | ({
-        type: ApplicationTypeEnum.RECALL_DECEASED
-      } & { answers: RecallApplicationSchema })
-  )
+  ApplicationAnswers
 
 export type ApplicationCreateAttributes = {
   caseId?: string
@@ -80,7 +82,7 @@ export type ApplicationCreateAttributes = {
   submittedByNationalId: string
   type: ApplicationTypeEnum
   status?: ApplicationStatusEnum
-  answers: Partial<ApplicationAttributes['answers']>
+  answers?: ApplicationAnswers
 }
 
 @BaseTable({ tableName: LegalGazetteModels.APPLICATION })
@@ -122,18 +124,25 @@ export class ApplicationModel extends BaseModel<
   @ApiProperty({ enum: ApplicationTypeEnum, enumName: 'ApplicationTypeEnum' })
   type!: ApplicationTypeEnum
 
+  @Column({
+    type: DataType.ENUM(...Object.values(ApplicationStatusEnum)),
+    allowNull: false,
+    defaultValue: ApplicationStatusEnum.DRAFT,
+  })
   @ApiProperty({
     enum: ApplicationStatusEnum,
     enumName: 'ApplicationStatusEnum',
+    default: ApplicationStatusEnum.DRAFT,
   })
   status!: ApplicationStatusEnum
 
   @ApiProperty({ type: DataType.JSONB, default: {} })
-  answers!: ApplicationAttributes
-
-  getAnswers() {
-    return this.answers
-  }
+  @Column({
+    type: DataType.JSONB,
+    allowNull: false,
+    defaultValue: {},
+  })
+  answers!: ApplicationAnswers
 
   @BelongsTo(() => CaseModel)
   case!: CaseModel
@@ -156,7 +165,7 @@ export class ApplicationModel extends BaseModel<
   static fromModel(model: ApplicationModel): ApplicationDto {
     return {
       id: model.id,
-      deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+      deletedAt: model.deletedAt?.toISOString(),
       createdAt: model.createdAt.toISOString(),
       updatedAt: model.updatedAt.toISOString(),
       caseId: model.caseId,
@@ -171,16 +180,12 @@ export class ApplicationModel extends BaseModel<
     return ApplicationModel.fromModel(this)
   }
 
-  static fromModelToDetailedDto(model: ApplicationModel) {
+  static fromModelToDetailedDto(
+    model: ApplicationModel,
+  ): ApplicationDetailedDto {
     return {
-      id: model.id,
-      createdAt: model.createdAt.toISOString(),
-      updatedAt: model.updatedAt.toISOString(),
-      caseId: model.caseId,
-      submittedByNationalId: model.submittedByNationalId,
-      status: model.status,
-      title: model.title,
-      type: model.type,
+      ...this.fromModel(model),
+      answers: model.answers,
     }
   }
 
@@ -220,24 +225,9 @@ export class GetApplicationsDto {
   paging!: Paging
 }
 
-export class ApplicationDetailedDto {
-  @ApiProperty({ type: String })
-  caseId!: string
-
-  @ApiProperty({ type: String })
-  submittedByNationalId!: string
-
-  @ApiProperty({
-    enum: ApplicationStatusEnum,
-    enumName: 'ApplicationStatusEnum',
-  })
-  status!: ApplicationStatusEnum
-
-  @ApiProperty({ type: String })
-  title!: string
-
-  @ApiProperty({ enum: ApplicationTypeEnum, enumName: 'ApplicationTypeEnum' })
-  type!: ApplicationTypeEnum
+export class ApplicationDetailedDto extends ApplicationDto {
+  @ApiProperty({ type: Object, default: {} })
+  answers!: Record<string, any>
 }
 
 export class UpdateApplicationDto {

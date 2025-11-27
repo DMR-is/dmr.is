@@ -1,24 +1,10 @@
 import z from 'zod'
 
+import { baseApplicationValidationSchema } from './base'
+import { commonApplicationSchema } from './common'
 import {
-  baseApplicationSchema,
-  baseEntitySchema,
-  communicationChannelSchema,
-  signatureSchema,
-} from './base'
-import {
-  commonApplicationFieldsSchema,
-  commonApplicationSchema,
-} from './common'
-import {
-  courtAndJudgmentFieldsSchema,
-  divisionMeetingFieldsSchema,
-  liquidatorFieldsSchema,
-  recallApplicationFieldsSchema,
-  recallApplicationSchema,
-  recallDeceasedApplicationFieldsSchema,
-  recallDeceasedDivisionMeetingFieldsSchema,
-  settlementFieldsSchema,
+  recallBankruptcyApplicationSchema,
+  recallDeceasedApplicationSchema,
 } from './recall'
 
 export type DeepPartial<T> = T extends object
@@ -27,40 +13,16 @@ export type DeepPartial<T> = T extends object
     }
   : T
 
-export type BaseEntitySchema = z.infer<typeof baseEntitySchema>
-
-export type CommunicationChannelSchema = z.infer<
-  typeof communicationChannelSchema
->
-
-export type SignatureSchema = z.infer<typeof signatureSchema>
-
-export type CommonApplicationFieldsSchema = z.infer<
-  typeof commonApplicationFieldsSchema
->
-
 export type CommonApplicationSchema = z.infer<typeof commonApplicationSchema>
 
-export type BaseApplicationSchema = z.infer<typeof baseApplicationSchema>
-
-export type CourtAndJudgmentFieldsSchema = z.infer<
-  typeof courtAndJudgmentFieldsSchema
+export type RecallBankruptcyApplicationSchema = z.infer<
+  typeof recallBankruptcyApplicationSchema
 >
 
-export type SettlementFieldsSchema = z.infer<typeof settlementFieldsSchema>
-
-export type LiquidatorFieldsSchema = z.infer<typeof liquidatorFieldsSchema>
-
-export type DivisionMeetingFieldsSchema = z.infer<
-  typeof divisionMeetingFieldsSchema
+export type RecallDeceasedApplicationSchema = z.infer<
+  typeof recallDeceasedApplicationSchema
 >
 
-export type RecallBankruptcyApplicationFieldsSchema = z.infer<
-  typeof recallApplicationFieldsSchema
+export type BaseApplicationSchema = z.infer<
+  typeof baseApplicationValidationSchema
 >
-
-export type RecallDeceasedApplicationFieldsSchema = z.infer<
-  typeof recallDeceasedApplicationFieldsSchema
->
-
-export type RecallApplicationSchema = z.infer<typeof recallApplicationSchema>

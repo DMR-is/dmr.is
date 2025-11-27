@@ -10,6 +10,12 @@ export default async function ApplicationPage({
 }: {
   params: { id: string; type: FormTypes }
 }) {
+  const application = await fetchQueryWithHandler(
+    trpc.getApplicationById.queryOptions({
+      id: params.id,
+    }),
+  )
+
   if (!ALLOWED_FORM_TYPES.includes(params.type)) {
     throw new Error('Tegund umsóknar finnst ekki')
   }

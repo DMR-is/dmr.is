@@ -2,11 +2,14 @@
 
 import { isBase64 } from 'class-validator'
 
-import { OptionSchema } from '@dmr.is/legal-gazette/schemas'
-
 import { ApplicationDetailedDto, ApplicationTypeEnum } from '../../gen/fetch'
 import { CommonForm } from './common/CommonForm'
 import { RecallForm } from './recall/RecallForm'
+
+type OptionSchema = {
+  label: string
+  value: string
+}
 
 export type Props = {
   application: ApplicationDetailedDto
@@ -44,7 +47,7 @@ export const ApplicationForm = ({
 
               return application.commonFields.html
             })(),
-            type: application.applicationType,
+            type: application?.type,
           }}
           communicationChannels={application.communicationChannels}
           publishingDates={application.publishingDates}
