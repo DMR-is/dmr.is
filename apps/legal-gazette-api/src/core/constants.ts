@@ -25,6 +25,7 @@ export enum LegalGazetteModels {
   COMMENT = 'advert_comment',
   FORECLOSURE = 'foreclosure',
   FORECLOSURE_PROPERTY = 'foreclosure_property',
+  DOCUMENT_ISSUE_SETTINGS = 'document_issue_settings',
   DOCUMENT_ISSUES = 'document_issues',
 }
 

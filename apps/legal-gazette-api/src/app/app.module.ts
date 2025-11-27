@@ -29,6 +29,7 @@ import { FeeCodeModel } from '../models/fee-code.model'
 import { ForeclosureModel } from '../models/foreclosure.model'
 import { ForeclosurePropertyModel } from '../models/foreclosure-property.model'
 import { IssueModel } from '../models/issues.model'
+import { IssueSettingsModel } from '../models/issues-settings.model'
 import { SettlementModel } from '../models/settlement.model'
 import { StatusModel } from '../models/status.model'
 import { SubscriberModel } from '../models/subscriber.model'
@@ -101,6 +102,7 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
             ForeclosureModel,
             ForeclosurePropertyModel,
             IssueModel,
+            IssueSettingsModel,
           ],
         }),
       ],

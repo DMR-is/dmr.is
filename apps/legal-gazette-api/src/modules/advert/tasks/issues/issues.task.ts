@@ -11,6 +11,7 @@ import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../../models/advert-publication.model'
 import { CategoryModel } from '../../../../models/category.model'
 import { IssueModel } from '../../../../models/issues.model'
+import { IssueSettingsModel } from '../../../../models/issues-settings.model'
 import { pdfMetaTitle } from '../../pdf/lib/issue-templates'
 import { PdfService } from '../../pdf/pdf.service'
 import { IIssuesTask } from './issues.task.interface'
@@ -26,6 +27,8 @@ export class IssuesTaskService implements IIssuesTask {
     @InjectModel(AdvertPublicationModel)
     private readonly advertPublicationModel: typeof AdvertPublicationModel,
     @InjectModel(IssueModel) private readonly issueModel: typeof IssueModel,
+    @InjectModel(IssueSettingsModel)
+    private readonly issueSettingsModel: typeof IssueSettingsModel,
     @Inject(PdfService) private readonly pdfService: PdfService,
   ) {}
 
@@ -140,6 +143,21 @@ export class IssuesTaskService implements IIssuesTask {
       const totalPagesThisYear =
         nextIssueNumber === 1 ? 0 : lastIssue.runningPageNumber
 
+      const issueSettings = await this.issueSettingsModel.findOne({
+        order: [['createdAt', 'DESC']],
+      })
+
+      if (!issueSettings) {
+        this.logger.error(
+          'No issue settings found, district commisioner will be empty',
+          {
+            context: LOGGING_CONTEXT,
+          },
+        )
+      }
+
+      const districtCommissioner = issueSettings?.districtCommissioner ?? ''
+
       const pdfGenInfo = await this.pdfService.generatePdfIssueFromHtml(
         `${pdfMetaTitle(title)}${combinedHtml}`,
         {
@@ -147,7 +165,7 @@ export class IssuesTaskService implements IIssuesTask {
           issueYear: currentYear,
           yearsIssued: currentYear - YEAR_ESTABLISHED,
           fullDate: formatDate(now, 'd. MMMM yyyy'),
-          syslumadur: 'Kristín Þórðardóttir',
+          syslumadur: districtCommissioner,
           pageNumberDisplayStart: totalPagesThisYear + 2,
         },
       )
