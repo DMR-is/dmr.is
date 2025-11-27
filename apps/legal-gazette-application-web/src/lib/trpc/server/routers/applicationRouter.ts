@@ -9,8 +9,9 @@ import {
 import { CreateApplicationApplicationTypeEnum } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
-const updateApplicationSchemaWithId = updateApplicationSchema.extend({
+export const updateApplicationInputSchema = z.object({
   id: z.string(),
+  answers: updateApplicationSchema,
 })
 
 export const createApplicationSchema = z.enum(
@@ -52,13 +53,11 @@ export const applicationRouter = router({
     return { types, categories, courtDistricts }
   }),
   updateApplication: protectedProcedure
-    .input(updateApplicationSchemaWithId)
+    .input(updateApplicationInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const { id, ...updateApplicationDto } = input
-
       return await ctx.api.updateApplication({
-        applicationId: id,
-        updateApplicationDto: { ...updateApplicationDto },
+        applicationId: input.id,
+        updateApplicationDto: { answers: input.answers },
       })
     }),
   getApplications: protectedProcedure
