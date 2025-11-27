@@ -48,7 +48,7 @@ type CaseCreateAttributes = {
   include: [
     {
       model: ApplicationModel,
-      attributes: ['id', 'applicationType', 'status'],
+      attributes: ['id', 'type', 'status'],
     },
   ],
   order: [['createdAt', 'DESC']],

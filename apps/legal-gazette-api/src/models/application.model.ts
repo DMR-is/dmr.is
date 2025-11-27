@@ -20,7 +20,7 @@ import {
 } from 'sequelize-typescript'
 import { isBase64 } from 'validator'
 
-import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
+import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import {
   ApplicationTypeEnum,
@@ -33,11 +33,9 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'
 import { CaseModel } from './case.model'
-import { CategoryModel } from './category.model'
 import { CreateCommunicationChannelDto } from './communication-channel.model'
 import { SettlementModel } from './settlement.model'
 import { CreateSignatureDto } from './signature.model'
-import { TypeModel } from './type.model'
 
 export enum ApplicationStatusEnum {
   DRAFT = 'DRAFT',
@@ -87,11 +85,7 @@ export type ApplicationCreateAttributes = {
 
 @BaseTable({ tableName: LegalGazetteModels.APPLICATION })
 @DefaultScope(() => ({
-  include: [
-    { model: CategoryModel, as: 'category' },
-    { model: TypeModel, as: 'type' },
-    { model: SettlementModel, as: 'settlement' },
-  ],
+  include: [{ model: SettlementModel, as: 'settlement' }],
   order: [['createdAt', 'DESC']],
 }))
 export class ApplicationModel extends BaseModel<

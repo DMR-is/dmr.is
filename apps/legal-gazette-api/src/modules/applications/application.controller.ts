@@ -45,6 +45,11 @@ export class ApplicationController {
   ) {}
 
   @Post('createApplication/:applicationType')
+  @ApiParam({
+    name: 'applicationType',
+    enum: ApplicationTypeEnum,
+    required: true,
+  })
   @LGResponse({ operationId: 'createApplication', type: ApplicationDto })
   async createApplication(
     @Param('applicationType', new EnumValidationPipe(ApplicationTypeEnum))
