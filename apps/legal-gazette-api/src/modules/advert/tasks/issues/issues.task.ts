@@ -50,7 +50,9 @@ export class IssuesTaskService implements IIssuesTask {
 
       if (!lastIssue || !lastIssue.publishDate) {
         this.logger.info(
-          'No issue found, skipping PDF generation. Manually create an issue to start auto publishing.',
+          `No issue found, skipping PDF generation.
+          Manually create an issue to start auto publishing.
+          Manual issue should contain issueNr and publish information from previous systems most recent issue.`,
           {
             context: LOGGING_CONTEXT,
           },
