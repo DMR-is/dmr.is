@@ -1,6 +1,2 @@
-export * from './token-auth.guard'
-export * from './role-guard'
 export * from './involved-party.guard'
-export * from './scopes-guard'
-export * from './scopes.decorator'
 export * from './search-admin.guard'

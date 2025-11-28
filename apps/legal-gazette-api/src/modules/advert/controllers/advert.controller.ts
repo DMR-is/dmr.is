@@ -10,10 +10,12 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { ScopesGuard, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
+import { AdminOnly } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
+import { AdminGuard } from '../../../core/guards/admin.guard'
 import {
   AdvertDetailedDto,
   GetAdvertsDto,
@@ -27,7 +29,8 @@ import { IAdvertService } from '../../../modules/advert/advert.service.interface
   version: '1',
 })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, ScopesGuard, AdminGuard)
+@AdminOnly()
 export class AdvertController {
   constructor(
     @Inject(IAdvertService)
@@ -58,6 +61,8 @@ export class AdvertController {
     return this.advertService.getAdvertById(id, user)
   }
 
+  // Note: This endpoint is also accessible by application-web users via ApplicationWebScopes
+  // The AdminGuard will allow access if user is admin OR has ApplicationWebScopes
   @Get('byCaseId/:caseId')
   @LGResponse({ operationId: 'getAdvertsByCaseId', type: GetAdvertsDto })
   getAdvertByCaseId(@Param('caseId', new UUIDValidationPipe()) caseId: string) {

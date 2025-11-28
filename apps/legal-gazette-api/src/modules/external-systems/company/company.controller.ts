@@ -1,7 +1,7 @@
 import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { MachineClientGuard } from '../../../core/guards/machine-client.guard'
@@ -12,6 +12,7 @@ import {
 } from '../external-systems.dto'
 import { ICompanyService } from './company.service.interface'
 
+// NOTE: This controller uses MachineClientGuard - for external system integrations only
 @Controller({
   path: 'companies',
   version: '1',

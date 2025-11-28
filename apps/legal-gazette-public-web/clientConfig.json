@@ -625,6 +625,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - public API"]
       }
@@ -698,6 +699,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - public API"]
       }
@@ -756,6 +758,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - public API"]
       }
@@ -820,6 +823,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - public API"]
       }
@@ -894,6 +898,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - public API"]
       },
@@ -915,6 +920,96 @@
         ],
         "responses": {
           "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - public API"]
+      }
+    },
+    "/api/v1/issues/all": {
+      "get": {
+        "operationId": "getAllPublishedIssues",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 1, "example": 1, "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 10, "example": 10, "type": "number" }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetIssuesDto" }
+              }
+            }
+          },
           "400": {
             "description": "",
             "content": {
@@ -1276,6 +1371,50 @@
         "type": "object",
         "properties": { "scheduledAt": { "type": "string" } },
         "required": ["scheduledAt"]
+      },
+      "IssueDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the issue was created"
+          },
+          "publishDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the issue was published"
+          },
+          "title": { "type": "string" },
+          "url": { "type": "string" },
+          "issue": { "type": "number" },
+          "year": { "type": "number" },
+          "runningPageNumber": { "type": "number" },
+          "isLegacy": { "type": "boolean" }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "publishDate",
+          "title",
+          "url",
+          "issue",
+          "year",
+          "runningPageNumber",
+          "isLegacy"
+        ]
+      },
+      "GetIssuesDto": {
+        "type": "object",
+        "properties": {
+          "issues": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/IssueDto" }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["issues", "paging"]
       },
       "BaseEntityDto": {
         "type": "object",

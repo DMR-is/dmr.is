@@ -8,6 +8,8 @@ import {
 } from '../../../models/court-district.model'
 import { BaseEntityController } from '../base-entity.controller'
 
+// Note: This controller is used by admin and application-web
+// Any authenticated user can access these endpoints
 @Controller({
   path: 'court-districts',
   version: '1',

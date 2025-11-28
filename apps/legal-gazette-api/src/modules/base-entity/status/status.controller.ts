@@ -1,7 +1,18 @@
-import { Controller, Get, NotFoundException, Param } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  UseGuards,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
+import { ApiBearerAuth } from '@nestjs/swagger'
 
+import { ScopesGuard, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+
+import { AdminOnly } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
+import { AdminGuard } from '../../../core/guards/admin.guard'
 import {
   GetStatusesDto,
   StatusDto,
@@ -12,6 +23,9 @@ import {
   path: 'statuses',
   version: '1',
 })
+@ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard, ScopesGuard, AdminGuard)
+@AdminOnly()
 export class StatusController {
   constructor(
     @InjectModel(StatusModel) private readonly statusModel: typeof StatusModel,

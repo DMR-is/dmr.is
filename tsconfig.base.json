@@ -36,6 +36,7 @@
       "@dmr.is/middleware": ["libs/shared/middleware/src/index.ts"],
       "@dmr.is/mocks": ["libs/mocks/src/index.ts"],
       "@dmr.is/modules": ["libs/shared/modules/src/index.ts"],
+      "@dmr.is/modules/guards/auth": ["libs/shared/modules/src/guards/auth/index.ts"],
       "@dmr.is/nx-open-next": ["libs/nx-open-next/src/index.ts"],
       "@dmr.is/pipelines": ["libs/shared/pipelines/src/index.ts"],
       "@dmr.is/shared/dto": ["libs/shared/dto/src/lib/index.ts"],

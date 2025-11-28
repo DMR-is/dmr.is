@@ -1,9 +1,11 @@
 import { Controller, Get, Inject, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { ScopesGuard, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
+import { AdminOnly } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
+import { AdminGuard } from '../../../core/guards/admin.guard'
 import {
   GetAdvertsInProgressStatsDto,
   GetAdvertsToBePublishedStatsDto,
@@ -16,7 +18,8 @@ import { IStatisticsService } from './statistics.service.interface'
   version: '1',
 })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, ScopesGuard, AdminGuard)
+@AdminOnly()
 export class StatisticsController {
   constructor(
     @Inject(IStatisticsService)
