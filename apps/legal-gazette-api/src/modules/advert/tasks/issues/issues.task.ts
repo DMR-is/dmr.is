@@ -57,7 +57,7 @@ export class IssuesTaskService implements IIssuesTask {
             No issue available, skipping PDF generation.
             Manually create an issue to start auto publishing.
             Manual issue should contain issueNr and publish information from previous systems most recent issue.
-            ${lastIssue?.isLegacy ? 'Manual issue must not be marked as legacy.' : ''}
+            ${lastIssue?.isLegacy ? 'Latest issue must not be marked as legacy.' : ''}
           `,
           {
             context: LOGGING_CONTEXT,
@@ -170,7 +170,7 @@ export class IssuesTaskService implements IIssuesTask {
         },
       )
 
-      const fileName = `issue-${nextIssueNumber}-${currentYear}.pdf`
+      const fileName = `lbl-${nextIssueNumber}-${currentYear}.pdf`
       const key = `adverts/issues/${currentYear}/${fileName}`
       const uploadRes = await this.pdfService.uploadPdfToS3(
         key,
