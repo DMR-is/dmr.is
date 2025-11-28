@@ -10,10 +10,12 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+import { ScopesGuard, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
+import { AdminOnly } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
+import { AdminGuard } from '../../../core/guards/admin.guard'
 import {
   AdvertDetailedDto,
   GetAdvertsDto,
@@ -27,9 +29,9 @@ import { IAdvertService } from '../../../modules/advert/advert.service.interface
   version: '1',
 })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, ScopesGuard, AdminGuard)
+@AdminOnly()
 export class AdvertController {
-  // TODO: Make this controller admin-only by adding RoleGuard and @Roles(UserRoleEnum.Admin), except for getAdvertsByCaseId which should use ApplicationWebScopes decorator
   constructor(
     @Inject(IAdvertService)
     private readonly advertService: IAdvertService,
@@ -59,7 +61,8 @@ export class AdvertController {
     return this.advertService.getAdvertById(id, user)
   }
 
-  // TODO: Make this endpoint use ApplicationWebScopes decorator
+  // Note: This endpoint is also accessible by application-web users via ApplicationWebScopes
+  // The AdminGuard will allow access if user is admin OR has ApplicationWebScopes
   @Get('byCaseId/:caseId')
   @LGResponse({ operationId: 'getAdvertsByCaseId', type: GetAdvertsDto })
   getAdvertByCaseId(@Param('caseId', new UUIDValidationPipe()) caseId: string) {

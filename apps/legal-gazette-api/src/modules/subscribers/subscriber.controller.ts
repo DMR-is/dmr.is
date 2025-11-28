@@ -3,15 +3,19 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+import {
+  PublicWebScopes,
+  ScopesGuard,
+  TokenJwtAuthGuard,
+} from '@dmr.is/modules/guards/auth'
 
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { SubscriberDto } from '../../models/subscriber.model'
 import { ISubscriberService } from './subscriber.service.interface'
 
-// TODO: Make this controller use PublicWebScopes decorator
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, ScopesGuard)
+@PublicWebScopes()
 @Controller({
   path: 'subscribers',
   version: '1',

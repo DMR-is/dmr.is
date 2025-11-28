@@ -480,6 +480,7 @@ nx run-many --target=serve --projects=legal-gazette-api,legal-gazette-web --para
 - **Validation**: Zod schemas for forms, class-validator for DTOs
 - **Testing**: Write tests for business logic and API endpoints
 - **Documentation**: JSDoc comments for complex functions
+- **Plan Files**: When working on a feature with a `plan-*.md` file, **always update the plan** to reflect current progress (mark phases complete, update status tables, note decisions made)
 - **Naming**: 
   - Components: PascalCase
   - Files: kebab-case for multi-word, camelCase for single word

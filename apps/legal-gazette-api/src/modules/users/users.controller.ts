@@ -2,15 +2,17 @@ import { Controller, Get, Inject, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+import { ScopesGuard, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
+import { AdminOnly } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
+import { AdminGuard } from '../../core/guards/admin.guard'
 import { GetUsersResponse, UserDto } from '../../models/users.model'
 import { IUsersService } from './users.service.interface'
 
-// TODO: Make this controller admin-only by adding RoleGuard and @Roles(UserRoleEnum.Admin)
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, ScopesGuard, AdminGuard)
+@AdminOnly()
 @Controller({
   path: 'users',
   version: '1',

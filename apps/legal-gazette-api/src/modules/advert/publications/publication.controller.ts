@@ -10,7 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
-import { ApiParam } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import {
   PublicOrApplicationWebScopes,
@@ -20,7 +20,9 @@ import {
 } from '@dmr.is/modules/guards/auth'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 
+import { AdminOnly } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
+import { AdminGuard } from '../../../core/guards/admin.guard'
 import {
   AdvertPublicationDetailedDto,
   AdvertVersionEnum,
@@ -30,7 +32,8 @@ import {
 } from '../../../models/advert-publication.model'
 import { IPublicationService } from './publication.service.interface'
 
-@UseGuards(TokenJwtAuthGuard, ScopesGuard)
+@ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard, ScopesGuard, AdminGuard)
 @Controller({
   path: '/publications',
   version: '1',
@@ -72,7 +75,7 @@ export class AdvertPublicationController {
     return this.advertPublicationService.getAdvertPublication(advertId, version)
   }
 
-  // TODO: Make this endpoint admin-only by adding RoleGuard and @Roles(UserRoleEnum.Admin)
+  @AdminOnly()
   @Post('/adverts/:advertId')
   @LGResponse({ operationId: 'createAdvertPublication' })
   async createAdvertPublication(
@@ -81,7 +84,7 @@ export class AdvertPublicationController {
     await this.advertPublicationService.createAdvertPublication(advertId)
   }
 
-  // TODO: Make this endpoint admin-only by adding RoleGuard and @Roles(UserRoleEnum.Admin)
+  @AdminOnly()
   @Post(':publicationId/adverts/:advertId/publish')
   @LGResponse({ operationId: 'publishAdvertPublication' })
   async publishAdvertPublication(
@@ -94,7 +97,7 @@ export class AdvertPublicationController {
     )
   }
 
-  // TODO: Make this endpoint admin-only by adding RoleGuard and @Roles(UserRoleEnum.Admin)
+  @AdminOnly()
   @Patch('/:publicationId/adverts/:advertId')
   @LGResponse({ operationId: 'updateAdvertPublication' })
   async updateAdvertPublication(
@@ -109,7 +112,7 @@ export class AdvertPublicationController {
     )
   }
 
-  // TODO: Make this endpoint admin-only by adding RoleGuard and @Roles(UserRoleEnum.Admin)
+  @AdminOnly()
   @Delete('/:publicationId/adverts/:advertId')
   @LGResponse({ operationId: 'deleteAdvertPublication' })
   async deleteAdvertPublication(

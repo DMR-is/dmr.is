@@ -64,6 +64,8 @@ export class ScopesGuard implements CanActivate {
     haveScopes: string | string[],
   ): boolean {
     const parsed = this.parseScopes(haveScopes)
+    console.log('needScopes', needScopes, 'haveScopes', parsed
+    )
     return needScopes.some((scope) => parsed.includes(scope))
   }
 }
