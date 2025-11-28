@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Inject,
-  Param,
-  Query,
-  UseGuards,
-} from '@nestjs/common'
+import { Controller, Get, Inject, Query } from '@nestjs/common'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { GetIssuesDto, GetIssuesQuery } from '../../../models/issues.model'

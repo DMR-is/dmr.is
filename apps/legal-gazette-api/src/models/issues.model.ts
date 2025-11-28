@@ -6,7 +6,7 @@ import {
   IsString,
   IsUUID,
 } from 'class-validator'
-import { Column, DataType, HasMany } from 'sequelize-typescript'
+import { Column, DataType } from 'sequelize-typescript'
 
 import { ApiProperty } from '@nestjs/swagger'
 

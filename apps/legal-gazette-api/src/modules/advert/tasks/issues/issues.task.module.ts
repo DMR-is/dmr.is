@@ -3,13 +3,18 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AdvertPublicationModel } from '../../../../models/advert-publication.model'
 import { IssueModel } from '../../../../models/issues.model'
+import { IssueSettingsModel } from '../../../../models/issues-settings.model'
 import { PdfProviderModule } from '../../pdf/pdf.provider.module'
 import { IssuesTaskService } from './issues.task'
 import { IIssuesTask } from './issues.task.interface'
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([IssueModel, AdvertPublicationModel]),
+    SequelizeModule.forFeature([
+      IssueModel,
+      IssueSettingsModel,
+      AdvertPublicationModel,
+    ]),
     PdfProviderModule,
   ],
   providers: [
