@@ -511,6 +511,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -576,6 +577,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -641,6 +643,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1748,6 +1751,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1821,6 +1825,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1879,6 +1884,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1943,6 +1949,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -2017,6 +2024,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       },
@@ -2079,6 +2087,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -2227,6 +2236,36 @@
             "schema": { "default": 10, "example": 10, "type": "number" }
           },
           {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "direction",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/SortDirectionEnum" }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
             "name": "categoryId",
             "required": false,
             "in": "query",
@@ -2246,24 +2285,6 @@
             "required": false,
             "in": "query",
             "schema": { "type": "array", "items": { "type": "string" } }
-          },
-          {
-            "name": "dateFrom",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateTo",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -3109,13 +3130,61 @@
         },
         "required": ["id", "advertId", "scheduledAt", "isLegacy", "version"]
       },
+      "AdvertDto": {
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "description": "ISO representation of the creation date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "ISO representation of the updated date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": "string",
+            "description": "ISO representation of the deletion date",
+            "example": "2021-08-31T12:00:00.000Z",
+            "nullable": true
+          },
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "createdBy": { "type": "string" },
+          "publicationNumber": { "type": "string" },
+          "publications": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
+          },
+          "category": { "$ref": "#/components/schemas/CategoryDto" },
+          "type": { "$ref": "#/components/schemas/TypeDto" },
+          "status": { "$ref": "#/components/schemas/StatusDto" },
+          "scheduledAt": { "type": "string" },
+          "assignedUser": { "type": "string" },
+          "hasInternalComments": { "type": "boolean" }
+        },
+        "required": [
+          "createdAt",
+          "updatedAt",
+          "id",
+          "title",
+          "createdBy",
+          "publications",
+          "category",
+          "type",
+          "status",
+          "scheduledAt",
+          "hasInternalComments"
+        ]
+      },
       "AdvertPublicationDetailedDto": {
         "type": "object",
         "properties": {
           "publication": {
             "$ref": "#/components/schemas/AdvertPublicationDto"
           },
-          "advert": { "type": "object" },
+          "advert": { "$ref": "#/components/schemas/AdvertDto" },
           "html": { "type": "string" }
         },
         "required": ["publication", "advert", "html"]
@@ -3195,54 +3264,7 @@
           "published"
         ]
       },
-      "AdvertDto": {
-        "type": "object",
-        "properties": {
-          "createdAt": {
-            "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "deletedAt": {
-            "type": "string",
-            "description": "ISO representation of the deletion date",
-            "example": "2021-08-31T12:00:00.000Z",
-            "nullable": true
-          },
-          "id": { "type": "string" },
-          "title": { "type": "string" },
-          "createdBy": { "type": "string" },
-          "publicationNumber": { "type": "string" },
-          "publications": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
-          },
-          "category": { "$ref": "#/components/schemas/CategoryDto" },
-          "type": { "$ref": "#/components/schemas/TypeDto" },
-          "status": { "$ref": "#/components/schemas/StatusDto" },
-          "scheduledAt": { "type": "string" },
-          "assignedUser": { "type": "string" },
-          "hasInternalComments": { "type": "boolean" }
-        },
-        "required": [
-          "createdAt",
-          "updatedAt",
-          "id",
-          "title",
-          "createdBy",
-          "publications",
-          "category",
-          "type",
-          "status",
-          "scheduledAt",
-          "hasInternalComments"
-        ]
-      },
+      "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
       "GetAdvertsDto": {
         "type": "object",
         "properties": {
@@ -3253,6 +3275,17 @@
           "paging": { "$ref": "#/components/schemas/Paging" }
         },
         "required": ["adverts", "paging"]
+      },
+      "AdvertTemplateType": {
+        "type": "string",
+        "enum": [
+          "COMMON",
+          "RECALL_BANKRUPTCY",
+          "RECALL_DECEASED",
+          "DIVISION_MEETING_BANKRUPTCY",
+          "DIVISION_MEETING_DECEASED",
+          "DIVISION_ENDING"
+        ]
       },
       "SettlementDto": {
         "type": "object",
@@ -3268,22 +3301,22 @@
               }
             ]
           },
-          "settlementName": { "type": "string" },
-          "settlementNationalId": { "type": "string" },
-          "settlementAddress": { "type": "string" },
+          "name": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "address": { "type": "string" },
           "declaredClaims": { "type": "number" },
-          "settlementDeadline": { "type": "string", "nullable": true },
-          "settlementDateOfDeath": { "type": "string", "nullable": true }
+          "deadline": { "type": "string", "nullable": true },
+          "dateOfDeath": { "type": "string", "nullable": true }
         },
         "required": [
           "id",
           "liquidatorName",
           "liquidatorLocation",
           "liquidatorRecallStatementType",
-          "settlementName",
-          "settlementNationalId",
-          "settlementAddress",
-          "settlementDeadline"
+          "name",
+          "nationalId",
+          "address",
+          "deadline"
         ]
       },
       "CommunicationChannelDto": {
@@ -3337,6 +3370,9 @@
             "nullable": true
           },
           "id": { "type": "string" },
+          "templateType": {
+            "allOf": [{ "$ref": "#/components/schemas/AdvertTemplateType" }]
+          },
           "caseId": { "type": "string" },
           "title": { "type": "string" },
           "createdBy": { "type": "string" },
@@ -3379,6 +3415,7 @@
           "createdAt",
           "updatedAt",
           "id",
+          "templateType",
           "title",
           "createdBy",
           "canEdit",
