@@ -1,7 +1,7 @@
 import { Controller, Get, Inject, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import {
@@ -11,6 +11,7 @@ import {
 } from './statistics.dto'
 import { IStatisticsService } from './statistics.service.interface'
 
+// TODO: Make this controller admin-only by adding RoleGuard and @Roles(UserRoleEnum.Admin)
 @Controller({
   path: 'statistics',
   version: '1',

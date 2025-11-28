@@ -15,6 +15,7 @@ import {
 } from '../../../models/type.model'
 import { BaseEntityController } from '../base-entity.controller'
 
+// TODO: Make this controller use PublicWebScopes, ApplicationWebScopes, and admin-only (all three apps use this)
 @Controller({ path: 'types', version: '1' })
 export class TypeController extends BaseEntityController<
   typeof TypeModel,

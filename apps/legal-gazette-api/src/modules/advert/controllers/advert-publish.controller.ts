@@ -7,6 +7,7 @@ import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { PublishAdvertsBody } from '../../../models/advert.model'
 import { IPublicationService } from '../publications/publication.service.interface'
 
+// TODO: Make this controller admin-only by adding RoleGuard and @Roles(UserRoleEnum.Admin)
 @Controller({
   path: 'adverts',
   version: '1',

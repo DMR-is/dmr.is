@@ -8,6 +8,7 @@ import {
 } from '../../../models/court-district.model'
 import { BaseEntityController } from '../base-entity.controller'
 
+// TODO: Make this controller use ApplicationWebScopes and admin-only (legal-gazette-web and legal-gazette-application-web use this)
 @Controller({
   path: 'court-districts',
   version: '1',

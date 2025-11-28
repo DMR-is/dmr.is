@@ -5,11 +5,12 @@ import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
 import { PdfService } from '../pdf/pdf.service'
 import { IPublicationService } from '../publications/publication.service.interface'
 
+// TODO: Make this controller admin-only by adding RoleGuard and @Roles(UserRoleEnum.Admin)
 @Controller({ path: 'adverts/pdf', version: '1' })
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard)

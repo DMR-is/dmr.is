@@ -6,6 +6,7 @@ import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { UpdateSettlementDto } from '../../models/settlement.model'
 import { ISettlementService } from './settlement.service.interface'
 
+// TODO: Make this controller admin-only by adding RoleGuard and @Roles(UserRoleEnum.Admin)
 @Controller({
   path: 'settlements',
   version: '1',

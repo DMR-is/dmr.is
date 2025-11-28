@@ -4,6 +4,7 @@ import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { GetIssuesDto, GetIssuesQuery } from '../../../models/issues.model'
 import { IIssuesService } from './issues.service.interface'
 
+// TODO: Determine usage - currently no tRPC routers call this controller
 @Controller({
   path: 'issues',
   version: '1',

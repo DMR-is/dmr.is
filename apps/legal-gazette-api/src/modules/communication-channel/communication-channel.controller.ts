@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import {
@@ -22,6 +22,7 @@ import {
 } from '../../models/communication-channel.model'
 import { ICommunicationChannelService } from './communication-channel.service.interface'
 
+// TODO: Make this controller admin-only by adding RoleGuard and @Roles(UserRoleEnum.Admin)
 @Controller({
   path: ':advertId/communication-channels',
   version: '1',

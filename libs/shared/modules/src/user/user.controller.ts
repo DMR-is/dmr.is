@@ -35,7 +35,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { RoleGuard, TokenJwtAuthGuard } from '../guards'
+import { RoleGuard, TokenJwtAuthGuard } from '../guards/auth'
 import { IUserService } from './user.service.interface'
 
 @Controller({

@@ -10,6 +10,7 @@ import {
 } from '../../models/type-categories.model'
 import { ITypeCategoriesService } from './type-categories.service.interface'
 
+// TODO: Determine usage - currently no tRPC routers call this controller
 @Controller({
   path: 'type-categories',
   version: '1',

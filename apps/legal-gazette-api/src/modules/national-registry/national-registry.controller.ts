@@ -2,12 +2,13 @@ import { Controller, Get, Inject, Param, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { GetPersonDto } from '@dmr.is/clients/national-registry'
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 import { NationalIdValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { ILGNationalRegistryService } from './national-registry.service.interface'
 
+// TODO: Make this controller use ApplicationWebScopes decorator
 @Controller({
   path: 'national-registry',
   version: '1',

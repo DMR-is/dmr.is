@@ -10,7 +10,7 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
@@ -29,6 +29,7 @@ import { IAdvertService } from '../../../modules/advert/advert.service.interface
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard)
 export class AdvertController {
+  // TODO: Make this controller admin-only by adding RoleGuard and @Roles(UserRoleEnum.Admin), except for getAdvertsByCaseId which should use ApplicationWebScopes decorator
   constructor(
     @Inject(IAdvertService)
     private readonly advertService: IAdvertService,
@@ -58,6 +59,7 @@ export class AdvertController {
     return this.advertService.getAdvertById(id, user)
   }
 
+  // TODO: Make this endpoint use ApplicationWebScopes decorator
   @Get('byCaseId/:caseId')
   @LGResponse({ operationId: 'getAdvertsByCaseId', type: GetAdvertsDto })
   getAdvertByCaseId(@Param('caseId', new UUIDValidationPipe()) caseId: string) {

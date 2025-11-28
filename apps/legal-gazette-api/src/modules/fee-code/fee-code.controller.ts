@@ -4,6 +4,7 @@ import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { FeeCodeDto, GetFeeCodesResponse } from '../../models/fee-code.model'
 import { IFeeCodeService } from './fee-code.service.interface'
 
+// TODO: Determine usage - currently no tRPC routers call this controller
 @Controller({
   path: 'fee-codes',
   version: '1',

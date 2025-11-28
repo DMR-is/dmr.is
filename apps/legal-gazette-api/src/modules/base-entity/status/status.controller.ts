@@ -8,6 +8,7 @@ import {
   StatusModel,
 } from '../../../models/status.model'
 
+// TODO: Make this controller admin-only by adding RoleGuard and @Roles(UserRoleEnum.Admin)
 @Controller({
   path: 'statuses',
   version: '1',
