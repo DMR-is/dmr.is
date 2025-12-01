@@ -61,9 +61,15 @@ export class ExternalService implements IExternalService {
       },
     ).then((response) => {
       if (!response.ok) {
-        throw new Error(`Network response was not ok: ${response.statusText}`)
+        throw new Error(
+          `Network response was not ok: ${response.statusText}, publicationNumber: ${regulation.number}`,
+        )
       }
       return response.json()
+    })
+    this.logger.info('regulation published', {
+      category: LOGGING_CATEGORY,
+      publicationNumber: regulation.number,
     })
     return Promise.resolve(ResultWrapper.ok())
   }
