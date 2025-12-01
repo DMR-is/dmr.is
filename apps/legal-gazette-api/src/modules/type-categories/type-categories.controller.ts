@@ -1,8 +1,13 @@
-import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 
+import { Controller, Get, Inject, Param, Query, UseGuards } from '@nestjs/common'
+import { ApiBearerAuth } from '@nestjs/swagger'
+
+import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
+import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
+import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import {
   TypesWithCategoriesResponseDto,
   TypeWithCategoriesQueryDto,
@@ -11,6 +16,10 @@ import {
 import { ITypeCategoriesService } from './type-categories.service.interface'
 
 // TODO: Determine usage - currently no tRPC routers call this controller
+// By default controllers that are not used, will have admin API only access
+@ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
+@AdminAccess()
 @Controller({
   path: 'type-categories',
   version: '1',

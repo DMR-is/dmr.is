@@ -3,7 +3,6 @@
 > **📚 Specialized Documentation**  
 > This file provides quick reference and critical conventions. For detailed patterns:
 > - **Next.js Architecture** (App Router, Server/Client Components, routing): [nextjs-architecture-guide.md](./nextjs-architecture-guide.md)
-> - **Logging Implementation** (Edge Runtime details): [../plan-edgeCompatibleLogging.md](../plan-edgeCompatibleLogging.md)
 > - **Documentation Guide** (how to use these files): [README-documentation.md](./README-documentation.md)
 
 ## Project Overview
