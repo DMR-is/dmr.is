@@ -11,9 +11,11 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
+import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
+import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import {
   CommunicationChannelDto,
   CreateCommunicationChannelDto,
@@ -27,7 +29,8 @@ import { ICommunicationChannelService } from './communication-channel.service.in
   version: '1',
 })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
+@AdminAccess()
 export class CommunicationChannelController {
   constructor(
     @Inject(ICommunicationChannelService)

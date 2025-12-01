@@ -15,11 +15,11 @@ import {
   ApplicationModule,
   HealthModule,
   PdfModule,
-  RoleGuard,
   SignatureModule,
   UserModule,
   UtilityModule,
 } from '@dmr.is/modules'
+import { RoleGuard } from '@dmr.is/modules/guards/auth'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { ApplicationController } from './application/application.controller'

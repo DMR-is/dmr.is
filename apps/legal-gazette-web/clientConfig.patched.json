@@ -76,6 +76,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Category"]
       }
@@ -155,6 +160,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Category"]
       }
@@ -244,6 +254,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Category"]
       }
@@ -323,6 +338,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Type"]
       }
@@ -393,6 +413,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Type"]
       }
@@ -472,6 +497,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Type"]
       }
@@ -552,6 +582,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Type"]
       }
@@ -622,6 +657,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Status"]
       }
@@ -701,6 +741,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Status"]
       }
@@ -780,6 +825,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Status"]
       }
@@ -850,6 +900,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["CourtDistrict"]
       }
@@ -929,6 +984,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["CourtDistrict"]
       }
@@ -1008,6 +1068,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["CourtDistrict"]
       }
@@ -2587,6 +2652,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["AdvertPublish"]
       }
@@ -2659,6 +2729,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["AdvertPublish"]
       }
@@ -2894,6 +2969,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["AdvertPublication"]
       }
@@ -2981,6 +3061,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["AdvertPublication"]
       }
@@ -3053,6 +3138,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["AdvertPublication"]
       }
@@ -3133,6 +3223,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["AdvertPublication"]
       }
@@ -3223,6 +3318,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["AdvertPublication"]
       },
@@ -3301,6 +3401,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["AdvertPublication"]
       }
@@ -4547,6 +4652,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Settlement"]
       }
@@ -5832,6 +5942,121 @@
         "summary": "",
         "tags": ["LGNationalRegistry"]
       }
+    },
+    "/api/v1/issues/all": {
+      "get": {
+        "operationId": "getAllPublishedIssues",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetIssuesDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Issues"]
+      }
     }
   },
   "info": {
@@ -6618,6 +6843,17 @@
           }
         }
       },
+      "AdvertTemplateType": {
+        "type": "string",
+        "enum": [
+          "COMMON",
+          "RECALL_BANKRUPTCY",
+          "RECALL_DECEASED",
+          "DIVISION_MEETING_BANKRUPTCY",
+          "DIVISION_MEETING_DECEASED",
+          "DIVISION_ENDING"
+        ]
+      },
       "ApplicationRequirementStatementEnum": {
         "type": "string",
         "enum": [
@@ -6796,6 +7032,13 @@
           "id": {
             "type": "string"
           },
+          "templateType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdvertTemplateType"
+              }
+            ]
+          },
           "caseId": {
             "type": "string"
           },
@@ -6894,6 +7137,7 @@
           "createdAt",
           "updatedAt",
           "id",
+          "templateType",
           "title",
           "createdBy",
           "canEdit",
@@ -7158,6 +7402,14 @@
           "divisionMeetingLocation": {
             "type": "string",
             "nullable": true
+          },
+          "templateType": {
+            "description": "Template type of the advert",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdvertTemplateType"
+              }
+            ]
           },
           "signatureDate": {
             "type": "string",
@@ -8192,6 +8444,68 @@
           }
         },
         "required": ["person"]
+      },
+      "IssueDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the issue was created"
+          },
+          "publishDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the issue was published"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "issue": {
+            "type": "number"
+          },
+          "year": {
+            "type": "number"
+          },
+          "runningPageNumber": {
+            "type": "number"
+          },
+          "isLegacy": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "publishDate",
+          "title",
+          "url",
+          "issue",
+          "year",
+          "runningPageNumber",
+          "isLegacy"
+        ]
+      },
+      "GetIssuesDto": {
+        "type": "object",
+        "properties": {
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IssueDto"
+            }
+          },
+          "paging": {
+            "$ref": "#/components/schemas/Paging"
+          }
+        },
+        "required": ["issues", "paging"]
       },
       "BaseEntityDto": {
         "type": "object",

@@ -8,12 +8,20 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common'
-import { ApiParam } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
+import {
+  PublicOrApplicationWebScopes,
+  PublicWebScopes,
+  TokenJwtAuthGuard,
+} from '@dmr.is/modules/guards/auth'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 
+import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
+import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import {
   AdvertPublicationDetailedDto,
   AdvertVersionEnum,
@@ -23,6 +31,8 @@ import {
 } from '../../../models/advert-publication.model'
 import { IPublicationService } from './publication.service.interface'
 
+@ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
 @Controller({
   path: '/publications',
   version: '1',
@@ -33,6 +43,7 @@ export class AdvertPublicationController {
     readonly advertPublicationService: IPublicationService,
   ) {}
 
+  @PublicWebScopes()
   @Get()
   @LGResponse({
     operationId: 'getPublications',
@@ -44,6 +55,7 @@ export class AdvertPublicationController {
     return this.advertPublicationService.getPublications(query)
   }
 
+  @PublicOrApplicationWebScopes()
   @Get('/adverts/:advertId/:version')
   @ApiParam({
     name: 'version',
@@ -62,6 +74,7 @@ export class AdvertPublicationController {
     return this.advertPublicationService.getAdvertPublication(advertId, version)
   }
 
+  @AdminAccess()
   @Post('/adverts/:advertId')
   @LGResponse({ operationId: 'createAdvertPublication' })
   async createAdvertPublication(
@@ -70,6 +83,7 @@ export class AdvertPublicationController {
     await this.advertPublicationService.createAdvertPublication(advertId)
   }
 
+  @AdminAccess()
   @Post(':publicationId/adverts/:advertId/publish')
   @LGResponse({ operationId: 'publishAdvertPublication' })
   async publishAdvertPublication(
@@ -82,6 +96,7 @@ export class AdvertPublicationController {
     )
   }
 
+  @AdminAccess()
   @Patch('/:publicationId/adverts/:advertId')
   @LGResponse({ operationId: 'updateAdvertPublication' })
   async updateAdvertPublication(
@@ -96,6 +111,7 @@ export class AdvertPublicationController {
     )
   }
 
+  @AdminAccess()
   @Delete('/:publicationId/adverts/:advertId')
   @LGResponse({ operationId: 'deleteAdvertPublication' })
   async deleteAdvertPublication(

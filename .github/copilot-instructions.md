@@ -3,7 +3,6 @@
 > **📚 Specialized Documentation**  
 > This file provides quick reference and critical conventions. For detailed patterns:
 > - **Next.js Architecture** (App Router, Server/Client Components, routing): [nextjs-architecture-guide.md](./nextjs-architecture-guide.md)
-> - **Logging Implementation** (Edge Runtime details): [../plan-edgeCompatibleLogging.md](../plan-edgeCompatibleLogging.md)
 > - **Documentation Guide** (how to use these files): [README-documentation.md](./README-documentation.md)
 
 ## Project Overview
@@ -176,6 +175,181 @@ export class CaseProviderModule {}
 })
 export class CaseControllerModule {}
 ```
+
+### Authorization Guards (Legal Gazette API)
+
+The Legal Gazette API uses `AuthorizationGuard` to handle both scope-based and admin-based access control in a single guard.
+
+**Authorization Logic Matrix:**
+
+| Decorators | User Lookup? | Access Logic |
+|------------|--------------|--------------|
+| None | ❌ No | Allow (auth only) |
+| `@Scopes()` only | ❌ No | Check scope in JWT |
+| `@AdminAccess()` only | ✅ Yes | Check user in UserModel |
+| `@AdminAccess()` + `@Scopes()` | ✅ Yes | Admin OR scope (OR logic) |
+
+**Available Decorators:**
+
+```typescript
+// Scope decorators (from @dmr.is/modules/guards/auth)
+@PublicWebScopes()           // Requires '@dmr.is/lg-public-web' scope
+@ApplicationWebScopes()      // Requires '@dmr.is/lg-application-web' scope
+@PublicOrApplicationWebScopes()  // Requires EITHER scope
+
+// Admin decorator (from local decorators)
+@AdminAccess()               // Requires user in UserModel table
+```
+
+**Controller Pattern Examples:**
+
+```typescript
+// Admin-only controller
+@Controller('admin-stuff')
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
+@AdminAccess()
+export class AdminController { ... }
+
+// Scope-only controller (no database lookup)
+@Controller('public-stuff')
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
+@PublicWebScopes()
+export class PublicController { ... }
+
+// Mixed access: Admin OR specific scope (OR logic)
+@Controller('shared-stuff')
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
+@ApplicationWebScopes()
+@AdminAccess()
+export class SharedController {
+  // Admin users can access without scope
+  // Application-web users can access via scope
+}
+
+// Method-level scope override
+@Controller('mixed')
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
+@AdminAccess()  // Class-level: admin required
+export class MixedController {
+  @Get('admin-only')
+  adminOnly() { ... }  // Inherits @AdminAccess()
+  
+  @ApplicationWebScopes()  // Method-level scope
+  @Get('shared')
+  shared() { ... }  // Admin OR application-web
+}
+```
+
+### Controller Authorization Tests
+
+When testing controller authorization, use the **real Reflector** to read actual decorators from the controller.
+
+**Test File Structure** (`*.controller.spec.ts`):
+
+```typescript
+import { ExecutionContext } from '@nestjs/common'
+import { Reflector } from '@nestjs/core'
+import { Test, TestingModule } from '@nestjs/testing'
+
+import { SCOPES_KEY } from '@dmr.is/modules/guards/auth'
+import { ADMIN_KEY } from '../../../core/decorators/admin.decorator'
+import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
+import { IUsersService } from '../../users/users.service.interface'
+import { MyController } from './my.controller'
+
+// Test constants
+const ADMIN_NATIONAL_ID = '1234567890'
+const PUBLIC_WEB_NATIONAL_ID = '0987654321'
+const APPLICATION_WEB_NATIONAL_ID = '1122334455'
+
+// User factories
+const createAdminUser = () => ({ nationalId: ADMIN_NATIONAL_ID, scope: '' })
+const createPublicWebUser = () => ({ 
+  nationalId: PUBLIC_WEB_NATIONAL_ID, 
+  scope: '@dmr.is/lg-public-web' 
+})
+const createApplicationWebUser = () => ({ 
+  nationalId: APPLICATION_WEB_NATIONAL_ID, 
+  scope: '@dmr.is/lg-application-web' 
+})
+
+describe('MyController - Guard Authorization', () => {
+  let authorizationGuard: AuthorizationGuard
+  let reflector: Reflector
+  let usersService: jest.Mocked<IUsersService>
+
+  // Create context with REAL controller method reference
+  const createMockContext = (
+    user: MockUser | null,
+    methodName: keyof MyController,
+  ): ExecutionContext => ({
+    switchToHttp: () => ({ getRequest: () => ({ user }) }),
+    getHandler: () => MyController.prototype[methodName] as () => void,
+    getClass: () => MyController,
+  } as unknown as ExecutionContext)
+
+  beforeEach(async () => {
+    const mockUsersService = {
+      getUserByNationalId: jest.fn().mockImplementation((nationalId) => {
+        if (nationalId === ADMIN_NATIONAL_ID) {
+          return Promise.resolve({ id: '1', nationalId, name: 'Admin' })
+        }
+        throw new Error('User not found')
+      }),
+    }
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AuthorizationGuard,
+        Reflector,  // Use REAL Reflector
+        { provide: IUsersService, useValue: mockUsersService },
+      ],
+    }).compile()
+
+    authorizationGuard = module.get<AuthorizationGuard>(AuthorizationGuard)
+    reflector = module.get<Reflector>(Reflector)
+    usersService = module.get(IUsersService)
+  })
+
+  // Test decorator configuration
+  describe('Decorator verification', () => {
+    it('should have @AdminAccess() on class', () => {
+      const isAdmin = reflector.getAllAndOverride(ADMIN_KEY, [MyController])
+      expect(isAdmin).toBe(true)
+    })
+
+    it('should have @ApplicationWebScopes() on specificMethod', () => {
+      const scopes = reflector.getAllAndOverride(SCOPES_KEY, [
+        MyController.prototype.specificMethod,
+        MyController,
+      ])
+      expect(scopes).toEqual(['@dmr.is/lg-application-web'])
+    })
+  })
+
+  // Test authorization behavior
+  describe('adminOnlyMethod', () => {
+    it('should ALLOW admin users', async () => {
+      const context = createMockContext(createAdminUser(), 'adminOnlyMethod')
+      const result = await authorizationGuard.canActivate(context)
+      expect(result).toBe(true)
+    })
+
+    it('should DENY non-admin users', async () => {
+      const context = createMockContext(createPublicWebUser(), 'adminOnlyMethod')
+      await expect(authorizationGuard.canActivate(context)).rejects.toThrow()
+    })
+  })
+})
+```
+
+**Key Testing Principles:**
+
+1. **Use real Reflector** - Don't mock it, so tests read actual decorators
+2. **Mock only IUsersService** - Admin lookup via database
+3. **Test each method** - Verify decorator inheritance and overrides
+4. **Test user types** - Admin, public-web, application-web, unauthenticated
+5. **Verify DB lookups** - Ensure `getUserByNationalId` called/not called appropriately
 
 ## Development Workflows
 
@@ -480,6 +654,7 @@ nx run-many --target=serve --projects=legal-gazette-api,legal-gazette-web --para
 - **Validation**: Zod schemas for forms, class-validator for DTOs
 - **Testing**: Write tests for business logic and API endpoints
 - **Documentation**: JSDoc comments for complex functions
+- **Plan Files**: When working on a feature with a `plan-*.md` file, **always update the plan** to reflect current progress (mark phases complete, update status tables, note decisions made)
 - **Naming**: 
   - Components: PascalCase
   - Files: kebab-case for multi-word, camelCase for single word

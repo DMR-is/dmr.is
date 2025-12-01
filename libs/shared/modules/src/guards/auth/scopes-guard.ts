@@ -5,6 +5,12 @@ import { Reflector } from '@nestjs/core'
 
 import { ACTOR_SCOPES_KEY, SCOPES_KEY } from './scopes.decorator'
 
+// This guard is used by legal-gazette-api for scope-based authorization
+// legal-gazette-public-web users should have the scope '@dmr.is/lg-public-web'
+// legal-gazette-application-web users should have the scope '@dmr.is/lg-application-web'
+// We need to make sure that endpoints used respectively by these two clients
+// are protected by this guard with the appropriate @Scopes() decorator.
+
 @Injectable()
 export class ScopesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}

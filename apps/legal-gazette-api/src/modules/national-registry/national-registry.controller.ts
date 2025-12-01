@@ -2,10 +2,14 @@ import { Controller, Get, Inject, Param, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { GetPersonDto } from '@dmr.is/clients/national-registry'
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import {
+  ApplicationWebScopes,
+  TokenJwtAuthGuard,
+} from '@dmr.is/modules/guards/auth'
 import { NationalIdValidationPipe } from '@dmr.is/pipelines'
 
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
+import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import { ILGNationalRegistryService } from './national-registry.service.interface'
 
 @Controller({
@@ -13,7 +17,8 @@ import { ILGNationalRegistryService } from './national-registry.service.interfac
   version: '1',
 })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
+@ApplicationWebScopes()
 export class LGNationalRegistryController {
   constructor(
     @Inject(ILGNationalRegistryService)

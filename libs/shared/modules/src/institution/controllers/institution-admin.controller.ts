@@ -25,7 +25,7 @@ import {
   UpdateInstitution,
 } from '@dmr.is/shared/dto'
 
-import { RoleGuard, TokenJwtAuthGuard } from '../../guards'
+import { RoleGuard, TokenJwtAuthGuard } from '../../guards/auth'
 import { IInstitutionService } from '../institution.service.interface'
 
 @Controller({

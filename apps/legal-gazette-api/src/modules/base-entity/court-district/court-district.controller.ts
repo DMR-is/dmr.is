@@ -1,6 +1,14 @@
-import { Controller, Get, Param } from '@nestjs/common'
+import { Controller, Get, Param, UseGuards } from '@nestjs/common'
+import { ApiBearerAuth } from '@nestjs/swagger'
 
+import {
+  ApplicationWebScopes,
+  TokenJwtAuthGuard,
+} from '@dmr.is/modules/guards/auth'
+
+import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
+import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import {
   CourtDistrictDto,
   CourtDistrictModel,
@@ -8,10 +16,15 @@ import {
 } from '../../../models/court-district.model'
 import { BaseEntityController } from '../base-entity.controller'
 
+// Access: Admin users OR application-web users
 @Controller({
   path: 'court-districts',
   version: '1',
 })
+@ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
+@ApplicationWebScopes()
+@AdminAccess()
 export class CourtDistrictController extends BaseEntityController<
   typeof CourtDistrictModel,
   CourtDistrictDto
