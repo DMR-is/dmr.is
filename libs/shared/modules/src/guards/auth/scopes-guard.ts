@@ -5,9 +5,6 @@ import { Reflector } from '@nestjs/core'
 
 import { ACTOR_SCOPES_KEY, SCOPES_KEY } from './scopes.decorator'
 
-
-
-
 // This guard is used by legal-gazette-api for scope-based authorization
 // legal-gazette-public-web users should have the scope '@dmr.is/lg-public-web'
 // legal-gazette-application-web users should have the scope '@dmr.is/lg-application-web'
@@ -64,8 +61,6 @@ export class ScopesGuard implements CanActivate {
     haveScopes: string | string[],
   ): boolean {
     const parsed = this.parseScopes(haveScopes)
-    console.log('needScopes', needScopes, 'haveScopes', parsed
-    )
     return needScopes.some((scope) => parsed.includes(scope))
   }
 }
