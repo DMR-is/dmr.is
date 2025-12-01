@@ -1,17 +1,24 @@
 import { isString, isUUID } from 'class-validator'
 import z from 'zod'
 
-import { baseApplicationSchema, baseApplicationValidationSchema } from './base'
-import { ApplicationTypeEnum } from './constants'
+import {
+  baseApplicationSchema,
+  baseApplicationSchemaRefined,
+} from '../base/application'
+import { ApplicationTypeEnum } from '../constants'
 
 export const commonFieldsSchema = z.object({
-  typeId: z.string().optional(),
-  categoryId: z.string().optional(),
-  caption: z.string().optional(),
-  html: z.string().optional(),
+  typeId: z.string().optional().nullable(),
+  categoryId: z.string().optional().nullable(),
+  caption: z.string().optional().nullable(),
+  html: z.string().optional().nullable(),
 })
 
-export const commonFieldsValidationSchema = z.object({
+export const commonApplicationAnswers = baseApplicationSchema.extend({
+  fields: commonFieldsSchema.optional(),
+})
+
+export const commonFieldsSchemaRefined = z.object({
   typeId: z.uuid().refine((id) => isUUID(id), {
     message: 'Tegund auglýsingar er nauðsynleg',
   }),
@@ -29,18 +36,14 @@ export const commonFieldsValidationSchema = z.object({
 })
 
 export const commonApplicationSchema = z.object({
-  type: ApplicationTypeEnum.COMMON,
-  answers: baseApplicationSchema
-    .extend({
-      fields: commonFieldsSchema,
-    })
-    .optional(),
+  type: z.literal(ApplicationTypeEnum.COMMON),
+  answers: commonApplicationAnswers.optional(),
 })
 
-export const commonApplicationValidationSchema = z.object({
+export const commonApplicationSchemaRefined = z.object({
   type: ApplicationTypeEnum.COMMON,
-  answers: baseApplicationValidationSchema.extend({
-    fields: commonFieldsValidationSchema,
+  answers: baseApplicationSchemaRefined.extend({
+    fields: commonFieldsSchemaRefined,
   }),
 })
 

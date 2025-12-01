@@ -1,42 +1,45 @@
 import { UseFormProps } from 'react-hook-form'
+import z from 'zod'
 
 import {
-  ApplicationMetaDataSchema,
-  CommonApplicationFieldsSchema,
+  commonApplicationAnswers,
   CommonApplicationSchema,
-  commonApplicationSchema,
-  CommunicationChannelSchema,
-  PublishingDatesSchema,
-  SignatureSchema,
 } from '@dmr.is/legal-gazette/schemas'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { DeepPartial } from '@trpc/server'
+
+const commonApplicationWebSchema = commonApplicationAnswers.extend({
+  metadata: z.object({
+    applicationId: z.string(),
+    caseId: z.string(),
+    typeOptions: z.array(
+      z.object({
+        label: z.string(),
+        value: z.string(),
+      }),
+    ),
+  }),
+})
+
+export type CommonApplicationWebSchema = z.infer<
+  typeof commonApplicationWebSchema
+>
+
+export type CommonApplicationWebMetadata =
+  CommonApplicationWebSchema['metadata']
 
 export type CommonFormProps = {
-  metadata: ApplicationMetaDataSchema
-  fields: DeepPartial<CommonApplicationFieldsSchema>
-  signature: SignatureSchema
-  publishingDates: PublishingDatesSchema[]
-  communicationChannels: CommunicationChannelSchema[]
-  additionalText?: string
+  metadata: CommonApplicationWebMetadata
+  application: CommonApplicationSchema
 }
 export const commonForm = ({
   metadata,
-  fields,
-  signature,
-  publishingDates,
-  communicationChannels,
-  additionalText,
-}: CommonFormProps): UseFormProps<CommonApplicationSchema> => ({
+  application,
+}: CommonFormProps): UseFormProps<CommonApplicationWebSchema> => ({
   mode: 'onChange',
-  resolver: zodResolver(commonApplicationSchema),
+  resolver: zodResolver(commonApplicationWebSchema),
   defaultValues: {
     metadata,
-    fields,
-    signature,
-    publishingDates,
-    communicationChannels,
-    additionalText,
+    ...application,
   },
 })

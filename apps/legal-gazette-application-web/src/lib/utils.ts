@@ -3,7 +3,6 @@ import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
 import { DateFormats, FormTypes } from './constants'
-
 export const formatDate = (
   date: string | Date,
   df: DateFormats = DateFormats.LONG,

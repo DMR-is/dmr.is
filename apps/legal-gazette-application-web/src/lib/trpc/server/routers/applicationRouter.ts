@@ -1,17 +1,13 @@
 import z from 'zod'
 
 import {
-  addDivisionEndingInputSchema,
-  addDivisionMeetingInputSchema,
   CommonApplicationSchema,
   commonApplicationSchema,
-  isCommonApplication,
-  isUpdateCommonApplication,
-  RecallApplicationSchema,
-  recallApplicationSchema,
+  createDivisionEndingInput,
+  createDivisionMeetingInput,
   recallBankruptcyApplicationSchema,
   recallDeceasedApplicationSchema,
-  updateApplicationSchema,
+  updateApplicationWithIdInput,
 } from '@dmr.is/legal-gazette/schemas'
 
 import {
@@ -21,11 +17,6 @@ import {
 import { protectedProcedure, router } from '../trpc'
 
 import { TRPCError } from '@trpc/server'
-
-export const updateApplicationInputSchema = z.object({
-  id: z.string(),
-  answers: updateApplicationSchema,
-})
 
 export const createApplicationSchema = z.enum(
   CreateApplicationApplicationTypeEnum,
@@ -66,11 +57,14 @@ export const applicationRouter = router({
     return { types, categories, courtDistricts }
   }),
   updateApplication: protectedProcedure
-    .input(updateApplicationInputSchema)
+    .input(updateApplicationWithIdInput)
     .mutation(async ({ ctx, input }) => {
+      const { id, ...applicationAnswers } = input
       return await ctx.api.updateApplication({
         applicationId: input.id,
-        updateApplicationDto: { answers: input.answers },
+        updateApplicationDto: {
+          answers: { ...applicationAnswers.answers },
+        },
       })
     }),
   getApplications: protectedProcedure
@@ -81,6 +75,51 @@ export const applicationRouter = router({
         pageSize: input?.pageSize,
       })
     }),
+  getCommonApplicationById: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const application = await ctx.api.getApplicationById({
+        applicationId: input.id,
+      })
+
+      const parsed = commonApplicationSchema.parse({
+        type: application.type,
+        answers: { ...application.answers },
+      })
+
+      return {
+        ...application,
+        answers: parsed.answers as CommonApplicationSchema,
+      }
+    }),
+  getRecallBankruptcyApplicationById: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const application = await ctx.api.getApplicationById({
+        applicationId: input.id,
+      })
+
+      const parsed = recallBankruptcyApplicationSchema.parse(application)
+
+      return {
+        ...application,
+        answers: parsed.answers,
+      }
+    }),
+  getRecallDeceasedApplicationById: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const application = await ctx.api.getApplicationById({
+        applicationId: input.id,
+      })
+
+      const parsed = recallDeceasedApplicationSchema.parse(application)
+
+      return {
+        ...application,
+        answers: parsed.answers,
+      }
+    }),
   getApplicationById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -90,13 +129,38 @@ export const applicationRouter = router({
 
       switch (application.type) {
         case ApplicationTypeEnum.COMMON: {
-          return commonApplicationSchema.parse(application)
+          const parsed = commonApplicationSchema.safeParse({
+            type: application.type,
+            answers: { ...application.answers },
+          })
+
+          if (!parsed.success) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: `Invalid common application data`,
+            })
+          }
+
+          return {
+            ...application,
+            answers: parsed.data.answers,
+          }
         }
         case ApplicationTypeEnum.RECALLBANKRUPTCY: {
-          return recallBankruptcyApplicationSchema.parse(application)
+          const parsed = recallBankruptcyApplicationSchema.parse(application)
+
+          return {
+            ...application,
+            answers: parsed.answers,
+          }
         }
         case ApplicationTypeEnum.RECALLDECEASED: {
-          return recallDeceasedApplicationSchema.parse(application)
+          const parsed = recallDeceasedApplicationSchema.parse(application)
+
+          return {
+            ...application,
+            answers: parsed.answers,
+          }
         }
         default: {
           throw new TRPCError({
@@ -121,21 +185,19 @@ export const applicationRouter = router({
       })
     }),
   addDivisionMeeting: protectedProcedure
-    .input(addDivisionMeetingInputSchema)
+    .input(createDivisionMeetingInput)
     .mutation(async ({ ctx, input }) => {
-      const { applicationId, ...dto } = input
       return await ctx.api.addDivisionMeetingAdvertToApplication({
-        applicationId: applicationId,
-        addDivisionMeetingForApplicationDto: dto,
+        applicationId: 'some-id',
+        createDivisionMeetingDto: input,
       })
     }),
   addDivisionEnding: protectedProcedure
-    .input(addDivisionEndingInputSchema)
+    .input(createDivisionEndingInput)
     .mutation(async ({ ctx, input }) => {
-      const { applicationId, ...dto } = input
       return await ctx.api.addDivisionEndingAdvertToApplication({
-        applicationId: applicationId,
-        addDivisionEndingForApplicationDto: dto,
+        applicationId: 'some-id',
+        createDivisionEndingDto: input,
       })
     }),
 })

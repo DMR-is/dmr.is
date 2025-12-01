@@ -48,7 +48,7 @@ type CaseCreateAttributes = {
   include: [
     {
       model: ApplicationModel,
-      attributes: ['id', 'type', 'status'],
+      attributes: ['id', 'applicationType', 'status'],
     },
   ],
   order: [['createdAt', 'DESC']],
@@ -133,7 +133,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
       createdAt: model.createdAt.toISOString(),
       updatedAt: model.updatedAt.toISOString(),
       deletedAt: model.deletedAt?.toISOString(),
-      applicationType: model.application?.type ?? undefined,
+      applicationType: model.application?.applicationType ?? undefined,
     }
   }
 

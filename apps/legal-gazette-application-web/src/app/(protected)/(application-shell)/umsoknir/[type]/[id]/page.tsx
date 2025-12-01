@@ -1,7 +1,9 @@
-import { HydrateClient } from '@dmr.is/trpc/client/server'
-import { fetchQueryWithHandler, prefetch } from '@dmr.is/trpc/client/server'
+import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
+import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
-import { ApplicationFormContainer } from '../../../../../../containers/ApplicationFormContainer'
+import { CommonForm } from '../../../../../../components/form/common/CommonForm'
+import { RecallForm } from '../../../../../../components/form/recall/RecallForm'
+import { ApplicationStatusEnum } from '../../../../../../gen/fetch'
 import { ALLOWED_FORM_TYPES, FormTypes } from '../../../../../../lib/constants'
 import { trpc } from '../../../../../../lib/trpc/client/server'
 
@@ -10,25 +12,81 @@ export default async function ApplicationPage({
 }: {
   params: { id: string; type: FormTypes }
 }) {
-  const application = await fetchQueryWithHandler(
-    trpc.getApplicationById.queryOptions({
-      id: params.id,
-    }),
-  )
-
   if (!ALLOWED_FORM_TYPES.includes(params.type)) {
     throw new Error('Tegund umsóknar finnst ekki')
   }
 
-  void prefetch(trpc.getBaseEntities.queryOptions())
-  const data = await fetchQueryWithHandler(
-    trpc.getApplicationById.queryOptions({
-      id: params.id,
-    }),
+  const baseEntities = await fetchQueryWithHandler(
+    trpc.getBaseEntities.queryOptions(),
   )
-  return (
-    <HydrateClient>
-      <ApplicationFormContainer application={data} />
-    </HydrateClient>
+
+  let Component = (
+    <AlertMessage
+      type="error"
+      title="Tegund umsóknar finnst ekki"
+      message="Athugaðu hvort tegund umsóknar sé rétt í slóðinni"
+    />
   )
+
+  switch (params.type) {
+    case FormTypes.COMMON: {
+      const application = await fetchQueryWithHandler(
+        trpc.getCommonApplicationById.queryOptions({
+          id: params.id,
+        }),
+      )
+
+      if (application.status === ApplicationStatusEnum.DRAFT) {
+        Component = (
+          <CommonForm
+            metadata={{
+              applicationId: application.id,
+              caseId: application.caseId,
+              typeOptions: baseEntities.types.map((type) => ({
+                label: type.title,
+                value: type.id,
+              })),
+            }}
+            application={application.answers}
+          />
+        )
+      }
+
+      break
+    }
+    case FormTypes.BANKRUPTCY: {
+      const application = await fetchQueryWithHandler(
+        trpc.getRecallBankruptcyApplicationById.queryOptions({
+          id: params.id,
+        }),
+      )
+
+      if (application.status === ApplicationStatusEnum.DRAFT) {
+        // Component = <RecallForm />
+      }
+
+      break
+    }
+    case FormTypes.DECEASED: {
+      const application = await fetchQueryWithHandler(
+        trpc.getRecallDeceasedApplicationById.queryOptions({
+          id: params.id,
+        }),
+      )
+
+      if (application.status === ApplicationStatusEnum.DRAFT) {
+        // Component = <RecallForm />
+      }
+
+      break
+    }
+  }
+
+  return Component
+
+  // return (
+  // <HydrateClient>
+  //   <ApplicationFormContainer application={data} />
+  // </HydrateClient>
+  // )
 }

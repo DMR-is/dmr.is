@@ -1,4 +1,6 @@
+import deepmerge from 'deepmerge'
 import { Op } from 'sequelize'
+import z from 'zod'
 
 import {
   BadRequestException,
@@ -16,9 +18,12 @@ import {
 } from '@dmr.is/clients/national-registry'
 import {
   ApplicationTypeEnum,
-  commonApplicationValidationSchema,
-  recallApplicationValidationSchema,
-  updateApplicationSchema,
+  commonApplicationSchemaRefined,
+  communicationChannelSchema,
+  recallApplicationSchemaRefined,
+  recallBankruptcyAnswersSchemaRefined,
+  recallDeceasedAnswersSchemaRefined,
+  updateApplicationInput,
 } from '@dmr.is/legal-gazette/schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared/dto'
@@ -72,7 +77,7 @@ export class ApplicationService implements IApplicationService {
     application: ApplicationModel,
     submittee: PersonDto,
   ) {
-    const { answers } = commonApplicationValidationSchema.parse(
+    const { answers } = commonApplicationSchemaRefined.parse(
       application.answers,
     )
 
@@ -107,34 +112,34 @@ export class ApplicationService implements IApplicationService {
     submittee: PersonDto,
   ) {
     let data
-    switch (application.type) {
+    switch (application.applicationType) {
       case ApplicationTypeEnum.RECALL_BANKRUPTCY:
-        data = recallApplicationValidationSchema.parse(application.answers)
+        data = recallBankruptcyAnswersSchemaRefined.parse(application.answers)
         break
       case ApplicationTypeEnum.RECALL_DECEASED:
-        data = recallApplicationValidationSchema.parse(application.answers)
+        data = recallDeceasedAnswersSchemaRefined.parse(application.answers)
         break
       default:
         this.logger.warn(
-          `Attempted to submit recall application with unknown type: ${application.type}`,
+          `Attempted to submit recall application with unknown type: ${application.applicationType}`,
         )
         throw new BadRequestException()
     }
 
     const title =
-      application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
-        ? `Innköllun þrotabús - ${data.answers.settlementFields.name}`
-        : `Innköllun dánarbús - ${data.answers.settlementFields.name}`
+      application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
+        ? `Innköllun þrotabús - ${data.fields.settlementFields.name}`
+        : `Innköllun dánarbús - ${data.fields.settlementFields.name}`
 
     const createObj: CreateAdvertInternalDto = {
       applicationId: application.id,
       templateType:
-        application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
+        application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
           ? AdvertTemplateType.RECALL_BANKRUPTCY
           : AdvertTemplateType.RECALL_DECEASED,
       caseId: application.caseId,
       typeId:
-        application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
+        application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
           ? RECALL_BANKRUPTCY_ADVERT_TYPE_ID
           : RECALL_DECEASED_ADVERT_TYPE_ID,
       categoryId: RECALL_CATEGORY_ID,
@@ -145,14 +150,14 @@ export class ApplicationService implements IApplicationService {
       signatureLocation: data.signature?.location,
       signatureDate: data.signature?.date ?? undefined,
       title: title,
-      divisionMeetingDate: data.answers.divisionMeetingFields?.meetingDate,
+      divisionMeetingDate: data.fields.divisionMeetingFields?.meetingDate,
       divisionMeetingLocation:
-        data.answers.divisionMeetingFields?.meetingLocation,
-      judgementDate: data.answers.courtAndJudgmentFields?.judgmentDate,
-      courtDistrictId: data.answers.courtAndJudgmentFields?.courtDistrictId,
+        data.fields.divisionMeetingFields?.meetingLocation,
+      judgementDate: data.fields.courtAndJudgmentFields?.judgmentDate,
+      courtDistrictId: data.fields.courtAndJudgmentFields?.courtDistrictId,
       communicationChannels: data.communicationChannels,
       scheduledAt: data.publishingDates,
-      settlement: { ...data.answers.settlementFields },
+      settlement: { ...data.fields.settlementFields },
     }
 
     const advert = await this.advertService.createAdvert(createObj)
@@ -173,7 +178,7 @@ export class ApplicationService implements IApplicationService {
         id: applicationId,
         submittedByNationalId: submittee.kennitala,
         status: ApplicationStatusEnum.SUBMITTED,
-        type: {
+        applicationType: {
           [Op.or]: [
             ApplicationTypeEnum.RECALL_BANKRUPTCY,
             ApplicationTypeEnum.RECALL_DECEASED,
@@ -185,7 +190,7 @@ export class ApplicationService implements IApplicationService {
     await this.advertService.createAdvert({
       applicationId: application.id,
       templateType:
-        application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
+        application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
           ? AdvertTemplateType.DIVISION_MEETING_BANKRUPTCY
           : AdvertTemplateType.DIVISION_MEETING_DECEASED,
       caseId: application.caseId,
@@ -217,7 +222,7 @@ export class ApplicationService implements IApplicationService {
         id: applicationId,
         submittedByNationalId: submittee.kennitala,
         status: ApplicationStatusEnum.SUBMITTED,
-        type: {
+        applicationType: {
           [Op.or]: [
             ApplicationTypeEnum.RECALL_BANKRUPTCY,
             ApplicationTypeEnum.RECALL_DECEASED,
@@ -232,7 +237,10 @@ export class ApplicationService implements IApplicationService {
       )
     }
 
-    const parsed = recallApplicationValidationSchema.parse(application.answers)
+    const parsed = recallApplicationSchemaRefined.parse({
+      type: application.applicationType,
+      answers: application.answers,
+    })
 
     await this.advertService.createAdvert({
       applicationId: application.id,
@@ -249,7 +257,7 @@ export class ApplicationService implements IApplicationService {
       title: `Skiptalok - ${application.settlement.name}`,
       additionalText: body.additionalText,
       settlementId: application.settlement.id,
-      judgementDate: parsed.answers.courtAndJudgmentFields.judgmentDate,
+      judgementDate: parsed.answers.fields.courtAndJudgmentFields.judgmentDate,
       communicationChannels: body.communicationChannels,
       scheduledAt: [body.meetingDate],
     })
@@ -266,16 +274,52 @@ export class ApplicationService implements IApplicationService {
       where: { id: applicationId, submittedByNationalId: user.nationalId },
     })
 
-    const parsedAnswers = updateApplicationSchema.parse({
-      type: application.type,
-      answers: {
-        ...application.answers,
-        ...body.answers,
+    const parsedData = updateApplicationInput.parse({
+      type: application.applicationType,
+      answers: body.answers,
+    })
+
+    const currentAnswers =
+      (application.answers as Record<string, unknown>) || {}
+    const incomingAnswers =
+      (parsedData.answers as Record<string, unknown>) || {}
+
+    const mergedAnswers = deepmerge(currentAnswers, incomingAnswers, {
+      customMerge: (key) => {
+        if (key === 'publishingDates') {
+          return (_current, incoming) => incoming
+        }
+
+        if (key === 'communicationChannels') {
+          return (current, incoming) => {
+            const merged = [...current]
+
+            incoming.forEach(
+              (sourceChannel: z.infer<typeof communicationChannelSchema>) => {
+                const index = merged.findIndex(
+                  (t) => t.email === sourceChannel.email,
+                )
+                if (index > -1) {
+                  merged[index] = sourceChannel
+                } else {
+                  merged.push(sourceChannel)
+                }
+              },
+            )
+
+            return merged
+          }
+        }
       },
     })
 
+    const validatedMerged = updateApplicationInput.parse({
+      type: application.applicationType,
+      answers: mergedAnswers,
+    })
+
     await application.update({
-      answers: { ...parsedAnswers.answers, type: application.type },
+      answers: validatedMerged.answers,
     })
 
     await application.reload()
@@ -322,9 +366,9 @@ export class ApplicationService implements IApplicationService {
       {
         involvedPartyNationalId: user.nationalId,
         application: {
-          type: type,
+          applicationType: type,
           submittedByNationalId: user.nationalId,
-          answers: { type: type },
+          answers: {},
         },
       },
       {
@@ -414,7 +458,7 @@ export class ApplicationService implements IApplicationService {
       throw new InternalServerErrorException('Could not verify submittee')
     }
 
-    switch (application.type) {
+    switch (application.applicationType) {
       case ApplicationTypeEnum.COMMON:
         await this.submitCommonApplication(application, submittee)
         break
@@ -424,7 +468,7 @@ export class ApplicationService implements IApplicationService {
         break
       default:
         this.logger.warn(
-          `Attempted to submit application with unknown type: ${application.type}`,
+          `Attempted to submit application with unknown type: ${application.applicationType}`,
         )
         throw new BadRequestException()
     }

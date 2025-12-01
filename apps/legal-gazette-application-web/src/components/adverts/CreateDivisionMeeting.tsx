@@ -3,7 +3,7 @@ import { useParams } from 'next/navigation'
 
 import { useEffect, useState } from 'react'
 
-import { addDivisionMeetingValidationSchema } from '@dmr.is/legal-gazette/schemas'
+import { createDivisionMeetingInput } from '@dmr.is/legal-gazette/schemas'
 import {
   Box,
   Button,
@@ -70,8 +70,7 @@ export const CreateDivisionMeeting = ({
   }, [formState])
 
   const setAndGetFormValidation = async () => {
-    const formValidation =
-      addDivisionMeetingValidationSchema.safeParse(formState)
+    const formValidation = createDivisionMeetingInput.safeParse(formState)
     const formErrors = formValidation.error?.flatten().fieldErrors
 
     setFieldErrors(formErrors)

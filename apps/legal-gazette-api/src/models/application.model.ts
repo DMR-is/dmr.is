@@ -24,9 +24,9 @@ import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import {
   ApplicationTypeEnum,
-  CommonApplicationSchema,
-  RecallBankruptcyApplicationSchema,
-  RecallDeceasedApplicationSchema,
+  CommonApplicationAnswers,
+  RecallBankruptcyApplicationAnswers,
+  RecallDeceasedApplicationAnswers,
 } from '@dmr.is/legal-gazette/schemas'
 import { Paging } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
@@ -54,24 +54,22 @@ export enum IslandIsCommonApplicationEventsEnum {
   REJECT = 'REJECT',
 }
 
+export type ApplicationAnswers<
+  T extends ApplicationTypeEnum = ApplicationTypeEnum,
+> = {
+  [ApplicationTypeEnum.COMMON]: CommonApplicationAnswers
+  [ApplicationTypeEnum.RECALL_BANKRUPTCY]: RecallBankruptcyApplicationAnswers
+  [ApplicationTypeEnum.RECALL_DECEASED]: RecallDeceasedApplicationAnswers
+}[T]
+
 type BaseApplicationAttributes = {
   caseId: string
   settlementId: string | null
   submittedByNationalId: string
-  type: ApplicationTypeEnum
+  applicationType: ApplicationTypeEnum
   status: ApplicationStatusEnum
+  answers: ApplicationAnswers
 }
-
-type ApplicationAnswers =
-  | ({ type: ApplicationTypeEnum.COMMON } & {
-      answers?: CommonApplicationSchema
-    })
-  | ({ type: ApplicationTypeEnum.RECALL_BANKRUPTCY } & {
-      answers?: RecallBankruptcyApplicationSchema
-    })
-  | ({ type: ApplicationTypeEnum.RECALL_DECEASED } & {
-      answers?: RecallDeceasedApplicationSchema
-    })
 
 export type ApplicationAttributes = BaseApplicationAttributes &
   ApplicationAnswers
@@ -80,7 +78,7 @@ export type ApplicationCreateAttributes = {
   caseId?: string
   settlementId?: string | null
   submittedByNationalId: string
-  type: ApplicationTypeEnum
+  applicationType: ApplicationTypeEnum
   status?: ApplicationStatusEnum
   answers?: ApplicationAnswers
 }
@@ -99,7 +97,6 @@ export class ApplicationModel extends BaseModel<
     allowNull: false,
   })
   @ForeignKey(() => CaseModel)
-  @ApiProperty({ type: String })
   caseId!: string
 
   @Column({
@@ -114,29 +111,21 @@ export class ApplicationModel extends BaseModel<
     type: DataType.TEXT,
     allowNull: false,
   })
-  @ApiProperty({ type: String })
   submittedByNationalId!: string
 
   @Column({
     type: DataType.ENUM(...Object.values(ApplicationTypeEnum)),
     allowNull: false,
   })
-  @ApiProperty({ enum: ApplicationTypeEnum, enumName: 'ApplicationTypeEnum' })
-  type!: ApplicationTypeEnum
+  applicationType!: ApplicationTypeEnum
 
   @Column({
     type: DataType.ENUM(...Object.values(ApplicationStatusEnum)),
     allowNull: false,
     defaultValue: ApplicationStatusEnum.DRAFT,
   })
-  @ApiProperty({
-    enum: ApplicationStatusEnum,
-    enumName: 'ApplicationStatusEnum',
-    default: ApplicationStatusEnum.DRAFT,
-  })
   status!: ApplicationStatusEnum
 
-  @ApiProperty({ type: DataType.JSONB, default: {} })
   @Column({
     type: DataType.JSONB,
     allowNull: false,
@@ -151,11 +140,11 @@ export class ApplicationModel extends BaseModel<
   settlement?: SettlementModel
 
   get title() {
-    if (this.type === ApplicationTypeEnum.RECALL_DECEASED) {
+    if (this.applicationType === ApplicationTypeEnum.RECALL_DECEASED) {
       return 'Innköllun dánarbús'
     }
 
-    if (this.type === ApplicationTypeEnum.RECALL_BANKRUPTCY) {
+    if (this.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY) {
       return 'Innköllun þrotabús'
     }
 
@@ -172,7 +161,7 @@ export class ApplicationModel extends BaseModel<
       submittedByNationalId: model.submittedByNationalId,
       status: model.status,
       title: model.title,
-      type: model.type,
+      type: model.applicationType,
     }
   }
 
@@ -185,7 +174,7 @@ export class ApplicationModel extends BaseModel<
   ): ApplicationDetailedDto {
     return {
       ...this.fromModel(model),
-      answers: model.answers,
+      answers: { ...model.answers },
     }
   }
 

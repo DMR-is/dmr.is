@@ -1,28 +1,29 @@
 import z from 'zod'
 
-import { baseApplicationValidationSchema } from './base'
-import { commonApplicationSchema } from './common'
+import { baseApplicationSchemaRefined } from './base/application'
 import {
-  recallBankruptcyApplicationSchema,
-  recallDeceasedApplicationSchema,
-} from './recall'
-
-export type DeepPartial<T> = T extends object
-  ? {
-      [P in keyof T]?: DeepPartial<T[P]>
-    }
-  : T
+  commonApplicationAnswers,
+  commonApplicationSchema,
+} from './common/application'
+import { recallBankruptcyApplicationSchema } from './recall/bankruptcy'
+import { recallDeceasedApplicationSchema } from './recall/deceased'
 
 export type CommonApplicationSchema = z.infer<typeof commonApplicationSchema>
+
+export type CommonApplicationAnswers = z.infer<typeof commonApplicationAnswers>
 
 export type RecallBankruptcyApplicationSchema = z.infer<
   typeof recallBankruptcyApplicationSchema
 >
 
+export type RecallBankruptcyApplicationAnswers =
+  RecallBankruptcyApplicationSchema['answers']
+
 export type RecallDeceasedApplicationSchema = z.infer<
   typeof recallDeceasedApplicationSchema
 >
 
-export type BaseApplicationSchema = z.infer<
-  typeof baseApplicationValidationSchema
->
+export type RecallDeceasedApplicationAnswers =
+  RecallDeceasedApplicationSchema['answers']
+
+export type BaseApplicationSchema = z.infer<typeof baseApplicationSchemaRefined>

@@ -8,6 +8,8 @@ import {
   Post,
   Query,
   UseGuards,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
@@ -108,6 +110,7 @@ export class ApplicationController {
     operationId: 'updateApplication',
     type: ApplicationDetailedDto,
   })
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: false }))
   async updateApplication(
     @Param('applicationId') applicationId: string,
     @Body() body: UpdateApplicationDto,

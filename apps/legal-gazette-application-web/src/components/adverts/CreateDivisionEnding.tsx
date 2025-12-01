@@ -3,7 +3,7 @@ import { useParams } from 'next/navigation'
 
 import { useEffect, useState } from 'react'
 
-import { addDivisionEndingValidationSchema } from '@dmr.is/legal-gazette/schemas'
+import { createDivisionEndingInput } from '@dmr.is/legal-gazette/schemas'
 import {
   Box,
   Button,
@@ -73,8 +73,7 @@ export const CreateDivisionEnding = ({
   }, [formState])
 
   const setAndGetFormValidation = async () => {
-    const formValidation =
-      addDivisionEndingValidationSchema.safeParse(formState)
+    const formValidation = createDivisionEndingInput.safeParse(formState)
     const formErrors = formValidation.error?.flatten().fieldErrors
 
     setFieldErrors(formErrors)

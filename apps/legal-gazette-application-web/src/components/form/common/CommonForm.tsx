@@ -2,22 +2,27 @@
 
 import { FormProvider, useForm } from 'react-hook-form'
 
-import { CommonApplicationSchema } from '@dmr.is/legal-gazette/schemas'
 import { SkeletonLoader, Stack, Text } from '@dmr.is/ui/components/island-is'
 
 import { useSubmitApplication } from '../../../hooks/useSubmitApplication'
-import { commonForm, CommonFormProps } from '../../../lib/forms/common-form'
+import {
+  CommonApplicationWebSchema,
+  commonForm,
+  CommonFormProps,
+} from '../../../lib/forms/common-form'
 import { ApplicationShell } from '../../application/ApplicationShell'
 import { CommunicationChannelFields } from '../fields/CommunicationChannelFields'
 import { PublishingFields } from '../fields/PublishingFields'
 import { SignatureFields } from '../fields/SignatureFields'
 import { CommonAdvertFields } from './fields/CommonAdvertFields'
 
-export const CommonForm = (props: CommonFormProps) => {
-  const methods = useForm<CommonApplicationSchema>(commonForm(props))
+export const CommonForm = ({ application, metadata }: CommonFormProps) => {
+  const methods = useForm<CommonApplicationWebSchema>(
+    commonForm({ application, metadata }),
+  )
 
   const { onValidSubmit, onInvalidSubmit } = useSubmitApplication(
-    props.metadata.applicationId,
+    metadata.applicationId,
   )
 
   return (
@@ -44,9 +49,9 @@ export const CommonForm = (props: CommonFormProps) => {
             ) : (
               <>
                 <CommonAdvertFields />
-                <SignatureFields />
+                {/* <SignatureFields />
                 <PublishingFields />
-                <CommunicationChannelFields />
+                <CommunicationChannelFields /> */}
               </>
             )}
           </Stack>

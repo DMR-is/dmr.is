@@ -1,5 +1,10 @@
 'use client'
 
+import {
+  CommonApplicationSchema,
+  RecallBankruptcyApplicationSchema,
+  RecallDeceasedApplicationSchema,
+} from '@dmr.is/legal-gazette/schemas'
 import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
@@ -10,8 +15,12 @@ import { ApplicationSubmittedContainer } from './ApplicationSubmittedContainer'
 
 type Props = {
   application: ApplicationDetailedDto
+  answers:
+    | CommonApplicationSchema
+    | RecallBankruptcyApplicationSchema
+    | RecallDeceasedApplicationSchema
 }
-export function ApplicationFormContainer({ application }: Props) {
+export function ApplicationFormContainer({ application, answers }: Props) {
   const trpc = useTRPC()
   const { data } = useSuspenseQuery(
     trpc.getApplicationById.queryOptions({ id: application.id }),
