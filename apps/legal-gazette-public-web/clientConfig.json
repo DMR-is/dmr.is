@@ -62,6 +62,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - public API"]
       }
@@ -120,6 +121,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - public API"]
       }
@@ -185,6 +187,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - public API"]
       }
@@ -251,6 +254,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - public API"]
       }
@@ -316,6 +320,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - public API"]
       }
@@ -381,6 +386,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - public API"]
       }
@@ -453,6 +459,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - public API"]
       }

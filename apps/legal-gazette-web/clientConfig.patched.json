@@ -76,6 +76,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Category"]
       }
@@ -155,6 +160,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Category"]
       }
@@ -244,6 +254,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Category"]
       }
@@ -323,6 +338,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Type"]
       }
@@ -393,6 +413,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Type"]
       }
@@ -472,6 +497,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Type"]
       }
@@ -552,6 +582,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["Type"]
       }
@@ -865,6 +900,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["CourtDistrict"]
       }
@@ -944,6 +984,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["CourtDistrict"]
       }
@@ -1023,6 +1068,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "",
         "tags": ["CourtDistrict"]
       }
