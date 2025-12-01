@@ -5,8 +5,8 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { AllWebAppsScopes, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
-import { AdminOnly } from '../../../core/decorators/admin.decorator'
 import { UNASSIGNABLE_CATEGORY_IDS } from '../../../core/constants'
+import { AdminOnly } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AdminGuard } from '../../../core/guards/admin.guard'
 import {
