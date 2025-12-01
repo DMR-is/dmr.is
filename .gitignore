@@ -62,6 +62,10 @@ testem.log
 # Planning files
 plan-*.md
 plan-*.prompt.md
+# Allow planning files in folder
+!.github/planning/**/plan-*.md
+!.github/planning/**/plan-*.prompt.md
+
 
 # System Files
 .DS_Store
