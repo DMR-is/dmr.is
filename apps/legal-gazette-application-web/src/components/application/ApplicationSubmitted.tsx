@@ -34,7 +34,7 @@ export const ApplicationSubmitted = ({ adverts, applicationType }: Props) => {
           <Box background="white" borderRadius="large" padding={[4, 5, 6]}>
             <Stack space={[4, 5, 6]}>
               <Stack space={[2, 3, 4]}>
-                <Inline justifyContent="spaceBetween" alignY="center">
+                <Inline justifyContent="spaceBetween" alignY="top">
                   <Text variant="h2">Auglýsingar tengdar umsókninni</Text>
                   <LinkV2 href={PageRoutes.APPLICATIONS}>
                     <Button preTextIcon="arrowBack" variant="text" size="small">
