@@ -17,7 +17,6 @@ import { IUserService } from '../../user/user.service.interface'
 const LOGGING_CATEGORY = 'role-guard'
 const LOGGING_CONTEXT = 'RoleGuard'
 
-
 // Role guard used for official-journal-admin-api and official-journal-application-api
 @Injectable()
 export class RoleGuard implements CanActivate {
