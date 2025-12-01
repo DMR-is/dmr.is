@@ -65,8 +65,6 @@ export class AdvertController {
     return this.advertService.getAdvertById(id, user)
   }
 
-  // Note: This endpoint is also accessible by application-web users via ApplicationWebScopes
-  // The AdminGuard will allow access if user is admin OR has ApplicationWebScopes
   @ApplicationWebScopes()
   @Get('byCaseId/:caseId')
   @LGResponse({ operationId: 'getAdvertsByCaseId', type: GetAdvertsDto })
