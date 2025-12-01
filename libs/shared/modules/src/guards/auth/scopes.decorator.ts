@@ -67,3 +67,37 @@ export const PublicOrApplicationWebScopes = () =>
     '@dmr.is/lg-public-web',
     '@dmr.is/lg-application-web',
   ])
+
+/**
+ * Scope decorator for endpoints accessible by all three legal gazette web applications.
+ * User needs only ONE of the scopes to access the endpoint.
+ * Admin users access via AdminGuard, others via ScopesGuard.
+ *
+ * @example
+ * ```typescript
+ * @AllWebAppsScopes()
+ * @UseGuards(TokenJwtAuthGuard, ScopesGuard, AdminGuard)
+ * @Get('shared-endpoint')
+ * async handler() { ... }
+ * ```
+ */
+export const AllWebAppsScopes = () =>
+  SetMetadata(SCOPES_KEY, [
+    '@dmr.is/lg-public-web',
+    '@dmr.is/lg-application-web',
+  ])
+
+/**
+ * Scope decorator for endpoints accessible by admin AND application-web users.
+ * Admin users pass via AdminGuard, application-web users pass via ScopesGuard.
+ *
+ * @example
+ * ```typescript
+ * @AdminOrApplicationWebScopes()
+ * @UseGuards(TokenJwtAuthGuard, ScopesGuard, AdminGuard)
+ * @Get('admin-or-app-endpoint')
+ * async handler() { ... }
+ * ```
+ */
+export const AdminOrApplicationWebScopes = () =>
+  SetMetadata(SCOPES_KEY, ['@dmr.is/lg-application-web'])

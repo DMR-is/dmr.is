@@ -1,9 +1,14 @@
 import { Op } from 'sequelize'
 
-import { Controller, Get, Param, Query } from '@nestjs/common'
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
+import { ApiBearerAuth } from '@nestjs/swagger'
 
+import { AllWebAppsScopes, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+
+import { AdminOnly } from '../../../core/decorators/admin.decorator'
 import { UNASSIGNABLE_CATEGORY_IDS } from '../../../core/constants'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
+import { AdminGuard } from '../../../core/guards/admin.guard'
 import {
   CategoryDto,
   CategoryModel,
@@ -13,12 +18,15 @@ import {
 import { TypeModel } from '../../../models/type.model'
 import { BaseEntityController } from '../base-entity.controller'
 
-// Note: This controller is used by all 3 apps (admin, public-web, application-web)
-// Any authenticated user can access these endpoints
+// Access: Admin users OR public-web users OR application-web users
 @Controller({
   path: 'categories',
   version: '1',
 })
+@ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard, AdminGuard)
+@AllWebAppsScopes()
+@AdminOnly()
 export class CategoryController extends BaseEntityController<
   typeof CategoryModel,
   CategoryDto
