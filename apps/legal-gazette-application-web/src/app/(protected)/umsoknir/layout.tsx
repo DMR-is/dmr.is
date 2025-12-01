@@ -8,7 +8,7 @@ export default function UmsoknirLadningLayout({
   return (
     <>
       {children}
-      <Footer type="inner" />
+      <Footer site="applications" />
     </>
   )
 }
