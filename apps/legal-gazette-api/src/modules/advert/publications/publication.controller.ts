@@ -15,14 +15,13 @@ import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 import {
   PublicOrApplicationWebScopes,
   PublicWebScopes,
-  ScopesGuard,
   TokenJwtAuthGuard,
 } from '@dmr.is/modules/guards/auth'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 
-import { AdminOnly } from '../../../core/decorators/admin.decorator'
+import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
-import { AdminGuard } from '../../../core/guards/admin.guard'
+import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import {
   AdvertPublicationDetailedDto,
   AdvertVersionEnum,
@@ -33,7 +32,7 @@ import {
 import { IPublicationService } from './publication.service.interface'
 
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard, ScopesGuard, AdminGuard)
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
 @Controller({
   path: '/publications',
   version: '1',
@@ -75,7 +74,7 @@ export class AdvertPublicationController {
     return this.advertPublicationService.getAdvertPublication(advertId, version)
   }
 
-  @AdminOnly()
+  @AdminAccess()
   @Post('/adverts/:advertId')
   @LGResponse({ operationId: 'createAdvertPublication' })
   async createAdvertPublication(
@@ -84,7 +83,7 @@ export class AdvertPublicationController {
     await this.advertPublicationService.createAdvertPublication(advertId)
   }
 
-  @AdminOnly()
+  @AdminAccess()
   @Post(':publicationId/adverts/:advertId/publish')
   @LGResponse({ operationId: 'publishAdvertPublication' })
   async publishAdvertPublication(
@@ -97,7 +96,7 @@ export class AdvertPublicationController {
     )
   }
 
-  @AdminOnly()
+  @AdminAccess()
   @Patch('/:publicationId/adverts/:advertId')
   @LGResponse({ operationId: 'updateAdvertPublication' })
   async updateAdvertPublication(
@@ -112,7 +111,7 @@ export class AdvertPublicationController {
     )
   }
 
-  @AdminOnly()
+  @AdminAccess()
   @Delete('/:publicationId/adverts/:advertId')
   @LGResponse({ operationId: 'deleteAdvertPublication' })
   async deleteAdvertPublication(

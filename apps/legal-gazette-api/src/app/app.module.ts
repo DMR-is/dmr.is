@@ -16,7 +16,7 @@ import {
 } from '@dmr.is/shared/filters'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
-import { AdminGuardModule } from '../core/guards/admin-guard.module'
+import { AuthorizationGuardModule } from '../core/guards/authorization-guard.module'
 import { AdvertModel } from '../models/advert.model'
 import { AdvertPublicationModel } from '../models/advert-publication.model'
 import { AdvertTypeFeeCodeModel } from '../models/advert-type-fee-code.model'
@@ -66,7 +66,7 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
 @Module({
   imports: [
     LoggingModule,
-    AdminGuardModule, // Makes AdminGuard available globally
+    AuthorizationGuardModule, // Makes AuthorizationGuard available globally
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     SequelizeModule.forRootAsync({

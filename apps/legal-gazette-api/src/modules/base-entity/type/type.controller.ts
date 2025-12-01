@@ -3,15 +3,15 @@ import { Op } from 'sequelize'
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { AllWebAppsScopes, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+import { PublicOrApplicationWebScopes, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
 import {
   COMMON_ADVERT_TYPES_IDS,
   UNASSIGNABLE_TYPE_IDS,
 } from '../../../core/constants'
-import { AdminOnly } from '../../../core/decorators/admin.decorator'
+import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
-import { AdminGuard } from '../../../core/guards/admin.guard'
+import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import {
   GetTypesDto,
   GetTypesQueryDto,
@@ -23,9 +23,9 @@ import { BaseEntityController } from '../base-entity.controller'
 // Access: Admin users OR public-web users OR application-web users
 @Controller({ path: 'types', version: '1' })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard, AdminGuard)
-@AllWebAppsScopes()
-@AdminOnly()
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
+@PublicOrApplicationWebScopes()
+@AdminAccess()
 export class TypeController extends BaseEntityController<
   typeof TypeModel,
   TypeDto

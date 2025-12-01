@@ -8,16 +8,16 @@ export const ADMIN_KEY = 'admin'
  *
  * @example
  * ```typescript
- * @AdminOnly()
+ * @AdminAccess()
  * @Controller('admin')
  * export class AdminController { ... }
  * ```
  *
  * @example
  * ```typescript
- * @AdminOnly()
+ * @AdminAccess()
  * @Get('sensitive-data')
  * async getSensitiveData() { ... }
  * ```
  */
-export const AdminOnly = () => SetMetadata(ADMIN_KEY, true)
+export const AdminAccess = () => SetMetadata(ADMIN_KEY, true)

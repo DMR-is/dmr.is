@@ -11,12 +11,12 @@ import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import { ScopesGuard, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+import {  TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
-import { AdminOnly } from '../../../core/decorators/admin.decorator'
+import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
-import { AdminGuard } from '../../../core/guards/admin.guard'
+import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import {
   AdvertDetailedDto,
   UpdateAdvertDto,
@@ -28,8 +28,8 @@ import { IAdvertService } from '../../../modules/advert/advert.service.interface
   version: '1',
 })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard, ScopesGuard, AdminGuard)
-@AdminOnly()
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
+@AdminAccess()
 export class AdvertUpdateController {
   constructor(
     @Inject(IAdvertService)

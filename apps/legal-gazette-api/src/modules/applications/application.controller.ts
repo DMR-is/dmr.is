@@ -14,12 +14,13 @@ import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { PersonDto } from '@dmr.is/clients/national-registry'
 import { CurrentUser } from '@dmr.is/decorators'
-import { ApplicationWebScopes, ScopesGuard, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+import { ApplicationWebScopes, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { CurrentSubmittee } from '../../core/decorators/current-submittee.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
+import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import { CurrentNationalRegistryPersonGuard } from '../../core/guards/current-submitte.guard'
 import {
   AddDivisionEndingForApplicationDto,
@@ -34,7 +35,7 @@ import { IApplicationService } from './application.service.interface'
 
 @ApiBearerAuth()
 @ApplicationWebScopes()
-@UseGuards(TokenJwtAuthGuard, ScopesGuard)
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
 @Controller({
   path: 'applications',
   version: '1',
