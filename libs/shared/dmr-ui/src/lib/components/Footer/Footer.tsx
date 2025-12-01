@@ -14,7 +14,7 @@ import {
 import { HeaderLogo } from '../Header/HeaderLogo'
 import * as styles from './footer.css'
 
-export const Footer = () => {
+export const Footer = ({ type = 'outer' }: { type?: 'outer' | 'inner' }) => {
   const hlekkir = [
     {
       title: 'Auglýsingarflokkar',
@@ -46,16 +46,29 @@ export const Footer = () => {
     },
   ]
 
-  const adridVefir = [
+  const adridVefirOuter = [
     {
-      title: 'Umsóknarkerfi auglýsanda',
-      href: '/auglysingar?type=innkollun-throtabu',
+      title: 'Umsóknarkerfi Lögbirtingarblaðs',
+      href: 'https://umsoknir.legal-gazette.dev.dmr-dev.cloud/innskraning?callbackUrl=%2Fumsoknir',
     },
     {
       title: 'Stjórnartíðindi',
       href: 'https://island.is/stjornartidindi',
     },
   ]
+
+  const adridVefirInner = [
+    {
+      title: 'Vefur Lögbirtingablaðs',
+      href: 'https://legal-gazette.dev.dmr-dev.cloud',
+    },
+    {
+      title: 'Stjórnartíðindi',
+      href: 'https://island.is/stjornartidindi',
+    },
+  ]
+
+  const adridVefir = type === 'outer' ? adridVefirOuter : adridVefirInner
 
   return (
     <footer>
@@ -88,39 +101,41 @@ export const Footer = () => {
                   </Stack>
                 </Stack>
               </Inline>
-              {}
+
               <div className={styles.footerDivider} />
             </GridColumn>
 
-            <GridColumn span={['12/12', '6/12', '6/12', '6/12']}>
-              <Stack space={2}>
-                <Text variant="eyebrow" color="blue400" paddingTop={4}>
-                  Hlekkir
-                </Text>
-                <Inline space={8}>
-                  <Stack space={1}>
-                    {hlekkir.map(
-                      ({ title, href }, index) =>
-                        index < 4 && (
-                          <Text key={index} variant="small" color="blue600">
-                            <a href={href}>{title}</a>
-                          </Text>
-                        ),
-                    )}
-                  </Stack>
-                  <Stack space={1}>
-                    {hlekkir.map(
-                      ({ title, href }, index) =>
-                        index >= 4 && (
-                          <Text key={index} variant="small" color="blue600">
-                            <a href={href}>{title}</a>
-                          </Text>
-                        ),
-                    )}
-                  </Stack>
-                </Inline>
-              </Stack>
-            </GridColumn>
+            {type === 'outer' && (
+              <GridColumn span={['12/12', '6/12', '6/12', '6/12']}>
+                <Stack space={2}>
+                  <Text variant="eyebrow" color="blue400" paddingTop={4}>
+                    Hlekkir
+                  </Text>
+                  <Inline space={8}>
+                    <Stack space={1}>
+                      {hlekkir.map(
+                        ({ title, href }, index) =>
+                          index < 4 && (
+                            <Text key={index} variant="small" color="blue600">
+                              <a href={href}>{title}</a>
+                            </Text>
+                          ),
+                      )}
+                    </Stack>
+                    <Stack space={1}>
+                      {hlekkir.map(
+                        ({ title, href }, index) =>
+                          index >= 4 && (
+                            <Text key={index} variant="small" color="blue600">
+                              <a href={href}>{title}</a>
+                            </Text>
+                          ),
+                      )}
+                    </Stack>
+                  </Inline>
+                </Stack>
+              </GridColumn>
+            )}
           </GridRow>
         </GridContainer>
       </Box>
