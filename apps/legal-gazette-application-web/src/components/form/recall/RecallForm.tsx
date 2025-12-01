@@ -3,9 +3,17 @@
 import { FormProvider, useForm } from 'react-hook-form'
 
 import { RecallApplicationSchema } from '@dmr.is/legal-gazette/schemas'
-import { AlertMessage, Stack, Text } from '@dmr.is/ui/components/island-is'
+import {
+  AlertMessage,
+  Button,
+  Inline,
+  LinkV2,
+  Stack,
+  Text,
+} from '@dmr.is/ui/components/island-is'
 
 import { useSubmitApplication } from '../../../hooks/useSubmitApplication'
+import { PageRoutes } from '../../../lib/constants'
 import { recallForm, RecallFormProps } from '../../../lib/forms/recall-form'
 import { ApplicationShell } from '../../application/ApplicationShell'
 import { CommunicationChannelFields } from '../fields/CommunicationChannelFields'
@@ -32,9 +40,16 @@ export const RecallForm = (props: RecallFormProps) => {
         <ApplicationShell>
           <Stack space={[2, 3, 4]}>
             <Stack space={[1, 2]}>
-              <Text variant="h2">
-                Innköllun {isBankruptcy ? 'þrotabús' : 'dánarbús'}
-              </Text>
+              <Inline justifyContent="spaceBetween" alignY="top">
+                <Text variant="h2">
+                  Innköllun {isBankruptcy ? 'þrotabús' : 'dánarbús'}
+                </Text>
+                <LinkV2 href={PageRoutes.APPLICATIONS}>
+                  <Button preTextIcon="arrowBack" variant="text" size="small">
+                    Tilbaka í umsóknir
+                  </Button>
+                </LinkV2>
+              </Inline>
               <Text>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
                 eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
