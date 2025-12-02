@@ -403,7 +403,7 @@ A separate data import script will be needed to populate `LEGACY_SUBSCRIBERS` fr
 | `modules/legacy-migration/legacy-migration.service.spec.ts` | Tests | Service unit tests | ✅ Created |
 | `modules/legacy-migration/legacy-migration.dto.ts` | DTOs | Request/Response DTOs | ✅ Created |
 | `app/skraning/flytja/page.tsx` | Page | Migration completion UI | 🔲 Not Started |
-| `lib/trpc/server/routers/legacyMigrationRouter.ts` | Router | tRPC routes | 🔲 Not Started |
+| `lib/trpc/server/routers/legacyMigrationRouter.ts` | Router | tRPC routes | ✅ Created |
 
 ### Files to Modify
 
@@ -412,9 +412,9 @@ A separate data import script will be needed to populate `LEGACY_SUBSCRIBERS` fr
 | `app/app.module.ts` | Register new models and modules | ✅ Done |
 | `core/constants.ts` | Add LEGACY_SUBSCRIBER, LEGACY_MIGRATION_TOKEN enums | ✅ Done |
 | `models/subscriber.model.ts` | Fix isActive type from `false` to `boolean` | ✅ Done |
-| `subscriber.service.ts` | Add auto-migration check | 🔲 Not Started |
+| `subscriber.service.ts` | Add auto-migration check | ✅ Done |
 | `app/skraning/@register/page.tsx` | Add redemption UI | 🔲 Not Started |
-| `lib/trpc/server/routers/index.ts` | Add legacyMigrationRouter | 🔲 Not Started |
+| `lib/trpc/server/routers/_app.ts` | Add legacyMigrationRouter | ✅ Done |
 
 ---
 
@@ -426,7 +426,7 @@ A separate data import script will be needed to populate `LEGACY_SUBSCRIBERS` fr
 | Phase 2: Backend Service Tests (TDD) | ✅ Complete | 19 test cases covering all service methods |
 | Phase 3: Backend Services Implementation | ✅ Complete | Service, Controller, DTOs, Modules - all 19 tests passing |
 | Phase 4: Email Integration | ✅ Complete | Implemented in service using IAWSService.sendMail() |
-| Phase 5: Frontend Updates | 🔲 Not Started | |
-| Phase 6: Auto-Migration on Sign-In | 🔲 Not Started | |
+| Phase 5: Auto-Migration on Sign-In | ✅ Complete | Integrated in SubscriberService.getUserByNationalId() |
+| Phase 6: Frontend Updates | 🔲 Not Started | |
 | Phase 7: Payment Integration | 🔲 Not Started | |
 | Data Import Script | 🔲 Not Started | |

@@ -190,48 +190,55 @@ export class LegacyMigrationService implements ILegacyMigrationService {
   /**
    * Auto-migrate a legacy user by kennitala on sign-in.
    * Only migrates if the legacy user has the same kennitala and hasn't been migrated yet.
+   * Returns null if migration is not possible or if any error occurs.
    */
   async autoMigrateByKennitala(
     nationalId: string,
   ): Promise<SubscriberDto | null> {
-    // Find legacy user by kennitala
-    const legacyUser = await this.legacySubscriberModel.findOne({
-      where: { nationalId },
-    })
+    try {
+      // Find legacy user by kennitala
+      const legacyUser = await this.legacySubscriberModel.findOne({
+        where: { nationalId },
+      })
 
-    // No legacy user found
-    if (!legacyUser) {
+      // No legacy user found
+      if (!legacyUser) {
+        return null
+      }
+
+      // Already migrated
+      if (legacyUser.migratedAt) {
+        return null
+      }
+
+      // Parse name into first and last name
+      const { firstName, lastName } = this.parseName(legacyUser.name)
+
+      // Create new subscriber
+      const newSubscriber = await this.subscriberModel.create({
+        nationalId,
+        firstName,
+        lastName,
+        isActive: legacyUser.isActive,
+      })
+
+      // Mark legacy user as migrated
+      await this.legacySubscriberModel.update(
+        {
+          migratedAt: new Date(),
+          migratedToSubscriberId: newSubscriber.id,
+        },
+        {
+          where: { id: legacyUser.id },
+        },
+      )
+
+      return newSubscriber.fromModel()
+    } catch {
+      // If any database error occurs (e.g., table doesn't exist yet),
+      // return null to allow normal subscriber creation flow
       return null
     }
-
-    // Already migrated
-    if (legacyUser.migratedAt) {
-      return null
-    }
-
-    // Parse name into first and last name
-    const { firstName, lastName } = this.parseName(legacyUser.name)
-
-    // Create new subscriber
-    const newSubscriber = await this.subscriberModel.create({
-      nationalId,
-      firstName,
-      lastName,
-      isActive: legacyUser.isActive,
-    })
-
-    // Mark legacy user as migrated
-    await this.legacySubscriberModel.update(
-      {
-        migratedAt: new Date(),
-        migratedToSubscriberId: newSubscriber.id,
-      },
-      {
-        where: { id: legacyUser.id },
-      },
-    )
-
-    return newSubscriber.fromModel()
   }
 
   /**

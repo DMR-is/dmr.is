@@ -127,6 +127,8 @@ export const authOptions: AuthOptions = {
         isActive: token.isActive as boolean,
       }
 
+      console.log('token.accessToken', token.accessToken)
+
       // Add tokens to session
       session.accessToken = token.accessToken as string
       session.idToken = token.idToken as string
