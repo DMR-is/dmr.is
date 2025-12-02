@@ -160,7 +160,7 @@ export const CreateDivisionEnding = ({
                             handleChange={(date) =>
                               setFormState({
                                 ...formState,
-                                scheduledAt: date.toISOString(),
+                                meetingDate: date.toISOString(),
                               })
                             }
                           />

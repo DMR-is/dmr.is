@@ -6,6 +6,7 @@ import { CommonForm } from '../components/form/common/CommonForm'
 import { RecallForm } from '../components/form/recall/RecallForm'
 import { ApplicationStatusEnum } from '../gen/fetch'
 import { trpc } from '../lib/trpc/client/server'
+import { ApplicationSubmittedContainer } from './ApplicationSubmittedContainer'
 
 type Props = {
   applicationId: string
@@ -13,9 +14,18 @@ type Props = {
 }
 
 export async function ApplicationFormContainer({ applicationId, type }: Props) {
+  const application = await fetchQueryWithHandler(
+    trpc.getApplicationById.queryOptions({
+      id: applicationId,
+    }),
+  )
   const baseEntities = await fetchQueryWithHandler(
     trpc.getBaseEntities.queryOptions(),
   )
+
+  if (application.status !== ApplicationStatusEnum.DRAFT) {
+    return <ApplicationSubmittedContainer application={application} />
+  }
 
   let Component = (
     <AlertMessage

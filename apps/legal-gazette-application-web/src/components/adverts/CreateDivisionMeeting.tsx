@@ -20,7 +20,7 @@ import {
   toast,
 } from '@dmr.is/ui/components/island-is'
 
-import { AddDivisionMeetingForApplicationDto } from '../../gen/fetch'
+import { CreateDivisionMeetingDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { Center } from '../center/Center'
 import { DivisionSignatureFields } from '../form/fields/DivisionSignatureFields'
@@ -32,8 +32,9 @@ type Props = {
   onVisibilityChange: (isVisible: boolean) => void
 }
 
-const initFormState: AddDivisionMeetingForApplicationDto = {
+const initFormState: CreateDivisionMeetingDto = {
   additionalText: '',
+  communicationChannels: [],
   meetingDate: '',
   meetingLocation: '',
   signature: {
@@ -57,7 +58,7 @@ export const CreateDivisionMeeting = ({
   const [submitClicked, setSubmitClicked] = useState(false)
 
   const [formState, setFormState] =
-    useState<AddDivisionMeetingForApplicationDto>(initFormState)
+    useState<CreateDivisionMeetingDto>(initFormState)
 
   const [fieldErrors, setFieldErrors] = useState<
     { [key: string]: string[] } | undefined

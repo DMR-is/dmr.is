@@ -4,19 +4,16 @@ import {
   CommonApplicationSchema,
   commonApplicationSchema,
   createDivisionEndingInput,
+  createDivisionEndingWithIdInput,
   createDivisionMeetingInput,
+  createDivisionMeetingWithIdInput,
   recallBankruptcyApplicationSchema,
   recallDeceasedApplicationSchema,
   updateApplicationWithIdInput,
 } from '@dmr.is/legal-gazette/schemas'
 
-import {
-  ApplicationTypeEnum,
-  CreateApplicationApplicationTypeEnum,
-} from '../../../../gen/fetch'
+import { CreateApplicationApplicationTypeEnum } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
-
-import { TRPCError } from '@trpc/server'
 
 export const createApplicationSchema = z.enum(
   CreateApplicationApplicationTypeEnum,
@@ -122,54 +119,12 @@ export const applicationRouter = router({
     }),
   getApplicationById: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const application = await ctx.api.getApplicationById({
-        applicationId: input.id,
-      })
-
-      switch (application.type) {
-        case ApplicationTypeEnum.COMMON: {
-          const parsed = commonApplicationSchema.safeParse({
-            type: application.type,
-            answers: { ...application.answers },
-          })
-
-          if (!parsed.success) {
-            throw new TRPCError({
-              code: 'BAD_REQUEST',
-              message: `Invalid common application data`,
-            })
-          }
-
-          return {
-            ...application,
-            answers: parsed.data.answers,
-          }
-        }
-        case ApplicationTypeEnum.RECALLBANKRUPTCY: {
-          const parsed = recallBankruptcyApplicationSchema.parse(application)
-
-          return {
-            ...application,
-            answers: parsed.answers,
-          }
-        }
-        case ApplicationTypeEnum.RECALLDECEASED: {
-          const parsed = recallDeceasedApplicationSchema.parse(application)
-
-          return {
-            ...application,
-            answers: parsed.answers,
-          }
-        }
-        default: {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: `Application type ${application.type} is not supported in the application web`,
-          })
-        }
-      }
-    }),
+    .query(
+      async ({ ctx, input }) =>
+        await ctx.api.getApplicationById({
+          applicationId: input.id,
+        }),
+    ),
   createApplication: protectedProcedure
     .input(createApplicationSchema)
     .mutation(async ({ ctx, input }) => {
@@ -185,19 +140,21 @@ export const applicationRouter = router({
       })
     }),
   addDivisionMeeting: protectedProcedure
-    .input(createDivisionMeetingInput)
+    .input(createDivisionMeetingWithIdInput)
     .mutation(async ({ ctx, input }) => {
+      const { applicationId, ...rest } = input
       return await ctx.api.addDivisionMeetingAdvertToApplication({
-        applicationId: 'some-id',
-        createDivisionMeetingDto: input,
+        applicationId: applicationId,
+        createDivisionMeetingDto: rest,
       })
     }),
   addDivisionEnding: protectedProcedure
-    .input(createDivisionEndingInput)
+    .input(createDivisionEndingWithIdInput)
     .mutation(async ({ ctx, input }) => {
+      const { applicationId, ...rest } = input
       return await ctx.api.addDivisionEndingAdvertToApplication({
-        applicationId: 'some-id',
-        createDivisionEndingDto: input,
+        applicationId: input.applicationId,
+        createDivisionEndingDto: rest,
       })
     }),
 })

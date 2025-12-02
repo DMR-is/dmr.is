@@ -227,7 +227,7 @@ export class UpdateApplicationDto {
 }
 
 export class CreateDivisionMeetingDto {
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: String, required: false })
   @IsOptional()
   @IsString()
   additionalText?: string

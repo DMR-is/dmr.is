@@ -5,22 +5,24 @@ import { useFormContext } from 'react-hook-form'
 import z from 'zod'
 
 import {
-  CommonApplicationSchema,
+  ApplicationTypeEnum,
   commonApplicationSchema,
-  RecallApplicationSchema,
+  CommonApplicationWebSchema,
   recallApplicationSchema,
+  RecallApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import { Box, Button, Stack, Text } from '@dmr.is/ui/components/island-is'
 
-import { ApplicationTypeEnum } from '../../gen/fetch'
 import { getErrors } from '../../lib/utils'
 import * as styles from './application.css'
 
 export const ApplicationSidebar = () => {
   const [showValidation, setShowValidation] = useState(true)
   const { getValues, formState } = useFormContext<
-    RecallApplicationSchema | CommonApplicationSchema
+    RecallApplicationWebSchema | CommonApplicationWebSchema
   >()
+
+  const applicationType = getValues('metadata.type')
 
   const application = getValues()
 
@@ -35,7 +37,7 @@ export const ApplicationSidebar = () => {
 
   const validatedErrors = useMemo(() => {
     const errors = getErrors(
-      application.type === ApplicationTypeEnum.COMMON
+      applicationType === ApplicationTypeEnum.COMMON
         ? commonResult.error
           ? z.treeifyError(commonResult.error)
           : []
@@ -45,7 +47,7 @@ export const ApplicationSidebar = () => {
     ).flatMap((err) => err)
 
     return errors
-  }, [commonResult.error, recallResult.error, application.type])
+  }, [commonResult.error, recallResult.error, applicationType])
 
   const handleScrollToField = (path: string) => {
     const element = document.getElementById(path)

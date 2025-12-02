@@ -2874,7 +2874,6 @@
           }
         },
         "required": [
-          "additionalText",
           "meetingDate",
           "meetingLocation",
           "signature",
@@ -2897,7 +2896,6 @@
           "declaredClaims": { "type": "number" }
         },
         "required": [
-          "additionalText",
           "meetingDate",
           "meetingLocation",
           "signature",

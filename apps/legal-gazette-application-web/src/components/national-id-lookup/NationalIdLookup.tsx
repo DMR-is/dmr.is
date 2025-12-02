@@ -4,7 +4,7 @@ import Kennitala from 'kennitala'
 import { useEffect, useMemo, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import { RecallApplicationSchema } from '@dmr.is/legal-gazette/schemas'
+import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { Input, toast } from '@dmr.is/ui/components/island-is'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
@@ -33,7 +33,7 @@ export const NationalIdLookup = ({
   onError: setErrorMessage,
 }: Props) => {
   const trpc = useTRPC()
-  const { formState } = useFormContext<RecallApplicationSchema>()
+  const { formState } = useFormContext<RecallApplicationWebSchema>()
   const { mutate, isPending } = useMutation(
     trpc.getPersonByNationalId.mutationOptions({
       onMutate: () => {
