@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
 import {
-  ApplicationInputFields,
   BaseApplicationWebSchema,
   CommunicationChannelSchema,
 } from '@dmr.is/legal-gazette/schemas'
@@ -32,7 +31,7 @@ export const CommunicationChannelFields = () => {
 
   const { updateApplicationJson } = useUpdateApplicationJson({
     id: metadata.applicationId,
-    type: metadata.type,
+    type: 'COMMON',
   })
 
   const channels = watch('communicationChannels', []) || []
@@ -67,7 +66,7 @@ export const CommunicationChannelFields = () => {
       channels.push(channel)
     }
 
-    setValue(ApplicationInputFields.COMMUNICATION_CHANNELS, channels, {
+    setValue('communicationChannels', channels, {
       shouldValidate: true,
     })
     updateApplicationJson({ communicationChannels: channels })
@@ -78,22 +77,19 @@ export const CommunicationChannelFields = () => {
 
   const removeChannel = (index: number) => {
     const updatedChannels = channels.filter((_, i) => i !== index)
-    setValue(ApplicationInputFields.COMMUNICATION_CHANNELS, updatedChannels)
+    setValue('communicationChannels', updatedChannels)
     updateApplicationJson({ communicationChannels: updatedChannels })
-    trigger(ApplicationInputFields.COMMUNICATION_CHANNELS)
+    trigger('communicationChannels')
   }
 
   const handleFirstFocus = () => {
-    const check =
-      formState.touchedFields[ApplicationInputFields.COMMUNICATION_CHANNELS]
+    const check = formState.touchedFields['communicationChannels']
 
     if (check) return
 
-    setValue(
-      ApplicationInputFields.COMMUNICATION_CHANNELS,
-      getValues(ApplicationInputFields.COMMUNICATION_CHANNELS),
-      { shouldTouch: true },
-    )
+    setValue('communicationChannels', getValues('communicationChannels'), {
+      shouldTouch: true,
+    })
   }
 
   return (

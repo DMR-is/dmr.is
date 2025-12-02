@@ -2,12 +2,7 @@
 
 import { useFormContext } from 'react-hook-form'
 
-import {
-  ApplicationInputFields,
-  ApplicationTypeEnum,
-  RecallApplicationInputFields,
-  RecallApplicationWebSchema,
-} from '@dmr.is/legal-gazette/schemas'
+import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import {
   GridColumn,
   GridRow,
@@ -28,7 +23,7 @@ export const RecallAdvertFields = () => {
   const { updateApplicationJson, debouncedUpdateApplicationJson } =
     useUpdateApplicationJson({
       id: applicationId,
-      type: ApplicationTypeEnum.RECALL_BANKRUPTCY,
+      type: 'RECALL',
     })
 
   return (
@@ -54,7 +49,7 @@ export const RecallAdvertFields = () => {
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <DatePickerController
-            name={RecallApplicationInputFields.JUDGMENT_DATE}
+            name="fields.courtAndJudgmentFields.judgmentDate"
             label="Úrskurðardagur"
             required
             onChange={(val) =>
@@ -69,7 +64,7 @@ export const RecallAdvertFields = () => {
         <GridColumn span="12/12">
           <InputController
             textArea
-            name={ApplicationInputFields.ADDITIONAL_TEXT}
+            name="additionalText"
             label="Frjáls texti"
             onChange={(val) =>
               debouncedUpdateApplicationJson({ additionalText: val })

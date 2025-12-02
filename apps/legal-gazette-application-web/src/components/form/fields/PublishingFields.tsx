@@ -3,10 +3,7 @@ import addYears from 'date-fns/addYears'
 import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import {
-  ApplicationInputFields,
-  BaseApplicationWebSchema,
-} from '@dmr.is/legal-gazette/schemas'
+import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import {
   AlertMessage,
   Box,
@@ -36,14 +33,11 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
 
   const { updateApplicationJson } = useUpdateApplicationJson({
     id: metadata.applicationId,
-    type: metadata.type,
+    type: 'COMMON',
   })
 
   const currentDates =
-    watch(
-      ApplicationInputFields.PUBLISHING_DATES,
-      getValues(ApplicationInputFields.PUBLISHING_DATES),
-    ) || []
+    watch('publishingDates', getValues('publishingDates')) || []
 
   const [dateState, setDateState] = useState(currentDates)
 
@@ -57,7 +51,7 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
     const newDate = getNextWeekday(addDays(lastDate, TWO_WEEKS))
     const newDates = [...dateState, newDate.toISOString()]
     setDateState(newDates)
-    setValue(ApplicationInputFields.PUBLISHING_DATES, newDates)
+    setValue('publishingDates', newDates)
     updateApplicationJson({
       publishingDates: newDates,
     })
@@ -65,7 +59,7 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
 
   const removeDate = (index: number) => {
     const newDates = dateState.filter((_, i) => i !== index)
-    setValue(ApplicationInputFields.PUBLISHING_DATES, newDates)
+    setValue('publishingDates', newDates)
     setDateState(newDates)
     updateApplicationJson({
       publishingDates: newDates,
@@ -76,7 +70,7 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
     const newDates = [...dateState]
     newDates[index] = date.toISOString()
     setDateState(newDates)
-    setValue(ApplicationInputFields.PUBLISHING_DATES, newDates)
+    setValue('publishingDates', newDates)
     updateApplicationJson({
       publishingDates: newDates,
     })
@@ -116,7 +110,7 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
                   <DatePickerController
                     maxDate={getNextWeekday(maxDate)}
                     label={`Birtingardagur ${index + 1}`}
-                    name={`${ApplicationInputFields.PUBLISHING_DATES}[${index}]`}
+                    name={`${'publishingDates'}[${index}]`}
                     required={index === 0}
                     defaultValue={date}
                     minDate={getNextWeekday(minDate)}

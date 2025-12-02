@@ -16,11 +16,11 @@ import { InputController } from '../controllers/InputController'
 
 export const SignatureFields = () => {
   const { getValues, formState } = useFormContext<BaseApplicationWebSchema>()
-  const { applicationId, type } = getValues('metadata')
+  const { applicationId } = getValues('metadata')
 
   const { debouncedUpdateApplicationJson } = useUpdateApplicationJson({
     id: applicationId,
-    type: type,
+    type: 'COMMON',
   })
 
   const signatureError = formState.errors.signature

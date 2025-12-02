@@ -4,11 +4,7 @@ import { isBase64 } from 'class-validator'
 import { useEffect } from 'react'
 import { useFormContext, useFormState } from 'react-hook-form'
 
-import {
-  ApplicationTypeEnum,
-  CommonApplicationInputFields,
-  CommonApplicationWebSchema,
-} from '@dmr.is/legal-gazette/schemas'
+import { CommonApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   GridColumn,
@@ -38,7 +34,7 @@ export const CommonAdvertFields = () => {
   const { updateApplicationJson, debouncedUpdateApplicationJson } =
     useUpdateApplicationJson({
       id: metadata.applicationId,
-      type: ApplicationTypeEnum.COMMON,
+      type: 'COMMON',
     })
 
   const {
@@ -134,7 +130,7 @@ export const CommonAdvertFields = () => {
         </GridColumn>
         <GridColumn span="12/12">
           <InputController
-            name={CommonApplicationInputFields.CAPTION}
+            name="fields.caption"
             label="Yfirskrift"
             required
             onChange={(val) =>

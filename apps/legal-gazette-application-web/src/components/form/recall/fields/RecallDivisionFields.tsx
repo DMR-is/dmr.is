@@ -3,10 +3,7 @@ import addYears from 'date-fns/addYears'
 import { useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import {
-  RecallApplicationInputFields,
-  RecallApplicationWebSchema,
-} from '@dmr.is/legal-gazette/schemas'
+import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplicationJson } from '../../../../hooks/useUpdateApplicationJson'
@@ -65,7 +62,7 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
       <GridColumn span="6/12">
         <InputController
           required={required}
-          name={RecallApplicationInputFields.DIVISION_MEETING_LOCATION}
+          name="fields.divisionMeetingFields.meetingLocation"
           label="Staðsetning skiptafundar"
           onBlur={(location) =>
             updateApplicationJson({
@@ -82,7 +79,7 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
         <DatePickerController
           required={required}
           withTime={true}
-          name={RecallApplicationInputFields.DIVISION_MEETING_DATE}
+          name="fields.divisionMeetingFields.meetingDate"
           label="Dagsetning skiptafundar"
           minDate={minDate ? getNextWeekday(minDate) : undefined}
           maxDate={maxDate}

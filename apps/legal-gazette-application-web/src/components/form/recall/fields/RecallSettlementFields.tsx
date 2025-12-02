@@ -4,7 +4,6 @@ import { useFormContext } from 'react-hook-form'
 
 import {
   ApplicationTypeEnum,
-  RecallApplicationInputFields,
   RecallApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
@@ -49,12 +48,12 @@ export const RecallSettlementFields = () => {
     nationalId,
     zipCode,
   }: NationalIdLookupResults) => {
-    setValue(RecallApplicationInputFields.SETTLEMENT_NAME, name)
+    setValue('fields.settlementFields.name', name)
     setValue(
-      RecallApplicationInputFields.SETTLEMENT_ADDRESS,
+      'fields.settlementFields.address',
       `${address}, ${zipCode} ${city}`,
     )
-    setValue(RecallApplicationInputFields.SETTLEMENT_NATIONAL_ID, nationalId)
+    setValue('fields.settlementFields.nationalId', nationalId)
     updateApplicationJson({
       fields: {
         settlementFields: {
@@ -67,7 +66,7 @@ export const RecallSettlementFields = () => {
   }
 
   const resetLookupFields = () => {
-    setValue(RecallApplicationInputFields.SETTLEMENT_NATIONAL_ID, '')
+    setValue('fields.settlementFields.nationalId', '')
     updateApplicationJson({
       fields: {
         settlementFields: {
