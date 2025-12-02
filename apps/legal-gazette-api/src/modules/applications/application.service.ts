@@ -20,9 +20,8 @@ import {
   ApplicationTypeEnum,
   commonApplicationSchemaRefined,
   communicationChannelSchema,
-  recallApplicationSchemaRefined,
-  recallBankruptcyAnswersSchemaRefined,
-  recallDeceasedAnswersSchemaRefined,
+  recallBankruptcyAnswersRefined,
+  recallDeceasedAnswersRefined,
   updateApplicationInput,
 } from '@dmr.is/legal-gazette/schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -114,10 +113,10 @@ export class ApplicationService implements IApplicationService {
     let data
     switch (application.applicationType) {
       case ApplicationTypeEnum.RECALL_BANKRUPTCY:
-        data = recallBankruptcyAnswersSchemaRefined.parse(application.answers)
+        data = recallBankruptcyAnswersRefined.parse(application.answers)
         break
       case ApplicationTypeEnum.RECALL_DECEASED:
-        data = recallDeceasedAnswersSchemaRefined.parse(application.answers)
+        data = recallDeceasedAnswersRefined.parse(application.answers)
         break
       default:
         this.logger.warn(
@@ -237,10 +236,29 @@ export class ApplicationService implements IApplicationService {
       )
     }
 
-    const parsed = recallApplicationSchemaRefined.parse({
-      type: application.applicationType,
-      answers: application.answers,
-    })
+    let parsedAnswers
+    try {
+      if (
+        application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
+      ) {
+        parsedAnswers = recallBankruptcyAnswersRefined.parse(
+          application.answers,
+        )
+      } else if (
+        application.applicationType === ApplicationTypeEnum.RECALL_DECEASED
+      ) {
+        parsedAnswers = recallDeceasedAnswersRefined.parse(application.answers)
+      } else {
+        throw new BadRequestException('Invalid application type')
+      }
+    } catch (error) {
+      this.logger.error('Failed to parse application answers', {
+        context: 'ApplicationService',
+        applicationId: application.id,
+        error,
+      })
+      throw new BadRequestException('Invalid application data')
+    }
 
     await this.advertService.createAdvert({
       applicationId: application.id,
@@ -257,7 +275,7 @@ export class ApplicationService implements IApplicationService {
       title: `Skiptalok - ${application.settlement.name}`,
       additionalText: body.additionalText,
       settlementId: application.settlement.id,
-      judgementDate: parsed.answers.fields.courtAndJudgmentFields.judgmentDate,
+      judgementDate: parsedAnswers.fields.courtAndJudgmentFields.judgmentDate,
       communicationChannels: body.communicationChannels,
       scheduledAt: [body.meetingDate],
     })

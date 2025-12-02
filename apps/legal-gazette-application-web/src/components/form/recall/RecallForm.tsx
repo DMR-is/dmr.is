@@ -2,7 +2,10 @@
 
 import { FormProvider, useForm } from 'react-hook-form'
 
-import { RecallApplicationSchema } from '@dmr.is/legal-gazette/schemas'
+import {
+  ApplicationTypeEnum,
+  RecallApplicationWebSchema,
+} from '@dmr.is/legal-gazette/schemas'
 import { AlertMessage, Stack, Text } from '@dmr.is/ui/components/island-is'
 
 import { useSubmitApplication } from '../../../hooks/useSubmitApplication'
@@ -18,13 +21,14 @@ import { RecallRequirementStatementFields } from './fields/RecallRequirementStat
 import { RecallSettlementFields } from './fields/RecallSettlementFields'
 
 export const RecallForm = (props: RecallFormProps) => {
-  const methods = useForm<RecallApplicationSchema>(recallForm(props))
+  const methods = useForm<RecallApplicationWebSchema>(recallForm(props))
 
   const { onValidSubmit, onInvalidSubmit } = useSubmitApplication(
     props.metadata.applicationId,
   )
 
-  const isBankruptcy = props.fields.type === 'RECALL_BANKRUPTCY'
+  const isBankruptcy =
+    props.application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
 
   return (
     <FormProvider {...methods}>
