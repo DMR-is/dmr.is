@@ -25,10 +25,11 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
   } = useFormContext<RecallApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
 
-  const { updateApplication } = useUpdateApplication({
-    id: applicationId,
-    type: 'RECALL',
-  })
+  const { updateApplication, debouncedUpdateApplication } =
+    useUpdateApplication({
+      id: applicationId,
+      type: 'RECALL',
+    })
 
   const recallDates = watch('publishingDates') || []
 
@@ -64,14 +65,20 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
           required={required}
           name="fields.divisionMeetingFields.meetingLocation"
           label="Staðsetning skiptafundar"
-          onBlur={(location) =>
-            updateApplication({
-              fields: {
-                divisionMeetingFields: {
-                  meetingLocation: location,
+          onChange={(location) =>
+            debouncedUpdateApplication(
+              {
+                fields: {
+                  divisionMeetingFields: {
+                    meetingLocation: location,
+                  },
                 },
               },
-            })
+              {
+                successMessage: 'Staðsetning skiptafundar vistuð',
+                errorMessage: 'Ekki tókst að vista staðsetningu skiptafundar',
+              },
+            )
           }
         />
       </GridColumn>
@@ -85,13 +92,19 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
           maxDate={maxDate}
           excludeDates={excludeDates}
           onChange={(date) =>
-            updateApplication({
-              fields: {
-                divisionMeetingFields: {
-                  meetingDate: date.toISOString(),
+            debouncedUpdateApplication(
+              {
+                fields: {
+                  divisionMeetingFields: {
+                    meetingDate: date.toISOString(),
+                  },
                 },
               },
-            })
+              {
+                successMessage: 'Dagsetning skiptafundar vistuð',
+                errorMessage: 'Ekki tókst að vista dagsetningu skiptafundar',
+              },
+            )
           }
         />
       </GridColumn>

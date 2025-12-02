@@ -37,13 +37,19 @@ export const RecallAdvertFields = () => {
             label="Dómstóll"
             required
             onChange={(val) =>
-              updateApplication({
-                fields: {
-                  courtAndJudgmentFields: {
-                    courtDistrictId: val,
+              updateApplication(
+                {
+                  fields: {
+                    courtAndJudgmentFields: {
+                      courtDistrictId: val,
+                    },
                   },
                 },
-              })
+                {
+                  successMessage: 'Dómstóll vistaður',
+                  errorMessage: 'Ekki tókst að vista dómstól',
+                },
+              )
             }
           />
         </GridColumn>
@@ -53,11 +59,17 @@ export const RecallAdvertFields = () => {
             label="Úrskurðardagur"
             required
             onChange={(val) =>
-              updateApplication({
-                fields: {
-                  courtAndJudgmentFields: { judgmentDate: val.toISOString() },
+              updateApplication(
+                {
+                  fields: {
+                    courtAndJudgmentFields: { judgmentDate: val.toISOString() },
+                  },
                 },
-              })
+                {
+                  successMessage: 'Úrskurðardagur vistaður',
+                  errorMessage: 'Ekki tókst að vista úrskurðardag',
+                },
+              )
             }
           />
         </GridColumn>
@@ -67,7 +79,13 @@ export const RecallAdvertFields = () => {
             name="additionalText"
             label="Frjáls texti"
             onChange={(val) =>
-              debouncedUpdateApplication({ additionalText: val })
+              debouncedUpdateApplication(
+                { additionalText: val },
+                {
+                  successMessage: 'Frjáls texti vistaður',
+                  errorMessage: 'Ekki tókst að vista frjálsan texta',
+                },
+              )
             }
           />
         </GridColumn>

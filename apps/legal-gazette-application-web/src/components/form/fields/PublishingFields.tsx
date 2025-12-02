@@ -52,18 +52,30 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
     const newDates = [...dateState, newDate.toISOString()]
     setDateState(newDates)
     setValue('publishingDates', newDates)
-    updateApplication({
-      publishingDates: newDates,
-    })
+    updateApplication(
+      {
+        publishingDates: newDates,
+      },
+      {
+        successMessage: 'Birtingardegi bætt við',
+        errorMessage: 'Ekki tókst að bæta við birtingardegi',
+      },
+    )
   }
 
   const removeDate = (index: number) => {
     const newDates = dateState.filter((_, i) => i !== index)
     setValue('publishingDates', newDates)
     setDateState(newDates)
-    updateApplication({
-      publishingDates: newDates,
-    })
+    updateApplication(
+      {
+        publishingDates: newDates,
+      },
+      {
+        successMessage: 'Birtingardagur fjarlægður',
+        errorMessage: 'Ekki tókst að fjarlægja birtingardag',
+      },
+    )
   }
 
   const onDateChange = (date: Date, index: number) => {
@@ -71,9 +83,15 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
     newDates[index] = date.toISOString()
     setDateState(newDates)
     setValue('publishingDates', newDates)
-    updateApplication({
-      publishingDates: newDates,
-    })
+    updateApplication(
+      {
+        publishingDates: newDates,
+      },
+      {
+        successMessage: 'Birtingardagur uppfærður',
+        errorMessage: 'Ekki tókst að uppfæra birtingardag',
+      },
+    )
   }
 
   return (

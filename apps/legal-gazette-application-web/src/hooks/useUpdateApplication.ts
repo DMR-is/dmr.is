@@ -91,7 +91,7 @@ export const useUpdateApplication = <T extends UpdateApplicationType>({
     ) => {
       const body = {
         id: id,
-        type: type,
+        type: application.type,
         answers: answers,
       }
 

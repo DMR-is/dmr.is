@@ -58,14 +58,20 @@ export const RecallRequirementStatementFields = () => {
           label="Kröfulýsingar"
           required
           onChange={(val) => {
-            updateApplication({
-              fields: {
-                settlementFields: {
-                  recallRequirementStatementType:
-                    val as ApplicationRequirementStatementEnum,
+            updateApplication(
+              {
+                fields: {
+                  settlementFields: {
+                    recallRequirementStatementType:
+                      val as ApplicationRequirementStatementEnum,
+                  },
                 },
               },
-            })
+              {
+                successMessage: 'Val á kröfulýsingu vistað',
+                errorMessage: 'Ekki tókst að vista val á kröfulýsingu',
+              },
+            )
             if (
               val === ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
             ) {
@@ -96,13 +102,19 @@ export const RecallRequirementStatementFields = () => {
                 : 'Tölvupóstur'
           }
           onChange={(val) =>
-            debouncedUpdateApplication({
-              fields: {
-                settlementFields: {
-                  recallRequirementStatementLocation: val,
+            debouncedUpdateApplication(
+              {
+                fields: {
+                  settlementFields: {
+                    recallRequirementStatementLocation: val,
+                  },
                 },
               },
-            })
+              {
+                successMessage: 'Staðsetning skiptastjóra vistuð',
+                errorMessage: 'Ekki tókst að vista staðsetningu skiptastjóra',
+              },
+            )
           }
           readonly={
             recallRequirementStatementType ===

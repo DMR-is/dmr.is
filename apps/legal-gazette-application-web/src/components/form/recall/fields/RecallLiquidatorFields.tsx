@@ -34,13 +34,19 @@ export const RecallLiquidatorFields = () => {
           label="Nafn skiptastjóra"
           name={'fields.settlementFields.liquidatorName'}
           onChange={(val) =>
-            debouncedUpdateApplication({
-              fields: {
-                settlementFields: {
-                  liquidatorName: val,
+            debouncedUpdateApplication(
+              {
+                fields: {
+                  settlementFields: {
+                    liquidatorName: val,
+                  },
                 },
               },
-            })
+              {
+                successMessage: 'Nafn skiptastjóra vistað',
+                errorMessage: 'Ekki tókst að vista nafn skiptastjóra',
+              },
+            )
           }
           required
         />
@@ -51,26 +57,38 @@ export const RecallLiquidatorFields = () => {
           label="Staðsetning skiptastjóra"
           name={'fields.settlementFields.liquidatorLocation'}
           onChange={(val) =>
-            debouncedUpdateApplication({
-              fields: {
-                settlementFields: {
-                  liquidatorLocation: val,
+            debouncedUpdateApplication(
+              {
+                fields: {
+                  settlementFields: {
+                    liquidatorLocation: val,
+                  },
                 },
               },
-            })
+              {
+                successMessage: 'Staðsetning skiptastjóra vistuð',
+                errorMessage: 'Ekki tókst að vista staðsetningu skiptastjóra',
+              },
+            )
           }
           onBlur={(val) => {
             if (
               recallRequirementStateLocation ===
               ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
             ) {
-              updateApplication({
-                fields: {
-                  settlementFields: {
-                    recallRequirementStatementLocation: val,
+              updateApplication(
+                {
+                  fields: {
+                    settlementFields: {
+                      recallRequirementStatementLocation: val,
+                    },
                   },
                 },
-              })
+                {
+                  successMessage: 'Staðsetning skiptastjóra ',
+                  errorMessage: 'Ekki tókst að vista staðsetningu skiptastjóra',
+                },
+              )
             }
           }}
         />

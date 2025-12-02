@@ -69,7 +69,17 @@ export const CommunicationChannelFields = () => {
     setValue('communicationChannels', channels, {
       shouldValidate: true,
     })
-    updateApplication({ communicationChannels: channels })
+    updateApplication(
+      { communicationChannels: channels },
+      {
+        successMessage: isEditing
+          ? 'Samskiptaleið uppfærð'
+          : 'Samskiptaleið bætt við',
+        errorMessage: isEditing
+          ? 'Ekki tókst að uppfæra samskiptaleið'
+          : 'Ekki tókst að bæta við samskiptaleið',
+      },
+    )
     setToggleAdd(false)
     setIsEditing('')
     setCurrentChannel({ email: '', name: '', phone: '' })
@@ -78,7 +88,13 @@ export const CommunicationChannelFields = () => {
   const removeChannel = (index: number) => {
     const updatedChannels = channels.filter((_, i) => i !== index)
     setValue('communicationChannels', updatedChannels)
-    updateApplication({ communicationChannels: updatedChannels })
+    updateApplication(
+      { communicationChannels: updatedChannels },
+      {
+        successMessage: 'Samskiptaleið fjarlægð',
+        errorMessage: 'Ekki tókst að fjarlægja samskiptaleið',
+      },
+    )
     trigger('communicationChannels')
   }
 

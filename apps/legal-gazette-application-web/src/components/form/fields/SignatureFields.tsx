@@ -45,7 +45,7 @@ export const SignatureFields = () => {
                 debouncedUpdateApplication(
                   { signature: { name: val } },
                   {
-                    errorMessage: 'Villa við að uppfæra nafn undirritara',
+                    errorMessage: 'Ekki tókst að uppfæra nafn undirritara',
                     successMessage: 'Nafn undirritara uppfært',
                   },
                 )
@@ -61,7 +61,7 @@ export const SignatureFields = () => {
                   { signature: { location: val } },
                   {
                     errorMessage:
-                      'Villa við að uppfæra staðsetningu undirritara',
+                      'Ekki tókst að uppfæra staðsetningu undirritara',
                     successMessage: 'Staðsetning undirritara uppfærð',
                   },
                 )
@@ -76,7 +76,7 @@ export const SignatureFields = () => {
                 debouncedUpdateApplication(
                   { signature: { onBehalfOf: val } },
                   {
-                    errorMessage: 'Villa við að uppfæra f.h. undirritara',
+                    errorMessage: 'Ekki tókst að uppfæra f.h. undirritara',
                     successMessage: 'f.h. undirritara uppfært',
                   },
                 )
@@ -92,7 +92,7 @@ export const SignatureFields = () => {
                   { signature: { date: date.toISOString() } },
                   {
                     errorMessage:
-                      'Villa við að uppfæra dagsetningu undirritunar',
+                      'Ekki tókst að uppfæra dagsetningu undirritunar',
                     successMessage: 'Dagsetning undirritunar uppfærð',
                   },
                 )

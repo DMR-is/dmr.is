@@ -54,15 +54,21 @@ export const RecallSettlementFields = () => {
       `${address}, ${zipCode} ${city}`,
     )
     setValue('fields.settlementFields.nationalId', nationalId)
-    updateApplication({
-      fields: {
-        settlementFields: {
-          name: name,
-          address: `${address}, ${zipCode} ${city}`,
-          nationalId: nationalId,
+    updateApplication(
+      {
+        fields: {
+          settlementFields: {
+            name: name,
+            address: `${address}, ${zipCode} ${city}`,
+            nationalId: nationalId,
+          },
         },
       },
-    })
+      {
+        successMessage: 'Upplýsingar um þrotabú vistaðar',
+        errorMessage: 'Ekki tókst að vista upplýsingar um þrotabú',
+      },
+    )
   }
 
   const resetLookupFields = () => {
@@ -111,22 +117,34 @@ export const RecallSettlementFields = () => {
           required
           onChange={(val) => {
             if (isRecallBankruptcy) {
-              return updateApplication({
-                fields: {
-                  settlementFields: {
-                    deadlineDate: val.toISOString(),
+              return updateApplication(
+                {
+                  fields: {
+                    settlementFields: {
+                      deadlineDate: val.toISOString(),
+                    },
                   },
                 },
-              })
+                {
+                  successMessage: 'Frestdagur þrotabús vistaður',
+                  errorMessage: 'Ekki tókst að vista frestdag þrotabús',
+                },
+              )
             }
 
-            return updateApplication({
-              fields: {
-                settlementFields: {
-                  dateOfDeath: val.toISOString(),
+            return (
+              updateApplication({
+                fields: {
+                  settlementFields: {
+                    dateOfDeath: val.toISOString(),
+                  },
                 },
-              },
-            })
+              }),
+              {
+                successMessage: 'Dánardagur vistaður',
+                errorMessage: 'Ekki tókst að vista dánardag',
+              }
+            )
           }}
         />
       </GridColumn>
@@ -136,13 +154,19 @@ export const RecallSettlementFields = () => {
           label={`Nafn ${settlementType}`}
           required
           onChange={(val) =>
-            debouncedUpdateApplication({
-              fields: {
-                settlementFields: {
-                  name: val,
+            debouncedUpdateApplication(
+              {
+                fields: {
+                  settlementFields: {
+                    name: val,
+                  },
                 },
               },
-            })
+              {
+                successMessage: `Nafn ${settlementType} vistað`,
+                errorMessage: `Ekki tókst að vista nafn ${settlementType}`,
+              },
+            )
           }
         />
       </GridColumn>
@@ -157,13 +181,19 @@ export const RecallSettlementFields = () => {
               : 'Síðasta heimilisfang'
           }
           onChange={(val) =>
-            debouncedUpdateApplication({
-              fields: {
-                settlementFields: {
-                  address: val,
+            debouncedUpdateApplication(
+              {
+                fields: {
+                  settlementFields: {
+                    address: val,
+                  },
                 },
               },
-            })
+              {
+                successMessage: `Heimilisfang ${settlementType} vistað`,
+                errorMessage: `Ekki tókst að vista heimilisfang ${settlementType}`,
+              },
+            )
           }
         />
       </GridColumn>

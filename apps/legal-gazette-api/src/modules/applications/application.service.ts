@@ -112,12 +112,40 @@ export class ApplicationService implements IApplicationService {
   ) {
     let data
     switch (application.applicationType) {
-      case ApplicationTypeEnum.RECALL_BANKRUPTCY:
-        data = recallBankruptcyAnswersRefined.parse(application.answers)
+      case ApplicationTypeEnum.RECALL_BANKRUPTCY: {
+        const check = recallBankruptcyAnswersRefined.safeParse(
+          application.answers,
+        )
+
+        if (!check.success) {
+          this.logger.error('Failed to parse application answers', {
+            context: 'ApplicationService',
+            applicationId: application.id,
+            error: z.treeifyError(check.error),
+          })
+          throw new BadRequestException('Invalid application data')
+        }
+
+        data = check.data
         break
-      case ApplicationTypeEnum.RECALL_DECEASED:
-        data = recallDeceasedAnswersRefined.parse(application.answers)
+      }
+      case ApplicationTypeEnum.RECALL_DECEASED: {
+        const check = recallDeceasedAnswersRefined.safeParse(
+          application.answers,
+        )
+
+        if (!check.success) {
+          this.logger.error('Failed to parse application answers', {
+            context: 'ApplicationService',
+            applicationId: application.id,
+            error: z.treeifyError(check.error),
+          })
+          throw new BadRequestException('Invalid application data')
+        }
+
+        data = check.data
         break
+      }
       default:
         this.logger.warn(
           `Attempted to submit recall application with unknown type: ${application.applicationType}`,
