@@ -390,27 +390,31 @@ A separate data import script will be needed to populate `LEGACY_SUBSCRIBERS` fr
 
 ### New Files to Create
 
-| File | Type | Description |
-|------|------|-------------|
-| `db/migrations/m-YYYYMMDD-legacy-subscribers.js` | Migration | Database schema |
-| `models/legacy-subscriber.model.ts` | Model | Legacy user data |
-| `models/legacy-migration-token.model.ts` | Model | Magic link tokens |
-| `modules/legacy-migration/legacy-migration.provider.module.ts` | Module | Service providers |
-| `modules/legacy-migration/legacy-migration.controller.module.ts` | Module | Controller setup |
-| `modules/legacy-migration/legacy-migration.controller.ts` | Controller | API endpoints |
-| `modules/legacy-migration/legacy-migration.service.ts` | Service | Business logic |
-| `modules/legacy-migration/legacy-migration.service.interface.ts` | Interface | Service contract |
-| `app/skraning/flytja/page.tsx` | Page | Migration completion UI |
-| `lib/trpc/server/routers/legacyMigrationRouter.ts` | Router | tRPC routes |
+| File | Type | Description | Status |
+|------|------|-------------|--------|
+| `db/migrations/m-20251202-legacy-subscribers.js` | Migration | Database schema | ✅ Created |
+| `models/legacy-subscriber.model.ts` | Model | Legacy user data | ✅ Created |
+| `models/legacy-migration-token.model.ts` | Model | Magic link tokens | ✅ Created |
+| `modules/legacy-migration/legacy-migration.provider.module.ts` | Module | Service providers | ✅ Created |
+| `modules/legacy-migration/legacy-migration.controller.module.ts` | Module | Controller setup | ✅ Created |
+| `modules/legacy-migration/legacy-migration.controller.ts` | Controller | API endpoints | ✅ Created |
+| `modules/legacy-migration/legacy-migration.service.ts` | Service | Business logic | ✅ Created |
+| `modules/legacy-migration/legacy-migration.service.interface.ts` | Interface | Service contract | ✅ Created |
+| `modules/legacy-migration/legacy-migration.service.spec.ts` | Tests | Service unit tests | ✅ Created |
+| `modules/legacy-migration/legacy-migration.dto.ts` | DTOs | Request/Response DTOs | ✅ Created |
+| `app/skraning/flytja/page.tsx` | Page | Migration completion UI | 🔲 Not Started |
+| `lib/trpc/server/routers/legacyMigrationRouter.ts` | Router | tRPC routes | 🔲 Not Started |
 
 ### Files to Modify
 
-| File | Changes |
-|------|---------|
-| `app.module.ts` | Register new models and modules |
-| `subscriber.service.ts` | Add auto-migration check |
-| `app/skraning/@register/page.tsx` | Add redemption UI |
-| `lib/trpc/server/routers/index.ts` | Add legacyMigrationRouter |
+| File | Changes | Status |
+|------|---------|--------|
+| `app/app.module.ts` | Register new models and modules | ✅ Done |
+| `core/constants.ts` | Add LEGACY_SUBSCRIBER, LEGACY_MIGRATION_TOKEN enums | ✅ Done |
+| `models/subscriber.model.ts` | Fix isActive type from `false` to `boolean` | ✅ Done |
+| `subscriber.service.ts` | Add auto-migration check | 🔲 Not Started |
+| `app/skraning/@register/page.tsx` | Add redemption UI | 🔲 Not Started |
+| `lib/trpc/server/routers/index.ts` | Add legacyMigrationRouter | 🔲 Not Started |
 
 ---
 
@@ -419,9 +423,9 @@ A separate data import script will be needed to populate `LEGACY_SUBSCRIBERS` fr
 | Phase | Status | Notes |
 |-------|--------|-------|
 | Phase 1: Database Schema | ✅ Complete | Migration file + Sequelize models |
-| Phase 2: Backend Service Tests (TDD) | ✅ Complete | Write tests first before implementation |
-| Phase 3: Backend Services Implementation | 🔲 Not Started | Implement service to pass tests |
-| Phase 4: Email Integration | 🔲 Not Started | |
+| Phase 2: Backend Service Tests (TDD) | ✅ Complete | 19 test cases covering all service methods |
+| Phase 3: Backend Services Implementation | ✅ Complete | Service, Controller, DTOs, Modules - all 19 tests passing |
+| Phase 4: Email Integration | ✅ Complete | Implemented in service using IAWSService.sendMail() |
 | Phase 5: Frontend Updates | 🔲 Not Started | |
 | Phase 6: Auto-Migration on Sign-In | 🔲 Not Started | |
 | Phase 7: Payment Integration | 🔲 Not Started | |

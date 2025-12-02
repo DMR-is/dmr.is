@@ -19,7 +19,7 @@ export type SubscriberCreateAttributes = {
   nationalId: string
   firstName: string
   lastName: string
-  isActive?: false
+  isActive?: boolean
   email?: string | null
   phone?: string | null
 }

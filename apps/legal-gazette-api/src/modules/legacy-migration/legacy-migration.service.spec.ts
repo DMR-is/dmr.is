@@ -343,7 +343,10 @@ describe('LegacyMigrationService', () => {
       subscriberModel.create.mockResolvedValue(createMockNewSubscriber())
       legacySubscriberModel.update = jest.fn().mockResolvedValue([1])
 
-      const result = await service.completeMigration(TEST_TOKEN, TEST_NATIONAL_ID)
+      const result = await service.completeMigration(
+        TEST_TOKEN,
+        TEST_NATIONAL_ID,
+      )
 
       // Should create subscriber with legacy user's data
       expect(subscriberModel.create).toHaveBeenCalledWith(
@@ -387,7 +390,10 @@ describe('LegacyMigrationService', () => {
         }),
       })
 
-      const result = await service.completeMigration(TEST_TOKEN, TEST_NATIONAL_ID)
+      const result = await service.completeMigration(
+        TEST_TOKEN,
+        TEST_NATIONAL_ID,
+      )
 
       expect(subscriberModel.create).toHaveBeenCalledWith(
         expect.objectContaining({

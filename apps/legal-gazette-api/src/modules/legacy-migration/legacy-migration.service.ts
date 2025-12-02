@@ -1,4 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { randomUUID } from 'crypto'
+
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { IAWSService } from '@dmr.is/modules'
@@ -11,11 +18,17 @@ import {
   ILegacyMigrationService,
 } from './legacy-migration.service.interface'
 
+const TOKEN_EXPIRY_HOURS = 24
+const MAGIC_LINK_BASE_URL =
+  process.env.LG_PUBLIC_WEB_URL || 'https://logbirtingablad.is'
+
 /**
  * Service for handling legacy subscriber migration to the new system.
  *
- * This is a stub implementation for TDD - tests are written first,
- * implementation will be added in Phase 3.
+ * Supports three migration scenarios:
+ * 1. Auto-migration for legacy users with kennitala (on sign-in)
+ * 2. Magic link migration for legacy users without kennitala
+ * 3. New registration with payment for non-legacy users
  */
 @Injectable()
 export class LegacyMigrationService implements ILegacyMigrationService {
@@ -30,31 +43,270 @@ export class LegacyMigrationService implements ILegacyMigrationService {
     private readonly awsService: IAWSService,
   ) {}
 
-  async checkLegacyEmail(_email: string): Promise<CheckLegacyEmailResult> {
-    // TODO: Implement in Phase 3
-    throw new Error('Not implemented')
+  /**
+   * Check if an email exists in the legacy subscriber table
+   */
+  async checkLegacyEmail(email: string): Promise<CheckLegacyEmailResult> {
+    const normalizedEmail = email.toLowerCase()
+
+    const legacyUser = await this.legacySubscriberModel.findOne({
+      where: { email: normalizedEmail },
+    })
+
+    if (!legacyUser) {
+      return {
+        exists: false,
+        hasKennitala: false,
+      }
+    }
+
+    return {
+      exists: true,
+      hasKennitala: !!legacyUser.nationalId,
+    }
   }
 
+  /**
+   * Request a magic link for migration.
+   * Sends an email to the legacy email address with a magic link.
+   */
   async requestMigration(
-    _email: string,
-    _targetNationalId: string,
+    email: string,
+    targetNationalId: string,
   ): Promise<void> {
-    // TODO: Implement in Phase 3
-    throw new Error('Not implemented')
+    const normalizedEmail = email.toLowerCase()
+
+    // Find legacy user
+    const legacyUser = await this.legacySubscriberModel.findOne({
+      where: { email: normalizedEmail },
+    })
+
+    if (!legacyUser) {
+      throw new NotFoundException('Netfang fannst ekki í eldra áskriftarkerfi.')
+    }
+
+    // Check if already migrated
+    if (legacyUser.migratedAt) {
+      throw new BadRequestException(
+        'Þessi áskrift hefur þegar verið flutt yfir í nýja kerfið.',
+      )
+    }
+
+    // Generate secure token
+    const token = this.generateSecureToken()
+
+    // Calculate expiry (24 hours from now)
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + TOKEN_EXPIRY_HOURS)
+
+    // Create token record
+    await this.legacyMigrationTokenModel.create({
+      token,
+      email: normalizedEmail,
+      targetNationalId,
+      expiresAt,
+      legacySubscriberId: legacyUser.id,
+    })
+
+    // Build magic link URL
+    const magicLinkUrl = `${MAGIC_LINK_BASE_URL}/skraning/flytja?token=${token}`
+
+    // Send email
+    await this.awsService.sendMail({
+      from: 'Lögbirtingablaðið <noreply@logbirtingablad.is>',
+      to: normalizedEmail,
+      replyTo: 'noreply@logbirtingablad.is',
+      subject: 'Staðfesting á flutningi áskriftar - Lögbirtingablaðið',
+      html: this.buildMigrationEmailHtml(magicLinkUrl),
+      text: this.buildMigrationEmailText(magicLinkUrl),
+    })
   }
 
+  /**
+   * Complete the migration after magic link verification.
+   */
   async completeMigration(
-    _token: string,
-    _authenticatedNationalId: string,
+    token: string,
+    authenticatedNationalId: string,
   ): Promise<SubscriberDto> {
-    // TODO: Implement in Phase 3
-    throw new Error('Not implemented')
+    // Find token with associated legacy subscriber
+    const migrationToken = await this.legacyMigrationTokenModel.findOne({
+      where: { token },
+      include: [{ model: LegacySubscriberModel, as: 'legacySubscriber' }],
+    })
+
+    if (!migrationToken) {
+      throw new NotFoundException('Ógildur eða útrunninn hlekkur.')
+    }
+
+    // Check if token is valid (not expired and not used)
+    if (!migrationToken.isValid()) {
+      throw new BadRequestException(
+        'Hlekkurinn er útrunninn eða hefur þegar verið notaður.',
+      )
+    }
+
+    // Verify that authenticated user matches the token target
+    if (migrationToken.targetNationalId !== authenticatedNationalId) {
+      throw new BadRequestException(
+        'Innskráður notandi passar ekki við flutningsbeiðni.',
+      )
+    }
+
+    const legacyUser = migrationToken.legacySubscriber
+    if (!legacyUser) {
+      throw new NotFoundException('Eldri áskrifandi fannst ekki.')
+    }
+
+    // Parse name into first and last name
+    const { firstName, lastName } = this.parseName(legacyUser.name)
+
+    // Create new subscriber with legacy user's data
+    const newSubscriber = await this.subscriberModel.create({
+      nationalId: authenticatedNationalId,
+      firstName,
+      lastName,
+      isActive: legacyUser.isActive,
+    })
+
+    // Mark token as used
+    migrationToken.usedAt = new Date()
+    await migrationToken.save()
+
+    // Mark legacy subscriber as migrated
+    await this.legacySubscriberModel.update(
+      {
+        migratedAt: new Date(),
+        migratedToSubscriberId: newSubscriber.id,
+      },
+      {
+        where: { id: legacyUser.id },
+      },
+    )
+
+    return newSubscriber.fromModel()
   }
 
+  /**
+   * Auto-migrate a legacy user by kennitala on sign-in.
+   * Only migrates if the legacy user has the same kennitala and hasn't been migrated yet.
+   */
   async autoMigrateByKennitala(
-    _nationalId: string,
+    nationalId: string,
   ): Promise<SubscriberDto | null> {
-    // TODO: Implement in Phase 3
-    throw new Error('Not implemented')
+    // Find legacy user by kennitala
+    const legacyUser = await this.legacySubscriberModel.findOne({
+      where: { nationalId },
+    })
+
+    // No legacy user found
+    if (!legacyUser) {
+      return null
+    }
+
+    // Already migrated
+    if (legacyUser.migratedAt) {
+      return null
+    }
+
+    // Parse name into first and last name
+    const { firstName, lastName } = this.parseName(legacyUser.name)
+
+    // Create new subscriber
+    const newSubscriber = await this.subscriberModel.create({
+      nationalId,
+      firstName,
+      lastName,
+      isActive: legacyUser.isActive,
+    })
+
+    // Mark legacy user as migrated
+    await this.legacySubscriberModel.update(
+      {
+        migratedAt: new Date(),
+        migratedToSubscriberId: newSubscriber.id,
+      },
+      {
+        where: { id: legacyUser.id },
+      },
+    )
+
+    return newSubscriber.fromModel()
+  }
+
+  /**
+   * Generate a cryptographically secure token.
+   * Uses UUID v4 which provides 122 bits of randomness.
+   */
+  private generateSecureToken(): string {
+    // Generate two UUIDs and combine them for extra security (64 characters)
+    return `${randomUUID()}${randomUUID()}`.replace(/-/g, '')
+  }
+
+  /**
+   * Parse a full name into first and last name parts.
+   */
+  private parseName(fullName: string): { firstName: string; lastName: string } {
+    const parts = fullName.trim().split(/\s+/)
+    const firstName = parts[0] || ''
+    const lastName = parts.slice(1).join(' ') || ''
+    return { firstName, lastName }
+  }
+
+  /**
+   * Build HTML email content for migration email.
+   */
+  private buildMigrationEmailHtml(magicLinkUrl: string): string {
+    return `
+<!DOCTYPE html>
+<html lang="is">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h1 style="color: #0061ff;">Lögbirtingablaðið</h1>
+    <p>Sæl/l,</p>
+    <p>Þú hefur óskað eftir að flytja áskriftina þína á Lögbirtingablaðinu yfir í nýja kerfið.</p>
+    <p>Smelltu á eftirfarandi hlekk til að ljúka flutningnum:</p>
+    <p style="margin: 30px 0;">
+      <a href="${magicLinkUrl}"
+         style="background-color: #0061ff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
+        Ljúka flutningi
+      </a>
+    </p>
+    <p><strong>Hlekkurinn er virkur í 24 klukkustundir.</strong></p>
+    <p>Ef þú baðst ekki um þennan flutning, vinsamlegast hunsaðu þennan tölvupóst.</p>
+    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+    <p style="color: #666; font-size: 14px;">
+      Kveðja,<br>
+      Lögbirtingablaðið
+    </p>
+  </div>
+</body>
+</html>
+    `.trim()
+  }
+
+  /**
+   * Build plain text email content for migration email.
+   */
+  private buildMigrationEmailText(magicLinkUrl: string): string {
+    return `
+Sæl/l,
+
+Þú hefur óskað eftir að flytja áskriftina þína á Lögbirtingablaðinu yfir í nýja kerfið.
+
+Smelltu á eftirfarandi hlekk til að ljúka flutningnum:
+${magicLinkUrl}
+
+Hlekkurinn er virkur í 24 klukkustundir.
+
+Ef þú baðst ekki um þennan flutning, vinsamlegast hunsaðu þennan tölvupóst.
+
+Kveðja,
+Lögbirtingablaðið
+    `.trim()
   }
 }
