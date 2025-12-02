@@ -9,7 +9,7 @@ import {
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplicationJson } from '../../../../hooks/useUpdateApplicationJson'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { POSTPONE_LIMIT } from '../../../../lib/constants'
 import {
   NationalIdLookup,
@@ -30,8 +30,8 @@ export const RecallSettlementFields = () => {
 
   const settlementType = isRecallBankruptcy ? 'þrotabús' : 'dánarbús'
 
-  const { updateApplicationJson, debouncedUpdateApplicationJson } =
-    useUpdateApplicationJson({
+  const { updateApplication, debouncedUpdateApplication } =
+    useUpdateApplication({
       id: applicationId,
       type: 'RECALL',
     })
@@ -54,7 +54,7 @@ export const RecallSettlementFields = () => {
       `${address}, ${zipCode} ${city}`,
     )
     setValue('fields.settlementFields.nationalId', nationalId)
-    updateApplicationJson({
+    updateApplication({
       fields: {
         settlementFields: {
           name: name,
@@ -67,7 +67,7 @@ export const RecallSettlementFields = () => {
 
   const resetLookupFields = () => {
     setValue('fields.settlementFields.nationalId', '')
-    updateApplicationJson({
+    updateApplication({
       fields: {
         settlementFields: {
           name: '',
@@ -111,7 +111,7 @@ export const RecallSettlementFields = () => {
           required
           onChange={(val) => {
             if (isRecallBankruptcy) {
-              return updateApplicationJson({
+              return updateApplication({
                 fields: {
                   settlementFields: {
                     deadlineDate: val.toISOString(),
@@ -120,7 +120,7 @@ export const RecallSettlementFields = () => {
               })
             }
 
-            return updateApplicationJson({
+            return updateApplication({
               fields: {
                 settlementFields: {
                   dateOfDeath: val.toISOString(),
@@ -136,7 +136,7 @@ export const RecallSettlementFields = () => {
           label={`Nafn ${settlementType}`}
           required
           onChange={(val) =>
-            debouncedUpdateApplicationJson({
+            debouncedUpdateApplication({
               fields: {
                 settlementFields: {
                   name: val,
@@ -157,7 +157,7 @@ export const RecallSettlementFields = () => {
               : 'Síðasta heimilisfang'
           }
           onChange={(val) =>
-            debouncedUpdateApplicationJson({
+            debouncedUpdateApplication({
               fields: {
                 settlementFields: {
                   address: val,

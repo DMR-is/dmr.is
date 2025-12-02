@@ -13,7 +13,7 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplicationJson } from '../../../../hooks/useUpdateApplicationJson'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { Editor } from '../../../editor/Editor'
 import { InputController } from '../../controllers/InputController'
@@ -31,8 +31,8 @@ export const CommonAdvertFields = () => {
     ? Buffer.from(fields?.html ?? '', 'base64').toString('utf-8')
     : (fields?.html ?? '')
 
-  const { updateApplicationJson, debouncedUpdateApplicationJson } =
-    useUpdateApplicationJson({
+  const { updateApplication, debouncedUpdateApplication } =
+    useUpdateApplication({
       id: metadata.applicationId,
       type: 'COMMON',
     })
@@ -54,7 +54,7 @@ export const CommonAdvertFields = () => {
     if (categoriesData?.categories.length === 1) {
       setValue('fields.categoryId', categoriesData.categories[0].id)
 
-      return updateApplicationJson(
+      return updateApplication(
         {
           fields: { categoryId: categoriesData.categories[0].id },
         },
@@ -67,7 +67,7 @@ export const CommonAdvertFields = () => {
     }
 
     setValue('fields.categoryId', null)
-    return updateApplicationJson(
+    return updateApplication(
       { fields: { categoryId: null } },
       {
         successMessage: 'Flokkur vistaður',
@@ -100,7 +100,7 @@ export const CommonAdvertFields = () => {
             name={'fields.typeId'}
             label="Tegund auglýsingar"
             onChange={(val) =>
-              updateApplicationJson(
+              updateApplication(
                 { fields: { typeId: val } },
                 {
                   successMessage: 'Tegund auglýsingar vistuð',
@@ -118,7 +118,7 @@ export const CommonAdvertFields = () => {
             name={'fields.categoryId'}
             label="Flokkur"
             onChange={(val) =>
-              updateApplicationJson(
+              updateApplication(
                 { fields: { categoryId: val } },
                 {
                   successMessage: 'Flokkur vistaður',
@@ -134,7 +134,7 @@ export const CommonAdvertFields = () => {
             label="Yfirskrift"
             required
             onChange={(val) =>
-              debouncedUpdateApplicationJson(
+              debouncedUpdateApplication(
                 { fields: { caption: val } },
                 {
                   successMessage: 'Yfirskrift vistuð',
@@ -151,7 +151,7 @@ export const CommonAdvertFields = () => {
           <Editor
             defaultValue={defaultHTML}
             onChange={(val) =>
-              debouncedUpdateApplicationJson(
+              debouncedUpdateApplication(
                 { fields: { html: Buffer.from(val).toString('base64') } },
                 {
                   successMessage: 'Meginmál vistað',

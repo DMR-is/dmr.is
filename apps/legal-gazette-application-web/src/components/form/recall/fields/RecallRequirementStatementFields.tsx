@@ -6,7 +6,7 @@ import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
 import { ApplicationRequirementStatementEnum } from '../../../../gen/fetch'
-import { useUpdateApplicationJson } from '../../../../hooks/useUpdateApplicationJson'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { requirementsStatementOptions } from '../../../../lib/constants'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
@@ -17,8 +17,8 @@ export const RecallRequirementStatementFields = () => {
 
   const metadata = getValues('metadata')
 
-  const { updateApplicationJson, debouncedUpdateApplicationJson } =
-    useUpdateApplicationJson({
+  const { updateApplication, debouncedUpdateApplication } =
+    useUpdateApplication({
       id: metadata.applicationId,
       type: 'RECALL',
     })
@@ -58,7 +58,7 @@ export const RecallRequirementStatementFields = () => {
           label="Kröfulýsingar"
           required
           onChange={(val) => {
-            updateApplicationJson({
+            updateApplication({
               fields: {
                 settlementFields: {
                   recallRequirementStatementType:
@@ -96,7 +96,7 @@ export const RecallRequirementStatementFields = () => {
                 : 'Tölvupóstur'
           }
           onChange={(val) =>
-            debouncedUpdateApplicationJson({
+            debouncedUpdateApplication({
               fields: {
                 settlementFields: {
                   recallRequirementStatementLocation: val,

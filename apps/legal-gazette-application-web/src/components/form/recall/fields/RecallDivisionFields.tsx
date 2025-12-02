@@ -6,7 +6,7 @@ import { useFormContext } from 'react-hook-form'
 import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplicationJson } from '../../../../hooks/useUpdateApplicationJson'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { ONE_WEEK, TWO_WEEKS } from '../../../../lib/constants'
 import { getNextWeekday, getWeekendDays } from '../../../../lib/utils'
 import { DatePickerController } from '../../controllers/DatePickerController'
@@ -25,7 +25,7 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
   } = useFormContext<RecallApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
 
-  const { updateApplicationJson } = useUpdateApplicationJson({
+  const { updateApplication } = useUpdateApplication({
     id: applicationId,
     type: 'RECALL',
   })
@@ -36,7 +36,7 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
     if (isReady && dirtyFields.publishingDates) {
       setValue('publishingDates', [])
 
-      updateApplicationJson({
+      updateApplication({
         fields: {
           divisionMeetingFields: {
             meetingDate: null,
@@ -65,7 +65,7 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
           name="fields.divisionMeetingFields.meetingLocation"
           label="Staðsetning skiptafundar"
           onBlur={(location) =>
-            updateApplicationJson({
+            updateApplication({
               fields: {
                 divisionMeetingFields: {
                   meetingLocation: location,
@@ -85,7 +85,7 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
           maxDate={maxDate}
           excludeDates={excludeDates}
           onChange={(date) =>
-            updateApplicationJson({
+            updateApplication({
               fields: {
                 divisionMeetingFields: {
                   meetingDate: date.toISOString(),

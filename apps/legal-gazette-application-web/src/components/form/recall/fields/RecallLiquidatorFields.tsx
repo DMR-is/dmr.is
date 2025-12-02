@@ -6,7 +6,7 @@ import {
 } from '@dmr.is/legal-gazette/schemas'
 import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplicationJson } from '../../../../hooks/useUpdateApplicationJson'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { InputController } from '../../controllers/InputController'
 
 export const RecallLiquidatorFields = () => {
@@ -14,8 +14,8 @@ export const RecallLiquidatorFields = () => {
 
   const metadata = getValues('metadata')
 
-  const { debouncedUpdateApplicationJson, updateApplicationJson } =
-    useUpdateApplicationJson({
+  const { debouncedUpdateApplication, updateApplication } =
+    useUpdateApplication({
       id: metadata.applicationId,
       type: 'RECALL',
     })
@@ -34,7 +34,7 @@ export const RecallLiquidatorFields = () => {
           label="Nafn skiptastjóra"
           name={'fields.settlementFields.liquidatorName'}
           onChange={(val) =>
-            debouncedUpdateApplicationJson({
+            debouncedUpdateApplication({
               fields: {
                 settlementFields: {
                   liquidatorName: val,
@@ -51,7 +51,7 @@ export const RecallLiquidatorFields = () => {
           label="Staðsetning skiptastjóra"
           name={'fields.settlementFields.liquidatorLocation'}
           onChange={(val) =>
-            debouncedUpdateApplicationJson({
+            debouncedUpdateApplication({
               fields: {
                 settlementFields: {
                   liquidatorLocation: val,
@@ -64,7 +64,7 @@ export const RecallLiquidatorFields = () => {
               recallRequirementStateLocation ===
               ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
             ) {
-              updateApplicationJson({
+              updateApplication({
                 fields: {
                   settlementFields: {
                     recallRequirementStatementLocation: val,

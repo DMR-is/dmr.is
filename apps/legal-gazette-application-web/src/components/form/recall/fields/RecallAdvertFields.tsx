@@ -10,7 +10,7 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplicationJson } from '../../../../hooks/useUpdateApplicationJson'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
@@ -20,8 +20,8 @@ export const RecallAdvertFields = () => {
 
   const { applicationId, courtOptions } = getValues('metadata')
 
-  const { updateApplicationJson, debouncedUpdateApplicationJson } =
-    useUpdateApplicationJson({
+  const { updateApplication, debouncedUpdateApplication } =
+    useUpdateApplication({
       id: applicationId,
       type: 'RECALL',
     })
@@ -37,7 +37,7 @@ export const RecallAdvertFields = () => {
             label="Dómstóll"
             required
             onChange={(val) =>
-              updateApplicationJson({
+              updateApplication({
                 fields: {
                   courtAndJudgmentFields: {
                     courtDistrictId: val,
@@ -53,7 +53,7 @@ export const RecallAdvertFields = () => {
             label="Úrskurðardagur"
             required
             onChange={(val) =>
-              updateApplicationJson({
+              updateApplication({
                 fields: {
                   courtAndJudgmentFields: { judgmentDate: val.toISOString() },
                 },
@@ -67,7 +67,7 @@ export const RecallAdvertFields = () => {
             name="additionalText"
             label="Frjáls texti"
             onChange={(val) =>
-              debouncedUpdateApplicationJson({ additionalText: val })
+              debouncedUpdateApplication({ additionalText: val })
             }
           />
         </GridColumn>

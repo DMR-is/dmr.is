@@ -21,7 +21,7 @@ import {
 } from '@dmr.is/ui/components/island-is'
 import {} from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplicationJson } from '../../../hooks/useUpdateApplicationJson'
+import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 
 export const CommunicationChannelFields = () => {
   const { getValues, setValue, watch, formState, trigger } =
@@ -29,7 +29,7 @@ export const CommunicationChannelFields = () => {
 
   const metadata = getValues('metadata')
 
-  const { updateApplicationJson } = useUpdateApplicationJson({
+  const { updateApplication } = useUpdateApplication({
     id: metadata.applicationId,
     type: 'COMMON',
   })
@@ -69,7 +69,7 @@ export const CommunicationChannelFields = () => {
     setValue('communicationChannels', channels, {
       shouldValidate: true,
     })
-    updateApplicationJson({ communicationChannels: channels })
+    updateApplication({ communicationChannels: channels })
     setToggleAdd(false)
     setIsEditing('')
     setCurrentChannel({ email: '', name: '', phone: '' })
@@ -78,7 +78,7 @@ export const CommunicationChannelFields = () => {
   const removeChannel = (index: number) => {
     const updatedChannels = channels.filter((_, i) => i !== index)
     setValue('communicationChannels', updatedChannels)
-    updateApplicationJson({ communicationChannels: updatedChannels })
+    updateApplication({ communicationChannels: updatedChannels })
     trigger('communicationChannels')
   }
 

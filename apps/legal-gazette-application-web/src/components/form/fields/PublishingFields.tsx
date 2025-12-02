@@ -15,7 +15,7 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplicationJson } from '../../../hooks/useUpdateApplicationJson'
+import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 import { ONE_DAY, TWO_WEEKS } from '../../../lib/constants'
 import { getNextWeekday, getWeekendDays } from '../../../lib/utils'
 import { DatePickerController } from '../controllers/DatePickerController'
@@ -31,7 +31,7 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
 
   const { metadata } = getValues()
 
-  const { updateApplicationJson } = useUpdateApplicationJson({
+  const { updateApplication } = useUpdateApplication({
     id: metadata.applicationId,
     type: 'COMMON',
   })
@@ -52,7 +52,7 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
     const newDates = [...dateState, newDate.toISOString()]
     setDateState(newDates)
     setValue('publishingDates', newDates)
-    updateApplicationJson({
+    updateApplication({
       publishingDates: newDates,
     })
   }
@@ -61,7 +61,7 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
     const newDates = dateState.filter((_, i) => i !== index)
     setValue('publishingDates', newDates)
     setDateState(newDates)
-    updateApplicationJson({
+    updateApplication({
       publishingDates: newDates,
     })
   }
@@ -71,7 +71,7 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
     newDates[index] = date.toISOString()
     setDateState(newDates)
     setValue('publishingDates', newDates)
-    updateApplicationJson({
+    updateApplication({
       publishingDates: newDates,
     })
   }

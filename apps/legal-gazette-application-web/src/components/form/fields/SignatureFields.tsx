@@ -10,7 +10,7 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplicationJson } from '../../../hooks/useUpdateApplicationJson'
+import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 import { DatePickerController } from '../controllers/DatePickerController'
 import { InputController } from '../controllers/InputController'
 
@@ -18,7 +18,7 @@ export const SignatureFields = () => {
   const { getValues, formState } = useFormContext<BaseApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
 
-  const { debouncedUpdateApplicationJson } = useUpdateApplicationJson({
+  const { debouncedUpdateApplication } = useUpdateApplication({
     id: applicationId,
     type: 'COMMON',
   })
@@ -42,7 +42,7 @@ export const SignatureFields = () => {
               name="signature.name"
               label="Nafn undirritara"
               onChange={(val) =>
-                debouncedUpdateApplicationJson(
+                debouncedUpdateApplication(
                   { signature: { name: val } },
                   {
                     errorMessage: 'Villa við að uppfæra nafn undirritara',
@@ -57,7 +57,7 @@ export const SignatureFields = () => {
               name="signature.location"
               label="Staðsetning undirritara"
               onChange={(val) =>
-                debouncedUpdateApplicationJson(
+                debouncedUpdateApplication(
                   { signature: { location: val } },
                   {
                     errorMessage:
@@ -73,7 +73,7 @@ export const SignatureFields = () => {
               name="signature.onBehalfOf"
               label="F.h. undirritara"
               onChange={(val) =>
-                debouncedUpdateApplicationJson(
+                debouncedUpdateApplication(
                   { signature: { onBehalfOf: val } },
                   {
                     errorMessage: 'Villa við að uppfæra f.h. undirritara',
@@ -88,7 +88,7 @@ export const SignatureFields = () => {
               name="signature.date"
               label="Dagsetning undirritunar"
               onChange={(date) =>
-                debouncedUpdateApplicationJson(
+                debouncedUpdateApplication(
                   { signature: { date: date.toISOString() } },
                   {
                     errorMessage:
