@@ -386,6 +386,22 @@ A separate data import script will be needed to populate `LEGACY_SUBSCRIBERS` fr
 
 ---
 
+## TODOs / Known Issues
+
+1. **⚠️ Email Service Error Handling:** The `requestMigration` method in `legacy-migration.service.ts` currently does not throw an error if `IAWSService.sendMail()` fails to send the email. This results in a false success response to the user. Need to check the return value of `sendMail()` and throw an error if the email was not sent successfully.
+
+2. **🧪 Manual Testing Required:** Before release, perform manual testing of all user flows:
+   - [ ] New user registration (no legacy account)
+   - [ ] Legacy user with kennitala → auto-migration on sign-in
+   - [ ] Legacy user without kennitala → magic link flow
+   - [ ] Magic link expiry (24 hours)
+   - [ ] Magic link single-use enforcement
+   - [ ] Session `isActive` status after migration
+   - [ ] Error handling for invalid/expired tokens
+   - [ ] Email delivery verification
+
+---
+
 ## File Summary
 
 ### New Files to Create
@@ -402,7 +418,7 @@ A separate data import script will be needed to populate `LEGACY_SUBSCRIBERS` fr
 | `modules/legacy-migration/legacy-migration.service.interface.ts` | Interface | Service contract | ✅ Created |
 | `modules/legacy-migration/legacy-migration.service.spec.ts` | Tests | Service unit tests | ✅ Created |
 | `modules/legacy-migration/legacy-migration.dto.ts` | DTOs | Request/Response DTOs | ✅ Created |
-| `app/skraning/flytja/page.tsx` | Page | Migration completion UI | 🔲 Not Started |
+| `app/skraning/flytja/page.tsx` | Page | Migration completion UI | ✅ Created |
 | `lib/trpc/server/routers/legacyMigrationRouter.ts` | Router | tRPC routes | ✅ Created |
 
 ### Files to Modify
@@ -413,7 +429,7 @@ A separate data import script will be needed to populate `LEGACY_SUBSCRIBERS` fr
 | `core/constants.ts` | Add LEGACY_SUBSCRIBER, LEGACY_MIGRATION_TOKEN enums | ✅ Done |
 | `models/subscriber.model.ts` | Fix isActive type from `false` to `boolean` | ✅ Done |
 | `subscriber.service.ts` | Add auto-migration check | ✅ Done |
-| `app/skraning/@register/page.tsx` | Add redemption UI | 🔲 Not Started |
+| `app/skraning/@register/page.tsx` | Add redemption UI | ✅ Done |
 | `lib/trpc/server/routers/_app.ts` | Add legacyMigrationRouter | ✅ Done |
 
 ---
@@ -427,6 +443,6 @@ A separate data import script will be needed to populate `LEGACY_SUBSCRIBERS` fr
 | Phase 3: Backend Services Implementation | ✅ Complete | Service, Controller, DTOs, Modules - all 19 tests passing |
 | Phase 4: Email Integration | ✅ Complete | Implemented in service using IAWSService.sendMail() |
 | Phase 5: Auto-Migration on Sign-In | ✅ Complete | Integrated in SubscriberService.getUserByNationalId() |
-| Phase 6: Frontend Updates | 🔲 Not Started | |
+| Phase 6: Frontend Updates | ✅ Complete | Registration page with legacy redemption form + migration completion page |
 | Phase 7: Payment Integration | 🔲 Not Started | |
 | Data Import Script | 🔲 Not Started | |

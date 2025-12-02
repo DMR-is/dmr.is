@@ -21,6 +21,7 @@ import {
 const TOKEN_EXPIRY_HOURS = 24
 const MAGIC_LINK_BASE_URL =
   process.env.LG_PUBLIC_WEB_URL || 'https://logbirtingablad.is'
+const senderEmail = process.env.LEGACY_MIGRATION_SENDER_EMAIL || 'noreply@legal-gazette.dev.dmr-dev.cloud'
 
 /**
  * Service for handling legacy subscriber migration to the new system.
@@ -109,13 +110,13 @@ export class LegacyMigrationService implements ILegacyMigrationService {
     })
 
     // Build magic link URL
-    const magicLinkUrl = `${MAGIC_LINK_BASE_URL}/skraning/flytja?token=${token}`
+    const magicLinkUrl = `${MAGIC_LINK_BASE_URL}/flytja?token=${token}`
 
     // Send email
     await this.awsService.sendMail({
-      from: 'Lögbirtingablaðið <noreply@logbirtingablad.is>',
+      from: `Lögbirtingablaðið <${senderEmail}>`,
       to: normalizedEmail,
-      replyTo: 'noreply@logbirtingablad.is',
+      replyTo: senderEmail,
       subject: 'Staðfesting á flutningi áskriftar - Lögbirtingablaðið',
       html: this.buildMigrationEmailHtml(magicLinkUrl),
       text: this.buildMigrationEmailText(magicLinkUrl),
@@ -131,7 +132,7 @@ export class LegacyMigrationService implements ILegacyMigrationService {
   ): Promise<SubscriberDto> {
     // Find token with associated legacy subscriber
     const migrationToken = await this.legacyMigrationTokenModel.findOne({
-      where: { token },
+      where: { token: token },
       include: [{ model: LegacySubscriberModel, as: 'legacySubscriber' }],
     })
 
@@ -162,12 +163,20 @@ export class LegacyMigrationService implements ILegacyMigrationService {
     const { firstName, lastName } = this.parseName(legacyUser.name)
 
     // Create new subscriber with legacy user's data
-    const newSubscriber = await this.subscriberModel.create({
-      nationalId: authenticatedNationalId,
-      firstName,
-      lastName,
-      isActive: legacyUser.isActive,
+    const [newSubscriber, created] = await this.subscriberModel.findOrCreate({
+      where: { nationalId: authenticatedNationalId },
+      defaults: {
+        nationalId: authenticatedNationalId,
+        firstName,
+        lastName,
+        isActive: legacyUser.isActive,
+      },
     })
+
+    if (!created) {
+      newSubscriber.isActive = legacyUser.isActive
+      await newSubscriber.save()
+    }
 
     // Mark token as used
     migrationToken.usedAt = new Date()

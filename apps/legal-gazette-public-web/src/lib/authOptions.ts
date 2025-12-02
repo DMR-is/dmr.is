@@ -99,6 +99,20 @@ export const authOptions: AuthOptions = {
         } as JWT
       }
 
+      // If token is not active, we check if user is active to update token
+      // In case of account migration
+      if (!token.isActive) {
+        const member = await authorize(
+          token.nationalId as string,
+          token.accessToken as string,
+        )
+        if (member) {
+          token.isActive = member.isActive
+        } else {
+          token.isActive = false
+        }
+      }
+
       if (!isExpired(token.accessToken, !!token.invalid)) {
         return token
       }
