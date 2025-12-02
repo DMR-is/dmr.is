@@ -1,11 +1,10 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { signIn, useSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 
 import { useEffect, useState } from 'react'
 
-import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { Header } from '@dmr.is/ui/components/Header/Header'
 import { HeaderLogin } from '@dmr.is/ui/components/Header/HeaderLogin'
 import {
