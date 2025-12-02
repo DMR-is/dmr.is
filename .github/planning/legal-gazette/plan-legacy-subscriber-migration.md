@@ -418,11 +418,11 @@ A separate data import script will be needed to populate `LEGACY_SUBSCRIBERS` fr
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| Phase 1: Database Schema | 🔲 Not Started | |
-| Phase 2: Backend Services | 🔲 Not Started | |
-| Phase 3: Email Integration | 🔲 Not Started | |
-| Phase 4: Frontend Updates | 🔲 Not Started | |
-| Phase 5: Auto-Migration | 🔲 Not Started | |
-| Phase 6: Payment Integration | 🔲 Not Started | |
+| Phase 1: Database Schema | ✅ Complete | Migration file + Sequelize models |
+| Phase 2: Backend Service Tests (TDD) | ✅ Complete | Write tests first before implementation |
+| Phase 3: Backend Services Implementation | 🔲 Not Started | Implement service to pass tests |
+| Phase 4: Email Integration | 🔲 Not Started | |
+| Phase 5: Frontend Updates | 🔲 Not Started | |
+| Phase 6: Auto-Migration on Sign-In | 🔲 Not Started | |
+| Phase 7: Payment Integration | 🔲 Not Started | |
 | Data Import Script | 🔲 Not Started | |
-| Testing | 🔲 Not Started | |
