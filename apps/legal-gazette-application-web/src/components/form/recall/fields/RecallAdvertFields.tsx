@@ -4,8 +4,9 @@ import { useFormContext } from 'react-hook-form'
 
 import {
   ApplicationInputFields,
+  ApplicationTypeEnum,
   RecallApplicationInputFields,
-  RecallApplicationSchema,
+  RecallApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import {
   GridColumn,
@@ -14,21 +15,21 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
-import { useUpdateRecallApplication } from '../../../../hooks/useUpdateRecallApplication'
+import { useUpdateApplicationJson } from '../../../../hooks/useUpdateApplicationJson'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
 
 export const RecallAdvertFields = () => {
-  const { getValues } = useFormContext<RecallApplicationSchema>()
+  const { getValues } = useFormContext<RecallApplicationWebSchema>()
 
-  const { applicationId, courtDistrictOptions } = getValues('metadata')
+  const { applicationId, courtOptions } = getValues('metadata')
 
-  const { updateAdditionalText } = useUpdateApplication(applicationId)
-
-  const { updateCourtDistrict, updateJudgmentDate } =
-    useUpdateRecallApplication(applicationId)
+  const { updateApplicationJson, debouncedUpdateApplicationJson } =
+    useUpdateApplicationJson({
+      id: applicationId,
+      type: ApplicationTypeEnum.RECALL_BANKRUPTCY,
+    })
 
   return (
     <Stack space={[1, 2]}>
@@ -36,11 +37,19 @@ export const RecallAdvertFields = () => {
       <GridRow rowGap={[2, 3]}>
         <GridColumn span={['12/12', '6/12']}>
           <SelectController
-            options={courtDistrictOptions}
-            name={RecallApplicationInputFields.COURT_DISTRICT_ID}
+            options={courtOptions}
+            name="fields.courtAndJudgmentFields.courtDistrictId"
             label="Dómstóll"
             required
-            onChange={(val) => updateCourtDistrict(val)}
+            onChange={(val) =>
+              updateApplicationJson({
+                fields: {
+                  courtAndJudgmentFields: {
+                    courtDistrictId: val,
+                  },
+                },
+              })
+            }
           />
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
@@ -48,7 +57,13 @@ export const RecallAdvertFields = () => {
             name={RecallApplicationInputFields.JUDGMENT_DATE}
             label="Úrskurðardagur"
             required
-            onChange={(val) => updateJudgmentDate(val.toISOString())}
+            onChange={(val) =>
+              updateApplicationJson({
+                fields: {
+                  courtAndJudgmentFields: { judgmentDate: val.toISOString() },
+                },
+              })
+            }
           />
         </GridColumn>
         <GridColumn span="12/12">
@@ -56,7 +71,9 @@ export const RecallAdvertFields = () => {
             textArea
             name={ApplicationInputFields.ADDITIONAL_TEXT}
             label="Frjáls texti"
-            onBlur={(val) => updateAdditionalText(val)}
+            onChange={(val) =>
+              debouncedUpdateApplicationJson({ additionalText: val })
+            }
           />
         </GridColumn>
       </GridRow>

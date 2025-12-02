@@ -2,10 +2,8 @@ import debounce from 'lodash/debounce'
 import { useCallback } from 'react'
 
 import {
-  ApplicationTypeEnum,
   CommonApplicationAnswers,
-  RecallBankruptcyApplicationAnswers,
-  RecallDeceasedApplicationAnswers,
+  RecallApplicationAnswers,
   updateApplicationWithIdInput,
 } from '@dmr.is/legal-gazette/schemas'
 import { toast } from '@dmr.is/ui/components/island-is'
@@ -25,21 +23,17 @@ type UpdateApplicationMutationOptions = {
   silent?: boolean
 }
 
-type UpdateApplicationAnswers<T extends ApplicationTypeEnum> =
-  T extends ApplicationTypeEnum.COMMON
-    ? CommonApplicationAnswers
-    : T extends ApplicationTypeEnum.RECALL_BANKRUPTCY
-      ? RecallBankruptcyApplicationAnswers
-      : T extends ApplicationTypeEnum.RECALL_DECEASED
-        ? RecallDeceasedApplicationAnswers
-        : never
+export type UpdateApplicationJsonType = 'COMMON' | 'RECALL'
 
-type UseUpdateApplicationJSONParams<T extends ApplicationTypeEnum> = {
+type UpdateApplicationAnswers<T extends UpdateApplicationJsonType> =
+  T extends 'COMMON' ? CommonApplicationAnswers : RecallApplicationAnswers
+
+type UseUpdateApplicationJSONParams<T extends UpdateApplicationJsonType> = {
   id: string
   type: T
 }
 
-export const useUpdateApplicationJson = <T extends ApplicationTypeEnum>({
+export const useUpdateApplicationJson = <T extends UpdateApplicationJsonType>({
   id,
   type,
 }: UseUpdateApplicationJSONParams<T>) => {

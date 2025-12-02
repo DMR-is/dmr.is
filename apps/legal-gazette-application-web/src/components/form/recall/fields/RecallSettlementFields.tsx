@@ -3,13 +3,14 @@ import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
 import {
+  ApplicationTypeEnum,
   RecallApplicationInputFields,
-  RecallApplicationSchema,
+  RecallApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateRecallApplication } from '../../../../hooks/useUpdateRecallApplication'
+import { useUpdateApplicationJson } from '../../../../hooks/useUpdateApplicationJson'
 import { POSTPONE_LIMIT } from '../../../../lib/constants'
 import {
   NationalIdLookup,
@@ -19,23 +20,22 @@ import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
 export const RecallSettlementFields = () => {
-  const { getValues, setValue } = useFormContext<RecallApplicationSchema>()
-  const { type } = getValues('fields')
+  const { getValues, setValue } = useFormContext<RecallApplicationWebSchema>()
+  const { type, applicationId } = getValues('metadata')
 
-  const title =
-    type === 'RECALL_BANKRUPTCY'
-      ? 'Upplýsingar um þrotabúið'
-      : 'Upplýsingar um dánarbúið'
+  const isRecallBankruptcy = type === ApplicationTypeEnum.RECALL_BANKRUPTCY
 
-  const settlementType = type === 'RECALL_BANKRUPTCY' ? 'þrotabús' : 'dánarbús'
+  const title = isRecallBankruptcy
+    ? 'Upplýsingar um þrotabúið'
+    : 'Upplýsingar um dánarbúið'
 
-  const {
-    updateRecallApplication,
-    updateSettlementName,
-    updateSettlementAddress,
-    updateSettlementDeadlineDate,
-    updateSettlementDateOfDeath,
-  } = useUpdateRecallApplication(getValues('metadata.applicationId'))
+  const settlementType = isRecallBankruptcy ? 'þrotabús' : 'dánarbús'
+
+  const { updateApplicationJson, debouncedUpdateApplicationJson } =
+    useUpdateApplicationJson({
+      id: applicationId,
+      type: 'RECALL',
+    })
 
   const [onLookupError, setOnLookupError] = useState<{
     title: string
@@ -55,22 +55,26 @@ export const RecallSettlementFields = () => {
       `${address}, ${zipCode} ${city}`,
     )
     setValue(RecallApplicationInputFields.SETTLEMENT_NATIONAL_ID, nationalId)
-    updateRecallApplication({
-      settlementFields: {
-        name: name,
-        address: `${address}, ${zipCode} ${city}`,
-        nationalId: nationalId,
+    updateApplicationJson({
+      fields: {
+        settlementFields: {
+          name: name,
+          address: `${address}, ${zipCode} ${city}`,
+          nationalId: nationalId,
+        },
       },
     })
   }
 
   const resetLookupFields = () => {
     setValue(RecallApplicationInputFields.SETTLEMENT_NATIONAL_ID, '')
-    updateRecallApplication({
-      settlementFields: {
-        name: '',
-        address: '',
-        nationalId: '',
+    updateApplicationJson({
+      fields: {
+        settlementFields: {
+          name: '',
+          address: '',
+          nationalId: '',
+        },
       },
     })
   }
@@ -87,7 +91,7 @@ export const RecallSettlementFields = () => {
       )}
       <GridColumn span={['12/12', '6/12']}>
         <NationalIdLookup
-          defaultValue={getValues('fields.settlementFields.nationalId')}
+          defaultValue={getValues('fields.settlementFields.nationalId') ?? ''}
           onSuccessfulLookup={onSuccessfulLookup}
           onReset={resetLookupFields}
           onError={setOnLookupError}
@@ -96,48 +100,72 @@ export const RecallSettlementFields = () => {
       <GridColumn span={['12/12', '6/12']}>
         <DatePickerController
           name={
-            type === 'RECALL_BANKRUPTCY'
-              ? RecallApplicationInputFields.SETTLEMENT_DEADLINE_DATE
-              : RecallApplicationInputFields.SETTLEMENT_DATE_OF_DEATH
+            isRecallBankruptcy
+              ? 'fields.settlementFields.deadlineDate'
+              : 'fields.settlementFields.dateOfDeath'
           }
-          maxDate={type === 'RECALL_BANKRUPTCY' ? new Date() : undefined}
+          maxDate={isRecallBankruptcy ? new Date() : undefined}
           minDate={
-            type === 'RECALL_BANKRUPTCY'
-              ? subDays(new Date(), POSTPONE_LIMIT)
-              : undefined
+            isRecallBankruptcy ? subDays(new Date(), POSTPONE_LIMIT) : undefined
           }
-          label={
-            type === 'RECALL_BANKRUPTCY' ? 'Frestdagur þrotabús' : 'Dánardagur'
-          }
+          label={isRecallBankruptcy ? 'Frestdagur þrotabús' : 'Dánardagur'}
           required
           onChange={(val) => {
-            if (type === 'RECALL_BANKRUPTCY') {
-              return updateSettlementDeadlineDate(val.toISOString())
+            if (isRecallBankruptcy) {
+              return updateApplicationJson({
+                fields: {
+                  settlementFields: {
+                    deadlineDate: val.toISOString(),
+                  },
+                },
+              })
             }
 
-            return updateSettlementDateOfDeath(val.toISOString())
+            return updateApplicationJson({
+              fields: {
+                settlementFields: {
+                  dateOfDeath: val.toISOString(),
+                },
+              },
+            })
           }}
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
         <InputController
-          name={RecallApplicationInputFields.SETTLEMENT_NAME}
+          name="fields.settlementFields.name"
           label={`Nafn ${settlementType}`}
           required
-          onChange={(val) => updateSettlementName(val)}
+          onChange={(val) =>
+            debouncedUpdateApplicationJson({
+              fields: {
+                settlementFields: {
+                  name: val,
+                },
+              },
+            })
+          }
         />
       </GridColumn>
 
       <GridColumn span={['12/12', '6/12']}>
         <InputController
-          name={RecallApplicationInputFields.SETTLEMENT_ADDRESS}
+          required
+          name="fields.settlementFields.address"
           label={
             settlementType === 'þrotabús'
               ? 'Heimilisfang þrotabús'
               : 'Síðasta heimilisfang'
           }
-          required
-          onChange={(val) => updateSettlementAddress(val)}
+          onChange={(val) =>
+            debouncedUpdateApplicationJson({
+              fields: {
+                settlementFields: {
+                  address: val,
+                },
+              },
+            })
+          }
         />
       </GridColumn>
     </GridRow>

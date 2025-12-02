@@ -35,37 +35,24 @@ export const recallDeceasedSchemaRefined = z.object({
   }),
 })
 
-export const recallDeceasedAnswersSchema = baseApplicationSchema.extend({
+export const recallDeceasedAnswers = baseApplicationSchema.extend({
   fields: recallDeceasedSchema,
 })
 
-export const recallDeceasedAnswersSchemaRefined =
-  baseApplicationSchemaRefined.extend({
+export const recallDeceasedAnswersRefined = baseApplicationSchemaRefined.extend(
+  {
     fields: recallDeceasedSchemaRefined,
-  })
+  },
+)
 
 export const recallDeceasedApplicationSchema = z.object({
   type: z.literal(ApplicationTypeEnum.RECALL_DECEASED),
-  answers: recallDeceasedAnswersSchema.optional(),
+  answers: recallDeceasedAnswers.optional(),
 })
 
 export const recallDeceasedApplicationSchemaRefined = z.object({
-  type: z.literal(ApplicationTypeEnum.RECALL_DECEASED),
-  answers: recallDeceasedAnswersSchemaRefined.extend({
+  ...recallDeceasedAnswersRefined.extend({
     publishingDates: publishingDatesRecallSchemaRefined,
   }),
+  type: z.literal(ApplicationTypeEnum.RECALL_DECEASED),
 })
-
-export const isRecallDeceasedApplicationSchema = (
-  obj: unknown,
-): obj is z.infer<typeof recallDeceasedApplicationSchema> => {
-  const parseResult = recallDeceasedApplicationSchema.safeParse(obj)
-  return parseResult.success
-}
-
-export const isRecallDeceasedApplicationSchemaRefined = (
-  obj: unknown,
-): obj is z.infer<typeof recallDeceasedApplicationSchemaRefined> => {
-  const parseResult = recallDeceasedApplicationSchemaRefined.safeParse(obj)
-  return parseResult.success
-}

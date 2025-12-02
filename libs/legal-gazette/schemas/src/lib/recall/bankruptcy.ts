@@ -20,9 +20,11 @@ import { settlementSchema, settlementSchemaRefined } from './settlement'
 export const recallBankruptcySchema = z.object({
   courtAndJudgmentFields: courtAndJudgmentSchema.optional(),
   divisionMeetingFields: divisionMeetingSchema.optional(),
-  settlementFields: settlementSchema.extend({
-    deadlineDate: z.string().optional().nullable(),
-  }),
+  settlementFields: settlementSchema
+    .extend({
+      deadlineDate: z.string().optional().nullable(),
+    })
+    .optional(),
 })
 
 export const recallBankruptcySchemaRefined = z.object({
@@ -35,11 +37,11 @@ export const recallBankruptcySchemaRefined = z.object({
   }),
 })
 
-export const recallBankruptcyAnswersSchema = baseApplicationSchema.extend({
-  fields: recallBankruptcySchema,
+export const recallBankruptcyAnswers = baseApplicationSchema.extend({
+  fields: recallBankruptcySchema.optional(),
 })
 
-export const recallBankruptcyAnswersSchemaRefined =
+export const recallBankruptcyAnswersRefined =
   baseApplicationSchemaRefined.extend({
     fields: recallBankruptcySchemaRefined,
     publishingDates: publishingDatesRecallSchemaRefined,
@@ -47,24 +49,10 @@ export const recallBankruptcyAnswersSchemaRefined =
 
 export const recallBankruptcyApplicationSchema = z.object({
   type: z.literal(ApplicationTypeEnum.RECALL_BANKRUPTCY),
-  answers: recallBankruptcyAnswersSchema.optional(),
+  answers: recallBankruptcyAnswers.optional(),
 })
 
 export const recallBankruptcyApplicationSchemaRefined = z.object({
+  ...recallBankruptcyAnswersRefined,
   type: z.literal(ApplicationTypeEnum.RECALL_BANKRUPTCY),
-  answers: recallBankruptcyAnswersSchemaRefined,
 })
-
-export const isRecallBankruptcyApplicationSchema = (
-  obj: unknown,
-): obj is z.infer<typeof recallBankruptcyApplicationSchema> => {
-  const parseResult = recallBankruptcyApplicationSchema.safeParse(obj)
-  return parseResult.success
-}
-
-export const isRecallBankruptcyApplicationSchemaRefined = (
-  obj: unknown,
-): obj is z.infer<typeof recallBankruptcyApplicationSchemaRefined> => {
-  const parseResult = recallBankruptcyApplicationSchemaRefined.safeParse(obj)
-  return parseResult.success
-}

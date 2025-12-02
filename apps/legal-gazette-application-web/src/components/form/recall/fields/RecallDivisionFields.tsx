@@ -4,13 +4,12 @@ import { useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 
 import {
-  ApplicationInputFields,
   RecallApplicationInputFields,
-  RecallApplicationSchema,
+  RecallApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateRecallApplication } from '../../../../hooks/useUpdateRecallApplication'
+import { useUpdateApplicationJson } from '../../../../hooks/useUpdateApplicationJson'
 import { ONE_WEEK, TWO_WEEKS } from '../../../../lib/constants'
 import { getNextWeekday, getWeekendDays } from '../../../../lib/utils'
 import { DatePickerController } from '../../controllers/DatePickerController'
@@ -26,27 +25,32 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
     setValue,
     watch,
     formState: { isReady, dirtyFields },
-  } = useFormContext<RecallApplicationSchema>()
+  } = useFormContext<RecallApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
 
-  const recallDates = watch(ApplicationInputFields.PUBLISHING_DATES)
+  const { updateApplicationJson } = useUpdateApplicationJson({
+    id: applicationId,
+    type: 'RECALL',
+  })
+
+  const recallDates = watch('publishingDates') || []
 
   useEffect(() => {
     if (isReady && dirtyFields.publishingDates) {
-      setValue(ApplicationInputFields.PUBLISHING_DATES, [])
+      setValue('publishingDates', [])
 
-      updateDivisionMeetingDate(null)
+      updateApplicationJson({
+        fields: {
+          divisionMeetingFields: {
+            meetingDate: null,
+          },
+        },
+      })
     }
   }, [recallDates, isReady, dirtyFields])
 
-  const { updateDivisionMeetingDate, updateDivisionMeetingLocation } =
-    useUpdateRecallApplication(applicationId)
-
   const minDate = recallDates?.length
-    ? addDays(
-        new Date(recallDates[recallDates.length - 1].publishingDate),
-        ONE_WEEK * 9,
-      )
+    ? addDays(new Date(recallDates[recallDates.length - 1]), ONE_WEEK * 9)
     : addDays(new Date(), TWO_WEEKS)
 
   const maxDate = addYears(minDate, 1)
@@ -63,7 +67,15 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
           required={required}
           name={RecallApplicationInputFields.DIVISION_MEETING_LOCATION}
           label="Staðsetning skiptafundar"
-          onBlur={(location) => updateDivisionMeetingLocation(location)}
+          onBlur={(location) =>
+            updateApplicationJson({
+              fields: {
+                divisionMeetingFields: {
+                  meetingLocation: location,
+                },
+              },
+            })
+          }
         />
       </GridColumn>
       <GridColumn span="6/12">
@@ -75,7 +87,15 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
           minDate={minDate ? getNextWeekday(minDate) : undefined}
           maxDate={maxDate}
           excludeDates={excludeDates}
-          onChange={(date) => updateDivisionMeetingDate(date.toISOString())}
+          onChange={(date) =>
+            updateApplicationJson({
+              fields: {
+                divisionMeetingFields: {
+                  meetingDate: date.toISOString(),
+                },
+              },
+            })
+          }
         />
       </GridColumn>
     </GridRow>

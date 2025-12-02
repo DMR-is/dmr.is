@@ -9,8 +9,19 @@ import {
   commonApplicationSchema,
   commonApplicationWebSchema,
 } from './common/application'
-import { recallBankruptcyApplicationSchema } from './recall/bankruptcy'
-import { recallDeceasedApplicationSchema } from './recall/deceased'
+import {
+  recallBankruptcyAnswers,
+  recallBankruptcyApplicationSchema,
+} from './recall/bankruptcy'
+import {
+  recallDeceasedAnswers,
+  recallDeceasedApplicationSchema,
+} from './recall/deceased'
+import {
+  recallApplicationAnswers,
+  recallApplicationSchema,
+  recallApplicationWebSchema,
+} from './recall'
 
 export type CommonApplicationSchema = z.infer<typeof commonApplicationSchema>
 
@@ -20,15 +31,21 @@ export type RecallBankruptcyApplicationSchema = z.infer<
   typeof recallBankruptcyApplicationSchema
 >
 
-export type RecallBankruptcyApplicationAnswers =
-  RecallBankruptcyApplicationSchema['answers']
+export type RecallBankruptcyApplicationAnswers = z.infer<
+  typeof recallBankruptcyAnswers
+>
 
 export type RecallDeceasedApplicationSchema = z.infer<
   typeof recallDeceasedApplicationSchema
 >
 
-export type RecallDeceasedApplicationAnswers =
-  RecallDeceasedApplicationSchema['answers']
+export type RecallDeceasedApplicationAnswers = z.infer<
+  typeof recallDeceasedAnswers
+>
+
+export type RecallApplicationSchema = z.infer<typeof recallApplicationSchema>
+
+export type RecallApplicationAnswers = z.infer<typeof recallApplicationAnswers>
 
 export type BaseApplicationSchema = z.infer<typeof baseApplicationSchemaRefined>
 
@@ -37,3 +54,7 @@ export type CommonApplicationWebSchema = z.infer<
 >
 
 export type BaseApplicationWebSchema = z.infer<typeof baseApplicationWebSchema>
+
+export type RecallApplicationWebSchema = z.infer<
+  typeof recallApplicationWebSchema
+>

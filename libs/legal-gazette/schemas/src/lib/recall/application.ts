@@ -20,11 +20,18 @@ export const recallApplicationSchemaRefined = z.discriminatedUnion('type', [
   recallDeceasedApplicationSchemaRefined,
 ])
 
+export const recallApplicationAnswers = z.union([
+  recallBankruptcyApplicationSchema.shape.answers,
+  recallDeceasedApplicationSchema.shape.answers,
+])
+
 export const recallApplicationWebSchema = z
   .object({
-    metadata: metadataSchema,
+    metadata: metadataSchema.extend({
+      courtOptions: z.array(z.object({ label: z.string(), value: z.string() })),
+    }),
   })
-  .and(recallApplicationSchema)
+  .and(recallApplicationAnswers)
 
 export const isRecallApplicationSchema = (
   obj: unknown,

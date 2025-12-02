@@ -1,43 +1,31 @@
 import { UseFormProps } from 'react-hook-form'
 
 import {
-  ApplicationMetaDataSchema,
-  CommunicationChannelSchema,
-  DeepPartial,
-  PublishingDatesSchema,
-  RecallApplicationFieldsSchema,
   RecallApplicationSchema,
-  recallApplicationSchema,
-  SignatureSchema,
+  RecallApplicationWebSchema,
+  recallApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 
+export type RecallApplicationWebMetadata =
+  RecallApplicationWebSchema['metadata']
+
 export type RecallFormProps = {
-  metadata: ApplicationMetaDataSchema
-  fields: DeepPartial<RecallApplicationFieldsSchema>
-  signature: SignatureSchema
-  publishingDates: PublishingDatesSchema[]
-  communicationChannels: CommunicationChannelSchema[]
-  additionalText?: string
+  metadata: RecallApplicationWebMetadata
+  application: RecallApplicationSchema
 }
 
 export const recallForm = ({
   metadata,
-  fields,
-  signature,
-  communicationChannels,
-  publishingDates,
-  additionalText,
-}: RecallFormProps): UseFormProps<RecallApplicationSchema> => ({
-  mode: 'onChange',
-  resolver: zodResolver(recallApplicationSchema),
-  defaultValues: {
-    metadata,
-    fields,
-    signature,
-    communicationChannels,
-    publishingDates,
-    additionalText,
-  },
-})
+  application,
+}: RecallFormProps): UseFormProps<RecallApplicationWebSchema> => {
+  return {
+    mode: 'onChange',
+    resolver: zodResolver(recallApplicationWebSchema),
+    defaultValues: {
+      metadata,
+      ...application,
+    },
+  }
+}
