@@ -45,9 +45,10 @@ async function authorize(nationalId?: string, accessToken?: string) {
   const client = getClient(accessToken)
 
   try {
-    const { data: member, error } = await serverFetcher(() => client.getMySubscriber())
+    const { data: member, error } = await serverFetcher(() =>
+      client.getMySubscriber(),
+    )
     if (!member) {
-
       const logger = getLogger('authorize')
 
       logger.error('Failure authenticating', {
@@ -126,8 +127,6 @@ export const authOptions: AuthOptions = {
         id: token.userId as string,
         isActive: token.isActive as boolean,
       }
-
-      console.log('token.accessToken', token.accessToken)
 
       // Add tokens to session
       session.accessToken = token.accessToken as string
