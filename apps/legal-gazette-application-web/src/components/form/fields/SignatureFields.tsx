@@ -1,9 +1,6 @@
 import { useFormContext } from 'react-hook-form'
 
-import {
-  ApplicationInputFields,
-  BaseApplicationSchema,
-} from '@dmr.is/legal-gazette/schemas'
+import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import {
   AlertMessage,
   Box,
@@ -13,18 +10,18 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
+import { useUpdateApplicationJson } from '../../../hooks/useUpdateApplicationJson'
 import { DatePickerController } from '../controllers/DatePickerController'
 import { InputController } from '../controllers/InputController'
 
 export const SignatureFields = () => {
-  const { getValues, formState } = useFormContext<BaseApplicationSchema>()
-  const {
-    updateSignatureName,
-    updateSignatureLocation,
-    updateSignatureDate,
-    updateSignatureOnBehalfOf,
-  } = useUpdateApplication(getValues('metadata.applicationId'))
+  const { getValues, formState } = useFormContext<BaseApplicationWebSchema>()
+  const { applicationId, type } = getValues('metadata')
+
+  const { debouncedUpdateApplicationJson } = useUpdateApplicationJson({
+    id: applicationId,
+    type: type,
+  })
 
   const signatureError = formState.errors.signature
 
@@ -42,30 +39,64 @@ export const SignatureFields = () => {
         <GridRow rowGap={[2, 3]}>
           <GridColumn span={['12/12', '6/12']}>
             <InputController
-              name={ApplicationInputFields.SIGNATURE_NAME}
+              name="signature.name"
               label="Nafn undirritara"
-              onBlur={(val) => updateSignatureName(val)}
+              onChange={(val) =>
+                debouncedUpdateApplicationJson(
+                  { signature: { name: val } },
+                  {
+                    errorMessage: 'Villa við að uppfæra nafn undirritara',
+                    successMessage: 'Nafn undirritara uppfært',
+                  },
+                )
+              }
             />
           </GridColumn>
           <GridColumn span={['12/12', '6/12']}>
             <InputController
-              name={ApplicationInputFields.SIGNATURE_LOCATION}
+              name="signature.location"
               label="Staðsetning undirritara"
-              onBlur={(val) => updateSignatureLocation(val)}
+              onChange={(val) =>
+                debouncedUpdateApplicationJson(
+                  { signature: { location: val } },
+                  {
+                    errorMessage:
+                      'Villa við að uppfæra staðsetningu undirritara',
+                    successMessage: 'Staðsetning undirritara uppfærð',
+                  },
+                )
+              }
             />
           </GridColumn>
           <GridColumn span={['12/12', '6/12']}>
             <InputController
-              name={ApplicationInputFields.SIGNATURE_ON_BEHALF_OF}
+              name="signature.onBehalfOf"
               label="F.h. undirritara"
-              onBlur={(val) => updateSignatureOnBehalfOf(val)}
+              onChange={(val) =>
+                debouncedUpdateApplicationJson(
+                  { signature: { onBehalfOf: val } },
+                  {
+                    errorMessage: 'Villa við að uppfæra f.h. undirritara',
+                    successMessage: 'f.h. undirritara uppfært',
+                  },
+                )
+              }
             />
           </GridColumn>
           <GridColumn span={['12/12', '6/12']}>
             <DatePickerController
-              name={ApplicationInputFields.SIGNATURE_DATE}
+              name="signature.date"
               label="Dagsetning undirritunar"
-              onChange={(date) => updateSignatureDate(date.toISOString())}
+              onChange={(date) =>
+                debouncedUpdateApplicationJson(
+                  { signature: { date: date.toISOString() } },
+                  {
+                    errorMessage:
+                      'Villa við að uppfæra dagsetningu undirritunar',
+                    successMessage: 'Dagsetning undirritunar uppfærð',
+                  },
+                )
+              }
             />
           </GridColumn>
         </GridRow>

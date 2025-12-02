@@ -28,6 +28,7 @@ export const ApplicationForm = ({
         <CommonForm
           metadata={{
             applicationId: application.id,
+            type: application.applicationType,
             caseId: application.caseId,
             courtDistrictOptions: courtDistricts,
             typeOptions: types,

@@ -4,6 +4,7 @@ import {
   communicationChannelSchema,
   communicationChannelSchemaRefined,
 } from './communication-channels'
+import { metadataSchema } from './metadata'
 import {
   publishingDatesSchema,
   publishingDatesSchemaRefined,
@@ -14,7 +15,7 @@ export const baseApplicationSchema = z.object({
   additionalText: z.string().optional(),
   publishingDates: publishingDatesSchema.optional(),
   signature: signatureSchema.optional(),
-  communicationChannels: communicationChannelSchema.optional(),
+  communicationChannels: z.array(communicationChannelSchema).optional(),
 })
 
 export const baseApplicationSchemaRefined = z.object({
@@ -22,4 +23,8 @@ export const baseApplicationSchemaRefined = z.object({
   publishingDates: publishingDatesSchemaRefined,
   signature: signatureSchemaRefined,
   communicationChannels: communicationChannelSchemaRefined,
+})
+
+export const baseApplicationWebSchema = baseApplicationSchema.extend({
+  metadata: metadataSchema,
 })

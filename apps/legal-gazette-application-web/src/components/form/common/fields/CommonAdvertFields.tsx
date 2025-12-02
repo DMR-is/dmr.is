@@ -1,22 +1,23 @@
 'use client'
 
-import debounce from 'lodash/debounce'
-import { useCallback, useEffect } from 'react'
+import { isBase64 } from 'class-validator'
+import { useEffect } from 'react'
 import { useFormContext, useFormState } from 'react-hook-form'
 
-import { CommonApplicationInputFields } from '@dmr.is/legal-gazette/schemas'
+import {
+  ApplicationTypeEnum,
+  CommonApplicationInputFields,
+  CommonApplicationWebSchema,
+} from '@dmr.is/legal-gazette/schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   GridColumn,
   GridRow,
   Stack,
   Text,
-  toast,
 } from '@dmr.is/ui/components/island-is'
 
-import { ApplicationTypeEnum } from '../../../../gen/fetch'
 import { useUpdateApplicationJson } from '../../../../hooks/useUpdateApplicationJson'
-import { CommonApplicationWebSchema } from '../../../../lib/forms/common-form'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { Editor } from '../../../editor/Editor'
 import { InputController } from '../../controllers/InputController'
@@ -28,20 +29,27 @@ export const CommonAdvertFields = () => {
   const formState = useFormState()
   const metadata = getValues('metadata')
 
-  const typeId = watch('fields.typeId')
-  const categoryId = watch('fields.categoryId')
+  const fields = watch('fields')
 
-  const { updateApplicationJson } = useUpdateApplicationJson({
-    id: metadata.applicationId,
-    type: ApplicationTypeEnum.COMMON,
-  })
+  const defaultHTML = isBase64(fields?.html)
+    ? Buffer.from(fields?.html ?? '', 'base64').toString('utf-8')
+    : (fields?.html ?? '')
+
+  const { updateApplicationJson, debouncedUpdateApplicationJson } =
+    useUpdateApplicationJson({
+      id: metadata.applicationId,
+      type: ApplicationTypeEnum.COMMON,
+    })
 
   const {
     data: categoriesData,
     isLoading,
     isPending,
   } = useQuery(
-    trpc.getCategories.queryOptions({ typeId: typeId! }, { enabled: !!typeId }),
+    trpc.getCategories.queryOptions(
+      { typeId: fields?.typeId ?? undefined },
+      { enabled: !!fields?.typeId },
+    ),
   )
 
   useEffect(() => {
@@ -50,38 +58,28 @@ export const CommonAdvertFields = () => {
     if (categoriesData?.categories.length === 1) {
       setValue('fields.categoryId', categoriesData.categories[0].id)
 
-      return updateApplicationJson({
-        fields: { categoryId: categoriesData.categories[0].id },
-      })
+      return updateApplicationJson(
+        {
+          fields: { categoryId: categoriesData.categories[0].id },
+        },
+        {
+          successMessage: 'Flokkur vistaður',
+          errorMessage: 'Ekki tókst að vista flokk',
+          silent: true,
+        },
+      )
     }
 
     setValue('fields.categoryId', null)
-    return updateApplicationJson({ fields: { categoryId: null } })
+    return updateApplicationJson(
+      { fields: { categoryId: null } },
+      {
+        successMessage: 'Flokkur vistaður',
+        errorMessage: 'Ekki tókst að vista flokk',
+        silent: true,
+      },
+    )
   }, [categoriesData?.categories, formState.isDirty])
-
-  // const updateHtmlOnBlurHandler = useCallback(
-  //   (val: string) => {
-  //     setValue('fields.html', val, {
-  //       shouldValidate: true,
-  //       shouldDirty: true,
-  //       shouldTouch: true,
-  //     })
-  //     updateHTML(val)
-  //   },
-  //   [setValue, updateHTML],
-  // )
-
-  // const updateHtmlOnChangeHandler = useCallback(
-  //   debounce((val: string) => {
-  //     setValue('fields.html', val, {
-  //       shouldValidate: true,
-  //       shouldDirty: true,
-  //       shouldTouch: true,
-  //     })
-  //     updateHTML(val)
-  //   }, 500),
-  //   [setValue, updateHTML],
-  // )
 
   const categoryOptions =
     categoriesData?.categories.map((category) => ({
@@ -109,12 +107,8 @@ export const CommonAdvertFields = () => {
               updateApplicationJson(
                 { fields: { typeId: val } },
                 {
-                  onSuccess: () => {
-                    toast.success('Tegund auglýsingar uppfærð')
-                  },
-                  onError: () => {
-                    toast.error('Ekki tókst að uppfæra tegund auglýsingar')
-                  },
+                  successMessage: 'Tegund auglýsingar vistuð',
+                  errorMessage: 'Ekki tókst að vista tegund auglýsingar',
                 },
               )
             }
@@ -128,16 +122,30 @@ export const CommonAdvertFields = () => {
             name={'fields.categoryId'}
             label="Flokkur"
             onChange={(val) =>
-              updateApplicationJson({ fields: { categoryId: val } })
+              updateApplicationJson(
+                { fields: { categoryId: val } },
+                {
+                  successMessage: 'Flokkur vistaður',
+                  errorMessage: 'Ekki tókst að vista flokk',
+                },
+              )
             }
           />
         </GridColumn>
-        {/*<GridColumn span="12/12">
+        <GridColumn span="12/12">
           <InputController
             name={CommonApplicationInputFields.CAPTION}
             label="Yfirskrift"
             required
-            onBlur={(val) => updateCaption(val)}
+            onChange={(val) =>
+              debouncedUpdateApplicationJson(
+                { fields: { caption: val } },
+                {
+                  successMessage: 'Yfirskrift vistuð',
+                  errorMessage: 'Ekki tókst að vista yfirskrift',
+                },
+              )
+            }
           />
         </GridColumn>
         <GridColumn span="12/12">
@@ -145,14 +153,18 @@ export const CommonAdvertFields = () => {
             Meginmál
           </Text>
           <Editor
-            defaultValue={getValues('fields.html')}
-            onChange={(val) => {
-              updateHtmlOnChangeHandler.cancel()
-              updateHtmlOnChangeHandler(val)
-            }}
-            onBlur={updateHtmlOnBlurHandler}
+            defaultValue={defaultHTML}
+            onChange={(val) =>
+              debouncedUpdateApplicationJson(
+                { fields: { html: Buffer.from(val).toString('base64') } },
+                {
+                  successMessage: 'Meginmál vistað',
+                  errorMessage: 'Ekki tókst að vista meginmál',
+                },
+              )
+            }
           />
-        </GridColumn> */}
+        </GridColumn>
       </GridRow>
     </Stack>
   )

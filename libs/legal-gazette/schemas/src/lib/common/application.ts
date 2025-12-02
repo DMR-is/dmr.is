@@ -5,6 +5,7 @@ import {
   baseApplicationSchema,
   baseApplicationSchemaRefined,
 } from '../base/application'
+import { metadataSchema } from '../base/metadata'
 import { ApplicationTypeEnum } from '../constants'
 
 export const commonFieldsSchema = z.object({
@@ -44,6 +45,17 @@ export const commonApplicationSchemaRefined = z.object({
   type: ApplicationTypeEnum.COMMON,
   answers: baseApplicationSchemaRefined.extend({
     fields: commonFieldsSchemaRefined,
+  }),
+})
+
+export const commonApplicationWebSchema = commonApplicationAnswers.extend({
+  metadata: metadataSchema.extend({
+    typeOptions: z.array(
+      z.object({
+        label: z.string(),
+        value: z.string(),
+      }),
+    ),
   }),
 })
 

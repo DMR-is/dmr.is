@@ -31,6 +31,10 @@ export const InputController = (props: Props) => {
   const handleBlur = (
     event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
+    if (event.target.value === field.value) {
+      return
+    }
+
     field.onBlur()
     if (props.onBlur) {
       props.onBlur(event.target.value)

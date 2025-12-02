@@ -5,7 +5,7 @@ import { useFormContext } from 'react-hook-form'
 
 import {
   ApplicationInputFields,
-  BaseApplicationSchema,
+  BaseApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import {
   AlertMessage,
@@ -18,7 +18,7 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
+import { useUpdateApplicationJson } from '../../../hooks/useUpdateApplicationJson'
 import { ONE_DAY, TWO_WEEKS } from '../../../lib/constants'
 import { getNextWeekday, getWeekendDays } from '../../../lib/utils'
 import { DatePickerController } from '../controllers/DatePickerController'
@@ -29,10 +29,15 @@ type Props = {
 }
 
 export const PublishingFields = ({ additionalTitle, alert }: Props) => {
-  const { getValues, watch, setValue } = useFormContext<BaseApplicationSchema>()
-  const { updatePublishingDates } = useUpdateApplication(
-    getValues('metadata.applicationId'),
-  )
+  const { getValues, watch, setValue } =
+    useFormContext<BaseApplicationWebSchema>()
+
+  const { metadata } = getValues()
+
+  const { updateApplicationJson } = useUpdateApplicationJson({
+    id: metadata.applicationId,
+    type: metadata.type,
+  })
 
   const currentDates =
     watch(
@@ -47,40 +52,34 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
 
     const lastDate =
       dateState.length > 0
-        ? new Date(dateState[dateState.length - 1].publishingDate)
+        ? new Date(dateState[dateState.length - 1])
         : new Date()
     const newDate = getNextWeekday(addDays(lastDate, TWO_WEEKS))
-    const newDates = [...dateState, { publishingDate: newDate.toISOString() }]
+    const newDates = [...dateState, newDate.toISOString()]
     setDateState(newDates)
     setValue(ApplicationInputFields.PUBLISHING_DATES, newDates)
-    updatePublishingDates(
-      newDates.map(({ publishingDate }) =>
-        new Date(publishingDate).toISOString(),
-      ),
-    )
+    updateApplicationJson({
+      publishingDates: newDates,
+    })
   }
 
   const removeDate = (index: number) => {
     const newDates = dateState.filter((_, i) => i !== index)
     setValue(ApplicationInputFields.PUBLISHING_DATES, newDates)
     setDateState(newDates)
-    updatePublishingDates(
-      newDates.map(({ publishingDate }) =>
-        new Date(publishingDate).toISOString(),
-      ),
-    )
+    updateApplicationJson({
+      publishingDates: newDates,
+    })
   }
 
   const onDateChange = (date: Date, index: number) => {
     const newDates = [...dateState]
-    newDates[index] = { publishingDate: date.toISOString() }
+    newDates[index] = date.toISOString()
     setDateState(newDates)
     setValue(ApplicationInputFields.PUBLISHING_DATES, newDates)
-    updatePublishingDates(
-      newDates.map(({ publishingDate }) =>
-        new Date(publishingDate).toISOString(),
-      ),
-    )
+    updateApplicationJson({
+      publishingDates: newDates,
+    })
   }
 
   return (
@@ -93,8 +92,7 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
         <GridColumn span="12/12">
           <Stack space={[2, 3]}>
             {currentDates.map((date, index) => {
-              const prevDate =
-                index === 0 ? null : currentDates[index - 1].publishingDate
+              const prevDate = index === 0 ? null : currentDates[index - 1]
               const maxDate = addYears(new Date(), ONE_DAY)
 
               const minDate =
@@ -118,9 +116,9 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
                   <DatePickerController
                     maxDate={getNextWeekday(maxDate)}
                     label={`Birtingardagur ${index + 1}`}
-                    name={`${ApplicationInputFields.PUBLISHING_DATES}[${index}].publishingDate`}
+                    name={`${ApplicationInputFields.PUBLISHING_DATES}[${index}]`}
                     required={index === 0}
-                    defaultValue={date.publishingDate}
+                    defaultValue={date}
                     minDate={getNextWeekday(minDate)}
                     excludeDates={excludeDates}
                     onChange={(date) => onDateChange(date, index)}

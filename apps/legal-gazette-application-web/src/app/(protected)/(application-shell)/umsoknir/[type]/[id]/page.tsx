@@ -1,8 +1,8 @@
+import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
 import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
 import { CommonForm } from '../../../../../../components/form/common/CommonForm'
-import { RecallForm } from '../../../../../../components/form/recall/RecallForm'
 import { ApplicationStatusEnum } from '../../../../../../gen/fetch'
 import { ALLOWED_FORM_TYPES, FormTypes } from '../../../../../../lib/constants'
 import { trpc } from '../../../../../../lib/trpc/client/server'
@@ -40,6 +40,7 @@ export default async function ApplicationPage({
         Component = (
           <CommonForm
             metadata={{
+              type: application.type as unknown as ApplicationTypeEnum,
               applicationId: application.id,
               caseId: application.caseId,
               typeOptions: baseEntities.types.map((type) => ({

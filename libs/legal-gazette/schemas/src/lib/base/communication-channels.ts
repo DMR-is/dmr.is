@@ -11,3 +11,11 @@ export const communicationChannelSchemaRefined = z
   .min(1, {
     message: 'Að minnsta kosti ein samskiptaleið verður að vera til staðar',
   })
+
+export type CommunicationChannelSchema = z.infer<
+  typeof communicationChannelSchema
+>
+
+export type CommunicationChannelsSchema = z.infer<
+  typeof communicationChannelSchemaRefined
+>

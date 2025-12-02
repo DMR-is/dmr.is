@@ -1,23 +1,36 @@
+import debounce from 'lodash/debounce'
 import { useCallback } from 'react'
 
 import {
+  ApplicationTypeEnum,
   CommonApplicationAnswers,
   RecallBankruptcyApplicationAnswers,
   RecallDeceasedApplicationAnswers,
   updateApplicationWithIdInput,
 } from '@dmr.is/legal-gazette/schemas'
+import { toast } from '@dmr.is/ui/components/island-is'
 
-import { ApplicationDetailedDto, ApplicationTypeEnum } from '../gen/fetch'
+import { ApplicationDetailedDto } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from '@tanstack/react-query'
+
+type UpdateApplicationMutationOptions = {
+  successMessage?: string
+  errorMessage?: string
+  silent?: boolean
+}
 
 type UpdateApplicationAnswers<T extends ApplicationTypeEnum> =
   T extends ApplicationTypeEnum.COMMON
     ? CommonApplicationAnswers
-    : T extends ApplicationTypeEnum.RECALLBANKRUPTCY
+    : T extends ApplicationTypeEnum.RECALL_BANKRUPTCY
       ? RecallBankruptcyApplicationAnswers
-      : T extends ApplicationTypeEnum.RECALLDECEASED
+      : T extends ApplicationTypeEnum.RECALL_DECEASED
         ? RecallDeceasedApplicationAnswers
         : never
 
@@ -33,6 +46,9 @@ export const useUpdateApplicationJson = <T extends ApplicationTypeEnum>({
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
+  const { data: application } = useSuspenseQuery(
+    trpc.getApplicationById.queryOptions({ id: id }),
+  )
   const {
     mutate: updateApplicationMutation,
     isPending: isUpdatingApplication,
@@ -71,30 +87,13 @@ export const useUpdateApplicationJson = <T extends ApplicationTypeEnum>({
 
         return prevData
       },
-      onSuccess: () => {
-        queryClient.invalidateQueries(
-          trpc.getApplicationById.queryFilter({
-            id,
-          }),
-        )
-      },
-      onError: (_error, _variables, onMutateResult) => {
-        if (onMutateResult) {
-          queryClient.setQueryData(
-            trpc.getApplicationById.queryKey({
-              id,
-            }),
-            onMutateResult,
-          )
-        }
-      },
     }),
   )
 
   const updateApplicationJson = useCallback(
     (
       answers: UpdateApplicationAnswers<T>,
-      options?: Parameters<typeof updateApplicationMutation>[1],
+      options?: UpdateApplicationMutationOptions,
     ) => {
       const body = {
         id: id,
@@ -104,13 +103,64 @@ export const useUpdateApplicationJson = <T extends ApplicationTypeEnum>({
 
       const parsed = updateApplicationWithIdInput.parse(body)
 
-      return updateApplicationMutation(parsed, options)
+      return updateApplicationMutation(parsed, {
+        onSuccess: () => {
+          if (options?.successMessage && !options.silent) {
+            toast.success(options.successMessage, {
+              toastId: options.successMessage,
+            })
+          }
+
+          queryClient.invalidateQueries(
+            trpc.getApplicationById.queryFilter({
+              id,
+            }),
+          )
+        },
+        onError: (_error, _variables, onMutateResult) => {
+          if (options?.errorMessage && !options.silent) {
+            toast.error(options.errorMessage, { toastId: options.errorMessage })
+          }
+
+          if (onMutateResult) {
+            queryClient.setQueryData(
+              trpc.getApplicationById.queryKey({
+                id,
+              }),
+              onMutateResult,
+            )
+          }
+        },
+      })
     },
-    [type, id, updateApplicationMutation],
+    [application.answers],
+  )
+
+  const debouncedHandler = useCallback(
+    debounce(
+      (
+        answers: UpdateApplicationAnswers<T>,
+        options?: UpdateApplicationMutationOptions,
+      ) => updateApplicationJson(answers, options),
+      500,
+    ),
+    [application.answers],
+  )
+
+  const debouncedUpdateApplicationJson = useCallback(
+    (
+      answers: UpdateApplicationAnswers<T>,
+      options?: UpdateApplicationMutationOptions,
+    ) => {
+      debouncedHandler.cancel()
+      return debouncedHandler(answers, options)
+    },
+    [debouncedHandler],
   )
 
   return {
     updateApplicationJson,
+    debouncedUpdateApplicationJson,
     isUpdatingApplication,
   }
 }

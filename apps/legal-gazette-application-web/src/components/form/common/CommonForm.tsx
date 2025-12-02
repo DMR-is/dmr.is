@@ -2,16 +2,12 @@
 
 import { FormProvider, useForm } from 'react-hook-form'
 
+import { CommonApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { SkeletonLoader, Stack, Text } from '@dmr.is/ui/components/island-is'
 
 import { useSubmitApplication } from '../../../hooks/useSubmitApplication'
-import {
-  CommonApplicationWebSchema,
-  commonForm,
-  CommonFormProps,
-} from '../../../lib/forms/common-form'
+import { commonForm, CommonFormProps } from '../../../lib/forms/common-form'
 import { ApplicationShell } from '../../application/ApplicationShell'
-import { CommunicationChannelFields } from '../fields/CommunicationChannelFields'
 import { PublishingFields } from '../fields/PublishingFields'
 import { SignatureFields } from '../fields/SignatureFields'
 import { CommonAdvertFields } from './fields/CommonAdvertFields'
@@ -49,9 +45,9 @@ export const CommonForm = ({ application, metadata }: CommonFormProps) => {
             ) : (
               <>
                 <CommonAdvertFields />
-                {/* <SignatureFields />
+                <SignatureFields />
                 <PublishingFields />
-                <CommunicationChannelFields /> */}
+                {/*<CommunicationChannelFields /> */}
               </>
             )}
           </Stack>

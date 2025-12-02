@@ -1,5 +1,6 @@
 import z from 'zod'
 
+import { metadataSchema } from '../base/metadata'
 import {
   recallBankruptcyApplicationSchema,
   recallBankruptcyApplicationSchemaRefined,
@@ -18,6 +19,12 @@ export const recallApplicationSchemaRefined = z.discriminatedUnion('type', [
   recallBankruptcyApplicationSchemaRefined,
   recallDeceasedApplicationSchemaRefined,
 ])
+
+export const recallApplicationWebSchema = z
+  .object({
+    metadata: metadataSchema,
+  })
+  .and(recallApplicationSchema)
 
 export const isRecallApplicationSchema = (
   obj: unknown,

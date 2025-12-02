@@ -3,7 +3,7 @@ import { useFormContext } from 'react-hook-form'
 
 import {
   ApplicationInputFields,
-  BaseApplicationSchema,
+  BaseApplicationWebSchema,
   CommunicationChannelSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import {
@@ -22,20 +22,20 @@ import {
 } from '@dmr.is/ui/components/island-is'
 import {} from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
+import { useUpdateApplicationJson } from '../../../hooks/useUpdateApplicationJson'
 
 export const CommunicationChannelFields = () => {
   const { getValues, setValue, watch, formState, trigger } =
-    useFormContext<BaseApplicationSchema>()
+    useFormContext<BaseApplicationWebSchema>()
 
-  const { updateCommunicationChannels } = useUpdateApplication(
-    getValues(ApplicationInputFields.APPLICATION_ID),
-  )
+  const metadata = getValues('metadata')
 
-  const channels: CommunicationChannelSchema[] = watch(
-    ApplicationInputFields.COMMUNICATION_CHANNELS,
-    [],
-  )
+  const { updateApplicationJson } = useUpdateApplicationJson({
+    id: metadata.applicationId,
+    type: metadata.type,
+  })
+
+  const channels = watch('communicationChannels', []) || []
 
   const [toggleAdd, setToggleAdd] = useState(false)
   const [isEditing, setIsEditing] = useState('')
@@ -70,7 +70,7 @@ export const CommunicationChannelFields = () => {
     setValue(ApplicationInputFields.COMMUNICATION_CHANNELS, channels, {
       shouldValidate: true,
     })
-    updateCommunicationChannels(channels)
+    updateApplicationJson({ communicationChannels: channels })
     setToggleAdd(false)
     setIsEditing('')
     setCurrentChannel({ email: '', name: '', phone: '' })
@@ -79,7 +79,7 @@ export const CommunicationChannelFields = () => {
   const removeChannel = (index: number) => {
     const updatedChannels = channels.filter((_, i) => i !== index)
     setValue(ApplicationInputFields.COMMUNICATION_CHANNELS, updatedChannels)
-    updateCommunicationChannels(updatedChannels)
+    updateApplicationJson({ communicationChannels: updatedChannels })
     trigger(ApplicationInputFields.COMMUNICATION_CHANNELS)
   }
 
