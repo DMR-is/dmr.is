@@ -69,48 +69,6 @@ export const applicationRouter = router({
         pageSize: input?.pageSize,
       })
     }),
-  getCommonApplicationById: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const application = await ctx.api.getApplicationById({
-        applicationId: input.id,
-      })
-
-      const answers = commonApplicationAnswers.parse(application.answers)
-
-      return {
-        ...application,
-        answers: answers,
-      }
-    }),
-  getRecallBankruptcyApplicationById: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const application = await ctx.api.getApplicationById({
-        applicationId: input.id,
-      })
-
-      const answers = recallBankruptcyAnswers.parse(application.answers)
-
-      return {
-        ...application,
-        answers: answers,
-      }
-    }),
-  getRecallDeceasedApplicationById: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const application = await ctx.api.getApplicationById({
-        applicationId: input.id,
-      })
-
-      const answers = recallDeceasedAnswers.parse(application.answers)
-
-      return {
-        ...application,
-        answers: answers,
-      }
-    }),
   getApplicationById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(

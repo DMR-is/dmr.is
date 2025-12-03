@@ -37,8 +37,9 @@ export const RecallRequirementStatementFields = () => {
     if (
       customLiquidatorType !==
       ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
-    )
+    ) {
       return
+    }
 
     setValue(
       'fields.settlementFields.recallRequirementStatementLocation',
@@ -79,11 +80,25 @@ export const RecallRequirementStatementFields = () => {
                 'fields.settlementFields.recallRequirementStatementLocation',
                 liquidatorLocation,
               )
+              updateApplication({
+                fields: {
+                  settlementFields: {
+                    recallRequirementStatementLocation: liquidatorLocation,
+                  },
+                },
+              })
             } else {
               setValue(
                 'fields.settlementFields.recallRequirementStatementLocation',
                 '',
               )
+              updateApplication({
+                fields: {
+                  settlementFields: {
+                    recallRequirementStatementLocation: '',
+                  },
+                },
+              })
             }
           }}
         />

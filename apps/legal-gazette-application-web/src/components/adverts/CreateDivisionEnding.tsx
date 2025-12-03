@@ -5,7 +5,7 @@ import get from 'lodash/get'
 import { useEffect, useState } from 'react'
 
 import { createDivisionEndingInput } from '@dmr.is/legal-gazette/schemas'
-import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   Box,
   Button,
@@ -101,8 +101,6 @@ export const CreateDivisionEnding = ({
     setSubmitClicked(true)
     const formValidation = await setAndGetFormValidation()
 
-    console.log('wassap', formState)
-
     if (formValidation.success) {
       addDivisionEnding(
         {
@@ -111,11 +109,7 @@ export const CreateDivisionEnding = ({
         },
         {
           onSuccess: () => {
-            queryClient.invalidateQueries(
-              trpc.getAdvertByCaseId.queryFilter({
-                caseId: id as string,
-              }),
-            )
+            queryClient.invalidateQueries(trpc.getAdvertByCaseId.queryFilter())
             toast.success('Skiptalokum bætt við', {
               toastId: 'add-division-ending-success',
             })

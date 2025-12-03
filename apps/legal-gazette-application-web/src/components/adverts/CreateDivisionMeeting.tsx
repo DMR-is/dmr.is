@@ -110,11 +110,7 @@ export const CreateDivisionMeeting = ({
         },
         {
           onSuccess: () => {
-            queryClient.invalidateQueries(
-              trpc.getAdvertByCaseId.queryFilter({
-                caseId: applicationId as string,
-              }),
-            )
+            queryClient.invalidateQueries(trpc.getAdvertByCaseId.queryFilter())
             setSubmitClicked(false)
             setFormState({
               ...initFormState,

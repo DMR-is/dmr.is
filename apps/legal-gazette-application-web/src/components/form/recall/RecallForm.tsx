@@ -35,7 +35,10 @@ export const RecallForm = (props: RecallFormProps) => {
     props.application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
 
   const onSubmit = useCallback(
-    (data: RecallApplicationWebSchema) => {
+    (_data: RecallApplicationWebSchema) => {
+      // Manually get values to ensure we have the latest data
+      const data = methods.getValues()
+
       if (isBankruptcy) {
         const bankruptcyCheck = recallBankruptcyAnswersRefined.safeParse(data)
 

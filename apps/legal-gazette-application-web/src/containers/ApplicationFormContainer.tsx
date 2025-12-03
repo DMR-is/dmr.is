@@ -1,30 +1,36 @@
+'use client'
+
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
-import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
 import { CommonForm } from '../components/form/common/CommonForm'
 import { RecallForm } from '../components/form/recall/RecallForm'
-import { ApplicationStatusEnum } from '../gen/fetch'
-import { trpc } from '../lib/trpc/client/server'
+import { ApplicationDetailedDto, ApplicationStatusEnum } from '../gen/fetch'
+import { useTRPC } from '../lib/trpc/client/trpc'
 import { ApplicationSubmittedContainer } from './ApplicationSubmittedContainer'
 
+import { useSuspenseQuery } from '@tanstack/react-query'
+
 type Props = {
-  applicationId: string
+  application: ApplicationDetailedDto
   type: ApplicationTypeEnum
 }
 
-export async function ApplicationFormContainer({ applicationId, type }: Props) {
-  const application = await fetchQueryWithHandler(
-    trpc.getApplicationById.queryOptions({
-      id: applicationId,
-    }),
+export function ApplicationFormContainer({
+  application: initalApplication,
+  type,
+}: Props) {
+  const trpc = useTRPC()
+  const { data } = useSuspenseQuery(
+    trpc.getApplicationById.queryOptions({ id: initalApplication.id }),
   )
-  const baseEntities = await fetchQueryWithHandler(
+
+  const { data: baseEntities } = useSuspenseQuery(
     trpc.getBaseEntities.queryOptions(),
   )
 
-  if (application.status !== ApplicationStatusEnum.DRAFT) {
-    return <ApplicationSubmittedContainer application={application} />
+  if (data.status !== ApplicationStatusEnum.DRAFT) {
+    return <ApplicationSubmittedContainer application={data} />
   }
 
   let Component = (
@@ -37,93 +43,65 @@ export async function ApplicationFormContainer({ applicationId, type }: Props) {
 
   switch (type) {
     case ApplicationTypeEnum.COMMON: {
-      const application = await fetchQueryWithHandler(
-        trpc.getCommonApplicationById.queryOptions({
-          id: applicationId,
-        }),
+      Component = (
+        <CommonForm
+          metadata={{
+            type: data.type as unknown as ApplicationTypeEnum,
+            applicationId: data.id,
+            caseId: data.caseId,
+            typeOptions: baseEntities.types.map((type) => ({
+              label: type.title,
+              value: type.id,
+            })),
+          }}
+          application={{
+            type: ApplicationTypeEnum.COMMON,
+            ...data.answers,
+          }}
+        />
       )
-
-      if (application.status === ApplicationStatusEnum.DRAFT) {
-        console.log('application', {
-          type: ApplicationTypeEnum.COMMON,
-          answers: { ...application.answers },
-        })
-        Component = (
-          <CommonForm
-            metadata={{
-              type: application.type as unknown as ApplicationTypeEnum,
-              applicationId: application.id,
-              caseId: application.caseId,
-              typeOptions: baseEntities.types.map((type) => ({
-                label: type.title,
-                value: type.id,
-              })),
-            }}
-            application={{
-              type: ApplicationTypeEnum.COMMON,
-              ...application.answers,
-            }}
-          />
-        )
-      }
 
       break
     }
     case ApplicationTypeEnum.RECALL_BANKRUPTCY: {
-      const application = await fetchQueryWithHandler(
-        trpc.getRecallBankruptcyApplicationById.queryOptions({
-          id: applicationId,
-        }),
+      Component = (
+        <RecallForm
+          metadata={{
+            applicationId: data.id,
+            caseId: data.caseId,
+            type: ApplicationTypeEnum.RECALL_BANKRUPTCY,
+            courtOptions: baseEntities.courtDistricts.map((court) => ({
+              label: court.title,
+              value: court.id,
+            })),
+          }}
+          application={{
+            type: ApplicationTypeEnum.RECALL_BANKRUPTCY,
+            ...data.answers,
+          }}
+        />
       )
-
-      if (application.status === ApplicationStatusEnum.DRAFT) {
-        Component = (
-          <RecallForm
-            metadata={{
-              applicationId: application.id,
-              caseId: application.caseId,
-              type: ApplicationTypeEnum.RECALL_BANKRUPTCY,
-              courtOptions: baseEntities.courtDistricts.map((court) => ({
-                label: court.title,
-                value: court.id,
-              })),
-            }}
-            application={{
-              type: ApplicationTypeEnum.RECALL_BANKRUPTCY,
-              ...application.answers,
-            }}
-          />
-        )
-      }
 
       break
     }
     case ApplicationTypeEnum.RECALL_DECEASED: {
-      const application = await fetchQueryWithHandler(
-        trpc.getRecallDeceasedApplicationById.queryOptions({
-          id: applicationId,
-        }),
+      Component = (
+        <RecallForm
+          metadata={{
+            applicationId: data.id,
+            caseId: data.caseId,
+            type: ApplicationTypeEnum.RECALL_DECEASED,
+            courtOptions: baseEntities.courtDistricts.map((court) => ({
+              label: court.title,
+              value: court.id,
+            })),
+          }}
+          application={{
+            type: ApplicationTypeEnum.RECALL_DECEASED,
+            ...data.answers,
+          }}
+        />
       )
-
-      if (application.status === ApplicationStatusEnum.DRAFT) {
-        Component = (
-          <RecallForm
-            metadata={{
-              applicationId: application.id,
-              caseId: application.caseId,
-              type: ApplicationTypeEnum.RECALL_DECEASED,
-              courtOptions: baseEntities.courtDistricts.map((court) => ({
-                label: court.title,
-                value: court.id,
-              })),
-            }}
-            application={{
-              type: ApplicationTypeEnum.RECALL_DECEASED,
-              ...application.answers,
-            }}
-          />
-        )
-      }
 
       break
     }
