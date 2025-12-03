@@ -27,13 +27,23 @@ export const useSubmitApplication = (applicationId: string) => {
               id: applicationId,
             }),
           )
+          queryClient.invalidateQueries(
+            trpc.getCommonApplicationById.queryFilter({
+              id: applicationId,
+            }),
+          )
+          queryClient.invalidateQueries(
+            trpc.getApplicationById.queryFilter({
+              id: applicationId,
+            }),
+          )
           toast.success('Umsókn hefur verið send inn', {
-            toastId: 'submit-common-application-success',
+            toastId: 'submit-application-success',
           })
         },
         onError: () => {
           toast.error('Ekki tókst að senda inn umsókn', {
-            toastId: 'submit-common-application-error',
+            toastId: 'submit-application-error',
           })
         },
       },

@@ -1,8 +1,12 @@
 'use client'
 
+import { useCallback } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 
-import { CommonApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
+import {
+  commonApplicationAnswersRefined,
+  CommonApplicationWebSchema,
+} from '@dmr.is/legal-gazette/schemas'
 import { SkeletonLoader, Stack, Text } from '@dmr.is/ui/components/island-is'
 
 import { useSubmitApplication } from '../../../hooks/useSubmitApplication'
@@ -22,9 +26,29 @@ export const CommonForm = ({ application, metadata }: CommonFormProps) => {
     metadata.applicationId,
   )
 
+  const onSubmit = useCallback(
+    (_data: CommonApplicationWebSchema) => {
+      // Manually get the values to ensure we have the latest state
+      const data = methods.getValues()
+      const check = commonApplicationAnswersRefined.safeParse(data)
+
+      if (!check.success) {
+        check.error.issues.forEach((issue) => {
+          methods.setError(issue.path.join('.') as any, {
+            message: issue.message,
+          })
+        })
+        return onInvalidSubmit(data)
+      }
+
+      onValidSubmit()
+    },
+    [methods, onInvalidSubmit, onValidSubmit],
+  )
+
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onValidSubmit, onInvalidSubmit)}>
+      <form onSubmit={methods.handleSubmit(onSubmit, onInvalidSubmit)}>
         <ApplicationShell>
           <Stack space={[2, 3, 4]}>
             <Stack space={[1, 2]}>

@@ -19,13 +19,11 @@ export type RecallFormProps = {
 export const recallForm = ({
   metadata,
   application,
-}: RecallFormProps): UseFormProps<RecallApplicationWebSchema> => {
-  return {
-    mode: 'onChange',
-    resolver: zodResolver(recallApplicationWebSchema),
-    defaultValues: {
-      metadata,
-      ...application,
-    },
-  }
-}
+}: RecallFormProps): UseFormProps<RecallApplicationWebSchema> => ({
+  mode: 'onChange',
+  resolver: zodResolver(recallApplicationWebSchema),
+  defaultValues: {
+    metadata,
+    ...application,
+  },
+})

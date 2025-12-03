@@ -44,6 +44,10 @@ export async function ApplicationFormContainer({ applicationId, type }: Props) {
       )
 
       if (application.status === ApplicationStatusEnum.DRAFT) {
+        console.log('application', {
+          type: ApplicationTypeEnum.COMMON,
+          answers: { ...application.answers },
+        })
         Component = (
           <CommonForm
             metadata={{
@@ -55,7 +59,10 @@ export async function ApplicationFormContainer({ applicationId, type }: Props) {
                 value: type.id,
               })),
             }}
-            application={application.answers}
+            application={{
+              type: ApplicationTypeEnum.COMMON,
+              ...application.answers,
+            }}
           />
         )
       }
@@ -104,7 +111,7 @@ export async function ApplicationFormContainer({ applicationId, type }: Props) {
             metadata={{
               applicationId: application.id,
               caseId: application.caseId,
-              type: ApplicationTypeEnum.RECALL_BANKRUPTCY,
+              type: ApplicationTypeEnum.RECALL_DECEASED,
               courtOptions: baseEntities.courtDistricts.map((court) => ({
                 label: court.title,
                 value: court.id,

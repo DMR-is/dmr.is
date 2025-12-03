@@ -51,30 +51,12 @@ export const CommonAdvertFields = () => {
   useEffect(() => {
     if (!categoriesData?.categories || !formState.isDirty) return
 
-    if (categoriesData?.categories.length === 1) {
-      setValue('fields.categoryId', categoriesData.categories[0].id)
+    if (categoriesData.categories.length === 1) {
+      const newCategoryId = categoriesData.categories[0].id
 
-      return updateApplication(
-        {
-          fields: { categoryId: categoriesData.categories[0].id },
-        },
-        {
-          successMessage: 'Flokkur vistaður',
-          errorMessage: 'Ekki tókst að vista flokk',
-          silent: true,
-        },
-      )
+      setValue('fields.categoryId', newCategoryId)
+      updateApplication({ fields: { categoryId: newCategoryId } })
     }
-
-    setValue('fields.categoryId', null)
-    return updateApplication(
-      { fields: { categoryId: null } },
-      {
-        successMessage: 'Flokkur vistaður',
-        errorMessage: 'Ekki tókst að vista flokk',
-        silent: true,
-      },
-    )
   }, [categoriesData?.categories, formState.isDirty])
 
   const categoryOptions =
@@ -150,7 +132,12 @@ export const CommonAdvertFields = () => {
           </Text>
           <Editor
             defaultValue={defaultHTML}
-            onChange={(val) =>
+            onChange={(val) => {
+              setValue('fields.html', val, {
+                shouldValidate: true,
+                shouldDirty: true,
+                shouldTouch: true,
+              })
               debouncedUpdateApplication(
                 { fields: { html: Buffer.from(val).toString('base64') } },
                 {
@@ -158,7 +145,7 @@ export const CommonAdvertFields = () => {
                   errorMessage: 'Ekki tókst að vista meginmál',
                 },
               )
-            }
+            }}
           />
         </GridColumn>
       </GridRow>

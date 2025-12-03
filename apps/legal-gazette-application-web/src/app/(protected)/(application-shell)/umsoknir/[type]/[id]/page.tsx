@@ -13,12 +13,11 @@ export default async function ApplicationPage({
     throw new Error('Tegund umsóknar er ekki til')
   }
 
+  const mappedType = mapFormTypeToApplicationType(params.type)
+
   return (
     <HydrateClient>
-      <ApplicationFormContainer
-        applicationId={params.id}
-        type={mapFormTypeToApplicationType(params.type)}
-      />
+      <ApplicationFormContainer applicationId={params.id} type={mappedType} />
     </HydrateClient>
   )
 }

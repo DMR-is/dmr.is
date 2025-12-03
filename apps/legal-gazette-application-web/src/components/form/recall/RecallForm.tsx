@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import { useCallback } from 'react'
@@ -9,12 +10,7 @@ import {
   recallBankruptcyAnswersRefined,
   recallDeceasedAnswersRefined,
 } from '@dmr.is/legal-gazette/schemas'
-import {
-  AlertMessage,
-  Stack,
-  Text,
-  toast,
-} from '@dmr.is/ui/components/island-is'
+import { Stack, Text } from '@dmr.is/ui/components/island-is'
 
 import { useSubmitApplication } from '../../../hooks/useSubmitApplication'
 import { recallForm, RecallFormProps } from '../../../lib/forms/recall-form'
@@ -38,35 +34,38 @@ export const RecallForm = (props: RecallFormProps) => {
   const isBankruptcy =
     props.application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
 
-  const onSubmit = useCallback((data: RecallApplicationWebSchema) => {
-    if (isBankruptcy) {
-      const bankruptcyCheck = recallBankruptcyAnswersRefined.safeParse(data)
+  const onSubmit = useCallback(
+    (data: RecallApplicationWebSchema) => {
+      if (isBankruptcy) {
+        const bankruptcyCheck = recallBankruptcyAnswersRefined.safeParse(data)
 
-      if (!bankruptcyCheck.success) {
-        bankruptcyCheck.error.issues.forEach((issue) => {
-          methods.setError(issue.path.join('.') as any, {
-            message: issue.message,
+        if (!bankruptcyCheck.success) {
+          bankruptcyCheck.error.issues.forEach((issue) => {
+            methods.setError(issue.path.join('.') as any, {
+              message: issue.message,
+            })
           })
-        })
+
+          return onInvalidSubmit(data)
+        }
+      } else {
+        const deceasedCheck = recallDeceasedAnswersRefined.safeParse(data)
+
+        if (!deceasedCheck.success) {
+          deceasedCheck.error.issues.forEach((issue) => {
+            methods.setError(issue.path.join('.') as any, {
+              message: issue.message,
+            })
+          })
+
+          return onInvalidSubmit(data)
+        }
       }
 
-      return onInvalidSubmit(data)
-    }
-
-    const deceasedCheck = recallDeceasedAnswersRefined.safeParse(data)
-
-    if (!deceasedCheck.success) {
-      deceasedCheck.error.issues.forEach((issue) => {
-        methods.setError(issue.path.join('.') as any, {
-          message: issue.message,
-        })
-      })
-
-      return onInvalidSubmit(data)
-    }
-
-    onValidSubmit()
-  }, [])
+      onValidSubmit()
+    },
+    [isBankruptcy, methods, onValidSubmit, onInvalidSubmit],
+  )
 
   return (
     <FormProvider {...methods}>
