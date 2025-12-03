@@ -2,11 +2,15 @@
 
 ## Summary
 
-Migrate legacy users (email+password authentication) to the new Kennitala-based authentication system. Users with existing subscriptions can redeem their accounts via a magic link flow, while new users register and trigger TBR payment.
+Migrate legacy users (email+password authentication) to the new Kennitala-based authentication system. Users with existing subscriptions can redeem their accounts via a magic link flow.
 
 ## Planning Date
 
 December 2, 2025
+
+## Completion Date
+
+December 3, 2025
 
 ---
 
@@ -57,15 +61,12 @@ Uses Island.is authentication (Kennitala-based) via NextAuth with IdentityServer
 
 ### Scenario 3: New User (No Legacy Account)
 
-**Flow:** New registration with payment
+**Flow:** New registration
 1. User authenticates via Island.is
 2. No existing subscriber or legacy match found
 3. User fills registration form
 4. System creates `SubscriberModel` with `isActive: false`
-5. System triggers TBR payment via [`TBRService`](../../../apps/legal-gazette-api/src/modules/tbr/tbr.service.ts)
-6. Upon payment creation → set `isActive: true`
-
-Note: We do not wait for payment, only wait for confirmation that the payment request has been created
+5. Payment integration handled separately (see [TBR Subscription Payment Plan](./plan-tbr-subscription-payment.md))
 
 ---
 
@@ -304,28 +305,6 @@ async getUserByNationalId(user: DMRUser): Promise<SubscriberDto> {
 
 ---
 
-### Phase 6: Payment Integration for New Users
-
-#### 6.1 Create Subscription Payment Flow
-
-Reference existing payment flow in:
-- [`advert-published.listener.ts`](../../../apps/legal-gazette-api/src/modules/advert/publications/listeners/advert-published.listener.ts)
-- [`TBRService`](../../../apps/legal-gazette-api/src/modules/tbr/tbr.service.ts)
-
-**New subscriber payment differs from advert payment:**
-- Different fee code for subscription
-- Different charge category
-- One-time annual fee (3,000 kr per prompt.md)
-
-#### 6.2 Payment Trigger
-
-Create listener or service method:
-- Triggered when new subscriber completes registration
-- Creates TBR transaction for subscription fee
-- Updates subscriber `isActive` status upon payment confirmation
-
----
-
 ## Security Considerations
 
 ### Magic Link Security
@@ -369,8 +348,7 @@ A separate data import script will be needed to populate `LEGACY_SUBSCRIBERS` fr
 - [ ] Migration fails if authenticated nationalId doesn't match token
 - [ ] Successful migration creates subscriber with correct isActive status
 - [ ] Auto-migration works for legacy users with kennitala
-- [ ] New user registration triggers TBR payment
-- [ ] Payment confirmation activates subscription
+- [ ] New user registration creates subscriber with isActive: false
 
 ---
 
@@ -444,5 +422,10 @@ A separate data import script will be needed to populate `LEGACY_SUBSCRIBERS` fr
 | Phase 4: Email Integration | ✅ Complete | Implemented in service using IAWSService.sendMail() |
 | Phase 5: Auto-Migration on Sign-In | ✅ Complete | Integrated in SubscriberService.getUserByNationalId() |
 | Phase 6: Frontend Updates | ✅ Complete | Registration page with legacy redemption form + migration completion page |
-| Phase 7: Payment Integration | 🔲 Not Started | |
-| Data Import Script | 🔲 Not Started | |
+
+---
+
+## Related Plans
+
+- [TBR Subscription Payment](./plan-tbr-subscription-payment.md) - Payment integration for new subscribers
+- [Legacy Data Import](./plan-legacy-data-import.md) - Import legacy subscriber data from old system
