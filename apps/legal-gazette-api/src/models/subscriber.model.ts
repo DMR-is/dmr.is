@@ -11,6 +11,7 @@ export type SubscriberAttributes = {
   nationalId: string
   name: string | null
   isActive: boolean
+  subscribedAt: Date | null
 }
 
 export type SubscriberCreateAttributes = {
@@ -18,11 +19,12 @@ export type SubscriberCreateAttributes = {
   nationalId: string
   name?: string | null
   isActive?: boolean
+  subscribedAt?: Date | null
 }
 
 @BaseTable({ tableName: LegalGazetteModels.SUBSCRIBER })
 @DefaultScope(() => ({
-  attributes: ['id', 'nationalId', 'name', 'isActive'],
+  attributes: ['id', 'nationalId', 'name', 'isActive', 'subscribedAt'],
 }))
 export class SubscriberModel extends BaseModel<
   SubscriberAttributes,
@@ -54,12 +56,21 @@ export class SubscriberModel extends BaseModel<
   @ApiProperty({ type: Boolean })
   isActive!: boolean
 
+  @Column({
+    type: DataType.DATE,
+    field: 'subscribed_at',
+    allowNull: true,
+  })
+  @ApiProperty({ type: Date, nullable: true })
+  subscribedAt!: Date | null
+
   static fromModel(model: SubscriberModel): SubscriberDto {
     return {
       id: model.id,
       nationalId: model.nationalId,
       name: model.name,
       isActive: model.isActive,
+      subscribedAt: model.subscribedAt,
     }
   }
 
@@ -73,4 +84,5 @@ export class SubscriberDto extends PickType(SubscriberModel, [
   'nationalId',
   'name',
   'isActive',
+  'subscribedAt',
 ]) {}

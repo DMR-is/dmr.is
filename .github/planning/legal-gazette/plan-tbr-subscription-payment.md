@@ -26,7 +26,7 @@ Reference implementation for advert payments:
 
 ### Requirements
 
-- **Fee Amount:** 3,000 ISK annual subscription fee
+- **Fee Amount:** 3,000 ISK annual subscription fee (lets keep this as env variable)
 - **Trigger:** When new subscriber completes registration (not legacy migration)
 - **Activation:** Set `isActive: true` upon payment request creation (not payment confirmation)
 - **Fee Code:** Different from advert payment fee code (TBD)

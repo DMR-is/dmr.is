@@ -162,17 +162,25 @@ export class LegacyMigrationService implements ILegacyMigrationService {
     }
 
     // Create new subscriber with legacy user's data
+    // Use legacy user's subscription date if available
+    const subscribedAt = legacyUser.isActive ? legacyUser.subscribedAt : null
+
     const [newSubscriber, created] = await this.subscriberModel.findOrCreate({
       where: { nationalId: authenticatedNationalId },
       defaults: {
         nationalId: authenticatedNationalId,
         name: legacyUser.name,
         isActive: legacyUser.isActive,
+        subscribedAt,
       },
     })
 
     if (!created) {
       newSubscriber.isActive = legacyUser.isActive
+      // Only set subscribedAt if it's not already set (preserve original subscription date)
+      if (!newSubscriber.subscribedAt && legacyUser.isActive) {
+        newSubscriber.subscribedAt = subscribedAt
+      }
       await newSubscriber.save()
     }
 
@@ -219,10 +227,14 @@ export class LegacyMigrationService implements ILegacyMigrationService {
       }
 
       // Create new subscriber
+      // Use legacy user's subscription date if available
+      const subscribedAt = legacyUser.isActive ? legacyUser.subscribedAt : null
+
       const newSubscriber = await this.subscriberModel.create({
         nationalId,
         name: legacyUser.name,
         isActive: legacyUser.isActive,
+        subscribedAt,
       })
 
       // Mark legacy user as migrated
