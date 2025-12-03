@@ -2,10 +2,7 @@ import subDays from 'date-fns/subDays'
 import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import {
-  ApplicationTypeEnum,
-  RecallApplicationWebSchema,
-} from '@dmr.is/legal-gazette/schemas'
+import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 

@@ -18,7 +18,6 @@ import {
 } from '@dmr.is/clients/national-registry'
 import {
   ApplicationTypeEnum,
-  commonApplicationAnswers,
   commonApplicationAnswersRefined,
   communicationChannelSchema,
   recallBankruptcyAnswersRefined,

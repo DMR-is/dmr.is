@@ -44,9 +44,9 @@ export const settlementSchemaRefined = z.object({
       message: 'Staðsetning skiptastjóra er nauðsynleg',
     }),
   recallRequirementStatementType: z.enum(ApplicationRequirementStatementEnum, {
-    error: 'Sendingarmáti kröfulýsingar er nauðsynlegur',
+    message: 'Sendingarmáti kröfulýsingar er nauðsynlegur',
   }),
   recallRequirementStatementLocation: z
     .string('Staðsetning kröfulýsingar er nauðsynleg')
-    .min(1, { error: 'Staðsetning kröfulýsingar er nauðsynleg' }),
+    .min(1, { message: 'Staðsetning kröfulýsingar er nauðsynleg' }),
 })
