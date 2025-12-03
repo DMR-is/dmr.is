@@ -19,6 +19,7 @@ export type LegacySubscriberAttributes = {
   email: string
   nationalId: string | null
   isActive: boolean
+  subscribedAt: Date | null
   passwordHash: string | null
   migratedAt: Date | null
   migratedToSubscriberId: string | null
@@ -30,6 +31,7 @@ export type LegacySubscriberCreateAttributes = {
   email: string
   nationalId?: string | null
   isActive?: boolean
+  subscribedAt?: Date | null
   passwordHash?: string | null
   migratedAt?: Date | null
   migratedToSubscriberId?: string | null
@@ -43,6 +45,7 @@ export type LegacySubscriberCreateAttributes = {
     'email',
     'nationalId',
     'isActive',
+    'subscribedAt',
     'migratedAt',
     'migratedToSubscriberId',
   ],
@@ -82,6 +85,14 @@ export class LegacySubscriberModel extends BaseModel<
   })
   @ApiProperty({ type: Boolean })
   isActive!: boolean
+
+  @Column({
+    type: DataType.DATE,
+    field: 'subscribed_at',
+    allowNull: true,
+  })
+  @ApiProperty({ type: Date, nullable: true })
+  subscribedAt!: Date | null
 
   @Column({
     type: DataType.TEXT,
