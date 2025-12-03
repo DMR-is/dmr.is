@@ -17,7 +17,7 @@ export class CheckLegacyEmailResponseDto {
     description: 'Whether the email exists in the legacy system',
     example: true,
   })
-  exists!: boolean
+  emailExists!: boolean
 
   @ApiProperty({
     description: 'Whether the legacy account has an associated kennitala',

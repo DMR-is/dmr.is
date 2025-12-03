@@ -1385,9 +1385,10 @@
         "properties": {
           "id": { "type": "string" },
           "nationalId": { "type": "string" },
+          "name": { "type": "string", "nullable": true },
           "isActive": { "type": "boolean" }
         },
-        "required": ["id", "nationalId", "isActive"]
+        "required": ["id", "nationalId", "name", "isActive"]
       },
       "TypeIdEnum": {
         "type": "string",
@@ -1637,7 +1638,7 @@
       "CheckLegacyEmailResponseDto": {
         "type": "object",
         "properties": {
-          "exists": {
+          "emailExists": {
             "type": "boolean",
             "description": "Whether the email exists in the legacy system",
             "example": true
@@ -1648,7 +1649,7 @@
             "example": false
           }
         },
-        "required": ["exists", "hasKennitala"]
+        "required": ["emailExists", "hasKennitala"]
       },
       "RequestMigrationDto": {
         "type": "object",

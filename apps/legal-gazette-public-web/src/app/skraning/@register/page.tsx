@@ -71,7 +71,7 @@ export default function Signup() {
       // First check if the email exists in legacy system
       const result = await checkEmail.mutateAsync({ email: legacyEmail })
 
-      if (!result._exists) {
+      if (!result.emailExists) {
         setLegacyError(
           'Þetta netfang fannst ekki í eldra kerfinu. Vinsamlegast athugaðu hvort netfangið sé rétt eða skráðu nýja áskrift.',
         )
