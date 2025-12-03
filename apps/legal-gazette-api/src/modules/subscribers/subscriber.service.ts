@@ -20,12 +20,9 @@ export class SubscriberService implements ISubscriberService {
   ) {}
 
   async createSubscriber(user: DMRUser): Promise<SubscriberDto> {
-    const firstName = user.name?.split(' ')[0] || ''
-    const lastName = user.name?.split(' ').slice(1).join(' ') || ''
     const subscriber = await this.subscriberModel.create({
       nationalId: user.nationalId,
-      firstName,
-      lastName,
+      name: user.name || null,
       isActive: false,
     })
     return subscriber.fromModel()

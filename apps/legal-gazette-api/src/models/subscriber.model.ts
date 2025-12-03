@@ -5,28 +5,24 @@ import { ApiProperty, PickType } from '@nestjs/swagger'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'
+
 export type SubscriberAttributes = {
   id: string
   nationalId: string
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
+  name: string | null
+  isActive: boolean
 }
 
 export type SubscriberCreateAttributes = {
   id?: string
   nationalId: string
-  firstName: string
-  lastName: string
+  name?: string | null
   isActive?: boolean
-  email?: string | null
-  phone?: string | null
 }
 
 @BaseTable({ tableName: LegalGazetteModels.SUBSCRIBER })
 @DefaultScope(() => ({
-  attributes: ['id', 'nationalId', 'isActive'],
+  attributes: ['id', 'nationalId', 'name', 'isActive'],
 }))
 export class SubscriberModel extends BaseModel<
   SubscriberAttributes,
@@ -42,10 +38,18 @@ export class SubscriberModel extends BaseModel<
   nationalId!: string
 
   @Column({
+    type: DataType.TEXT,
+    field: 'name',
+    allowNull: true,
+  })
+  @ApiProperty({ type: String, nullable: true })
+  name!: string | null
+
+  @Column({
     type: DataType.BOOLEAN,
     field: 'is_active',
     allowNull: false,
-    defaultValue: true,
+    defaultValue: false,
   })
   @ApiProperty({ type: Boolean })
   isActive!: boolean
@@ -54,6 +58,7 @@ export class SubscriberModel extends BaseModel<
     return {
       id: model.id,
       nationalId: model.nationalId,
+      name: model.name,
       isActive: model.isActive,
     }
   }
@@ -66,5 +71,6 @@ export class SubscriberModel extends BaseModel<
 export class SubscriberDto extends PickType(SubscriberModel, [
   'id',
   'nationalId',
+  'name',
   'isActive',
 ]) {}

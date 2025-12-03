@@ -489,8 +489,7 @@ describe('LegacyMigrationService', () => {
 
       expect(subscriberModel.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          firstName: 'Jón',
-          lastName: 'Jónsson',
+          name: 'Jón Jónsson',
         }),
       )
     })

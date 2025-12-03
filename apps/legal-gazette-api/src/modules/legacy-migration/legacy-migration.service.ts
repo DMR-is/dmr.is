@@ -161,16 +161,12 @@ export class LegacyMigrationService implements ILegacyMigrationService {
       throw new NotFoundException('Eldri áskrifandi fannst ekki.')
     }
 
-    // Parse name into first and last name
-    const { firstName, lastName } = this.parseName(legacyUser.name)
-
     // Create new subscriber with legacy user's data
     const [newSubscriber, created] = await this.subscriberModel.findOrCreate({
       where: { nationalId: authenticatedNationalId },
       defaults: {
         nationalId: authenticatedNationalId,
-        firstName,
-        lastName,
+        name: legacyUser.name,
         isActive: legacyUser.isActive,
       },
     })
@@ -222,14 +218,10 @@ export class LegacyMigrationService implements ILegacyMigrationService {
         return null
       }
 
-      // Parse name into first and last name
-      const { firstName, lastName } = this.parseName(legacyUser.name)
-
       // Create new subscriber
       const newSubscriber = await this.subscriberModel.create({
         nationalId,
-        firstName,
-        lastName,
+        name: legacyUser.name,
         isActive: legacyUser.isActive,
       })
 
@@ -259,16 +251,6 @@ export class LegacyMigrationService implements ILegacyMigrationService {
   private generateSecureToken(): string {
     // Generate two UUIDs and combine them for extra security (64 characters)
     return `${randomUUID()}${randomUUID()}`.replace(/-/g, '')
-  }
-
-  /**
-   * Parse a full name into first and last name parts.
-   */
-  private parseName(fullName: string): { firstName: string; lastName: string } {
-    const parts = fullName.trim().split(/\s+/)
-    const firstName = parts[0] || ''
-    const lastName = parts.slice(1).join(' ') || ''
-    return { firstName, lastName }
   }
 
   /**
