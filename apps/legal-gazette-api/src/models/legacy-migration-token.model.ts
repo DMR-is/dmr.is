@@ -105,6 +105,4 @@ export class LegacyMigrationTokenModel extends BaseModel<
   isValid(): boolean {
     return !this.usedAt && new Date() < this.expiresAt
   }
-
-
 }
