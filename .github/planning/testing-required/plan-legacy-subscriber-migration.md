@@ -427,5 +427,5 @@ A separate data import script will be needed to populate `LEGACY_SUBSCRIBERS` fr
 
 ## Related Plans
 
-- [TBR Subscription Payment](./plan-tbr-subscription-payment.md) - Payment integration for new subscribers
-- [Legacy Data Import](./plan-legacy-data-import.md) - Import legacy subscriber data from old system
+- [TBR Subscription Payment](../legal-gazette/plan-tbr-subscription-payment.md) - Payment integration for new subscribers
+- [Legacy Data Import](../legal-gazette/plan-legacy-data-import.md) - Import legacy subscriber data from old system
