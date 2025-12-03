@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { trpcProcedureHandler } from '@dmr.is/trpc/utils/errorHandler'
+
 import { protectedProcedure, router } from '../trpc'
 
 export const legacyMigrationRouter = router({
@@ -10,8 +12,10 @@ export const legacyMigrationRouter = router({
   checkEmail: protectedProcedure
     .input(z.object({ email: z.email() }))
     .mutation(async ({ ctx, input }) => {
-      return await ctx.api.checkLegacyEmail({
-        checkLegacyEmailDto: { email: input.email },
+      return await trpcProcedureHandler(async () => {
+        return ctx.api.checkLegacyEmail({
+          checkLegacyEmailDto: { email: input.email },
+        })
       })
     }),
 
@@ -22,11 +26,12 @@ export const legacyMigrationRouter = router({
   requestMigration: protectedProcedure
     .input(z.object({ email: z.email() }))
     .mutation(async ({ ctx, input }) => {
-      await ctx.api.requestLegacyMigration({
-        requestMigrationDto: { email: input.email },
+      return await trpcProcedureHandler(async () => {
+        return ctx.api.requestLegacyMigration({
+          requestMigrationDto: { email: input.email },
+        })
       })
     }),
-
   /**
    * Complete the migration using the magic link token
    * Verifies the token and migrates the legacy account to the authenticated user
@@ -34,8 +39,10 @@ export const legacyMigrationRouter = router({
   completeMigration: protectedProcedure
     .input(z.object({ token: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      return await ctx.api.completeLegacyMigration({
-        completeMigrationDto: { token: input.token },
+      return await trpcProcedureHandler(async () => {
+        return ctx.api.completeLegacyMigration({
+          completeMigrationDto: { token: input.token },
+        })
       })
     }),
 })

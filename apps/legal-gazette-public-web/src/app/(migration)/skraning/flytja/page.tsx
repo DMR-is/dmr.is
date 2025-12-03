@@ -18,7 +18,7 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { useTRPC } from '../../lib/trpc/client/trpc'
+import { useTRPC } from '../../../../lib/trpc/client/trpc'
 
 import { useMutation } from '@tanstack/react-query'
 
@@ -72,6 +72,7 @@ export default function MigrationCompletionPage() {
         },
         onError: (error) => {
           setMigrationStatus('error')
+
           const message =
             error instanceof Error ? error.message : 'Óþekkt villa kom upp'
 
@@ -106,12 +107,13 @@ export default function MigrationCompletionPage() {
     router.push('/skraning')
   }
 
-  // Show loading header while determining session status
-  const HeaderComponent = session ? Header : HeaderLogin
-
   return (
     <>
-      <HeaderComponent />
+      {session ? (
+        <Header />
+      ) : (
+        <HeaderLogin redirectTo={`/skraning/flytja?token=${token}`} />
+      )}
       <GridContainer>
         <GridRow marginTop={[4, 6, 8]}>
           <GridColumn

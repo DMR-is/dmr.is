@@ -21,7 +21,9 @@ import {
 const TOKEN_EXPIRY_HOURS = 24
 const MAGIC_LINK_BASE_URL =
   process.env.LG_PUBLIC_WEB_URL || 'https://logbirtingablad.is'
-const senderEmail = process.env.LEGACY_MIGRATION_SENDER_EMAIL || 'noreply@legal-gazette.dev.dmr-dev.cloud'
+const senderEmail =
+  process.env.LEGACY_MIGRATION_SENDER_EMAIL ||
+  'noreply@legal-gazette.dev.dmr-dev.cloud'
 
 /**
  * Service for handling legacy subscriber migration to the new system.
@@ -110,7 +112,7 @@ export class LegacyMigrationService implements ILegacyMigrationService {
     })
 
     // Build magic link URL
-    const magicLinkUrl = `${MAGIC_LINK_BASE_URL}/flytja?token=${token}`
+    const magicLinkUrl = `${MAGIC_LINK_BASE_URL}/skraning/flytja?token=${token}`
 
     // Send email
     await this.awsService.sendMail({
