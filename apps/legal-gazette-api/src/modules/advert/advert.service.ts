@@ -173,6 +173,11 @@ export class AdvertService implements IAdvertService {
       includeArr.push({ model: SettlementModel })
     }
 
+    this.logger.info('Creating advert', {
+      body,
+      context: 'AdvertService',
+    })
+
     const advert = await this.advertModel.create(
       {
         templateType: body.templateType,

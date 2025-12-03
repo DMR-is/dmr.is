@@ -18,7 +18,8 @@ import {
 } from '@dmr.is/clients/national-registry'
 import {
   ApplicationTypeEnum,
-  commonApplicationSchemaRefined,
+  commonApplicationAnswers,
+  commonApplicationAnswersRefined,
   communicationChannelSchema,
   recallBankruptcyAnswersRefined,
   recallDeceasedAnswersRefined,
@@ -76,12 +77,10 @@ export class ApplicationService implements IApplicationService {
     application: ApplicationModel,
     submittee: PersonDto,
   ) {
-    const { answers } = commonApplicationSchemaRefined.parse(
-      application.answers,
-    )
+    const parsed = commonApplicationAnswersRefined.parse(application.answers)
 
     const category = await this.categoryModel.findByPkOrThrow(
-      answers.fields.categoryId,
+      parsed.fields.categoryId,
     )
 
     await this.advertService.createAdvert({
@@ -89,18 +88,18 @@ export class ApplicationService implements IApplicationService {
       applicationId: application.id,
       createdBy: submittee.nafn,
       createdByNationalId: submittee.kennitala,
-      typeId: answers.fields.typeId,
-      categoryId: answers.fields.categoryId,
-      caption: answers.fields.caption,
-      additionalText: answers.additionalText,
-      signatureName: answers.signature?.name,
-      signatureOnBehalfOf: answers.signature?.onBehalfOf,
-      signatureLocation: answers.signature?.location,
-      signatureDate: answers.signature?.date,
-      content: answers.fields.html,
-      title: `${category.title} - ${answers.fields.caption}`,
-      communicationChannels: answers.communicationChannels,
-      scheduledAt: answers.publishingDates,
+      typeId: parsed.fields.typeId,
+      categoryId: parsed.fields.categoryId,
+      caption: parsed.fields.caption,
+      additionalText: parsed.additionalText,
+      signatureName: parsed.signature?.name,
+      signatureOnBehalfOf: parsed.signature?.onBehalfOf,
+      signatureLocation: parsed.signature?.location,
+      signatureDate: parsed.signature?.date,
+      content: parsed.fields.html,
+      title: `${category.title} - ${parsed.fields.caption}`,
+      communicationChannels: parsed.communicationChannels,
+      scheduledAt: parsed.publishingDates,
     })
 
     await application.update({ status: ApplicationStatusEnum.FINISHED })
@@ -111,6 +110,9 @@ export class ApplicationService implements IApplicationService {
     submittee: PersonDto,
   ) {
     let data
+
+    let createObj: CreateAdvertInternalDto = {} as CreateAdvertInternalDto
+
     switch (application.applicationType) {
       case ApplicationTypeEnum.RECALL_BANKRUPTCY: {
         const check = recallBankruptcyAnswersRefined.safeParse(
@@ -127,6 +129,11 @@ export class ApplicationService implements IApplicationService {
         }
 
         data = check.data
+        Object.assign(createObj, {
+          settlement: {
+            deadline: data.fields.settlementFields.deadlineDate,
+          },
+        })
         break
       }
       case ApplicationTypeEnum.RECALL_DECEASED: {
@@ -144,6 +151,11 @@ export class ApplicationService implements IApplicationService {
         }
 
         data = check.data
+        Object.assign(createObj, {
+          settlement: {
+            dateOfDeath: data.fields.settlementFields.dateOfDeath,
+          },
+        })
         break
       }
       default:
@@ -158,7 +170,7 @@ export class ApplicationService implements IApplicationService {
         ? `Innköllun þrotabús - ${data.fields.settlementFields.name}`
         : `Innköllun dánarbús - ${data.fields.settlementFields.name}`
 
-    const createObj: CreateAdvertInternalDto = {
+    createObj = {
       applicationId: application.id,
       templateType:
         application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
@@ -184,7 +196,10 @@ export class ApplicationService implements IApplicationService {
       courtDistrictId: data.fields.courtAndJudgmentFields?.courtDistrictId,
       communicationChannels: data.communicationChannels,
       scheduledAt: data.publishingDates,
-      settlement: { ...data.fields.settlementFields },
+      settlement: {
+        ...data.fields.settlementFields,
+        ...createObj.settlement,
+      },
     }
 
     const advert = await this.advertService.createAdvert(createObj)

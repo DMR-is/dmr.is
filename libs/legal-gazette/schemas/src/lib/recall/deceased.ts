@@ -36,7 +36,7 @@ export const recallDeceasedSchemaRefined = z.object({
 })
 
 export const recallDeceasedAnswers = baseApplicationSchema.extend({
-  fields: recallDeceasedSchema,
+  fields: recallDeceasedSchema.optional(),
 })
 
 export const recallDeceasedAnswersRefined = baseApplicationSchemaRefined.extend(

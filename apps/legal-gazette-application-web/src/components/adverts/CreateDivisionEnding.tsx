@@ -1,9 +1,11 @@
 'use client'
 import { useParams } from 'next/navigation'
 
+import get from 'lodash/get'
 import { useEffect, useState } from 'react'
 
 import { createDivisionEndingInput } from '@dmr.is/legal-gazette/schemas'
+import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import {
   Box,
   Button,
@@ -32,20 +34,6 @@ type Props = {
   onVisibilityChange(isVisible: boolean): void
 }
 
-const initFormState: CreateDivisionEndingDto = {
-  declaredClaims: -1,
-  additionalText: '',
-  meetingDate: '',
-  meetingLocation: '',
-  communicationChannels: [],
-  signature: {
-    date: undefined,
-    location: '',
-    name: '',
-    onBehalfOf: '',
-  },
-}
-
 export const CreateDivisionEnding = ({
   isVisible,
   onVisibilityChange,
@@ -57,10 +45,38 @@ export const CreateDivisionEnding = ({
     trpc.addDivisionEnding.mutationOptions(),
   )
 
+  const { data: application } = useQuery(
+    trpc.getApplicationById.queryOptions({ id: id as string }),
+  )
+
+  useEffect(() => {
+    const communicationChannels = get(
+      application?.answers,
+      'communicationChannels',
+      [],
+    )
+
+    setFormState((prev) => ({
+      ...prev,
+      communicationChannels: communicationChannels,
+    }))
+  }, [application?.answers])
+
   const [submitClicked, setSubmitClicked] = useState(false)
 
-  const [formState, setFormState] =
-    useState<CreateDivisionEndingDto>(initFormState)
+  const [formState, setFormState] = useState<CreateDivisionEndingDto>({
+    declaredClaims: -1,
+    additionalText: '',
+    meetingDate: '',
+    meetingLocation: '',
+    communicationChannels: [],
+    signature: {
+      date: undefined,
+      location: '',
+      name: '',
+      onBehalfOf: '',
+    },
+  })
 
   const [fieldErrors, setFieldErrors] = useState<
     { [key: string]: string[] } | undefined
@@ -84,6 +100,8 @@ export const CreateDivisionEnding = ({
   const validateAndSubmit = async () => {
     setSubmitClicked(true)
     const formValidation = await setAndGetFormValidation()
+
+    console.log('wassap', formState)
 
     if (formValidation.success) {
       addDivisionEnding(

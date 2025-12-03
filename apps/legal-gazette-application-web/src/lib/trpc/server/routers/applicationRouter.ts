@@ -1,14 +1,11 @@
 import z from 'zod'
 
 import {
-  CommonApplicationSchema,
-  commonApplicationSchema,
-  createDivisionEndingInput,
+  commonApplicationAnswers,
   createDivisionEndingWithIdInput,
-  createDivisionMeetingInput,
   createDivisionMeetingWithIdInput,
-  recallBankruptcyApplicationSchema,
-  recallDeceasedApplicationSchema,
+  recallBankruptcyAnswers,
+  recallDeceasedAnswers,
   updateApplicationWithIdInput,
 } from '@dmr.is/legal-gazette/schemas'
 
@@ -79,14 +76,11 @@ export const applicationRouter = router({
         applicationId: input.id,
       })
 
-      const parsed = commonApplicationSchema.parse({
-        type: application.type,
-        answers: { ...application.answers },
-      })
+      const answers = commonApplicationAnswers.parse(application.answers)
 
       return {
         ...application,
-        answers: parsed.answers as CommonApplicationSchema,
+        answers: answers,
       }
     }),
   getRecallBankruptcyApplicationById: protectedProcedure
@@ -96,11 +90,11 @@ export const applicationRouter = router({
         applicationId: input.id,
       })
 
-      const parsed = recallBankruptcyApplicationSchema.parse(application)
+      const answers = recallBankruptcyAnswers.parse(application.answers)
 
       return {
         ...application,
-        answers: parsed.answers,
+        answers: answers,
       }
     }),
   getRecallDeceasedApplicationById: protectedProcedure
@@ -110,11 +104,11 @@ export const applicationRouter = router({
         applicationId: input.id,
       })
 
-      const parsed = recallDeceasedApplicationSchema.parse(application)
+      const answers = recallDeceasedAnswers.parse(application.answers)
 
       return {
         ...application,
-        answers: parsed.answers,
+        answers: answers,
       }
     }),
   getApplicationById: protectedProcedure

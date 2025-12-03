@@ -1,9 +1,11 @@
 'use client'
 import { useParams } from 'next/navigation'
 
+import get from 'lodash/get'
 import { useEffect, useState } from 'react'
 
 import { createDivisionMeetingInput } from '@dmr.is/legal-gazette/schemas'
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   Box,
   Button,
@@ -57,6 +59,23 @@ export const CreateDivisionMeeting = ({
   )
   const [submitClicked, setSubmitClicked] = useState(false)
 
+  const { data: application } = useQuery(
+    trpc.getApplicationById.queryOptions({ id: applicationId as string }),
+  )
+
+  useEffect(() => {
+    const communicationChannels = get(
+      application?.answers,
+      'communicationChannels',
+      [],
+    )
+
+    setFormState((prev) => ({
+      ...prev,
+      communicationChannels: communicationChannels,
+    }))
+  }, [application?.answers])
+
   const [formState, setFormState] =
     useState<CreateDivisionMeetingDto>(initFormState)
 
@@ -97,7 +116,10 @@ export const CreateDivisionMeeting = ({
               }),
             )
             setSubmitClicked(false)
-            setFormState(initFormState)
+            setFormState({
+              ...initFormState,
+              communicationChannels: formState.communicationChannels,
+            })
 
             toast.success('Skiptafundur stofnaður', {
               toastId: 'create-division-meeting',
