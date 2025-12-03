@@ -18,29 +18,35 @@ export const settlementSchema = z.object({
 })
 
 export const settlementSchemaRefined = z.object({
-  name: z.string().refine((name) => isString(name) && name.length > 0, {
-    message: 'Nafn bús er nauðsynlegt',
-  }),
-  nationalId: z.string().refine((nationalId) => Kennitala.isValid(nationalId), {
-    message: 'Kennitala bús er nauðsynleg',
-  }),
+  name: z
+    .string('Nafn bús er nauðsynlegt')
+    .refine((name) => isString(name) && name.length > 0, {
+      message: 'Nafn bús er nauðsynlegt',
+    }),
+  nationalId: z
+    .string('Kennitala bús er nauðsynleg')
+    .refine((nationalId) => Kennitala.isValid(nationalId), {
+      message: 'Kennitala bús er nauðsynleg',
+    }),
   address: z
-    .string()
+    .string('Heimilisfang bús er nauðsynlegt')
     .refine((address) => isString(address) && address.length > 0, {
       message: 'Heimilisfang bús er nauðsynlegt',
     }),
   liquidatorName: z
-    .string()
+    .string('Nafn skiptastjóra er nauðsynlegt')
     .refine((name) => isString(name) && name.length > 0, {
       message: 'Nafn skiptastjóra er nauðsynlegt',
     }),
   liquidatorLocation: z
-    .string()
+    .string('Staðsetning skiptastjóra er nauðsynleg')
     .refine((location) => isString(location) && location.length > 0, {
       message: 'Staðsetning skiptastjóra er nauðsynleg',
     }),
-  recallRequirementStatementType: z
-    .enum(ApplicationRequirementStatementEnum)
-    .optional(),
-  recallRequirementStatementLocation: z.string().optional(),
+  recallRequirementStatementType: z.enum(ApplicationRequirementStatementEnum, {
+    error: 'Sendingarmáti kröfulýsingar er nauðsynlegur',
+  }),
+  recallRequirementStatementLocation: z
+    .string('Staðsetning kröfulýsingar er nauðsynleg')
+    .min(1, { error: 'Staðsetning kröfulýsingar er nauðsynleg' }),
 })

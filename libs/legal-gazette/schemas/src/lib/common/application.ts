@@ -1,7 +1,10 @@
 import { isString, isUUID } from 'class-validator'
 import z from 'zod'
 
-import { baseApplicationSchemaRefined } from '../base/application'
+import {
+  baseApplicationSchema,
+  baseApplicationSchemaRefined,
+} from '../base/application'
 import { metadataSchema } from '../base/metadata'
 import { ApplicationTypeEnum } from '../constants'
 
@@ -13,23 +16,29 @@ export const commonFieldsSchema = z.object({
 })
 
 export const commonFieldsSchemaRefined = z.object({
-  typeId: z.uuid().refine((id) => isUUID(id), {
-    message: 'Tegund auglýsingar er nauðsynleg',
-  }),
-  categoryId: z.uuid().refine((id) => isUUID(id), {
-    message: 'Flokkur auglýsingar er nauðsynlegur',
-  }),
+  typeId: z
+    .uuid('Tegund auglýsingar er nauðsynleg')
+    .refine((id) => isUUID(id), {
+      message: 'Tegund auglýsingar er nauðsynleg',
+    }),
+  categoryId: z
+    .uuid('Flokkur auglýsingar er nauðsynlegur')
+    .refine((id) => isUUID(id), {
+      message: 'Flokkur auglýsingar er nauðsynlegur',
+    }),
   caption: z
-    .string()
+    .string('Yfirskrift er nauðsynleg')
     .refine((caption) => isString(caption) && caption.length > 0, {
       message: 'Yfirskrift er nauðsynleg',
     }),
-  html: z.string().refine((html) => isString(html) && html.length > 0, {
-    message: 'Efni auglýsingar er nauðsynlegt',
-  }),
+  html: z
+    .string('Efni auglýsingar er nauðsynlegt')
+    .refine((html) => isString(html) && html.length > 0, {
+      message: 'Efni auglýsingar er nauðsynlegt',
+    }),
 })
 
-export const commonApplicationAnswers = baseApplicationSchemaRefined.extend({
+export const commonApplicationAnswers = baseApplicationSchema.extend({
   fields: commonFieldsSchema.optional(),
 })
 

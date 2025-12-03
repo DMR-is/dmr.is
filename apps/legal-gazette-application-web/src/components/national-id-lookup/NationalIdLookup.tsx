@@ -83,6 +83,7 @@ export const NationalIdLookup = ({
 
   return (
     <Input
+      id="fields.settlementFields.nationalId"
       readOnly={isValidId}
       size="sm"
       backgroundColor="blue"
@@ -91,7 +92,7 @@ export const NationalIdLookup = ({
       placeholder="Sláðu inn kennitölu"
       maxLength={10}
       errorMessage={errorLabel || errorMessage}
-      name="national-id-lookup"
+      name="fields.settlementFields.nationalId"
       value={nationalId}
       onChange={(e) => setNationalId(e.target.value)}
       buttons={[

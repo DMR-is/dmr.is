@@ -1,15 +1,9 @@
-'use client'
-
-import { useFormContext } from 'react-hook-form'
-
 import { Box, Button, Inline, LinkV2 } from '@dmr.is/ui/components/island-is'
 
 import { PageRoutes } from '../../../lib/constants'
 import * as styles from './application-footer.css'
 
 export const ApplicationFooter = () => {
-  const { formState } = useFormContext()
-
   return (
     <Box
       paddingY={[3, 5]}
@@ -25,7 +19,7 @@ export const ApplicationFooter = () => {
             Yfirlit
           </Button>
         </LinkV2>
-        <Button type="submit" icon="arrowForward" disabled={!formState.isValid}>
+        <Button type="submit" icon="arrowForward">
           Senda til birtingar
         </Button>
       </Inline>

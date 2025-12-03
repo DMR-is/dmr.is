@@ -7,10 +7,14 @@ export const courtAndJudgmentSchema = z.object({
 })
 
 export const courtAndJudgmentSchemaRefined = z.object({
-  courtDistrictId: z.string().refine((id) => isUUID(id), {
-    message: 'Dómstóll er nauðsynlegur',
-  }),
-  judgmentDate: z.iso.datetime().refine((date) => isDateString(date), {
-    message: 'Úrskurðar dagsetning er nauðsynlegur',
-  }),
+  courtDistrictId: z
+    .string('Dómstóll er nauðsynlegur')
+    .refine((id) => isUUID(id), {
+      message: 'Dómstóll er nauðsynlegur',
+    }),
+  judgmentDate: z.iso
+    .datetime('Dagsetning úrskurðar er nauðsynleg')
+    .refine((date) => isDateString(date), {
+      message: 'Dagsetning úrskurðar er nauðsynleg',
+    }),
 })

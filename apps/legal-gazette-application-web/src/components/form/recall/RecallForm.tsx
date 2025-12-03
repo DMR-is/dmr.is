@@ -1,12 +1,20 @@
 'use client'
 
+import { useCallback } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 
 import {
   ApplicationTypeEnum,
   RecallApplicationWebSchema,
+  recallBankruptcyAnswersRefined,
+  recallDeceasedAnswersRefined,
 } from '@dmr.is/legal-gazette/schemas'
-import { AlertMessage, Stack, Text } from '@dmr.is/ui/components/island-is'
+import {
+  AlertMessage,
+  Stack,
+  Text,
+  toast,
+} from '@dmr.is/ui/components/island-is'
 
 import { useSubmitApplication } from '../../../hooks/useSubmitApplication'
 import { recallForm, RecallFormProps } from '../../../lib/forms/recall-form'
@@ -30,9 +38,39 @@ export const RecallForm = (props: RecallFormProps) => {
   const isBankruptcy =
     props.application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
 
+  const onSubmit = useCallback((data: RecallApplicationWebSchema) => {
+    if (isBankruptcy) {
+      const bankruptcyCheck = recallBankruptcyAnswersRefined.safeParse(data)
+
+      if (!bankruptcyCheck.success) {
+        bankruptcyCheck.error.issues.forEach((issue) => {
+          methods.setError(issue.path.join('.') as any, {
+            message: issue.message,
+          })
+        })
+      }
+
+      return onInvalidSubmit(data)
+    }
+
+    const deceasedCheck = recallDeceasedAnswersRefined.safeParse(data)
+
+    if (!deceasedCheck.success) {
+      deceasedCheck.error.issues.forEach((issue) => {
+        methods.setError(issue.path.join('.') as any, {
+          message: issue.message,
+        })
+      })
+
+      return onInvalidSubmit(data)
+    }
+
+    onValidSubmit()
+  }, [])
+
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onValidSubmit, onInvalidSubmit)}>
+      <form onSubmit={methods.handleSubmit(onSubmit, onInvalidSubmit)}>
         <ApplicationShell>
           <Stack space={[2, 3, 4]}>
             <Stack space={[1, 2]}>
@@ -47,20 +85,11 @@ export const RecallForm = (props: RecallFormProps) => {
               </Text>
             </Stack>
             <RecallAdvertFields />
-            <RecallSettlementFields />
+            <RecallSettlementFields isBankruptcy={isBankruptcy} />
             <RecallLiquidatorFields />
             <RecallRequirementStatementFields />
-            <PublishingFields
-              additionalTitle="innköllunar"
-              alert={
-                <AlertMessage
-                  type="info"
-                  title="Minnst tveir birtingardagar eru nauðsynlegir"
-                  message="Bættu við birtingardögum fyrir innköllunina hér fyrir neðan."
-                />
-              }
-            />
-            <RecallDivisionFields required={isBankruptcy} />
+            <PublishingFields additionalTitle="innköllunar" />
+            <RecallDivisionFields isBankruptcy={isBankruptcy} />
             <SignatureFields />
             <CommunicationChannelFields />
           </Stack>

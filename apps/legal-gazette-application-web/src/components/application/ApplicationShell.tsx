@@ -32,7 +32,7 @@ export const ApplicationShell = ({ children }: Props) => {
           <ApplicationFooter />
         </GridColumn>
         <GridColumn span={['12/12', '12/12', '3/12']}>
-          {/* <ApplicationSidebar /> */}
+          <ApplicationSidebar />
         </GridColumn>
       </GridRow>
     </GridContainer>

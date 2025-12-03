@@ -20,18 +20,22 @@ import { settlementSchema, settlementSchemaRefined } from './settlement'
 export const recallDeceasedSchema = z.object({
   courtAndJudgmentFields: courtAndJudgmentSchema.optional(),
   divisionMeetingFields: divisionMeetingSchema.optional(),
-  settlementFields: settlementSchema.extend({
-    dateOfDeath: z.string().optional().nullable(),
-  }),
+  settlementFields: settlementSchema
+    .extend({
+      dateOfDeath: z.string().optional().nullable(),
+    })
+    .optional(),
 })
 
 export const recallDeceasedSchemaRefined = z.object({
   courtAndJudgmentFields: courtAndJudgmentSchemaRefined,
   divisionMeetingFields: divisionMeetingSchemaRefined,
   settlementFields: settlementSchemaRefined.extend({
-    dateOfDeath: z.iso.datetime().refine((date) => isDateString(date), {
-      message: 'Frestdagur bús er nauðsynlegur',
-    }),
+    dateOfDeath: z.iso
+      .datetime('Dánardagur bús er nauðsynlegur')
+      .refine((date) => isDateString(date), {
+        message: 'Dánardagur bús er nauðsynlegur',
+      }),
   }),
 })
 

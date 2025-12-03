@@ -7,11 +7,13 @@ export const divisionMeetingSchema = z.object({
 })
 
 export const divisionMeetingSchemaRefined = z.object({
-  meetingDate: z.iso.datetime().refine((date) => isDateString(date), {
-    message: 'Fundardagur er nauðsynlegur',
-  }),
+  meetingDate: z.iso
+    .datetime('Fundardagur er nauðsynlegur')
+    .refine((date) => isDateString(date), {
+      message: 'Fundardagur er nauðsynlegur',
+    }),
   meetingLocation: z
-    .string()
+    .string('Fundarstaður er nauðsynlegur')
     .refine((location) => isString(location) && location.length > 0, {
       message: 'Fundarstaður er nauðsynlegur',
     }),

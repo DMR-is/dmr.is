@@ -31,9 +31,11 @@ export const recallBankruptcySchemaRefined = z.object({
   courtAndJudgmentFields: courtAndJudgmentSchemaRefined,
   divisionMeetingFields: divisionMeetingSchemaRefined,
   settlementFields: settlementSchemaRefined.extend({
-    deadlineDate: z.iso.datetime().refine((date) => isDateString(date), {
-      message: 'Frestdagur bús er nauðsynlegur',
-    }),
+    deadlineDate: z.iso
+      .datetime('Frestdagur bús er nauðsynlegur')
+      .refine((date) => isDateString(date), {
+        message: 'Frestdagur bús er nauðsynlegur',
+      }),
   }),
 })
 
@@ -49,7 +51,7 @@ export const recallBankruptcyAnswersRefined =
 
 export const recallBankruptcyApplicationSchema = z.object({
   type: z.literal(ApplicationTypeEnum.RECALL_BANKRUPTCY),
-  answers: recallBankruptcyAnswers.optional(),
+  answers: recallBankruptcyAnswers.partial().optional(),
 })
 
 export const recallBankruptcyApplicationSchemaRefined = z.object({

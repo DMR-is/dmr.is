@@ -35,7 +35,7 @@ type UseUpdateApplicationParams<T extends UpdateApplicationType> = {
 
 export const useUpdateApplication = <T extends UpdateApplicationType>({
   id,
-  type,
+  type: _type,
 }: UseUpdateApplicationParams<T>) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()

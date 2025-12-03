@@ -7,7 +7,9 @@ export const communicationChannelSchema = z.object({
 })
 
 export const communicationChannelSchemaRefined = z
-  .array(communicationChannelSchema)
+  .array(communicationChannelSchema, {
+    error: 'Að minnsta kosti ein samskiptaleið verður að vera til staðar',
+  })
   .min(1, {
     message: 'Að minnsta kosti ein samskiptaleið verður að vera til staðar',
   })

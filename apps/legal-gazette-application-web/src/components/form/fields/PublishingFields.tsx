@@ -26,7 +26,7 @@ type Props = {
 }
 
 export const PublishingFields = ({ additionalTitle, alert }: Props) => {
-  const { getValues, watch, setValue } =
+  const { getValues, watch, setValue, formState } =
     useFormContext<BaseApplicationWebSchema>()
 
   const { metadata } = getValues()
@@ -94,13 +94,23 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
     )
   }
 
+  const signatureError = formState.errors.publishingDates
+
   return (
     <Box id="publishingDates">
       <GridRow rowGap={[2, 3]}>
         <GridColumn span="12/12">
-          <Text variant="h4">{`Birting${additionalTitle ? ` ${additionalTitle}` : ''}`}</Text>
+          <Stack space={[2, 3]}>
+            <Text variant="h4">{`Birting${additionalTitle ? ` ${additionalTitle}` : ''}`}</Text>
+            {signatureError && (
+              <AlertMessage
+                type="error"
+                title="Birtingardagar ekki útfylltir"
+                message={signatureError.message}
+              />
+            )}
+          </Stack>
         </GridColumn>
-        {alert && <GridColumn span="12/12">{alert}</GridColumn>}
         <GridColumn span="12/12">
           <Stack space={[2, 3]}>
             {currentDates.map((date, index) => {

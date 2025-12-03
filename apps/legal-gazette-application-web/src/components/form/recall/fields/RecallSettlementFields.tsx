@@ -18,17 +18,18 @@ import {
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
-export const RecallSettlementFields = () => {
+type Props = {
+  isBankruptcy: boolean
+}
+export const RecallSettlementFields = ({ isBankruptcy }: Props) => {
   const { getValues, setValue } = useFormContext<RecallApplicationWebSchema>()
-  const { type, applicationId } = getValues('metadata')
+  const { applicationId } = getValues('metadata')
 
-  const isRecallBankruptcy = type === ApplicationTypeEnum.RECALL_BANKRUPTCY
-
-  const title = isRecallBankruptcy
+  const title = isBankruptcy
     ? 'Upplýsingar um þrotabúið'
     : 'Upplýsingar um dánarbúið'
 
-  const settlementType = isRecallBankruptcy ? 'þrotabús' : 'dánarbús'
+  const settlementType = isBankruptcy ? 'þrotabús' : 'dánarbús'
 
   const { updateApplication, debouncedUpdateApplication } =
     useUpdateApplication({
@@ -105,18 +106,18 @@ export const RecallSettlementFields = () => {
       <GridColumn span={['12/12', '6/12']}>
         <DatePickerController
           name={
-            isRecallBankruptcy
+            isBankruptcy
               ? 'fields.settlementFields.deadlineDate'
               : 'fields.settlementFields.dateOfDeath'
           }
-          maxDate={isRecallBankruptcy ? new Date() : undefined}
+          maxDate={isBankruptcy ? new Date() : undefined}
           minDate={
-            isRecallBankruptcy ? subDays(new Date(), POSTPONE_LIMIT) : undefined
+            isBankruptcy ? subDays(new Date(), POSTPONE_LIMIT) : undefined
           }
-          label={isRecallBankruptcy ? 'Frestdagur þrotabús' : 'Dánardagur'}
+          label={isBankruptcy ? 'Frestdagur þrotabús' : 'Dánardagur'}
           required
           onChange={(val) => {
-            if (isRecallBankruptcy) {
+            if (isBankruptcy) {
               return updateApplication(
                 {
                   fields: {

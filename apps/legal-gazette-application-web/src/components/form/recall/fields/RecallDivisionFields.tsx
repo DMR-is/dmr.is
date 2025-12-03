@@ -13,10 +13,10 @@ import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
 type Props = {
-  required?: boolean
+  isBankruptcy: boolean
 }
 
-export const RecallDivisionFields = ({ required = true }: Props) => {
+export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
   const {
     getValues,
     setValue,
@@ -62,7 +62,7 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
 
       <GridColumn span="6/12">
         <InputController
-          required={required}
+          required={isBankruptcy}
           name="fields.divisionMeetingFields.meetingLocation"
           label="Staðsetning skiptafundar"
           onChange={(location) =>
@@ -84,7 +84,7 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
       </GridColumn>
       <GridColumn span="6/12">
         <DatePickerController
-          required={required}
+          required={isBankruptcy}
           withTime={true}
           name="fields.divisionMeetingFields.meetingDate"
           label="Dagsetning skiptafundar"

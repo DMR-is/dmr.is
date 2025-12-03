@@ -17,9 +17,16 @@ export const useSubmitApplication = (applicationId: string) => {
       { id: applicationId },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries(trpc.getApplicationById.queryFilter({
-            id: applicationId,
-          }))
+          queryClient.invalidateQueries(
+            trpc.getRecallBankruptcyApplicationById.queryFilter({
+              id: applicationId,
+            }),
+          )
+          queryClient.invalidateQueries(
+            trpc.getRecallDeceasedApplicationById.queryFilter({
+              id: applicationId,
+            }),
+          )
           toast.success('Umsókn hefur verið send inn', {
             toastId: 'submit-common-application-success',
           })
