@@ -4,6 +4,7 @@ import { IssuesControllerModule } from '../advert/issues/issues.controller.modul
 import { PublicationControllerModule } from '../advert/publications/publication.controller.module'
 import { CategoryControllerModule } from '../base-entity/category/category.controller.module'
 import { TypeControllerModule } from '../base-entity/type/type.controller.module'
+import { LegacyMigrationControllerModule } from '../legacy-migration/legacy-migration.controller.module'
 import { SubscriberControllerModule } from '../subscribers/subscriber.controller.module'
 
 @Module({
@@ -13,6 +14,7 @@ import { SubscriberControllerModule } from '../subscribers/subscriber.controller
     SubscriberControllerModule,
     PublicationControllerModule,
     IssuesControllerModule,
+    LegacyMigrationControllerModule,
   ],
   controllers: [],
   providers: [],

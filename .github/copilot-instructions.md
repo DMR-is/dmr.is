@@ -5,6 +5,55 @@
 > - **Next.js Architecture** (App Router, Server/Client Components, routing): [nextjs-architecture-guide.md](./nextjs-architecture-guide.md)
 > - **Documentation Guide** (how to use these files): [README-documentation.md](./README-documentation.md)
 
+## Planning-First Workflow
+
+**IMPORTANT**: For new features, multi-file changes, or complex tasks, always follow the planning-first approach:
+
+### When to Create a Planning File
+
+Before making multiple changes, **ask the user** if they want to create a planning file first when:
+- Implementing a new feature that spans multiple files
+- Making architectural changes
+- Refactoring existing code across modules
+- Adding new database migrations or models
+- Creating new API endpoints with corresponding frontend changes
+
+### Planning File Process
+
+1. **Ask First**: "This looks like a multi-step task. Would you like me to create a planning file first in `.github/planning/<product>/` before implementing?"
+
+2. **Create Planning File**: If approved, create a detailed plan at `.github/planning/<product>/plan-<feature-name>.md` including:
+   - Summary of the task
+   - Implementation phases
+   - Files to create/modify
+   - Database changes (if any)
+   - Security considerations
+   - Testing checklist
+   - Status tracking table
+
+3. **Summarize and Confirm**: After creating the planning file, provide a brief summary of:
+   - Key phases and their scope
+   - Number of files to be created/modified
+   - Any open questions or decisions needed
+   - Then ask: "Should I proceed with implementation?"
+
+4. **Update During Implementation**: Keep the planning file updated with progress (mark phases complete, note decisions made)
+
+### Planning Folder Structure
+
+```
+.github/planning/
+├── legal-gazette/           # Legal Gazette product plans
+├── ojoi/                    # Official Journal product plans
+└── shared/                  # Cross-product plans
+```
+
+### Example Planning File Reference
+
+See [plan-legacy-subscriber-migration.md](./planning/legal-gazette/plan-legacy-subscriber-migration.md) for a well-structured planning document.
+
+---
+
 ## Project Overview
 
 This is an **Nx monorepo** managing multiple applications for Iceland's DMR (Dómsmálaráðuneytið - Ministry of Justice). It includes systems for official publications, legal gazettes, and regulations.

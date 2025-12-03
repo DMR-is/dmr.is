@@ -45,9 +45,10 @@ async function authorize(nationalId?: string, accessToken?: string) {
   const client = getClient(accessToken)
 
   try {
-    const { data: member, error } = await serverFetcher(() => client.getMySubscriber())
+    const { data: member, error } = await serverFetcher(() =>
+      client.getMySubscriber(),
+    )
     if (!member) {
-
       const logger = getLogger('authorize')
 
       logger.error('Failure authenticating', {
@@ -96,6 +97,20 @@ export const authOptions: AuthOptions = {
           idToken: account.id_token,
           isActive: user.isActive,
         } as JWT
+      }
+
+      // If token is not active, we check if user is active to update token
+      // In case of account migration
+      if (!token.isActive) {
+        const member = await authorize(
+          token.nationalId as string,
+          token.accessToken as string,
+        )
+        if (member) {
+          token.isActive = member.isActive
+        } else {
+          token.isActive = false
+        }
       }
 
       if (!isExpired(token.accessToken, !!token.invalid)) {

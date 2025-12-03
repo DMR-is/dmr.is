@@ -21,9 +21,10 @@ import { HeaderLogo } from './HeaderLogo'
 
 export type HeaderProps = {
   variant?: 'blue' | 'white'
+  redirectTo?: string
 }
 
-export const HeaderLogin = ({ variant = 'blue' }: HeaderProps) => {
+export const HeaderLogin = ({ variant = 'blue', redirectTo = '/' }: HeaderProps) => {
   const [loading, setLoading] = useState(false)
   return (
     <Hidden print={true}>
@@ -70,7 +71,7 @@ export const HeaderLogin = ({ variant = 'blue' }: HeaderProps) => {
                       e.preventDefault()
                       try {
                         setLoading(true)
-                        await signIn(identityServerId, { callbackUrl: '/' })
+                        await signIn(identityServerId, { callbackUrl: redirectTo })
                       } catch (error) {
                         setLoading(false)
                       }
