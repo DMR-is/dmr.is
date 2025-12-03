@@ -119,6 +119,7 @@ describe('LegacyMigrationService', () => {
   }
   let subscriberModel: {
     create: jest.Mock
+    findOrCreate: jest.Mock
     findOne: jest.Mock
   }
   let awsService: {
@@ -139,6 +140,7 @@ describe('LegacyMigrationService', () => {
 
     subscriberModel = {
       create: jest.fn(),
+      findOrCreate: jest.fn(),
       findOne: jest.fn(),
     }
 
@@ -340,7 +342,10 @@ describe('LegacyMigrationService', () => {
     it('should create new subscriber and mark token as used on successful migration', async () => {
       const mockToken = createMockValidToken()
       legacyMigrationTokenModel.findOne.mockResolvedValue(mockToken)
-      subscriberModel.create.mockResolvedValue(createMockNewSubscriber())
+      subscriberModel.findOrCreate.mockResolvedValue([
+        createMockNewSubscriber(),
+        true,
+      ])
       legacySubscriberModel.update = jest.fn().mockResolvedValue([1])
 
       const result = await service.completeMigration(
@@ -349,10 +354,13 @@ describe('LegacyMigrationService', () => {
       )
 
       // Should create subscriber with legacy user's data
-      expect(subscriberModel.create).toHaveBeenCalledWith(
+      expect(subscriberModel.findOrCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          nationalId: TEST_NATIONAL_ID,
-          isActive: true, // Legacy user was active
+          where: { nationalId: TEST_NATIONAL_ID },
+          defaults: expect.objectContaining({
+            nationalId: TEST_NATIONAL_ID,
+            isActive: true, // Legacy user was active
+          }),
         }),
       )
 
@@ -380,24 +388,31 @@ describe('LegacyMigrationService', () => {
         legacySubscriber: inactiveUser,
       }
       legacyMigrationTokenModel.findOne.mockResolvedValue(mockToken)
-      subscriberModel.create.mockResolvedValue({
-        ...createMockNewSubscriber(),
-        isActive: false,
-        fromModel: () => ({
-          id: 'subscriber-new',
-          nationalId: TEST_NATIONAL_ID,
+      subscriberModel.findOrCreate.mockResolvedValue([
+        {
+          ...createMockNewSubscriber(),
           isActive: false,
-        }),
-      })
+          fromModel: () => ({
+            id: 'subscriber-new',
+            nationalId: TEST_NATIONAL_ID,
+            isActive: false,
+          }),
+        },
+        true,
+      ])
 
       const result = await service.completeMigration(
         TEST_TOKEN,
         TEST_NATIONAL_ID,
       )
 
-      expect(subscriberModel.create).toHaveBeenCalledWith(
+      expect(subscriberModel.findOrCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          isActive: false,
+          where: { nationalId: TEST_NATIONAL_ID },
+          defaults: expect.objectContaining({
+            nationalId: TEST_NATIONAL_ID,
+            isActive: false,
+          }),
         }),
       )
       expect(result.isActive).toBe(false)
