@@ -35,6 +35,7 @@ import { SettlementModel } from '../models/settlement.model'
 import { SignatureModel } from '../models/signature.model'
 import { StatusModel } from '../models/status.model'
 import { SubscriberModel } from '../models/subscriber.model'
+import { SubscriberPaymentModel } from '../models/subscriber-payment.model'
 import { TBRCompanySettingsModel } from '../models/tbr-company-settings.model'
 import { TBRTransactionModel } from '../models/tbr-transactions.model'
 import { TypeModel } from '../models/type.model'
@@ -80,6 +81,7 @@ import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.mo
             AdvertModel,
             SettlementModel,
             SubscriberModel,
+            SubscriberPaymentModel,
             ApplicationModel,
             AdvertPublicationModel,
             TypeCategoriesModel,

@@ -3,6 +3,7 @@ export enum LegalGazetteEvents {
   ADVERT_PUBLISHED = 'advert.published',
   STATUS_CHANGED = 'advert.status.changed',
   USER_ASSIGNED = 'advert.user.assigned',
+  SUBSCRIBER_CREATED = 'subscriber.created',
 }
 
 export enum LegalGazetteModels {
@@ -30,6 +31,7 @@ export enum LegalGazetteModels {
   DOCUMENT_ISSUE_SETTINGS = 'document_issue_settings',
   DOCUMENT_ISSUES = 'document_issues',
   TBR_COMPANY_SETTINGS = 'tbr_company_settings',
+  SUBSCRIBER_PAYMENT = 'subscriber_payments',
 }
 
 export const RECALL_BANKRUPTCY_ADVERT_TYPE_ID =

@@ -39,15 +39,15 @@ Reference implementation for advert payments:
 
 #### 1.1 Determine TBR Fee Codes
 
-- [ ] Identify correct fee code for subscription payments
-- [ ] Identify charge category for subscription payments
-- [ ] Confirm payment amount (3,000 ISK)
+- [x] Identify correct fee code for subscription payments (Using `LG_SUBSCRIPTION_FEE_CODE` env var)
+- [x] Identify charge category for subscription payments (Using existing `LG_TBR_CHARGE_CATEGORY_PERSON` and `LG_TBR_CHARGE_CATEGORY_COMPANY`)
+- [x] Confirm payment amount (3,000 ISK, configurable via `LG_SUBSCRIPTION_AMOUNT` env var)
 
 #### 1.2 Review Existing TBR Integration
 
-- [ ] Understand `TBRService` interface and methods
-- [ ] Review advert payment flow for reference
-- [ ] Identify any differences needed for subscription payments
+- [x] Understand `TBRService` interface and methods
+- [x] Review advert payment flow for reference
+- [x] Identify any differences needed for subscription payments
 
 ---
 
@@ -55,35 +55,21 @@ Reference implementation for advert payments:
 
 #### 2.1 Create Subscription Payment Service
 
-**Option A:** Add method to existing `TBRService`
-```typescript
-async createSubscriptionPayment(subscriber: SubscriberDto): Promise<void>
-```
-
-**Option B:** Create dedicated `SubscriptionPaymentService`
+**✅ Implemented:** Using existing `TBRService` via dependency injection in listener
 
 #### 2.2 Integration Points
 
-Two possible approaches:
-
-**Approach 1: Event-based (Listener)**
-- Create `SubscriberCreatedEvent`
-- Create `SubscriberCreatedListener` that triggers TBR payment
-- Similar to `AdvertPublishedListener`
-
-**Approach 2: Direct call in service**
-- Call payment service directly in `SubscriberService.createSubscriber()`
-- Simpler but less decoupled
+**✅ Implemented:** Event-based approach (Approach 1)
+- [x] Created `SubscriberCreatedEvent` with `isLegacyMigration` flag
+- [x] Created `SubscriberCreatedListener` that triggers TBR payment
+- [x] Listener only processes payment for non-legacy subscribers
+- [x] Similar pattern to `AdvertPublishedListener`
 
 #### 2.3 Subscriber Activation
 
-After TBR payment request is created:
-```typescript
-await this.subscriberModel.update(
-  { isActive: true },
-  { where: { id: subscriber.id } }
-)
-```
+**✅ Implemented:** Activation happens in listener after successful payment request creation
+- [x] `SubscriberCreatedListener` updates `isActive: true` after TBR payment posted
+- [x] Legacy migrations skip payment and keep their existing `isActive: true` status
 
 ---
 
@@ -105,24 +91,25 @@ Update registration page to show:
 
 ### Phase 4: Testing
 
-- [ ] Unit tests for subscription payment service
+- [ ] Unit tests for subscription payment listener
 - [ ] Integration test with TBR (dev environment)
 - [ ] E2E test of new user registration flow
 - [ ] Verify `isActive` is set correctly after payment creation
+- [ ] Test legacy migration flow (should skip payment)
 
 ---
 
 ## Open Questions
 
-1. **Fee Code:** What is the correct TBR fee code for subscription payments?
+1. **✅ Fee Code:** Fee code configured via `LG_SUBSCRIPTION_FEE_CODE` environment variable
 
-2. **Charge Category:** What charge category should be used?
+2. **✅ Charge Category:** Using existing TBR charge categories for person/company
 
-3. **Payment Confirmation:** Do we need to handle payment confirmation callbacks, or is payment request creation sufficient?
+3. **Payment Confirmation:** Do we need to handle payment confirmation callbacks, or is payment request creation sufficient? _(Currently: activation on request creation)_
 
-4. **Subscription Renewal:** How will annual renewal be handled? (Out of scope for this plan?)
+4. **Subscription Renewal:** How will annual renewal be handled? _(Out of scope for this plan)_
 
-5. **Refunds:** What happens if a user wants to cancel their subscription?
+5. **Refunds:** What happens if a user wants to cancel their subscription? _(Out of scope for this plan)_
 
 ---
 
@@ -136,17 +123,23 @@ Update registration page to show:
 
 ## File Summary
 
-### New Files to Create
+### New Files Created
 
 | File | Type | Description | Status |
 |------|------|-------------|--------|
-| TBD | Service/Listener | Subscription payment logic | 🔲 Not Started |
+| `subscriber-created.event.ts` | Event | Event emitted when subscriber is created | ✅ Complete |
+| `subscriber-created.listener.ts` | Listener | Handles subscription payment on subscriber creation | ✅ Complete |
+| `subscriber-payment.model.ts` | Model | Tracks subscription payment records | ✅ Complete |
+| `m-20251203-subscriber-payments.js` | Migration | Creates subscriber_payments table | ✅ Complete |
 
-### Files to Modify
+### Files Modified
 
 | File | Changes | Status |
 |------|---------|--------|
-| `subscriber.service.ts` | Trigger payment on new subscriber creation | 🔲 Not Started |
+| `constants.ts` | Added `SUBSCRIBER_CREATED` event and `SUBSCRIBER_PAYMENT` model | ✅ Complete |
+| `subscriber.service.ts` | Emit event on subscriber creation (legacy and new) | ✅ Complete |
+| `subscriber.provider.module.ts` | Register listener and TBR module | ✅ Complete |
+| `app.module.ts` | Register `SubscriberPaymentModel` | ✅ Complete |
 | `app/skraning/@register/page.tsx` | Show payment info and success state | 🔲 Not Started |
 
 ---
@@ -155,10 +148,202 @@ Update registration page to show:
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| Phase 1: Research & Configuration | 🔲 Not Started | Need TBR fee codes |
-| Phase 2: Backend Implementation | 🔲 Not Started | |
-| Phase 3: Frontend Updates | 🔲 Not Started | |
-| Phase 4: Testing | 🔲 Not Started | |
+| Phase 1: Research & Configuration | ✅ Complete | TBR integration reviewed, fee codes configured via env vars |
+| Phase 2: Backend Implementation | ✅ Complete | Event-based listener implemented, payment activation working |
+| Phase 2.4: Add `subscribedAt` Tracking | ✅ Complete | Enhancement to track subscription activation date |
+| Phase 3: Frontend Updates | 🔲 Not Started | Registration page needs payment info display |
+| Phase 4: Testing | 🔲 Not Started | Needs unit tests and E2E testing |
+
+## Environment Variables
+
+The following environment variables must be configured:
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `LG_SUBSCRIPTION_FEE_CODE` | TBR fee code for subscriptions | `SUBSCRIPTION_FEE` | Yes (set in TBR system) |
+| `LG_SUBSCRIPTION_AMOUNT` | Annual subscription fee in ISK | `3000` | No (defaults to 3000) |
+| `LG_TBR_CHARGE_CATEGORY_PERSON` | TBR charge category for persons | - | Yes (already exists) |
+| `LG_TBR_CHARGE_CATEGORY_COMPANY` | TBR charge category for companies | - | Yes (already exists) |
+| `LG_TBR_CREDENTIALS` | TBR API credentials | - | Yes (already exists) |
+| `LG_TBR_OFFICE_ID` | TBR office ID | - | Yes (already exists) |
+| `LG_TBR_PATH` | TBR API base path | - | Yes (already exists) |
+
+## Implementation Details
+
+### Payment Flow
+
+1. User authenticates via NIS (National ID Service)
+2. `SubscriberService.getUserByNationalId()` is called
+3. Service checks for existing subscriber
+4. If not found, checks for legacy migration eligibility
+5. If no legacy user, creates new subscriber with `isActive: false`
+6. `SUBSCRIBER_CREATED` event is emitted with `isLegacyMigration: false`
+7. `SubscriberCreatedListener` receives event
+8. Listener determines charge category (person vs company) from national ID
+9. Listener calls `TBRService.postPayment()` to create payment request
+10. On success, saves payment record to `subscriber_payments` table
+11. Listener updates subscriber `isActive: true`
+12. User can now access subscriber features
+
+### Legacy Migration Flow
+
+1. User authenticates via NIS
+2. `SubscriberService.getUserByNationalId()` is called
+3. Service checks for existing subscriber
+4. If not found, checks `autoMigrateByKennitala()`
+5. If legacy user found, creates new subscriber with `isActive: true` (inherits from legacy)
+6. `SUBSCRIBER_CREATED` event is emitted with `isLegacyMigration: true`
+7. `SubscriberCreatedListener` receives event but **skips payment** (logs and returns)
+8. User can immediately access subscriber features (no payment needed)
+
+---
+
+## Phase 2.4: Add `subscribedAt` Tracking (Enhancement)
+
+### Overview
+
+Track the exact date/time when a subscriber's subscription became active by adding a `subscribedAt` field to the subscriber model.
+
+### Requirements
+
+- **Field Name:** `subscribedAt` (nullable timestamp)
+- **Constraints:**
+  - Only set when `isActive` is `true`
+  - Should be `null` when `isActive` is `false`
+  - Once set, should not be changed (represents initial subscription date)
+- **Update Points:**
+  - Set when `SubscriberCreatedListener` activates a new subscriber
+  - Set when legacy migration creates an active subscriber
+
+### Implementation Tasks
+
+#### Database Changes
+
+- [x] Create migration to add `subscribedAt` column to `legal_gazette_subscribers` table
+  - Field: `SUBSCRIBED_AT TIMESTAMP WITH TIME ZONE`
+  - Nullable: `true`
+  - Default: `null`
+  - File: `m-20251203-subscriber-subscribed-at.js`
+
+#### Model Changes
+
+- [x] Update `SubscriberModel` to include `subscribedAt` field
+  - Type: `Date | null`
+  - Added to `SubscriberAttributes`, `SubscriberCreateAttributes`, and `SubscriberDto`
+  - Added to default scope
+  - Added column decorator with `field: 'subscribed_at'`
+
+#### Service Changes
+
+- [x] Update `SubscriberCreatedListener.createSubscriptionPayment()`
+  - Set `subscribedAt: new Date()` when updating `isActive: true`
+  - Updated logging to include subscribedAt timestamp
+
+- [x] Update `LegacyMigrationService.autoMigrateByKennitala()`
+  - Set `subscribedAt` using `legacyUser.subscribedAt` (preserves original subscription date from legacy system)
+  - Fallback chain: `legacyUser.subscribedAt || legacyUser.createdAt || new Date()`
+  - Only set if user is active: `legacyUser.isActive ? legacyUser.subscribedAt || legacyUser.createdAt || new Date() : null`
+
+- [x] Update `LegacyMigrationService.completeMigration()`
+  - Set `subscribedAt` using `legacyUser.subscribedAt` (preserves original subscription date from legacy system)
+  - Fallback chain: `legacyUser.subscribedAt || legacyUser.createdAt || new Date()`
+  - Only updates if not already set (preserves original subscription date)
+  - Code: `if (!newSubscriber.subscribedAt && legacyUser.isActive) { newSubscriber.subscribedAt = subscribedAt }`
+
+#### Legacy Data Migration
+
+**Note:** No automatic backfill migration needed.
+
+- Existing subscribers created before this feature will have `subscribedAt = null`
+- New logic will set `subscribedAt` automatically:
+  - For new subscribers: Set when activated via `SubscriberCreatedListener`
+  - For legacy migrations: Set using `legacyUser.createdAt` via `LegacyMigrationService`
+- Existing active subscribers can keep `subscribedAt = null` (indicates pre-feature subscribers)
+
+**Migration Strategy:**
+
+No automatic backfill is needed. The field will be populated organically:
+
+1. **New subscribers**: Automatically set via `SubscriberCreatedListener.createSubscriptionPayment()`
+2. **Future legacy migrations**: Automatically set via `LegacyMigrationService` using `legacyUser.subscribedAt` (original subscription date from legacy system)
+3. **Existing subscribers**: Will have `subscribedAt = null`, which is acceptable and indicates they subscribed before this feature was added
+
+**Optional Manual Backfill (if needed):**
+
+If you need to backfill existing active subscribers in the future, you can run:
+
+```sql
+-- Backfill subscribedAt for legacy migrations using legacy subscribedAt field
+UPDATE legal_gazette_subscribers s
+SET subscribed_at = (
+  SELECT COALESCE(ls.subscribed_at, ls.created, ls.migrated_at)
+  FROM legacy_subscribers ls
+  WHERE ls.migrated_to_subscriber_id = s.id
+)
+WHERE s.is_active = true
+  AND s.subscribed_at IS NULL
+  AND EXISTS (
+    SELECT 1 FROM legacy_subscribers ls
+    WHERE ls.migrated_to_subscriber_id = s.id
+  );
+
+-- Backfill subscribedAt for non-legacy active subscribers
+UPDATE legal_gazette_subscribers
+SET subscribed_at = created
+WHERE is_active = true
+  AND subscribed_at IS NULL;
+```
+
+**Note:** The migration uses `COALESCE(ls.subscribed_at, ls.created, ls.migrated_at)` to:
+1. **Prefer** the legacy subscriber's `subscribed_at` (original subscription date from legacy system)
+2. **Fall back** to `created` if `subscribed_at` is null
+3. **Final fallback** to `migrated_at` as last resort
+
+### Files to Create
+
+| File | Type | Description | Status |
+|------|------|-------------|--------|
+| `m-20251203-subscriber-subscribed-at.js` | Migration | Add `subscribed_at` column to subscribers | ✅ Complete |
+| `m-20251203-legacy-subscriber-subscribed-at.js` | Migration | Add `subscribed_at` column to legacy_subscribers | ✅ Complete |
+
+### Files to Modify
+
+| File | Changes | Status |
+|------|---------|--------|
+| `subscriber.model.ts` | Add `subscribedAt` field to model and DTO | ✅ Complete |
+| `legacy-subscriber.model.ts` | Add `subscribedAt` field to model | ✅ Complete |
+| `subscriber-created.listener.ts` | Set `subscribedAt` when activating subscriber | ✅ Complete |
+| `legacy-migration.service.ts` | Set `subscribedAt` on auto-migration and magic link migration using legacy `subscribedAt` | ✅ Complete |
+
+### Testing Requirements
+
+- [ ] Unit test: `subscribedAt` is set when new subscriber is activated
+- [ ] Unit test: `subscribedAt` is set when legacy user is migrated
+- [ ] Unit test: `subscribedAt` is `null` for inactive subscribers
+- [ ] Unit test: `subscribedAt` preserves original date on reactivation
+- [ ] Unit test: Existing subscribers can have `subscribedAt = null`
+- [ ] E2E test: New registration flow sets `subscribedAt` correctly
+- [ ] E2E test: Legacy migration preserves original subscription date
+
+### Notes
+
+**Business Logic:**
+- `subscribedAt` represents the **first time** a user became an active subscriber
+- This is different from `created` (account creation) and `modified` (last update)
+- Useful for:
+  - Calculating subscription renewal dates
+  - Determining subscription age for analytics
+  - Auditing subscription history
+
+**Edge Cases:**
+- If a subscriber is deactivated and reactivated, `subscribedAt` should **NOT** be updated (keeps original date)
+- **Legacy users:** Should use their original `subscribedAt` from the legacy_subscribers table (preserves exact original subscription date)
+- **Fallback chain for legacy users:** `legacyUser.subscribedAt` → `legacyUser.createdAt` → `new Date()`
+- **Pre-feature subscribers:** Existing subscribers created before this feature will have `subscribedAt = null`, which is acceptable and indicates they were created before subscription date tracking was implemented
+
+**Legacy Data Import:**
+- The `subscribedAt` field must be included when importing legacy subscriber data
+- See [Legacy Data Import Plan](./plan-legacy-data-import.md) for details on importing legacy subscription dates
 
 ---
 
