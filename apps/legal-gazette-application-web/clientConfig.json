@@ -62,6 +62,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -120,6 +121,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -185,6 +187,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -251,6 +254,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -316,6 +320,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -381,6 +386,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -453,6 +459,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -511,6 +518,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -576,6 +584,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -641,6 +650,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -701,6 +711,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -766,6 +777,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -831,6 +843,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1748,6 +1761,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1821,6 +1835,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1879,6 +1894,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -1943,6 +1959,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -2017,6 +2034,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       },
@@ -2079,6 +2097,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
       }
@@ -2228,14 +2247,18 @@
           },
           {
             "name": "sortBy",
+            "name": "sortBy",
             "required": false,
             "in": "query",
+            "schema": { "type": "string" }
             "schema": { "type": "string" }
           },
           {
             "name": "direction",
+            "name": "direction",
             "required": false,
             "in": "query",
+            "schema": { "$ref": "#/components/schemas/SortDirectionEnum" }
             "schema": { "$ref": "#/components/schemas/SortDirectionEnum" }
           },
           {
@@ -2255,6 +2278,27 @@
             "required": false,
             "in": "query",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "statusId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/StatusIdEnum" }
+            }
+          },
+          {
+            "name": "typeId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
             "name": "categoryId",
@@ -3029,6 +3073,7 @@
             "$ref": "#/components/schemas/AdvertPublicationDto"
           },
           "advert": { "$ref": "#/components/schemas/AdvertDto" },
+          "advert": { "$ref": "#/components/schemas/AdvertDto" },
           "html": { "type": "string" }
         },
         "required": ["publication", "advert", "html"]
@@ -3109,6 +3154,7 @@
         ]
       },
       "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
+      "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
       "GetAdvertsDto": {
         "type": "object",
         "properties": {
@@ -3156,7 +3202,12 @@
           "name": { "type": "string" },
           "nationalId": { "type": "string" },
           "address": { "type": "string" },
+          "name": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "address": { "type": "string" },
           "declaredClaims": { "type": "number" },
+          "deadline": { "type": "string", "nullable": true },
+          "dateOfDeath": { "type": "string", "nullable": true }
           "deadline": { "type": "string", "nullable": true },
           "dateOfDeath": { "type": "string", "nullable": true }
         },
@@ -3165,6 +3216,10 @@
           "liquidatorName",
           "liquidatorLocation",
           "liquidatorRecallStatementType",
+          "name",
+          "nationalId",
+          "address",
+          "deadline"
           "name",
           "nationalId",
           "address",

@@ -37,8 +37,8 @@ import {
   InvolvedPartyGuard,
   ISignatureService,
   IUserService,
-  TokenJwtAuthGuard,
 } from '@dmr.is/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 import {
   EnumValidationPipe,
   FileTypeValidationPipe,

@@ -1,9 +1,19 @@
-import { Body, Controller, Inject, Param, Post } from '@nestjs/common'
-import { ApiParam } from '@nestjs/swagger'
+import {
+  Body,
+  Controller,
+  Inject,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common'
+import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
+import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
+import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
+import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { PublishAdvertsBody } from '../../../models/advert.model'
 import { IPublicationService } from '../publications/publication.service.interface'
 
@@ -11,6 +21,9 @@ import { IPublicationService } from '../publications/publication.service.interfa
   path: 'adverts',
   version: '1',
 })
+@ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
+@AdminAccess()
 export class AdvertPublishController {
   constructor(
     @Inject(IPublicationService)

@@ -3,14 +3,16 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { PublicWebScopes, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
+import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import { SubscriberDto } from '../../models/subscriber.model'
 import { ISubscriberService } from './subscriber.service.interface'
 
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
+@PublicWebScopes()
 @Controller({
   path: 'subscribers',
   version: '1',

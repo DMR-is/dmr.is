@@ -1,4 +1,4 @@
-import { Footer } from '../../../components/footer/Footer'
+import { Footer } from '@dmr.is/ui/components/Footer/Footer'
 
 export default function UmsoknirLadningLayout({
   children,
@@ -8,7 +8,7 @@ export default function UmsoknirLadningLayout({
   return (
     <>
       {children}
-      <Footer />
+      <Footer site="applications" />
     </>
   )
 }

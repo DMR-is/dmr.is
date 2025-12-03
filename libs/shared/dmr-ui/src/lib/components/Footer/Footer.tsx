@@ -14,8 +14,8 @@ import {
 import { HeaderLogo } from '../Header/HeaderLogo'
 import * as styles from './footer.css'
 
-export const Footer = () => {
-  const hlekkir = [
+export const Footer = ({ site = 'web' }: { site?: 'web' | 'applications' }) => {
+  const innerLinks = [
     {
       title: 'Auglýsingarflokkar',
       href: '/sidur/auglysingaflokkar',
@@ -46,16 +46,31 @@ export const Footer = () => {
     },
   ]
 
-  const adridVefir = [
-    {
-      title: 'Umsóknarkerfi auglýsanda',
-      href: '/auglysingar?type=innkollun-throtabu',
-    },
-    {
-      title: 'Stjórnartíðindi',
-      href: 'https://island.is/stjornartidindi',
-    },
-  ]
+  // TODO: Before launch on prod, replace legal-gazette.dev URL's with prod URL's
+  const externalLinks =
+    site === 'web'
+      ? [
+          {
+            title: 'Umsóknarkerfi Lögbirtingarblaðs',
+            href: 'https://umsoknir.legal-gazette.dev.dmr-dev.cloud',
+          },
+          {
+            title: 'Stjórnartíðindi',
+            href: 'https://island.is/stjornartidindi',
+          },
+        ]
+      : site === 'applications'
+        ? [
+            {
+              title: 'Vefur Lögbirtingablaðs',
+              href: 'https://legal-gazette.dev.dmr-dev.cloud',
+            },
+            {
+              title: 'Stjórnartíðindi',
+              href: 'https://island.is/stjornartidindi',
+            },
+          ]
+        : []
 
   return (
     <footer>
@@ -88,39 +103,41 @@ export const Footer = () => {
                   </Stack>
                 </Stack>
               </Inline>
-              {}
+
               <div className={styles.footerDivider} />
             </GridColumn>
 
-            <GridColumn span={['12/12', '6/12', '6/12', '6/12']}>
-              <Stack space={2}>
-                <Text variant="eyebrow" color="blue400" paddingTop={4}>
-                  Hlekkir
-                </Text>
-                <Inline space={8}>
-                  <Stack space={1}>
-                    {hlekkir.map(
-                      ({ title, href }, index) =>
-                        index < 4 && (
-                          <Text key={index} variant="small" color="blue600">
-                            <a href={href}>{title}</a>
-                          </Text>
-                        ),
-                    )}
-                  </Stack>
-                  <Stack space={1}>
-                    {hlekkir.map(
-                      ({ title, href }, index) =>
-                        index >= 4 && (
-                          <Text key={index} variant="small" color="blue600">
-                            <a href={href}>{title}</a>
-                          </Text>
-                        ),
-                    )}
-                  </Stack>
-                </Inline>
-              </Stack>
-            </GridColumn>
+            {site === 'web' && (
+              <GridColumn span={['12/12', '6/12', '6/12', '6/12']}>
+                <Stack space={2}>
+                  <Text variant="eyebrow" color="blue400" paddingTop={4}>
+                    Hlekkir
+                  </Text>
+                  <Inline space={8}>
+                    <Stack space={1}>
+                      {innerLinks.map(
+                        ({ title, href }, index) =>
+                          index < 4 && (
+                            <Text key={index} variant="small" color="blue600">
+                              <a href={href}>{title}</a>
+                            </Text>
+                          ),
+                      )}
+                    </Stack>
+                    <Stack space={1}>
+                      {innerLinks.map(
+                        ({ title, href }, index) =>
+                          index >= 4 && (
+                            <Text key={index} variant="small" color="blue600">
+                              <a href={href}>{title}</a>
+                            </Text>
+                          ),
+                      )}
+                    </Stack>
+                  </Inline>
+                </Stack>
+              </GridColumn>
+            )}
           </GridRow>
         </GridContainer>
       </Box>
@@ -133,7 +150,7 @@ export const Footer = () => {
           </Box>
           <Box>
             <Inline space={[2, 2, 4]}>
-              {adridVefir.map(({ title, href }) => (
+              {externalLinks.map(({ title, href }) => (
                 <LinkV2 href={href} underline="normal" newTab>
                   <Text variant="small" color="blue600">
                     {title}

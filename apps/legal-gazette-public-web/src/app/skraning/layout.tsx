@@ -6,8 +6,6 @@ import { HeaderLogin } from '@dmr.is/ui/components/Header/HeaderLogin'
 
 import { authOptions } from '../../lib/authOptions'
 
-import '../../styles/global.css'
-
 export default async function RootLayout({
   register,
   login,

@@ -38,16 +38,17 @@ export const identityServerConfig =
         scope: `openid offline_access profile @dmr.is/lg-public-web`,
       }
 
-async function authorize(nationalId?: string, idToken?: string) {
-  if (!idToken || !nationalId) {
+async function authorize(nationalId?: string, accessToken?: string) {
+  if (!accessToken || !nationalId) {
     return null
   }
-  const client = getClient(idToken)
+  const client = getClient(accessToken)
 
   try {
-    const { data: member, error } = await serverFetcher(() => client.getMySubscriber())
+    const { data: member, error } = await serverFetcher(() =>
+      client.getMySubscriber(),
+    )
     if (!member) {
-
       const logger = getLogger('authorize')
 
       logger.error('Failure authenticating', {
@@ -96,6 +97,20 @@ export const authOptions: AuthOptions = {
           idToken: account.id_token,
           isActive: user.isActive,
         } as JWT
+      }
+
+      // If token is not active, we check if user is active to update token
+      // In case of account migration
+      if (!token.isActive) {
+        const member = await authorize(
+          token.nationalId as string,
+          token.accessToken as string,
+        )
+        if (member) {
+          token.isActive = member.isActive
+        } else {
+          token.isActive = false
+        }
       }
 
       if (!isExpired(token.accessToken, !!token.invalid)) {
@@ -149,7 +164,7 @@ export const authOptions: AuthOptions = {
         }
         const decodedAccessToken = decode(account?.id_token) as JWT
         const nationalId = decodedAccessToken?.nationalId
-        const authMember = await authorize(nationalId, account?.id_token)
+        const authMember = await authorize(nationalId, account?.access_token)
         // Return false if no user is found
         if (!authMember) {
           return false

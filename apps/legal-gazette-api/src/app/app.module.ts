@@ -16,6 +16,7 @@ import {
 } from '@dmr.is/shared/filters'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
+import { AuthorizationGuardModule } from '../core/guards/authorization-guard.module'
 import { AdvertModel } from '../models/advert.model'
 import { AdvertPublicationModel } from '../models/advert-publication.model'
 import { AdvertTypeFeeCodeModel } from '../models/advert-type-fee-code.model'
@@ -28,6 +29,10 @@ import { CourtDistrictModel } from '../models/court-district.model'
 import { FeeCodeModel } from '../models/fee-code.model'
 import { ForeclosureModel } from '../models/foreclosure.model'
 import { ForeclosurePropertyModel } from '../models/foreclosure-property.model'
+import { IssueModel } from '../models/issues.model'
+import { IssueSettingsModel } from '../models/issues-settings.model'
+import { LegacyMigrationTokenModel } from '../models/legacy-migration-token.model'
+import { LegacySubscriberModel } from '../models/legacy-subscriber.model'
 import { SettlementModel } from '../models/settlement.model'
 import { StatusModel } from '../models/status.model'
 import { SubscriberModel } from '../models/subscriber.model'
@@ -36,6 +41,7 @@ import { TypeModel } from '../models/type.model'
 import { TypeCategoriesModel } from '../models/type-categories.model'
 import { UserModel } from '../models/users.model'
 import { AdvertControllerModule } from '../modules/advert/advert.controller.module'
+import { IssuesControllerModule } from '../modules/advert/issues/issues.controller.module'
 import { PublicationControllerModule } from '../modules/advert/publications/publication.controller.module'
 import { StatisticsControllerModule } from '../modules/advert/statistics/statistics.controller.module'
 import { ApplictionControllerModule } from '../modules/applications/application.controller.module'
@@ -49,6 +55,7 @@ import { CommentControllerModule } from '../modules/comment/comment.controller.m
 import { CommunicationChannelControllerModule } from '../modules/communication-channel/communication-channel.module'
 import { CompanyControllerModule } from '../modules/external-systems/company/company.controller.module'
 import { ForeclosureControllerModule } from '../modules/external-systems/foreclosure/foreclosure.controller.module'
+import { LegacyMigrationControllerModule } from '../modules/legacy-migration/legacy-migration.controller.module'
 import { LGNationalRegistryControllerModule } from '../modules/national-registry/national-registry.controller.module'
 import { SettlementControllerModule } from '../modules/settlement/settlement.controller.module'
 import { SubscriberControllerModule } from '../modules/subscribers/subscriber.controller.module'
@@ -62,6 +69,7 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
 @Module({
   imports: [
     LoggingModule,
+    AuthorizationGuardModule, // Makes AuthorizationGuard available globally
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     SequelizeModule.forRootAsync({
@@ -98,6 +106,10 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
             CommentModel,
             ForeclosureModel,
             ForeclosurePropertyModel,
+            IssueModel,
+            IssueSettingsModel,
+            LegacySubscriberModel,
+            LegacyMigrationTokenModel,
           ],
         }),
       ],
@@ -129,6 +141,8 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
     CommunicationChannelControllerModule,
     StatisticsControllerModule,
     LGNationalRegistryControllerModule,
+    IssuesControllerModule,
+    LegacyMigrationControllerModule,
     {
       module: AuthModule,
       global: true,

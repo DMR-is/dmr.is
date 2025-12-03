@@ -12,11 +12,12 @@ import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { UserRoleTitle } from '@dmr.is/types'
 
-import { IUserService } from '../user/user.service.interface'
+import { IUserService } from '../../user/user.service.interface'
 
 const LOGGING_CATEGORY = 'role-guard'
 const LOGGING_CONTEXT = 'RoleGuard'
 
+// Role guard used for official-journal-admin-api and official-journal-application-api
 @Injectable()
 export class RoleGuard implements CanActivate {
   constructor(

@@ -39,9 +39,11 @@ import {
   ICommentServiceV2,
   IJournalService,
   IPriceService,
+} from '@dmr.is/modules'
+import {
   RoleGuard,
   TokenJwtAuthGuard,
-} from '@dmr.is/modules'
+} from '@dmr.is/modules/guards/auth'
 import {
   EnumValidationPipe,
   FileTypeValidationPipe,

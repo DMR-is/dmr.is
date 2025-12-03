@@ -12,16 +12,20 @@ import {
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
 import { Auth } from '@island.is/auth-nest-tools'
 
+import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
+import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import { CaseDto, CaseQueryDto, GetCasesDto } from '../../models/case.model'
 import { ICaseService } from './case.service.interface'
 
+// TODO: Determine usage - currently no tRPC routers call this controller
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
+@AdminAccess()
 @Controller({ path: 'cases', version: '1' })
 export class CaseController {
   constructor(

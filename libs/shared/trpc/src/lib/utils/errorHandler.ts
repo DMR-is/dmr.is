@@ -53,7 +53,7 @@ export async function createTRPCError(error: unknown) {
       ] ?? 'INTERNAL_SERVER_ERROR'
     return new TRPCError({
       code: trpcErrorCode,
-      message: err.message,
+      message: err.details && err.details.length ? err.details[0] : err.message,
       cause: err,
     })
   } catch (error) {
@@ -62,5 +62,17 @@ export async function createTRPCError(error: unknown) {
       message: 'Internal server error',
       cause: error,
     })
+  }
+}
+
+export async function trpcProcedureHandler<T>(
+  procedure: () => Promise<T>,
+): Promise<T> {
+  try {
+    const result = await procedure()
+    return result
+  } catch (error) {
+    const trpcError = await createTRPCError(error)
+    throw trpcError
   }
 }

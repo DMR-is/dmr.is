@@ -2,7 +2,7 @@ import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { PersonDto } from '@dmr.is/clients/national-registry'
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
 import { CurrentSubmittee } from '../../core/decorators/current-submittee.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
@@ -10,6 +10,7 @@ import { CurrentNationalRegistryPersonGuard } from '../../core/guards/current-su
 import { IslandIsSubmitApplicationDto } from '../../models/application.model'
 import { IApplicationService } from '../applications/application.service.interface'
 
+// NOTE: This controller is for island.is application submissions - uses CurrentNationalRegistryPersonGuard
 @Controller({
   path: 'applications/island-is',
   version: '1',

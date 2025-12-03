@@ -5,14 +5,17 @@ import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
+import { AdminAccess } from '../../../core/decorators/admin.decorator'
+import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { PdfService } from '../pdf/pdf.service'
 import { IPublicationService } from '../publications/publication.service.interface'
 
 @Controller({ path: 'adverts/pdf', version: '1' })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
+@AdminAccess()
 export class AdvertPdfController {
   constructor(
     @Inject(PdfService) private readonly pdfService: PdfService,

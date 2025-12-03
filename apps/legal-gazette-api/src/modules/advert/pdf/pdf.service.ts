@@ -6,11 +6,21 @@ import { IAWSService } from '@dmr.is/modules'
 
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
 import { getBrowser } from './lib/browser'
+import {
+  firstPageHeader,
+  issueOverwriteCss,
+  lastPageFooter,
+  pageHeaders,
+} from './lib/issue-templates'
+import { mergePdfBuffers, PdfBufferInformation } from './lib/mergeBuffer'
 import { pdfStyles } from './lib/pdf.css'
 
 const LOGGING_CONTEXT = 'PdfService'
 const bucket =
   process.env.LEGAL_GAZETTE_BUCKET || 'legal-gazette-files-bucket-dev'
+const cdnUrl =
+  process.env.LEGAL_GAZETTE_CDN_URL ||
+  'https://files.legal-gazette.dev.dmr-dev.cloud'
 
 @Injectable()
 export class PdfService {
@@ -50,18 +60,7 @@ export class PdfService {
     }
   }
 
-  async generatePdfAndSaveToS3(
-    html: string,
-    advertId: string,
-    publicationId: string,
-    title?: string,
-  ): Promise<{ s3Url: string; key: string; pdfBuffer: Buffer }> {
-    const pdfBuffer = await this.generatePdfFromHtml(
-      `${title ? `<head><title>${title}</title></head>` : ''}${html}`,
-    )
-
-    const fileName = 'advert.pdf'
-    const key = `adverts/${advertId}/${publicationId}/${fileName}`
+  async uploadPdfToS3(key: string, fileName: string, pdfBuffer: Buffer) {
     const upload = await this.s3.uploadObject(bucket, key, fileName, pdfBuffer)
 
     if (!upload.result.ok) {
@@ -80,11 +79,28 @@ export class PdfService {
       })
     }
 
+    const url = `${cdnUrl}/${key}`
+    return { s3Url: url }
+  }
+  async generatePdfAndSaveToS3(
+    html: string,
+    advertId: string,
+    publicationId: string,
+    title?: string,
+  ): Promise<{ s3Url: string; key: string; pdfBuffer: Buffer }> {
+    const pdfBuffer = await this.generatePdfFromHtml(
+      `${title ? `<head><title>${title}</title></head>` : ''}${html}`,
+    )
+
+    const fileName = 'advert.pdf'
+    const key = `adverts/${advertId}/${publicationId}/${fileName}`
+    const uploadRes = await this.uploadPdfToS3(key, fileName, pdfBuffer)
+
     const publication = await this.advertPublicationModel.findOneOrThrow({
       where: { id: publicationId, advertId },
     })
 
-    const url = 'https://files.legal-gazette.dev.dmr-dev.cloud/' + key
+    const url = uploadRes.s3Url
 
     await publication.update({
       pdfUrl: url,
@@ -144,5 +160,74 @@ export class PdfService {
     })
 
     return generatedPdf.pdfBuffer
+  }
+
+  async generatePdfIssueFromHtml(
+    htmlContent: string,
+    constants: {
+      issueNr: number
+      issueYear: number
+      yearsIssued: number
+      pageNumberDisplayStart: number
+      fullDate: string
+      syslumadur: string
+    },
+  ): Promise<PdfBufferInformation> {
+    const browers = await getBrowser()
+    try {
+      const page = await browers.newPage()
+      const issueFormatted = `${constants.issueNr}/${constants.issueYear}`
+      const html =
+        firstPageHeader(
+          constants.issueNr,
+          constants.yearsIssued,
+          constants.fullDate,
+        ) +
+        htmlContent +
+        lastPageFooter(
+          constants.syslumadur,
+          constants.issueNr,
+          constants.issueYear,
+        )
+
+      await page.setContent(html, {
+        waitUntil: 'networkidle0',
+      })
+
+      await page.addStyleTag({ content: pdfStyles })
+      await page.addStyleTag({
+        content: issueOverwriteCss,
+      })
+
+      const firstPageBuffer = await page.pdf({
+        format: 'A4',
+        pageRanges: '1',
+      })
+
+      const restBuffer = await page.pdf({
+        format: 'A4',
+        pageRanges: '2-',
+        footerTemplate: '<div></div>',
+        headerTemplate: pageHeaders(issueFormatted),
+        displayHeaderFooter: true,
+      })
+
+      const issueBufferInfo = await mergePdfBuffers(
+        [firstPageBuffer, restBuffer],
+        constants.pageNumberDisplayStart,
+      )
+
+      await browers.close()
+      return issueBufferInfo
+    } catch (error) {
+      this.logger.warn('Failed to generate PDF', {
+        context: LOGGING_CONTEXT,
+        error: error,
+      })
+
+      throw error
+    } finally {
+      await browers.close()
+    }
   }
 }

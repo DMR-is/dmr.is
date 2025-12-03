@@ -26,6 +26,10 @@ export enum LegalGazetteModels {
   FORECLOSURE = 'foreclosure',
   FORECLOSURE_PROPERTY = 'foreclosure_property',
   SIGNATURE = 'signature',
+  DOCUMENT_ISSUE_SETTINGS = 'document_issue_settings',
+  DOCUMENT_ISSUES = 'document_issues',
+  LEGACY_SUBSCRIBER = 'legacy_subscribers',
+  LEGACY_MIGRATION_TOKEN = 'legacy_migration_tokens',
 }
 
 export const RECALL_BANKRUPTCY_ADVERT_TYPE_ID =
