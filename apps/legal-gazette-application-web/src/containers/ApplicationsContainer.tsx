@@ -1,5 +1,7 @@
 'use client'
 
+import { parseAsInteger, useQueryState } from 'nuqs'
+
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   AlertMessage,
@@ -18,8 +20,11 @@ type Props = {
 
 export function ApplicationsContainer({ searchParams }: Props) {
   const trpc = useTRPC()
+  const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
   const { data, isLoading, error } = useQuery(
-    trpc.getApplications.queryOptions(),
+    trpc.getApplications.queryOptions({
+      page: page,
+    }),
   )
 
   if (isLoading) {
@@ -47,7 +52,11 @@ export function ApplicationsContainer({ searchParams }: Props) {
   return (
     <Stack space={4}>
       <UmsoknirHero />
-      <ApplicationList applications={applications ?? []} paging={paging} />
+      <ApplicationList
+        applications={applications ?? []}
+        paging={paging}
+        onPageChange={setPage}
+      />
     </Stack>
   )
 }
