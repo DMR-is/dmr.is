@@ -56,6 +56,7 @@ export class AdvertPublicationController {
   }
 
   @PublicOrApplicationWebScopes()
+  @AdminAccess()
   @Get('/adverts/:advertId/:version')
   @ApiParam({
     name: 'version',
