@@ -3,50 +3,52 @@ import addYears from 'date-fns/addYears'
 import { useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import {
-  ApplicationInputFields,
-  RecallApplicationInputFields,
-  RecallApplicationSchema,
-} from '@dmr.is/legal-gazette/schemas'
+import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateRecallApplication } from '../../../../hooks/useUpdateRecallApplication'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { ONE_WEEK, TWO_WEEKS } from '../../../../lib/constants'
 import { getNextWeekday, getWeekendDays } from '../../../../lib/utils'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
 type Props = {
-  required?: boolean
+  isBankruptcy: boolean
 }
 
-export const RecallDivisionFields = ({ required = true }: Props) => {
+export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
   const {
     getValues,
     setValue,
     watch,
     formState: { isReady, dirtyFields },
-  } = useFormContext<RecallApplicationSchema>()
+  } = useFormContext<RecallApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
 
-  const recallDates = watch(ApplicationInputFields.PUBLISHING_DATES)
+  const { updateApplication, debouncedUpdateApplication } =
+    useUpdateApplication({
+      id: applicationId,
+      type: 'RECALL',
+    })
+
+  const recallDates = watch('publishingDates') || []
 
   useEffect(() => {
     if (isReady && dirtyFields.publishingDates) {
-      setValue(ApplicationInputFields.PUBLISHING_DATES, [])
+      setValue('publishingDates', [])
 
-      updateDivisionMeetingDate(null)
+      updateApplication({
+        fields: {
+          divisionMeetingFields: {
+            meetingDate: null,
+          },
+        },
+      })
     }
   }, [recallDates, isReady, dirtyFields])
 
-  const { updateDivisionMeetingDate, updateDivisionMeetingLocation } =
-    useUpdateRecallApplication(applicationId)
-
   const minDate = recallDates?.length
-    ? addDays(
-        new Date(recallDates[recallDates.length - 1].publishingDate),
-        ONE_WEEK * 9,
-      )
+    ? addDays(new Date(recallDates[recallDates.length - 1]), ONE_WEEK * 9)
     : addDays(new Date(), TWO_WEEKS)
 
   const maxDate = addYears(minDate, 1)
@@ -60,22 +62,50 @@ export const RecallDivisionFields = ({ required = true }: Props) => {
 
       <GridColumn span="6/12">
         <InputController
-          required={required}
-          name={RecallApplicationInputFields.DIVISION_MEETING_LOCATION}
+          required={isBankruptcy}
+          name="fields.divisionMeetingFields.meetingLocation"
           label="Staðsetning skiptafundar"
-          onBlur={(location) => updateDivisionMeetingLocation(location)}
+          onChange={(location) =>
+            debouncedUpdateApplication(
+              {
+                fields: {
+                  divisionMeetingFields: {
+                    meetingLocation: location,
+                  },
+                },
+              },
+              {
+                successMessage: 'Staðsetning skiptafundar vistuð',
+                errorMessage: 'Ekki tókst að vista staðsetningu skiptafundar',
+              },
+            )
+          }
         />
       </GridColumn>
       <GridColumn span="6/12">
         <DatePickerController
-          required={required}
+          required={isBankruptcy}
           withTime={true}
-          name={RecallApplicationInputFields.DIVISION_MEETING_DATE}
+          name="fields.divisionMeetingFields.meetingDate"
           label="Dagsetning skiptafundar"
           minDate={minDate ? getNextWeekday(minDate) : undefined}
           maxDate={maxDate}
           excludeDates={excludeDates}
-          onChange={(date) => updateDivisionMeetingDate(date.toISOString())}
+          onChange={(date) =>
+            debouncedUpdateApplication(
+              {
+                fields: {
+                  divisionMeetingFields: {
+                    meetingDate: date.toISOString(),
+                  },
+                },
+              },
+              {
+                successMessage: 'Dagsetning skiptafundar vistuð',
+                errorMessage: 'Ekki tókst að vista dagsetningu skiptafundar',
+              },
+            )
+          }
         />
       </GridColumn>
     </GridRow>

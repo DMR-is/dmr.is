@@ -1,10 +1,16 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
+import { useCallback } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 
-import { RecallApplicationSchema } from '@dmr.is/legal-gazette/schemas'
 import {
-  AlertMessage,
+  ApplicationTypeEnum,
+  RecallApplicationWebSchema,
+  recallBankruptcyAnswersRefined,
+  recallDeceasedAnswersRefined,
+} from '@dmr.is/legal-gazette/schemas'
+import {
   Button,
   Inline,
   LinkV2,
@@ -26,17 +32,54 @@ import { RecallRequirementStatementFields } from './fields/RecallRequirementStat
 import { RecallSettlementFields } from './fields/RecallSettlementFields'
 
 export const RecallForm = (props: RecallFormProps) => {
-  const methods = useForm<RecallApplicationSchema>(recallForm(props))
+  const methods = useForm<RecallApplicationWebSchema>(recallForm(props))
 
   const { onValidSubmit, onInvalidSubmit } = useSubmitApplication(
     props.metadata.applicationId,
   )
 
-  const isBankruptcy = props.fields.type === 'RECALL_BANKRUPTCY'
+  const isBankruptcy =
+    props.application.type === ApplicationTypeEnum.RECALL_BANKRUPTCY
+
+  const onSubmit = useCallback(
+    (_data: RecallApplicationWebSchema) => {
+      // Manually get values to ensure we have the latest data
+      const data = methods.getValues()
+
+      if (isBankruptcy) {
+        const bankruptcyCheck = recallBankruptcyAnswersRefined.safeParse(data)
+
+        if (!bankruptcyCheck.success) {
+          bankruptcyCheck.error.issues.forEach((issue) => {
+            methods.setError(issue.path.join('.') as any, {
+              message: issue.message,
+            })
+          })
+
+          return onInvalidSubmit(data)
+        }
+      } else {
+        const deceasedCheck = recallDeceasedAnswersRefined.safeParse(data)
+
+        if (!deceasedCheck.success) {
+          deceasedCheck.error.issues.forEach((issue) => {
+            methods.setError(issue.path.join('.') as any, {
+              message: issue.message,
+            })
+          })
+
+          return onInvalidSubmit(data)
+        }
+      }
+
+      onValidSubmit()
+    },
+    [isBankruptcy, methods, onValidSubmit, onInvalidSubmit],
+  )
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onValidSubmit, onInvalidSubmit)}>
+      <form onSubmit={methods.handleSubmit(onSubmit, onInvalidSubmit)}>
         <ApplicationShell>
           <Stack space={[2, 3, 4]}>
             <Stack space={[1, 2]}>
@@ -58,20 +101,11 @@ export const RecallForm = (props: RecallFormProps) => {
               </Text>
             </Stack>
             <RecallAdvertFields />
-            <RecallSettlementFields />
+            <RecallSettlementFields isBankruptcy={isBankruptcy} />
             <RecallLiquidatorFields />
             <RecallRequirementStatementFields />
-            <PublishingFields
-              additionalTitle="innköllunar"
-              alert={
-                <AlertMessage
-                  type="info"
-                  title="Minnst tveir birtingardagar eru nauðsynlegir"
-                  message="Bættu við birtingardögum fyrir innköllunina hér fyrir neðan."
-                />
-              }
-            />
-            <RecallDivisionFields required={isBankruptcy} />
+            <PublishingFields additionalTitle="innköllunar" />
+            <RecallDivisionFields isBankruptcy={isBankruptcy} />
             <SignatureFields />
             <CommunicationChannelFields />
           </Stack>

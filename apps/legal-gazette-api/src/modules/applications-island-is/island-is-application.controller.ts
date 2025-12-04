@@ -7,7 +7,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 import { CurrentSubmittee } from '../../core/decorators/current-submittee.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { CurrentNationalRegistryPersonGuard } from '../../core/guards/current-submitte.guard'
-import { IslandIsSubmitCommonApplicationDto } from '../../models/application.model'
+import { IslandIsSubmitApplicationDto } from '../../models/application.model'
 import { IApplicationService } from '../applications/application.service.interface'
 
 // NOTE: This controller is for island.is application submissions - uses CurrentNationalRegistryPersonGuard
@@ -26,7 +26,7 @@ export class IslandIsApplicationController {
   @Post('submit')
   @LGResponse({ operationId: 'submitIslandIsApplication', status: 201 })
   async submitApplication(
-    @Body() body: IslandIsSubmitCommonApplicationDto,
+    @Body() body: IslandIsSubmitApplicationDto,
     @CurrentSubmittee() submittee: PersonDto,
   ) {
     return this.applicationService.submitIslandIsApplication(body, submittee)

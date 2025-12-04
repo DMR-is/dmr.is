@@ -46,7 +46,7 @@ export const ApplicationSubmittedContainer = ({ application }: Props) => {
   return (
     <ApplicationSubmitted
       adverts={data.adverts}
-      applicationType={application.applicationType}
+      applicationType={application.type}
     />
   )
 }

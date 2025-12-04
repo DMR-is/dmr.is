@@ -13,6 +13,7 @@ import {
 
 import { ApiProperty, IntersectionType, PickType } from '@nestjs/swagger'
 
+import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
@@ -22,7 +23,6 @@ import { AdvertCreateAttributes, AdvertModel } from './advert.model'
 import {
   ApplicationCreateAttributes,
   ApplicationModel,
-  ApplicationTypeEnum,
 } from './application.model'
 import { StatusIdEnum } from './status.model'
 
@@ -132,7 +132,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
       caseNumber: model.caseNumber,
       createdAt: model.createdAt.toISOString(),
       updatedAt: model.updatedAt.toISOString(),
-      deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+      deletedAt: model.deletedAt?.toISOString(),
       applicationType: model.application?.applicationType ?? undefined,
     }
   }

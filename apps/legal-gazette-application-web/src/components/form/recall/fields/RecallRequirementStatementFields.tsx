@@ -1,46 +1,51 @@
 import { useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import {
-  RecallApplicationInputFields,
-  RecallApplicationSchema,
-} from '@dmr.is/legal-gazette/schemas'
+import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 
 import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
 
 import { ApplicationRequirementStatementEnum } from '../../../../gen/fetch'
-import { useUpdateRecallApplication } from '../../../../hooks/useUpdateRecallApplication'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { requirementsStatementOptions } from '../../../../lib/constants'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
 
 export const RecallRequirementStatementFields = () => {
   const { getValues, setValue, watch } =
-    useFormContext<RecallApplicationSchema>()
-  const {
-    updateLiquidatorRecallRequirementStatementType,
-    updateLiquidatorRecallRequirementStatementLocation,
-  } = useUpdateRecallApplication(getValues('metadata.applicationId'))
+    useFormContext<RecallApplicationWebSchema>()
+
+  const metadata = getValues('metadata')
+
+  const { updateApplication, debouncedUpdateApplication } =
+    useUpdateApplication({
+      id: metadata.applicationId,
+      type: 'RECALL',
+    })
+
+  const liquidatorLocation = watch('fields.settlementFields.liquidatorLocation')
+
+  const customLiquidatorType = watch(
+    'fields.settlementFields.recallRequirementStatementType',
+  )
+
+  const recallRequirementStatementType = watch(
+    'fields.settlementFields.recallRequirementStatementType',
+  )
 
   useEffect(() => {
-    const liquidatorLocation = watch(
-      RecallApplicationInputFields.LIQUIDATOR_LOCATION,
-    )
-    const customLiquidatorType = getValues(
-      RecallApplicationInputFields.RECALL_REQUIREMENT_STATEMENT_TYPE,
-    )
-
     if (
       customLiquidatorType !==
       ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
-    )
+    ) {
       return
+    }
 
     setValue(
-      RecallApplicationInputFields.RECALL_REQUIREMENT_STATEMENT_LOCATION,
+      'fields.settlementFields.recallRequirementStatementLocation',
       liquidatorLocation,
     )
-  }, [watch(RecallApplicationInputFields.LIQUIDATOR_LOCATION)])
+  }, [liquidatorLocation, customLiquidatorType, setValue])
 
   return (
     <GridRow rowGap={[2, 3]}>
@@ -50,59 +55,85 @@ export const RecallRequirementStatementFields = () => {
       <GridColumn span={['12/12', '6/12']}>
         <SelectController
           options={requirementsStatementOptions}
-          name={RecallApplicationInputFields.RECALL_REQUIREMENT_STATEMENT_TYPE}
+          name={'fields.settlementFields.recallRequirementStatementType'}
           label="Kröfulýsingar"
           required
           onChange={(val) => {
-            updateLiquidatorRecallRequirementStatementType(
-              val as ApplicationRequirementStatementEnum,
+            updateApplication(
+              {
+                fields: {
+                  settlementFields: {
+                    recallRequirementStatementType:
+                      val as ApplicationRequirementStatementEnum,
+                  },
+                },
+              },
+              {
+                successMessage: 'Val á kröfulýsingu vistað',
+                errorMessage: 'Ekki tókst að vista val á kröfulýsingu',
+              },
             )
             if (
               val === ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
             ) {
-              const liquidatorLocation = getValues(
-                RecallApplicationInputFields.LIQUIDATOR_LOCATION,
-              )
               setValue(
-                RecallApplicationInputFields.RECALL_REQUIREMENT_STATEMENT_LOCATION,
+                'fields.settlementFields.recallRequirementStatementLocation',
                 liquidatorLocation,
               )
+              updateApplication({
+                fields: {
+                  settlementFields: {
+                    recallRequirementStatementLocation: liquidatorLocation,
+                  },
+                },
+              })
             } else {
               setValue(
-                RecallApplicationInputFields.RECALL_REQUIREMENT_STATEMENT_LOCATION,
+                'fields.settlementFields.recallRequirementStatementLocation',
                 '',
               )
+              updateApplication({
+                fields: {
+                  settlementFields: {
+                    recallRequirementStatementLocation: '',
+                  },
+                },
+              })
             }
           }}
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
         <InputController
+          key={recallRequirementStatementType}
+          name={'fields.settlementFields.recallRequirementStatementLocation'}
           label={
-            getValues(
-              RecallApplicationInputFields.RECALL_REQUIREMENT_STATEMENT_TYPE,
-            ) === ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
+            recallRequirementStatementType ===
+            ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
               ? 'Staðsetning skiptastjóra'
-              : getValues(
-                    RecallApplicationInputFields.RECALL_REQUIREMENT_STATEMENT_TYPE,
-                  ) ===
+              : recallRequirementStatementType ===
                   ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORLOCATION
                 ? 'Innslegin staðsetning'
                 : 'Tölvupóstur'
           }
-          key={getValues(
-            'fields.liquidatorFields.recallRequirementStatementType',
-          )}
-          name={
-            RecallApplicationInputFields.RECALL_REQUIREMENT_STATEMENT_LOCATION
-          }
-          onBlur={(val) =>
-            updateLiquidatorRecallRequirementStatementLocation(val)
+          onChange={(val) =>
+            debouncedUpdateApplication(
+              {
+                fields: {
+                  settlementFields: {
+                    recallRequirementStatementLocation: val,
+                  },
+                },
+              },
+              {
+                successMessage: 'Staðsetning skiptastjóra vistuð',
+                errorMessage: 'Ekki tókst að vista staðsetningu skiptastjóra',
+              },
+            )
           }
           readonly={
-            getValues(
-              RecallApplicationInputFields.RECALL_REQUIREMENT_STATEMENT_TYPE,
-            ) === ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
+            recallRequirementStatementType ===
+            ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
           }
         />
       </GridColumn>

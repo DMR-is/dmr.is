@@ -14526,7 +14526,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"deepmerge@npm:^4.2.2, deepmerge@npm:^4.3.1":
+"deepmerge@npm:4.3.1, deepmerge@npm:^4.2.2, deepmerge@npm:^4.3.1":
   version: 4.3.1
   resolution: "deepmerge@npm:4.3.1"
   checksum: 10c0/e53481aaf1aa2c4082b5342be6b6d8ad9dfe387bc92ce197a66dea08bd4265904a087e75e464f14d1347cf2ac8afe1e4c16b266e0561cc5df29382d3c5f80044
@@ -14873,6 +14873,7 @@ __metadata:
     csstype: "npm:^2.6.13"
     date-fns: "npm:^2.29.3"
     dd-trace: "npm:^5.56.0"
+    deepmerge: "npm:4.3.1"
     dotenv: "npm:~16.3.1"
     downshift: "npm:^5.4.3"
     elastic-builder: "npm:^2.26.0"

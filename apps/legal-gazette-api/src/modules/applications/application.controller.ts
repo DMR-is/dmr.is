@@ -8,13 +8,19 @@ import {
   Post,
   Query,
   UseGuards,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { PersonDto } from '@dmr.is/clients/national-registry'
 import { CurrentUser } from '@dmr.is/decorators'
-import { ApplicationWebScopes, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
+import {
+  ApplicationWebScopes,
+  TokenJwtAuthGuard,
+} from '@dmr.is/modules/guards/auth'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
@@ -23,11 +29,10 @@ import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import { CurrentNationalRegistryPersonGuard } from '../../core/guards/current-submitte.guard'
 import {
-  AddDivisionEndingForApplicationDto,
-  AddDivisionMeetingForApplicationDto,
   ApplicationDetailedDto,
   ApplicationDto,
-  ApplicationTypeEnum,
+  CreateDivisionEndingDto,
+  CreateDivisionMeetingDto,
   GetApplicationsDto,
   UpdateApplicationDto,
 } from '../../models/application.model'
@@ -47,7 +52,11 @@ export class ApplicationController {
   ) {}
 
   @Post('createApplication/:applicationType')
-  @ApiParam({ enum: ApplicationTypeEnum, name: 'applicationType' })
+  @ApiParam({
+    name: 'applicationType',
+    enum: ApplicationTypeEnum,
+    required: true,
+  })
   @LGResponse({ operationId: 'createApplication', type: ApplicationDto })
   async createApplication(
     @Param('applicationType', new EnumValidationPipe(ApplicationTypeEnum))
@@ -104,6 +113,7 @@ export class ApplicationController {
     operationId: 'updateApplication',
     type: ApplicationDetailedDto,
   })
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: false }))
   async updateApplication(
     @Param('applicationId') applicationId: string,
     @Body() body: UpdateApplicationDto,
@@ -117,7 +127,7 @@ export class ApplicationController {
   @UseGuards(CurrentNationalRegistryPersonGuard)
   async addDivisionMeetingAdvert(
     @Param('applicationId') applicationId: string,
-    @Body() body: AddDivisionMeetingForApplicationDto,
+    @Body() body: CreateDivisionMeetingDto,
     @CurrentSubmittee() submittee: PersonDto,
   ): Promise<void> {
     return this.applicationService.addDivisionMeetingAdvertToApplication(
@@ -132,7 +142,7 @@ export class ApplicationController {
   @UseGuards(CurrentNationalRegistryPersonGuard)
   async addDivisionEndingAdvertToApplication(
     @Param('applicationId') applicationId: string,
-    @Body() body: AddDivisionEndingForApplicationDto,
+    @Body() body: CreateDivisionEndingDto,
     @CurrentSubmittee() submittee: PersonDto,
   ): Promise<void> {
     return this.applicationService.addDivisionEndingAdvertToApplication(

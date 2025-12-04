@@ -9,10 +9,13 @@ module.exports = {
     // eslint-disable-next-line no-console
     console.log(cwd())
 
-    const typeSeed = await readFile('./src/modules/type/type.seed.sql', 'utf8')
+    const typeSeed = await readFile(
+      './src/modules/base-entity/type/type.seed.sql',
+      'utf8',
+    )
 
     const categoriesSeed = await readFile(
-      './src/modules/category/category.seed.sql',
+      './src/modules/base-entity/category/category.seed.sql',
       'utf8',
     )
 
@@ -22,7 +25,7 @@ module.exports = {
     )
 
     const statusSeed = await readFile(
-      './src/modules/status/status.seed.sql',
+      './src/modules/base-entity/status/status.seed.sql',
       'utf8',
     )
 
@@ -31,7 +34,7 @@ module.exports = {
       'utf8',
     )
     const courtDistrictSeed = await readFile(
-      './src/modules/court-district/court-district.seed.sql',
+      './src/modules/base-entity/court-district/court-district.seed.sql',
       'utf8',
     )
 

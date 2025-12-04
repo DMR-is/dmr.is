@@ -1,9 +1,11 @@
 'use client'
 import { useParams } from 'next/navigation'
 
+import get from 'lodash/get'
 import { useEffect, useState } from 'react'
 
-import { addDivisionMeetingValidationSchema } from '@dmr.is/legal-gazette/schemas'
+import { createDivisionMeetingInput } from '@dmr.is/legal-gazette/schemas'
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   Box,
   Button,
@@ -20,7 +22,7 @@ import {
   toast,
 } from '@dmr.is/ui/components/island-is'
 
-import { AddDivisionMeetingForApplicationDto } from '../../gen/fetch'
+import { CreateDivisionMeetingDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { Center } from '../center/Center'
 import { DivisionSignatureFields } from '../form/fields/DivisionSignatureFields'
@@ -32,8 +34,9 @@ type Props = {
   onVisibilityChange: (isVisible: boolean) => void
 }
 
-const initFormState: AddDivisionMeetingForApplicationDto = {
+const initFormState: CreateDivisionMeetingDto = {
   additionalText: '',
+  communicationChannels: [],
   meetingDate: '',
   meetingLocation: '',
   signature: {
@@ -56,8 +59,25 @@ export const CreateDivisionMeeting = ({
   )
   const [submitClicked, setSubmitClicked] = useState(false)
 
+  const { data: application } = useQuery(
+    trpc.getApplicationById.queryOptions({ id: applicationId as string }),
+  )
+
+  useEffect(() => {
+    const communicationChannels = get(
+      application?.answers,
+      'communicationChannels',
+      [],
+    )
+
+    setFormState((prev) => ({
+      ...prev,
+      communicationChannels: communicationChannels,
+    }))
+  }, [application?.answers])
+
   const [formState, setFormState] =
-    useState<AddDivisionMeetingForApplicationDto>(initFormState)
+    useState<CreateDivisionMeetingDto>(initFormState)
 
   const [fieldErrors, setFieldErrors] = useState<
     { [key: string]: string[] } | undefined
@@ -70,8 +90,7 @@ export const CreateDivisionMeeting = ({
   }, [formState])
 
   const setAndGetFormValidation = async () => {
-    const formValidation =
-      addDivisionMeetingValidationSchema.safeParse(formState)
+    const formValidation = createDivisionMeetingInput.safeParse(formState)
     const formErrors = formValidation.error?.flatten().fieldErrors
 
     setFieldErrors(formErrors)
@@ -91,13 +110,12 @@ export const CreateDivisionMeeting = ({
         },
         {
           onSuccess: () => {
-            queryClient.invalidateQueries(
-              trpc.getAdvertByCaseId.queryFilter({
-                caseId: applicationId as string,
-              }),
-            )
+            queryClient.invalidateQueries(trpc.getAdvertByCaseId.queryFilter())
             setSubmitClicked(false)
-            setFormState(initFormState)
+            setFormState({
+              ...initFormState,
+              communicationChannels: formState.communicationChannels,
+            })
 
             toast.success('Skiptafundur stofnaður', {
               toastId: 'create-division-meeting',

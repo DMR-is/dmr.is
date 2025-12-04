@@ -3,6 +3,13 @@ import { ApiProperty } from '@nestjs/swagger'
 export class DetailedDto {
   @ApiProperty({
     type: String,
+    description: 'Unique identifier',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  readonly id!: string
+
+  @ApiProperty({
+    type: String,
     description: 'ISO representation of the creation date',
     example: '2021-08-31T12:00:00.000Z',
   })
@@ -22,5 +29,5 @@ export class DetailedDto {
     required: false,
     nullable: true,
   })
-  readonly deletedAt!: string | null
+  readonly deletedAt?: string
 }

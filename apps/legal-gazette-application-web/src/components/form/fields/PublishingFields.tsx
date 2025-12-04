@@ -3,10 +3,7 @@ import addYears from 'date-fns/addYears'
 import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import {
-  ApplicationInputFields,
-  BaseApplicationSchema,
-} from '@dmr.is/legal-gazette/schemas'
+import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import {
   AlertMessage,
   Box,
@@ -29,16 +26,18 @@ type Props = {
 }
 
 export const PublishingFields = ({ additionalTitle, alert }: Props) => {
-  const { getValues, watch, setValue } = useFormContext<BaseApplicationSchema>()
-  const { updatePublishingDates } = useUpdateApplication(
-    getValues('metadata.applicationId'),
-  )
+  const { getValues, watch, setValue, formState } =
+    useFormContext<BaseApplicationWebSchema>()
+
+  const { metadata } = getValues()
+
+  const { updateApplication } = useUpdateApplication({
+    id: metadata.applicationId,
+    type: 'COMMON',
+  })
 
   const currentDates =
-    watch(
-      ApplicationInputFields.PUBLISHING_DATES,
-      getValues(ApplicationInputFields.PUBLISHING_DATES),
-    ) || []
+    watch('publishingDates', getValues('publishingDates')) || []
 
   const [dateState, setDateState] = useState(currentDates)
 
@@ -47,54 +46,75 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
 
     const lastDate =
       dateState.length > 0
-        ? new Date(dateState[dateState.length - 1].publishingDate)
+        ? new Date(dateState[dateState.length - 1])
         : new Date()
     const newDate = getNextWeekday(addDays(lastDate, TWO_WEEKS))
-    const newDates = [...dateState, { publishingDate: newDate.toISOString() }]
+    const newDates = [...dateState, newDate.toISOString()]
     setDateState(newDates)
-    setValue(ApplicationInputFields.PUBLISHING_DATES, newDates)
-    updatePublishingDates(
-      newDates.map(({ publishingDate }) =>
-        new Date(publishingDate).toISOString(),
-      ),
+    setValue('publishingDates', newDates)
+    updateApplication(
+      {
+        publishingDates: newDates,
+      },
+      {
+        successMessage: 'Birtingardegi bætt við',
+        errorMessage: 'Ekki tókst að bæta við birtingardegi',
+      },
     )
   }
 
   const removeDate = (index: number) => {
     const newDates = dateState.filter((_, i) => i !== index)
-    setValue(ApplicationInputFields.PUBLISHING_DATES, newDates)
+    setValue('publishingDates', newDates)
     setDateState(newDates)
-    updatePublishingDates(
-      newDates.map(({ publishingDate }) =>
-        new Date(publishingDate).toISOString(),
-      ),
+    updateApplication(
+      {
+        publishingDates: newDates,
+      },
+      {
+        successMessage: 'Birtingardagur fjarlægður',
+        errorMessage: 'Ekki tókst að fjarlægja birtingardag',
+      },
     )
   }
 
   const onDateChange = (date: Date, index: number) => {
     const newDates = [...dateState]
-    newDates[index] = { publishingDate: date.toISOString() }
+    newDates[index] = date.toISOString()
     setDateState(newDates)
-    setValue(ApplicationInputFields.PUBLISHING_DATES, newDates)
-    updatePublishingDates(
-      newDates.map(({ publishingDate }) =>
-        new Date(publishingDate).toISOString(),
-      ),
+    setValue('publishingDates', newDates)
+    updateApplication(
+      {
+        publishingDates: newDates,
+      },
+      {
+        successMessage: 'Birtingardagur uppfærður',
+        errorMessage: 'Ekki tókst að uppfæra birtingardag',
+      },
     )
   }
+
+  const signatureError = formState.errors.publishingDates
 
   return (
     <Box id="publishingDates">
       <GridRow rowGap={[2, 3]}>
         <GridColumn span="12/12">
-          <Text variant="h4">{`Birting${additionalTitle ? ` ${additionalTitle}` : ''}`}</Text>
+          <Stack space={[2, 3]}>
+            <Text variant="h4">{`Birting${additionalTitle ? ` ${additionalTitle}` : ''}`}</Text>
+            {signatureError && (
+              <AlertMessage
+                type="error"
+                title="Birtingardagar ekki útfylltir"
+                message={signatureError.message}
+              />
+            )}
+          </Stack>
         </GridColumn>
-        {alert && <GridColumn span="12/12">{alert}</GridColumn>}
         <GridColumn span="12/12">
           <Stack space={[2, 3]}>
             {currentDates.map((date, index) => {
-              const prevDate =
-                index === 0 ? null : currentDates[index - 1].publishingDate
+              const prevDate = index === 0 ? null : currentDates[index - 1]
               const maxDate = addYears(new Date(), ONE_DAY)
 
               const minDate =
@@ -118,9 +138,9 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
                   <DatePickerController
                     maxDate={getNextWeekday(maxDate)}
                     label={`Birtingardagur ${index + 1}`}
-                    name={`${ApplicationInputFields.PUBLISHING_DATES}[${index}].publishingDate`}
+                    name={`${'publishingDates'}[${index}]`}
                     required={index === 0}
-                    defaultValue={date.publishingDate}
+                    defaultValue={date}
                     minDate={getNextWeekday(minDate)}
                     excludeDates={excludeDates}
                     onChange={(date) => onDateChange(date, index)}

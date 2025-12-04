@@ -49,6 +49,7 @@ import {
   AdvertPublicationsCreateAttributes,
   AdvertVersionEnum,
 } from './advert-publication.model'
+import { ApplicationModel } from './application.model'
 import { CaseModel } from './case.model'
 import { CategoryDto, CategoryModel } from './category.model'
 import { CommentDto, CommentModel, CommentTypeEnum } from './comment.model'
@@ -85,6 +86,7 @@ type AdvertAttributes = {
   caseId: string | null
   templateType: AdvertTemplateType
   islandIsApplicationId: string | null
+  applicationId: string | null
   typeId: string
   categoryId: string
   statusId: string
@@ -128,6 +130,7 @@ export type AdvertCreateAttributes = {
   caseId?: string | null
   templateType?: AdvertTemplateType
   islandIsApplicationId?: string | null
+  applicationId?: string | null
   typeId: string
   categoryId: string
   statusId?: string
@@ -315,6 +318,15 @@ export class AdvertModel extends BaseModel<
   @ForeignKey(() => CaseModel)
   @ApiProperty({ type: String, required: false, nullable: true })
   caseId?: string | null
+
+  @Column({
+    type: DataType.UUID,
+    defaultValue: null,
+    allowNull: true,
+  })
+  @ForeignKey(() => ApplicationModel)
+  @ApiProperty({ type: String, required: false, nullable: true })
+  applicationId?: string | null
 
   @Column({
     type: DataType.UUID,
@@ -668,7 +680,7 @@ export class AdvertModel extends BaseModel<
         createdAt: model.createdAt.toISOString(),
         updatedAt: model.updatedAt.toISOString(),
         hasInternalComments: model.hasInternalComments,
-        deletedAt: model.deletedAt ? model.deletedAt.toISOString() : null,
+        deletedAt: model.deletedAt?.toISOString(),
         category: model.category.fromModel(),
         type: model.type.fromModel(),
         status: model.status.fromModel(),
@@ -1006,6 +1018,11 @@ export class CreateAdvertInternalDto extends PickType(AdvertModel, [
   @IsOptional()
   @IsEnum(AdvertTemplateType)
   templateType?: AdvertTemplateType
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsUUID()
+  applicationId?: string
 
   @ApiProperty({
     type: String,

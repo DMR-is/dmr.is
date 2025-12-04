@@ -7,8 +7,8 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import {
-  AddDivisionEndingForApplicationDto,
-  AddDivisionMeetingForApplicationDto,
+  CreateDivisionEndingDto,
+  CreateDivisionMeetingDto,
 } from '../../../gen/fetch'
 
 export const DivisionSignatureFields = ({
@@ -18,15 +18,10 @@ export const DivisionSignatureFields = ({
 }: {
   fieldErrors: { [key: string]: string[] } | undefined
   setFormState: React.Dispatch<
-    React.SetStateAction<
-      | AddDivisionMeetingForApplicationDto
-      | AddDivisionEndingForApplicationDto
-      | any
-    >
+    | React.SetStateAction<CreateDivisionMeetingDto | CreateDivisionEndingDto>
+    | any
   >
-  formState:
-    | AddDivisionMeetingForApplicationDto
-    | AddDivisionEndingForApplicationDto
+  formState: CreateDivisionMeetingDto | CreateDivisionEndingDto
 }) => {
   return (
     <GridRow rowGap={[1, 2]}>

@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
 import {
-  ApplicationInputFields,
-  BaseApplicationSchema,
+  BaseApplicationWebSchema,
   CommunicationChannelSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import {
@@ -26,16 +25,16 @@ import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 
 export const CommunicationChannelFields = () => {
   const { getValues, setValue, watch, formState, trigger } =
-    useFormContext<BaseApplicationSchema>()
+    useFormContext<BaseApplicationWebSchema>()
 
-  const { updateCommunicationChannels } = useUpdateApplication(
-    getValues(ApplicationInputFields.APPLICATION_ID),
-  )
+  const metadata = getValues('metadata')
 
-  const channels: CommunicationChannelSchema[] = watch(
-    ApplicationInputFields.COMMUNICATION_CHANNELS,
-    [],
-  )
+  const { updateApplication } = useUpdateApplication({
+    id: metadata.applicationId,
+    type: 'COMMON',
+  })
+
+  const channels = watch('communicationChannels', []) || []
 
   const [toggleAdd, setToggleAdd] = useState(false)
   const [isEditing, setIsEditing] = useState('')
@@ -67,10 +66,20 @@ export const CommunicationChannelFields = () => {
       channels.push(channel)
     }
 
-    setValue(ApplicationInputFields.COMMUNICATION_CHANNELS, channels, {
+    setValue('communicationChannels', channels, {
       shouldValidate: true,
     })
-    updateCommunicationChannels(channels)
+    updateApplication(
+      { communicationChannels: channels },
+      {
+        successMessage: isEditing
+          ? 'Samskiptaleið uppfærð'
+          : 'Samskiptaleið bætt við',
+        errorMessage: isEditing
+          ? 'Ekki tókst að uppfæra samskiptaleið'
+          : 'Ekki tókst að bæta við samskiptaleið',
+      },
+    )
     setToggleAdd(false)
     setIsEditing('')
     setCurrentChannel({ email: '', name: '', phone: '' })
@@ -78,22 +87,25 @@ export const CommunicationChannelFields = () => {
 
   const removeChannel = (index: number) => {
     const updatedChannels = channels.filter((_, i) => i !== index)
-    setValue(ApplicationInputFields.COMMUNICATION_CHANNELS, updatedChannels)
-    updateCommunicationChannels(updatedChannels)
-    trigger(ApplicationInputFields.COMMUNICATION_CHANNELS)
+    setValue('communicationChannels', updatedChannels)
+    updateApplication(
+      { communicationChannels: updatedChannels },
+      {
+        successMessage: 'Samskiptaleið fjarlægð',
+        errorMessage: 'Ekki tókst að fjarlægja samskiptaleið',
+      },
+    )
+    trigger('communicationChannels')
   }
 
   const handleFirstFocus = () => {
-    const check =
-      formState.touchedFields[ApplicationInputFields.COMMUNICATION_CHANNELS]
+    const check = formState.touchedFields['communicationChannels']
 
     if (check) return
 
-    setValue(
-      ApplicationInputFields.COMMUNICATION_CHANNELS,
-      getValues(ApplicationInputFields.COMMUNICATION_CHANNELS),
-      { shouldTouch: true },
-    )
+    setValue('communicationChannels', getValues('communicationChannels'), {
+      shouldTouch: true,
+    })
   }
 
   return (

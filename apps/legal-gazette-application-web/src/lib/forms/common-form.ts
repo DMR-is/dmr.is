@@ -1,42 +1,29 @@
 import { UseFormProps } from 'react-hook-form'
+import z from 'zod'
 
 import {
-  ApplicationMetaDataSchema,
-  CommonApplicationFieldsSchema,
   CommonApplicationSchema,
-  commonApplicationSchema,
-  CommunicationChannelSchema,
-  PublishingDatesSchema,
-  SignatureSchema,
+  CommonApplicationWebSchema,
+  commonApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { DeepPartial } from '@trpc/server'
+
+export type CommonApplicationWebMetadata =
+  CommonApplicationWebSchema['metadata']
 
 export type CommonFormProps = {
-  metadata: ApplicationMetaDataSchema
-  fields: DeepPartial<CommonApplicationFieldsSchema>
-  signature: SignatureSchema
-  publishingDates: PublishingDatesSchema[]
-  communicationChannels: CommunicationChannelSchema[]
-  additionalText?: string
+  metadata: CommonApplicationWebMetadata
+  application: CommonApplicationSchema
 }
 export const commonForm = ({
+  application,
   metadata,
-  fields,
-  signature,
-  publishingDates,
-  communicationChannels,
-  additionalText,
-}: CommonFormProps): UseFormProps<CommonApplicationSchema> => ({
+}: CommonFormProps): UseFormProps<CommonApplicationWebSchema> => ({
   mode: 'onChange',
-  resolver: zodResolver(commonApplicationSchema),
+  resolver: zodResolver(commonApplicationWebSchema),
   defaultValues: {
     metadata,
-    fields,
-    signature,
-    publishingDates,
-    communicationChannels,
-    additionalText,
+    ...application,
   },
 })

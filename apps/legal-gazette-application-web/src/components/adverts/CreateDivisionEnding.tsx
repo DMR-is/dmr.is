@@ -1,9 +1,11 @@
 'use client'
 import { useParams } from 'next/navigation'
 
+import get from 'lodash/get'
 import { useEffect, useState } from 'react'
 
-import { addDivisionEndingValidationSchema } from '@dmr.is/legal-gazette/schemas'
+import { createDivisionEndingInput } from '@dmr.is/legal-gazette/schemas'
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   Box,
   Button,
@@ -20,7 +22,7 @@ import {
   toast,
 } from '@dmr.is/ui/components/island-is'
 
-import { AddDivisionEndingForApplicationDto } from '../../gen/fetch'
+import { CreateDivisionEndingDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { Center } from '../center/Center'
 import { DivisionSignatureFields } from '../form/fields/DivisionSignatureFields'
@@ -30,18 +32,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 type Props = {
   isVisible: boolean
   onVisibilityChange(isVisible: boolean): void
-}
-
-const initFormState: AddDivisionEndingForApplicationDto = {
-  declaredClaims: -1,
-  additionalText: '',
-  scheduledAt: '',
-  signature: {
-    date: undefined,
-    location: '',
-    name: '',
-    onBehalfOf: '',
-  },
 }
 
 export const CreateDivisionEnding = ({
@@ -55,10 +45,38 @@ export const CreateDivisionEnding = ({
     trpc.addDivisionEnding.mutationOptions(),
   )
 
+  const { data: application } = useQuery(
+    trpc.getApplicationById.queryOptions({ id: id as string }),
+  )
+
+  useEffect(() => {
+    const communicationChannels = get(
+      application?.answers,
+      'communicationChannels',
+      [],
+    )
+
+    setFormState((prev) => ({
+      ...prev,
+      communicationChannels: communicationChannels,
+    }))
+  }, [application?.answers])
+
   const [submitClicked, setSubmitClicked] = useState(false)
 
-  const [formState, setFormState] =
-    useState<AddDivisionEndingForApplicationDto>(initFormState)
+  const [formState, setFormState] = useState<CreateDivisionEndingDto>({
+    declaredClaims: -1,
+    additionalText: '',
+    meetingDate: '',
+    meetingLocation: '',
+    communicationChannels: [],
+    signature: {
+      date: undefined,
+      location: '',
+      name: '',
+      onBehalfOf: '',
+    },
+  })
 
   const [fieldErrors, setFieldErrors] = useState<
     { [key: string]: string[] } | undefined
@@ -71,8 +89,7 @@ export const CreateDivisionEnding = ({
   }, [formState])
 
   const setAndGetFormValidation = async () => {
-    const formValidation =
-      addDivisionEndingValidationSchema.safeParse(formState)
+    const formValidation = createDivisionEndingInput.safeParse(formState)
     const formErrors = formValidation.error?.flatten().fieldErrors
 
     setFieldErrors(formErrors)
@@ -92,11 +109,7 @@ export const CreateDivisionEnding = ({
         },
         {
           onSuccess: () => {
-            queryClient.invalidateQueries(
-              trpc.getAdvertByCaseId.queryFilter({
-                caseId: id as string,
-              }),
-            )
+            queryClient.invalidateQueries(trpc.getAdvertByCaseId.queryFilter())
             toast.success('Skiptalokum bætt við', {
               toastId: 'add-division-ending-success',
             })
@@ -159,7 +172,7 @@ export const CreateDivisionEnding = ({
                             handleChange={(date) =>
                               setFormState({
                                 ...formState,
-                                scheduledAt: date.toISOString(),
+                                meetingDate: date.toISOString(),
                               })
                             }
                           />

@@ -35,7 +35,7 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
     <Box padding={[2, 3, 4]} className={styles.advertPublication}>
       <Stack space={[2]}>
         {advert.publications.map((pub, i) => {
-          const isPublished = pub.publishedAt !== null
+          const isPublished = !!pub.publishedAt
 
           return (
             <Fragment key={i}>

@@ -1,13 +1,10 @@
 'use client'
 
-import debounce from 'lodash/debounce'
-import { useCallback, useEffect } from 'react'
+import { isBase64 } from 'class-validator'
+import { useEffect } from 'react'
 import { useFormContext, useFormState } from 'react-hook-form'
 
-import {
-  CommonApplicationInputFields,
-  CommonApplicationSchema,
-} from '@dmr.is/legal-gazette/schemas'
+import { CommonApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   GridColumn,
@@ -16,7 +13,7 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateCommonApplication } from '../../../../hooks/useUpdateCommonApplication'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { Editor } from '../../../editor/Editor'
 import { InputController } from '../../controllers/InputController'
@@ -24,16 +21,21 @@ import { SelectController } from '../../controllers/SelectController'
 export const CommonAdvertFields = () => {
   const trpc = useTRPC()
   const { getValues, setValue, watch } =
-    useFormContext<CommonApplicationSchema>()
+    useFormContext<CommonApplicationWebSchema>()
   const formState = useFormState()
-
   const metadata = getValues('metadata')
 
-  const { updateType, updateCategory, updateCaption, updateHTML } =
-    useUpdateCommonApplication(metadata.applicationId)
+  const fields = watch('fields')
 
-  const typeId = watch(CommonApplicationInputFields.TYPE)
-  const categoryId = watch(CommonApplicationInputFields.CATEGORY)
+  const defaultHTML = isBase64(fields?.html)
+    ? Buffer.from(fields?.html ?? '', 'base64').toString('utf-8')
+    : (fields?.html ?? '')
+
+  const { updateApplication, debouncedUpdateApplication } =
+    useUpdateApplication({
+      id: metadata.applicationId,
+      type: 'COMMON',
+    })
 
   const {
     data: categoriesData,
@@ -41,8 +43,8 @@ export const CommonAdvertFields = () => {
     isPending,
   } = useQuery(
     trpc.getCategories.queryOptions(
-      { typeId: typeId },
-      { enabled: !!typeId },
+      { typeId: fields?.typeId ?? undefined },
+      { enabled: !!fields?.typeId },
     ),
   )
 
@@ -50,37 +52,12 @@ export const CommonAdvertFields = () => {
     if (!categoriesData?.categories || !formState.isDirty) return
 
     if (categoriesData.categories.length === 1) {
-      setValue(
-        CommonApplicationInputFields.CATEGORY,
-        categoriesData.categories[0].id,
-      )
-      updateCategory(categoriesData.categories[0].id)
+      const newCategoryId = categoriesData.categories[0].id
+
+      setValue('fields.categoryId', newCategoryId)
+      updateApplication({ fields: { categoryId: newCategoryId } })
     }
   }, [categoriesData?.categories, formState.isDirty])
-
-  const updateHtmlOnBlurHandler = useCallback(
-    (val: string) => {
-      setValue('fields.html', val, {
-        shouldValidate: true,
-        shouldDirty: true,
-        shouldTouch: true,
-      })
-      updateHTML(val)
-    },
-    [setValue, updateHTML],
-  )
-
-  const updateHtmlOnChangeHandler = useCallback(
-    debounce((val: string) => {
-      setValue('fields.html', val, {
-        shouldValidate: true,
-        shouldDirty: true,
-        shouldTouch: true,
-      })
-      updateHTML(val)
-    }, 500),
-    [setValue, updateHTML],
-  )
 
   const categoryOptions =
     categoriesData?.categories.map((category) => ({
@@ -102,28 +79,51 @@ export const CommonAdvertFields = () => {
           <SelectController
             required
             options={metadata.typeOptions}
-            name={CommonApplicationInputFields.TYPE}
+            name={'fields.typeId'}
             label="Tegund auglýsingar"
-            onChange={(val) => updateType(val)}
+            onChange={(val) =>
+              updateApplication(
+                { fields: { typeId: val } },
+                {
+                  successMessage: 'Tegund auglýsingar vistuð',
+                  errorMessage: 'Ekki tókst að vista tegund auglýsingar',
+                },
+              )
+            }
           />
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <SelectController
             required
-            key={`${typeId}-${categoryId}`}
             disabled={disabledCategories}
             options={categoryOptions}
-            name={CommonApplicationInputFields.CATEGORY}
+            name={'fields.categoryId'}
             label="Flokkur"
-            onChange={(val) => updateCategory(val)}
+            onChange={(val) =>
+              updateApplication(
+                { fields: { categoryId: val } },
+                {
+                  successMessage: 'Flokkur vistaður',
+                  errorMessage: 'Ekki tókst að vista flokk',
+                },
+              )
+            }
           />
         </GridColumn>
         <GridColumn span="12/12">
           <InputController
-            name={CommonApplicationInputFields.CAPTION}
+            name="fields.caption"
             label="Yfirskrift"
             required
-            onBlur={(val) => updateCaption(val)}
+            onChange={(val) =>
+              debouncedUpdateApplication(
+                { fields: { caption: val } },
+                {
+                  successMessage: 'Yfirskrift vistuð',
+                  errorMessage: 'Ekki tókst að vista yfirskrift',
+                },
+              )
+            }
           />
         </GridColumn>
         <GridColumn span="12/12">
@@ -131,12 +131,21 @@ export const CommonAdvertFields = () => {
             Meginmál
           </Text>
           <Editor
-            defaultValue={getValues('fields.html')}
+            defaultValue={defaultHTML}
             onChange={(val) => {
-              updateHtmlOnChangeHandler.cancel()
-              updateHtmlOnChangeHandler(val)
+              setValue('fields.html', val, {
+                shouldValidate: true,
+                shouldDirty: true,
+                shouldTouch: true,
+              })
+              debouncedUpdateApplication(
+                { fields: { html: Buffer.from(val).toString('base64') } },
+                {
+                  successMessage: 'Meginmál vistað',
+                  errorMessage: 'Ekki tókst að vista meginmál',
+                },
+              )
             }}
-            onBlur={updateHtmlOnBlurHandler}
           />
         </GridColumn>
       </GridRow>

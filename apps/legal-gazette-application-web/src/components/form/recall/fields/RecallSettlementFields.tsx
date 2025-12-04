@@ -2,14 +2,11 @@ import subDays from 'date-fns/subDays'
 import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import {
-  RecallApplicationInputFields,
-  RecallApplicationSchema,
-} from '@dmr.is/legal-gazette/schemas'
+import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateRecallApplication } from '../../../../hooks/useUpdateRecallApplication'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { POSTPONE_LIMIT } from '../../../../lib/constants'
 import {
   NationalIdLookup,
@@ -18,24 +15,24 @@ import {
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
-export const RecallSettlementFields = () => {
-  const { getValues, setValue } = useFormContext<RecallApplicationSchema>()
-  const { type } = getValues('fields')
+type Props = {
+  isBankruptcy: boolean
+}
+export const RecallSettlementFields = ({ isBankruptcy }: Props) => {
+  const { getValues, setValue } = useFormContext<RecallApplicationWebSchema>()
+  const { applicationId } = getValues('metadata')
 
-  const title =
-    type === 'RECALL_BANKRUPTCY'
-      ? 'Upplýsingar um þrotabúið'
-      : 'Upplýsingar um dánarbúið'
+  const title = isBankruptcy
+    ? 'Upplýsingar um þrotabúið'
+    : 'Upplýsingar um dánarbúið'
 
-  const settlementType = type === 'RECALL_BANKRUPTCY' ? 'þrotabús' : 'dánarbús'
+  const settlementType = isBankruptcy ? 'þrotabús' : 'dánarbús'
 
-  const {
-    updateRecallApplication,
-    updateSettlementName,
-    updateSettlementAddress,
-    updateSettlementDeadlineDate,
-    updateSettlementDateOfDeath,
-  } = useUpdateRecallApplication(getValues('metadata.applicationId'))
+  const { updateApplication, debouncedUpdateApplication } =
+    useUpdateApplication({
+      id: applicationId,
+      type: 'RECALL',
+    })
 
   const [onLookupError, setOnLookupError] = useState<{
     title: string
@@ -49,28 +46,38 @@ export const RecallSettlementFields = () => {
     nationalId,
     zipCode,
   }: NationalIdLookupResults) => {
-    setValue(RecallApplicationInputFields.SETTLEMENT_NAME, name)
+    setValue('fields.settlementFields.name', name)
     setValue(
-      RecallApplicationInputFields.SETTLEMENT_ADDRESS,
+      'fields.settlementFields.address',
       `${address}, ${zipCode} ${city}`,
     )
-    setValue(RecallApplicationInputFields.SETTLEMENT_NATIONAL_ID, nationalId)
-    updateRecallApplication({
-      settlementFields: {
-        name: name,
-        address: `${address}, ${zipCode} ${city}`,
-        nationalId: nationalId,
+    setValue('fields.settlementFields.nationalId', nationalId)
+    updateApplication(
+      {
+        fields: {
+          settlementFields: {
+            name: name,
+            address: `${address}, ${zipCode} ${city}`,
+            nationalId: nationalId,
+          },
+        },
       },
-    })
+      {
+        successMessage: 'Upplýsingar um þrotabú vistaðar',
+        errorMessage: 'Ekki tókst að vista upplýsingar um þrotabú',
+      },
+    )
   }
 
   const resetLookupFields = () => {
-    setValue(RecallApplicationInputFields.SETTLEMENT_NATIONAL_ID, '')
-    updateRecallApplication({
-      settlementFields: {
-        name: '',
-        address: '',
-        nationalId: '',
+    setValue('fields.settlementFields.nationalId', '')
+    updateApplication({
+      fields: {
+        settlementFields: {
+          name: '',
+          address: '',
+          nationalId: '',
+        },
       },
     })
   }
@@ -87,7 +94,7 @@ export const RecallSettlementFields = () => {
       )}
       <GridColumn span={['12/12', '6/12']}>
         <NationalIdLookup
-          defaultValue={getValues('fields.settlementFields.nationalId')}
+          defaultValue={getValues('fields.settlementFields.nationalId') ?? ''}
           onSuccessfulLookup={onSuccessfulLookup}
           onReset={resetLookupFields}
           onError={setOnLookupError}
@@ -96,48 +103,96 @@ export const RecallSettlementFields = () => {
       <GridColumn span={['12/12', '6/12']}>
         <DatePickerController
           name={
-            type === 'RECALL_BANKRUPTCY'
-              ? RecallApplicationInputFields.SETTLEMENT_DEADLINE_DATE
-              : RecallApplicationInputFields.SETTLEMENT_DATE_OF_DEATH
+            isBankruptcy
+              ? 'fields.settlementFields.deadlineDate'
+              : 'fields.settlementFields.dateOfDeath'
           }
-          maxDate={type === 'RECALL_BANKRUPTCY' ? new Date() : undefined}
+          maxDate={isBankruptcy ? new Date() : undefined}
           minDate={
-            type === 'RECALL_BANKRUPTCY'
-              ? subDays(new Date(), POSTPONE_LIMIT)
-              : undefined
+            isBankruptcy ? subDays(new Date(), POSTPONE_LIMIT) : undefined
           }
-          label={
-            type === 'RECALL_BANKRUPTCY' ? 'Frestdagur þrotabús' : 'Dánardagur'
-          }
+          label={isBankruptcy ? 'Frestdagur þrotabús' : 'Dánardagur'}
           required
           onChange={(val) => {
-            if (type === 'RECALL_BANKRUPTCY') {
-              return updateSettlementDeadlineDate(val.toISOString())
+            if (isBankruptcy) {
+              return updateApplication(
+                {
+                  fields: {
+                    settlementFields: {
+                      deadlineDate: val.toISOString(),
+                    },
+                  },
+                },
+                {
+                  successMessage: 'Frestdagur þrotabús vistaður',
+                  errorMessage: 'Ekki tókst að vista frestdag þrotabús',
+                },
+              )
             }
 
-            return updateSettlementDateOfDeath(val.toISOString())
+            return (
+              updateApplication({
+                fields: {
+                  settlementFields: {
+                    dateOfDeath: val.toISOString(),
+                  },
+                },
+              }),
+              {
+                successMessage: 'Dánardagur vistaður',
+                errorMessage: 'Ekki tókst að vista dánardag',
+              }
+            )
           }}
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
         <InputController
-          name={RecallApplicationInputFields.SETTLEMENT_NAME}
+          name="fields.settlementFields.name"
           label={`Nafn ${settlementType}`}
           required
-          onChange={(val) => updateSettlementName(val)}
+          onChange={(val) =>
+            debouncedUpdateApplication(
+              {
+                fields: {
+                  settlementFields: {
+                    name: val,
+                  },
+                },
+              },
+              {
+                successMessage: `Nafn ${settlementType} vistað`,
+                errorMessage: `Ekki tókst að vista nafn ${settlementType}`,
+              },
+            )
+          }
         />
       </GridColumn>
 
       <GridColumn span={['12/12', '6/12']}>
         <InputController
-          name={RecallApplicationInputFields.SETTLEMENT_ADDRESS}
+          required
+          name="fields.settlementFields.address"
           label={
             settlementType === 'þrotabús'
               ? 'Heimilisfang þrotabús'
               : 'Síðasta heimilisfang'
           }
-          required
-          onChange={(val) => updateSettlementAddress(val)}
+          onChange={(val) =>
+            debouncedUpdateApplication(
+              {
+                fields: {
+                  settlementFields: {
+                    address: val,
+                  },
+                },
+              },
+              {
+                successMessage: `Heimilisfang ${settlementType} vistað`,
+                errorMessage: `Ekki tókst að vista heimilisfang ${settlementType}`,
+              },
+            )
+          }
         />
       </GridColumn>
     </GridRow>

@@ -1,17 +1,16 @@
 import z from 'zod'
 
 import {
-  addDivisionEndingInputSchema,
-  addDivisionMeetingInputSchema,
-  updateApplicationSchema,
+  commonApplicationAnswers,
+  createDivisionEndingWithIdInput,
+  createDivisionMeetingWithIdInput,
+  recallBankruptcyAnswers,
+  recallDeceasedAnswers,
+  updateApplicationWithIdInput,
 } from '@dmr.is/legal-gazette/schemas'
 
 import { CreateApplicationApplicationTypeEnum } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
-
-const updateApplicationSchemaWithId = updateApplicationSchema.extend({
-  id: z.string(),
-})
 
 export const createApplicationSchema = z.enum(
   CreateApplicationApplicationTypeEnum,
@@ -52,13 +51,14 @@ export const applicationRouter = router({
     return { types, categories, courtDistricts }
   }),
   updateApplication: protectedProcedure
-    .input(updateApplicationSchemaWithId)
+    .input(updateApplicationWithIdInput)
     .mutation(async ({ ctx, input }) => {
-      const { id, ...updateApplicationDto } = input
-
+      const { id, ...applicationAnswers } = input
       return await ctx.api.updateApplication({
-        applicationId: id,
-        updateApplicationDto: { ...updateApplicationDto },
+        applicationId: input.id,
+        updateApplicationDto: {
+          answers: { ...applicationAnswers.answers },
+        },
       })
     }),
   getApplications: protectedProcedure
@@ -71,11 +71,12 @@ export const applicationRouter = router({
     }),
   getApplicationById: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return await ctx.api.getApplicationById({
-        applicationId: input.id,
-      })
-    }),
+    .query(
+      async ({ ctx, input }) =>
+        await ctx.api.getApplicationById({
+          applicationId: input.id,
+        }),
+    ),
   createApplication: protectedProcedure
     .input(createApplicationSchema)
     .mutation(async ({ ctx, input }) => {
@@ -91,21 +92,21 @@ export const applicationRouter = router({
       })
     }),
   addDivisionMeeting: protectedProcedure
-    .input(addDivisionMeetingInputSchema)
+    .input(createDivisionMeetingWithIdInput)
     .mutation(async ({ ctx, input }) => {
-      const { applicationId, ...dto } = input
+      const { applicationId, ...rest } = input
       return await ctx.api.addDivisionMeetingAdvertToApplication({
         applicationId: applicationId,
-        addDivisionMeetingForApplicationDto: dto,
+        createDivisionMeetingDto: rest,
       })
     }),
   addDivisionEnding: protectedProcedure
-    .input(addDivisionEndingInputSchema)
+    .input(createDivisionEndingWithIdInput)
     .mutation(async ({ ctx, input }) => {
-      const { applicationId, ...dto } = input
+      const { applicationId, ...rest } = input
       return await ctx.api.addDivisionEndingAdvertToApplication({
-        applicationId: applicationId,
-        addDivisionEndingForApplicationDto: dto,
+        applicationId: input.applicationId,
+        createDivisionEndingDto: rest,
       })
     }),
 })

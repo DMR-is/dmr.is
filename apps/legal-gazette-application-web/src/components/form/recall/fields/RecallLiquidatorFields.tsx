@@ -2,21 +2,27 @@ import { useFormContext } from 'react-hook-form'
 
 import {
   ApplicationRequirementStatementEnum,
-  RecallApplicationInputFields,
-  RecallApplicationSchema,
+  RecallApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateRecallApplication } from '../../../../hooks/useUpdateRecallApplication'
+import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { InputController } from '../../controllers/InputController'
 
 export const RecallLiquidatorFields = () => {
-  const { getValues } = useFormContext<RecallApplicationSchema>()
-  const {
-    updateLiquidatorName,
-    updateLiquidatorLocation,
-    updateLiquidatorRecallRequirementStatementLocation,
-  } = useUpdateRecallApplication(getValues('metadata.applicationId'))
+  const { getValues, watch } = useFormContext<RecallApplicationWebSchema>()
+
+  const metadata = getValues('metadata')
+
+  const { debouncedUpdateApplication, updateApplication } =
+    useUpdateApplication({
+      id: metadata.applicationId,
+      type: 'RECALL',
+    })
+
+  const recallRequirementStateLocation = watch(
+    'fields.settlementFields.recallRequirementStatementType',
+  )
 
   return (
     <GridRow rowGap={[2, 3]}>
@@ -26,26 +32,65 @@ export const RecallLiquidatorFields = () => {
       <GridColumn span={['12/12', '6/12']}>
         <InputController
           label="Nafn skiptastjóra"
-          name={RecallApplicationInputFields.LIQUIDATOR_NAME}
-          onBlur={(val) => updateLiquidatorName(val)}
+          name={'fields.settlementFields.liquidatorName'}
+          onChange={(val) =>
+            debouncedUpdateApplication(
+              {
+                fields: {
+                  settlementFields: {
+                    liquidatorName: val,
+                  },
+                },
+              },
+              {
+                successMessage: 'Nafn skiptastjóra vistað',
+                errorMessage: 'Ekki tókst að vista nafn skiptastjóra',
+              },
+            )
+          }
           required
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
         <InputController
+          required
           label="Staðsetning skiptastjóra"
-          name={RecallApplicationInputFields.LIQUIDATOR_LOCATION}
+          name={'fields.settlementFields.liquidatorLocation'}
+          onChange={(val) =>
+            debouncedUpdateApplication(
+              {
+                fields: {
+                  settlementFields: {
+                    liquidatorLocation: val,
+                  },
+                },
+              },
+              {
+                successMessage: 'Staðsetning skiptastjóra vistuð',
+                errorMessage: 'Ekki tókst að vista staðsetningu skiptastjóra',
+              },
+            )
+          }
           onBlur={(val) => {
-            updateLiquidatorLocation(val)
             if (
-              getValues(
-                RecallApplicationInputFields.RECALL_REQUIREMENT_STATEMENT_TYPE,
-              ) === ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
+              recallRequirementStateLocation ===
+              ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
             ) {
-              updateLiquidatorRecallRequirementStatementLocation(val)
+              updateApplication(
+                {
+                  fields: {
+                    settlementFields: {
+                      recallRequirementStatementLocation: val,
+                    },
+                  },
+                },
+                {
+                  successMessage: 'Staðsetning skiptastjóra ',
+                  errorMessage: 'Ekki tókst að vista staðsetningu skiptastjóra',
+                },
+              )
             }
           }}
-          required
         />
       </GridColumn>
     </GridRow>

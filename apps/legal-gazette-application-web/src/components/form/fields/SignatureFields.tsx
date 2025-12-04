@@ -1,9 +1,6 @@
 import { useFormContext } from 'react-hook-form'
 
-import {
-  ApplicationInputFields,
-  BaseApplicationSchema,
-} from '@dmr.is/legal-gazette/schemas'
+import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import {
   AlertMessage,
   Box,
@@ -18,13 +15,13 @@ import { DatePickerController } from '../controllers/DatePickerController'
 import { InputController } from '../controllers/InputController'
 
 export const SignatureFields = () => {
-  const { getValues, formState } = useFormContext<BaseApplicationSchema>()
-  const {
-    updateSignatureName,
-    updateSignatureLocation,
-    updateSignatureDate,
-    updateSignatureOnBehalfOf,
-  } = useUpdateApplication(getValues('metadata.applicationId'))
+  const { getValues, formState } = useFormContext<BaseApplicationWebSchema>()
+  const { applicationId } = getValues('metadata')
+
+  const { debouncedUpdateApplication } = useUpdateApplication({
+    id: applicationId,
+    type: 'COMMON',
+  })
 
   const signatureError = formState.errors.signature
 
@@ -42,30 +39,64 @@ export const SignatureFields = () => {
         <GridRow rowGap={[2, 3]}>
           <GridColumn span={['12/12', '6/12']}>
             <InputController
-              name={ApplicationInputFields.SIGNATURE_NAME}
+              name="signature.name"
               label="Nafn undirritara"
-              onBlur={(val) => updateSignatureName(val)}
+              onChange={(val) =>
+                debouncedUpdateApplication(
+                  { signature: { name: val } },
+                  {
+                    errorMessage: 'Ekki tókst að uppfæra nafn undirritara',
+                    successMessage: 'Nafn undirritara uppfært',
+                  },
+                )
+              }
             />
           </GridColumn>
           <GridColumn span={['12/12', '6/12']}>
             <InputController
-              name={ApplicationInputFields.SIGNATURE_LOCATION}
+              name="signature.location"
               label="Staðsetning undirritara"
-              onBlur={(val) => updateSignatureLocation(val)}
+              onChange={(val) =>
+                debouncedUpdateApplication(
+                  { signature: { location: val } },
+                  {
+                    errorMessage:
+                      'Ekki tókst að uppfæra staðsetningu undirritara',
+                    successMessage: 'Staðsetning undirritara uppfærð',
+                  },
+                )
+              }
             />
           </GridColumn>
           <GridColumn span={['12/12', '6/12']}>
             <InputController
-              name={ApplicationInputFields.SIGNATURE_ON_BEHALF_OF}
+              name="signature.onBehalfOf"
               label="F.h. undirritara"
-              onBlur={(val) => updateSignatureOnBehalfOf(val)}
+              onChange={(val) =>
+                debouncedUpdateApplication(
+                  { signature: { onBehalfOf: val } },
+                  {
+                    errorMessage: 'Ekki tókst að uppfæra f.h. undirritara',
+                    successMessage: 'f.h. undirritara uppfært',
+                  },
+                )
+              }
             />
           </GridColumn>
           <GridColumn span={['12/12', '6/12']}>
             <DatePickerController
-              name={ApplicationInputFields.SIGNATURE_DATE}
+              name="signature.date"
               label="Dagsetning undirritunar"
-              onChange={(date) => updateSignatureDate(date.toISOString())}
+              onChange={(date) =>
+                debouncedUpdateApplication(
+                  { signature: { date: date.toISOString() } },
+                  {
+                    errorMessage:
+                      'Ekki tókst að uppfæra dagsetningu undirritunar',
+                    successMessage: 'Dagsetning undirritunar uppfærð',
+                  },
+                )
+              }
             />
           </GridColumn>
         </GridRow>

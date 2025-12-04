@@ -161,7 +161,9 @@ export class AdvertService implements IAdvertService {
     })
   }
 
-  async createAdvert(body: CreateAdvertInternalDto): Promise<{ id: string }> {
+  async createAdvert(
+    body: CreateAdvertInternalDto,
+  ): Promise<AdvertDetailedDto> {
     const includeArr: Includeable[] = []
 
     if (body.communicationChannels) {
@@ -170,6 +172,11 @@ export class AdvertService implements IAdvertService {
     if (body.settlement) {
       includeArr.push({ model: SettlementModel })
     }
+
+    this.logger.info('Creating advert', {
+      body,
+      context: 'AdvertService',
+    })
 
     const advert = await this.advertModel.create(
       {
@@ -210,18 +217,18 @@ export class AdvertService implements IAdvertService {
               liquidatorLocation: body.settlement.liquidatorLocation,
               liquidatorName: body.settlement.liquidatorName,
               liquidatorRecallStatementType:
-                body.settlement.liquidatorRecallStatementType,
+                body.settlement.recallStatementType,
               liquidatorRecallStatementLocation:
-                body.settlement.liquidatorRecallStatementLocation,
-              address: body.settlement.settlementAddress,
-              dateOfDeath: body.settlement.settlementDateOfDeath
-                ? new Date(body.settlement.settlementDateOfDeath)
+                body.settlement.recallStatementLocation,
+              address: body.settlement.address,
+              dateOfDeath: body.settlement.dateOfDeath
+                ? new Date(body.settlement.dateOfDeath)
                 : null,
-              deadline: body.settlement.settlementDeadline
-                ? new Date(body.settlement.settlementDeadline)
+              deadline: body.settlement.deadline
+                ? new Date(body.settlement.deadline)
                 : null,
-              name: body.settlement.settlementName,
-              nationalId: body.settlement.settlementNationalId,
+              name: body.settlement.name,
+              nationalId: body.settlement.nationalId,
               declaredClaims: body.settlement.declaredClaims ?? null,
             }
           : undefined,
@@ -251,7 +258,9 @@ export class AdvertService implements IAdvertService {
       actorId: advert.createdByNationalId,
     })
 
-    return { id: advert.id }
+    await advert.reload()
+
+    return advert.fromModelToDetailed()
   }
 
   async assignAdvertToEmployee(
