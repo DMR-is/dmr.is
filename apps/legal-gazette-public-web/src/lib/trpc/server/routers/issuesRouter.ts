@@ -14,7 +14,7 @@ export const issuesRouter = router({
   getIssues: publicProcedure
     .input(getIssuesSchema)
     .query(async ({ ctx, input }) => {
-      return await ctx.api.getAllPublishedIssues({
+      return await ctx.publicApi.getAllPublishedIssues({
         // page: input.page ?? 1,
         // pageSize: 10,
         // year: input.yearId?.toString(),

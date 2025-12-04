@@ -1,6 +1,6 @@
 import { createEnhancedFetch } from './createEnhancedFetch'
 
-type WebClient = 'LGAdmin' | 'OJOIAdmin' | 'LGWeb' | 'LGApplicationWeb'
+type WebClient = 'LGAdmin' | 'OJOIAdmin' | 'LGWeb' | 'LGApplicationWeb' | 'LGPublicWeb'
 
 const getPath = (client: WebClient) => {
   if (process.env.NODE_ENV !== 'production') {
