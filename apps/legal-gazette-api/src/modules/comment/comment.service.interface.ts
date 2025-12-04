@@ -26,6 +26,12 @@ export interface ICommentService {
     body: CreateStatusUpdateCommentDto,
   ): Promise<CommentDto>
 
+  createSubmitCommentForExternalSystem(
+    advertId: string,
+    actorId: string,
+    actorName: string,
+  ): Promise<CommentDto>
+
   createTextComment(
     advertId: string,
     body: CreateTextCommentDto,
