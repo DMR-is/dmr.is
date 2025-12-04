@@ -36,6 +36,7 @@ import { LegacySubscriberModel } from '../models/legacy-subscriber.model'
 import { SettlementModel } from '../models/settlement.model'
 import { StatusModel } from '../models/status.model'
 import { SubscriberModel } from '../models/subscriber.model'
+import { SubscriberPaymentModel } from '../models/subscriber-payment.model'
 import { TBRTransactionModel } from '../models/tbr-transactions.model'
 import { TypeModel } from '../models/type.model'
 import { TypeCategoriesModel } from '../models/type-categories.model'
@@ -97,6 +98,7 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
             AdvertModel,
             SettlementModel,
             SubscriberModel,
+            SubscriberPaymentModel,
             ApplicationModel,
             AdvertPublicationModel,
             TypeCategoriesModel,
