@@ -27,21 +27,6 @@ export class IssuesService implements IIssuesService {
     })
 
     const whereParams: WhereOptions = {}
-    if (q?.dateFrom) {
-      Object.assign(whereParams, {
-        publishDate: {
-          [Op.gte]: startOfDay(new Date(q.dateFrom)),
-        },
-      })
-    }
-
-    if (q?.dateTo) {
-      Object.assign(whereParams, {
-        publishDate: {
-          [Op.lte]: endOfDay(new Date(q.dateTo)),
-        },
-      })
-    }
 
     if (q?.year) {
       Object.assign(whereParams, {

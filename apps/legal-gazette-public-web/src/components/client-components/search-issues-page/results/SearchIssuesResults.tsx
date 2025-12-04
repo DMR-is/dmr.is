@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
@@ -33,12 +33,8 @@ export const SearchIssuesResults = ({
         filters.dateFrom && filters.dateTo
           ? undefined
           : filters.yearId.toString(),
-      dateFrom: filters.dateFrom
-        ? new Date(filters.dateFrom).toISOString()
-        : undefined,
-      dateTo: filters.dateTo
-        ? new Date(filters.dateTo).toISOString()
-        : undefined,
+      dateFrom: filters.dateFrom ? filters.dateFrom.toISOString() : undefined,
+      dateTo: filters.dateTo ? filters.dateTo.toISOString() : undefined,
     }),
   )
 
