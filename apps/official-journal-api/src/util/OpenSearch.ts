@@ -194,7 +194,6 @@ export const getOsBody = (
         },
       })
 
-      // Optional: still use your normal text query as a "soft" scorer
       should.push(buildTextQuery(prefixValue))
     } else {
       // NORMAL MODE
