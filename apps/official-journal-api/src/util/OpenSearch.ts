@@ -174,18 +174,22 @@ export const getOsBody = (
         bool: {
           should: [
             {
-              prefix: {
-                'title.keyword': {
-                  value: prefixValue,
-                  boost: 8, // strong bias to title prefix
+              match_phrase_prefix: {
+                'title.stemmed': {
+                  query: prefixValue,
+                  slop: 2,
+                  max_expansions: 50,
+                  boost: 8,
                 },
               },
             },
             {
-              prefix: {
-                'involvedParty.title.keyword': {
-                  value: prefixValue,
-                  boost: 5, // a bit less than title
+              match_phrase_prefix: {
+                'involvedParty.title.stemmed': {
+                  query: prefixValue,
+                  slop: 1,
+                  max_expansions: 50,
+                  boost: 5,
                 },
               },
             },
