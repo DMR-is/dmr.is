@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
@@ -15,7 +15,6 @@ import { Icon, Link } from '@island.is/island-ui/core'
 
 import { useFilters } from '../../../../hooks/useFilters'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
-import { issues } from '../dummyData'
 
 export const SearchIssuesResults = ({
   setTotalItems,
@@ -26,11 +25,14 @@ export const SearchIssuesResults = ({
 
   const trpc = useTRPC()
 
-  const { data: filteredData, isLoading } = useQuery(
+  const { data, isLoading } = useQuery(
     trpc.getIssues.queryOptions({
       page: filters.page,
       pageSize: filters.pageSize,
-      yearId: filters.yearId,
+      year:
+        filters.dateFrom && filters.dateTo
+          ? undefined
+          : filters.yearId.toString(),
       dateFrom: filters.dateFrom
         ? new Date(filters.dateFrom).toISOString()
         : undefined,
@@ -40,62 +42,11 @@ export const SearchIssuesResults = ({
     }),
   )
 
-  // const getFilteredData = () => {
-  //   let thisData = [...issues]
-  //   if (filters.dateFrom && filters.dateTo) {
-  //     thisData = thisData.filter((issue) => {
-  //       if (issue.date < filters.dateFrom! || issue.date > filters.dateTo!) {
-  //         return false
-  //       }
-  //       return true
-  //     })
-  //   } else {
-  //     thisData = thisData.filter((issue) => {
-  //       if (issue.date.getFullYear() !== filters.yearId) {
-  //         return false
-  //       }
-  //       return true
-  //     })
-  //   }
-  //   setTotalItems(thisData.length)
-  //   return {
-  //     data: thisData.filter((issue, index) => {
-  //       if (
-  //         index >= (filters.page - 1) * filters.pageSize &&
-  //         index < filters.page * filters.pageSize
-  //       ) {
-  //         return true
-  //       }
-  //       return false
-  //     }),
-
-  //     paging: {
-  //       pageSize: filters.pageSize,
-  //       totalPages:
-  //         filters.pageSize > 0
-  //           ? Math.ceil(thisData.length / filters.pageSize)
-  //           : 1,
-  //       page: filters.page,
-  //       totalItems: thisData.length,
-  //     },
-  //   }
-  // }
-  // const [filteredData, setFilteredData] = useState(getFilteredData())
-
-  // useEffect(() => {
-  //   // console.log('changed', data.amount)
-  //   setFilteredData(getFilteredData())
-  // }, [filters])
-
-  // if (error) {
-  //   return (
-  //     <AlertMessage
-  //       type="error"
-  //       title="Villa kom upp"
-  //       message="Ekki tókst að sækja birtingar, vinsamlegast reynið aftur síðar"
-  //     />
-  //   )
-  // }
+  useEffect(() => {
+    if (data?.paging.totalItems) {
+      setTotalItems(data.paging.totalItems)
+    }
+  }, [data])
 
   return (
     <Stack space={[2, 3, 4]}>
@@ -106,10 +57,10 @@ export const SearchIssuesResults = ({
           repeat={5}
           space={[2, 3, 4]}
         />
-      ) : (filteredData?.issues?.length || 0) > 0 ? (
+      ) : (data?.issues?.length || 0) > 0 ? (
         <Box paddingBottom={3} borderRadius="large">
           <DataTable
-            paging={filteredData?.paging}
+            paging={data?.paging}
             onPageChange={(page) => setFilters((prev) => ({ ...prev, page }))}
             onPageSizeChange={(pageSize) =>
               setFilters((prev) => ({ ...prev, pageSize, page: 1 }))
@@ -133,9 +84,9 @@ export const SearchIssuesResults = ({
               },
             ]}
             rows={
-              filteredData?.issues?.map((issue) => ({
+              data?.issues?.map((issue) => ({
                 nr: issue.issue,
-                date: issue.publishDate,
+                date: new Date(issue.publishDate).toLocaleDateString('en-GB'),
                 link: (
                   <Link
                     href={issue.url}

@@ -29,7 +29,7 @@ export class IssuesService implements IIssuesService {
     const whereParams: WhereOptions = {}
     if (q?.dateFrom) {
       Object.assign(whereParams, {
-        publicationDate: {
+        publishDate: {
           [Op.gte]: startOfDay(new Date(q.dateFrom)),
         },
       })
@@ -37,7 +37,7 @@ export class IssuesService implements IIssuesService {
 
     if (q?.dateTo) {
       Object.assign(whereParams, {
-        publicationDate: {
+        publishDate: {
           [Op.lte]: endOfDay(new Date(q.dateTo)),
         },
       })
@@ -45,7 +45,7 @@ export class IssuesService implements IIssuesService {
 
     if (q?.year) {
       Object.assign(whereParams, {
-        publicationYear: {
+        year: {
           [Op.eq]: q.year,
         },
       })
@@ -53,7 +53,7 @@ export class IssuesService implements IIssuesService {
 
     if (q?.dateTo && q?.dateFrom) {
       Object.assign(whereParams, {
-        publicationDate: {
+        publishDate: {
           [Op.between]: [
             startOfDay(new Date(q.dateFrom)),
             endOfDay(new Date(q.dateTo)),
@@ -64,7 +64,10 @@ export class IssuesService implements IIssuesService {
 
     const issues = await this.issueModel.findAndCountAll({
       where: whereParams,
-      order: [['issue', 'ASC']],
+      order: [
+        ['year', 'DESC'],
+        ['issue', 'DESC'],
+      ],
       limit,
       offset,
     })

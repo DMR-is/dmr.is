@@ -5,8 +5,7 @@ import { publicProcedure, router } from '../trpc'
 const getIssuesSchema = z.object({
   page: z.number().optional(),
   pageSize: z.number().optional(),
-  yearId: z.number().optional(),
-  typeId: z.string().optional(),
+  year: z.string().optional(),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
 })
@@ -14,10 +13,6 @@ export const issuesRouter = router({
   getIssues: publicProcedure
     .input(getIssuesSchema)
     .query(async ({ ctx, input }) => {
-      return await ctx.publicApi.getAllPublishedIssues({
-        // page: input.page ?? 1,
-        // pageSize: 10,
-        // year: input.yearId?.toString(),
-      })
+      return await ctx.publicApi.getAllPublishedIssues(input)
     }),
 })
