@@ -64,6 +64,7 @@ export class ForeclosureService implements IForeclosureService {
       signatureLocation: body.responsibleParty.signature.location,
       signatureOnBehalfOf: body.responsibleParty.signature.onBehalfOf,
       scheduledAt: [body.foreclosureDate],
+      isFromExternalSystem: true,
     })
 
     const newForeClosure = await this.foreclosureModel.create(

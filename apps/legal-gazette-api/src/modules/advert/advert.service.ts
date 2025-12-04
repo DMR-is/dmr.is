@@ -256,6 +256,8 @@ export class AdvertService implements IAdvertService {
       advertId: advert.id,
       statusId: advert.statusId,
       actorId: advert.createdByNationalId,
+      actorName: advert.createdBy,
+      external: body.isFromExternalSystem,
     })
 
     await advert.reload()

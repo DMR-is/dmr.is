@@ -14,7 +14,7 @@ import {
   CreateTextCommentDto,
   GetCommentsDto,
 } from '../../models/comment.model'
-import { StatusModel } from '../../models/status.model'
+import { StatusIdEnum, StatusModel } from '../../models/status.model'
 import { UserModel } from '../../models/users.model'
 import { ICommentService } from './comment.service.interface'
 
@@ -26,6 +26,22 @@ export class CommentService implements ICommentService {
     @InjectModel(StatusModel) private statusModel: typeof StatusModel,
     @InjectModel(AdvertModel) private advertModel: typeof AdvertModel,
   ) {}
+  async createSubmitCommentForExternalSystem(
+    advertId: string,
+    actorId: string,
+    actorName: string,
+  ): Promise<CommentDto> {
+    const newComment = await this.commentModel.create({
+      type: CommentTypeEnum.SUBMIT,
+      advertId: advertId,
+      statusId: StatusIdEnum.SUBMITTED,
+      actorId: actorId,
+      actor: actorName,
+    })
+
+    await newComment.reload()
+    return newComment.fromModel()
+  }
 
   private async getAdvertStatusId(advertId: string): Promise<string> {
     const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {

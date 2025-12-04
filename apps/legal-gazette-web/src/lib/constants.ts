@@ -1,3 +1,4 @@
+import { AdvertTemplateType } from '../gen/fetch'
 import { RouteItem } from './types'
 
 export const DEFAULT_PAGE = 1
@@ -78,3 +79,15 @@ export enum RitstjornTabs {
   PUBLISHING = 'a-leid-i-utgafu',
   COMPLETED = 'klaradar',
 }
+
+export const RecallAdvertTypes = [
+  AdvertTemplateType.RECALLBANKRUPTCY,
+  AdvertTemplateType.RECALLDECEASED,
+]
+
+export const DivisionMeetingAdvertTypes = [
+  AdvertTemplateType.DIVISIONMEETINGBANKRUPTCY,
+  AdvertTemplateType.DIVISIONMEETINGDECEASED,
+  AdvertTemplateType.RECALLBANKRUPTCY,
+  AdvertTemplateType.RECALLDECEASED,
+]

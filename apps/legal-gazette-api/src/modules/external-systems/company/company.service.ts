@@ -162,6 +162,7 @@ export class CompanyService implements ICompanyService {
       signatureOnBehalfOf: body.responsibleParty.signature.onBehalfOf,
       scheduledAt: [nextWednesday.toISOString()],
       caption: `${formatDate(date, 'MMMM yyyy')}`,
+      isFromExternalSystem: true,
     })
   }
 
@@ -267,6 +268,7 @@ export class CompanyService implements ICompanyService {
       signatureLocation: body.responsibleParty.signature.location,
       signatureOnBehalfOf: body.responsibleParty.signature.onBehalfOf,
       scheduledAt: [nextWednesday.toISOString()],
+      isFromExternalSystem: true,
     })
   }
 
@@ -396,6 +398,7 @@ export class CompanyService implements ICompanyService {
       signatureLocation: body.responsibleParty.signature.location,
       signatureOnBehalfOf: body.responsibleParty.signature.onBehalfOf,
       scheduledAt: [nextWednesday.toISOString()],
+      isFromExternalSystem: true,
     })
   }
 }

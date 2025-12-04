@@ -23,12 +23,10 @@ import { SignatureFields } from '../../components/field-set-items/SignatureField
 import { AdvertFormAccordion } from '../../components/Form/AdvertFormAccordion'
 import { StatusIdEnum } from '../../gen/fetch'
 import {
-  isBankruptcyRecallAdvert,
-  isDeceasedRecallAdvert,
-  isDivisionEndingAdvert,
-  isDivisionMeetingAdvert,
-} from '../../lib/advert-type-guards'
-import { Route } from '../../lib/constants'
+  DivisionMeetingAdvertTypes,
+  RecallAdvertTypes,
+  Route,
+} from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 type AdvertContainerProps = {
@@ -52,14 +50,10 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
     ),
   )
 
-  const isBankruptcyRecall = isBankruptcyRecallAdvert(advert)
-  const isRecallDeceased = isDeceasedRecallAdvert(advert)
-  const isDivisionEnding = isDivisionEndingAdvert(advert)
-  const isDivisionMeeting = isDivisionMeetingAdvert(advert)
-
-  const shouldShowCourtAndJudgementFields =
-    isBankruptcyRecall || isRecallDeceased || isDivisionEnding
-  const shouldShowDivisionMeeting = isBankruptcyRecall || isDivisionMeeting
+  const isRecallAdvertType = RecallAdvertTypes.includes(advert.templateType)
+  const hasDivisionMeeting = DivisionMeetingAdvertTypes.includes(
+    advert.templateType,
+  )
 
   const items = advert
     ? [
@@ -75,6 +69,7 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
               totalPrice={advert.totalPrice}
             />
           ),
+          hidden: false,
         },
         {
           title: 'Almennar upplýsingar',
@@ -102,7 +97,6 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
               content={advert.content ?? ''}
             />
           ),
-          // hidden: !!advert.caption && !!advert.content,
           hidden: false,
         },
         {
@@ -116,7 +110,7 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
               judgementDate={advert.judgementDate}
             />
           ),
-          hidden: !shouldShowCourtAndJudgementFields,
+          hidden: !isRecallAdvertType,
         },
         {
           title: 'Upplýsingar um skiptafund',
@@ -130,20 +124,19 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
               }
             />
           ),
-          hidden: !shouldShowDivisionMeeting,
+          hidden: !hasDivisionMeeting,
         },
         {
           title: 'Upplýsingar um búið',
-          children: (
+          children: advert.settlement ? (
             <SettlementFields
               advertId={advert.id}
               canEdit={advert.canEdit}
-              settlement={advert.settlement!}
-              isBankruptcyRecall={isBankruptcyRecall}
-              isDeceasedRecall={isRecallDeceased}
-              isDivisionEnding={isDivisionEnding}
+              settlement={advert.settlement}
+              templateType={advert.templateType}
             />
-          ),
+          ) : null,
+          hidden: !isRecallAdvertType,
         },
         {
           title: 'Undirritun',
@@ -161,6 +154,7 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
               }
             />
           ),
+          hidden: false,
         },
         {
           title: 'Birtingar',
@@ -172,6 +166,7 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
               advertStatus={advert.status.title}
             />
           ),
+          hidden: false,
         },
         {
           title: 'Samskiptaleiðir',
@@ -181,10 +176,12 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
               channels={advert.communicationChannels}
             />
           ),
+          hidden: false,
         },
         {
           title: 'Athugasemdir',
           children: <CommentFields id={advert.id} />,
+          hidden: false,
         },
       ].filter((item) => !item.hidden)
     : []

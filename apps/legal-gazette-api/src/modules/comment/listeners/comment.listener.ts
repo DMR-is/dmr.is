@@ -29,6 +29,34 @@ export class CommentListener {
         context: 'CommentListener',
       })
 
+      if (payload.external) {
+        if (!payload.actorId || !payload.actorName) {
+          this.logger.error(
+            'Missing actorId or actorName for external submit comment, skipping comment creation',
+            {
+              advertId: payload.advertId,
+              context: 'CommentListener',
+            },
+          )
+
+          return
+        }
+
+        this.logger.info('Creating submit comment for external system', {
+          advertId: payload.advertId,
+          context: 'CommentListener',
+        })
+        return await this.commentService.createSubmitCommentForExternalSystem(
+          payload.advertId,
+          payload.actorId,
+          payload.actorName,
+        )
+      }
+
+      this.logger.info('Creating submit comment', {
+        advertId: payload.advertId,
+        context: 'CommentListener',
+      })
       await this.commentService.createSubmitComment(payload.advertId, {
         actorId: payload.actorId,
       })

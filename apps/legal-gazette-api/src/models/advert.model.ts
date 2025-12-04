@@ -1019,6 +1019,11 @@ export class CreateAdvertInternalDto extends PickType(AdvertModel, [
   @IsEnum(AdvertTemplateType)
   templateType?: AdvertTemplateType
 
+  @ApiProperty({ type: Boolean, required: false })
+  @IsOptional()
+  @IsBoolean()
+  isFromExternalSystem?: boolean
+
   @ApiProperty({ type: String, required: false })
   @IsOptional()
   @IsUUID()
