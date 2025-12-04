@@ -2,7 +2,7 @@ import { Transform } from 'class-transformer'
 import { IsDate, IsOptional, IsString, IsUUID } from 'class-validator'
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
-import { ApiProperty, PickType } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
