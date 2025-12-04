@@ -8,25 +8,21 @@ import {
   Stack,
 } from '@dmr.is/ui/components/island-is'
 
-import { SettlementDto } from '../../gen/fetch'
+import { AdvertTemplateType, SettlementDto } from '../../gen/fetch'
 import { useUpdateSettlement } from '../../hooks/useUpdateSettlement'
 
 type SettlementFieldsProps = {
   advertId: string
   canEdit: boolean
   settlement: SettlementDto
-  isBankruptcyRecall?: boolean
-  isDeceasedRecall?: boolean
-  isDivisionEnding?: boolean
+  templateType: AdvertTemplateType
 }
 
 export const SettlementFields = ({
   advertId,
   canEdit,
   settlement,
-  isBankruptcyRecall,
-  isDeceasedRecall,
-  isDivisionEnding,
+  templateType,
 }: SettlementFieldsProps) => {
   const {
     updateLiquidatorName,
@@ -101,7 +97,9 @@ export const SettlementFields = ({
             onBlur={(evt) => updateSettlementAddress(evt.target.value)}
           />
         </GridColumn>
-        {isBankruptcyRecall && (
+
+        {(templateType === AdvertTemplateType.RECALLBANKRUPTCY ||
+          templateType === AdvertTemplateType.DIVISIONMEETINGBANKRUPTCY) && (
           <GridColumn span={['12/12', '6/12']}>
             <DatePicker
               disabled={!canEdit}
@@ -120,7 +118,9 @@ export const SettlementFields = ({
             />
           </GridColumn>
         )}
-        {isDeceasedRecall && (
+
+        {(templateType === AdvertTemplateType.RECALLDECEASED ||
+          templateType === AdvertTemplateType.DIVISIONMEETINGDECEASED) && (
           <GridColumn span={['12/12', '6/12']}>
             <DatePicker
               disabled={!canEdit}
@@ -142,8 +142,8 @@ export const SettlementFields = ({
           </GridColumn>
         )}
       </GridRow>
-      <GridRow>
-        {isDivisionEnding && (
+      {templateType === AdvertTemplateType.DIVISIONENDING && (
+        <GridRow>
           <GridColumn span={['12/12', '6/12']}>
             <Input
               disabled={!canEdit}
@@ -152,14 +152,14 @@ export const SettlementFields = ({
               backgroundColor="blue"
               type="number"
               label="Lýstar kröfur"
-              defaultValue={settlement.declaredClaims ?? undefined}
+              defaultValue={settlement.declaredClaims}
               onBlur={(evt) => {
                 updateDeclaredClaims(Number(evt.target.value))
               }}
             />
           </GridColumn>
-        )}
-      </GridRow>
+        </GridRow>
+      )}
     </Stack>
   )
 }
