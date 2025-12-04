@@ -59,6 +59,27 @@ export const getOsPaging = (
   return paging
 }
 
+function buildTextQuery(search: string) {
+  return {
+    multi_match: {
+      query: search,
+      type: 'most_fields',
+      operator: 'or',
+      fields: [
+        'title^5',
+        'involvedParty.title.stemmed^5',
+        'title.stemmed^3',
+        'title.compound^3',
+        'department.title.stemmed^0.2',
+        'bodyText.stemmed^0.9',
+        'bodyText^0.4',
+        'publicationNumber.full',
+        'caseNumber',
+      ],
+    },
+  }
+}
+
 export const getOsBody = (
   qp?: GetAdvertsQueryParams,
 ): { body: any; alias: string; page: number; size: number } => {
@@ -141,35 +162,60 @@ export const getOsBody = (
     { _id: 'desc' },
   ]
 
+  const must: any[] = []
+
+  const wildcardMatch = q.match(/^(\S+)\*$/)
+
+  if (q) {
+    if (wildcardMatch && !q.includes(' ')) {
+      const prefixValue = wildcardMatch[1]
+
+      must.push({
+        bool: {
+          should: [
+            {
+              prefix: {
+                'title.keyword': {
+                  value: prefixValue,
+                  boost: 8, // strong bias to title prefix
+                },
+              },
+            },
+            {
+              prefix: {
+                'involvedParty.title.keyword': {
+                  value: prefixValue,
+                  boost: 5, // a bit less than title
+                },
+              },
+            },
+          ],
+          minimum_should_match: 1,
+        },
+      })
+
+      should.push(buildTextQuery(prefixValue))
+    } else {
+      // NORMAL MODE
+      must.push(buildTextQuery(q))
+    }
+  } else {
+    must.push({ match_all: {} })
+  }
+
   // Query
   const body: any = {
     from,
     size,
     query: {
       bool: {
-        must: qp?.search
-          ? [
-              {
-                multi_match: {
-                  query: qp?.search,
-                  type: 'best_fields',
-                  fields: [
-                    'title^5',
-                    'title.stemmed^3',
-                    'title.compound^3',
-                    'department.title.stemmed^0.2',
-                    'bodyText^0.9',
-                    'caseNumber',
-                  ],
-                },
-              },
-            ]
-          : [{ match_all: {} }],
+        must,
         filter: filters,
         should,
+        minimum_should_match: 0,
       },
     },
-    track_total_hits: true,
+    track_total_hits: 200, // Cap at 200 to avoid performance issues
     sort,
     // Don’t send back these fields.
     _source: { excludes: ['bodyText', 'caseNumber'] },
