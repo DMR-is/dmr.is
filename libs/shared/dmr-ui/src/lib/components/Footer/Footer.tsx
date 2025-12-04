@@ -151,7 +151,7 @@ export const Footer = ({ site = 'web' }: { site?: 'web' | 'applications' }) => {
           <Box>
             <Inline space={[2, 2, 4]}>
               {externalLinks.map(({ title, href }) => (
-                <LinkV2 href={href} underline="normal" newTab>
+                <LinkV2 href={href} underline="normal" newTab key={title}>
                   <Text variant="small" color="blue600">
                     {title}
                   </Text>
