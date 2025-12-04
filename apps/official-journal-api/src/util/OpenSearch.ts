@@ -204,6 +204,7 @@ export const getOsBody = (
   }
 
   // Query
+  const hasTextQuery = !!q
   const body: any = {
     from,
     size,
@@ -215,7 +216,7 @@ export const getOsBody = (
         minimum_should_match: 0,
       },
     },
-    track_total_hits: 200, // Cap at 200 to avoid performance issues
+    track_total_hits: hasTextQuery ? 200 : true, // Cap at 200 to avoid performance issues
     sort,
     // Don’t send back these fields.
     _source: { excludes: ['bodyText', 'caseNumber'] },
