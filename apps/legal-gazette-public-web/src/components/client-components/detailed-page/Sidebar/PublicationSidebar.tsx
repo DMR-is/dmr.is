@@ -28,10 +28,6 @@ export const PublicationSidebar = ({ publication }: Props) => {
               </Text>
             </Stack>
           )}
-          <Stack space={0}>
-            <Text variant="h4">Innsent af</Text>
-            <Text variant="small">{publication.advert.createdBy}</Text>
-          </Stack>
         </Stack>
       </Box>
       <Box background="dark100" padding={3} borderRadius="large">
