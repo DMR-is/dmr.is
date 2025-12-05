@@ -16,6 +16,7 @@ import {
   CourtDistrictApi,
   HealthApi,
   SettlementApi,
+  SignatureApi,
   StatisticsApi,
   StatusApi,
   SubscriberApi,
@@ -32,6 +33,7 @@ const apis = [
   'StatusApi',
   'TypeApi',
   'UsersApi',
+  'SignatureApi',
   'StatisticsApi',
   'ApplicationApi',
   'AdvertPdfApi',
@@ -56,6 +58,7 @@ export type ApiClientMap = {
   StatusApi: StatusApi
   TypeApi: TypeApi
   UsersApi: UsersApi
+  SignatureApi: SignatureApi
   StatisticsApi: StatisticsApi
   ApplicationApi: ApplicationApi
   AdvertPdfApi: AdvertPdfApi
@@ -80,6 +83,7 @@ const ApiConstructors: {
   StatusApi,
   TypeApi,
   UsersApi,
+  SignatureApi,
   StatisticsApi,
   ApplicationApi,
   AdvertPdfApi,

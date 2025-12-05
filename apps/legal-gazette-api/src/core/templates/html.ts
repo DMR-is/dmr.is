@@ -46,12 +46,14 @@ export function getAdvertHtmlMarkup(
     { className: 'advertSerial' },
   )
 
-  const signatureMarkup = getSignatureMarkup({
-    date: model.signatureDate,
-    location: model.signatureLocation,
-    name: model.signatureName,
-    onBehalfOf: model.signatureOnBehalfOf,
-  })
+  const signatureMarkup = model.signature
+    ? getSignatureMarkup({
+        date: model.signature.date,
+        location: model.signature.location,
+        name: model.signature.name,
+        onBehalfOf: model.signature.onBehalfOf,
+      })
+    : ''
 
   let htmlContent = ``
   switch (model.templateType) {

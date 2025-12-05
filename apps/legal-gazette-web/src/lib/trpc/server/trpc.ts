@@ -46,6 +46,7 @@ export const createTRPCContext = cache(async () => {
       session.idToken,
     ),
     statisticsApi: await getServerClient('StatisticsApi', session.idToken),
+    signatureApi: await getServerClient('SignatureApi', session.idToken),
   }
 })
 

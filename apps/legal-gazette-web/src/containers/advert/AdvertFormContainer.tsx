@@ -1,27 +1,22 @@
 'use client'
 
 import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
-import {
-  AlertMessage,
-  Box,
-  Breadcrumbs,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { Box, Breadcrumbs, Stack, Text } from '@dmr.is/ui/components/island-is'
 import { formatDate } from '@dmr.is/utils/client'
 
+import { AdvertFormAlert } from '../../components/alert/AdvertFormAlert'
 import { AdvertBaseFields } from '../../components/field-set-items/AdvertBaseFields'
 import { AdvertReadonlyFields } from '../../components/field-set-items/AdvertReadonlyFields'
 import { CommentFields } from '../../components/field-set-items/CommentFields'
 import { CommunicationChannelFields } from '../../components/field-set-items/CommunicationChannelFields'
 import { ContentFields } from '../../components/field-set-items/ContentFields'
 import { CourtAndJudgementFields } from '../../components/field-set-items/CourtAndJudgementFields'
+import { CreateSignatureField } from '../../components/field-set-items/CreateSignatureField'
 import { DivisionMeetingFields } from '../../components/field-set-items/DivisionMeetingFields'
 import { PublicationsFields } from '../../components/field-set-items/PublicationsFields'
 import { SettlementFields } from '../../components/field-set-items/SettlementFields'
 import { SignatureFields } from '../../components/field-set-items/SignatureFields'
 import { AdvertFormAccordion } from '../../components/Form/AdvertFormAccordion'
-import { StatusIdEnum } from '../../gen/fetch'
 import {
   DivisionMeetingAdvertTypes,
   RecallAdvertTypes,
@@ -140,18 +135,15 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
         },
         {
           title: 'Undirritun',
-          children: (
+          children: advert.signature ? (
             <SignatureFields
-              id={advert.id}
+              signature={advert.signature}
               canEdit={advert.canEdit}
-              signatureName={advert.signatureName ?? ''}
-              signatureOnBehalfOf={advert.signatureOnBehalfOf ?? ''}
-              signatureLocation={advert.signatureLocation ?? ''}
-              signatureDate={
-                advert.signatureDate
-                  ? new Date(advert.signatureDate)
-                  : undefined
-              }
+            />
+          ) : (
+            <CreateSignatureField
+              advertId={advert.id}
+              canEdit={advert.canEdit}
             />
           ),
           hidden: false,
@@ -213,21 +205,7 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
             luctus. Donec in nisi et justo luctus egestas.
           </Text>
         </Stack>
-        {advert.canEdit === false && (
-          <AlertMessage
-            type={advert.status.id === StatusIdEnum.REJECTED ? 'error' : 'info'}
-            title={
-              advert.status.id === StatusIdEnum.REJECTED
-                ? 'Auglýsingin var hafnað'
-                : 'Þú ert ekki skráður sem starfsmaður á þessari auglýsingu'
-            }
-            message={
-              advert.status.id === StatusIdEnum.REJECTED
-                ? 'Ekki er hægt að eiga við hafnaðar auglýsingar.'
-                : 'Aðeins starfsfólk sem er skráð á auglýsinguna getur unnið í henni.'
-            }
-          />
-        )}
+        <AdvertFormAlert status={advert.status} canEdit={advert.canEdit} />
         <AdvertFormAccordion items={items} />
       </Stack>
     </Box>

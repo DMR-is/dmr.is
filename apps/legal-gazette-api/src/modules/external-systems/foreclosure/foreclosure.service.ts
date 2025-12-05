@@ -59,10 +59,12 @@ export class ForeclosureService implements IForeclosureService {
       title: `Nauðungarsölur - ${body.foreclosureRegion}`,
       createdBy: body.responsibleParty.name,
       createdByNationalId: body.responsibleParty.nationalId,
-      signatureName: body.responsibleParty.signature.name,
-      signatureDate: body.responsibleParty.signature.date,
-      signatureLocation: body.responsibleParty.signature.location,
-      signatureOnBehalfOf: body.responsibleParty.signature.onBehalfOf,
+      signature: {
+        name: body.responsibleParty.signature.name,
+        date: body.responsibleParty.signature.date,
+        location: body.responsibleParty.signature.location,
+        onBehalfOf: body.responsibleParty.signature.onBehalfOf,
+      },
       scheduledAt: [body.foreclosureDate],
       isFromExternalSystem: true,
     })

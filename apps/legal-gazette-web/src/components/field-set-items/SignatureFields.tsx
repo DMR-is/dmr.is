@@ -8,34 +8,30 @@ import {
   Stack,
 } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
+import { SignatureDto } from '../../gen/fetch'
+import { useUpdateSignature } from '../../hooks/useUpdateSignature'
 
 type SignatureFieldsProps = {
-  id: string
+  signature: SignatureDto
   canEdit: boolean
-  signatureName?: string
-  signatureOnBehalfOf?: string
-  signatureLocation?: string
-  signatureDate?: Date
 }
 
 export const SignatureFields = ({
-  id,
+  signature,
   canEdit,
-  signatureName = '',
-  signatureLocation = '',
-  signatureOnBehalfOf = '',
-  signatureDate,
 }: SignatureFieldsProps) => {
   const {
     updateSignatureName,
     updateSignatureOnBehalfOf,
     updateSignatureLocation,
     updateSignatureDate,
-    isUpdatingAdvert,
-  } = useUpdateAdvert(id)
+    isUpdating,
+  } = useUpdateSignature({
+    advertId: signature.advertId,
+    signatureId: signature.id,
+  })
 
-  const isDisabled = !canEdit || isUpdatingAdvert
+  const isDisabled = isUpdating || !canEdit
 
   return (
     <Stack space={[1, 2]}>
@@ -47,7 +43,7 @@ export const SignatureFields = ({
             backgroundColor="blue"
             size="sm"
             label="Nafn undirritara"
-            defaultValue={signatureName}
+            defaultValue={signature.name}
             onBlur={(evt) => updateSignatureName(evt.target.value)}
           />
         </GridColumn>
@@ -57,7 +53,7 @@ export const SignatureFields = ({
             backgroundColor="blue"
             size="sm"
             label="Fyrir hönd"
-            defaultValue={signatureOnBehalfOf ?? ''}
+            defaultValue={signature.onBehalfOf}
             disabled={isDisabled}
             onBlur={(evt) => updateSignatureOnBehalfOf(evt.target.value)}
           />
@@ -68,7 +64,7 @@ export const SignatureFields = ({
             backgroundColor="blue"
             size="sm"
             label="Staður undirritunar"
-            defaultValue={signatureLocation}
+            defaultValue={signature.location}
             disabled={isDisabled}
             onBlur={(evt) => updateSignatureLocation(evt.target.value)}
           />
@@ -81,7 +77,7 @@ export const SignatureFields = ({
             placeholderText=""
             size="sm"
             label="Dagsetning undirritunar"
-            selected={signatureDate}
+            selected={signature.date ? new Date(signature.date) : null}
             disabled={isDisabled}
             handleChange={(date) =>
               updateSignatureDate(date?.toISOString() || '')
