@@ -12,6 +12,18 @@ const updateSignatureInput = z.object({
 })
 
 export const signatureRouter = router({
+  createSignature: protectedProcedure
+    .input(
+      z.object({
+        advertId: z.string(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      return await ctx.signatureApi.createSignature({
+        advertId: input.advertId,
+        createSignatureDto: {},
+      })
+    }),
   updateSignature: protectedProcedure
     .input(updateSignatureInput)
     .mutation(async ({ input, ctx }) => {

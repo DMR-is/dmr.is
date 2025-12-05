@@ -37,14 +37,19 @@ export const useUpdateSignature = ({
             trpc.getAdvert.queryKey({ id: advertId }),
           ) as AdvertDetailedDto
 
+          if (!prevData.signature) {
+            return { prevData }
+          }
+
           const optimisticData: AdvertDetailedDto = {
             ...prevData,
             signature: {
               ...prevData.signature,
-              name: variables.name ?? prevData.signature.name,
-              onBehalfOf: variables.onBehalfOf ?? prevData.signature.onBehalfOf,
-              location: variables.location ?? prevData.signature.location,
-              date: variables.date ?? prevData.signature.date,
+              name: variables.name ?? prevData.signature?.name,
+              onBehalfOf:
+                variables.onBehalfOf ?? prevData.signature?.onBehalfOf,
+              location: variables.location ?? prevData.signature?.location,
+              date: variables.date ?? prevData.signature?.date,
             },
           }
 
@@ -78,7 +83,7 @@ export const useUpdateSignature = ({
 
   const updateSignatureName = useCallback(
     (name?: string | null) => {
-      if (name === advert?.signature.name) {
+      if (name === advert?.signature?.name) {
         return
       }
 
@@ -88,12 +93,12 @@ export const useUpdateSignature = ({
         name,
       })
     },
-    [updateSignatureMutation, advert?.signature.name, signatureId, advertId],
+    [updateSignatureMutation, advert?.signature?.name, signatureId, advertId],
   )
 
   const updateSignatureOnBehalfOf = useCallback(
     (onBehalfOf?: string | null) => {
-      if (onBehalfOf === advert?.signature.onBehalfOf) {
+      if (onBehalfOf === advert?.signature?.onBehalfOf) {
         return
       }
 
@@ -105,7 +110,7 @@ export const useUpdateSignature = ({
     },
     [
       updateSignatureMutation,
-      advert?.signature.onBehalfOf,
+      advert?.signature?.onBehalfOf,
       signatureId,
       advertId,
     ],
@@ -113,7 +118,7 @@ export const useUpdateSignature = ({
 
   const updateSignatureLocation = useCallback(
     (location?: string | null) => {
-      if (location === advert?.signature.location) {
+      if (location === advert?.signature?.location) {
         return
       }
 
@@ -125,7 +130,7 @@ export const useUpdateSignature = ({
     },
     [
       updateSignatureMutation,
-      advert?.signature.location,
+      advert?.signature?.location,
       signatureId,
       advertId,
     ],
@@ -133,7 +138,7 @@ export const useUpdateSignature = ({
 
   const updateSignatureDate = useCallback(
     (date?: string | null) => {
-      if (date === advert?.signature.date) {
+      if (date === advert?.signature?.date) {
         return
       }
 
@@ -143,7 +148,7 @@ export const useUpdateSignature = ({
         date,
       })
     },
-    [updateSignatureMutation, advert?.signature.date, signatureId, advertId],
+    [updateSignatureMutation, advert?.signature?.date, signatureId, advertId],
   )
 
   return {

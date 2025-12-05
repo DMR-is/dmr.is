@@ -508,7 +508,7 @@ export class AdvertModel extends BaseModel<
   assignedUser?: UserModel
 
   @HasOne(() => SignatureModel)
-  signature!: SignatureModel
+  signature?: SignatureModel
 
   @HasMany(() => AdvertPublicationModel)
   publications!: AdvertPublicationModel[]
@@ -683,7 +683,7 @@ export class AdvertModel extends BaseModel<
       templateType: model.templateType,
       canEdit: this.canEdit(model, userId),
       publicationNumber: model.publicationNumber ?? undefined,
-      signature: model.signature.fromModel(),
+      signature: model.signature?.fromModel(),
       caption: model.caption ?? undefined,
       content: model.content ?? undefined,
       additionalText: model.additionalText ?? undefined,
@@ -830,10 +830,11 @@ export class AdvertDetailedDto extends DetailedDto {
   @Type(() => CommentDto)
   comments!: CommentDto[]
 
-  @ApiProperty({ type: SignatureDto })
+  @ApiProperty({ type: SignatureDto, required: false })
+  @IsOptional()
   @ValidateNested()
   @Type(() => SignatureDto)
-  signature!: SignatureDto
+  signature?: SignatureDto
 
   @ApiProperty({ type: String, required: false })
   @IsOptional()
