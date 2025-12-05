@@ -19,11 +19,14 @@ import { ApplicationCard } from './ApplicationCard'
 type Props = {
   applications: ApplicationDto[]
   paging: Paging
+  onPageChange?: (page: number) => void
 }
 
-export const ApplicationList = ({ applications, paging }: Props) => {
-  const [_page, setPage] = useQueryState('page', parseAsInteger)
-
+export const ApplicationList = ({
+  applications,
+  paging,
+  onPageChange,
+}: Props) => {
   return (
     <GridContainer>
       <GridRow marginBottom={8}>
@@ -43,7 +46,10 @@ export const ApplicationList = ({ applications, paging }: Props) => {
                 totalItems={paging.totalItems}
                 totalPages={paging.totalPages}
                 renderLink={(page, className, children) => (
-                  <button className={className} onClick={() => setPage(page)}>
+                  <button
+                    className={className}
+                    onClick={() => onPageChange?.(page)}
+                  >
                     {children}
                   </button>
                 )}
