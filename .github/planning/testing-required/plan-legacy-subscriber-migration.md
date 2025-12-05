@@ -156,7 +156,7 @@ COMMIT;
 ```typescript
 interface ILegacyMigrationService {
   // Check if email exists in legacy system
-  checkLegacyEmail(email: string): Promise<{ exists: boolean; hasKennitala: boolean }>
+  checkLegacyEmail(email: string): Promise<CheckLegacyEmailResponseDto>
   
   // Request magic link for migration
   requestMigration(email: string, targetNationalId: string): Promise<void>

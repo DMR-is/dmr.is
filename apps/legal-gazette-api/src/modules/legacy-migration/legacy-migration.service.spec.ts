@@ -177,7 +177,7 @@ describe('LegacyMigrationService', () => {
   })
 
   describe('checkLegacyEmail', () => {
-    it('should return exists: true and hasKennitala: true when email exists with kennitala', async () => {
+    it('should return emailExists: true and hasKennitala: true when email exists with kennitala', async () => {
       legacySubscriberModel.findOne.mockResolvedValue(
         createMockLegacySubscriberWithKt(),
       )
@@ -185,7 +185,7 @@ describe('LegacyMigrationService', () => {
       const result = await service.checkLegacyEmail(TEST_EMAIL)
 
       expect(result).toEqual({
-        exists: true,
+        emailExists: true,
         hasKennitala: true,
       })
       expect(legacySubscriberModel.findOne).toHaveBeenCalledWith({
@@ -193,7 +193,7 @@ describe('LegacyMigrationService', () => {
       })
     })
 
-    it('should return exists: true and hasKennitala: false when email exists without kennitala', async () => {
+    it('should return emailExists: true and hasKennitala: false when email exists without kennitala', async () => {
       legacySubscriberModel.findOne.mockResolvedValue(
         createMockLegacySubscriberWithoutKt(),
       )
@@ -201,18 +201,18 @@ describe('LegacyMigrationService', () => {
       const result = await service.checkLegacyEmail(TEST_EMAIL_NO_KT)
 
       expect(result).toEqual({
-        exists: true,
+        emailExists: true,
         hasKennitala: false,
       })
     })
 
-    it('should return exists: false when email does not exist', async () => {
+    it('should return emailExists: false when email does not exist', async () => {
       legacySubscriberModel.findOne.mockResolvedValue(null)
 
       const result = await service.checkLegacyEmail('nonexistent@example.com')
 
       expect(result).toEqual({
-        exists: false,
+        emailExists: false,
         hasKennitala: false,
       })
     })
