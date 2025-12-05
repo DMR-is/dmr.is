@@ -170,6 +170,7 @@ export class LegacyMigrationService implements ILegacyMigrationService {
         name: legacyUser.name,
         isActive: legacyUser.isActive,
         subscribedAt,
+        legacySubscriberId: legacyUser.id,
       },
     })
 
@@ -233,6 +234,7 @@ export class LegacyMigrationService implements ILegacyMigrationService {
         name: legacyUser.name,
         isActive: legacyUser.isActive,
         subscribedAt,
+        legacySubscriberId: legacyUser.id,
       })
 
       // Mark legacy user as migrated
