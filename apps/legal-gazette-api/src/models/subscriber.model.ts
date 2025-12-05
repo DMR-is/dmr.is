@@ -20,6 +20,7 @@ export type SubscriberCreateAttributes = {
   name?: string | null
   isActive?: boolean
   subscribedAt?: Date | null
+  legacySubscriberId?: string | null
 }
 
 @BaseTable({ tableName: LegalGazetteModels.SUBSCRIBER })
@@ -63,6 +64,14 @@ export class SubscriberModel extends BaseModel<
   })
   @ApiProperty({ type: Date, nullable: true })
   subscribedAt!: Date | null
+
+  @Column({
+    type: DataType.UUIDV4,
+    field: 'legacy_subscriber_id',
+    allowNull: true,
+  })
+  @ApiProperty({ type: String, nullable: true })
+  legacySubscriberId!: string | null
 
   static fromModel(model: SubscriberModel): SubscriberDto {
     return {
