@@ -9,7 +9,11 @@ export interface ISignatureService {
 
   getAdvertSignature(advertId: string): Promise<SignatureDto>
 
-  updateSignature(id: string, body: UpdateSignatureDto): Promise<SignatureDto>
+  updateSignature(
+    id: string,
+    advertId: string,
+    body: UpdateSignatureDto,
+  ): Promise<SignatureDto>
 
   createSignature(
     advertId: string,

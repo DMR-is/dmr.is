@@ -8,19 +8,21 @@ import {
   Stack,
 } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
+import { useUpdateSignature } from '../../hooks/useUpdateSignature'
 
 type SignatureFieldsProps = {
-  id: string
+  advertId: string
+  signatureId: string
   canEdit: boolean
   signatureName?: string
   signatureOnBehalfOf?: string
   signatureLocation?: string
-  signatureDate?: Date
+  signatureDate?: string
 }
 
 export const SignatureFields = ({
-  id,
+  advertId,
+  signatureId,
   canEdit,
   signatureName = '',
   signatureLocation = '',
@@ -32,10 +34,10 @@ export const SignatureFields = ({
     updateSignatureOnBehalfOf,
     updateSignatureLocation,
     updateSignatureDate,
-    isUpdatingAdvert,
-  } = useUpdateAdvert(id)
+    isUpdating,
+  } = useUpdateSignature({ advertId, signatureId })
 
-  const isDisabled = !canEdit || isUpdatingAdvert
+  const isDisabled = isUpdating || !canEdit
 
   return (
     <Stack space={[1, 2]}>
@@ -81,7 +83,7 @@ export const SignatureFields = ({
             placeholderText=""
             size="sm"
             label="Dagsetning undirritunar"
-            selected={signatureDate}
+            selected={signatureDate ? new Date(signatureDate) : null}
             disabled={isDisabled}
             handleChange={(date) =>
               updateSignatureDate(date?.toISOString() || '')

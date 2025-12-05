@@ -32,9 +32,12 @@ export class SignatureService implements ISignatureService {
 
   async updateSignature(
     id: string,
+    advertId: string,
     body: UpdateSignatureDto,
   ): Promise<SignatureDto> {
-    const signature = await this.signatureModel.findByPkOrThrow(id)
+    const signature = await this.signatureModel.findOneOrThrow({
+      where: { id, advertId },
+    })
     await signature.update(body)
 
     return signature.fromModel()

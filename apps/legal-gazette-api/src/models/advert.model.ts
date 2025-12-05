@@ -174,6 +174,7 @@ export type AdvertCreateAttributes = {
     { model: CommunicationChannelModel },
     { model: TBRTransactionModel },
     { model: CommentModel },
+    { model: SignatureModel },
     { model: ForeclosureModel, include: [ForeclosurePropertyModel] },
   ],
   order: [

@@ -4173,7 +4173,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddDivisionMeetingForApplicationDto"
+                "$ref": "#/components/schemas/CreateDivisionMeetingDto"
               }
             }
           }
@@ -4260,7 +4260,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddDivisionEndingForApplicationDto"
+                "$ref": "#/components/schemas/CreateDivisionEndingDto"
               }
             }
           }
@@ -6328,6 +6328,368 @@
         "summary": "Complete migration with token verification",
         "tags": ["Legacy Migration"]
       }
+    },
+    "/api/v1/adverts/signatures/{signatureId}": {
+      "get": {
+        "operationId": "getSignatureById",
+        "parameters": [
+          {
+            "name": "signatureId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignatureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "",
+        "tags": ["Signature"]
+      }
+    },
+    "/api/v1/adverts/{advertId}/signatures": {
+      "get": {
+        "operationId": "getAdvertSignature",
+        "parameters": [
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignatureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "",
+        "tags": ["Signature"]
+      },
+      "post": {
+        "operationId": "createSignature",
+        "parameters": [
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSignatureDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignatureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "",
+        "tags": ["Signature"]
+      }
+    },
+    "/api/v1/adverts/{advertId}/signatures/{signatureId}": {
+      "patch": {
+        "operationId": "updateSignature",
+        "parameters": [
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "signatureId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSignatureDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignatureDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "",
+        "tags": ["Signature"]
+      }
     }
   },
   "info": {
@@ -6575,17 +6937,21 @@
       "ResponsiblePartySignature": {
         "type": "object",
         "properties": {
+          "date": {
+            "type": "string",
+            "nullable": true
+          },
           "name": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "location": {
-            "type": "string"
-          },
-          "date": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "onBehalfOf": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -6963,6 +7329,11 @@
       "CaseDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
           "createdAt": {
             "type": "string",
             "description": "ISO representation of the creation date",
@@ -6979,9 +7350,6 @@
             "example": "2021-08-31T12:00:00.000Z",
             "nullable": true
           },
-          "id": {
-            "type": "string"
-          },
           "caseNumber": {
             "type": "string"
           },
@@ -6993,7 +7361,7 @@
             ]
           }
         },
-        "required": ["createdAt", "updatedAt", "id", "caseNumber"]
+        "required": ["id", "createdAt", "updatedAt", "caseNumber"]
       },
       "Paging": {
         "type": "object",
@@ -7074,18 +7442,6 @@
             "type": "string"
           },
           "additionalText": {
-            "type": "string"
-          },
-          "signatureLocation": {
-            "type": "string"
-          },
-          "signatureName": {
-            "type": "string"
-          },
-          "signatureOnBehalfOf": {
-            "type": "string"
-          },
-          "signatureDate": {
             "type": "string"
           },
           "judgementDate": {
@@ -7281,9 +7637,14 @@
         },
         "required": ["id", "type", "advertId", "actor", "status", "createdAt"]
       },
-      "AdvertDetailedDto": {
+      "SignatureDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
           "createdAt": {
             "type": "string",
             "description": "ISO representation of the creation date",
@@ -7300,8 +7661,47 @@
             "example": "2021-08-31T12:00:00.000Z",
             "nullable": true
           },
-          "id": {
+          "advertId": {
             "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "onBehalfOf": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "createdAt", "updatedAt", "advertId"]
+      },
+      "AdvertDetailedDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "ISO representation of the creation date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "ISO representation of the updated date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": "string",
+            "description": "ISO representation of the deletion date",
+            "example": "2021-08-31T12:00:00.000Z",
+            "nullable": true
           },
           "templateType": {
             "allOf": [
@@ -7329,18 +7729,6 @@
             "type": "string"
           },
           "additionalText": {
-            "type": "string"
-          },
-          "signatureLocation": {
-            "type": "string"
-          },
-          "signatureName": {
-            "type": "string"
-          },
-          "signatureOnBehalfOf": {
-            "type": "string"
-          },
-          "signatureDate": {
             "type": "string"
           },
           "judgementDate": {
@@ -7397,6 +7785,9 @@
               "$ref": "#/components/schemas/CommentDto"
             }
           },
+          "signature": {
+            "$ref": "#/components/schemas/SignatureDto"
+          },
           "paidAt": {
             "type": "string"
           },
@@ -7405,9 +7796,9 @@
           }
         },
         "required": [
+          "id",
           "createdAt",
           "updatedAt",
-          "id",
           "templateType",
           "title",
           "createdBy",
@@ -7419,7 +7810,8 @@
           "status",
           "scheduledAt",
           "hasInternalComments",
-          "comments"
+          "comments",
+          "signature"
         ]
       },
       "AdvertStatusCounterItemDto": {
@@ -7468,6 +7860,11 @@
       "AdvertDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
           "createdAt": {
             "type": "string",
             "description": "ISO representation of the creation date",
@@ -7483,9 +7880,6 @@
             "description": "ISO representation of the deletion date",
             "example": "2021-08-31T12:00:00.000Z",
             "nullable": true
-          },
-          "id": {
-            "type": "string"
           },
           "title": {
             "type": "string"
@@ -7522,9 +7916,9 @@
           }
         },
         "required": [
+          "id",
           "createdAt",
           "updatedAt",
-          "id",
           "title",
           "createdBy",
           "publications",
@@ -7562,6 +7956,27 @@
         },
         "required": ["advertIds"]
       },
+      "CreateSignatureDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "onBehalfOf": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "CreateCommunicationChannelDto": {
         "type": "object",
         "properties": {
@@ -7586,37 +8001,37 @@
           "liquidatorLocation": {
             "type": "string"
           },
-          "liquidatorRecallStatementLocation": {
+          "recallStatementLocation": {
             "type": "string"
           },
-          "liquidatorRecallStatementType": {
+          "recallStatementType": {
             "type": "string"
           },
-          "settlementName": {
+          "name": {
             "type": "string"
           },
-          "settlementNationalId": {
+          "nationalId": {
             "type": "string"
           },
-          "settlementAddress": {
+          "address": {
             "type": "string"
           },
           "declaredClaims": {
             "type": "number"
           },
-          "settlementDeadline": {
+          "deadline": {
             "type": "string"
           },
-          "settlementDateOfDeath": {
+          "dateOfDeath": {
             "type": "string"
           }
         },
         "required": [
           "liquidatorName",
           "liquidatorLocation",
-          "settlementName",
-          "settlementNationalId",
-          "settlementAddress"
+          "name",
+          "nationalId",
+          "address"
         ]
       },
       "CreateAdvertDto": {
@@ -7647,18 +8062,6 @@
             "type": "string",
             "nullable": true
           },
-          "signatureName": {
-            "type": "string",
-            "nullable": true
-          },
-          "signatureOnBehalfOf": {
-            "type": "string",
-            "nullable": true
-          },
-          "signatureLocation": {
-            "type": "string",
-            "nullable": true
-          },
           "additionalText": {
             "type": "string",
             "nullable": true
@@ -7682,6 +8085,12 @@
               }
             ]
           },
+          "isFromExternalSystem": {
+            "type": "boolean"
+          },
+          "applicationId": {
+            "type": "string"
+          },
           "signatureDate": {
             "type": "string",
             "description": "Date of signature"
@@ -7699,6 +8108,9 @@
               "type": "string"
             }
           },
+          "signature": {
+            "$ref": "#/components/schemas/CreateSignatureDto"
+          },
           "communicationChannels": {
             "description": "List of communication channels for notifications",
             "type": "array",
@@ -7715,6 +8127,7 @@
           "categoryId",
           "title",
           "scheduledAt",
+          "signature",
           "communicationChannels"
         ]
       },
@@ -7845,9 +8258,14 @@
           },
           "isActive": {
             "type": "boolean"
+          },
+          "subscribedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
           }
         },
-        "required": ["id", "nationalId", "name", "isActive"]
+        "required": ["id", "nationalId", "name", "isActive", "subscribedAt"]
       },
       "UserDto": {
         "type": "object",
@@ -7890,20 +8308,31 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "description": "Unique identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "ISO representation of the creation date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "ISO representation of the updated date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": "string",
+            "description": "ISO representation of the deletion date",
+            "example": "2021-08-31T12:00:00.000Z",
+            "nullable": true
           },
           "caseId": {
             "type": "string"
           },
           "submittedByNationalId": {
             "type": "string"
-          },
-          "applicationType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ApplicationTypeEnum"
-              }
-            ]
           },
           "status": {
             "allOf": [
@@ -7912,35 +8341,26 @@
               }
             ]
           },
-          "islandIsApplicationId": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string"
-          },
-          "updatedAt": {
-            "type": "string"
-          },
-          "category": {
-            "$ref": "#/components/schemas/CategoryDto"
-          },
-          "type": {
-            "$ref": "#/components/schemas/TypeDto"
-          },
           "title": {
             "type": "string"
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationTypeEnum"
+              }
+            ]
           }
         },
         "required": [
           "id",
-          "caseId",
-          "submittedByNationalId",
-          "applicationType",
-          "status",
           "createdAt",
           "updatedAt",
-          "title"
+          "caseId",
+          "submittedByNationalId",
+          "status",
+          "title",
+          "type"
         ]
       },
       "GetApplicationsDto": {
@@ -7958,155 +8378,35 @@
         },
         "required": ["applications", "paging"]
       },
-      "CommonApplicationFieldsDto": {
-        "type": "object",
-        "properties": {
-          "typeId": {
-            "type": "string"
-          },
-          "categoryId": {
-            "type": "string"
-          },
-          "caption": {
-            "type": "string"
-          },
-          "html": {
-            "type": "string"
-          }
-        }
-      },
-      "CourtAndJudgmentFieldsDto": {
-        "type": "object",
-        "properties": {
-          "courtDistrictId": {
-            "type": "string"
-          },
-          "judgmentDate": {
-            "type": "string"
-          }
-        }
-      },
-      "ApplicationLiquidationFieldsDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "location": {
-            "type": "string"
-          },
-          "recallRequirementStatementType": {
-            "default": "LIQUIDATOR_LOCATION",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ApplicationRequirementStatementEnum"
-              }
-            ]
-          },
-          "recallRequirementStatementLocation": {
-            "type": "string",
-            "description": "Location to send recall requirement (Kröfulýsing)"
-          }
-        }
-      },
-      "ApplicationSettlementDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "nationalId": {
-            "type": "string"
-          },
-          "address": {
-            "type": "string"
-          },
-          "deadlineDate": {
-            "type": "string"
-          },
-          "dateOfDeath": {
-            "type": "string"
-          }
-        }
-      },
-      "ApplicationDivisionMeetingFieldsDto": {
-        "type": "object",
-        "properties": {
-          "meetingDate": {
-            "type": "string"
-          },
-          "meetingLocation": {
-            "type": "string"
-          }
-        }
-      },
-      "RecallFieldsDto": {
-        "type": "object",
-        "properties": {
-          "courtAndJudgmentFields": {
-            "$ref": "#/components/schemas/CourtAndJudgmentFieldsDto"
-          },
-          "liquidatorFields": {
-            "$ref": "#/components/schemas/ApplicationLiquidationFieldsDto"
-          },
-          "settlementFields": {
-            "$ref": "#/components/schemas/ApplicationSettlementDto"
-          },
-          "divisionMeetingFields": {
-            "$ref": "#/components/schemas/ApplicationDivisionMeetingFieldsDto"
-          }
-        },
-        "required": [
-          "courtAndJudgmentFields",
-          "liquidatorFields",
-          "settlementFields",
-          "divisionMeetingFields"
-        ]
-      },
-      "ApplicationSignatureDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "location": {
-            "type": "string"
-          },
-          "date": {
-            "type": "string"
-          },
-          "onBehalfOf": {
-            "type": "string"
-          }
-        }
-      },
-      "ApplicationPublishingDatesDto": {
-        "type": "object",
-        "properties": {
-          "publishingDate": {
-            "type": "string"
-          }
-        },
-        "required": ["publishingDate"]
-      },
       "ApplicationDetailedDto": {
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "description": "Unique identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "ISO representation of the creation date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "ISO representation of the updated date",
+            "example": "2021-08-31T12:00:00.000Z"
+          },
+          "deletedAt": {
+            "type": "string",
+            "description": "ISO representation of the deletion date",
+            "example": "2021-08-31T12:00:00.000Z",
+            "nullable": true
           },
           "caseId": {
             "type": "string"
           },
           "submittedByNationalId": {
             "type": "string"
-          },
-          "applicationType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ApplicationTypeEnum"
-              }
-            ]
           },
           "status": {
             "allOf": [
@@ -8115,42 +8415,57 @@
               }
             ]
           },
-          "islandIsApplicationId": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string"
-          },
-          "updatedAt": {
-            "type": "string"
-          },
-          "category": {
-            "$ref": "#/components/schemas/CategoryDto"
-          },
-          "type": {
-            "$ref": "#/components/schemas/TypeDto"
-          },
           "title": {
             "type": "string"
           },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationTypeEnum"
+              }
+            ]
+          },
+          "answers": {
+            "type": "object",
+            "default": {}
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "caseId",
+          "submittedByNationalId",
+          "status",
+          "title",
+          "type",
+          "answers"
+        ]
+      },
+      "UpdateApplicationDto": {
+        "type": "object",
+        "properties": {
+          "answers": {
+            "type": "object",
+            "default": {}
+          }
+        },
+        "required": ["answers"]
+      },
+      "CreateDivisionMeetingDto": {
+        "type": "object",
+        "properties": {
           "additionalText": {
             "type": "string"
           },
-          "commonFields": {
-            "$ref": "#/components/schemas/CommonApplicationFieldsDto"
+          "meetingDate": {
+            "type": "string"
           },
-          "recallFields": {
-            "$ref": "#/components/schemas/RecallFieldsDto"
+          "meetingLocation": {
+            "type": "string"
           },
           "signature": {
-            "$ref": "#/components/schemas/ApplicationSignatureDto"
-          },
-          "publishingDates": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ApplicationPublishingDatesDto"
-            }
+            "$ref": "#/components/schemas/CreateSignatureDto"
           },
           "communicationChannels": {
             "type": "array",
@@ -8160,133 +8475,13 @@
           }
         },
         "required": [
-          "id",
-          "caseId",
-          "submittedByNationalId",
-          "applicationType",
-          "status",
-          "createdAt",
-          "updatedAt",
-          "title",
-          "commonFields",
-          "recallFields",
+          "meetingDate",
+          "meetingLocation",
           "signature",
-          "publishingDates",
           "communicationChannels"
         ]
       },
-      "UpdateCourtAndJudgmentFieldsDto": {
-        "type": "object",
-        "properties": {
-          "courtDistrictId": {
-            "type": "string"
-          },
-          "judgmentDate": {
-            "type": "string"
-          }
-        }
-      },
-      "UpdateApplicationLiquidationFieldsDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "location": {
-            "type": "string"
-          },
-          "recallRequirementStatementType": {
-            "default": "LIQUIDATOR_LOCATION",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ApplicationRequirementStatementEnum"
-              }
-            ]
-          },
-          "recallRequirementStatementLocation": {
-            "type": "string",
-            "description": "Location to send recall requirement (Kröfulýsing)"
-          }
-        }
-      },
-      "UpdateApplicationSettlementDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "nationalId": {
-            "type": "string"
-          },
-          "address": {
-            "type": "string"
-          },
-          "deadlineDate": {
-            "type": "string"
-          },
-          "dateOfDeath": {
-            "type": "string"
-          }
-        }
-      },
-      "UpdateApplicationDivisionMeetingFieldsDto": {
-        "type": "object",
-        "properties": {
-          "meetingDate": {
-            "type": "string"
-          },
-          "meetingLocation": {
-            "type": "string"
-          }
-        }
-      },
-      "UpdateRecallFieldsDto": {
-        "type": "object",
-        "properties": {
-          "courtAndJudgmentFields": {
-            "$ref": "#/components/schemas/UpdateCourtAndJudgmentFieldsDto"
-          },
-          "liquidatorFields": {
-            "$ref": "#/components/schemas/UpdateApplicationLiquidationFieldsDto"
-          },
-          "settlementFields": {
-            "$ref": "#/components/schemas/UpdateApplicationSettlementDto"
-          },
-          "divisionMeetingFields": {
-            "$ref": "#/components/schemas/UpdateApplicationDivisionMeetingFieldsDto"
-          }
-        }
-      },
-      "UpdateApplicationDto": {
-        "type": "object",
-        "properties": {
-          "additionalText": {
-            "type": "string"
-          },
-          "commonFields": {
-            "$ref": "#/components/schemas/CommonApplicationFieldsDto"
-          },
-          "recallFields": {
-            "$ref": "#/components/schemas/UpdateRecallFieldsDto"
-          },
-          "signature": {
-            "$ref": "#/components/schemas/ApplicationSignatureDto"
-          },
-          "publishingDates": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ApplicationPublishingDatesDto"
-            }
-          },
-          "communicationChannels": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
-            }
-          }
-        }
-      },
-      "AddDivisionMeetingForApplicationDto": {
+      "CreateDivisionEndingDto": {
         "type": "object",
         "properties": {
           "additionalText": {
@@ -8299,40 +8494,25 @@
             "type": "string"
           },
           "signature": {
-            "$ref": "#/components/schemas/ApplicationSignatureDto"
+            "$ref": "#/components/schemas/CreateSignatureDto"
           },
           "communicationChannels": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CreateCommunicationChannelDto"
             }
-          }
-        },
-        "required": ["meetingDate", "meetingLocation", "signature"]
-      },
-      "AddDivisionEndingForApplicationDto": {
-        "type": "object",
-        "properties": {
-          "additionalText": {
-            "type": "string"
-          },
-          "signature": {
-            "$ref": "#/components/schemas/ApplicationSignatureDto"
-          },
-          "communicationChannels": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
-            }
-          },
-          "scheduledAt": {
-            "type": "string"
           },
           "declaredClaims": {
             "type": "number"
           }
         },
-        "required": ["signature", "scheduledAt", "declaredClaims"]
+        "required": [
+          "meetingDate",
+          "meetingLocation",
+          "signature",
+          "communicationChannels",
+          "declaredClaims"
+        ]
       },
       "TypeWithCategoriesDto": {
         "type": "object",
@@ -8830,6 +9010,27 @@
           }
         },
         "required": ["token"]
+      },
+      "UpdateSignatureDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "onBehalfOf": {
+            "type": "string",
+            "nullable": true
+          }
+        }
       },
       "BaseEntityDto": {
         "type": "object",

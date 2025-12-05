@@ -8,7 +8,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
@@ -43,6 +43,7 @@ export class SignatureController {
   }
 
   @Get('/:advertId/signatures')
+  @ApiParam({ name: 'advertId', required: true })
   @LGResponse({ operationId: 'getAdvertSignature', type: SignatureDto })
   async getAdvertSignature(
     @Param('advertId') advertId: string,
@@ -51,6 +52,7 @@ export class SignatureController {
   }
 
   @Post('/:advertId/signatures')
+  @ApiParam({ name: 'advertId', required: true })
   @LGResponse({ operationId: 'createSignature', type: SignatureDto })
   async createSignature(
     @Param('advertId') advertId: string,
@@ -60,11 +62,13 @@ export class SignatureController {
   }
 
   @Patch('/:advertId/signatures/:signatureId')
+  @ApiParam({ name: 'advertId', required: true })
   @LGResponse({ operationId: 'updateSignature', type: SignatureDto })
   async updateSignature(
+    @Param('advertId') advertId: string,
     @Param('signatureId') signatureId: string,
     @Body() body: UpdateSignatureDto,
   ): Promise<SignatureDto> {
-    return this.signatureService.updateSignature(signatureId, body)
+    return this.signatureService.updateSignature(signatureId, advertId, body)
   }
 }

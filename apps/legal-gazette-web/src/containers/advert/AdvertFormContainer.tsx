@@ -142,16 +142,13 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
           title: 'Undirritun',
           children: (
             <SignatureFields
-              id={advert.id}
+              advertId={advert.id}
+              signatureId={advert.signature.id}
               canEdit={advert.canEdit}
-              signatureName={advert.signatureName ?? ''}
-              signatureOnBehalfOf={advert.signatureOnBehalfOf ?? ''}
-              signatureLocation={advert.signatureLocation ?? ''}
-              signatureDate={
-                advert.signatureDate
-                  ? new Date(advert.signatureDate)
-                  : undefined
-              }
+              signatureName={advert.signature.name}
+              signatureOnBehalfOf={advert.signature.onBehalfOf}
+              signatureLocation={advert.signature.location}
+              signatureDate={advert.signature.date}
             />
           ),
           hidden: false,
