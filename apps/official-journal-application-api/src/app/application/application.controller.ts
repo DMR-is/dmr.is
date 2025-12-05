@@ -303,13 +303,13 @@ export class ApplicationController {
   ) {
     if (user.role.title === UserRoleEnum.InvolvedParty) {
       const res = ResultWrapper.unwrap(
-        await this.userService.getInvolvedPartyByNationalId(
+        await this.userService.getInvolvedPartiesByNationalId(
           user.nationalId,
           params?.partyName ?? undefined,
         ),
       )
       return {
-        involvedParties: [res.involvedParty],
+        involvedParties: res.involvedParties,
       }
     }
 
