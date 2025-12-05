@@ -28,12 +28,12 @@ export const channelsRouter = router({
   getChannels: protectedProcedure
     .input(getChannelsSchema)
     .query(async ({ input, ctx }) => {
-      return await ctx.channelsApi.getCommunicationChannels(input)
+      return await ctx.api.getCommunicationChannels(input)
     }),
   createChannel: protectedProcedure
     .input(createCommunicationChannelSchema)
     .mutation(async ({ input, ctx }) => {
-      return await ctx.channelsApi.createCommunicationChannel({
+      return await ctx.api.createCommunicationChannel({
         advertId: input.advertId,
         createCommunicationChannelDto: {
           email: input.email,
@@ -45,7 +45,7 @@ export const channelsRouter = router({
   updateChannel: protectedProcedure
     .input(updateCommunicationChannelSchema)
     .mutation(async ({ input, ctx }) => {
-      return await ctx.channelsApi.updateCommunicationChannel({
+      return await ctx.api.updateCommunicationChannel({
         advertId: input.advertId,
         channelId: input.channelId,
         updateCommunicationChannelDto: {
@@ -58,7 +58,7 @@ export const channelsRouter = router({
   deleteChannel: protectedProcedure
     .input(deleteCommunicationChannelSchema)
     .mutation(async ({ input, ctx }) => {
-      return await ctx.channelsApi.deleteCommunicationChannel({
+      return await ctx.api.deleteCommunicationChannel({
         advertId: input.advertId,
         channelId: input.channelId,
       })

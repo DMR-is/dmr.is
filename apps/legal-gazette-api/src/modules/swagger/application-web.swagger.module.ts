@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 
+import { AdvertControllerModule } from '../advert/advert.controller.module'
 import { AdvertProviderModule } from '../advert/advert.provider.module'
-import { AdvertController } from '../advert/controllers/advert.controller'
 import { PublicationControllerModule } from '../advert/publications/publication.controller.module'
 import { ApplictionControllerModule } from '../applications/application.controller.module'
 import { CategoryControllerModule } from '../base-entity/category/category.controller.module'
@@ -14,6 +14,7 @@ import { LGNationalRegistryControllerModule } from '../national-registry/nationa
 @Module({
   imports: [
     AdvertProviderModule,
+    AdvertControllerModule,
     TypeControllerModule,
     CategoryControllerModule,
     StatusControllerModule,
@@ -23,7 +24,7 @@ import { LGNationalRegistryControllerModule } from '../national-registry/nationa
     PublicationControllerModule,
     LGNationalRegistryControllerModule,
   ],
-  controllers: [AdvertController],
+  controllers: [],
   providers: [],
   exports: [],
 })

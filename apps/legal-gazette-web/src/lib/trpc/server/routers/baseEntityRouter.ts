@@ -10,28 +10,28 @@ export const baseEntityRouter = router({
   getTypes: protectedProcedure
     .input(z.object({ excludeUnassignable: z.boolean().optional() }).optional())
     .query(async ({ input, ctx }) => {
-      return ctx.baseEntity.typeApi.getTypes({
+      return ctx.api.getTypes({
         excludeUnassignable: input?.excludeUnassignable,
       })
     }),
   getCategories: protectedProcedure
     .input(getCategoriesSchema)
     .query(async ({ input, ctx }) => {
-      return ctx.baseEntity.categoryApi.getCategories(input)
+      return ctx.api.getCategories(input)
     }),
   getStatuses: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.baseEntity.statusApi.getStatuses()
+    return ctx.api.getStatuses()
   }),
   getCourtDistricts: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.baseEntity.courtDistrictApi.getCourtDistricts()
+    return ctx.api.getCourtDistricts()
   }),
   getAllEntities: protectedProcedure.query(async ({ ctx }) => {
     const [{ types }, { categories }, { statuses }, { courtDistricts }] =
       await Promise.all([
-        ctx.baseEntity.typeApi.getTypes({}),
-        ctx.baseEntity.categoryApi.getCategories({}),
-        ctx.baseEntity.statusApi.getStatuses(),
-        ctx.baseEntity.courtDistrictApi.getCourtDistricts(),
+        ctx.api.getTypes({}),
+        ctx.api.getCategories({}),
+        ctx.api.getStatuses(),
+        ctx.api.getCourtDistricts(),
       ])
     return { types, categories, statuses, courtDistricts }
   }),

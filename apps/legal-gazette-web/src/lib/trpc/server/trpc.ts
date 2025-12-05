@@ -12,40 +12,9 @@ export const createTRPCContext = cache(async () => {
   if (session?.invalid || !session?.idToken) {
     throw new TRPCError({ code: 'UNAUTHORIZED' })
   }
+
   return {
-    session,
-    adverts: {
-      baseApi: await getServerClient('AdvertApi', session.idToken),
-      updateApi: await getServerClient('AdvertUpdateApi', session.idToken),
-      createApi: await getServerClient('AdvertCreateApi', session.idToken),
-    },
-    baseEntity: {
-      typeApi: await getServerClient('TypeApi', session.idToken),
-      categoryApi: await getServerClient('CategoryApi', session.idToken),
-      statusApi: await getServerClient('StatusApi', session.idToken),
-      courtDistrictApi: await getServerClient(
-        'CourtDistrictApi',
-        session.idToken,
-      ),
-    },
-    publications: {
-      publicationsApi: await getServerClient(
-        'AdvertPublicationApi',
-        session.idToken,
-      ),
-      advertPublishApi: await getServerClient(
-        'AdvertPublishApi',
-        session.idToken,
-      ),
-    },
-    usersApi: await getServerClient('UsersApi', session.idToken),
-    settlementApi: await getServerClient('SettlementApi', session.idToken),
-    commentsApi: await getServerClient('CommentApi', session.idToken),
-    channelsApi: await getServerClient(
-      'CommunicationChannelApi',
-      session.idToken,
-    ),
-    statisticsApi: await getServerClient('StatisticsApi', session.idToken),
+    api: await getServerClient(session.idToken),
   }
 })
 
@@ -75,54 +44,15 @@ export const publicProcedure = t.procedure.use(({ ctx, next }) => {
   })
 })
 
-const validateApiAccess = (
-  ctx: Awaited<ReturnType<typeof createTRPCContext>>,
-) => {
-  const requiredApis = [
-    ctx.adverts.baseApi,
-    ctx.adverts.updateApi,
-    ctx.baseEntity.categoryApi,
-    ctx.baseEntity.typeApi,
-    ctx.baseEntity.statusApi,
-    ctx.baseEntity.courtDistrictApi,
-    ctx.publications.publicationsApi,
-    ctx.commentsApi,
-    ctx.channelsApi,
-    ctx.settlementApi,
-    ctx.usersApi,
-    ctx.statisticsApi,
-  ]
-
-  if (requiredApis.some((api) => !api)) {
+export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
+  if (!ctx.api) {
     throw new TRPCError({ code: 'UNAUTHORIZED' })
   }
-}
-
-export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
-  validateApiAccess(ctx)
 
   return next({
     ctx: {
       ...ctx,
-      advertsApi: ctx.adverts.baseApi,
-      updateApi: ctx.adverts.updateApi,
-      baseEntity: {
-        typeApi: ctx.baseEntity.typeApi,
-        categoryApi: ctx.baseEntity.categoryApi,
-        statusApi: ctx.baseEntity.statusApi,
-        courtDistrictApi: ctx.baseEntity.courtDistrictApi,
-      },
-      publications: {
-        publicationsApi: ctx.publications.publicationsApi,
-        advertPublishApi: ctx.publications.advertPublishApi,
-      },
-      usersApi: ctx.usersApi,
-      settlementApi: ctx.settlementApi,
-      commentsApi: ctx.commentsApi,
-      channelsApi: ctx.channelsApi,
-      statisticsApi: ctx.statisticsApi,
+      api: ctx.api,
     },
   })
 })
-
-export type Router = typeof router
