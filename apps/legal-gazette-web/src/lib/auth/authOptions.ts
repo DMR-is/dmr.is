@@ -24,7 +24,7 @@ async function authorize(nationalId?: string, idToken?: string) {
     return null
   }
 
-  const dmrClient = getLegalGazetteClient('UsersApi', idToken)
+  const dmrClient = getLegalGazetteClient(idToken)
 
   try {
     const { data: member, error } = await serverFetcher(() =>

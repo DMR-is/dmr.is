@@ -13,13 +13,12 @@ export const commentRouter = router({
   getComments: protectedProcedure
     .input(getCommentsSchema)
     .query(
-      async ({ ctx, input }) =>
-        await ctx.commentsApi.getCommentsByAdvertId(input),
+      async ({ ctx, input }) => await ctx.api.getCommentsByAdvertId(input),
     ),
   postComment: protectedProcedure
     .input(postCommentSchema)
     .mutation(async ({ ctx, input }) => {
-      return await ctx.commentsApi.postComment({
+      return await ctx.api.postComment({
         advertId: input.advertId,
         createTextCommentBodyDto: { comment: input.comment },
       })
