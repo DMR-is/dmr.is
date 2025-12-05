@@ -36,8 +36,8 @@ export class PartyGuard implements CanActivate {
       const involvedPartyLookup =
         await this.userService.getInvolvedPartiesByNationalId(
           req.user.nationalId,
+          req.user.actor.nationalId,
         )
-
       if (!involvedPartyLookup.result.ok) {
         this.logger.warn('Could not find involved party', {
           error: involvedPartyLookup.result.error,

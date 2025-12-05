@@ -302,14 +302,8 @@ export class ApplicationController {
     @Query() params?: GetInvolvedPartiesForApplicationQuery,
   ) {
     if (user.role.title === UserRoleEnum.InvolvedParty) {
-      const res = ResultWrapper.unwrap(
-        await this.userService.getInvolvedPartiesByNationalId(
-          user.nationalId,
-          params?.partyName ?? undefined,
-        ),
-      )
       return {
-        involvedParties: res.involvedParties,
+        involvedParties: user.involvedParties,
       }
     }
 

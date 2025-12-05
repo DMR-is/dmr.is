@@ -473,7 +473,6 @@ export class UserService implements IUserService {
   @LogAndHandle()
   async getInvolvedPartiesByNationalId(
     nationalId: string,
-    name?: string,
     userNationalId?: string,
   ): Promise<ResultWrapper<GetInvoledPartiesByUserResponse>> {
     let involvedParty: AdvertInvolvedPartyModel | null = null
@@ -523,32 +522,12 @@ export class UserService implements IUserService {
         }
       }
     }
-
-    if (name) {
-      // Try with name + nationalId first
-      involvedParty = await this.advertInvolvedPartyModel.findOne({
-        where: {
-          nationalId: { [Op.eq]: nationalId },
-          title: { [Op.iLike]: `%${name}%` },
-        },
-      })
-
-      // If not found, fallback to just nationalId
-      if (!involvedParty) {
-        involvedParty = await this.advertInvolvedPartyModel.findOne({
-          where: {
-            nationalId: { [Op.eq]: nationalId },
-          },
-        })
-      }
-    } else {
-      // No name provided → only use nationalId
-      involvedParty = await this.advertInvolvedPartyModel.findOne({
-        where: {
-          nationalId: { [Op.eq]: nationalId },
-        },
-      })
-    }
+    // No User nationalId or only 1 involved party → only use nationalId
+    involvedParty = await this.advertInvolvedPartyModel.findOne({
+      where: {
+        nationalId: { [Op.eq]: nationalId },
+      },
+    })
 
     if (!involvedParty) {
       return ResultWrapper.err({

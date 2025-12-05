@@ -28,7 +28,6 @@ export interface IUserService {
 
   getInvolvedPartiesByNationalId(
     nationalId: string,
-    name?: string,
     userNationalId?: string,
   ): Promise<ResultWrapper<GetInvoledPartiesByUserResponse>>
 
