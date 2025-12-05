@@ -53,6 +53,8 @@ module.exports = {
     return queryInterface.sequelize.query(`
       BEGIN;
 
+      DROP TABLE IF EXISTS ADVERT_TYPE_FEE_CODE;
+
       DROP TABLE IF EXISTS TBR_TRANSACTION;
 
       DROP TABLE IF EXISTS TBR_FEE_CODE;
