@@ -8090,10 +8090,6 @@
           "applicationId": {
             "type": "string"
           },
-          "signatureDate": {
-            "type": "string",
-            "description": "Date of signature"
-          },
           "judgementDate": {
             "type": "string"
           },
@@ -8126,7 +8122,6 @@
           "categoryId",
           "title",
           "scheduledAt",
-          "signature",
           "communicationChannels"
         ]
       },

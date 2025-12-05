@@ -6244,10 +6244,6 @@
           },
           "isFromExternalSystem": { "type": "boolean" },
           "applicationId": { "type": "string" },
-          "signatureDate": {
-            "type": "string",
-            "description": "Date of signature"
-          },
           "judgementDate": { "type": "string" },
           "divisionMeetingDate": { "type": "string" },
           "scheduledAt": {
@@ -6270,7 +6266,6 @@
           "categoryId",
           "title",
           "scheduledAt",
-          "signature",
           "communicationChannels"
         ]
       },

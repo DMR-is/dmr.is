@@ -141,7 +141,7 @@ export type AdvertCreateAttributes = {
   createdByNationalId: string
 
   // signature
-  signature: SignatureCreationAttributes
+  signature?: SignatureCreationAttributes
 
   // Common specific properties
   additionalText?: string | null
@@ -984,15 +984,6 @@ export class CreateAdvertInternalDto extends PickType(AdvertModel, [
   applicationId?: string
 
   @ApiProperty({
-    type: String,
-    description: 'Date of signature',
-    required: false,
-  })
-  @IsOptional()
-  @IsDateString()
-  signatureDate?: string
-
-  @ApiProperty({
     enum: StatusIdEnum,
     enumName: 'StatusIdEnum',
     required: false,
@@ -1025,10 +1016,11 @@ export class CreateAdvertInternalDto extends PickType(AdvertModel, [
   @ArrayMaxSize(3)
   scheduledAt!: string[]
 
-  @ApiProperty({ type: CreateSignatureDto })
+  @ApiProperty({ type: CreateSignatureDto, required: false })
+  @IsOptional()
   @ValidateNested()
   @Type(() => CreateSignatureDto)
-  signature!: CreateSignatureDto
+  signature?: CreateSignatureDto
 
   @ApiProperty({
     type: [CreateCommunicationChannelDto],

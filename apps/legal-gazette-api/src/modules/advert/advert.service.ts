@@ -165,7 +165,11 @@ export class AdvertService implements IAdvertService {
   async createAdvert(
     body: CreateAdvertInternalDto,
   ): Promise<AdvertDetailedDto> {
-    const includeArr: Includeable[] = [{ model: SignatureModel }]
+    const includeArr: Includeable[] = []
+
+    if (body.signature) {
+      includeArr.push({ model: SignatureModel })
+    }
 
     if (body.communicationChannels) {
       includeArr.push({ model: CommunicationChannelModel })
@@ -198,7 +202,7 @@ export class AdvertService implements IAdvertService {
           typeof body.judgementDate === 'string'
             ? new Date(body.judgementDate)
             : body.judgementDate,
-        signature: body.signature,
+        signature: body?.signature,
         additionalText: body.additionalText,
         divisionMeetingDate:
           typeof body.divisionMeetingDate === 'string'
