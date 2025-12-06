@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   Box,
   SkeletonLoader,
@@ -13,7 +14,7 @@ import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { Icon, Link } from '@island.is/island-ui/core'
 
 import { useFilters } from '../../../../hooks/useFilters'
-import { issues } from '../dummyData'
+import { useTRPC } from '../../../../lib/trpc/client/trpc'
 
 export const SearchIssuesResults = ({
   setTotalItems,
@@ -21,64 +22,27 @@ export const SearchIssuesResults = ({
   setTotalItems: (count: number) => void
 }) => {
   const { filters, setFilters } = useFilters()
-  const [isLoading, setIsLoading] = useState(false)
 
-  const getFilteredData = () => {
-    let thisData = [...issues]
-    if (filters.dateFrom && filters.dateTo) {
-      thisData = thisData.filter((issue) => {
-        if (issue.date < filters.dateFrom! || issue.date > filters.dateTo!) {
-          return false
-        }
-        return true
-      })
-    } else {
-      thisData = thisData.filter((issue) => {
-        if (issue.date.getFullYear() !== filters.yearId) {
-          return false
-        }
-        return true
-      })
-    }
-    setTotalItems(thisData.length)
-    return {
-      data: thisData.filter((issue, index) => {
-        if (
-          index >= (filters.page - 1) * filters.pageSize &&
-          index < filters.page * filters.pageSize
-        ) {
-          return true
-        }
-        return false
-      }),
+  const trpc = useTRPC()
 
-      paging: {
-        pageSize: filters.pageSize,
-        totalPages:
-          filters.pageSize > 0
-            ? Math.ceil(thisData.length / filters.pageSize)
-            : 1,
-        page: filters.page,
-        totalItems: thisData.length,
-      },
-    }
-  }
-  const [filteredData, setFilteredData] = useState(getFilteredData())
+  const { data, isLoading } = useQuery(
+    trpc.getIssues.queryOptions({
+      page: filters.page,
+      pageSize: filters.pageSize,
+      year:
+        filters.dateFrom && filters.dateTo
+          ? undefined
+          : filters.yearId.toString(),
+      dateFrom: filters.dateFrom ? filters.dateFrom.toISOString() : undefined,
+      dateTo: filters.dateTo ? filters.dateTo.toISOString() : undefined,
+    }),
+  )
 
   useEffect(() => {
-    // console.log('changed', data.amount)
-    setFilteredData(getFilteredData())
-  }, [filters])
-
-  // if (error) {
-  //   return (
-  //     <AlertMessage
-  //       type="error"
-  //       title="Villa kom upp"
-  //       message="Ekki tókst að sækja birtingar, vinsamlegast reynið aftur síðar"
-  //     />
-  //   )
-  // }
+    if (data?.paging.totalItems) {
+      setTotalItems(data.paging.totalItems)
+    }
+  }, [data])
 
   return (
     <Stack space={[2, 3, 4]}>
@@ -89,10 +53,10 @@ export const SearchIssuesResults = ({
           repeat={5}
           space={[2, 3, 4]}
         />
-      ) : (filteredData.data?.length || 0) > 0 ? (
+      ) : (data?.issues?.length || 0) > 0 ? (
         <Box paddingBottom={3} borderRadius="large">
           <DataTable
-            paging={filteredData.paging}
+            paging={data?.paging}
             onPageChange={(page) => setFilters((prev) => ({ ...prev, page }))}
             onPageSizeChange={(pageSize) =>
               setFilters((prev) => ({ ...prev, pageSize, page: 1 }))
@@ -116,12 +80,12 @@ export const SearchIssuesResults = ({
               },
             ]}
             rows={
-              filteredData.data?.map((publication) => ({
-                nr: publication.nr,
-                date: publication.date.toLocaleDateString('en-GB'),
+              data?.issues?.map((issue) => ({
+                nr: issue.issue,
+                date: new Date(issue.publishDate).toLocaleDateString('en-GB'),
                 link: (
                   <Link
-                    href={publication.link ?? ''}
+                    href={issue.url}
                     underline="small"
                     underlineVisibility="hover"
                   >

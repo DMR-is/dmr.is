@@ -1,12 +1,12 @@
 import { cache } from 'react'
 
-import { getServerClient } from '../../api/serverClient'
+import { getPublicServerClient, getServerClient } from '../../api/serverClient'
 
 import { initTRPC, TRPCError } from '@trpc/server'
 
 export const createTRPCContext = cache(async () => {
   return {
-    api: await getServerClient(),
+    publicApi: await getPublicServerClient(),
   }
 })
 
@@ -29,21 +29,30 @@ export const router = t.router
 export const mergeRouters = t.mergeRouters
 
 export const publicProcedure = t.procedure.use(({ ctx, next }) => {
+  if (!ctx.publicApi) {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'No public API client found',
+    })
+  }
   return next({
     ctx: {
       ...ctx,
+      publicApi: ctx.publicApi,
     },
   })
 })
 
-export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
-  if (!ctx.api) {
+export const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
+  const api = await getServerClient()
+
+  if (!api) {
     throw new TRPCError({ code: 'UNAUTHORIZED' })
   }
   return next({
     ctx: {
       ...ctx,
-      api: ctx.api,
+      api,
     },
   })
 })
