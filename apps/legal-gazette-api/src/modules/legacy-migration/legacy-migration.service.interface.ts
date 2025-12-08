@@ -1,9 +1,5 @@
 import { SubscriberDto } from '../../models/subscriber.model'
-
-export interface CheckLegacyEmailResult {
-  exists: boolean
-  hasKennitala: boolean
-}
+import { CheckLegacyEmailResponseDto } from './legacy-migration.dto'
 
 export interface ILegacyMigrationService {
   /**
@@ -11,7 +7,7 @@ export interface ILegacyMigrationService {
    * @param email - The email to check
    * @returns Object indicating if email exists and if it has an associated kennitala
    */
-  checkLegacyEmail(email: string): Promise<CheckLegacyEmailResult>
+  checkLegacyEmail(email: string): Promise<CheckLegacyEmailResponseDto>
 
   /**
    * Request a magic link for migration

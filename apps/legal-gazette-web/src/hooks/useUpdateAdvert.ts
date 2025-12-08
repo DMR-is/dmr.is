@@ -451,74 +451,6 @@ export const useUpdateAdvert = (id: string) => {
     [updateAdvert, advert?.category.id],
   )
 
-  const updateSignatureName = useCallback(
-    (signatureName?: string) => {
-      if (signatureName === advert?.signatureName) {
-        return
-      }
-
-      return updateAdvert(
-        { signatureName },
-        {
-          successMessage: 'Nafn undirritara uppfært',
-          errorMessage: 'Villa við að uppfæra nafn undirritara',
-        },
-      )
-    },
-    [updateAdvert, advert?.signatureName],
-  )
-
-  const updateSignatureOnBehalfOf = useCallback(
-    (signatureOnBehalfOf: string) => {
-      if (signatureOnBehalfOf === advert?.signatureOnBehalfOf) {
-        return
-      }
-
-      updateAdvert(
-        { signatureOnBehalfOf },
-        {
-          successMessage: 'Fyrir hönd uppfært',
-          errorMessage: 'Villa við að uppfæra fyrir hönd',
-        },
-      )
-    },
-    [updateAdvert, advert?.signatureOnBehalfOf],
-  )
-
-  const updateSignatureLocation = useCallback(
-    (signatureLocation: string) => {
-      if (signatureLocation === advert?.signatureLocation) {
-        return
-      }
-
-      updateAdvert(
-        { signatureLocation },
-        {
-          successMessage: 'Staður undirritunar uppfærður',
-          errorMessage: 'Villa við að uppfæra stað undirritunar',
-        },
-      )
-    },
-    [updateAdvert, advert?.signatureLocation],
-  )
-
-  const updateSignatureDate = useCallback(
-    (signatureDate: string) => {
-      if (signatureDate === advert?.signatureDate) {
-        return
-      }
-
-      updateAdvert(
-        { signatureDate },
-        {
-          successMessage: 'Dagsetning undirritunar uppfærð',
-          errorMessage: 'Villa við að uppfæra dagsetningu undirritunar',
-        },
-      )
-    },
-    [updateAdvert, advert?.signatureDate],
-  )
-
   const updateCourtDistrict = useCallback(
     (courtDistrictId: string) => {
       if (courtDistrictId === advert?.courtDistrict?.id) {
@@ -611,10 +543,6 @@ export const useUpdateAdvert = (id: string) => {
     updateAdditionalText,
     updateType,
     updateCategory,
-    updateSignatureName,
-    updateSignatureOnBehalfOf,
-    updateSignatureLocation,
-    updateSignatureDate,
     updateCourtDistrict,
     updateJudgementDay,
     updateDivisionMeetingLocation,
