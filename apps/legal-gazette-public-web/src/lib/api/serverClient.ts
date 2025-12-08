@@ -12,5 +12,5 @@ export async function getServerClient() {
     throw new TRPCError({ code: 'UNAUTHORIZED', message: 'No session found' })
   }
 
-  return getClient(session.accessToken)
+  return getClient(session.accessToken, session.idToken)
 }

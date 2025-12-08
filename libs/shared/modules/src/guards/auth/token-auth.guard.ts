@@ -12,6 +12,13 @@ import {
 import { LogMethod } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+type UserFromIdToken = {
+  name: string
+  actor?: {
+    name: string
+  }
+}
+
 @Injectable()
 export class TokenJwtAuthGuard implements CanActivate {
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {}
@@ -20,6 +27,29 @@ export class TokenJwtAuthGuard implements CanActivate {
     cache: true,
     rateLimit: true,
   })
+
+  private userInfoFromIdToken(
+    idToken: string,
+    publicKey: string,
+    accessTokenSub?: string,
+  ): UserFromIdToken | null {
+    try {
+      const payload = jwt.verify(idToken, publicKey, {
+        algorithms: ['RS256'],
+      }) as jwt.JwtPayload
+      if (payload.sub !== accessTokenSub) {
+        this.logger.error('ID Token sub does not match Access Token sub')
+        return null
+      }
+      return {
+        name: payload.name,
+        actor: payload.actor,
+      }
+    } catch (error) {
+      this.logger.error('ID Token Verification Error:', error)
+      return null
+    }
+  }
 
   @LogMethod(false)
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -30,7 +60,16 @@ export class TokenJwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('Authorization header is missing')
     }
 
-    const token = authHeader.split(' ')[1]
+    const multipleTokens = authHeader.split(',')
+    const tokens = multipleTokens.map((token: string) => {
+      return token.replace('Bearer ', '').trim()
+    })
+
+
+    // Added support to have access and idtoken in the authorization header
+    // This gives us the ability to get scopes from access token and user info from id token
+    const token = tokens[0] // Use the first token for verification
+    const idToken = tokens[1] // Use the second token for ID token verification
     if (!token) {
       throw new UnauthorizedException('Token is missing')
     }
@@ -47,8 +86,23 @@ export class TokenJwtAuthGuard implements CanActivate {
       const publicKey = key.getPublicKey()
 
       // Verify the token with the public key
-      const payload = jwt.verify(token, publicKey, { algorithms: ['RS256'] })
-      request.user = payload // Attach the decoded payload to request
+      const payload = jwt.verify(token, publicKey, {
+        algorithms: ['RS256'],
+      }) as jwt.JwtPayload
+      const user = idToken
+        ? this.userInfoFromIdToken(tokens[1], publicKey, payload.sub as string)
+        : null
+      const actor = payload.actor
+        ? {
+            ...payload.actor,
+            name: user?.actor?.name || payload.actor?.name,
+          }
+        : undefined
+      request.user = {
+        ...payload, // Attach the decoded payload to request
+        actor: actor,
+        name: user?.name || payload.name,
+      }
 
       return true
     } catch (error) {
