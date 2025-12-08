@@ -1,13 +1,14 @@
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
-import { StatusDto, StatusEnum } from '../../gen/fetch'
+import { StatusDto } from '../../gen/fetch'
+import { StatusIdEnum } from '../../lib/constants'
 
 type Props = {
   status: StatusDto
   canEdit: boolean
 }
 export const AdvertFormAlert = ({ status, canEdit }: Props) => {
-  if (status.title === StatusEnum.ÚTgefið) {
+  if (status.id === StatusIdEnum.PUBLISHED) {
     return (
       <AlertMessage
         type="success"
@@ -17,7 +18,7 @@ export const AdvertFormAlert = ({ status, canEdit }: Props) => {
     )
   }
 
-  if (status.title === StatusEnum.Hafnað) {
+  if (status.id === StatusIdEnum.REJECTED) {
     return (
       <AlertMessage
         type="error"
@@ -27,7 +28,7 @@ export const AdvertFormAlert = ({ status, canEdit }: Props) => {
     )
   }
 
-  if (status.title === StatusEnum.Afturkallað) {
+  if (status.id === StatusIdEnum.WITHDRAWN) {
     return (
       <AlertMessage
         type="warning"

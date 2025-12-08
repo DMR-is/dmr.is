@@ -111,12 +111,6 @@ import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.mo
     InternalWebSwaggerModule,
     IslandIsApplicationSwaggerModule,
     PublicWebSwaggerModule,
-    CommunicationChannelControllerModule,
-    StatisticsControllerModule,
-    LGNationalRegistryControllerModule,
-    IssuesControllerModule,
-    LegacyMigrationControllerModule,
-    SignatureControllerModule,
     {
       module: AuthModule,
       global: true,

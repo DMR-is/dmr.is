@@ -21,7 +21,6 @@ import {
   DivisionMeetingAdvertTypes,
   RecallAdvertTypes,
   Route,
-  StatusIdEnum,
 } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 

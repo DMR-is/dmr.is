@@ -19,7 +19,7 @@ export const signatureRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      return await ctx.signatureApi.createSignature({
+      return await ctx.api.createSignature({
         advertId: input.advertId,
         createSignatureDto: {},
       })
@@ -28,7 +28,7 @@ export const signatureRouter = router({
     .input(updateSignatureInput)
     .mutation(async ({ input, ctx }) => {
       const { signatureId, advertId, ...updateData } = input
-      return await ctx.signatureApi.updateSignature({
+      return await ctx.api.updateSignature({
         signatureId: signatureId,
         advertId: advertId,
         updateSignatureDto: updateData,

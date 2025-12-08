@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common'
 import { AdvertControllerModule } from '../advert/advert.controller.module'
 import { IssuesControllerModule } from '../advert/issues/issues.controller.module'
 import { PublicationControllerModule } from '../advert/publications/publication.controller.module'
+import { SignatureControllerModule } from '../advert/signature/signature.controller.module'
 import { StatisticsControllerModule } from '../advert/statistics/statistics.controller.module'
 import { BaseEntityControllerModule } from '../base-entity/base-entity.controller.module'
 import { CategoryControllerModule } from '../base-entity/category/category.controller.module'
@@ -33,6 +34,7 @@ import { UserControllerModule } from '../users/users.controller.module'
     FeeCodeModule,
     SettlementControllerModule,
     UserControllerModule,
+    SignatureControllerModule,
   ],
 })
 export class InternalWebSwaggerModule {}
