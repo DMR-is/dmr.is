@@ -5,6 +5,8 @@ export interface DMRUser extends Auth {
   name: string
   fullName: string
   scope: string[]
+  client: string
+  authorization: string
   actor?: {
     nationalId: string
     name: string
