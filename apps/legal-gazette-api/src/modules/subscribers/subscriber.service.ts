@@ -41,7 +41,7 @@ export class SubscriberService implements ISubscriberService {
     // 2. Check for auto-migratable legacy user (has kennitala)
     try {
       const migratedSubscriber =
-        await this.legacyMigrationService.autoMigrateByKennitala(user.nationalId)
+        await this.legacyMigrationService.autoMigrateByKennitala(user)
 
       if (migratedSubscriber) {
         logger.info('Auto-migrated legacy subscriber', {

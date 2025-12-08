@@ -82,7 +82,7 @@ export class LegacyMigrationController {
   ): Promise<SubscriberDto> {
     return this.legacyMigrationService.completeMigration(
       dto.token,
-      user.nationalId,
+      user,
     )
   }
 }

@@ -1,3 +1,5 @@
+import { DMRUser } from '@dmr.is/auth/dmrUser'
+
 import { SubscriberDto } from '../../models/subscriber.model'
 import { CheckLegacyEmailResponseDto } from './legacy-migration.dto'
 
@@ -24,10 +26,7 @@ export interface ILegacyMigrationService {
    * @returns The newly created subscriber
    * @throws BadRequestException if token is invalid, expired, or nationalId doesn't match
    */
-  completeMigration(
-    token: string,
-    authenticatedNationalId: string,
-  ): Promise<SubscriberDto>
+  completeMigration(token: string, user: DMRUser): Promise<SubscriberDto>
 
   /**
    * Auto-migrate a legacy user by kennitala on sign-in
@@ -35,7 +34,7 @@ export interface ILegacyMigrationService {
    * @param nationalId - The kennitala to check for auto-migration
    * @returns The newly created subscriber if auto-migrated, null otherwise
    */
-  autoMigrateByKennitala(nationalId: string): Promise<SubscriberDto | null>
+  autoMigrateByKennitala(user: DMRUser): Promise<SubscriberDto | null>
 }
 
 export const ILegacyMigrationService = Symbol('ILegacyMigrationService')
