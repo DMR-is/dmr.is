@@ -1,18 +1,22 @@
-import { withAuth } from 'next-auth/middleware'
+import { createAuthMiddleware } from '@dmr.is/auth/middleware-helpers'
 
-export default withAuth({
-  callbacks: {
-    authorized: async ({ token }) => {
-      if (token && !token.invalid) {
-        return true
-      }
-      return false
-    },
-  },
-  pages: {
-    signIn: '/innskraning',
-    error: '/error',
-  },
+import { identityServerConfig } from './lib/auth/authOptions'
+
+export default createAuthMiddleware({
+  clientId: identityServerConfig.clientId,
+  clientSecret: identityServerConfig.clientSecret,
+  redirectUriEnvVar: 'LG_WEB_URL',
+  fallbackRedirectUri: process.env.IDENTITY_SERVER_LOGOUT_URL as string,
+  signInPath: '/innskraning',
+  checkIsActive: false,
 })
 
-export const config = { matcher: ['/((?!api/.*|.*\\.|innskraning).*)'] }
+export const config = {
+  matcher: [
+    // Exclude specific paths from authentication
+    // This should be statically defined as dynamic values do not work
+    // for each route to exclude, add it to the list in following patterns: |<route>|
+    `/((?!api|innskraning|_next/static|_next/image|images|fonts|.well-known|favicon.ico).*)`,
+    '/api/trpc/(.*)',
+  ],
+}
