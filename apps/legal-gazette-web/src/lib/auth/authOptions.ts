@@ -5,7 +5,8 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { decode } from 'jsonwebtoken'
 
 import { serverFetcher } from '@dmr.is/api-client/fetchers'
-import { identityServerConfig } from '@dmr.is/auth/identityServerConfig'
+import { identityServerId } from '@dmr.is/auth/identityProvider'
+import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
 import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
 import { getLogger } from '@dmr.is/logging-next'
 
@@ -18,6 +19,23 @@ type ErrorWithPotentialReqRes = Error & {
   request?: unknown
   response?: unknown
 }
+
+export const localIdentityServerConfig = {
+  id: identityServerId,
+  name: 'Iceland authentication service',
+  scope: `openid offline_access profile`,
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  clientId: process.env.LG_WEB_CLIENT_ID!,
+  clientSecret: process.env.LG_WEB_CLIENT_SECRET ?? '',
+}
+
+export const identityServerConfig =
+  process.env.NODE_ENV !== 'production'
+    ? localIdentityServerConfig
+    : {
+        ...sharedIdentityServerConfig,
+        scope: localIdentityServerConfig.scope,
+      }
 
 async function authorize(nationalId?: string, idToken?: string) {
   if (!idToken || !nationalId) {

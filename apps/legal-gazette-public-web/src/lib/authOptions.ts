@@ -35,7 +35,7 @@ export const identityServerConfig =
     ? localIdentityServerConfig
     : {
         ...sharedIdentityServerConfig,
-        scope: `openid offline_access profile @dmr.is/lg-public-web`,
+        scope: localIdentityServerConfig.scope,
       }
 
 async function authorize(nationalId?: string, accessToken?: string) {

@@ -24,7 +24,7 @@ export const identityServerConfig =
     ? localIdentityServerConfig
     : {
         ...sharedIdentityServerConfig,
-        scope: `openid offline_access profile @dmr.is/lg-application-web`,
+        scope: localIdentityServerConfig.scope,
       }
 
 export const authOptions: AuthOptions = {
