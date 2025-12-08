@@ -34,6 +34,7 @@ import { IssueSettingsModel } from '../models/issues-settings.model'
 import { LegacyMigrationTokenModel } from '../models/legacy-migration-token.model'
 import { LegacySubscriberModel } from '../models/legacy-subscriber.model'
 import { SettlementModel } from '../models/settlement.model'
+import { SignatureModel } from '../models/signature.model'
 import { StatusModel } from '../models/status.model'
 import { SubscriberModel } from '../models/subscriber.model'
 import { TBRTransactionModel } from '../models/tbr-transactions.model'
@@ -43,6 +44,7 @@ import { UserModel } from '../models/users.model'
 import { AdvertControllerModule } from '../modules/advert/advert.controller.module'
 import { IssuesControllerModule } from '../modules/advert/issues/issues.controller.module'
 import { PublicationControllerModule } from '../modules/advert/publications/publication.controller.module'
+import { SignatureControllerModule } from '../modules/advert/signature/signature.controller.module'
 import { StatisticsControllerModule } from '../modules/advert/statistics/statistics.controller.module'
 import { ApplictionControllerModule } from '../modules/applications/application.controller.module'
 import { BaseEntityControllerModule } from '../modules/base-entity/base-entity.controller.module'
@@ -110,6 +112,7 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
             IssueSettingsModel,
             LegacySubscriberModel,
             LegacyMigrationTokenModel,
+            SignatureModel,
           ],
         }),
       ],
@@ -143,6 +146,7 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
     LGNationalRegistryControllerModule,
     IssuesControllerModule,
     LegacyMigrationControllerModule,
+    SignatureControllerModule,
     {
       module: AuthModule,
       global: true,
