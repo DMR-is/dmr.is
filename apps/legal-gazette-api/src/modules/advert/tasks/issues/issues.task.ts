@@ -5,7 +5,7 @@ import { Cron, CronExpression } from '@nestjs/schedule'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { formatDate } from '@dmr.is/utils'
+import { formatDate, hashPdf } from '@dmr.is/utils'
 
 import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../../models/advert-publication.model'
@@ -170,12 +170,15 @@ export class IssuesTaskService implements IIssuesTask {
         },
       )
 
+      const hash = hashPdf(pdfGenInfo.buffer)
+
       const fileName = `lbl-${nextIssueNumber}-${currentYear}.pdf`
       const key = `adverts/issues/${currentYear}/${fileName}`
       const uploadRes = await this.pdfService.uploadPdfToS3(
         key,
         fileName,
         pdfGenInfo.buffer,
+        hash,
       )
 
       const newIssue = await this.issueModel.create({
@@ -185,12 +188,14 @@ export class IssuesTaskService implements IIssuesTask {
         year: now.getFullYear(),
         runningPageNumber: pdfGenInfo.totalPages + totalPagesThisYear,
         url: uploadRes.s3Url,
+        hash: hash,
       })
 
       this.logger.info('Created new issue', {
         context: LOGGING_CONTEXT,
         issueId: newIssue.id,
         publicationCount: publications.length,
+        hash: hash,
       })
     } catch (error) {
       this.logger.error('daily PDF generation failed', {

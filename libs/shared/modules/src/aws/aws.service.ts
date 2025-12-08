@@ -181,12 +181,14 @@ export class AWSService implements IAWSService {
     key: string,
     fileName: string,
     data: Buffer,
+    hash?: string,
   ): Promise<ResultWrapper<string>> {
     const isPdf = fileName.toLowerCase().endsWith('.pdf')
     const command = new PutObjectCommand({
       Bucket: bucket,
       Key: key,
       Body: data,
+      Metadata: hash ? { hash } : undefined,
       ...(isPdf
         ? {
             ContentType: 'application/pdf',

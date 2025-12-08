@@ -60,8 +60,19 @@ export class PdfService {
     }
   }
 
-  async uploadPdfToS3(key: string, fileName: string, pdfBuffer: Buffer) {
-    const upload = await this.s3.uploadObject(bucket, key, fileName, pdfBuffer)
+  async uploadPdfToS3(
+    key: string,
+    fileName: string,
+    pdfBuffer: Buffer,
+    hash?: string,
+  ) {
+    const upload = await this.s3.uploadObject(
+      bucket,
+      key,
+      fileName,
+      pdfBuffer,
+      hash,
+    )
 
     if (!upload.result.ok) {
       this.logger.warn('Failed to upload pdf to s3', {
