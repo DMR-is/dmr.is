@@ -9,6 +9,7 @@ export default createAuthMiddleware({
   fallbackRedirectUri: process.env.IDENTITY_SERVER_LOGOUT_URL as string,
   signInPath: '/innskraning',
   checkIsActive: false,
+  skipDefaultUrlCheck: true,
 })
 
 export const config = {
@@ -16,7 +17,7 @@ export const config = {
     // Exclude specific paths from authentication
     // This should be statically defined as dynamic values do not work
     // for each route to exclude, add it to the list in following patterns: |<route>|
-    `/((?!api|innskraning|_next/static|_next/image|images|fonts|.well-known|favicon.ico).*)`,
+    `/((?!api|innskraning|_next/static|_next/image|images|fonts|.well-known|assets|favicon.ico).*)`,
     '/api/trpc/(.*)',
   ],
 }

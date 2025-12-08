@@ -86,6 +86,7 @@ export interface CreateAuthMiddlewareConfig {
   fallbackRedirectUri: string
   signInPath: string
   checkIsActive?: boolean
+  skipDefaultUrlCheck?: boolean
 }
 
 export function createAuthMiddleware(config: CreateAuthMiddlewareConfig) {
@@ -96,6 +97,7 @@ export function createAuthMiddleware(config: CreateAuthMiddlewareConfig) {
     fallbackRedirectUri,
     signInPath,
     checkIsActive = false,
+    skipDefaultUrlCheck = false,
   } = config
 
   const middleware = withAuth(
@@ -126,13 +128,12 @@ export function createAuthMiddleware(config: CreateAuthMiddlewareConfig) {
         authorized: ({ token, req }) => {
           const requestedPath = req.nextUrl.pathname
 
-          if (
-            DEFAULT_URL === requestedPath ||
-            requestedPath.includes('/api/trpc')
-          ) {
+          const defaultUrlCheck = skipDefaultUrlCheck
+            ? false
+            : DEFAULT_URL === requestedPath
+          if (defaultUrlCheck || requestedPath.includes('/api/trpc')) {
             return true
           }
-
 
           if (checkIsActive) {
             return !!token && !token.invalid && !!token.isActive
