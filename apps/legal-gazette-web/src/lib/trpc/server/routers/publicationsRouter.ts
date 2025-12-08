@@ -32,7 +32,7 @@ export const publicationsRouter = router({
   createPublication: protectedProcedure
     .input(createPublicationSchema)
     .mutation(async ({ ctx, input }) => {
-      return await ctx.publications.publicationsApi.createAdvertPublication({
+      return await ctx.api.createAdvertPublication({
         advertId: input.advertId,
       })
     }),
@@ -40,7 +40,7 @@ export const publicationsRouter = router({
   updatePublication: protectedProcedure
     .input(updatePublicationSchema)
     .mutation(async ({ ctx, input }) => {
-      return await ctx.publications.publicationsApi.updateAdvertPublication({
+      return await ctx.api.updateAdvertPublication({
         advertId: input.advertId,
         publicationId: input.publicationId,
         updateAdvertPublicationDto: {
@@ -52,7 +52,7 @@ export const publicationsRouter = router({
   deletePublication: protectedProcedure
     .input(deletePublicationSchema)
     .mutation(async ({ ctx, input }) => {
-      return await ctx.publications.publicationsApi.deleteAdvertPublication({
+      return await ctx.api.deleteAdvertPublication({
         advertId: input.advertId,
         publicationId: input.publicationId,
       })
@@ -61,7 +61,7 @@ export const publicationsRouter = router({
   publishPublication: protectedProcedure
     .input(publishPublicationSchema)
     .mutation(async ({ ctx, input }) => {
-      return await ctx.publications.publicationsApi.publishAdvertPublication({
+      return await ctx.api.publishAdvertPublication({
         advertId: input.advertId,
         publicationId: input.publicationId,
       })
@@ -69,7 +69,7 @@ export const publicationsRouter = router({
   publishAdverts: protectedProcedure
     .input(z.object({ advertIds: z.array(z.string()) }))
     .mutation(async ({ ctx, input }) => {
-      return await ctx.publications.advertPublishApi.publishAdverts({
+      return await ctx.api.publishAdverts({
         publishAdvertsBody: {
           advertIds: input.advertIds,
         },
@@ -79,7 +79,7 @@ export const publicationsRouter = router({
   getPublication: protectedProcedure
     .input(getPublicationSchema)
     .query(async ({ ctx, input }) => {
-      return await ctx.publications.publicationsApi.getAdvertPublication({
+      return await ctx.api.getAdvertPublication({
         advertId: input.advertId,
         version: input.version,
       })

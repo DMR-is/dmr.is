@@ -155,7 +155,7 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
               id={advert.id}
               canEdit={advert.canEdit}
               publications={advert.publications}
-              advertStatus={advert.status.title}
+              advertStatus={advert.status}
             />
           ),
           hidden: false,

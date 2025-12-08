@@ -2,8 +2,8 @@
 
 import { Select, SkeletonLoader } from '@dmr.is/ui/components/island-is'
 
-import { StatusIdEnum } from '../../gen/fetch'
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
+import { StatusIdEnum } from '../../lib/constants'
 
 type Props = {
   advertId: string

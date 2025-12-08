@@ -20,9 +20,10 @@ import { Inline, toast } from '@island.is/island-ui/core'
 import {
   AdvertPublicationDto,
   AdvertVersionEnum,
-  StatusEnum,
+  StatusDto,
 } from '../../gen/fetch'
 import { useUpdatePublications } from '../../hooks/useUpdatePublications'
+import { StatusIdEnum } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { AdvertPublicationModal } from '../modals/AdvertPublicationModal'
 
@@ -32,7 +33,7 @@ type PublicationsFieldsProps = {
   id: string
   canEdit: boolean
   publications: AdvertPublicationDto[]
-  advertStatus: StatusEnum
+  advertStatus: StatusDto
 }
 
 export const PublicationsFields = ({
@@ -78,8 +79,8 @@ export const PublicationsFields = ({
 
   const handlePublishPublication = (pub: AdvertPublicationDto) => {
     if (
-      advertStatus !== StatusEnum.TilbúiðTilÚtgáfu &&
-      advertStatus !== StatusEnum.ÚTgefið
+      advertStatus.id !== StatusIdEnum.READY_FOR_PUBLICATION &&
+      advertStatus.id !== StatusIdEnum.PUBLISHED
     ) {
       toast.warning('Auglýsing ekki tilbúin til útgáfu')
       return

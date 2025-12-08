@@ -12,9 +12,9 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { StatusDto, StatusIdEnum } from '../../gen/fetch'
+import { StatusDto } from '../../gen/fetch'
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
-import { Route } from '../../lib/constants'
+import { Route, StatusIdEnum } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -53,12 +53,15 @@ export const ChangeStatusButtons = ({
   const isLoading =
     isMovingToNextStatus || isMovingToPreviousStatus || isRejecting
 
-  const prevMovableStatuses = [
+  const prevMovableStatuses: string[] = [
     StatusIdEnum.READY_FOR_PUBLICATION,
     StatusIdEnum.IN_PROGRESS,
   ]
 
-  const nextMovableStatuses = [StatusIdEnum.SUBMITTED, StatusIdEnum.IN_PROGRESS]
+  const nextMovableStatuses: string[] = [
+    StatusIdEnum.SUBMITTED,
+    StatusIdEnum.IN_PROGRESS,
+  ]
 
   const canMoveToPreviousStatus = useMemo(() => {
     return prevMovableStatuses.includes(currentStatus.id)

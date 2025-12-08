@@ -8,31 +8,32 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { StatusEnum } from '../../gen/fetch'
-import {  useTRPC } from '../../lib/trpc/client/trpc'
+import { StatusEnum } from '../../lib/constants'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { commentStepperMapper } from '../../mappers/commentMapper'
 
 type Props = {
   id: string
 }
+
 export const AdvertFormStepper = ({ id }: Props) => {
   const trpc = useTRPC()
   const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id }))
 
   const statusTitle = advert?.status.title
 
-  const statusSteps = [
-    { status: StatusEnum.Innsent },
-    { status: StatusEnum.ÍVinnslu },
-    { status: StatusEnum.TilbúiðTilÚtgáfu },
+  const statusSteps: { status: StatusEnum }[] = [
+    { status: StatusEnum.SUBMITTED },
+    { status: StatusEnum.IN_PROGRESS },
+    { status: StatusEnum.READY_FOR_PUBLICATION },
   ]
 
-  if (statusTitle === StatusEnum.Hafnað) {
-    statusSteps.push({ status: StatusEnum.Hafnað })
-  } else if (statusTitle === StatusEnum.Afturkallað) {
-    statusSteps.push({ status: StatusEnum.Afturkallað })
+  if (statusTitle === StatusEnum.REJECTED) {
+    statusSteps.push({ status: StatusEnum.REJECTED })
+  } else if (statusTitle === StatusEnum.REVOKED) {
+    statusSteps.push({ status: StatusEnum.REVOKED })
   } else {
-    statusSteps.push({ status: StatusEnum.ÚTgefið })
+    statusSteps.push({ status: StatusEnum.PUBLISHED })
   }
 
   const sections = statusSteps.map((step, index) => {

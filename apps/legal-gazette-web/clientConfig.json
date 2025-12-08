@@ -1,1295 +1,6 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/api/v1/categories/slug/{slug}": {
-      "get": {
-        "operationId": "getCategoryBySlug",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CategoryDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Category"]
-      }
-    },
-    "/api/v1/categories/{id}": {
-      "get": {
-        "operationId": "getCategory",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CategoryDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Category"]
-      }
-    },
-    "/api/v1/categories": {
-      "get": {
-        "operationId": "getCategories",
-        "parameters": [
-          {
-            "name": "type",
-            "required": false,
-            "in": "query",
-            "schema": { "nullable": true, "type": "string" }
-          },
-          {
-            "name": "excludeUnassignable",
-            "required": false,
-            "in": "query",
-            "description": "Filter out unassignable advert types",
-            "schema": { "type": "boolean" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetCategoriesDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Category"]
-      }
-    },
-    "/api/v1/types/slug/{slug}": {
-      "get": {
-        "operationId": "getTypeBySlug",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/TypeModel" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Type"]
-      }
-    },
-    "/api/v1/types/common": {
-      "get": {
-        "operationId": "getCommonAdvertTypes",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetTypesDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Type"]
-      }
-    },
-    "/api/v1/types/{id}": {
-      "get": {
-        "operationId": "getType",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/TypeModel" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Type"]
-      }
-    },
-    "/api/v1/types": {
-      "get": {
-        "operationId": "getTypes",
-        "parameters": [
-          {
-            "name": "excludeUnassignable",
-            "required": false,
-            "in": "query",
-            "description": "Filter out unassignable advert types",
-            "schema": { "type": "boolean" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetTypesDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Type"]
-      }
-    },
-    "/api/v1/statuses": {
-      "get": {
-        "operationId": "getStatuses",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetStatusesDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Status"]
-      }
-    },
-    "/api/v1/statuses/{id}": {
-      "get": {
-        "operationId": "getStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/StatusDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Status"]
-      }
-    },
-    "/api/v1/statuses/slug/{slug}": {
-      "get": {
-        "operationId": "getStatusBySlug",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/StatusDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Status"]
-      }
-    },
-    "/api/v1/court-districts": {
-      "get": {
-        "operationId": "getCourtDistricts",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetCourtDistrictsDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["CourtDistrict"]
-      }
-    },
-    "/api/v1/court-districts/{id}": {
-      "get": {
-        "operationId": "getCourtDistrictById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CourtDistrictDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["CourtDistrict"]
-      }
-    },
-    "/api/v1/court-districts/slug/{slug}": {
-      "get": {
-        "operationId": "getCourtDistrictBySlug",
-        "parameters": [
-          {
-            "name": "slug",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CourtDistrictDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["CourtDistrict"]
-      }
-    },
-    "/api/v1/external/companies/hlutafelag": {
-      "post": {
-        "description": "Register a new company (Hlutafélag nýskráning)",
-        "operationId": "registerHlutafelag",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterCompanyHlutafelagDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Company"]
-      }
-    },
-    "/api/v1/external/companies/firmaskra": {
-      "post": {
-        "description": "Register a new company from (Firmaskrá - Fyrirtækjaskrá)",
-        "operationId": "registerFirmaskra",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterCompanyFirmaskraDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Company"]
-      }
-    },
-    "/api/v1/external/companies/aukatilkynningar": {
-      "post": {
-        "operationId": "createAdditionalAnnouncements",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAdditionalAnnouncementsDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Company"]
-      }
-    },
-    "/api/v1/cases": {
-      "get": {
-        "operationId": "getCases",
-        "parameters": [
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "schema": { "default": 1, "example": 1, "type": "number" }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "schema": { "default": 10, "example": 10, "type": "number" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetCasesDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Case"]
-      },
-      "post": {
-        "operationId": "createCase",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CaseDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Case"]
-      }
-    },
-    "/api/v1/cases/{id}/restore": {
-      "post": {
-        "operationId": "restore",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CaseDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Case"]
-      }
-    },
-    "/api/v1/cases/{id}": {
-      "delete": {
-        "operationId": "deleteCase",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Case"]
-      }
-    },
     "/api/v1/adverts/{id}/assign/{userId}": {
       "post": {
         "operationId": "assignAdvertToEmployee",
@@ -1352,7 +63,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertUpdate"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/{id}/category/{categoryId}": {
@@ -1417,7 +128,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertUpdate"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/{id}": {
@@ -1491,7 +202,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertUpdate"]
+        "tags": ["Legal gazette - internal API"]
       },
       "get": {
         "operationId": "getAdvertById",
@@ -1555,7 +266,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Advert"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/{id}/status/next": {
@@ -1614,7 +325,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertUpdate"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/{id}/status/previous": {
@@ -1673,7 +384,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertUpdate"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/{id}/reject": {
@@ -1732,7 +443,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertUpdate"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/pdf/{id}": {
@@ -1758,7 +469,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertPdf"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/count": {
@@ -1819,7 +530,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Advert"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts": {
@@ -1878,10 +589,7 @@
             "name": "statusId",
             "required": false,
             "in": "query",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/components/schemas/StatusIdEnum" }
-            }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
             "name": "typeId",
@@ -1942,7 +650,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Advert"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/byCaseId/{caseId}": {
@@ -2008,7 +716,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Advert"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/publish": {
@@ -2068,7 +776,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertPublish"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/{id}/publish": {
@@ -2127,7 +835,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertPublish"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/create": {
@@ -2196,7 +904,97 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertCreate"]
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/issues/all": {
+      "get": {
+        "operationId": "getAllPublishedIssues",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 1, "example": 1, "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 10, "example": 10, "type": "number" }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetIssuesDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/publications": {
@@ -2310,7 +1108,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertPublication"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/publications/adverts/{advertId}/{version}": {
@@ -2384,7 +1182,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertPublication"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/publications/adverts/{advertId}": {
@@ -2443,7 +1241,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertPublication"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/publications/{publicationId}/adverts/{advertId}/publish": {
@@ -2508,7 +1306,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertPublication"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/publications/{publicationId}/adverts/{advertId}": {
@@ -2583,7 +1381,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertPublication"]
+        "tags": ["Legal gazette - internal API"]
       },
       "delete": {
         "operationId": "deleteAdvertPublication",
@@ -2646,19 +1444,21 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["AdvertPublication"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
-    "/api/v1/subscribers/me": {
+    "/api/v1/statistics": {
       "get": {
-        "operationId": "getMySubscriber",
+        "operationId": "getCountByStatuses",
         "parameters": [],
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SubscriberDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/GetCountByStatusesDto"
+                }
               }
             }
           },
@@ -2705,19 +1505,21 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Subscriber"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
-    "/api/v1/users/me": {
+    "/api/v1/statistics/in-progress": {
       "get": {
-        "operationId": "getMyUser",
+        "operationId": "getAdvertsInProgressStats",
         "parameters": [],
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UserDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/GetAdvertsInProgressStatsDto"
+                }
               }
             }
           },
@@ -2764,19 +1566,21 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Users"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
-    "/api/v1/users/employees": {
+    "/api/v1/statistics/to-be-published": {
       "get": {
-        "operationId": "getEmployees",
+        "operationId": "getAdvertsToBePublishedStats",
         "parameters": [],
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetUsersResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/GetAdvertsToBePublishedStatsDto"
+                }
               }
             }
           },
@@ -2823,91 +1627,29 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Users"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
-    "/api/v1/applications/createApplication/{applicationType}": {
-      "post": {
-        "operationId": "createApplication",
+    "/api/v1/categories/slug/{slug}": {
+      "get": {
+        "operationId": "getCategoryBySlug",
         "parameters": [
           {
-            "name": "applicationType",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "enum": ["COMMON", "RECALL_BANKRUPTCY", "RECALL_DECEASED"],
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApplicationDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Application"]
-      }
-    },
-    "/api/v1/applications/submitApplication/{applicationId}": {
-      "post": {
-        "operationId": "submitApplication",
-        "parameters": [
-          {
-            "name": "applicationId",
+            "name": "slug",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
           }
         ],
         "responses": {
-          "204": { "description": "" },
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategoryDto" }
+              }
+            }
+          },
           "400": {
             "description": "",
             "content": {
@@ -2951,24 +1693,91 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Application"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
-    "/api/v1/applications/getMyApplications": {
+    "/api/v1/categories/{id}": {
       "get": {
-        "operationId": "getMyApplications",
+        "operationId": "getCategory",
         "parameters": [
           {
-            "name": "page",
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategoryDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/categories": {
+      "get": {
+        "operationId": "getCategories",
+        "parameters": [
+          {
+            "name": "type",
             "required": false,
             "in": "query",
-            "schema": { "default": 1, "example": 1, "type": "number" }
+            "schema": { "nullable": true, "type": "string" }
           },
           {
-            "name": "pageSize",
+            "name": "excludeUnassignable",
             "required": false,
             "in": "query",
-            "schema": { "default": 10, "example": 10, "type": "number" }
+            "description": "Filter out unassignable advert types",
+            "schema": { "type": "boolean" }
           }
         ],
         "responses": {
@@ -2976,7 +1785,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetApplicationsDto" }
+                "schema": { "$ref": "#/components/schemas/GetCategoriesDto" }
               }
             }
           },
@@ -3023,994 +1832,20 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Application"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
-    "/api/v1/applications/getApplicationById/{applicationId}": {
+    "/api/v1/court-districts": {
       "get": {
-        "operationId": "getApplicationById",
-        "parameters": [
-          {
-            "name": "applicationId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApplicationDetailedDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Application"]
-      }
-    },
-    "/api/v1/applications/getApplicationByCaseId/{caseId}": {
-      "get": {
-        "operationId": "getApplicationByCaseId",
-        "parameters": [
-          {
-            "name": "caseId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApplicationDetailedDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Application"]
-      }
-    },
-    "/api/v1/applications/{applicationId}": {
-      "patch": {
-        "operationId": "updateApplication",
-        "parameters": [
-          {
-            "name": "applicationId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateApplicationDto" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApplicationDetailedDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Application"]
-      }
-    },
-    "/api/v1/applications/{applicationId}/addDivisionMeetingAdvertToApplication": {
-      "post": {
-        "operationId": "addDivisionMeetingAdvertToApplication",
-        "parameters": [
-          {
-            "name": "applicationId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateDivisionMeetingDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Application"]
-      }
-    },
-    "/api/v1/applications/{applicationId}/addDivisionEndingAdvertToApplication": {
-      "post": {
-        "operationId": "addDivisionEndingAdvertToApplication",
-        "parameters": [
-          {
-            "name": "applicationId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateDivisionEndingDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Application"]
-      }
-    },
-    "/api/v1/type-categories": {
-      "get": {
-        "operationId": "getTypeCategories",
-        "parameters": [
-          {
-            "name": "typeId",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "categoryId",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TypesWithCategoriesResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["TypeWithCategories"]
-      }
-    },
-    "/api/v1/type-categories/category/{categoryId}": {
-      "get": {
-        "operationId": "getTypeCategoriesByCategoryId",
-        "parameters": [
-          {
-            "name": "categoryId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TypesWithCategoriesResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["TypeWithCategories"]
-      }
-    },
-    "/api/v1/type-categories/type/{typeId}": {
-      "get": {
-        "operationId": "getTypeCategoriesByTypeId",
-        "parameters": [
-          {
-            "name": "typeId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TypeWithCategoriesResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["TypeWithCategories"]
-      }
-    },
-    "/api/v1/settlements/{id}": {
-      "patch": {
-        "operationId": "updateSettlement",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateSettlementDto" }
-            }
-          }
-        },
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Settlement"]
-      }
-    },
-    "/api/v1/comments/{advertId}": {
-      "get": {
-        "operationId": "getCommentsByAdvertId",
-        "parameters": [
-          {
-            "name": "advertId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetCommentsDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Comment"]
-      },
-      "post": {
-        "operationId": "postComment",
-        "parameters": [
-          {
-            "name": "advertId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTextCommentBodyDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CommentDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Comment"]
-      }
-    },
-    "/api/v1/external/foreclosures/{id}": {
-      "get": {
-        "description": "Get foreclosure by id",
-        "operationId": "getForeclosureById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ForeclosureDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Foreclosure"]
-      }
-    },
-    "/api/v1/external/foreclosures/sale": {
-      "post": {
-        "description": "Creates a new foreclosure advertisement along with its properties",
-        "operationId": "createForeclosureSale",
+        "operationId": "getCourtDistricts",
         "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateForeclosureSaleDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ForeclosureDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Foreclosure"]
-      }
-    },
-    "/api/v1/external/foreclosures/sale/{id}": {
-      "delete": {
-        "description": "Deletes a foreclosure sale by its ID, marks the advert as withdrawn",
-        "operationId": "deleteForeclosureSale",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The ID of the foreclosure sale",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Foreclosure"]
-      }
-    },
-    "/api/v1/external/foreclosures/sale/{id}/property": {
-      "post": {
-        "description": "Creates a new property for an existing foreclosure sale",
-        "operationId": "createForeclosureProperty",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The ID of the foreclosure sale",
-            "schema": { "type": "string" }
-          }
-        ],
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ForeclosurePropertyDto"
+                  "$ref": "#/components/schemas/GetCourtDistrictsDto"
                 }
               }
             }
@@ -4058,31 +1893,29 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Foreclosure"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
-    "/api/v1/external/foreclosures/sale/{id}/property/{propertyNumber}": {
-      "delete": {
-        "description": "Deletes a property from an existing foreclosure sale",
-        "operationId": "deletePropertyFromForeclosure",
+    "/api/v1/court-districts/{id}": {
+      "get": {
+        "operationId": "getCourtDistrictById",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "The ID of the foreclosure sale",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "propertyNumber",
-            "required": true,
-            "in": "path",
-            "description": "The property number of the property to delete (fastanúmer)",
             "schema": { "type": "string" }
           }
         ],
         "responses": {
-          "204": { "description": "" },
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CourtDistrictDto" }
+              }
+            }
+          },
           "400": {
             "description": "",
             "content": {
@@ -4126,15 +1959,264 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Foreclosure"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
-    "/api/v1/health": {
+    "/api/v1/court-districts/slug/{slug}": {
       "get": {
-        "operationId": "HealthController__v1",
+        "operationId": "getCourtDistrictBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CourtDistrictDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/statuses": {
+      "get": {
+        "operationId": "getStatuses",
         "parameters": [],
-        "responses": { "200": { "description": "Health check endpoint." } },
-        "tags": ["Health"]
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetStatusesDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/statuses/{id}": {
+      "get": {
+        "operationId": "getStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StatusDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/statuses/slug/{slug}": {
+      "get": {
+        "operationId": "getStatusBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StatusDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/{advertId}/communication-channels": {
@@ -4202,7 +2284,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["CommunicationChannel"]
+        "tags": ["Legal gazette - internal API"]
       },
       "post": {
         "operationId": "createCommunicationChannel",
@@ -4278,7 +2360,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["CommunicationChannel"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/{advertId}/communication-channels/{channelId}": {
@@ -4362,7 +2444,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["CommunicationChannel"]
+        "tags": ["Legal gazette - internal API"]
       },
       "delete": {
         "operationId": "deleteCommunicationChannel",
@@ -4425,198 +2507,15 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["CommunicationChannel"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
-    "/api/v1/statistics": {
+    "/api/v1/types/slug/{slug}": {
       "get": {
-        "operationId": "getCountByStatuses",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetCountByStatusesDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Statistics"]
-      }
-    },
-    "/api/v1/statistics/in-progress": {
-      "get": {
-        "operationId": "getAdvertsInProgressStats",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetAdvertsInProgressStatsDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Statistics"]
-      }
-    },
-    "/api/v1/statistics/to-be-published": {
-      "get": {
-        "operationId": "getAdvertsToBePublishedStats",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetAdvertsToBePublishedStatsDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Statistics"]
-      }
-    },
-    "/api/v1/national-registry/person/{nationalId}": {
-      "get": {
-        "operationId": "getPersonByNationalId",
+        "operationId": "getTypeBySlug",
         "parameters": [
           {
-            "name": "nationalId",
+            "name": "slug",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
@@ -4627,7 +2526,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetPersonDto" }
+                "schema": { "$ref": "#/components/schemas/TypeModel" }
               }
             }
           },
@@ -4674,12 +2573,204 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["LGNationalRegistry"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
-    "/api/v1/issues/all": {
+    "/api/v1/types/common": {
       "get": {
-        "operationId": "getAllPublishedIssues",
+        "operationId": "getCommonAdvertTypes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetTypesDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/types/{id}": {
+      "get": {
+        "operationId": "getType",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TypeModel" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/types": {
+      "get": {
+        "operationId": "getTypes",
+        "parameters": [
+          {
+            "name": "excludeUnassignable",
+            "required": false,
+            "in": "query",
+            "description": "Filter out unassignable advert types",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetTypesDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/cases": {
+      "get": {
+        "operationId": "getCases",
         "parameters": [
           {
             "name": "page",
@@ -4692,24 +2783,6 @@
             "required": false,
             "in": "query",
             "schema": { "default": 10, "example": 10, "type": "number" }
-          },
-          {
-            "name": "dateFrom",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "dateTo",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "year",
-            "required": false,
-            "in": "query",
-            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -4717,7 +2790,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetIssuesDto" }
+                "schema": { "$ref": "#/components/schemas/GetCasesDto" }
               }
             }
           },
@@ -4764,30 +2837,17 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Issues"]
-      }
-    },
-    "/api/v1/legacy-migration/check-email": {
+        "tags": ["Legal gazette - internal API"]
+      },
       "post": {
-        "description": "Checks if the provided email exists in the legacy subscriber table and whether it has an associated kennitala.",
-        "operationId": "checkLegacyEmail",
+        "operationId": "createCase",
         "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CheckLegacyEmailDto" }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CheckLegacyEmailResponseDto"
-                }
+                "schema": { "$ref": "#/components/schemas/CaseDto" }
               }
             }
           },
@@ -4833,20 +2893,416 @@
           }
         },
         "security": [{ "bearer": [] }],
-        "summary": "Check if email exists in legacy system",
-        "tags": ["Legacy Migration"]
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
       }
     },
-    "/api/v1/legacy-migration/request": {
+    "/api/v1/cases/{id}/restore": {
       "post": {
-        "description": "Sends a magic link email to the legacy email address for account migration. The authenticated user must click the link to complete migration.",
-        "operationId": "requestLegacyMigration",
-        "parameters": [],
+        "operationId": "restore",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CaseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/cases/{id}": {
+      "delete": {
+        "operationId": "deleteCase",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/comments/{advertId}": {
+      "get": {
+        "operationId": "getCommentsByAdvertId",
+        "parameters": [
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetCommentsDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      },
+      "post": {
+        "operationId": "postComment",
+        "parameters": [
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/RequestMigrationDto" }
+              "schema": {
+                "$ref": "#/components/schemas/CreateTextCommentBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CommentDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/fee-codes": {
+      "get": {
+        "operationId": "getFeeCodes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetFeeCodesResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/fee-codes/{id}": {
+      "get": {
+        "operationId": "getFeeCodeById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FeeCodeDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/settlements/{id}": {
+      "patch": {
+        "operationId": "updateSettlement",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateSettlementDto" }
             }
           }
         },
@@ -4894,29 +3350,20 @@
           }
         },
         "security": [{ "bearer": [] }],
-        "summary": "Request magic link for migration",
-        "tags": ["Legacy Migration"]
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
       }
     },
-    "/api/v1/legacy-migration/complete": {
-      "post": {
-        "description": "Completes the migration process by verifying the magic link token. The authenticated nationalId must match the token target.",
-        "operationId": "completeLegacyMigration",
+    "/api/v1/users/me": {
+      "get": {
+        "operationId": "getMyUser",
         "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CompleteMigrationDto" }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SubscriberDto" }
+                "schema": { "$ref": "#/components/schemas/UserDto" }
               }
             }
           },
@@ -4962,8 +3409,67 @@
           }
         },
         "security": [{ "bearer": [] }],
-        "summary": "Complete migration with token verification",
-        "tags": ["Legacy Migration"]
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/users/employees": {
+      "get": {
+        "operationId": "getEmployees",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetUsersResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/signatures/{signatureId}": {
@@ -5029,7 +3535,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Signature"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/{advertId}/signatures": {
@@ -5095,7 +3601,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Signature"]
+        "tags": ["Legal gazette - internal API"]
       },
       "post": {
         "operationId": "createSignature",
@@ -5167,7 +3673,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Signature"]
+        "tags": ["Legal gazette - internal API"]
       }
     },
     "/api/v1/adverts/{advertId}/signatures/{signatureId}": {
@@ -5247,7 +3753,7 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Signature"]
+        "tags": ["Legal gazette - internal API"]
       }
     }
   },
@@ -5264,27 +3770,6 @@
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
-      "CategoryDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the entity",
-            "example": "Base entity"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
       "ApiErrorDto": {
         "type": "object",
         "properties": {
@@ -5322,536 +3807,6 @@
         },
         "required": ["statusCode", "timestamp"]
       },
-      "GetCategoriesDto": {
-        "type": "object",
-        "properties": {
-          "categories": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CategoryDto" }
-          }
-        },
-        "required": ["categories"]
-      },
-      "TypeModel": {
-        "type": "object",
-        "properties": { "id": { "type": "string" } },
-        "required": ["id"]
-      },
-      "TypeDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the entity",
-            "example": "Base entity"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "GetTypesDto": {
-        "type": "object",
-        "properties": {
-          "types": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/TypeDto" }
-          }
-        },
-        "required": ["types"]
-      },
-      "StatusIdEnum": {
-        "type": "string",
-        "enum": [
-          "cd3bf301-52a1-493e-8c80-a391c310c840",
-          "7ef679c4-4f66-4892-b6ad-ee05e0be4359",
-          "a2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
-          "bd835a1d-0ecb-4aa4-9910-b5e60c30dced",
-          "f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
-          "e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c"
-        ]
-      },
-      "StatusEnum": {
-        "type": "string",
-        "enum": [
-          "Innsent",
-          "Í vinnslu",
-          "Tilbúið til útgáfu",
-          "Útgefið",
-          "Hafnað",
-          "Afturkallað"
-        ]
-      },
-      "StatusDto": {
-        "type": "object",
-        "properties": {
-          "id": { "allOf": [{ "$ref": "#/components/schemas/StatusIdEnum" }] },
-          "title": { "allOf": [{ "$ref": "#/components/schemas/StatusEnum" }] },
-          "slug": { "type": "string" }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "GetStatusesDto": {
-        "type": "object",
-        "properties": {
-          "statuses": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/StatusDto" }
-          }
-        },
-        "required": ["statuses"]
-      },
-      "CourtDistrictDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the entity",
-            "example": "Base entity"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
-          }
-        },
-        "required": ["id", "title", "slug"]
-      },
-      "GetCourtDistrictsDto": {
-        "type": "object",
-        "properties": {
-          "courtDistricts": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CourtDistrictDto" }
-          }
-        },
-        "required": ["courtDistricts"]
-      },
-      "ResponsiblePartySignature": {
-        "type": "object",
-        "properties": {
-          "date": { "type": "string", "nullable": true },
-          "name": { "type": "string", "nullable": true },
-          "location": { "type": "string", "nullable": true },
-          "onBehalfOf": { "type": "string", "nullable": true }
-        }
-      },
-      "ResponsiblePartyDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name of the party responsible for the advert",
-            "example": "Ríkisskattstjóri, hlutafélagaskrá"
-          },
-          "nationalId": {
-            "type": "string",
-            "description": "The national id of who is responsible for the advert",
-            "example": "1234567890"
-          },
-          "signature": {
-            "$ref": "#/components/schemas/ResponsiblePartySignature"
-          }
-        },
-        "required": ["name", "nationalId", "signature"]
-      },
-      "PartyEntityDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name of the party",
-            "example": "Jón Jónsson / Jón ehf."
-          },
-          "nationalId": {
-            "type": "string",
-            "description": "National id of the party",
-            "example": "1234567890"
-          },
-          "address": {
-            "type": "string",
-            "description": "Address of the party",
-            "example": "Laugavegur 1, 101 Reykjavik"
-          },
-          "role": {
-            "type": "string",
-            "description": "Role of the party, always comes first if present",
-            "example": "Stjórnarmaður, meðstjórnandi o.s.frv."
-          },
-          "jobTitle": {
-            "type": "string",
-            "description": "Job title of the party, always comes last if present",
-            "example": "löggiltur endurskoðandi"
-          }
-        },
-        "required": ["name"]
-      },
-      "CompanyBoardDto": {
-        "type": "object",
-        "properties": {
-          "appointedDate": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date when the board was appointed",
-            "example": "2023-10-01T12:00:00Z (ISO 8601 format)"
-          },
-          "members": {
-            "description": "The members of the company board (Stjórn)",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/PartyEntityDto" }
-          },
-          "executiveBoardMembers": {
-            "description": "The executive members of the company board (Framkvæmdarstjórn)",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/PartyEntityDto" }
-          }
-        },
-        "required": ["appointedDate", "members"]
-      },
-      "RegisterCompanyHlutafelagDto": {
-        "type": "object",
-        "properties": {
-          "responsibleParty": {
-            "description": "The party responsible for the company",
-            "allOf": [{ "$ref": "#/components/schemas/ResponsiblePartyDto" }]
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of the registered company (Félagið heitir)",
-            "example": "HXM ehf."
-          },
-          "nationalId": {
-            "type": "string",
-            "description": "National id of the registered company (Kennitala fyrirtækis)",
-            "example": "1234567890"
-          },
-          "registeredAddress": {
-            "type": "string",
-            "description": "Address of the registered company (Skráð heimilisfang fyrirtækis)",
-            "example": "Laugavegur 1, 101 Reykjavik"
-          },
-          "creators": {
-            "description": "List of registered company creators (Stofnendur)",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/PartyEntityDto" }
-          },
-          "approvedDate": {
-            "type": "string",
-            "description": "Date when the company was accepted (Dagsetning samþykkta er)",
-            "example": "2023-10-01T12:00:00Z (ISO 8601 format)"
-          },
-          "board": {
-            "description": "The board of the company (Stjórn)",
-            "allOf": [{ "$ref": "#/components/schemas/CompanyBoardDto" }]
-          },
-          "theFirmWrites": {
-            "type": "string",
-            "example": "Ef einn í stjórn:  Stjórnarmaður, ef stjórn er fjölskipuð: Meirihluti stjórnar (Firmað ritar)"
-          },
-          "procurationHolders": {
-            "description": "The procuration holders of the company (Prókuruumboð)",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/PartyEntityDto" }
-          },
-          "auditors": {
-            "description": "The auditors of the company (Skoðunarmaður/endurskoðandi)",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/PartyEntityDto" }
-          },
-          "capital": {
-            "type": "number",
-            "description": "The capital of the company in ISK (Hlutafé kr.)",
-            "example": 1000000
-          },
-          "purpose": {
-            "type": "string",
-            "description": "The purpose of the company (Tilgangur)"
-          },
-          "benefits": {
-            "type": "boolean",
-            "description": "Are there special benefits (Hömlur á meðferð hlutabréfa)",
-            "example": false
-          },
-          "liquidationObligation": {
-            "type": "boolean",
-            "description": "Is there an obligation for liquidation (Lausnarskylda á hlutabréfum)",
-            "example": false
-          }
-        },
-        "required": [
-          "responsibleParty",
-          "name",
-          "nationalId",
-          "registeredAddress",
-          "creators",
-          "approvedDate",
-          "board",
-          "theFirmWrites",
-          "auditors",
-          "capital",
-          "purpose",
-          "benefits",
-          "liquidationObligation"
-        ]
-      },
-      "AdditionalPropertiesDto": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "description": "The key of the addtional information",
-            "example": "Stjórn / Stjórnarformaður og framkvæmdastjórn"
-          },
-          "value": {
-            "description": "The value of the addtional information",
-            "allOf": [{ "$ref": "#/components/schemas/PartyEntityDto" }]
-          }
-        },
-        "required": ["key", "value"]
-      },
-      "RegisterCompanyFirmaskraDto": {
-        "type": "object",
-        "properties": {
-          "responsibleParty": {
-            "description": "The party responsible for the company",
-            "allOf": [{ "$ref": "#/components/schemas/ResponsiblePartyDto" }]
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of the registered company (Félagið heitir)",
-            "example": "HXM ehf."
-          },
-          "nationalId": {
-            "type": "string",
-            "description": "National id of the registered company (Kennitala fyrirtækis)",
-            "example": "1234567890"
-          },
-          "registeredAddress": {
-            "type": "string",
-            "description": "Address of the registered company (Skráð heimilisfang fyrirtækis)",
-            "example": "Laugavegur 1, 101 Reykjavik"
-          },
-          "creators": {
-            "description": "List of registered company creators (Stofnendur)",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/PartyEntityDto" }
-          },
-          "approvedDate": {
-            "type": "string",
-            "description": "Date when the company was accepted (Dagsetning samþykkta er)",
-            "example": "2023-10-01T12:00:00Z (ISO 8601 format)"
-          },
-          "procurationHolders": {
-            "description": "The procuration holders of the company (Prókuruumboð)",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/PartyEntityDto" }
-          },
-          "purpose": {
-            "type": "string",
-            "description": "The purpose of the company (Tilgangur)"
-          },
-          "taxMembership": {
-            "type": "string",
-            "description": "Tax membership status (Skattaðlid)",
-            "example": "félagið er sjálfstæður skattaðili"
-          },
-          "firmWriting": {
-            "type": "string",
-            "description": "Firmaritun",
-            "example": "Allir félagsmenn saman"
-          },
-          "additionalProperties": {
-            "description": "Additional properties (Auka eigindi, birtast neðst í auglýsingu)",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/AdditionalPropertiesDto" }
-          }
-        },
-        "required": [
-          "responsibleParty",
-          "name",
-          "nationalId",
-          "registeredAddress",
-          "creators",
-          "approvedDate",
-          "purpose",
-          "taxMembership",
-          "firmWriting"
-        ]
-      },
-      "AnnouncementItem": {
-        "type": "string",
-        "enum": [
-          "A",
-          "B",
-          "C",
-          "D",
-          "E",
-          "F",
-          "G",
-          "H",
-          "J",
-          "K",
-          "L",
-          "M",
-          "N",
-          "O",
-          "P",
-          "R",
-          "S",
-          "T"
-        ]
-      },
-      "AdditionalAnnouncementsDto": {
-        "type": "object",
-        "properties": {
-          "companyNationalId": {
-            "type": "string",
-            "description": "The national id of the company (Kennitala fyrirtækis)",
-            "example": "1234567890"
-          },
-          "companyName": {
-            "type": "string",
-            "description": "The name of the company (Heiti fyrirtækis)",
-            "example": "HXM ehf."
-          },
-          "companyLocation": {
-            "type": "string",
-            "description": "The location of the company (Staðsetning fyrirtækis)",
-            "example": "Reykjavík"
-          },
-          "announcementItems": {
-            "type": "array",
-            "description": "List of additional announcements to create (Tegundir)",
-            "example": ["A", "J"],
-            "items": { "$ref": "#/components/schemas/AnnouncementItem" }
-          }
-        },
-        "required": [
-          "companyNationalId",
-          "companyName",
-          "companyLocation",
-          "announcementItems"
-        ]
-      },
-      "CreateAdditionalAnnouncementsDto": {
-        "type": "object",
-        "properties": {
-          "responsibleParty": {
-            "description": "The party responsible for the additional announcements",
-            "allOf": [{ "$ref": "#/components/schemas/ResponsiblePartyDto" }]
-          },
-          "announcementYear": {
-            "type": "number",
-            "description": "The year of the additional announcements to create (1900 - 2100)",
-            "example": 2024
-          },
-          "announcementMonth": {
-            "type": "number",
-            "description": "The month of the additional announcements to create (0 - 11)",
-            "example": 6
-          },
-          "announcements": {
-            "description": "List of additional announcements to create (Fjöldi tilkynninga)",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AdditionalAnnouncementsDto"
-            }
-          }
-        },
-        "required": [
-          "responsibleParty",
-          "announcementYear",
-          "announcementMonth",
-          "announcements"
-        ]
-      },
-      "ApplicationTypeEnum": {
-        "type": "string",
-        "enum": ["COMMON", "RECALL_BANKRUPTCY", "RECALL_DECEASED"]
-      },
-      "CaseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "deletedAt": {
-            "type": "string",
-            "description": "ISO representation of the deletion date",
-            "example": "2021-08-31T12:00:00.000Z",
-            "nullable": true
-          },
-          "caseNumber": { "type": "string" },
-          "applicationType": {
-            "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
-          }
-        },
-        "required": ["id", "createdAt", "updatedAt", "caseNumber"]
-      },
-      "Paging": {
-        "type": "object",
-        "properties": {
-          "page": { "type": "number", "example": 1 },
-          "totalPages": { "type": "number", "example": 10 },
-          "totalItems": { "type": "number", "example": 1000 },
-          "nextPage": { "type": "number", "example": 2, "nullable": true },
-          "previousPage": { "type": "number", "example": 1, "nullable": true },
-          "pageSize": {
-            "type": "number",
-            "example": 10,
-            "minimum": 1,
-            "maximum": 100
-          },
-          "hasNextPage": { "type": "boolean", "example": true },
-          "hasPreviousPage": { "type": "boolean", "example": false }
-        },
-        "required": [
-          "page",
-          "totalPages",
-          "totalItems",
-          "nextPage",
-          "previousPage",
-          "pageSize",
-          "hasNextPage",
-          "hasPreviousPage"
-        ]
-      },
-      "GetCasesDto": {
-        "type": "object",
-        "properties": {
-          "cases": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CaseDto" }
-          },
-          "paging": { "$ref": "#/components/schemas/Paging" }
-        },
-        "required": ["cases", "paging"]
-      },
       "UpdateAdvertDto": {
         "type": "object",
         "properties": {
@@ -5878,6 +3833,27 @@
           "DIVISION_MEETING_DECEASED",
           "DIVISION_ENDING"
         ]
+      },
+      "CourtDistrictDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUIDV4 of the entity",
+            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the entity",
+            "example": "Base entity"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the entity",
+            "example": "base-entity"
+          }
+        },
+        "required": ["id", "title", "slug"]
       },
       "ApplicationRequirementStatementEnum": {
         "type": "string",
@@ -5945,6 +3921,69 @@
           }
         },
         "required": ["id", "advertId", "scheduledAt", "isLegacy", "version"]
+      },
+      "CategoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUIDV4 of the entity",
+            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the entity",
+            "example": "Base entity"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the entity",
+            "example": "base-entity"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "TypeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUIDV4 of the entity",
+            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the entity",
+            "example": "Base entity"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the entity",
+            "example": "base-entity"
+          }
+        },
+        "required": ["id", "title", "slug"]
+      },
+      "StatusDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUIDV4 of the entity",
+            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the entity",
+            "example": "Base entity"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the entity",
+            "example": "base-entity"
+          }
+        },
+        "required": ["id", "title", "slug"]
       },
       "CommentTypeEnum": {
         "type": "string",
@@ -6166,6 +4205,34 @@
           "hasInternalComments"
         ]
       },
+      "Paging": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "number", "example": 1 },
+          "totalPages": { "type": "number", "example": 10 },
+          "totalItems": { "type": "number", "example": 1000 },
+          "nextPage": { "type": "number", "example": 2, "nullable": true },
+          "previousPage": { "type": "number", "example": 1, "nullable": true },
+          "pageSize": {
+            "type": "number",
+            "example": 10,
+            "minimum": 1,
+            "maximum": 100
+          },
+          "hasNextPage": { "type": "boolean", "example": true },
+          "hasPreviousPage": { "type": "boolean", "example": false }
+        },
+        "required": [
+          "page",
+          "totalPages",
+          "totalItems",
+          "nextPage",
+          "previousPage",
+          "pageSize",
+          "hasNextPage",
+          "hasPreviousPage"
+        ]
+      },
       "GetAdvertsDto": {
         "type": "object",
         "properties": {
@@ -6244,6 +4311,10 @@
           },
           "isFromExternalSystem": { "type": "boolean" },
           "applicationId": { "type": "string" },
+          "signatureDate": {
+            "type": "string",
+            "description": "Date of signature"
+          },
           "judgementDate": { "type": "string" },
           "divisionMeetingDate": { "type": "string" },
           "scheduledAt": {
@@ -6273,6 +4344,50 @@
         "type": "object",
         "properties": { "id": { "type": "string" } },
         "required": ["id"]
+      },
+      "IssueDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the issue was created"
+          },
+          "publishDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time when the issue was published"
+          },
+          "title": { "type": "string" },
+          "url": { "type": "string" },
+          "issue": { "type": "number" },
+          "year": { "type": "number" },
+          "runningPageNumber": { "type": "number" },
+          "isLegacy": { "type": "boolean" }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "publishDate",
+          "title",
+          "url",
+          "issue",
+          "year",
+          "runningPageNumber",
+          "isLegacy"
+        ]
+      },
+      "GetIssuesDto": {
+        "type": "object",
+        "properties": {
+          "issues": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/IssueDto" }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["issues", "paging"]
       },
       "TypeIdEnum": {
         "type": "string",
@@ -6341,399 +4456,6 @@
         "properties": { "scheduledAt": { "type": "string" } },
         "required": ["scheduledAt"]
       },
-      "SubscriberDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "nationalId": { "type": "string" },
-          "name": { "type": "string", "nullable": true },
-          "isActive": { "type": "boolean" },
-          "subscribedAt": {
-            "format": "date-time",
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "required": ["id", "nationalId", "name", "isActive", "subscribedAt"]
-      },
-      "UserDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "nationalId": { "type": "string" },
-          "email": { "type": "string" },
-          "phone": { "type": "string" },
-          "name": { "type": "string" }
-        },
-        "required": ["id", "nationalId", "email", "name"]
-      },
-      "GetUsersResponse": {
-        "type": "object",
-        "properties": {
-          "users": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/UserDto" }
-          }
-        },
-        "required": ["users"]
-      },
-      "ApplicationStatusEnum": {
-        "type": "string",
-        "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
-      },
-      "ApplicationDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "deletedAt": {
-            "type": "string",
-            "description": "ISO representation of the deletion date",
-            "example": "2021-08-31T12:00:00.000Z",
-            "nullable": true
-          },
-          "caseId": { "type": "string" },
-          "submittedByNationalId": { "type": "string" },
-          "status": {
-            "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
-          },
-          "title": { "type": "string" },
-          "type": {
-            "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
-          }
-        },
-        "required": [
-          "id",
-          "createdAt",
-          "updatedAt",
-          "caseId",
-          "submittedByNationalId",
-          "status",
-          "title",
-          "type"
-        ]
-      },
-      "GetApplicationsDto": {
-        "type": "object",
-        "properties": {
-          "applications": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/ApplicationDto" }
-          },
-          "paging": { "$ref": "#/components/schemas/Paging" }
-        },
-        "required": ["applications", "paging"]
-      },
-      "ApplicationDetailedDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
-          },
-          "deletedAt": {
-            "type": "string",
-            "description": "ISO representation of the deletion date",
-            "example": "2021-08-31T12:00:00.000Z",
-            "nullable": true
-          },
-          "caseId": { "type": "string" },
-          "submittedByNationalId": { "type": "string" },
-          "status": {
-            "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
-          },
-          "title": { "type": "string" },
-          "type": {
-            "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
-          },
-          "answers": { "type": "object", "default": {} }
-        },
-        "required": [
-          "id",
-          "createdAt",
-          "updatedAt",
-          "caseId",
-          "submittedByNationalId",
-          "status",
-          "title",
-          "type",
-          "answers"
-        ]
-      },
-      "UpdateApplicationDto": {
-        "type": "object",
-        "properties": { "answers": { "type": "object", "default": {} } },
-        "required": ["answers"]
-      },
-      "CreateDivisionMeetingDto": {
-        "type": "object",
-        "properties": {
-          "additionalText": { "type": "string" },
-          "meetingDate": { "type": "string" },
-          "meetingLocation": { "type": "string" },
-          "signature": { "$ref": "#/components/schemas/CreateSignatureDto" },
-          "communicationChannels": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
-            }
-          }
-        },
-        "required": [
-          "meetingDate",
-          "meetingLocation",
-          "signature",
-          "communicationChannels"
-        ]
-      },
-      "CreateDivisionEndingDto": {
-        "type": "object",
-        "properties": {
-          "additionalText": { "type": "string" },
-          "meetingDate": { "type": "string" },
-          "meetingLocation": { "type": "string" },
-          "signature": { "$ref": "#/components/schemas/CreateSignatureDto" },
-          "communicationChannels": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
-            }
-          },
-          "declaredClaims": { "type": "number" }
-        },
-        "required": [
-          "meetingDate",
-          "meetingLocation",
-          "signature",
-          "communicationChannels",
-          "declaredClaims"
-        ]
-      },
-      "TypeWithCategoriesDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUIDV4 of the entity",
-            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the entity",
-            "example": "Base entity"
-          },
-          "slug": {
-            "type": "string",
-            "description": "Slug of the entity",
-            "example": "base-entity"
-          },
-          "categories": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CategoryDto" }
-          }
-        },
-        "required": ["id", "title", "slug", "categories"]
-      },
-      "TypesWithCategoriesResponseDto": {
-        "type": "object",
-        "properties": {
-          "types": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/TypeWithCategoriesDto" }
-          }
-        },
-        "required": ["types"]
-      },
-      "TypeWithCategoriesResponseDto": {
-        "type": "object",
-        "properties": {
-          "type": { "$ref": "#/components/schemas/TypeWithCategoriesDto" }
-        },
-        "required": ["type"]
-      },
-      "UpdateSettlementDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "liquidatorName": { "type": "string" },
-          "liquidatorLocation": { "type": "string" },
-          "liquidatorRecallStatementLocation": { "type": "string" },
-          "liquidatorRecallStatementType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ApplicationRequirementStatementEnum"
-              }
-            ]
-          },
-          "name": { "type": "string" },
-          "nationalId": { "type": "string" },
-          "address": { "type": "string" },
-          "declaredClaims": { "type": "number" },
-          "deadline": { "type": "string", "nullable": true },
-          "dateOfDeath": { "type": "string", "nullable": true }
-        }
-      },
-      "GetCommentsDto": {
-        "type": "object",
-        "properties": {
-          "comments": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CommentDto" }
-          }
-        },
-        "required": ["comments"]
-      },
-      "CreateTextCommentBodyDto": {
-        "type": "object",
-        "properties": { "comment": { "type": "string" } },
-        "required": ["comment"]
-      },
-      "ForeclosurePropertyDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "foreclosureId": { "type": "string" },
-          "propertyName": { "type": "string" },
-          "propertyNumber": { "type": "string" },
-          "propertyTotalPrice": { "type": "number" },
-          "claimant": { "type": "string" },
-          "respondent": { "type": "string" },
-          "createdAt": { "type": "string" },
-          "updatedAt": { "type": "string" }
-        },
-        "required": [
-          "id",
-          "foreclosureId",
-          "propertyName",
-          "propertyNumber",
-          "propertyTotalPrice",
-          "claimant",
-          "respondent",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "ForeclosureDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "advertId": { "type": "string" },
-          "caseNumberIdentifier": {
-            "type": "string",
-            "description": "The ID of the foreclosure",
-            "nullable": true
-          },
-          "foreclosureRegion": {
-            "type": "string",
-            "description": "The ID of the advert the foreclosure belongs to"
-          },
-          "foreclosureAddress": {
-            "type": "string",
-            "description": "The address of the foreclosure"
-          },
-          "foreclosureDate": { "type": "string" },
-          "createdAt": { "type": "string" },
-          "updatedAt": { "type": "string" },
-          "properties": {
-            "description": "List of all the properties listed in the foreclosure",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/ForeclosurePropertyDto" }
-          }
-        },
-        "required": [
-          "id",
-          "advertId",
-          "caseNumberIdentifier",
-          "foreclosureRegion",
-          "foreclosureAddress",
-          "foreclosureDate",
-          "createdAt",
-          "updatedAt",
-          "properties"
-        ]
-      },
-      "CreateForeclosureSaleDto": {
-        "type": "object",
-        "properties": {
-          "properties": {
-            "description": "List of all the properties listed in the foreclosure",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/ForeclosurePropertyDto" }
-          },
-          "caseNumberIdentifier": {
-            "type": "string",
-            "description": "The ID of the foreclosure",
-            "nullable": true
-          },
-          "foreclosureRegion": {
-            "type": "string",
-            "description": "The land region of where the foreclosure is located"
-          },
-          "foreclosureAddress": {
-            "type": "string",
-            "description": "The address of the foreclosure"
-          },
-          "foreclosureDate": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The date of the foreclosure"
-          },
-          "responsibleParty": {
-            "description": "The responsible party for the foreclosure",
-            "allOf": [{ "$ref": "#/components/schemas/ResponsiblePartyDto" }]
-          }
-        },
-        "required": [
-          "properties",
-          "caseNumberIdentifier",
-          "foreclosureRegion",
-          "foreclosureAddress",
-          "foreclosureDate",
-          "responsibleParty"
-        ]
-      },
-      "GetCommunicationChannelsDto": {
-        "type": "object",
-        "properties": {
-          "channels": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
-          }
-        },
-        "required": ["channels"]
-      },
-      "UpdateCommunicationChannelDto": {
-        "type": "object",
-        "properties": {
-          "email": { "type": "string" },
-          "name": { "type": "string" },
-          "phone": { "type": "string" }
-        }
-      },
       "GetCountByStatusesDto": {
         "type": "object",
         "properties": {
@@ -6766,133 +4488,193 @@
         },
         "required": ["tobePublishedTodayCount", "pastDueCount"]
       },
-      "PersonDto": {
+      "GetCategoriesDto": {
         "type": "object",
         "properties": {
-          "stada": { "type": "string" },
-          "kennitala": { "type": "string" },
-          "nafn": { "type": "string" },
-          "loghHusk": { "type": "string" },
-          "heimili": { "type": "string" },
-          "postaritun": { "type": "string" },
-          "sveitarfelag": { "type": "string" },
-          "svfNr": { "type": "string" },
-          "kynkodi": { "type": "number" }
-        },
-        "required": [
-          "stada",
-          "kennitala",
-          "nafn",
-          "loghHusk",
-          "heimili",
-          "postaritun",
-          "sveitarfelag",
-          "svfNr",
-          "kynkodi"
-        ]
-      },
-      "GetPersonDto": {
-        "type": "object",
-        "properties": {
-          "person": {
-            "nullable": true,
-            "allOf": [{ "$ref": "#/components/schemas/PersonDto" }]
+          "categories": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CategoryDto" }
           }
         },
-        "required": ["person"]
+        "required": ["categories"]
       },
-      "IssueDto": {
+      "GetCourtDistrictsDto": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
+          "courtDistricts": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CourtDistrictDto" }
+          }
+        },
+        "required": ["courtDistricts"]
+      },
+      "GetStatusesDto": {
+        "type": "object",
+        "properties": {
+          "statuses": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/StatusDto" }
+          }
+        },
+        "required": ["statuses"]
+      },
+      "GetCommunicationChannelsDto": {
+        "type": "object",
+        "properties": {
+          "channels": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CommunicationChannelDto" }
+          }
+        },
+        "required": ["channels"]
+      },
+      "UpdateCommunicationChannelDto": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "phone": { "type": "string" }
+        }
+      },
+      "TypeModel": {
+        "type": "object",
+        "properties": { "id": { "type": "string" } },
+        "required": ["id"]
+      },
+      "GetTypesDto": {
+        "type": "object",
+        "properties": {
+          "types": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TypeDto" }
+          }
+        },
+        "required": ["types"]
+      },
+      "ApplicationTypeEnum": {
+        "type": "string",
+        "enum": ["COMMON", "RECALL_BANKRUPTCY", "RECALL_DECEASED"]
+      },
+      "CaseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
           "createdAt": {
             "type": "string",
-            "format": "date-time",
-            "description": "The date and time when the issue was created"
+            "description": "ISO representation of the creation date",
+            "example": "2021-08-31T12:00:00.000Z"
           },
-          "publishDate": {
+          "updatedAt": {
             "type": "string",
-            "format": "date-time",
-            "description": "The date and time when the issue was published"
+            "description": "ISO representation of the updated date",
+            "example": "2021-08-31T12:00:00.000Z"
           },
-          "title": { "type": "string" },
-          "url": { "type": "string" },
-          "issue": { "type": "number" },
-          "year": { "type": "number" },
-          "runningPageNumber": { "type": "number" },
-          "isLegacy": { "type": "boolean" }
+          "deletedAt": {
+            "type": "string",
+            "description": "ISO representation of the deletion date",
+            "example": "2021-08-31T12:00:00.000Z",
+            "nullable": true
+          },
+          "caseNumber": { "type": "string" },
+          "applicationType": {
+            "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
+          }
         },
-        "required": [
-          "id",
-          "createdAt",
-          "publishDate",
-          "title",
-          "url",
-          "issue",
-          "year",
-          "runningPageNumber",
-          "isLegacy"
-        ]
+        "required": ["id", "createdAt", "updatedAt", "caseNumber"]
       },
-      "GetIssuesDto": {
+      "GetCasesDto": {
         "type": "object",
         "properties": {
-          "issues": {
+          "cases": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/IssueDto" }
+            "items": { "$ref": "#/components/schemas/CaseDto" }
           },
           "paging": { "$ref": "#/components/schemas/Paging" }
         },
-        "required": ["issues", "paging"]
+        "required": ["cases", "paging"]
       },
-      "CheckLegacyEmailDto": {
+      "GetCommentsDto": {
         "type": "object",
         "properties": {
-          "email": {
-            "type": "string",
-            "description": "Email address to check in the legacy system",
-            "example": "user@example.com"
+          "comments": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CommentDto" }
           }
         },
-        "required": ["email"]
+        "required": ["comments"]
       },
-      "CheckLegacyEmailResponseDto": {
+      "CreateTextCommentBodyDto": {
+        "type": "object",
+        "properties": { "comment": { "type": "string" } },
+        "required": ["comment"]
+      },
+      "FeeCodeDto": {
         "type": "object",
         "properties": {
-          "emailExists": {
-            "type": "boolean",
-            "description": "Whether the email exists in the legacy system",
-            "example": true
+          "id": { "type": "string" },
+          "feeCode": { "type": "string" },
+          "description": { "type": "string" },
+          "value": { "type": "number" },
+          "isMultiplied": { "type": "boolean" }
+        },
+        "required": ["id", "feeCode", "description", "value", "isMultiplied"]
+      },
+      "GetFeeCodesResponse": {
+        "type": "object",
+        "properties": {
+          "feeCodes": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/FeeCodeDto" }
+          }
+        },
+        "required": ["feeCodes"]
+      },
+      "UpdateSettlementDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "liquidatorName": { "type": "string" },
+          "liquidatorLocation": { "type": "string" },
+          "liquidatorRecallStatementLocation": { "type": "string" },
+          "liquidatorRecallStatementType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationRequirementStatementEnum"
+              }
+            ]
           },
-          "hasKennitala": {
-            "type": "boolean",
-            "description": "Whether the legacy account has an associated kennitala",
-            "example": false
-          }
-        },
-        "required": ["emailExists", "hasKennitala"]
+          "name": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "address": { "type": "string" },
+          "declaredClaims": { "type": "number" },
+          "deadline": { "type": "string", "nullable": true },
+          "dateOfDeath": { "type": "string", "nullable": true }
+        }
       },
-      "RequestMigrationDto": {
+      "UserDto": {
         "type": "object",
         "properties": {
-          "email": {
-            "type": "string",
-            "description": "Legacy email address to send the magic link to. Must exist in the legacy system.",
-            "example": "user@example.com"
-          }
+          "id": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "name": { "type": "string" }
         },
-        "required": ["email"]
+        "required": ["id", "nationalId", "email", "name"]
       },
-      "CompleteMigrationDto": {
+      "GetUsersResponse": {
         "type": "object",
         "properties": {
-          "token": {
-            "type": "string",
-            "description": "Magic link token received via email. Must be valid and not expired.",
-            "example": "abc123def456..."
+          "users": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UserDto" }
           }
         },
-        "required": ["token"]
+        "required": ["users"]
       },
       "UpdateSignatureDto": {
         "type": "object",

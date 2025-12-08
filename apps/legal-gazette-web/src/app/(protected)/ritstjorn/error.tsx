@@ -1,13 +1,13 @@
 'use client'
 
-import { usePathname } from "next/navigation"
-import { useSession } from "next-auth/react"
+import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
-import { useEffect } from "react"
+import { useEffect } from 'react'
 
-import { forceLogin } from "@dmr.is/auth/useLogOut"
+import { forceLogin } from '@dmr.is/auth/useLogOut'
 
-export default function Error({ error }: { error: Error }) {
+export default function Error({ error: _error }: { error: Error }) {
   const pathName = usePathname()
   const { data: session, status } = useSession()
 
@@ -21,4 +21,3 @@ export default function Error({ error }: { error: Error }) {
   }, [session?.invalid, status, pathName])
   return <div>Error ritstjorn</div>
 }
-
