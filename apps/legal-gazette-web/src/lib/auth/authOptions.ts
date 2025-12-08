@@ -7,7 +7,6 @@ import { decode } from 'jsonwebtoken'
 import { serverFetcher } from '@dmr.is/api-client/fetchers'
 import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
-import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
 import { getLogger } from '@dmr.is/logging-next'
 
 import { getLegalGazetteClient } from '../api/createClient'
@@ -98,21 +97,9 @@ export const authOptions: AuthOptions = {
         } as JWT
       }
 
-      if (!isExpired(token.accessToken, !!token.invalid)) {
-        return token
-      }
 
-      // If token is expired, try to refresh it
-      // Returning new access, refresh and id tokens
-      // On failure, return token.invalid = true
-
-      const redirectUri =
-        process.env.LEGAL_GAZETTE_WEB_IDENTITY_SERVER_LOGOUT_URL ??
-        process.env.IDENTITY_SERVER_LOGOUT_URL
-
-      const refreshedToken = await refreshAccessToken(token, redirectUri)
-
-      return refreshedToken
+     return token
+     // Refresh token is handled in middleware
     },
 
     session: async ({ session, token }) => {
