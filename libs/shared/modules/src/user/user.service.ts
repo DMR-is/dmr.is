@@ -491,7 +491,7 @@ export class UserService implements IUserService {
         where: {
           nationalId: { [Op.eq]: userNationalId },
         },
-        attributes: ['id'],
+        attributes: ['id', 'createdAt'],
       })
 
       if (user?.id) {
