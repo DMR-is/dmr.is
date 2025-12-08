@@ -589,10 +589,7 @@
             "name": "statusId",
             "required": false,
             "in": "query",
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/components/schemas/StatusIdEnum" }
-            }
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
             "name": "typeId",
@@ -3687,34 +3684,24 @@
         },
         "required": ["id", "title", "slug"]
       },
-      "StatusIdEnum": {
-        "type": "string",
-        "enum": [
-          "cd3bf301-52a1-493e-8c80-a391c310c840",
-          "7ef679c4-4f66-4892-b6ad-ee05e0be4359",
-          "a2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
-          "bd835a1d-0ecb-4aa4-9910-b5e60c30dced",
-          "f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c",
-          "e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c"
-        ]
-      },
-      "StatusEnum": {
-        "type": "string",
-        "enum": [
-          "Innsent",
-          "Í vinnslu",
-          "Tilbúið til útgáfu",
-          "Útgefið",
-          "Hafnað",
-          "Afturkallað"
-        ]
-      },
       "StatusDto": {
         "type": "object",
         "properties": {
-          "id": { "allOf": [{ "$ref": "#/components/schemas/StatusIdEnum" }] },
-          "title": { "allOf": [{ "$ref": "#/components/schemas/StatusEnum" }] },
-          "slug": { "type": "string" }
+          "id": {
+            "type": "string",
+            "description": "UUIDV4 of the entity",
+            "example": "182391f7-d355-46f0-bcee-4d8baa68b55d"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the entity",
+            "example": "Base entity"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Slug of the entity",
+            "example": "base-entity"
+          }
         },
         "required": ["id", "title", "slug"]
       },

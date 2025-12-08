@@ -95,7 +95,7 @@
       "options": {
         "commands": [
           "rm -rf apps/legal-gazette-web/src/gen/fetch",
-          "yarn openapi-generator -o apps/legal-gazette-web/src/gen/fetch -i apps/legal-gazette-web/clientConfig.patched.json"
+          "yarn openapi-generator -o apps/legal-gazette-web/src/gen/fetch -i apps/legal-gazette-web/clientConfig.json"
         ]
       },
       "outputs": ["{projectRoot}/gen/fetch"]

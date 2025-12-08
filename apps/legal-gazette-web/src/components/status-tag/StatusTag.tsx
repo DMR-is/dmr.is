@@ -2,7 +2,8 @@ import React from 'react'
 
 import { Tag } from '@dmr.is/ui/components/island-is'
 
-import { StatusDto, StatusEnum } from '../../gen/fetch'
+import { StatusDto } from '../../gen/fetch'
+import { StatusEnum } from '../../lib/constants'
 
 type Props = {
   status: StatusDto
@@ -12,20 +13,20 @@ export const StatusTag = ({ status }: Props) => {
   let variant: React.ComponentProps<typeof Tag>['variant'] = 'purple'
 
   switch (status.title) {
-    case StatusEnum.Innsent:
+    case StatusEnum.SUBMITTED:
       variant = 'purple'
       break
-    case StatusEnum.ÍVinnslu:
+    case StatusEnum.IN_PROGRESS:
       variant = 'blue'
       break
-    case StatusEnum.TilbúiðTilÚtgáfu:
+    case StatusEnum.READY_FOR_PUBLICATION:
       variant = 'blueberry'
       break
-    case StatusEnum.Afturkallað:
-    case StatusEnum.Hafnað:
+    case StatusEnum.REVOKED:
+    case StatusEnum.REJECTED:
       variant = 'rose'
       break
-    case StatusEnum.ÚTgefið:
+    case StatusEnum.PUBLISHED:
       variant = 'mint'
       break
     default:

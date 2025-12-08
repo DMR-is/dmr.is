@@ -21,11 +21,11 @@ import { PublicationsFields } from '../../components/field-set-items/Publication
 import { SettlementFields } from '../../components/field-set-items/SettlementFields'
 import { SignatureFields } from '../../components/field-set-items/SignatureFields'
 import { AdvertFormAccordion } from '../../components/Form/AdvertFormAccordion'
-import { StatusIdEnum } from '../../gen/fetch'
 import {
   DivisionMeetingAdvertTypes,
   RecallAdvertTypes,
   Route,
+  StatusIdEnum,
 } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
@@ -163,7 +163,7 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
               id={advert.id}
               canEdit={advert.canEdit}
               publications={advert.publications}
-              advertStatus={advert.status.title}
+              advertStatus={advert.status}
             />
           ),
           hidden: false,

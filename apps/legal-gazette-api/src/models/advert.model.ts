@@ -929,27 +929,15 @@ export class GetAdvertsQueryDto extends QueryDto {
   @IsUUID(undefined, { each: true })
   categoryId?: string[]
 
-  @ApiProperty({
-    enum: StatusIdEnum,
-    enumName: 'StatusIdEnum',
-    'x-enumNames': [
-      'Submitted',
-      'ReadyForPublication',
-      'Published',
-      'Rejected',
-      'Withdrawn',
-    ],
-    isArray: true,
-    required: false,
-  })
+  @ApiProperty({ type: [String], required: false })
   @Transform(({ value }) => {
     if (!value) return undefined
     return Array.isArray(value) ? value : [value]
   })
   @IsOptional()
   @IsArray()
-  @IsEnum(StatusIdEnum, { each: true })
-  statusId?: StatusIdEnum[]
+  @IsUUID(undefined, { each: true })
+  statusId?: string[]
 
   @ApiProperty({
     type: [String],
@@ -1038,15 +1026,10 @@ export class CreateAdvertInternalDto extends PickType(AdvertModel, [
   @IsDateString()
   signatureDate?: string
 
-  @ApiProperty({
-    enum: StatusIdEnum,
-    enumName: 'StatusIdEnum',
-    required: false,
-    description: 'Status of the advert',
-  })
+  @ApiProperty({ type: String, required: false })
   @IsOptional()
-  @IsEnum(StatusIdEnum)
-  statusId?: StatusIdEnum
+  @IsUUID()
+  statusId?: string
 
   @ApiProperty({
     type: String,

@@ -8,10 +8,10 @@ import {
   CategoryDto,
   CourtDistrictDto,
   StatusDto,
-  StatusIdEnum,
   TypeDto,
   UpdateAdvertDto,
 } from '../gen/fetch'
+import { StatusIdEnum } from '../lib/constants'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -80,7 +80,7 @@ export const useUpdateAdvert = (id: string) => {
           ) as AdvertDetailedDto
 
           const currentStatus = prevData.status
-          let nextStatus: StatusIdEnum
+          let nextStatus: string
 
           switch (currentStatus.id) {
             case StatusIdEnum.SUBMITTED: {
@@ -144,7 +144,7 @@ export const useUpdateAdvert = (id: string) => {
         ) as AdvertDetailedDto
 
         const currentStatus = prevData.status
-        let prevStatus: StatusIdEnum
+        let prevStatus: string
 
         switch (currentStatus.id) {
           case StatusIdEnum.READY_FOR_PUBLICATION: {

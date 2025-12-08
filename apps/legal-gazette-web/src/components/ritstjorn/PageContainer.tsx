@@ -14,8 +14,9 @@ import {
   Tabs,
 } from '@island.is/island-ui/core'
 
-import { GetAdvertsStatusCounterDto, StatusIdEnum } from '../../gen/fetch'
+import { GetAdvertsStatusCounterDto } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
+import { StatusIdEnum } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { CreateAdvert } from '../create-advert/CreateAdvert'
 import { RitstjornHero } from '../ritstjorn/Hero'
@@ -48,10 +49,10 @@ export const PageContainer = ({ advertCount }: Props) => {
       case 'innsendar':
         setStatusOptions(
           data.statuses
-            .filter((status) =>
-              [StatusIdEnum.SUBMITTED, StatusIdEnum.IN_PROGRESS].includes(
-                status.id as StatusIdEnum,
-              ),
+            .filter(
+              (status) =>
+                StatusIdEnum.SUBMITTED === status.id ||
+                StatusIdEnum.IN_PROGRESS === status.id,
             )
             .map((opt) => ({
               label: opt.title,
@@ -62,10 +63,8 @@ export const PageContainer = ({ advertCount }: Props) => {
       case 'utgafa':
         setStatusOptions(
           data.statuses
-            .filter((status) =>
-              [StatusIdEnum.READY_FOR_PUBLICATION].includes(
-                status.id as StatusIdEnum,
-              ),
+            .filter(
+              (status) => StatusIdEnum.READY_FOR_PUBLICATION === status.id,
             )
             .map((opt) => ({
               label: opt.title,

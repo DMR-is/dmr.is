@@ -3,7 +3,8 @@ import { z } from 'zod'
 import { communicationChannelSchema } from '@dmr.is/legal-gazette/schemas'
 import { createTRPCError } from '@dmr.is/trpc/utils/errorHandler'
 
-import { SortDirectionEnum, StatusIdEnum } from '../../../../gen/fetch'
+import { SortDirectionEnum } from '../../../../gen/fetch'
+import { StatusIdEnum } from '../../../constants'
 import { protectedProcedure, router } from '../trpc'
 
 const getAdvertsRequestSchema = z.object({
@@ -12,7 +13,7 @@ const getAdvertsRequestSchema = z.object({
   search: z.string().optional(),
   categoryId: z.array(z.string()).optional(),
   typeId: z.array(z.string()).optional(),
-  statusId: z.array(z.enum(StatusIdEnum)).optional(),
+  statusId: z.array(z.string()).optional(),
   fromDate: z.string().optional(),
   toDate: z.string().optional(),
   sortBy: z.string().optional(),
