@@ -34,8 +34,10 @@ export class PartyGuard implements CanActivate {
     try {
       // User is acting on behalf of involved party
       const involvedPartyLookup =
-        await this.userService.getInvolvedPartyByNationalId(req.user.nationalId)
-
+        await this.userService.getInvolvedPartiesByNationalId(
+          req.user.nationalId,
+          req.user.actor.nationalId,
+        )
       if (!involvedPartyLookup.result.ok) {
         this.logger.warn('Could not find involved party', {
           error: involvedPartyLookup.result.error,
@@ -44,13 +46,13 @@ export class PartyGuard implements CanActivate {
         })
         return false
       }
-      const resParty = involvedPartyLookup.result.value
+      const resParty = involvedPartyLookup.result.value.involvedParties
       req.user.role = {
         title: UserRoleEnum.InvolvedParty,
       }
-      req.involvedParties = [resParty.involvedParty.id]
+      req.involvedParties = resParty
 
-      if (resParty.involvedParty.nationalId) {
+      if (resParty.length > 0) {
         // Involved party exists.
         return true
       }

@@ -10,7 +10,6 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CreateUserDto,
   GetInvoledPartiesByUserResponse,
-  GetInvoledPartyByNationalIdResponse,
   GetMyUserInfoResponse,
   GetRolesByUserResponse,
   GetUserResponse,
@@ -472,37 +471,63 @@ export class UserService implements IUserService {
   }
 
   @LogAndHandle()
-  async getInvolvedPartyByNationalId(
+  async getInvolvedPartiesByNationalId(
     nationalId: string,
-    name?: string,
-  ): Promise<ResultWrapper<GetInvoledPartyByNationalIdResponse>> {
+    userNationalId?: string,
+  ): Promise<ResultWrapper<GetInvoledPartiesByUserResponse>> {
     let involvedParty: AdvertInvolvedPartyModel | null = null
 
-    if (name) {
-      // Try with name + nationalId first
-      involvedParty = await this.advertInvolvedPartyModel.findOne({
+    const count = await this.advertInvolvedPartyModel.count({
+      where: {
+        nationalId: { [Op.eq]: nationalId },
+      },
+    })
+
+    // If more than one involved party with same nationalId is associated to the user.
+    // Get all associated involved parties by that nationalId.
+    // If not .. just continue as normal.
+    if (userNationalId && count > 1) {
+      const user = await this.userModel.findOne({
         where: {
-          nationalId: { [Op.eq]: nationalId },
-          title: { [Op.iLike]: `%${name}%` },
+          nationalId: { [Op.eq]: userNationalId },
         },
+        attributes: ['id'],
       })
 
-      // If not found, fallback to just nationalId
-      if (!involvedParty) {
-        involvedParty = await this.advertInvolvedPartyModel.findOne({
-          where: {
-            nationalId: { [Op.eq]: nationalId },
+      if (user?.id) {
+        const userInvolvedParties = await this.userInvolvedPartiesModel.findAll(
+          {
+            include: [
+              {
+                model: AdvertInvolvedPartyModel,
+                where: {
+                  nationalId: { [Op.eq]: nationalId },
+                },
+              },
+            ],
+            where: {
+              userId: user.id,
+            },
           },
-        })
+        )
+
+        if (userInvolvedParties.length > 1) {
+          const migrated = userInvolvedParties.map((uip) =>
+            advertInvolvedPartyMigrate(uip.involvedParties),
+          )
+
+          return ResultWrapper.ok({
+            involvedParties: migrated,
+          })
+        }
       }
-    } else {
-      // No name provided → only use nationalId
-      involvedParty = await this.advertInvolvedPartyModel.findOne({
-        where: {
-          nationalId: { [Op.eq]: nationalId },
-        },
-      })
     }
+    // No User nationalId or only 1 involved party → only use nationalId
+    involvedParty = await this.advertInvolvedPartyModel.findOne({
+      where: {
+        nationalId: { [Op.eq]: nationalId },
+      },
+    })
 
     if (!involvedParty) {
       return ResultWrapper.err({
@@ -514,7 +539,7 @@ export class UserService implements IUserService {
     const migrated = advertInvolvedPartyMigrate(involvedParty)
 
     return ResultWrapper.ok({
-      involvedParty: migrated,
+      involvedParties: [migrated],
     })
   }
 
