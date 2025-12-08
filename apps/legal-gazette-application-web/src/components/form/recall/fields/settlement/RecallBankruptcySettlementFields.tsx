@@ -1,19 +1,21 @@
+import subDays from 'date-fns/subDays'
 import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
 import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
-import { AlertMessage, Select } from '@dmr.is/ui/components/island-is'
+import { AlertMessage } from '@dmr.is/ui/components/island-is'
 import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
+import { POSTPONE_LIMIT } from '../../../../../lib/constants'
 import {
   NationalIdLookup,
   NationalIdLookupResults,
-} from '../../../national-id-lookup/NationalIdLookup'
-import { DatePickerController } from '../../controllers/DatePickerController'
-import { InputController } from '../../controllers/InputController'
+} from '../../../../national-id-lookup/NationalIdLookup'
+import { DatePickerController } from '../../../controllers/DatePickerController'
+import { InputController } from '../../../controllers/InputController'
 
-export const RecallDeceasedSettlementFields = () => {
+export const RecallBankruptcySettlementFields = () => {
   const { getValues, setValue } = useFormContext<RecallApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
 
@@ -72,27 +74,9 @@ export const RecallDeceasedSettlementFields = () => {
   }
 
   return (
-    <Select
-      options={[
-        {
-          label: 'Óskipt dánarbú',
-          value: 'undividedEstate',
-        },
-        {
-          label: 'Eigandi samlagsfélags',
-          value: 'dividedEstate',
-        },
-      ]}
-    />
-  )
-}
-
-/*
-
-(
     <GridRow rowGap={[2, 3]}>
       <GridColumn span="12/12">
-        <Text variant="h4">Upplýsingar um dánarbúið</Text>
+        <Text variant="h4">'Upplýsingar um þrotabúið</Text>
       </GridColumn>
       {onLookupError && (
         <GridColumn span="12/12">
@@ -109,30 +93,32 @@ export const RecallDeceasedSettlementFields = () => {
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
         <DatePickerController
-          name="fields.settlementFields.dateOfDeath"
-          maxDate={undefined}
-          minDate={undefined}
-          label="Dánardagur"
+          name="fields.settlementFields.deadlineDate"
+          maxDate={new Date()}
+          minDate={subDays(new Date(), POSTPONE_LIMIT)}
+          label="Frestdagur þrotabús"
           required
-          onChange={(val) => (
-            updateApplication({
-              fields: {
-                settlementFields: {
-                  dateOfDeath: val.toISOString(),
+          onChange={(val) =>
+            updateApplication(
+              {
+                fields: {
+                  settlementFields: {
+                    deadlineDate: val.toISOString(),
+                  },
                 },
               },
-            }),
-            {
-              successMessage: 'Dánardagur vistaður',
-              errorMessage: 'Ekki tókst að vista dánardag',
-            }
-          )}
+              {
+                successMessage: 'Frestdagur þrotabús vistaður',
+                errorMessage: 'Ekki tókst að vista frestdag þrotabús',
+              },
+            )
+          }
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
         <InputController
           name="fields.settlementFields.name"
-          label={`Nafn dánarbús`}
+          label="Nafn þrotabús"
           required
           onChange={(val) =>
             debouncedUpdateApplication(
@@ -144,19 +130,18 @@ export const RecallDeceasedSettlementFields = () => {
                 },
               },
               {
-                successMessage: `Nafn dánarbús vistað`,
-                errorMessage: `Ekki tókst að vista nafn dánarbús`,
+                successMessage: 'Nafn þrotabús vistað',
+                errorMessage: 'Ekki tókst að vista nafn þrotabús',
               },
             )
           }
         />
       </GridColumn>
-
       <GridColumn span={['12/12', '6/12']}>
         <InputController
           required
           name="fields.settlementFields.address"
-          label="Síðasta heimilisfang"
+          label="Heimilisfang þrotabús"
           onChange={(val) =>
             debouncedUpdateApplication(
               {
@@ -167,8 +152,8 @@ export const RecallDeceasedSettlementFields = () => {
                 },
               },
               {
-                successMessage: `Heimilisfang dánarbús vistað`,
-                errorMessage: `Ekki tókst að vista heimilisfang dánarbús`,
+                successMessage: 'Heimilisfang þrotabús vistað',
+                errorMessage: 'Ekki tókst að vista heimilisfang þrotabús',
               },
             )
           }
@@ -176,5 +161,4 @@ export const RecallDeceasedSettlementFields = () => {
       </GridColumn>
     </GridRow>
   )
-
-*/
+}

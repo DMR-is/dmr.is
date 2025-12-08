@@ -23,6 +23,7 @@ export const recallDeceasedSchema = z.object({
   settlementFields: settlementSchema
     .extend({
       dateOfDeath: z.string().optional().nullable(),
+      type: z.enum(['DEFAULT', 'UNDIVIDED', 'OWNER']).optional(),
     })
     .optional(),
 })
@@ -36,6 +37,7 @@ export const recallDeceasedSchemaRefined = z.object({
       .refine((date) => isDateString(date), {
         message: 'Dánardagur bús er nauðsynlegur',
       }),
+    type: z.enum(['DEFAULT', 'UNDIVIDED', 'OWNER']).optional(),
   }),
 })
 

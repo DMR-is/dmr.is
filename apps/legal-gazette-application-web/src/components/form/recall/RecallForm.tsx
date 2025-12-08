@@ -29,7 +29,7 @@ import { RecallAdvertFields } from './fields/RecallAdvertFields'
 import { RecallDivisionFields } from './fields/RecallDivisionFields'
 import { RecallLiquidatorFields } from './fields/RecallLiquidatorFields'
 import { RecallRequirementStatementFields } from './fields/RecallRequirementStatementFields'
-import { RecallSettlementFields } from './fields/RecallSettlementFields'
+import { RecallSettlementFields } from './fields/settlement/RecallSettlementFields'
 
 export const RecallForm = (props: RecallFormProps) => {
   const methods = useForm<RecallApplicationWebSchema>(recallForm(props))
@@ -101,7 +101,7 @@ export const RecallForm = (props: RecallFormProps) => {
               </Text>
             </Stack>
             <RecallAdvertFields />
-            <RecallSettlementFields isBankruptcy={isBankruptcy} />
+            <RecallSettlementFields />
             <RecallLiquidatorFields />
             <RecallRequirementStatementFields />
             <PublishingFields additionalTitle="innköllunar" />
