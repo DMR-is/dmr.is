@@ -10,6 +10,13 @@
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "preview",
+            "required": false,
+            "in": "query",
+            "description": "Show date in PDF",
+            "schema": { "default": false, "type": "boolean" }
           }
         ],
         "responses": {
@@ -1976,6 +1983,31 @@
                 "schema": {
                   "$ref": "#/components/schemas/PresignedUrlResponse"
                 }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
+    "/api/v1/cases/{id}/pdf-preview": {
+      "get": {
+        "operationId": "getCasePdfPreview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the generated pdf as a binary.",
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
               }
             }
           }

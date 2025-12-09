@@ -230,6 +230,12 @@ export interface ICaseService {
     params: GetPaymentQuery,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetPaymentResponse>>
+
+  generatePdfByCase(
+    caseId: string,
+    publishedAt?: string | Date,
+    serial?: number,
+  ): Promise<Buffer | null>
 }
 
 export const ICaseService = Symbol('ICaseService')

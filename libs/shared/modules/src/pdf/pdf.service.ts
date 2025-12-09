@@ -230,7 +230,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
   async generatePdfByCaseId(
     caseId: string,
     publishedAt?: string,
-    serial?: number,
+    serial?: number | string,
     correctionDate?: string | Date,
   ): Promise<ResultWrapper<Buffer>> {
     const caseLookup = (await this.utilityService.caseLookup(caseId)).unwrap()
