@@ -17,7 +17,7 @@ import { ApplicationDto, Paging } from '../../gen/fetch'
 import { ApplicationCard } from './ApplicationCard'
 
 type Props = {
-  applications: ApplicationDto[]
+  applications: any[]
   paging: Paging
   onPageChange?: (page: number) => void
 }
@@ -42,7 +42,7 @@ export const ApplicationList = ({
             {paging.totalPages > 1 && (
               <Pagination
                 page={paging.page}
-                itemsPerPage={paging.pageSize}
+                itemsPerPage={100}
                 totalItems={paging.totalItems}
                 totalPages={paging.totalPages}
                 renderLink={(page, className, children) => (

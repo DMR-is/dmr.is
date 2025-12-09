@@ -61,7 +61,8 @@ export const ApplicationCard = ({ application }: Props) => {
 
         <Stack space={1}>
           <Text variant="h3">{application.title}</Text>
-          <Inline align="right">
+          <Inline justifyContent="spaceBetween" alignY="center">
+            <Text variant="medium">{application.subtitle}</Text>
             <LinkV2 href={url}>
               <Button
                 variant="text"

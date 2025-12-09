@@ -14,28 +14,39 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { AdvertDto, ApplicationTypeEnum } from '../../gen/fetch'
+import {
+  AdvertDto,
+  ApplicationDetailedDto,
+  ApplicationTypeEnum,
+} from '../../gen/fetch'
 import { PageRoutes } from '../../lib/constants'
 import { AddAdvertsToApplicationMenu } from '../adverts/AddAdvertsToApplicationMenu'
 import { AdvertList } from '../adverts/AdvertList'
 import { AdvertTable } from '../adverts/AdvertTable'
 
 type Props = {
+  title: string
+  subtitle: string
   applicationType: ApplicationTypeEnum
   adverts: AdvertDto[]
 }
 
-export const ApplicationSubmitted = ({ adverts, applicationType }: Props) => {
+export const ApplicationSubmitted = ({
+  adverts,
+  applicationType,
+  title,
+  subtitle,
+}: Props) => {
   const [showAsCards, setShowAsCards] = useState(false)
   return (
     <GridContainer>
       <GridRow>
         <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
           <Box background="white" borderRadius="large" padding={[4, 5, 6]}>
-            <Stack space={[4, 5, 6]}>
+            <Stack space={[4]}>
               <Stack space={[2, 3, 4]}>
                 <Inline justifyContent="spaceBetween" alignY="top">
-                  <Text variant="h2">Auglýsingar tengdar umsókninni</Text>
+                  <Text variant="h2">Auglýsingar tengdar umsókn</Text>
                   <LinkV2 href={PageRoutes.APPLICATIONS}>
                     <Button preTextIcon="arrowBack" variant="text" size="small">
                       Tilbaka í umsóknir
@@ -45,9 +56,9 @@ export const ApplicationSubmitted = ({ adverts, applicationType }: Props) => {
                 <GridRow>
                   <GridColumn span={['12/12', '9/12']}>
                     <Text>
-                      Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                      Sed do eiusmod tempor incididunt ut labore et dolore magna
-                      aliqua.
+                      {applicationType !== ApplicationTypeEnum.COMMON &&
+                        title + ' - '}
+                      {subtitle}
                     </Text>
                   </GridColumn>
                   {applicationType !== ApplicationTypeEnum.COMMON && (

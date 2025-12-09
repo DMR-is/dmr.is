@@ -78,17 +78,13 @@ export class ApplicationService implements IApplicationService {
   ) {
     const parsed = commonApplicationAnswersRefined.parse(application.answers)
 
-    const category = await this.categoryModel.findByPkOrThrow(
-      parsed.fields.categoryId,
-    )
-
     await this.advertService.createAdvert({
       caseId: application.caseId,
       applicationId: application.id,
       createdBy: submittee.nafn,
       createdByNationalId: submittee.kennitala,
-      typeId: parsed.fields.typeId,
-      categoryId: parsed.fields.categoryId,
+      typeId: parsed.fields.type.id,
+      categoryId: parsed.fields.category.id,
       caption: parsed.fields.caption,
       additionalText: parsed.additionalText,
       signature: {
@@ -98,7 +94,7 @@ export class ApplicationService implements IApplicationService {
           : undefined,
       },
       content: parsed.fields.html,
-      title: `${category.title} - ${parsed.fields.caption}`,
+      title: parsed.fields.caption,
       communicationChannels: parsed.communicationChannels,
       scheduledAt: parsed.publishingDates,
     })

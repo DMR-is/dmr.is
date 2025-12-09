@@ -112,7 +112,12 @@ export const CommunicationChannelFields = () => {
     <Box id="communicationChannels" component="div" onFocus={handleFirstFocus}>
       <GridRow rowGap={[2, 3]}>
         <GridColumn span="12/12">
-          <Text variant="h4">Samskiptaleiðir</Text>
+          <Text variant="h4">
+            Samskiptaleiðir{' '}
+            <Text fontWeight="regular" color="red600" as="span">
+              *
+            </Text>
+          </Text>
         </GridColumn>
         <GridColumn span="12/12">
           <Stack space={[2, 3]}>

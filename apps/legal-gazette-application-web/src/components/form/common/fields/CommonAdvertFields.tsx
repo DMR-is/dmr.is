@@ -43,8 +43,8 @@ export const CommonAdvertFields = () => {
     isPending,
   } = useQuery(
     trpc.getCategories.queryOptions(
-      { typeId: fields?.typeId ?? undefined },
-      { enabled: !!fields?.typeId },
+      { typeId: fields?.type?.id },
+      { enabled: !!fields?.type?.id },
     ),
   )
 
@@ -52,10 +52,10 @@ export const CommonAdvertFields = () => {
     if (!categoriesData?.categories || !formState.isDirty) return
 
     if (categoriesData.categories.length === 1) {
-      const newCategoryId = categoriesData.categories[0].id
+      const newCategory = categoriesData.categories[0]
 
-      setValue('fields.categoryId', newCategoryId)
-      updateApplication({ fields: { categoryId: newCategoryId } })
+      setValue('fields.category', newCategory)
+      updateApplication({ fields: { category: newCategory } })
     }
   }, [categoriesData?.categories, formState.isDirty])
 
@@ -78,18 +78,25 @@ export const CommonAdvertFields = () => {
         <GridColumn span={['12/12', '6/12']}>
           <SelectController
             required
-            options={metadata.typeOptions}
-            name={'fields.typeId'}
+            options={metadata.typeOptions.map((typeOption) => ({
+              label: typeOption.label,
+              value: typeOption.value.id,
+            }))}
+            name={'fields.type.id'}
             label="Tegund auglýsingar"
-            onChange={(val) =>
-              updateApplication(
-                { fields: { typeId: val } },
+            onChange={(val) => {
+              const typeToUpdateTo = metadata.typeOptions.find(
+                (typeOption) => typeOption.value.id === val,
+              )?.value
+
+              return updateApplication(
+                { fields: { type: typeToUpdateTo } },
                 {
                   successMessage: 'Tegund auglýsingar vistuð',
                   errorMessage: 'Ekki tókst að vista tegund auglýsingar',
                 },
               )
-            }
+            }}
           />
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
@@ -97,17 +104,20 @@ export const CommonAdvertFields = () => {
             required
             disabled={disabledCategories}
             options={categoryOptions}
-            name={'fields.categoryId'}
+            name={'fields.category.id'}
             label="Flokkur"
-            onChange={(val) =>
-              updateApplication(
-                { fields: { categoryId: val } },
+            onChange={(val) => {
+              const categoryToUpdateTo = categoriesData?.categories.find(
+                (category) => category.id === val,
+              )
+              return updateApplication(
+                { fields: { category: categoryToUpdateTo } },
                 {
                   successMessage: 'Flokkur vistaður',
                   errorMessage: 'Ekki tókst að vista flokk',
                 },
               )
-            }
+            }}
           />
         </GridColumn>
         <GridColumn span="12/12">
@@ -128,7 +138,10 @@ export const CommonAdvertFields = () => {
         </GridColumn>
         <GridColumn span="12/12">
           <Text marginBottom={1} variant="h4">
-            Meginmál
+            Meginmál{' '}
+            <Text fontWeight="regular" color="red600" as="span">
+              *
+            </Text>
           </Text>
           <Editor
             defaultValue={defaultHTML}
