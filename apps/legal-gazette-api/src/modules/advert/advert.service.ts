@@ -185,6 +185,7 @@ export class AdvertService implements IAdvertService {
 
     const advert = await this.advertModel.create(
       {
+        applicationId: body.applicationId,
         templateType: body.templateType,
         typeId: body.typeId,
         categoryId: body.categoryId,
@@ -229,6 +230,7 @@ export class AdvertService implements IAdvertService {
               name: body.settlement.name,
               nationalId: body.settlement.nationalId,
               declaredClaims: body.settlement.declaredClaims ?? null,
+              companies: body.settlement.companies,
             }
           : undefined,
       },

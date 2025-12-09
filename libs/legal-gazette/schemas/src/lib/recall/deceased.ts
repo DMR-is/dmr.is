@@ -35,7 +35,7 @@ export const recallDeceasedSchema = z.object({
 
 export const recallDeceasedSchemaRefined = z.object({
   courtAndJudgmentFields: courtAndJudgmentSchemaRefined,
-  divisionMeetingFields: divisionMeetingSchemaRefined,
+  divisionMeetingFields: divisionMeetingSchemaRefined.optional(),
   settlementFields: settlementSchemaRefined
     .extend({
       dateOfDeath: z.iso

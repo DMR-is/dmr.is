@@ -155,6 +155,7 @@ export class ApplicationService implements IApplicationService {
         Object.assign(createObj, {
           settlement: {
             dateOfDeath: data.fields.settlementFields.dateOfDeath,
+            type: data.fields.settlementFields.type,
           },
         })
         break

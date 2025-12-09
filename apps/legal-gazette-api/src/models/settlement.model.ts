@@ -12,6 +12,7 @@ import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
 
 import {
   ApplicationRequirementStatementEnum,
+  CompanySchema,
   SettlementType,
 } from '@dmr.is/legal-gazette/schemas'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
@@ -31,6 +32,7 @@ type SettlementAttributes = {
   declaredClaims: number | null
   liquidatorRecallStatementLocation?: string | null
   liquidatorRecallStatementType?: string | null
+  companies?: CompanySchema[]
 }
 
 export type SettlementCreateAttributes = Omit<
@@ -138,6 +140,9 @@ export class SettlementModel extends BaseModel<
   @ApiProperty({ type: Number, required: false })
   declaredClaims!: number | null
 
+  @Column({ type: DataType.JSONB })
+  companies?: CompanySchema[]
+
   @HasMany(() => AdvertModel)
   adverts!: AdvertModel[]
 
@@ -162,6 +167,18 @@ export class SettlementModel extends BaseModel<
   fromModel(): SettlementDto {
     return SettlementModel.fromModel(this)
   }
+}
+
+export class SettlementCompanyDto {
+  @ApiProperty({ type: String, required: true })
+  @IsString()
+  @MaxLength(255)
+  companyName!: string
+
+  @ApiProperty({ type: String, required: true })
+  @IsString()
+  @MaxLength(255)
+  companyNationalId!: string
 }
 
 export class SettlementDto extends PickType(SettlementModel, [
@@ -238,6 +255,10 @@ export class CreateSettlementDto {
   @IsOptional()
   @IsDateString()
   dateOfDeath?: string
+
+  @ApiProperty({ type: [SettlementCompanyDto], required: false })
+  @IsOptional()
+  companies?: SettlementCompanyDto[]
 }
 
 export class UpdateSettlementDto extends PartialType(SettlementDto) {}
