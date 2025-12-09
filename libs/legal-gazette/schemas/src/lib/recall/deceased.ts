@@ -43,7 +43,7 @@ export const recallDeceasedSchemaRefined = z.object({
         .refine((date) => isDateString(date), {
           message: 'Dánardagur bús er nauðsynlegur',
         }),
-      companies: z.array(companySchema.optional()),
+      companies: z.array(companySchema).optional(),
       type: z.enum(['DEFAULT', 'UNDIVIDED', 'OWNER']).optional(),
     })
     .refine(
@@ -67,6 +67,7 @@ export const recallDeceasedAnswers = baseApplicationSchema.extend({
 export const recallDeceasedAnswersRefined = baseApplicationSchemaRefined.extend(
   {
     fields: recallDeceasedSchemaRefined,
+    publishingDates: publishingDatesRecallSchemaRefined,
   },
 )
 
