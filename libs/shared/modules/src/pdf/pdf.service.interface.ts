@@ -4,7 +4,7 @@ export interface IPdfService {
   generatePdfByCaseId(
     caseId: string,
     publishedAt?: string | Date,
-    serial?: number,
+    serial?: number | string,
     correctionDate?: string | Date,
   ): Promise<ResultWrapper<Buffer>>
 
