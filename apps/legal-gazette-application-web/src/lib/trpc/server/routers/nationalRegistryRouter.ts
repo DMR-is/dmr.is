@@ -1,6 +1,9 @@
 import z from 'zod'
 
+import { LegalEntityDto } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
+
+import { TRPCError } from '@trpc/server'
 
 const getPersonByNationalIdInputSchema = z.object({
   nationalId: z
@@ -18,5 +21,18 @@ export const nationalRegistryRouter = router({
       const person = await ctx.api.getPersonByNationalId({ nationalId })
 
       return person
+    }),
+  getCompanyByNationalId: protectedProcedure
+    .input(getPersonByNationalIdInputSchema)
+    .mutation(async ({ input, ctx }): Promise<LegalEntityDto> => {
+      const { nationalId } = input
+
+      const company = await ctx.api.getCompanyByNationalId({ nationalId })
+
+      if (company.legalEntity === null) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Company not found' })
+      }
+
+      return company.legalEntity
     }),
 })

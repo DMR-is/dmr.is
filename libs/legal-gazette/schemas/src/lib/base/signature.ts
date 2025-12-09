@@ -2,10 +2,10 @@ import { isString } from 'class-validator'
 import z from 'zod'
 
 export const signatureSchema = z.object({
-  name: z.string().optional(),
-  location: z.string().optional(),
-  date: z.iso.datetime().optional(),
-  onBehalfOf: z.string().optional(),
+  name: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+  date: z.iso.datetime().optional().nullable(),
+  onBehalfOf: z.string().optional().nullable(),
 })
 
 export const signatureSchemaRefined = signatureSchema.refine((schema) => {

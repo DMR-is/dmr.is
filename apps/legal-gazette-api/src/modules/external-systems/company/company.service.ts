@@ -341,13 +341,14 @@ export class CompanyService implements ICompanyService {
             </td>
           </tr>
           ${
-            executiveBoardMembers.length > 0 &&
-            `<tr>
+            executiveBoardMembers.length > 0
+              ? `<tr>
               <td>
                 <i>Framkvæmdarstjórn</i>
                 ${executiveBoardMembers}
               </td>
             </tr>`
+              : ''
           }
           <tr>
             <td>

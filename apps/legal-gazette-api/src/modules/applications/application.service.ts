@@ -155,6 +155,7 @@ export class ApplicationService implements IApplicationService {
         Object.assign(createObj, {
           settlement: {
             dateOfDeath: data.fields.settlementFields.dateOfDeath,
+            type: data.fields.settlementFields.type,
           },
         })
         break
@@ -348,6 +349,10 @@ export class ApplicationService implements IApplicationService {
 
     const mergedAnswers = deepmerge(currentAnswers, incomingAnswers, {
       customMerge: (key) => {
+        if (key === 'companies') {
+          return (_current, incoming) => incoming
+        }
+
         if (key === 'publishingDates') {
           return (_current, incoming) => incoming
         }

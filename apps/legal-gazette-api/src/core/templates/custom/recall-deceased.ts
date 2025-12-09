@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { isEmpty } from 'class-validator'
+
 import { InternalServerErrorException } from '@nestjs/common'
 
+import { SettlementType } from '@dmr.is/legal-gazette/schemas'
 import { getLogger } from '@dmr.is/logging'
 import { formatDate } from '@dmr.is/utils'
 
@@ -66,6 +69,39 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
     formatDate(dateOfDeath, 'dd. MMMM yyyy'),
   )
 
+  let settlementText = ''
+  switch (model.settlement!.type) {
+    case SettlementType.DEFAULT:
+      settlementText = ''
+      break
+    case SettlementType.UNDIVIDED:
+      settlementText = `${name} sat í óskiptu búi eftir [NAFN & KT MAKA] sem lést þann [DÁNARDAGUR MAKA].`
+      break
+    case SettlementType.OWNER: {
+      const companies = model.settlement!.companies
+      if (isEmpty(companies) || companies?.length === 0) {
+        settlementText = ''
+        break
+      }
+
+      if (companies!.length === 1) {
+        const company = companies![0]
+        settlementText = `Athygli er vakin á því að dánarbúið ber ótakmarkaða ábyrgð á skuldbindingum félagsins ${company.companyName} kt. ${company.companyNationalId}.`
+        break
+      }
+
+      settlementText = `Athygli er vakin á því að dánarbúið ber ótakmarkaða ábyrgð á skuldbindingum félaga`
+      const companyList = companies!
+        .map(
+          (company) =>
+            ` ${company.companyName} kt. ${company.companyNationalId}`,
+        )
+        .join(', ')
+      settlementText += `: ${companyList}.`
+      break
+    }
+  }
+
   const outro = getElement(
     `Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur framangreindu dánarbúi eða telja til eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu þessarar innköllunar. Kröfulýsingar skulu sendar skiptastjóra að ${liquidatorLocation}.`,
   )
@@ -84,6 +120,7 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
               </tr>
             </tbody>
           </table>
+          ${isEmpty(settlementText) ? '' : getElement(settlementText)}
           ${outro}
         `
 }

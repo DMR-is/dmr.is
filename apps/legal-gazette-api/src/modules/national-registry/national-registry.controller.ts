@@ -1,6 +1,7 @@
 import { Controller, Get, Inject, Param, UseGuards } from '@nestjs/common'
-import { ApiBearerAuth } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiExtraModels } from '@nestjs/swagger'
 
+import { GetCompanyDto, LegalEntityDto } from '@dmr.is/clients/company-registry'
 import { GetPersonDto } from '@dmr.is/clients/national-registry'
 import {
   ApplicationWebScopes,
@@ -16,6 +17,7 @@ import { ILGNationalRegistryService } from './national-registry.service.interfac
   path: 'national-registry',
   version: '1',
 })
+@ApiExtraModels(LegalEntityDto)
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
 @ApplicationWebScopes()
@@ -31,5 +33,13 @@ export class LGNationalRegistryController {
     @Param('nationalId', new NationalIdValidationPipe()) nationalId: string,
   ) {
     return this.nationalRegistryService.getPersonByNationalId(nationalId)
+  }
+
+  @Get('/company/:nationalId')
+  @LGResponse({ operationId: 'getCompanyByNationalId', type: GetCompanyDto })
+  getCompanyByNationalId(
+    @Param('nationalId', new NationalIdValidationPipe()) nationalId: string,
+  ) {
+    return this.nationalRegistryService.getCompanyByNationalId(nationalId)
   }
 }
