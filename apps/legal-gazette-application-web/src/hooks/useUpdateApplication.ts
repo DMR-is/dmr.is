@@ -18,6 +18,7 @@ import {
 } from '@tanstack/react-query'
 
 type UpdateApplicationMutationOptions = {
+  onSuccessCallback?: () => void
   successMessage?: string
   errorMessage?: string
   silent?: boolean
@@ -104,6 +105,8 @@ export const useUpdateApplication = <T extends UpdateApplicationType>({
               toastId: options.successMessage,
             })
           }
+
+          options?.onSuccessCallback?.()
 
           queryClient.invalidateQueries(
             trpc.getApplicationById.queryFilter({

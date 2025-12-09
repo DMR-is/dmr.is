@@ -20,6 +20,8 @@ export const ApplicationSidebar = () => {
 
   const parsedErrors = parseFormstateErrors(formState.errors)
 
+  console.log('parsedErrors', parsedErrors)
+
   const handleFieldNavigation = (fieldPath: string) => {
     let element = document.querySelector(`[name="${fieldPath}"]`) as HTMLElement
 

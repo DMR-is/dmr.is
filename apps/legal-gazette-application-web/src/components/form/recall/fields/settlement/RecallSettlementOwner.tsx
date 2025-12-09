@@ -1,20 +1,13 @@
-'use client'
+import { Stack } from '@dmr.is/ui/components/island-is'
 
-import { useFormContext } from 'react-hook-form'
-
-import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
-
-import { NationalIdLookup } from '../../../../national-id-lookup/NationalIdLookup'
+import { CompanyLookup } from '../../../../company-lookup/CompanyLookup'
+import { RecallSettlementDefault } from './RecallSettlementDefault'
 
 export const RecallSettlementOwner = () => {
-  const { getValues, setValue } = useFormContext<RecallApplicationWebSchema>()
-
   return (
-    <NationalIdLookup
-      defaultValue={getValues('fields.settlementFields.nationalId') ?? ''}
-      // onSuccessfulLookup={onSuccessfulLookup}
-      // onReset={resetLookupFields}
-      // onError={setOnLookupError}
-    />
+    <Stack space={[2, 3]}>
+      <RecallSettlementDefault />
+      <CompanyLookup />
+    </Stack>
   )
 }

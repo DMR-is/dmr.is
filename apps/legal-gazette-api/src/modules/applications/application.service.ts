@@ -348,6 +348,10 @@ export class ApplicationService implements IApplicationService {
 
     const mergedAnswers = deepmerge(currentAnswers, incomingAnswers, {
       customMerge: (key) => {
+        if (key === 'companies') {
+          return (_current, incoming) => incoming
+        }
+
         if (key === 'publishingDates') {
           return (_current, incoming) => incoming
         }
