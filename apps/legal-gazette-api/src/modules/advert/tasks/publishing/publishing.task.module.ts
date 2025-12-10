@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common'
+import { SequelizeModule } from '@nestjs/sequelize'
 
+import { AdvertModel } from '../../../../models/advert.model'
+import { AdvertPublicationModel } from '../../../../models/advert-publication.model'
 import { PublishingTaskService } from './publishing.task'
 import { IPublishingTaskService } from './publishing.task.interface'
 
 @Module({
-  imports: [],
+  imports: [SequelizeModule.forFeature([AdvertPublicationModel, AdvertModel])],
   controllers: [],
   providers: [
     {
