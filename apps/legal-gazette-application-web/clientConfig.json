@@ -3874,6 +3874,7 @@
             "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
           },
           "title": { "type": "string" },
+          "subtitle": { "type": "string" },
           "type": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           }
@@ -3930,6 +3931,7 @@
             "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
           },
           "title": { "type": "string" },
+          "subtitle": { "type": "string" },
           "type": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           },

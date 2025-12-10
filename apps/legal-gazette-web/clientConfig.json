@@ -992,7 +992,6 @@
             }
           }
         },
-        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - internal API"]
       }
@@ -3855,6 +3854,10 @@
         },
         "required": ["id", "title", "slug"]
       },
+      "SettlementType": {
+        "type": "string",
+        "enum": ["DEFAULT", "UNDIVIDED", "OWNER"]
+      },
       "ApplicationRequirementStatementEnum": {
         "type": "string",
         "enum": [
@@ -3867,6 +3870,9 @@
         "type": "object",
         "properties": {
           "id": { "type": "string" },
+          "type": {
+            "allOf": [{ "$ref": "#/components/schemas/SettlementType" }]
+          },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
           "liquidatorRecallStatementLocation": { "type": "string" },
@@ -3886,6 +3892,7 @@
         },
         "required": [
           "id",
+          "type",
           "liquidatorName",
           "liquidatorLocation",
           "liquidatorRecallStatementType",
@@ -4269,6 +4276,14 @@
         },
         "required": ["email"]
       },
+      "SettlementCompanyDto": {
+        "type": "object",
+        "properties": {
+          "companyName": { "type": "string" },
+          "companyNationalId": { "type": "string" }
+        },
+        "required": ["companyName", "companyNationalId"]
+      },
       "CreateSettlementDto": {
         "type": "object",
         "properties": {
@@ -4281,7 +4296,11 @@
           "address": { "type": "string" },
           "declaredClaims": { "type": "number" },
           "deadline": { "type": "string" },
-          "dateOfDeath": { "type": "string" }
+          "dateOfDeath": { "type": "string" },
+          "companies": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SettlementCompanyDto" }
+          }
         },
         "required": [
           "liquidatorName",
@@ -4637,6 +4656,9 @@
         "type": "object",
         "properties": {
           "id": { "type": "string" },
+          "type": {
+            "allOf": [{ "$ref": "#/components/schemas/SettlementType" }]
+          },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
           "liquidatorRecallStatementLocation": { "type": "string" },
