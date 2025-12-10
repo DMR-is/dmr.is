@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth'
 
 import { authOptions } from '../authOptions'
-import { getClient } from './createClient'
+import { getClient, getPublicClient } from './createClient'
 
 import { TRPCError } from '@trpc/server'
 
@@ -13,4 +13,8 @@ export async function getServerClient() {
   }
 
   return getClient(session.accessToken, session.idToken)
+}
+
+export async function getPublicServerClient() {
+  return getPublicClient()
 }

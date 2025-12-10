@@ -12,8 +12,6 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { Icon } from '@island.is/island-ui/core'
-
 import { useFilters } from '../../../../hooks/useFilters'
 import { isDate } from '../../../../lib/utils'
 

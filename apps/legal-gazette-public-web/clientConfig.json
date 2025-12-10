@@ -1058,7 +1058,6 @@
             }
           }
         },
-        "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - public API"]
       }
@@ -1386,9 +1385,14 @@
           "id": { "type": "string" },
           "nationalId": { "type": "string" },
           "name": { "type": "string", "nullable": true },
-          "isActive": { "type": "boolean" }
+          "isActive": { "type": "boolean" },
+          "subscribedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          }
         },
-        "required": ["id", "nationalId", "name", "isActive"]
+        "required": ["id", "nationalId", "name", "isActive", "subscribedAt"]
       },
       "TypeIdEnum": {
         "type": "string",
@@ -1519,6 +1523,11 @@
       "AdvertDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
           "createdAt": {
             "type": "string",
             "description": "ISO representation of the creation date",
@@ -1535,7 +1544,6 @@
             "example": "2021-08-31T12:00:00.000Z",
             "nullable": true
           },
-          "id": { "type": "string" },
           "title": { "type": "string" },
           "createdBy": { "type": "string" },
           "publicationNumber": { "type": "string" },
@@ -1551,9 +1559,9 @@
           "hasInternalComments": { "type": "boolean" }
         },
         "required": [
+          "id",
           "createdAt",
           "updatedAt",
-          "id",
           "title",
           "createdBy",
           "publications",
