@@ -47,6 +47,8 @@ export const ApplicationSubmittedContainer = ({ application }: Props) => {
     <ApplicationSubmitted
       adverts={data.adverts}
       applicationType={application.type}
+      title={application.title}
+      subtitle={application.subtitle ?? ''}
     />
   )
 }

@@ -51,7 +51,7 @@ export function ApplicationFormContainer({
             caseId: data.caseId,
             typeOptions: baseEntities.types.map((type) => ({
               label: type.title,
-              value: type.id,
+              value: type,
             })),
           }}
           application={{

@@ -11,6 +11,7 @@ import {
   IsUUID,
   ValidateNested,
 } from 'class-validator'
+import get from 'lodash/get'
 import {
   BelongsTo,
   Column,
@@ -148,7 +149,19 @@ export class ApplicationModel extends BaseModel<
       return 'Innköllun þrotabús'
     }
 
-    return 'Almenn umsókn'
+    const type = get(this.answers, 'fields.type.title', '')
+
+    return `${type || 'Almenn umsókn'}`
+  }
+  getSubtitle = () => {
+    if (
+      this.applicationType === ApplicationTypeEnum.RECALL_DECEASED ||
+      this.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
+    ) {
+      return get(this.answers, 'fields.settlementFields.name', '')
+    }
+
+    return get(this.answers, 'fields.caption', '')
   }
 
   static fromModel(model: ApplicationModel): ApplicationDto {
@@ -162,6 +175,7 @@ export class ApplicationModel extends BaseModel<
       status: model.status,
       title: model.title,
       type: model.applicationType,
+      subtitle: model.getSubtitle(),
     }
   }
 
@@ -202,8 +216,15 @@ export class ApplicationDto extends DetailedDto {
   @ApiProperty({ type: String })
   title!: string
 
+  @ApiProperty({ type: String, required: false })
+  subtitle?: string
+
   @ApiProperty({ enum: ApplicationTypeEnum, enumName: 'ApplicationTypeEnum' })
   type!: ApplicationTypeEnum
+}
+
+export class ApplicationDtoWithSubtitle extends ApplicationDto {
+  subtitle?: string
 }
 
 export class GetApplicationsDto {

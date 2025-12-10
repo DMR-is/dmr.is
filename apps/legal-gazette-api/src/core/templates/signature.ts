@@ -1,4 +1,4 @@
-import { isDefined } from 'class-validator'
+import { isDefined, isEmpty } from 'class-validator'
 
 import { formatDate } from '@dmr.is/utils'
 
@@ -36,12 +36,14 @@ export function getSignatureMarkup({
   }
 
   const locationMarkup = getElement(formatDateAndLocation(location, date))
-  const onBehalfOfMarkup = isDefined(onBehalfOf)
+  const onBehalfOfMarkup = !isEmpty(onBehalfOf)
     ? getElement(`f.h. ${onBehalfOf}`)
     : ''
-  const nameMarkup = getElement(`<strong>${name}</strong>`, {
-    className: 'advertSignatureName',
-  })
+  const nameMarkup = !isEmpty(name)
+    ? getElement(`<strong>${name}</strong>`, {
+        className: 'advertSignatureName',
+      })
+    : ''
 
   return `
     <div class="advertSignature">

@@ -3661,6 +3661,14 @@
         },
         "required": ["email"]
       },
+      "SettlementCompanyDto": {
+        "type": "object",
+        "properties": {
+          "companyName": { "type": "string" },
+          "companyNationalId": { "type": "string" }
+        },
+        "required": ["companyName", "companyNationalId"]
+      },
       "CreateSettlementDto": {
         "type": "object",
         "properties": {
@@ -3673,7 +3681,11 @@
           "address": { "type": "string" },
           "declaredClaims": { "type": "number" },
           "deadline": { "type": "string" },
-          "dateOfDeath": { "type": "string" }
+          "dateOfDeath": { "type": "string" },
+          "companies": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SettlementCompanyDto" }
+          }
         },
         "required": [
           "liquidatorName",

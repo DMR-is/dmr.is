@@ -20,13 +20,13 @@ export const AdvertTable = ({ adverts }: Props) => {
       size: 'tiny',
     },
     {
-      field: 'type',
-      children: 'Tegund',
+      field: 'category',
+      children: 'Flokkur',
       size: 'tiny',
     },
     {
-      field: 'category',
-      children: 'Flokkur',
+      field: 'type',
+      children: 'Tegund',
       size: 'tiny',
     },
     {
