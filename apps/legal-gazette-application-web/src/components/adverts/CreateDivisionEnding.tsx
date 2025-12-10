@@ -208,7 +208,7 @@ export const CreateDivisionEnding = ({
                           <Inline align="right" alignY="center">
                             <Button
                               type="submit"
-                              icon="upload"
+                              icon="add"
                               iconType="outline"
                               loading={isPending}
                             >
