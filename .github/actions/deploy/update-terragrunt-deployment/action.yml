@@ -35,10 +35,10 @@ runs:
       shell: bash
       run: brew install terragrunt tfenv
 
-    - name: Setup Terraform v1.10.1
+    - name: Setup Terraform v1.11.2
       uses: hashicorp/setup-Terraform@v3
       with:
-        terraform_version: 1.10.1
+        terraform_version: 1.11.2
 
     - name: Terragrunt version
       shell: bash
