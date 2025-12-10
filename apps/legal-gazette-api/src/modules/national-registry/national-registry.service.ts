@@ -1,5 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common'
 
+import {
+  GetCompanyDto,
+  ICompanyRegistryClientService,
+} from '@dmr.is/clients/company-registry'
 import { INationalRegistryService } from '@dmr.is/clients/national-registry'
 import { GetPersonDto } from '@dmr.is/clients/national-registry'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -12,6 +16,8 @@ export class LGNationalRegistryService implements ILGNationalRegistryService {
     @Inject(LOGGER_PROVIDER) private logger: Logger,
     @Inject(INationalRegistryService)
     private nationalRegistryService: INationalRegistryService,
+    @Inject(ICompanyRegistryClientService)
+    private companyRegistryService: ICompanyRegistryClientService,
   ) {}
   async getPersonByNationalId(nationalId: string): Promise<GetPersonDto> {
     try {
@@ -20,6 +26,16 @@ export class LGNationalRegistryService implements ILGNationalRegistryService {
       this.logger.error(`Failed to get person by national id`, error)
 
       return { person: null }
+    }
+  }
+
+  async getCompanyByNationalId(nationalId: string): Promise<GetCompanyDto> {
+    try {
+      return this.companyRegistryService.getCompany(nationalId)
+    } catch (error) {
+      this.logger.error(`Failed to get company by national id`, error)
+
+      return { legalEntity: null }
     }
   }
 }

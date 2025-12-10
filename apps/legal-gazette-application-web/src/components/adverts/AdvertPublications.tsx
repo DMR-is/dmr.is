@@ -55,7 +55,7 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
                 key={i}
                 eyebrow={
                   detailed
-                    ? `${advert.type.title} - ${advert.category.title} - Birting ${pub.version}`
+                    ? `${advert.category.title} - ${advert.type.title} - Birting ${pub.version}`
                     : undefined
                 }
                 cta={{

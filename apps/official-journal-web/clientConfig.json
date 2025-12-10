@@ -1984,6 +1984,31 @@
         "summary": ""
       }
     },
+    "/api/v1/cases/{id}/pdf-preview": {
+      "get": {
+        "operationId": "getCasePdfPreview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the generated pdf as a binary.",
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
     "/api/v1/advert-types/types": {
       "post": {
         "operationId": "createType",

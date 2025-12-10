@@ -5,15 +5,13 @@ import { Configuration, LegalGazettePublicAPIApi } from '../../gen/fetch'
 let client: LegalGazettePublicAPIApi | undefined
 let publicClient: LegalGazettePublicAPIApi | undefined
 
-export const getClient = (accessToken: string) => {
+export const getClient = (accessToken: string, idToken: string) => {
   if (typeof window === 'undefined' || !accessToken) {
-    return new LegalGazettePublicAPIApi(
-      config(Configuration, accessToken, 'LGWeb'),
-    )
+    return new LegalGazettePublicAPIApi(config(Configuration, [accessToken, idToken], 'LGWeb'))
   }
 
   return (client ??= new LegalGazettePublicAPIApi(
-    config(Configuration, accessToken, 'LGWeb'),
+    config(Configuration, [accessToken, idToken], 'LGWeb'),
   ))
 }
 

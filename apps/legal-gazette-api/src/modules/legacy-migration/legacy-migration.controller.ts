@@ -14,10 +14,7 @@ import {
   CompleteMigrationDto,
   RequestMigrationDto,
 } from './legacy-migration.dto'
-import {
-  CheckLegacyEmailResult,
-  ILegacyMigrationService,
-} from './legacy-migration.service.interface'
+import { ILegacyMigrationService } from './legacy-migration.service.interface'
 
 @ApiTags('Legacy Migration')
 @ApiBearerAuth()
@@ -45,7 +42,7 @@ export class LegacyMigrationController {
   })
   async checkLegacyEmail(
     @Body() dto: CheckLegacyEmailDto,
-  ): Promise<CheckLegacyEmailResult> {
+  ): Promise<CheckLegacyEmailResponseDto> {
     return this.legacyMigrationService.checkLegacyEmail(dto.email)
   }
 
@@ -85,7 +82,7 @@ export class LegacyMigrationController {
   ): Promise<SubscriberDto> {
     return this.legacyMigrationService.completeMigration(
       dto.token,
-      user.nationalId,
+      user,
     )
   }
 }

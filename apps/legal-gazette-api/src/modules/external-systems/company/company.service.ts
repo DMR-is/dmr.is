@@ -156,10 +156,12 @@ export class CompanyService implements ICompanyService {
       createdBy: body.responsibleParty.name,
       createdByNationalId: body.responsibleParty.nationalId,
       content: htmlContent,
-      signatureDate: body.responsibleParty.signature.date,
-      signatureName: body.responsibleParty.signature.name,
-      signatureLocation: body.responsibleParty.signature.location,
-      signatureOnBehalfOf: body.responsibleParty.signature.onBehalfOf,
+      signature: {
+        name: body.responsibleParty.signature.name,
+        date: body.responsibleParty.signature.date,
+        location: body.responsibleParty.signature.location,
+        onBehalfOf: body.responsibleParty.signature.onBehalfOf,
+      },
       scheduledAt: [nextWednesday.toISOString()],
       caption: `${formatDate(date, 'MMMM yyyy')}`,
       isFromExternalSystem: true,
@@ -263,10 +265,12 @@ export class CompanyService implements ICompanyService {
       createdByNationalId: body.responsibleParty.nationalId,
       caption: body.name,
       content: htmlContent,
-      signatureDate: body.responsibleParty.signature.date,
-      signatureName: body.responsibleParty.signature.name,
-      signatureLocation: body.responsibleParty.signature.location,
-      signatureOnBehalfOf: body.responsibleParty.signature.onBehalfOf,
+      signature: {
+        name: body.responsibleParty.signature.name,
+        date: body.responsibleParty.signature.date,
+        location: body.responsibleParty.signature.location,
+        onBehalfOf: body.responsibleParty.signature.onBehalfOf,
+      },
       scheduledAt: [nextWednesday.toISOString()],
       isFromExternalSystem: true,
     })
@@ -337,13 +341,14 @@ export class CompanyService implements ICompanyService {
             </td>
           </tr>
           ${
-            executiveBoardMembers.length > 0 &&
-            `<tr>
+            executiveBoardMembers.length > 0
+              ? `<tr>
               <td>
                 <i>Framkvæmdarstjórn</i>
                 ${executiveBoardMembers}
               </td>
             </tr>`
+              : ''
           }
           <tr>
             <td>
@@ -393,10 +398,12 @@ export class CompanyService implements ICompanyService {
       createdByNationalId: body.responsibleParty.nationalId,
       caption: body.name,
       content: htmlContent,
-      signatureDate: body.responsibleParty.signature.date,
-      signatureName: body.responsibleParty.signature.name,
-      signatureLocation: body.responsibleParty.signature.location,
-      signatureOnBehalfOf: body.responsibleParty.signature.onBehalfOf,
+      signature: {
+        name: body.responsibleParty.signature.name,
+        date: body.responsibleParty.signature.date,
+        location: body.responsibleParty.signature.location,
+        onBehalfOf: body.responsibleParty.signature.onBehalfOf,
+      },
       scheduledAt: [nextWednesday.toISOString()],
       isFromExternalSystem: true,
     })

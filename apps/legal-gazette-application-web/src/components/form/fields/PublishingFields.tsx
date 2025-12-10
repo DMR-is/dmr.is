@@ -101,7 +101,12 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
       <GridRow rowGap={[2, 3]}>
         <GridColumn span="12/12">
           <Stack space={[2, 3]}>
-            <Text variant="h4">{`Birting${additionalTitle ? ` ${additionalTitle}` : ''}`}</Text>
+            <Text variant="h4">
+              {`Birting${additionalTitle ? ` ${additionalTitle}` : ''}`}{' '}
+              <Text fontWeight="regular" color="red600" as="span">
+                *
+              </Text>
+            </Text>
             {signatureError && (
               <AlertMessage
                 type="error"

@@ -2,6 +2,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
+import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { IAWSService } from '@dmr.is/modules'
 
 import { LegacyMigrationTokenModel } from '../../models/legacy-migration-token.model'
@@ -18,6 +19,18 @@ const OTHER_NATIONAL_ID = '0987654321'
 const TEST_TOKEN = 'valid-token-123'
 const EXPIRED_TOKEN = 'expired-token-456'
 const USED_TOKEN = 'used-token-789'
+
+// Mock DMR User
+const createMockDMRUserWithPublicScope = (nationalId: string): DMRUser => {
+  return {
+    nationalId,
+    name: 'Test User',
+    fullName: 'Test User',
+    scope: ['@dmr.is/lg-public-web'],
+    authorization: 'Bearer some-jwt-token',
+    client: 'dmr-web-client',
+  }
+}
 
 // Mock legacy subscriber with kennitala
 const createMockLegacySubscriberWithKt = () => ({
@@ -177,7 +190,7 @@ describe('LegacyMigrationService', () => {
   })
 
   describe('checkLegacyEmail', () => {
-    it('should return exists: true and hasKennitala: true when email exists with kennitala', async () => {
+    it('should return emailExists: true and hasKennitala: true when email exists with kennitala', async () => {
       legacySubscriberModel.findOne.mockResolvedValue(
         createMockLegacySubscriberWithKt(),
       )
@@ -185,7 +198,7 @@ describe('LegacyMigrationService', () => {
       const result = await service.checkLegacyEmail(TEST_EMAIL)
 
       expect(result).toEqual({
-        exists: true,
+        emailExists: true,
         hasKennitala: true,
       })
       expect(legacySubscriberModel.findOne).toHaveBeenCalledWith({
@@ -193,7 +206,7 @@ describe('LegacyMigrationService', () => {
       })
     })
 
-    it('should return exists: true and hasKennitala: false when email exists without kennitala', async () => {
+    it('should return emailExists: true and hasKennitala: false when email exists without kennitala', async () => {
       legacySubscriberModel.findOne.mockResolvedValue(
         createMockLegacySubscriberWithoutKt(),
       )
@@ -201,18 +214,18 @@ describe('LegacyMigrationService', () => {
       const result = await service.checkLegacyEmail(TEST_EMAIL_NO_KT)
 
       expect(result).toEqual({
-        exists: true,
+        emailExists: true,
         hasKennitala: false,
       })
     })
 
-    it('should return exists: false when email does not exist', async () => {
+    it('should return emailExists: false when email does not exist', async () => {
       legacySubscriberModel.findOne.mockResolvedValue(null)
 
       const result = await service.checkLegacyEmail('nonexistent@example.com')
 
       expect(result).toEqual({
-        exists: false,
+        emailExists: false,
         hasKennitala: false,
       })
     })
@@ -307,7 +320,10 @@ describe('LegacyMigrationService', () => {
       legacyMigrationTokenModel.findOne.mockResolvedValue(null)
 
       await expect(
-        service.completeMigration('invalid-token', TEST_NATIONAL_ID),
+        service.completeMigration(
+          'invalid-token',
+          createMockDMRUserWithPublicScope(TEST_NATIONAL_ID),
+        ),
       ).rejects.toThrow(NotFoundException)
     })
 
@@ -317,7 +333,10 @@ describe('LegacyMigrationService', () => {
       )
 
       await expect(
-        service.completeMigration(EXPIRED_TOKEN, TEST_NATIONAL_ID),
+        service.completeMigration(
+          EXPIRED_TOKEN,
+          createMockDMRUserWithPublicScope(TEST_NATIONAL_ID),
+        ),
       ).rejects.toThrow(BadRequestException)
     })
 
@@ -325,7 +344,10 @@ describe('LegacyMigrationService', () => {
       legacyMigrationTokenModel.findOne.mockResolvedValue(createMockUsedToken())
 
       await expect(
-        service.completeMigration(USED_TOKEN, TEST_NATIONAL_ID),
+        service.completeMigration(
+          USED_TOKEN,
+          createMockDMRUserWithPublicScope(TEST_NATIONAL_ID),
+        ),
       ).rejects.toThrow(BadRequestException)
     })
 
@@ -335,7 +357,10 @@ describe('LegacyMigrationService', () => {
       )
 
       await expect(
-        service.completeMigration(TEST_TOKEN, OTHER_NATIONAL_ID),
+        service.completeMigration(
+          TEST_TOKEN,
+          createMockDMRUserWithPublicScope(OTHER_NATIONAL_ID),
+        ),
       ).rejects.toThrow(BadRequestException)
     })
 
@@ -350,7 +375,7 @@ describe('LegacyMigrationService', () => {
 
       const result = await service.completeMigration(
         TEST_TOKEN,
-        TEST_NATIONAL_ID,
+        createMockDMRUserWithPublicScope(TEST_NATIONAL_ID),
       )
 
       // Should create subscriber with legacy user's data
@@ -403,7 +428,7 @@ describe('LegacyMigrationService', () => {
 
       const result = await service.completeMigration(
         TEST_TOKEN,
-        TEST_NATIONAL_ID,
+        createMockDMRUserWithPublicScope(TEST_NATIONAL_ID),
       )
 
       expect(subscriberModel.findOrCreate).toHaveBeenCalledWith(
@@ -423,7 +448,9 @@ describe('LegacyMigrationService', () => {
     it('should return null when no legacy user exists with the kennitala', async () => {
       legacySubscriberModel.findOne.mockResolvedValue(null)
 
-      const result = await service.autoMigrateByKennitala(TEST_NATIONAL_ID)
+      const result = await service.autoMigrateByKennitala(
+        createMockDMRUserWithPublicScope(TEST_NATIONAL_ID),
+      )
 
       expect(result).toBeNull()
       expect(legacySubscriberModel.findOne).toHaveBeenCalledWith({
@@ -436,7 +463,9 @@ describe('LegacyMigrationService', () => {
         createMockMigratedLegacySubscriber(),
       )
 
-      const result = await service.autoMigrateByKennitala(TEST_NATIONAL_ID)
+      const result = await service.autoMigrateByKennitala(
+        createMockDMRUserWithPublicScope(TEST_NATIONAL_ID),
+      )
 
       expect(result).toBeNull()
       expect(subscriberModel.create).not.toHaveBeenCalled()
@@ -448,7 +477,9 @@ describe('LegacyMigrationService', () => {
       subscriberModel.create.mockResolvedValue(createMockNewSubscriber())
       legacySubscriberModel.update = jest.fn().mockResolvedValue([1])
 
-      const result = await service.autoMigrateByKennitala(TEST_NATIONAL_ID)
+      const result = await service.autoMigrateByKennitala(
+        createMockDMRUserWithPublicScope(TEST_NATIONAL_ID),
+      )
 
       // Should create subscriber
       expect(subscriberModel.create).toHaveBeenCalledWith(
@@ -477,7 +508,7 @@ describe('LegacyMigrationService', () => {
       })
     })
 
-    it('should preserve legacy user name in new subscriber', async () => {
+    it('should use name from dmr user if available', async () => {
       const legacyUser = {
         ...createMockLegacySubscriberWithKt(),
         name: 'Jón Jónsson',
@@ -485,7 +516,30 @@ describe('LegacyMigrationService', () => {
       legacySubscriberModel.findOne.mockResolvedValue(legacyUser)
       subscriberModel.create.mockResolvedValue(createMockNewSubscriber())
 
-      await service.autoMigrateByKennitala(TEST_NATIONAL_ID)
+      await service.autoMigrateByKennitala(
+        createMockDMRUserWithPublicScope(TEST_NATIONAL_ID),
+      )
+
+      expect(subscriberModel.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Test User',
+        }),
+      )
+    })
+
+    it('should use name legacy user if not in dmr user', async () => {
+      const legacyUser = {
+        ...createMockLegacySubscriberWithKt(),
+        name: 'Jón Jónsson',
+      }
+      legacySubscriberModel.findOne.mockResolvedValue(legacyUser)
+      subscriberModel.create.mockResolvedValue(createMockNewSubscriber())
+
+      await service.autoMigrateByKennitala({
+        ...createMockDMRUserWithPublicScope(TEST_NATIONAL_ID),
+        name: '',
+        fullName: '',
+      })
 
       expect(subscriberModel.create).toHaveBeenCalledWith(
         expect.objectContaining({

@@ -10,5 +10,5 @@ export async function getServerClient() {
     throw new Error('No session found')
   }
 
-  return getLegalGazetteClient(session.accessToken)
+  return getLegalGazetteClient(session.accessToken, session.idToken)
 }

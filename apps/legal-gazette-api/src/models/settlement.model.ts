@@ -10,13 +10,18 @@ import { Column, DataType, HasMany } from 'sequelize-typescript'
 
 import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
 
-import { ApplicationRequirementStatementEnum } from '@dmr.is/legal-gazette/schemas'
+import {
+  ApplicationRequirementStatementEnum,
+  CompanySchema,
+  SettlementType,
+} from '@dmr.is/legal-gazette/schemas'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { AdvertModel } from './advert.model'
 type SettlementAttributes = {
   advertId: string
+  type: SettlementType
   liquidatorName: string
   liquidatorLocation: string
   name: string
@@ -27,14 +32,16 @@ type SettlementAttributes = {
   declaredClaims: number | null
   liquidatorRecallStatementLocation?: string | null
   liquidatorRecallStatementType?: string | null
+  companies?: CompanySchema[]
 }
 
 export type SettlementCreateAttributes = Omit<
   SettlementAttributes,
-  'advertId' | 'declaredClaims'
+  'advertId' | 'declaredClaims' | 'type'
 > & {
   advertId?: string
   declaredClaims?: number | null
+  type?: SettlementType
 }
 
 @BaseTable({ tableName: LegalGazetteModels.SETTLEMENT })
@@ -42,6 +49,14 @@ export class SettlementModel extends BaseModel<
   SettlementAttributes,
   SettlementCreateAttributes
 > {
+  @Column({
+    type: DataType.ENUM(...Object.values(SettlementType)),
+    allowNull: false,
+    defaultValue: SettlementType.DEFAULT,
+  })
+  @ApiProperty({ enum: SettlementType, enumName: 'SettlementType' })
+  type!: SettlementType
+
   @Column({
     type: DataType.TEXT,
     allowNull: false,
@@ -125,12 +140,16 @@ export class SettlementModel extends BaseModel<
   @ApiProperty({ type: Number, required: false })
   declaredClaims!: number | null
 
+  @Column({ type: DataType.JSONB })
+  companies?: CompanySchema[]
+
   @HasMany(() => AdvertModel)
   adverts!: AdvertModel[]
 
   static fromModel(model: SettlementModel): SettlementDto {
     return {
       id: model.id,
+      type: model.type,
       liquidatorName: model.liquidatorName,
       liquidatorLocation: model.liquidatorLocation,
       liquidatorRecallStatementLocation:
@@ -150,8 +169,21 @@ export class SettlementModel extends BaseModel<
   }
 }
 
+export class SettlementCompanyDto {
+  @ApiProperty({ type: String, required: true })
+  @IsString()
+  @MaxLength(255)
+  companyName!: string
+
+  @ApiProperty({ type: String, required: true })
+  @IsString()
+  @MaxLength(255)
+  companyNationalId!: string
+}
+
 export class SettlementDto extends PickType(SettlementModel, [
   'id',
+  'type',
   'liquidatorName',
   'liquidatorLocation',
   'liquidatorRecallStatementLocation',
@@ -223,6 +255,10 @@ export class CreateSettlementDto {
   @IsOptional()
   @IsDateString()
   dateOfDeath?: string
+
+  @ApiProperty({ type: [SettlementCompanyDto], required: false })
+  @IsOptional()
+  companies?: SettlementCompanyDto[]
 }
 
 export class UpdateSettlementDto extends PartialType(SettlementDto) {}

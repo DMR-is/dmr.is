@@ -1,31 +1,24 @@
-import { isString, isUUID } from 'class-validator'
+import { isString } from 'class-validator'
 import z from 'zod'
 
 import {
   baseApplicationSchema,
   baseApplicationSchemaRefined,
 } from '../base/application'
+import { baseEntitySchema } from '../base/base-entity'
 import { metadataSchema } from '../base/metadata'
 import { ApplicationTypeEnum } from '../constants'
 
 export const commonFieldsSchema = z.object({
-  typeId: z.string().optional().nullable(),
-  categoryId: z.string().optional().nullable(),
+  type: baseEntitySchema.optional().nullable(),
+  category: baseEntitySchema.optional().nullable(),
   caption: z.string().optional().nullable(),
   html: z.string().optional().nullable(),
 })
 
 export const commonFieldsSchemaRefined = z.object({
-  typeId: z
-    .uuid('Tegund auglýsingar er nauðsynleg')
-    .refine((id) => isUUID(id), {
-      message: 'Tegund auglýsingar er nauðsynleg',
-    }),
-  categoryId: z
-    .uuid('Flokkur auglýsingar er nauðsynlegur')
-    .refine((id) => isUUID(id), {
-      message: 'Flokkur auglýsingar er nauðsynlegur',
-    }),
+  type: baseEntitySchema,
+  category: baseEntitySchema,
   caption: z
     .string('Yfirskrift er nauðsynleg')
     .refine((caption) => isString(caption) && caption.length > 0, {
@@ -64,7 +57,7 @@ export const commonApplicationWebSchema = commonApplicationAnswers.extend({
     typeOptions: z.array(
       z.object({
         label: z.string(),
-        value: z.string(),
+        value: baseEntitySchema,
       }),
     ),
   }),

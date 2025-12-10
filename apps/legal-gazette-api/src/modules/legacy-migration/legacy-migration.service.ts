@@ -8,15 +8,14 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { IAWSService } from '@dmr.is/modules'
 
 import { LegacyMigrationTokenModel } from '../../models/legacy-migration-token.model'
 import { LegacySubscriberModel } from '../../models/legacy-subscriber.model'
 import { SubscriberDto, SubscriberModel } from '../../models/subscriber.model'
-import {
-  CheckLegacyEmailResult,
-  ILegacyMigrationService,
-} from './legacy-migration.service.interface'
+import { CheckLegacyEmailResponseDto } from './legacy-migration.dto'
+import { ILegacyMigrationService } from './legacy-migration.service.interface'
 
 const TOKEN_EXPIRY_HOURS = 24
 const MAGIC_LINK_BASE_URL =
@@ -49,7 +48,7 @@ export class LegacyMigrationService implements ILegacyMigrationService {
   /**
    * Check if an email exists in the legacy subscriber table
    */
-  async checkLegacyEmail(email: string): Promise<CheckLegacyEmailResult> {
+  async checkLegacyEmail(email: string): Promise<CheckLegacyEmailResponseDto> {
     const normalizedEmail = email.toLowerCase()
 
     const legacyUser = await this.legacySubscriberModel.findOne({
@@ -58,13 +57,13 @@ export class LegacyMigrationService implements ILegacyMigrationService {
 
     if (!legacyUser) {
       return {
-        exists: false,
+        emailExists: false,
         hasKennitala: false,
       }
     }
 
     return {
-      exists: true,
+      emailExists: true,
       hasKennitala: !!legacyUser.nationalId,
     }
   }
@@ -130,7 +129,7 @@ export class LegacyMigrationService implements ILegacyMigrationService {
    */
   async completeMigration(
     token: string,
-    authenticatedNationalId: string,
+    user: DMRUser,
   ): Promise<SubscriberDto> {
     // Find token with associated legacy subscriber
     const migrationToken = await this.legacyMigrationTokenModel.findOne({
@@ -150,7 +149,7 @@ export class LegacyMigrationService implements ILegacyMigrationService {
     }
 
     // Verify that authenticated user matches the token target
-    if (migrationToken.targetNationalId !== authenticatedNationalId) {
+    if (migrationToken.targetNationalId !== user.nationalId) {
       throw new BadRequestException(
         'Innskráður notandi passar ekki við flutningsbeiðni.',
       )
@@ -166,12 +165,13 @@ export class LegacyMigrationService implements ILegacyMigrationService {
     const subscribedAt = legacyUser.isActive ? legacyUser.subscribedAt : null
 
     const [newSubscriber, created] = await this.subscriberModel.findOrCreate({
-      where: { nationalId: authenticatedNationalId },
+      where: { nationalId: user.nationalId },
       defaults: {
-        nationalId: authenticatedNationalId,
-        name: legacyUser.name,
+        nationalId: user.nationalId,
+        name: user.name || legacyUser.name,
         isActive: legacyUser.isActive,
         subscribedAt,
+        legacySubscriberId: legacyUser.id,
       },
     })
 
@@ -207,13 +207,11 @@ export class LegacyMigrationService implements ILegacyMigrationService {
    * Only migrates if the legacy user has the same kennitala and hasn't been migrated yet.
    * Returns null if migration is not possible or if any error occurs.
    */
-  async autoMigrateByKennitala(
-    nationalId: string,
-  ): Promise<SubscriberDto | null> {
+  async autoMigrateByKennitala(user: DMRUser): Promise<SubscriberDto | null> {
     try {
       // Find legacy user by kennitala
       const legacyUser = await this.legacySubscriberModel.findOne({
-        where: { nationalId },
+        where: { nationalId: user.nationalId },
       })
 
       // No legacy user found
@@ -231,10 +229,11 @@ export class LegacyMigrationService implements ILegacyMigrationService {
       const subscribedAt = legacyUser.isActive ? legacyUser.subscribedAt : null
 
       const newSubscriber = await this.subscriberModel.create({
-        nationalId,
-        name: legacyUser.name,
+        nationalId: user.nationalId,
+        name: user.name || legacyUser.name,
         isActive: legacyUser.isActive,
         subscribedAt,
+        legacySubscriberId: legacyUser.id,
       })
 
       // Mark legacy user as migrated

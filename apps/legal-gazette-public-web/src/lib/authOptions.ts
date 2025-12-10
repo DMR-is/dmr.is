@@ -7,7 +7,6 @@ import { decode } from 'jsonwebtoken'
 import { serverFetcher } from '@dmr.is/api-client/fetchers'
 import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
-import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
 import { getLogger } from '@dmr.is/logging-next'
 
 import { getClient } from './api/createClient'
@@ -35,14 +34,14 @@ export const identityServerConfig =
     ? localIdentityServerConfig
     : {
         ...sharedIdentityServerConfig,
-        scope: `openid offline_access profile @dmr.is/lg-public-web`,
+        scope: localIdentityServerConfig.scope,
       }
 
-async function authorize(nationalId?: string, accessToken?: string) {
-  if (!accessToken || !nationalId) {
+async function authorize(nationalId?: string, accessToken?: string, idToken?: string) {
+  if (!accessToken || !nationalId || !idToken) {
     return null
   }
-  const client = getClient(accessToken)
+  const client = getClient(accessToken, idToken)
 
   try {
     const { data: member, error } = await serverFetcher(() =>
@@ -113,24 +112,8 @@ export const authOptions: AuthOptions = {
         }
       }
 
-      if (!isExpired(token.accessToken, !!token.invalid)) {
-        return token
-      }
       return token
-
-      // If token is expired, try to refresh it
-      // Returning new access, refresh and id tokens
-      // On failure, return token.invalid = true
-
-      const redirectUri =
-        process.env.LG_PUBLIC_WEB_URL ?? process.env.IDENTITY_SERVER_LOGOUT_URL
-
-      return refreshAccessToken(
-        token,
-        redirectUri,
-        identityServerConfig.clientId,
-        identityServerConfig.clientSecret,
-      )
+      // Refresh token is handled in middleware
     },
 
     session: async ({ session, token }) => {
@@ -164,7 +147,7 @@ export const authOptions: AuthOptions = {
         }
         const decodedAccessToken = decode(account?.id_token) as JWT
         const nationalId = decodedAccessToken?.nationalId
-        const authMember = await authorize(nationalId, account?.access_token)
+        const authMember = await authorize(nationalId, account?.access_token, account?.id_token)
         // Return false if no user is found
         if (!authMember) {
           return false

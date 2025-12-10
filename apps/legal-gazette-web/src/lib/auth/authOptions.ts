@@ -5,8 +5,8 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { decode } from 'jsonwebtoken'
 
 import { serverFetcher } from '@dmr.is/api-client/fetchers'
-import { identityServerConfig } from '@dmr.is/auth/identityServerConfig'
-import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
+import { identityServerId } from '@dmr.is/auth/identityProvider'
+import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
 import { getLogger } from '@dmr.is/logging-next'
 
 import { getLegalGazetteClient } from '../api/createClient'
@@ -19,12 +19,29 @@ type ErrorWithPotentialReqRes = Error & {
   response?: unknown
 }
 
+export const localIdentityServerConfig = {
+  id: identityServerId,
+  name: 'Iceland authentication service',
+  scope: `openid offline_access profile`,
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  clientId: process.env.LG_WEB_CLIENT_ID!,
+  clientSecret: process.env.LG_WEB_CLIENT_SECRET ?? '',
+}
+
+export const identityServerConfig =
+  process.env.NODE_ENV !== 'production'
+    ? localIdentityServerConfig
+    : {
+        ...sharedIdentityServerConfig,
+        scope: localIdentityServerConfig.scope,
+      }
+
 async function authorize(nationalId?: string, idToken?: string) {
   if (!idToken || !nationalId) {
     return null
   }
 
-  const dmrClient = getLegalGazetteClient('UsersApi', idToken)
+  const dmrClient = getLegalGazetteClient(idToken)
 
   try {
     const { data: member, error } = await serverFetcher(() =>
@@ -80,21 +97,9 @@ export const authOptions: AuthOptions = {
         } as JWT
       }
 
-      if (!isExpired(token.accessToken, !!token.invalid)) {
-        return token
-      }
 
-      // If token is expired, try to refresh it
-      // Returning new access, refresh and id tokens
-      // On failure, return token.invalid = true
-
-      const redirectUri =
-        process.env.LEGAL_GAZETTE_WEB_IDENTITY_SERVER_LOGOUT_URL ??
-        process.env.IDENTITY_SERVER_LOGOUT_URL
-
-      const refreshedToken = await refreshAccessToken(token, redirectUri)
-
-      return refreshedToken
+     return token
+     // Refresh token is handled in middleware
     },
 
     session: async ({ session, token }) => {

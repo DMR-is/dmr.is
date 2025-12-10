@@ -77,7 +77,7 @@ export class RoleGuard implements CanActivate {
       }
 
       req.user = user
-      req.involvedParties = user.involvedParties.map((party) => party.id)
+      req.user.involvedParties = user.involvedParties.map((party) => party.id)
 
       return true
     } catch (error) {

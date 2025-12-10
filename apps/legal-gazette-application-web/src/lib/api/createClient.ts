@@ -8,15 +8,16 @@ import {
 let client: LegalGazetteApplicationWebAPIApi | undefined
 
 export const getLegalGazetteClient = (
-  token: string,
+  accessToken: string,
+  idToken: string,
 ): LegalGazetteApplicationWebAPIApi => {
-  if (typeof window === 'undefined' || !token) {
+  if (typeof window === 'undefined' || !accessToken) {
     return new LegalGazetteApplicationWebAPIApi(
-      config(Configuration, token, 'LGApplicationWeb'),
+      config(Configuration, [accessToken, idToken], 'LGApplicationWeb'),
     )
   }
 
   return (client ??= new LegalGazetteApplicationWebAPIApi(
-    config(Configuration, token, 'LGApplicationWeb'),
+    config(Configuration, [accessToken, idToken], 'LGApplicationWeb'),
   ))
 }

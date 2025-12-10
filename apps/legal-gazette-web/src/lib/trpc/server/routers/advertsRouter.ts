@@ -3,7 +3,8 @@ import { z } from 'zod'
 import { communicationChannelSchema } from '@dmr.is/legal-gazette/schemas'
 import { createTRPCError } from '@dmr.is/trpc/utils/errorHandler'
 
-import { SortDirectionEnum, StatusIdEnum } from '../../../../gen/fetch'
+import { SortDirectionEnum } from '../../../../gen/fetch'
+import { StatusIdEnum } from '../../../constants'
 import { protectedProcedure, router } from '../trpc'
 
 const getAdvertsRequestSchema = z.object({
@@ -12,7 +13,7 @@ const getAdvertsRequestSchema = z.object({
   search: z.string().optional(),
   categoryId: z.array(z.string()).optional(),
   typeId: z.array(z.string()).optional(),
-  statusId: z.array(z.enum(StatusIdEnum)).optional(),
+  statusId: z.array(z.string()).optional(),
   fromDate: z.string().optional(),
   toDate: z.string().optional(),
   sortBy: z.string().optional(),
@@ -51,16 +52,16 @@ export const advertsRouter = router({
   createAdvert: protectedProcedure
     .input(createAdvertDtoSchema)
     .mutation(async ({ ctx, input }) => {
-      return await ctx.adverts.createApi.createAdvert({
+      return await ctx.api.createAdvert({
         createAdvertDto: input,
       })
     }),
   getAdvert: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      // return await ctx.advertsApi.getAdvertById({ id: input.id })
+      // return await ctx.api.getAdvertById({ id: input.id })
       try {
-        const advert = await ctx.advertsApi.getAdvertById({ id: input.id })
+        const advert = await ctx.api.getAdvertById({ id: input.id })
         return advert
       } catch (error) {
         const trpcError = await createTRPCError(error)
@@ -68,7 +69,7 @@ export const advertsRouter = router({
       }
     }),
   getAdvertsCount: protectedProcedure.query(async ({ ctx }) => {
-    return await ctx.advertsApi.getAdvertsCount()
+    return await ctx.api.getAdvertsCount()
   }),
   getAdvertsInProgress: protectedProcedure
     .input(getAdvertsRequestSchema)
@@ -79,7 +80,7 @@ export const advertsRouter = router({
         input.statusId?.includes(status),
       )
 
-      return await ctx.advertsApi.getAdverts({
+      return await ctx.api.getAdverts({
         ...input,
         statusId:
           matchingStatuses.length > 0 ? matchingStatuses : allowedStatuses,
@@ -89,19 +90,19 @@ export const advertsRouter = router({
     .input(getAdvertsRequestSchema)
     .query(
       async ({ ctx, input }) =>
-        await ctx.advertsApi.getAdverts({
+        await ctx.api.getAdverts({
           ...input,
           statusId: [StatusIdEnum.READY_FOR_PUBLICATION],
         }),
     ),
   getCompletedAdverts: protectedProcedure
     .input(getAdvertsRequestSchema)
-    .query(async ({ ctx, input }) => await ctx.advertsApi.getAdverts(input)),
+    .query(async ({ ctx, input }) => await ctx.api.getAdverts(input)),
   updateAdvert: protectedProcedure
     .input(updateAdvertDtoSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, ...rest } = input
-      return await ctx.adverts.updateApi.updateAdvert({
+      return await ctx.api.updateAdvert({
         id: id,
         updateAdvertDto: rest,
       })
@@ -109,7 +110,7 @@ export const advertsRouter = router({
   assignUser: protectedProcedure
     .input(z.object({ id: z.string(), userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return await ctx.adverts.updateApi.assignAdvertToEmployee({
+      return await ctx.api.assignAdvertToEmployee({
         id: input.id,
         userId: input.userId,
       })
@@ -123,11 +124,11 @@ export const advertsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       await Promise.all([
-        await ctx.adverts.updateApi.assignAdvertToEmployee({
+        await ctx.api.assignAdvertToEmployee({
           id: input.id,
           userId: input.userId,
         }),
-        await ctx.adverts.updateApi.moveAdvertToNextStatus({
+        await ctx.api.moveAdvertToNextStatus({
           id: input.id,
         }),
       ])
@@ -135,21 +136,21 @@ export const advertsRouter = router({
   moveToNextStatus: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return await ctx.adverts.updateApi.moveAdvertToNextStatus({
+      return await ctx.api.moveAdvertToNextStatus({
         id: input.id,
       })
     }),
   moveToPreviousStatus: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return await ctx.adverts.updateApi.moveAdvertToPreviousStatus({
+      return await ctx.api.moveAdvertToPreviousStatus({
         id: input.id,
       })
     }),
   rejectAdvert: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return await ctx.adverts.updateApi.rejectAdvert({
+      return await ctx.api.rejectAdvert({
         id: input.id,
       })
     }),

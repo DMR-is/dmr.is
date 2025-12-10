@@ -78,25 +78,23 @@ export class ApplicationService implements IApplicationService {
   ) {
     const parsed = commonApplicationAnswersRefined.parse(application.answers)
 
-    const category = await this.categoryModel.findByPkOrThrow(
-      parsed.fields.categoryId,
-    )
-
     await this.advertService.createAdvert({
       caseId: application.caseId,
       applicationId: application.id,
       createdBy: submittee.nafn,
       createdByNationalId: submittee.kennitala,
-      typeId: parsed.fields.typeId,
-      categoryId: parsed.fields.categoryId,
+      typeId: parsed.fields.type.id,
+      categoryId: parsed.fields.category.id,
       caption: parsed.fields.caption,
       additionalText: parsed.additionalText,
-      signatureName: parsed.signature?.name,
-      signatureOnBehalfOf: parsed.signature?.onBehalfOf,
-      signatureLocation: parsed.signature?.location,
-      signatureDate: parsed.signature?.date,
+      signature: {
+        ...parsed.signature,
+        date: parsed.signature?.date
+          ? new Date(parsed.signature.date)
+          : undefined,
+      },
       content: parsed.fields.html,
-      title: `${category.title} - ${parsed.fields.caption}`,
+      title: parsed.fields.caption,
       communicationChannels: parsed.communicationChannels,
       scheduledAt: parsed.publishingDates,
     })
@@ -153,6 +151,7 @@ export class ApplicationService implements IApplicationService {
         Object.assign(createObj, {
           settlement: {
             dateOfDeath: data.fields.settlementFields.dateOfDeath,
+            type: data.fields.settlementFields.type,
           },
         })
         break
@@ -183,10 +182,10 @@ export class ApplicationService implements IApplicationService {
       categoryId: RECALL_CATEGORY_ID,
       createdBy: submittee.nafn,
       createdByNationalId: submittee.kennitala,
-      signatureName: data.signature?.name,
-      signatureOnBehalfOf: data.signature?.onBehalfOf,
-      signatureLocation: data.signature?.location,
-      signatureDate: data.signature?.date ?? undefined,
+      signature: {
+        ...data.signature,
+        date: data.signature?.date ? new Date(data.signature.date) : undefined,
+      },
       title: title,
       divisionMeetingDate: data.fields.divisionMeetingFields?.meetingDate,
       divisionMeetingLocation:
@@ -238,10 +237,10 @@ export class ApplicationService implements IApplicationService {
       categoryId: CategoryDefaultIdEnum.DIVISION_MEETINGS,
       createdBy: submittee.nafn,
       createdByNationalId: submittee.kennitala,
-      signatureName: body.signature?.name,
-      signatureDate: body.signature?.date,
-      signatureLocation: body.signature?.location,
-      signatureOnBehalfOf: body.signature?.onBehalfOf,
+      signature: {
+        ...body.signature,
+        date: body.signature?.date ? new Date(body.signature.date) : undefined,
+      },
       divisionMeetingDate: body.meetingDate,
       divisionMeetingLocation: body.meetingLocation,
       typeId: TypeIdEnum.DIVISION_MEETING,
@@ -310,10 +309,10 @@ export class ApplicationService implements IApplicationService {
       templateType: AdvertTemplateType.DIVISION_ENDING,
       createdBy: submittee.nafn,
       createdByNationalId: submittee.kennitala,
-      signatureName: body.signature?.name,
-      signatureDate: body.signature?.date,
-      signatureLocation: body.signature?.location,
-      signatureOnBehalfOf: body.signature?.onBehalfOf,
+      signature: {
+        ...body.signature,
+        date: body.signature?.date ? new Date(body.signature.date) : undefined,
+      },
       title: `Skiptalok - ${application.settlement.name}`,
       additionalText: body.additionalText,
       settlementId: application.settlement.id,
@@ -346,6 +345,10 @@ export class ApplicationService implements IApplicationService {
 
     const mergedAnswers = deepmerge(currentAnswers, incomingAnswers, {
       customMerge: (key) => {
+        if (key === 'companies') {
+          return (_current, incoming) => incoming
+        }
+
         if (key === 'publishingDates') {
           return (_current, incoming) => incoming
         }
@@ -490,10 +493,12 @@ export class ApplicationService implements IApplicationService {
       islandIsApplicationId: body.islandIsApplicationId,
       createdBy: submittee.nafn,
       createdByNationalId: submittee.kennitala,
-      signatureName: body.signature.name,
-      signatureDate: body.signature.date,
-      signatureLocation: body.signature.location,
-      signatureOnBehalfOf: body.signature.onBehalfOf,
+      signature: {
+        name: body.signature.name,
+        date: body.signature.date,
+        location: body.signature.location,
+        onBehalfOf: body.signature.onBehalfOf,
+      },
       title: `${category.title} - ${body.caption}`,
       caption: body.caption,
       additionalText: body.additionalText,

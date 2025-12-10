@@ -19,7 +19,7 @@ export const settlementRouter = router({
     .input(updateSettlementSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, ...updateSettlementDto } = input
-      return await ctx.settlementApi.updateSettlement({
+      return await ctx.api.updateSettlement({
         id,
         updateSettlementDto: updateSettlementDto,
       })

@@ -14,6 +14,7 @@ import {
   recallBankruptcyApplicationSchema,
 } from './recall/bankruptcy'
 import {
+  companySchema,
   recallDeceasedAnswers,
   recallDeceasedApplicationSchema,
 } from './recall/deceased'
@@ -58,3 +59,5 @@ export type BaseApplicationWebSchema = z.infer<typeof baseApplicationWebSchema>
 export type RecallApplicationWebSchema = z.infer<
   typeof recallApplicationWebSchema
 >
+
+export type CompanySchema = z.infer<typeof companySchema>

@@ -6,7 +6,6 @@ import { AlertMessage, Tooltip } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { formatDate } from '@dmr.is/utils/client'
 
-import { StatusIdEnum } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
 import { useTRPC } from '../../lib/trpc/client/trpc'
@@ -26,7 +25,7 @@ export const AdvertsInProgress = () => {
       {
         categoryId: params.categoryId,
         typeId: params.typeId,
-        statusId: params.statusId as StatusIdEnum[],
+        statusId: params.statusId,
         search: params.search,
         page: params.page,
         pageSize: params.pageSize,

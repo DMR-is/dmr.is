@@ -1063,6 +1063,26 @@ export class CaseService implements ICaseService {
     return ResultWrapper.ok()
   }
 
+  @LogAndHandle({ logArgs: false })
+  async generatePdfByCase(caseId: string): Promise<Buffer | null> {
+    const advertPdf = await this.pdfService.generatePdfByCaseId(
+      caseId,
+      new Date(),
+      `000/${new Date().getFullYear()}`,
+    )
+
+    if (!advertPdf.result.ok) {
+      this.logger.warn('Failed to get pdf for case', {
+        error: advertPdf.result.error,
+        category: LOGGING_CATEGORY,
+      })
+
+      return null
+    }
+
+    return advertPdf.result.value
+  }
+
   @LogAndHandle()
   @Transactional()
   createCaseChannel(

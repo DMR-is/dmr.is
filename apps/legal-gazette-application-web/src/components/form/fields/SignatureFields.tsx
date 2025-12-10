@@ -28,14 +28,20 @@ export const SignatureFields = () => {
   return (
     <Box id="signature">
       <Stack space={[1, 2]}>
-        <Text variant="h4">Undirritun</Text>
-        {signatureError && (
-          <AlertMessage
-            type="error"
-            title="Fylla þarf út undirritun"
-            message={signatureError.message}
-          />
-        )}
+        <Text variant="h4">
+          Undirritun{' '}
+          <Text fontWeight="regular" color="red600" as="span">
+            *
+          </Text>
+          <Text
+            variant="small"
+            fontWeight={signatureError ? 'semiBold' : 'regular'}
+            color={(signatureError && 'red600') || 'dark400'}
+          >
+            Fylla þarf út nafn, staðsetningu eða dagsetningu undirritunar
+          </Text>
+        </Text>
+
         <GridRow rowGap={[2, 3]}>
           <GridColumn span={['12/12', '6/12']}>
             <InputController

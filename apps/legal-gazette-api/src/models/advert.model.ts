@@ -68,6 +68,12 @@ import {
   SettlementDto,
   SettlementModel,
 } from './settlement.model'
+import {
+  CreateSignatureDto,
+  SignatureCreationAttributes,
+  SignatureDto,
+  SignatureModel,
+} from './signature.model'
 import { StatusDto, StatusIdEnum, StatusModel } from './status.model'
 import { TBRTransactionModel } from './tbr-transactions.model'
 import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
@@ -98,12 +104,6 @@ type AdvertAttributes = {
   legacyHtml?: string | null
   legacyId: string | null
 
-  // signature
-  signatureName?: string | null
-  signatureOnBehalfOf?: string | null
-  signatureLocation?: string | null
-  signatureDate?: Date | null
-
   // Common specific properties
   caption: string | null
   content: string | null
@@ -122,6 +122,7 @@ type AdvertAttributes = {
   status: StatusModel
   case: CaseModel
   settlement?: SettlementModel
+  signature: SignatureModel
   communicationChannels?: CommunicationChannelModel[]
   comments: CommentModel[]
 }
@@ -140,10 +141,7 @@ export type AdvertCreateAttributes = {
   createdByNationalId: string
 
   // signature
-  signatureName?: string | null
-  signatureOnBehalfOf?: string | null
-  signatureLocation?: string | null
-  signatureDate?: Date
+  signature?: SignatureCreationAttributes
 
   // Common specific properties
   additionalText?: string | null
@@ -176,6 +174,7 @@ export type AdvertCreateAttributes = {
     { model: CommunicationChannelModel },
     { model: TBRTransactionModel },
     { model: CommentModel },
+    { model: SignatureModel },
     { model: ForeclosureModel, include: [ForeclosurePropertyModel] },
   ],
   order: [
@@ -438,34 +437,6 @@ export class AdvertModel extends BaseModel<
   createdBy!: string
 
   @Column({
-    type: DataType.STRING(100),
-    allowNull: true,
-  })
-  @ApiProperty({ type: String, required: false, nullable: true })
-  signatureName?: string | null
-
-  @Column({
-    type: DataType.STRING(100),
-    allowNull: true,
-  })
-  @ApiProperty({ type: String, required: false, nullable: true })
-  signatureOnBehalfOf?: string | null
-
-  @Column({
-    type: DataType.TEXT,
-    allowNull: true,
-  })
-  @ApiProperty({ type: String, required: false, nullable: true })
-  signatureLocation?: string | null
-
-  @Column({
-    type: DataType.DATE,
-    allowNull: true,
-  })
-  @ApiProperty({ type: String, required: false, nullable: true })
-  signatureDate?: Date | null
-
-  @Column({
     type: DataType.TEXT,
     allowNull: true,
   })
@@ -535,6 +506,9 @@ export class AdvertModel extends BaseModel<
 
   @BelongsTo(() => UserModel)
   assignedUser?: UserModel
+
+  @HasOne(() => SignatureModel)
+  signature?: SignatureModel
 
   @HasMany(() => AdvertPublicationModel)
   publications!: AdvertPublicationModel[]
@@ -709,10 +683,7 @@ export class AdvertModel extends BaseModel<
       templateType: model.templateType,
       canEdit: this.canEdit(model, userId),
       publicationNumber: model.publicationNumber ?? undefined,
-      signatureOnBehalfOf: model.signatureOnBehalfOf ?? undefined,
-      signatureDate: model.signatureDate?.toISOString(),
-      signatureLocation: model.signatureLocation ?? undefined,
-      signatureName: model.signatureName ?? undefined,
+      signature: model.signature?.fromModel(),
       caption: model.caption ?? undefined,
       content: model.content ?? undefined,
       additionalText: model.additionalText ?? undefined,
@@ -781,26 +752,6 @@ export class AdvertDetailedDto extends DetailedDto {
   @IsOptional()
   @IsString()
   additionalText?: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
-  signatureLocation?: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
-  signatureName?: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
-  signatureOnBehalfOf?: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
-  signatureDate?: string
 
   @ApiProperty({ type: String, required: false })
   @IsOptional()
@@ -879,6 +830,12 @@ export class AdvertDetailedDto extends DetailedDto {
   @Type(() => CommentDto)
   comments!: CommentDto[]
 
+  @ApiProperty({ type: SignatureDto, required: false })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => SignatureDto)
+  signature?: SignatureDto
+
   @ApiProperty({ type: String, required: false })
   @IsOptional()
   @IsString()
@@ -929,27 +886,15 @@ export class GetAdvertsQueryDto extends QueryDto {
   @IsUUID(undefined, { each: true })
   categoryId?: string[]
 
-  @ApiProperty({
-    enum: StatusIdEnum,
-    enumName: 'StatusIdEnum',
-    'x-enumNames': [
-      'Submitted',
-      'ReadyForPublication',
-      'Published',
-      'Rejected',
-      'Withdrawn',
-    ],
-    isArray: true,
-    required: false,
-  })
+  @ApiProperty({ type: [String], required: false })
   @Transform(({ value }) => {
     if (!value) return undefined
     return Array.isArray(value) ? value : [value]
   })
   @IsOptional()
   @IsArray()
-  @IsEnum(StatusIdEnum, { each: true })
-  statusId?: StatusIdEnum[]
+  @IsUUID(undefined, { each: true })
+  statusId?: string[]
 
   @ApiProperty({
     type: [String],
@@ -999,9 +944,6 @@ export class CreateAdvertInternalDto extends PickType(AdvertModel, [
   'legacyHtml',
   'createdBy',
   'createdByNationalId',
-  'signatureName',
-  'signatureOnBehalfOf',
-  'signatureLocation',
   'additionalText',
   'caption',
   'content',
@@ -1038,15 +980,10 @@ export class CreateAdvertInternalDto extends PickType(AdvertModel, [
   @IsDateString()
   signatureDate?: string
 
-  @ApiProperty({
-    enum: StatusIdEnum,
-    enumName: 'StatusIdEnum',
-    required: false,
-    description: 'Status of the advert',
-  })
+  @ApiProperty({ type: String, required: false })
   @IsOptional()
-  @IsEnum(StatusIdEnum)
-  statusId?: StatusIdEnum
+  @IsUUID()
+  statusId?: string
 
   @ApiProperty({
     type: String,
@@ -1070,6 +1007,12 @@ export class CreateAdvertInternalDto extends PickType(AdvertModel, [
   @ArrayMinSize(1)
   @ArrayMaxSize(3)
   scheduledAt!: string[]
+
+  @ApiProperty({ type: CreateSignatureDto, required: false })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateSignatureDto)
+  signature?: CreateSignatureDto
 
   @ApiProperty({
     type: [CreateCommunicationChannelDto],
@@ -1103,10 +1046,6 @@ export class UpdateAdvertDto extends PartialType(
     'content',
     'additionalText',
     'caption',
-    'signatureName',
-    'signatureLocation',
-    'signatureOnBehalfOf',
-    'signatureDate',
     'divisionMeetingDate',
     'divisionMeetingLocation',
     'judgementDate',

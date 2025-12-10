@@ -21,6 +21,7 @@ import {
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import { CommunicationChannelModel } from '../../models/communication-channel.model'
 import { SettlementModel } from '../../models/settlement.model'
+import { SignatureModel } from '../../models/signature.model'
 import { StatusIdEnum } from '../../models/status.model'
 import { UserModel } from '../../models/users.model'
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
@@ -166,6 +167,10 @@ export class AdvertService implements IAdvertService {
   ): Promise<AdvertDetailedDto> {
     const includeArr: Includeable[] = []
 
+    if (body.signature) {
+      includeArr.push({ model: SignatureModel })
+    }
+
     if (body.communicationChannels) {
       includeArr.push({ model: CommunicationChannelModel })
     }
@@ -180,6 +185,7 @@ export class AdvertService implements IAdvertService {
 
     const advert = await this.advertModel.create(
       {
+        applicationId: body.applicationId,
         templateType: body.templateType,
         typeId: body.typeId,
         categoryId: body.categoryId,
@@ -197,13 +203,7 @@ export class AdvertService implements IAdvertService {
           typeof body.judgementDate === 'string'
             ? new Date(body.judgementDate)
             : body.judgementDate,
-        signatureDate:
-          typeof body.signatureDate === 'string'
-            ? new Date(body.signatureDate)
-            : body.signatureDate,
-        signatureLocation: body.signatureLocation,
-        signatureName: body.signatureName,
-        signatureOnBehalfOf: body.signatureOnBehalfOf,
+        signature: body?.signature,
         additionalText: body.additionalText,
         divisionMeetingDate:
           typeof body.divisionMeetingDate === 'string'
@@ -230,6 +230,7 @@ export class AdvertService implements IAdvertService {
               name: body.settlement.name,
               nationalId: body.settlement.nationalId,
               declaredClaims: body.settlement.declaredClaims ?? null,
+              companies: body.settlement.companies,
             }
           : undefined,
       },
@@ -312,13 +313,6 @@ export class AdvertService implements IAdvertService {
       categoryId: category ? category.id : body.categoryId,
       title: body.title,
       content: body.content,
-      signatureDate:
-        typeof body.signatureDate === 'string'
-          ? new Date(body.signatureDate)
-          : body.signatureDate,
-      signatureLocation: body.signatureLocation,
-      signatureName: body.signatureName,
-      signatureOnBehalfOf: body.signatureOnBehalfOf,
       additionalText: body.additionalText,
       divisionMeetingDate:
         typeof body.divisionMeetingDate === 'string'

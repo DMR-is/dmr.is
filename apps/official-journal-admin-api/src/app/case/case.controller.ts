@@ -1,3 +1,5 @@
+import { Response } from 'express'
+
 import {
   Body,
   Controller,
@@ -11,6 +13,7 @@ import {
   Post,
   Put,
   Query,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -40,10 +43,7 @@ import {
   IJournalService,
   IPriceService,
 } from '@dmr.is/modules'
-import {
-  RoleGuard,
-  TokenJwtAuthGuard,
-} from '@dmr.is/modules/guards/auth'
+import { RoleGuard, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 import {
   EnumValidationPipe,
   FileTypeValidationPipe,
@@ -919,5 +919,38 @@ export class CaseController {
     @Body() body: PostApplicationAssetBody,
   ): Promise<PresignedUrlResponse> {
     return (await this.caseService.uploadAttachments(body.key)).unwrap()
+  }
+
+  @Get(':id/pdf-preview')
+  @ApiOperation({ operationId: 'getCasePdfPreview' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the generated pdf as a binary.',
+    content: {
+      'application/pdf': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  async getCasePdfPreview(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Res() res: Response,
+  ) {
+    const pdf = await this.caseService.generatePdfByCase(id)
+
+    if (!pdf) {
+      throw new HttpException('PDF generation failed', 500)
+    }
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="case-preview.pdf"`,
+      'Content-Length': pdf.length,
+    })
+
+    res.send(pdf)
   }
 }

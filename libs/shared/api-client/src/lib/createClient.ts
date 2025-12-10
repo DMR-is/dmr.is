@@ -28,13 +28,29 @@ const getPath = (client: WebClient) => {
 
 type CParameters = {
   fetchApi: (url: RequestInfo | URL, init?: RequestInit) => Promise<Response>
-  accessToken: string
+  accessToken: string | (() => string)
+  idToken?: string
   basePath: string
+}
+
+const getAccessToken = (tokens: string | Array<string>) => {
+  if (Array.isArray(tokens)) {
+    if (tokens.length === 1) {
+      return tokens[0]
+    }
+    return tokens.map((t, i) =>{
+      if (i === 0) {
+        return t
+      }
+      return `, Bearer ${t}`
+    }).join('')
+  }
+  return tokens
 }
 
 export const config = <Configuration>(
   Configuration: new (config?: CParameters) => Configuration,
-  token: string,
+  token: string | Array<string>,
   client: WebClient,
 ) => {
   const fetchWithCookie = createEnhancedFetch()
@@ -46,31 +62,32 @@ export const config = <Configuration>(
 
       return fetchWithCookie(finalUrl, init)
     },
-    accessToken: token,
+    accessToken: getAccessToken(token),
     basePath: getPath(client),
   })
 }
 
 let dmrClient: {
   client: unknown
-  token: string
+  token: string | Array<string>
 }
 
 export const getDmrClient = <DefaultApi, Configuration>(
   DefaultApi: new (config: Configuration) => DefaultApi,
   Configuration: new (config?: CParameters) => Configuration,
-  token: string,
+  token: string | Array<string>,
   client: WebClient = 'OJOIAdmin',
 ): DefaultApi => {
+  const tokenString = getAccessToken(token)
   if (typeof window === 'undefined') {
-    return new DefaultApi(config(Configuration, token, client))
+    return new DefaultApi(config(Configuration, tokenString, client))
   }
-  if (dmrClient && dmrClient.token === token) {
+  if (dmrClient && dmrClient.token === tokenString) {
     return dmrClient.client as DefaultApi
   }
   dmrClient = {
-    client: new DefaultApi(config(Configuration, token, client)),
-    token,
+    client: new DefaultApi(config(Configuration, tokenString, client)),
+    token: tokenString,
   }
 
   return dmrClient.client as DefaultApi

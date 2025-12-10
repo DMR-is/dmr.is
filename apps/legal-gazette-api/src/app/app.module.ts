@@ -34,37 +34,24 @@ import { IssueSettingsModel } from '../models/issues-settings.model'
 import { LegacyMigrationTokenModel } from '../models/legacy-migration-token.model'
 import { LegacySubscriberModel } from '../models/legacy-subscriber.model'
 import { SettlementModel } from '../models/settlement.model'
+import { SignatureModel } from '../models/signature.model'
 import { StatusModel } from '../models/status.model'
 import { SubscriberModel } from '../models/subscriber.model'
 import { TBRTransactionModel } from '../models/tbr-transactions.model'
 import { TypeModel } from '../models/type.model'
 import { TypeCategoriesModel } from '../models/type-categories.model'
 import { UserModel } from '../models/users.model'
-import { AdvertControllerModule } from '../modules/advert/advert.controller.module'
 import { IssuesControllerModule } from '../modules/advert/issues/issues.controller.module'
-import { PublicationControllerModule } from '../modules/advert/publications/publication.controller.module'
+import { SignatureControllerModule } from '../modules/advert/signature/signature.controller.module'
 import { StatisticsControllerModule } from '../modules/advert/statistics/statistics.controller.module'
-import { ApplictionControllerModule } from '../modules/applications/application.controller.module'
-import { BaseEntityControllerModule } from '../modules/base-entity/base-entity.controller.module'
-import { CategoryControllerModule } from '../modules/base-entity/category/category.controller.module'
-import { CourtDistrictControllerModule } from '../modules/base-entity/court-district/court-district.controller.module'
-import { StatusControllerModule } from '../modules/base-entity/status/status.controller.module'
-import { TypeControllerModule } from '../modules/base-entity/type/type.controller.module'
-import { CaseControllerModule } from '../modules/case/case.controller.module'
-import { CommentControllerModule } from '../modules/comment/comment.controller.module'
 import { CommunicationChannelControllerModule } from '../modules/communication-channel/communication-channel.module'
-import { CompanyControllerModule } from '../modules/external-systems/company/company.controller.module'
-import { ForeclosureControllerModule } from '../modules/external-systems/foreclosure/foreclosure.controller.module'
 import { LegacyMigrationControllerModule } from '../modules/legacy-migration/legacy-migration.controller.module'
 import { LGNationalRegistryControllerModule } from '../modules/national-registry/national-registry.controller.module'
-import { SettlementControllerModule } from '../modules/settlement/settlement.controller.module'
-import { SubscriberControllerModule } from '../modules/subscribers/subscriber.controller.module'
 import { ApplicationWebSwaggerModule } from '../modules/swagger/application-web.swagger.module'
 import { ExternalSystemsSwaggerModule } from '../modules/swagger/external-systems.swagger.module'
+import { InternalWebSwaggerModule } from '../modules/swagger/internal-web.swagger.module'
 import { IslandIsApplicationSwaggerModule } from '../modules/swagger/island-is-application.swagger.module'
 import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.module'
-import { TypesCategoriesControllerModule } from '../modules/type-categories/type-categories.module'
-import { UserControllerModule } from '../modules/users/users.controller.module'
 
 @Module({
   imports: [
@@ -110,6 +97,7 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
             IssueSettingsModel,
             LegacySubscriberModel,
             LegacyMigrationTokenModel,
+            SignatureModel,
           ],
         }),
       ],
@@ -117,32 +105,12 @@ import { UserControllerModule } from '../modules/users/users.controller.module'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    CategoryControllerModule,
-    TypeControllerModule,
-    StatusControllerModule,
-    CourtDistrictControllerModule,
-    BaseEntityControllerModule,
-    CompanyControllerModule,
-    CaseControllerModule,
-    AdvertControllerModule,
-    PublicationControllerModule,
-    SubscriberControllerModule,
-    UserControllerModule,
-    ApplictionControllerModule,
-    TypesCategoriesControllerModule,
-    SettlementControllerModule,
-    CommentControllerModule,
-    ForeclosureControllerModule,
     HealthModule,
     ApplicationWebSwaggerModule,
     ExternalSystemsSwaggerModule,
+    InternalWebSwaggerModule,
     IslandIsApplicationSwaggerModule,
     PublicWebSwaggerModule,
-    CommunicationChannelControllerModule,
-    StatisticsControllerModule,
-    LGNationalRegistryControllerModule,
-    IssuesControllerModule,
-    LegacyMigrationControllerModule,
     {
       module: AuthModule,
       global: true,

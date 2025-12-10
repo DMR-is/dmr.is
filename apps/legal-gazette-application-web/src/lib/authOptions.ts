@@ -6,7 +6,6 @@ import { decode } from 'jsonwebtoken'
 
 import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
-import { isExpired, refreshAccessToken } from '@dmr.is/auth/token-service'
 
 const SESION_TIMEOUT = 60 * 60 // 1 hour
 
@@ -24,7 +23,7 @@ export const identityServerConfig =
     ? localIdentityServerConfig
     : {
         ...sharedIdentityServerConfig,
-        scope: `openid offline_access profile @dmr.is/lg-application-web`,
+        scope: localIdentityServerConfig.scope,
       }
 
 export const authOptions: AuthOptions = {
@@ -51,25 +50,8 @@ export const authOptions: AuthOptions = {
         } as JWT
       }
 
-      if (!isExpired(token.accessToken, !!token.invalid)) {
-        return token
-      }
       return token
-
-      // If token is expired, try to refresh it
-      // Returning new access, refresh and id tokens
-      // On failure, return token.invalid = true
-
-      const redirectUri =
-        process.env.LG_APPLICATION_WEB_URL ??
-        process.env.IDENTITY_SERVER_LOGOUT_URL
-
-      return refreshAccessToken(
-        token,
-        redirectUri,
-        identityServerConfig.clientId,
-        identityServerConfig.clientSecret,
-      )
+      // Refresh token is handled in middleware
     },
 
     session: async ({ session, token }) => {

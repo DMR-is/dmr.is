@@ -47,6 +47,35 @@ export const RecallRequirementStatementFields = () => {
     )
   }, [liquidatorLocation, customLiquidatorType, setValue])
 
+  const onChangeStatementType = (
+    statementType: ApplicationRequirementStatementEnum,
+  ) => {
+    const location =
+      statementType === ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
+        ? liquidatorLocation
+        : ''
+
+    setValue(
+      'fields.settlementFields.recallRequirementStatementLocation',
+      location,
+    )
+
+    updateApplication(
+      {
+        fields: {
+          settlementFields: {
+            recallRequirementStatementType: statementType,
+            recallRequirementStatementLocation: location,
+          },
+        },
+      },
+      {
+        successMessage: 'Val á kröfulýsingu vistað',
+        errorMessage: 'Ekki tókst að vista val á kröfulýsingu',
+      },
+    )
+  }
+
   return (
     <GridRow rowGap={[2, 3]}>
       <GridColumn span="12/12">
@@ -58,49 +87,9 @@ export const RecallRequirementStatementFields = () => {
           name={'fields.settlementFields.recallRequirementStatementType'}
           label="Kröfulýsingar"
           required
-          onChange={(val) => {
-            updateApplication(
-              {
-                fields: {
-                  settlementFields: {
-                    recallRequirementStatementType:
-                      val as ApplicationRequirementStatementEnum,
-                  },
-                },
-              },
-              {
-                successMessage: 'Val á kröfulýsingu vistað',
-                errorMessage: 'Ekki tókst að vista val á kröfulýsingu',
-              },
-            )
-            if (
-              val === ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
-            ) {
-              setValue(
-                'fields.settlementFields.recallRequirementStatementLocation',
-                liquidatorLocation,
-              )
-              updateApplication({
-                fields: {
-                  settlementFields: {
-                    recallRequirementStatementLocation: liquidatorLocation,
-                  },
-                },
-              })
-            } else {
-              setValue(
-                'fields.settlementFields.recallRequirementStatementLocation',
-                '',
-              )
-              updateApplication({
-                fields: {
-                  settlementFields: {
-                    recallRequirementStatementLocation: '',
-                  },
-                },
-              })
-            }
-          }}
+          onChange={(val) =>
+            onChangeStatementType(val as ApplicationRequirementStatementEnum)
+          }
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
