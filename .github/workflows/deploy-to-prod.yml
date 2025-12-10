@@ -33,4 +33,4 @@ jobs:
           AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
           VERSION_TAG: ${{ github.event.inputs.version-tag }}
           PAT: ${{ secrets.DMR_ACCOUNT_PAT }}
-          SERVICES: official-journal-api official-journal-admin-api official-journal-application-api official-journal-web regulations-api
+          SERVICES: official-journal-api official-journal-admin-api official-journal-application-api official-journal-web regulations-api legal-gazette-api legal-gazette-web legal-gazette-application-web legal-gazette-public-web
