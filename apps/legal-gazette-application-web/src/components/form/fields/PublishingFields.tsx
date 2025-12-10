@@ -1,9 +1,11 @@
 import addDays from 'date-fns/addDays'
 import addYears from 'date-fns/addYears'
-import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
+import {
+  BaseApplicationWebSchema,
+  RecallApplicationWebSchema,
+} from '@dmr.is/legal-gazette/schemas'
 import {
   AlertMessage,
   Box,
@@ -16,82 +18,77 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
-import { ONE_DAY, TWO_WEEKS } from '../../../lib/constants'
+import { TWO_WEEKS } from '../../../lib/constants'
 import { getNextWeekday, getWeekendDays } from '../../../lib/utils'
 import { DatePickerController } from '../controllers/DatePickerController'
 
 type Props = {
   additionalTitle?: string
-  alert?: React.ReactElement<typeof AlertMessage>
+  applicationType?: 'COMMON' | 'RECALL'
 }
 
-export const PublishingFields = ({ additionalTitle, alert }: Props) => {
-  const { getValues, watch, setValue, formState } =
-    useFormContext<BaseApplicationWebSchema>()
+export const PublishingFields = ({
+  additionalTitle,
+  applicationType = 'COMMON',
+}: Props) => {
+  const { getValues, watch, setValue, formState } = useFormContext<
+    BaseApplicationWebSchema | RecallApplicationWebSchema
+  >()
 
   const { metadata } = getValues()
 
   const { updateApplication } = useUpdateApplication({
     id: metadata.applicationId,
-    type: 'COMMON',
+    type: applicationType,
   })
+  const currentDates = watch('publishingDates') ?? []
 
-  const currentDates =
-    watch('publishingDates', getValues('publishingDates')) || []
+  const updatePublishingDates = (newDates: string[]) => {
+    setValue('publishingDates', newDates)
 
-  const [dateState, setDateState] = useState(currentDates)
+    if (applicationType === 'RECALL') {
+      setValue('fields.divisionMeetingFields.meetingDate', null)
+    }
+
+    const payload =
+      applicationType === 'RECALL'
+        ? {
+            publishingDates: newDates,
+            fields: {
+              divisionMeetingFields: {
+                meetingDate: null,
+              },
+            },
+          }
+        : { publishingDates: newDates }
+
+    updateApplication(payload, {
+      successMessage: 'Birtingardagar vistaðir',
+      errorMessage: 'Ekki tókst að vista birtingardaga',
+    })
+  }
 
   const addDate = () => {
-    if (dateState.length >= 3) return
+    if (currentDates.length > 2) return
 
     const lastDate =
-      dateState.length > 0
-        ? new Date(dateState[dateState.length - 1])
+      currentDates.length > 0
+        ? new Date(currentDates[currentDates.length - 1])
         : new Date()
     const newDate = getNextWeekday(addDays(lastDate, TWO_WEEKS))
-    const newDates = [...dateState, newDate.toISOString()]
-    setDateState(newDates)
-    setValue('publishingDates', newDates)
-    updateApplication(
-      {
-        publishingDates: newDates,
-      },
-      {
-        successMessage: 'Birtingardegi bætt við',
-        errorMessage: 'Ekki tókst að bæta við birtingardegi',
-      },
-    )
+    const newDates = [...currentDates, newDate.toISOString()]
+    updatePublishingDates(newDates)
   }
 
   const removeDate = (index: number) => {
-    const newDates = dateState.filter((_, i) => i !== index)
-    setValue('publishingDates', newDates)
-    setDateState(newDates)
-    updateApplication(
-      {
-        publishingDates: newDates,
-      },
-      {
-        successMessage: 'Birtingardagur fjarlægður',
-        errorMessage: 'Ekki tókst að fjarlægja birtingardag',
-      },
-    )
+    const newDates = currentDates.filter((_, i) => i !== index)
+    updatePublishingDates(newDates)
   }
 
   const onDateChange = (date: Date, index: number) => {
-    const newDates = [...dateState]
+    const newDates = [...currentDates]
     newDates[index] = date.toISOString()
-    setDateState(newDates)
-    setValue('publishingDates', newDates)
-    updateApplication(
-      {
-        publishingDates: newDates,
-      },
-      {
-        successMessage: 'Birtingardagur uppfærður',
-        errorMessage: 'Ekki tókst að uppfæra birtingardag',
-      },
-    )
+    updatePublishingDates(newDates)
   }
 
   const signatureError = formState.errors.publishingDates
@@ -118,9 +115,9 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
         </GridColumn>
         <GridColumn span="12/12">
           <Stack space={[2, 3]}>
-            {currentDates.map((date, index) => {
+            {currentDates?.map((date, index) => {
               const prevDate = index === 0 ? null : currentDates[index - 1]
-              const maxDate = addYears(new Date(), ONE_DAY)
+              const maxDate = addYears(new Date(), 1)
 
               const minDate =
                 index === 0
@@ -156,7 +153,7 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
                     iconType="outline"
                     size="default"
                     colorScheme="destructive"
-                    disabled={dateState.length <= 1}
+                    disabled={currentDates.length <= 1}
                     onClick={() => removeDate(index)}
                   />
                 </Inline>
@@ -168,7 +165,7 @@ export const PublishingFields = ({ additionalTitle, alert }: Props) => {
               iconType="outline"
               size="small"
               onClick={addDate}
-              disabled={dateState.length >= 3}
+              disabled={currentDates.length >= 3}
             >
               Bæta við birtingardegi
             </Button>
