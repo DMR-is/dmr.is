@@ -1,11 +1,14 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { getLogger } from '@dmr.is/logging'
 
+import { LegalGazetteEvents } from '../../core/constants'
 import { SubscriberDto, SubscriberModel } from '../../models/subscriber.model'
 import { ILegacyMigrationService } from '../legacy-migration/legacy-migration.service.interface'
+import { SubscriberCreatedEvent } from './events/subscriber-created.event'
 import { ISubscriberService } from './subscriber.service.interface'
 
 const logger = getLogger('SubscriberService')
@@ -17,6 +20,7 @@ export class SubscriberService implements ISubscriberService {
     private readonly subscriberModel: typeof SubscriberModel,
     @Inject(ILegacyMigrationService)
     private readonly legacyMigrationService: ILegacyMigrationService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async createSubscriber(user: DMRUser): Promise<SubscriberDto> {
@@ -25,7 +29,16 @@ export class SubscriberService implements ISubscriberService {
       name: user.name || null,
       isActive: false,
     })
-    return subscriber.fromModel()
+
+    const subscriberDto = subscriber.fromModel()
+
+    // Emit event for payment processing
+    this.eventEmitter.emit(LegalGazetteEvents.SUBSCRIBER_CREATED, {
+      subscriber: subscriberDto,
+      isLegacyMigration: false,
+    } as SubscriberCreatedEvent)
+
+    return subscriberDto
   }
 
   async getUserByNationalId(user: DMRUser): Promise<SubscriberDto> {
@@ -47,6 +60,13 @@ export class SubscriberService implements ISubscriberService {
         logger.info('Auto-migrated legacy subscriber', {
           nationalId: user.nationalId,
         })
+
+        // Emit event for legacy migration (no payment needed)
+        this.eventEmitter.emit(LegalGazetteEvents.SUBSCRIBER_CREATED, {
+          subscriber: migratedSubscriber,
+          isLegacyMigration: true,
+        } as SubscriberCreatedEvent)
+
         return migratedSubscriber
       }
     } catch (error) {
