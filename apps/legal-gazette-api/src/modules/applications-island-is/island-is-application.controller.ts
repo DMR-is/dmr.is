@@ -10,9 +10,6 @@ import { CurrentNationalRegistryPersonGuard } from '../../core/guards/current-su
 import { IslandIsSubmitApplicationDto } from '../../models/application.model'
 import { IApplicationService } from '../applications/application.service.interface'
 
-// NOTE: This controller is for island.is application submissions - uses CurrentNationalRegistryPersonGuard
-// Therefore we need to disable the local rule eslint
-/* eslint-disable local-rules/require-controller-auth-decorators */
 @Controller({
   path: 'applications/island-is',
   version: '1',

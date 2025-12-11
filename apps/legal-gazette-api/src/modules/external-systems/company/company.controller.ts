@@ -12,8 +12,6 @@ import {
 } from '../external-systems.dto'
 import { ICompanyService } from './company.service.interface'
 
-// NOTE: This controller uses MachineClientGuard - for external system integrations only
-/* eslint-disable local-rules/require-controller-auth-decorators */
 @Controller({
   path: 'companies',
   version: '1',
