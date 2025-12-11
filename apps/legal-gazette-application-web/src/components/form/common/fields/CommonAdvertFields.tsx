@@ -53,16 +53,14 @@ export const CommonAdvertFields = () => {
 
   useEffect(() => {
     if (!categoriesData?.categories || !formState.isDirty) return
+    const newCategory = categoriesData.categories[0]
+    setValue('fields.category', newCategory)
 
     const fields: UpdateApplicationAnswers<'COMMON'>['fields'] = {
       type: getValues('fields.type'),
+      category: newCategory,
     }
 
-    if (categoriesData.categories.length === 1) {
-      const newCategory = categoriesData.categories[0]
-      setValue('fields.category', newCategory)
-      fields.category = newCategory
-    }
     updateApplication(
       { fields: fields },
       {
