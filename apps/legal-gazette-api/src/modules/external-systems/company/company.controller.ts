@@ -12,7 +12,6 @@ import {
 } from '../external-systems.dto'
 import { ICompanyService } from './company.service.interface'
 
-// NOTE: This controller uses MachineClientGuard - for external system integrations only
 @Controller({
   path: 'companies',
   version: '1',

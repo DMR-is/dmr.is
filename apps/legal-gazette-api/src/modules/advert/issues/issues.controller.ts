@@ -1,9 +1,11 @@
 import { Controller, Get, Inject, Query } from '@nestjs/common'
 
+import { PublicController } from '../../../core/decorators'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { GetIssuesDto, GetIssuesQuery } from '../../../models/issues.model'
 import { IIssuesService } from './issues.service.interface'
 
+@PublicController()
 @Controller({
   path: 'issues',
   version: '1',
