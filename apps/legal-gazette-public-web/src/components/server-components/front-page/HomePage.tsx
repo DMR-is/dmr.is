@@ -24,17 +24,17 @@ export const HomePage = async () => {
     {
       title: 'Innköllun þrotabúa',
       href: '/auglysingar?typeId=065c3fd9-58d1-436f-9fb8-c1f5c214fa50&categoryId=7d0e4b20-2fdd-4ca9-895b-9e7792eca6e5',
-      variant: 'purple',
+      variant: 'blue',
     },
     {
       title: 'Innköllun dánarbúa',
       href: '/auglysingar?typeId=bc6384f4-91b0-48fe-9a3a-b528b0aa6468&categoryId=7d0e4b20-2fdd-4ca9-895b-9e7792eca6e5',
-      variant: 'purple',
+      variant: 'blue',
     },
     {
       title: 'Útgefin tölublöð',
-      href: '/sidur/prentudutgafa',
-      variant: 'darkerBlue',
+      href: '/sidur/utgefintolublod',
+      variant: 'purple',
     },
   ]
 

@@ -22,10 +22,13 @@ import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { isDate } from '../../../../lib/utils'
 
 import { useQuery } from '@tanstack/react-query'
+
 export const SearchSidebar = () => {
   const trpc = useTRPC()
   const { filters, setFilters, reset } = useFilters()
-  const MIN_DATE = new Date('1970-01-01')
+  const THIS_YEAR = new Date().getFullYear()
+  const MIN_DATE = new Date('2000-01-01')
+  const MIN_YEAR = MIN_DATE.getFullYear()
   const [timestamp, setTimestamp] = useState(new Date().getTime())
   const [categorySelected, setCategorySelected] =
     useState<Option<string> | null>(null)
@@ -130,6 +133,7 @@ export const SearchSidebar = () => {
               setFilters({
                 ...filters,
                 page: null,
+                typeId: null,
                 categoryId: options?.value ? [options.value] : null,
               })
             }}
@@ -161,6 +165,8 @@ export const SearchSidebar = () => {
             minDate={MIN_DATE}
             maxDate={new Date()}
             handleChange={(date) => updateDate('dateFrom', date)}
+            minYear={MIN_YEAR}
+            maxYear={THIS_YEAR}
           />
           <DatePicker
             locale="is"
@@ -171,6 +177,8 @@ export const SearchSidebar = () => {
             minDate={filters.dateFrom ? filters.dateFrom : MIN_DATE}
             maxDate={new Date()}
             handleChange={(date) => updateDate('dateTo', date)}
+            minYear={MIN_YEAR}
+            maxYear={THIS_YEAR}
           />
           <Select
             label="Fjöldi niðurstaða"
