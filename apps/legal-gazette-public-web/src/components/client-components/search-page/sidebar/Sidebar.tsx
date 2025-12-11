@@ -1,7 +1,8 @@
 'use client'
 
+import { de } from 'date-fns/locale'
 import debounce from 'lodash/debounce'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import {
   Button,
@@ -14,6 +15,8 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
+import { Option } from '@island.is/island-ui/core'
+
 import { useFilters } from '../../../../hooks/useFilters'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { isDate } from '../../../../lib/utils'
@@ -24,6 +27,9 @@ export const SearchSidebar = () => {
   const { filters, setFilters, reset } = useFilters()
   const MIN_DATE = new Date('1970-01-01')
   const [timestamp, setTimestamp] = useState(new Date().getTime())
+  const [categorySelected, setCategorySelected] =
+    useState<Option<string> | null>(null)
+  const [typeSelected, setTypeSelected] = useState<Option<string> | null>(null)
 
   const debouncedSetFilters = useCallback(
     debounce(
@@ -43,15 +49,14 @@ export const SearchSidebar = () => {
     setFilters({ ...filters, [key]: date })
   }
 
-  const { data: typeData, isPaused: isLoadingTypes } = useQuery(
-    trpc.getTypes.queryOptions(),
+  const { data: typeData, isLoading: isLoadingTypes } = useQuery(
+    trpc.getTypes.queryOptions({
+      category: filters.categoryId?.length ? filters.categoryId[0] : undefined,
+    }),
   )
 
   const { data: categoryData, isPaused: isLoadingCategories } = useQuery(
-    trpc.getCategories.queryOptions(
-      { type: filters.typeId ?? undefined },
-      { enabled: !!filters.typeId },
-    ),
+    trpc.getCategories.queryOptions(),
   )
 
   const typeOptions = typeData?.types.map((type) => ({
@@ -59,16 +64,25 @@ export const SearchSidebar = () => {
     value: type.id,
   }))
 
-  const defaultType = typeOptions?.find((t) => t.value === filters.typeId)
+  useEffect(() => {
+    const filterCategory = filters.categoryId?.length
+      ? categoryOptions?.find((cat) => cat.value === filters.categoryId?.[0])
+      : null
+
+    setCategorySelected(filterCategory || null)
+  }, [categoryData, filters.categoryId])
+
+  useEffect(() => {
+    const filterType = typeOptions?.find(
+      (type) => type.value === filters.typeId,
+    )
+    setTypeSelected(filterType || null)
+  }, [typeData, filters.typeId])
 
   const categoryOptions = categoryData?.categories.map((cat) => ({
     label: cat.title,
     value: cat.id,
   }))
-
-  const defaultCategories = categoryOptions?.filter((c) =>
-    filters.categoryId?.includes(c.value),
-  )
 
   const totalResultsOptions = Array.from(
     { length: 5 },
@@ -82,7 +96,7 @@ export const SearchSidebar = () => {
     <Stack space={[1, 2]} key={timestamp}>
       <Text variant="h4">Leit</Text>
       <Input
-        placeholder="Leit í Lögbirtingablaðinu"
+        placeholder="Sláðu inn leitarorð"
         name="search"
         size="sm"
         defaultValue={filters.search || ''}
@@ -102,41 +116,41 @@ export const SearchSidebar = () => {
           Hreinsa síur
         </Button>
       </Inline>
+
       <Select
-        key={`filters.typeId-${isLoadingTypes ? 'loading' : 'loaded'}`}
+        isLoading={isLoadingCategories}
         isClearable
-        isLoading={isLoadingTypes}
-        label="Tegund"
-        options={typeOptions || []}
+        label="Flokkur"
+        placeholder="Allir flokkar"
+        options={categoryOptions || []}
+        value={categorySelected}
         size="xs"
-        defaultValue={defaultType || null}
-        onChange={(opt) => {
-          if (!opt) {
-            return setFilters({ ...filters, typeId: null, categoryId: [] })
-          }
+        onChange={(options) => {
           setFilters({
             ...filters,
-            typeId: opt.value as string,
-            categoryId: [],
+            page: null,
+            categoryId: options?.value ? [options.value] : null,
           })
         }}
       />
+
       <Select
-        key={`filters.categoryId-${filters.typeId}-${categoryOptions?.length}`}
-        isLoading={isLoadingCategories}
-        placeholder={!filters.typeId ? 'Veldu tegund fyrst' : 'Veldu flokka'}
-        noOptionsMessage="Veldu tegund fyrst"
-        isMulti
         isClearable
-        label="Flokkur"
-        defaultValue={defaultCategories || []}
-        options={categoryOptions || []}
+        isLoading={isLoadingTypes}
+        label="Tegund"
+        placeholder="Allar tegundir"
+        options={typeOptions || []}
         size="xs"
-        onChange={(options) => {
-          const incoming = options.map((opt) => opt.value as string)
-          setFilters({ ...filters, categoryId: incoming })
+        value={typeSelected}
+        onChange={(opt) => {
+          setFilters({
+            ...filters,
+            page: null,
+            typeId: opt?.value || null,
+          })
         }}
       />
+
       <DatePicker
         locale="is"
         label="Dagsetning frá"

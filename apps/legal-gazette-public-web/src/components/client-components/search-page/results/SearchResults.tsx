@@ -39,13 +39,13 @@ export const SearchResults = () => {
       <AlertMessage
         type="error"
         title="Villa kom upp"
-        message="Ekki tókst að sækja birtingar, vinsamlegast reynið aftur síðar"
+        message={error.message}
       />
     )
   }
 
   return (
-    <Stack space={[2, 3, 4]}>
+    <Stack space={[2]}>
       <Box>
         <Text marginBottom={[2, 3]} variant="h1">
           Leit í lögbirtingablaðinu

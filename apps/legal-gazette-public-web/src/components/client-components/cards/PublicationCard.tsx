@@ -19,43 +19,49 @@ type Props = {
 export const PublicationCard = ({ publication }: Props) => {
   return (
     <Box padding={3} background="white" borderRadius="large" border="standard">
-      <Stack space={2}>
-        <Inline justifyContent="spaceBetween">
+      <Stack space={0}>
+        <Inline
+          justifyContent="spaceBetween"
+          alignY="center"
+          flexWrap="nowrap"
+          space={2}
+        >
           {/* <Text color="purple400" variant="eyebrow">
             {publication.createdBy}
           </Text> */}
-          <Text color="purple400" variant="eyebrow">
-            Útgáfudagur:{' '}
+          <Text variant="h4">{publication.title}</Text>
+          <Text variant="small" title="Útgáfudagur">
             {format(new Date(publication.publishedAt), 'dd. MMMM yyyy', {
               locale: is,
             })}
           </Text>
         </Inline>
-        <Stack space={0}>
-          <Text variant="h3">{publication.title}</Text>
-          <Text variant="default">{publication.publicationNumber}</Text>
-        </Stack>
-        <Inline justifyContent="spaceBetween">
-          <Inline space={1} alignY="center">
-            <Tag
-              href={`/auglysingar?typeId=${publication.type.id}`}
-              variant="blueberry"
+        <Stack space={2}>
+          <Text variant="small" title="Útgáfunúmer">
+            {publication.publicationNumber}
+          </Text>
+          <Inline justifyContent="spaceBetween" alignY={'bottom'}>
+            <Inline space={1} alignY="center">
+              <Tag
+                href={`/auglysingar?categoryId=${publication.category.id}`}
+                variant="blue"
+              >
+                {publication.category.title}
+              </Tag>
+              <Tag
+                href={`/auglysingar?typeId=${publication.type.id}`}
+                variant="blueberry"
+              >
+                {publication.type.title}
+              </Tag>
+            </Inline>
+            <ArrowLink
+              href={`/auglysingar/${publication.advertId}/${publication.version}`}
             >
-              {publication.type.title}
-            </Tag>
-            <Tag
-              href={`/auglysingar?categoryId=${publication.category.id}`}
-              variant="blue"
-            >
-              {publication.category.title}
-            </Tag>
+              Sjá nánar
+            </ArrowLink>
           </Inline>
-          <ArrowLink
-            href={`/auglysingar/${publication.advertId}/${publication.version}`}
-          >
-            Sjá nánar
-          </ArrowLink>
-        </Inline>
+        </Stack>
       </Stack>
     </Box>
   )

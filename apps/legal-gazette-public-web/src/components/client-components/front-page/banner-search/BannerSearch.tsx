@@ -43,7 +43,7 @@ export const BannerSearch = ({ quickLinks }: Props) => {
   return (
     <GridContainer>
       <GridRow>
-        <GridColumn span={['1/1', '1/1', '1/1', '9/12', '7/12']}>
+        <GridColumn span={['1/1', '1/1', '1/1', '9/12', '7/12']} paddingTop={0}>
           <Stack space={[2, 3, 4]}>
             <Input
               name="search"

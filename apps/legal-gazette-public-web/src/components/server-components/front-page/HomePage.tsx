@@ -62,10 +62,25 @@ export const HomePage = async () => {
               description="Dómsmálaráðuneytið gefur út Lögbirtingablaðið. Það kom fyrst út í prentuðu formi í árið 1908 og í dag er blaðið einnig aðgengilegt á netinu þar sem hægt er að nálgast öll tölublöð sem komið hafa út frá 1. janúar 2001."
               alignHeader={'spaceBetween'}
             >
-              <Box paddingBottom={8}>
+              <Box paddingTop={0} paddingBottom={6}>
                 <BannerSearch quickLinks={quickLinks} />
               </Box>
             </Hero>
+          </GridColumn>
+          <GridColumn
+            span={['12/12', '12/12', '12/12', '10/12']}
+            offset={['0', '0', '0', '1/12']}
+          >
+            <Text marginBottom={8}>
+              Vegna athugsemda Persónuverndar hefur verið tekið fyrir leit í
+              blaðinu í auglýsingaflokkum, sem varða fjárhagsmálefni
+              einstaklinga og fyrirtækja, nema eftir útgáfudagsetningum og
+              útgáfutímabilum. Þeir flokkar sem sæta þessari takmörkuðu leit
+              eru: <br />
+              Innkallanir, greiðsluaðlögun, greiðsluáskorun, nauðasamningar,
+              nauðungarsala, skiptafundur, veðhafafundur, skiptalok, stefnur,
+              svipting fjárræðis og kaupmáli, framhald uppboðs.
+            </Text>
           </GridColumn>
         </GridRow>
       </GridContainer>

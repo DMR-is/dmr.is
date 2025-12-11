@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer'
-import { IsBoolean, IsOptional } from 'class-validator'
+import { IsBoolean, IsOptional, IsUUID } from 'class-validator'
 import { BelongsToMany } from 'sequelize-typescript'
 
 import { ApiProperty } from '@nestjs/swagger'
@@ -40,7 +40,7 @@ export class TypeModel extends BaseEntityModel<TypeDto> {
       id: model.id,
       title: model.title,
       slug: model.slug,
-      categories: model.categories.map((category) => category.fromModel()),
+      categories: model?.categories?.map((category) => category.fromModel()),
     }
   }
 
@@ -57,6 +57,15 @@ export class GetTypesDto {
 }
 
 export class GetTypesQueryDto {
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  category?: string
+
   @ApiProperty({
     type: Boolean,
     required: false,
