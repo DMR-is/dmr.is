@@ -230,4 +230,183 @@ module.exports = {
       }
     },
   },
+  /**
+   * This rule enforces that NestJS controllers in the Legal Gazette API have proper
+   * authentication and authorization decorators:
+   * - @ApiBearerAuth() for Swagger documentation
+   * - @UseGuards(TokenJwtAuthGuard, AuthorizationGuard) for authentication
+   * - Either @AdminAccess() or a scope decorator (@ApplicationWebScopes(), @PublicWebScopes(), etc.)
+   *
+   * This ensures all endpoints are properly secured and documented.
+   */
+  'require-controller-auth-decorators': {
+    meta: {
+      type: 'problem',
+      docs: {
+        description:
+          'require authentication and authorization decorators on NestJS controllers',
+        category: 'Security',
+        recommended: true,
+      },
+      messages: {
+        missingApiBearerAuth:
+          'Controller is missing @ApiBearerAuth() decorator for Swagger documentation.',
+        missingUseGuards:
+          'Controller is missing @UseGuards(TokenJwtAuthGuard, AuthorizationGuard) decorator.',
+        missingAuthorizationDecorator:
+          'Controller or method is missing authorization decorator. Use @AdminAccess() or a scope decorator (@ApplicationWebScopes(), @PublicWebScopes(), @PublicOrApplicationWebScopes()).',
+        missingTokenJwtAuthGuard:
+          '@UseGuards() is missing TokenJwtAuthGuard.',
+        missingAuthorizationGuard:
+          '@UseGuards() is missing AuthorizationGuard.',
+      },
+      schema: [],
+    },
+    create: function (context) {
+      const scopeDecorators = [
+        'ApplicationWebScopes',
+        'PublicWebScopes',
+        'PublicOrApplicationWebScopes',
+      ]
+      const authDecorators = ['AdminAccess', ...scopeDecorators]
+
+      function hasDecorator(decorators, name) {
+        if (!decorators) return false
+        return decorators.some((decorator) => {
+          const expr = decorator.expression
+          // Handle @DecoratorName() - CallExpression
+          if (expr?.type === 'CallExpression' && expr.callee?.name === name) {
+            return true
+          }
+          // Handle @DecoratorName - Identifier (no parentheses)
+          if (expr?.type === 'Identifier' && expr.name === name) {
+            return true
+          }
+          return false
+        })
+      }
+
+      function hasUseGuardsWithBoth(decorators) {
+        if (!decorators) return { hasUseGuards: false, hasTokenJwt: false, hasAuthGuard: false }
+
+        for (const decorator of decorators) {
+          const expr = decorator.expression
+          if (expr?.type === 'CallExpression' && expr.callee?.name === 'UseGuards') {
+            const args = expr.arguments || []
+            const guardNames = args
+              .filter((arg) => arg.type === 'Identifier')
+              .map((arg) => arg.name)
+
+            return {
+              hasUseGuards: true,
+              hasTokenJwt: guardNames.includes('TokenJwtAuthGuard'),
+              hasAuthGuard: guardNames.includes('AuthorizationGuard'),
+            }
+          }
+        }
+        return { hasUseGuards: false, hasTokenJwt: false, hasAuthGuard: false }
+      }
+
+      function hasAnyAuthDecorator(decorators) {
+        if (!decorators) return false
+        return authDecorators.some((name) => hasDecorator(decorators, name))
+      }
+
+      function hasScopeDecorator(decorators) {
+        if (!decorators) return false
+        return scopeDecorators.some((name) => hasDecorator(decorators, name))
+      }
+
+      return {
+        // Check class-level decorators on @Controller classes
+        ClassDeclaration: (node) => {
+          const decorators = node.decorators
+          if (!decorators) return
+
+          // Check if this is a @Controller class
+          const isController = hasDecorator(decorators, 'Controller')
+          if (!isController) return
+
+          // Check for @ApiBearerAuth()
+          if (!hasDecorator(decorators, 'ApiBearerAuth')) {
+            context.report({
+              node,
+              messageId: 'missingApiBearerAuth',
+            })
+          }
+
+          // Check for @UseGuards with both guards
+          const guards = hasUseGuardsWithBoth(decorators)
+          if (!guards.hasUseGuards) {
+            context.report({
+              node,
+              messageId: 'missingUseGuards',
+            })
+          } else {
+            if (!guards.hasTokenJwt) {
+              context.report({
+                node,
+                messageId: 'missingTokenJwtAuthGuard',
+              })
+            }
+            if (!guards.hasAuthGuard) {
+              context.report({
+                node,
+                messageId: 'missingAuthorizationGuard',
+              })
+            }
+          }
+
+          // Check for authorization decorator at class level
+          const hasClassAuth = hasAnyAuthDecorator(decorators)
+
+          // If no class-level auth, check each method
+          if (!hasClassAuth) {
+            const classBody = node.body?.body || []
+            const methods = classBody.filter(
+              (member) =>
+                member.type === 'MethodDefinition' &&
+                member.kind === 'method' &&
+                !member.static,
+            )
+
+            // Check if ALL methods have auth decorators
+            const methodsWithoutAuth = methods.filter(
+              (method) => !hasAnyAuthDecorator(method.decorators),
+            )
+
+            if (methodsWithoutAuth.length > 0) {
+              // Report on the class if no class-level auth and some methods missing auth
+              context.report({
+                node,
+                messageId: 'missingAuthorizationDecorator',
+              })
+            }
+          }
+        },
+
+        // Also check individual methods that override class-level auth
+        // (This is informational - methods can have scope decorators that work with class @AdminAccess)
+        MethodDefinition: (node) => {
+          // Only check if parent is a controller class
+          const parent = node.parent?.parent
+          if (!parent?.decorators) return
+
+          const isController = hasDecorator(parent.decorators, 'Controller')
+          if (!isController) return
+
+          // Check if method has HTTP decorator (Get, Post, Put, Delete, Patch)
+          const httpDecorators = ['Get', 'Post', 'Put', 'Delete', 'Patch']
+          const isHttpMethod = httpDecorators.some((name) =>
+            hasDecorator(node.decorators, name),
+          )
+          if (!isHttpMethod) return
+
+          // If class has @AdminAccess and method has scope decorator, that's valid (OR logic)
+          // If class has no auth and method has no auth, error was already reported on class
+          // No additional method-level reporting needed for basic enforcement
+        },
+      }
+    },
+  },
 }

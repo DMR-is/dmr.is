@@ -21,6 +21,9 @@ import {
 import { ForeclosurePropertyDto } from '../../../models/foreclosure-property.model'
 import { IForeclosureService } from './foreclosure.service.interface'
 
+// Note: This controller uses the MachineClientGuard
+// We disable the local-rules/require-controller-auth-decorators rule here
+/* eslint-disable local-rules/require-controller-auth-decorators */
 @Controller({
   path: 'foreclosures',
   version: '1',

@@ -6,6 +6,8 @@ import { Controller, NotFoundException, Param } from '@nestjs/common'
 
 import { BaseEntityModel } from '@dmr.is/shared/models/base'
 
+// TODO: IS THIS USED ANYWHERE? IF NOT, DELETE IT
+/* eslint-disable local-rules/require-controller-auth-decorators */
 @Controller()
 export class BaseEntityController<Model extends typeof BaseEntityModel<T>, T> {
   constructor(protected readonly model: Model) {}
