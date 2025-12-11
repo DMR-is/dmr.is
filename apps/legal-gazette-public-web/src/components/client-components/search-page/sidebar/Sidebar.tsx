@@ -15,7 +15,7 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { Option } from '@island.is/island-ui/core'
+import { Box, Option } from '@island.is/island-ui/core'
 
 import { useFilters } from '../../../../hooks/useFilters'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
@@ -55,7 +55,7 @@ export const SearchSidebar = () => {
     }),
   )
 
-  const { data: categoryData, isPaused: isLoadingCategories } = useQuery(
+  const { data: categoryData, isLoading: isLoadingCategories } = useQuery(
     trpc.getCategories.queryOptions(),
   )
 
@@ -93,96 +93,116 @@ export const SearchSidebar = () => {
   }))
 
   return (
-    <Stack space={[1, 2]} key={timestamp}>
-      <Text variant="h4">Leit</Text>
-      <Input
-        placeholder="Sláðu inn leitarorð"
-        name="search"
-        size="sm"
-        defaultValue={filters.search || ''}
-        onChange={(e) => debouncedSetFilters('search', e.target.value)}
-      />
-      <Divider />
-      <Inline justifyContent="spaceBetween" alignY="center">
-        <Text variant="h4">Síur</Text>
-        <Button
-          variant="text"
-          size="small"
-          onClick={() => {
-            reset()
-            setTimestamp(new Date().getTime())
-          }}
-        >
-          Hreinsa síur
-        </Button>
-      </Inline>
+    <Stack space={2}>
+      <Box padding={3} borderRadius="large" background="blue100">
+        <Stack space={[1, 2]} key={timestamp}>
+          <Inline justifyContent={'spaceBetween'} alignY="center">
+            <Text variant="h4">Leit</Text>
+            <Button
+              variant="text"
+              size="small"
+              icon="reload"
+              onClick={() => {
+                reset()
+                setTimestamp(new Date().getTime())
+              }}
+            >
+              Hreinsa
+            </Button>
+          </Inline>
+          <Input
+            placeholder="Sláðu inn leitarorð"
+            name="search"
+            size="sm"
+            defaultValue={filters.search || ''}
+            onChange={(e) => debouncedSetFilters('search', e.target.value)}
+          />
+          <Divider />
+          <Select
+            isLoading={isLoadingCategories}
+            isClearable
+            label="Flokkur"
+            placeholder="Allir flokkar"
+            options={categoryOptions || []}
+            value={categorySelected}
+            size="xs"
+            onChange={(options) => {
+              setFilters({
+                ...filters,
+                page: null,
+                categoryId: options?.value ? [options.value] : null,
+              })
+            }}
+          />
 
-      <Select
-        isLoading={isLoadingCategories}
-        isClearable
-        label="Flokkur"
-        placeholder="Allir flokkar"
-        options={categoryOptions || []}
-        value={categorySelected}
-        size="xs"
-        onChange={(options) => {
-          setFilters({
-            ...filters,
-            page: null,
-            categoryId: options?.value ? [options.value] : null,
-          })
-        }}
-      />
+          <Select
+            isClearable
+            isLoading={isLoadingTypes}
+            label="Tegund"
+            placeholder="Allar tegundir"
+            options={typeOptions || []}
+            size="xs"
+            value={typeSelected}
+            onChange={(opt) => {
+              setFilters({
+                ...filters,
+                page: null,
+                typeId: opt?.value || null,
+              })
+            }}
+          />
 
-      <Select
-        isClearable
-        isLoading={isLoadingTypes}
-        label="Tegund"
-        placeholder="Allar tegundir"
-        options={typeOptions || []}
-        size="xs"
-        value={typeSelected}
-        onChange={(opt) => {
-          setFilters({
-            ...filters,
-            page: null,
-            typeId: opt?.value || null,
-          })
-        }}
-      />
-
-      <DatePicker
-        locale="is"
-        label="Dagsetning frá"
-        size="xs"
-        placeholderText=""
-        selected={filters.dateFrom}
-        minDate={MIN_DATE}
-        maxDate={new Date()}
-        handleChange={(date) => updateDate('dateFrom', date)}
-      />
-      <DatePicker
-        locale="is"
-        label="Dagsetning til"
-        size="xs"
-        placeholderText=""
-        selected={filters.dateTo}
-        minDate={filters.dateFrom ? filters.dateFrom : MIN_DATE}
-        maxDate={new Date()}
-        handleChange={(date) => updateDate('dateTo', date)}
-      />
-      <Select
-        label="Fjöldi niðurstaða"
-        options={totalResultsOptions}
-        size="xs"
-        defaultValue={totalResultsOptions.find(
-          (o) => o.value === filters.pageSize,
-        )}
-        onChange={(opt) => {
-          if (!opt) return
-          setFilters({ ...filters, pageSize: opt.value as number })
-        }}
-      />
+          <DatePicker
+            locale="is"
+            label="Dagsetning frá"
+            size="xs"
+            placeholderText=""
+            selected={filters.dateFrom}
+            minDate={MIN_DATE}
+            maxDate={new Date()}
+            handleChange={(date) => updateDate('dateFrom', date)}
+          />
+          <DatePicker
+            locale="is"
+            label="Dagsetning til"
+            size="xs"
+            placeholderText=""
+            selected={filters.dateTo}
+            minDate={filters.dateFrom ? filters.dateFrom : MIN_DATE}
+            maxDate={new Date()}
+            handleChange={(date) => updateDate('dateTo', date)}
+          />
+          <Select
+            label="Fjöldi niðurstaða"
+            options={totalResultsOptions}
+            size="xs"
+            defaultValue={totalResultsOptions.find(
+              (o) => o.value === filters.pageSize,
+            )}
+            onChange={(opt) => {
+              if (!opt) return
+              setFilters({ ...filters, pageSize: opt.value as number })
+            }}
+          />
+        </Stack>
+      </Box>
+      <Box paddingLeft={1} marginBottom={4}>
+        {filters.totalItems ? (
+          <Text>
+            <strong>
+              {filters.page > 1 ? filters.pageSize * (filters.page - 1) + 1 : 1}
+            </strong>
+            {' – '}
+            <strong>
+              {filters.page * filters.pageSize < filters.totalItems
+                ? filters.page * filters.pageSize
+                : filters.totalItems}
+            </strong>
+            {' af '}
+            <strong>{filters.totalItems}</strong> niðurstöðum
+          </Text>
+        ) : null}
+      </Box>
     </Stack>
   )
 }

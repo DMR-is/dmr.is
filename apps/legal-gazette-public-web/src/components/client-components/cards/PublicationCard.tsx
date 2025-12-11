@@ -4,6 +4,7 @@ import is from 'date-fns/locale/is'
 import {
   ArrowLink,
   Box,
+  Icon,
   Inline,
   Stack,
   Tag,
@@ -20,26 +21,36 @@ export const PublicationCard = ({ publication }: Props) => {
   return (
     <Box padding={3} background="white" borderRadius="large" border="standard">
       <Stack space={0}>
-        <Inline
-          justifyContent="spaceBetween"
-          alignY="center"
-          flexWrap="nowrap"
-          space={2}
-        >
-          {/* <Text color="purple400" variant="eyebrow">
-            {publication.createdBy}
-          </Text> */}
-          <Text variant="h4">{publication.title}</Text>
-          <Text variant="small" title="Útgáfudagur">
-            {format(new Date(publication.publishedAt), 'dd. MMMM yyyy', {
-              locale: is,
-            })}
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Text variant="h4" as="span">
+            {publication.title}
           </Text>
-        </Inline>
+
+          <Box style={{ flexShrink: 0 }}>
+            <Inline space={1} alignY="top" justifyContent="flexEnd">
+              <Icon
+                icon="time"
+                size="small"
+                type="outline"
+                title="Útgáfudagur"
+              />
+              <Text variant="small" title="Útgáfudagur">
+                {format(new Date(publication.publishedAt), 'dd. MMMM yyyy', {
+                  locale: is,
+                })}
+              </Text>
+            </Inline>
+          </Box>
+        </div>
         <Stack space={2}>
-          <Text variant="small" title="Útgáfunúmer">
-            {publication.publicationNumber}
-          </Text>
+          <Inline space={1} alignY="center">
+            <Text variant="small" as="span" title="Útgáfunúmer">
+              {publication.publicationNumber}
+            </Text>
+            <Text variant="small" as="span" title="Birting">
+              {publication.version}
+            </Text>
+          </Inline>
           <Inline justifyContent="spaceBetween" alignY={'bottom'}>
             <Inline space={1} alignY="center">
               <Tag
@@ -58,7 +69,7 @@ export const PublicationCard = ({ publication }: Props) => {
             <ArrowLink
               href={`/auglysingar/${publication.advertId}/${publication.version}`}
             >
-              Sjá nánar
+              Skoða
             </ArrowLink>
           </Inline>
         </Stack>

@@ -25,20 +25,6 @@ export const Breadcrumbs = () => {
       })
     }
 
-    const uuidMatch = path.match(/\/auglysingar\/([0-9a-fA-F-]{36})(?:\/|$)/)
-
-    const version = path.split('/').pop()
-
-    if (uuidMatch) {
-      const versions = ['A', 'B', 'C']
-      const title =
-        version && versions.includes(version) ? `Birting ${version}` : `Birting`
-      paths.push({
-        title: title,
-        href: path,
-      })
-    }
-
     return paths
   }, [path])
 

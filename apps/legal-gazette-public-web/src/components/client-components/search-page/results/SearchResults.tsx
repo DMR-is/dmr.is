@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect } from 'react'
+
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   AlertMessage,
@@ -44,15 +46,15 @@ export const SearchResults = () => {
     )
   }
 
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, totalItems: data?.paging.totalItems }))
+  }, [data])
+
   return (
     <Stack space={[2]}>
       <Box>
-        <Text marginBottom={[2, 3]} variant="h1">
-          Leit í lögbirtingablaðinu
-        </Text>
-        <Text>
-          Um útgáfu Lögbirtingablaðsins gilda lög um Stjórnartíðindi og
-          Lögbirtingablað nr. 15/2005.
+        <Text marginBottom={[1]} variant="h2">
+          Leit í Lögbirtingablaði
         </Text>
       </Box>
       {isLoading ? (
