@@ -6,10 +6,6 @@ import { Controller, NotFoundException, Param } from '@nestjs/common'
 
 import { BaseEntityModel } from '@dmr.is/shared/models/base'
 
-import { PublicController } from '../../core/decorators'
-
-// TODO: IS THIS USED ANYWHERE? IF NOT, DELETE IT
-@PublicController()
 @Controller()
 export class BaseEntityController<Model extends typeof BaseEntityModel<T>, T> {
   constructor(protected readonly model: Model) {}

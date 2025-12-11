@@ -252,6 +252,10 @@ module.exports = {
    * Public Controllers (no auth required):
    * - Use @PublicController() decorator to bypass all auth checks
    *
+   * Abstract/Base Controllers (no HTTP method decorators):
+   * - Automatically skipped - these are meant to be extended by other controllers
+   * - Child controllers must have proper guards and decorators
+   *
    * Note: Cannot mix AuthorizationGuard with MachineClientGuard or CurrentNationalRegistryPersonGuard
    *
    * This ensures all endpoints are properly secured and documented.
@@ -352,6 +356,19 @@ module.exports = {
         return authDecorators.some((name) => hasDecorator(decorators, name))
       }
 
+      // Check if a class has any HTTP method decorators (Get, Post, Put, Delete, Patch)
+      function hasAnyHttpMethodDecorators(classBody) {
+        const httpDecorators = ['Get', 'Post', 'Put', 'Delete', 'Patch']
+        const methods = classBody?.body || []
+
+        return methods.some((member) => {
+          if (member.type !== 'MethodDefinition') return false
+          return httpDecorators.some((name) =>
+            hasDecorator(member.decorators, name),
+          )
+        })
+      }
+
       return {
         // Check class-level decorators on @Controller classes
         ClassDeclaration: (node) => {
@@ -365,6 +382,11 @@ module.exports = {
           // Check for @PublicController() - bypasses all auth checks
           const isPublicController = hasDecorator(decorators, 'PublicController')
           if (isPublicController) return
+
+          // Check if this is an abstract/base controller (no HTTP method decorators)
+          // These controllers are meant to be extended and don't need guards/auth decorators
+          const hasHttpMethods = hasAnyHttpMethodDecorators(node.body)
+          if (!hasHttpMethods) return
 
           // Check for @ApiBearerAuth()
           if (!hasDecorator(decorators, 'ApiBearerAuth')) {
