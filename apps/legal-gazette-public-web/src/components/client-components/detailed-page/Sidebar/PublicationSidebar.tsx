@@ -1,3 +1,7 @@
+'use client'
+
+import Link from 'next/link'
+
 import { Box, Button, Stack, Text } from '@dmr.is/ui/components/island-is'
 import { formatDate } from '@dmr.is/utils/client'
 
@@ -8,6 +12,20 @@ type Props = {
 }
 
 export const PublicationSidebar = ({ publication }: Props) => {
+  // const trpc = useTRPC()
+  // const { mutate, isPending } = useMutation(
+  //   trpc.getPublicationPdf.mutationOptions({
+  //     onSuccess: (data) => {
+  //       console.log(data)
+  //       console.log('data.size', data.size)
+  //       console.log('data.type', data.type)
+  //     },
+  //     onError: () => {
+  //       toast.error('Ekki tókst að sækja PDF skjal')
+  //     },
+  //   }),
+  // )
+
   return (
     <Stack space={[1, 2]}>
       <Box padding={3} background="blue100" borderRadius="large">
@@ -31,9 +49,20 @@ export const PublicationSidebar = ({ publication }: Props) => {
         </Stack>
       </Box>
       <Box background="dark100" padding={3} borderRadius="large">
-        <Button size="small" variant="text" icon="download" iconType="outline">
-          Sækja PDF
-        </Button>
+        <Link
+          href={`/api/adverts/${publication.advert.id}/pdf?version=${publication.publication.version}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <Button
+            variant="text"
+            icon="download"
+            iconType="outline"
+            size="small"
+          >
+            Prenta auglýsingu
+          </Button>
+        </Link>
       </Box>
     </Stack>
   )
