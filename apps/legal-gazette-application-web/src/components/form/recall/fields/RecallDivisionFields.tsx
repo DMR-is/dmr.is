@@ -1,6 +1,5 @@
 import addDays from 'date-fns/addDays'
 import addYears from 'date-fns/addYears'
-import { useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 
 import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
@@ -17,39 +16,19 @@ type Props = {
 }
 
 export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
-  const {
-    getValues,
-    setValue,
-    watch,
-    formState: { isReady, dirtyFields },
-  } = useFormContext<RecallApplicationWebSchema>()
+  const { getValues, watch } = useFormContext<RecallApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
 
-  const { updateApplication, debouncedUpdateApplication } =
-    useUpdateApplication({
-      id: applicationId,
-      type: 'RECALL',
-    })
+  const { debouncedUpdateApplication } = useUpdateApplication({
+    id: applicationId,
+    type: 'RECALL',
+  })
 
   const recallDates = watch('publishingDates') || []
 
-  useEffect(() => {
-    if (isReady && dirtyFields.publishingDates) {
-      setValue('publishingDates', [])
-
-      updateApplication({
-        fields: {
-          divisionMeetingFields: {
-            meetingDate: null,
-          },
-        },
-      })
-    }
-  }, [recallDates, isReady, dirtyFields])
-
   const minDate = recallDates?.length
-    ? addDays(new Date(recallDates[recallDates.length - 1]), ONE_WEEK * 9)
-    : addDays(new Date(), TWO_WEEKS)
+    ? addDays(new Date(recallDates[recallDates.length - 1]), 7 * 9)
+    : addDays(new Date(), 14)
 
   const maxDate = addYears(minDate, 1)
   const excludeDates = getWeekendDays(minDate, maxDate)

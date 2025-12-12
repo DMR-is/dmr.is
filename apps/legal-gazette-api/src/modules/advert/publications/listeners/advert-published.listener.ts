@@ -29,7 +29,7 @@ export class AdvertPublishedListener {
     private readonly tbrTransactionModel: typeof TBRTransactionModel,
   ) {}
 
-  @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED, { async: true })
+  @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED)
   async createTBRTransaction({ advert, publication }: AdvertPublishedEvent) {
     if (publication.version !== AdvertVersionEnum.A) return
 
@@ -70,7 +70,7 @@ export class AdvertPublishedListener {
     })
   }
 
-  @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED, { async: true })
+  @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED)
   async sendEmailNotification({ advert, publication }: AdvertPublishedEvent) {
     this.logger.info('Sending email notification for advert', {
       advertId: advert.id,
@@ -114,7 +114,7 @@ export class AdvertPublishedListener {
     })
   }
 
-  @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED, { async: true })
+  @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED)
   async generatePdf({ advert, publication, html }: AdvertPublishedEvent) {
     this.logger.info('Generating PDF for advert', {
       advertId: publication.advertId,

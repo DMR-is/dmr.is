@@ -243,7 +243,7 @@ export const CreateDivisionMeeting = ({
                               <Button
                                 type="submit"
                                 loading={isPending}
-                                icon="share"
+                                icon="add"
                                 iconType="outline"
                               >
                                 Stofna skiptafund

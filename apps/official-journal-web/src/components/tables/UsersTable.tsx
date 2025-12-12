@@ -165,7 +165,6 @@ export const UsersTable = ({
                 {
                   field: 'institution',
                   children: 'Stofnun',
-                  width: '200px',
                 },
                 {
                   field: 'role',
@@ -199,11 +198,11 @@ export const UsersTable = ({
                   email: user.email,
                   institution:
                     user.involvedParties.length > 0 ? (
-                      <Stack space={1}>
+                      <div style={{ whiteSpace: 'normal' }}>
                         {user.involvedParties
                           .map((party) => party.title)
                           .join(', ')}
-                      </Stack>
+                      </div>
                     ) : (
                       <Tag variant="rose">Engin stofnun</Tag>
                     ),

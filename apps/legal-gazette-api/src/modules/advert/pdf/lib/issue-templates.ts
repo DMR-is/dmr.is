@@ -147,6 +147,7 @@ export const lastPageFooter = (
       ">
         ${syslumadur}
       </div>
+      <div class="sub_signature">Afritun eða dreifing þessa efnis er óheimil. Efnið kann að innihalda persónuupplýsingar sem njóta verndar samkvæmt lögum nr. 90/2018 og reglugerð (ESB) 2016/679 (GDPR). Óheimil meðferð getur varðað við lög.</div>
     </div>
   </div>
 `

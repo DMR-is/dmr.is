@@ -23,6 +23,7 @@ export interface IssueAttributes {
   year: number
   runningPageNumber: number
   isLegacy: boolean
+  hash: string
 }
 
 type IssueCreateAttributes = Omit<IssueAttributes, 'isLegacy'> & {
@@ -55,6 +56,9 @@ export class IssueModel extends BaseModel<
   @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false })
   isLegacy!: boolean
 
+  @Column({ type: DataType.TEXT })
+  hash!: string
+
   static fromModel(model: IssueModel): IssueDto {
     return {
       id: model.id,
@@ -65,6 +69,7 @@ export class IssueModel extends BaseModel<
       year: model.year,
       runningPageNumber: model.runningPageNumber,
       isLegacy: model.isLegacy,
+      hash: model.hash,
     }
   }
 
@@ -118,6 +123,10 @@ export class IssueDto {
   @ApiProperty({ type: Boolean })
   @IsBoolean()
   isLegacy!: boolean
+
+  @ApiProperty({ type: String })
+  @IsString()
+  hash!: string
 }
 
 export class GetIssuesDto {

@@ -98,7 +98,10 @@ export const RecallForm = (props: RecallFormProps) => {
             <RecallSettlementFields />
             <RecallLiquidatorFields />
             <RecallRequirementStatementFields />
-            <PublishingFields additionalTitle="innköllunar" />
+            <PublishingFields
+              additionalTitle="innköllunar"
+              applicationType="RECALL"
+            />
             <RecallDivisionFields isBankruptcy={isBankruptcy} />
             <SignatureFields />
             <CommunicationChannelFields />

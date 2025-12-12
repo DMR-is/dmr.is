@@ -2,7 +2,6 @@ import { useFormContext } from 'react-hook-form'
 
 import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import {
-  AlertMessage,
   Box,
   GridColumn,
   GridRow,
@@ -35,6 +34,7 @@ export const SignatureFields = () => {
           </Text>
           <Text
             variant="small"
+            as="span"
             fontWeight={signatureError ? 'semiBold' : 'regular'}
             color={(signatureError && 'red600') || 'dark400'}
           >

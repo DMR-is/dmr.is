@@ -1,4 +1,5 @@
 import { isDefined } from 'class-validator'
+import { createHash } from 'crypto'
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import sanitizeHtml from 'sanitize-html'
@@ -694,3 +695,7 @@ export const getBodyHTMLlength = (
 
 export const toUtf8 = (v: unknown) =>
   Buffer.isBuffer(v) ? v.toString('utf8') : (v as string)
+
+export function hashPdf(buffer: Buffer): string {
+  return createHash('sha256').update(buffer).digest('hex') // 64-char hex string
+}

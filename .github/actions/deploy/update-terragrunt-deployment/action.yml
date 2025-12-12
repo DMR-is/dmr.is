@@ -35,10 +35,10 @@ runs:
       shell: bash
       run: brew install terragrunt tfenv
 
-    - name: Setup Terraform v1.10.1
+    - name: Setup Terraform v1.11.2
       uses: hashicorp/setup-Terraform@v3
       with:
-        terraform_version: 1.10.1
+        terraform_version: 1.11.2
 
     - name: Terragrunt version
       shell: bash
@@ -107,6 +107,42 @@ runs:
           --target regulations_api \
           --config-var-name regulations_api_version_tag 2>&1 | \
           stdbuf -oL -eL sed 's/^/[regulations_api] /' &
+
+        stdbuf -oL -eL ../scripts/update_tag.sh \
+          --environment ${{ inputs.ENV }} \
+          --update-value ${{ inputs.VERSION_TAG }} \
+          --commit false \
+          --ignore-dirty true \
+          --target legal_gazette_api \
+          --config-var-name legal_gazette_api_version_tag 2>&1 | \
+          stdbuf -oL -eL sed 's/^/[legal_gazette_api] /' &
+
+        stdbuf -oL -eL ../scripts/update_tag.sh \
+          --environment ${{ inputs.ENV }} \
+          --update-value ${{ inputs.VERSION_TAG }} \
+          --commit false \
+          --ignore-dirty true \
+          --target legal_gazette_web \
+          --config-var-name legal_gazette_web_version_tag 2>&1 | \
+          stdbuf -oL -eL sed 's/^/[legal_gazette_web] /' &
+
+        stdbuf -oL -eL ../scripts/update_tag.sh \
+          --environment ${{ inputs.ENV }} \
+          --update-value ${{ inputs.VERSION_TAG }} \
+          --commit false \
+          --ignore-dirty true \
+          --target legal_gazette_application_web \
+          --config-var-name legal_gazette_application_web_version_tag 2>&1 | \
+          stdbuf -oL -eL sed 's/^/[legal_gazette_application_web] /' &
+
+        stdbuf -oL -eL ../scripts/update_tag.sh \
+          --environment ${{ inputs.ENV }} \
+          --update-value ${{ inputs.VERSION_TAG }} \
+          --commit false \
+          --ignore-dirty true \
+          --target legal_gazette_public_web \
+          --config-var-name legal_gazette_public_web_version_tag 2>&1 | \
+          stdbuf -oL -eL sed 's/^/[legal_gazette_public_web] /' &
 
         FAIL=0
         for pid in $(jobs -p); do

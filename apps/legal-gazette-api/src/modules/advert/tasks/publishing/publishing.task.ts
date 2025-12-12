@@ -126,52 +126,45 @@ export class PublishingTaskService implements IPublishingTaskService {
           index,
         },
       )
-      const transaction = await this.sequelize.transaction()
 
       try {
-        const publicationNumber = isEmpty(pub.advert.publicationNumber)
-          ? await this.getNextPublicationNumber(pub.scheduledAt, transaction)
-          : pub.advert.publicationNumber
+        await this.sequelize.transaction(async (transaction) => {
+          const publicationNumber = isEmpty(pub.advert.publicationNumber)
+            ? await this.getNextPublicationNumber(pub.scheduledAt, transaction)
+            : pub.advert.publicationNumber
 
-        pub.publishedAt = new Date()
-        await pub.save({ transaction: transaction })
+          pub.publishedAt = new Date()
+          await pub.save({ transaction: transaction })
 
-        await pub.advert.update(
-          {
-            publicationNumber,
-            statusId: StatusIdEnum.PUBLISHED,
-          },
-          { transaction: transaction },
-        )
+          await pub.advert.update(
+            {
+              publicationNumber,
+              statusId: StatusIdEnum.PUBLISHED,
+            },
+            { transaction: transaction },
+          )
 
-        // Add afterCommit hook to emit event
-        transaction.afterCommit(() => {
-          this.eventEmitter.emit(LegalGazetteEvents.ADVERT_PUBLISHED, {
-            publicationId: pub.id,
-            advertId: pub.advert.id,
-            publicationNumber,
-            publishedAt: pub.publishedAt,
-            scheduledAt: pub.scheduledAt,
+          transaction.afterCommit(() => {
+            this.eventEmitter.emit(LegalGazetteEvents.ADVERT_PUBLISHED, {
+              publicationId: pub.id,
+              advertId: pub.advert.id,
+              publicationNumber,
+              publishedAt: pub.publishedAt,
+              scheduledAt: pub.scheduledAt,
+            })
           })
         })
 
-        await transaction.commit()
         this.logger.info(`Published advert publication with ID: ${pub.id}`, {
           context: LOGGER_CONTEXT,
         })
-
-        this.eventEmitter.emit('advert.published', {
-          publicationId: pub.id,
-          advertId: pub.advert.id,
-        })
       } catch (error) {
-        this.logger.error(`Failed to publish`, {
+        this.logger.error(`Failed to publish advert publication`, {
           publicationId: pub.id,
           advertId: pub.advert.id,
           context: LOGGER_CONTEXT,
           error: error,
         })
-        await transaction.rollback()
         continue
       }
     }

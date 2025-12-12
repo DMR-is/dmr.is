@@ -13,7 +13,10 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import {
+  UpdateApplicationAnswers,
+  useUpdateApplication,
+} from '../../../../hooks/useUpdateApplication'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { Editor } from '../../../editor/Editor'
 import { InputController } from '../../controllers/InputController'
@@ -50,13 +53,21 @@ export const CommonAdvertFields = () => {
 
   useEffect(() => {
     if (!categoriesData?.categories || !formState.isDirty) return
+    const newCategory = categoriesData.categories[0]
+    setValue('fields.category', newCategory)
 
-    if (categoriesData.categories.length === 1) {
-      const newCategory = categoriesData.categories[0]
-
-      setValue('fields.category', newCategory)
-      updateApplication({ fields: { category: newCategory } })
+    const fields: UpdateApplicationAnswers<'COMMON'>['fields'] = {
+      type: getValues('fields.type'),
+      category: newCategory,
     }
+
+    updateApplication(
+      { fields: fields },
+      {
+        successMessage: 'Tegund auglýsingar vistuð',
+        errorMessage: 'Ekki tókst að vista tegund auglýsingar',
+      },
+    )
   }, [categoriesData?.categories, formState.isDirty])
 
   const categoryOptions =
@@ -89,13 +100,7 @@ export const CommonAdvertFields = () => {
                 (typeOption) => typeOption.value.id === val,
               )?.value
 
-              return updateApplication(
-                { fields: { type: typeToUpdateTo } },
-                {
-                  successMessage: 'Tegund auglýsingar vistuð',
-                  errorMessage: 'Ekki tókst að vista tegund auglýsingar',
-                },
-              )
+              setValue('fields.type', typeToUpdateTo)
             }}
           />
         </GridColumn>

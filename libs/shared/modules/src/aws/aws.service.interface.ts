@@ -37,6 +37,7 @@ export interface IAWSService {
     key: string,
     fileName: string,
     data: Buffer,
+    hash?: string,
   ): Promise<ResultWrapper<string>>
 
   sendMail(message: Mail.Options): Promise<SentMessageInfo>
