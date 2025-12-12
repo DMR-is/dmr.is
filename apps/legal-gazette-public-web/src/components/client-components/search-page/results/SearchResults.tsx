@@ -1,8 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
-
-import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   AlertMessage,
   Box,
@@ -13,31 +10,14 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { useTotalItemsContext } from '../../../../context/total-items-context'
 import { useFilters } from '../../../../hooks/useFilters'
-import { useTRPC } from '../../../../lib/trpc/client/trpc'
+import { usePublications } from '../../../../hooks/usePublications'
 import { PublicationCard } from '../../cards/PublicationCard'
 
 export const SearchResults = () => {
   const { filters, setFilters } = useFilters()
-  const { setTotalItems } = useTotalItemsContext()
-  const trpc = useTRPC()
 
-  const { data, isLoading, error } = useQuery(
-    trpc.getPublications.queryOptions({
-      page: filters.page,
-      pageSize: filters.pageSize,
-      search: filters.search,
-      categoryId: filters.categoryId ?? undefined,
-      typeId: filters.typeId ?? undefined,
-      dateFrom: filters.dateFrom
-        ? new Date(filters.dateFrom).toISOString()
-        : undefined,
-      dateTo: filters.dateTo
-        ? new Date(filters.dateTo).toISOString()
-        : undefined,
-    }),
-  )
+  const { data, isLoading, error } = usePublications()
 
   if (error) {
     return (
@@ -48,10 +28,6 @@ export const SearchResults = () => {
       />
     )
   }
-
-  useEffect(() => {
-    setTotalItems(data?.paging.totalItems)
-  }, [data])
 
   const breadcrumbs = [
     {
