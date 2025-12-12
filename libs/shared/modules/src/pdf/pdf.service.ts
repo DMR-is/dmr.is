@@ -11,7 +11,6 @@ import {
 } from '@dmr.is/constants'
 import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { cleanupSingleEditorOutput } from '@dmr.is/regulations-tools/cleanupEditorOutput'
 import { HTMLText } from '@dmr.is/regulations-tools/types'
 import { ResultWrapper } from '@dmr.is/types'
 import {
@@ -19,6 +18,7 @@ import {
   formatAnyDate,
   handlePdfAdditions,
   retryAsync,
+  simpleSanitize,
 } from '@dmr.is/utils'
 
 import { caseDetailedMigrate } from '../case/migrations/case-detailed.migrate'
@@ -86,12 +86,12 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     if (answers.advert.additions) {
       additionHtml = answers.advert.additions
         .map((addition) =>
-          cleanupSingleEditorOutput(addition.content as HTMLText)
+          simpleSanitize(addition.content as HTMLText)
             ? `
             <section class="appendix">
               <h2 class="appendix__title">${addition.title}</h2>
               <div class="appendix__text">
-                ${cleanupSingleEditorOutput(addition.content as HTMLText)}
+                ${simpleSanitize(addition.content as HTMLText)}
               </div>
             </section>
           `
@@ -103,7 +103,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     let markup = advertPdfTemplate({
       title: answers.advert.title,
       type: answers.advert.type.title,
-      content: cleanupSingleEditorOutput(answers.advert.html as HTMLText),
+      content: simpleSanitize(answers.advert.html as HTMLText),
       additions: additionHtml,
       signature: signatureHtml,
       hiddenSignature: true,
@@ -144,7 +144,6 @@ export class PdfService implements OnModuleDestroy, IPdfService {
         // Load content and wait for quiet network so PDF has stable layout
         await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
 
-        // Your shared PDF CSS
         await page.addStyleTag({ content: pdfCss })
 
         if (header) {
@@ -244,7 +243,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     const markup = advertPdfTemplate({
       title: activeCase.advertTitle,
       type: activeCase.advertType.title,
-      content: cleanupSingleEditorOutput(activeCase.html as HTMLText),
+      content: simpleSanitize(activeCase.html as HTMLText),
       additions: handlePdfAdditions(activeCase.additions),
       signature: activeCase.signature.html,
       subSignature:
