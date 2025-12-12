@@ -62,7 +62,11 @@ export const HomePage = async () => {
               description="Dómsmálaráðuneytið gefur út Lögbirtingablaðið. Það kom fyrst út í prentuðu formi í árið 1908 og í dag er blaðið einnig aðgengilegt á netinu þar sem hægt er að nálgast öll tölublöð sem komið hafa út frá 1. janúar 2001."
               alignHeader={'spaceBetween'}
             >
-              <Box paddingTop={0} paddingBottom={6}>
+              <Box
+                style={{ marginTop: '-32px' }}
+                paddingTop={0}
+                paddingBottom={6}
+              >
                 <BannerSearch quickLinks={quickLinks} />
               </Box>
             </Hero>

@@ -21,6 +21,7 @@ export const AdvertDisplay = ({
   withStyles = false,
 }: AdvertDisplayProps) => {
   const hasNumberOrDate = number || date
+
   return (
     <Box position="relative" overflow="auto">
       <Box

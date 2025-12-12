@@ -6,6 +6,7 @@ import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   AlertMessage,
   Box,
+  Breadcrumbs,
   Pagination,
   SkeletonLoader,
   Stack,
@@ -50,46 +51,61 @@ export const SearchResults = () => {
     setFilters((prev) => ({ ...prev, totalItems: data?.paging.totalItems }))
   }, [data])
 
+  const breadcrumbs = [
+    {
+      title: 'Lögbirtingarblað',
+      href: '/',
+    },
+    {
+      title: 'Auglýsingar',
+    },
+  ]
+
   return (
-    <Stack space={[2]}>
-      <Box>
-        <Text marginBottom={[1]} variant="h2">
-          Leit í Lögbirtingablaði
-        </Text>
-      </Box>
-      {isLoading ? (
-        <SkeletonLoader
-          height={230}
-          borderRadius="large"
-          repeat={5}
-          space={[2, 3, 4]}
-        />
-      ) : (data?.publications.length || 0) > 0 ? (
-        data?.publications.map((publication) => (
-          <PublicationCard key={publication.id} publication={publication} />
-        ))
-      ) : (
-        <Box padding={[2, 3, 4]} borderRadius="large" border="standard">
-          <Text variant="h3">Engar birtingar fundust</Text>
-          <Text>Vinsamlegast endurskoðaðu leitarskilyrði</Text>
-        </Box>
-      )}
-      {(data?.paging.totalItems || 0) > 0 && (
-        <Pagination
-          page={filters.page}
-          itemsPerPage={filters.pageSize}
-          totalItems={data?.paging.totalItems}
-          totalPages={data?.paging.totalPages}
-          renderLink={(page, className, children) => (
-            <button
-              className={className}
-              onClick={() => setFilters((prev) => ({ ...prev, page }))}
-            >
-              {children}
-            </button>
-          )}
-        />
-      )}
-    </Stack>
+    <>
+      <Stack space={[2]}>
+        <Stack space={[1]}>
+          <Breadcrumbs items={breadcrumbs} />
+          <Box>
+            <Text marginBottom={[1]} variant="h2">
+              Leit í Lögbirtingablaði
+            </Text>
+          </Box>
+        </Stack>
+        {isLoading ? (
+          <SkeletonLoader
+            height={230}
+            borderRadius="large"
+            repeat={5}
+            space={[2, 3, 4]}
+          />
+        ) : (data?.publications.length || 0) > 0 ? (
+          data?.publications.map((publication) => (
+            <PublicationCard key={publication.id} publication={publication} />
+          ))
+        ) : (
+          <Box padding={[2, 3, 4]} borderRadius="large" border="standard">
+            <Text variant="h3">Engar birtingar fundust</Text>
+            <Text>Vinsamlegast endurskoðaðu leitarskilyrði</Text>
+          </Box>
+        )}
+        {(data?.paging.totalItems || 0) > 0 && (
+          <Pagination
+            page={filters.page}
+            itemsPerPage={filters.pageSize}
+            totalItems={data?.paging.totalItems}
+            totalPages={data?.paging.totalPages}
+            renderLink={(page, className, children) => (
+              <button
+                className={className}
+                onClick={() => setFilters((prev) => ({ ...prev, page }))}
+              >
+                {children}
+              </button>
+            )}
+          />
+        )}
+      </Stack>
+    </>
   )
 }
