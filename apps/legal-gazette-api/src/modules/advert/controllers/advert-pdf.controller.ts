@@ -1,14 +1,29 @@
 import { Response } from 'express'
 
-import { Controller, Get, Inject, Param, Res, UseGuards } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common'
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+} from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+import { PublicWebScopes, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
+import { AdvertVersionEnum } from '../../../models/advert-publication.model'
 import { PdfService } from '../pdf/pdf.service'
 import { IPublicationService } from '../publications/publication.service.interface'
 
@@ -16,6 +31,7 @@ import { IPublicationService } from '../publications/publication.service.interfa
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
 @AdminAccess()
+@PublicWebScopes()
 export class AdvertPdfController {
   constructor(
     @Inject(PdfService) private readonly pdfService: PdfService,
@@ -37,30 +53,56 @@ export class AdvertPdfController {
       },
     },
   })
+  @ApiQuery({ name: 'version', required: false, type: 'string' })
   async getAdvertPdf(
     @Param('id') id: string,
+    @Query('version') version: AdvertVersionEnum | undefined,
     @CurrentUser() user: DMRUser,
     @Res() res: Response,
   ) {
-    const publications =
-      await this.publicationService.getPublishedPublicationsByAdvertId(id)
-
-    const latest = publications[publications.length - 1]
-
-    const publicationId = latest.publication.id
-    const publicationPdf = latest.publication.pdfUrl
+    const publication = await this.getPublicationData(id, version)
 
     const pdf = await this.pdfService.handleAdvertPdf(
       id,
-      publicationId,
-      latest.html,
-      publicationPdf,
-      latest.advert.title,
+      publication.publicationId,
+      publication.html,
+      publication.pdfUrl,
+      publication.advertTitle,
     )
 
+    this.sendPdfResponse(res, pdf, publication.publicationNumber)
+  }
+
+  private async getPublicationData(id: string, version?: AdvertVersionEnum) {
+    const publications =
+      await this.publicationService.getPublishedPublicationsByAdvertId(id)
+    const latest = version
+      ? publications[publications.length - 1]
+      : publications.find((p) => p.publication.version === version)
+
+    if (!latest) {
+      throw new BadRequestException(
+        'No published publication found for the given advert and version',
+      )
+    }
+
+    return {
+      publicationId: latest.publication.id,
+      html: latest.html,
+      pdfUrl: latest.publication.pdfUrl,
+      advertTitle: latest.advert.title,
+      publicationNumber: latest.advert.publicationNumber,
+    }
+  }
+
+  private sendPdfResponse(
+    res: Response,
+    pdf: Buffer,
+    publicationNumber: string | undefined,
+  ) {
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="advert-${latest.advert.publicationNumber}.pdf"`,
+      'Content-Disposition': `inline; filename="advert-${publicationNumber}.pdf"`,
       'Content-Length': pdf.length,
     })
 

@@ -41,12 +41,7 @@ import { TBRTransactionModel } from '../models/tbr-transactions.model'
 import { TypeModel } from '../models/type.model'
 import { TypeCategoriesModel } from '../models/type-categories.model'
 import { UserModel } from '../models/users.model'
-import { IssuesControllerModule } from '../modules/advert/issues/issues.controller.module'
-import { SignatureControllerModule } from '../modules/advert/signature/signature.controller.module'
-import { StatisticsControllerModule } from '../modules/advert/statistics/statistics.controller.module'
-import { CommunicationChannelControllerModule } from '../modules/communication-channel/communication-channel.module'
-import { LegacyMigrationControllerModule } from '../modules/legacy-migration/legacy-migration.controller.module'
-import { LGNationalRegistryControllerModule } from '../modules/national-registry/national-registry.controller.module'
+import { PublicationListenerModule } from '../modules/advert/publications/listeners/publication.listener.module'
 import { ApplicationWebSwaggerModule } from '../modules/swagger/application-web.swagger.module'
 import { ExternalSystemsSwaggerModule } from '../modules/swagger/external-systems.swagger.module'
 import { InternalWebSwaggerModule } from '../modules/swagger/internal-web.swagger.module'
@@ -111,6 +106,7 @@ import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.mo
     InternalWebSwaggerModule,
     IslandIsApplicationSwaggerModule,
     PublicWebSwaggerModule,
+    PublicationListenerModule,
     {
       module: AuthModule,
       global: true,

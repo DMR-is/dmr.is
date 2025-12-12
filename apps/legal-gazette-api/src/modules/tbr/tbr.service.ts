@@ -82,7 +82,7 @@ export class TBRService implements ITBRService {
     const endpoint = new URL(`${this.config.tbrBasePath}${path}`).toString()
 
     this.logger.info('Making TBR request to:', {
-      message: endpoint,
+      message: `/${endpoint.split('/').slice(-2).join('/')}`,
       path: path,
       method: options?.method || 'GET',
       context: 'TBRService',

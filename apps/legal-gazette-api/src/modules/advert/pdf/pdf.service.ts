@@ -28,7 +28,7 @@ export class PdfService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IAWSService) private readonly s3: IAWSService,
     @InjectModel(AdvertPublicationModel)
-    readonly advertPublicationModel: typeof AdvertPublicationModel,
+    private readonly advertPublicationModel: typeof AdvertPublicationModel,
   ) {}
 
   async generatePdfFromHtml(html: string): Promise<Buffer> {
