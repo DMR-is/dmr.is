@@ -47,6 +47,7 @@ export class ForeclosureController {
   @LGResponse({
     operationId: 'createForeclosureSale',
     type: ForeclosureDto,
+    status: 201,
     description:
       'Creates a new foreclosure advertisement along with its properties',
   })
@@ -58,6 +59,7 @@ export class ForeclosureController {
 
   @Delete('/sale/:id')
   @LGResponse({
+    status: 204,
     operationId: 'deleteForeclosureSale',
     description:
       'Deletes a foreclosure sale by its ID, marks the advert as withdrawn',
@@ -72,6 +74,7 @@ export class ForeclosureController {
     operationId: 'createForeclosureProperty',
     description: 'Creates a new property for an existing foreclosure sale',
     type: ForeclosurePropertyDto,
+    status: 201,
   })
   @ApiParam({ name: 'id', description: 'The ID of the foreclosure sale' })
   async createForeclosureProperty(
@@ -85,6 +88,7 @@ export class ForeclosureController {
   @LGResponse({
     operationId: 'deletePropertyFromForeclosure',
     description: 'Deletes a property from an existing foreclosure sale',
+    status: 204,
   })
   @ApiParam({ name: 'id', description: 'The ID of the foreclosure sale' })
   @ApiParam({
