@@ -1,10 +1,10 @@
 'use client'
 
-import { de } from 'date-fns/locale'
 import debounce from 'lodash/debounce'
 import { useCallback, useEffect, useState } from 'react'
 
 import {
+  Box,
   Button,
   DatePicker,
   Divider,
@@ -15,7 +15,7 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { Box, Option } from '@island.is/island-ui/core'
+import { Option } from '@island.is/island-ui/core'
 
 import { useTotalItemsContext } from '../../../../context/total-items-context'
 import { useFilters } from '../../../../hooks/useFilters'

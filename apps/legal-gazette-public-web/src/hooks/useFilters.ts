@@ -5,6 +5,7 @@ import {
   parseAsString,
   useQueryStates,
 } from 'nuqs'
+
 export const useFilters = () => {
   const [filters, setFilters] = useQueryStates({
     page: parseAsInteger.withDefault(1),

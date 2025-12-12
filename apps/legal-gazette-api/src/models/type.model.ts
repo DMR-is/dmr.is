@@ -40,7 +40,7 @@ export class TypeModel extends BaseEntityModel<TypeDto> {
       id: model.id,
       title: model.title,
       slug: model.slug,
-      categories: model?.categories?.map((category) => category.fromModel()),
+      categories: model.categories.map((category) => category.fromModel()),
     }
   }
 

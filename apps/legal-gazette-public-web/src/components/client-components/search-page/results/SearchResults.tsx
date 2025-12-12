@@ -44,7 +44,7 @@ export const SearchResults = () => {
       <AlertMessage
         type="error"
         title="Villa kom upp"
-        message={error.message}
+        message="Ekki tókst að sækja birtingar, vinsamlegast reynið aftur síðar"
       />
     )
   }
