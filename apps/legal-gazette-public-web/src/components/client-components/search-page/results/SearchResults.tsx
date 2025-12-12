@@ -13,12 +13,14 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
+import { useTotalItemsContext } from '../../../../context/total-items-context'
 import { useFilters } from '../../../../hooks/useFilters'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { PublicationCard } from '../../cards/PublicationCard'
 
 export const SearchResults = () => {
   const { filters, setFilters } = useFilters()
+  const { setTotalItems } = useTotalItemsContext()
   const trpc = useTRPC()
 
   const { data, isLoading, error } = useQuery(
@@ -48,7 +50,7 @@ export const SearchResults = () => {
   }
 
   useEffect(() => {
-    setFilters((prev) => ({ ...prev, totalItems: data?.paging.totalItems }))
+    setTotalItems(data?.paging.totalItems)
   }, [data])
 
   const breadcrumbs = [

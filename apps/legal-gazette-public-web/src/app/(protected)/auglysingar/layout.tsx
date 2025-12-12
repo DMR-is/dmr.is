@@ -2,6 +2,7 @@ import { Footer } from '@dmr.is/ui/components/Footer/Footer'
 import { Box, GridContainer, Stack } from '@dmr.is/ui/components/island-is'
 
 import { NavigateBack } from '../../../components/client-components/navigate-back/NavigateBack'
+import { TotalItemsProvider } from '../../../context/total-items-context'
 import * as styles from './grid-layout.css'
 
 export default async function Layout({
@@ -14,7 +15,7 @@ export default async function Layout({
   related: React.ReactNode
 }) {
   return (
-    <>
+    <TotalItemsProvider>
       <GridContainer>
         <Box paddingY={8} className={styles.gridLayout}>
           <Box className={styles.sidebarStyle}>
@@ -30,6 +31,6 @@ export default async function Layout({
       </GridContainer>
       {related && <Box>{related}</Box>}
       <Footer />
-    </>
+    </TotalItemsProvider>
   )
 }

@@ -1593,7 +1593,8 @@
           "issue": { "type": "number" },
           "year": { "type": "number" },
           "runningPageNumber": { "type": "number" },
-          "isLegacy": { "type": "boolean" }
+          "isLegacy": { "type": "boolean" },
+          "hash": { "type": "string" }
         },
         "required": [
           "id",
@@ -1604,7 +1605,8 @@
           "issue",
           "year",
           "runningPageNumber",
-          "isLegacy"
+          "isLegacy",
+          "hash"
         ]
       },
       "GetIssuesDto": {

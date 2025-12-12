@@ -5,7 +5,6 @@ import {
   parseAsString,
   useQueryStates,
 } from 'nuqs'
-
 export const useFilters = () => {
   const [filters, setFilters] = useQueryStates({
     page: parseAsInteger.withDefault(1),
@@ -16,7 +15,6 @@ export const useFilters = () => {
     dateFrom: parseAsIsoDate,
     dateTo: parseAsIsoDate,
     yearId: parseAsInteger.withDefault(new Date().getFullYear()),
-    totalItems: parseAsInteger.withDefault(0),
   })
 
   const reset = () => {
@@ -27,7 +25,6 @@ export const useFilters = () => {
       dateFrom: null,
       dateTo: null,
       yearId: null,
-      totalItems: null,
     })
   }
 
