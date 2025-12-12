@@ -14,6 +14,7 @@ import { CaseControllerModule } from '../case/case.controller.module'
 import { CommentControllerModule } from '../comment/comment.controller.module'
 import { CommunicationChannelControllerModule } from '../communication-channel/communication-channel.module'
 import { FeeCodeModule } from '../fee-code/fee-code.controller.module'
+import { TBRCompanySettingsControllerModule } from '../settings/tbr-company/tbr-company-settings.controller.module'
 import { SettlementControllerModule } from '../settlement/settlement.controller.module'
 import { UserControllerModule } from '../users/users.controller.module'
 
@@ -35,6 +36,7 @@ import { UserControllerModule } from '../users/users.controller.module'
     SettlementControllerModule,
     UserControllerModule,
     SignatureControllerModule,
+    TBRCompanySettingsControllerModule,
   ],
 })
 export class InternalWebSwaggerModule {}
