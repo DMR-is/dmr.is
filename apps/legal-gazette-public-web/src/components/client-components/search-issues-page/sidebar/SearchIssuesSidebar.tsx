@@ -21,8 +21,9 @@ export const SearchIssuesSidebar = ({
   totalItems?: number
 }) => {
   const { filters, setFilters, reset } = useFilters()
-  const MIN_DATE = new Date('2000-01-01')
   const THIS_YEAR = new Date().getFullYear()
+  const MIN_DATE = new Date('2000-01-01')
+  const MIN_YEAR = MIN_DATE.getFullYear()
   const [timestamp, setTimestamp] = useState(new Date().getTime())
   const [startDate, setStartDate] = useState<Date | null>(null)
   const [endDate, setEndDate] = useState<Date | null>(null)
@@ -121,6 +122,8 @@ export const SearchIssuesSidebar = ({
                 setStartDate(null)
               }
             }}
+            minYear={MIN_YEAR}
+            maxYear={THIS_YEAR}
           />
           <DatePicker
             locale="is"
@@ -139,6 +142,8 @@ export const SearchIssuesSidebar = ({
                 setEndDate(null)
               }
             }}
+            minYear={MIN_YEAR}
+            maxYear={THIS_YEAR}
           />
           <Select
             label="Fjöldi niðurstaða á síðu"

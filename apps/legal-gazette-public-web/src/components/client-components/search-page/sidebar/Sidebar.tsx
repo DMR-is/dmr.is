@@ -1,9 +1,10 @@
 'use client'
 
 import debounce from 'lodash/debounce'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import {
+  Box,
   Button,
   DatePicker,
   Divider,
@@ -14,16 +15,27 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
+import { Option } from '@island.is/island-ui/core'
+
 import { useFilters } from '../../../../hooks/useFilters'
+import { usePublications } from '../../../../hooks/usePublications'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { isDate } from '../../../../lib/utils'
 
 import { useQuery } from '@tanstack/react-query'
+
 export const SearchSidebar = () => {
   const trpc = useTRPC()
   const { filters, setFilters, reset } = useFilters()
-  const MIN_DATE = new Date('1970-01-01')
+  const { totalItems } = usePublications()
+
+  const THIS_YEAR = new Date().getFullYear()
+  const MIN_DATE = new Date('2000-01-01')
+  const MIN_YEAR = MIN_DATE.getFullYear()
   const [timestamp, setTimestamp] = useState(new Date().getTime())
+  const [categorySelected, setCategorySelected] =
+    useState<Option<string> | null>(null)
+  const [typeSelected, setTypeSelected] = useState<Option<string> | null>(null)
 
   const debouncedSetFilters = useCallback(
     debounce(
@@ -43,15 +55,14 @@ export const SearchSidebar = () => {
     setFilters({ ...filters, [key]: date })
   }
 
-  const { data: typeData, isPaused: isLoadingTypes } = useQuery(
-    trpc.getTypes.queryOptions(),
+  const { data: typeData, isLoading: isLoadingTypes } = useQuery(
+    trpc.getTypes.queryOptions({
+      category: filters.categoryId?.length ? filters.categoryId[0] : undefined,
+    }),
   )
 
-  const { data: categoryData, isPaused: isLoadingCategories } = useQuery(
-    trpc.getCategories.queryOptions(
-      { type: filters.typeId ?? undefined },
-      { enabled: !!filters.typeId },
-    ),
+  const { data: categoryData, isLoading: isLoadingCategories } = useQuery(
+    trpc.getCategories.queryOptions(),
   )
 
   const typeOptions = typeData?.types.map((type) => ({
@@ -59,16 +70,25 @@ export const SearchSidebar = () => {
     value: type.id,
   }))
 
-  const defaultType = typeOptions?.find((t) => t.value === filters.typeId)
+  useEffect(() => {
+    const filterCategory = filters.categoryId?.length
+      ? categoryOptions?.find((cat) => cat.value === filters.categoryId?.[0])
+      : null
+
+    setCategorySelected(filterCategory || null)
+  }, [categoryData, filters.categoryId])
+
+  useEffect(() => {
+    const filterType = typeOptions?.find(
+      (type) => type.value === filters.typeId,
+    )
+    setTypeSelected(filterType || null)
+  }, [typeData, filters.typeId])
 
   const categoryOptions = categoryData?.categories.map((cat) => ({
     label: cat.title,
     value: cat.id,
   }))
-
-  const defaultCategories = categoryOptions?.filter((c) =>
-    filters.categoryId?.includes(c.value),
-  )
 
   const totalResultsOptions = Array.from(
     { length: 5 },
@@ -79,96 +99,121 @@ export const SearchSidebar = () => {
   }))
 
   return (
-    <Stack space={[1, 2]} key={timestamp}>
-      <Text variant="h4">Leit</Text>
-      <Input
-        placeholder="Leit í Lögbirtingablaðinu"
-        name="search"
-        size="sm"
-        defaultValue={filters.search || ''}
-        onChange={(e) => debouncedSetFilters('search', e.target.value)}
-      />
-      <Divider />
-      <Inline justifyContent="spaceBetween" alignY="center">
-        <Text variant="h4">Síur</Text>
-        <Button
-          variant="text"
-          size="small"
-          onClick={() => {
-            reset()
-            setTimestamp(new Date().getTime())
-          }}
-        >
-          Hreinsa síur
-        </Button>
-      </Inline>
-      <Select
-        key={`filters.typeId-${isLoadingTypes ? 'loading' : 'loaded'}`}
-        isClearable
-        isLoading={isLoadingTypes}
-        label="Tegund"
-        options={typeOptions || []}
-        size="xs"
-        defaultValue={defaultType || null}
-        onChange={(opt) => {
-          if (!opt) {
-            return setFilters({ ...filters, typeId: null, categoryId: [] })
-          }
-          setFilters({
-            ...filters,
-            typeId: opt.value as string,
-            categoryId: [],
-          })
-        }}
-      />
-      <Select
-        key={`filters.categoryId-${filters.typeId}-${categoryOptions?.length}`}
-        isLoading={isLoadingCategories}
-        placeholder={!filters.typeId ? 'Veldu tegund fyrst' : 'Veldu flokka'}
-        noOptionsMessage="Veldu tegund fyrst"
-        isMulti
-        isClearable
-        label="Flokkur"
-        defaultValue={defaultCategories || []}
-        options={categoryOptions || []}
-        size="xs"
-        onChange={(options) => {
-          const incoming = options.map((opt) => opt.value as string)
-          setFilters({ ...filters, categoryId: incoming })
-        }}
-      />
-      <DatePicker
-        locale="is"
-        label="Dagsetning frá"
-        size="xs"
-        placeholderText=""
-        selected={filters.dateFrom}
-        minDate={MIN_DATE}
-        maxDate={new Date()}
-        handleChange={(date) => updateDate('dateFrom', date)}
-      />
-      <DatePicker
-        locale="is"
-        label="Dagsetning til"
-        size="xs"
-        placeholderText=""
-        selected={filters.dateTo}
-        minDate={filters.dateFrom ? filters.dateFrom : MIN_DATE}
-        maxDate={new Date()}
-        handleChange={(date) => updateDate('dateTo', date)}
-      />
-      <Select
-        label="Fjöldi niðurstaða"
-        options={totalResultsOptions}
-        size="xs"
-        defaultValue={totalResultsOptions.find(
-          (o) => o.value === filters.pageSize,
-        )}
-        onChange={(opt) => {
-          if (!opt) return
-          setFilters({ ...filters, pageSize: opt.value as number })
-        }}
-      />
+    <Stack space={2}>
+      <Box padding={3} borderRadius="large" background="blue100">
+        <Stack space={[1, 2]} key={timestamp}>
+          <Inline justifyContent={'spaceBetween'} alignY="center">
+            <Text variant="h4">Leit</Text>
+            <Button
+              variant="text"
+              size="small"
+              icon="reload"
+              onClick={() => {
+                reset()
+                setTimestamp(new Date().getTime())
+              }}
+            >
+              Hreinsa
+            </Button>
+          </Inline>
+          <Input
+            placeholder="Sláðu inn leitarorð"
+            name="search"
+            size="sm"
+            defaultValue={filters.search || ''}
+            onChange={(e) => debouncedSetFilters('search', e.target.value)}
+          />
+          <Divider />
+          <Select
+            isLoading={isLoadingCategories}
+            isClearable
+            label="Flokkur"
+            placeholder="Allir flokkar"
+            options={categoryOptions || []}
+            value={categorySelected}
+            size="xs"
+            onChange={(options) => {
+              setFilters({
+                ...filters,
+                page: null,
+                typeId: null,
+                categoryId: options?.value ? [options.value] : null,
+              })
+            }}
+          />
+
+          <Select
+            isClearable
+            isLoading={isLoadingTypes}
+            label="Tegund"
+            placeholder="Allar tegundir"
+            options={typeOptions || []}
+            size="xs"
+            value={typeSelected}
+            onChange={(opt) => {
+              setFilters({
+                ...filters,
+                page: null,
+                typeId: opt?.value || null,
+              })
+            }}
+          />
+
+          <DatePicker
+            locale="is"
+            label="Dagsetning frá"
+            size="xs"
+            placeholderText=""
+            selected={filters.dateFrom}
+            minDate={MIN_DATE}
+            maxDate={new Date()}
+            handleChange={(date) => updateDate('dateFrom', date)}
+            minYear={MIN_YEAR}
+            maxYear={THIS_YEAR}
+          />
+          <DatePicker
+            locale="is"
+            label="Dagsetning til"
+            size="xs"
+            placeholderText=""
+            selected={filters.dateTo}
+            minDate={filters.dateFrom ? filters.dateFrom : MIN_DATE}
+            maxDate={new Date()}
+            handleChange={(date) => updateDate('dateTo', date)}
+            minYear={MIN_YEAR}
+            maxYear={THIS_YEAR}
+          />
+          <Select
+            label="Fjöldi niðurstaða"
+            options={totalResultsOptions}
+            size="xs"
+            defaultValue={totalResultsOptions.find(
+              (o) => o.value === filters.pageSize,
+            )}
+            onChange={(opt) => {
+              if (!opt) return
+              setFilters({ ...filters, pageSize: opt.value as number })
+            }}
+          />
+        </Stack>
+      </Box>
+      <Box paddingLeft={1} marginBottom={4}>
+        {totalItems ? (
+          <Text>
+            <strong>
+              {filters.page > 1 ? filters.pageSize * (filters.page - 1) + 1 : 1}
+            </strong>
+            {' – '}
+            <strong>
+              {filters.page * filters.pageSize < totalItems
+                ? filters.page * filters.pageSize
+                : totalItems}
+            </strong>
+            {' af '}
+            <strong>{totalItems}</strong> niðurstöðum
+          </Text>
+        ) : null}
+      </Box>
     </Stack>
   )
 }

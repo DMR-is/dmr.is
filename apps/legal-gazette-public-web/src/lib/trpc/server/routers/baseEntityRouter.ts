@@ -8,10 +8,18 @@ const getCategoriesSchema = z
   })
   .optional()
 
+const getTypesSchema = z
+  .object({
+    category: z.string().optional(),
+  })
+  .optional()
+
 export const baseEntityRouter = router({
-  getTypes: protectedProcedure.query(async ({ ctx }) => {
-    return await ctx.api.getTypes({})
-  }),
+  getTypes: protectedProcedure
+    .input(getTypesSchema)
+    .query(async ({ ctx, input = {} }) => {
+      return await ctx.api.getTypes(input)
+    }),
   getCategories: protectedProcedure
     .input(getCategoriesSchema)
     .query(async ({ ctx, input = {} }) => {

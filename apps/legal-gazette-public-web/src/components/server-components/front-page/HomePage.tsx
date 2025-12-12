@@ -23,18 +23,18 @@ export const HomePage = async () => {
     },
     {
       title: 'Innköllun þrotabúa',
-      href: '/auglysingar?type=innkollun-throtabu',
-      variant: 'purple',
+      href: '/auglysingar?typeId=065c3fd9-58d1-436f-9fb8-c1f5c214fa50&categoryId=7d0e4b20-2fdd-4ca9-895b-9e7792eca6e5',
+      variant: 'blue',
     },
     {
       title: 'Innköllun dánarbúa',
-      href: '/auglysingar?type=innkollun-danarbua',
-      variant: 'purple',
+      href: '/auglysingar?typeId=bc6384f4-91b0-48fe-9a3a-b528b0aa6468&categoryId=7d0e4b20-2fdd-4ca9-895b-9e7792eca6e5',
+      variant: 'blue',
     },
     {
       title: 'Útgefin tölublöð',
-      href: '/sidur/prentudutgafa',
-      variant: 'darkerBlue',
+      href: '/sidur/utgefintolublod',
+      variant: 'purple',
     },
   ]
 
@@ -62,10 +62,29 @@ export const HomePage = async () => {
               description="Dómsmálaráðuneytið gefur út Lögbirtingablaðið. Það kom fyrst út í prentuðu formi í árið 1908 og í dag er blaðið einnig aðgengilegt á netinu þar sem hægt er að nálgast öll tölublöð sem komið hafa út frá 1. janúar 2001."
               alignHeader={'spaceBetween'}
             >
-              <Box paddingBottom={8}>
+              <Box
+                style={{ marginTop: '-32px' }}
+                paddingTop={0}
+                paddingBottom={6}
+              >
                 <BannerSearch quickLinks={quickLinks} />
               </Box>
             </Hero>
+          </GridColumn>
+          <GridColumn
+            span={['12/12', '12/12', '12/12', '10/12']}
+            offset={['0', '0', '0', '1/12']}
+          >
+            <Text marginBottom={8}>
+              Vegna athugsemda Persónuverndar hefur verið tekið fyrir leit í
+              blaðinu í auglýsingaflokkum, sem varða fjárhagsmálefni
+              einstaklinga og fyrirtækja, nema eftir útgáfudagsetningum og
+              útgáfutímabilum. Þeir flokkar sem sæta þessari takmörkuðu leit
+              eru: <br />
+              Innkallanir, greiðsluaðlögun, greiðsluáskorun, nauðasamningar,
+              nauðungarsala, skiptafundur, veðhafafundur, skiptalok, stefnur,
+              svipting fjárræðis og kaupmáli, framhald uppboðs.
+            </Text>
           </GridColumn>
         </GridRow>
       </GridContainer>
@@ -74,8 +93,10 @@ export const HomePage = async () => {
         <GridContainer>
           <GridRow>
             <GridColumn span={['1/1', '1/1', '1/1', '12/12']}>
-              <Stack space={[2, 3, 4]}>
-                <Text variant="h3">Nýjustu auglýsingar</Text>
+              <Text variant="h3" paddingBottom={3}>
+                Nýjustu auglýsingar
+              </Text>
+              <Stack space={[2]}>
                 {latestPublications.publications.map((pub) => (
                   <PublicationCard publication={pub} key={pub.id} />
                 ))}
