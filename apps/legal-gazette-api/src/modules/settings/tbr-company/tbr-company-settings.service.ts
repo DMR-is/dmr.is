@@ -80,7 +80,10 @@ export class TBRCompanySettingsService implements ITBRCompanySettingsService {
     })
     const setting = await this.settingsModel.findByPkOrThrow(id)
 
-    await setting.update({ active: true })
+    await this.settingsModel.update(
+      { active: true },
+      { where: { nationalId: setting.nationalId } },
+    )
   }
   async markAsInactive(id: string): Promise<void> {
     this.logger.info(`Marking TBR company setting as inactive`, {
@@ -90,7 +93,10 @@ export class TBRCompanySettingsService implements ITBRCompanySettingsService {
 
     const setting = await this.settingsModel.findByPkOrThrow(id)
 
-    await setting.update({ active: false })
+    await this.settingsModel.update(
+      { active: false },
+      { where: { nationalId: setting.nationalId } },
+    )
   }
   async deleteSetting(id: string): Promise<void> {
     this.logger.info(`Deleting TBR company setting`, {

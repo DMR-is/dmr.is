@@ -4,7 +4,7 @@ import { parseAsInteger } from 'next-usequerystate'
 
 import { parseAsBoolean, parseAsString, useQueryStates } from 'nuqs'
 
-import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import Hero from '@dmr.is/ui/components/Hero/Hero'
 import {
   GridColumn,
@@ -29,7 +29,7 @@ export const TBRSettingsContainer = () => {
   })
 
   const trpc = useTRPC()
-  const { data } = useSuspenseQuery(
+  const { data } = useQuery(
     trpc.getTbrSettings.queryOptions({
       page: queryParams.page,
       pageSize: queryParams.pageSize,
@@ -58,21 +58,23 @@ export const TBRSettingsContainer = () => {
         <GridColumn span="12/12">
           <Stack space={[1, 2]}>
             <TBRSettingsFilters />
-            <TBRSettingsList items={data.items} />
-            <Pagination
-              page={data.paging.page}
-              totalItems={data.paging.totalItems}
-              itemsPerPage={10}
-              totalPages={data.paging.totalPages}
-              renderLink={(page, className, children) => (
-                <button
-                  className={className}
-                  onClick={() => setQueryParams({ page })}
-                >
-                  {children}
-                </button>
-              )}
-            />
+            <TBRSettingsList items={data?.items || []} />
+            {data?.paging && (
+              <Pagination
+                page={data.paging.page}
+                totalItems={data.paging.totalItems}
+                itemsPerPage={10}
+                totalPages={data.paging.totalPages}
+                renderLink={(page, className, children) => (
+                  <button
+                    className={className}
+                    onClick={() => setQueryParams({ page })}
+                  >
+                    {children}
+                  </button>
+                )}
+              />
+            )}
           </Stack>
         </GridColumn>
       </GridRow>

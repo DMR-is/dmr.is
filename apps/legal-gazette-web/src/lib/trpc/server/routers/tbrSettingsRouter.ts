@@ -25,6 +25,10 @@ export const updateTbrSettingInput = createTbrSettingInput
   .partial()
   .required({ id: true })
 
+export const toggleTbrSettingStatusInput = idInput.extend({
+  isActive: z.boolean(),
+})
+
 export const tbrSettingsRouter = router({
   getTbrSettings: protectedProcedure
     .input(getTbrSettingsInput)
@@ -51,14 +55,13 @@ export const tbrSettingsRouter = router({
     .mutation(async ({ ctx, input }) => {
       return await ctx.api.deleteTBRCompanySettings({ id: input.id })
     }),
-  activateSetting: protectedProcedure
-    .input(idInput)
+  toggleSettingStatus: protectedProcedure
+    .input(toggleTbrSettingStatusInput)
     .mutation(async ({ ctx, input }) => {
-      return await ctx.api.activateTBRCompanySettings({ id: input.id })
-    }),
-  deactivateSetting: protectedProcedure
-    .input(idInput)
-    .mutation(async ({ ctx, input }) => {
-      return await ctx.api.deactivateTBRCompanySettings({ id: input.id })
+      if (input.isActive) {
+        return await ctx.api.activateTBRCompanySettings({ id: input.id })
+      } else {
+        return await ctx.api.deactivateTBRCompanySettings({ id: input.id })
+      }
     }),
 })

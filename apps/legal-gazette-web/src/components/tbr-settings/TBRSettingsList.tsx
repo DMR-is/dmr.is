@@ -1,16 +1,25 @@
-import { Tag } from '@dmr.is/ui/components/island-is'
+'use client'
+
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { TBRCompanySettingsItemDto } from '../../gen/fetch'
+import { useTRPC } from '../../lib/trpc/client/trpc'
+import { CreateTBRSetting } from './CreateTBRSetting'
+import { DeleteTBRSetting } from './DeleteTBRSetting'
+import { TBRSettingInfo } from './TBRSettingInfo'
+import { ToggleTBRSettingsStatus } from './ToggleTBRStatus'
+
+import { useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   items: TBRCompanySettingsItemDto[]
 }
 
-type Column = React.ComponentProps<typeof DataTable>['columns'][number]
-
 export const TBRSettingsList = ({ items }: Props) => {
-  const columns: Column[] = [
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+
+  const columns = [
     {
       field: 'name',
       children: 'Nafn',
@@ -31,19 +40,35 @@ export const TBRSettingsList = ({ items }: Props) => {
       field: 'status',
       children: 'Staða',
     },
-  ]
+    {
+      field: 'actions',
+      children: <CreateTBRSetting />,
+      size: 'tiny' as const,
+    },
+  ] as const
 
   const rows = items.map((item) => ({
-    id: item.id,
+    isExpandable: true,
+    children: <TBRSettingInfo setting={item} />,
     name: item.name,
     nationalId: item.nationalId,
+    uniqueKey: item.id,
     email: item.email || '-',
     phone: item.phone || '-',
     status: (
-      <Tag variant={item.active ? 'mint' : 'rose'}>
-        {item.active ? 'Virkur' : 'Óvirkur'}
-      </Tag>
+      <ToggleTBRSettingsStatus
+        settingId={item.id}
+        settingNationalId={item.nationalId}
+        isActive={item.active}
+      />
     ),
+    actions: <DeleteTBRSetting settingName={item.name} settingId={item.id} />,
+    onExpandChange: (expanded: boolean) => {
+      // only invalidate when expanding to refetch updated data
+      if (expanded) {
+        queryClient.invalidateQueries(trpc.getTbrSettings.queryFilter())
+      }
+    },
   }))
 
   return <DataTable columns={columns} rows={rows} />

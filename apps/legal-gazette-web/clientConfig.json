@@ -3859,7 +3859,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetTBRCompanySettingsQueryDto"
+                  "$ref": "#/components/schemas/TBRCompanySettingsItemDto"
                 }
               }
             }
@@ -3937,7 +3937,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetTBRCompanySettingsQueryDto"
+                  "$ref": "#/components/schemas/TBRCompanySettingsItemDto"
                 }
               }
             }
@@ -3998,16 +3998,7 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetTBRCompanySettingsQueryDto"
-                }
-              }
-            }
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
@@ -4066,16 +4057,7 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetTBRCompanySettingsQueryDto"
-                }
-              }
-            }
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
@@ -4134,16 +4116,7 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetTBRCompanySettingsQueryDto"
-                }
-              }
-            }
-          },
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {
@@ -5207,15 +5180,6 @@
           "phone": { "type": "string" }
         },
         "required": ["name", "nationalId"]
-      },
-      "GetTBRCompanySettingsQueryDto": {
-        "type": "object",
-        "properties": {
-          "page": { "type": "number", "example": 1, "default": 1 },
-          "pageSize": { "type": "number", "example": 10, "default": 10 },
-          "search": { "type": "string" },
-          "activeOnly": { "type": "boolean" }
-        }
       },
       "UpdateTbrCompanySettingsDto": {
         "type": "object",

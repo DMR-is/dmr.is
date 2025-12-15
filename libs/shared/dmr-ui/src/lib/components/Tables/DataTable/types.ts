@@ -18,6 +18,7 @@ export type DataTableCellProps = {
 
 export type DataTableRowExpandableProps = {
   isExpandable?: boolean
+  onExpandChange?: (expanded: boolean) => void
   startExpanded?: boolean
   children?: React.ReactNode
 }
@@ -27,14 +28,17 @@ export type DataTableRowHasLinkProps = {
   href?: string
 }
 
-export type DataTableRowProps<T extends readonly DataTableColumnProps[]> = {
+export type DataTableRowData<T extends readonly DataTableColumnProps[]> = {
   [K in T[number]['field']]: React.ReactNode
-} & {
-  columns: T
-  uniqueKey?: string
-  background?: string
-} & DataTableRowExpandableProps &
-  DataTableRowHasLinkProps
+}
+
+export type DataTableRowProps<T extends readonly DataTableColumnProps[]> =
+  DataTableRowData<T> & {
+    columns: T
+    uniqueKey?: string
+    background?: string
+  } & DataTableRowExpandableProps &
+    DataTableRowHasLinkProps
 export type DataTablePagingProps = {
   page: number
   pageSize: number
@@ -56,11 +60,31 @@ export type DataTablePaginationProps = {
   showPageSizeSelect?: boolean
 }
 
+// Define row data with field values
+type DataTableRowFieldData<T extends readonly DataTableColumnProps[]> = {
+  [K in T[number]['field']]: React.ReactNode
+}
+
+// Define expandable and link props separately
+type DataTableRowMetadata = {
+  uniqueKey?: string
+  background?: string
+  isExpandable?: boolean
+  onExpandChange?: (expanded: boolean) => void
+  startExpanded?: boolean
+  children?: React.ReactNode
+  hasLink?: boolean
+  href?: string
+}
+
+export type DataTableRowInput<T extends readonly DataTableColumnProps[]> =
+  DataTableRowFieldData<T> & DataTableRowMetadata
+
 export type DataTableProps<T extends readonly DataTableColumnProps[]> = {
   layout?: 'fixed' | 'auto'
   loading?: boolean
   columns: T
-  rows?: Array<Omit<DataTableRowProps<T>, 'columns'>>
+  rows?: Array<DataTableRowInput<T>>
   paging?: DataTablePagingProps
   onPageChange?: (page: number) => void
   onPageSizeChange?: (pageSize: number) => void
