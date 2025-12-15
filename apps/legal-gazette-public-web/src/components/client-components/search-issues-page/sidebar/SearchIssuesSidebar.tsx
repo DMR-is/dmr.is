@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import {
   Box,
@@ -36,7 +36,7 @@ export const SearchIssuesSidebar = () => {
       setEndDate(date)
     }
 
-    setFilters({ ...filters, [key]: date, page: 1, year: 'all' })
+    setFilters({ ...filters, [key]: date, page: 1 })
   }
 
   const totalResultsOptions = Array.from(
@@ -55,6 +55,14 @@ export const SearchIssuesSidebar = () => {
     value: num.toString(),
   }))
   yearOptions.unshift({ label: '— Öll ár —', value: 'allt' })
+
+  useEffect(() => {
+    if (filters.dateFrom && filters.dateTo) {
+      if (filters.dateFrom && filters.dateTo) {
+        setFilters({ ...filters, year: 'all' })
+      }
+    }
+  }, [filters.dateFrom, filters.dateTo])
 
   return (
     <Stack space={2}>
