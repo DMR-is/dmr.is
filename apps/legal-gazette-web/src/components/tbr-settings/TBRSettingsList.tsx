@@ -64,8 +64,8 @@ export const TBRSettingsList = ({ items }: Props) => {
     ),
     actions: <DeleteTBRSetting settingName={item.name} settingId={item.id} />,
     onExpandChange: (expanded: boolean) => {
-      // only invalidate when expanding to refetch updated data
-      if (expanded) {
+      // only invalidate when collapsing to refetch updated data
+      if (!expanded) {
         queryClient.invalidateQueries(trpc.getTbrSettings.queryFilter())
       }
     },
