@@ -76,22 +76,22 @@ export class AdvertPdfController {
   private async getPublicationData(id: string, version?: AdvertVersionEnum) {
     const publications =
       await this.publicationService.getPublishedPublicationsByAdvertId(id)
-    const latest = version
-      ? publications[publications.length - 1]
-      : publications.find((p) => p.publication.version === version)
+    const publication = version
+      ? publications.find((p) => p.publication.version === version)
+      : publications[publications.length - 1]
 
-    if (!latest) {
+    if (!publication) {
       throw new BadRequestException(
         'No published publication found for the given advert and version',
       )
     }
 
     return {
-      publicationId: latest.publication.id,
-      html: latest.html,
-      pdfUrl: latest.publication.pdfUrl,
-      advertTitle: latest.advert.title,
-      publicationNumber: latest.advert.publicationNumber,
+      publicationId: publication.publication.id,
+      html: publication.html,
+      pdfUrl: publication.publication.pdfUrl,
+      advertTitle: publication.advert.title,
+      publicationNumber: publication.advert.publicationNumber,
     }
   }
 

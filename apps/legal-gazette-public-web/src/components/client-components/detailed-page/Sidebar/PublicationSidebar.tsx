@@ -1,5 +1,3 @@
-'use client'
-
 import Link from 'next/link'
 
 import { Box, Button, Stack, Text } from '@dmr.is/ui/components/island-is'
@@ -12,20 +10,6 @@ type Props = {
 }
 
 export const PublicationSidebar = ({ publication }: Props) => {
-  // const trpc = useTRPC()
-  // const { mutate, isPending } = useMutation(
-  //   trpc.getPublicationPdf.mutationOptions({
-  //     onSuccess: (data) => {
-  //       console.log(data)
-  //       console.log('data.size', data.size)
-  //       console.log('data.type', data.type)
-  //     },
-  //     onError: () => {
-  //       toast.error('Ekki tókst að sækja PDF skjal')
-  //     },
-  //   }),
-  // )
-
   return (
     <Stack space={[1, 2]}>
       <Box padding={3} background="blue100" borderRadius="large">
