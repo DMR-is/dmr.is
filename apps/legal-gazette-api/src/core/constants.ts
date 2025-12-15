@@ -30,6 +30,7 @@ export enum LegalGazetteModels {
   DOCUMENT_ISSUES = 'document_issues',
   LEGACY_SUBSCRIBER = 'legacy_subscribers',
   LEGACY_MIGRATION_TOKEN = 'legacy_migration_tokens',
+  TBR_COMPANY_SETTINGS = 'tbr_company_settings',
 }
 
 export const RECALL_BANKRUPTCY_ADVERT_TYPE_ID =

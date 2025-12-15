@@ -19,6 +19,7 @@ import { AuthorizationGuard } from '../../../core/guards'
 import {
   CreateTBRCompanySettingsDto,
   GetTBRCompanySettingsQueryDto,
+  TBRCompanySettingsListDto,
   UpdateTbrCompanySettingsDto,
 } from '../../../models/tbr-company-settings.model'
 import { ITBRCompanySettingsService } from './tbr-company-settings.service.interface'
@@ -39,7 +40,7 @@ export class TBRCompanySettingsController {
   @Get()
   @LGResponse({
     operationId: 'getTBRCompanySettings',
-    type: GetTBRCompanySettingsQueryDto,
+    type: TBRCompanySettingsListDto,
   })
   async getSettings(@Query() query: GetTBRCompanySettingsQueryDto) {
     return this.tbrCompanySettingsService.getSettings(query)
