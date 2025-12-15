@@ -105,185 +105,99 @@ export default function Signup() {
 
   return (
     <GridContainer>
-      <GridRow marginTop={[2, 2, 3]}>
+      <GridRow marginTop={[2, 2, 2, 0]}>
         <GridColumn
           paddingBottom={[2, 2, 3]}
-          offset={['0', '1/12']}
-          span={['12/12', '5/12']}
+          offset={['0', '0', '0', '1/12']}
+          span={['12/12', '8/12', '8/12', '5/12']}
         >
           <Box component="img" src="/images/image-with-text-1.svg" />
         </GridColumn>
-        <GridColumn paddingBottom={[2, 2, 3]} span={['12/12', '5/12']}>
-          <Box
-            display="flex"
-            flexDirection="column"
-            height="full"
-            justifyContent="center"
-          >
-            <Stack space={2}>
-              <Text variant="h2">Gerast áskrifandi</Text>
-              <Text variant="intro">
-                Velkomin á skráningarvef fyrir rafræna áskrift Lögbirtingablaðs
-              </Text>
-              <Text>
-                Við skráninguna verður til greiðsluseðill að fjárhæð 3.000 kr.
-                sem er ársáskriftargjald sem greitt er fyrirfram. Það opnast
-                fyrir aðgang að kerfinu í eitt ár daginn eftir að sú upphæð
-                hefur verið greidd.
-              </Text>
-            </Stack>
-          </Box>
-        </GridColumn>
-      </GridRow>
+        <GridColumn
+          paddingBottom={[2, 2, 3]}
+          span={['12/12', '12/12', '12/12', '5/12']}
+        >
+          <Box marginTop={[0, 0, 0, 6]}>
+            <Stack space={6}>
+              <Stack space={2}>
+                <Text variant="h2">Gerast áskrifandi</Text>
+                <Text variant="intro">
+                  Velkomin á skráningarvef fyrir rafræna áskrift
+                  Lögbirtingablaðs
+                </Text>
+                <Text>
+                  Við skráninguna verður til greiðsluseðill að fjárhæð 3.000 kr.
+                  sem er ársáskriftargjald sem greitt er fyrirfram. Það opnast
+                  fyrir aðgang að kerfinu í eitt ár daginn eftir að sú upphæð
+                  hefur verið greidd.
+                </Text>
+              </Stack>
 
-      {/* Legacy Migration Section */}
-      <GridRow marginTop={[2, 3]} marginBottom={[2, 3]}>
-        <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
-          <Box
-            background="blue100"
-            padding={[3, 4]}
-            borderRadius="large"
-            borderColor="blue200"
-            borderWidth="standard"
-            borderStyle="solid"
-          >
-            <Stack space={3}>
-              <Text variant="h3">Ertu þegar áskrifandi?</Text>
-              <Text>
-                Ef þú átt áskrift í eldra kerfi Lögbirtingablaðsins geturðu
-                flutt hana hingað. Sláðu inn netfangið sem þú notaðir í eldra
-                kerfinu og við sendum þér staðfestingarpóst.
-              </Text>
-
-              {legacyMigrationState === 'sent' ? (
-                <AlertMessage
-                  type="success"
-                  title="Staðfestingarpóstur sendur!"
-                  message={`Við höfum sent tölvupóst á ${legacyEmail} með hlekk til að ljúka flutningi áskriftarinnar. Athugaðu einnig ruslpóstmöppuna ef þú finnur ekki póstinn.`}
-                />
-              ) : (
-                <Stack space={2}>
+              <form>
+                <Stack space={[2, 4]}>
                   <Input
-                    name="legacy-email"
-                    type="email"
-                    label="Netfang í eldra kerfi"
-                    placeholder="netfang@daemi.is"
-                    backgroundColor="white"
-                    value={legacyEmail}
-                    onChange={(e) => {
-                      setLegacyEmail(e.target.value)
-                      if (legacyMigrationState === 'error') {
-                        setLegacyMigrationState('idle')
-                        setLegacyError('')
-                      }
-                    }}
-                    hasError={legacyMigrationState === 'error'}
-                    errorMessage={legacyError}
+                    name="name"
+                    type="text"
+                    label="Nafn"
+                    placeholder="Sláðu inn nafn"
+                    backgroundColor="blue"
+                    value={session?.user.name ?? createState.name}
+                    onChange={(e) =>
+                      setCreateState({
+                        ...createState,
+                        name: e.target.value,
+                      })
+                    }
+                    required
                   />
-                  <Box>
+                  <Input
+                    name="kennitala"
+                    type="text"
+                    label="Kennitala"
+                    placeholder="Sláðu inn kennitölu"
+                    backgroundColor="blue"
+                    value={session?.user?.nationalId ?? createState.nationalId}
+                    onChange={(e) =>
+                      setCreateState({
+                        ...createState,
+                        nationalId: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                  <Input
+                    name="netfang"
+                    type="text"
+                    label="Netfang"
+                    placeholder="Sláðu inn netfang"
+                    backgroundColor="blue"
+                    value={createState.email}
+                    onChange={(e) =>
+                      setCreateState({
+                        ...createState,
+                        email: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                  <Inline space={2} justifyContent="flexEnd">
                     <Button
-                      variant="ghost"
-                      size="small"
-                      icon="mail"
+                      icon="arrowForward"
                       iconType="outline"
-                      loading={
-                        legacyMigrationState === 'checking' ||
-                        legacyMigrationState === 'sending'
-                      }
-                      onClick={handleLegacyMigrationRequest}
+                      // loading={isCreatingInstitution}
+
+                      variant="primary"
+                      // onClick={() => createInstitution(createState)}
                     >
-                      Senda staðfestingarpóst
+                      Vista
                     </Button>
-                  </Box>
+                  </Inline>
                 </Stack>
-              )}
+              </form>
             </Stack>
           </Box>
         </GridColumn>
       </GridRow>
-
-      {/* Divider */}
-      <GridRow marginBottom={[2, 3]}>
-        <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
-          <Divider />
-          <Box marginTop={[2, 3]}>
-            <Text variant="h3">Ný áskrift</Text>
-            <Text marginTop={1}>
-              Ef þú ert ekki áskrifandi í eldra kerfinu, vinsamlegast fylltu út
-              formið hér að neðan til að skrá nýja áskrift.
-            </Text>
-          </Box>
-        </GridColumn>
-      </GridRow>
-
-      {/* New Subscription Form */}
-      <form>
-        <GridRow rowGap={[2, 3]} marginBottom={[4, 8]}>
-          <GridColumn span={['12/12', '5/12']} offset={['0', '6/12']}>
-            <Stack space={[2, 4]}>
-              <Input
-                name="name"
-                type="text"
-                label="Nafn"
-                placeholder="Sláðu inn nafn"
-                backgroundColor="blue"
-                value={session?.user.name ?? createState.name}
-                onChange={(e) =>
-                  setCreateState({
-                    ...createState,
-                    name: e.target.value,
-                  })
-                }
-                required
-              />
-              <Input
-                name="kennitala"
-                type="text"
-                label="Kennitala"
-                placeholder="Sláðu inn kennitölu"
-                backgroundColor="blue"
-                value={session?.user?.nationalId ?? createState.nationalId}
-                onChange={(e) =>
-                  setCreateState({
-                    ...createState,
-                    nationalId: e.target.value,
-                  })
-                }
-                required
-              />
-              <Input
-                name="netfang"
-                type="text"
-                label="Netfang"
-                placeholder="Sláðu inn netfang"
-                backgroundColor="blue"
-                value={createState.email}
-                onChange={(e) =>
-                  setCreateState({
-                    ...createState,
-                    email: e.target.value,
-                  })
-                }
-                required
-              />
-            </Stack>
-          </GridColumn>
-          <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
-            <Inline space={2} justifyContent="flexEnd">
-              <Button
-                icon="arrowForward"
-                iconType="outline"
-                // loading={isCreatingInstitution}
-
-                variant="primary"
-                // onClick={() => createInstitution(createState)}
-              >
-                Vista
-              </Button>
-            </Inline>
-          </GridColumn>
-        </GridRow>
-      </form>
     </GridContainer>
   )
 }

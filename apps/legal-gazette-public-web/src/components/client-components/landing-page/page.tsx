@@ -20,6 +20,7 @@ type QuickLink = {
   title: string
   href: string
   variant: 'primary' | 'ghost' | 'text' | 'utility'
+  newTab?: boolean
 }
 export const LandingPageContent = () => {
   const { data: session } = useSession()
@@ -27,8 +28,9 @@ export const LandingPageContent = () => {
   const quickLinks: QuickLink[] = [
     {
       title: 'Umsóknarkerfi auglýsanda',
-      href: '/auglysingar?type=innkollun-throtabu',
+      href: 'https://umsoknir.logbirtingablad.is',
       variant: 'primary',
+      newTab: true,
     },
   ]
   if (session) {
@@ -69,7 +71,7 @@ export const LandingPageContent = () => {
                     iconType="outline"
                     variant={link.variant}
                   >
-                    <LinkV2 key={i} href={link.href}>
+                    <LinkV2 key={i} href={link.href} newTab={link.newTab}>
                       {link.title}
                     </LinkV2>
                   </Button>

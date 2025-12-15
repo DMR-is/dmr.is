@@ -46,13 +46,12 @@ export const Footer = ({ site = 'web' }: { site?: 'web' | 'applications' }) => {
     },
   ]
 
-  // TODO: Before launch on prod, replace legal-gazette.dev URL's with prod URL's
   const externalLinks =
     site === 'web'
       ? [
           {
             title: 'Umsóknarkerfi Lögbirtingarblaðs',
-            href: 'https://umsoknir.legal-gazette.dev.dmr-dev.cloud',
+            href: 'https://umsoknir.logbirtingablad.is',
           },
           {
             title: 'Stjórnartíðindi',
