@@ -1,48 +1,22 @@
 'use client'
 
-import { useEffect } from 'react'
-
-import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   Box,
+  Icon,
+  LinkV2,
   SkeletonLoader,
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
-
-import { Icon, Link } from '@island.is/island-ui/core'
+import { formatDate } from '@dmr.is/utils/client'
 
 import { useFilters } from '../../../../hooks/useFilters'
-import { useTRPC } from '../../../../lib/trpc/client/trpc'
+import { useIssues } from '../../../../hooks/useIssues'
 
-export const SearchIssuesResults = ({
-  setTotalItems,
-}: {
-  setTotalItems: (count: number) => void
-}) => {
-  const { filters, setFilters } = useFilters()
-
-  const trpc = useTRPC()
-
-  const { data, isLoading } = useQuery(
-    trpc.getIssues.queryOptions({
-      page: filters.page,
-      pageSize: filters.pageSize,
-      year:
-        filters.dateFrom && filters.dateTo
-          ? undefined
-          : filters.yearId.toString(),
-      dateFrom: filters.dateFrom ? filters.dateFrom.toISOString() : undefined,
-      dateTo: filters.dateTo ? filters.dateTo.toISOString() : undefined,
-    }),
-  )
-
-  useEffect(() => {
-    if (data?.paging.totalItems) {
-      setTotalItems(data.paging.totalItems)
-    }
-  }, [data])
+export const SearchIssuesResults = () => {
+  const { setFilters } = useFilters()
+  const { data, isLoading } = useIssues()
 
   return (
     <Stack space={[2, 3, 4]}>
@@ -82,24 +56,14 @@ export const SearchIssuesResults = ({
             rows={
               data?.issues?.map((issue) => ({
                 nr: issue.issue,
-                date: new Date(issue.publishDate).toLocaleDateString('en-GB'),
+                date: formatDate(issue.publishDate),
                 link: (
-                  <Link
-                    href={issue.url}
-                    underline="small"
-                    underlineVisibility="hover"
-                  >
-                    <span
-                      style={{
-                        display: 'flex',
-                        alignItems: 'bottom',
-                        gap: '3px',
-                      }}
-                    >
+                  <LinkV2 href={issue.url ?? '#'}>
+                    <span style={{ display: 'flex', gap: '3px' }}>
                       <Icon icon="document" type="outline" size="small" />
                       Sækja pdf
                     </span>
-                  </Link>
+                  </LinkV2>
                 ),
               })) || []
             }
