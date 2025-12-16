@@ -1,8 +1,12 @@
 'use client'
 
-import Link from 'next/link'
-
-import { Box, Button, Stack, Text } from '@dmr.is/ui/components/island-is'
+import {
+  Box,
+  Button,
+  LinkV2,
+  Stack,
+  Text,
+} from '@dmr.is/ui/components/island-is'
 import { formatDate } from '@dmr.is/utils/client'
 
 import { AdvertPublicationDetailedDto } from '../../../../gen/fetch'
@@ -49,20 +53,19 @@ export const PublicationSidebar = ({ publication }: Props) => {
         </Stack>
       </Box>
       <Box background="dark100" padding={3} borderRadius="large">
-        <Link
+        <LinkV2
           href={`/api/adverts/${publication.advert.id}/pdf?version=${publication.publication.version}`}
-          target="_blank"
-          rel="noreferrer"
+          newTab
         >
           <Button
             variant="text"
-            icon="download"
+            icon="document"
             iconType="outline"
             size="small"
           >
             Prenta auglýsingu
           </Button>
-        </Link>
+        </LinkV2>
       </Box>
     </Stack>
   )
