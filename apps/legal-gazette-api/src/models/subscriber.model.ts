@@ -10,22 +10,33 @@ export type SubscriberAttributes = {
   id: string
   nationalId: string
   name: string | null
+  email: string | null
   isActive: boolean
-  subscribedAt: Date | null
+  subscribedFrom: Date | null
+  subscribedTo: Date | null
 }
 
 export type SubscriberCreateAttributes = {
   id?: string
   nationalId: string
   name?: string | null
+  email?: string | null
   isActive?: boolean
-  subscribedAt?: Date | null
-  legacySubscriberId?: string | null
+  subscribedFrom?: Date | null
+  subscribedTo?: Date | null
 }
 
 @BaseTable({ tableName: LegalGazetteModels.SUBSCRIBER })
 @DefaultScope(() => ({
-  attributes: ['id', 'nationalId', 'name', 'isActive', 'subscribedAt'],
+  attributes: [
+    'id',
+    'nationalId',
+    'name',
+    'email',
+    'isActive',
+    'subscribedFrom',
+    'subscribedTo',
+  ],
 }))
 export class SubscriberModel extends BaseModel<
   SubscriberAttributes,
@@ -49,6 +60,14 @@ export class SubscriberModel extends BaseModel<
   name!: string | null
 
   @Column({
+    type: DataType.TEXT,
+    field: 'email',
+    allowNull: true,
+  })
+  @ApiProperty({ type: String, nullable: true })
+  email!: string | null
+
+  @Column({
     type: DataType.BOOLEAN,
     field: 'is_active',
     allowNull: false,
@@ -59,27 +78,29 @@ export class SubscriberModel extends BaseModel<
 
   @Column({
     type: DataType.DATE,
-    field: 'subscribed_at',
+    field: 'subscribed_from',
     allowNull: true,
   })
   @ApiProperty({ type: Date, nullable: true })
-  subscribedAt!: Date | null
+  subscribedFrom!: Date | null
 
   @Column({
-    type: DataType.UUIDV4,
-    field: 'legacy_subscriber_id',
+    type: DataType.DATE,
+    field: 'subscribed_to',
     allowNull: true,
   })
-  @ApiProperty({ type: String, nullable: true })
-  legacySubscriberId!: string | null
+  @ApiProperty({ type: Date, nullable: true, description: 'NULL means subscription is still active' })
+  subscribedTo!: Date | null
 
   static fromModel(model: SubscriberModel): SubscriberDto {
     return {
       id: model.id,
       nationalId: model.nationalId,
       name: model.name,
+      email: model.email,
       isActive: model.isActive,
-      subscribedAt: model.subscribedAt,
+      subscribedFrom: model.subscribedFrom,
+      subscribedTo: model.subscribedTo,
     }
   }
 
@@ -92,6 +113,8 @@ export class SubscriberDto extends PickType(SubscriberModel, [
   'id',
   'nationalId',
   'name',
+  'email',
   'isActive',
-  'subscribedAt',
+  'subscribedFrom',
+  'subscribedTo',
 ]) {}
