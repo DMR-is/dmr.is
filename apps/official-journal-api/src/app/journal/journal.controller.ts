@@ -99,13 +99,7 @@ export class JournalController {
   async advertsLean(
     @Query() params?: GetAdvertsQueryParams,
   ): Promise<GetLeanAdvertsResponse> {
-    const useV2 = process.env.SEARCH_V2_ENABLED === 'true'
-    if (useV2) {
-      return this.search(params)
-    }
-    return ResultWrapper.unwrap(
-      await this.journalService.getAdvertsLean(params),
-    )
+    return this.search(params)
   }
 
   @Get('/departments/:id')
@@ -224,12 +218,10 @@ export class JournalController {
   })
   @Header('Content-Type', 'application/rss+xml')
   async getRssFeed(@Param('id') id: string) {
-    const adverts = ResultWrapper.unwrap(
-      await this.journalService.getAdvertsLean({
-        department: id?.toLowerCase(),
-        pageSize: 100,
-      }),
-    )
+    const adverts = await this.search({
+      department: id?.toLowerCase(),
+      pageSize: 100,
+    })
     return AdvertsToRss(adverts.adverts, id?.toLowerCase())
   }
 
