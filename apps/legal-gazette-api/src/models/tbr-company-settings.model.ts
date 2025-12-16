@@ -1,11 +1,13 @@
+import { Transform } from 'class-transformer'
 import { IsBoolean, IsOptional, IsString } from 'class-validator'
-import { Column, DataType } from 'sequelize-typescript'
+import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
 import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
 
 import { Paging, PagingQuery } from '@dmr.is/shared/dto'
-import { BaseModel } from '@dmr.is/shared/models/base'
+import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'
 
 export type TBRCompanySettingsAttributes = {
@@ -19,6 +21,10 @@ export type TBRCompanySettingsAttributes = {
 
 export type TBRCompanySettingsCreateAttributes = TBRCompanySettingsAttributes
 
+@DefaultScope(() => ({
+  order: [['name', 'ASC']],
+}))
+@BaseTable({ tableName: LegalGazetteModels.TBR_COMPANY_SETTINGS })
 export class TBRCompanySettingsModel extends BaseModel<
   TBRCompanySettingsAttributes,
   TBRCompanySettingsCreateAttributes
@@ -41,6 +47,20 @@ export class TBRCompanySettingsModel extends BaseModel<
   @Column({ type: DataType.STRING(50), allowNull: false })
   code!: string
 
+  get phoneNumber() {
+    if (!this.phone) return
+
+    if (this.phone.startsWith('+354')) {
+      return this.phone.replace('+354', '+354 ')
+    }
+
+    if (this.phone.startsWith('354')) {
+      return this.phone.replace('354', '+354 ')
+    }
+
+    return this.phone
+  }
+
   static fromModel(model: TBRCompanySettingsModel): TBRCompanySettingsItemDto {
     return {
       id: model.id,
@@ -49,7 +69,7 @@ export class TBRCompanySettingsModel extends BaseModel<
       name: model.name,
       nationalId: model.nationalId,
       email: model.email,
-      phone: model.phone,
+      phone: model.phoneNumber,
       active: model.active,
       code: model.code,
     }
@@ -97,6 +117,7 @@ export class GetTBRCompanySettingsQueryDto extends PagingQuery {
   @ApiProperty({ type: Boolean, required: false })
   @IsOptional()
   @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
   activeOnly?: boolean
 }
 export class TBRCompanySettingsListDto {

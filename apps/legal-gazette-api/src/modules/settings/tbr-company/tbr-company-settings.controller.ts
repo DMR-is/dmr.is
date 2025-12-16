@@ -19,6 +19,8 @@ import { AuthorizationGuard } from '../../../core/guards'
 import {
   CreateTBRCompanySettingsDto,
   GetTBRCompanySettingsQueryDto,
+  TBRCompanySettingsItemDto,
+  TBRCompanySettingsListDto,
   UpdateTbrCompanySettingsDto,
 } from '../../../models/tbr-company-settings.model'
 import { ITBRCompanySettingsService } from './tbr-company-settings.service.interface'
@@ -39,7 +41,7 @@ export class TBRCompanySettingsController {
   @Get()
   @LGResponse({
     operationId: 'getTBRCompanySettings',
-    type: GetTBRCompanySettingsQueryDto,
+    type: TBRCompanySettingsListDto,
   })
   async getSettings(@Query() query: GetTBRCompanySettingsQueryDto) {
     return this.tbrCompanySettingsService.getSettings(query)
@@ -48,7 +50,7 @@ export class TBRCompanySettingsController {
   @Post()
   @LGResponse({
     operationId: 'createTBRCompanySettings',
-    type: GetTBRCompanySettingsQueryDto,
+    type: TBRCompanySettingsItemDto,
   })
   async createSettings(@Body() body: CreateTBRCompanySettingsDto) {
     return this.tbrCompanySettingsService.createSetting(body)
@@ -57,7 +59,7 @@ export class TBRCompanySettingsController {
   @Patch(':id')
   @LGResponse({
     operationId: 'updateTBRCompanySettings',
-    type: GetTBRCompanySettingsQueryDto,
+    type: TBRCompanySettingsItemDto,
   })
   async updateSettings(
     @Param('id') id: string,
@@ -69,7 +71,7 @@ export class TBRCompanySettingsController {
   @Delete(':id')
   @LGResponse({
     operationId: 'deleteTBRCompanySettings',
-    type: GetTBRCompanySettingsQueryDto,
+    status: 204,
   })
   async deleteSettings(@Param('id') id: string) {
     return this.tbrCompanySettingsService.deleteSetting(id)
@@ -78,7 +80,7 @@ export class TBRCompanySettingsController {
   @Post(':id/activate')
   @LGResponse({
     operationId: 'activateTBRCompanySettings',
-    type: GetTBRCompanySettingsQueryDto,
+    status: 200,
   })
   async activateSettings(@Param('id') id: string) {
     return this.tbrCompanySettingsService.markAsActive(id)
@@ -87,7 +89,7 @@ export class TBRCompanySettingsController {
   @Post(':id/deactivate')
   @LGResponse({
     operationId: 'deactivateTBRCompanySettings',
-    type: GetTBRCompanySettingsQueryDto,
+    status: 200,
   })
   async deactivateSettings(@Param('id') id: string) {
     return this.tbrCompanySettingsService.markAsInactive(id)

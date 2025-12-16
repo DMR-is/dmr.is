@@ -15,6 +15,7 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
   isExpandable,
   hasLink = false,
   startExpanded = false,
+  onExpandChange,
   ...row
 }: DataTableRowProps<T>) => {
   const [expanded, setExpanded] = useState(startExpanded)
@@ -25,6 +26,15 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
   return (
     <>
       <tr
+        onClick={(e) => {
+          if (isExpandable) {
+            setExpanded(!expanded)
+
+            onExpandChange?.(!expanded)
+
+            e.stopPropagation()
+          }
+        }}
         onMouseOver={() => hasLink && setHovered(true)}
         onMouseLeave={() => hasLink && setHovered(false)}
         role={isExpandable ? 'button' : 'div'}
@@ -64,8 +74,9 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
             <button
               type="button"
               onClick={(e) => {
-                e.stopPropagation()
                 setExpanded(!expanded)
+                onExpandChange?.(!expanded)
+                e.stopPropagation()
               }}
             >
               <Icon

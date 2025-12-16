@@ -23,10 +23,15 @@ import { HeaderLogo } from './HeaderLogo'
 
 export type HeaderProps = {
   controlPanel?: ControlPanelProps
+  settings?: React.ReactNode
   variant?: 'blue' | 'white'
 }
 
-export const Header = ({ controlPanel, variant = 'blue' }: HeaderProps) => {
+export const Header = ({
+  controlPanel,
+  settings,
+  variant = 'blue',
+}: HeaderProps) => {
   const { data: session, status } = useSession()
   const logOut = useLogOut()
   const pathName = usePathname()
@@ -60,6 +65,7 @@ export const Header = ({ controlPanel, variant = 'blue' }: HeaderProps) => {
                   justifyContent="flexEnd"
                   width="full"
                 >
+                  {settings}
                   {session?.user ? (
                     <DropdownMenu
                       title={session.user.name ?? ''}

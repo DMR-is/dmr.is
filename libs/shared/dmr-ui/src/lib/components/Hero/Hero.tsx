@@ -28,6 +28,7 @@ export type HeroProps = {
   contentSpan?: SpanType
   imageSpan?: SpanType
   button?: React.ReactNode
+  centerImage?: boolean
   alignHeader?: ResponsiveProp<keyof typeof justifyContent>
 }
 
@@ -51,6 +52,7 @@ export const Hero = ({
   imageSpan = ['12/12', '12/12', '12/12', '4/12'],
   button,
   alignHeader = 'flexStart',
+  centerImage = false,
 }: HeroProps) => {
   const hasTitleOrDescription = !!(title || description || breadcrumbs)
   const hasImage = !!(image && image.src)
@@ -85,7 +87,9 @@ export const Hero = ({
           )}
           {hasImage && (
             <GridColumn hiddenBelow="lg" span={imageSpan}>
-              <img src={image.src} alt={image.alt} />
+              <Inline align={centerImage ? 'center' : 'left'}>
+                <img src={image.src} alt={image.alt} />
+              </Inline>
             </GridColumn>
           )}
         </GridRow>
