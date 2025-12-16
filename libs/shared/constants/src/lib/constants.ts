@@ -107,3 +107,9 @@ export const PAGE_SIZE_OPTIONS = [
     value: 100,
   },
 ]
+
+export const REGULATION_TYPES = [
+  'a-deild-reglugerd',
+  'b-deild-reglugerd',
+  'c-deild-reglugerd',
+]
