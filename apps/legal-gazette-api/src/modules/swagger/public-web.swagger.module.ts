@@ -7,7 +7,6 @@ import { PublicationControllerModule } from '../advert/publications/publication.
 import { PublicationProviderModule } from '../advert/publications/publication.provider.module'
 import { CategoryControllerModule } from '../base-entity/category/category.controller.module'
 import { TypeControllerModule } from '../base-entity/type/type.controller.module'
-import { LegacyMigrationControllerModule } from '../legacy-migration/legacy-migration.controller.module'
 import { SubscriberControllerModule } from '../subscribers/subscriber.controller.module'
 
 @Module({
@@ -19,7 +18,6 @@ import { SubscriberControllerModule } from '../subscribers/subscriber.controller
     SubscriberControllerModule,
     PublicationControllerModule,
     IssuesControllerModule,
-    LegacyMigrationControllerModule,
   ],
   controllers: [AdvertPdfController],
   providers: [],

@@ -28,8 +28,6 @@ export enum LegalGazetteModels {
   SIGNATURE = 'signature',
   DOCUMENT_ISSUE_SETTINGS = 'document_issue_settings',
   DOCUMENT_ISSUES = 'document_issues',
-  LEGACY_SUBSCRIBER = 'legacy_subscribers',
-  LEGACY_MIGRATION_TOKEN = 'legacy_migration_tokens',
   TBR_COMPANY_SETTINGS = 'tbr_company_settings',
 }
 

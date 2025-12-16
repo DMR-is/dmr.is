@@ -31,8 +31,6 @@ import { ForeclosureModel } from '../models/foreclosure.model'
 import { ForeclosurePropertyModel } from '../models/foreclosure-property.model'
 import { IssueModel } from '../models/issues.model'
 import { IssueSettingsModel } from '../models/issues-settings.model'
-import { LegacyMigrationTokenModel } from '../models/legacy-migration-token.model'
-import { LegacySubscriberModel } from '../models/legacy-subscriber.model'
 import { SettlementModel } from '../models/settlement.model'
 import { SignatureModel } from '../models/signature.model'
 import { StatusModel } from '../models/status.model'
@@ -93,8 +91,6 @@ import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.mo
             ForeclosurePropertyModel,
             IssueModel,
             IssueSettingsModel,
-            LegacySubscriberModel,
-            LegacyMigrationTokenModel,
             SignatureModel,
             TBRCompanySettingsModel,
           ],

@@ -1068,205 +1068,6 @@
         "tags": ["Legal gazette - public API"]
       }
     },
-    "/api/v1/legacy-migration/check-email": {
-      "post": {
-        "description": "Checks if the provided email exists in the legacy subscriber table and whether it has an associated kennitala.",
-        "operationId": "checkLegacyEmail",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CheckLegacyEmailDto" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CheckLegacyEmailResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "Check if email exists in legacy system",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/legacy-migration/request": {
-      "post": {
-        "description": "Sends a magic link email to the legacy email address for account migration. The authenticated user must click the link to complete migration.",
-        "operationId": "requestLegacyMigration",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/RequestMigrationDto" }
-            }
-          }
-        },
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "Request magic link for migration",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/legacy-migration/complete": {
-      "post": {
-        "description": "Completes the migration process by verifying the magic link token. The authenticated nationalId must match the token target.",
-        "operationId": "completeLegacyMigration",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CompleteMigrationDto" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/SubscriberDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "Complete migration with token verification",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
     "/api/v1/adverts/pdf/{id}": {
       "get": {
         "operationId": "getAdvertPdf",
@@ -1423,14 +1224,29 @@
           "id": { "type": "string" },
           "nationalId": { "type": "string" },
           "name": { "type": "string", "nullable": true },
+          "email": { "type": "string", "nullable": true },
           "isActive": { "type": "boolean" },
-          "subscribedAt": {
+          "subscribedFrom": {
             "format": "date-time",
             "type": "string",
             "nullable": true
+          },
+          "subscribedTo": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true,
+            "description": "NULL means subscription is still active"
           }
         },
-        "required": ["id", "nationalId", "name", "isActive", "subscribedAt"]
+        "required": [
+          "id",
+          "nationalId",
+          "name",
+          "email",
+          "isActive",
+          "subscribedFrom",
+          "subscribedTo"
+        ]
       },
       "AdvertVersionEnum": { "type": "string", "enum": ["A", "B", "C"] },
       "PublishedPublicationDto": {
@@ -1651,55 +1467,6 @@
           "paging": { "$ref": "#/components/schemas/Paging" }
         },
         "required": ["issues", "paging"]
-      },
-      "CheckLegacyEmailDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "description": "Email address to check in the legacy system",
-            "example": "user@example.com"
-          }
-        },
-        "required": ["email"]
-      },
-      "CheckLegacyEmailResponseDto": {
-        "type": "object",
-        "properties": {
-          "emailExists": {
-            "type": "boolean",
-            "description": "Whether the email exists in the legacy system",
-            "example": true
-          },
-          "hasKennitala": {
-            "type": "boolean",
-            "description": "Whether the legacy account has an associated kennitala",
-            "example": false
-          }
-        },
-        "required": ["emailExists", "hasKennitala"]
-      },
-      "RequestMigrationDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "description": "Legacy email address to send the magic link to. Must exist in the legacy system.",
-            "example": "user@example.com"
-          }
-        },
-        "required": ["email"]
-      },
-      "CompleteMigrationDto": {
-        "type": "object",
-        "properties": {
-          "token": {
-            "type": "string",
-            "description": "Magic link token received via email. Must be valid and not expired.",
-            "example": "abc123def456..."
-          }
-        },
-        "required": ["token"]
       },
       "BaseEntityDto": {
         "type": "object",
