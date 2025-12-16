@@ -12,7 +12,6 @@ import {
 } from '../external-systems.dto'
 import { ICompanyService } from './company.service.interface'
 
-// NOTE: This controller uses MachineClientGuard - for external system integrations only
 @Controller({
   path: 'companies',
   version: '1',
@@ -28,6 +27,7 @@ export class CompanyController {
   @LGResponse({
     operationId: 'registerHlutafelag',
     description: 'Register a new company (Hlutafélag nýskráning)',
+    status: 201,
   })
   async registerCompany(@Body() body: RegisterCompanyHlutafelagDto) {
     return this.companyService.registerCompanyHlutafelag(body)
@@ -37,6 +37,7 @@ export class CompanyController {
   @LGResponse({
     operationId: 'registerFirmaskra',
     description: 'Register a new company from (Firmaskrá - Fyrirtækjaskrá)',
+    status: 201,
   })
   async registerCompanyFromFirmaskra(
     @Body() body: RegisterCompanyFirmaskraDto,
@@ -45,7 +46,7 @@ export class CompanyController {
   }
 
   @Post('aukatilkynningar')
-  @LGResponse({ operationId: 'createAdditionalAnnouncements' })
+  @LGResponse({ operationId: 'createAdditionalAnnouncements', status: 201 })
   async createAdditionalAnnouncements(
     @Body() body: CreateAdditionalAnnouncementsDto,
   ) {

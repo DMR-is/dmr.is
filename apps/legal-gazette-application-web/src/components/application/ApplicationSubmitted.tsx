@@ -49,7 +49,7 @@ export const ApplicationSubmitted = ({
                   <Text variant="h2">Auglýsingar tengdar umsókn</Text>
                   <LinkV2 href={PageRoutes.APPLICATIONS}>
                     <Button preTextIcon="arrowBack" variant="text" size="small">
-                      Tilbaka í umsóknir
+                      Til baka í umsóknir
                     </Button>
                   </LinkV2>
                 </Inline>

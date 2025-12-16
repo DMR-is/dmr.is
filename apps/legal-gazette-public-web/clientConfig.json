@@ -197,6 +197,12 @@
         "operationId": "getTypes",
         "parameters": [
           {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "schema": { "nullable": true, "type": "string" }
+          },
+          {
             "name": "excludeUnassignable",
             "required": false,
             "in": "query",
@@ -567,7 +573,7 @@
             "name": "typeId",
             "required": false,
             "in": "query",
-            "schema": { "$ref": "#/components/schemas/TypeIdEnum" }
+            "schema": { "type": "string" }
           },
           {
             "name": "categoryId",
@@ -1425,16 +1431,6 @@
           }
         },
         "required": ["id", "nationalId", "name", "isActive", "subscribedAt"]
-      },
-      "TypeIdEnum": {
-        "type": "string",
-        "enum": [
-          "065C3FD9-58D1-436F-9FB8-C1F5C214FA50",
-          "BC6384F4-91B0-48FE-9A3A-B528B0AA6468",
-          "F1A7CE20-37BE-451B-8AA7-BC90B8A7E7BD",
-          "D40BED80-6D9C-4388-AEA8-445B27614D8A",
-          "6BD9C89E-8658-4EA0-A1CE-1948656EB4E7"
-        ]
       },
       "AdvertVersionEnum": { "type": "string", "enum": ["A", "B", "C"] },
       "PublishedPublicationDto": {

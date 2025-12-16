@@ -10,7 +10,6 @@ import { CurrentNationalRegistryPersonGuard } from '../../core/guards/current-su
 import { IslandIsSubmitApplicationDto } from '../../models/application.model'
 import { IApplicationService } from '../applications/application.service.interface'
 
-// NOTE: This controller is for island.is application submissions - uses CurrentNationalRegistryPersonGuard
 @Controller({
   path: 'applications/island-is',
   version: '1',

@@ -261,6 +261,9 @@ const baseOptions: sanitizeHtml.IOptions = {
     '*': (tagName, attribs) => {
       const cls = attribs.class || ''
 
+      const allowStyleOn = new Set(['table', 'tr', 'td', 'th'])
+      if (!allowStyleOn.has(tagName)) delete attribs.style
+
       if (attribs.style) {
         attribs.style = normalizeStyle(attribs.style)
       }
@@ -278,6 +281,10 @@ const baseOptions: sanitizeHtml.IOptions = {
     body: 'div',
     meta: '',
   },
+}
+
+export const simpleSanitize = (html: string) => {
+  return sanitizeHtml(html, baseOptions)
 }
 
 export function cleanLegacyHtml(input: string): string {

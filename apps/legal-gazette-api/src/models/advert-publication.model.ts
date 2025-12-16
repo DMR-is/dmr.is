@@ -1,10 +1,4 @@
-import {
-  IsDateString,
-  IsEnum,
-  IsOptional,
-  IsString,
-  IsUUID,
-} from 'class-validator'
+import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator'
 import { BulkCreateOptions, Op, WhereOptions } from 'sequelize'
 import {
   BeforeBulkCreate,
@@ -139,14 +133,14 @@ export type AdvertPublicationsCreateAttributes = {
 
     if (query.typeId) {
       Object.assign(advertWhereOptions, {
-        typeId: query.typeId,
+        typeId: { [Op.eq]: query.typeId },
       })
     }
 
     if (query.categoryId) {
       Object.assign(advertWhereOptions, {
         categoryId: {
-          [Op.in]: query.categoryId,
+          [Op.eq]: query.categoryId,
         },
       })
     }
@@ -390,10 +384,10 @@ export class GetPublicationsQueryDto extends PagingQuery {
   @IsDateString()
   dateTo?: string
 
-  @ApiProperty({ enum: TypeIdEnum, enumName: 'TypeIdEnum', required: false })
+  @ApiProperty({ type: String, required: false })
   @IsOptional()
-  @IsEnum(TypeIdEnum)
-  typeId?: TypeIdEnum
+  @IsString()
+  typeId?: string
 
   @ApiProperty({ type: [String], required: false })
   @IsOptional()

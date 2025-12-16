@@ -1,8 +1,8 @@
 'use client'
-import NextLink from 'next/link'
+
 import { useParams, useRouter } from 'next/navigation'
 
-import { Button } from '@dmr.is/ui/components/island-is'
+import { Button, LinkV2 } from '@dmr.is/ui/components/island-is'
 
 export const NavigateBack = () => {
   const params = useParams()
@@ -21,7 +21,7 @@ export const NavigateBack = () => {
       Til baka
     </Button>
   ) : (
-    <NextLink href={href}>
+    <LinkV2 href={href}>
       <Button
         as="div"
         size="small"
@@ -31,6 +31,6 @@ export const NavigateBack = () => {
       >
         Til baka
       </Button>
-    </NextLink>
+    </LinkV2>
   )
 }

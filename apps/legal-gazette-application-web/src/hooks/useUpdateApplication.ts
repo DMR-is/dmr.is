@@ -26,7 +26,7 @@ type UpdateApplicationMutationOptions = {
 
 export type UpdateApplicationType = 'COMMON' | 'RECALL'
 
-type UpdateApplicationAnswers<T extends UpdateApplicationType> =
+export type UpdateApplicationAnswers<T extends UpdateApplicationType> =
   T extends 'COMMON' ? CommonApplicationAnswers : RecallApplicationAnswers
 
 type UseUpdateApplicationParams<T extends UpdateApplicationType> = {

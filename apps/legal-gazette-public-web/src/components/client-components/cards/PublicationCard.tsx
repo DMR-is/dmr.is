@@ -4,6 +4,7 @@ import is from 'date-fns/locale/is'
 import {
   ArrowLink,
   Box,
+  Icon,
   Inline,
   Stack,
   Tag,
@@ -19,43 +20,59 @@ type Props = {
 export const PublicationCard = ({ publication }: Props) => {
   return (
     <Box padding={3} background="white" borderRadius="large" border="standard">
-      <Stack space={2}>
-        <Inline justifyContent="spaceBetween">
-          {/* <Text color="purple400" variant="eyebrow">
-            {publication.createdBy}
-          </Text> */}
-          <Text color="purple400" variant="eyebrow">
-            Útgáfudagur:{' '}
-            {format(new Date(publication.publishedAt), 'dd. MMMM yyyy', {
-              locale: is,
-            })}
+      <Stack space={0}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Text variant="h4" as="span">
+            {publication.title}
           </Text>
-        </Inline>
-        <Stack space={0}>
-          <Text variant="h3">{publication.title}</Text>
-          <Text variant="default">{publication.publicationNumber}</Text>
-        </Stack>
-        <Inline justifyContent="spaceBetween">
+
+          <Box style={{ flexShrink: 0 }}>
+            <Inline space={1} alignY="top" justifyContent="flexEnd">
+              <Icon
+                icon="time"
+                size="small"
+                type="outline"
+                title="Útgáfudagur"
+              />
+              <Text variant="small" title="Útgáfudagur">
+                {format(new Date(publication.publishedAt), 'dd. MMMM yyyy', {
+                  locale: is,
+                })}
+              </Text>
+            </Inline>
+          </Box>
+        </div>
+        <Stack space={2}>
           <Inline space={1} alignY="center">
-            <Tag
-              href={`/auglysingar?typeId=${publication.type.id}`}
-              variant="blueberry"
-            >
-              {publication.type.title}
-            </Tag>
-            <Tag
-              href={`/auglysingar?categoryId=${publication.category.id}`}
-              variant="blue"
-            >
-              {publication.category.title}
-            </Tag>
+            <Text variant="small" as="span" title="Útgáfunúmer">
+              {publication.publicationNumber}
+            </Text>
+            <Text variant="small" as="span" title="Birting">
+              {publication.version}
+            </Text>
           </Inline>
-          <ArrowLink
-            href={`/auglysingar/${publication.advertId}/${publication.version}`}
-          >
-            Sjá nánar
-          </ArrowLink>
-        </Inline>
+          <Inline justifyContent="spaceBetween" alignY={'bottom'}>
+            <Inline space={1} alignY="center">
+              <Tag
+                href={`/auglysingar?categoryId=${publication.category.id}`}
+                variant="blue"
+              >
+                {publication.category.title}
+              </Tag>
+              <Tag
+                href={`/auglysingar?typeId=${publication.type.id}`}
+                variant="blueberry"
+              >
+                {publication.type.title}
+              </Tag>
+            </Inline>
+            <ArrowLink
+              href={`/auglysingar/${publication.advertId}/${publication.version}`}
+            >
+              Skoða
+            </ArrowLink>
+          </Inline>
+        </Stack>
       </Stack>
     </Box>
   )

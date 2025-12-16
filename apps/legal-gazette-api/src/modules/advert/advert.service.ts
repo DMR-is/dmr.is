@@ -1,4 +1,5 @@
 import { Includeable } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
@@ -37,33 +38,42 @@ export class AdvertService implements IAdvertService {
     @InjectModel(AdvertPublicationModel)
     private readonly advertPublicationModel: typeof AdvertPublicationModel,
     private readonly eventEmitter: EventEmitter2,
+    private readonly sequelize: Sequelize,
   ) {}
 
   async rejectAdvert(advertId: string, currentUser: DMRUser): Promise<void> {
-    const user = await this.userModel.unscoped().findOneOrThrow({
-      attributes: ['id', 'nationalId'],
-      where: { nationalId: currentUser.nationalId },
-    })
-    const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
-      attributes: ['id', 'statusId', 'assignedUserId'],
-    })
+    await this.sequelize.transaction(async (t) => {
+      const user = await this.userModel.unscoped().findOneOrThrow({
+        attributes: ['id', 'nationalId'],
+        where: { nationalId: currentUser.nationalId },
+      })
+      const advert = await this.advertModel
+        .unscoped()
+        .findByPkOrThrow(advertId, {
+          attributes: ['id', 'statusId', 'assignedUserId'],
+        })
 
-    const isEditable = advert.canEdit(user.id)
+      const isEditable = advert.canEdit(user.id)
 
-    if (!isEditable) {
-      this.logger.warn(
-        `User with id ${user.id} is not allowed to reject advert with id ${advertId}`,
-      )
+      if (!isEditable) {
+        this.logger.warn(
+          `User with id ${user.id} is not allowed to reject advert with id ${advertId}`,
+        )
 
-      throw new BadRequestException('User is not allowed to reject this advert')
-    }
+        throw new BadRequestException(
+          'User is not allowed to reject this advert',
+        )
+      }
 
-    await advert.update({ statusId: StatusIdEnum.REJECTED })
+      await advert.update({ statusId: StatusIdEnum.REJECTED })
 
-    this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
-      advertId,
-      actorId: currentUser.nationalId,
-      statusId: StatusIdEnum.REJECTED,
+      t.afterCommit(() => {
+        this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
+          advertId,
+          actorId: currentUser.nationalId,
+          statusId: StatusIdEnum.REJECTED,
+        })
+      })
     })
   }
 
@@ -71,199 +81,214 @@ export class AdvertService implements IAdvertService {
     advertId: string,
     currentUser: DMRUser,
   ): Promise<void> {
-    const moveableStatuses = [StatusIdEnum.SUBMITTED, StatusIdEnum.IN_PROGRESS]
+    await this.sequelize.transaction(async (t) => {
+      const moveableStatuses = [
+        StatusIdEnum.SUBMITTED,
+        StatusIdEnum.IN_PROGRESS,
+      ]
 
-    const currentStatusId = await this.advertModel
-      .unscoped()
-      .findByPkOrThrow(advertId, {
-        attributes: ['id', 'statusId'],
-      })
+      const currentStatusId = await this.advertModel
+        .unscoped()
+        .findByPkOrThrow(advertId, {
+          attributes: ['id', 'statusId'],
+        })
 
-    if (!moveableStatuses.includes(currentStatusId.statusId)) {
-      this.logger.warn(
-        `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to next status`,
+      if (!moveableStatuses.includes(currentStatusId.statusId)) {
+        this.logger.warn(
+          `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to next status`,
+        )
+
+        throw new BadRequestException('Advert cannot be moved to next status')
+      }
+
+      let nextStatusId: StatusIdEnum
+
+      switch (currentStatusId.statusId) {
+        case StatusIdEnum.SUBMITTED:
+          nextStatusId = StatusIdEnum.IN_PROGRESS
+          break
+        case StatusIdEnum.IN_PROGRESS:
+          nextStatusId = StatusIdEnum.READY_FOR_PUBLICATION
+          break
+        default:
+          throw new BadRequestException(`Advert cannot be moved to next status`)
+      }
+
+      await this.advertModel.update(
+        { statusId: nextStatusId },
+        { where: { id: advertId } },
       )
 
-      throw new BadRequestException('Advert cannot be moved to next status')
-    }
-
-    let nextStatusId: StatusIdEnum
-
-    switch (currentStatusId.statusId) {
-      case StatusIdEnum.SUBMITTED:
-        nextStatusId = StatusIdEnum.IN_PROGRESS
-        break
-      case StatusIdEnum.IN_PROGRESS:
-        nextStatusId = StatusIdEnum.READY_FOR_PUBLICATION
-        break
-      default:
-        throw new BadRequestException(`Advert cannot be moved to next status`)
-    }
-
-    await this.advertModel.update(
-      { statusId: nextStatusId },
-      { where: { id: advertId } },
-    )
-
-    // emit the event
-    this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
-      advertId,
-      actorId: currentUser.nationalId,
-      statusId: nextStatusId,
+      t.afterCommit(() => {
+        this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
+          advertId,
+          actorId: currentUser.nationalId,
+          statusId: nextStatusId,
+        })
+      })
     })
   }
   async moveAdvertToPreviousStatus(
     advertId: string,
     currentUser: DMRUser,
   ): Promise<void> {
-    const moveableStatuses = [
-      StatusIdEnum.IN_PROGRESS,
-      StatusIdEnum.READY_FOR_PUBLICATION,
-    ]
+    await this.sequelize.transaction(async (t) => {
+      const moveableStatuses = [
+        StatusIdEnum.IN_PROGRESS,
+        StatusIdEnum.READY_FOR_PUBLICATION,
+      ]
 
-    const currentStatusId = await this.advertModel
-      .unscoped()
-      .findByPkOrThrow(advertId, {
-        attributes: ['id', 'statusId'],
-      })
+      const currentStatusId = await this.advertModel
+        .unscoped()
+        .findByPkOrThrow(advertId, {
+          attributes: ['id', 'statusId'],
+        })
 
-    if (!moveableStatuses.includes(currentStatusId.statusId)) {
-      this.logger.warn(
-        `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to previous status`,
+      if (!moveableStatuses.includes(currentStatusId.statusId)) {
+        this.logger.warn(
+          `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to previous status`,
+        )
+
+        throw new BadRequestException(
+          'Advert cannot be moved to previous status',
+        )
+      }
+
+      let previousStatusId: StatusIdEnum
+
+      switch (currentStatusId.statusId) {
+        case StatusIdEnum.IN_PROGRESS:
+          previousStatusId = StatusIdEnum.SUBMITTED
+          break
+        case StatusIdEnum.READY_FOR_PUBLICATION:
+          previousStatusId = StatusIdEnum.IN_PROGRESS
+          break
+        default:
+          throw new BadRequestException(
+            `Advert cannot be moved to previous status`,
+          )
+      }
+
+      await this.advertModel.update(
+        { statusId: previousStatusId },
+        { where: { id: advertId } },
       )
 
-      throw new BadRequestException('Advert cannot be moved to previous status')
-    }
-
-    let previousStatusId: StatusIdEnum
-
-    switch (currentStatusId.statusId) {
-      case StatusIdEnum.IN_PROGRESS:
-        previousStatusId = StatusIdEnum.SUBMITTED
-        break
-      case StatusIdEnum.READY_FOR_PUBLICATION:
-        previousStatusId = StatusIdEnum.IN_PROGRESS
-        break
-      default:
-        throw new BadRequestException(
-          `Advert cannot be moved to previous status`,
-        )
-    }
-
-    await this.advertModel.update(
-      { statusId: previousStatusId },
-      { where: { id: advertId } },
-    )
-
-    this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
-      advertId,
-      actorId: currentUser.nationalId,
-      statusId: previousStatusId,
+      t.afterCommit(() => {
+        this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
+          advertId,
+          actorId: currentUser.nationalId,
+          statusId: previousStatusId,
+        })
+      })
     })
   }
 
   async createAdvert(
     body: CreateAdvertInternalDto,
   ): Promise<AdvertDetailedDto> {
-    const includeArr: Includeable[] = []
+    return await this.sequelize.transaction(async (t) => {
+      const includeArr: Includeable[] = []
 
-    if (body.signature) {
-      includeArr.push({ model: SignatureModel })
-    }
+      if (body.signature) {
+        includeArr.push({ model: SignatureModel })
+      }
 
-    if (body.communicationChannels) {
-      includeArr.push({ model: CommunicationChannelModel })
-    }
-    if (body.settlement) {
-      includeArr.push({ model: SettlementModel })
-    }
+      if (body.communicationChannels) {
+        includeArr.push({ model: CommunicationChannelModel })
+      }
+      if (body.settlement) {
+        includeArr.push({ model: SettlementModel })
+      }
 
-    this.logger.info('Creating advert', {
-      body,
-      context: 'AdvertService',
+      this.logger.info('Creating advert', {
+        body,
+        context: 'AdvertService',
+      })
+
+      const advert = await this.advertModel.create(
+        {
+          applicationId: body.applicationId,
+          templateType: body.templateType,
+          typeId: body.typeId,
+          categoryId: body.categoryId,
+          caseId: body.caseId,
+          title: body.title,
+          content: body.content,
+          createdBy: body.createdBy,
+          caption: body.caption,
+          createdByNationalId: body.createdByNationalId,
+          statusId: body.statusId,
+          courtDistrictId: body.courtDistrictId,
+          legacyHtml: body.legacyHtml,
+          islandIsApplicationId: body.islandIsApplicationId,
+          judgementDate:
+            typeof body.judgementDate === 'string'
+              ? new Date(body.judgementDate)
+              : body.judgementDate,
+          signature: body?.signature,
+          additionalText: body.additionalText,
+          divisionMeetingDate:
+            typeof body.divisionMeetingDate === 'string'
+              ? new Date(body.divisionMeetingDate)
+              : body.divisionMeetingDate,
+          divisionMeetingLocation: body.divisionMeetingLocation,
+          communicationChannels: body.communicationChannels,
+          settlementId: body.settlementId,
+          settlement: body.settlement
+            ? {
+                liquidatorLocation: body.settlement.liquidatorLocation,
+                liquidatorName: body.settlement.liquidatorName,
+                liquidatorRecallStatementType:
+                  body.settlement.recallStatementType,
+                liquidatorRecallStatementLocation:
+                  body.settlement.recallStatementLocation,
+                address: body.settlement.address,
+                dateOfDeath: body.settlement.dateOfDeath
+                  ? new Date(body.settlement.dateOfDeath)
+                  : null,
+                deadline: body.settlement.deadline
+                  ? new Date(body.settlement.deadline)
+                  : null,
+                name: body.settlement.name,
+                nationalId: body.settlement.nationalId,
+                declaredClaims: body.settlement.declaredClaims ?? null,
+                companies: body.settlement.companies,
+              }
+            : undefined,
+        },
+        {
+          returning: true,
+          include: includeArr,
+        },
+      )
+
+      await this.advertPublicationModel.bulkCreate(
+        body.scheduledAt.map((scheduledAt, i) => ({
+          advertId: advert.id,
+          scheduledAt: new Date(scheduledAt),
+          versionNumber: i + 1,
+        })),
+      )
+
+      t.afterCommit(() => {
+        this.logger.debug('Emitting advert.created event', {
+          advertId: advert.id,
+          statusId: advert.statusId,
+          actorId: advert.createdByNationalId,
+        })
+        this.eventEmitter.emit(LegalGazetteEvents.ADVERT_CREATED, {
+          advertId: advert.id,
+          statusId: advert.statusId,
+          actorId: advert.createdByNationalId,
+          actorName: advert.createdBy,
+          external: body.isFromExternalSystem,
+        })
+      })
+
+      await advert.reload()
+      return advert.fromModelToDetailed()
     })
-
-    const advert = await this.advertModel.create(
-      {
-        applicationId: body.applicationId,
-        templateType: body.templateType,
-        typeId: body.typeId,
-        categoryId: body.categoryId,
-        caseId: body.caseId,
-        title: body.title,
-        content: body.content,
-        createdBy: body.createdBy,
-        caption: body.caption,
-        createdByNationalId: body.createdByNationalId,
-        statusId: body.statusId,
-        courtDistrictId: body.courtDistrictId,
-        legacyHtml: body.legacyHtml,
-        islandIsApplicationId: body.islandIsApplicationId,
-        judgementDate:
-          typeof body.judgementDate === 'string'
-            ? new Date(body.judgementDate)
-            : body.judgementDate,
-        signature: body?.signature,
-        additionalText: body.additionalText,
-        divisionMeetingDate:
-          typeof body.divisionMeetingDate === 'string'
-            ? new Date(body.divisionMeetingDate)
-            : body.divisionMeetingDate,
-        divisionMeetingLocation: body.divisionMeetingLocation,
-        communicationChannels: body.communicationChannels,
-        settlementId: body.settlementId,
-        settlement: body.settlement
-          ? {
-              liquidatorLocation: body.settlement.liquidatorLocation,
-              liquidatorName: body.settlement.liquidatorName,
-              liquidatorRecallStatementType:
-                body.settlement.recallStatementType,
-              liquidatorRecallStatementLocation:
-                body.settlement.recallStatementLocation,
-              address: body.settlement.address,
-              dateOfDeath: body.settlement.dateOfDeath
-                ? new Date(body.settlement.dateOfDeath)
-                : null,
-              deadline: body.settlement.deadline
-                ? new Date(body.settlement.deadline)
-                : null,
-              name: body.settlement.name,
-              nationalId: body.settlement.nationalId,
-              declaredClaims: body.settlement.declaredClaims ?? null,
-              companies: body.settlement.companies,
-            }
-          : undefined,
-      },
-      {
-        returning: true,
-        include: includeArr,
-      },
-    )
-
-    await this.advertPublicationModel.bulkCreate(
-      body.scheduledAt.map((scheduledAt, i) => ({
-        advertId: advert.id,
-        scheduledAt: new Date(scheduledAt),
-        versionNumber: i + 1,
-      })),
-    )
-
-    this.logger.debug('Emitting advert.created event', {
-      advertId: advert.id,
-      statusId: advert.statusId,
-      actorId: advert.createdByNationalId,
-    })
-    this.eventEmitter.emit(LegalGazetteEvents.ADVERT_CREATED, {
-      advertId: advert.id,
-      statusId: advert.statusId,
-      actorId: advert.createdByNationalId,
-      actorName: advert.createdBy,
-      external: body.isFromExternalSystem,
-    })
-
-    await advert.reload()
-
-    return advert.fromModelToDetailed()
   }
 
   async assignAdvertToEmployee(

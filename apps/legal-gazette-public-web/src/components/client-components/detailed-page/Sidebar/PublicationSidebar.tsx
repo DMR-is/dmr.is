@@ -35,18 +35,37 @@ export const PublicationSidebar = ({ publication }: Props) => {
       <Box padding={3} background="blue100" borderRadius="large">
         <Stack space={[1, 2]}>
           <Stack space={0}>
-            <Text variant="h4">Tegund</Text>
-            <Text variant="small">{publication.advert.type.title}</Text>
-          </Stack>
-          <Stack space={0}>
             <Text variant="h4">Flokkur</Text>
             <Text variant="small">{publication.advert.category.title}</Text>
           </Stack>
+          <Stack space={0}>
+            <Text variant="h4">Tegund</Text>
+            <Text variant="small">{publication.advert.type.title}</Text>
+          </Stack>
+
+          {publication.advert.publicationNumber && (
+            <Stack space={0}>
+              <Text variant="h4">Útgáfunúmer</Text>
+              <Text variant="small">
+                {publication.advert.publicationNumber}
+              </Text>
+            </Stack>
+          )}
+
           {publication.publication.publishedAt && (
             <Stack space={0}>
               <Text variant="h4">Útgáfudagur</Text>
               <Text variant="small">
                 {formatDate(new Date(publication.publication.publishedAt))}
+              </Text>
+            </Stack>
+          )}
+
+          {publication.publication.version && (
+            <Stack space={0}>
+              <Text variant="h4">Birting</Text>
+              <Text variant="small">
+                Birting {publication.publication.version}
               </Text>
             </Stack>
           )}
