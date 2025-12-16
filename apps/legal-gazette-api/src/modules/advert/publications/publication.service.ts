@@ -271,6 +271,14 @@ export class PublicationService implements IPublicationService {
       await publication.update({ publishedAt: new Date() })
 
       t.afterCommit(() => {
+        this.logger.debug(
+          'Successfully published advert publication, emitting advert.published event',
+          {
+            context: 'PublicationService',
+            advertId: advert.id,
+            publicationId: publication.id,
+          },
+        )
         const payload: AdvertPublishedEvent = {
           advert: advert.fromModelToDetailed(),
           publication: publication.fromModel(),

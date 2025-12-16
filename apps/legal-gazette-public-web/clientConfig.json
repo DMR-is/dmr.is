@@ -1266,6 +1266,38 @@
         "summary": "Complete migration with token verification",
         "tags": ["Legal gazette - public API"]
       }
+    },
+    "/api/v1/adverts/pdf/{id}": {
+      "get": {
+        "operationId": "getAdvertPdf",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "version",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the generated pdf as a binary.",
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - public API"]
+      }
     }
   },
   "info": {

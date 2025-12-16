@@ -1,4 +1,12 @@
-import { Box, Button, Stack, Text } from '@dmr.is/ui/components/island-is'
+'use client'
+
+import {
+  Box,
+  Button,
+  LinkV2,
+  Stack,
+  Text,
+} from '@dmr.is/ui/components/island-is'
 import { formatDate } from '@dmr.is/utils/client'
 
 import { AdvertPublicationDetailedDto } from '../../../../gen/fetch'
@@ -50,9 +58,19 @@ export const PublicationSidebar = ({ publication }: Props) => {
         </Stack>
       </Box>
       <Box background="dark100" padding={3} borderRadius="large">
-        <Button size="small" variant="text" icon="download" iconType="outline">
-          Sækja PDF
-        </Button>
+        <LinkV2
+          href={`/api/adverts/${publication.advert.id}/pdf?version=${publication.publication.version}`}
+          newTab
+        >
+          <Button
+            variant="text"
+            icon="document"
+            iconType="outline"
+            size="small"
+          >
+            Prenta auglýsingu
+          </Button>
+        </LinkV2>
       </Box>
     </Stack>
   )
