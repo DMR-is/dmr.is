@@ -43,6 +43,7 @@ import { TypeModel } from '../models/type.model'
 import { TypeCategoriesModel } from '../models/type-categories.model'
 import { UserModel } from '../models/users.model'
 import { PublicationListenerModule } from '../modules/advert/publications/listeners/publication.listener.module'
+import { TaskModule } from '../modules/advert/tasks/task.module'
 import { ApplicationWebSwaggerModule } from '../modules/swagger/application-web.swagger.module'
 import { ExternalSystemsSwaggerModule } from '../modules/swagger/external-systems.swagger.module'
 import { InternalWebSwaggerModule } from '../modules/swagger/internal-web.swagger.module'
@@ -52,6 +53,7 @@ import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.mo
 @Module({
   imports: [
     LoggingModule,
+    TaskModule,
     AuthorizationGuardModule, // Makes AuthorizationGuard available globally
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
