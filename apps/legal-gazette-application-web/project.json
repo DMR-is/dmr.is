@@ -69,6 +69,14 @@
       },
       "outputs": ["{projectRoot}/gen/fetch"]
     },
+    "update-client": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["update-openapi-schema", "codegen"],
+      "options": {
+        "commands": [],
+        "cwd": "apps/legal-gazette-application-web"
+      }
+    },
     "container": {
       "executor": "@nx-tools/nx-container:build",
       "dependsOn": ["build"],
