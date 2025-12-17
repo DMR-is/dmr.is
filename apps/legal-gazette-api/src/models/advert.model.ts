@@ -644,7 +644,9 @@ export class AdvertModel extends BaseModel<
       (pub) => pub.publishedAt === null,
     )
 
-    const date = publishing ? publishing.scheduledAt : new Date()
+    const date = publishing
+      ? publishing.scheduledAt
+      : model.publications[model.publications.length - 1].scheduledAt
 
     try {
       return {
