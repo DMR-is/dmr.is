@@ -15,7 +15,7 @@ export const useFilters = () => {
     categoryId: parseAsArrayOf(parseAsString),
     dateFrom: parseAsIsoDate,
     dateTo: parseAsIsoDate,
-    yearId: parseAsInteger.withDefault(new Date().getFullYear()),
+    year: parseAsString.withDefault(new Date().getFullYear().toString()),
   })
 
   const reset = () => {
@@ -25,7 +25,7 @@ export const useFilters = () => {
       categoryId: null,
       dateFrom: null,
       dateTo: null,
-      yearId: null,
+      year: 'all',
     })
   }
 

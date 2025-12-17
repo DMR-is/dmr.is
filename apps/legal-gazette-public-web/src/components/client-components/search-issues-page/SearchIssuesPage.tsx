@@ -1,23 +1,26 @@
-'use client'
-
-import { useState } from 'react'
-
-import { Box, GridColumn, GridRow } from '@dmr.is/ui/components/island-is'
+import { Box, GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
 
 import { SearchIssuesResults } from './results/SearchIssuesResults'
 import { SearchIssuesSidebar } from './sidebar/SearchIssuesSidebar'
 
 export const SearchIssuesPage = () => {
-  const [totalItems, setTotalItems] = useState(0)
   return (
     <GridRow>
       <GridColumn span={['12/12', '12/12', '12/12', '3/12']}>
         <Box>
-          <SearchIssuesSidebar totalItems={totalItems} />
+          <SearchIssuesSidebar />
         </Box>
       </GridColumn>
       <GridColumn span={['12/12', '12/12', '12/12', '9/12']}>
-        <SearchIssuesResults setTotalItems={setTotalItems} />
+        <SearchIssuesResults />
+        <GridColumn span={['12/12', '12/12', '12/12', '11/12']}>
+          <Text variant="small" marginTop={1}>
+            Afritun eða dreifing þessa efnis er óheimil. Efnið kann að innihalda
+            persónuupplýsingar sem njóta verndar samkvæmt lögum nr. 90/2018 og
+            reglugerð (ESB) 2016/679 (GDPR). Óheimil meðferð getur varðað við
+            lög.
+          </Text>
+        </GridColumn>
       </GridColumn>
     </GridRow>
   )

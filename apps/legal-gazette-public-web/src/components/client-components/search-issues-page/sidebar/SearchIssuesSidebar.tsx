@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import {
   Box,
@@ -13,14 +13,13 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { useFilters } from '../../../../hooks/useFilters'
+import { useIssues } from '../../../../hooks/useIssues'
 import { isDate } from '../../../../lib/utils'
 
-export const SearchIssuesSidebar = ({
-  totalItems,
-}: {
-  totalItems?: number
-}) => {
+export const SearchIssuesSidebar = () => {
   const { filters, setFilters, reset } = useFilters()
+  const { totalItems } = useIssues()
+
   const THIS_YEAR = new Date().getFullYear()
   const MIN_DATE = new Date('2000-01-01')
   const MIN_YEAR = MIN_DATE.getFullYear()
@@ -53,10 +52,17 @@ export const SearchIssuesSidebar = ({
     (_, i) => THIS_YEAR - i,
   ).map((num) => ({
     label: num.toString(),
-    value: num,
+    value: num.toString(),
   }))
+  yearOptions.unshift({ label: '— Öll ár —', value: 'allt' })
 
-  const defaultYear = yearOptions[0]
+  useEffect(() => {
+    if (filters.dateFrom && filters.dateTo) {
+      if (filters.dateFrom && filters.dateTo) {
+        setFilters({ ...filters, year: 'all' })
+      }
+    }
+  }, [filters.dateFrom, filters.dateTo])
 
   return (
     <Stack space={2}>
@@ -81,17 +87,32 @@ export const SearchIssuesSidebar = ({
           <Select
             label="Ár"
             options={yearOptions}
+            placeholder="Öll ár"
             size="xs"
             backgroundColor="blue"
-            defaultValue={
-              filters.yearId
-                ? yearOptions.find((o) => o.value === filters.yearId)
-                : defaultYear
-            }
+            value={yearOptions.find((o) => o.value === filters.year) ?? null}
             onChange={(opt) => {
               if (!opt) {
                 return
               }
+
+              if (opt.value === 'allt') {
+                setFilters((prev) => ({
+                  ...prev,
+                  year: 'all',
+                  page: null,
+                }))
+                setStartDate(null)
+                setEndDate(null)
+                return
+              }
+
+              setFilters((prev) => ({
+                ...prev,
+                year: opt.value,
+                page: null,
+              }))
+
               setStartDate(
                 new Date(
                   `${opt.value}-${new Date().getMonth() + 1}-${new Date().getDate()}`,
@@ -102,8 +123,6 @@ export const SearchIssuesSidebar = ({
                   `${opt.value}-${new Date().getMonth() + 1}-${new Date().getDate()}`,
                 ),
               )
-
-              setFilters((prev) => ({ ...prev, yearId: opt.value, page: null }))
             }}
           />
 
