@@ -6,10 +6,10 @@ import {
   Stack,
 } from '@dmr.is/ui/components/island-is'
 
-import { UmsoknirHero } from '../../../components/hero/UmsoknirHero'
-import { TabNav } from '../../../components/tabs/TabNav'
+import { UmsoknirHero } from '../../../../components/hero/UmsoknirHero'
+import { TabNav } from '../../../../components/tabs/TabNav'
 
-export default function ViewLayout({
+export default function ViewListLayout({
   children,
 }: {
   children: React.ReactNode
