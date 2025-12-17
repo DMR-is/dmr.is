@@ -29,12 +29,12 @@ const createAdminUser = (): MockUser => ({
 
 const createPublicWebUser = (): MockUser => ({
   nationalId: PUBLIC_WEB_NATIONAL_ID,
-  scope: '@dmr.is/lg-public-web',
+  scope: '@logbirtingablad.is/logbirtingabladid',
 })
 
 const createApplicationWebUser = (): MockUser => ({
   nationalId: APPLICATION_WEB_NATIONAL_ID,
-  scope: '@dmr.is/lg-application-web',
+  scope: '@logbirtingablad.is/lg-application-web',
 })
 
 const createRandomScopeUser = (): MockUser => ({
@@ -120,7 +120,7 @@ describe('AdvertPublicationController - Guard Authorization', () => {
         AdvertPublicationController.prototype.getPublishedPublications,
         AdvertPublicationController,
       ])
-      expect(scopes).toEqual(['@dmr.is/lg-public-web'])
+      expect(scopes).toEqual(['@logbirtingablad.is/logbirtingabladid'])
     })
 
     it('getPublication should have @PublicOrApplicationWebScopes()', () => {
@@ -129,8 +129,8 @@ describe('AdvertPublicationController - Guard Authorization', () => {
         AdvertPublicationController,
       ])
       expect(scopes).toEqual([
-        '@dmr.is/lg-public-web',
-        '@dmr.is/lg-application-web',
+        '@logbirtingablad.is/logbirtingabladid',
+        '@logbirtingablad.is/lg-application-web',
       ])
     })
 

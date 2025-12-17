@@ -29,12 +29,12 @@ const createAdminUser = (): MockUser => ({
 
 const createPublicWebUser = (): MockUser => ({
   nationalId: PUBLIC_WEB_NATIONAL_ID,
-  scope: '@dmr.is/lg-public-web',
+  scope: '@logbirtingablad.is/logbirtingabladid',
 })
 
 const createApplicationWebUser = (): MockUser => ({
   nationalId: APPLICATION_WEB_NATIONAL_ID,
-  scope: '@dmr.is/lg-application-web',
+  scope: '@logbirtingablad.is/lg-application-web',
 })
 
 const createRandomScopeUser = (): MockUser => ({
@@ -149,7 +149,7 @@ describe('AdvertController - Guard Authorization', () => {
         AdvertController.prototype.getAdvertByCaseId,
         AdvertController,
       ])
-      expect(scopes).toEqual(['@dmr.is/lg-application-web'])
+      expect(scopes).toEqual(['@logbirtingablad.is/lg-application-web'])
     })
 
     it('getAdvertByCaseId should also inherit @AdminAccess() from class', () => {

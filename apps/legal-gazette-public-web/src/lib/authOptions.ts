@@ -23,7 +23,7 @@ const LOGGING_CATEGORY = 'next-auth'
 export const localIdentityServerConfig = {
   id: identityServerId,
   name: 'Iceland authentication service',
-  scope: `openid offline_access profile @dmr.is/lg-public-web`,
+  scope: `openid offline_access profile @logbirtingablad.is/logbirtingabladid`,
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   clientId: process.env.LG_PUBLIC_WEB_CLIENT_ID!,
   clientSecret: process.env.LG_PUBLIC_WEB_CLIENT_SECRET ?? '',
