@@ -66,7 +66,7 @@ export class StatusModel extends BaseModel<StatusAttributes, StatusAttributes> {
   adverts!: AdvertModel[]
 
   static async setAdvertStatus(advertId: string, statusId: StatusIdEnum) {
-    const advert = await AdvertModel.unscoped().findByPkOrThrow(advertId, {
+    const advert = await AdvertModel.findByPkOrThrow(advertId, {
       attributes: ['id', 'statusId'],
       include: [StatusModel],
     })

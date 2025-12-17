@@ -1,4 +1,4 @@
-import { Includeable } from 'sequelize'
+import { Op, Order, WhereOptions } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
@@ -20,9 +20,6 @@ import {
   UpdateAdvertDto,
 } from '../../models/advert.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
-import { CommunicationChannelModel } from '../../models/communication-channel.model'
-import { SettlementModel } from '../../models/settlement.model'
-import { SignatureModel } from '../../models/signature.model'
 import { StatusIdEnum } from '../../models/status.model'
 import { UserModel } from '../../models/users.model'
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
@@ -188,25 +185,12 @@ export class AdvertService implements IAdvertService {
     body: CreateAdvertInternalDto,
   ): Promise<AdvertDetailedDto> {
     return await this.sequelize.transaction(async (t) => {
-      const includeArr: Includeable[] = []
-
-      if (body.signature) {
-        includeArr.push({ model: SignatureModel })
-      }
-
-      if (body.communicationChannels) {
-        includeArr.push({ model: CommunicationChannelModel })
-      }
-      if (body.settlement) {
-        includeArr.push({ model: SettlementModel })
-      }
-
       this.logger.info('Creating advert', {
         body,
         context: 'AdvertService',
       })
 
-      const advert = await this.advertModel.create(
+      const advert = await this.advertModel.scope('detailed').create(
         {
           applicationId: body.applicationId,
           templateType: body.templateType,
@@ -259,7 +243,6 @@ export class AdvertService implements IAdvertService {
         },
         {
           returning: true,
-          include: includeArr,
         },
       )
 
@@ -294,15 +277,26 @@ export class AdvertService implements IAdvertService {
   async assignAdvertToEmployee(
     advertId: string,
     userId: string,
+    currentUser: DMRUser,
   ): Promise<void> {
-    await this.advertModel.update(
-      { assignedUserId: userId },
-      { where: { id: advertId } },
-    )
+    return this.sequelize.transaction(async (t) => {
+      await this.advertModel.update(
+        { assignedUserId: userId },
+        { where: { id: advertId } },
+      )
+
+      t.afterCommit(() => {
+        this.eventEmitter.emit(LegalGazetteEvents.USER_ASSIGNED, {
+          advertId,
+          actorId: currentUser.nationalId,
+          receiverId: userId,
+        })
+      })
+    })
   }
 
   async markAdvertAsWithdrawn(advertId: string): Promise<void> {
-    const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
+    const advert = await this.advertModel.findByPkOrThrow(advertId, {
       attributes: ['id', 'statusId'],
     })
 
@@ -310,7 +304,7 @@ export class AdvertService implements IAdvertService {
   }
 
   async getAdvertsByCaseId(caseId: string): Promise<GetAdvertsDto> {
-    const adverts = await this.advertModel.findAll({
+    const adverts = await this.advertModel.scope('listview').findAll({
       where: { caseId },
     })
 
@@ -326,7 +320,9 @@ export class AdvertService implements IAdvertService {
     id: string,
     body: UpdateAdvertDto,
   ): Promise<AdvertDetailedDto> {
-    const advert = await this.advertModel.findByPkOrThrow(id)
+    const advert = await this.advertModel
+      .withScope('detailed')
+      .findByPkOrThrow(id)
 
     const category = body.typeId
       ? (await this.typeCategoriesService.findByTypeId(body.typeId)).type
@@ -412,14 +408,76 @@ export class AdvertService implements IAdvertService {
       pageSize: query.pageSize,
     })
 
-    const results = await this.advertModel
-      .scope([{ method: ['withQuery', query] }])
-      .findAndCountAll({
-        col: 'AdvertModel.id',
-        distinct: true,
-        limit,
-        offset,
+    const whereOptions: WhereOptions = {}
+
+    if (query.typeId) {
+      Object.assign(whereOptions, { typeId: { [Op.in]: query.typeId } })
+    }
+
+    if (query.categoryId) {
+      Object.assign(whereOptions, { categoryId: { [Op.in]: query.categoryId } })
+    }
+
+    if (query.statusId) {
+      Object.assign(whereOptions, { statusId: { [Op.in]: query.statusId } })
+    }
+
+    if (query.dateFrom && query.dateTo) {
+      Object.assign(whereOptions, {
+        createdAt: {
+          [Op.between]: [query.dateFrom, query.dateTo],
+        },
       })
+    }
+
+    if (query.dateFrom && !query.dateTo) {
+      Object.assign(whereOptions, {
+        createdAt: {
+          [Op.gte]: query.dateFrom,
+        },
+      })
+    }
+
+    if (!query.dateFrom && query.dateTo) {
+      Object.assign(whereOptions, {
+        createdAt: {
+          [Op.lte]: query.dateTo,
+        },
+      })
+    }
+
+    if (query.search) {
+      Object.assign(whereOptions, {
+        [Op.or]: [
+          { title: { [Op.iLike]: `%${query.search}%` } },
+          { content: { [Op.iLike]: `%${query.search}%` } },
+          { caption: { [Op.iLike]: `%${query.search}%` } },
+        ],
+      })
+    }
+
+    const order: Order = []
+    const direction = query.direction || 'desc'
+
+    if (query.sortBy === 'birting') {
+      order.push([
+        {
+          model: AdvertPublicationModel,
+          as: 'publications',
+        },
+        'scheduledAt',
+        direction,
+      ])
+    } else {
+      order.push(['createdAt', direction])
+    }
+
+    const results = await this.advertModel.scope('listview').findAndCountAll({
+      limit,
+      offset,
+      where: whereOptions,
+      order,
+    })
 
     const migrated = results.rows.map((advert) => advert.fromModel())
     const paging = generatePaging(
@@ -444,7 +502,7 @@ export class AdvertService implements IAdvertService {
         attributes: ['id', 'nationalId'],
         where: { nationalId: currentUser.nationalId },
       }),
-      this.advertModel.findByPkOrThrow(id),
+      this.advertModel.withScope('detailed').findByPkOrThrow(id),
     ])
 
     return advert.fromModelToDetailed(user?.id)

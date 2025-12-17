@@ -8,6 +8,7 @@ import { ICommentService } from '../comment.service.interface'
 import {
   CreateStatusChangeCommentEvent,
   CreateSubmitCommentEvent,
+  CreateUserAssignedCommentEvent,
 } from '../events/create-submit-comment.event'
 
 @Injectable()
@@ -74,6 +75,18 @@ export class CommentListener {
     await this.commentService.createStatusUpdateComment(payload.advertId, {
       actorId: payload.actorId,
       receiverId: payload.statusId,
+    })
+  }
+
+  @OnEvent(LegalGazetteEvents.USER_ASSIGNED)
+  async handleUserAssignedEvent(payload: CreateUserAssignedCommentEvent) {
+    this.logger.info('Handling user.assigned event', {
+      payload,
+      context: 'CommentListener',
+    })
+    await this.commentService.createAssignComment(payload.advertId, {
+      actorId: payload.actorId,
+      receiverId: payload.receiverId,
     })
   }
 }

@@ -35,7 +35,7 @@ export class PublishingTaskService implements IPublishingTaskService {
     const year = pubDate.getFullYear()
     const month = (pubDate.getMonth() + 1).toString().padStart(2, '0')
     const day = pubDate.getDate().toString().padStart(2, '0')
-    const maxPublication = await this.advertModel.unscoped().findOne({
+    const maxPublication = await this.advertModel.findOne({
       attributes: ['id', 'publicationNumber'],
       where: {
         publicationNumber: {
@@ -89,7 +89,7 @@ export class PublishingTaskService implements IPublishingTaskService {
         },
         include: [
           {
-            model: AdvertModel.unscoped(),
+            model: AdvertModel,
             where: {
               statusId: {
                 [Op.eq]: StatusIdEnum.READY_FOR_PUBLICATION,

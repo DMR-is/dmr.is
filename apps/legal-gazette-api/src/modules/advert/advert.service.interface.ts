@@ -30,7 +30,11 @@ export interface IAdvertService {
   markAdvertAsWithdrawn(advertId: string): Promise<void>
   rejectAdvert(advertId: string, currentUser: DMRUser): Promise<void>
 
-  assignAdvertToEmployee(advertId: string, userId: string): Promise<void>
+  assignAdvertToEmployee(
+    advertId: string,
+    userId: string,
+    currentUser: DMRUser,
+  ): Promise<void>
 
   createAdvert(body: CreateAdvertInternalDto): Promise<AdvertDetailedDto>
 }

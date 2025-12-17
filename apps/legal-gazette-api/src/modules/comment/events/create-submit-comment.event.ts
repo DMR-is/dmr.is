@@ -11,3 +11,9 @@ export class CreateStatusChangeCommentEvent {
   actorId!: string
   statusId!: string
 }
+
+export class CreateUserAssignedCommentEvent {
+  advertId!: string
+  actorId!: string
+  receiverId!: string
+}

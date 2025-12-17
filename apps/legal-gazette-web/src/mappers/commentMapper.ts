@@ -58,8 +58,15 @@ export const commentStepperMapper = (comment: CommentDto) => {
         date: formatDate(comment.createdAt, 'dd. MMMM yyyy'),
       }
     case CommentTypeEnum.ASSIGN:
+      if (comment.actor === comment.receiver) {
+        return {
+          title: `${comment.actor} merkir sér auglýsinguna`,
+          date: formatDate(comment.createdAt, 'dd. MMMM yyyy'),
+        }
+      }
+
       return {
-        title: `Skráð á: ${comment.receiver}`,
+        title: `${comment.actor} færir mál á ${comment.receiver}`,
         date: formatDate(comment.createdAt, 'dd. MMMM yyyy'),
       }
     case CommentTypeEnum.STATUSUPDATE:

@@ -61,7 +61,7 @@ export type AdvertPublicationsCreateAttributes = {
         where: publicationWhereOptions,
         include: [
           {
-            model: AdvertModel.unscoped(),
+            model: AdvertModel,
             required: true,
             attributes: [
               'id',
@@ -149,7 +149,7 @@ export type AdvertPublicationsCreateAttributes = {
       where: publicationWhereOptions,
       include: [
         {
-          model: AdvertModel.unscoped(),
+          model: AdvertModel,
           required: true,
           attributes: [
             'id',
@@ -215,12 +215,9 @@ export class AdvertPublicationModel extends BaseModel<
 
   @BeforeCreate
   static async validate(model: AdvertPublicationModel) {
-    const advert = await AdvertModel.unscoped().findByPkOrThrow(
-      model.advertId,
-      {
-        attributes: ['id', 'typeId'],
-      },
-    )
+    const advert = await AdvertModel.findByPkOrThrow(model.advertId, {
+      attributes: ['id', 'typeId'],
+    })
 
     switch (advert.typeId) {
       case TypeIdEnum.DIVISION_MEETING: {

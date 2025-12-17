@@ -2,6 +2,7 @@ export enum LegalGazetteEvents {
   ADVERT_CREATED = 'advert.created',
   ADVERT_PUBLISHED = 'advert.published',
   STATUS_CHANGED = 'advert.status.changed',
+  USER_ASSIGNED = 'advert.user.assigned',
 }
 
 export enum LegalGazetteModels {

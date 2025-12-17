@@ -51,17 +51,32 @@ export const PublicationsFields = ({
   } = useUpdatePublications(id)
 
   const [modalVisible, setModalVisible] = useState(false)
+  const [selectedVersion, setSelectedVersion] =
+    useState<AdvertVersionEnum | null>(null)
 
   const {
     data: publicationData,
     error: publicationError,
     isLoading: isLoadingPublicationData,
   } = useQuery(
-    trpc.getPublication.queryOptions({
-      advertId: id,
-      version: AdvertVersionEnum.A,
-    }),
+    trpc.getPublication.queryOptions(
+      {
+        advertId: id,
+        version: selectedVersion as AdvertVersionEnum,
+      },
+      {
+        enabled: selectedVersion !== null,
+        // cache time - always fetch the latest version if changes are made to the advert
+        gcTime: 0,
+      },
+    ),
   )
+
+  useEffect(() => {
+    if (publicationData?.html) {
+      setModalVisible(true)
+    }
+  }, [publicationData])
 
   useEffect(() => {
     if (publicationError && !isLoadingPublicationData) {
@@ -133,6 +148,9 @@ export const PublicationsFields = ({
                 <Input
                   disabled={!canEdit}
                   backgroundColor="blue"
+                  loading={
+                    pub.version === selectedVersion && isLoadingPublicationData
+                  }
                   name="publishedAt"
                   readOnly
                   label="Útgáfudagur"
@@ -150,7 +168,7 @@ export const PublicationsFields = ({
                       label: 'Skoða',
                       type: 'outline',
                       onClick: () => {
-                        setModalVisible(true)
+                        setSelectedVersion(pub.version)
                       },
                     },
                   ]}
