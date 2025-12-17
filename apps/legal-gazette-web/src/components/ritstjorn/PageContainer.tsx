@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 
 import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { Drawer } from '@dmr.is/ui/components/Drawer/Drawer'
-import { Button, Stack } from '@dmr.is/ui/components/island-is'
+import { Button, Inline, Stack } from '@dmr.is/ui/components/island-is'
 
 import {
   GridColumn,
@@ -18,6 +18,7 @@ import { GetAdvertsStatusCounterDto } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
 import { StatusIdEnum } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import CaseFilters from '../CaseFilters/CaseFilters'
 import { CreateAdvert } from '../create-advert/CreateAdvert'
 import { RitstjornHero } from '../ritstjorn/Hero'
 import AdvertsCompleted from '../Tables/AdvertsCompleted'
@@ -86,23 +87,26 @@ export const PageContainer = ({ advertCount }: Props) => {
     <>
       <RitstjornHero />
       <GridContainer>
-        <GridRow>
+        <GridRow marginBottom={[4, 6]}>
           <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
-            <Stack space={[2, 3, 4]}>
-              <Drawer
-                disclosure={
-                  <Button
-                    variant="utility"
-                    size="small"
-                    icon="document"
-                    iconType="outline"
-                  >
-                    Stofna auglýsingu
-                  </Button>
-                }
-              >
-                <CreateAdvert />
-              </Drawer>
+            <Stack space={[0]}>
+              <Inline space={2} justifyContent={'spaceBetween'}>
+                <CaseFilters />
+                <Drawer
+                  disclosure={
+                    <Button
+                      variant="utility"
+                      size="small"
+                      icon="add"
+                      iconType="outline"
+                    >
+                      Stofna auglýsingu
+                    </Button>
+                  }
+                >
+                  <CreateAdvert />
+                </Drawer>
+              </Inline>
               <Tabs
                 label=""
                 selected={tab ?? 'innsendar'}
@@ -111,17 +115,17 @@ export const PageContainer = ({ advertCount }: Props) => {
                 tabs={[
                   {
                     id: 'innsendar',
-                    label: `Innsendar (${advertCount.submitted.count})`,
+                    label: `Innsent / í vinnslu (${advertCount.submitted.count})`,
                     content: <SubmittedTab key="submitted-tab" />,
                   },
                   {
                     id: 'utgafa',
-                    label: `Útgáfa (${advertCount.readyForPublication.count})`,
+                    label: `Tilbúið til útgáfu (${advertCount.readyForPublication.count})`,
                     content: <PublishingTab key="publishing-tab" />,
                   },
                   {
                     id: 'yfirlit',
-                    label: `Yfirlit (${completedCount})`,
+                    label: `Öll mál (${completedCount})`,
                     content: <AdvertsCompleted key="overview-tab" />,
                   },
                 ]}

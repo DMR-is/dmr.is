@@ -2,7 +2,6 @@
 
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
-import { useEffect, useState } from 'react'
 
 import {
   Button,
@@ -17,17 +16,9 @@ import {
 
 import { Inline, toast } from '@island.is/island-ui/core'
 
-import {
-  AdvertPublicationDto,
-  AdvertVersionEnum,
-  StatusDto,
-} from '../../gen/fetch'
+import { AdvertPublicationDto, StatusDto } from '../../gen/fetch'
 import { useUpdatePublications } from '../../hooks/useUpdatePublications'
 import { StatusIdEnum } from '../../lib/constants'
-import { useTRPC } from '../../lib/trpc/client/trpc'
-import { AdvertPublicationModal } from '../modals/AdvertPublicationModal'
-
-import { useQuery } from '@tanstack/react-query'
 
 type PublicationsFieldsProps = {
   id: string
@@ -42,47 +33,12 @@ export const PublicationsFields = ({
   publications,
   advertStatus,
 }: PublicationsFieldsProps) => {
-  const trpc = useTRPC()
   const {
     createPublication,
     updatePublication,
     deletePublication,
     publishPublication,
   } = useUpdatePublications(id)
-
-  const [modalVisible, setModalVisible] = useState(false)
-  const [selectedVersion, setSelectedVersion] =
-    useState<AdvertVersionEnum | null>(null)
-
-  const {
-    data: publicationData,
-    error: publicationError,
-    isLoading: isLoadingPublicationData,
-  } = useQuery(
-    trpc.getPublication.queryOptions(
-      {
-        advertId: id,
-        version: selectedVersion as AdvertVersionEnum,
-      },
-      {
-        enabled: selectedVersion !== null,
-        // cache time - always fetch the latest version if changes are made to the advert
-        gcTime: 0,
-      },
-    ),
-  )
-
-  useEffect(() => {
-    if (publicationData?.html) {
-      setModalVisible(true)
-    }
-  }, [publicationData])
-
-  useEffect(() => {
-    if (publicationError && !isLoadingPublicationData) {
-      toast.error('Ekki tókst að sækja birtingu')
-    }
-  }, [publicationError, isLoadingPublicationData])
 
   const handleCreatePublication = () => {
     createPublication()
@@ -144,56 +100,48 @@ export const PublicationsFields = ({
             </GridColumn>
 
             <GridColumn span={['12/12', '6/12']}>
-              <Inline space={[1, 2]} flexWrap="nowrap" alignY="center">
-                <Input
-                  disabled={!canEdit}
-                  backgroundColor="blue"
-                  loading={
-                    pub.version === selectedVersion && isLoadingPublicationData
-                  }
-                  name="publishedAt"
-                  readOnly
-                  label="Útgáfudagur"
-                  value={
-                    pub.publishedAt
-                      ? format(new Date(pub.publishedAt), 'dd. MMMM. yyyy', {
-                          locale: is,
-                        })
-                      : ''
-                  }
-                  size="sm"
-                  buttons={[
-                    {
-                      name: 'eye',
-                      label: 'Skoða',
-                      type: 'outline',
-                      onClick: () => {
-                        setSelectedVersion(pub.version)
+              <GridRow rowGap={[1, 2]}>
+                <GridColumn span={['10/12']}>
+                  <Input
+                    disabled={!canEdit}
+                    backgroundColor="blue"
+                    name="publishedAt"
+                    readOnly
+                    placeholder="Birtist við útgáfu"
+                    label="Útgáfudagur"
+                    value={
+                      pub.publishedAt
+                        ? format(new Date(pub.publishedAt), 'dd. MMMM. yyyy', {
+                            locale: is,
+                          })
+                        : ''
+                    }
+                    size="sm"
+                  />
+                </GridColumn>
+                <GridColumn span={['2/12']}>
+                  <DropdownMenu
+                    disabled={!canEdit}
+                    icon="settings"
+                    iconType="outline"
+                    // loading={isUpdatingAdvert}
+                    items={[
+                      {
+                        title: 'Gefa út birtingu',
+                        onClick: () => handlePublishPublication(pub),
                       },
-                    },
-                  ]}
-                />
-                <DropdownMenu
-                  disabled={!canEdit}
-                  icon="settings"
-                  iconType="outline"
-                  // loading={isUpdatingAdvert}
-                  items={[
-                    {
-                      title: 'Gefa út birtingu',
-                      onClick: () => handlePublishPublication(pub),
-                    },
-                    ...(index !== 0
-                      ? [
-                          {
-                            title: 'Fjarlægja birtingu',
-                            onClick: () => handleDeletePublication(pub.id),
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
-              </Inline>
+                      ...(index !== 0
+                        ? [
+                            {
+                              title: 'Fjarlægja birtingu',
+                              onClick: () => handleDeletePublication(pub.id),
+                            },
+                          ]
+                        : []),
+                    ]}
+                  />
+                </GridColumn>
+              </GridRow>
             </GridColumn>
           </GridRow>
         ))}
@@ -214,16 +162,6 @@ export const PublicationsFields = ({
           </GridColumn>
         </GridRow>
       </Stack>
-      {publicationData?.html && modalVisible && (
-        <AdvertPublicationModal
-          html={publicationData.html}
-          isVisible={modalVisible}
-          onVisibilityChange={(vis) => {
-            setModalVisible(vis)
-          }}
-          id="advert-publication-modal"
-        />
-      )}
     </>
   )
 }

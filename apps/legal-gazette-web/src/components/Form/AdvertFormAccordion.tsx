@@ -25,7 +25,7 @@ type Props = {
 }
 
 export const AdvertFormAccordion = ({ items }: Props) => {
-  const toggles = items.map(() => useToggle(false))
+  const toggles = items.map((_, index) => useToggle(index !== 0))
 
   const expandAll = () => {
     toggles.forEach(([_tog, setToggle]) => setToggle(true))

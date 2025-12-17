@@ -22,7 +22,7 @@ export const Editor = ({ onChange, onBlur, defaultValue, disabled }: Props) => {
         onBlur={onBlur}
         config={{
           toolbar:
-            'bold italic underline | numlist bullist table | link | customInsertButton',
+            'bold italic underline | align numlist bullist table | link | customInsertButton',
         }}
       />
     </Box>

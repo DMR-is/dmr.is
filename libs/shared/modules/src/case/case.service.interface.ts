@@ -70,6 +70,7 @@ export interface ICaseService {
   ): Promise<ResultWrapper<CreateCaseResponseDto>>
 
   publishCases(body: PostCasePublishBody): Promise<ResultWrapper>
+  publishSingleRegulation(id: string): Promise<ResultWrapper>
   getCasesWithStatusCount(
     status: CaseStatusEnum,
     params?: GetCasesWithStatusCountQuery,

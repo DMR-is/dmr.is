@@ -51,7 +51,8 @@ export const AdvertReadonlyFields = ({
             name="publicationNumber"
             size="sm"
             label="Útgáfunúmer"
-            value={publicationNumber ?? 'Reiknast við útgáfu'}
+            placeholder="Reiknast við útgáfu"
+            value={publicationNumber}
             buttons={
               publicationNumber
                 ? [
