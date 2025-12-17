@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import AnimateHeight from 'react-animate-height'
 
-import { Box, Icon, LinkV2, Text } from '@island.is/island-ui/core'
+import { Box, Button, Icon, LinkV2, Text } from '@island.is/island-ui/core'
 
 import useBreakpoints from '../../../hooks/useBreakpoints'
 import * as styles from './DataTable.css'
@@ -55,16 +55,15 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
                   visible: hovered,
                 })}
               >
-                <Box className={styles.seeMoreTableCellLinkText}>
-                  <Text variant="eyebrow" color={'blue400'} as="span">
+                <Text
+                  color={'blue400'}
+                  as="div"
+                  className={styles.seeMoreTableCellLinkText}
+                >
+                  <Button variant="text" icon="arrowForward" size="small">
                     {breakpoints.xl && 'Opna mál'}
-                    <Icon
-                      icon="arrowForward"
-                      color="blue400"
-                      className={styles.seeMoreTableCellLinkIcon}
-                    />
-                  </Text>
-                </Box>
+                  </Button>
+                </Text>
               </Box>
             </LinkV2>
           </td>
