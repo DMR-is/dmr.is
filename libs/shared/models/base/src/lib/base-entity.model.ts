@@ -1,6 +1,6 @@
 import { Column, DataType } from 'sequelize-typescript'
 
-import { BaseModel, BaseModelWithAttributes } from './base.model'
+import { BaseModel, BaseModelAttributes } from './base.model'
 import { BaseEntityTable } from './decorators'
 
 type BaseEntityModelCreateAttributes = {
@@ -8,8 +8,8 @@ type BaseEntityModelCreateAttributes = {
   slug: string
 }
 
-export type BaseEntityModelAttributes =
-  BaseModelWithAttributes<BaseEntityModelCreateAttributes>
+export type BaseEntityModelAttributes = BaseModelAttributes &
+  BaseEntityModelCreateAttributes
 
 export type BaseEntityAttributes = Pick<
   BaseEntityModelAttributes,

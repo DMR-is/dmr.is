@@ -44,7 +44,7 @@ export class CommentService implements ICommentService {
   }
 
   private async getAdvertStatusId(advertId: string): Promise<string> {
-    const advert = await this.advertModel.unscoped().findByPkOrThrow(advertId, {
+    const advert = await this.advertModel.findByPkOrThrow(advertId, {
       attributes: ['id', 'statusId'],
     })
 

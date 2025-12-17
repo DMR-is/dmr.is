@@ -14,18 +14,16 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator'
-import { BulkCreateOptions, Op, WhereOptions } from 'sequelize'
+import { BulkCreateOptions } from 'sequelize'
 import {
   BeforeBulkCreate,
   BelongsTo,
   Column,
   DataType,
-  DefaultScope,
   ForeignKey,
   HasMany,
   HasOne,
   Scopes,
-  Sequelize,
 } from 'sequelize-typescript'
 
 import {
@@ -162,139 +160,35 @@ export type AdvertCreateAttributes = {
 }
 
 @BaseTable({ tableName: LegalGazetteModels.ADVERT })
-@DefaultScope(() => ({
-  include: [
-    { model: StatusModel },
-    { model: CategoryModel },
-    { model: CourtDistrictModel },
-    { model: TypeModel },
-    { model: UserModel },
-    { model: AdvertPublicationModel },
-    { model: SettlementModel },
-    { model: CommunicationChannelModel },
-    { model: TBRTransactionModel },
-    { model: CommentModel },
-    { model: SignatureModel },
-    { model: ForeclosureModel, include: [ForeclosurePropertyModel] },
-  ],
-  order: [
-    [
-      { model: AdvertPublicationModel, as: 'publications' },
-      'scheduledAt',
-      'ASC',
-    ],
-  ],
-}))
 @Scopes(() => ({
-  withQuery: (query: GetAdvertsQueryDto) => {
-    const whereOptions: WhereOptions = {}
-
-    if (query.typeId) {
-      Object.assign(whereOptions, { typeId: { [Op.in]: query.typeId } })
-    }
-
-    if (query.categoryId) {
-      Object.assign(whereOptions, { categoryId: { [Op.in]: query.categoryId } })
-    }
-
-    if (query.statusId) {
-      Object.assign(whereOptions, { statusId: { [Op.in]: query.statusId } })
-    }
-
-    if (query.dateFrom && query.dateTo) {
-      Object.assign(whereOptions, {
-        createdAt: {
-          [Op.between]: [query.dateFrom, query.dateTo],
-        },
-      })
-    }
-
-    if (query.dateFrom && !query.dateTo) {
-      Object.assign(whereOptions, {
-        createdAt: {
-          [Op.gte]: query.dateFrom,
-        },
-      })
-    }
-
-    if (!query.dateFrom && query.dateTo) {
-      Object.assign(whereOptions, {
-        createdAt: {
-          [Op.lte]: query.dateTo,
-        },
-      })
-    }
-
-    if (query.search) {
-      Object.assign(whereOptions, {
-        [Op.or]: [
-          { title: { [Op.iLike]: `%${query.search}%` } },
-          { content: { [Op.iLike]: `%${query.search}%` } },
-          { caption: { [Op.iLike]: `%${query.search}%` } },
-        ],
-      })
-    }
-
-    const sortByKey = query.sortBy || 'birting'
-    const direction = query.direction || 'ASC'
-
-    if (sortByKey === 'birting') {
-      return {
-        include: [
-          { model: StatusModel },
-          { model: CategoryModel },
-          { model: CourtDistrictModel },
-          { model: TypeModel },
-          { model: UserModel },
-          {
-            model: AdvertPublicationModel,
-            where: {
-              publishedAt: null,
-              deletedAt: null,
-            },
-            required: false,
-            separate: true,
-          },
-          { model: SettlementModel },
-          { model: CommunicationChannelModel, separate: true },
-          { model: TBRTransactionModel },
-          { model: CommentModel, separate: true },
-          { model: ForeclosureModel },
-        ],
-        where: whereOptions,
-        order: [
-          [
-            Sequelize.literal(`(
-          SELECT MIN("publications"."scheduled_at")
-          FROM "advert_publication" AS "publications"
-          WHERE "publications"."advert_id" = "AdvertModel"."id"
-          AND "publications"."deleted_at" IS NULL
-          AND "publications"."published_at" IS NULL
-        )`),
-            direction,
-          ],
-        ],
-        subQuery: false,
-      }
-    }
-
-    return {
-      include: [
-        { model: StatusModel },
-        { model: CategoryModel },
-        { model: CourtDistrictModel },
-        { model: TypeModel },
-        { model: UserModel },
-        { model: AdvertPublicationModel },
-        { model: SettlementModel },
-        { model: CommunicationChannelModel },
-        { model: TBRTransactionModel },
-        { model: CommentModel },
-        { model: ForeclosureModel },
-      ],
-      where: whereOptions,
-      order: [['createdAt', direction]],
-    }
+  listview: {
+    include: [
+      { model: StatusModel },
+      { model: CategoryModel },
+      { model: TypeModel },
+      // we need to include the comment model to know if we have internal comments
+      { model: CommentModel },
+      // we need the publication model to get scheduledAt
+      { model: AdvertPublicationModel, as: 'publications' },
+      // we need user model for assigned user
+      { model: UserModel },
+    ],
+  },
+  detailed: {
+    include: [
+      { model: StatusModel },
+      { model: CategoryModel },
+      { model: CourtDistrictModel },
+      { model: TypeModel },
+      { model: UserModel },
+      { model: AdvertPublicationModel, as: 'publications' },
+      { model: SettlementModel },
+      { model: CommunicationChannelModel },
+      { model: TBRTransactionModel },
+      { model: CommentModel },
+      { model: SignatureModel },
+      { model: ForeclosureModel, include: [ForeclosurePropertyModel] },
+    ],
   },
 }))
 export class AdvertModel extends BaseModel<
@@ -540,9 +434,10 @@ export class AdvertModel extends BaseModel<
 
       const latestPub = this.publications
         .filter((pub) => pub.publishedAt !== null)
-        .sort((a, b) => b.publishedAt!.getTime() - a.publishedAt!.getTime())[0]
-
-
+        .sort((a, b) => {
+          if (!a.publishedAt || !b.publishedAt) return 0
+          return b.publishedAt.getTime() - a.publishedAt.getTime()
+        })[0]
 
       return getAdvertHtmlMarkup(this, latestPub?.versionLetter)
     } catch (error) {

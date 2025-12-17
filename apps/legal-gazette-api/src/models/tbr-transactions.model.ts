@@ -29,7 +29,7 @@ export type TBRTransactionCreateAttributes = TBRTransactionAttributes
   withDebtor: {
     include: [
       {
-        model: AdvertModel.unscoped(),
+        model: AdvertModel,
         attributes: ['id', 'createdByNationalId'],
       },
     ],
