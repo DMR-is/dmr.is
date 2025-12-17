@@ -13,6 +13,7 @@ import { LegalGazetteEvents } from '../../../../core/constants'
 import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../../models/advert-publication.model'
 import { StatusIdEnum } from '../../../../models/status.model'
+import { AdvertPublishedEvent } from '../../publications/events/advert-published.event'
 import { IPublishingTaskService } from './publishing.task.interface'
 
 const LOGGER_CONTEXT = 'PublishingTaskService'
@@ -65,7 +66,7 @@ export class PublishingTaskService implements IPublishingTaskService {
     return publicationNumber
   }
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_MINUTE)
   async publishAdverts(): Promise<void> {
     const now = new Date()
 
@@ -77,27 +78,15 @@ export class PublishingTaskService implements IPublishingTaskService {
     const start = now.setHours(0, 0, 0, 0)
     const end = now.setHours(23, 59, 59, 999)
 
-    const publicationsToBePublished = await this.publicationModel
-      .unscoped()
-      .findAll({
-        where: {
-          publishedAt: { [Op.is]: null },
-          scheduledAt: {
-            [Op.gte]: start,
-            [Op.lte]: end,
-          },
+    const publicationsToBePublished = await this.publicationModel.findAll({
+      where: {
+        publishedAt: { [Op.is]: null },
+        scheduledAt: {
+          [Op.gte]: start,
+          [Op.lte]: end,
         },
-        include: [
-          {
-            model: AdvertModel,
-            where: {
-              statusId: {
-                [Op.eq]: StatusIdEnum.READY_FOR_PUBLICATION,
-              },
-            },
-          },
-        ],
-      })
+      },
+    })
 
     if (publicationsToBePublished.length === 0) {
       this.logger.info(
@@ -116,27 +105,42 @@ export class PublishingTaskService implements IPublishingTaskService {
       },
     )
 
+    const advert = await this.advertModel.scope('detailed').findOne({
+      where: { id: publicationsToBePublished[0]?.advertId },
+    })
+
+    if (!advert) {
+      this.logger.warn(
+        `Advert not found for publication with ID: ${publicationsToBePublished[0]?.id}`,
+        {
+          context: LOGGER_CONTEXT,
+          publicationId: publicationsToBePublished[0]?.id,
+        },
+      )
+      return
+    }
+
     for (const [index, pub] of publicationsToBePublished.entries()) {
       this.logger.debug(
         `Processing publication ${index + 1} of ${publicationsToBePublished.length}`,
         {
           context: LOGGER_CONTEXT,
           publicationId: pub.id,
-          advertId: pub.advert.id,
+          advertId: advert.id,
           index,
         },
       )
 
       try {
         await this.sequelize.transaction(async (transaction) => {
-          const publicationNumber = isEmpty(pub.advert.publicationNumber)
+          const publicationNumber = isEmpty(advert.publicationNumber)
             ? await this.getNextPublicationNumber(pub.scheduledAt, transaction)
-            : pub.advert.publicationNumber
+            : advert.publicationNumber
 
           pub.publishedAt = new Date()
           await pub.save({ transaction: transaction })
 
-          await pub.advert.update(
+          await advert.update(
             {
               publicationNumber,
               statusId: StatusIdEnum.PUBLISHED,
@@ -144,14 +148,13 @@ export class PublishingTaskService implements IPublishingTaskService {
             { transaction: transaction },
           )
 
+          const payload: AdvertPublishedEvent = {
+            advert: advert.fromModelToDetailed(),
+            publication: pub.fromModel(),
+            html: advert.htmlMarkup(pub.versionLetter),
+          }
           transaction.afterCommit(() => {
-            this.eventEmitter.emit(LegalGazetteEvents.ADVERT_PUBLISHED, {
-              publicationId: pub.id,
-              advertId: pub.advert.id,
-              publicationNumber,
-              publishedAt: pub.publishedAt,
-              scheduledAt: pub.scheduledAt,
-            })
+            this.eventEmitter.emit(LegalGazetteEvents.ADVERT_PUBLISHED, payload)
           })
         })
 
@@ -161,7 +164,7 @@ export class PublishingTaskService implements IPublishingTaskService {
       } catch (error) {
         this.logger.error(`Failed to publish advert publication`, {
           publicationId: pub.id,
-          advertId: pub.advert.id,
+          advertId: advert.id,
           context: LOGGER_CONTEXT,
           error: error,
         })
