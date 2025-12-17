@@ -42,8 +42,6 @@ export const usePublishAdvertRegulation = () => {
               toastId: 'publishRegulation',
             },
           )
-          // eslint-disable-next-line no-console
-          console.log('error: ', error)
         })
     } catch (error) {
       setError(`Ekki tókst að senda reglugerð í ritstjórnarkerfi reglugerða`)
