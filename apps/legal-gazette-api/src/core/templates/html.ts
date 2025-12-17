@@ -15,7 +15,7 @@ import { getSignatureMarkup } from './signature'
 
 export function getAdvertHtmlMarkup(
   model: AdvertModel,
-  version: AdvertVersionEnum = AdvertVersionEnum.A,
+  version: AdvertVersionEnum | undefined = AdvertVersionEnum.A,
 ): string {
   const publication = model.publications.find(
     (pub) => pub.versionLetter === version,

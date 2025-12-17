@@ -1,8 +1,28 @@
 # Plan: Legacy Subscriber Data Import
 
-## Summary
+> **⚠️ STATUS: OBSOLETE**
+> 
+> **Date Deprecated:** December 16, 2024
+> 
+> This plan has been superseded. The legacy migration approach (importing data to LEGACY_SUBSCRIBERS table, magic link migration flow) has been **abandoned** in favor of a simpler direct subscriber management approach.
+> 
+> **What happened:**
+> - The `legacy_subscribers` and `legacy_migration_tokens` tables have been dropped
+> - The entire `modules/legacy-migration/` module has been deleted
+> - The subscriber table now has a simplified schema with direct data entry
+> 
+> **New approach:**
+> - Subscribers are created directly in the `legal_gazette_subscribers` table
+> - No migration flow needed - admin users can import/create subscribers directly
+> - Schema now includes: `national_id`, `name`, `email`, `is_active`, `subscribed_from`, `subscribed_to`
+> 
+> See the current subscriber model at: `apps/legal-gazette-api/src/models/subscriber.model.ts`
 
-Import legacy subscriber data from the old Legal Gazette system into the new `LEGACY_SUBSCRIBERS` table. This data is required for the legacy migration flow to work.
+---
+
+## ~~Summary~~ (Historical)
+
+~~Import legacy subscriber data from the old Legal Gazette system into the new `LEGACY_SUBSCRIBERS` table. This data is required for the legacy migration flow to work.~~
 
 ## Planning Date
 
@@ -10,21 +30,24 @@ December 3, 2025
 
 ---
 
-## Background
+## ~~Background~~ (Historical)
 
-### Source System
+### ~~Source System~~
 
-The legacy Legal Gazette system uses email+password authentication with the following user data:
-- **Name** - User's full name
-- **Email** - Login identifier (unique)
-- **Kennitala** - Optional national ID
-- **isActive** - Subscription status
-- **subscribedAt** - Original subscription date (IMPORTANT: Required for subscription tracking)
-- **Password Hash** - Hashed password (algorithm TBD)
+~~The legacy Legal Gazette system uses email+password authentication with the following user data:~~
+- ~~**Name** - User's full name~~
+- ~~**Email** - Login identifier (unique)~~
+- ~~**Kennitala** - Optional national ID~~
+- ~~**isActive** - Subscription status~~
+- ~~**subscribedAt** - Original subscription date (IMPORTANT: Required for subscription tracking)~~
+- ~~**Password Hash** - Hashed password (algorithm TBD)~~
 
-### Target Table
+### ~~Target Table~~ (DROPPED)
+
+~~This table has been dropped as of December 16, 2024.~~
 
 ```sql
+-- DROPPED: This table no longer exists
 CREATE TABLE LEGACY_SUBSCRIBERS (
   ID UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   CREATED_AT TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -45,9 +68,9 @@ CREATE TABLE LEGACY_SUBSCRIBERS (
 
 ---
 
-## Implementation Plan
+## ~~Implementation Plan~~ (Historical)
 
-### Phase 1: Data Export from Legacy System
+### ~~Phase 1: Data Export from Legacy System~~
 
 #### 1.1 Obtain Data Export
 

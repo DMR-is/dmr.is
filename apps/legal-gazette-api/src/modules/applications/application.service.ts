@@ -12,10 +12,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
-import {
-  INationalRegistryService,
-  PersonDto,
-} from '@dmr.is/clients/national-registry'
+import { INationalRegistryService } from '@dmr.is/clients/national-registry'
 import {
   ApplicationTypeEnum,
   commonApplicationAnswersRefined,
@@ -74,15 +71,15 @@ export class ApplicationService implements IApplicationService {
 
   private async submitCommonApplication(
     application: ApplicationModel,
-    submittee: PersonDto,
+    submittee: DMRUser,
   ) {
     const parsed = commonApplicationAnswersRefined.parse(application.answers)
 
     await this.advertService.createAdvert({
       caseId: application.caseId,
       applicationId: application.id,
-      createdBy: submittee.nafn,
-      createdByNationalId: submittee.kennitala,
+      createdBy: submittee.name,
+      createdByNationalId: submittee.nationalId,
       typeId: parsed.fields.type.id,
       categoryId: parsed.fields.category.id,
       caption: parsed.fields.caption,
@@ -104,7 +101,7 @@ export class ApplicationService implements IApplicationService {
 
   private async submitRecallApplication(
     application: ApplicationModel,
-    submittee: PersonDto,
+    user: DMRUser,
   ) {
     let data
 
@@ -180,8 +177,8 @@ export class ApplicationService implements IApplicationService {
           ? RECALL_BANKRUPTCY_ADVERT_TYPE_ID
           : RECALL_DECEASED_ADVERT_TYPE_ID,
       categoryId: RECALL_CATEGORY_ID,
-      createdBy: submittee.nafn,
-      createdByNationalId: submittee.kennitala,
+      createdBy: user.name,
+      createdByNationalId: user.nationalId,
       signature: {
         ...data.signature,
         date: data.signature?.date ? new Date(data.signature.date) : undefined,
@@ -211,12 +208,12 @@ export class ApplicationService implements IApplicationService {
   async addDivisionMeetingAdvertToApplication(
     applicationId: string,
     body: CreateDivisionMeetingDto,
-    submittee: PersonDto,
+    user: DMRUser,
   ): Promise<void> {
     const application = await this.applicationModel.findOneOrThrow({
       where: {
         id: applicationId,
-        submittedByNationalId: submittee.kennitala,
+        submittedByNationalId: user.nationalId,
         status: ApplicationStatusEnum.SUBMITTED,
         applicationType: {
           [Op.or]: [
@@ -235,8 +232,8 @@ export class ApplicationService implements IApplicationService {
           : AdvertTemplateType.DIVISION_MEETING_DECEASED,
       caseId: application.caseId,
       categoryId: CategoryDefaultIdEnum.DIVISION_MEETINGS,
-      createdBy: submittee.nafn,
-      createdByNationalId: submittee.kennitala,
+      createdBy: user.name,
+      createdByNationalId: user.nationalId,
       signature: {
         ...body.signature,
         date: body.signature?.date ? new Date(body.signature.date) : undefined,
@@ -255,12 +252,12 @@ export class ApplicationService implements IApplicationService {
   async addDivisionEndingAdvertToApplication(
     applicationId: string,
     body: CreateDivisionEndingDto,
-    submittee: PersonDto,
+    user: DMRUser,
   ): Promise<void> {
     const application = await this.applicationModel.findOneOrThrow({
       where: {
         id: applicationId,
-        submittedByNationalId: submittee.kennitala,
+        submittedByNationalId: user.nationalId,
         status: ApplicationStatusEnum.SUBMITTED,
         applicationType: {
           [Op.or]: [
@@ -307,8 +304,8 @@ export class ApplicationService implements IApplicationService {
       typeId: TypeIdEnum.DIVISION_ENDING,
       categoryId: CategoryDefaultIdEnum.DIVISION_ENDINGS,
       templateType: AdvertTemplateType.DIVISION_ENDING,
-      createdBy: submittee.nafn,
-      createdByNationalId: submittee.kennitala,
+      createdBy: user.name,
+      createdByNationalId: user.nationalId,
       signature: {
         ...body.signature,
         date: body.signature?.date ? new Date(body.signature.date) : undefined,
@@ -477,10 +474,10 @@ export class ApplicationService implements IApplicationService {
 
   async submitIslandIsApplication(
     body: IslandIsSubmitApplicationDto,
-    submittee: PersonDto,
+    user: DMRUser,
   ): Promise<void> {
     const newCase = await this.caseModel.create(
-      { involvedPartyNationalId: submittee.kennitala },
+      { involvedPartyNationalId: user.nationalId },
       { returning: ['id'] },
     )
 
@@ -491,8 +488,8 @@ export class ApplicationService implements IApplicationService {
       typeId: body.typeId,
       categoryId: body.categoryId,
       islandIsApplicationId: body.islandIsApplicationId,
-      createdBy: submittee.nafn,
-      createdByNationalId: submittee.kennitala,
+      createdBy: user.name,
+      createdByNationalId: user.nationalId,
       signature: {
         name: body.signature.name,
         date: body.signature.date,
@@ -512,24 +509,13 @@ export class ApplicationService implements IApplicationService {
       where: { id: applicationId, submittedByNationalId: user.nationalId },
     })
 
-    const { person: submittee } =
-      await this.nationalRegistryService.getPersonByNationalId(user.nationalId)
-
-    if (!submittee) {
-      this.logger.warn(`Could not find submittee in national registry`, {
-        context: 'ApplicationService',
-        category: 'legal-gazette',
-      })
-      throw new InternalServerErrorException('Could not verify submittee')
-    }
-
     switch (application.applicationType) {
       case ApplicationTypeEnum.COMMON:
-        await this.submitCommonApplication(application, submittee)
+        await this.submitCommonApplication(application, user)
         break
       case ApplicationTypeEnum.RECALL_BANKRUPTCY:
       case ApplicationTypeEnum.RECALL_DECEASED:
-        await this.submitRecallApplication(application, submittee)
+        await this.submitRecallApplication(application, user)
         break
       default:
         this.logger.warn(

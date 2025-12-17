@@ -542,33 +542,15 @@ export class AdvertModel extends BaseModel<
         .filter((pub) => pub.publishedAt !== null)
         .sort((a, b) => b.publishedAt!.getTime() - a.publishedAt!.getTime())[0]
 
-      if (!latestPub) {
-        throw new InternalServerErrorException(
-          'No published advert publications found',
-        )
-      }
 
-      return this.htmlMarkup(latestPub.versionLetter)
+
+      return getAdvertHtmlMarkup(this, latestPub?.versionLetter)
     } catch (error) {
       const logger = getLogger('AdvertModel')
       const message = error instanceof Error ? error.message : 'Unknown error'
       logger.error('Error generating HTML markup,', { message })
       throw new InternalServerErrorException()
     }
-  }
-  static htmlMarkup(model: AdvertModel): string {
-    // find the lastest publishedAt date
-    const latestPub = model.publications
-      .filter((pub) => pub.publishedAt !== null)
-      .sort((a, b) => b.publishedAt!.getTime() - a.publishedAt!.getTime())[0]
-
-    if (!latestPub) {
-      throw new InternalServerErrorException(
-        'No published advert publications found',
-      )
-    }
-
-    return model.htmlMarkup(latestPub.versionLetter)
   }
 
   @BeforeBulkCreate
@@ -933,6 +915,50 @@ export class GetAdvertsStatusCounterDto {
 
   @ApiProperty({ type: AdvertStatusCounterItemDto })
   published!: AdvertStatusCounterItemDto
+}
+
+// ============================================================================
+// My Adverts DTOs (for application-web users to view their submitted adverts)
+// ============================================================================
+
+export class MyAdvertListItemDto {
+  @ApiProperty({ type: String, format: 'uuid' })
+  id!: string
+
+  @ApiProperty({ type: String, format: 'uuid', nullable: true })
+  legacyId!: string | null
+
+  @ApiProperty({ type: String })
+  title!: string
+
+  @ApiProperty({ type: String, nullable: true })
+  publicationNumber!: string | null
+
+  @ApiProperty({ type: TypeDto })
+  type!: TypeDto
+
+  @ApiProperty({ type: CategoryDto })
+  category!: CategoryDto
+
+  @ApiProperty({ type: StatusDto })
+  status!: StatusDto
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  createdAt!: Date
+
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
+  publishedAt!: Date | null
+
+  @ApiProperty({ type: String, nullable: true })
+  html!: string | null
+}
+
+export class GetMyAdvertsDto {
+  @ApiProperty({ type: [MyAdvertListItemDto] })
+  adverts!: MyAdvertListItemDto[]
+
+  @ApiProperty({ type: Paging })
+  paging!: Paging
 }
 
 export class CreateAdvertInternalDto extends PickType(AdvertModel, [

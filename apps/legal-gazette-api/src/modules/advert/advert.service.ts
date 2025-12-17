@@ -1,4 +1,4 @@
-import { Includeable } from 'sequelize'
+import { Includeable, Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
@@ -7,6 +7,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { PagingQuery } from '@dmr.is/shared/dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { LegalGazetteEvents } from '../../core/constants'
@@ -17,13 +18,17 @@ import {
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
+  GetMyAdvertsDto,
+  MyAdvertListItemDto,
   UpdateAdvertDto,
 } from '../../models/advert.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
+import { CategoryModel } from '../../models/category.model'
 import { CommunicationChannelModel } from '../../models/communication-channel.model'
 import { SettlementModel } from '../../models/settlement.model'
 import { SignatureModel } from '../../models/signature.model'
-import { StatusIdEnum } from '../../models/status.model'
+import { StatusIdEnum, StatusModel } from '../../models/status.model'
+import { TypeModel } from '../../models/type.model'
 import { UserModel } from '../../models/users.model'
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
 import { IAdvertService } from './advert.service.interface'
@@ -448,5 +453,100 @@ export class AdvertService implements IAdvertService {
     ])
 
     return advert.fromModelToDetailed(user?.id)
+  }
+
+  async getMyAdverts(
+    query: PagingQuery,
+    user: DMRUser,
+  ): Promise<GetMyAdvertsDto> {
+    const { limit, offset } = getLimitAndOffset(query)
+
+    const adverts = await this.advertModel.unscoped().findAndCountAll({
+      limit,
+      offset,
+      where: {
+        createdByNationalId: user.nationalId,
+      },
+      include: [
+        { model: TypeModel, attributes: ['id', 'title', 'slug'] },
+        { model: CategoryModel, attributes: ['id', 'title', 'slug'] },
+        { model: StatusModel, attributes: ['id', 'title', 'slug'] },
+        {
+          model: AdvertPublicationModel,
+          attributes: ['publishedAt', 'versionNumber', 'scheduledAt'],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+    })
+
+    const mapped: MyAdvertListItemDto[] = adverts.rows.map((advert) => ({
+      id: advert.id,
+      legacyId: advert.legacyId,
+      title: advert.title,
+      publicationNumber: advert.publicationNumber,
+      type: advert.type.fromModel(),
+      category: advert.category.fromModel(),
+      status: advert.status.fromModel(),
+      createdAt: advert.createdAt,
+      publishedAt: advert.publications?.[0]?.publishedAt ?? null,
+      html: advert.htmlMarkup(),
+    }))
+
+    const paging = generatePaging(
+      adverts.rows,
+      query.page,
+      query.pageSize,
+      adverts.count,
+    )
+
+    return { adverts: mapped, paging }
+  }
+
+  async getMyLegacyAdverts(
+    query: PagingQuery,
+    user: DMRUser,
+  ): Promise<GetMyAdvertsDto> {
+    const { limit, offset } = getLimitAndOffset(query)
+
+    const adverts = await this.advertModel.unscoped().findAndCountAll({
+      limit,
+      offset,
+      where: {
+        createdByNationalId: user.nationalId,
+        legacyId: { [Op.ne]: null },
+      },
+      include: [
+        { model: TypeModel, attributes: ['id', 'title', 'slug'] },
+        { model: CategoryModel, attributes: ['id', 'title', 'slug'] },
+        { model: StatusModel, attributes: ['id', 'title', 'slug'] },
+        {
+          model: AdvertPublicationModel,
+          attributes: ['publishedAt', 'versionNumber', 'scheduledAt'],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+    })
+
+    const mapped: MyAdvertListItemDto[] = adverts.rows.map((advert) => ({
+      id: advert.id,
+      legacyId: advert.legacyId,
+      title: advert.title,
+      publicationNumber: advert.publicationNumber,
+      type: advert.type.fromModel(),
+      category: advert.category.fromModel(),
+      status: advert.status.fromModel(),
+      createdAt: advert.createdAt,
+      publishedAt: advert.publications?.[0]?.publishedAt ?? null,
+      html: advert.htmlMarkup(),
+    }))
+
+    const paging = generatePaging(
+      adverts.rows,
+      query.page,
+      query.pageSize,
+      adverts.count,
+    )
+
+    return { adverts: mapped, paging }
   }
 }
