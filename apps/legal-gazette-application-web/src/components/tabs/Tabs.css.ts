@@ -6,7 +6,6 @@ import { recipe } from '@vanilla-extract/recipes'
 export const tabsTablist = style({
   position: 'relative',
   display: 'flex',
-  overflowX: 'auto',
   borderBottom: `2px solid ${theme.color.blue200}`,
   width: '100%',
 })
