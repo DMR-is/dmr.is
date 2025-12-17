@@ -66,7 +66,7 @@ export class PublishingTaskService implements IPublishingTaskService {
     return publicationNumber
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_HOUR)
   async publishAdverts(): Promise<void> {
     const now = new Date()
 
