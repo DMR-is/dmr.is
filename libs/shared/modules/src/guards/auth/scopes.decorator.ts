@@ -25,7 +25,7 @@ export const ActorScopes = (...scopes: string[]) =>
 
 /**
  * Scope decorator for legal-gazette-public-web endpoints.
- * Requires the '@dmr.is/lg-public-web' scope.
+ * Requires the '@logbirtingablad.is/logbirtingabladid' scope.
  *
  * @example
  * ```typescript
@@ -35,11 +35,11 @@ export const ActorScopes = (...scopes: string[]) =>
  * ```
  */
 export const PublicWebScopes = () =>
-  SetMetadata(SCOPES_KEY, ['@dmr.is/lg-public-web'])
+  SetMetadata(SCOPES_KEY, ['@logbirtingablad.is/logbirtingabladid'])
 
 /**
  * Scope decorator for legal-gazette-application-web endpoints.
- * Requires the '@dmr.is/lg-application-web' scope.
+ * Requires the '@logbirtingablad.is/lg-application-web' scope.
  *
  * @example
  * ```typescript
@@ -49,7 +49,7 @@ export const PublicWebScopes = () =>
  * ```
  */
 export const ApplicationWebScopes = () =>
-  SetMetadata(SCOPES_KEY, ['@dmr.is/lg-application-web'])
+  SetMetadata(SCOPES_KEY, ['@logbirtingablad.is/lg-application-web'])
 
 /**
  * Scope decorator for endpoints accessible by EITHER public-web OR application-web users.
@@ -64,6 +64,6 @@ export const ApplicationWebScopes = () =>
  */
 export const PublicOrApplicationWebScopes = () =>
   SetMetadata(SCOPES_KEY, [
-    '@dmr.is/lg-public-web',
-    '@dmr.is/lg-application-web',
+    '@logbirtingablad.is/logbirtingabladid',
+    '@logbirtingablad.is/lg-application-web',
   ])

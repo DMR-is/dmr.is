@@ -242,8 +242,8 @@ The Legal Gazette API uses `AuthorizationGuard` to handle both scope-based and a
 
 ```typescript
 // Scope decorators (from @dmr.is/modules/guards/auth)
-@PublicWebScopes()           // Requires '@dmr.is/lg-public-web' scope
-@ApplicationWebScopes()      // Requires '@dmr.is/lg-application-web' scope
+@PublicWebScopes()           // Requires '@logbirtingablad.is/logbirtingabladid' scope
+@ApplicationWebScopes()      // Requires '@logbirtingablad.is/lg-application-web' scope
 @PublicOrApplicationWebScopes()  // Requires EITHER scope
 
 // Admin decorator (from local decorators)
@@ -315,11 +315,11 @@ const APPLICATION_WEB_NATIONAL_ID = '1122334455'
 const createAdminUser = () => ({ nationalId: ADMIN_NATIONAL_ID, scope: '' })
 const createPublicWebUser = () => ({ 
   nationalId: PUBLIC_WEB_NATIONAL_ID, 
-  scope: '@dmr.is/lg-public-web' 
+  scope: '@logbirtingablad.is/logbirtingabladid' 
 })
 const createApplicationWebUser = () => ({ 
   nationalId: APPLICATION_WEB_NATIONAL_ID, 
-  scope: '@dmr.is/lg-application-web' 
+  scope: '@logbirtingablad.is/lg-application-web' 
 })
 
 describe('MyController - Guard Authorization', () => {
@@ -372,7 +372,7 @@ describe('MyController - Guard Authorization', () => {
         MyController.prototype.specificMethod,
         MyController,
       ])
-      expect(scopes).toEqual(['@dmr.is/lg-application-web'])
+      expect(scopes).toEqual(['@logbirtingablad.is/lg-application-web'])
     })
   })
 

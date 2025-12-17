@@ -45,7 +45,7 @@ const logger = getLogger('AuthorizationGuard')
  *
  * // Scope-only - no user lookup, just checks scope in JWT
  * @UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
- * @PublicWebScopes()  // Sets @Scopes(['@dmr.is/lg-public-web'])
+ * @PublicWebScopes()  // Sets @Scopes(['@logbirtingablad.is/logbirtingabladid'])
  * @Controller('public')
  * export class PublicController { ... }
  *
