@@ -95,7 +95,7 @@ export const PublishingTab = () => {
           <Button
             disabled={selectedAdvertIds.length === 0}
             colorScheme="destructive"
-            icon="trash"
+            icon="removeCircle"
             iconType="outline"
             onClick={() =>
               selectedAdvertIds.forEach((id) => {

@@ -56,8 +56,8 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
                 })}
               >
                 <Box className={styles.seeMoreTableCellLinkText}>
-                  <Text variant="eyebrow" color={'blue400'}>
-                    {breakpoints.xl && 'Sjá nánar'}
+                  <Text variant="eyebrow" color={'blue400'} as="span">
+                    {breakpoints.xl && 'Opna mál'}
                     <Icon
                       icon="arrowForward"
                       color="blue400"

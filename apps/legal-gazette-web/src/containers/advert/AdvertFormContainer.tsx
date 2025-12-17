@@ -181,29 +181,24 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
   return (
     <Box background="white" padding={[4, 6, 8]} borderRadius="large">
       <Stack space={[3, 4]}>
-        <Breadcrumbs
-          items={[
-            {
-              title: 'Stjórnborð',
-              href: Route.STJORNBORD,
-            },
-            {
-              title: 'Ritstjórn',
-              href: Route.RITSTJORN,
-            },
-            {
-              title: advert.title,
-            },
-          ]}
-        />
-        <Stack space={[1, 2]}>
-          <Text variant="h2">Vinnslusvæði Lögbirtingablaðsins</Text>
-          <Text>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
-            at interdum risus. Orci varius natoque penatibus et magnis dis
-            parturient montes, nascetur ridiculus mus. Phasellus finibus lacinia
-            luctus. Donec in nisi et justo luctus egestas.
-          </Text>
+        <Stack space={[2]}>
+          <Breadcrumbs
+            items={[
+              {
+                title: 'Stjórnborð',
+                href: Route.STJORNBORD,
+              },
+              {
+                title: 'Ritstjórn',
+                href: Route.RITSTJORN,
+              },
+              {
+                title: 'Stakt mál',
+              },
+            ]}
+          />
+
+          <Text variant="h2">{advert.title}</Text>
         </Stack>
         <AdvertFormAlert status={advert.status} canEdit={advert.canEdit} />
         <AdvertFormAccordion items={items} />

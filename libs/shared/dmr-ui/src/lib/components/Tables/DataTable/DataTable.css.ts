@@ -55,7 +55,7 @@ export const linkTableHeaderCell = style({
 export const seeMoreTableCellLink = recipe({
   base: {
     display: 'block',
-    padding: theme.spacing[2],
+    padding: theme.spacing[1],
 
     '@media': {
       [`screen and (max-width: ${theme.breakpoints.xl}px)`]: {
@@ -84,10 +84,20 @@ export const seeMoreTableCellLinkText = style({
   paddingBottom: 4,
   width: 'max-content',
   color: theme.color.blue400,
+  background: theme.color.blue100,
 
   selectors: {
     '&:hover': {
-      background: theme.color.blue100,
+      color: theme.color.purple400,
+
+      span: {
+        color: theme.color.purple400,
+        svg: {
+          path: {
+            stroke: theme.color.purple400,
+          },
+        },
+      },
     },
   },
 

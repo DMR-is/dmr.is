@@ -1,11 +1,16 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
+import { toast } from '@dmr.is/ui/components/island-is'
 
 import { ChangeStatusButtons } from '../../components/buttons/ChangeStatusButtons'
 import { EmployeeSelect } from '../../components/employee-select/EmployeeSelect'
 import { AdvertFormStepper } from '../../components/Form/AdvertFormStepper'
 import { AdvertSidebar } from '../../components/Form/FormSidebar'
+import { AdvertPublicationModal } from '../../components/modals/AdvertPublicationModal'
+import { AdvertVersionEnum } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 type AdvertContainerProps = {
@@ -18,6 +23,25 @@ export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
     trpc.getEmployees.queryOptions(),
   )
   const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id }))
+
+  const [modalVisible, setModalVisible] = useState(false)
+
+  const {
+    data: publicationData,
+    error: publicationError,
+    isLoading: isLoadingPublicationData,
+  } = useQuery(
+    trpc.getPublication.queryOptions({
+      advertId: id,
+      version: AdvertVersionEnum.A,
+    }),
+  )
+
+  useEffect(() => {
+    if (publicationError && !isLoadingPublicationData) {
+      toast.error('Ekki tókst að sækja birtingu')
+    }
+  }, [publicationError, isLoadingPublicationData])
 
   return (
     <AdvertSidebar>
@@ -35,8 +59,19 @@ export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
         advertId={advert.id}
         currentStatus={advert.status}
         canEdit={advert.canEdit}
+        setModalVisible={setModalVisible}
       />
       <AdvertFormStepper id={id} />
+      {publicationData?.html && modalVisible && (
+        <AdvertPublicationModal
+          html={publicationData.html}
+          isVisible={modalVisible}
+          onVisibilityChange={(vis) => {
+            setModalVisible(vis)
+          }}
+          id="advert-publication-modal"
+        />
+      )}
     </AdvertSidebar>
   )
 }

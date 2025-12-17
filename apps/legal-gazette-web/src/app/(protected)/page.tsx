@@ -1,9 +1,9 @@
-import {fetchQuery} from '@dmr.is/trpc/client/server'
+import { fetchQuery } from '@dmr.is/trpc/client/server'
 
 import { ApplicationContainer } from '../../components/front-page/ApplicationContainer'
 import { HeroContainer } from '../../components/front-page/HeroContainer'
 import { SectionContainer } from '../../components/front-page/SectionContainer'
-import {  trpc } from '../../lib/trpc/client/server'
+import { trpc } from '../../lib/trpc/client/server'
 
 export default async function IndexPage() {
   const countByStatusPromise = fetchQuery(

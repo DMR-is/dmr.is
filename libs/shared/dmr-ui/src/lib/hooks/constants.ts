@@ -33,8 +33,8 @@ export enum Route {
   STJORNBORD = '/',
   RITSTJORN = '/ritstjorn',
   RITSTJORN_ID = '/ritstjorn/[id]',
-  UTGAFA = '/utgafa',
-  HEILDARYFIRLIT = '/heildaryfirlit',
+  UTGAFA = '/ritstjorn?tab=utgafa',
+  HEILDARYFIRLIT = '/ritstjorn?tab=yfirlit',
 }
 
 export const Routes: RouteItem[] = [
