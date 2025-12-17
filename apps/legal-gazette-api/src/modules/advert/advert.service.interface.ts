@@ -1,4 +1,5 @@
 import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { PagingQuery } from '@dmr.is/shared/dto'
 
 import {
   AdvertDetailedDto,
@@ -6,6 +7,7 @@ import {
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
+  GetMyAdvertsDto,
   UpdateAdvertDto,
 } from '../../models/advert.model'
 
@@ -37,6 +39,10 @@ export interface IAdvertService {
   ): Promise<void>
 
   createAdvert(body: CreateAdvertInternalDto): Promise<AdvertDetailedDto>
+
+  getMyAdverts(query: PagingQuery, user: DMRUser): Promise<GetMyAdvertsDto>
+
+  getMyLegacyAdverts(query: PagingQuery, user: DMRUser): Promise<GetMyAdvertsDto>
 }
 
 export const IAdvertService = Symbol('IAdvertService')
