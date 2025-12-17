@@ -188,6 +188,16 @@ export class AdvertService implements IAdvertService {
     body: CreateAdvertInternalDto,
   ): Promise<AdvertDetailedDto> {
     return await this.sequelize.transaction(async (t) => {
+      if (body.scheduledAt.length === 0) {
+        this.logger.warn('Tried to create advert without publication dates', {
+          body,
+          context: 'AdvertService',
+        })
+        throw new BadRequestException(
+          'At least one scheduled publication date is required',
+        )
+      }
+
       const includeArr: Includeable[] = []
 
       if (body.signature) {

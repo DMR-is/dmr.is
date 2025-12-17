@@ -55,7 +55,7 @@ export const linkTableHeaderCell = style({
 export const seeMoreTableCellLink = recipe({
   base: {
     display: 'block',
-    padding: theme.spacing[2],
+    padding: theme.spacing[1],
 
     '@media': {
       [`screen and (max-width: ${theme.breakpoints.xl}px)`]: {
@@ -80,34 +80,9 @@ export const seeMoreTableCellLink = recipe({
 })
 
 export const seeMoreTableCellLinkText = style({
-  position: 'relative',
-  paddingBottom: 4,
   width: 'max-content',
-  color: theme.color.blue400,
-
-  selectors: {
-    '&:hover': {
-      background: theme.color.blue100,
-    },
-  },
-
-  '@media': {
-    [`screen and (min-width: ${theme.breakpoints.xl}px)`]: {
-      // position: 'absolute',
-      marginRight: theme.spacing[2],
-      // transform: 'translateY(-50%)',
-      paddingInline: theme.spacing[1],
-      '::before': {
-        content: "''",
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        background: 'currentColor',
-        height: 2,
-      },
-    },
-  },
+  background: theme.color.blue100,
+  padding: '0.175rem 1rem 0.325rem',
 })
 
 export const seeMoreTableCellLinkIcon = style({

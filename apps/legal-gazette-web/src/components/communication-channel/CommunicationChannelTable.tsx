@@ -44,5 +44,11 @@ export const CommunicationChannelTable = ({ advertId, channels }: Props) => {
     ),
   }))
 
-  return <DataTable columns={columns} rows={[...rows]} />
+  return (
+    <DataTable
+      columns={columns}
+      rows={[...rows]}
+      noDataMessage="Engar samskiptaleiðir fundust"
+    />
+  )
 }

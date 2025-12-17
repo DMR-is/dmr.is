@@ -11,7 +11,7 @@ export const ritstjornTableMessages = {
   publishing: defineMessages({
     removeFromPublishingQueue: {
       id: 'lg.web:ritstjorn-tables.publishing.removeFromPublishingQueue',
-      defaultMessage: 'Taka úr Útgáfu',
+      defaultMessage: 'Taka úr útgáfu',
       description:
         'Button text for removing an advert from the publishing queue',
     },
