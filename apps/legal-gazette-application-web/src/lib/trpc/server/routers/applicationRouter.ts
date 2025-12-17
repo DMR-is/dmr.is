@@ -109,4 +109,20 @@ export const applicationRouter = router({
         createDivisionEndingDto: rest,
       })
     }),
+  getMyAdverts: protectedProcedure
+    .input(getApplicationsSchema.optional())
+    .query(async ({ ctx, input }) => {
+      return await ctx.api.getMyAdverts({
+        page: input?.page,
+        pageSize: input?.pageSize,
+      })
+    }),
+    getMyLegacyAdverts: protectedProcedure
+    .input(getApplicationsSchema.optional())
+    .query(async ({ ctx, input }) => {
+      return await ctx.api.getMyLegacyAdverts({
+        page: input?.page,
+        pageSize: input?.pageSize,
+      })
+    }),
 })

@@ -15,6 +15,7 @@ import {
   TokenJwtAuthGuard,
 } from '@dmr.is/modules/guards/auth'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
+import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
@@ -24,6 +25,7 @@ import {
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
+  GetMyAdvertsDto,
 } from '../../../models/advert.model'
 import { IAdvertService } from '../../../modules/advert/advert.service.interface'
 
@@ -53,6 +55,20 @@ export class AdvertController {
   @LGResponse({ operationId: 'getAdverts', type: GetAdvertsDto })
   getAdverts(@Query() query: GetAdvertsQueryDto) {
     return this.advertService.getAdverts(query)
+  }
+
+  @ApplicationWebScopes()
+  @Get('getMyAdverts')
+  @LGResponse({ operationId: 'getMyAdverts', type: GetMyAdvertsDto })
+  getMyAdverts(@Query() query: PagingQuery, @CurrentUser() user: DMRUser) {
+    return this.advertService.getMyAdverts(query, user)
+  }
+
+  @ApplicationWebScopes()
+  @Get('getMyLegacyAdverts')
+  @LGResponse({ operationId: 'getMyLegacyAdverts', type: GetMyAdvertsDto })
+  getMyLegacyAdverts(@Query() query: PagingQuery, @CurrentUser() user: DMRUser) {
+    return this.advertService.getMyLegacyAdverts(query, user)
   }
 
   @Get(':id')

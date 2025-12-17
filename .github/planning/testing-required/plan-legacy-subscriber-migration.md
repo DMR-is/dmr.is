@@ -1,8 +1,41 @@
 # Plan: Legacy Subscriber Migration to New System
 
-## Summary
+> **⚠️ STATUS: OBSOLETE - APPROACH ABANDONED**
+> 
+> **Date Deprecated:** December 16, 2024
+> 
+> This plan has been superseded. The legacy migration approach (magic link flow, auto-migration by kennitala, LEGACY_SUBSCRIBERS table) has been **completely removed** from the codebase.
+> 
+> **What was removed:**
+> - `legacy_subscribers` table - DROPPED
+> - `legacy_migration_tokens` table - DROPPED
+> - `modules/legacy-migration/` - Entire module DELETED
+> - Magic link email flow - REMOVED
+> - Auto-migration on sign-in - REMOVED
+> - Registration page legacy redemption UI - REMOVED
+> 
+> **New approach:**
+> Subscribers are now managed directly in the `legal_gazette_subscribers` table with a simplified schema:
+> - `national_id` (PRIMARY KEY) - From Island.is authentication
+> - `name` - User's name
+> - `email` - Contact email
+> - `is_active` - Subscription status
+> - `subscribed_from` (TIMESTAMPTZ) - Subscription start date
+> - `subscribed_to` (TIMESTAMPTZ) - Subscription end date (nullable)
+> 
+> Admin users can directly import/manage subscribers without a migration flow.
+> 
+> See the current subscriber model at: `apps/legal-gazette-api/src/models/subscriber.model.ts`
+> 
+> **Related migrations:**
+> - `m-20251216-01-alter-subscribers-table.js` - Adds new columns
+> - `m-20251216-02-drop-legacy-tables.js` - Drops legacy tables
 
-Migrate legacy users (email+password authentication) to the new Kennitala-based authentication system. Users with existing subscriptions can redeem their accounts via a magic link flow.
+---
+
+## ~~Summary~~ (Historical)
+
+~~Migrate legacy users (email+password authentication) to the new Kennitala-based authentication system. Users with existing subscriptions can redeem their accounts via a magic link flow.~~
 
 ## Planning Date
 
@@ -12,42 +45,46 @@ December 2, 2025
 
 December 3, 2025
 
----
+## Deprecation Date
 
-## Background
-
-### Current Legacy System (External)
-
-The legacy system uses email+password authentication with the following user data:
-- **Name** - User's full name
-- **Email** - Login identifier
-- **Kennitala** - Optional (this becomes the new auth identifier)
-- **isActive** - Subscription status
-
-### New System
-
-Uses Island.is authentication (Kennitala-based) via NextAuth with IdentityServer4. Users are stored in `LEGAL_GAZETTE_SUBSCRIBERS` table.
-
-**Key Files:**
-- [`apps/legal-gazette-api/src/models/subscriber.model.ts`](../../../apps/legal-gazette-api/src/models/subscriber.model.ts) - Current subscriber model
-- [`apps/legal-gazette-public-web/src/lib/authOptions.ts`](../../../apps/legal-gazette-public-web/src/lib/authOptions.ts) - NextAuth configuration
-- [`apps/legal-gazette-public-web/src/app/skraning/@register/page.tsx`](../../../apps/legal-gazette-public-web/src/app/skraning/@register/page.tsx) - Registration UI
+December 16, 2024 - Approach abandoned in favor of direct subscriber management
 
 ---
 
-## Migration Scenarios
+## ~~Background~~ (Historical)
 
-### Scenario 1: Legacy User WITH Kennitala
+### ~~Current Legacy System (External)~~
 
-**Flow:** Automatic migration on first sign-in
-- User authenticates via Island.is
-- System checks `LEGACY_SUBSCRIBERS` table by kennitala
-- If found with active subscription → auto-create `SubscriberModel` with `isActive: true`
-- Mark legacy record as migrated
+~~The legacy system uses email+password authentication with the following user data:~~
+- ~~**Name** - User's full name~~
+- ~~**Email** - Login identifier~~
+- ~~**Kennitala** - Optional (this becomes the new auth identifier)~~
+- ~~**isActive** - Subscription status~~
 
-### Scenario 2: Legacy User WITHOUT Kennitala (Magic Link Flow)
+### ~~New System~~ (Historical)
 
-**Flow:** Manual redemption via magic link
+~~Uses Island.is authentication (Kennitala-based) via NextAuth with IdentityServer4. Users are stored in `LEGAL_GAZETTE_SUBSCRIBERS` table.~~
+
+~~**Key Files:**~~ (These files have been modified/deleted)
+- ~~[`apps/legal-gazette-api/src/models/subscriber.model.ts`](../../../apps/legal-gazette-api/src/models/subscriber.model.ts) - Current subscriber model~~ ✅ Still exists, schema updated
+- ~~[`apps/legal-gazette-public-web/src/lib/authOptions.ts`](../../../apps/legal-gazette-public-web/src/lib/authOptions.ts) - NextAuth configuration~~ ✅ Still exists
+- ~~[`apps/legal-gazette-public-web/src/app/skraning/@register/page.tsx`](../../../apps/legal-gazette-public-web/src/app/skraning/@register/page.tsx) - Registration UI~~ ✅ Still exists, legacy UI removed
+
+---
+
+## ~~Migration Scenarios~~ (Historical - No longer implemented)
+
+### ~~Scenario 1: Legacy User WITH Kennitala~~
+
+~~**Flow:** Automatic migration on first sign-in~~
+- ~~User authenticates via Island.is~~
+- ~~System checks `LEGACY_SUBSCRIBERS` table by kennitala~~
+- ~~If found with active subscription → auto-create `SubscriberModel` with `isActive: true`~~
+- ~~Mark legacy record as migrated~~
+
+### ~~Scenario 2: Legacy User WITHOUT Kennitala (Magic Link Flow)~~
+
+~~**Flow:** Manual redemption via magic link~~
 1. User authenticates via Island.is (gets session with nationalId)
 2. User sees "Redeem existing account" option
 3. User enters legacy email address
@@ -386,29 +423,29 @@ A separate data import script will be needed to populate `LEGACY_SUBSCRIBERS` fr
 
 | File | Type | Description | Status |
 |------|------|-------------|--------|
-| `db/migrations/m-20251202-legacy-subscribers.js` | Migration | Database schema | ✅ Created |
-| `models/legacy-subscriber.model.ts` | Model | Legacy user data | ✅ Created |
-| `models/legacy-migration-token.model.ts` | Model | Magic link tokens | ✅ Created |
-| `modules/legacy-migration/legacy-migration.provider.module.ts` | Module | Service providers | ✅ Created |
-| `modules/legacy-migration/legacy-migration.controller.module.ts` | Module | Controller setup | ✅ Created |
-| `modules/legacy-migration/legacy-migration.controller.ts` | Controller | API endpoints | ✅ Created |
-| `modules/legacy-migration/legacy-migration.service.ts` | Service | Business logic | ✅ Created |
-| `modules/legacy-migration/legacy-migration.service.interface.ts` | Interface | Service contract | ✅ Created |
-| `modules/legacy-migration/legacy-migration.service.spec.ts` | Tests | Service unit tests | ✅ Created |
-| `modules/legacy-migration/legacy-migration.dto.ts` | DTOs | Request/Response DTOs | ✅ Created |
-| `app/skraning/flytja/page.tsx` | Page | Migration completion UI | ✅ Created |
-| `lib/trpc/server/routers/legacyMigrationRouter.ts` | Router | tRPC routes | ✅ Created |
+| `db/migrations/m-20251202-legacy-subscribers.js` | Migration | Database schema | ❌ REMOVED (Dec 16, 2024) |
+| `models/legacy-subscriber.model.ts` | Model | Legacy user data | ❌ DELETED (Dec 16, 2024) |
+| `models/legacy-migration-token.model.ts` | Model | Magic link tokens | ❌ DELETED (Dec 16, 2024) |
+| `modules/legacy-migration/legacy-migration.provider.module.ts` | Module | Service providers | ❌ DELETED (Dec 16, 2024) |
+| `modules/legacy-migration/legacy-migration.controller.module.ts` | Module | Controller setup | ❌ DELETED (Dec 16, 2024) |
+| `modules/legacy-migration/legacy-migration.controller.ts` | Controller | API endpoints | ❌ DELETED (Dec 16, 2024) |
+| `modules/legacy-migration/legacy-migration.service.ts` | Service | Business logic | ❌ DELETED (Dec 16, 2024) |
+| `modules/legacy-migration/legacy-migration.service.interface.ts` | Interface | Service contract | ❌ DELETED (Dec 16, 2024) |
+| `modules/legacy-migration/legacy-migration.service.spec.ts` | Tests | Service unit tests | ❌ DELETED (Dec 16, 2024) |
+| `modules/legacy-migration/legacy-migration.dto.ts` | DTOs | Request/Response DTOs | ❌ DELETED (Dec 16, 2024) |
+| `app/skraning/flytja/page.tsx` | Page | Migration completion UI | ❌ DELETED (Dec 16, 2024) |
+| `lib/trpc/server/routers/legacyMigrationRouter.ts` | Router | tRPC routes | ❌ DELETED (Dec 16, 2024) |
 
-### Files to Modify
+### Files to Modify (Reverted/Updated)
 
 | File | Changes | Status |
 |------|---------|--------|
-| `app/app.module.ts` | Register new models and modules | ✅ Done |
-| `core/constants.ts` | Add LEGACY_SUBSCRIBER, LEGACY_MIGRATION_TOKEN enums | ✅ Done |
-| `models/subscriber.model.ts` | Fix isActive type from `false` to `boolean` | ✅ Done |
-| `subscriber.service.ts` | Add auto-migration check | ✅ Done |
-| `app/skraning/@register/page.tsx` | Add redemption UI | ✅ Done |
-| `lib/trpc/server/routers/_app.ts` | Add legacyMigrationRouter | ✅ Done |
+| `app/app.module.ts` | ~~Register new models and modules~~ → Legacy imports removed | 🔄 Reverted (Dec 16, 2024) |
+| `core/constants.ts` | ~~Add LEGACY_SUBSCRIBER, LEGACY_MIGRATION_TOKEN enums~~ → Removed | 🔄 Reverted (Dec 16, 2024) |
+| `models/subscriber.model.ts` | New schema with subscribedFrom, email, subscribedTo | ✅ Updated (Dec 16, 2024) |
+| `subscriber.service.ts` | ~~Add auto-migration check~~ → Legacy code removed | 🔄 Reverted (Dec 16, 2024) |
+| `app/skraning/@register/page.tsx` | ~~Add redemption UI~~ → Legacy UI removed | 🔄 Reverted (Dec 16, 2024) |
+| `lib/trpc/server/routers/_app.ts` | ~~Add legacyMigrationRouter~~ → Removed | 🔄 Reverted (Dec 16, 2024) |
 
 ---
 
@@ -416,16 +453,28 @@ A separate data import script will be needed to populate `LEGACY_SUBSCRIBERS` fr
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| Phase 1: Database Schema | ✅ Complete | Migration file + Sequelize models |
-| Phase 2: Backend Service Tests (TDD) | ✅ Complete | 19 test cases covering all service methods |
-| Phase 3: Backend Services Implementation | ✅ Complete | Service, Controller, DTOs, Modules - all 19 tests passing |
-| Phase 4: Email Integration | ✅ Complete | Implemented in service using IAWSService.sendMail() |
-| Phase 5: Auto-Migration on Sign-In | ✅ Complete | Integrated in SubscriberService.getUserByNationalId() |
-| Phase 6: Frontend Updates | ✅ Complete | Registration page with legacy redemption form + migration completion page |
+| Phase 1: Database Schema | ❌ ABANDONED | Tables dropped via m-20251216-02-drop-legacy-tables.js |
+| Phase 2: Backend Service Tests (TDD) | ❌ ABANDONED | Tests deleted along with module |
+| Phase 3: Backend Services Implementation | ❌ ABANDONED | Entire legacy-migration module deleted |
+| Phase 4: Email Integration | ❌ ABANDONED | No longer needed |
+| Phase 5: Auto-Migration on Sign-In | ❌ ABANDONED | Removed from SubscriberService |
+| Phase 6: Frontend Updates | ❌ ABANDONED | Legacy UI removed from registration page |
+| **NEW: Direct Subscriber Management** | ✅ Implemented | Simplified schema, admin import capability |
+
+---
+
+## Replacement Migrations
+
+The following migrations replace this plan's approach:
+
+| Migration | Purpose |
+|-----------|---------|
+| `m-20251216-01-alter-subscribers-table.js` | Adds `subscribed_from`, `email`, `subscribed_to` columns; drops `subscribed_at`, `legacy_subscriber_id` |
+| `m-20251216-02-drop-legacy-tables.js` | Drops `legacy_migration_tokens` and `legacy_subscribers` tables |
 
 ---
 
 ## Related Plans
 
-- [TBR Subscription Payment](../legal-gazette/plan-tbr-subscription-payment.md) - Payment integration for new subscribers
-- [Legacy Data Import](../legal-gazette/plan-legacy-data-import.md) - Import legacy subscriber data from old system
+- ~~[TBR Subscription Payment](../legal-gazette/plan-tbr-subscription-payment.md) - Payment integration for new subscribers~~
+- ~~[Legacy Data Import](../legal-gazette/plan-legacy-data-import.md) - Import legacy subscriber data from old system~~ (OBSOLETE)

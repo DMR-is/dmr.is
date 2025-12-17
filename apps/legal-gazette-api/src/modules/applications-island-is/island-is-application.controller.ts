@@ -1,10 +1,10 @@
 import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { PersonDto } from '@dmr.is/clients/national-registry'
+import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
-import { CurrentSubmittee } from '../../core/decorators/current-submittee.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { CurrentNationalRegistryPersonGuard } from '../../core/guards/current-submitte.guard'
 import { IslandIsSubmitApplicationDto } from '../../models/application.model'
@@ -26,8 +26,8 @@ export class IslandIsApplicationController {
   @LGResponse({ operationId: 'submitIslandIsApplication', status: 201 })
   async submitApplication(
     @Body() body: IslandIsSubmitApplicationDto,
-    @CurrentSubmittee() submittee: PersonDto,
+    @CurrentUser() user: DMRUser,
   ) {
-    return this.applicationService.submitIslandIsApplication(body, submittee)
+    return this.applicationService.submitIslandIsApplication(body, user)
   }
 }
