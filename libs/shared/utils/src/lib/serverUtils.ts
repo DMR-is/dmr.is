@@ -1,7 +1,10 @@
 import { isDefined } from 'class-validator'
 import { createHash } from 'crypto'
+import addDays from 'date-fns/addDays'
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
+import startOfDay from 'date-fns/startOfDay'
+import { getHolidays } from 'fridagar'
 import sanitizeHtml from 'sanitize-html'
 import {
   BaseError,
@@ -29,6 +32,7 @@ import {
 import { logger } from '@dmr.is/logging'
 import { cleanupSingleEditorOutput } from '@dmr.is/regulations-tools/cleanupEditorOutput'
 import { HTMLText } from '@dmr.is/regulations-tools/types'
+import { toISODate } from '@dmr.is/regulations-tools/utils'
 import {
   AdvertTemplateDetails,
   AdvertTemplateTypeEnums,
@@ -142,13 +146,68 @@ export const getKeyFromLocation = (location: string) => {
   return `${splitKey}${location.split(splitKey)[1]}`
 }
 
-export const getFastTrack = (date: Date) => {
+type IsHolidayMap = Record<string, true | undefined>
+const holidayCache: Record<number, IsHolidayMap | undefined> = {}
+const getHolidayMap = (year: number): IsHolidayMap => {
+  let yearHolidays = holidayCache[year]
+  if (!yearHolidays) {
+    const holidayMap: IsHolidayMap = {}
+    getHolidays(year).forEach((holiday) => {
+      holidayMap[toISODate(holiday.date)] = true
+    })
+    yearHolidays = holidayCache[year] = holidayMap
+  }
+  return yearHolidays
+}
+const getNextWorkday = (date: Date) => {
+  // Returns the next workday.
+  let nextDay = date
+  let iterations = 0
+  const MAX_ITERATIONS = 30 // Prevent infinite loop
+  while (!isWorkday(nextDay) && iterations < MAX_ITERATIONS) {
+    nextDay = addDays(nextDay, 1)
+    iterations++
+  }
+  return nextDay
+}
+
+const isWorkday = (date: Date): boolean => {
+  const wDay = date.getDay()
+  if (wDay === 0 || wDay === 6) {
+    return false
+  }
+  const holidays = getHolidayMap(date.getFullYear())
+  return holidays[toISODate(date)] !== true
+}
+
+const addWorkDays = (date: Date, days: number) => {
+  let result = new Date(date)
+  while (days > 0) {
+    result = addDays(result, 1)
+    if (isWorkday(result)) {
+      days--
+    }
+  }
+  return result
+}
+
+export const getFastTrack = (date?: Date) => {
   const now = new Date()
-  const diff = date.getTime() - now.getTime()
-  const diffDays = diff / (1000 * 3600 * 24)
+  if (!date)
+    return {
+      fastTrack: false,
+      now,
+    }
+
+  const fastTrackCutoffDate = startOfDay(
+    getNextWorkday(addWorkDays(new Date(), FAST_TRACK_DAYS)),
+  )
+
+  const compareDate = startOfDay(date)
+
   let fastTrack = false
 
-  if (diffDays <= FAST_TRACK_DAYS) {
+  if (fastTrackCutoffDate.getTime() > compareDate.getTime()) {
     fastTrack = true
   }
   return {
