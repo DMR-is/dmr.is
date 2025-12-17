@@ -76,7 +76,7 @@ export const HomePage = async () => {
             offset={['0', '0', '0', '1/12']}
           >
             <Text marginBottom={8}>
-              Vegna athugsemda Persónuverndar hefur verið tekið fyrir leit í
+              Vegna athugasemda Persónuverndar hefur verið tekið fyrir leit í
               blaðinu í auglýsingaflokkum, sem varða fjárhagsmálefni
               einstaklinga og fyrirtækja, nema eftir útgáfudagsetningum og
               útgáfutímabilum. Þeir flokkar sem sæta þessari takmörkuðu leit

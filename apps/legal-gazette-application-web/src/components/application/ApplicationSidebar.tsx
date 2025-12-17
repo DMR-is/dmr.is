@@ -36,7 +36,7 @@ export const ApplicationSidebar = () => {
     <Box className={styles.sidebarStyles}>
       <Stack space={3}>
         <Stack space={2}>
-          <Text variant="h4">Athugsemdir</Text>
+          <Text variant="h4">Athugasemdir</Text>
           {parsedErrors.length === 0 && <Text>Engar athugasemdir</Text>}
           <AnimateHeight height={showValidation ? 'auto' : 0}>
             <ul>
@@ -69,7 +69,7 @@ export const ApplicationSidebar = () => {
             onClick={() => setShowValidation((prev) => !prev)}
           >
             <Text fontWeight="semiBold" color="white" variant="medium">
-              {showValidation ? 'Fela athugasemdir' : 'Sjá athugsemdir'}
+              {showValidation ? 'Fela athugasemdir' : 'Sjá athugasemdir'}
             </Text>
           </Button>
         )}

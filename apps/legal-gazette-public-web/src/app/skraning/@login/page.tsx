@@ -42,7 +42,7 @@ export default function Signup() {
                 Velkomin á skráningarvef fyrir rafræna áskrift Lögbirtingablaðs
               </Text>
               <Text>
-                Við skráninguna verður til greiðsluseðill að fjárhæð 3.000 kr.
+                Við skráninguna verður til greiðsluseðill að fjárhæð 4.500 kr.
                 sem er ársáskriftargjald sem greitt er fyrirfram. Það opnast
                 fyrir aðgang að kerfinu í eitt ár daginn eftir að sú upphæð
                 hefur verið greidd. Hefjið skráningarferlið með því að skrá inn
