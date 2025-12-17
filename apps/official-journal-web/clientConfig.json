@@ -1984,6 +1984,22 @@
         "summary": ""
       }
     },
+    "/api/v1/cases/advert/{id}/publish-regulation": {
+      "post": {
+        "operationId": "publishSingleRegulation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
     "/api/v1/cases/{id}/pdf-preview": {
       "get": {
         "operationId": "getCasePdfPreview",

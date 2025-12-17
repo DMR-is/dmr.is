@@ -921,6 +921,15 @@ export class CaseController {
     return (await this.caseService.uploadAttachments(body.key)).unwrap()
   }
 
+  @Post('advert/:id/publish-regulation')
+  @ApiOperation({ operationId: 'publishSingleRegulation' })
+  @ApiNoContentResponse()
+  async publishSingleRegulation(
+    @Param('id', new UUIDValidationPipe()) id: string,
+  ) {
+    ResultWrapper.unwrap(await this.caseService.publishSingleRegulation(id))
+  }
+
   @Get(':id/pdf-preview')
   @ApiOperation({ operationId: 'getCasePdfPreview' })
   @ApiResponse({

@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { AttachmentTypeParam } from '@dmr.is/constants'
+import { AttachmentTypeParam, REGULATION_TYPES } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -1284,11 +1284,7 @@ export class CaseService implements ICaseService {
     const maintypes = await this.advertMainTypeModel.findAll({
       where: {
         slug: {
-          [Op.in]: [
-            'a-deild-reglugerd',
-            'b-deild-reglugerd',
-            'c-deild-reglugerd',
-          ],
+          [Op.in]: REGULATION_TYPES,
         },
       },
       include: [AdvertTypeModel],
@@ -1324,6 +1320,44 @@ export class CaseService implements ICaseService {
         })
       }
     }
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle({ logArgs: false })
+  async publishSingleRegulation(
+    advertId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const advert = await this.journalService.getAdvert(advertId)
+
+    if (!advert.result.ok) {
+      this.logger.error('Single reg publish failed. Ad not found.', {
+        error: advert.result.error,
+        category: LOGGING_CATEGORY,
+      })
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Single reg publish failed. Ad not found.',
+      })
+    }
+
+    const advertType = advert.result?.value?.advert?.type?.slug
+
+    if (!advertType || !REGULATION_TYPES.includes(advertType)) {
+      this.logger.error(
+        'Single reg publish failed due to invalid advert type',
+        {
+          category: LOGGING_CATEGORY,
+        },
+      )
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Single reg publish failed. invalid advert type.',
+      })
+    }
+
+    await this.externalService.publishRegulation(advert.result.value.advert)
 
     return ResultWrapper.ok()
   }
