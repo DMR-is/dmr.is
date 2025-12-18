@@ -2,6 +2,11 @@ import { useController, UseControllerProps } from 'react-hook-form'
 
 import { DatePicker } from '@dmr.is/ui/components/island-is'
 
+import {
+  MAX_SELECTABLE_YEAR,
+  MIN_SELECTABLE_YEAR,
+} from '../../../lib/constants'
+
 type Props = UseControllerProps & {
   label: string
   required?: boolean
@@ -38,6 +43,8 @@ export const DatePickerController = (props: Props) => {
   return (
     <div onBlur={handleFirstBlur}>
       <DatePicker
+        maxYear={MAX_SELECTABLE_YEAR}
+        minYear={MIN_SELECTABLE_YEAR}
         id={field.name}
         name={field.name}
         handleChange={handleChange}

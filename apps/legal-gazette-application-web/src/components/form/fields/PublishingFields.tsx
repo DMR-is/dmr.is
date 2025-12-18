@@ -1,5 +1,6 @@
+import { addYears } from 'date-fns'
 import addDays from 'date-fns/addDays'
-import addYears from 'date-fns/addYears'
+import { useCallback } from 'react'
 import { useFormContext } from 'react-hook-form'
 
 import {
@@ -16,10 +17,13 @@ import {
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
+import {
+  getInvalidPublishingDatesInRange,
+  getNextValidPublishingDate,
+} from '@dmr.is/utils/date'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
-import { TWO_WEEKS } from '../../../lib/constants'
-import { getNextWeekday, getWeekendDays } from '../../../lib/utils'
+import { ONE_DAY, ONE_WEEK } from '../../../lib/constants'
 import { DatePickerController } from '../controllers/DatePickerController'
 
 type Props = {
@@ -36,60 +40,69 @@ export const PublishingFields = ({
   >()
 
   const { metadata } = getValues()
-
+  const currentDates = watch('publishingDates') ?? []
   const { updateApplication } = useUpdateApplication({
     id: metadata.applicationId,
     type: applicationType,
   })
-  const currentDates = watch('publishingDates') ?? []
 
-  const updatePublishingDates = (newDates: string[]) => {
-    setValue('publishingDates', newDates)
+  const updatePublishingDates = useCallback(
+    (newDates: string[]) => {
+      setValue('publishingDates', newDates)
 
-    if (applicationType === 'RECALL') {
-      setValue('fields.divisionMeetingFields.meetingDate', null)
-    }
+      if (applicationType === 'RECALL') {
+        setValue('fields.divisionMeetingFields.meetingDate', null)
+      }
 
-    const payload =
-      applicationType === 'RECALL'
-        ? {
-            publishingDates: newDates,
-            fields: {
-              divisionMeetingFields: {
-                meetingDate: null,
+      const payload =
+        applicationType === 'RECALL'
+          ? {
+              publishingDates: newDates,
+              fields: {
+                divisionMeetingFields: {
+                  meetingDate: null,
+                },
               },
-            },
-          }
-        : { publishingDates: newDates }
+            }
+          : { publishingDates: newDates }
 
-    updateApplication(payload, {
-      successMessage: 'Birtingardagar vistaðir',
-      errorMessage: 'Ekki tókst að vista birtingardaga',
-    })
-  }
+      updateApplication(payload, {
+        successMessage: 'Birtingardagar vistaðir',
+        errorMessage: 'Ekki tókst að vista birtingardaga',
+      })
+    },
+    [setValue, applicationType, updateApplication],
+  )
 
-  const addDate = () => {
+  const addDate = useCallback(() => {
     if (currentDates.length > 2) return
 
     const lastDate =
       currentDates.length > 0
         ? new Date(currentDates[currentDates.length - 1])
         : new Date()
-    const newDate = getNextWeekday(addDays(lastDate, TWO_WEEKS))
+
+    const newDate = getNextValidPublishingDate(addDays(lastDate, ONE_WEEK))
     const newDates = [...currentDates, newDate.toISOString()]
     updatePublishingDates(newDates)
-  }
+  }, [currentDates, updatePublishingDates])
 
-  const removeDate = (index: number) => {
-    const newDates = currentDates.filter((_, i) => i !== index)
-    updatePublishingDates(newDates)
-  }
+  const removeDate = useCallback(
+    (index: number) => {
+      const newDates = currentDates.filter((_, i) => i !== index)
+      updatePublishingDates(newDates)
+    },
+    [currentDates, updatePublishingDates],
+  )
 
-  const onDateChange = (date: Date, index: number) => {
-    const newDates = [...currentDates]
-    newDates[index] = date.toISOString()
-    updatePublishingDates(newDates)
-  }
+  const onDateChange = useCallback(
+    (date: Date, index: number) => {
+      const newDates = [...currentDates]
+      newDates[index] = date.toISOString()
+      updatePublishingDates(newDates)
+    },
+    [currentDates, updatePublishingDates],
+  )
 
   const signatureError = formState.errors.publishingDates
 
@@ -116,19 +129,16 @@ export const PublishingFields = ({
         <GridColumn span="12/12">
           <Stack space={[2, 3]}>
             {currentDates?.map((date, index) => {
-              const prevDate = index === 0 ? null : currentDates[index - 1]
-              const maxDate = addYears(new Date(), 1)
+              const previousDate =
+                index > 0
+                  ? addDays(new Date(currentDates[index - 1]), ONE_DAY)
+                  : null
 
-              const minDate =
-                index === 0
-                  ? getNextWeekday(addDays(new Date(), TWO_WEEKS))
-                  : getNextWeekday(
-                      addDays(
-                        prevDate ? new Date(prevDate) : new Date(),
-                        TWO_WEEKS,
-                      ),
-                    )
-              const excludeDates = getWeekendDays(minDate, maxDate)
+              const min = previousDate
+                ? getNextValidPublishingDate(previousDate)
+                : getNextValidPublishingDate()
+              const max = getNextValidPublishingDate(addYears(min, 1))
+              const excludeDates = getInvalidPublishingDatesInRange(min, max)
 
               return (
                 <Inline
@@ -138,13 +148,13 @@ export const PublishingFields = ({
                   key={index}
                 >
                   <DatePickerController
-                    maxDate={getNextWeekday(maxDate)}
+                    minDate={min}
+                    maxDate={max}
+                    excludeDates={excludeDates}
                     label={`Birtingardagur ${index + 1}`}
                     name={`${'publishingDates'}[${index}]`}
                     required={index === 0}
                     defaultValue={date}
-                    minDate={getNextWeekday(minDate)}
-                    excludeDates={excludeDates}
                     onChange={(date) => onDateChange(date, index)}
                   />
                   <Button
