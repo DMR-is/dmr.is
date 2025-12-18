@@ -73,3 +73,11 @@ export const UNASSIGNABLE_CATEGORY_IDS = [
 export const UNASSIGNABLE_TYPE_IDS = [
   '82425CC8-B32E-4ADE-9EE4-BC6F8261B735', // Almennar auglýsingar
 ]
+
+export const TASK_JOB_IDS = {
+  issues: 1,
+  payment: 2,
+  publishing: 3,
+}
+
+export const TASK_NAMESPACE = 1000

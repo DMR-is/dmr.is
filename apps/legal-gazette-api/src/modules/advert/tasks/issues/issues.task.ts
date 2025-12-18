@@ -7,6 +7,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { formatDate, hashPdf } from '@dmr.is/utils'
 
+import { TASK_JOB_IDS } from '../../../../core/constants'
 import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../../models/advert-publication.model'
 import { CategoryModel } from '../../../../models/category.model'
@@ -14,6 +15,7 @@ import { IssueModel } from '../../../../models/issues.model'
 import { IssueSettingsModel } from '../../../../models/issues-settings.model'
 import { pdfMetaTitle } from '../../pdf/lib/issue-templates'
 import { PdfService } from '../../pdf/pdf.service'
+import { PgAdvisoryXactLockService } from '../lock.service'
 import { IIssuesTask } from './issues.task.interface'
 
 const LOGGING_CONTEXT = 'IssuesTask'
@@ -30,12 +32,25 @@ export class IssuesTaskService implements IIssuesTask {
     @InjectModel(IssueSettingsModel)
     private readonly issueSettingsModel: typeof IssueSettingsModel,
     @Inject(PdfService) private readonly pdfService: PdfService,
+    private readonly lock: PgAdvisoryXactLockService,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_7AM, {
     name: 'daily-pdf-generation',
     timeZone: 'Atlantic/Reykjavik',
   })
+  async run() {
+    const { ran } = await this.lock.runWithXactLock(
+      TASK_JOB_IDS.issues,
+      async () => {
+        await this.dailyIssueGeneration()
+      },
+    )
+
+    if (!ran)
+      this.logger.debug('IssuesTask skipped (lock held by another container)')
+  }
+
   async dailyIssueGeneration(): Promise<void> {
     const now = new Date()
     const oneDayAgo = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000)

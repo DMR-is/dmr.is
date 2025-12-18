@@ -6,8 +6,10 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { TASK_JOB_IDS } from '../../../../core/constants'
 import { TBRTransactionModel } from '../../../../models/tbr-transactions.model'
 import { ITBRService } from '../../../tbr/tbr.service.interface'
+import { PgAdvisoryXactLockService } from '../lock.service'
 import { IAdvertPaymentTaskService } from './advert-payment.task.interface'
 
 const LOGGING_CONTEXT = 'AdvertPaymentService'
@@ -20,6 +22,7 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
     @Inject(ITBRService) private readonly tbrService: ITBRService,
     @InjectModel(TBRTransactionModel)
     private readonly tbrTransactionModel: typeof TBRTransactionModel,
+    private readonly lock: PgAdvisoryXactLockService,
   ) {
     const tbrChunk = process.env.TBR_CHUNK_SIZE
       ? parseInt(process.env.TBR_CHUNK_SIZE, 10)
@@ -31,6 +34,18 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
   }
 
   @Cron('*/15 * * * *')
+  async run() {
+    const { ran } = await this.lock.runWithXactLock(
+      TASK_JOB_IDS.payment,
+      async () => {
+        await this.updateTBRPayments()
+      },
+    )
+
+    if (!ran)
+      this.logger.debug('TBRPayments skipped (lock held by another container)')
+  }
+
   async updateTBRPayments() {
     const now = new Date()
     this.logger.info('Starting TBR payment status update job', {
