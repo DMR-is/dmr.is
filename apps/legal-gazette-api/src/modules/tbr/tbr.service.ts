@@ -80,50 +80,61 @@ export class TBRService implements ITBRService {
     options?: Omit<RequestInit, 'headers'>,
   ) {
     const endpoint = new URL(`${this.config.tbrBasePath}${path}`).toString()
-
-    this.logger.info('Making TBR request to:', {
-      message: `/${endpoint.split('/').slice(-2).join('/')}`,
-      path: path,
-      method: options?.method || 'GET',
-      context: 'TBRService',
-    })
-
-    const response = await fetch(endpoint, {
-      headers: {
-        Authorization: `Basic ${this.credentials}`,
-        'Content-Type': 'application/json',
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        'X-Road-Client': process.env.XROAD_DMR_CLIENT!,
-      },
-      signal: AbortSignal.timeout(10000), // 10 seconds
-      ...options,
-    })
-
-    if (!response.ok) {
-      const err = await response.json()
-
-      if (response.status === 404) {
-        this.logger.error('TBR claim not found', {
-          status: response.status,
-          error: err?.error,
-          detail: err?.error?.detail,
-          context: 'TBRService',
-        })
-
-        throw new NotFoundException('TBR claim not found')
-      }
-
-      this.logger.error('TBR request failed', {
-        url: path,
-        status: response.status,
+    try {
+      this.logger.info('Making TBR request to:', {
+        message: `/${endpoint.split('/').slice(-2).join('/')}`,
+        path: path,
+        method: options?.method || 'GET',
         context: 'TBRService',
-        detail: err,
       })
 
-      throw new InternalServerErrorException('TBR request failed')
-    }
+      const response = await fetch(endpoint, {
+        headers: {
+          Authorization: `Basic ${this.credentials}`,
+          'Content-Type': 'application/json',
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          'X-Road-Client': process.env.XROAD_DMR_CLIENT!,
+        },
+        signal: AbortSignal.timeout(10000), // 10 seconds
+        ...options,
+      })
 
-    return response
+      if (!response.ok) {
+        const err = await response.json()
+
+        if (response.status === 404) {
+          this.logger.error('TBR claim not found', {
+            status: response.status,
+            error: err,
+            detail: err?.error?.detail,
+            context: 'TBRService',
+          })
+
+          throw new NotFoundException('TBR claim not found')
+        }
+
+        this.logger.error('TBR request failed', {
+          url: path,
+          status: response.status,
+          context: 'TBRService',
+          error: err,
+          detail: err?.error?.detail,
+        })
+
+        throw new InternalServerErrorException('TBR request failed')
+      }
+
+      return response
+    } catch (error) {
+      this.logger.error('TBR request error when requesting:', {
+        message: endpoint,
+        url: path,
+        context: 'TBRService',
+        error: error,
+        detail: error instanceof Error ? error.message : undefined,
+      })
+      throw error
+    }
   }
 
   async postPayment(body: TBRPostPaymentBodyDto): Promise<void> {

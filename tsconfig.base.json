@@ -65,6 +65,7 @@
       ],
       "@dmr.is/ui/utils/*": ["libs/shared/dmr-ui/src/lib/utils/*"],
       "@dmr.is/utils": ["libs/shared/utils/src/index.ts"],
+      "@dmr.is/utils/date": ["libs/shared/utils/src/lib/dateUtils.ts"],
       "@dmr.is/utils/cache": ["libs/shared/utils/src/lib/cacheUtils.ts"],
       "@dmr.is/utils/cache.provider": [
         "libs/shared/utils/src/lib/cache.provider.ts"
