@@ -72,7 +72,7 @@ describe('ScopesGuard', () => {
   })
 
   describe('when @Scopes() decorator is present', () => {
-    const requiredScopes = ['@dmr.is/lg-public-web']
+    const requiredScopes = ['@logbirtingablad.is/logbirtingabladid']
 
     beforeEach(() => {
       jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
@@ -85,7 +85,7 @@ describe('ScopesGuard', () => {
     describe('and user has matching scope', () => {
       it('should allow access with exact scope match', () => {
         const context = createMockContext({
-          scope: '@dmr.is/lg-public-web',
+          scope: '@logbirtingablad.is/logbirtingabladid',
         })
 
         const result = guard.canActivate(context)
@@ -95,7 +95,7 @@ describe('ScopesGuard', () => {
 
       it('should allow access when user has multiple scopes including required one', () => {
         const context = createMockContext({
-          scope: '@dmr.is/other-scope @dmr.is/lg-public-web @dmr.is/another',
+          scope: '@dmr.is/other-scope @logbirtingablad.is/logbirtingabladid @dmr.is/another',
         })
 
         const result = guard.canActivate(context)
@@ -107,7 +107,7 @@ describe('ScopesGuard', () => {
     describe('and user does NOT have matching scope', () => {
       it('should deny access when scope does not match', () => {
         const context = createMockContext({
-          scope: '@dmr.is/lg-application-web',
+          scope: '@logbirtingablad.is/lg-application-web',
         })
 
         const result = guard.canActivate(context)
@@ -145,8 +145,8 @@ describe('ScopesGuard', () => {
 
   describe('when multiple scopes are required (OR logic)', () => {
     const requiredScopes = [
-      '@dmr.is/lg-public-web',
-      '@dmr.is/lg-application-web',
+      '@logbirtingablad.is/logbirtingabladid',
+      '@logbirtingablad.is/lg-application-web',
     ]
 
     beforeEach(() => {
@@ -159,7 +159,7 @@ describe('ScopesGuard', () => {
 
     it('should allow access when user has first scope', () => {
       const context = createMockContext({
-        scope: '@dmr.is/lg-public-web',
+        scope: '@logbirtingablad.is/logbirtingabladid',
       })
 
       const result = guard.canActivate(context)
@@ -169,7 +169,7 @@ describe('ScopesGuard', () => {
 
     it('should allow access when user has second scope', () => {
       const context = createMockContext({
-        scope: '@dmr.is/lg-application-web',
+        scope: '@logbirtingablad.is/lg-application-web',
       })
 
       const result = guard.canActivate(context)
@@ -179,7 +179,7 @@ describe('ScopesGuard', () => {
 
     it('should allow access when user has both scopes', () => {
       const context = createMockContext({
-        scope: '@dmr.is/lg-public-web @dmr.is/lg-application-web',
+        scope: '@logbirtingablad.is/logbirtingabladid @logbirtingablad.is/lg-application-web',
       })
 
       const result = guard.canActivate(context)
@@ -271,7 +271,7 @@ describe('ScopesGuard', () => {
   })
 
   describe('when both @Scopes() and @ActorScopes() are present', () => {
-    const requiredScopes = ['@dmr.is/lg-public-web']
+    const requiredScopes = ['@logbirtingablad.is/logbirtingabladid']
     const requiredActorScopes = ['@dmr.is/actor-scope']
 
     beforeEach(() => {
@@ -284,7 +284,7 @@ describe('ScopesGuard', () => {
 
     it('should allow access when both scope and actor scope match', () => {
       const context = createMockContext({
-        scope: '@dmr.is/lg-public-web',
+        scope: '@logbirtingablad.is/logbirtingabladid',
         actor: {
           scope: '@dmr.is/actor-scope',
         },
@@ -297,7 +297,7 @@ describe('ScopesGuard', () => {
 
     it('should deny access when scope matches but actor scope does not', () => {
       const context = createMockContext({
-        scope: '@dmr.is/lg-public-web',
+        scope: '@logbirtingablad.is/logbirtingabladid',
         actor: {
           scope: '@dmr.is/other-scope',
         },
@@ -336,7 +336,7 @@ describe('ScopesGuard', () => {
   })
 
   describe('scope parsing edge cases', () => {
-    const requiredScopes = ['@dmr.is/lg-public-web']
+    const requiredScopes = ['@logbirtingablad.is/logbirtingabladid']
 
     beforeEach(() => {
       jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
@@ -348,7 +348,7 @@ describe('ScopesGuard', () => {
 
     it('should handle scopes as space-separated string', () => {
       const context = createMockContext({
-        scope: 'scope1 @dmr.is/lg-public-web scope3',
+        scope: 'scope1 @logbirtingablad.is/logbirtingabladid scope3',
       })
 
       const result = guard.canActivate(context)
@@ -358,7 +358,7 @@ describe('ScopesGuard', () => {
 
     it('should NOT match partial scope names', () => {
       const context = createMockContext({
-        scope: '@dmr.is/lg-public-web-extended',
+        scope: '@logbirtingablad.is/logbirtingabladid-extended',
       })
 
       const result = guard.canActivate(context)
@@ -378,17 +378,17 @@ describe('ScopesGuard', () => {
   })
 
   describe('Legal Gazette specific scope decorators', () => {
-    describe('@PublicWebScopes() - requires @dmr.is/lg-public-web', () => {
+    describe('@PublicWebScopes() - requires @logbirtingablad.is/logbirtingabladid', () => {
       beforeEach(() => {
         jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
-          if (key === SCOPES_KEY) return ['@dmr.is/lg-public-web']
+          if (key === SCOPES_KEY) return ['@logbirtingablad.is/logbirtingabladid']
           return undefined
         })
       })
 
       it('should allow public-web users', () => {
         const context = createMockContext({
-          scope: '@dmr.is/lg-public-web',
+          scope: '@logbirtingablad.is/logbirtingabladid',
         })
 
         expect(guard.canActivate(context)).toBe(true)
@@ -396,24 +396,24 @@ describe('ScopesGuard', () => {
 
       it('should deny application-web users', () => {
         const context = createMockContext({
-          scope: '@dmr.is/lg-application-web',
+          scope: '@logbirtingablad.is/lg-application-web',
         })
 
         expect(guard.canActivate(context)).toBe(false)
       })
     })
 
-    describe('@ApplicationWebScopes() - requires @dmr.is/lg-application-web', () => {
+    describe('@ApplicationWebScopes() - requires @logbirtingablad.is/lg-application-web', () => {
       beforeEach(() => {
         jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
-          if (key === SCOPES_KEY) return ['@dmr.is/lg-application-web']
+          if (key === SCOPES_KEY) return ['@logbirtingablad.is/lg-application-web']
           return undefined
         })
       })
 
       it('should allow application-web users', () => {
         const context = createMockContext({
-          scope: '@dmr.is/lg-application-web',
+          scope: '@logbirtingablad.is/lg-application-web',
         })
 
         expect(guard.canActivate(context)).toBe(true)
@@ -421,7 +421,7 @@ describe('ScopesGuard', () => {
 
       it('should deny public-web users', () => {
         const context = createMockContext({
-          scope: '@dmr.is/lg-public-web',
+          scope: '@logbirtingablad.is/logbirtingabladid',
         })
 
         expect(guard.canActivate(context)).toBe(false)
@@ -432,14 +432,14 @@ describe('ScopesGuard', () => {
       beforeEach(() => {
         jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
           if (key === SCOPES_KEY)
-            return ['@dmr.is/lg-public-web', '@dmr.is/lg-application-web']
+            return ['@logbirtingablad.is/logbirtingabladid', '@logbirtingablad.is/lg-application-web']
           return undefined
         })
       })
 
       it('should allow public-web users', () => {
         const context = createMockContext({
-          scope: '@dmr.is/lg-public-web',
+          scope: '@logbirtingablad.is/logbirtingabladid',
         })
 
         expect(guard.canActivate(context)).toBe(true)
@@ -447,7 +447,7 @@ describe('ScopesGuard', () => {
 
       it('should allow application-web users', () => {
         const context = createMockContext({
-          scope: '@dmr.is/lg-application-web',
+          scope: '@logbirtingablad.is/lg-application-web',
         })
 
         expect(guard.canActivate(context)).toBe(true)

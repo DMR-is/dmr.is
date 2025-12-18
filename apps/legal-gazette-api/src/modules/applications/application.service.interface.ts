@@ -1,5 +1,4 @@
 import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { PersonDto } from '@dmr.is/clients/national-registry'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
@@ -26,7 +25,7 @@ export interface IApplicationService {
 
   submitIslandIsApplication(
     body: IslandIsSubmitApplicationDto,
-    submittee: PersonDto,
+    submittee: DMRUser,
   ): Promise<void>
 
   submitApplication(applicationId: string, user: DMRUser): Promise<void>
@@ -50,13 +49,13 @@ export interface IApplicationService {
   addDivisionMeetingAdvertToApplication(
     applicationId: string,
     body: CreateDivisionMeetingDto,
-    submittee: PersonDto,
+    submittee: DMRUser,
   ): Promise<void>
 
   addDivisionEndingAdvertToApplication(
     applicationId: string,
     body: CreateDivisionEndingDto,
-    submittee: PersonDto,
+    submittee: DMRUser,
   ): Promise<void>
 }
 

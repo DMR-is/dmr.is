@@ -14,7 +14,6 @@ import {
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { PersonDto } from '@dmr.is/clients/national-registry'
 import { CurrentUser } from '@dmr.is/decorators'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
 import {
@@ -24,7 +23,6 @@ import {
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
-import { CurrentSubmittee } from '../../core/decorators/current-submittee.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import { CurrentNationalRegistryPersonGuard } from '../../core/guards/current-submitte.guard'
@@ -128,12 +126,12 @@ export class ApplicationController {
   async addDivisionMeetingAdvert(
     @Param('applicationId') applicationId: string,
     @Body() body: CreateDivisionMeetingDto,
-    @CurrentSubmittee() submittee: PersonDto,
+    @CurrentUser() user: DMRUser,
   ): Promise<void> {
     return this.applicationService.addDivisionMeetingAdvertToApplication(
       applicationId,
       body,
-      submittee,
+      user,
     )
   }
 
@@ -143,12 +141,12 @@ export class ApplicationController {
   async addDivisionEndingAdvertToApplication(
     @Param('applicationId') applicationId: string,
     @Body() body: CreateDivisionEndingDto,
-    @CurrentSubmittee() submittee: PersonDto,
+    @CurrentUser() user: DMRUser,
   ): Promise<void> {
     return this.applicationService.addDivisionEndingAdvertToApplication(
       applicationId,
       body,
-      submittee,
+      user,
     )
   }
 }

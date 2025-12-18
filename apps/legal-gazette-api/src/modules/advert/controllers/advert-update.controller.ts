@@ -42,8 +42,13 @@ export class AdvertUpdateController {
   assignAdvertToEmployee(
     @Param('id', new UUIDValidationPipe()) advertId: string,
     @Param('userId', new UUIDValidationPipe()) userId: string,
+    @CurrentUser() currentUser: DMRUser,
   ) {
-    return this.advertService.assignAdvertToEmployee(advertId, userId)
+    return this.advertService.assignAdvertToEmployee(
+      advertId,
+      userId,
+      currentUser,
+    )
   }
 
   @Patch('category/:categoryId')

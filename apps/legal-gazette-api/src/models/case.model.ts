@@ -79,7 +79,7 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
 
   @BeforeDestroy
   static async markAdvertsAsWithdrawn(instance: CaseModel) {
-    const adverts = await AdvertModel.unscoped().findAll({
+    const adverts = await AdvertModel.findAll({
       attributes: ['id'],
       where: { caseId: instance.id },
     })

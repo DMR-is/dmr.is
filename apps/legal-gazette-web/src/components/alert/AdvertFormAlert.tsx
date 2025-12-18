@@ -13,7 +13,7 @@ export const AdvertFormAlert = ({ status, canEdit }: Props) => {
       <AlertMessage
         type="success"
         title="Auglýsing útgefin"
-        message=" auglýsingar sem eru ekki útgefnar er hægt að breyta"
+        message="Aðeins er hægt að breyta auglýsingum sem ekki er búið að gefa út"
       />
     )
   }

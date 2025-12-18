@@ -37,15 +37,17 @@ export class PublicationService implements IPublicationService {
   async getPublishedPublicationsByAdvertId(
     advertId: string,
   ): Promise<AdvertPublicationDetailedDto[]> {
-    const advert = await this.advertModel.findByPkOrThrow(advertId, {
-      include: [
-        {
-          model: AdvertPublicationModel,
-          as: 'publications',
-          where: { publishedAt: { [Op.ne]: null } },
-        },
-      ],
-    })
+    const advert = await this.advertModel
+      .withScope('listview')
+      .findByPkOrThrow(advertId, {
+        include: [
+          {
+            model: AdvertPublicationModel,
+            as: 'publications',
+            where: { publishedAt: { [Op.ne]: null } },
+          },
+        ],
+      })
 
     return advert.publications.map((publication, index) => {
       return {
@@ -88,7 +90,7 @@ export class PublicationService implements IPublicationService {
 
   async publishAdverts(advertIds: string[]): Promise<void> {
     // maybe fail if length of advert results is not the same as advertIds length
-    const adverts = await this.advertModel.unscoped().findAll({
+    const adverts = await this.advertModel.findAll({
       attributes: ['id', 'publicationNumber', 'statusId'],
       include: [
         {
@@ -190,7 +192,9 @@ export class PublicationService implements IPublicationService {
     id: string,
     version: AdvertVersionEnum,
   ): Promise<AdvertPublicationDetailedDto> {
-    const advertPromise = this.advertModel.findByPkOrThrow(id)
+    const advertPromise = this.advertModel
+      .withScope('listview')
+      .findByPkOrThrow(id)
     const publicationPromise = this.advertPublicationModel.findOneOrThrow({
       where: {
         advertId: id,
@@ -225,7 +229,9 @@ export class PublicationService implements IPublicationService {
         },
       )
 
-      const advert = await this.advertModel.findByPkOrThrow(advertId)
+      const advert = await this.advertModel
+        .withScope('detailed')
+        .findByPkOrThrow(advertId)
 
       const publication = await this.advertPublicationModel.findOneOrThrow({
         where: { id: publicationId, advertId },
@@ -241,7 +247,7 @@ export class PublicationService implements IPublicationService {
         const day = pubDate.getDate().toString().padStart(2, '0')
 
         // find max publication number for today
-        const maxPublication = await this.advertModel.unscoped().findOne({
+        const maxPublication = await this.advertModel.findOne({
           attributes: ['id', 'publicationNumber'],
           where: {
             publicationNumber: {

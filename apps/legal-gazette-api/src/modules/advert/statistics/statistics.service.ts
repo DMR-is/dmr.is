@@ -23,19 +23,19 @@ export class StatisticsService implements IStatisticsService {
   ) {}
 
   async getCountByStatuses(): Promise<GetCountByStatusesDto> {
-    const submittedCountPromise = this.advertModel.unscoped().count({
+    const submittedCountPromise = this.advertModel.count({
       attributes: ['statusId'],
       where: { statusId: StatusIdEnum.SUBMITTED },
       group: ['statusId'],
     })
 
-    const inprogressCountPromise = this.advertModel.unscoped().count({
+    const inprogressCountPromise = this.advertModel.count({
       attributes: ['statusId'],
       where: { statusId: StatusIdEnum.IN_PROGRESS },
       group: ['statusId'],
     })
 
-    const tobePublishedCountPromise = this.advertModel.unscoped().count({
+    const tobePublishedCountPromise = this.advertModel.count({
       attributes: ['statusId'],
       where: { statusId: StatusIdEnum.READY_FOR_PUBLICATION },
       group: ['statusId'],
@@ -61,7 +61,7 @@ export class StatisticsService implements IStatisticsService {
     }
   }
   async getAdvertsInProgressStats(): Promise<GetAdvertsInProgressStatsDto> {
-    const submittedTodayCountPromise = this.advertModel.unscoped().count({
+    const submittedTodayCountPromise = this.advertModel.count({
       attributes: ['statusId', 'createdAt'],
       where: {
         statusId: StatusIdEnum.SUBMITTED,
@@ -72,13 +72,13 @@ export class StatisticsService implements IStatisticsService {
       group: ['statusId', 'createdAt'],
     })
 
-    const totalInProgressCountPromise = this.advertModel.unscoped().count({
+    const totalInProgressCountPromise = this.advertModel.count({
       attributes: ['statusId'],
       where: { statusId: StatusIdEnum.IN_PROGRESS },
       group: ['statusId'],
     })
 
-    const unassignedCountPromise = this.advertModel.unscoped().count({
+    const unassignedCountPromise = this.advertModel.count({
       attributes: ['statusId'],
       where: {
         statusId: {
@@ -95,7 +95,7 @@ export class StatisticsService implements IStatisticsService {
       include: [
         {
           required: true,
-          model: AdvertModel.unscoped(),
+          model: AdvertModel,
           attributes: ['id', 'statusId'],
           where: {
             statusId: {
@@ -144,7 +144,7 @@ export class StatisticsService implements IStatisticsService {
   }
 
   async getAdvertsToBePublishedStats(): Promise<GetAdvertsToBePublishedStatsDto> {
-    const tobePublishedTodayCountPromise = this.advertModel.unscoped().count({
+    const tobePublishedTodayCountPromise = this.advertModel.count({
       attributes: ['statusId'],
       where: {
         statusId: StatusIdEnum.READY_FOR_PUBLICATION,
@@ -168,7 +168,7 @@ export class StatisticsService implements IStatisticsService {
       group: ['statusId'],
     })
 
-    const pastDueCountPromise = this.advertModel.unscoped().count({
+    const pastDueCountPromise = this.advertModel.count({
       attributes: ['statusId'],
       where: {
         statusId: {
