@@ -67,7 +67,7 @@ export class PublishingTaskService implements IPublishingTaskService {
     return publicationNumber
   }
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_HOUR)
   async run() {
     const { ran } = await this.lock.runWithXactLock(
       TASK_JOB_IDS.publishing,
