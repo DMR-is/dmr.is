@@ -9,10 +9,11 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { LegalGazetteEvents } from '../../../../core/constants'
+import { LegalGazetteEvents, TASK_JOB_IDS } from '../../../../core/constants'
 import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../../models/advert-publication.model'
 import { StatusIdEnum } from '../../../../models/status.model'
+import { PgAdvisoryXactLockService } from '../lock.service'
 import { IPublishingTaskService } from './publishing.task.interface'
 
 const LOGGER_CONTEXT = 'PublishingTaskService'
@@ -26,6 +27,7 @@ export class PublishingTaskService implements IPublishingTaskService {
     private readonly publicationModel: typeof AdvertPublicationModel,
     private sequelize: Sequelize,
     private readonly eventEmitter: EventEmitter2,
+    private readonly lock: PgAdvisoryXactLockService,
   ) {}
 
   private async getNextPublicationNumber(
@@ -66,6 +68,20 @@ export class PublishingTaskService implements IPublishingTaskService {
   }
 
   @Cron(CronExpression.EVERY_5_MINUTES)
+  async run() {
+    const { ran } = await this.lock.runWithXactLock(
+      TASK_JOB_IDS.publishing,
+      async () => {
+        await this.publishAdverts()
+      },
+    )
+
+    if (!ran)
+      this.logger.debug(
+        'PublishingTask skipped (lock held by another container)',
+      )
+  }
+
   async publishAdverts(): Promise<void> {
     const now = new Date()
 
