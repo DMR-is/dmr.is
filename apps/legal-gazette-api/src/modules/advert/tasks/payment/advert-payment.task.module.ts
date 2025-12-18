@@ -3,6 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { TBRTransactionModel } from '../../../../models/tbr-transactions.model'
 import { TBRModule } from '../../../tbr/tbr.module'
+import { PgAdvisoryLockModule } from '../lock.module'
 import { AdvertPaymentTaskService } from './advert-payment.task'
 import { IAdvertPaymentTaskService } from './advert-payment.task.interface'
 
@@ -14,6 +15,7 @@ import { IAdvertPaymentTaskService } from './advert-payment.task.interface'
       officeId: process.env.LG_TBR_OFFICE_ID!,
       tbrBasePath: process.env.LG_TBR_PATH!,
     }),
+    PgAdvisoryLockModule,
   ],
   providers: [
     {
