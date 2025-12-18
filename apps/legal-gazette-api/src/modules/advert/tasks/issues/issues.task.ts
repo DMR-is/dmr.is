@@ -20,7 +20,6 @@ import { IIssuesTask } from './issues.task.interface'
 
 const LOGGING_CONTEXT = 'IssuesTask'
 const YEAR_ESTABLISHED = 1907
-const CUTOFF_YEAR = 2025
 
 @Injectable()
 export class IssuesTaskService implements IIssuesTask {
@@ -63,16 +62,21 @@ export class IssuesTaskService implements IIssuesTask {
       })
 
       const lastIssue = await this.issueModel.findOne({
-        order: [['createdAt', 'DESC']],
+        order: [['publishDate', 'DESC']],
       })
 
-      if (!lastIssue || !lastIssue.publishDate || lastIssue.isLegacy) {
+      if (
+        !lastIssue ||
+        !lastIssue.publishDate ||
+        !lastIssue.runningPageNumber
+      ) {
         this.logger.info(
           `
             No issue available, skipping PDF generation.
             Manually create an issue to start auto publishing.
             Manual issue should contain issueNr and publish information from previous systems most recent issue.
-            ${lastIssue?.isLegacy ? 'Latest issue must not be marked as legacy.' : ''}
+            ${lastIssue?.id ? `Last issue ID: ${lastIssue.id}` : 'No issues found in database.'}
+            ${!lastIssue?.runningPageNumber ? 'Latest issue must have a running page number' : ''}
           `,
           {
             context: LOGGING_CONTEXT,
@@ -148,11 +152,7 @@ export class IssuesTaskService implements IIssuesTask {
         },
       })
 
-      // During cutoff year, continue with last issue number from previous system.
-      const lastIssueNr =
-        currentYear === CUTOFF_YEAR ? lastIssue.issue : issuesThisYear
-
-      const nextIssueNumber = lastIssueNr + 1
+      const nextIssueNumber = issuesThisYear + 1
       const publishDate = now
 
       const totalPagesThisYear =
