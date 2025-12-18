@@ -193,7 +193,7 @@ export class PublicationService implements IPublicationService {
     version: AdvertVersionEnum,
   ): Promise<AdvertPublicationDetailedDto> {
     const advertPromise = this.advertModel
-      .withScope('listview')
+      .withScope('detailed')
       .findByPkOrThrow(id)
     const publicationPromise = this.advertPublicationModel.findOneOrThrow({
       where: {

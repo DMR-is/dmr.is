@@ -260,6 +260,20 @@ export class AdvertService implements IAdvertService {
             : undefined,
         },
         {
+          include: [
+            {
+              model: SignatureModel,
+              as: 'signature',
+            },
+            {
+              model: CommunicationChannelModel,
+              as: 'communicationChannels',
+            },
+            {
+              model: SettlementModel,
+              as: 'settlement',
+            },
+          ],
           returning: true,
         },
       )
