@@ -1,13 +1,20 @@
-import addDays from 'date-fns/addDays'
-import addYears from 'date-fns/addYears'
+import { addDays, addYears } from 'date-fns'
 import { useFormContext } from 'react-hook-form'
 
 import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
-import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
+import {
+  AlertMessage,
+  GridColumn,
+  GridRow,
+  Text,
+} from '@dmr.is/ui/components/island-is'
+import {
+  getInvalidPublishingDatesInRange,
+  getNextValidPublishingDate,
+} from '@dmr.is/utils/date'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
-import { ONE_WEEK, TWO_WEEKS } from '../../../../lib/constants'
-import { getNextWeekday, getWeekendDays } from '../../../../lib/utils'
+import { ONE_WEEK } from '../../../../lib/constants'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
@@ -26,12 +33,13 @@ export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
 
   const recallDates = watch('publishingDates') || []
 
-  const minDate = recallDates?.length
-    ? addDays(new Date(recallDates[recallDates.length - 1]), 7 * 9)
-    : addDays(new Date(), 14)
-
-  const maxDate = addYears(minDate, 1)
-  const excludeDates = getWeekendDays(minDate, maxDate)
+  const minDate = recallDates.length
+    ? getNextValidPublishingDate(
+        addDays(new Date(recallDates[recallDates.length - 1]), ONE_WEEK * 9),
+      )
+    : getNextValidPublishingDate()
+  const maxDate = getNextValidPublishingDate(addYears(minDate, 5))
+  const excludeDates = getInvalidPublishingDatesInRange(minDate, maxDate)
 
   return (
     <GridRow rowGap={[2, 3]}>
@@ -62,30 +70,34 @@ export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
         />
       </GridColumn>
       <GridColumn span="6/12">
-        <DatePickerController
-          required={isBankruptcy}
-          withTime={true}
-          name="fields.divisionMeetingFields.meetingDate"
-          label="Dagsetning skiptafundar"
-          minDate={minDate ? getNextWeekday(minDate) : undefined}
-          maxDate={maxDate}
-          excludeDates={excludeDates}
-          onChange={(date) =>
-            debouncedUpdateApplication(
-              {
-                fields: {
-                  divisionMeetingFields: {
-                    meetingDate: date.toISOString(),
+        {recallDates.length === 0 ? (
+          <AlertMessage type="info" title="Veldu birtingardag fyrst" />
+        ) : (
+          <DatePickerController
+            required={isBankruptcy}
+            withTime={true}
+            name="fields.divisionMeetingFields.meetingDate"
+            label="Dagsetning skiptafundar"
+            minDate={minDate}
+            maxDate={maxDate}
+            excludeDates={excludeDates}
+            onChange={(date) =>
+              debouncedUpdateApplication(
+                {
+                  fields: {
+                    divisionMeetingFields: {
+                      meetingDate: date.toISOString(),
+                    },
                   },
                 },
-              },
-              {
-                successMessage: 'Dagsetning skiptafundar vistuð',
-                errorMessage: 'Ekki tókst að vista dagsetningu skiptafundar',
-              },
-            )
-          }
-        />
+                {
+                  successMessage: 'Dagsetning skiptafundar vistuð',
+                  errorMessage: 'Ekki tókst að vista dagsetningu skiptafundar',
+                },
+              )
+            }
+          />
+        )}
       </GridColumn>
     </GridRow>
   )
