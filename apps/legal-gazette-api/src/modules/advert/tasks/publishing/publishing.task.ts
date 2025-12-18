@@ -13,8 +13,8 @@ import { LegalGazetteEvents, TASK_JOB_IDS } from '../../../../core/constants'
 import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../../models/advert-publication.model'
 import { StatusIdEnum } from '../../../../models/status.model'
-import { PgAdvisoryXactLockService } from '../lock.service'
 import { AdvertPublishedEvent } from '../../publications/events/advert-published.event'
+import { PgAdvisoryXactLockService } from '../lock.service'
 import { IPublishingTaskService } from './publishing.task.interface'
 
 const LOGGER_CONTEXT = 'PublishingTaskService'
@@ -82,7 +82,7 @@ export class PublishingTaskService implements IPublishingTaskService {
         'PublishingTask skipped (lock held by another container)',
       )
   }
-  
+
   async publishAdverts(): Promise<void> {
     const now = new Date()
 
