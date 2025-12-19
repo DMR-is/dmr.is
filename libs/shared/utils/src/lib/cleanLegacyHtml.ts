@@ -250,18 +250,28 @@ const baseOptions: sanitizeHtml.IOptions = {
     tr: ['style', 'align', 'id', 'class', 'title'],
     td: ['style', 'align', 'id', 'class', 'title', 'rowspan', 'colspan'],
     th: ['style', 'align', 'id', 'class', 'title', 'rowspan', 'colspan'],
+    ul: ['style', 'id', 'class', 'title'],
+    ol: ['style', 'id', 'class', 'title'],
     '*': ['id', 'class', 'title'],
   },
   allowedSchemes: ['http', 'https', 'mailto', 'tel'],
   allowedStyles: {
     p: { 'text-align': [/^(left|right|center|justify)$/i] },
     div: { 'text-align': [/^(left|right|center|justify)$/i] },
+    ol: {
+      'list-style-type': [
+        /^(decimal|lower-alpha|upper-alpha|lower-roman|upper-roman)$/i,
+      ],
+    },
+    ul: {
+      'list-style-type': [/^(disc|circle|square)$/i],
+    },
   },
   transformTags: {
     '*': (tagName, attribs) => {
       const cls = attribs.class || ''
 
-      const allowStyleOn = new Set(['table', 'tr', 'td', 'th'])
+      const allowStyleOn = new Set(['table', 'tr', 'td', 'th', 'ol', 'ul'])
       if (!allowStyleOn.has(tagName)) delete attribs.style
 
       if (attribs.style) {
