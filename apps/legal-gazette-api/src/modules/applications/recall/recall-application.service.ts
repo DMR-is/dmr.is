@@ -46,6 +46,139 @@ export class RecallApplicationService implements IRecallApplicationService {
     @InjectModel(ApplicationModel)
     private applicationModel: typeof ApplicationModel,
   ) {}
+  async getMinDateForDivisionEnding(
+    applicationId: string,
+  ): Promise<GetMinDateResponseDto> {
+    // The min date for division ending can be the day after latest division meeting
+    // if no division meeting exists then it should be 2 months and 1 week after the first recall advert publication date
+
+    const divisionMeeting = await this.advertModel.findOne({
+      attributes: ['id', 'createdAt'],
+      where: {
+        applicationId: applicationId,
+      },
+      include: [
+        {
+          model: AdvertPublicationModel,
+          as: 'publications',
+          attributes: ['id', 'scheduledAt', 'publishedAt'],
+          required: true,
+          order: [
+            ['publishedAt', 'DESC NULLS FIRST'],
+            ['scheduledAt', 'DESC'],
+          ],
+          limit: 1,
+        },
+      ],
+    })
+
+    if (divisionMeeting && divisionMeeting.publications.length > 0) {
+      const meeting = divisionMeeting.publications[0]
+
+      const previousMeetingDate = meeting.publishedAt
+        ? new Date(meeting.publishedAt)
+        : new Date(meeting.scheduledAt)
+
+      const nextMeetingDate = addBusinessDays(
+        previousMeetingDate,
+        1,
+      ).toISOString()
+
+      this.logger.debug(
+        `Found previous division meeting advert, setting next min meeting date to`,
+        {
+          context: 'ApplicationService',
+          message: nextMeetingDate,
+          applicationId: applicationId,
+          advertId: divisionMeeting.id,
+          previousMeetingDate: previousMeetingDate.toISOString(),
+          nextMinMeetingDate: nextMeetingDate,
+        },
+      )
+
+      return { minDate: nextMeetingDate }
+    }
+
+    this.logger.debug(`No division meeting advert found for application`, {
+      context: 'ApplicationService',
+      applicationId: applicationId,
+    })
+
+    const firstRecallAdvert = await this.advertModel.findOne({
+      attributes: ['id', 'createdAt', 'divisionMeetingDate'],
+      where: {
+        applicationId: applicationId,
+        typeId: {
+          [Op.in]: [
+            RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
+            RECALL_DECEASED_ADVERT_TYPE_ID,
+          ],
+        },
+      },
+      order: [['createdAt', 'ASC']],
+      include: [
+        {
+          required: true,
+          as: 'publications',
+          model: AdvertPublicationModel,
+          attributes: ['id', 'scheduledAt', 'publishedAt'],
+          limit: 1,
+        },
+      ],
+    })
+
+    if (!firstRecallAdvert || firstRecallAdvert.publications.length === 0) {
+      this.logger.warn(`No recall adverts found for application`, {
+        context: 'RecallApplicationService',
+        applicationId: applicationId,
+      })
+
+      return { minDate: getNextValidPublishingDate().toISOString() }
+    }
+
+    if (firstRecallAdvert.divisionMeetingDate) {
+      const divisionMeetingDate = new Date(
+        firstRecallAdvert.divisionMeetingDate,
+      )
+
+      const nextMinDate = addBusinessDays(divisionMeetingDate, 1).toISOString()
+      this.logger.debug(
+        `Found division meeting date on first recall advert, setting next min meeting date to`,
+        {
+          context: 'ApplicationService',
+          message: nextMinDate,
+          applicationId: applicationId,
+          advertId: firstRecallAdvert.id,
+          divisionMeetingDate: divisionMeetingDate.toISOString(),
+          nextMinMeetingDate: nextMinDate,
+        },
+      )
+      return { minDate: nextMinDate }
+    }
+
+    const firstPublication = firstRecallAdvert.publications[0]
+    const publicationDate = firstPublication.publishedAt
+      ? new Date(firstPublication.publishedAt)
+      : new Date(firstPublication.scheduledAt)
+
+    const nextMinDate = getNextValidPublishingDate(
+      addDays(publicationDate, 63),
+    ).toISOString()
+
+    this.logger.debug(
+      `No division meeting date found on first recall advert, setting next min meeting date to`,
+      {
+        context: 'ApplicationService',
+        message: nextMinDate,
+        applicationId: applicationId,
+        advertId: firstRecallAdvert.id,
+        publicationDate: publicationDate.toISOString(),
+        nextMinMeetingDate: nextMinDate,
+      },
+    )
+
+    return { minDate: nextMinDate }
+  }
   async addDivisionMeeting(
     applicationId: string,
     body: CreateDivisionMeetingDto,
@@ -95,6 +228,30 @@ export class RecallApplicationService implements IRecallApplicationService {
     body: CreateDivisionEndingDto,
     user: DMRUser,
   ): Promise<void> {
+    const { judgementDate } = await this.advertModel.findOneOrThrow({
+      attributes: ['id', 'judgementDate'],
+      where: {
+        applicationId: applicationId,
+        typeId: {
+          [Op.in]: [
+            RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
+            RECALL_DECEASED_ADVERT_TYPE_ID,
+          ],
+        },
+      },
+    })
+
+    if (!judgementDate) {
+      this.logger.error(
+        `Cannot create division ending advert without judgement date set on recall advert`,
+        {
+          context: 'RecallApplicationService',
+          applicationId: applicationId,
+        },
+      )
+      throw new BadRequestException('Judgement date not set on recall advert')
+    }
+
     const application = await this.applicationModel.findOneOrThrow({
       where: {
         id: applicationId,
@@ -109,36 +266,6 @@ export class RecallApplicationService implements IRecallApplicationService {
       },
     })
 
-    if (!application.settlement) {
-      throw new BadRequestException(
-        'Application is missing settlement information',
-      )
-    }
-
-    let parsedAnswers
-    try {
-      if (
-        application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
-      ) {
-        parsedAnswers = recallBankruptcyAnswersRefined.parse(
-          application.answers,
-        )
-      } else if (
-        application.applicationType === ApplicationTypeEnum.RECALL_DECEASED
-      ) {
-        parsedAnswers = recallDeceasedAnswersRefined.parse(application.answers)
-      } else {
-        throw new BadRequestException('Invalid application type')
-      }
-    } catch (error) {
-      this.logger.error('Failed to parse application answers', {
-        context: 'ApplicationService',
-        applicationId: application.id,
-        error,
-      })
-      throw new BadRequestException('Invalid application data')
-    }
-
     await this.advertService.createAdvert({
       applicationId: application.id,
       caseId: application.caseId,
@@ -151,10 +278,10 @@ export class RecallApplicationService implements IRecallApplicationService {
         ...body.signature,
         date: body.signature?.date ? new Date(body.signature.date) : undefined,
       },
-      title: `Skiptalok - ${application.settlement.name}`,
+      title: `Skiptalok - ${application.settlement?.name}`,
       additionalText: body.additionalText,
-      settlementId: application.settlement.id,
-      judgementDate: parsedAnswers.fields.courtAndJudgmentFields.judgmentDate,
+      settlementId: application.settlement?.id,
+      judgementDate: judgementDate.toISOString(),
       communicationChannels: body.communicationChannels,
       scheduledAt: [body.meetingDate],
     })
