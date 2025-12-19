@@ -10,7 +10,7 @@ export const HeaderLogo = () => {
       <img
         src={skjaldarmerki}
         alt="Skjaldarmerki"
-        width={lg ? 70 : 50}
+        width={lg ? 64 : 50}
         height={lg ? 40 : 32}
       />
     </FocusableBox>

@@ -3,18 +3,21 @@
 import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import { forceLogin, useLogOut } from '@dmr.is/auth/useLogOut'
 
 import {
   Box,
   DropdownMenu,
+  DropdownMenuProps,
   GridColumn,
   GridContainer,
   GridRow,
   Hidden,
   Inline,
+  Text,
+  useBreakpoint,
 } from '@island.is/island-ui/core'
 
 import { ControlPanel, ControlPanelProps } from '../ControlPanel/ControlPanel'
@@ -35,6 +38,7 @@ export const Header = ({
   const { data: session, status } = useSession()
   const logOut = useLogOut()
   const pathName = usePathname()
+  const { md } = useBreakpoint()
 
   useEffect(() => {
     if (session?.invalid === true && status === 'authenticated') {
@@ -44,6 +48,28 @@ export const Header = ({
       forceLogin(pathName ?? '/innskraning')
     }
   }, [session?.invalid, status, pathName])
+
+  const dropdownOptions = useMemo(() => {
+    const options: DropdownMenuProps['items'] = [
+      {
+        title: 'Útskrá',
+        onClick: (e: React.MouseEvent) => {
+          e.preventDefault()
+          logOut()
+        },
+      },
+    ]
+    if (!md) {
+      options.unshift({
+        title: session?.user?.name ?? 'Notandi',
+        icon: 'person',
+        iconType: 'outline',
+      })
+    }
+
+    return options
+  }, [md])
+
   return (
     <Hidden print={true}>
       <header className={styles.header({ variant })}>
@@ -54,9 +80,12 @@ export const Header = ({
                 <Inline
                   alignY="center"
                   justifyContent="flexStart"
-                  space={[2, 2, 4]}
+                  space={[1, 2, 4]}
                 >
                   <HeaderLogo />
+                  <Text variant="h4" fontWeight="regular">
+                    Lögbirtingablað
+                  </Text>
                   {controlPanel && <ControlPanel {...controlPanel} />}
                 </Inline>
                 <Box
@@ -68,18 +97,10 @@ export const Header = ({
                   {settings}
                   {session?.user ? (
                     <DropdownMenu
-                      title={session.user.name ?? ''}
-                      icon="chevronDown"
+                      title={md ? (session.user.name ?? '') : ''}
+                      icon={md ? 'chevronDown' : 'person'}
                       menuLabel={'Notandi'}
-                      items={[
-                        {
-                          title: 'Útskrá',
-                          onClick: (e) => {
-                            e.preventDefault()
-                            logOut()
-                          },
-                        },
-                      ]}
+                      items={dropdownOptions}
                     />
                   ) : null}
                 </Box>
