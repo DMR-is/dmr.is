@@ -251,7 +251,7 @@ const baseOptions: sanitizeHtml.IOptions = {
     td: ['style', 'align', 'id', 'class', 'title', 'rowspan', 'colspan'],
     th: ['style', 'align', 'id', 'class', 'title', 'rowspan', 'colspan'],
     ul: ['style', 'id', 'class', 'title'],
-    ol: ['style', 'id', 'class', 'title'],
+    ol: ['start', 'type', 'style', 'id', 'class', 'title'],
     '*': ['id', 'class', 'title'],
   },
   allowedSchemes: ['http', 'https', 'mailto', 'tel'],
