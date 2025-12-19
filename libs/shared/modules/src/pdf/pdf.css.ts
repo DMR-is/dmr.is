@@ -391,7 +391,6 @@ export const pdfCss = `
 
   .article__title em, .article__title i {
     display: block;
-    font-style: italic;
   }
 
   /* ======================================================================= */
