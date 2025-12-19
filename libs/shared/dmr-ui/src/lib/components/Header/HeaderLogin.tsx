@@ -14,6 +14,8 @@ import {
   GridRow,
   Hidden,
   Inline,
+  Text,
+  useBreakpoint,
 } from '@island.is/island-ui/core'
 
 import * as styles from './Header.css'
@@ -24,7 +26,11 @@ export type HeaderProps = {
   redirectTo?: string
 }
 
-export const HeaderLogin = ({ variant = 'blue', redirectTo = '/' }: HeaderProps) => {
+export const HeaderLogin = ({
+  variant = 'blue',
+  redirectTo = '/',
+}: HeaderProps) => {
+  const { md } = useBreakpoint()
   const [loading, setLoading] = useState(false)
   return (
     <Hidden print={true}>
@@ -36,9 +42,12 @@ export const HeaderLogin = ({ variant = 'blue', redirectTo = '/' }: HeaderProps)
                 <Inline
                   alignY="center"
                   justifyContent="flexStart"
-                  space={[2, 2, 4]}
+                  space={[1, 2, 4]}
                 >
                   <HeaderLogo />
+                  <Text variant="h4" fontWeight="regular">
+                    Lögbirtingablað
+                  </Text>
                 </Inline>
                 <Box
                   display="flex"
@@ -46,32 +55,19 @@ export const HeaderLogin = ({ variant = 'blue', redirectTo = '/' }: HeaderProps)
                   justifyContent="flexEnd"
                   width="full"
                 >
-                  {/* <DropdownMenu
-                    icon="person"
-                    items={[
-                      {
-                        href: '/innskraning',
-                        title: 'Skrá inn',
-                      },
-                      {
-                        href: '/skraning',
-                        title: 'Gerast áskrifandi',
-                      },
-                    ]}
-                    openOnHover
-                    title="Áskrift innskráning"
-                  /> */}
                   <Button
                     variant="utility"
                     size="small"
-                    icon="person"
+                    icon={md ? 'person' : undefined}
                     iconType="outline"
                     // loading={loading}
                     onClick={async (e) => {
                       e.preventDefault()
                       try {
                         setLoading(true)
-                        await signIn(identityServerId, { callbackUrl: redirectTo })
+                        await signIn(identityServerId, {
+                          callbackUrl: redirectTo,
+                        })
                       } catch (error) {
                         setLoading(false)
                       }

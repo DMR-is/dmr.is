@@ -6,6 +6,7 @@ import {
   GridRow,
   Hidden,
   Inline,
+  Text,
 } from '@island.is/island-ui/core'
 
 import * as styles from './Header.css'
@@ -26,9 +27,12 @@ export const HeaderNoAuth = ({ variant = 'blue' }: HeaderProps) => {
                 <Inline
                   alignY="center"
                   justifyContent="flexStart"
-                  space={[2, 2, 4]}
+                  space={[1, 1, 4]}
                 >
                   <HeaderLogo />
+                  <Text variant="h4" fontWeight="regular">
+                    Lögbirtingablað
+                  </Text>
                 </Inline>
               </Inline>
             </GridColumn>
