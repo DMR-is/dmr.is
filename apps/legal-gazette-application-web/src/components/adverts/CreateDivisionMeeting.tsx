@@ -1,6 +1,7 @@
 'use client'
 import { useParams } from 'next/navigation'
 
+import { addYears } from 'date-fns'
 import get from 'lodash/get'
 import { useEffect, useState } from 'react'
 
@@ -21,6 +22,10 @@ import {
   Text,
   toast,
 } from '@dmr.is/ui/components/island-is'
+import {
+  getInvalidPublishingDatesInRange,
+  getNextValidPublishingDate,
+} from '@dmr.is/utils/date'
 
 import { CreateDivisionMeetingDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
@@ -57,6 +62,13 @@ export const CreateDivisionMeeting = ({
   const { mutate: addDivisionMeeting, isPending } = useMutation(
     trpc.addDivisionMeeting.mutationOptions(),
   )
+
+  const { data } = useQuery(
+    trpc.getMininumDateForDivisionMeeting.queryOptions({
+      applicationId: applicationId as string,
+    }),
+  )
+
   const [submitClicked, setSubmitClicked] = useState(false)
 
   const { data: application } = useQuery(
@@ -131,6 +143,17 @@ export const CreateDivisionMeeting = ({
       )
     }
   }
+
+  const minDate = getNextValidPublishingDate(
+    data?.minDate ? new Date(data.minDate) : new Date(),
+  )
+
+  const maxDate = getNextValidPublishingDate(addYears(new Date(), 3))
+
+  const invalidPublishingDates = getInvalidPublishingDatesInRange(
+    minDate,
+    maxDate,
+  )
 
   return (
     <ModalBase
@@ -209,6 +232,11 @@ export const CreateDivisionMeeting = ({
                             <DatePicker
                               locale="is"
                               required
+                              excludeDates={invalidPublishingDates}
+                              minDate={minDate}
+                              maxDate={maxDate}
+                              maxYear={addYears(new Date(), 3).getFullYear()}
+                              minYear={new Date().getFullYear()}
                               name="meetingDate"
                               backgroundColor="blue"
                               label="Dagsetning og tími skiptafundar"

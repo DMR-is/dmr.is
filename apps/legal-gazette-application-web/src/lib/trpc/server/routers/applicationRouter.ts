@@ -1,11 +1,8 @@
 import z from 'zod'
 
 import {
-  commonApplicationAnswers,
   createDivisionEndingWithIdInput,
   createDivisionMeetingWithIdInput,
-  recallBankruptcyAnswers,
-  recallDeceasedAnswers,
   updateApplicationWithIdInput,
 } from '@dmr.is/legal-gazette/schemas'
 
@@ -91,11 +88,18 @@ export const applicationRouter = router({
         applicationId: input.id,
       })
     }),
+  getMininumDateForDivisionMeeting: protectedProcedure
+    .input(z.object({ applicationId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return await ctx.api.getMinDateForDivisionMeeting({
+        applicationId: input.applicationId,
+      })
+    }),
   addDivisionMeeting: protectedProcedure
     .input(createDivisionMeetingWithIdInput)
     .mutation(async ({ ctx, input }) => {
       const { applicationId, ...rest } = input
-      return await ctx.api.addDivisionMeetingAdvertToApplication({
+      return await ctx.api.addDivisionMeeting({
         applicationId: applicationId,
         createDivisionMeetingDto: rest,
       })
@@ -104,7 +108,7 @@ export const applicationRouter = router({
     .input(createDivisionEndingWithIdInput)
     .mutation(async ({ ctx, input }) => {
       const { applicationId, ...rest } = input
-      return await ctx.api.addDivisionEndingAdvertToApplication({
+      return await ctx.api.addDivisionEnding({
         applicationId: input.applicationId,
         createDivisionEndingDto: rest,
       })
@@ -117,7 +121,7 @@ export const applicationRouter = router({
         pageSize: input?.pageSize,
       })
     }),
-    getMyLegacyAdverts: protectedProcedure
+  getMyLegacyAdverts: protectedProcedure
     .input(getApplicationsSchema.optional())
     .query(async ({ ctx, input }) => {
       return await ctx.api.getMyLegacyAdverts({
