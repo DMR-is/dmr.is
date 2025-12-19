@@ -95,6 +95,13 @@ export const applicationRouter = router({
         applicationId: input.applicationId,
       })
     }),
+  getMinumDateForDivisionEnding: protectedProcedure
+    .input(z.object({ applicationId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return await ctx.api.getMinDateForDivisionEnding({
+        applicationId: input.applicationId,
+      })
+    }),
   addDivisionMeeting: protectedProcedure
     .input(createDivisionMeetingWithIdInput)
     .mutation(async ({ ctx, input }) => {

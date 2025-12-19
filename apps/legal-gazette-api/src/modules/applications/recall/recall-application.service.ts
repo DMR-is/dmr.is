@@ -286,6 +286,10 @@ export class RecallApplicationService implements IRecallApplicationService {
       scheduledAt: [body.meetingDate],
     })
 
+    await application.settlement?.update({
+      declaredClaims: body.declaredClaims,
+    })
+
     await application.update({ status: ApplicationStatusEnum.FINISHED })
   }
   async getMinDateForDivisionMeeting(
