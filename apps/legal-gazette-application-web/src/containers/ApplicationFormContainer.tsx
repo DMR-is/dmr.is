@@ -1,28 +1,24 @@
 'use client'
 
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
+import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
 import { CommonForm } from '../components/form/common/CommonForm'
 import { RecallForm } from '../components/form/recall/RecallForm'
-import { ApplicationDetailedDto, ApplicationStatusEnum } from '../gen/fetch'
+import { ApplicationStatusEnum } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
 import { ApplicationSubmittedContainer } from './ApplicationSubmittedContainer'
 
-import { useSuspenseQuery } from '@tanstack/react-query'
-
 type Props = {
-  application: ApplicationDetailedDto
+  applicationId: string
   type: ApplicationTypeEnum
 }
 
-export function ApplicationFormContainer({
-  application: initalApplication,
-  type,
-}: Props) {
+export function ApplicationFormContainer({ applicationId, type }: Props) {
   const trpc = useTRPC()
   const { data } = useSuspenseQuery(
-    trpc.getApplicationById.queryOptions({ id: initalApplication.id }),
+    trpc.getApplicationById.queryOptions({ id: applicationId }),
   )
 
   const { data: baseEntities } = useSuspenseQuery(

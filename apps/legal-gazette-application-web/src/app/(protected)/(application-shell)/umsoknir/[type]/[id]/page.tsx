@@ -21,7 +21,7 @@ export default async function ApplicationPage({
   const mappedType = mapFormTypeToApplicationType(params.type)
 
   void prefetch(trpc.getBaseEntities.queryOptions())
-  const data = await fetchQueryWithHandler(
+  await fetchQueryWithHandler(
     trpc.getApplicationById.queryOptions({
       id: params.id,
     }),
@@ -29,7 +29,7 @@ export default async function ApplicationPage({
 
   return (
     <HydrateClient>
-      <ApplicationFormContainer application={data} type={mappedType} />
+      <ApplicationFormContainer applicationId={params.id} type={mappedType} />
     </HydrateClient>
   )
 }

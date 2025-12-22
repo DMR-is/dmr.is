@@ -14,7 +14,9 @@ export const makeQueryClient = () => {
       },
       dehydrate: {
         shouldDehydrateQuery: (query) => {
-          return defaultShouldDehydrateQuery(query)
+           const shouldDehydrate = defaultShouldDehydrateQuery(query)
+           const isPending  = query.state.status === 'pending'
+           return shouldDehydrate || isPending
         },
         shouldRedactErrors: (_error) => {
           // We should not catch Next.js server errors
