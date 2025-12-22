@@ -22,8 +22,8 @@ export default function ApplicationTypePage({
   params: { type: FormTypes }
 }) {
   const title = ALLOWED_FORM_TYPES.includes(params.type)
-    ? 'Auðkenni umsóknar vantar í slóðina'
-    : 'Umsóknar tegund er ekki til.'
+    ? 'Auðkenni auglýsingar vantar í slóðina'
+    : 'Auglýsingar tegund er ekki til.'
 
   return (
     <Box padding={[4, 5, 6]}>
@@ -31,16 +31,18 @@ export default function ApplicationTypePage({
         <Stack space={[1, 2]}>
           <Text variant="h2">{title}</Text>
           <Stack space={1}>
-            <Text variant="h4">Hægt er að sækja um eftirfarandi umsóknir.</Text>
+            <Text variant="h4">
+              Hægt er að sækja um eftirfarandi auglýsingar.
+            </Text>
             <BulletList type="ul">
-              <Bullet>Almenna umsókn</Bullet>
-              <Bullet>Innköllun dánarbús</Bullet>
-              <Bullet>Innköllun þrotabús</Bullet>
+              <Bullet>Almenn auglýsing</Bullet>
+              <Bullet>Dánarbú</Bullet>
+              <Bullet>Þrotabú</Bullet>
             </BulletList>
           </Stack>
           <LinkV2 href={PageRoutes.APPLICATIONS}>
             <Button variant="text" size="small" icon="arrowForward">
-              Opna umsóknir
+              Opna auglýsingar
             </Button>
           </LinkV2>
         </Stack>

@@ -32,12 +32,11 @@ export const ApplicationList = ({
       <GridRow marginBottom={8}>
         <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
           <Stack space={[2, 3, 4]}>
-            <Text variant="h2">Mínar umsóknir</Text>
             {applications.map((application, i) => (
               <ApplicationCard application={application} key={i} />
             ))}
             {applications.length === 0 && (
-              <Text>Þú hefur ekki skráð neinar umsóknir ennþá.</Text>
+              <Text>Þú hefur ekki atofnað neinar auglýsingar ennþá.</Text>
             )}
             {paging.totalPages > 1 && (
               <Pagination

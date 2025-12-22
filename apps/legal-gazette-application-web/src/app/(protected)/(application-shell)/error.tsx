@@ -21,9 +21,9 @@ export default function Error({
     message: 'Eitthvað fór úrskeiðis við að sækja gögnin.',
   }
 
-  if (error.message === 'Umsókn fannst ekki') {
-    message.title = 'Umsókn fannst ekki'
-    message.message = 'Ekki náðist að sækja umsóknina.'
+  if (error.message === 'Auglýsing fannst ekki') {
+    message.title = 'Auglýsing fannst ekki'
+    message.message = 'Ekki náðist að sækja auglýsinguna.'
   }
 
   if (error.message === 'Failed to fetch') {

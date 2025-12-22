@@ -2,7 +2,9 @@
 
 import { useRouter } from 'next/navigation'
 
-import { DropdownMenu, toast } from '@dmr.is/ui/components/island-is'
+import { Box, Inline, Text, toast } from '@dmr.is/ui/components/island-is'
+
+import { Button } from '@island.is/island-ui/core'
 
 import {
   ApplicationTypeEnum,
@@ -17,7 +19,7 @@ export const CreateApplication = () => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
-  const { mutate: createApplication, isPending } = useMutation(
+  const { mutate: createApplication } = useMutation(
     trpc.createApplication.mutationOptions({
       onMutate: () => {
         queryClient.invalidateQueries(trpc.getApplications.queryFilter())
@@ -40,7 +42,7 @@ export const CreateApplication = () => {
       onError: (error) => {
         toast.error(
           error?.message ||
-            'Ekki tókst að stofna umsókn. Vinsamlegast reyndu aftur síðar.',
+            'Ekki tókst að stofna auglýsingu. Vinsamlegast reyndu aftur síðar.',
           {
             toastId: 'createApplicationError',
           },
@@ -50,31 +52,45 @@ export const CreateApplication = () => {
   )
 
   return (
-    <DropdownMenu
-      title="Stofna umsókn"
-      icon="hammer"
-      loading={isPending}
-      items={[
-        {
-          title: 'Almenn umsókn',
-          onClick: () =>
-            createApplication(CreateApplicationApplicationTypeEnum.COMMON),
-        },
-        {
-          title: 'Innköllun þrotabús',
-          onClick: () =>
+    <Box marginTop={2}>
+      <Inline space={2}>
+        <Button
+          variant="utility"
+          icon="fileTrayFull"
+          iconType="outline"
+          title="Stofna almennna auglýsingu"
+          onClick={() =>
+            createApplication(CreateApplicationApplicationTypeEnum.COMMON)
+          }
+        >
+          Almenn auglýsing
+        </Button>
+        <Button
+          variant="utility"
+          icon="hammer"
+          iconType="outline"
+          title="Stofna "
+          onClick={() =>
             createApplication(
               CreateApplicationApplicationTypeEnum.RECALLBANKRUPTCY,
-            ),
-        },
-        {
-          title: 'Innköllun dánarbús',
-          onClick: () =>
+            )
+          }
+        >
+          Þrotabú
+        </Button>
+        <Button
+          variant="utility"
+          icon="homeWithCar"
+          iconType="outline"
+          onClick={() =>
             createApplication(
               CreateApplicationApplicationTypeEnum.RECALLDECEASED,
-            ),
-        },
-      ]}
-    />
+            )
+          }
+        >
+          Dánarbú
+        </Button>
+      </Inline>
+    </Box>
   )
 }

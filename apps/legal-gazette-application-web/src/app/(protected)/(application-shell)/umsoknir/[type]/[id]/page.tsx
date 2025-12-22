@@ -15,7 +15,7 @@ export default async function ApplicationPage({
   params: { id: string; type: FormTypes }
 }) {
   if (!ALLOWED_FORM_TYPES.includes(params.type)) {
-    throw new Error('Tegund umsóknar er ekki til')
+    throw new Error('Tegund auglýsingar er ekki til')
   }
 
   const mappedType = mapFormTypeToApplicationType(params.type)
