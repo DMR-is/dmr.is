@@ -7,7 +7,7 @@ import { execute as htmldiff } from '@dmr.is/regulations-tools/htmldiff-js'
 import { extractAppendixesAndComments } from '@dmr.is/regulations-tools/textHelpers'
 import { nameToSlug, toISODate } from '@dmr.is/regulations-tools/utils'
 
-import { FILE_SERVER } from '../constants'
+import { API_URL } from '../constants'
 import {
   DB_Regulation,
   DB_RegulationCancel,
@@ -291,7 +291,7 @@ async function isMigrated(regulation: DB_Regulation) {
 
 // ---------------------------------------------------------------------------
 
-const getPdfVersion = (routePath: string) => FILE_SERVER + '/pdf/' + routePath
+const getPdfVersion = (routePath: string) => API_URL + routePath + '/pdf/'
 
 // ===========================================================================
 
