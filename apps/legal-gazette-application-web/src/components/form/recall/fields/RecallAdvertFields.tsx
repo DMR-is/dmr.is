@@ -3,12 +3,7 @@
 import { useFormContext } from 'react-hook-form'
 
 import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
-import {
-  GridColumn,
-  GridRow,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { GridColumn, GridRow, Stack } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { DatePickerController } from '../../controllers/DatePickerController'
@@ -28,7 +23,6 @@ export const RecallAdvertFields = () => {
 
   return (
     <Stack space={[1, 2]}>
-      <Text variant="h4">Grunnupplýsingar</Text>
       <GridRow rowGap={[2, 3]}>
         <GridColumn span={['12/12', '6/12']}>
           <SelectController

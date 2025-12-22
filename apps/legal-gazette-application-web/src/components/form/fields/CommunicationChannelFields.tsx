@@ -112,14 +112,6 @@ export const CommunicationChannelFields = () => {
     <Box id="communicationChannels" component="div" onFocus={handleFirstFocus}>
       <GridRow rowGap={[2, 3]}>
         <GridColumn span="12/12">
-          <Text variant="h4">
-            Samskiptaleiðir{' '}
-            <Text fontWeight="regular" color="red600" as="span">
-              *
-            </Text>
-          </Text>
-        </GridColumn>
-        <GridColumn span="12/12">
           <Stack space={[2, 3]}>
             {formState.errors?.communicationChannels && (
               <AlertMessage
@@ -272,7 +264,11 @@ export const CommunicationChannelFields = () => {
                 </T.Body>
               </T.Table>
             ) : (
-              <Text>Engar samskiptaleiðir valdar</Text>
+              <AlertMessage
+                type="info"
+                title="Engar samskiptaleiðir valdar"
+                message="Að minnsta kosti þarf ein samskiptaleið að vera til staðar"
+              />
             )}
             <Button
               size="medium"

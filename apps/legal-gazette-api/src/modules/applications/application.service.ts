@@ -379,6 +379,7 @@ export class ApplicationService implements IApplicationService {
     })
 
     await application.update({
+      currentStep: body.currentStep ?? application.currentStep,
       answers: validatedMerged.answers,
     })
 

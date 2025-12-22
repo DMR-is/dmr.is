@@ -8,6 +8,7 @@ import { RecallForm } from '../components/form/recall/RecallForm'
 import { ApplicationDetailedDto, ApplicationStatusEnum } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
 import { ApplicationSubmittedContainer } from './ApplicationSubmittedContainer'
+import { RecallFormContainer } from './RecallFormContainer'
 
 import { useSuspenseQuery } from '@tanstack/react-query'
 
@@ -63,47 +64,8 @@ export function ApplicationFormContainer({
 
       break
     }
-    case ApplicationTypeEnum.RECALL_BANKRUPTCY: {
-      Component = (
-        <RecallForm
-          metadata={{
-            applicationId: data.id,
-            caseId: data.caseId,
-            type: ApplicationTypeEnum.RECALL_BANKRUPTCY,
-            courtOptions: baseEntities.courtDistricts.map((court) => ({
-              label: court.title,
-              value: court.id,
-            })),
-          }}
-          application={{
-            type: ApplicationTypeEnum.RECALL_BANKRUPTCY,
-            ...data.answers,
-          }}
-        />
-      )
-
-      break
-    }
-    case ApplicationTypeEnum.RECALL_DECEASED: {
-      Component = (
-        <RecallForm
-          metadata={{
-            applicationId: data.id,
-            caseId: data.caseId,
-            type: ApplicationTypeEnum.RECALL_DECEASED,
-            courtOptions: baseEntities.courtDistricts.map((court) => ({
-              label: court.title,
-              value: court.id,
-            })),
-          }}
-          application={{
-            type: ApplicationTypeEnum.RECALL_DECEASED,
-            ...data.answers,
-          }}
-        />
-      )
-
-      break
+    default: {
+      Component = <RecallFormContainer application={data} />
     }
   }
 

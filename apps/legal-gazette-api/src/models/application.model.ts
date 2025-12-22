@@ -41,6 +41,7 @@ import { CreateSignatureDto } from './signature.model'
 
 export enum ApplicationStatusEnum {
   DRAFT = 'DRAFT',
+  IN_PROGRESS = 'IN_PROGRESS',
   SUBMITTED = 'SUBMITTED',
   FINISHED = 'FINISHED',
 }
@@ -70,6 +71,7 @@ type BaseApplicationAttributes = {
   applicationType: ApplicationTypeEnum
   status: ApplicationStatusEnum
   answers: ApplicationAnswers
+  currentStep: number
 }
 
 export type ApplicationAttributes = BaseApplicationAttributes &
@@ -128,6 +130,13 @@ export class ApplicationModel extends BaseModel<
   status!: ApplicationStatusEnum
 
   @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+  })
+  currentStep!: number
+
+  @Column({
     type: DataType.JSONB,
     allowNull: false,
     defaultValue: {},
@@ -176,6 +185,7 @@ export class ApplicationModel extends BaseModel<
       title: model.title,
       type: model.applicationType,
       subtitle: model.getSubtitle(),
+      currentStep: model.currentStep,
     }
   }
 
@@ -221,6 +231,9 @@ export class ApplicationDto extends DetailedDto {
 
   @ApiProperty({ enum: ApplicationTypeEnum, enumName: 'ApplicationTypeEnum' })
   type!: ApplicationTypeEnum
+
+  @ApiProperty({ type: Number })
+  currentStep!: number
 }
 
 export class ApplicationDtoWithSubtitle extends ApplicationDto {
@@ -241,6 +254,11 @@ export class ApplicationDetailedDto extends ApplicationDto {
 }
 
 export class UpdateApplicationDto {
+  @ApiProperty({ type: Number, required: false })
+  @IsOptional()
+  @IsNumber()
+  currentStep?: number
+
   @ApiProperty({ type: Object, default: {} })
   @IsOptional()
   @IsObject()

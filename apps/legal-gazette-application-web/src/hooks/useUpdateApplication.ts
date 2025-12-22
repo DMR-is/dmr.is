@@ -26,8 +26,12 @@ type UpdateApplicationMutationOptions = {
 
 export type UpdateApplicationType = 'COMMON' | 'RECALL'
 
+export type UpdateApplicationAnswersWithoutStep<
+  T extends UpdateApplicationType,
+> = T extends 'COMMON' ? CommonApplicationAnswers : RecallApplicationAnswers
+
 export type UpdateApplicationAnswers<T extends UpdateApplicationType> =
-  T extends 'COMMON' ? CommonApplicationAnswers : RecallApplicationAnswers
+  UpdateApplicationAnswersWithoutStep<T> & { currentStep?: number }
 
 type UseUpdateApplicationParams<T extends UpdateApplicationType> = {
   id: string
@@ -94,6 +98,7 @@ export const useUpdateApplication = <T extends UpdateApplicationType>({
         id: id,
         type: application.type,
         answers: answers,
+        currentStep: answers.currentStep,
       }
 
       const parsed = updateApplicationWithIdInput.parse(body)

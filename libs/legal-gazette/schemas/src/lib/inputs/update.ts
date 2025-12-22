@@ -6,11 +6,13 @@ import {
   recallDeceasedApplicationSchema,
 } from '../recall'
 
-export const updateApplicationInput = z.discriminatedUnion('type', [
-  commonApplicationSchema,
-  recallBankruptcyApplicationSchema,
-  recallDeceasedApplicationSchema,
-])
+export const updateApplicationInput = z
+  .discriminatedUnion('type', [
+    commonApplicationSchema,
+    recallBankruptcyApplicationSchema,
+    recallDeceasedApplicationSchema,
+  ])
+  .and(z.object({ currentStep: z.number().optional() }))
 
 export const updateApplicationWithIdInput = z
   .object({

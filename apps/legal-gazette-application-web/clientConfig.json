@@ -4040,7 +4040,7 @@
       },
       "ApplicationStatusEnum": {
         "type": "string",
-        "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
+        "enum": ["DRAFT", "IN_PROGRESS", "SUBMITTED", "FINISHED"]
       },
       "ApplicationDto": {
         "type": "object",
@@ -4075,7 +4075,8 @@
           "subtitle": { "type": "string" },
           "type": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
-          }
+          },
+          "currentStep": { "type": "number" }
         },
         "required": [
           "id",
@@ -4085,7 +4086,8 @@
           "submittedByNationalId",
           "status",
           "title",
-          "type"
+          "type",
+          "currentStep"
         ]
       },
       "GetApplicationsDto": {
@@ -4133,6 +4135,7 @@
           "type": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           },
+          "currentStep": { "type": "number" },
           "answers": { "type": "object", "default": {} }
         },
         "required": [
@@ -4144,12 +4147,16 @@
           "status",
           "title",
           "type",
+          "currentStep",
           "answers"
         ]
       },
       "UpdateApplicationDto": {
         "type": "object",
-        "properties": { "answers": { "type": "object", "default": {} } },
+        "properties": {
+          "currentStep": { "type": "number" },
+          "answers": { "type": "object", "default": {} }
+        },
         "required": ["answers"]
       },
       "CreateDivisionMeetingDto": {

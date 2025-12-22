@@ -1,11 +1,8 @@
 import z from 'zod'
 
 import {
-  commonApplicationAnswers,
   createDivisionEndingWithIdInput,
   createDivisionMeetingWithIdInput,
-  recallBankruptcyAnswers,
-  recallDeceasedAnswers,
   updateApplicationWithIdInput,
 } from '@dmr.is/legal-gazette/schemas'
 
@@ -53,10 +50,11 @@ export const applicationRouter = router({
   updateApplication: protectedProcedure
     .input(updateApplicationWithIdInput)
     .mutation(async ({ ctx, input }) => {
-      const { id, ...applicationAnswers } = input
+      const { id, currentStep, ...applicationAnswers } = input
       return await ctx.api.updateApplication({
         applicationId: input.id,
         updateApplicationDto: {
+          currentStep,
           answers: { ...applicationAnswers.answers },
         },
       })
@@ -117,7 +115,7 @@ export const applicationRouter = router({
         pageSize: input?.pageSize,
       })
     }),
-    getMyLegacyAdverts: protectedProcedure
+  getMyLegacyAdverts: protectedProcedure
     .input(getApplicationsSchema.optional())
     .query(async ({ ctx, input }) => {
       return await ctx.api.getMyLegacyAdverts({
