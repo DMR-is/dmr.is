@@ -9,7 +9,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { TASK_JOB_IDS } from '../../../../core/constants'
 import { TBRTransactionModel } from '../../../../models/tbr-transactions.model'
 import { ITBRService } from '../../../tbr/tbr.service.interface'
-import { PgAdvisoryXactLockService } from '../lock.service'
+import { PgAdvisoryLockService } from '../lock.service'
 import { IAdvertPaymentTaskService } from './advert-payment.task.interface'
 
 const LOGGING_CONTEXT = 'AdvertPaymentService'
@@ -22,7 +22,7 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
     @Inject(ITBRService) private readonly tbrService: ITBRService,
     @InjectModel(TBRTransactionModel)
     private readonly tbrTransactionModel: typeof TBRTransactionModel,
-    private readonly lock: PgAdvisoryXactLockService,
+    private readonly lock: PgAdvisoryLockService,
   ) {
     const tbrChunk = process.env.TBR_CHUNK_SIZE
       ? parseInt(process.env.TBR_CHUNK_SIZE, 10)
@@ -33,13 +33,16 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
     }
   }
 
-  @Cron('*/15 * * * *')
+  @Cron('*/15 * * * *', {
+    name: 'payment-job',
+  })
   async run() {
-    const { ran } = await this.lock.runWithXactLock(
+    const { ran } = await this.lock.runWithSessionLock(
       TASK_JOB_IDS.payment,
       async () => {
         await this.updateTBRPayments()
       },
+      { minHoldMs: 5000 },
     )
 
     if (!ran)
