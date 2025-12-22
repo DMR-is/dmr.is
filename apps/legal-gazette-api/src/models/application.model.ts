@@ -22,7 +22,7 @@ import {
 } from 'sequelize-typescript'
 import { isBase64 } from 'validator'
 
-import { ApiProperty, PickType } from '@nestjs/swagger'
+import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
 
 import {
   ApplicationTypeEnum,
@@ -281,7 +281,10 @@ export class CreateDivisionMeetingDto {
   communicationChannels!: CreateCommunicationChannelDto[]
 }
 
-export class CreateDivisionEndingDto extends CreateDivisionMeetingDto {
+export class CreateDivisionEndingDto extends OmitType(
+  CreateDivisionMeetingDto,
+  ['meetingLocation'],
+) {
   @ApiProperty({ type: Number })
   @IsNumber()
   declaredClaims!: number

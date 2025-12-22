@@ -79,7 +79,6 @@ export const CreateDivisionEnding = ({
     declaredClaims: -1,
     additionalText: '',
     meetingDate: '',
-    meetingLocation: '',
     communicationChannels: [],
     signature: {
       date: undefined,

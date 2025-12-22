@@ -4200,7 +4200,6 @@
         "properties": {
           "additionalText": { "type": "string" },
           "meetingDate": { "type": "string" },
-          "meetingLocation": { "type": "string" },
           "signature": { "$ref": "#/components/schemas/CreateSignatureDto" },
           "communicationChannels": {
             "type": "array",
@@ -4212,7 +4211,6 @@
         },
         "required": [
           "meetingDate",
-          "meetingLocation",
           "signature",
           "communicationChannels",
           "declaredClaims"
