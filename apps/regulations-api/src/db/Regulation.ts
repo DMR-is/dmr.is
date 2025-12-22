@@ -291,7 +291,7 @@ async function isMigrated(regulation: DB_Regulation) {
 
 // ---------------------------------------------------------------------------
 
-const getPdfVersion = (routePath: string) => API_URL + routePath + '/pdf/'
+const getPdfVersion = (routePath: string) => API_URL + '/' + routePath + '/pdf/'
 
 // ===========================================================================
 
