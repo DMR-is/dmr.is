@@ -14,7 +14,7 @@ import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../../models/advert-publication.model'
 import { StatusIdEnum } from '../../../../models/status.model'
 import { AdvertPublishedEvent } from '../../publications/events/advert-published.event'
-import { PgAdvisoryXactLockService } from '../lock.service'
+import { PgAdvisoryLockService } from '../lock.service'
 import { IPublishingTaskService } from './publishing.task.interface'
 
 const LOGGER_CONTEXT = 'PublishingTaskService'
@@ -28,7 +28,7 @@ export class PublishingTaskService implements IPublishingTaskService {
     private readonly publicationModel: typeof AdvertPublicationModel,
     private sequelize: Sequelize,
     private readonly eventEmitter: EventEmitter2,
-    private readonly lock: PgAdvisoryXactLockService,
+    private readonly lock: PgAdvisoryLockService,
   ) {}
 
   private async getNextPublicationNumber(
@@ -68,13 +68,16 @@ export class PublishingTaskService implements IPublishingTaskService {
     return publicationNumber
   }
 
-  @Cron(CronExpression.EVERY_HOUR)
+  @Cron(CronExpression.EVERY_HOUR, {
+    name: 'publishing-job',
+  })
   async run() {
-    const { ran } = await this.lock.runWithXactLock(
+    const { ran } = await this.lock.runWithSessionLock(
       TASK_JOB_IDS.publishing,
       async () => {
         await this.publishAdverts()
       },
+      { minHoldMs: 5000 },
     )
 
     if (!ran)
