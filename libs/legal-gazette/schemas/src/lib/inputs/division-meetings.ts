@@ -17,6 +17,7 @@ export const createDivisionEndingInput = createDivisionMeetingInput.extend({
   declaredClaims: z
     .number()
     .min(0, { message: 'Lýstar kröfur þurfa vera 0 eða hærri' }),
+  meetingLocation: z.string().optional(),
 })
 
 export const createDivisionMeetingWithIdInput =

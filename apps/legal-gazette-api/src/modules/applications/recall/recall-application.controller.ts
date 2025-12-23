@@ -68,4 +68,15 @@ export class RecallApplicationController {
   ): Promise<GetMinDateResponseDto> {
     return this.applicationService.getMinDateForDivisionMeeting(applicationId)
   }
+
+  @Get(':applicationId/divisionEnding/minDate')
+  @LGResponse({
+    operationId: 'getMinDateForDivisionEnding',
+    type: GetMinDateResponseDto,
+  })
+  async getMinDateForDivisionEnding(
+    @Param('applicationId') applicationId: string,
+  ): Promise<GetMinDateResponseDto> {
+    return this.applicationService.getMinDateForDivisionEnding(applicationId)
+  }
 }

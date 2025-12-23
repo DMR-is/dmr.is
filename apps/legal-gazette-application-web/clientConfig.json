@@ -2370,6 +2370,74 @@
         "tags": ["Legal gazette - application web API"]
       }
     },
+    "/api/v1/applications/recall/{applicationId}/divisionEnding/minDate": {
+      "get": {
+        "operationId": "getMinDateForDivisionEnding",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMinDateResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
     "/api/v1/applications/createApplication/{applicationType}": {
       "post": {
         "operationId": "createApplication",
@@ -4132,7 +4200,6 @@
         "properties": {
           "additionalText": { "type": "string" },
           "meetingDate": { "type": "string" },
-          "meetingLocation": { "type": "string" },
           "signature": { "$ref": "#/components/schemas/CreateSignatureDto" },
           "communicationChannels": {
             "type": "array",
@@ -4144,7 +4211,6 @@
         },
         "required": [
           "meetingDate",
-          "meetingLocation",
           "signature",
           "communicationChannels",
           "declaredClaims"

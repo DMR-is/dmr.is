@@ -75,7 +75,7 @@ export function getDivisionEndingTemplate(model: AdvertModel): string {
     `)
 
   const declaredClaimsCell = getTableCell(`
-      kr. ${declaredClaims.toLocaleString('is-IS').replaceAll(',', '.')},
+      kr. ${declaredClaims},
     `)
 
   const tableMarkup = `

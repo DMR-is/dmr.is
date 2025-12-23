@@ -24,6 +24,10 @@ export interface IRecallApplicationService {
   getMinDateForDivisionMeeting(
     applicationId: string,
   ): Promise<GetMinDateResponseDto>
+
+  getMinDateForDivisionEnding(
+    applicationId: string,
+  ): Promise<GetMinDateResponseDto>
 }
 
 export const IRecallApplicationService = Symbol('IRecallApplicationService')
