@@ -15,11 +15,20 @@ type Props = UseControllerProps & {
   excludeDates?: Date[]
   withTime?: boolean
   onChange?: (date: Date) => void
+  appearInline?: boolean
 }
 
 export const DatePickerController = (props: Props) => {
-  const { label, required, onChange, minDate, maxDate, excludeDates, ...rest } =
-    props
+  const {
+    label,
+    required,
+    onChange,
+    minDate,
+    maxDate,
+    excludeDates,
+    appearInline,
+    ...rest
+  } = props
   const { field, fieldState } = useController(rest)
 
   const error = fieldState.error
@@ -43,6 +52,7 @@ export const DatePickerController = (props: Props) => {
   return (
     <div onBlur={handleFirstBlur}>
       <DatePicker
+        appearInline={appearInline}
         maxYear={MAX_SELECTABLE_YEAR}
         minYear={MIN_SELECTABLE_YEAR}
         id={field.name}

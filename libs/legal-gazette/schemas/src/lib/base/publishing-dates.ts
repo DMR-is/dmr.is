@@ -15,6 +15,21 @@ const validateOrder = (dates: string[]) => {
   })
 }
 
+const validateMinimumDaysBetween = (dates: string[]) => {
+  return dates.every((date, index) => {
+    if (index === 0) return true
+    const previousDate = new Date(dates[index - 1])
+    const currentDate = new Date(date)
+
+    previousDate.setHours(0, 0, 0, 0)
+    currentDate.setHours(0, 0, 0, 0)
+
+    const timeDifference = currentDate.getTime() - previousDate.getTime()
+    const daysDifference = timeDifference / (1000 * 60 * 60 * 24)
+    return daysDifference >= 1
+  })
+}
+
 export const publishingDatesSchema = z.array(z.iso.datetime()).optional()
 
 export const publishingDatesSchemaRefined = z
@@ -30,8 +45,11 @@ export const publishingDatesSchemaRefined = z
   .refine(validateFuture, {
     message: 'Birtingardagar verða að vera í framtíðinni',
   })
+  .refine(validateMinimumDaysBetween, {
+    message: 'Að minnsta kosti einn dagur verður að vera á milli birtingardaga',
+  })
   .refine(validateOrder, {
-    message: 'Birtingardagar verða vera í réttri röð frá fyrsta til síðasta',
+    message: 'Birtingardagar verða vera í réttri röð',
   })
 
 export const publishingDatesRecallSchemaRefined = z
@@ -56,6 +74,9 @@ export const publishingDatesRecallSchemaRefined = z
   .refine(validateFuture, {
     message: 'Birtingardagar verða að vera í framtíðinni',
   })
+  .refine(validateMinimumDaysBetween, {
+    message: 'Að minnsta kosti einn dagur verður að vera á milli birtingardaga',
+  })
   .refine(validateOrder, {
-    message: 'Birtingardagar verða vera í réttri röð frá fyrsta til síðasta',
+    message: 'Birtingardagar verða vera í réttri röð',
   })

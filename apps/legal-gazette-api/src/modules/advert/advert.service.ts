@@ -1,4 +1,4 @@
-import { Op, Order, WhereOptions } from 'sequelize'
+import { IncludeOptions, Op, Order, WhereOptions } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
@@ -192,6 +192,29 @@ export class AdvertService implements IAdvertService {
   async createAdvert(
     body: CreateAdvertInternalDto,
   ): Promise<AdvertDetailedDto> {
+    const include: IncludeOptions[] = []
+
+    if (body.settlement) {
+      include.push({
+        model: SettlementModel,
+        as: 'settlement',
+      })
+    }
+
+    if (body.signature) {
+      include.push({
+        model: SignatureModel,
+        as: 'signature',
+      })
+    }
+
+    if (body.communicationChannels) {
+      include.push({
+        model: CommunicationChannelModel,
+        as: 'communicationChannels',
+      })
+    }
+
     return await this.sequelize.transaction(async (t) => {
       if (body.scheduledAt.length === 0) {
         this.logger.warn('Tried to create advert without publication dates', {
@@ -260,20 +283,7 @@ export class AdvertService implements IAdvertService {
             : undefined,
         },
         {
-          include: [
-            {
-              model: SignatureModel,
-              as: 'signature',
-            },
-            {
-              model: CommunicationChannelModel,
-              as: 'communicationChannels',
-            },
-            {
-              model: SettlementModel,
-              as: 'settlement',
-            },
-          ],
+          include: include,
           returning: true,
         },
       )

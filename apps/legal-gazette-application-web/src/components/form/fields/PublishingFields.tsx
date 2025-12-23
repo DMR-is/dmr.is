@@ -120,7 +120,7 @@ export const PublishingFields = ({
             {signatureError && (
               <AlertMessage
                 type="error"
-                title="Birtingardagar ekki útfylltir"
+                title="Birtingardagar ekki rétt útfylltir"
                 message={signatureError.message}
               />
             )}
