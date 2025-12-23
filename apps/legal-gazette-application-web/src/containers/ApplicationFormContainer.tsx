@@ -32,8 +32,8 @@ export function ApplicationFormContainer({ applicationId, type }: Props) {
   let Component = (
     <AlertMessage
       type="error"
-      title="Tegund umsóknar finnst ekki"
-      message="Athugaðu hvort tegund umsóknar sé rétt í slóðinni"
+      title="Tegund auglýsingar finnst ekki"
+      message="Athugaðu hvort tegund auglýsingar sé rétt í slóðinni"
     />
   )
 

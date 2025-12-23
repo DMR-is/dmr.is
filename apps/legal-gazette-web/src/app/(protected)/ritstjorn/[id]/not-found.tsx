@@ -31,7 +31,7 @@ export default function NotFound() {
             preTextIconType="outline"
             variant="primary"
           >
-            Til baka í auglýsingar
+            Til baka
           </Button>
         </LinkV2>
       </Box>

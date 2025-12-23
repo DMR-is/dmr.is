@@ -142,16 +142,16 @@ export class ApplicationModel extends BaseModel<
 
   get title() {
     if (this.applicationType === ApplicationTypeEnum.RECALL_DECEASED) {
-      return 'Innköllun dánarbús'
+      return 'Dánarbú'
     }
 
     if (this.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY) {
-      return 'Innköllun þrotabús'
+      return 'Þrotabú'
     }
 
     const type = get(this.answers, 'fields.type.title', '')
 
-    return `${type || 'Almenn umsókn'}`
+    return `${type || 'Almenn auglýsing'}`
   }
   getSubtitle = () => {
     if (

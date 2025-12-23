@@ -14,16 +14,16 @@ type Tab = {
 }
 
 const tabs: Tab[] = [
-  { id: 'applications', label: 'Umsóknir', href: '/umsoknir' },
-  { id: 'adverts', label: 'Eldri auglýsingar', href: '/auglysingar' },
+  { id: 'applications', label: 'Mínar auglýsingar', href: '/umsoknir' },
+  { id: 'olderAdverts', label: 'Eldri auglýsingar', href: '/eldriauglysingar' },
 ]
 
 export const TabNav = () => {
   const pathname = usePathname()
 
   const getActiveTab = () => {
-    if (pathname === '/auglysingar') {
-      return 'adverts'
+    if (pathname === '/eldriauglysingar') {
+      return 'olderAdverts'
     }
     return 'applications'
   }
