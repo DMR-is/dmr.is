@@ -36,7 +36,7 @@ export const ApplicationList = ({
               <ApplicationCard application={application} key={i} />
             ))}
             {applications.length === 0 && (
-              <Text>Þú hefur ekki atofnað neinar auglýsingar ennþá.</Text>
+              <Text>Þú hefur ekki stofnað neinar auglýsingar ennþá.</Text>
             )}
             {paging.totalPages > 1 && (
               <Pagination
