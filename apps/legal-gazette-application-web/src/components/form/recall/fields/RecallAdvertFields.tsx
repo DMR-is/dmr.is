@@ -3,17 +3,22 @@
 import { useFormContext } from 'react-hook-form'
 
 import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { GridColumn, GridRow, Stack } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
+import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
 
 export const RecallAdvertFields = () => {
+  const trpc = useTRPC()
   const { getValues } = useFormContext<RecallApplicationWebSchema>()
 
-  const { applicationId, courtOptions } = getValues('metadata')
+  const { applicationId } = getValues('metadata')
+
+  const { data: courtOptions } = useQuery(trpc.getCourtDistricts.queryOptions())
 
   const { updateApplication, debouncedUpdateApplication } =
     useUpdateApplication({
@@ -26,7 +31,12 @@ export const RecallAdvertFields = () => {
       <GridRow rowGap={[2, 3]}>
         <GridColumn span={['12/12', '6/12']}>
           <SelectController
-            options={courtOptions}
+            options={
+              courtOptions?.courtDistricts.map((court) => ({
+                label: court.title,
+                value: court.id,
+              })) || []
+            }
             name="fields.courtAndJudgmentFields.courtDistrictId"
             label="Dómstóll"
             required
@@ -35,7 +45,9 @@ export const RecallAdvertFields = () => {
                 {
                   fields: {
                     courtAndJudgmentFields: {
-                      courtDistrictId: val,
+                      courtDistrict: courtOptions?.courtDistricts.find(
+                        (option) => option.id === val,
+                      ),
                     },
                   },
                 },

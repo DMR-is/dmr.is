@@ -4,7 +4,6 @@ import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
 import { CommonForm } from '../components/form/common/CommonForm'
-import { RecallForm } from '../components/form/recall/RecallForm'
 import { ApplicationDetailedDto, ApplicationStatusEnum } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
 import { ApplicationSubmittedContainer } from './ApplicationSubmittedContainer'

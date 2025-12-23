@@ -336,3 +336,8 @@ export class IslandIsSubmitApplicationDto extends PickType(
   @IsDateString(undefined, { each: true })
   publishingDates!: string[]
 }
+
+export class GetHTMLPreview {
+  @ApiProperty({ type: String })
+  preview!: string
+}

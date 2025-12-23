@@ -1,109 +1,76 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { isEmpty } from 'class-validator'
 
-import { InternalServerErrorException } from '@nestjs/common'
-
 import { SettlementType } from '@dmr.is/legal-gazette/schemas'
-import { getLogger } from '@dmr.is/logging'
 import { formatDate } from '@dmr.is/utils'
 
 import { AdvertModel } from '../../../models/advert.model'
 import { getElement, getTableCell, getTableHeaderCell } from '../element'
 
-const LOGGING_CONTEXT = 'RecallDeceasedTemplate'
-const logger = getLogger(LOGGING_CONTEXT)
-
-function validateRecallDeceasedModel(model: AdvertModel) {
-  if (!model.settlement) {
-    logger.error('Settlement information is missing', {
-      context: LOGGING_CONTEXT,
-    })
-
-    return false
-  }
-
-  if (!model.settlement.dateOfDeath) {
-    logger.error('Date of death is missing', { context: LOGGING_CONTEXT })
-
-    return false
-  }
-
-  if (!model.judgementDate) {
-    logger.error('Judgement date is missing', { context: LOGGING_CONTEXT })
-
-    return false
-  }
-
-  return true
-}
-
 export function getRecallDeceasedTemplate(model: AdvertModel): string {
-  const isValid = validateRecallDeceasedModel(model)
-
-  if (!isValid) {
-    throw new InternalServerErrorException(
-      'Invalid model provided for recall deceased template',
-    )
-  }
-
-  const judgementDate = model.judgementDate!
-  const name = model.settlement!.name
-  const dateOfDeath = model.settlement!.dateOfDeath!
-  const nationalId = model.settlement!.nationalId
-  const address = model.settlement!.address
-  const liquidatorLocation = model.settlement!.liquidatorLocation
+  // Render what we can, gracefully handle missing data
+  const judgementDate = model.judgementDate
+  const name = model.settlement?.name
+  const dateOfDeath = model.settlement?.dateOfDeath
+  const nationalId = model.settlement?.nationalId
+  const address = model.settlement?.address
+  const liquidatorLocation = model.settlement?.liquidatorLocation
 
   const intro = getElement(
-    `Með úrskurði ${model.courtDistrict?.title} uppkveðnum ${formatDate(judgementDate, 'dd. MMMM yyyy')} var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:`,
+    `Með úrskurði ${model.courtDistrict?.title || ''} uppkveðnum ${judgementDate ? formatDate(judgementDate, 'dd. MMMM yyyy') : ''} var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:`,
   )
   const tableHeaderName = getTableHeaderCell('Dánarbú, nafn:')
   const tableHeaderDateOfDeath = getTableHeaderCell('Dánardagur:')
 
   const tableCellName = getTableCell(`
-    ${name}, <br />
-    kt. ${nationalId}, <br />
+    ${name || ''}, <br />
+    kt. ${nationalId || ''}, <br />
     síðasta heimilisfang:<br />
-    ${address}
+    ${address || ''}
     `)
   const tableCellDateOfDeath = getTableCell(
-    formatDate(dateOfDeath, 'dd. MMMM yyyy'),
+    dateOfDeath ? formatDate(dateOfDeath, 'dd. MMMM yyyy') : '',
   )
 
   let settlementText = ''
-  switch (model.settlement!.type) {
-    case SettlementType.DEFAULT:
-      settlementText = ''
-      break
-    case SettlementType.UNDIVIDED:
-      settlementText = `${name} sat í óskiptu búi eftir [NAFN & KT MAKA] sem lést þann [DÁNARDAGUR MAKA].`
-      break
-    case SettlementType.OWNER: {
-      const companies = model.settlement!.companies
-      if (isEmpty(companies) || companies?.length === 0) {
+  if (model.settlement?.type) {
+    switch (model.settlement.type) {
+      case SettlementType.DEFAULT:
         settlementText = ''
         break
-      }
+      case SettlementType.UNDIVIDED:
+        settlementText = `${name || ''} sat í óskiptu búi eftir  sem lést þann .`
+        break
+      case SettlementType.OWNER: {
+        const companies = model.settlement.companies
+        if (isEmpty(companies) || companies?.length === 0) {
+          settlementText = ''
+          break
+        }
 
-      if (companies!.length === 1) {
-        const company = companies![0]
-        settlementText = `Athygli er vakin á því að dánarbúið ber ótakmarkaða ábyrgð á skuldbindingum félagsins ${company.companyName} kt. ${company.companyNationalId}.`
+        if (companies && companies.length === 1) {
+          const company = companies[0]
+          settlementText = `Athygli er vakin á því að dánarbúið ber ótakmarkaða ábyrgð á skuldbindingum félagsins ${company.companyName || ''} kt. ${company.companyNationalId || ''}.`
+          break
+        }
+
+        if (companies) {
+          settlementText = `Athygli er vakin á því að dánarbúið ber ótakmarkaða ábyrgð á skuldbindingum félaga`
+          const companyList = companies
+            .map(
+              (company) =>
+                ` ${company.companyName || ''} kt. ${company.companyNationalId || ''}`,
+            )
+            .join(', ')
+          settlementText += `: ${companyList}.`
+        }
         break
       }
-
-      settlementText = `Athygli er vakin á því að dánarbúið ber ótakmarkaða ábyrgð á skuldbindingum félaga`
-      const companyList = companies!
-        .map(
-          (company) =>
-            ` ${company.companyName} kt. ${company.companyNationalId}`,
-        )
-        .join(', ')
-      settlementText += `: ${companyList}.`
-      break
     }
   }
 
   const outro = getElement(
-    `Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur framangreindu dánarbúi eða telja til eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu þessarar innköllunar. Kröfulýsingar skulu sendar skiptastjóra að ${liquidatorLocation}.`,
+    `Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur framangreindu dánarbúi eða telja til eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu þessarar innköllunar. Kröfulýsingar skulu sendar skiptastjóra að ${liquidatorLocation || ''}.`,
   )
 
   return `

@@ -1,4 +1,5 @@
 import deepmerge from 'deepmerge'
+import get from 'lodash/get'
 import { Op } from 'sequelize'
 import z from 'zod'
 
@@ -30,6 +31,8 @@ import {
   RECALL_CATEGORY_ID,
   RECALL_DECEASED_ADVERT_TYPE_ID,
 } from '../../core/constants'
+import { getAdvertHTMLMarkupPreview } from '../../core/templates/html'
+import { mapIndexToVersion } from '../../core/utils'
 import {
   AdvertTemplateType,
   CreateAdvertInternalDto,
@@ -42,6 +45,7 @@ import {
   CreateDivisionEndingDto,
   CreateDivisionMeetingDto,
   GetApplicationsDto,
+  GetHTMLPreview,
   IslandIsSubmitApplicationDto,
   UpdateApplicationDto,
 } from '../../models/application.model'
@@ -68,6 +72,130 @@ export class ApplicationService implements IApplicationService {
     @InjectModel(CategoryModel)
     private readonly categoryModel: typeof CategoryModel,
   ) {}
+  async previewApplication(
+    applicationId: string,
+    user: DMRUser,
+  ): Promise<GetHTMLPreview> {
+    const application = await this.applicationModel.findOneOrThrow({
+      where: { id: applicationId, submittedByNationalId: user.nationalId },
+    })
+
+    const typeId =
+      application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
+        ? RECALL_BANKRUPTCY_ADVERT_TYPE_ID
+        : ApplicationTypeEnum.RECALL_DECEASED ===
+            ApplicationTypeEnum.RECALL_DECEASED
+          ? RECALL_DECEASED_ADVERT_TYPE_ID
+          : get(application.answers, 'fields.type.id')
+
+    const publications = get(application.answers, 'publishingDates', []).map(
+      (date, i) => ({
+        scheduledAt: date,
+        versionLetter: mapIndexToVersion(i),
+      }),
+    )
+
+    const signatureDate = get(application.answers, 'signature.date')
+
+    const companies = get(
+      application.answers,
+      'fields.settlementFields.companies',
+      [],
+    ).map((company) => ({
+      companyName: company.companyName,
+      companyId: company.companyNationalId,
+    }))
+
+    const previewHTML = getAdvertHTMLMarkupPreview({
+      title: application.title,
+      templateType:
+        application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
+          ? AdvertTemplateType.RECALL_BANKRUPTCY
+          : AdvertTemplateType.RECALL_DECEASED,
+      typeId: typeId,
+      additionalText: get(application.answers, 'additionalText'),
+      content: get(application.answers, 'fields.html', undefined),
+      publications: publications,
+      publicationNumber: null,
+      signature: {
+        name: get(application.answers, 'signature.name', null),
+        date: signatureDate ? new Date(signatureDate) : null,
+        location: get(application.answers, 'signature.location', null),
+        onBehalfOf: get(application.answers, 'signature.onBehalfOf', null),
+      },
+      judgementDate: get(
+        application.answers,
+        'fields.courtAndJudgmentFields.judgmentDate',
+      ),
+      courtDistrict: {
+        title: get(
+          application.answers,
+          'fields.courtAndJudgmentFields.courtDistrict.title',
+          undefined,
+        ),
+      },
+      settlement: {
+        name: get(
+          application.answers,
+          'fields.settlementFields.name',
+          undefined,
+        ),
+        nationalId: get(
+          application.answers,
+          'fields.settlementFields.nationalId',
+          undefined,
+        ),
+        type: get(
+          application.answers,
+          'fields.settlementFields.type',
+          undefined,
+        ),
+        liquidatorName: get(
+          application.answers,
+          'fields.settlementFields.liquidatorName',
+          undefined,
+        ),
+        liquidatorLocation: get(
+          application.answers,
+          'fields.settlementFields.liquidatorLocation',
+          undefined,
+        ),
+        liquidatorRecallStatementLocation: get(
+          application.answers,
+          'fields.settlementFields.liquidatorRecallStatementLocation',
+          undefined,
+        ),
+        liquidatorRecallStatementType: get(
+          application.answers,
+          'fields.settlementFields.liquidatorRecallStatementType',
+          undefined,
+        ),
+        deadline: get(
+          application.answers,
+          'fields.settlementFields.deadlineDate',
+          undefined,
+        ),
+        dateOfDeath: get(
+          application.answers,
+          'fields.settlementFields.dateOfDeath',
+          undefined,
+        ),
+        address: get(
+          application.answers,
+          'fields.settlementFields.address',
+          undefined,
+        ),
+        declaredClaims: get(
+          application.answers,
+          'fields.settlementFields.declaredClaims',
+          undefined,
+        ),
+        companies: companies,
+      },
+    })
+
+    return { preview: previewHTML }
+  }
 
   private async submitCommonApplication(
     application: ApplicationModel,
@@ -188,7 +316,7 @@ export class ApplicationService implements IApplicationService {
       divisionMeetingLocation:
         data.fields.divisionMeetingFields?.meetingLocation,
       judgementDate: data.fields.courtAndJudgmentFields?.judgmentDate,
-      courtDistrictId: data.fields.courtAndJudgmentFields?.courtDistrictId,
+      courtDistrictId: data.fields.courtAndJudgmentFields?.courtDistrict.id,
       communicationChannels: data.communicationChannels,
       scheduledAt: data.publishingDates,
       settlement: {

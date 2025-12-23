@@ -8,6 +8,7 @@ import {
   CreateDivisionEndingDto,
   CreateDivisionMeetingDto,
   GetApplicationsDto,
+  GetHTMLPreview,
   IslandIsSubmitApplicationDto,
   UpdateApplicationDto,
 } from '../../models/application.model'
@@ -57,6 +58,11 @@ export interface IApplicationService {
     body: CreateDivisionEndingDto,
     submittee: DMRUser,
   ): Promise<void>
+
+  previewApplication(
+    applicationId: string,
+    user: DMRUser,
+  ): Promise<GetHTMLPreview>
 }
 
 export const IApplicationService = Symbol('IApplicationService')

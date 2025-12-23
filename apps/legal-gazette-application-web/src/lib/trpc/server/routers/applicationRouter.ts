@@ -47,6 +47,9 @@ export const applicationRouter = router({
 
     return { types, categories, courtDistricts }
   }),
+  getCourtDistricts: protectedProcedure.query(async ({ ctx }) => {
+    return await ctx.api.getCourtDistricts()
+  }),
   updateApplication: protectedProcedure
     .input(updateApplicationWithIdInput)
     .mutation(async ({ ctx, input }) => {
@@ -122,5 +125,13 @@ export const applicationRouter = router({
         page: input?.page,
         pageSize: input?.pageSize,
       })
+    }),
+  getPreviewHTML: protectedProcedure
+    .input(z.object({ applicationId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const previewHTML = await ctx.api.previewApplication({
+        applicationId: input.applicationId,
+      })
+      return previewHTML
     }),
 })
