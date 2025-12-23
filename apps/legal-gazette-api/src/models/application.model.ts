@@ -18,6 +18,7 @@ import {
   DataType,
   DefaultScope,
   ForeignKey,
+  HasMany,
 } from 'sequelize-typescript'
 import { isBase64 } from 'validator'
 
@@ -34,6 +35,7 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'
+import { AdvertModel } from './advert.model'
 import { CaseModel } from './case.model'
 import { CreateCommunicationChannelDto } from './communication-channel.model'
 import { SettlementModel } from './settlement.model'
@@ -70,6 +72,7 @@ type BaseApplicationAttributes = {
   applicationType: ApplicationTypeEnum
   status: ApplicationStatusEnum
   answers: ApplicationAnswers
+  adverts?: AdvertModel[]
 }
 
 export type ApplicationAttributes = BaseApplicationAttributes &
@@ -139,6 +142,9 @@ export class ApplicationModel extends BaseModel<
 
   @BelongsTo(() => SettlementModel)
   settlement?: SettlementModel
+
+  @HasMany(() => AdvertModel)
+  adverts?: AdvertModel[]
 
   get title() {
     if (this.applicationType === ApplicationTypeEnum.RECALL_DECEASED) {
@@ -317,4 +323,10 @@ export class IslandIsSubmitApplicationDto extends PickType(
   @ArrayMaxSize(3)
   @IsDateString(undefined, { each: true })
   publishingDates!: string[]
+}
+
+export class GetMinDateResponseDto {
+  @ApiProperty({ type: String })
+  @IsDateString()
+  minDate!: string
 }

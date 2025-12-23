@@ -25,12 +25,9 @@ import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
-import { CurrentNationalRegistryPersonGuard } from '../../core/guards/current-submitte.guard'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
-  CreateDivisionEndingDto,
-  CreateDivisionMeetingDto,
   GetApplicationsDto,
   UpdateApplicationDto,
 } from '../../models/application.model'
@@ -118,35 +115,5 @@ export class ApplicationController {
     @CurrentUser() user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
     return this.applicationService.updateApplication(applicationId, body, user)
-  }
-
-  @Post(':applicationId/addDivisionMeetingAdvertToApplication')
-  @LGResponse({ operationId: 'addDivisionMeetingAdvertToApplication' })
-  @UseGuards(CurrentNationalRegistryPersonGuard)
-  async addDivisionMeetingAdvert(
-    @Param('applicationId') applicationId: string,
-    @Body() body: CreateDivisionMeetingDto,
-    @CurrentUser() user: DMRUser,
-  ): Promise<void> {
-    return this.applicationService.addDivisionMeetingAdvertToApplication(
-      applicationId,
-      body,
-      user,
-    )
-  }
-
-  @Post(':applicationId/addDivisionEndingAdvertToApplication')
-  @LGResponse({ operationId: 'addDivisionEndingAdvertToApplication' })
-  @UseGuards(CurrentNationalRegistryPersonGuard)
-  async addDivisionEndingAdvertToApplication(
-    @Param('applicationId') applicationId: string,
-    @Body() body: CreateDivisionEndingDto,
-    @CurrentUser() user: DMRUser,
-  ): Promise<void> {
-    return this.applicationService.addDivisionEndingAdvertToApplication(
-      applicationId,
-      body,
-      user,
-    )
   }
 }
