@@ -4258,6 +4258,10 @@
           "subtitle": { "type": "string" },
           "type": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
+          },
+          "publications": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
           }
         },
         "required": [
@@ -4315,6 +4319,10 @@
           "subtitle": { "type": "string" },
           "type": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
+          },
+          "publications": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
           },
           "answers": { "type": "object", "default": {} }
         },

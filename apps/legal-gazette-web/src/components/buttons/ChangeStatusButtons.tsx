@@ -90,7 +90,7 @@ export const ChangeStatusButtons = ({
   const nextText = useMemo(() => {
     switch (currentStatus.id) {
       case StatusIdEnum.SUBMITTED:
-        return 'Færa aftur í vinnslu'
+        return 'Færa í vinnslu'
       case StatusIdEnum.IN_PROGRESS:
         return 'Færa í tilbúið til útgáfu'
       default:
