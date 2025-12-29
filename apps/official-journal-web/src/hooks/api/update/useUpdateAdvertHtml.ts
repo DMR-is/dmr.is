@@ -1,10 +1,7 @@
-import { useSession } from 'next-auth/react'
-
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { getDmrClient } from '../../../lib/api/createClient'
-import { swrFetcher } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants'
 
 type UdpateAdvertHtmlTriggerArgs = {
   advertHtml: string
@@ -23,29 +20,27 @@ type UseUpdateAdvertHtmlParams = {
 }
 
 export const useUpdateAdvertHtml = ({
-  options,
   caseId,
+  options,
 }: UseUpdateAdvertHtmlParams) => {
-  const { data: session } = useSession()
-  const dmrClient = getDmrClient(session?.idToken as string)
-
-  const { data, error, isMutating, trigger } = swrMutation<
+  const { trigger, isMutating, error, reset } = swrMutation<
     Response,
     Error,
     Key,
     UdpateAdvertHtmlTriggerArgs
   >(
-    session && caseId ? ['updateAdvertHtml', session?.user, caseId] : null,
-    (_url: any, { arg }: { arg: UdpateAdvertHtmlTriggerArgs }) =>
-      swrFetcher({
-        func: () =>
-          dmrClient.updateAdvertHtml({
-            id: caseId,
-            updateAdvertHtmlBody: {
-              advertHtml: arg.advertHtml,
-            },
-          }),
-      }) as unknown as Promise<Response>,
+    APIRoutes.UpdateAdvertHtml,
+    (url: string, { arg }: { arg: UdpateAdvertHtmlTriggerArgs }) =>
+      fetcher<Response, UdpateAdvertHtmlTriggerArgs>(
+        url.replace(':id', caseId),
+        {
+          arg: {
+            withAuth: true,
+            method: 'POST',
+            body: arg,
+          },
+        },
+      ),
     {
       ...options,
       throwOnError: false,
@@ -53,9 +48,9 @@ export const useUpdateAdvertHtml = ({
   )
 
   return {
-    data,
     error,
-    isMutating,
     trigger,
+    isMutating,
+    reset,
   }
 }
