@@ -143,7 +143,7 @@ export const pdfCss = `
 
   p,
   li {
-    break-inside: avoid-column;
+    page-break-inside: avoid;
   }
 
   pre {
