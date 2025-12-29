@@ -73,6 +73,7 @@ export const SignatureFields = () => {
           </GridColumn>
           <GridColumn span={['12/12', '6/12']}>
             <DatePickerController
+              appearInline={true}
               name="signature.date"
               label="Dagsetning undirritunar"
               onChange={(date) =>

@@ -1,14 +1,12 @@
 import { Module } from '@nestjs/common'
 
-import { NationalRegistryModule } from '@dmr.is/clients/national-registry'
-
-import { CurrentNationalRegistryPersonGuard } from '../../core/guards/current-submitte.guard'
+import { RecallApplicationController } from './recall/recall-application.controller'
+import { RecallApplicationProviderModule } from './recall/recall-application.provider.module'
 import { ApplicationController } from './application.controller'
 import { ApplicationProviderModule } from './application.provider.module'
 @Module({
-  imports: [ApplicationProviderModule, NationalRegistryModule],
-  controllers: [ApplicationController],
-  providers: [CurrentNationalRegistryPersonGuard],
+  imports: [RecallApplicationProviderModule, ApplicationProviderModule],
+  controllers: [RecallApplicationController, ApplicationController],
   exports: [],
 })
 export class ApplictionControllerModule {}

@@ -18,10 +18,11 @@ import {
   DataType,
   DefaultScope,
   ForeignKey,
+  HasMany,
 } from 'sequelize-typescript'
 import { isBase64 } from 'validator'
 
-import { ApiProperty, PickType } from '@nestjs/swagger'
+import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
 
 import {
   ApplicationTypeEnum,
@@ -34,6 +35,7 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'
+import { AdvertModel } from './advert.model'
 import { CaseModel } from './case.model'
 import { CreateCommunicationChannelDto } from './communication-channel.model'
 import { SettlementModel } from './settlement.model'
@@ -72,6 +74,7 @@ type BaseApplicationAttributes = {
   applicationType: ApplicationTypeEnum
   status: ApplicationStatusEnum
   answers: ApplicationAnswers
+  adverts?: AdvertModel[]
   currentStep: number
 }
 
@@ -157,18 +160,21 @@ export class ApplicationModel extends BaseModel<
   @BelongsTo(() => SettlementModel)
   settlement?: SettlementModel
 
+  @HasMany(() => AdvertModel)
+  adverts?: AdvertModel[]
+
   get title() {
     if (this.applicationType === ApplicationTypeEnum.RECALL_DECEASED) {
-      return 'Innköllun dánarbús'
+      return 'Dánarbú'
     }
 
     if (this.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY) {
-      return 'Innköllun þrotabús'
+      return 'Þrotabú'
     }
 
     const type = get(this.answers, 'fields.type.title', '')
 
-    return `${type || 'Almenn umsókn'}`
+    return `${type || 'Almenn auglýsing'}`
   }
   getSubtitle = () => {
     if (
@@ -305,7 +311,10 @@ export class CreateDivisionMeetingDto {
   communicationChannels!: CreateCommunicationChannelDto[]
 }
 
-export class CreateDivisionEndingDto extends CreateDivisionMeetingDto {
+export class CreateDivisionEndingDto extends OmitType(
+  CreateDivisionMeetingDto,
+  ['meetingLocation'],
+) {
   @ApiProperty({ type: Number })
   @IsNumber()
   declaredClaims!: number
@@ -352,4 +361,10 @@ export class IslandIsSubmitApplicationDto extends PickType(
 export class GetHTMLPreview {
   @ApiProperty({ type: String })
   preview!: string
+}
+
+export class GetMinDateResponseDto {
+  @ApiProperty({ type: String })
+  @IsDateString()
+  minDate!: string
 }

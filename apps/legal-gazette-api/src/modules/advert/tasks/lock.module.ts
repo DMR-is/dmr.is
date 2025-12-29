@@ -1,9 +1,9 @@
-import { Global, Module } from '@nestjs/common'
+import { Module } from '@nestjs/common'
 
-import { PgAdvisoryXactLockService } from './lock.service'
+import { PgAdvisoryLockService } from './lock.service'
 
 @Module({
-  providers: [PgAdvisoryXactLockService],
-  exports: [PgAdvisoryXactLockService],
+  providers: [PgAdvisoryLockService],
+  exports: [PgAdvisoryLockService],
 })
 export class PgAdvisoryLockModule {}

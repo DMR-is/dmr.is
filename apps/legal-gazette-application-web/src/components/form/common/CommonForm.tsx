@@ -61,10 +61,10 @@ export const CommonForm = ({ application, metadata }: CommonFormProps) => {
           <Stack space={[2, 3, 4]}>
             <Stack space={[1, 2]}>
               <Inline justifyContent="spaceBetween" alignY="top">
-                <Text variant="h2">Almenn umsókn</Text>
+                <Text variant="h2">Almenn auglýsing</Text>
                 <LinkV2 href={PageRoutes.APPLICATIONS}>
                   <Button preTextIcon="arrowBack" variant="text" size="small">
-                    Til baka í umsóknir
+                    Til baka
                   </Button>
                 </LinkV2>
               </Inline>

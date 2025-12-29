@@ -92,11 +92,25 @@ export const applicationRouter = router({
         applicationId: input.id,
       })
     }),
+  getMininumDateForDivisionMeeting: protectedProcedure
+    .input(z.object({ applicationId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return await ctx.api.getMinDateForDivisionMeeting({
+        applicationId: input.applicationId,
+      })
+    }),
+  getMinumDateForDivisionEnding: protectedProcedure
+    .input(z.object({ applicationId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return await ctx.api.getMinDateForDivisionEnding({
+        applicationId: input.applicationId,
+      })
+    }),
   addDivisionMeeting: protectedProcedure
     .input(createDivisionMeetingWithIdInput)
     .mutation(async ({ ctx, input }) => {
       const { applicationId, ...rest } = input
-      return await ctx.api.addDivisionMeetingAdvertToApplication({
+      return await ctx.api.addDivisionMeeting({
         applicationId: applicationId,
         createDivisionMeetingDto: rest,
       })
@@ -105,7 +119,7 @@ export const applicationRouter = router({
     .input(createDivisionEndingWithIdInput)
     .mutation(async ({ ctx, input }) => {
       const { applicationId, ...rest } = input
-      return await ctx.api.addDivisionEndingAdvertToApplication({
+      return await ctx.api.addDivisionEnding({
         applicationId: input.applicationId,
         createDivisionEndingDto: rest,
       })

@@ -10,8 +10,8 @@ export const UmsoknirHero = () => {
     <Box paddingY={[3, 4, 5, 6]}>
       <Hero
         variant="small"
-        title="Umsóknir Lögbirtingablaðsins"
-        description="Hér getur þú valið um hverskonar umsókn þú vilt senda inn til Lögbirtingablaðsins."
+        title="Lögbirtingablaðið - auglýsingar"
+        description="Hér getur þú valið um hverskonar auglýsingu þú vilt senda inn til Lögbirtingablaðsins."
         contentSpan={['12/12', '8/12']}
         imageSpan={['12/12', '3/12']}
         image={{

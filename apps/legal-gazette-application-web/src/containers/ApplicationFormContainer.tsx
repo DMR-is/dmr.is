@@ -12,17 +12,14 @@ import { RecallFormContainer } from './RecallFormContainer'
 import { useSuspenseQuery } from '@tanstack/react-query'
 
 type Props = {
-  application: ApplicationDetailedDto
+  applicationId: string
   type: ApplicationTypeEnum
 }
 
-export function ApplicationFormContainer({
-  application: initalApplication,
-  type,
-}: Props) {
+export function ApplicationFormContainer({ applicationId, type }: Props) {
   const trpc = useTRPC()
   const { data } = useSuspenseQuery(
-    trpc.getApplicationById.queryOptions({ id: initalApplication.id }),
+    trpc.getApplicationById.queryOptions({ id: applicationId }),
   )
 
   if (data.status !== ApplicationStatusEnum.DRAFT) {
@@ -32,8 +29,8 @@ export function ApplicationFormContainer({
   let Component = (
     <AlertMessage
       type="error"
-      title="Tegund umsóknar finnst ekki"
-      message="Athugaðu hvort tegund umsóknar sé rétt í slóðinni"
+      title="Tegund auglýsingar finnst ekki"
+      message="Athugaðu hvort tegund auglýsingar sé rétt í slóðinni"
     />
   )
 

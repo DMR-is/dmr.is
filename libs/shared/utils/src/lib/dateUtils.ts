@@ -29,7 +29,9 @@ export const isDateOnWeekendOrHoliday = (date: Date = new Date()) => {
   return isHoliday
 }
 
-export const getNextValidPublishingDate = (fromDate: Date = new Date()) => {
+export const getNextValidPublishingDate = (
+  fromDate: Date | undefined = new Date(),
+) => {
   const nextDate = new Date(fromDate)
   const today = new Date()
 

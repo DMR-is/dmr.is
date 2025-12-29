@@ -49,28 +49,31 @@ export const PageContainer = ({ advertCount }: Props) => {
     switch (tab) {
       case 'innsendar':
         setStatusOptions(
-          data.statuses
-            .filter(
-              (status) =>
-                StatusIdEnum.SUBMITTED === status.id ||
-                StatusIdEnum.IN_PROGRESS === status.id,
-            )
-            .map((opt) => ({
-              label: opt.title,
-              value: opt.id,
-            })),
+          data.statuses.flatMap((status) => {
+            if (
+              StatusIdEnum.SUBMITTED === status.id ||
+              StatusIdEnum.IN_PROGRESS === status.id
+            ) {
+              return {
+                label: status.title,
+                value: status.id,
+              }
+            }
+            return []
+          }),
         )
         break
       case 'utgafa':
         setStatusOptions(
-          data.statuses
-            .filter(
-              (status) => StatusIdEnum.READY_FOR_PUBLICATION === status.id,
-            )
-            .map((opt) => ({
-              label: opt.title,
-              value: opt.id,
-            })),
+          data.statuses.flatMap((status) => {
+            if (StatusIdEnum.READY_FOR_PUBLICATION === status.id) {
+              return {
+                label: status.title,
+                value: status.id,
+              }
+            }
+            return []
+          }),
         )
         break
       default:

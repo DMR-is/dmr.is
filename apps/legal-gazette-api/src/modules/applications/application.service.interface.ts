@@ -5,8 +5,6 @@ import { PagingQuery } from '@dmr.is/shared/dto'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
-  CreateDivisionEndingDto,
-  CreateDivisionMeetingDto,
   GetApplicationsDto,
   GetHTMLPreview,
   IslandIsSubmitApplicationDto,
@@ -46,18 +44,6 @@ export interface IApplicationService {
     body: UpdateApplicationDto,
     user: DMRUser,
   ): Promise<ApplicationDetailedDto>
-
-  addDivisionMeetingAdvertToApplication(
-    applicationId: string,
-    body: CreateDivisionMeetingDto,
-    submittee: DMRUser,
-  ): Promise<void>
-
-  addDivisionEndingAdvertToApplication(
-    applicationId: string,
-    body: CreateDivisionEndingDto,
-    submittee: DMRUser,
-  ): Promise<void>
 
   previewApplication(
     applicationId: string,

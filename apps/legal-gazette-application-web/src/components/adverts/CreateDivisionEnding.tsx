@@ -1,6 +1,7 @@
 'use client'
 import { useParams } from 'next/navigation'
 
+import { addYears } from 'date-fns'
 import get from 'lodash/get'
 import { useEffect, useState } from 'react'
 
@@ -21,6 +22,10 @@ import {
   Text,
   toast,
 } from '@dmr.is/ui/components/island-is'
+import {
+  getInvalidPublishingDatesInRange,
+  getNextValidPublishingDate,
+} from '@dmr.is/utils/date'
 
 import { CreateDivisionEndingDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
@@ -43,6 +48,12 @@ export const CreateDivisionEnding = ({
   const queryClient = useQueryClient()
   const { mutate: addDivisionEnding, isPending } = useMutation(
     trpc.addDivisionEnding.mutationOptions(),
+  )
+
+  const { data } = useQuery(
+    trpc.getMininumDateForDivisionMeeting.queryOptions({
+      applicationId: id as string,
+    }),
   )
 
   const { data: application } = useQuery(
@@ -68,7 +79,6 @@ export const CreateDivisionEnding = ({
     declaredClaims: -1,
     additionalText: '',
     meetingDate: '',
-    meetingLocation: '',
     communicationChannels: [],
     signature: {
       date: undefined,
@@ -124,6 +134,17 @@ export const CreateDivisionEnding = ({
     }
   }
 
+  const minDate = getNextValidPublishingDate(
+    data?.minDate ? new Date(data.minDate) : new Date(),
+  )
+
+  const maxDate = getNextValidPublishingDate(addYears(new Date(), 3))
+
+  const invalidPublishingDates = getInvalidPublishingDatesInRange(
+    minDate,
+    maxDate,
+  )
+
   return (
     <ModalBase
       baseId="create-division-ending-modal"
@@ -161,6 +182,11 @@ export const CreateDivisionEnding = ({
                         </GridColumn>
                         <GridColumn span={['12/12', '6/12']}>
                           <DatePicker
+                            minDate={minDate}
+                            maxDate={maxDate}
+                            excludeDates={invalidPublishingDates}
+                            maxYear={addYears(new Date(), 3).getFullYear()}
+                            minYear={new Date().getFullYear()}
                             required
                             size="sm"
                             locale="is"

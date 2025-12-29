@@ -13,7 +13,6 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { INationalRegistryService } from '@dmr.is/clients/national-registry'
 import {
   ApplicationTypeEnum,
   commonApplicationAnswersRefined,
@@ -64,8 +63,6 @@ export class ApplicationService implements IApplicationService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IAdvertService)
     private readonly advertService: IAdvertService,
-    @Inject(INationalRegistryService)
-    private readonly nationalRegistryService: INationalRegistryService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     @InjectModel(ApplicationModel)
     private readonly applicationModel: typeof ApplicationModel,

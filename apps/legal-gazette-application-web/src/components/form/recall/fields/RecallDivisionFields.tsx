@@ -35,7 +35,7 @@ export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
 
   const minDate = recallDates.length
     ? getNextValidPublishingDate(
-        addDays(new Date(recallDates[recallDates.length - 1]), ONE_WEEK * 9),
+        addDays(new Date(recallDates[0]), ONE_WEEK * 9),
       )
     : getNextValidPublishingDate()
   const maxDate = getNextValidPublishingDate(addYears(minDate, 5))

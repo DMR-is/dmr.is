@@ -70,7 +70,9 @@ export const ApplicationCard = ({ application }: Props) => {
                 iconType="outline"
                 size="small"
               >
-                Opna umsókn
+                {application.type === ApplicationTypeEnum.COMMON
+                  ? 'Opna auglýsingu'
+                  : 'Opna mál'}
               </Button>
             </LinkV2>
           </Inline>

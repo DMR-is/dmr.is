@@ -2164,6 +2164,280 @@
         "tags": ["Legal gazette - application web API"]
       }
     },
+    "/api/v1/applications/recall/{applicationId}/addDivisionMeeting": {
+      "post": {
+        "operationId": "addDivisionMeeting",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDivisionMeetingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/applications/recall/{applicationId}/addDivisionEnding": {
+      "post": {
+        "operationId": "addDivisionEnding",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDivisionEndingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/applications/recall/{applicationId}/divisionMeeting/minDate": {
+      "get": {
+        "operationId": "getMinDateForDivisionMeeting",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMinDateResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/applications/recall/{applicationId}/divisionEnding/minDate": {
+      "get": {
+        "operationId": "getMinDateForDivisionEnding",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMinDateResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
     "/api/v1/applications/createApplication/{applicationType}": {
       "post": {
         "operationId": "createApplication",
@@ -2576,6 +2850,7 @@
         "tags": ["Legal gazette - application web API"]
       }
     },
+<<<<<<< HEAD
     "/api/v1/applications/{applicationId}/addDivisionMeetingAdvertToApplication": {
       "post": {
         "operationId": "addDivisionMeetingAdvertToApplication",
@@ -2780,6 +3055,8 @@
         "tags": ["Legal gazette - application web API"]
       }
     },
+=======
+>>>>>>> origin/main
     "/api/v1/publications": {
       "get": {
         "operationId": "getPublications",
@@ -4104,6 +4381,53 @@
         },
         "required": ["cases", "paging"]
       },
+      "CreateDivisionMeetingDto": {
+        "type": "object",
+        "properties": {
+          "additionalText": { "type": "string" },
+          "meetingDate": { "type": "string" },
+          "meetingLocation": { "type": "string" },
+          "signature": { "$ref": "#/components/schemas/CreateSignatureDto" },
+          "communicationChannels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
+          }
+        },
+        "required": [
+          "meetingDate",
+          "meetingLocation",
+          "signature",
+          "communicationChannels"
+        ]
+      },
+      "CreateDivisionEndingDto": {
+        "type": "object",
+        "properties": {
+          "additionalText": { "type": "string" },
+          "meetingDate": { "type": "string" },
+          "signature": { "$ref": "#/components/schemas/CreateSignatureDto" },
+          "communicationChannels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
+          },
+          "declaredClaims": { "type": "number" }
+        },
+        "required": [
+          "meetingDate",
+          "signature",
+          "communicationChannels",
+          "declaredClaims"
+        ]
+      },
+      "GetMinDateResponseDto": {
+        "type": "object",
+        "properties": { "minDate": { "type": "string" } },
+        "required": ["minDate"]
+      },
       "ApplicationStatusEnum": {
         "type": "string",
         "enum": ["DRAFT", "IN_PROGRESS", "SUBMITTED", "FINISHED"]
@@ -4227,6 +4551,7 @@
         },
         "required": ["answers"]
       },
+<<<<<<< HEAD
       "CreateDivisionMeetingDto": {
         "type": "object",
         "properties": {
@@ -4276,6 +4601,8 @@
         "properties": { "preview": { "type": "string" } },
         "required": ["preview"]
       },
+=======
+>>>>>>> origin/main
       "PublishedPublicationDto": {
         "type": "object",
         "properties": {

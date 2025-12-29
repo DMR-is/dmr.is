@@ -31,6 +31,7 @@ export const LandingPageContent = () => {
       variant: 'primary',
     },
   ]
+
   if (session) {
     quickLinks.push({
       title: 'Gerast áskrifandi',

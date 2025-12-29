@@ -15,7 +15,7 @@ import { IssueModel } from '../../../../models/issues.model'
 import { IssueSettingsModel } from '../../../../models/issues-settings.model'
 import { pdfMetaTitle } from '../../pdf/lib/issue-templates'
 import { PdfService } from '../../pdf/pdf.service'
-import { PgAdvisoryXactLockService } from '../lock.service'
+import { PgAdvisoryLockService } from '../lock.service'
 import { IIssuesTask } from './issues.task.interface'
 
 const LOGGING_CONTEXT = 'IssuesTask'
@@ -31,7 +31,7 @@ export class IssuesTaskService implements IIssuesTask {
     @InjectModel(IssueSettingsModel)
     private readonly issueSettingsModel: typeof IssueSettingsModel,
     @Inject(PdfService) private readonly pdfService: PdfService,
-    private readonly lock: PgAdvisoryXactLockService,
+    private readonly lock: PgAdvisoryLockService,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_7AM, {
@@ -39,11 +39,12 @@ export class IssuesTaskService implements IIssuesTask {
     timeZone: 'Atlantic/Reykjavik',
   })
   async run() {
-    const { ran } = await this.lock.runWithXactLock(
+    const { ran } = await this.lock.runWithSessionLock(
       TASK_JOB_IDS.issues,
       async () => {
         await this.dailyIssueGeneration()
       },
+      { minHoldMs: 5000 },
     )
 
     if (!ran)

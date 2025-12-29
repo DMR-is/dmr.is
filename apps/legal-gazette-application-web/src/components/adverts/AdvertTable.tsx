@@ -39,13 +39,14 @@ export const AdvertTable = ({ adverts }: Props) => {
     <DataTable
       noDataMessage="Engar auglýsingar fundust"
       columns={columns}
-      rows={adverts.map((ad) => ({
+      rows={adverts.map((ad, index) => ({
         createdAt: formatDate(ad.createdAt, DateFormats.DEFAULT),
         category: ad.category.title,
         type: ad.type.title,
         title: ad.title,
         children: <AdvertPublications advert={ad} />,
         isExpandable: true,
+        startExpanded: index === adverts.length - 1,
       }))}
     />
   )
