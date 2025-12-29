@@ -23,44 +23,18 @@ export class SubscriberService implements ISubscriberService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async createSubscriber(user: DMRUser): Promise<SubscriberDto> {
-    const subscriber = await this.subscriberModel.create({
-      nationalId: user.nationalId,
-      name: user.name || null,
-      isActive: false,
-    })
-
-    const subscriberDto = subscriber.fromModel()
-
-    // Emit event for payment processing
-    this.eventEmitter.emit(LegalGazetteEvents.SUBSCRIBER_CREATED, {
-      subscriber: subscriberDto,
-      isLegacyMigration: false,
-    } as SubscriberCreatedEvent)
-
-    return subscriberDto
-  }
-
   async getUserByNationalId(user: DMRUser): Promise<SubscriberDto> {
     // Check existing subscriber
-    const subscriber = await this.subscriberModel.findOne({
+    const [subscriber] = await this.subscriberModel.findOrCreate({
       where: { nationalId: user.nationalId },
+      defaults: {
+        nationalId: user.nationalId,
+        name: user.name || null,
+        isActive: false,
+      },
     })
 
-    if (subscriber) {
-      return subscriber.fromModel()
-    }
-
-    // Create new inactive subscriber
-    const newSubscriber = await this.createSubscriber(user)
-
-    if (!newSubscriber) {
-      throw new NotFoundException(
-        `Subscriber not found and could not be created.`,
-      )
-    }
-
-    return newSubscriber
+    return subscriber.fromModel()
   }
   async createSubscriptionForUser(user: DMRUser): Promise<MutationResponse> {
     const subscriber = await this.subscriberModel.findOne({
@@ -82,6 +56,11 @@ export class SubscriberService implements ISubscriberService {
         subscriber.subscribedFrom = new Date()
       }
       await subscriber.save()
+
+      // Emit event for payment processing
+      this.eventEmitter.emit(LegalGazetteEvents.SUBSCRIBER_CREATED, {
+        subscriber: subscriber.fromModel(),
+      } as SubscriberCreatedEvent)
 
       return { success: true }
     } catch (error) {

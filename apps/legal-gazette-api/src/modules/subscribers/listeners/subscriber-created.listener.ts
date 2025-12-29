@@ -13,9 +13,9 @@ import { SubscriberCreatedEvent } from '../events/subscriber-created.event'
 const logger = getLogger('SubscriberCreatedListener')
 
 const SUBSCRIPTION_FEE_CODE =
-  process.env.LG_SUBSCRIPTION_FEE_CODE || 'SUBSCRIPTION_FEE'
+  process.env.LG_SUBSCRIPTION_FEE_CODE || 'RL401'
 const SUBSCRIPTION_AMOUNT = parseInt(
-  process.env.LG_SUBSCRIPTION_AMOUNT || '3000',
+  process.env.LG_SUBSCRIPTION_AMOUNT || '4500',
   10,
 )
 
@@ -40,15 +40,7 @@ export class SubscriberCreatedListener {
   @OnEvent(LegalGazetteEvents.SUBSCRIBER_CREATED, { async: true })
   async createSubscriptionPayment({
     subscriber,
-    isLegacyMigration,
   }: SubscriberCreatedEvent) {
-    // Skip payment for legacy migrations (they already paid)
-    if (isLegacyMigration) {
-      logger.info('Skipping payment for legacy migration', {
-        subscriberId: subscriber.id,
-      })
-      return
-    }
 
     logger.info('Creating subscription payment for new subscriber', {
       subscriberId: subscriber.id,
