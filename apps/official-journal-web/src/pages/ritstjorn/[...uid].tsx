@@ -132,11 +132,17 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
         feeCodePromise,
       ])
 
+    const initialCaseWithoutHtml: CaseDetailed = {
+      ...caseResponse._case,
+      history: [],
+      html: '',
+    }
+
     return {
       props: deleteUndefined({
         session,
         layout,
-        caseData: caseResponse._case,
+        caseData: initialCaseWithoutHtml,
         departments: departments.departments,
         categories: categories.categories,
         admins: users.users,

@@ -37,7 +37,7 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
   const { data: session } = useSession()
 
-  const { currentCase, refetch, canEdit } = useCaseContext()
+  const { currentCase, refetch, canEdit, fecthSuccess } = useCaseContext()
   const { previewPdf, loading: pdfLoading } = useHandleOpenPdf(currentCase.id)
 
   const { trigger } = useUpdateAdvertHtml({
@@ -52,7 +52,7 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
     },
   })
 
-  const onChangeHandler = useCallback(debounce(trigger, 500), [])
+  const onChangeHandler = useCallback(debounce(trigger, 1500), [])
 
   const fileUploader = useFileUploader(
     currentCase.applicationId ?? 'no-application-id',
@@ -74,12 +74,13 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
           className={styles.fieldBody}
           border="standard"
           borderRadius="large"
+          key={`${fecthSuccess}`}
         >
           <HTMLEditor
             readonly={!canEdit}
             defaultValue={currentCase.html}
-            onChange={(val) => onChangeHandler({ advertHtml: val })}
             handleUpload={fileUploader()}
+            onBlur={(val) => onChangeHandler({ advertHtml: val })}
           />
         </Box>
         <Inline space={2} justifyContent="flexEnd">
