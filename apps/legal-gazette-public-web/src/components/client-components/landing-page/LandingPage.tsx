@@ -2,6 +2,8 @@
 
 import { useSession } from 'next-auth/react'
 
+import { Icon } from 'submodules/island.is/libs/island-ui/core/src/lib/IconRC/iconMap'
+
 import { Footer } from '@dmr.is/ui/components/Footer/Footer'
 import Hero from '@dmr.is/ui/components/Hero/Hero'
 import {
@@ -20,15 +22,18 @@ type QuickLink = {
   title: string
   href: string
   variant: 'primary' | 'ghost' | 'text' | 'utility'
+  icon?: Icon
 }
 export const LandingPageContent = () => {
   const { data: session } = useSession()
 
+  // TODO: breyta í rétta tengla fyrir prod
   const quickLinks: QuickLink[] = [
     {
-      title: 'Umsóknarkerfi auglýsanda',
-      href: '/auglysingar?type=innkollun-throtabu',
+      title: 'Innri vefur auglýsanda',
+      href: 'https://umsoknir.legal-gazette.dev.dmr-dev.cloud',
       variant: 'primary',
+      icon: 'open',
     },
   ]
 
@@ -37,6 +42,7 @@ export const LandingPageContent = () => {
       title: 'Gerast áskrifandi',
       href: '/skraning',
       variant: 'ghost',
+      icon: 'pencil',
     })
   }
 
@@ -66,7 +72,7 @@ export const LandingPageContent = () => {
                   <Button
                     key={i}
                     size="small"
-                    icon="open"
+                    icon={link.icon}
                     iconType="outline"
                     variant={link.variant}
                   >

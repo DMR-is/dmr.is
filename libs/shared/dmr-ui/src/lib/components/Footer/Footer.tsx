@@ -51,7 +51,7 @@ export const Footer = ({ site = 'web' }: { site?: 'web' | 'applications' }) => {
     site === 'web'
       ? [
           {
-            title: 'Umsóknarkerfi Lögbirtingarblaðs',
+            title: 'Innri vefur auglýsanda',
             href: 'https://umsoknir.legal-gazette.dev.dmr-dev.cloud',
           },
           {
