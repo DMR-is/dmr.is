@@ -37,7 +37,11 @@ export const identityServerConfig =
         scope: localIdentityServerConfig.scope,
       }
 
-async function authorize(nationalId?: string, accessToken?: string, idToken?: string) {
+async function authorize(
+  nationalId?: string,
+  accessToken?: string,
+  idToken?: string,
+) {
   if (!accessToken || !nationalId || !idToken) {
     return null
   }
@@ -83,7 +87,7 @@ export const authOptions: AuthOptions = {
     maxAge: SESION_TIMEOUT,
   },
   callbacks: {
-    jwt: async ({ token, user, account }) => {
+    jwt: async ({ token, user, account, trigger }) => {
       if (user && account) {
         // On first sign-in, user will be available
         return {
@@ -98,12 +102,13 @@ export const authOptions: AuthOptions = {
         } as JWT
       }
 
-      // If token is not active, we check if user is active to update token
-      // In case of account migration
-      if (!token.isActive) {
+
+      // If we trigger update, we need to refetch the user to see if isActive has changed
+      if (trigger === 'update') {
         const member = await authorize(
           token.nationalId as string,
           token.accessToken as string,
+          token.idToken as string,
         )
         if (member) {
           token.isActive = member.isActive
@@ -147,7 +152,11 @@ export const authOptions: AuthOptions = {
         }
         const decodedAccessToken = decode(account?.id_token) as JWT
         const nationalId = decodedAccessToken?.nationalId
-        const authMember = await authorize(nationalId, account?.access_token, account?.id_token)
+        const authMember = await authorize(
+          nationalId,
+          account?.access_token,
+          account?.id_token,
+        )
         // Return false if no user is found
         if (!authMember) {
           return false
