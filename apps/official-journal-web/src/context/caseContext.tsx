@@ -44,6 +44,7 @@ type CaseState = {
   canUpdateAdvert: boolean
   refetchSignature: () => void
   isRefetchingSignature: boolean
+  fecthSuccess: boolean
   feeCodeOptions: TransactionFeeCode[]
   handleOptimisticUpdate: (
     newCase: CaseDetailed,
@@ -72,6 +73,7 @@ export const CaseContext = createContext<CaseState>({
   canUpdateAdvert: false,
   refetchSignature: () => undefined,
   isRefetchingSignature: false,
+  fecthSuccess: false,
   feeCodeOptions: [],
   handleOptimisticUpdate: () => undefined,
 })
@@ -100,6 +102,7 @@ export const CaseProvider = ({
   children,
 }: CaseProviderProps) => {
   const [currentCase, setCurrentCase] = useState<CaseDetailed>(initalCase)
+  const [fecthSuccess, setFechSuccess] = useState<boolean>(false)
   const [lastFetched, setLastFetched] = useState(new Date().toISOString())
   const [localCorrection, setLocalCorrection] = useState<AdvertCorrection>()
 
@@ -116,6 +119,7 @@ export const CaseProvider = ({
       onSuccess: (data) => {
         setCurrentCase(data._case)
         setLastFetched(new Date().toISOString())
+        setFechSuccess(true)
       },
     },
   })
@@ -234,6 +238,7 @@ export const CaseProvider = ({
         isRefetchingSignature,
         feeCodeOptions,
         handleOptimisticUpdate,
+        fecthSuccess,
       }}
     >
       {children}
