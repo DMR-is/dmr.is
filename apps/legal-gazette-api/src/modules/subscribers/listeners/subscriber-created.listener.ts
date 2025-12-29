@@ -40,7 +40,7 @@ export class SubscriberCreatedListener {
     }
   }
 
-  @OnEvent(LegalGazetteEvents.SUBSCRIBER_CREATED, { async: true })
+  @OnEvent(LegalGazetteEvents.SUBSCRIBER_CREATED, { suppressErrors: false })
   async createSubscriptionPayment({
     subscriber,
     actorNationalId,

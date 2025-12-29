@@ -23,6 +23,30 @@ export class SubscriberService implements ISubscriberService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  private async handleSubscriptionExpiry(
+    subscriber: SubscriberDto,
+  ): Promise<SubscriberDto> {
+    if (!subscriber.subscribedTo) {
+      return subscriber
+    }
+    const now = new Date()
+    const subscriptionExpiry = new Date(subscriber.subscribedTo)
+
+    if (subscriptionExpiry.valueOf() < now.valueOf()) {
+      this.logger.info('Subscriber subscription has expired', {
+        subscriberId: subscriber.id,
+        subscribedTo: subscriber.subscribedTo,
+      })
+      // Subscription has expired, update subscriber
+      const updatedSubscriber = await this.subscriberModel.update(
+        { isActive: false, subscribedTo: null },
+        { where: { id: subscriber.id }, returning: true },
+      )
+      return updatedSubscriber[1][0].fromModel()
+    }
+    return subscriber
+  }
+
   async getUserByNationalId(user: DMRUser): Promise<SubscriberDto> {
     // Check existing subscriber
     const [subscriber] = await this.subscriberModel.findOrCreate({
@@ -34,7 +58,7 @@ export class SubscriberService implements ISubscriberService {
       },
     })
 
-    return subscriber.fromModel()
+    return this.handleSubscriptionExpiry(subscriber.fromModel())
   }
   async createSubscriptionForUser(user: DMRUser): Promise<MutationResponse> {
     const subscriber = await this.subscriberModel.findOne({
@@ -51,18 +75,23 @@ export class SubscriberService implements ISubscriberService {
       // Determine the actor nationalId - use actor if exists (delegation), otherwise user
       const actorNationalId = user.actor?.nationalId ?? user.nationalId
 
-      // Emit event for payment processing
-      // Activation happens in listener after successful TBR payment
-      this.eventEmitter.emit(LegalGazetteEvents.SUBSCRIBER_CREATED, {
-        subscriber: subscriber.fromModel(),
-        actorNationalId,
-      } as SubscriberCreatedEvent)
+      // Emit event for payment processing and WAIT for it to complete
+      // emitAsync returns a Promise that resolves when all listeners complete
+      // If any listener throws, the error propagates here (requires suppressErrors: false on listener)
+      await this.eventEmitter.emitAsync(
+        LegalGazetteEvents.SUBSCRIBER_CREATED,
+        {
+          subscriber: subscriber.fromModel(),
+          actorNationalId,
+        } as SubscriberCreatedEvent,
+      )
 
       return { success: true }
     } catch (error) {
       this.logger.error('Error creating subscription', {
-        error: error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         category: 'subscriber-service',
+        subscriberId: subscriber.id,
       })
       return { success: false }
     }
