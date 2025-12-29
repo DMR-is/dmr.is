@@ -80,13 +80,24 @@ export class ApplicationService implements IApplicationService {
       where: { id: applicationId, applicantNationalId: user.nationalId },
     })
 
-    const typeId =
-      application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
-        ? RECALL_BANKRUPTCY_ADVERT_TYPE_ID
-        : ApplicationTypeEnum.RECALL_DECEASED ===
-            ApplicationTypeEnum.RECALL_DECEASED
-          ? RECALL_DECEASED_ADVERT_TYPE_ID
-          : get(application.answers, 'fields.type.id')
+    let typeId: string | undefined
+    let templateType: AdvertTemplateType | undefined
+    switch (application.applicationType) {
+      case ApplicationTypeEnum.RECALL_BANKRUPTCY:
+        typeId = RECALL_BANKRUPTCY_ADVERT_TYPE_ID
+        templateType = AdvertTemplateType.RECALL_BANKRUPTCY
+        // typeId is already set correctly
+        break
+      case ApplicationTypeEnum.RECALL_DECEASED:
+        typeId = RECALL_DECEASED_ADVERT_TYPE_ID
+        templateType = AdvertTemplateType.RECALL_DECEASED
+        break
+      case ApplicationTypeEnum.COMMON: {
+        typeId = get(application.answers, 'fields.type.id')
+        templateType = AdvertTemplateType.COMMON
+        break
+      }
+    }
 
     const publications = get(application.answers, 'publishingDates', []).map(
       (date, i) => ({
@@ -108,10 +119,7 @@ export class ApplicationService implements IApplicationService {
 
     const previewHTML = getAdvertHTMLMarkupPreview({
       title: application.title,
-      templateType:
-        application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
-          ? AdvertTemplateType.RECALL_BANKRUPTCY
-          : AdvertTemplateType.RECALL_DECEASED,
+      templateType: templateType,
       typeId: typeId,
       additionalText: get(application.answers, 'additionalText'),
       content: get(application.answers, 'fields.html', undefined),

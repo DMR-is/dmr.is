@@ -5,21 +5,22 @@ import { FormProvider, useForm } from 'react-hook-form'
 
 import {
   ApplicationTypeEnum,
-  RecallApplicationWebSchema,
-  recallBankruptcyAnswersRefined,
-  recallDeceasedAnswersRefined,
+  commonApplicationAnswersRefined,
+  CommonApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import { Box } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationShell } from '../components/application/ApplicationShell'
-import { AdvertStep } from '../components/form/recall/steps/AdvertStep'
-import { PublishingStep } from '../components/form/recall/steps/PublishingStep'
+import { AdvertStep } from '../components/form/common/steps/AdvertStep'
+import { PublishingStep } from '../components/form/common/steps/PublishingStep'
+import { SignatureStep } from '../components/form/common/steps/SignatureStep'
+import { SignatureFields } from '../components/form/fields/SignatureFields'
 import { PrerequisitesSteps } from '../components/form/steps/PrequesitesSteps'
 import { PreviewStep } from '../components/form/steps/PreviewStep'
 import { SummaryStep } from '../components/form/steps/SummaryStep'
 import { ApplicationDetailedDto } from '../gen/fetch'
 import { useSubmitApplication } from '../hooks/useSubmitApplication'
-import { recallForm } from '../lib/forms/recall-form'
+import { commonForm } from '../lib/forms/common-form'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
@@ -28,22 +29,7 @@ type Props = {
   application: ApplicationDetailedDto
 }
 
-const mapApplicationType = (
-  type: string,
-):
-  | ApplicationTypeEnum.RECALL_BANKRUPTCY
-  | ApplicationTypeEnum.RECALL_DECEASED => {
-  switch (type) {
-    case 'RECALL_BANKRUPTCY':
-      return ApplicationTypeEnum.RECALL_BANKRUPTCY
-    case 'RECALL_DECEASED':
-      return ApplicationTypeEnum.RECALL_DECEASED
-    default:
-      throw new Error('Unsupported application type for recall form')
-  }
-}
-
-export const RecallFormContainer = ({
+export const CommonFormContainer = ({
   application: initalApplication,
 }: Props) => {
   const trpc = useTRPC()
@@ -62,16 +48,14 @@ export const RecallFormContainer = ({
     application.id,
   )
 
-  const mappedType = mapApplicationType(application.type)
-  const isBankruptcy = mappedType === ApplicationTypeEnum.RECALL_BANKRUPTCY
-
   const items = [
     {
       title: 'Skilyrði fyrir birtingu',
       children: <PrerequisitesSteps id={application.id} />,
     },
     { title: 'Grunnupplýsingar', children: <AdvertStep /> },
-    { title: 'Birting og samskiptaleiðir', children: <PublishingStep /> },
+    { title: 'Undirritun', children: <SignatureStep /> },
+    { title: 'Birtingarupplýsingar', children: <PublishingStep /> },
     { title: 'Forskoðun', children: <PreviewStep id={application.id} /> },
     { title: 'Samantekt', children: <SummaryStep application={application} /> },
   ]
@@ -81,58 +65,41 @@ export const RecallFormContainer = ({
     totalSteps: items.length,
     applicationId: application.id,
     caseId: application.caseId,
-    type: mappedType,
-    isBankruptcy: isBankruptcy,
-    courtOptions: baseEntities.courtDistricts.map((court) => ({
-      label: court.title,
-      value: court.id,
+    type: ApplicationTypeEnum.COMMON,
+    isBankruptcy: false,
+    typeOptions: baseEntities.types.map((type) => ({
+      label: type.title,
+      value: type,
     })),
   }
 
-  const methods = useForm<RecallApplicationWebSchema>(
-    recallForm({
-      metadata: metadata,
+  const methods = useForm<CommonApplicationWebSchema>(
+    commonForm({
+      metadata,
       application: {
-        type: mappedType,
+        type: ApplicationTypeEnum.COMMON,
         ...application.answers,
       },
     }),
   )
-
   const onSubmit = useCallback(
-    (_data: RecallApplicationWebSchema) => {
-      // Manually get values to ensure we have the latest data
+    (_data: CommonApplicationWebSchema) => {
+      // Manually get the values to ensure we have the latest state
       const data = methods.getValues()
+      const check = commonApplicationAnswersRefined.safeParse(data)
 
-      if (mappedType === ApplicationTypeEnum.RECALL_BANKRUPTCY) {
-        const bankruptcyCheck = recallBankruptcyAnswersRefined.safeParse(data)
-
-        if (!bankruptcyCheck.success) {
-          bankruptcyCheck.error.issues.forEach((issue) => {
-            methods.setError(issue.path.join('.') as any, {
-              message: issue.message,
-            })
+      if (!check.success) {
+        check.error.issues.forEach((issue) => {
+          methods.setError(issue.path.join('.') as any, {
+            message: issue.message,
           })
-
-          return onInvalidSubmit(data)
-        }
-      } else {
-        const deceasedCheck = recallDeceasedAnswersRefined.safeParse(data)
-
-        if (!deceasedCheck.success) {
-          deceasedCheck.error.issues.forEach((issue) => {
-            methods.setError(issue.path.join('.') as any, {
-              message: issue.message,
-            })
-          })
-
-          return onInvalidSubmit(data)
-        }
+        })
+        return onInvalidSubmit(data)
       }
 
       onValidSubmit()
     },
-    [mappedType, methods, onValidSubmit, onInvalidSubmit],
+    [methods, onValidSubmit, onInvalidSubmit],
   )
 
   const itemToRender = items[application.currentStep]
