@@ -40,11 +40,13 @@ export class SubscriberCreatedListener {
   @OnEvent(LegalGazetteEvents.SUBSCRIBER_CREATED, { async: true })
   async createSubscriptionPayment({
     subscriber,
+    actorNationalId,
   }: SubscriberCreatedEvent) {
 
-    logger.info('Creating subscription payment for new subscriber', {
+    logger.info('Creating subscription payment for subscriber', {
       subscriberId: subscriber.id,
       nationalId: subscriber.nationalId,
+      actorNationalId,
     })
 
     try {
@@ -84,6 +86,7 @@ export class SubscriberCreatedListener {
       // Save payment record
       await this.subscriberPaymentModel.create({
         subscriberId: subscriber.id,
+        activatedByNationalId: actorNationalId,
         amount: SUBSCRIPTION_AMOUNT,
         chargeBase,
         chargeCategory,
@@ -91,15 +94,32 @@ export class SubscriberCreatedListener {
         paidAt: null,
       })
 
-      // Activate the subscriber and set subscription date
-      await this.subscriberModel.update(
-        { isActive: true, subscribedFrom: new Date() },
-        { where: { id: subscriber.id } },
-      )
+      // Fetch current subscriber to check if subscribedFrom already exists
+      const existingSubscriber = await this.subscriberModel.findByPk(subscriber.id)
+
+      // Calculate subscription end date (1 year from now)
+      const subscribedTo = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+
+      // Build update object - only set subscribedFrom if not already set
+      const updateData: { isActive: boolean; subscribedTo: Date; subscribedFrom?: Date } = {
+        isActive: true,
+        subscribedTo,
+      }
+
+      // Only set subscribedFrom if it doesn't exist (preserve original subscription date on renewal)
+      if (!existingSubscriber?.subscribedFrom) {
+        updateData.subscribedFrom = new Date()
+      }
+
+      // Activate the subscriber and set subscription dates
+      await this.subscriberModel.update(updateData, { where: { id: subscriber.id } })
 
       logger.info('Subscriber activated after payment request', {
         subscriberId: subscriber.id,
-        subscribedAt: new Date(),
+        actorNationalId,
+        subscribedFrom: updateData.subscribedFrom ?? existingSubscriber?.subscribedFrom,
+        subscribedTo,
+        isRenewal: !updateData.subscribedFrom,
       })
     } catch (error) {
       logger.error('Failed to create subscription payment', {

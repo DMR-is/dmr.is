@@ -12,6 +12,7 @@ import { SubscriberModel } from './subscriber.model'
 
 export type SubscriberPaymentAttributes = {
   subscriberId: string
+  activatedByNationalId: string
   amount: number
   chargeBase: string
   chargeCategory: string
@@ -26,9 +27,12 @@ export class SubscriberPaymentModel extends BaseModel<
   SubscriberPaymentAttributes,
   SubscriberPaymentCreateAttributes
 > {
-  @Column({ type: DataType.UUID, unique: true, allowNull: false })
+  @Column({ type: DataType.UUID, allowNull: false, field: 'subscriber_id' })
   @ForeignKey(() => SubscriberModel)
   subscriberId!: string
+
+  @Column({ type: DataType.STRING, allowNull: false, field: 'activated_by_national_id' })
+  activatedByNationalId!: string
 
   @Column({ type: DataType.NUMBER, allowNull: false })
   amount!: number

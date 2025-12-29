@@ -48,18 +48,14 @@ export class SubscriberService implements ISubscriberService {
     }
 
     try {
-      // Set isActive true and subscribedTo date 1 year from now
-      // Set subscribedFrom if not already set
-      subscriber.isActive = true
-      subscriber.subscribedTo = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-      if (!subscriber.subscribedFrom) {
-        subscriber.subscribedFrom = new Date()
-      }
-      await subscriber.save()
+      // Determine the actor nationalId - use actor if exists (delegation), otherwise user
+      const actorNationalId = user.actor?.nationalId ?? user.nationalId
 
       // Emit event for payment processing
+      // Activation happens in listener after successful TBR payment
       this.eventEmitter.emit(LegalGazetteEvents.SUBSCRIBER_CREATED, {
         subscriber: subscriber.fromModel(),
+        actorNationalId,
       } as SubscriberCreatedEvent)
 
       return { success: true }
