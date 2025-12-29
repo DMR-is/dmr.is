@@ -101,7 +101,7 @@ export class SubscriberCreatedListener {
 
       // Activate the subscriber and set subscription date
       await this.subscriberModel.update(
-        { isActive: true, subscribedAt: new Date() },
+        { isActive: true, subscribedFrom: new Date() },
         { where: { id: subscriber.id } },
       )
 
