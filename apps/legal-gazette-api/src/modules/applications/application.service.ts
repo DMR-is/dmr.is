@@ -77,7 +77,7 @@ export class ApplicationService implements IApplicationService {
     user: DMRUser,
   ): Promise<GetHTMLPreview> {
     const application = await this.applicationModel.findOneOrThrow({
-      where: { id: applicationId, submittedByNationalId: user.nationalId },
+      where: { id: applicationId, applicantNationalId: user.nationalId },
     })
 
     const typeId =
@@ -117,6 +117,14 @@ export class ApplicationService implements IApplicationService {
       content: get(application.answers, 'fields.html', undefined),
       publications: publications,
       publicationNumber: null,
+      divisionMeetingDate: get(
+        application.answers,
+        'fields.divisionMeetingFields.meetingDate',
+      ),
+      divisionMeetingLocation: get(
+        application.answers,
+        'fields.divisionMeetingFields.meetingLocation',
+      ),
       signature: {
         name: get(application.answers, 'signature.name', null),
         date: signatureDate ? new Date(signatureDate) : null,
@@ -224,7 +232,11 @@ export class ApplicationService implements IApplicationService {
       scheduledAt: parsed.publishingDates,
     })
 
-    await application.update({ status: ApplicationStatusEnum.FINISHED })
+    await application.update({
+      status: ApplicationStatusEnum.FINISHED,
+      submittedByNationalId:
+        submittee.actor?.nationalId || submittee.nationalId,
+    })
   }
 
   private async submitRecallApplication(
@@ -330,6 +342,7 @@ export class ApplicationService implements IApplicationService {
     await application.update({
       status: ApplicationStatusEnum.SUBMITTED,
       settlementId: advert.settlement?.id,
+      submittedByNationalId: user.actor?.nationalId || user.nationalId,
     })
   }
 
@@ -341,7 +354,7 @@ export class ApplicationService implements IApplicationService {
     const application = await this.applicationModel.findOneOrThrow({
       where: {
         id: applicationId,
-        submittedByNationalId: user.nationalId,
+        applicantNationalId: user.nationalId,
         status: ApplicationStatusEnum.SUBMITTED,
         applicationType: {
           [Op.or]: [
@@ -385,7 +398,7 @@ export class ApplicationService implements IApplicationService {
     const application = await this.applicationModel.findOneOrThrow({
       where: {
         id: applicationId,
-        submittedByNationalId: user.nationalId,
+        applicantNationalId: user.nationalId,
         status: ApplicationStatusEnum.SUBMITTED,
         applicationType: {
           [Op.or]: [
@@ -455,7 +468,7 @@ export class ApplicationService implements IApplicationService {
     user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
     const application = await this.applicationModel.findOneOrThrow({
-      where: { id: applicationId, submittedByNationalId: user.nationalId },
+      where: { id: applicationId, applicantNationalId: user.nationalId },
     })
 
     const parsedData = updateApplicationInput.parse({
@@ -521,7 +534,7 @@ export class ApplicationService implements IApplicationService {
     user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
     const application = await this.applicationModel.findOne({
-      where: { caseId: caseId, submittedByNationalId: user.nationalId },
+      where: { caseId: caseId, applicantNationalId: user.nationalId },
     })
 
     if (!application) {
@@ -535,7 +548,7 @@ export class ApplicationService implements IApplicationService {
     user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
     const application = await this.applicationModel.findOne({
-      where: { id: applicationId, submittedByNationalId: user.nationalId },
+      where: { id: applicationId, applicantNationalId: user.nationalId },
     })
 
     if (!application) {
@@ -556,7 +569,7 @@ export class ApplicationService implements IApplicationService {
         involvedPartyNationalId: user.nationalId,
         application: {
           applicationType: type,
-          submittedByNationalId: user.nationalId,
+          applicantNationalId: user.nationalId,
           answers: {},
         },
       },
@@ -585,7 +598,7 @@ export class ApplicationService implements IApplicationService {
       limit,
       offset,
       where: {
-        submittedByNationalId: user.nationalId,
+        applicantNationalId: user.nationalId,
       },
     })
 
@@ -635,7 +648,7 @@ export class ApplicationService implements IApplicationService {
   }
   async submitApplication(applicationId: string, user: DMRUser): Promise<void> {
     const application = await this.applicationModel.findOneOrThrow({
-      where: { id: applicationId, submittedByNationalId: user.nationalId },
+      where: { id: applicationId, applicantNationalId: user.nationalId },
     })
 
     switch (application.applicationType) {

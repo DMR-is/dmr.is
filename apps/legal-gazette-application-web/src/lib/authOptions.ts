@@ -41,7 +41,7 @@ export const authOptions: AuthOptions = {
         // On first sign-in, user will be available
         return {
           ...token,
-          nationalId: account.nationalId,
+          nationalId: user.nationalId,
           name: user.name ?? 'unknown',
           accessToken: account.access_token,
           refreshToken: account.refresh_token,

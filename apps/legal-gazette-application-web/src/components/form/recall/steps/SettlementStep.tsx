@@ -4,6 +4,7 @@ import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { Text } from '@dmr.is/ui/components/island-is'
 
 import { FormStep } from '../../../form-step/FormStep'
+import { RecallDivisionFields } from '../fields/RecallDivisionFields'
 import { RecallLiquidatorFields } from '../fields/RecallLiquidatorFields'
 import { RecallRequirementStatementFields } from '../fields/RecallRequirementStatementFields'
 import { RecallSettlementFields } from '../fields/settlement/RecallSettlementFields'
@@ -23,8 +24,20 @@ export const SettlementStep = () => {
       content: <RecallSettlementFields />,
     },
     {
+      title: 'Skiptafundur',
+      intro: isBankruptcy ? (
+        <Text>Hvar og hvenær fyrsti skiptafundur fer fram</Text>
+      ) : (
+        <Text>
+          Fylltu út reitina hér fyrir neðan ef þú vilt auglýsa skiptafund með
+          innköllunni
+        </Text>
+      ),
+      content: <RecallDivisionFields isBankruptcy={isBankruptcy} />,
+    },
+    {
       title: 'Upplýsingar um skiptastjóra',
-      intro: <Text>Fylla þarf út nafn og staðsetningu skiptastjóra</Text>,
+      // intro: <Text>Fylla þarf út nafn og staðsetningu skiptastjóra</Text>,
       content: <RecallLiquidatorFields />,
     },
     {

@@ -1,15 +1,15 @@
-import { Header } from '@dmr.is/ui/components/Header/Header'
-
 export default async function ProtectedLayout({
   children,
   view,
+  header,
 }: {
   children: React.ReactNode
   view: React.ReactNode
+  header: React.ReactNode
 }) {
   return (
     <>
-      <Header variant="white" />
+      {header}
       {view}
       {children}
     </>

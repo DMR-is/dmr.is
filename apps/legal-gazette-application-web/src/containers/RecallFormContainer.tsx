@@ -17,6 +17,7 @@ import { PublishingStep } from '../components/form/recall/steps/PublishingStep'
 import { SettlementStep } from '../components/form/recall/steps/SettlementStep'
 import { PrerequisitesSteps } from '../components/form/steps/PrequesitesSteps'
 import { PreviewStep } from '../components/form/steps/PreviewStep'
+import { SummaryStep } from '../components/form/steps/SummaryStep'
 import { ApplicationDetailedDto } from '../gen/fetch'
 import { useSubmitApplication } from '../hooks/useSubmitApplication'
 import { recallForm } from '../lib/forms/recall-form'
@@ -79,6 +80,7 @@ export const RecallFormContainer = ({
     },
     { title: 'Birting og samskiptaleiðir', children: <PublishingStep /> },
     { title: 'Forskoðun', children: <PreviewStep id={application.id} /> },
+    { title: 'Samantekt', children: <SummaryStep application={application} /> },
   ]
 
   const metadata = {

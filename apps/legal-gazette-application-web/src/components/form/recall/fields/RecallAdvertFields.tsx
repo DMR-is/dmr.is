@@ -26,28 +26,31 @@ export const RecallAdvertFields = () => {
       type: 'RECALL',
     })
 
+  const courtOptionsData =
+    courtOptions?.courtDistricts.map((court) => ({
+      label: court.title,
+      value: court.id,
+    })) || []
+
   return (
     <Stack space={[1, 2]}>
       <GridRow rowGap={[2, 3]}>
         <GridColumn span={['12/12', '6/12']}>
           <SelectController
-            options={
-              courtOptions?.courtDistricts.map((court) => ({
-                label: court.title,
-                value: court.id,
-              })) || []
-            }
-            name="fields.courtAndJudgmentFields.courtDistrictId"
+            options={courtOptionsData}
+            name="fields.courtAndJudgmentFields.courtDistrict.id"
             label="Dómstóll"
             required
-            onChange={(val) =>
-              updateApplication(
+            onChange={(val) => {
+              const found = courtOptions?.courtDistricts.find(
+                (option) => option.id === val,
+              )
+
+              return updateApplication(
                 {
                   fields: {
                     courtAndJudgmentFields: {
-                      courtDistrict: courtOptions?.courtDistricts.find(
-                        (option) => option.id === val,
-                      ),
+                      courtDistrict: found,
                     },
                   },
                 },
@@ -56,7 +59,7 @@ export const RecallAdvertFields = () => {
                   errorMessage: 'Ekki tókst að vista dómstól',
                 },
               )
-            }
+            }}
           />
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>

@@ -67,7 +67,8 @@ export type ApplicationAnswers<
 type BaseApplicationAttributes = {
   caseId: string
   settlementId: string | null
-  submittedByNationalId: string
+  applicantNationalId: string
+  submittedByNationalId: string | null
   applicationType: ApplicationTypeEnum
   status: ApplicationStatusEnum
   answers: ApplicationAnswers
@@ -80,7 +81,8 @@ export type ApplicationAttributes = BaseApplicationAttributes &
 export type ApplicationCreateAttributes = {
   caseId?: string
   settlementId?: string | null
-  submittedByNationalId: string
+  submittedByNationalId?: string | null
+  applicantNationalId: string
   applicationType: ApplicationTypeEnum
   status?: ApplicationStatusEnum
   answers?: ApplicationAnswers
@@ -114,7 +116,13 @@ export class ApplicationModel extends BaseModel<
     type: DataType.TEXT,
     allowNull: false,
   })
-  submittedByNationalId!: string
+  applicantNationalId!: string
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+  })
+  submittedByNationalId!: string | null
 
   @Column({
     type: DataType.ENUM(...Object.values(ApplicationTypeEnum)),
@@ -180,7 +188,8 @@ export class ApplicationModel extends BaseModel<
       createdAt: model.createdAt.toISOString(),
       updatedAt: model.updatedAt.toISOString(),
       caseId: model.caseId,
-      submittedByNationalId: model.submittedByNationalId,
+      applicantNationalId: model.applicantNationalId,
+      submittedByNationalId: model.submittedByNationalId || undefined,
       status: model.status,
       title: model.title,
       type: model.applicationType,
@@ -215,7 +224,10 @@ export class ApplicationDto extends DetailedDto {
   caseId!: string
 
   @ApiProperty({ type: String })
-  submittedByNationalId!: string
+  applicantNationalId!: string
+
+  @ApiProperty({ type: String, required: false })
+  submittedByNationalId?: string
 
   @ApiProperty({
     enum: ApplicationStatusEnum,

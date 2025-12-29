@@ -24,13 +24,20 @@ import { ControlPanel, ControlPanelProps } from '../ControlPanel/ControlPanel'
 import * as styles from './Header.css'
 import { HeaderLogo } from './HeaderLogo'
 
+type HeaderInfo = {
+  title?: string
+  description?: string
+}
+
 export type HeaderProps = {
+  info?: HeaderInfo
   controlPanel?: ControlPanelProps
   settings?: React.ReactNode
   variant?: 'blue' | 'white'
 }
 
 export const Header = ({
+  info,
   controlPanel,
   settings,
   variant = 'blue',
@@ -83,9 +90,28 @@ export const Header = ({
                   space={[1, 2, 4]}
                 >
                   <HeaderLogo />
-                  <Text variant="h4" fontWeight="regular">
-                    Lögbirtingablað
-                  </Text>
+                  {info && (
+                    <Box
+                      display="flex"
+                      borderLeftWidth="standard"
+                      borderStyle="solid"
+                      borderColor="dark100"
+                      alignItems="center"
+                      height="full"
+                      marginLeft={[1, 1, 2, 4]}
+                      marginRight="auto"
+                      paddingRight={[1, 1, 2, 4]}
+                    >
+                      <Box marginLeft={[1, 1, 2, 4]}>
+                        <Text variant="eyebrow">{info.title}</Text>
+                        {info.description && (
+                          <p className={styles.infoDescription}>
+                            {info.description}
+                          </p>
+                        )}
+                      </Box>
+                    </Box>
+                  )}
                   {controlPanel && <ControlPanel {...controlPanel} />}
                 </Inline>
                 <Box

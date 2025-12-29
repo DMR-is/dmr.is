@@ -43,10 +43,6 @@ export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
 
   return (
     <GridRow rowGap={[2, 3]}>
-      <GridColumn span="12/12">
-        <Text variant="h4">Upplýsingar um skiptafund</Text>
-      </GridColumn>
-
       <GridColumn span="6/12">
         <InputController
           required={isBankruptcy}
