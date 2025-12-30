@@ -30,7 +30,6 @@ import {
   PDF_RETRY_DELAY,
 } from '@dmr.is/constants'
 import { logger } from '@dmr.is/logging'
-import { cleanupSingleEditorOutput } from '@dmr.is/regulations-tools/cleanupEditorOutput'
 import { HTMLText } from '@dmr.is/regulations-tools/types'
 import { toISODate } from '@dmr.is/regulations-tools/utils'
 import {
@@ -46,6 +45,7 @@ import {
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { simpleSanitize } from './cleanLegacyHtml'
 import {
   templateAuglysing,
   templateGjaldskra,
@@ -512,7 +512,7 @@ export const handlePdfAdditions = (additionArray: CaseAddition[]) => {
       return a.order - b.order
     })
     .map((addition) => {
-      const cleanHtml = cleanupSingleEditorOutput(addition.html as HTMLText)
+      const cleanHtml = simpleSanitize(addition.html as HTMLText)
       return cleanHtml
         ? `
         <section class="appendix">
