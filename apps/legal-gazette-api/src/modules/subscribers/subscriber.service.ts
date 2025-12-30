@@ -1,12 +1,15 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { Logger } from '@dmr.is/logging-next'
 
+import { LegalGazetteEvents } from '../../core/constants'
 import { MutationResponse } from '../../core/dto/mutation.do'
 import { SubscriberDto, SubscriberModel } from '../../models/subscriber.model'
+import { SubscriberCreatedEvent } from './events/subscriber-created.event'
 import { ISubscriberService } from './subscriber.service.interface'
 
 @Injectable()
@@ -16,37 +19,46 @@ export class SubscriberService implements ISubscriberService {
 
     @InjectModel(SubscriberModel)
     private readonly subscriberModel: typeof SubscriberModel,
+
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async createSubscriber(user: DMRUser): Promise<SubscriberDto> {
-    const subscriber = await this.subscriberModel.create({
-      nationalId: user.nationalId,
-      name: user.name || null,
-      isActive: false,
-    })
-    return subscriber.fromModel()
+  private async handleSubscriptionExpiry(
+    subscriber: SubscriberDto,
+  ): Promise<SubscriberDto> {
+    if (!subscriber.subscribedTo) {
+      return subscriber
+    }
+    const now = new Date()
+    const subscriptionExpiry = new Date(subscriber.subscribedTo)
+
+    if (subscriptionExpiry.valueOf() < now.valueOf()) {
+      this.logger.info('Subscriber subscription has expired', {
+        subscriberId: subscriber.id,
+        subscribedTo: subscriber.subscribedTo,
+      })
+      // Subscription has expired, update subscriber
+      const updatedSubscriber = await this.subscriberModel.update(
+        { isActive: false, subscribedTo: null },
+        { where: { id: subscriber.id }, returning: true },
+      )
+      return updatedSubscriber[1][0].fromModel()
+    }
+    return subscriber
   }
 
   async getUserByNationalId(user: DMRUser): Promise<SubscriberDto> {
     // Check existing subscriber
-    const subscriber = await this.subscriberModel.findOne({
+    const [subscriber] = await this.subscriberModel.findOrCreate({
       where: { nationalId: user.nationalId },
+      defaults: {
+        nationalId: user.nationalId,
+        name: user.name || null,
+        isActive: false,
+      },
     })
 
-    if (subscriber) {
-      return subscriber.fromModel()
-    }
-
-    // Create new inactive subscriber
-    const newSubscriber = await this.createSubscriber(user)
-
-    if (!newSubscriber) {
-      throw new NotFoundException(
-        `Subscriber not found and could not be created.`,
-      )
-    }
-
-    return newSubscriber
+    return this.handleSubscriptionExpiry(subscriber.fromModel())
   }
   async createSubscriptionForUser(user: DMRUser): Promise<MutationResponse> {
     const subscriber = await this.subscriberModel.findOne({
@@ -60,20 +72,26 @@ export class SubscriberService implements ISubscriberService {
     }
 
     try {
-      // Set isActive true and subscribedTo date 1 year from now
-      // Set subscribedFrom if not already set
-      subscriber.isActive = true
-      subscriber.subscribedTo = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-      if (!subscriber.subscribedFrom) {
-        subscriber.subscribedFrom = new Date()
-      }
-      await subscriber.save()
+      // Determine the actor nationalId - use actor if exists (delegation), otherwise user
+      const actorNationalId = user.actor?.nationalId ?? user.nationalId
+
+      // Emit event for payment processing and WAIT for it to complete
+      // emitAsync returns a Promise that resolves when all listeners complete
+      // If any listener throws, the error propagates here (requires suppressErrors: false on listener)
+      await this.eventEmitter.emitAsync(
+        LegalGazetteEvents.SUBSCRIBER_CREATED,
+        {
+          subscriber: subscriber.fromModel(),
+          actorNationalId,
+        } as SubscriberCreatedEvent,
+      )
 
       return { success: true }
     } catch (error) {
       this.logger.error('Error creating subscription', {
-        error: error,
+        error: error instanceof Error ? error.message : 'Unknown error',
         category: 'subscriber-service',
+        subscriberId: subscriber.id,
       })
       return { success: false }
     }
