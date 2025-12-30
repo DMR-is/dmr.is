@@ -50,7 +50,7 @@ export const ApplicationCard = ({ application }: Props) => {
       : false
 
   if (allPublished) {
-    statusText = 'Lokið'
+    statusText = 'Útgefið'
   }
 
   return (
@@ -61,22 +61,25 @@ export const ApplicationCard = ({ application }: Props) => {
             {`${formatDate(application.updatedAt, "dd. MMMM yyyy 'kl.' HH:mm")}`}
           </Text>
           <Inline space={1}>
-            {publications.map(
-              (pub, i) =>
-                !!pub.publishedAt && (
-                  <Tag key={i} variant={'mint'}>
-                    Birting {pub.version} {'útgefin'}
-                  </Tag>
-                ),
-            )}
+            {!allPublished &&
+              publications.map(
+                (pub, i) =>
+                  !!pub.publishedAt && (
+                    <Tag key={i} variant={'mint'}>
+                      Birting {pub.version} {'útgefin'}
+                    </Tag>
+                  ),
+              )}
 
             <Tag
               variant={
-                application.status === ApplicationStatusEnum.DRAFT
-                  ? 'blue'
-                  : ApplicationStatusEnum.SUBMITTED
-                    ? 'blueberry'
-                    : 'mint'
+                allPublished
+                  ? 'mint'
+                  : application.status === ApplicationStatusEnum.DRAFT
+                    ? 'blue'
+                    : ApplicationStatusEnum.SUBMITTED
+                      ? 'blueberry'
+                      : 'mint'
               }
             >
               {statusText}
