@@ -98,16 +98,19 @@ export const Header = ({
                       borderColor="dark100"
                       alignItems="center"
                       height="full"
-                      marginLeft={[1, 1, 2, 4]}
+                      marginLeft={[1, 1, 0, 2]}
                       marginRight="auto"
-                      paddingRight={[1, 1, 2, 4]}
                     >
-                      <Box marginLeft={[1, 1, 2, 4]}>
-                        <Text variant="eyebrow">{info.title}</Text>
-                        {info.description && (
-                          <p className={styles.infoDescription}>
-                            {info.description}
-                          </p>
+                      <Box marginLeft={[2, 2, 3, 4]}>
+                        {info.description ? (
+                          <>
+                            <Text variant="eyebrow">{info.title}</Text>
+                            <p className={styles.infoDescription}>
+                              {info.description}
+                            </p>
+                          </>
+                        ) : (
+                          <Text fontWeight="medium">{info.title}</Text>
                         )}
                       </Box>
                     </Box>
