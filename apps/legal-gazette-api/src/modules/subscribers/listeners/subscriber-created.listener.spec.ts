@@ -144,7 +144,8 @@ describe('SubscriberCreatedListener', () => {
 
     it('should create TBR payment with COMPANY_CATEGORY for company ID', async () => {
       const event = createMockEvent({
-        subscriber: createMockSubscriber({ nationalId: '5501012345' }), // Company ID (starts with 5)
+        // eslint-disable-next-line local-rules/disallow-kennitalas
+        subscriber: createMockSubscriber({ nationalId: '5402696029' }), // Company ID (starts with 5)
       })
 
       await listener.createSubscriptionPayment(event)
@@ -152,7 +153,8 @@ describe('SubscriberCreatedListener', () => {
       expect(tbrService.postPayment).toHaveBeenCalledWith(
         expect.objectContaining({
           chargeCategory: 'COMPANY_CATEGORY',
-          debtorNationalId: '5501012345',
+          // eslint-disable-next-line local-rules/disallow-kennitalas
+          debtorNationalId: '5402696029',
         }),
       )
     })
@@ -168,51 +170,6 @@ describe('SubscriberCreatedListener', () => {
 
       // DB operations should not be called
       expect(sequelize.transaction).not.toHaveBeenCalled()
-    })
-  })
-
-  // ==========================================
-  // Company National ID Detection Tests
-  // ==========================================
-  describe('isCompanyNationalId', () => {
-    it.each([
-      ['0101801234', false], // Personal - starts with 0
-      ['1501901234', false], // Personal - starts with 1
-      ['2901801234', false], // Personal - starts with 2
-      ['3101801234', false], // Personal - starts with 3
-      ['4501012345', true], // Company - starts with 4
-      ['5501012345', true], // Company - starts with 5
-      ['6601012345', true], // Company - starts with 6
-      ['7701012345', true], // Company - starts with 7
-      ['8000000000', true], // Company - starts with 8
-      ['9000000000', true], // Company - starts with 9
-    ])('nationalId %s should return isCompany=%s', async (nationalId, isCompany) => {
-      const event = createMockEvent({
-        subscriber: createMockSubscriber({ nationalId }),
-      })
-
-      await listener.createSubscriptionPayment(event)
-
-      const expectedCategory = isCompany ? 'COMPANY_CATEGORY' : 'PERSON_CATEGORY'
-      expect(tbrService.postPayment).toHaveBeenCalledWith(
-        expect.objectContaining({
-          chargeCategory: expectedCategory,
-        }),
-      )
-    })
-
-    it('should treat invalid national IDs as personal', async () => {
-      const event = createMockEvent({
-        subscriber: createMockSubscriber({ nationalId: '12345' }), // Too short
-      })
-
-      await listener.createSubscriptionPayment(event)
-
-      expect(tbrService.postPayment).toHaveBeenCalledWith(
-        expect.objectContaining({
-          chargeCategory: 'PERSON_CATEGORY',
-        }),
-      )
     })
   })
 

@@ -1,3 +1,4 @@
+import Kennitala from 'kennitala'
 import { Sequelize } from 'sequelize-typescript'
 
 import { Inject, Injectable } from '@nestjs/common'
@@ -52,7 +53,7 @@ export class SubscriberCreatedListener {
     })
 
     // Determine charge category based on national ID format
-    const isCompany = this.isCompanyNationalId(subscriber.nationalId)
+    const isCompany = Kennitala.isCompany(subscriber.nationalId)
     const chargeCategory = (
       isCompany
         ? process.env.LG_TBR_CHARGE_CATEGORY_COMPANY
@@ -168,18 +169,5 @@ export class SubscriberCreatedListener {
       )
       throw error
     }
-  }
-
-  /**
-   * Check if a national ID belongs to a company
-   * Icelandic company IDs typically start with 4-9
-   * Personal IDs typically start with 0-3 (birth date format)
-   */
-  private isCompanyNationalId(nationalId: string): boolean {
-    if (!nationalId || nationalId.length !== 10) {
-      return false
-    }
-    const firstDigit = parseInt(nationalId.charAt(0), 10)
-    return firstDigit >= 4
   }
 }
