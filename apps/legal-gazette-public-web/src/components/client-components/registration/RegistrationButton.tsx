@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 
-import { Button } from '@dmr.is/ui/components/island-is'
+import { Button, toast } from '@dmr.is/ui/components/island-is'
 
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 
@@ -17,7 +17,10 @@ export const RegistrationButton = () => {
 
   const { mutate: createRegistration, isPending } = useMutation(
     trpc.createSubscription.mutationOptions({
-      onSuccess: async () => {
+      onSuccess: async (data) => {
+        if (data?.success === false) {
+          toast.error('Villa kom upp við skráningu, vinsamlegast hafið samband við þjónustuver')
+        }
         await update()
         router.refresh()
       },

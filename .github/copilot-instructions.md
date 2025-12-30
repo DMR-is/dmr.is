@@ -459,6 +459,75 @@ nx run legal-gazette-api:seed           # Seed data
 nx run legal-gazette-api:migrate/generate  # Generate new migration
 ```
 
+#### Migration Naming Convention
+
+Migration files should follow this pattern:
+```
+m-YYYYMMDD-description.js
+```
+
+Example: `m-20251229-subscriber-payments-alter.js`
+
+#### BaseModel Required Columns
+
+All tables that use `BaseModel` from `@dmr.is/shared/models/base` **must include these columns**:
+
+```sql
+-- Required columns for all BaseModel tables
+ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+UPDATED_AT TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+DELETED_AT TIMESTAMP WITH TIME ZONE  -- nullable, for soft deletes
+```
+
+**Example CREATE TABLE migration:**
+
+```javascript
+'use strict'
+
+module.exports = {
+  up: (queryInterface, Sequelize) => {
+    return queryInterface.sequelize.query(`
+      BEGIN;
+
+      CREATE TABLE my_table (
+        -- BaseModel columns (required)
+        ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+        UPDATED_AT TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+        DELETED_AT TIMESTAMP WITH TIME ZONE,
+
+        -- Custom columns
+        NAME TEXT NOT NULL,
+        DESCRIPTION TEXT,
+        FOREIGN_KEY_ID UUID REFERENCES other_table(ID) ON DELETE CASCADE
+      );
+
+      -- Indexes as needed
+      CREATE INDEX idx_my_table_foreign_key ON my_table(FOREIGN_KEY_ID);
+
+      COMMIT;
+    `)
+  },
+
+  down(queryInterface, Sequelize) {
+    return queryInterface.sequelize.query(`
+      BEGIN;
+      DROP TABLE IF EXISTS my_table;
+      COMMIT;
+    `)
+  },
+}
+```
+
+**Common column patterns:**
+- Use `TEXT` for strings (not VARCHAR)
+- Use `UUID` for IDs with `DEFAULT gen_random_uuid()`
+- Use `TIMESTAMP WITH TIME ZONE` for dates
+- Use `NUMERIC` for amounts/prices
+- Use `BOOLEAN` with `DEFAULT false` for flags
+- Add `ON DELETE CASCADE` or `ON DELETE SET NULL` for foreign keys
+
 ### Testing and Building
 
 ```bash
