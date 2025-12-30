@@ -75,9 +75,6 @@ export const RecallBankruptcySettlementFields = () => {
 
   return (
     <GridRow rowGap={[2, 3]}>
-      <GridColumn span="12/12">
-        <Text variant="h4">Upplýsingar um þrotabúið</Text>
-      </GridColumn>
       {onLookupError && (
         <GridColumn span="12/12">
           <AlertMessage type="error" {...onLookupError} />

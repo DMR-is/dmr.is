@@ -12,6 +12,7 @@ import {
 import { signatureSchema, signatureSchemaRefined } from './signature'
 
 export const baseApplicationSchema = z.object({
+  prequisitesAccepted: z.boolean().optional(),
   additionalText: z.string().optional(),
   publishingDates: publishingDatesSchema.optional(),
   signature: signatureSchema.optional(),
@@ -19,6 +20,9 @@ export const baseApplicationSchema = z.object({
 })
 
 export const baseApplicationSchemaRefined = z.object({
+  prequisitesAccepted: z.boolean().refine((val) => val === true, {
+    message: 'Þú þarft að samþykkja skilyrðin til að halda áfram',
+  }),
   additionalText: z.string().optional(),
   publishingDates: publishingDatesSchemaRefined,
   signature: signatureSchemaRefined,

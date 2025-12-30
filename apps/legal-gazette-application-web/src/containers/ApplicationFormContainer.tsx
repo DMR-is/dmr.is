@@ -1,14 +1,15 @@
 'use client'
 
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
-import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
-import { CommonForm } from '../components/form/common/CommonForm'
-import { RecallForm } from '../components/form/recall/RecallForm'
-import { ApplicationStatusEnum } from '../gen/fetch'
+import { ApplicationDetailedDto, ApplicationStatusEnum } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
 import { ApplicationSubmittedContainer } from './ApplicationSubmittedContainer'
+import { CommonFormContainer } from './CommonFormContainer'
+import { RecallFormContainer } from './RecallFormContainer'
+
+import { useSuspenseQuery } from '@tanstack/react-query'
 
 type Props = {
   applicationId: string
@@ -19,10 +20,6 @@ export function ApplicationFormContainer({ applicationId, type }: Props) {
   const trpc = useTRPC()
   const { data } = useSuspenseQuery(
     trpc.getApplicationById.queryOptions({ id: applicationId }),
-  )
-
-  const { data: baseEntities } = useSuspenseQuery(
-    trpc.getBaseEntities.queryOptions(),
   )
 
   if (data.status !== ApplicationStatusEnum.DRAFT) {
@@ -39,67 +36,12 @@ export function ApplicationFormContainer({ applicationId, type }: Props) {
 
   switch (type) {
     case ApplicationTypeEnum.COMMON: {
-      Component = (
-        <CommonForm
-          metadata={{
-            type: data.type as unknown as ApplicationTypeEnum,
-            applicationId: data.id,
-            caseId: data.caseId,
-            typeOptions: baseEntities.types.map((type) => ({
-              label: type.title,
-              value: type,
-            })),
-          }}
-          application={{
-            type: ApplicationTypeEnum.COMMON,
-            ...data.answers,
-          }}
-        />
-      )
+      Component = <CommonFormContainer application={data} />
 
       break
     }
-    case ApplicationTypeEnum.RECALL_BANKRUPTCY: {
-      Component = (
-        <RecallForm
-          metadata={{
-            applicationId: data.id,
-            caseId: data.caseId,
-            type: ApplicationTypeEnum.RECALL_BANKRUPTCY,
-            courtOptions: baseEntities.courtDistricts.map((court) => ({
-              label: court.title,
-              value: court.id,
-            })),
-          }}
-          application={{
-            type: ApplicationTypeEnum.RECALL_BANKRUPTCY,
-            ...data.answers,
-          }}
-        />
-      )
-
-      break
-    }
-    case ApplicationTypeEnum.RECALL_DECEASED: {
-      Component = (
-        <RecallForm
-          metadata={{
-            applicationId: data.id,
-            caseId: data.caseId,
-            type: ApplicationTypeEnum.RECALL_DECEASED,
-            courtOptions: baseEntities.courtDistricts.map((court) => ({
-              label: court.title,
-              value: court.id,
-            })),
-          }}
-          application={{
-            type: ApplicationTypeEnum.RECALL_DECEASED,
-            ...data.answers,
-          }}
-        />
-      )
-
-      break
+    default: {
+      Component = <RecallFormContainer application={data} />
     }
   }
 

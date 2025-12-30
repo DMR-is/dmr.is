@@ -6,6 +6,7 @@ import {
   ApplicationDetailedDto,
   ApplicationDto,
   GetApplicationsDto,
+  GetHTMLPreview,
   IslandIsSubmitApplicationDto,
   UpdateApplicationDto,
 } from '../../models/application.model'
@@ -43,6 +44,11 @@ export interface IApplicationService {
     body: UpdateApplicationDto,
     user: DMRUser,
   ): Promise<ApplicationDetailedDto>
+
+  previewApplication(
+    applicationId: string,
+    user: DMRUser,
+  ): Promise<GetHTMLPreview>
 }
 
 export const IApplicationService = Symbol('IApplicationService')

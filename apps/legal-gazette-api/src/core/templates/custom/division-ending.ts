@@ -50,19 +50,14 @@ function validateDivisionEnding(model: AdvertModel): boolean {
 }
 
 export function getDivisionEndingTemplate(model: AdvertModel): string {
-  const isValid = validateDivisionEnding(model)
-
-  if (!isValid) {
-    throw new Error('Division ending data not provided')
-  }
-
-  const judgmentDate = model.judgementDate!
-  const name = model.settlement!.name!
-  const nationalId = model.settlement!.nationalId!
-  const declaredClaims = model.settlement!.declaredClaims!
+  // Render what we can, gracefully handle missing data
+  const judgmentDate = model.judgementDate
+  const name = model.settlement?.name
+  const nationalId = model.settlement?.nationalId
+  const declaredClaims = model.settlement?.declaredClaims
 
   const intro = `
-    ${getElement(`Með úrskurði héraðsdóms Reykjavíkur uppkveðnum ${formatDate(judgmentDate, 'dd. MMMM yyyy')} var neðangreint bú tekið til gjaldþrotaskipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri í þrotabúinu.`)}
+    ${getElement(`Með úrskurði héraðsdóms Reykjavíkur uppkveðnum ${judgmentDate ? formatDate(judgmentDate, 'dd. MMMM yyyy') : ''} var neðangreint bú tekið til gjaldþrotaskipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri í þrotabúinu.`)}
     ${getElement(`Engar eignir fundust í búinu og var skiptum í því lokið 17. janúar 2025 samkvæmt 155. gr. laga nr. 21/1991 án þess að greiðsla fengist upp í lýstar kröfur, auk áfallinna vaxta og kostnaðar eftir úrskurðardag gjaldþrotaskipta.`)}
   `
 
@@ -70,8 +65,8 @@ export function getDivisionEndingTemplate(model: AdvertModel): string {
   const declaredClaimsHeader = getTableHeaderCell('Lýstar kröfur:')
 
   const settlementCell = getTableCell(`
-      ${name}, <br />
-      kt. ${nationalId}
+      ${name || ''}, <br />
+      kt. ${nationalId || ''}
     `)
 
   const declaredClaimsCell = getTableCell(`

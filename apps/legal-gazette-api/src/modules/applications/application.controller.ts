@@ -29,6 +29,7 @@ import {
   ApplicationDetailedDto,
   ApplicationDto,
   GetApplicationsDto,
+  GetHTMLPreview,
   UpdateApplicationDto,
 } from '../../models/application.model'
 import { IApplicationService } from './application.service.interface'
@@ -115,5 +116,14 @@ export class ApplicationController {
     @CurrentUser() user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
     return this.applicationService.updateApplication(applicationId, body, user)
+  }
+
+  @Get(':applicationId/preview')
+  @LGResponse({ operationId: 'previewApplication', type: GetHTMLPreview })
+  async previewApplication(
+    @Param('applicationId') applicationId: string,
+    @CurrentUser() user: DMRUser,
+  ): Promise<GetHTMLPreview> {
+    return this.applicationService.previewApplication(applicationId, user)
   }
 }

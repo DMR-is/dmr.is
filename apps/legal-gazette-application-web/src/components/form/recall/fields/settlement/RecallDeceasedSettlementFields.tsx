@@ -40,9 +40,6 @@ export const RecallDeceasedSettlementFields = () => {
   return (
     <>
       <GridRow marginBottom={[2, 3]} rowGap={[2, 3]}>
-        <GridColumn span="12/12">
-          <Text variant="h4">Upplýsingar um dánarbúið</Text>
-        </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <RecallSettlementSelect />
         </GridColumn>
