@@ -2850,6 +2850,72 @@
         "tags": ["Legal gazette - application web API"]
       }
     },
+    "/api/v1/applications/{applicationId}/preview": {
+      "get": {
+        "operationId": "previewApplication",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetHTMLPreview" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
     "/api/v1/publications": {
       "get": {
         "operationId": "getPublications",
@@ -4223,7 +4289,7 @@
       },
       "ApplicationStatusEnum": {
         "type": "string",
-        "enum": ["DRAFT", "SUBMITTED", "FINISHED"]
+        "enum": ["DRAFT", "IN_PROGRESS", "SUBMITTED", "FINISHED"]
       },
       "ApplicationDto": {
         "type": "object",
@@ -4250,6 +4316,7 @@
             "nullable": true
           },
           "caseId": { "type": "string" },
+          "applicantNationalId": { "type": "string" },
           "submittedByNationalId": { "type": "string" },
           "status": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
@@ -4262,17 +4329,19 @@
           "publications": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
-          }
+          },
+          "currentStep": { "type": "number" }
         },
         "required": [
           "id",
           "createdAt",
           "updatedAt",
           "caseId",
-          "submittedByNationalId",
+          "applicantNationalId",
           "status",
           "title",
-          "type"
+          "type",
+          "currentStep"
         ]
       },
       "GetApplicationsDto": {
@@ -4311,6 +4380,7 @@
             "nullable": true
           },
           "caseId": { "type": "string" },
+          "applicantNationalId": { "type": "string" },
           "submittedByNationalId": { "type": "string" },
           "status": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationStatusEnum" }]
@@ -4324,6 +4394,7 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
           },
+          "currentStep": { "type": "number" },
           "answers": { "type": "object", "default": {} }
         },
         "required": [
@@ -4331,17 +4402,26 @@
           "createdAt",
           "updatedAt",
           "caseId",
-          "submittedByNationalId",
+          "applicantNationalId",
           "status",
           "title",
           "type",
+          "currentStep",
           "answers"
         ]
       },
       "UpdateApplicationDto": {
         "type": "object",
-        "properties": { "answers": { "type": "object", "default": {} } },
+        "properties": {
+          "currentStep": { "type": "number" },
+          "answers": { "type": "object", "default": {} }
+        },
         "required": ["answers"]
+      },
+      "GetHTMLPreview": {
+        "type": "object",
+        "properties": { "preview": { "type": "string" } },
+        "required": ["preview"]
       },
       "PublishedPublicationDto": {
         "type": "object",

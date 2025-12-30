@@ -48,6 +48,7 @@ import { CreateSignatureDto } from './signature.model'
 
 export enum ApplicationStatusEnum {
   DRAFT = 'DRAFT',
+  IN_PROGRESS = 'IN_PROGRESS',
   SUBMITTED = 'SUBMITTED',
   FINISHED = 'FINISHED',
 }
@@ -73,11 +74,13 @@ export type ApplicationAnswers<
 type BaseApplicationAttributes = {
   caseId: string
   settlementId: string | null
-  submittedByNationalId: string
+  applicantNationalId: string
+  submittedByNationalId: string | null
   applicationType: ApplicationTypeEnum
   status: ApplicationStatusEnum
   answers: ApplicationAnswers
   adverts?: AdvertModel[]
+  currentStep: number
 }
 
 export type ApplicationAttributes = BaseApplicationAttributes &
@@ -86,7 +89,8 @@ export type ApplicationAttributes = BaseApplicationAttributes &
 export type ApplicationCreateAttributes = {
   caseId?: string
   settlementId?: string | null
-  submittedByNationalId: string
+  submittedByNationalId?: string | null
+  applicantNationalId: string
   applicationType: ApplicationTypeEnum
   status?: ApplicationStatusEnum
   answers?: ApplicationAnswers
@@ -142,7 +146,13 @@ export class ApplicationModel extends BaseModel<
     type: DataType.TEXT,
     allowNull: false,
   })
-  submittedByNationalId!: string
+  applicantNationalId!: string
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+  })
+  submittedByNationalId!: string | null
 
   @Column({
     type: DataType.ENUM(...Object.values(ApplicationTypeEnum)),
@@ -156,6 +166,13 @@ export class ApplicationModel extends BaseModel<
     defaultValue: ApplicationStatusEnum.DRAFT,
   })
   status!: ApplicationStatusEnum
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+  })
+  currentStep!: number
 
   @Column({
     type: DataType.JSONB,
@@ -204,7 +221,8 @@ export class ApplicationModel extends BaseModel<
       createdAt: model.createdAt.toISOString(),
       updatedAt: model.updatedAt.toISOString(),
       caseId: model.caseId,
-      submittedByNationalId: model.submittedByNationalId,
+      applicantNationalId: model.applicantNationalId,
+      submittedByNationalId: model.submittedByNationalId || undefined,
       status: model.status,
       title: model.title,
       type: model.applicationType,
@@ -212,6 +230,7 @@ export class ApplicationModel extends BaseModel<
       publications: model.adverts?.flatMap(
         (advert) => advert.publications?.map((pub) => pub.fromModel()) || [],
       ),
+      currentStep: model.currentStep,
     }
   }
 
@@ -241,7 +260,10 @@ export class ApplicationDto extends DetailedDto {
   caseId!: string
 
   @ApiProperty({ type: String })
-  submittedByNationalId!: string
+  applicantNationalId!: string
+
+  @ApiProperty({ type: String, required: false })
+  submittedByNationalId?: string
 
   @ApiProperty({
     enum: ApplicationStatusEnum,
@@ -260,6 +282,9 @@ export class ApplicationDto extends DetailedDto {
 
   @ApiProperty({ type: [AdvertPublicationDto], required: false })
   publications?: AdvertPublicationDto[]
+
+  @ApiProperty({ type: Number })
+  currentStep!: number
 }
 
 export class ApplicationDtoWithSubtitle extends ApplicationDto {
@@ -280,6 +305,11 @@ export class ApplicationDetailedDto extends ApplicationDto {
 }
 
 export class UpdateApplicationDto {
+  @ApiProperty({ type: Number, required: false })
+  @IsOptional()
+  @IsNumber()
+  currentStep?: number
+
   @ApiProperty({ type: Object, default: {} })
   @IsOptional()
   @IsObject()
@@ -359,6 +389,11 @@ export class IslandIsSubmitApplicationDto extends PickType(
   @ArrayMaxSize(3)
   @IsDateString(undefined, { each: true })
   publishingDates!: string[]
+}
+
+export class GetHTMLPreview {
+  @ApiProperty({ type: String })
+  preview!: string
 }
 
 export class GetMinDateResponseDto {

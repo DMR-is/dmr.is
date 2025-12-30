@@ -1,8 +1,33 @@
-import { theme } from '@island.is/island-ui/theme'
+import { theme, themeUtils } from '@island.is/island-ui/theme'
 
 import { DMR_HEADER_HEIGHT, DMR_HEADER_MOBILE_HEIGHT } from '../constants'
 
+import { style } from '@vanilla-extract/css'
 import { recipe } from '@vanilla-extract/recipes'
+
+export const infoContainer = style({
+  ...themeUtils.responsiveStyle({
+    md: {
+      border: `1px solid ${theme.color.dark100}`,
+    },
+  }),
+})
+
+export const infoDescription = style({
+  fontWeight: 300,
+  lineHeight: 1.5,
+  fontSize: 14,
+  maxHeight: 40,
+  position: 'relative',
+  overflow: 'auto',
+
+  ...themeUtils.responsiveStyle({
+    md: {
+      fontSize: 18,
+      maxHeight: 66,
+    },
+  }),
+})
 
 export const header = recipe({
   base: {

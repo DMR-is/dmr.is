@@ -4,4 +4,8 @@ export const subscriberRouter = router({
   getMySubscriber: protectedProcedure.query(async ({ ctx }) => {
     return await ctx.api.getMySubscriber()
   }),
+  createSubscription: protectedProcedure.mutation(async ({ ctx }) => {
+    const res = await ctx.api.createSubscription()
+    return res
+  }),
 })

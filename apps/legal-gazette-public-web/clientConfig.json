@@ -529,6 +529,65 @@
         "tags": ["Legal gazette - public API"]
       }
     },
+    "/api/v1/subscribers/create-subscription": {
+      "post": {
+        "operationId": "createSubscription",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MutationResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - public API"]
+      }
+    },
     "/api/v1/publications": {
       "get": {
         "operationId": "getPublications",
@@ -1247,6 +1306,11 @@
           "subscribedFrom",
           "subscribedTo"
         ]
+      },
+      "MutationResponse": {
+        "type": "object",
+        "properties": { "success": { "type": "boolean" } },
+        "required": ["success"]
       },
       "AdvertVersionEnum": { "type": "string", "enum": ["A", "B", "C"] },
       "PublishedPublicationDto": {

@@ -8,14 +8,12 @@ import {
   RecallApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import {
-  AlertMessage,
   Box,
   Button,
   GridColumn,
   GridRow,
   Inline,
   Stack,
-  Text,
 } from '@dmr.is/ui/components/island-is'
 import {
   getInvalidPublishingDatesInRange,
@@ -31,11 +29,8 @@ type Props = {
   applicationType?: 'COMMON' | 'RECALL'
 }
 
-export const PublishingFields = ({
-  additionalTitle,
-  applicationType = 'COMMON',
-}: Props) => {
-  const { getValues, watch, setValue, formState } = useFormContext<
+export const PublishingFields = ({ applicationType = 'COMMON' }: Props) => {
+  const { getValues, watch, setValue } = useFormContext<
     BaseApplicationWebSchema | RecallApplicationWebSchema
   >()
 
@@ -104,28 +99,9 @@ export const PublishingFields = ({
     [currentDates, updatePublishingDates],
   )
 
-  const signatureError = formState.errors.publishingDates
-
   return (
     <Box id="publishingDates">
       <GridRow rowGap={[2, 3]}>
-        <GridColumn span="12/12">
-          <Stack space={[2, 3]}>
-            <Text variant="h4">
-              {`Birting${additionalTitle ? ` ${additionalTitle}` : ''}`}{' '}
-              <Text fontWeight="regular" color="red600" as="span">
-                *
-              </Text>
-            </Text>
-            {signatureError && (
-              <AlertMessage
-                type="error"
-                title="Birtingardagar ekki rétt útfylltir"
-                message={signatureError.message}
-              />
-            )}
-          </Stack>
-        </GridColumn>
         <GridColumn span="12/12">
           <Stack space={[2, 3]}>
             {currentDates?.map((date, index) => {

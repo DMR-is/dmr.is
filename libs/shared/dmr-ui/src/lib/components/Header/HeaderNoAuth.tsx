@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  Box,
   GridColumn,
   GridContainer,
   GridRow,
@@ -30,9 +31,20 @@ export const HeaderNoAuth = ({ variant = 'blue' }: HeaderProps) => {
                   space={[1, 1, 4]}
                 >
                   <HeaderLogo />
-                  <Text variant="h4" fontWeight="regular">
-                    Lögbirtingablað
-                  </Text>
+                  <Box
+                    display="flex"
+                    borderLeftWidth="standard"
+                    borderStyle="solid"
+                    borderColor="dark100"
+                    alignItems="center"
+                    height="full"
+                    marginLeft={[1, 1, 0, 2]}
+                    marginRight="auto"
+                  >
+                    <Box marginLeft={[2, 2, 3, 4]}>
+                      <Text fontWeight="medium">Lögbirtingablað</Text>
+                    </Box>
+                  </Box>
                 </Inline>
               </Inline>
             </GridColumn>

@@ -6,7 +6,6 @@ import {
   GridColumn,
   GridRow,
   Stack,
-  Text,
 } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
@@ -14,7 +13,7 @@ import { DatePickerController } from '../controllers/DatePickerController'
 import { InputController } from '../controllers/InputController'
 
 export const SignatureFields = () => {
-  const { getValues, formState } = useFormContext<BaseApplicationWebSchema>()
+  const { getValues } = useFormContext<BaseApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
 
   const { debouncedUpdateApplication } = useUpdateApplication({
@@ -22,26 +21,9 @@ export const SignatureFields = () => {
     type: 'COMMON',
   })
 
-  const signatureError = formState.errors.signature
-
   return (
     <Box id="signature">
       <Stack space={[1, 2]}>
-        <Text variant="h4">
-          Undirritun{' '}
-          <Text fontWeight="regular" color="red600" as="span">
-            *
-          </Text>
-          <Text
-            variant="small"
-            as="span"
-            fontWeight={signatureError ? 'semiBold' : 'regular'}
-            color={(signatureError && 'red600') || 'dark400'}
-          >
-            Fylla þarf út nafn, staðsetningu eða dagsetningu undirritunar
-          </Text>
-        </Text>
-
         <GridRow rowGap={[2, 3]}>
           <GridColumn span={['12/12', '6/12']}>
             <InputController

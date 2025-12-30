@@ -557,7 +557,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       divisionMeetingLocation:
         data.fields.divisionMeetingFields?.meetingLocation,
       judgementDate: data.fields.courtAndJudgmentFields?.judgmentDate,
-      courtDistrictId: data.fields.courtAndJudgmentFields?.courtDistrictId,
+      courtDistrictId: data.fields.courtAndJudgmentFields?.courtDistrict.id,
       communicationChannels: data.communicationChannels,
       scheduledAt: data.publishingDates,
       settlement: {

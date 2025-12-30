@@ -4,7 +4,7 @@ import {
   ApplicationRequirementStatementEnum,
   RecallApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
-import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
+import { GridColumn, GridRow } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { InputController } from '../../controllers/InputController'
@@ -26,9 +26,6 @@ export const RecallLiquidatorFields = () => {
 
   return (
     <GridRow rowGap={[2, 3]}>
-      <GridColumn span="12/12">
-        <Text variant="h4">Upplýsingar um skiptastjóra</Text>
-      </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
         <InputController
           label="Nafn skiptastjóra"

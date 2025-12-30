@@ -5,6 +5,9 @@ import { parseAsInteger, useQueryState } from 'nuqs'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   AlertMessage,
+  GridColumn,
+  GridContainer,
+  GridRow,
   SkeletonLoader,
 } from '@dmr.is/ui/components/island-is'
 
@@ -23,7 +26,18 @@ export function AdvertsListContainer() {
 
   if (isLoading) {
     return (
-      <SkeletonLoader repeat={3} height={200} borderRadius="large" space={3} />
+      <GridContainer>
+        <GridRow>
+          <GridColumn span="12/12">
+            <SkeletonLoader
+              repeat={3}
+              height={200}
+              borderRadius="large"
+              space={3}
+            />
+          </GridColumn>
+        </GridRow>
+      </GridContainer>
     )
   }
 

@@ -2,20 +2,26 @@
 
 import {
   Box,
+  Button,
   GridColumn,
   GridContainer,
   GridRow,
+  Inline,
+  LinkV2,
+  Text,
 } from '@dmr.is/ui/components/island-is'
 
+import { PageRoutes } from '../../lib/constants'
 import { ApplicationFooter } from './footer/ApplicationFooter'
 import * as styles from './application.css'
 import { ApplicationSidebar } from './ApplicationSidebar'
 
 type Props = {
   children: React.ReactNode
+  title: string
 }
 
-export const ApplicationShell = ({ children }: Props) => {
+export const ApplicationShell = ({ children, title }: Props) => {
   return (
     <GridContainer>
       <GridRow>
@@ -27,6 +33,14 @@ export const ApplicationShell = ({ children }: Props) => {
             paddingX={[9, 12]}
             background="white"
           >
+            <Inline alignY="center" justifyContent="spaceBetween" space={2}>
+              <Text variant="h2">{title}</Text>
+              <LinkV2 href={PageRoutes.APPLICATIONS}>
+                <Button preTextIcon="arrowBack" variant="text" size="small">
+                  Til baka á forsíðu
+                </Button>
+              </LinkV2>
+            </Inline>
             {children}
           </Box>
           <ApplicationFooter />
