@@ -1,10 +1,10 @@
 export enum PageRoutes {
   LOGIN = '/innskraning',
   FRONTPAGE = '/',
-  APPLICATIONS = '/umsoknir',
-  APPLICATION_THROTABU = '/umsoknir/innkollun-throtabus',
-  APPLICATION_DANARBU = '/umsoknir/innkollun-danarbus',
-  APPLICATION_COMMON = '/umsoknir/almenn-umsokn',
+  APPLICATIONS = '/auglysingar',
+  APPLICATION_THROTABU = '/auglysingar/innkollun-throtabus',
+  APPLICATION_DANARBU = '/auglysingar/innkollun-danarbus',
+  APPLICATION_COMMON = '/auglysingar/almenn-auglysing',
   ISLAND_IS_COMMONA_APPLICATION = 'https://island.is/umsoknir/logbirtingarblad',
 }
 
@@ -21,7 +21,7 @@ export const POSTPONE_LIMIT = 90
 export enum FormTypes {
   BANKRUPTCY = 'innkollun-throtabus',
   DECEASED = 'innkollun-danarbus',
-  COMMON = 'almenn-umsokn',
+  COMMON = 'almenn-auglysing',
 }
 
 export const MAX_SELECTABLE_YEAR = new Date().getFullYear() + 5
