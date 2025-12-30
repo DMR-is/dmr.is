@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 
+import { Footer } from '@dmr.is/ui/components/Footer/Footer'
 import { Header } from '@dmr.is/ui/components/Header/Header'
 import { HeaderLogin } from '@dmr.is/ui/components/Header/HeaderLogin'
 
@@ -15,9 +16,9 @@ export default async function RootLayout({
 }) {
   const session = await getServerSession(authOptions)
 
-  if (session && session.user.isActive) {
-    redirect('/')
-  }
+  // if (session && session.user.isActive) {
+  //   redirect('/')
+  // }
   return (
     <>
       {session ? (
@@ -31,6 +32,7 @@ export default async function RootLayout({
           {login}
         </>
       )}
+      <Footer />
     </>
   )
 }
