@@ -37,7 +37,7 @@ export const ApplicationShell = ({ children, title }: Props) => {
               <Text variant="h2">{title}</Text>
               <LinkV2 href={PageRoutes.APPLICATIONS}>
                 <Button preTextIcon="arrowBack" variant="text" size="small">
-                  Tilbaka í umsóknir
+                  Til baka á forsíðu
                 </Button>
               </LinkV2>
             </Inline>
