@@ -21,11 +21,11 @@ export default function NotFound() {
             <Text marginBottom={2}>
               Athugaðu hvort auðkenni slóðarinnar sé rétt
             </Text>
-            <LinkV2 href="/umsoknir">
+            <LinkV2 href="/auglysingar">
               <Inline space={1} alignY="center">
                 <Icon icon="arrowBack" size="small" color="blue400" />
                 <Text variant="eyebrow" color="blue400">
-                  Til baka
+                  Til baka á forsíðu
                 </Text>
               </Inline>
             </LinkV2>

@@ -14,7 +14,7 @@ type Tab = {
 }
 
 const tabs: Tab[] = [
-  { id: 'applications', label: 'Mínar auglýsingar', href: '/umsoknir' },
+  { id: 'applications', label: 'Mínar auglýsingar', href: '/auglysingar' },
   { id: 'olderAdverts', label: 'Eldri auglýsingar', href: '/eldriauglysingar' },
 ]
 

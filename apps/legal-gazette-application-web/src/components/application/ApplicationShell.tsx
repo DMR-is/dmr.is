@@ -35,7 +35,7 @@ export const ApplicationShell = ({ children, title }: Props) => {
           >
             <Inline alignY="center" justifyContent="spaceBetween" space={2}>
               <Text variant="h2">{title}</Text>
-              <LinkV2 href={PageRoutes.APPLICATIONS}>
+              <LinkV2 href={PageRoutes.FRONTPAGE}>
                 <Button preTextIcon="arrowBack" variant="text" size="small">
                   Til baka á forsíðu
                 </Button>
