@@ -14,6 +14,7 @@ import { Box } from '@dmr.is/ui/components/island-is'
 import { ApplicationShell } from '../components/application/ApplicationShell'
 import { AdvertStep } from '../components/form/recall/steps/AdvertStep'
 import { PublishingStep } from '../components/form/recall/steps/PublishingStep'
+import { SettlementStep } from '../components/form/recall/steps/SettlementStep'
 import { PrerequisitesSteps } from '../components/form/steps/PrequesitesSteps'
 import { PreviewStep } from '../components/form/steps/PreviewStep'
 import { SummaryStep } from '../components/form/steps/SummaryStep'
@@ -71,6 +72,10 @@ export const RecallFormContainer = ({
       children: <PrerequisitesSteps id={application.id} />,
     },
     { title: 'Grunnupplýsingar', children: <AdvertStep /> },
+    {
+      title: `Upplýsing um ${isBankruptcy ? 'þrotabú' : 'dánarbú'}`,
+      children: <SettlementStep />,
+    },
     { title: 'Birting og samskiptaleiðir', children: <PublishingStep /> },
     { title: 'Forskoðun', children: <PreviewStep id={application.id} /> },
     { title: 'Samantekt', children: <SummaryStep application={application} /> },
