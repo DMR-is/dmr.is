@@ -16,9 +16,11 @@ import { PublishingStep } from '../components/form/common/steps/PublishingStep'
 import { PrerequisitesSteps } from '../components/form/steps/PrequesitesSteps'
 import { PreviewStep } from '../components/form/steps/PreviewStep'
 import { SummaryStep } from '../components/form/steps/SummaryStep'
+import { FormStep } from '../components/form-step/FormStep'
 import { ApplicationDetailedDto } from '../gen/fetch'
 import { useSubmitApplication } from '../hooks/useSubmitApplication'
-import { commonForm } from '../lib/forms/common-form'
+import { commonForm } from '../lib/forms/common/form'
+import { CommonForm } from '../lib/forms/common/steps'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
@@ -49,12 +51,12 @@ export const CommonFormContainer = ({
   const items = [
     {
       title: 'Skilyrði fyrir birtingu',
-      children: <PrerequisitesSteps id={application.id} />,
+      children: <PrerequisitesSteps />,
     },
     { title: 'Grunnupplýsingar', children: <AdvertStep /> },
     { title: 'Birtingarupplýsingar', children: <PublishingStep /> },
-    { title: 'Forskoðun', children: <PreviewStep id={application.id} /> },
-    { title: 'Samantekt', children: <SummaryStep application={application} /> },
+    { title: 'Forskoðun', children: <PreviewStep /> },
+    { title: 'Samantekt', children: <SummaryStep /> },
   ]
 
   const metadata = {
@@ -99,14 +101,21 @@ export const CommonFormContainer = ({
     [methods, onValidSubmit, onInvalidSubmit],
   )
 
-  const itemToRender = items[application.currentStep]
+  const stepToRender = CommonForm.steps.at(application.currentStep)
+
+  if (!stepToRender) {
+    // eslint-disable-next-line no-console
+    console.error('No step found for current step:', application.currentStep)
+    return null
+  }
 
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit, onInvalidSubmit)}>
-        <ApplicationShell title={itemToRender.title}>
-          <Box paddingY={[2, 3]}></Box>
-          {itemToRender.children}
+        <ApplicationShell form={CommonForm} title={stepToRender.title}>
+          <Box paddingY={[2, 3]}>
+            <FormStep items={stepToRender.fields} />
+          </Box>
         </ApplicationShell>
       </form>
     </FormProvider>

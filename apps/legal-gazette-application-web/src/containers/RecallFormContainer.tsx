@@ -20,7 +20,7 @@ import { PreviewStep } from '../components/form/steps/PreviewStep'
 import { SummaryStep } from '../components/form/steps/SummaryStep'
 import { ApplicationDetailedDto } from '../gen/fetch'
 import { useSubmitApplication } from '../hooks/useSubmitApplication'
-import { recallForm } from '../lib/forms/recall-form'
+import { recallForm } from '../lib/forms/recall/form'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
@@ -69,7 +69,7 @@ export const RecallFormContainer = ({
   const items = [
     {
       title: 'Skilyrði fyrir birtingu',
-      children: <PrerequisitesSteps id={application.id} />,
+      children: <PrerequisitesSteps />,
     },
     { title: 'Grunnupplýsingar', children: <AdvertStep /> },
     {
@@ -77,8 +77,8 @@ export const RecallFormContainer = ({
       children: <SettlementStep />,
     },
     { title: 'Birting og samskiptaleiðir', children: <PublishingStep /> },
-    { title: 'Forskoðun', children: <PreviewStep id={application.id} /> },
-    { title: 'Samantekt', children: <SummaryStep application={application} /> },
+    { title: 'Forskoðun', children: <PreviewStep /> },
+    { title: 'Samantekt', children: <SummaryStep /> },
   ]
 
   const metadata = {

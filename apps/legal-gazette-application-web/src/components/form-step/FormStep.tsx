@@ -14,13 +14,15 @@ export const FormStep = ({ items }: Props) => {
   return (
     <Stack space={[2, 3]}>
       {items.map((item, index) => (
-        <Stack space={[2, 3]} key={index}>
-          <Stack key={index} space={1}>
-            {item.title && <Text variant="h3">{item.title}</Text>}
-            {item.intro && item.intro}
+        <div data-section-index={index} key={index}>
+          <Stack space={[2, 3]}>
+            <Stack key={index} space={1}>
+              {item.title && <Text variant="h3">{item.title}</Text>}
+              {item.intro && item.intro}
+            </Stack>
+            {item.content}
           </Stack>
-          {item.content}
-        </Stack>
+        </div>
       ))}
     </Stack>
   )
