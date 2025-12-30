@@ -4326,6 +4326,10 @@
           "type": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           },
+          "publications": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
+          },
           "currentStep": { "type": "number" }
         },
         "required": [
@@ -4385,6 +4389,10 @@
           "subtitle": { "type": "string" },
           "type": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
+          },
+          "publications": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
           },
           "currentStep": { "type": "number" },
           "answers": { "type": "object", "default": {} }

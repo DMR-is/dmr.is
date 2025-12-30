@@ -30,33 +30,61 @@ export const ApplicationCard = ({ application }: Props) => {
         ? `${PageRoutes.APPLICATION_THROTABU}/${application.id}`
         : `${PageRoutes.APPLICATION_DANARBU}/${application.id}`
 
-  const statusText =
+  let statusText =
     application.status === ApplicationStatusEnum.DRAFT
       ? 'Í vinnslu hjá notanda'
-      : ApplicationStatusEnum.SUBMITTED
+      : application.status === ApplicationStatusEnum.SUBMITTED
         ? 'Í vinnslu hjá ritstjórn'
-        : 'Lokið'
+        : 'Innsent'
+
+  // get publication only for common applications
+  const publications =
+    application.type === ApplicationTypeEnum.COMMON
+      ? application.publications || []
+      : []
+
+  // check if all publications are published
+  const allPublished =
+    publications.length > 0
+      ? publications.every((pub) => pub.publishedAt != null)
+      : false
+
+  if (allPublished) {
+    statusText = 'Útgefið'
+  }
 
   return (
     <Box borderRadius="large" border="standard" padding={3} background="white">
       <Stack space={2}>
         <Inline justifyContent="spaceBetween">
-          <Text color="purple400" variant="eyebrow">
-            {`Stofnuð: ${formatDate(application.createdAt)} | Uppfærð: ${formatDate(
-              application.updatedAt,
-            )}`}
+          <Text color="purple400" variant="eyebrow" title="Uppfært">
+            {`${formatDate(application.updatedAt, "dd. MMMM yyyy 'kl.' HH:mm")}`}
           </Text>
-          <Tag
-            variant={
-              application.status === ApplicationStatusEnum.DRAFT
-                ? 'blue'
-                : ApplicationStatusEnum.SUBMITTED
-                  ? 'blueberry'
-                  : 'mint'
-            }
-          >
-            {statusText}
-          </Tag>
+          <Inline space={1}>
+            {!allPublished &&
+              publications.map(
+                (pub, i) =>
+                  !!pub.publishedAt && (
+                    <Tag key={i} variant={'mint'}>
+                      Birting {pub.version} {'útgefin'}
+                    </Tag>
+                  ),
+              )}
+
+            <Tag
+              variant={
+                allPublished
+                  ? 'mint'
+                  : application.status === ApplicationStatusEnum.DRAFT
+                    ? 'blue'
+                    : ApplicationStatusEnum.SUBMITTED
+                      ? 'blueberry'
+                      : 'mint'
+              }
+            >
+              {statusText}
+            </Tag>
+          </Inline>
         </Inline>
 
         <Stack space={1}>

@@ -19,6 +19,7 @@ import {
   DefaultScope,
   ForeignKey,
   HasMany,
+  Scopes,
 } from 'sequelize-typescript'
 import { isBase64 } from 'validator'
 
@@ -36,6 +37,10 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'
 import { AdvertModel } from './advert.model'
+import {
+  AdvertPublicationDto,
+  AdvertPublicationModel,
+} from './advert-publication.model'
 import { CaseModel } from './case.model'
 import { CreateCommunicationChannelDto } from './communication-channel.model'
 import { SettlementModel } from './settlement.model'
@@ -94,7 +99,29 @@ export type ApplicationCreateAttributes = {
 @BaseTable({ tableName: LegalGazetteModels.APPLICATION })
 @DefaultScope(() => ({
   include: [{ model: SettlementModel, as: 'settlement' }],
-  order: [['createdAt', 'DESC']],
+  order: [['updatedAt', 'DESC']],
+}))
+@Scopes(() => ({
+  listview: {
+    include: [
+      { model: SettlementModel, as: 'settlement' },
+      {
+        attributes: ['id'],
+        model: AdvertModel,
+        as: 'adverts',
+        required: false,
+        separate: true,
+        include: [
+          {
+            attributes: ['id', 'versionNumber', 'publishedAt', 'scheduledAt'],
+            model: AdvertPublicationModel,
+            as: 'publications',
+          },
+        ],
+      },
+    ],
+    order: [['updatedAt', 'DESC']],
+  },
 }))
 export class ApplicationModel extends BaseModel<
   ApplicationAttributes,
@@ -200,6 +227,9 @@ export class ApplicationModel extends BaseModel<
       title: model.title,
       type: model.applicationType,
       subtitle: model.getSubtitle(),
+      publications: model.adverts?.flatMap(
+        (advert) => advert.publications?.map((pub) => pub.fromModel()) || [],
+      ),
       currentStep: model.currentStep,
     }
   }
@@ -249,6 +279,9 @@ export class ApplicationDto extends DetailedDto {
 
   @ApiProperty({ enum: ApplicationTypeEnum, enumName: 'ApplicationTypeEnum' })
   type!: ApplicationTypeEnum
+
+  @ApiProperty({ type: [AdvertPublicationDto], required: false })
+  publications?: AdvertPublicationDto[]
 
   @ApiProperty({ type: Number })
   currentStep!: number

@@ -59,7 +59,7 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
                     : undefined
                 }
                 cta={{
-                  label: 'Opna auglýsingu',
+                  label: 'Skoða auglýsingu',
                   icon: 'open',
                   iconType: 'outline',
                   buttonType: { variant: 'text' },

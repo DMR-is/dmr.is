@@ -39,6 +39,7 @@ const dateFormats = [
   'HH:mm',
   'MMMM',
   'EEEE',
+  "dd. MMMM yyyy 'kl.' HH:mm",
 ] as const
 
 export const formatDate = (
