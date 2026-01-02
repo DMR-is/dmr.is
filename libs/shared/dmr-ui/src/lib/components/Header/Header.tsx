@@ -37,7 +37,7 @@ export type HeaderProps = {
 }
 
 export const Header = ({
-  info = { title: 'Lögbirtingablaðið' },
+  info = { title: 'Lögbirtingablað' },
   controlPanel,
   settings,
   variant = 'blue',
