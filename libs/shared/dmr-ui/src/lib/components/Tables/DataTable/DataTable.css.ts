@@ -55,23 +55,23 @@ export const linkTableHeaderCell = style({
 export const seeMoreTableCellLink = recipe({
   base: {
     display: 'block',
-    padding: theme.spacing[1],
+    transition: 'opacity 0.15s',
 
     '@media': {
       [`screen and (max-width: ${theme.breakpoints.xl}px)`]: {
         background: theme.color.white,
       },
       [`screen and (min-width: ${theme.breakpoints.xl}px)`]: {
-        visibility: 'hidden',
+        opacity: 0,
       },
     },
   },
   variants: {
-    visible: {
+    opacity: {
       true: {
         '@media': {
           [`screen and (min-width: ${theme.breakpoints.xl}px)`]: {
-            visibility: 'visible',
+            opacity: 1,
           },
         },
       },
@@ -98,17 +98,19 @@ export const emptyRowMessage = style({
 })
 
 export const dataTableRow = recipe({
-  base: {},
+  base: {
+    transition: 'background-color 0.15s',
+    selectors: {
+      '&:hover': {
+        backgroundColor: theme.color.blue100,
+      },
+    },
+  },
+
   variants: {
     expandable: {
       true: {
         cursor: 'pointer',
-
-        selectors: {
-          '&:hover': {
-            backgroundColor: theme.color.blue100,
-          },
-        },
       },
       false: {
         cursor: 'default',

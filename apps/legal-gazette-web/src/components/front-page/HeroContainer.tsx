@@ -5,16 +5,22 @@ import { LinkCard } from '@dmr.is/ui/components/LinkCard/LinkCard'
 
 import { GridColumn, GridRow } from '@island.is/island-ui/core'
 
-import { Route, Routes } from '../../lib/constants'
-import { routesToBreadcrumbs } from '../../lib/utils'
+import { Route } from '../../lib/constants'
 
 export const HeroContainer = () => {
-  const breadcrumbs = routesToBreadcrumbs(Routes, Route.STJORNBORD)
+  const breadcrumbs = {
+    items: [
+      {
+        title: 'Umsýslukerfi',
+      },
+    ],
+  }
+
   return (
     <Hero
-      breadcrumbs={{ items: breadcrumbs }}
+      breadcrumbs={breadcrumbs}
       title="Lögbirtingablað"
-      description="Umsýslukerfi Lögbirtingablaðs. Hér á stjórnborði er yfirlit yfir ritsjórn, útgáfu og tölfræði."
+      description="Umsýslukerfi Lögbirtingablaðsins. Yfirlit yfir ritsjórn, útgáfu og tölfræði. Lögbirtingablað hefur verið gefið út á prenti frá 2. Janúar 1908 en rafræn útgáfa hófst 1. júlí 2005."
       image={{
         src: '/assets/banner-image.svg',
         alt: 'Image alt',

@@ -39,7 +39,7 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
         onMouseLeave={() => hasLink && setHovered(false)}
         role={isExpandable ? 'button' : 'div'}
         className={styles.dataTableRow({
-          expandable: !!isExpandable || hasLink,
+          expandable: !!isExpandable,
         })}
         style={{ background: row.background }}
       >
@@ -52,7 +52,7 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
             <LinkV2 href={row.href} shallow={false}>
               <Box
                 className={styles.seeMoreTableCellLink({
-                  visible: hovered,
+                  opacity: hovered,
                 })}
               >
                 <Text

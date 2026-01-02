@@ -53,7 +53,7 @@ export const FilterMenu = () => {
     resetParams,
   } = useFilterContext()
   const popover = usePopoverState({
-    placement: 'bottom-start',
+    placement: 'right-end',
   })
 
   const filters: FilterMenuItem[] = [

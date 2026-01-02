@@ -19,10 +19,16 @@ export const ActiveFilters = ({
   const filterCount = filters.length
 
   return (
-    <Inline space={1} alignY="center">
+    <Inline space={1}>
       {filters.map((filter, i) => {
         return (
-          <Box cursor="pointer" role="button" onClick={filter.onClick} key={i}>
+          <Box
+            cursor="pointer"
+            role="button"
+            onClick={filter.onClick}
+            key={i}
+            paddingBottom={2}
+          >
             <Tag outlined variant={filter.variant}>
               <Box display="flex" alignItems="center">
                 <span>{filter.label}</span>
@@ -35,9 +41,11 @@ export const ActiveFilters = ({
         )
       })}
       {filterCount > 1 && onClear && (
-        <Button onClick={onClear} variant="text" size="small" icon="reload">
-          {onClearLabel}
-        </Button>
+        <Box marginLeft={1}>
+          <Button onClick={onClear} variant="text" size="small" icon="reload">
+            {onClearLabel}
+          </Button>
+        </Box>
       )}
     </Inline>
   )
