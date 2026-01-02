@@ -9,6 +9,7 @@ describe('logging', () => {
 
     it('should use level debug as default', async () => {
       const logLevel = 'debug'
+      process.env.NODE_ENV = 'development'
 
       const { logger } = await import('./logging')
 

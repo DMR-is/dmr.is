@@ -3,8 +3,11 @@ import { createLogger, format, LoggerOptions, transports } from 'winston'
 
 import { maskNationalIdFormatter } from './formatters'
 
+// Check if running in test environment
+const isTestEnv = process.env['NODE_ENV'] === 'test'
+
 // Default log settings for debug mode
-let logLevel = 'debug'
+let logLevel = isTestEnv ? 'silent' : 'debug'
 let logFormat = format.combine(
   format.errors({ stack: true }),
   format.timestamp(),
