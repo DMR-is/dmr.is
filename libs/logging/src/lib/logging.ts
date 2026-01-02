@@ -4,7 +4,7 @@ import { createLogger, format, LoggerOptions, transports } from 'winston'
 import { maskNationalIdFormatter } from './formatters'
 
 // Check if running in test environment
-const isTestEnv = process.env['NODE_ENV'] === 'test' || process.env['JEST_WORKER_ID'] !== undefined
+const isTestEnv = process.env['NODE_ENV'] === 'test'
 
 // Default log settings for debug mode
 let logLevel = isTestEnv ? 'silent' : 'debug'
