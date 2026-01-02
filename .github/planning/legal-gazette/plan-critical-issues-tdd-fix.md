@@ -21,13 +21,13 @@ This plan outlines a TDD approach to fixing the 5 critical issues identified in 
 
 ## Critical Issues Summary
 
-| ID | Issue | Location | Impact |
-|----|-------|----------|--------|
-| C-1 | Published Adverts Can Be Modified | `advert.service.ts` | Data integrity violation |
-| C-2 | Publishing Before Payment Confirmation | `publication.service.ts` | Business model bypass |
-| C-3 | Race Condition - Duplicate Payments | `subscriber.service.ts` | Double-charging users |
-| C-4 | Orphaned TBR Claims (Subscriber) | `subscriber-created.listener.ts` | Untracked payments |
-| C-5 | Orphaned TBR Claims (Advert) | `advert-published.listener.ts` | Untracked payments |
+| ID | Issue | Location | Impact | Status |
+|----|-------|----------|--------|--------|
+| C-1 | Published Adverts Can Be Modified | `advert.service.ts` | Data integrity violation | ✅ Complete |
+| C-2 | Publishing Before Payment Confirmation | `publication.service.ts` | Business model bypass | ⬜ Not Started |
+| C-3 | Race Condition - Duplicate Payments | `subscriber.service.ts` | Double-charging users | ✅ Complete |
+| C-4 | Orphaned TBR Claims (Subscriber) | `subscriber-created.listener.ts` | Untracked payments | ⬜ Not Started |
+| C-5 | Orphaned TBR Claims (Advert) | `advert-published.listener.ts` | Untracked payments | ⬜ Not Started |
 
 ---
 
@@ -346,10 +346,10 @@ Start with Option A for immediate fix. Option B can be added in a follow-up phas
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Write test file | ⬜ Not Started | |
-| Verify tests fail | ⬜ Not Started | |
-| Implement Option A fix | ⬜ Not Started | |
-| Verify tests pass | ⬜ Not Started | |
+| Write test file | ✅ Complete | `subscriber.service.spec.ts` created with 9 test cases |
+| Verify tests fail | ✅ Complete | 3 tests failed as expected |
+| Implement Option A fix | ✅ Complete | Added active subscription check before emitting event |
+| Verify tests pass | ✅ Complete | All 133 tests pass |
 | Code review | ⬜ Not Started | |
 | (Future) Option B Redis lock | ⬜ Backlog | |
 

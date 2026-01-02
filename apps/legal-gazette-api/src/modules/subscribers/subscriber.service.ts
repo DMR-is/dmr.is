@@ -71,6 +71,19 @@ export class SubscriberService implements ISubscriberService {
       )
     }
 
+    // Check if subscription is already active and not expired (idempotency check)
+    if (subscriber.isActive && subscriber.subscribedTo) {
+      const expiryDate = new Date(subscriber.subscribedTo)
+      if (expiryDate > new Date()) {
+        this.logger.info('Subscription already active, skipping payment', {
+          category: 'subscriber-service',
+          subscriberId: subscriber.id,
+          expiresAt: subscriber.subscribedTo,
+        })
+        return { success: true }
+      }
+    }
+
     try {
       // Determine the actor nationalId - use actor if exists (delegation), otherwise user
       const actorNationalId = user.actor?.nationalId ?? user.nationalId
