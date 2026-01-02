@@ -1,3 +1,5 @@
+import z from 'zod'
+
 /**
  * Form field is render inside a form step
  * @field title - Title of the field
@@ -22,6 +24,7 @@ export type FormStep = {
   title: string
   stepTitle: string
   fields: FormField[]
+  validationSchema?: z.ZodType
 }
 
 export type LegalGazetteForm = {

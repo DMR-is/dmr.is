@@ -1,3 +1,8 @@
+import {
+  baseApplicationSchemaRefined,
+  commonApplicationAnswersRefined,
+} from '@dmr.is/legal-gazette/schemas'
+
 import { AdvertContentField } from '../../../components/form/common/fields/AdvertContentFields'
 import { CommonAdvertFields } from '../../../components/form/common/fields/CommonAdvertFields'
 import { PublishingFields } from '../../../components/form/common/fields/PublishingFields'
@@ -8,7 +13,7 @@ import { PreviewStep } from '../../../components/form/steps/PreviewStep'
 import { SummaryStep } from '../../../components/form/steps/SummaryStep'
 import { LegalGazetteForm } from '../types'
 
-export const CommonForm: LegalGazetteForm = {
+export const CommonFormSteps: LegalGazetteForm = {
   steps: [
     {
       title: 'Skilyrði fyrir birtingu',
@@ -19,10 +24,17 @@ export const CommonForm: LegalGazetteForm = {
           content: <PrerequisitesSteps />,
         },
       ],
+      validationSchema: baseApplicationSchemaRefined.pick({
+        prequisitesAccepted: true,
+      }),
     },
     {
       title: 'Grunnupplýsingar',
       stepTitle: 'Upplýsingar',
+      validationSchema: commonApplicationAnswersRefined.pick({
+        signature: true,
+        fields: true,
+      }),
       fields: [
         {
           title: 'Tegund og flokkur auglýsingar',
@@ -41,6 +53,10 @@ export const CommonForm: LegalGazetteForm = {
     {
       title: 'Birtingardagar',
       stepTitle: 'Birting',
+      validationSchema: commonApplicationAnswersRefined.pick({
+        publishingDates: true,
+        communicationChannels: true,
+      }),
       fields: [
         {
           title: 'Birtingardagar',

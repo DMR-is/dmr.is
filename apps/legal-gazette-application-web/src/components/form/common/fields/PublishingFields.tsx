@@ -5,6 +5,7 @@ import { useFormContext } from 'react-hook-form'
 
 import { CommonApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import {
+  AlertMessage,
   Box,
   Button,
   GridColumn,
@@ -22,11 +23,11 @@ import { ONE_DAY, ONE_WEEK } from '../../../../lib/constants'
 import { DatePickerController } from '../../controllers/DatePickerController'
 
 export const PublishingFields = () => {
-  const { getValues, watch, setValue } =
+  const { getValues, watch, setValue, formState } =
     useFormContext<CommonApplicationWebSchema>()
 
   const { metadata } = getValues()
-  const currentDates = watch('publishingDates') ?? []
+  const currentDates = watch('publishingDates', []) as string[]
   const { updateApplication } = useUpdateApplication({
     id: metadata.applicationId,
     type: 'COMMON',
@@ -75,65 +76,74 @@ export const PublishingFields = () => {
     [currentDates, updatePublishingDates],
   )
 
+  const error = formState.errors.publishingDates?.message
+
   return (
-    <Box id="publishingDates">
-      <GridRow rowGap={[2, 3]}>
-        <GridColumn span="12/12">
-          <Stack space={[2, 3]}>
-            {currentDates?.map((date, index) => {
-              const previousDate =
-                index > 0
-                  ? addDays(new Date(currentDates[index - 1]), ONE_DAY)
-                  : null
+    <>
+      {error && (
+        <Box marginBottom={[2, 3]}>
+          <AlertMessage type="error" title={error} />
+        </Box>
+      )}
+      <Box id="publishingDates">
+        <GridRow rowGap={[2, 3]}>
+          <GridColumn span="12/12">
+            <Stack space={[2, 3]}>
+              {currentDates?.map((date, index) => {
+                const previousDate =
+                  index > 0
+                    ? addDays(new Date(currentDates[index - 1]), ONE_DAY)
+                    : null
 
-              const min = previousDate
-                ? getNextValidPublishingDate(previousDate)
-                : getNextValidPublishingDate()
-              const max = getNextValidPublishingDate(addYears(min, 1))
-              const excludeDates = getInvalidPublishingDatesInRange(min, max)
+                const min = previousDate
+                  ? getNextValidPublishingDate(previousDate)
+                  : getNextValidPublishingDate()
+                const max = getNextValidPublishingDate(addYears(min, 1))
+                const excludeDates = getInvalidPublishingDatesInRange(min, max)
 
-              return (
-                <Inline
-                  space={[1, 2]}
-                  flexWrap="wrap"
-                  alignY="center"
-                  key={index}
-                >
-                  <DatePickerController
-                    minDate={min}
-                    maxDate={max}
-                    excludeDates={excludeDates}
-                    label={`Birtingardagur ${index + 1}`}
-                    name={`${'publishingDates'}[${index}]`}
-                    required={index === 0}
-                    defaultValue={date}
-                    onChange={(date) => onDateChange(date, index)}
-                  />
-                  <Button
-                    circle
-                    icon="trash"
-                    iconType="outline"
-                    size="default"
-                    colorScheme="destructive"
-                    disabled={currentDates.length <= 1}
-                    onClick={() => removeDate(index)}
-                  />
-                </Inline>
-              )
-            })}
-            <Button
-              variant="utility"
-              icon="add"
-              iconType="outline"
-              size="small"
-              onClick={addDate}
-              disabled={currentDates.length >= 3}
-            >
-              Bæta við birtingardegi
-            </Button>
-          </Stack>
-        </GridColumn>
-      </GridRow>
-    </Box>
+                return (
+                  <Inline
+                    space={[1, 2]}
+                    flexWrap="wrap"
+                    alignY="center"
+                    key={index}
+                  >
+                    <DatePickerController
+                      minDate={min}
+                      maxDate={max}
+                      excludeDates={excludeDates}
+                      label={`Birtingardagur ${index + 1}`}
+                      name={`${'publishingDates'}[${index}]`}
+                      required={index === 0}
+                      defaultValue={date}
+                      onChange={(date) => onDateChange(date, index)}
+                    />
+                    <Button
+                      circle
+                      icon="trash"
+                      iconType="outline"
+                      size="default"
+                      colorScheme="destructive"
+                      disabled={currentDates.length <= 1}
+                      onClick={() => removeDate(index)}
+                    />
+                  </Inline>
+                )
+              })}
+              <Button
+                variant="utility"
+                icon="add"
+                iconType="outline"
+                size="small"
+                onClick={addDate}
+                disabled={currentDates.length >= 3}
+              >
+                Bæta við birtingardegi
+              </Button>
+            </Stack>
+          </GridColumn>
+        </GridRow>
+      </Box>
+    </>
   )
 }

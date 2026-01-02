@@ -20,7 +20,7 @@ import { FormStep } from '../components/form-step/FormStep'
 import { ApplicationDetailedDto } from '../gen/fetch'
 import { useSubmitApplication } from '../hooks/useSubmitApplication'
 import { commonForm } from '../lib/forms/common/form'
-import { CommonForm } from '../lib/forms/common/steps'
+import { CommonFormSteps } from '../lib/forms/common/steps'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
@@ -48,20 +48,9 @@ export const CommonFormContainer = ({
     application.id,
   )
 
-  const items = [
-    {
-      title: 'Skilyrði fyrir birtingu',
-      children: <PrerequisitesSteps />,
-    },
-    { title: 'Grunnupplýsingar', children: <AdvertStep /> },
-    { title: 'Birtingarupplýsingar', children: <PublishingStep /> },
-    { title: 'Forskoðun', children: <PreviewStep /> },
-    { title: 'Samantekt', children: <SummaryStep /> },
-  ]
-
   const metadata = {
     currentStep: application.currentStep,
-    totalSteps: items.length,
+    totalSteps: CommonFormSteps.steps.length,
     applicationId: application.id,
     caseId: application.caseId,
     type: ApplicationTypeEnum.COMMON,
@@ -101,7 +90,7 @@ export const CommonFormContainer = ({
     [methods, onValidSubmit, onInvalidSubmit],
   )
 
-  const stepToRender = CommonForm.steps.at(application.currentStep)
+  const stepToRender = CommonFormSteps.steps.at(application.currentStep)
 
   if (!stepToRender) {
     // eslint-disable-next-line no-console
@@ -112,7 +101,7 @@ export const CommonFormContainer = ({
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit, onInvalidSubmit)}>
-        <ApplicationShell form={CommonForm} title={stepToRender.title}>
+        <ApplicationShell form={CommonFormSteps} title={stepToRender.title}>
           <Box paddingY={[2, 3]}>
             <FormStep items={stepToRender.fields} />
           </Box>

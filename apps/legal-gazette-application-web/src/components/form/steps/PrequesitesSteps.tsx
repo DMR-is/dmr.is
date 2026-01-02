@@ -20,7 +20,7 @@ export const PrerequisitesSteps = () => {
   const prequisitesAccepted = watch('prequisitesAccepted')
 
   useEffect(() => {
-    setValue('metadata.canProceed', prequisitesAccepted)
+    setValue('metadata.canProceed', prequisitesAccepted === true)
   }, [prequisitesAccepted])
 
   const togglePrerequisites = (accepted: boolean) => {
