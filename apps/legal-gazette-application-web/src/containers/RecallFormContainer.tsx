@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
+import z from 'zod'
 
 import {
   ApplicationTypeEnum,
@@ -12,15 +13,11 @@ import {
 import { Box } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationShell } from '../components/application/ApplicationShell'
-import { AdvertStep } from '../components/form/recall/steps/AdvertStep'
-import { PublishingStep } from '../components/form/recall/steps/PublishingStep'
-import { SettlementStep } from '../components/form/recall/steps/SettlementStep'
-import { PrerequisitesSteps } from '../components/form/steps/PrequesitesSteps'
-import { PreviewStep } from '../components/form/steps/PreviewStep'
-import { SummaryStep } from '../components/form/steps/SummaryStep'
+import { FormStep } from '../components/form-step/FormStep'
 import { ApplicationDetailedDto } from '../gen/fetch'
 import { useSubmitApplication } from '../hooks/useSubmitApplication'
 import { recallForm } from '../lib/forms/recall/form'
+import { RecallFormSteps } from '../lib/forms/recall/steps'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
@@ -66,24 +63,11 @@ export const RecallFormContainer = ({
   const mappedType = mapApplicationType(application.type)
   const isBankruptcy = mappedType === ApplicationTypeEnum.RECALL_BANKRUPTCY
 
-  const items = [
-    {
-      title: 'Skilyrði fyrir birtingu',
-      children: <PrerequisitesSteps />,
-    },
-    { title: 'Grunnupplýsingar', children: <AdvertStep /> },
-    {
-      title: `Upplýsing um ${isBankruptcy ? 'þrotabú' : 'dánarbú'}`,
-      children: <SettlementStep />,
-    },
-    { title: 'Birting og samskiptaleiðir', children: <PublishingStep /> },
-    { title: 'Forskoðun', children: <PreviewStep /> },
-    { title: 'Samantekt', children: <SummaryStep /> },
-  ]
+  const form = RecallFormSteps(mappedType)
 
   const metadata = {
     currentStep: application.currentStep,
-    totalSteps: items.length,
+    totalSteps: form.steps.length,
     applicationId: application.id,
     caseId: application.caseId,
     type: mappedType,
@@ -113,6 +97,8 @@ export const RecallFormContainer = ({
         const bankruptcyCheck = recallBankruptcyAnswersRefined.safeParse(data)
 
         if (!bankruptcyCheck.success) {
+          const errors = z.treeifyError(bankruptcyCheck.error)
+          console.error('Bankruptcy validation errors:', errors)
           bankruptcyCheck.error.issues.forEach((issue) => {
             methods.setError(issue.path.join('.') as any, {
               message: issue.message,
@@ -124,7 +110,11 @@ export const RecallFormContainer = ({
       } else {
         const deceasedCheck = recallDeceasedAnswersRefined.safeParse(data)
 
+        console.log('data', data)
+
         if (!deceasedCheck.success) {
+          const errors = z.treeifyError(deceasedCheck.error)
+          console.error('Deceased validation errors:', errors)
           deceasedCheck.error.issues.forEach((issue) => {
             methods.setError(issue.path.join('.') as any, {
               message: issue.message,
@@ -140,14 +130,21 @@ export const RecallFormContainer = ({
     [mappedType, methods, onValidSubmit, onInvalidSubmit],
   )
 
-  const itemToRender = items[application.currentStep]
+  const stepToRender = form.steps.at(application.currentStep)
+
+  if (!stepToRender) {
+    // eslint-disable-next-line no-console
+    console.error('No step found for current step:', application.currentStep)
+    return null
+  }
 
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit, onInvalidSubmit)}>
-        <ApplicationShell title={itemToRender.title}>
-          <Box paddingY={[2, 3]}></Box>
-          {itemToRender.children}
+        <ApplicationShell form={form} title={stepToRender.title}>
+          <Box paddingY={[2, 3]}>
+            <FormStep items={stepToRender.fields} />
+          </Box>
         </ApplicationShell>
       </form>
     </FormProvider>

@@ -11,11 +11,6 @@ import {
 import { Box } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationShell } from '../components/application/ApplicationShell'
-import { AdvertStep } from '../components/form/common/steps/AdvertStep'
-import { PublishingStep } from '../components/form/common/steps/PublishingStep'
-import { PrerequisitesSteps } from '../components/form/steps/PrequesitesSteps'
-import { PreviewStep } from '../components/form/steps/PreviewStep'
-import { SummaryStep } from '../components/form/steps/SummaryStep'
 import { FormStep } from '../components/form-step/FormStep'
 import { ApplicationDetailedDto } from '../gen/fetch'
 import { useSubmitApplication } from '../hooks/useSubmitApplication'

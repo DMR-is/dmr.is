@@ -1,4 +1,4 @@
-import { isDateString } from 'class-validator'
+import { isDateString, isString } from 'class-validator'
 import z from 'zod'
 
 import {
@@ -11,10 +11,7 @@ import {
   courtAndJudgmentSchema,
   courtAndJudgmentSchemaRefined,
 } from './court-and-judgement'
-import {
-  divisionMeetingSchema,
-  divisionMeetingSchemaRefined,
-} from './division-meeting'
+import { divisionMeetingSchema } from './division-meeting'
 import { settlementSchema, settlementSchemaRefined } from './settlement'
 export const companySchema = z.object({
   companyName: z.string(),
@@ -35,7 +32,18 @@ export const recallDeceasedSchema = z.object({
 
 export const recallDeceasedSchemaRefined = z.object({
   courtAndJudgmentFields: courtAndJudgmentSchemaRefined,
-  divisionMeetingFields: divisionMeetingSchemaRefined.optional(),
+  divisionMeetingFields: z
+    .object({
+      meetingDate: z.iso
+        .datetime('Fundardagur er nauðsynlegur')
+        .optional()
+        .nullable(),
+      meetingLocation: z
+        .string('Fundarstaður er nauðsynlegur')
+        .optional()
+        .nullable(),
+    })
+    .optional(),
   settlementFields: settlementSchemaRefined
     .extend({
       dateOfDeath: z.iso

@@ -13,6 +13,7 @@ import { Box, Button, Inline } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 import { CommonFormSteps } from '../../../lib/forms/common/steps'
+import { RecallFormSteps } from '../../../lib/forms/recall/steps'
 import * as styles from './application-footer.css'
 
 const setFormErrors = (
@@ -94,6 +95,34 @@ export const ApplicationFooter = () => {
 
         if (!check.success) {
           const errors = z.treeifyError(check.error)
+
+          console.error('errors:', errors)
+
+          // Set form errors using the utility function
+          setFormErrors(errors, setError)
+
+          return
+        }
+
+        break
+      }
+      case ApplicationTypeEnum.RECALL_BANKRUPTCY:
+      case ApplicationTypeEnum.RECALL_DECEASED: {
+        const validationSchema = RecallFormSteps(metadata.type).steps[
+          currentStep
+        ].validationSchema
+
+        if (!validationSchema) {
+          break
+        }
+
+        const { metadata: _metadata, ...answers } = getValues()
+        const check = validationSchema.safeParse(answers)
+
+        if (!check.success) {
+          const errors = z.treeifyError(check.error)
+
+          console.error('errors:', errors)
 
           // Set form errors using the utility function
           setFormErrors(errors, setError)
