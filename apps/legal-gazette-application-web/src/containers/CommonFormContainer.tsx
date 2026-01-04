@@ -88,8 +88,6 @@ export const CommonFormContainer = ({
   const stepToRender = CommonFormSteps.steps.at(application.currentStep)
 
   if (!stepToRender) {
-    // eslint-disable-next-line no-console
-    console.error('No step found for current step:', application.currentStep)
     return null
   }
 

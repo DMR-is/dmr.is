@@ -97,8 +97,6 @@ export const RecallFormContainer = ({
         const bankruptcyCheck = recallBankruptcyAnswersRefined.safeParse(data)
 
         if (!bankruptcyCheck.success) {
-          const errors = z.treeifyError(bankruptcyCheck.error)
-          console.error('Bankruptcy validation errors:', errors)
           bankruptcyCheck.error.issues.forEach((issue) => {
             methods.setError(issue.path.join('.') as any, {
               message: issue.message,
@@ -110,11 +108,7 @@ export const RecallFormContainer = ({
       } else {
         const deceasedCheck = recallDeceasedAnswersRefined.safeParse(data)
 
-        console.log('data', data)
-
         if (!deceasedCheck.success) {
-          const errors = z.treeifyError(deceasedCheck.error)
-          console.error('Deceased validation errors:', errors)
           deceasedCheck.error.issues.forEach((issue) => {
             methods.setError(issue.path.join('.') as any, {
               message: issue.message,
@@ -134,7 +128,6 @@ export const RecallFormContainer = ({
 
   if (!stepToRender) {
     // eslint-disable-next-line no-console
-    console.error('No step found for current step:', application.currentStep)
     return null
   }
 

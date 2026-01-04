@@ -96,8 +96,6 @@ export const ApplicationFooter = () => {
         if (!check.success) {
           const errors = z.treeifyError(check.error)
 
-          console.error('errors:', errors)
-
           // Set form errors using the utility function
           setFormErrors(errors, setError)
 
@@ -121,8 +119,6 @@ export const ApplicationFooter = () => {
 
         if (!check.success) {
           const errors = z.treeifyError(check.error)
-
-          console.error('errors:', errors)
 
           // Set form errors using the utility function
           setFormErrors(errors, setError)
