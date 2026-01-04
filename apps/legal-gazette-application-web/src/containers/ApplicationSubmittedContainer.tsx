@@ -37,7 +37,7 @@ export const ApplicationSubmittedContainer = ({ application }: Props) => {
     return (
       <AlertMessage
         type="warning"
-        title="Engar auglýsingar fundust fyrir þessa umsókn"
+        title="Engar birtingar fundust fyrir þessa auglýsingu"
         message="Vinsamlegast reyndu aftur síðar"
       />
     )

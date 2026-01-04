@@ -22,21 +22,20 @@ export const useSubmitApplication = (applicationId: string) => {
               id: applicationId,
             }),
           )
-          toast.success('Umsókn hefur verið send inn', {
+          toast.success('Auglýsing hefur verið send inn', {
             toastId: 'submit-application-success',
           })
         },
         onError: () => {
-          toast.error('Ekki tókst að senda inn umsókn', {
+          toast.error('Ekki tókst að senda inn auglýsingu', {
             toastId: 'submit-application-error',
           })
         },
       },
     )
   }
-
-  const onInvalidSubmit = (errors: unknown) => {
-    toast.error('Umsókn er ekki rétt útfyllt', {
+  const onInvalidSubmit = (_errors: unknown) => {
+    toast.error('Auglýsing er ekki rétt útfyllt', {
       toastId: 'submit-common-application-error',
     })
   }

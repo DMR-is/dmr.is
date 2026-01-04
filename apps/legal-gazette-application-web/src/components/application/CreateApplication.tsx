@@ -58,7 +58,7 @@ export const CreateApplication = () => {
           variant="utility"
           icon="fileTrayFull"
           iconType="outline"
-          title="Stofna almennna auglýsingu"
+          title="Búa til almennna auglýsingu"
           onClick={() =>
             createApplication(CreateApplicationApplicationTypeEnum.COMMON)
           }
@@ -69,7 +69,7 @@ export const CreateApplication = () => {
           variant="utility"
           icon="hammer"
           iconType="outline"
-          title="Stofna "
+          title="Búa til innköllun þrotabús"
           onClick={() =>
             createApplication(
               CreateApplicationApplicationTypeEnum.RECALLBANKRUPTCY,
@@ -82,6 +82,7 @@ export const CreateApplication = () => {
           variant="utility"
           icon="homeWithCar"
           iconType="outline"
+          title="Búa til innköllun dánarbús"
           onClick={() =>
             createApplication(
               CreateApplicationApplicationTypeEnum.RECALLDECEASED,

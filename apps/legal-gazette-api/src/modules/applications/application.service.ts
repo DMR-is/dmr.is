@@ -599,13 +599,15 @@ export class ApplicationService implements IApplicationService {
     user: DMRUser,
   ): Promise<GetApplicationsDto> {
     const { limit, offset } = getLimitAndOffset(query)
-    const applications = await this.applicationModel.findAndCountAll({
-      limit,
-      offset,
-      where: {
-        applicantNationalId: user.nationalId,
-      },
-    })
+    const applications = await this.applicationModel
+      .scope('listview')
+      .findAndCountAll({
+        limit,
+        offset,
+        where: {
+          applicantNationalId: user.nationalId,
+        },
+      })
 
     const mapped = applications.rows.map((app) => app.fromModel())
 

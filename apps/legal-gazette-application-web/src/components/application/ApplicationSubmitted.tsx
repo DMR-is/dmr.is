@@ -53,20 +53,16 @@ export const ApplicationSubmitted = ({
             <Stack space={[4]}>
               <Stack space={[2, 3, 4]}>
                 <Inline justifyContent="spaceBetween" alignY="top">
-                  <Text variant="h2">{pageTitle}</Text>
-                  <LinkV2 href={PageRoutes.APPLICATIONS}>
+                  <Text variant="h3">{title + ' - ' + subtitle}</Text>
+                  <LinkV2 href={PageRoutes.FRONTPAGE}>
                     <Button preTextIcon="arrowBack" variant="text" size="small">
-                      Til baka
+                      Til baka á forsíðu
                     </Button>
                   </LinkV2>
                 </Inline>
                 <GridRow>
                   <GridColumn span={['12/12', '9/12']}>
-                    <Text>
-                      {applicationType !== ApplicationTypeEnum.COMMON &&
-                        title + ' - '}
-                      {subtitle}
-                    </Text>
+                    <Text>{pageTitle}</Text>
                   </GridColumn>
                   {applicationType !== ApplicationTypeEnum.COMMON && (
                     <GridColumn span={['12/12', '3/12']}>
@@ -76,18 +72,20 @@ export const ApplicationSubmitted = ({
                     </GridColumn>
                   )}
                 </GridRow>
-                <GridRow>
-                  <GridColumn span="12/12">
-                    <Button
-                      icon={showAsCards ? 'menu' : 'copy'}
-                      iconType="outline"
-                      variant="utility"
-                      onClick={() => setShowAsCards((prev) => !prev)}
-                    >
-                      {showAsCards ? 'Sýna sem töflu' : 'Sýna sem spjöld'}
-                    </Button>
-                  </GridColumn>
-                </GridRow>
+                {applicationType !== ApplicationTypeEnum.COMMON && (
+                  <GridRow>
+                    <GridColumn span="12/12">
+                      <Button
+                        icon={showAsCards ? 'menu' : 'copy'}
+                        iconType="outline"
+                        variant="utility"
+                        onClick={() => setShowAsCards((prev) => !prev)}
+                      >
+                        {showAsCards ? 'Sýna sem töflu' : 'Sýna sem spjöld'}
+                      </Button>
+                    </GridColumn>
+                  </GridRow>
+                )}
               </Stack>
               {showAsCards ? (
                 <AdvertList adverts={adverts} />

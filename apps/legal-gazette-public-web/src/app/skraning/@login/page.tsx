@@ -39,7 +39,8 @@ export default function Signup() {
             <Stack space={2}>
               <Text variant="h2">Gerast áskrifandi</Text>
               <Text variant="intro">
-                Velkomin á skráningarvef fyrir rafræna áskrift Lögbirtingablaðs
+                Velkomin á skráningarvef fyrir rafræna áskrift
+                Lögbirtingablaðsins
               </Text>
               <Text>
                 Við skráninguna verður til greiðsluseðill að fjárhæð 4.500 kr.

@@ -45,14 +45,14 @@ export function ApplicationsListContainer() {
     return (
       <AlertMessage
         type="error"
-        title="Villa við að sækja umsóknir"
+        title="Villa við að sækja auglýsingar"
         message="Vinsamlegast reynið aftur síðar"
       />
     )
   }
 
   if (!data) {
-    return <AlertMessage type="info" title="Engar umsóknir fundust" />
+    return <AlertMessage type="info" title="Engar auglýsingar fundust" />
   }
 
   const { applications, paging } = data
