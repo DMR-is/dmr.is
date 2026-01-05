@@ -140,7 +140,7 @@ export type AdvertCreateAttributes = {
   createdByNationalId: string
   externalId?: string | null
 
-  // signaturex
+  // signature
   signature?: SignatureCreationAttributes
 
   // Common specific properties
@@ -518,6 +518,9 @@ export class AdvertModel extends BaseModel<
 
       return false
     } catch (error) {
+      this.logger.error('Error checking canEdit permission', {
+        context: 'AdvertModel',
+      })
       return false
     }
   }
@@ -552,6 +555,9 @@ export class AdvertModel extends BaseModel<
         publications: model.publications.map((p) => p.fromModel()),
       }
     } catch (error) {
+      this.logger.warn('Error converting from model to external DTO', {
+        context: 'AdvertModel',
+      })
       throw new InternalServerErrorException()
     }
   }
@@ -618,6 +624,7 @@ export class AdvertModel extends BaseModel<
         scheduledAt: date.toISOString(),
         title: model.title,
         caption: model.caption ?? undefined,
+        content: model.content ?? undefined,
       }
     } catch (error) {
       throw new InternalServerErrorException()
@@ -798,15 +805,16 @@ export class ExternalAdvertDto extends PickType(AdvertDetailedDto, [
   'createdBy',
   'scheduledAt',
   'caption',
+  'content',
 ] as const) {
   @ApiProperty({ type: String, required: false })
   externalId?: string
-  @ApiProperty({ type: String, required: false })
-  category?: string
-  @ApiProperty({ type: String, required: false })
-  type?: string
-  @ApiProperty({ type: String, required: false })
-  status?: string
+  @ApiProperty({ type: String })
+  category!: string
+  @ApiProperty({ type: String })
+  type!: string
+  @ApiProperty({ type: String })
+  status!: string
 }
 
 export class GetExternalAdvertsDto {
@@ -851,8 +859,13 @@ export class GetAdvertsQueryDto extends QueryDto {
   @IsUUID(undefined, { each: true })
   typeId?: string[]
 
+  @ApiProperty({ type: [String], required: false })
+  @Transform(({ value }) => {
+    if (!value) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsArray()
   @IsOptional()
-  @IsUUID(undefined, { each: true })
   externalId?: string[]
 }
 

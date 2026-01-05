@@ -337,7 +337,7 @@ export class CompanyService implements ICompanyService {
           <tr>
             <td>
               <i>Firmað ritar: </i>
-              ${body.theFirmWrites}
+              ${body.signature}
             </td>
           </tr>
           ${

@@ -40,7 +40,7 @@ export enum AnnouncementItem {
 
 export class ResponsiblePartySignature extends CreateSignatureDto {}
 
-export class ResponsiblePartyDto {
+export class ObjectIssuer {
   @ApiProperty({
     type: String,
     description: 'Name of the party responsible for the advert',
@@ -177,13 +177,13 @@ export class CompanyBoardDto {
 
 export class RegisterCompanyHlutafelagDto {
   @ApiProperty({
-    type: ResponsiblePartyDto,
+    type: ObjectIssuer,
     description: 'The party responsible for the company',
   })
   @IsDefined()
-  @Type(() => ResponsiblePartyDto)
+  @Type(() => ObjectIssuer)
   @ValidateNested()
-  responsibleParty!: ResponsiblePartyDto
+  responsibleParty!: ObjectIssuer
 
   @ApiProperty({
     type: String,
@@ -242,7 +242,7 @@ export class RegisterCompanyHlutafelagDto {
       'Ef einn í stjórn:  Stjórnarmaður, ef stjórn er fjölskipuð: Meirihluti stjórnar (Firmað ritar)',
   })
   @IsString()
-  theFirmWrites!: string
+  signature!: string
 
   @ApiProperty({
     type: [PartyEntityDto],
@@ -336,13 +336,13 @@ export class AdditionalAnnouncementsDto {
 
 export class CreateAdditionalAnnouncementsDto {
   @ApiProperty({
-    type: ResponsiblePartyDto,
+    type: ObjectIssuer,
     description: 'The party responsible for the additional announcements',
   })
   @IsDefined()
-  @Type(() => ResponsiblePartyDto)
+  @Type(() => ObjectIssuer)
   @ValidateNested()
-  responsibleParty!: ResponsiblePartyDto
+  responsibleParty!: ObjectIssuer
 
   @ApiProperty({
     type: Number,
