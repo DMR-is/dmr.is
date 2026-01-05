@@ -1,18 +1,19 @@
 'use client'
+import { useFormContext } from 'react-hook-form'
+
+import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is'
 
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 
-type Props = {
-  id: string
-}
-
-export const PreviewStep = ({ id }: Props) => {
+export const PreviewStep = () => {
   const trpc = useTRPC()
+  const { getValues } = useFormContext<BaseApplicationWebSchema>()
+  const id = getValues('metadata.applicationId')
   const { data, isPending } = useQuery(
-    trpc.getPreviewHTML.queryOptions({ applicationId: id }),
+    trpc.getPreviewHTML.queryOptions({ applicationId: id }, { gcTime: 0 }),
   )
 
   return isPending ? (

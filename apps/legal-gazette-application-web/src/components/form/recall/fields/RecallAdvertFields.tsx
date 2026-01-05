@@ -14,7 +14,7 @@ import { SelectController } from '../../controllers/SelectController'
 
 export const RecallAdvertFields = () => {
   const trpc = useTRPC()
-  const { getValues } = useFormContext<RecallApplicationWebSchema>()
+  const { getValues, setValue } = useFormContext<RecallApplicationWebSchema>()
 
   const { applicationId } = getValues('metadata')
 
@@ -46,6 +46,7 @@ export const RecallAdvertFields = () => {
                 (option) => option.id === val,
               )
 
+              setValue('fields.courtAndJudgmentFields.courtDistrict', found)
               return updateApplication(
                 {
                   fields: {

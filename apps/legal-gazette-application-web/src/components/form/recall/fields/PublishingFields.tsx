@@ -3,7 +3,10 @@ import addDays from 'date-fns/addDays'
 import { useCallback } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import { CommonApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
+import {
+  BaseApplicationWebSchema,
+  RecallApplicationWebSchema,
+} from '@dmr.is/legal-gazette/schemas'
 import {
   AlertMessage,
   Box,
@@ -22,21 +25,32 @@ import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { ONE_DAY, ONE_WEEK } from '../../../../lib/constants'
 import { DatePickerController } from '../../controllers/DatePickerController'
 
-export const PublishingFields = () => {
-  const { getValues, watch, setValue, formState } =
-    useFormContext<CommonApplicationWebSchema>()
+export const RecallPublishingFields = () => {
+  const { getValues, watch, setValue, formState } = useFormContext<
+    BaseApplicationWebSchema | RecallApplicationWebSchema
+  >()
 
   const { metadata } = getValues()
-  const currentDates = watch('publishingDates', []) as string[]
+  const currentDates = watch('publishingDates') ?? []
   const { updateApplication } = useUpdateApplication({
     id: metadata.applicationId,
-    type: 'COMMON',
+    type: 'RECALL',
   })
 
   const updatePublishingDates = useCallback(
     (newDates: string[]) => {
       setValue('publishingDates', newDates)
-      const payload = { publishingDates: newDates }
+
+      setValue('fields.divisionMeetingFields.meetingDate', null)
+
+      const payload = {
+        publishingDates: newDates,
+        fields: {
+          divisionMeetingFields: {
+            meetingDate: null,
+          },
+        },
+      }
 
       updateApplication(payload, {
         successMessage: 'Birtingardagar vistaðir',
@@ -76,7 +90,7 @@ export const PublishingFields = () => {
     [currentDates, updatePublishingDates],
   )
 
-  const error = formState.errors.publishingDates?.message
+  const error = formState.errors?.publishingDates?.message
 
   return (
     <>

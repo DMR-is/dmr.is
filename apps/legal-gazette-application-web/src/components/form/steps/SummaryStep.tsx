@@ -10,24 +10,26 @@ import {
   ApplicationTypeEnum,
   BaseApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is'
 import { formatDate, numberFormat } from '@dmr.is/utils/client'
 
-import { ApplicationDetailedDto } from '../../../gen/fetch'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 import { FormStep } from '../../form-step/FormStep'
 import { SummaryFields } from '../fields/SummaryFields'
 
 import { useMutation } from '@tanstack/react-query'
 
-type Props = {
-  application: ApplicationDetailedDto
-}
-
-export const SummaryStep = ({ application }: Props) => {
+export const SummaryStep = () => {
   const trpc = useTRPC()
   const { getValues } = useFormContext<BaseApplicationWebSchema>()
   const formValues = getValues()
+
+  const { data: application, isPending: isPendingApplication } = useQuery(
+    trpc.getApplicationById.queryOptions({
+      id: formValues.metadata.applicationId,
+    }),
+  )
 
   const { mutate: getPersonInfo, isPending } = useMutation(
     trpc.getPersonByNationalId.mutationOptions({}),
@@ -37,6 +39,8 @@ export const SummaryStep = ({ application }: Props) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!application) return
+
     getPersonInfo(
       {
         nationalId: application.applicantNationalId,
@@ -145,23 +149,24 @@ export const SummaryStep = ({ application }: Props) => {
 
     setItems(summaryItems)
     setLoading(false)
-  }, [session])
+  }, [session, application])
+
+  const isLoading = loading || isPending || isPendingApplication
 
   return (
     <FormStep
       items={[
         {
-          content:
-            loading || isPending ? (
-              <SkeletonLoader
-                repeat={5}
-                height={64}
-                space={[1, 2]}
-                borderRadius="standard"
-              />
-            ) : (
-              <SummaryFields items={items} />
-            ),
+          content: isLoading ? (
+            <SkeletonLoader
+              repeat={5}
+              height={64}
+              space={[1, 2]}
+              borderRadius="standard"
+            />
+          ) : (
+            <SummaryFields items={items} />
+          ),
         },
       ]}
     />

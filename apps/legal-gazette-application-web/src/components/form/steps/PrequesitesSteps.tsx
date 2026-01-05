@@ -1,18 +1,17 @@
 import { useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import { CommonApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
+import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { Checkbox, Stack, Text } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 import { FormStep } from '../../form-step/FormStep'
 
-type Props = {
-  id: string
-}
+export const PrerequisitesSteps = () => {
+  const { setValue, watch, getValues } =
+    useFormContext<BaseApplicationWebSchema>()
+  const id = getValues('metadata.applicationId')
 
-export const PrerequisitesSteps = ({ id }: Props) => {
-  const { setValue, watch } = useFormContext<CommonApplicationWebSchema>()
   const { updateApplication, isUpdatingApplication } = useUpdateApplication({
     id: id,
     type: 'COMMON',
@@ -21,7 +20,7 @@ export const PrerequisitesSteps = ({ id }: Props) => {
   const prequisitesAccepted = watch('prequisitesAccepted')
 
   useEffect(() => {
-    setValue('metadata.canProceed', prequisitesAccepted)
+    setValue('metadata.canProceed', prequisitesAccepted === true)
   }, [prequisitesAccepted])
 
   const togglePrerequisites = (accepted: boolean) => {

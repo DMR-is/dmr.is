@@ -1,79 +1,77 @@
 'use client'
-import { useState } from 'react'
-import AnimateHeight from 'react-animate-height'
 import { useFormContext } from 'react-hook-form'
 
+import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
-  CommonApplicationWebSchema,
-  parseFormstateErrors,
-  RecallApplicationWebSchema,
-} from '@dmr.is/legal-gazette/schemas'
-import { Box, Button, Stack, Text } from '@dmr.is/ui/components/island-is'
+  Box,
+  FormStepper,
+  Section,
+  Text,
+} from '@dmr.is/ui/components/island-is'
 
+import { SkeletonLoader } from '@island.is/island-ui/core'
+
+import { LegalGazetteForm } from '../../lib/forms/types'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import * as styles from './application.css'
 
-export const ApplicationSidebar = () => {
-  const [showValidation, setShowValidation] = useState(true)
-  const { formState, clearErrors } = useFormContext<
-    RecallApplicationWebSchema | CommonApplicationWebSchema
-  >()
+type Props = {
+  form: LegalGazetteForm
+}
 
-  const parsedErrors = parseFormstateErrors(formState.errors)
+export const ApplicationSidebar = ({ form }: Props) => {
+  const trpc = useTRPC()
 
-  const handleFieldNavigation = (fieldPath: string) => {
-    let element = document.querySelector(`[name="${fieldPath}"]`) as HTMLElement
+  const { getValues } = useFormContext<BaseApplicationWebSchema>()
+  const id = getValues('metadata.applicationId')
 
-    if (!element) element = document.getElementById(fieldPath) as HTMLElement
+  const { data: application, isPending } = useQuery(
+    trpc.getApplicationById.queryOptions({ id: id }),
+  )
 
-    if (!element) return
-
-    clearErrors(fieldPath as any)
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    element.focus()
+  if (isPending) {
+    return (
+      <SkeletonLoader
+        repeat={5}
+        height={44}
+        space={1}
+        borderRadius="standard"
+      />
+    )
   }
+
+  const currentStep = application?.currentStep ?? 0
+
+  const sections = form.steps.map((step, i) => {
+    const isActive = i === currentStep
+    const isComplete = i < currentStep
+
+    const hasSubsteps = step.fields.length > 1
+
+    const subSections = hasSubsteps
+      ? step.fields.map((subStep, j) => (
+          <Text variant="medium" key={j}>
+            {subStep.title}
+          </Text>
+        ))
+      : []
+
+    return (
+      <Section
+        key={step.stepTitle}
+        section={step.stepTitle}
+        isActive={isActive}
+        isComplete={isComplete}
+        sectionIndex={i}
+        subSections={subSections}
+      />
+    )
+  })
 
   return (
     <Box className={styles.sidebarStyles}>
-      <Stack space={3}>
-        <Stack space={2}>
-          <Text variant="h4">Athugasemdir</Text>
-          {parsedErrors.length === 0 && <Text>Engar athugasemdir</Text>}
-          <AnimateHeight height={showValidation ? 'auto' : 0}>
-            <ul>
-              <Stack space={1}>
-                {parsedErrors.map((err, i) => (
-                  <li key={i}>
-                    <Button
-                      size="small"
-                      icon="arrowForward"
-                      iconType="outline"
-                      variant="text"
-                      colorScheme="destructive"
-                      onClick={() => handleFieldNavigation(err.path)}
-                    >
-                      {err.message}
-                    </Button>
-                  </li>
-                ))}
-              </Stack>
-            </ul>
-          </AnimateHeight>
-        </Stack>
-        {parsedErrors.length > 0 && (
-          <Button
-            fluid
-            disabled={!formState.isReady}
-            size="small"
-            icon={showValidation ? 'eyeOff' : 'eye'}
-            iconType="outline"
-            onClick={() => setShowValidation((prev) => !prev)}
-          >
-            <Text fontWeight="semiBold" color="white" variant="medium">
-              {showValidation ? 'Fela athugasemdir' : 'Sjá athugasemdir'}
-            </Text>
-          </Button>
-        )}
-      </Stack>
+      <FormStepper sections={sections} />
     </Box>
   )
 }

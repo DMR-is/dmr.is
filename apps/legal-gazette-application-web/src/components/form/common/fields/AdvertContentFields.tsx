@@ -10,7 +10,7 @@ import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { Editor } from '../../../editor/Editor'
 
 export const AdvertContentField = () => {
-  const { getValues, setValue, watch } =
+  const { getValues, setValue, clearErrors, watch, formState } =
     useFormContext<CommonApplicationWebSchema>()
   const metadata = getValues('metadata')
 
@@ -25,12 +25,16 @@ export const AdvertContentField = () => {
     type: 'COMMON',
   })
 
+  const error = formState.errors.fields?.html?.message
+
   return (
     <GridRow>
       <GridColumn span="12/12">
         <Editor
+          error={error}
           defaultValue={defaultHTML}
           onChange={(val) => {
+            clearErrors('fields.html')
             setValue('fields.html', val, {
               shouldValidate: true,
               shouldDirty: true,

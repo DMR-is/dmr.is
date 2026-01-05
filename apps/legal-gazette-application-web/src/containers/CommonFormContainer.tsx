@@ -11,14 +11,11 @@ import {
 import { Box } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationShell } from '../components/application/ApplicationShell'
-import { AdvertStep } from '../components/form/common/steps/AdvertStep'
-import { PublishingStep } from '../components/form/common/steps/PublishingStep'
-import { PrerequisitesSteps } from '../components/form/steps/PrequesitesSteps'
-import { PreviewStep } from '../components/form/steps/PreviewStep'
-import { SummaryStep } from '../components/form/steps/SummaryStep'
+import { FormStep } from '../components/form-step/FormStep'
 import { ApplicationDetailedDto } from '../gen/fetch'
 import { useSubmitApplication } from '../hooks/useSubmitApplication'
-import { commonForm } from '../lib/forms/common-form'
+import { commonForm } from '../lib/forms/common/form'
+import { CommonFormSteps } from '../lib/forms/common/steps'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
@@ -46,20 +43,9 @@ export const CommonFormContainer = ({
     application.id,
   )
 
-  const items = [
-    {
-      title: 'Skilyrði fyrir birtingu',
-      children: <PrerequisitesSteps id={application.id} />,
-    },
-    { title: 'Grunnupplýsingar', children: <AdvertStep /> },
-    { title: 'Birtingarupplýsingar', children: <PublishingStep /> },
-    { title: 'Forskoðun', children: <PreviewStep id={application.id} /> },
-    { title: 'Samantekt', children: <SummaryStep application={application} /> },
-  ]
-
   const metadata = {
     currentStep: application.currentStep,
-    totalSteps: items.length,
+    totalSteps: CommonFormSteps.steps.length,
     applicationId: application.id,
     caseId: application.caseId,
     type: ApplicationTypeEnum.COMMON,
@@ -99,14 +85,19 @@ export const CommonFormContainer = ({
     [methods, onValidSubmit, onInvalidSubmit],
   )
 
-  const itemToRender = items[application.currentStep]
+  const stepToRender = CommonFormSteps.steps.at(application.currentStep)
+
+  if (!stepToRender) {
+    return null
+  }
 
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit, onInvalidSubmit)}>
-        <ApplicationShell title={itemToRender.title}>
-          <Box paddingY={[2, 3]}></Box>
-          {itemToRender.children}
+        <ApplicationShell form={CommonFormSteps} title={stepToRender.title}>
+          <Box paddingY={[2, 3]}>
+            <FormStep items={stepToRender.fields} />
+          </Box>
         </ApplicationShell>
       </form>
     </FormProvider>

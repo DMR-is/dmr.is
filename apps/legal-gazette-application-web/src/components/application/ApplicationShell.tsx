@@ -12,6 +12,7 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { PageRoutes } from '../../lib/constants'
+import { LegalGazetteForm } from '../../lib/forms/types'
 import { ApplicationFooter } from './footer/ApplicationFooter'
 import * as styles from './application.css'
 import { ApplicationSidebar } from './ApplicationSidebar'
@@ -19,9 +20,10 @@ import { ApplicationSidebar } from './ApplicationSidebar'
 type Props = {
   children: React.ReactNode
   title: string
+  form: LegalGazetteForm
 }
 
-export const ApplicationShell = ({ children, title }: Props) => {
+export const ApplicationShell = ({ children, title, form }: Props) => {
   return (
     <GridContainer>
       <GridRow>
@@ -46,7 +48,7 @@ export const ApplicationShell = ({ children, title }: Props) => {
           <ApplicationFooter />
         </GridColumn>
         <GridColumn span={['12/12', '12/12', '3/12']}>
-          <ApplicationSidebar />
+          <ApplicationSidebar form={form} />
         </GridColumn>
       </GridRow>
     </GridContainer>

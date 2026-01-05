@@ -21,9 +21,7 @@ export const commonFieldsSchemaRefined = z.object({
   category: baseEntitySchema,
   caption: z
     .string('Yfirskrift er nauðsynleg')
-    .refine((caption) => isString(caption) && caption.length > 0, {
-      message: 'Yfirskrift er nauðsynleg',
-    }),
+    .min(1, { message: 'Yfirskrift er nauðsynleg' }),
   html: z
     .string('Efni auglýsingar er nauðsynlegt')
     .refine((html) => isString(html) && html.length > 0, {

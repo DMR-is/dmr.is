@@ -45,11 +45,11 @@ export const publishingDatesSchemaRefined = z
   .refine(validateFuture, {
     message: 'Birtingardagar verða að vera í framtíðinni',
   })
-  .refine(validateMinimumDaysBetween, {
-    message: 'Að minnsta kosti einn dagur verður að vera á milli birtingardaga',
-  })
   .refine(validateOrder, {
     message: 'Birtingardagar verða vera í réttri röð',
+  })
+  .refine(validateMinimumDaysBetween, {
+    message: 'Að minnsta kosti einn dagur verður að vera á milli birtingardaga',
   })
 
 export const publishingDatesRecallSchemaRefined = z

@@ -33,7 +33,8 @@ export const NationalIdLookup = ({
   onError: setErrorMessage,
 }: Props) => {
   const trpc = useTRPC()
-  const { formState } = useFormContext<RecallApplicationWebSchema>()
+  const { formState, clearErrors } =
+    useFormContext<RecallApplicationWebSchema>()
   const { mutate, isPending } = useMutation(
     trpc.getPersonByNationalId.mutationOptions({
       onMutate: () => {
@@ -67,6 +68,11 @@ export const NationalIdLookup = ({
   )
   const [nationalId, setNationalId] = useState(defaultValue)
 
+  const onChangeHandler = (val: string) => {
+    clearErrors('fields.settlementFields.nationalId')
+    setNationalId(val)
+  }
+
   const isValidId = useMemo(() => Kennitala.isValid(nationalId), [nationalId])
 
   const errorMessage =
@@ -94,7 +100,7 @@ export const NationalIdLookup = ({
       errorMessage={errorLabel || errorMessage}
       name="fields.settlementFields.nationalId"
       value={nationalId}
-      onChange={(e) => setNationalId(e.target.value)}
+      onChange={(e) => onChangeHandler(e.target.value)}
       buttons={[
         {
           name: 'close',

@@ -34,7 +34,6 @@ export const useSubmitApplication = (applicationId: string) => {
       },
     )
   }
-
   const onInvalidSubmit = (_errors: unknown) => {
     toast.error('Auglýsing er ekki rétt útfyllt', {
       toastId: 'submit-common-application-error',

@@ -6,6 +6,7 @@ import {
   GridColumn,
   GridRow,
   Stack,
+  Text,
 } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
@@ -13,7 +14,11 @@ import { DatePickerController } from '../controllers/DatePickerController'
 import { InputController } from '../controllers/InputController'
 
 export const SignatureFields = () => {
-  const { getValues } = useFormContext<BaseApplicationWebSchema>()
+  const {
+    getValues,
+    clearErrors,
+    formState: { errors },
+  } = useFormContext<BaseApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
 
   const { debouncedUpdateApplication } = useUpdateApplication({
@@ -21,75 +26,72 @@ export const SignatureFields = () => {
     type: 'COMMON',
   })
 
+  const onChangeHandler = (
+    key: 'date' | 'name' | 'location' | 'onBehalfOf',
+    value: string,
+  ) => {
+    clearErrors('signature')
+
+    debouncedUpdateApplication(
+      { signature: { [key]: value } },
+      {
+        errorMessage: 'Ekki tókst að uppfæra undirritun',
+        successMessage: 'Undirritun uppfærð',
+      },
+    )
+  }
+
   return (
-    <Box id="signature">
-      <Stack space={[1, 2]}>
-        <GridRow rowGap={[2, 3]}>
-          <GridColumn span={['12/12', '6/12']}>
-            <InputController
-              name="signature.name"
-              label="Nafn undirritara"
-              onChange={(val) =>
-                debouncedUpdateApplication(
-                  { signature: { name: val } },
-                  {
-                    errorMessage: 'Ekki tókst að uppfæra nafn undirritara',
-                    successMessage: 'Nafn undirritara uppfært',
-                  },
-                )
-              }
-            />
-          </GridColumn>
-          <GridColumn span={['12/12', '6/12']}>
-            <InputController
-              name="signature.location"
-              label="Staðsetning undirritara"
-              onChange={(val) =>
-                debouncedUpdateApplication(
-                  { signature: { location: val } },
-                  {
-                    errorMessage:
-                      'Ekki tókst að uppfæra staðsetningu undirritara',
-                    successMessage: 'Staðsetning undirritara uppfærð',
-                  },
-                )
-              }
-            />
-          </GridColumn>
-          <GridColumn span={['12/12', '6/12']}>
-            <InputController
-              name="signature.onBehalfOf"
-              label="F.h. undirritara"
-              onChange={(val) =>
-                debouncedUpdateApplication(
-                  { signature: { onBehalfOf: val } },
-                  {
-                    errorMessage: 'Ekki tókst að uppfæra f.h. undirritara',
-                    successMessage: 'f.h. undirritara uppfært',
-                  },
-                )
-              }
-            />
-          </GridColumn>
-          <GridColumn span={['12/12', '6/12']}>
-            <DatePickerController
-              appearInline={true}
-              name="signature.date"
-              label="Dagsetning undirritunar"
-              onChange={(date) =>
-                debouncedUpdateApplication(
-                  { signature: { date: date.toISOString() } },
-                  {
-                    errorMessage:
-                      'Ekki tókst að uppfæra dagsetningu undirritunar',
-                    successMessage: 'Dagsetning undirritunar uppfærð',
-                  },
-                )
-              }
-            />
-          </GridColumn>
-        </GridRow>
-      </Stack>
-    </Box>
+    <>
+      <Text
+        marginBottom={1}
+        variant="small"
+        fontWeight={errors?.signature ? 'semiBold' : 'regular'}
+        color={(errors?.signature && 'red600') || 'dark400'}
+      >
+        Fylla þarf út nafn, staðsetningu eða dagsetningu undirritunar{' '}
+        <Text fontWeight="regular" color="red600" as="span">
+          *
+        </Text>
+      </Text>
+
+      <Box id="signature">
+        <Stack space={[1, 2]}>
+          <GridRow rowGap={[2, 3]}>
+            <GridColumn span={['12/12', '6/12']}>
+              <InputController
+                name="signature.name"
+                label="Nafn undirritara"
+                onChange={(val) => onChangeHandler('name', val)}
+              />
+            </GridColumn>
+            <GridColumn span={['12/12', '6/12']}>
+              <InputController
+                name="signature.location"
+                label="Staðsetning undirritara"
+                onChange={(val) => onChangeHandler('location', val)}
+              />
+            </GridColumn>
+            <GridColumn span={['12/12', '6/12']}>
+              <InputController
+                name="signature.onBehalfOf"
+                label="F.h. undirritara"
+                onChange={(val) => onChangeHandler('onBehalfOf', val)}
+              />
+            </GridColumn>
+            <GridColumn span={['12/12', '6/12']}>
+              <DatePickerController
+                appearInline={true}
+                name="signature.date"
+                label="Dagsetning undirritunar"
+                onChange={(date) =>
+                  onChangeHandler('date', date?.toISOString() ?? '')
+                }
+              />
+            </GridColumn>
+          </GridRow>
+        </Stack>
+      </Box>
+    </>
   )
 }
