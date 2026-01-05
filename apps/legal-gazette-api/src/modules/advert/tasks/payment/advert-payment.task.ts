@@ -37,16 +37,24 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
     name: 'payment-job',
   })
   async run() {
-    const { ran } = await this.lock.runWithSessionLock(
+    // Use distributed lock with 10-minute cooldown (cron runs every 15 min)
+    // This prevents duplicate runs even if containers have slight clock drift
+    const { ran, reason } = await this.lock.runWithDistributedLock(
       TASK_JOB_IDS.payment,
       async () => {
         await this.updateTBRPayments()
       },
-      { minHoldMs: 5000 },
+      {
+        cooldownMs: 10 * 60 * 1000, // 10 minutes
+        containerId: process.env.HOSTNAME,
+      },
     )
 
-    if (!ran)
-      this.logger.debug('TBRPayments skipped (lock held by another container)')
+    if (!ran) {
+      this.logger.debug(`TBRPayments skipped (${reason})`, {
+        context: LOGGING_CONTEXT,
+      })
+    }
   }
 
   async updateTBRPayments() {
