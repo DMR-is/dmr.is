@@ -106,6 +106,77 @@ export class PgAdvisoryLockService {
   }
 
   /**
+   * Converts a string to a 32-bit integer hash for use as advisory lock key.
+   * Uses djb2 algorithm - fast and has good distribution.
+   */
+  private stringToLockKey(str: string): number {
+    let hash = 5381
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash * 33) ^ str.charCodeAt(i)
+    }
+    // Ensure positive 32-bit integer
+    return hash >>> 0
+  }
+
+  /**
+   * Runs a function with a per-user advisory lock.
+   * Prevents concurrent execution for the same user (e.g., double-click on subscription button).
+   *
+   * Uses a separate namespace (2000) from task locks to avoid conflicts.
+   *
+   * @param userKey - Unique user identifier (e.g., nationalId)
+   * @param fn - The async function to execute, receives the transaction for use in queries
+   * @returns The result of fn, or throws if lock couldn't be acquired
+   *
+   * @example
+   * ```typescript
+   * const result = await this.lock.runWithUserLock(
+   *   user.nationalId,
+   *   async (tx) => {
+   *     // All DB operations here use the same transaction
+   *     const subscriber = await this.subscriberModel.findOne({ where: {...}, transaction: tx })
+   *     // ... do work ...
+   *     return { success: true }
+   *   }
+   * )
+   * ```
+   */
+  async runWithUserLock<T>(
+    userKey: string,
+    fn: (tx: Transaction) => Promise<T>,
+  ): Promise<{ success: true; result: T } | { success: false; reason: 'lock_held' }> {
+    const USER_LOCK_NAMESPACE = 2000
+    const lockKey = this.stringToLockKey(userKey)
+
+    return this.sequelize.transaction(async (tx: Transaction) => {
+      // Try to acquire advisory lock for this user
+      const lockedRow = await this.sequelize.query<{ locked: boolean }>(
+        'SELECT pg_try_advisory_xact_lock($1, $2) AS locked',
+        {
+          bind: [USER_LOCK_NAMESPACE, lockKey],
+          type: QueryTypes.SELECT,
+          plain: true,
+          transaction: tx,
+        },
+      )
+
+      if (!lockedRow?.locked) {
+        this.logger.debug(`User lock blocked for key: ${userKey}`, {
+          lockKey,
+          namespace: USER_LOCK_NAMESPACE,
+        })
+        return { success: false, reason: 'lock_held' }
+      }
+
+      // Execute the function with the transaction
+      const result = await fn(tx)
+
+      return { success: true, result }
+      // Lock automatically released when transaction commits
+    })
+  }
+
+  /**
    * @deprecated Use runWithDistributedLock instead for better duplicate prevention.
    * Kept for backwards compatibility.
    */

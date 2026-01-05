@@ -83,3 +83,4 @@ export const TASK_JOB_IDS = {
 }
 
 export const TASK_NAMESPACE = 1000
+export const USER_LOCK_NAMESPACE = 2000

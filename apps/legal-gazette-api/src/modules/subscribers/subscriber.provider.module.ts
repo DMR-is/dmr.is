@@ -3,6 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { SubscriberModel } from '../../models/subscriber.model'
 import { SubscriberPaymentModel } from '../../models/subscriber-payment.model'
+import { PgAdvisoryLockModule } from '../advert/tasks/lock.module'
 import { TBRModule } from '../tbr/tbr.module'
 import { SubscriberCreatedListener } from './listeners/subscriber-created.listener'
 import { SubscriberController } from './subscriber.controller'
@@ -12,6 +13,7 @@ import { ISubscriberService } from './subscriber.service.interface'
 @Module({
   imports: [
     SequelizeModule.forFeature([SubscriberModel, SubscriberPaymentModel]),
+    PgAdvisoryLockModule,
     TBRModule.forRoot({
       credentials: process.env.LG_TBR_CREDENTIALS || '',
       officeId: process.env.LG_TBR_OFFICE_ID || '',

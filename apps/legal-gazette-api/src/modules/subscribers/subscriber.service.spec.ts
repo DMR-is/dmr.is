@@ -8,6 +8,7 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { LegalGazetteEvents } from '../../core/constants'
 import { SubscriberModel } from '../../models/subscriber.model'
+import { PgAdvisoryLockService } from '../advert/tasks/lock.service'
 import { SubscriberService } from './subscriber.service'
 
 // ==========================================
@@ -66,6 +67,22 @@ const createMockSubscriber = (overrides: Partial<MockSubscriber> = {}): MockSubs
   return subscriber
 }
 
+/**
+ * Creates a mock lock service that executes the callback immediately.
+ * Can be configured to simulate lock being held by another process.
+ */
+const createMockLockService = (lockHeld = false) => ({
+  runWithUserLock: jest.fn().mockImplementation(
+    async <T>(_userKey: string, fn: () => Promise<T>) => {
+      if (lockHeld) {
+        return { success: false, reason: 'lock_held' }
+      }
+      const result = await fn()
+      return { success: true, result }
+    },
+  ),
+})
+
 // ==========================================
 // Test Suite
 // ==========================================
@@ -78,6 +95,7 @@ describe('SubscriberService', () => {
     update: jest.Mock
   }
   let eventEmitter: jest.Mocked<EventEmitter2>
+  let lockService: ReturnType<typeof createMockLockService>
 
   beforeEach(async () => {
     jest.clearAllMocks()
@@ -93,6 +111,8 @@ describe('SubscriberService', () => {
       emitAsync: jest.fn().mockResolvedValue([]),
     }
 
+    lockService = createMockLockService()
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SubscriberService,
@@ -107,6 +127,10 @@ describe('SubscriberService', () => {
         {
           provide: EventEmitter2,
           useValue: mockEventEmitter,
+        },
+        {
+          provide: PgAdvisoryLockService,
+          useValue: lockService,
         },
       ],
     }).compile()
@@ -157,6 +181,7 @@ describe('SubscriberService', () => {
             { provide: LOGGER_PROVIDER, useValue: logger },
             { provide: getModelToken(SubscriberModel), useValue: subscriberModel },
             { provide: EventEmitter2, useValue: eventEmitter },
+            { provide: PgAdvisoryLockService, useValue: createMockLockService() },
           ],
         }).compile()
 
@@ -324,6 +349,68 @@ describe('SubscriberService', () => {
             actorNationalId: '9999999999',
           }),
         )
+      })
+    })
+
+    describe('distributed locking', () => {
+      it('should acquire lock with user nationalId', async () => {
+        // Arrange
+        const inactiveSubscriber = createMockSubscriber({ isActive: false })
+        subscriberModel.findOne.mockResolvedValue(inactiveSubscriber)
+
+        const user = createMockUser({ nationalId: '1234567890' })
+
+        // Act
+        await service.createSubscriptionForUser(user)
+
+        // Assert: Lock should be acquired with the user's nationalId
+        expect(lockService.runWithUserLock).toHaveBeenCalledWith(
+          '1234567890',
+          expect.any(Function),
+        )
+      })
+
+      it('should return success when lock is held by another request', async () => {
+        // Arrange: Configure lock service to simulate lock being held
+        lockService.runWithUserLock.mockResolvedValue({
+          success: false,
+          reason: 'lock_held',
+        })
+
+        const user = createMockUser()
+
+        // Act
+        const result = await service.createSubscriptionForUser(user)
+
+        // Assert: Should return success (idempotent) without emitting event
+        expect(result).toEqual({ success: true })
+        expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
+      })
+
+      it('should not emit payment event when concurrent request is blocked', async () => {
+        // Arrange: First call succeeds, second is blocked
+        const inactiveSubscriber = createMockSubscriber({ isActive: false })
+
+        // First call - lock acquired, emits event
+        lockService.runWithUserLock
+          .mockImplementationOnce(async (_key, fn) => {
+            subscriberModel.findOne.mockResolvedValue(inactiveSubscriber)
+            const result = await fn()
+            return { success: true, result }
+          })
+          // Second call - lock held
+          .mockResolvedValueOnce({ success: false, reason: 'lock_held' })
+
+        const user = createMockUser()
+
+        // Act
+        const result1 = await service.createSubscriptionForUser(user)
+        const result2 = await service.createSubscriptionForUser(user)
+
+        // Assert: Both return success, but only one event emitted
+        expect(result1).toEqual({ success: true })
+        expect(result2).toEqual({ success: true })
+        expect(eventEmitter.emitAsync).toHaveBeenCalledTimes(1)
       })
     })
   })

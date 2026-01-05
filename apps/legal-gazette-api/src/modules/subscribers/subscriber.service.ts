@@ -9,6 +9,7 @@ import { Logger } from '@dmr.is/logging-next'
 import { LegalGazetteEvents } from '../../core/constants'
 import { MutationResponse } from '../../core/dto/mutation.do'
 import { SubscriberDto, SubscriberModel } from '../../models/subscriber.model'
+import { PgAdvisoryLockService } from '../advert/tasks/lock.service'
 import { SubscriberCreatedEvent } from './events/subscriber-created.event'
 import { ISubscriberService } from './subscriber.service.interface'
 
@@ -21,6 +22,8 @@ export class SubscriberService implements ISubscriberService {
     private readonly subscriberModel: typeof SubscriberModel,
 
     private readonly eventEmitter: EventEmitter2,
+
+    private readonly lock: PgAdvisoryLockService,
   ) {}
 
   private async handleSubscriptionExpiry(
@@ -61,52 +64,63 @@ export class SubscriberService implements ISubscriberService {
     return this.handleSubscriptionExpiry(subscriber.fromModel())
   }
   async createSubscriptionForUser(user: DMRUser): Promise<MutationResponse> {
-    const subscriber = await this.subscriberModel.findOne({
-      where: { nationalId: user.nationalId },
-    })
-
-    if (!subscriber) {
-      throw new NotFoundException(
-        `Subscriber with nationalId ${user.nationalId} not found.`,
-      )
-    }
-
-    // Check if subscription is already active and not expired (idempotency check)
-    if (subscriber.isActive && subscriber.subscribedTo) {
-      const expiryDate = new Date(subscriber.subscribedTo)
-      if (expiryDate > new Date()) {
-        this.logger.info('Subscription already active, skipping payment', {
-          category: 'subscriber-service',
-          subscriberId: subscriber.id,
-          expiresAt: subscriber.subscribedTo,
+    // Use per-user lock to prevent race conditions (double-click, concurrent requests)
+    const lockResult = await this.lock.runWithUserLock(
+      user.nationalId,
+      async (tx) => {
+        const subscriber = await this.subscriberModel.findOne({
+          where: { nationalId: user.nationalId },
+          transaction: tx,
         })
+
+        if (!subscriber) {
+          throw new NotFoundException(
+            `Subscriber with nationalId ${user.nationalId} not found.`,
+          )
+        }
+
+        // Check if subscription is already active and not expired (idempotency check)
+        if (subscriber.isActive && subscriber.subscribedTo) {
+          const expiryDate = new Date(subscriber.subscribedTo)
+          if (expiryDate > new Date()) {
+            this.logger.info('Subscription already active, skipping payment', {
+              category: 'subscriber-service',
+              subscriberId: subscriber.id,
+              expiresAt: subscriber.subscribedTo,
+            })
+            return { success: true }
+          }
+        }
+
+        // Determine the actor nationalId - use actor if exists (delegation), otherwise user
+        const actorNationalId = user.actor?.nationalId ?? user.nationalId
+
+        // Emit event for payment processing and WAIT for it to complete
+        // emitAsync returns a Promise that resolves when all listeners complete
+        // If any listener throws, the error propagates here (requires suppressErrors: false on listener)
+        await this.eventEmitter.emitAsync(
+          LegalGazetteEvents.SUBSCRIBER_CREATED,
+          {
+            subscriber: subscriber.fromModel(),
+            actorNationalId,
+          } as SubscriberCreatedEvent,
+        )
+
         return { success: true }
-      }
-    }
+      },
+    )
 
-    try {
-      // Determine the actor nationalId - use actor if exists (delegation), otherwise user
-      const actorNationalId = user.actor?.nationalId ?? user.nationalId
-
-      // Emit event for payment processing and WAIT for it to complete
-      // emitAsync returns a Promise that resolves when all listeners complete
-      // If any listener throws, the error propagates here (requires suppressErrors: false on listener)
-      await this.eventEmitter.emitAsync(
-        LegalGazetteEvents.SUBSCRIBER_CREATED,
-        {
-          subscriber: subscriber.fromModel(),
-          actorNationalId,
-        } as SubscriberCreatedEvent,
-      )
-
-      return { success: true }
-    } catch (error) {
-      this.logger.error('Error creating subscription', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+    // Handle lock acquisition failure (concurrent request for same user)
+    if (!lockResult.success) {
+      this.logger.info('Subscription request blocked by concurrent request', {
         category: 'subscriber-service',
-        subscriberId: subscriber.id,
+        nationalId: user.nationalId,
+        reason: lockResult.reason,
       })
-      return { success: false }
+      // Return success since another request is already processing
+      return { success: true }
     }
+
+    return lockResult.result
   }
 }
