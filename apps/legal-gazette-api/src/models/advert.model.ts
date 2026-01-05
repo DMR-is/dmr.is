@@ -101,6 +101,7 @@ type AdvertAttributes = {
   createdByNationalId: string
   legacyHtml?: string | null
   legacyId: string | null
+  externalId?: string | null
 
   // Common specific properties
   caption: string | null
@@ -137,6 +138,7 @@ export type AdvertCreateAttributes = {
   legacyHtml?: string | null
   createdBy: string
   createdByNationalId: string
+  externalId?: string | null
 
   // signature
   signature?: SignatureCreationAttributes
@@ -377,6 +379,14 @@ export class AdvertModel extends BaseModel<
   @ApiProperty({ type: String, required: false })
   judgementDate?: Date | null
 
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    defaultValue: null,
+  })
+  @ApiProperty({ type: String, required: false, nullable: true })
+  externalId?: string | null
+
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
   case!: CaseModel
 
@@ -508,6 +518,9 @@ export class AdvertModel extends BaseModel<
 
       return false
     } catch (error) {
+      this.logger.error('Error checking canEdit permission', {
+        context: 'AdvertModel',
+      })
       return false
     }
   }
@@ -542,6 +555,9 @@ export class AdvertModel extends BaseModel<
         publications: model.publications.map((p) => p.fromModel()),
       }
     } catch (error) {
+      this.logger.warn('Error converting from AdvertModel to AdvertDto', {
+        context: 'AdvertModel',
+      })
       throw new InternalServerErrorException()
     }
   }
@@ -585,6 +601,44 @@ export class AdvertModel extends BaseModel<
 
   fromModelToDetailed(userId?: string): AdvertDetailedDto {
     return AdvertModel.fromModelToDetailed(this, userId)
+  }
+
+  static fromModelToExternal(model: AdvertModel): ExternalAdvertDto {
+    const publishing = model.publications.find(
+      (pub) => pub.publishedAt === null,
+    )
+
+    const date = publishing
+      ? publishing.scheduledAt
+      : model.publications[model.publications.length - 1].scheduledAt
+
+    try {
+      return {
+        id: model.id,
+        createdAt: model.createdAt.toISOString(),
+        updatedAt: model.updatedAt.toISOString(),
+        category: model.category.title,
+        type: model.type.title,
+        status: model.status.title,
+        createdBy: model.createdBy,
+        scheduledAt: date.toISOString(),
+        title: model.title,
+        caption: model.caption ?? undefined,
+        content: model.content ?? undefined,
+      }
+    } catch (error) {
+      this.logger.warn(
+        'Error converting from AdvertModel to ExternalAdvertDto',
+        {
+          context: 'AdvertModel',
+        },
+      )
+      throw new InternalServerErrorException()
+    }
+  }
+
+  fromModelToExternal(): ExternalAdvertDto {
+    return AdvertModel.fromModelToExternal(this)
   }
 }
 
@@ -749,6 +803,31 @@ export class GetAdvertsDto {
   paging!: Paging
 }
 
+export class ExternalAdvertDto extends PickType(AdvertDetailedDto, [
+  'id',
+  'title',
+  'createdAt',
+  'updatedAt',
+  'createdBy',
+  'scheduledAt',
+  'caption',
+  'content',
+] as const) {
+  @ApiProperty({ type: String, required: false })
+  externalId?: string
+  @ApiProperty({ type: String })
+  category!: string
+  @ApiProperty({ type: String })
+  type!: string
+  @ApiProperty({ type: String })
+  status!: string
+}
+
+export class GetExternalAdvertsDto {
+  @ApiProperty({ type: [ExternalAdvertDto] })
+  adverts!: ExternalAdvertDto[]
+}
+
 export class GetAdvertsQueryDto extends QueryDto {
   @ApiProperty({
     type: [String],
@@ -785,6 +864,15 @@ export class GetAdvertsQueryDto extends QueryDto {
   @IsArray()
   @IsUUID(undefined, { each: true })
   typeId?: string[]
+
+  @ApiProperty({ type: [String], required: false })
+  @Transform(({ value }) => {
+    if (!value) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsArray()
+  @IsOptional()
+  externalId?: string[]
 }
 
 export class AdvertStatusCounterItemDto {
@@ -871,6 +959,7 @@ export class CreateAdvertInternalDto extends PickType(AdvertModel, [
   'courtDistrictId',
   'settlementId',
   'divisionMeetingLocation',
+  'externalId',
 ] as const) {
   @ApiProperty({
     enum: AdvertTemplateType,

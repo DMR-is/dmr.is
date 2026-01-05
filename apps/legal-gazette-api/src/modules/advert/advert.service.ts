@@ -18,6 +18,7 @@ import {
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
+  GetExternalAdvertsDto,
   GetMyAdvertsDto,
   MyAdvertListItemDto,
   UpdateAdvertDto,
@@ -247,6 +248,7 @@ export class AdvertService implements IAdvertService {
           courtDistrictId: body.courtDistrictId,
           legacyHtml: body.legacyHtml,
           islandIsApplicationId: body.islandIsApplicationId,
+          externalId: body.externalId,
           judgementDate:
             typeof body.judgementDate === 'string'
               ? new Date(body.judgementDate)
@@ -355,6 +357,18 @@ export class AdvertService implements IAdvertService {
     return {
       adverts: mapped,
       paging: generatePaging(mapped, 1, mapped.length, mapped.length),
+    }
+  }
+
+  async getAdvertsByExternalId(
+    externalId: string,
+  ): Promise<GetExternalAdvertsDto> {
+    const adverts = await this.advertModel.scope('listview').findAll({
+      where: { externalId },
+    })
+
+    return {
+      adverts: adverts.map((advert) => advert.fromModelToExternal()),
     }
   }
 

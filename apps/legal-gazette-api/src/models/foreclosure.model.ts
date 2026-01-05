@@ -3,7 +3,6 @@ import {
   IsArray,
   IsDateString,
   IsString,
-  IsUUID,
   ValidateNested,
 } from 'class-validator'
 import {
@@ -15,15 +14,14 @@ import {
   HasMany,
 } from 'sequelize-typescript'
 
-import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
+import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'
-import { ResponsiblePartyDto } from '../modules/external-systems/external-systems.dto'
+import { ObjectIssuer } from '../modules/external-systems/external-systems.dto'
 import { AdvertModel } from './advert.model'
 import {
-  CreateForeclosurePropertyDto,
   ForeclosurePropertyDto,
   ForeclosurePropertyModel,
   ForeclosurePropertyModelCreateAttributes,
@@ -179,10 +177,10 @@ export class CreateForeclosureSaleDto extends PickType(ForeclosureDto, [
   foreclosureDate!: string
 
   @ApiProperty({
-    type: ResponsiblePartyDto,
+    type: ObjectIssuer,
     description: 'The responsible party for the foreclosure',
   })
   @ValidateNested()
-  @Type(() => ResponsiblePartyDto)
-  responsibleParty!: ResponsiblePartyDto
+  @Type(() => ObjectIssuer)
+  responsibleParty!: ObjectIssuer
 }

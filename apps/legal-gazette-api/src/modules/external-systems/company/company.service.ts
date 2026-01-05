@@ -337,7 +337,7 @@ export class CompanyService implements ICompanyService {
           <tr>
             <td>
               <i>Firmað ritar: </i>
-              ${body.theFirmWrites}
+              ${body.signature}
             </td>
           </tr>
           ${
@@ -406,6 +406,7 @@ export class CompanyService implements ICompanyService {
       },
       scheduledAt: [nextWednesday.toISOString()],
       isFromExternalSystem: true,
+      externalId: body.responsibleParty.externalId,
     })
   }
 }

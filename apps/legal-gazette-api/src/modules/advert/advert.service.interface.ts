@@ -7,6 +7,7 @@ import {
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
+  GetExternalAdvertsDto,
   GetMyAdvertsDto,
   UpdateAdvertDto,
 } from '../../models/advert.model'
@@ -21,6 +22,8 @@ export interface IAdvertService {
   updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDetailedDto>
 
   getAdvertsByCaseId(caseId: string): Promise<GetAdvertsDto>
+
+  getAdvertsByExternalId(externalId: string): Promise<GetExternalAdvertsDto>
 
   moveAdvertToNextStatus(advertId: string, currentUser: DMRUser): Promise<void>
 
@@ -42,7 +45,10 @@ export interface IAdvertService {
 
   getMyAdverts(query: PagingQuery, user: DMRUser): Promise<GetMyAdvertsDto>
 
-  getMyLegacyAdverts(query: PagingQuery, user: DMRUser): Promise<GetMyAdvertsDto>
+  getMyLegacyAdverts(
+    query: PagingQuery,
+    user: DMRUser,
+  ): Promise<GetMyAdvertsDto>
 }
 
 export const IAdvertService = Symbol('IAdvertService')

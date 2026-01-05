@@ -1,10 +1,20 @@
-import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { MachineClientGuard } from '../../../core/guards/machine-client.guard'
+import { GetExternalAdvertsDto } from '../../../models/advert.model'
+import { IAdvertService } from '../../advert/advert.service.interface'
 import {
   CreateAdditionalAnnouncementsDto,
   RegisterCompanyFirmaskraDto,
@@ -21,6 +31,8 @@ import { ICompanyService } from './company.service.interface'
 export class CompanyController {
   constructor(
     @Inject(ICompanyService) private readonly companyService: ICompanyService,
+    @Inject(IAdvertService)
+    private readonly advertService: IAdvertService,
   ) {}
 
   @Post('hlutafelag')
@@ -51,5 +63,14 @@ export class CompanyController {
     @Body() body: CreateAdditionalAnnouncementsDto,
   ) {
     return this.companyService.createAdditionalAnnouncements(body)
+  }
+
+  @Get('advertsByExternalId/:id')
+  @LGResponse({
+    operationId: 'getAdvertsByExternalId',
+    type: GetExternalAdvertsDto,
+  })
+  getAdvertByExternalId(@Param('id') externalId: string) {
+    return this.advertService.getAdvertsByExternalId(externalId)
   }
 }
