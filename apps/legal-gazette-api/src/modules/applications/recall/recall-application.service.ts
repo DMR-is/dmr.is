@@ -553,6 +553,7 @@ export class RecallApplicationService implements IRecallApplicationService {
         date: data.signature?.date ? new Date(data.signature.date) : undefined,
       },
       title: title,
+      additionalText: data.additionalText,
       divisionMeetingDate: data.fields.divisionMeetingFields?.meetingDate,
       divisionMeetingLocation:
         data.fields.divisionMeetingFields?.meetingLocation,
