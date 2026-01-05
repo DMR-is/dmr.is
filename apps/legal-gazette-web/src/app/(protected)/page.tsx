@@ -1,4 +1,5 @@
 import { fetchQuery } from '@dmr.is/trpc/client/server'
+import { Box } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationContainer } from '../../components/front-page/ApplicationContainer'
 import { HeroContainer } from '../../components/front-page/HeroContainer'
@@ -24,7 +25,7 @@ export default async function IndexPage() {
     ])
 
   return (
-    <>
+    <Box marginTop={[2, 4]}>
       <HeroContainer />
       <SectionContainer
         inprogressStats={inprogressStats}
@@ -32,6 +33,6 @@ export default async function IndexPage() {
         toBePublishedStats={readyForPublishingStats}
       />
       <ApplicationContainer />
-    </>
+    </Box>
   )
 }

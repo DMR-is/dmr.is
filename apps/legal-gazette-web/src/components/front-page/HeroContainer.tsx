@@ -5,16 +5,13 @@ import { LinkCard } from '@dmr.is/ui/components/LinkCard/LinkCard'
 
 import { GridColumn, GridRow } from '@island.is/island-ui/core'
 
-import { Route, Routes } from '../../lib/constants'
-import { routesToBreadcrumbs } from '../../lib/utils'
+import { Route } from '../../lib/constants'
 
 export const HeroContainer = () => {
-  const breadcrumbs = routesToBreadcrumbs(Routes, Route.STJORNBORD)
   return (
     <Hero
-      breadcrumbs={{ items: breadcrumbs }}
       title="Lögbirtingablað"
-      description="Umsýslukerfi Lögbirtingablaðs. Hér á stjórnborði er yfirlit yfir ritsjórn, útgáfu og tölfræði."
+      description="Umsýslukerfi Lögbirtingablaðsins, allt frá innsendingu til útgáfu. Ásamt yfirliti yfir útgefin mál. Lögbirtingablað hefur verið gefið út á prenti frá 2. Janúar 1908 en rafræn útgáfa hófst 1. júlí 2005."
       image={{
         src: '/assets/banner-image.svg',
         alt: 'Image alt',
@@ -24,8 +21,8 @@ export const HeroContainer = () => {
         <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
           <LinkCard
             href={Route.RITSTJORN}
-            title="Innsent / í vinnslu"
-            description="Yfirlit yfir innsend mál og þau sem eru í vinnslu."
+            title="Ritsjórn"
+            description="Umsýsla frá innsendingu, í vinnslu og til útgáfu."
             image={{
               src: '/assets/ritstjorn-image.svg',
             }}
@@ -34,8 +31,8 @@ export const HeroContainer = () => {
         <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
           <LinkCard
             href={Route.RITSTJORN + '?tab=utgafa'}
-            title="Tilbúið til útgáfu"
-            description="Yfirlit yfir mál sem eru tilbúin til útgáfu."
+            title="Útgáfa"
+            description="Mál sem eru tilbúin til útgáfu."
             image={{
               src: '/assets/utgafa-image.svg',
             }}
@@ -44,8 +41,8 @@ export const HeroContainer = () => {
         <GridColumn span={['12/12', '4/12']} paddingBottom={[0]}>
           <LinkCard
             href={Route.RITSTJORN + '?tab=yfirlit'}
-            title="Öll mál"
-            description="Yfirlit yfir öll mál, innsend, í vinnslu, útgefin og hafnað."
+            title="Heildarlisti"
+            description="Öll mál. Útgefin, í vinnslu og hafnað."
             image={{
               src: '/assets/heildar-image.svg',
             }}

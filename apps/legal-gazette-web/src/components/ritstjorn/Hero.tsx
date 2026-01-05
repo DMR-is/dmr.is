@@ -13,7 +13,7 @@ export const RitstjornHero = () => {
       breadcrumbs={{ items: breadcrumbs }}
       variant="small"
       title="Ritsjórn Lögbirtingablaðs"
-      description="Vinnslusvæði fyrir ritsjórn Lögbirtingablaðs."
+      description="Umsýsla frá innsendingu, í vinnslu og til útgáfu."
       image={{
         src: '/assets/banner-image-small-2.svg',
         alt: 'Image alt',

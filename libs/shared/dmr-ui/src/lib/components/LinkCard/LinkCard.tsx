@@ -35,18 +35,24 @@ export const LinkCard = ({
     <Box
       height="full"
       paddingX={3}
-      paddingY={2}
+      paddingY={3}
       border="standard"
       borderColor="blueberry200"
       borderRadius="large"
       background="white"
+      display="flex"
+      alignItems="center"
     >
       <GridContainer>
-        <GridRow>
-          <GridColumn span={columnSpan.content} paddingTop={1}>
+        <GridRow alignItems={'center'}>
+          <GridColumn span={columnSpan.content}>
             <Stack space={1}>
               <Text variant="h3" as="h3" color="blue400" fontWeight="semiBold">
-                <LinkV2 href={href}>{title}</LinkV2>
+                <span>
+                  <LinkV2 href={href} underline="normal">
+                    {title}
+                  </LinkV2>
+                </span>
               </Text>
               {description && <Text>{description}</Text>}
             </Stack>
