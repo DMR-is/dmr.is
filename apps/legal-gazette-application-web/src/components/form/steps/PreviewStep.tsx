@@ -13,7 +13,7 @@ export const PreviewStep = () => {
   const { getValues } = useFormContext<BaseApplicationWebSchema>()
   const id = getValues('metadata.applicationId')
   const { data, isPending } = useQuery(
-    trpc.getPreviewHTML.queryOptions({ applicationId: id }),
+    trpc.getPreviewHTML.queryOptions({ applicationId: id }, { gcTime: 0 }),
   )
 
   return isPending ? (
