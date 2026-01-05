@@ -555,7 +555,7 @@ export class AdvertModel extends BaseModel<
         publications: model.publications.map((p) => p.fromModel()),
       }
     } catch (error) {
-      this.logger.warn('Error converting from model to external DTO', {
+      this.logger.warn('Error converting from AdvertModel to AdvertDto', {
         context: 'AdvertModel',
       })
       throw new InternalServerErrorException()
@@ -627,6 +627,12 @@ export class AdvertModel extends BaseModel<
         content: model.content ?? undefined,
       }
     } catch (error) {
+      this.logger.warn(
+        'Error converting from AdvertModel to ExternalAdvertDto',
+        {
+          context: 'AdvertModel',
+        },
+      )
       throw new InternalServerErrorException()
     }
   }
