@@ -406,6 +406,7 @@ export class CompanyService implements ICompanyService {
       },
       scheduledAt: [nextWednesday.toISOString()],
       isFromExternalSystem: true,
+      externalId: body.responsibleParty.externalId,
     })
   }
 }

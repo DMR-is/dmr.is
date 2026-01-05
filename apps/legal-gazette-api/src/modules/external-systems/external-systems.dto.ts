@@ -62,6 +62,15 @@ export class ResponsiblePartyDto {
   @Type(() => ResponsiblePartySignature)
   @ValidateNested()
   signature!: ResponsiblePartySignature
+
+  @ApiProperty({
+    type: String,
+    description: 'External id if external service sent the advert',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  externalId?: string
 }
 
 export class PartyEntityDto {
