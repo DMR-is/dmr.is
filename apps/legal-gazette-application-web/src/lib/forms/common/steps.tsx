@@ -2,6 +2,7 @@ import {
   baseApplicationSchemaRefined,
   commonApplicationAnswersRefined,
 } from '@dmr.is/legal-gazette/schemas'
+import { Text } from '@dmr.is/ui/components/island-is'
 
 import { AdvertContentField } from '../../../components/form/common/fields/AdvertContentFields'
 import { CommonAdvertFields } from '../../../components/form/common/fields/CommonAdvertFields'
@@ -46,6 +47,7 @@ export const CommonFormSteps: LegalGazetteForm = {
         },
         {
           title: 'Undirritun',
+
           content: <SignatureFields />,
         },
       ],

@@ -11,8 +11,8 @@ import {
 import { Text } from '@dmr.is/ui/components/island-is'
 
 import { CommunicationChannelFields } from '../../../components/form/fields/CommunicationChannelFields'
-import { PublishingFields } from '../../../components/form/fields/PublishingFields'
 import { SignatureFields } from '../../../components/form/fields/SignatureFields'
+import { RecallPublishingFields } from '../../../components/form/recall/fields/PublishingFields'
 import { RecallAdvertFields } from '../../../components/form/recall/fields/RecallAdvertFields'
 import { RecallDivisionFields } from '../../../components/form/recall/fields/RecallDivisionFields'
 import { RecallLiquidatorFields } from '../../../components/form/recall/fields/RecallLiquidatorFields'
@@ -130,16 +130,12 @@ export const RecallFormSteps = (
             title: 'Birting',
             intro: (
               <Text>
-                Veldu dagsetningar hér fyrir neðan um ósk um birtingardag. Að
-                minnsta kosti einn birtingardagur er nauðsynlegur og mest þrír.
+                Veldu dagsetningar hér fyrir neðan um ósk um birtingardaga. Að
+                minnsta kosti tveir birtingardagar eru nauðsynlegir og mest
+                þrír.
               </Text>
             ),
-            content: (
-              <PublishingFields
-                additionalTitle="innköllunar"
-                applicationType="RECALL"
-              />
-            ),
+            content: <RecallPublishingFields />,
           },
           {
             title: 'Samskiptaleiðir',
