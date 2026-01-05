@@ -13,7 +13,7 @@ export const RitstjornHero = () => {
       breadcrumbs={{ items: breadcrumbs }}
       variant="small"
       title="Ritsjórn Lögbirtingablaðs"
-      description="Vinnslusvæði fyrir ritsjórn Lögbirtingablaðs. Lögbirtingablað hefur verið gefið út á prenti frá 2. Janúar 1908 en rafræn útgáfa hófst 1. júlí 2005."
+      description="Umsýsla frá innsendingu, í vinnslu og til útgáfu."
       image={{
         src: '/assets/banner-image-small-2.svg',
         alt: 'Image alt',

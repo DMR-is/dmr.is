@@ -65,7 +65,7 @@ export enum Route {
 export const Routes: RouteItem[] = [
   {
     path: Route.STJORNBORD,
-    pathName: 'Umsýslukerfi',
+    pathName: 'Lögbirtingablað',
     showInNavigation: true,
     children: [
       {

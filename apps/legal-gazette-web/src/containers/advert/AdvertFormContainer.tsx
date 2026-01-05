@@ -185,7 +185,7 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
           <Breadcrumbs
             items={[
               {
-                title: 'Umsýslukerfi',
+                title: 'Lögbirtingablað',
                 href: Route.STJORNBORD,
               },
               {

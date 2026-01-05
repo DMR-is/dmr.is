@@ -100,7 +100,7 @@ export const PageContainer = ({ advertCount }: Props) => {
                     <Button
                       variant="utility"
                       size="small"
-                      icon="add"
+                      icon="document"
                       iconType="outline"
                     >
                       Stofna auglýsingu
