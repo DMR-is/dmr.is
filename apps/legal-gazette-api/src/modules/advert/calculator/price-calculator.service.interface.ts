@@ -1,9 +1,14 @@
+import { DMRUser } from '@dmr.is/auth/dmrUser'
+
 import { GetPaymentDataResponseDto } from '../../tbr/tbr.dto'
 
-type NewType = Promise<GetPaymentDataResponseDto>
-
 export interface IPriceCalculatorService {
-  getPaymentData(advertId: string): NewType
+  getPaymentData(advertId: string): Promise<GetPaymentDataResponseDto>
+
+  getEstimatedPriceForApplication(
+    applicationId: string,
+    user: DMRUser,
+  ): Promise<number>
 }
 
 export const IPriceCalculatorService = Symbol('IPriceCalculatorService')

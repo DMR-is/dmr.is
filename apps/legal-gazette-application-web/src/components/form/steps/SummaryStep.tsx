@@ -31,6 +31,15 @@ export const SummaryStep = () => {
     }),
   )
 
+  const { data: estimatedPrice } = useQuery(
+    trpc.getEstimatedPrice.queryOptions(
+      {
+        applicationId: formValues.metadata.applicationId,
+      },
+      { gcTime: 0 },
+    ),
+  )
+
   const { mutate: getPersonInfo, isPending } = useMutation(
     trpc.getPersonByNationalId.mutationOptions({}),
   )
@@ -142,14 +151,27 @@ export const SummaryStep = () => {
       summaryItems.push(...communicationChannels)
     }
 
-    summaryItems.push({
-      title: 'Áætlað verð',
-      value: numberFormat(1500) + ' kr.',
-    })
-
     setItems(summaryItems)
     setLoading(false)
   }, [session, application])
+
+  useEffect(() => {
+    setItems((prev) => [
+      ...prev,
+      {
+        title: 'Áætlaður kostnaður',
+        value: estimatedPrice
+          ? `${numberFormat(estimatedPrice.price)} kr.`
+          : 'Ekki hægt að reikna',
+      },
+    ])
+
+    return () => {
+      setItems((prev) =>
+        prev.filter((item) => item.title !== 'Áætlaður kostnaður'),
+      )
+    }
+  }, [estimatedPrice])
 
   const isLoading = loading || isPending || isPendingApplication
 

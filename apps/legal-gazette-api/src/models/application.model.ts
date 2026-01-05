@@ -401,3 +401,9 @@ export class GetMinDateResponseDto {
   @IsDateString()
   minDate!: string
 }
+
+export class GetApplicationEstimatedPriceDto {
+  @ApiProperty({ type: Number })
+  @IsNumber()
+  price!: number
+}
