@@ -1,10 +1,11 @@
-import { Column, DataType, DefaultScope } from 'sequelize-typescript'
+import { Column, DataType, DefaultScope, HasMany } from 'sequelize-typescript'
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'
+import { SubscriberTransactionModel } from './subscriber-transaction.model'
 
 export type SubscriberAttributes = {
   id: string
@@ -91,6 +92,9 @@ export class SubscriberModel extends BaseModel<
   })
   @ApiProperty({ type: Date, nullable: true, description: 'NULL means subscription is still active' })
   subscribedTo!: Date | null
+
+  @HasMany(() => SubscriberTransactionModel)
+  transactions?: SubscriberTransactionModel[]
 
   static fromModel(model: SubscriberModel): SubscriberDto {
     return {

@@ -380,6 +380,17 @@ export class AdvertService implements IAdvertService {
       .withScope('detailed')
       .findByPkOrThrow(id)
 
+    // Prevent modification of adverts in terminal states
+    const nonEditableStatuses = [
+      StatusIdEnum.PUBLISHED,
+      StatusIdEnum.REJECTED,
+      StatusIdEnum.WITHDRAWN,
+    ]
+
+    if (nonEditableStatuses.includes(advert.statusId)) {
+      throw new BadRequestException('Cannot modify published adverts')
+    }
+
     const category = body.typeId
       ? (await this.typeCategoriesService.findByTypeId(body.typeId)).type
           .categories[0]

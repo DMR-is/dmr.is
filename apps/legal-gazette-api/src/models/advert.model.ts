@@ -91,6 +91,7 @@ type AdvertAttributes = {
   templateType: AdvertTemplateType
   islandIsApplicationId: string | null
   applicationId: string | null
+  transactionId: string | null
   typeId: string
   categoryId: string
   statusId: string
@@ -131,6 +132,7 @@ export type AdvertCreateAttributes = {
   templateType?: AdvertTemplateType
   islandIsApplicationId?: string | null
   applicationId?: string | null
+  transactionId?: string | null
   typeId: string
   categoryId: string
   statusId?: string
@@ -417,7 +419,17 @@ export class AdvertModel extends BaseModel<
   @HasMany(() => AdvertPublicationModel)
   publications!: AdvertPublicationModel[]
 
-  @HasOne(() => TBRTransactionModel)
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    defaultValue: null,
+    field: 'transaction_id',
+  })
+  @ForeignKey(() => TBRTransactionModel)
+  @ApiProperty({ type: String, required: false, nullable: true })
+  transactionId?: string | null
+
+  @BelongsTo(() => TBRTransactionModel)
   transaction?: TBRTransactionModel
 
   @HasMany(() => CommentModel)
