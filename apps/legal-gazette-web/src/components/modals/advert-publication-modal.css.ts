@@ -7,12 +7,13 @@ export const advertModalWrapperStyle = style({
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  minHeight: '100vh',
+  height: '100vh',
 })
 
 export const advertModalStyle = style({
   backgroundColor: theme.color.white,
   borderRadius: theme.border.radius.large,
-  minHeight: '80vh',
+  maxHeight: '80vh',
+  overflowY: 'auto',
   width: '100%',
 })

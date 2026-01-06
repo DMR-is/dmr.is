@@ -20,7 +20,7 @@ export function getForeclosureTemplate(
 
   const intro = getElement(
     `Eftirtalin beiðni um nauðungarsölu til fullnustu kröfu um peningagreiðslu verður tekin fyrir á skrifstofu embættisins ${foreclosure.foreclosureAddress},
-    ${formatDate(foreclosure.foreclosureDate, 'dd. MMMM yyyy')} kl. ${formatDate(foreclosure.foreclosureDate, 'HH:mm')}  hafi hún ekki áður verið felld niður:`,
+    ${formatDate(foreclosure.foreclosureDate, 'd. MMMM yyyy')} kl. ${formatDate(foreclosure.foreclosureDate, 'HH:mm')}  hafi hún ekki áður verið felld niður:`,
   )
 
   const properties = foreclosure.properties

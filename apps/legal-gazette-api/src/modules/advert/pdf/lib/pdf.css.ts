@@ -581,4 +581,41 @@ export const pdfStyles = `
       }
       .disclaimer__text {
       }
+
+      /* ======================================================================= */
+
+      .advertContent table {
+        table-layout: fixed;
+      }
+
+      .advertContent table td,
+      .advertContent table th {
+        border: none;
+        padding-right: 1em;
+      }
+
+      .advert.legal-gazette .advert {
+        font-size: 12pt;
+      }
+
+      .advert.legal-gazette .advertSerial {
+        font-size: 10pt;
+        text-align: right;
+        margin-block: 0;
+      }
+
+      .advert.legal-gazette .advertHeading {
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+
+      .advert.legal-gazette p {
+        text-align: justify;
+        margin-block: 1em;
+      }
+
+      .advert.legal-gazette .advertSignature p {
+        text-align: right;
+        margin-block: 0;
+      }
 `

@@ -38,7 +38,7 @@ export const AdvertPublicationModal = ({
       {({ closeModal }) => (
         <GridContainer>
           <GridRow>
-            <GridColumn span={['10/12']} offset={['1/12']}>
+            <GridColumn span={['10/12', '8/12']} offset={['1/12', '2/12']}>
               <Box className={styles.advertModalWrapperStyle}>
                 <Box className={styles.advertModalStyle} padding={[2, 3, 4]}>
                   <Stack space={2}>
@@ -47,6 +47,7 @@ export const AdvertPublicationModal = ({
                         variant="ghost"
                         onClick={closeModal}
                         circle={true}
+                        size="small"
                         icon="close"
                       />
                     </Inline>
