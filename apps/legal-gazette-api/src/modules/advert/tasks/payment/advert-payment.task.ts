@@ -64,18 +64,18 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
       context: LOGGING_CONTEXT,
     })
 
-    const pendingTransactions = await this.tbrTransactionModel
-      .scope('withDebtor')
-      .findAll({
-        where: {
-          chargeCategory: {
-            [Op.eq]: process.env.LG_TBR_CHARGE_CATEGORY_PERSON,
-          },
-          paidAt: {
-            [Op.eq]: null,
-          },
+    const pendingTransactions = await this.tbrTransactionModel.findAll({
+      where: {
+        transactionType: 'ADVERT',
+        chargeCategory: {
+          [Op.eq]: process.env.LG_TBR_CHARGE_CATEGORY_PERSON,
         },
-      })
+        paidAt: {
+          [Op.eq]: null,
+        },
+        status: TBRTransactionStatus.CREATED,
+      },
+    })
 
     if (pendingTransactions.length === 0) {
       this.logger.info('No pending TBR payments found, skipping job', {
@@ -115,7 +115,7 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
           this.tbrService.getPaymentStatus({
             chargeBase: transaction.chargeBase,
             chargeCategory: transaction.chargeCategory,
-            debtorNationalId: transaction.advert.createdByNationalId,
+            debtorNationalId: transaction.debtorNationalId,
           }),
         )
         const results = await Promise.allSettled(promises)
@@ -128,7 +128,7 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
             if (paymentData.paid) {
               this.logger.info('TBR payment completed, updating transaction', {
                 chargeBase: transaction.chargeBase,
-                advertId: transaction.advertId,
+                transactionId: transaction.id,
                 context: LOGGING_CONTEXT,
               })
               transaction.status = TBRTransactionStatus.PAID
@@ -139,7 +139,7 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
             this.logger.error('Error fetching TBR payment status', {
               error: result.reason,
               chargeBase: transaction.chargeBase,
-              advertId: transaction.advertId,
+              transactionId: transaction.id,
               context: LOGGING_CONTEXT,
             })
           }

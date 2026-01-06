@@ -8,10 +8,12 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IAWSService } from '@dmr.is/modules'
 
 import { LegalGazetteEvents } from '../../../../core/constants'
+import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertVersionEnum } from '../../../../models/advert-publication.model'
 import {
   TBRTransactionModel,
   TBRTransactionStatus,
+  TBRTransactionType,
 } from '../../../../models/tbr-transactions.model'
 import { ITBRService } from '../../../tbr/tbr.service.interface'
 import { IPriceCalculatorService } from '../../calculator/price-calculator.service.interface'
@@ -31,6 +33,8 @@ export class AdvertPublishedListener {
     @Inject(ITBRService) private readonly tbrService: ITBRService,
     @InjectModel(TBRTransactionModel)
     private readonly tbrTransactionModel: typeof TBRTransactionModel,
+    @InjectModel(AdvertModel)
+    private readonly advertModel: typeof AdvertModel,
     private readonly sequelize: Sequelize,
   ) {}
 
@@ -65,18 +69,28 @@ export class AdvertPublishedListener {
     try {
       transactionRecord = await this.sequelize.transaction(
         async (transaction) => {
-          return this.tbrTransactionModel.create(
+          // Create the transaction record
+          const tbrTransaction = await this.tbrTransactionModel.create(
             {
-              advertId: advert.id,
+              transactionType: TBRTransactionType.ADVERT,
               feeCodeId: feeCodeId,
               feeCodeMultiplier: expenses.quantity,
               totalPrice: expenses.sum,
               chargeCategory: paymentData.chargeCategory,
               chargeBase: paymentData.chargeBase,
+              debtorNationalId: paymentData.debtorNationalId,
               status: TBRTransactionStatus.PENDING,
             },
             { transaction },
           )
+
+          // Update the advert with the transaction reference
+          await this.advertModel.update(
+            { transactionId: tbrTransaction.id },
+            { where: { id: advert.id }, transaction },
+          )
+
+          return tbrTransaction
         },
       )
 

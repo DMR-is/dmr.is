@@ -23,6 +23,7 @@ export enum LegalGazetteModels {
   TYPE_CATEGORIES = 'type_categories',
   TBR_FEE_CODE = 'tbr_fee_code',
   TBR_TRANSACTION = 'tbr_transaction',
+  SUBSCRIBER_TRANSACTION = 'subscriber_transaction',
   ADVERT_TYPE_FEE_CODE = 'advert_type_fee_code',
   COMMENT = 'advert_comment',
   FORECLOSURE = 'foreclosure',

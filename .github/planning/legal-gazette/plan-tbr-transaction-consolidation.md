@@ -1,7 +1,7 @@
 # Plan: TBR Transaction Table Consolidation
 
 > **Created:** January 6, 2026  
-> **Status:** 📋 Planning  
+> **Status:** ✅ Implementation Complete (Migration Ready)  
 > **Approach:** Database-first migration
 
 ---
@@ -122,23 +122,28 @@ Transactions accessed via `subscriber_transaction` junction table.
 ## Files to Modify
 
 ### Models
-- [ ] `tbr-transactions.model.ts` - Add transaction_type, debtor_national_id; remove advert_id
-- [ ] `subscriber-transaction.model.ts` - NEW: junction table model
-- [ ] `advert.model.ts` - Add transactionId FK and relation
-- [ ] `subscriber.model.ts` - Add HasMany relation to subscriber_transaction
-- [ ] Delete `subscriber-payment.model.ts`
+- [x] `tbr-transactions.model.ts` - Add transaction_type, debtor_national_id; remove advert_id
+- [x] `subscriber-transaction.model.ts` - NEW: junction table model
+- [x] `advert.model.ts` - Add transactionId FK and relation
+- [x] `subscriber.model.ts` - Add HasMany relation to subscriber_transaction
+- [x] Delete `subscriber-payment.model.ts`
 
 ### Listeners
-- [ ] `subscriber-created.listener.ts` - Use TBRTransactionModel + SubscriberTransactionModel
-- [ ] `advert-published.listener.ts` - Update advert.transactionId after creating transaction
+- [x] `subscriber-created.listener.ts` - Use TBRTransactionModel + SubscriberTransactionModel
+- [x] `advert-published.listener.ts` - Update advert.transactionId after creating transaction
 
 ### Services
-- [ ] Any service using SubscriberPaymentModel
-- [ ] Update queries that join tbr_transaction via advert_id
+- [x] `advert-payment.task.ts` - Updated to use debtorNationalId directly
+- [x] Any service using SubscriberPaymentModel - Updated
+
+### Modules
+- [x] `app.module.ts` - Replaced SubscriberPaymentModel with SubscriberTransactionModel
+- [x] `subscriber.provider.module.ts` - Registered new models
+- [x] `publication.listener.module.ts` - Added AdvertModel
 
 ### Tests
-- [ ] Update all tests using SubscriberPaymentModel
-- [ ] Update advert-published.listener tests
+- [x] Update subscriber-created.listener.spec.ts (29 tests passing)
+- [x] Update advert-published.listener.spec.ts (added AdvertModel mock)
 
 ---
 
@@ -165,12 +170,27 @@ Transactions accessed via `subscriber_transaction` junction table.
 | Phase | Status | Notes |
 |-------|--------|-------|
 | Planning | ✅ Complete | |
-| Phase 1: Prepare tbr_transaction | ⬜ Not Started | |
-| Phase 2: Create subscriber_transaction | ⬜ Not Started | |
-| Phase 3: Add advert.transaction_id | ⬜ Not Started | |
-| Phase 4: Create subscription fee_code | ⬜ Not Started | |
-| Phase 5: Migrate subscriber_payment | ⬜ Not Started | |
-| Phase 6: Cleanup | ⬜ Not Started | |
-| Update Models | ⬜ Not Started | |
-| Update Listeners | ⬜ Not Started | |
-| Update Tests | ⬜ Not Started | |
+| Phase 1: Prepare tbr_transaction | ✅ Complete | Migration file created |
+| Phase 2: Create subscriber_transaction | ✅ Complete | Migration file created |
+| Phase 3: Add advert.transaction_id | ✅ Complete | Migration file created |
+| Phase 4: Create subscription fee_code | ✅ Complete | Migration file created |
+| Phase 5: Migrate subscriber_payment | ✅ Complete | Migration file created |
+| Phase 6: Cleanup | ✅ Complete | Migration file created |
+| Update Models | ✅ Complete | All models updated |
+| Update Listeners | ✅ Complete | Both listeners updated |
+| Update Tests | ✅ Complete | 154 tests passing |
+
+---
+
+## Implementation Notes
+
+**Migration File:** `apps/legal-gazette-api/db/migrations/m-20260106-tbr-transaction-consolidation.js`
+
+**Key Changes:**
+1. `TBRTransactionModel` - Added `transactionType` (ADVERT/SUBSCRIPTION), `debtorNationalId`; removed `advertId`
+2. `SubscriberTransactionModel` - NEW junction table for subscriber → transaction history with `isCurrent` flag
+3. `AdvertModel` - Added `transactionId` FK (1:1 relationship via BelongsTo)
+4. `SubscriberModel` - Added HasMany relation to SubscriberTransactionModel
+5. Deleted `SubscriberPaymentModel`
+
+**Test Results:** All 154 tests passing after consolidation

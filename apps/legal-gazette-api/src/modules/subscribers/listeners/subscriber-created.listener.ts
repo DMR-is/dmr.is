@@ -8,11 +8,14 @@ import { InjectModel } from '@nestjs/sequelize'
 import { getLogger } from '@dmr.is/logging'
 
 import { LegalGazetteEvents } from '../../../core/constants'
+import { FeeCodeModel } from '../../../models/fee-code.model'
 import { SubscriberModel } from '../../../models/subscriber.model'
+import { SubscriberTransactionModel } from '../../../models/subscriber-transaction.model'
 import {
-  SubscriberPaymentModel,
-  SubscriberPaymentStatus,
-} from '../../../models/subscriber-payment.model'
+  TBRTransactionModel,
+  TBRTransactionStatus,
+  TBRTransactionType,
+} from '../../../models/tbr-transactions.model'
 import { ITBRService } from '../../tbr/tbr.service.interface'
 import { SubscriberCreatedEvent } from '../events/subscriber-created.event'
 
@@ -29,10 +32,14 @@ const SUBSCRIPTION_AMOUNT = parseInt(
 export class SubscriberCreatedListener {
   constructor(
     @Inject(ITBRService) private readonly tbrService: ITBRService,
-    @InjectModel(SubscriberPaymentModel)
-    private readonly subscriberPaymentModel: typeof SubscriberPaymentModel,
+    @InjectModel(TBRTransactionModel)
+    private readonly tbrTransactionModel: typeof TBRTransactionModel,
+    @InjectModel(SubscriberTransactionModel)
+    private readonly subscriberTransactionModel: typeof SubscriberTransactionModel,
     @InjectModel(SubscriberModel)
     private readonly subscriberModel: typeof SubscriberModel,
+    @InjectModel(FeeCodeModel)
+    private readonly feeCodeModel: typeof FeeCodeModel,
     private readonly sequelize: Sequelize,
   ) {
     if (!process.env.LG_TBR_CHARGE_CATEGORY_PERSON) {
@@ -65,33 +72,68 @@ export class SubscriberCreatedListener {
 
     const chargeBase = subscriber.id
 
-    // C-4 Fix: Create PENDING payment record BEFORE calling TBR API
+    // Look up fee code ID for subscriptions
+    const feeCode = await this.feeCodeModel.findOne({
+      where: { feeCode: SUBSCRIPTION_FEE_CODE },
+    })
+
+    if (!feeCode) {
+      logger.error('Subscription fee code not found', {
+        feeCode: SUBSCRIPTION_FEE_CODE,
+      })
+      throw new Error(`Fee code ${SUBSCRIPTION_FEE_CODE} not found`)
+    }
+
+    // C-4 Fix: Create PENDING transaction record BEFORE calling TBR API
     // This ensures we have a record of the payment attempt even if TBR succeeds
     // but subsequent database operations fail (prevents orphaned TBR claims)
-    let paymentRecord: SubscriberPaymentModel
+    let transactionRecord: TBRTransactionModel
     try {
-      paymentRecord = await this.sequelize.transaction(async (transaction) => {
-        return this.subscriberPaymentModel.create(
+      transactionRecord = await this.sequelize.transaction(async (transaction) => {
+        // Mark any existing current transactions as not current
+        await this.subscriberTransactionModel.update(
+          { isCurrent: false },
           {
-            subscriberId: subscriber.id,
-            activatedByNationalId: actorNationalId,
-            amount: SUBSCRIPTION_AMOUNT,
+            where: { subscriberId: subscriber.id, isCurrent: true },
+            transaction,
+          },
+        )
+
+        // Create the TBR transaction record
+        const tbrTransaction = await this.tbrTransactionModel.create(
+          {
+            transactionType: TBRTransactionType.SUBSCRIPTION,
+            feeCodeId: feeCode.id,
+            feeCodeMultiplier: 1,
+            totalPrice: SUBSCRIPTION_AMOUNT,
             chargeBase,
             chargeCategory,
-            feeCode: SUBSCRIPTION_FEE_CODE,
-            paidAt: null,
-            status: SubscriberPaymentStatus.PENDING,
+            debtorNationalId: subscriber.nationalId,
+            status: TBRTransactionStatus.PENDING,
           },
           { transaction },
         )
+
+        // Create the subscriber-transaction junction record
+        await this.subscriberTransactionModel.create(
+          {
+            subscriberId: subscriber.id,
+            transactionId: tbrTransaction.id,
+            activatedByNationalId: actorNationalId,
+            isCurrent: true,
+          },
+          { transaction },
+        )
+
+        return tbrTransaction
       })
 
-      logger.info('Created PENDING payment record before TBR call', {
-        paymentId: paymentRecord.id,
+      logger.info('Created PENDING transaction record before TBR call', {
+        transactionId: transactionRecord.id,
         subscriberId: subscriber.id,
       })
     } catch (error) {
-      logger.error('Failed to create PENDING payment record', {
+      logger.error('Failed to create PENDING transaction record', {
         subscriberId: subscriber.id,
         error: error instanceof Error ? error.message : 'Unknown error',
       })
@@ -118,45 +160,45 @@ export class SubscriberCreatedListener {
 
       logger.info('TBR payment request created successfully', {
         subscriberId: subscriber.id,
-        paymentId: paymentRecord.id,
+        transactionId: transactionRecord.id,
         amount: SUBSCRIPTION_AMOUNT,
       })
 
-      // Update payment record to CONFIRMED after successful TBR call
+      // Update transaction record to CREATED after successful TBR call
       await this.sequelize.transaction(async (transaction) => {
-        await paymentRecord.update(
-          { status: SubscriberPaymentStatus.CREATED },
+        await transactionRecord.update(
+          { status: TBRTransactionStatus.CREATED },
           { transaction },
         )
       })
 
-      logger.info('Payment record updated to CREATED', {
-        paymentId: paymentRecord.id,
+      logger.info('Transaction record updated to CREATED', {
+        transactionId: transactionRecord.id,
       })
     } catch (error) {
-      // TBR call failed - update payment record to FAILED
+      // TBR call failed - update transaction record to FAILED
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error'
 
-      logger.error('TBR payment request failed, marking payment as FAILED', {
+      logger.error('TBR payment request failed, marking transaction as FAILED', {
         subscriberId: subscriber.id,
-        paymentId: paymentRecord.id,
+        transactionId: transactionRecord.id,
         error: errorMessage,
       })
 
       try {
         await this.sequelize.transaction(async (transaction) => {
-          await paymentRecord.update(
+          await transactionRecord.update(
             {
-              status: SubscriberPaymentStatus.FAILED,
+              status: TBRTransactionStatus.FAILED,
               tbrError: errorMessage,
             },
             { transaction },
           )
         })
       } catch (updateError) {
-        logger.error('Failed to update payment record to FAILED status', {
-          paymentId: paymentRecord.id,
+        logger.error('Failed to update transaction record to FAILED status', {
+          transactionId: transactionRecord.id,
           originalError: errorMessage,
           updateError:
             updateError instanceof Error

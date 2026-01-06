@@ -3,6 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AwsModule } from '@dmr.is/modules'
 
+import { AdvertModel } from '../../../../models/advert.model'
 import { TBRTransactionModel } from '../../../../models/tbr-transactions.model'
 import { TBRModule } from '../../../tbr/tbr.module'
 import { PriceCalculatorProviderModule } from '../../calculator/price-calculator.provider.module'
@@ -12,7 +13,7 @@ import { AdvertPublishedListener } from './advert-published.listener'
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([TBRTransactionModel]),
+    SequelizeModule.forFeature([TBRTransactionModel, AdvertModel]),
     AwsModule,
     PriceCalculatorProviderModule,
     PdfProviderModule,

@@ -6,6 +6,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IAWSService } from '@dmr.is/modules'
 
+import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertVersionEnum } from '../../../../models/advert-publication.model'
 import {
   TBRTransactionModel,
@@ -119,6 +120,10 @@ describe('AdvertPublishedListener', () => {
       generatePdfAndSaveToS3: jest.fn().mockResolvedValue(undefined),
     }
 
+    const mockAdvertModel = {
+      update: jest.fn().mockResolvedValue([1]),
+    }
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdvertPublishedListener,
@@ -129,6 +134,10 @@ describe('AdvertPublishedListener', () => {
         {
           provide: getModelToken(TBRTransactionModel),
           useValue: mockTbrTransactionModel,
+        },
+        {
+          provide: getModelToken(AdvertModel),
+          useValue: mockAdvertModel,
         },
         {
           provide: IPriceCalculatorService,

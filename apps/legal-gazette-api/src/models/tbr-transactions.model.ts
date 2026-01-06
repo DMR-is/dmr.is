@@ -3,13 +3,12 @@ import {
   Column,
   DataType,
   ForeignKey,
-  Scopes,
+  HasMany,
 } from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'
-import { AdvertModel } from './advert.model'
 import { FeeCodeModel } from './fee-code.model'
 
 /**
@@ -26,13 +25,22 @@ export enum TBRTransactionStatus {
   PAID = 'PAID',
 }
 
+/**
+ * Transaction type to distinguish between advert and subscription payments.
+ */
+export enum TBRTransactionType {
+  ADVERT = 'ADVERT',
+  SUBSCRIPTION = 'SUBSCRIPTION',
+}
+
 export type TBRTransactionAttributes = {
-  advertId: string
+  transactionType: TBRTransactionType
   feeCodeId: string
   totalPrice: number
   feeCodeMultiplier: number
   chargeBase: string
   chargeCategory: string
+  debtorNationalId: string
   paidAt: Date | null
   status: TBRTransactionStatus
   tbrReference: string | null
@@ -41,51 +49,54 @@ export type TBRTransactionAttributes = {
 
 export type TBRTransactionCreateAttributes = Omit<
   TBRTransactionAttributes,
-  'paidAt' | 'status' | 'tbrReference' | 'tbrError'
+  'paidAt' | 'status' | 'tbrReference' | 'tbrError' | 'feeCodeMultiplier'
 > & {
   paidAt?: Date | null
   status?: TBRTransactionStatus
   tbrReference?: string | null
   tbrError?: string | null
+  feeCodeMultiplier?: number
 }
 
 @BaseTable({ tableName: LegalGazetteModels.TBR_TRANSACTION })
-@Scopes(() => ({
-  withDebtor: {
-    include: [
-      {
-        model: AdvertModel,
-        attributes: ['id', 'createdByNationalId'],
-      },
-    ],
-  },
-}))
 export class TBRTransactionModel extends BaseModel<
   TBRTransactionAttributes,
   TBRTransactionCreateAttributes
 > {
-  @Column({ type: DataType.UUID, unique: true, allowNull: false })
-  @ForeignKey(() => AdvertModel)
-  advertId!: string
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    defaultValue: TBRTransactionType.ADVERT,
+    field: 'transaction_type',
+  })
+  transactionType!: TBRTransactionType
 
-  @Column({ type: DataType.UUID, allowNull: false })
+  @Column({ type: DataType.UUID, allowNull: false, field: 'fee_code_id' })
   @ForeignKey(() => FeeCodeModel)
   feeCodeId!: string
 
-  @Column({ type: DataType.NUMBER, allowNull: false })
+  @Column({ type: DataType.NUMBER, allowNull: false, field: 'total_price' })
   totalPrice!: number
 
-  @Column({ type: DataType.NUMBER, allowNull: false, defaultValue: 1 })
+  @Column({
+    type: DataType.NUMBER,
+    allowNull: false,
+    defaultValue: 1,
+    field: 'fee_code_multiplier',
+  })
   feeCodeMultiplier!: number
 
-  @Column({ type: DataType.DATE, allowNull: true, defaultValue: null })
+  @Column({ type: DataType.DATE, allowNull: true, defaultValue: null, field: 'paid_at' })
   paidAt!: Date | null
 
-  @Column({ type: DataType.STRING, allowNull: false })
+  @Column({ type: DataType.STRING, allowNull: false, field: 'charge_base' })
   chargeBase!: string
 
-  @Column({ type: DataType.STRING, allowNull: false })
+  @Column({ type: DataType.STRING, allowNull: false, field: 'charge_category' })
   chargeCategory!: string
+
+  @Column({ type: DataType.STRING, allowNull: false, field: 'debtor_national_id' })
+  debtorNationalId!: string
 
   @Column({
     type: DataType.STRING,
@@ -100,9 +111,9 @@ export class TBRTransactionModel extends BaseModel<
   @Column({ type: DataType.STRING, allowNull: true, field: 'tbr_error' })
   tbrError!: string | null
 
-  @BelongsTo(() => AdvertModel)
-  advert!: AdvertModel
-
   @BelongsTo(() => FeeCodeModel)
   feeCode!: FeeCodeModel
+
+  // Note: Relation to SubscriberTransactionModel is defined there to avoid circular imports
+  // Note: Relation to AdvertModel is now from AdvertModel.transactionId
 }

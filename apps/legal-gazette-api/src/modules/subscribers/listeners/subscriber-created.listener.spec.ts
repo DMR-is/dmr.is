@@ -3,8 +3,14 @@ import { Sequelize } from 'sequelize-typescript'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
+import { FeeCodeModel } from '../../../models/fee-code.model'
 import { SubscriberModel } from '../../../models/subscriber.model'
-import { SubscriberPaymentModel } from '../../../models/subscriber-payment.model'
+import { SubscriberTransactionModel } from '../../../models/subscriber-transaction.model'
+import {
+  TBRTransactionModel,
+  TBRTransactionStatus,
+  TBRTransactionType,
+} from '../../../models/tbr-transactions.model'
 import { ITBRService } from '../../tbr/tbr.service.interface'
 import { SubscriberCreatedEvent } from '../events/subscriber-created.event'
 import { SubscriberCreatedListener } from './subscriber-created.listener'
@@ -20,9 +26,19 @@ const MOCK_ENV = {
 describe('SubscriberCreatedListener', () => {
   let listener: SubscriberCreatedListener
   let tbrService: jest.Mocked<ITBRService>
-  let subscriberPaymentModel: jest.Mocked<typeof SubscriberPaymentModel>
+  let tbrTransactionModel: jest.Mocked<typeof TBRTransactionModel>
+  let subscriberTransactionModel: jest.Mocked<typeof SubscriberTransactionModel>
   let subscriberModel: jest.Mocked<typeof SubscriberModel>
+  let feeCodeModel: jest.Mocked<typeof FeeCodeModel>
   let sequelize: jest.Mocked<Sequelize>
+
+  // Mock fee code for lookup
+  const mockFeeCode = {
+    id: 'fee-code-uuid-123',
+    feeCode: 'RL401',
+    amount: 4500,
+    description: 'Subscription fee',
+  }
 
   // Test data factories
   const createMockSubscriber = (overrides = {}) => ({
@@ -72,19 +88,28 @@ describe('SubscriberCreatedListener', () => {
       getPaymentStatus: jest.fn(),
     }
 
-    // Default mock payment record with update method for C-4 pattern
-    const defaultMockPaymentRecord = {
-      id: 'payment-default',
+    // Default mock transaction record with update method for C-4 pattern
+    const defaultMockTransactionRecord = {
+      id: 'transaction-default',
       update: jest.fn().mockResolvedValue(undefined),
     }
 
-    const mockSubscriberPaymentModel = {
-      create: jest.fn().mockResolvedValue(defaultMockPaymentRecord),
+    const mockTbrTransactionModel = {
+      create: jest.fn().mockResolvedValue(defaultMockTransactionRecord),
+    }
+
+    const mockSubscriberTransactionModel = {
+      create: jest.fn().mockResolvedValue({ id: 'sub-transaction-123' }),
+      update: jest.fn().mockResolvedValue([1]),
     }
 
     const mockSubscriberModel = {
       findByPk: jest.fn().mockResolvedValue(null),
       update: jest.fn().mockResolvedValue([1]),
+    }
+
+    const mockFeeCodeModel = {
+      findOne: jest.fn().mockResolvedValue(mockFeeCode),
     }
 
     const mockSequelize = {
@@ -99,12 +124,20 @@ describe('SubscriberCreatedListener', () => {
           useValue: mockTbrService,
         },
         {
-          provide: getModelToken(SubscriberPaymentModel),
-          useValue: mockSubscriberPaymentModel,
+          provide: getModelToken(TBRTransactionModel),
+          useValue: mockTbrTransactionModel,
+        },
+        {
+          provide: getModelToken(SubscriberTransactionModel),
+          useValue: mockSubscriberTransactionModel,
         },
         {
           provide: getModelToken(SubscriberModel),
           useValue: mockSubscriberModel,
+        },
+        {
+          provide: getModelToken(FeeCodeModel),
+          useValue: mockFeeCodeModel,
         },
         {
           provide: Sequelize,
@@ -115,9 +148,40 @@ describe('SubscriberCreatedListener', () => {
 
     listener = module.get<SubscriberCreatedListener>(SubscriberCreatedListener)
     tbrService = module.get(ITBRService)
-    subscriberPaymentModel = module.get(getModelToken(SubscriberPaymentModel))
+    tbrTransactionModel = module.get(getModelToken(TBRTransactionModel))
+    subscriberTransactionModel = module.get(
+      getModelToken(SubscriberTransactionModel),
+    )
     subscriberModel = module.get(getModelToken(SubscriberModel))
+    feeCodeModel = module.get(getModelToken(FeeCodeModel))
     sequelize = module.get(Sequelize)
+  })
+
+  // ==========================================
+  // Fee Code Lookup Tests
+  // ==========================================
+  describe('Fee Code Lookup', () => {
+    it('should look up fee code by code string', async () => {
+      const event = createMockEvent()
+
+      await listener.createSubscriptionPayment(event)
+
+      expect(feeCodeModel.findOne).toHaveBeenCalledWith({
+        where: { feeCode: 'RL401' },
+      })
+    })
+
+    it('should throw error when fee code is not found', async () => {
+      feeCodeModel.findOne.mockResolvedValue(null)
+      const event = createMockEvent()
+
+      await expect(listener.createSubscriptionPayment(event)).rejects.toThrow(
+        'Fee code RL401 not found',
+      )
+
+      // TBR should NOT be called if fee code is not found
+      expect(tbrService.postPayment).not.toHaveBeenCalled()
+    })
   })
 
   // ==========================================
@@ -166,11 +230,11 @@ describe('SubscriberCreatedListener', () => {
     })
 
     it('should throw error when TBR payment fails', async () => {
-      const mockPaymentRecord = {
-        id: 'payment-123',
+      const mockTransactionRecord = {
+        id: 'transaction-123',
         update: jest.fn().mockResolvedValue(undefined),
       }
-      subscriberPaymentModel.create.mockResolvedValue(mockPaymentRecord)
+      tbrTransactionModel.create.mockResolvedValue(mockTransactionRecord)
       const event = createMockEvent()
       const tbrError = new Error('TBR service unavailable')
       tbrService.postPayment.mockRejectedValue(tbrError)
@@ -179,38 +243,78 @@ describe('SubscriberCreatedListener', () => {
         'TBR service unavailable',
       )
 
-      // C-4: Payment record should still be created (with PENDING then FAILED status)
-      expect(subscriberPaymentModel.create).toHaveBeenCalled()
-      expect(mockPaymentRecord.update).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'FAILED' }),
+      // C-4: Transaction record should still be created (with PENDING then FAILED status)
+      expect(tbrTransactionModel.create).toHaveBeenCalled()
+      expect(mockTransactionRecord.update).toHaveBeenCalledWith(
+        expect.objectContaining({ status: TBRTransactionStatus.FAILED }),
         expect.anything(),
       )
     })
   })
 
   // ==========================================
-  // Payment Record Creation Tests
+  // Transaction Record Creation Tests
   // ==========================================
-  describe('Payment Record Creation', () => {
-    it('should create payment record with correct data', async () => {
+  describe('Transaction Record Creation', () => {
+    it('should create TBR transaction record with correct data', async () => {
       const event = createMockEvent({
         actorNationalId: '0101809999',
       })
 
       await listener.createSubscriptionPayment(event)
 
-      expect(subscriberPaymentModel.create).toHaveBeenCalledWith(
+      expect(tbrTransactionModel.create).toHaveBeenCalledWith(
         {
-          subscriberId: 'subscriber-123',
-          activatedByNationalId: '0101809999',
-          amount: 4500,
+          transactionType: TBRTransactionType.SUBSCRIPTION,
+          feeCodeId: 'fee-code-uuid-123',
+          feeCodeMultiplier: 1,
+          totalPrice: 4500,
           chargeBase: 'subscriber-123',
           chargeCategory: 'PERSON_CATEGORY',
-          feeCode: 'RL401',
-          paidAt: null,
-          status: 'PENDING', // C-4: Now includes status field
+          debtorNationalId: '0101801234',
+          status: TBRTransactionStatus.PENDING,
         },
         expect.objectContaining({ transaction: expect.anything() }),
+      )
+    })
+
+    it('should create subscriber-transaction junction record', async () => {
+      const mockTransactionRecord = {
+        id: 'transaction-456',
+        update: jest.fn().mockResolvedValue(undefined),
+      }
+      tbrTransactionModel.create.mockResolvedValue(mockTransactionRecord)
+      const event = createMockEvent({
+        subscriber: createMockSubscriber({ id: 'subscriber-789' }),
+        actorNationalId: '0101809999',
+      })
+
+      await listener.createSubscriptionPayment(event)
+
+      expect(subscriberTransactionModel.create).toHaveBeenCalledWith(
+        {
+          subscriberId: 'subscriber-789',
+          transactionId: 'transaction-456',
+          activatedByNationalId: '0101809999',
+          isCurrent: true,
+        },
+        expect.objectContaining({ transaction: expect.anything() }),
+      )
+    })
+
+    it('should mark previous transactions as not current', async () => {
+      const event = createMockEvent({
+        subscriber: createMockSubscriber({ id: 'subscriber-789' }),
+      })
+
+      await listener.createSubscriptionPayment(event)
+
+      expect(subscriberTransactionModel.update).toHaveBeenCalledWith(
+        { isCurrent: false },
+        expect.objectContaining({
+          where: { subscriberId: 'subscriber-789', isCurrent: true },
+          transaction: expect.anything(),
+        }),
       )
     })
 
@@ -222,7 +326,7 @@ describe('SubscriberCreatedListener', () => {
 
       await listener.createSubscriptionPayment(event)
 
-      expect(subscriberPaymentModel.create).toHaveBeenCalledWith(
+      expect(subscriberTransactionModel.create).toHaveBeenCalledWith(
         expect.objectContaining({
           activatedByNationalId: '0101809999',
         }),
@@ -302,11 +406,11 @@ describe('SubscriberCreatedListener', () => {
       await listener.createSubscriptionPayment(event)
 
       // C-4 pattern: 3 transactions
-      // 1. Create PENDING payment record
-      // 2. Update to CONFIRMED after TBR success
+      // 1. Create PENDING transaction record + junction record
+      // 2. Update to CREATED after TBR success
       // 3. Activate subscriber
       expect(sequelize.transaction).toHaveBeenCalledTimes(3)
-      expect(subscriberPaymentModel.create).toHaveBeenCalledWith(
+      expect(tbrTransactionModel.create).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({ transaction: expect.anything() }),
       )
@@ -320,10 +424,10 @@ describe('SubscriberCreatedListener', () => {
       )
     })
 
-    it('should throw error when PENDING payment record creation fails', async () => {
+    it('should throw error when PENDING transaction record creation fails', async () => {
       const event = createMockEvent()
       const dbError = new Error('Database connection lost')
-      subscriberPaymentModel.create.mockRejectedValue(dbError)
+      tbrTransactionModel.create.mockRejectedValue(dbError)
 
       await expect(listener.createSubscriptionPayment(event)).rejects.toThrow(
         'Database connection lost',
@@ -334,21 +438,21 @@ describe('SubscriberCreatedListener', () => {
     })
 
     it('should create PENDING record and update to FAILED if TBR fails', async () => {
-      const mockPaymentRecord = {
-        id: 'payment-123',
+      const mockTransactionRecord = {
+        id: 'transaction-123',
         update: jest.fn().mockResolvedValue(undefined),
       }
-      subscriberPaymentModel.create.mockResolvedValue(mockPaymentRecord)
+      tbrTransactionModel.create.mockResolvedValue(mockTransactionRecord)
       const event = createMockEvent()
       tbrService.postPayment.mockRejectedValue(new Error('TBR error'))
 
       await expect(listener.createSubscriptionPayment(event)).rejects.toThrow()
 
       // PENDING record should have been created
-      expect(subscriberPaymentModel.create).toHaveBeenCalled()
-      // Payment should be updated to FAILED
-      expect(mockPaymentRecord.update).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'FAILED' }),
+      expect(tbrTransactionModel.create).toHaveBeenCalled()
+      // Transaction should be updated to FAILED
+      expect(mockTransactionRecord.update).toHaveBeenCalledWith(
+        expect.objectContaining({ status: TBRTransactionStatus.FAILED }),
         expect.anything(),
       )
       // Subscriber should NOT be activated
@@ -360,7 +464,13 @@ describe('SubscriberCreatedListener', () => {
   // Full Flow Integration Tests
   // ==========================================
   describe('Full Payment Flow', () => {
-    it('should complete full flow: TBR -> Payment Record -> Activate Subscriber', async () => {
+    it('should complete full flow: Fee Lookup -> TBR Transaction -> Junction -> TBR API -> Activate', async () => {
+      const mockTransactionRecord = {
+        id: 'transaction-456',
+        update: jest.fn().mockResolvedValue(undefined),
+      }
+      tbrTransactionModel.create.mockResolvedValue(mockTransactionRecord)
+
       const event = createMockEvent({
         subscriber: createMockSubscriber({
           id: 'sub-456',
@@ -372,8 +482,10 @@ describe('SubscriberCreatedListener', () => {
       await listener.createSubscriptionPayment(event)
 
       // Verify order of operations
+      expect(feeCodeModel.findOne).toHaveBeenCalledTimes(1)
+      expect(tbrTransactionModel.create).toHaveBeenCalledTimes(1)
+      expect(subscriberTransactionModel.create).toHaveBeenCalledTimes(1)
       expect(tbrService.postPayment).toHaveBeenCalledTimes(1)
-      expect(subscriberPaymentModel.create).toHaveBeenCalledTimes(1)
       expect(subscriberModel.findByPk).toHaveBeenCalledTimes(1)
       expect(subscriberModel.update).toHaveBeenCalledTimes(1)
 
@@ -385,11 +497,24 @@ describe('SubscriberCreatedListener', () => {
         }),
       )
 
-      // Verify payment record has actor national ID
-      expect(subscriberPaymentModel.create).toHaveBeenCalledWith(
+      // Verify TBR transaction record has correct data
+      expect(tbrTransactionModel.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          transactionType: TBRTransactionType.SUBSCRIPTION,
+          feeCodeId: 'fee-code-uuid-123',
+          debtorNationalId: '0101801234',
+          status: TBRTransactionStatus.PENDING,
+        }),
+        expect.anything(),
+      )
+
+      // Verify junction record links subscriber to transaction
+      expect(subscriberTransactionModel.create).toHaveBeenCalledWith(
         expect.objectContaining({
           subscriberId: 'sub-456',
+          transactionId: 'transaction-456',
           activatedByNationalId: '0101809999',
+          isCurrent: true,
         }),
         expect.anything(),
       )
@@ -418,8 +543,11 @@ describe('SubscriberCreatedListener', () => {
 
       await listener.createSubscriptionPayment(event)
 
-      // Should create new payment record (renewal)
-      expect(subscriberPaymentModel.create).toHaveBeenCalled()
+      // Should create new TBR transaction record (renewal)
+      expect(tbrTransactionModel.create).toHaveBeenCalled()
+
+      // Should create new junction record
+      expect(subscriberTransactionModel.create).toHaveBeenCalled()
 
       // Should update subscribedTo but NOT subscribedFrom
       const updateData = subscriberModel.update.mock.calls[0][0] as Record<
@@ -436,14 +564,14 @@ describe('SubscriberCreatedListener', () => {
   // C-4: Orphaned TBR Claims Prevention Tests
   // ==========================================
   describe('Orphaned TBR Claims Prevention (C-4)', () => {
-    describe('payment record creation order', () => {
-      it('should create PENDING payment record BEFORE calling TBR API', async () => {
+    describe('transaction record creation order', () => {
+      it('should create PENDING transaction record BEFORE calling TBR API', async () => {
         const callOrder: string[] = []
 
         // Track call order
-        subscriberPaymentModel.create.mockImplementation(async () => {
-          callOrder.push('create_payment')
-          return { id: 'payment-123', update: jest.fn() }
+        tbrTransactionModel.create.mockImplementation(async () => {
+          callOrder.push('create_transaction')
+          return { id: 'transaction-123', update: jest.fn() }
         })
         tbrService.postPayment.mockImplementation(async () => {
           callOrder.push('call_tbr')
@@ -453,17 +581,17 @@ describe('SubscriberCreatedListener', () => {
         const event = createMockEvent()
         await listener.createSubscriptionPayment(event)
 
-        // Payment record should be created BEFORE TBR call
-        expect(callOrder).toEqual(['create_payment', 'call_tbr'])
+        // Transaction record should be created BEFORE TBR call
+        expect(callOrder).toEqual(['create_transaction', 'call_tbr'])
       })
 
-      it('should create payment record with PENDING status initially', async () => {
+      it('should create transaction record with PENDING status initially', async () => {
         const event = createMockEvent()
         await listener.createSubscriptionPayment(event)
 
-        expect(subscriberPaymentModel.create).toHaveBeenCalledWith(
+        expect(tbrTransactionModel.create).toHaveBeenCalledWith(
           expect.objectContaining({
-            status: 'PENDING',
+            status: TBRTransactionStatus.PENDING,
           }),
           expect.anything(),
         )
@@ -471,20 +599,20 @@ describe('SubscriberCreatedListener', () => {
     })
 
     describe('successful TBR call', () => {
-      it('should update payment record to CONFIRMED after successful TBR call', async () => {
-        const mockPaymentRecord = {
-          id: 'payment-123',
+      it('should update transaction record to CREATED after successful TBR call', async () => {
+        const mockTransactionRecord = {
+          id: 'transaction-123',
           update: jest.fn().mockResolvedValue(undefined),
         }
-        subscriberPaymentModel.create.mockResolvedValue(mockPaymentRecord)
+        tbrTransactionModel.create.mockResolvedValue(mockTransactionRecord)
         tbrService.postPayment.mockResolvedValue(undefined)
 
         const event = createMockEvent()
         await listener.createSubscriptionPayment(event)
 
-        expect(mockPaymentRecord.update).toHaveBeenCalledWith(
+        expect(mockTransactionRecord.update).toHaveBeenCalledWith(
           expect.objectContaining({
-            status: 'CONFIRMED',
+            status: TBRTransactionStatus.CREATED,
           }),
           expect.anything(),
         )
@@ -492,12 +620,12 @@ describe('SubscriberCreatedListener', () => {
     })
 
     describe('TBR call failure', () => {
-      it('should update payment record to FAILED when TBR call fails', async () => {
-        const mockPaymentRecord = {
-          id: 'payment-123',
+      it('should update transaction record to FAILED when TBR call fails', async () => {
+        const mockTransactionRecord = {
+          id: 'transaction-123',
           update: jest.fn().mockResolvedValue(undefined),
         }
-        subscriberPaymentModel.create.mockResolvedValue(mockPaymentRecord)
+        tbrTransactionModel.create.mockResolvedValue(mockTransactionRecord)
         tbrService.postPayment.mockRejectedValue(new Error('TBR API error'))
 
         const event = createMockEvent()
@@ -506,9 +634,9 @@ describe('SubscriberCreatedListener', () => {
           'TBR API error',
         )
 
-        expect(mockPaymentRecord.update).toHaveBeenCalledWith(
+        expect(mockTransactionRecord.update).toHaveBeenCalledWith(
           expect.objectContaining({
-            status: 'FAILED',
+            status: TBRTransactionStatus.FAILED,
             tbrError: 'TBR API error',
           }),
           expect.anything(),
@@ -516,11 +644,11 @@ describe('SubscriberCreatedListener', () => {
       })
 
       it('should NOT activate subscriber when TBR call fails', async () => {
-        const mockPaymentRecord = {
-          id: 'payment-123',
+        const mockTransactionRecord = {
+          id: 'transaction-123',
           update: jest.fn().mockResolvedValue(undefined),
         }
-        subscriberPaymentModel.create.mockResolvedValue(mockPaymentRecord)
+        tbrTransactionModel.create.mockResolvedValue(mockTransactionRecord)
         tbrService.postPayment.mockRejectedValue(new Error('TBR API error'))
 
         const event = createMockEvent()
@@ -533,25 +661,27 @@ describe('SubscriberCreatedListener', () => {
     })
 
     describe('database failure after TBR success', () => {
-      it('should have payment record with CONFIRMED status even if subscriber update fails', async () => {
-        const mockPaymentRecord = {
-          id: 'payment-123',
+      it('should have transaction record with CREATED status even if subscriber update fails', async () => {
+        const mockTransactionRecord = {
+          id: 'transaction-123',
           update: jest.fn().mockResolvedValue(undefined),
         }
-        subscriberPaymentModel.create.mockResolvedValue(mockPaymentRecord)
+        tbrTransactionModel.create.mockResolvedValue(mockTransactionRecord)
         tbrService.postPayment.mockResolvedValue(undefined)
         subscriberModel.update.mockRejectedValue(new Error('DB error'))
 
         const event = createMockEvent()
 
         // The operation will fail due to subscriber update
-        await expect(listener.createSubscriptionPayment(event)).rejects.toThrow('DB error')
+        await expect(listener.createSubscriptionPayment(event)).rejects.toThrow(
+          'DB error',
+        )
 
-        // But the payment record should have been updated to CONFIRMED first
+        // But the transaction record should have been updated to CREATED first
         // This ensures we have a record of the TBR payment even if activation fails
-        expect(mockPaymentRecord.update).toHaveBeenCalledWith(
+        expect(mockTransactionRecord.update).toHaveBeenCalledWith(
           expect.objectContaining({
-            status: 'CONFIRMED',
+            status: TBRTransactionStatus.CREATED,
           }),
           expect.anything(),
         )
