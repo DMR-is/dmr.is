@@ -5,9 +5,7 @@
     "src/**/*.spec.ts",
     "src/**/*.test.ts"
   ],
-  "include": [
-    "src/**/*.ts"
-  ],
+  "include": [],
   "files": [],
   "references": [],
   "compilerOptions": {

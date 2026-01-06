@@ -9,7 +9,10 @@ import { getLogger } from '@dmr.is/logging'
 
 import { LegalGazetteEvents } from '../../../core/constants'
 import { SubscriberModel } from '../../../models/subscriber.model'
-import { SubscriberPaymentModel } from '../../../models/subscriber-payment.model'
+import {
+  SubscriberPaymentModel,
+  SubscriberPaymentStatus,
+} from '../../../models/subscriber-payment.model'
 import { ITBRService } from '../../tbr/tbr.service.interface'
 import { SubscriberCreatedEvent } from '../events/subscriber-created.event'
 
@@ -62,8 +65,40 @@ export class SubscriberCreatedListener {
 
     const chargeBase = subscriber.id
 
-    // Step 1: Create TBR payment request (external API call - outside transaction)
-    // This is done first because we can't roll back an external API call
+    // C-4 Fix: Create PENDING payment record BEFORE calling TBR API
+    // This ensures we have a record of the payment attempt even if TBR succeeds
+    // but subsequent database operations fail (prevents orphaned TBR claims)
+    let paymentRecord: SubscriberPaymentModel
+    try {
+      paymentRecord = await this.sequelize.transaction(async (transaction) => {
+        return this.subscriberPaymentModel.create(
+          {
+            subscriberId: subscriber.id,
+            activatedByNationalId: actorNationalId,
+            amount: SUBSCRIPTION_AMOUNT,
+            chargeBase,
+            chargeCategory,
+            feeCode: SUBSCRIPTION_FEE_CODE,
+            paidAt: null,
+            status: SubscriberPaymentStatus.PENDING,
+          },
+          { transaction },
+        )
+      })
+
+      logger.info('Created PENDING payment record before TBR call', {
+        paymentId: paymentRecord.id,
+        subscriberId: subscriber.id,
+      })
+    } catch (error) {
+      logger.error('Failed to create PENDING payment record', {
+        subscriberId: subscriber.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
+      throw error
+    }
+
+    // Step 2: Call TBR API (external call - cannot be rolled back)
     try {
       await this.tbrService.postPayment({
         advertId: subscriber.id, // Using subscriberId as unique identifier
@@ -83,36 +118,59 @@ export class SubscriberCreatedListener {
 
       logger.info('TBR payment request created successfully', {
         subscriberId: subscriber.id,
+        paymentId: paymentRecord.id,
         amount: SUBSCRIPTION_AMOUNT,
+      })
+
+      // Update payment record to CONFIRMED after successful TBR call
+      await this.sequelize.transaction(async (transaction) => {
+        await paymentRecord.update(
+          { status: SubscriberPaymentStatus.CREATED },
+          { transaction },
+        )
+      })
+
+      logger.info('Payment record updated to CREATED', {
+        paymentId: paymentRecord.id,
       })
     } catch (error) {
-      logger.error('Failed to create TBR payment request', {
+      // TBR call failed - update payment record to FAILED
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error'
+
+      logger.error('TBR payment request failed, marking payment as FAILED', {
         subscriberId: subscriber.id,
-        actorNationalId,
-        chargeCategory,
-        amount: SUBSCRIPTION_AMOUNT,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        paymentId: paymentRecord.id,
+        error: errorMessage,
       })
+
+      try {
+        await this.sequelize.transaction(async (transaction) => {
+          await paymentRecord.update(
+            {
+              status: SubscriberPaymentStatus.FAILED,
+              tbrError: errorMessage,
+            },
+            { transaction },
+          )
+        })
+      } catch (updateError) {
+        logger.error('Failed to update payment record to FAILED status', {
+          paymentId: paymentRecord.id,
+          originalError: errorMessage,
+          updateError:
+            updateError instanceof Error
+              ? updateError.message
+              : 'Unknown error',
+        })
+      }
+
       throw error
     }
 
-    // Step 2: Database operations wrapped in a transaction
-    // If any DB operation fails, the transaction will be rolled back
+    // Step 3: Activate subscriber (only after TBR success and payment confirmed)
     try {
       await this.sequelize.transaction(async (transaction) => {
-        // Save payment record
-        await this.subscriberPaymentModel.create(
-          {
-            subscriberId: subscriber.id,
-            activatedByNationalId: actorNationalId,
-            amount: SUBSCRIPTION_AMOUNT,
-            chargeBase,
-            chargeCategory,
-            feeCode: SUBSCRIPTION_FEE_CODE,
-            paidAt: null,
-          },
-          { transaction },
-        )
 
         // Fetch current subscriber to check if subscribedFrom already exists
         const existingSubscriber = await this.subscriberModel.findByPk(

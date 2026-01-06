@@ -12,6 +12,20 @@ import { LegalGazetteModels } from '../core/constants'
 import { AdvertModel } from './advert.model'
 import { FeeCodeModel } from './fee-code.model'
 
+/**
+ * TBR transaction status for tracking external API call state.
+ * - PENDING: Record created, TBR API not yet called
+ * - CREATED: TBR API call succeeded
+ * - FAILED: TBR API call failed (can be retried)
+ * - PAID: Payment confirmed
+ */
+export enum TBRTransactionStatus {
+  PENDING = 'PENDING',
+  CREATED = 'CREATED',
+  FAILED = 'FAILED',
+  PAID = 'PAID',
+}
+
 export type TBRTransactionAttributes = {
   advertId: string
   feeCodeId: string
@@ -20,9 +34,20 @@ export type TBRTransactionAttributes = {
   chargeBase: string
   chargeCategory: string
   paidAt: Date | null
+  status: TBRTransactionStatus
+  tbrReference: string | null
+  tbrError: string | null
 }
 
-export type TBRTransactionCreateAttributes = TBRTransactionAttributes
+export type TBRTransactionCreateAttributes = Omit<
+  TBRTransactionAttributes,
+  'paidAt' | 'status' | 'tbrReference' | 'tbrError'
+> & {
+  paidAt?: Date | null
+  status?: TBRTransactionStatus
+  tbrReference?: string | null
+  tbrError?: string | null
+}
 
 @BaseTable({ tableName: LegalGazetteModels.TBR_TRANSACTION })
 @Scopes(() => ({
@@ -61,6 +86,19 @@ export class TBRTransactionModel extends BaseModel<
 
   @Column({ type: DataType.STRING, allowNull: false })
   chargeCategory!: string
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    defaultValue: TBRTransactionStatus.PENDING,
+  })
+  status!: TBRTransactionStatus
+
+  @Column({ type: DataType.STRING, allowNull: true, field: 'tbr_reference' })
+  tbrReference!: string | null
+
+  @Column({ type: DataType.STRING, allowNull: true, field: 'tbr_error' })
+  tbrError!: string | null
 
   @BelongsTo(() => AdvertModel)
   advert!: AdvertModel

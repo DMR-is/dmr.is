@@ -24,10 +24,10 @@ This plan outlines a TDD approach to fixing the 5 critical issues identified in 
 | ID | Issue | Location | Impact | Status |
 |----|-------|----------|--------|--------|
 | C-1 | Published Adverts Can Be Modified | `advert.service.ts` | Data integrity violation | ✅ Complete |
-| C-2 | Publishing Before Payment Confirmation | `publication.service.ts` | Business model bypass | ⬜ Not Started |
+| C-2 | Publishing Before Payment Confirmation | `publication.service.ts` | Business model bypass | ⏸️ Blocked (needs stakeholder input) |
 | C-3 | Race Condition - Duplicate Payments | `subscriber.service.ts` | Double-charging users | ✅ Complete |
-| C-4 | Orphaned TBR Claims (Subscriber) | `subscriber-created.listener.ts` | Untracked payments | ⬜ Not Started |
-| C-5 | Orphaned TBR Claims (Advert) | `advert-published.listener.ts` | Untracked payments | ⬜ Not Started |
+| C-4 | Orphaned TBR Claims (Subscriber) | `subscriber-created.listener.ts` | Untracked payments | ✅ Complete |
+| C-5 | Orphaned TBR Claims (Advert) | `advert-published.listener.ts` | Untracked payments | ✅ Complete |
 
 ---
 
@@ -346,12 +346,12 @@ Start with Option A for immediate fix. Option B can be added in a follow-up phas
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Write test file | ✅ Complete | `subscriber.service.spec.ts` created with 9 test cases |
+| Write test file | ✅ Complete | `subscriber.service.spec.ts` created with 12 test cases |
 | Verify tests fail | ✅ Complete | 3 tests failed as expected |
 | Implement Option A fix | ✅ Complete | Added active subscription check before emitting event |
-| Verify tests pass | ✅ Complete | All 133 tests pass |
+| Implement Option B lock | ✅ Complete | Added `runWithUserLock()` in `lock.service.ts` and wrapped `createSubscriptionForUser` |
+| Verify tests pass | ✅ Complete | All 136 tests pass |
 | Code review | ⬜ Not Started | |
-| (Future) Option B Redis lock | ⬜ Backlog | |
 
 ---
 
@@ -525,12 +525,12 @@ async createSubscriptionPayment({
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Create migration | ⬜ Not Started | Add status, tbr_reference, tbr_error columns |
-| Update SubscriberPaymentModel | ⬜ Not Started | Add new fields |
-| Write test file | ⬜ Not Started | |
-| Verify tests fail | ⬜ Not Started | |
-| Implement fix | ⬜ Not Started | |
-| Verify tests pass | ⬜ Not Started | |
+| Create migration | ✅ Complete | `m-20260105-tbr-orphan-prevention.js` |
+| Update SubscriberPaymentModel | ✅ Complete | Added `status`, `tbrReference`, `tbrError` fields |
+| Write test file | ✅ Complete | 6 tests in `subscriber-created.listener.spec.ts` |
+| Verify tests fail | ✅ Complete | Tests failed before implementation |
+| Implement fix | ✅ Complete | PENDING → TBR → CONFIRMED/FAILED pattern |
+| Verify tests pass | ✅ Complete | All 19 tests pass |
 | Add reconciliation job | ⬜ Backlog | Retry PENDING/FAILED records |
 | Code review | ⬜ Not Started | |
 
@@ -687,12 +687,12 @@ async createTBRTransaction({ advert, publication }: AdvertPublishedEvent) {
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Create migration | ⬜ Not Started | Add status, tbr_reference, tbr_error columns |
-| Update TBRTransactionModel | ⬜ Not Started | Add new fields |
-| Write test file | ⬜ Not Started | |
-| Verify tests fail | ⬜ Not Started | |
-| Implement fix | ⬜ Not Started | |
-| Verify tests pass | ⬜ Not Started | |
+| Create migration | ✅ Complete | Same migration as C-4: `m-20260105-tbr-orphan-prevention.js` |
+| Update TBRTransactionModel | ✅ Complete | Added `status`, `tbrReference`, `tbrError` fields |
+| Write test file | ✅ Complete | 5 tests in `advert-published.listener.spec.ts` |
+| Verify tests fail | ✅ Complete | Tests failed before implementation |
+| Implement fix | ✅ Complete | PENDING → TBR → CONFIRMED/FAILED pattern |
+| Verify tests pass | ✅ Complete | All 8 tests pass |
 | Add reconciliation job | ⬜ Backlog | Retry PENDING/FAILED records |
 | Code review | ⬜ Not Started | |
 
