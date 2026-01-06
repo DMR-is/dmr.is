@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AdvertModel } from '../../models/advert.model'
@@ -19,8 +19,8 @@ import { IAdvertService } from './advert.service.interface'
     ]),
 
     PdfProviderModule,
-    PriceCalculatorProviderModule,
     TypeCategoriesProviderModule,
+    forwardRef(() => PriceCalculatorProviderModule),
   ],
   controllers: [],
   providers: [

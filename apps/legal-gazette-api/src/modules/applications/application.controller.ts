@@ -28,10 +28,12 @@ import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
+  GetApplicationEstimatedPriceDto,
   GetApplicationsDto,
   GetHTMLPreview,
   UpdateApplicationDto,
 } from '../../models/application.model'
+import { IPriceCalculatorService } from '../advert/calculator/price-calculator.service.interface'
 import { IApplicationService } from './application.service.interface'
 
 @ApiBearerAuth()
@@ -45,6 +47,8 @@ export class ApplicationController {
   constructor(
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
+    @Inject(IPriceCalculatorService)
+    private readonly priceCalculatorService: IPriceCalculatorService,
   ) {}
 
   @Post('createApplication/:applicationType')
@@ -125,5 +129,22 @@ export class ApplicationController {
     @CurrentUser() user: DMRUser,
   ): Promise<GetHTMLPreview> {
     return this.applicationService.previewApplication(applicationId, user)
+  }
+
+  @Get(':applicationId/price')
+  @LGResponse({
+    operationId: 'getApplicationPrice',
+    type: GetApplicationEstimatedPriceDto,
+  })
+  async getApplicationPrice(
+    @Param('applicationId') applicationId: string,
+    @CurrentUser() user: DMRUser,
+  ): Promise<GetApplicationEstimatedPriceDto> {
+    const price =
+      await this.priceCalculatorService.getEstimatedPriceForApplication(
+        applicationId,
+        user,
+      )
+    return { price }
   }
 }

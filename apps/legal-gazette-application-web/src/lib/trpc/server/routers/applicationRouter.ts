@@ -148,4 +148,11 @@ export const applicationRouter = router({
       })
       return previewHTML
     }),
+  getEstimatedPrice: protectedProcedure
+    .input(z.object({ applicationId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return await ctx.api.getApplicationPrice({
+        applicationId: input.applicationId,
+      })
+    }),
 })

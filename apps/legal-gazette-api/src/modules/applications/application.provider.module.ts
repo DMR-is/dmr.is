@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ApplicationModel } from '../../models/application.model'
@@ -11,7 +11,7 @@ import { IApplicationService } from './application.service.interface'
 
 @Module({
   imports: [
-    AdvertProviderModule,
+    forwardRef(() => AdvertProviderModule),
     RecallApplicationProviderModule,
     SequelizeModule.forFeature([CaseModel, ApplicationModel, CategoryModel]),
   ],

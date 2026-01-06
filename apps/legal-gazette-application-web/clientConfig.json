@@ -602,6 +602,12 @@
             "required": false,
             "in": "query",
             "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "externalId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
           }
         ],
         "responses": {
@@ -2916,6 +2922,74 @@
         "tags": ["Legal gazette - application web API"]
       }
     },
+    "/api/v1/applications/{applicationId}/price": {
+      "get": {
+        "operationId": "getApplicationPrice",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetApplicationEstimatedPriceDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
     "/api/v1/publications": {
       "get": {
         "operationId": "getPublications",
@@ -4109,6 +4183,7 @@
           "caption": { "type": "string", "nullable": true },
           "content": { "type": "string" },
           "divisionMeetingLocation": { "type": "string", "nullable": true },
+          "externalId": { "type": "string", "nullable": true },
           "templateType": {
             "description": "Template type of the advert",
             "allOf": [{ "$ref": "#/components/schemas/AdvertTemplateType" }]
@@ -4422,6 +4497,11 @@
         "type": "object",
         "properties": { "preview": { "type": "string" } },
         "required": ["preview"]
+      },
+      "GetApplicationEstimatedPriceDto": {
+        "type": "object",
+        "properties": { "price": { "type": "number" } },
+        "required": ["price"]
       },
       "PublishedPublicationDto": {
         "type": "object",
