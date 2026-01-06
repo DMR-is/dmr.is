@@ -298,7 +298,7 @@ export class PublicationService implements IPublicationService {
 
       await publication.update({ publishedAt: new Date() })
 
-      t.afterCommit(() => {
+      t.afterCommit(async () => {
         this.logger.debug(
           'Successfully published advert publication, emitting advert.published event',
           {
@@ -313,7 +313,26 @@ export class PublicationService implements IPublicationService {
           html: advert.htmlMarkup(publication.versionLetter),
         }
 
-        this.eventEmitter.emit(LegalGazetteEvents.ADVERT_PUBLISHED, payload)
+        // Emit event for payment processing and WAIT for it to complete
+        // emitAsync returns a Promise that resolves when all listeners complete
+        // If any listener throws, the error propagates here (requires suppressErrors: false on listener)
+        try {
+          await this.eventEmitter.emitAsync(
+            LegalGazetteEvents.ADVERT_PUBLISHED,
+            payload,
+          )
+        } catch (error) {
+          this.logger.error(
+            'Error occurred while emitting ADVERT_PUBLISHED event',
+            {
+              context: 'PublicationService',
+              advertId: advert.id,
+              publicationId: publication.id,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            },
+          )
+          throw error
+        }
       })
     })
   }
