@@ -17,7 +17,9 @@ export const RegistrationButton = ({ disabled }: { disabled?: boolean }) => {
     trpc.createSubscription.mutationOptions({
       onSuccess: async (data) => {
         if (data?.success === false) {
-          toast.error('Villa kom upp við skráningu, vinsamlegast hafið samband við þjónustuver')
+          toast.error(
+            'Villa kom upp við skráningu, vinsamlegast hafið samband við þjónustuver',
+          )
         }
         await update()
         setTimeout(() => {
@@ -28,7 +30,7 @@ export const RegistrationButton = ({ disabled }: { disabled?: boolean }) => {
   )
   return (
     <Button
-      disabled={disabled}
+      disabled={disabled || isPending}
       icon="arrowForward"
       iconType="outline"
       variant="primary"
