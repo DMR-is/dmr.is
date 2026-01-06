@@ -106,21 +106,22 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
               </Button>
             }
           />
-          <Button
-            variant="utility"
-            size="small"
-            icon="document"
-            iconType="outline"
-            type="button"
+          <Link
+            href={`/api/cases/${currentCase.id}/previewPdf`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.linkButton}
           >
-            <Link
-              href={`/api/cases/${currentCase.id}/previewPdf`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Button
+              variant="utility"
+              size="small"
+              icon="document"
+              iconType="outline"
+              as="span"
             >
               Skoða PDF forskoðun
-            </Link>
-          </Button>
+            </Button>
+          </Link>
         </Inline>
       </Stack>
     </AccordionItem>
