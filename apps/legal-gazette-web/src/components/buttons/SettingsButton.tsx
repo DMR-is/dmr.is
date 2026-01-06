@@ -7,7 +7,7 @@ type SettingsItems = React.ComponentProps<typeof DropdownMenu>['items']
 export const SettingsButton = () => {
   const items: SettingsItems = [
     {
-      title: 'TBR stillingar',
+      title: 'Reikningsviðskipti',
       href: '/stillingar/tbr',
       icon: 'wallet',
       iconType: 'outline',
