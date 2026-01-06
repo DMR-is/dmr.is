@@ -215,6 +215,7 @@ export enum APIRoutes {
   Adverts = '/api/cases/advert',
   Advert = '/api/cases/advert/:id',
   UpdateAdvertPDF = '/api/cases/advert/:id/updatePdf',
+  PreviewPdf = '/api/cases/:id/previewPdf',
 }
 
 export class OJOIWebException extends Error {
