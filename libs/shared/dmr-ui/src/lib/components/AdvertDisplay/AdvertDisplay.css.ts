@@ -24,6 +24,14 @@ globalStyle(
   },
 )
 
+globalStyle(`.advertContent table `, {
+  tableLayout: 'fixed',
+})
+globalStyle(`.advertContent table td, .advertContent table th`, {
+  border: 'none',
+  paddingRight: '1em',
+})
+
 globalStyle('.advert.legal-gazette .advert', {
   fontSize: '12pt',
 })

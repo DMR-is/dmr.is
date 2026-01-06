@@ -18,7 +18,7 @@ export const AdvertDisplay = ({
   type,
   title,
   html,
-  withStyles = false,
+  withStyles = true,
 }: AdvertDisplayProps) => {
   const hasNumberOrDate = number || date
   return (

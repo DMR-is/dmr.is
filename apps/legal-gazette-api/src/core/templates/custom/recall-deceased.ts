@@ -17,7 +17,7 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
   const liquidatorLocation = model.settlement?.liquidatorLocation
 
   const intro = getElement(
-    `Með úrskurði ${model.courtDistrict?.title || ''} uppkveðnum ${judgementDate ? formatDate(judgementDate, 'dd. MMMM yyyy') : ''} var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:`,
+    `Með úrskurði ${model.courtDistrict?.title || ''} uppkveðnum ${judgementDate ? formatDate(judgementDate, 'd. MMMM yyyy') : ''} var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:`,
   )
   const tableHeaderName = getTableHeaderCell('Dánarbú, nafn:')
   const tableHeaderDateOfDeath = getTableHeaderCell('Dánardagur:')
@@ -29,7 +29,7 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
     ${address || ''}
     `)
   const tableCellDateOfDeath = getTableCell(
-    dateOfDeath ? formatDate(dateOfDeath, 'dd. MMMM yyyy') : '',
+    dateOfDeath ? formatDate(dateOfDeath, 'd. MMMM yyyy') : '',
   )
 
   let settlementText = ''

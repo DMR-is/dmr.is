@@ -26,7 +26,7 @@ export function getDivisionMeetingBankruptcyTemplate(
         ${address || ''}
       `)
   const meetingCell = getTableCell(`
-        ${meetingDate ? formatDate(meetingDate, 'dd. MMMM yyyy') : ''},<br />
+        ${meetingDate ? formatDate(meetingDate, 'd. MMMM yyyy') : ''},<br />
         kl. ${meetingDate ? formatDate(meetingDate, 'HH:mm') : ''}
       `)
 

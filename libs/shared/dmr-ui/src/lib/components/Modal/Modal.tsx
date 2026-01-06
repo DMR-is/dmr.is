@@ -57,10 +57,11 @@ export const Modal = ({
                     >
                       {!!title && <Text variant="h3">{title}</Text>}
                       <Button
-                        icon="close"
-                        size="small"
-                        circle
+                        variant="ghost"
                         onClick={closeModal}
+                        circle={true}
+                        size="small"
+                        icon="close"
                       />
                     </Inline>
                     {children}

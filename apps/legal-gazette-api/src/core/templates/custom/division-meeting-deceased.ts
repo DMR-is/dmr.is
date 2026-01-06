@@ -66,7 +66,7 @@ export function getDivisionMeetingDeceasedTemplate(model: AdvertModel): string {
 
   const nameCell = getTableCell(name || '')
   const dateCell = getTableCell(
-    meetingDate ? formatDate(meetingDate, 'dd. MMMM yyyy') : '',
+    meetingDate ? formatDate(meetingDate, 'd. MMMM yyyy') : '',
   )
 
   const nationalIdCell = getTableCell(`kt. ${nationalId || ''}`)
