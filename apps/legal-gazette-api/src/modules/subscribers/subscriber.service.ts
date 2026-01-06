@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -12,8 +17,10 @@ import { SubscriberDto, SubscriberModel } from '../../models/subscriber.model'
 import { SubscriberCreatedEvent } from './events/subscriber-created.event'
 import { ISubscriberService } from './subscriber.service.interface'
 
+const LOGGING_CONTEXT = 'SubscriberService'
 @Injectable()
 export class SubscriberService implements ISubscriberService {
+  private currentActiveNationalIds: string[] = []
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
 
@@ -61,6 +68,17 @@ export class SubscriberService implements ISubscriberService {
     return this.handleSubscriptionExpiry(subscriber.fromModel())
   }
   async createSubscriptionForUser(user: DMRUser): Promise<MutationResponse> {
+    if (this.currentActiveNationalIds.includes(user.nationalId)) {
+      this.logger.info('Subscription process already ongoing for this user', {
+        context: LOGGING_CONTEXT,
+      })
+      throw new ConflictException(
+        'A subscription process is already ongoing for this user.',
+      )
+    }
+
+    this.currentActiveNationalIds.push(user.nationalId)
+
     const subscriber = await this.subscriberModel.findOne({
       where: { nationalId: user.nationalId },
     })
@@ -78,13 +96,10 @@ export class SubscriberService implements ISubscriberService {
       // Emit event for payment processing and WAIT for it to complete
       // emitAsync returns a Promise that resolves when all listeners complete
       // If any listener throws, the error propagates here (requires suppressErrors: false on listener)
-      await this.eventEmitter.emitAsync(
-        LegalGazetteEvents.SUBSCRIBER_CREATED,
-        {
-          subscriber: subscriber.fromModel(),
-          actorNationalId,
-        } as SubscriberCreatedEvent,
-      )
+      await this.eventEmitter.emitAsync(LegalGazetteEvents.SUBSCRIBER_CREATED, {
+        subscriber: subscriber.fromModel(),
+        actorNationalId,
+      } as SubscriberCreatedEvent)
 
       return { success: true }
     } catch (error) {
@@ -92,8 +107,13 @@ export class SubscriberService implements ISubscriberService {
         error: error instanceof Error ? error.message : 'Unknown error',
         category: 'subscriber-service',
         subscriberId: subscriber.id,
+        context: LOGGING_CONTEXT,
       })
       return { success: false }
+    } finally {
+      this.currentActiveNationalIds = this.currentActiveNationalIds.filter(
+        (id) => id !== user.nationalId,
+      )
     }
   }
 }
