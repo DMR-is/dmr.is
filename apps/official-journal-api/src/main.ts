@@ -3,6 +3,7 @@
  * This is only a minimal backend to get started.
  */
 
+import { json, urlencoded } from 'express'
 import { WinstonModule } from 'nest-winston'
 
 import { VersioningType } from '@nestjs/common'
@@ -25,8 +26,8 @@ async function bootstrap() {
     logger: WinstonModule.createLogger({ instance: logger }),
   })
 
-  // TODO make this behave with nest
-  // app.useLogger(logger)
+  app.use(json({ limit: '8mb' }))
+  app.use(urlencoded({ extended: true, limit: '8mb' }))
 
   app.useGlobalPipes(ExceptionFactoryPipe())
   app.setGlobalPrefix(globalPrefix)

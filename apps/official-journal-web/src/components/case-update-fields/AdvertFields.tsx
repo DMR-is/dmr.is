@@ -1,4 +1,5 @@
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 
 import debounce from 'lodash/debounce'
@@ -16,7 +17,6 @@ import {
 import { useUpdateAdvertHtml } from '../../hooks/api/update/useUpdateAdvertHtml'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { useHandleOpenPdf } from '../../hooks/usePdfPreviewDisplay'
 import { useFileUploader } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import { HTMLEditor } from '../editor/Editor'
@@ -38,7 +38,6 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
   const { data: session } = useSession()
 
   const { currentCase, refetch, canEdit } = useCaseContext()
-  const { previewPdf, loading: pdfLoading } = useHandleOpenPdf(currentCase.id)
 
   const { trigger } = useUpdateAdvertHtml({
     caseId: currentCase.id,
@@ -112,11 +111,15 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
             size="small"
             icon="document"
             iconType="outline"
-            onClick={() => previewPdf()}
-            loading={pdfLoading}
-            disabled={pdfLoading}
+            type="button"
           >
-            PDF forskoðun
+            <Link
+              href={`/api/cases/${currentCase.id}/previewPdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Skoða PDF forskoðun
+            </Link>
           </Button>
         </Inline>
       </Stack>
