@@ -1,4 +1,4 @@
-import { ExecutionContext, ForbiddenException, NotFoundException } from '@nestjs/common'
+import { ExecutionContext, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
@@ -50,7 +50,7 @@ describe('ApplicationOwnershipGuard', () => {
 
   beforeEach(async () => {
     const mockApplicationModel = {
-      findByPk: jest.fn(),
+      findOneOrThrow: jest.fn(),
     }
 
     const mockLogger = {
@@ -97,91 +97,61 @@ describe('ApplicationOwnershipGuard', () => {
 
   describe('canActivate', () => {
     it('should allow access when user is the owner', async () => {
-      jest.spyOn(applicationModel, 'findByPk').mockResolvedValue(mockApplication as ApplicationModel)
+      jest
+        .spyOn(applicationModel, 'findOneOrThrow')
+        .mockResolvedValue(mockApplication as ApplicationModel)
 
       const context = createMockContext(ownerUser, 'app-123')
       const result = await guard.canActivate(context)
 
       expect(result).toBe(true)
-      expect(applicationModel.findByPk).toHaveBeenCalledWith('app-123')
+      expect(applicationModel.findOneOrThrow).toHaveBeenCalledWith({
+        where: { applicantNationalId: '1234567890', id: 'app-123' },
+      })
       expect(logger.debug).toHaveBeenCalledWith(
         'Application ownership validated',
         expect.objectContaining({
           context: 'ApplicationOwnershipGuard',
           applicationId: 'app-123',
           userNationalId: '1234567890',
-          isAdmin: false,
-          isOwner: true,
-        }),
-      )
-    })
-
-    it('should allow access when user is an admin', async () => {
-      jest.spyOn(applicationModel, 'findByPk').mockResolvedValue(mockApplication as ApplicationModel)
-
-      const context = createMockContext(adminUser, 'app-123')
-      const result = await guard.canActivate(context)
-
-      expect(result).toBe(true)
-      expect(applicationModel.findByPk).toHaveBeenCalledWith('app-123')
-      expect(logger.debug).toHaveBeenCalledWith(
-        'Application ownership validated',
-        expect.objectContaining({
-          context: 'ApplicationOwnershipGuard',
-          applicationId: 'app-123',
-          userNationalId: '0123456789',
-          isAdmin: true,
-          isOwner: false,
         }),
       )
     })
 
     it('should throw NotFoundException when application does not exist', async () => {
-      jest.spyOn(applicationModel, 'findByPk').mockResolvedValue(null)
+      jest
+        .spyOn(applicationModel, 'findOneOrThrow')
+        .mockRejectedValue(new NotFoundException())
 
       const context = createMockContext(ownerUser, 'non-existent')
 
-      await expect(guard.canActivate(context)).rejects.toThrow(NotFoundException)
       await expect(guard.canActivate(context)).rejects.toThrow(
-        'Application with id non-existent not found',
+        NotFoundException,
       )
-      expect(logger.warn).toHaveBeenCalledWith(
-        'Application not found',
-        expect.objectContaining({
-          context: 'ApplicationOwnershipGuard',
-          applicationId: 'non-existent',
-          userNationalId: '1234567890',
-        }),
-      )
+      await expect(guard.canActivate(context)).rejects.toThrow('Not Found')
     })
 
     it('should throw ForbiddenException when user is not owner and not admin', async () => {
-      jest.spyOn(applicationModel, 'findByPk').mockResolvedValue(mockApplication as ApplicationModel)
+      jest
+        .spyOn(applicationModel, 'findOneOrThrow')
+        .mockRejectedValue(new NotFoundException())
 
       const context = createMockContext(unauthorizedUser, 'app-123')
 
-      await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException)
       await expect(guard.canActivate(context)).rejects.toThrow(
-        'You do not have permission to access this application',
+        NotFoundException,
       )
-      expect(logger.warn).toHaveBeenCalledWith(
-        'User attempted to access application they do not own',
-        expect.objectContaining({
-          context: 'ApplicationOwnershipGuard',
-          applicationId: 'app-123',
-          userNationalId: '1111111111',
-          applicantNationalId: '1234567890',
-        }),
-      )
+      await expect(guard.canActivate(context)).rejects.toThrow('Not Found')
     })
 
     it('should allow access when user is both owner and admin', async () => {
       const ownerAndAdmin: DMRUser = {
         ...ownerUser,
-        scope: ['@logbirtingablad.is/admin'],
       }
 
-      jest.spyOn(applicationModel, 'findByPk').mockResolvedValue(mockApplication as ApplicationModel)
+      jest
+        .spyOn(applicationModel, 'findOneOrThrow')
+        .mockResolvedValue(mockApplication as ApplicationModel)
 
       const context = createMockContext(ownerAndAdmin, 'app-123')
       const result = await guard.canActivate(context)
@@ -190,8 +160,8 @@ describe('ApplicationOwnershipGuard', () => {
       expect(logger.debug).toHaveBeenCalledWith(
         'Application ownership validated',
         expect.objectContaining({
-          isAdmin: true,
-          isOwner: true,
+          applicationId: 'app-123',
+          userNationalId: '1234567890',
         }),
       )
     })
@@ -212,7 +182,9 @@ describe('ApplicationOwnershipGuard', () => {
         }),
       } as ExecutionContext
 
-      await expect(guard.canActivate(context)).rejects.toThrow(NotFoundException)
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        NotFoundException,
+      )
     })
   })
 })

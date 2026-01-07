@@ -1,7 +1,6 @@
 import {
   CanActivate,
   ExecutionContext,
-  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -42,43 +41,17 @@ export class ApplicationOwnershipGuard implements CanActivate {
       throw new NotFoundException('Application ID is required')
     }
 
-    const application = await this.applicationModel.findByPk(applicationId)
-
-    if (!application) {
-      this.logger.warn('Application not found', {
-        context: 'ApplicationOwnershipGuard',
-        applicationId,
-        userNationalId: user?.nationalId,
-      })
-      throw new NotFoundException(
-        `Application with id ${applicationId} not found`,
-      )
-    }
-
-    // Check if user is admin (has admin scope)
-    const isAdmin = user?.scope?.includes('@logbirtingablad.is/admin') ?? false
-
-    // Check if user owns the application
-    const isOwner = application.applicantNationalId === user?.nationalId
-
-    if (!isAdmin && !isOwner) {
-      this.logger.warn('User attempted to access application they do not own', {
-        context: 'ApplicationOwnershipGuard',
-        applicationId,
-        userNationalId: user?.nationalId,
-        applicantNationalId: application.applicantNationalId,
-      })
-      throw new ForbiddenException(
-        'You do not have permission to access this application',
-      )
-    }
+    await this.applicationModel.findOneOrThrow({
+      where: {
+        id: applicationId,
+        applicantNationalId: user.nationalId,
+      },
+    })
 
     this.logger.debug('Application ownership validated', {
       context: 'ApplicationOwnershipGuard',
       applicationId,
       userNationalId: user.nationalId,
-      isAdmin,
-      isOwner,
     })
 
     return true
