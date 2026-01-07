@@ -36,7 +36,7 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'
-import { AdvertModel } from './advert.model'
+import { AdvertDto, AdvertModel } from './advert.model'
 import {
   AdvertPublicationDto,
   AdvertPublicationModel,
@@ -106,14 +106,12 @@ export type ApplicationCreateAttributes = {
     include: [
       { model: SettlementModel, as: 'settlement' },
       {
-        attributes: ['id'],
-        model: AdvertModel,
+        model: AdvertModel.scope('listview'),
         as: 'adverts',
         required: false,
         separate: true,
         include: [
           {
-            attributes: ['id', 'versionNumber', 'publishedAt', 'scheduledAt'],
             model: AdvertPublicationModel,
             as: 'publications',
           },
@@ -227,9 +225,7 @@ export class ApplicationModel extends BaseModel<
       title: model.title,
       type: model.applicationType,
       subtitle: model.getSubtitle(),
-      publications: model.adverts?.flatMap(
-        (advert) => advert.publications?.map((pub) => pub.fromModel()) || [],
-      ),
+      adverts: model.adverts?.flatMap((advert) => advert.fromModel()) || [],
       currentStep: model.currentStep,
     }
   }
@@ -280,8 +276,8 @@ export class ApplicationDto extends DetailedDto {
   @ApiProperty({ enum: ApplicationTypeEnum, enumName: 'ApplicationTypeEnum' })
   type!: ApplicationTypeEnum
 
-  @ApiProperty({ type: [AdvertPublicationDto], required: false })
-  publications?: AdvertPublicationDto[]
+  @ApiProperty({ type: () => [AdvertDto], required: false })
+  adverts?: AdvertDto[]
 
   @ApiProperty({ type: Number })
   currentStep!: number

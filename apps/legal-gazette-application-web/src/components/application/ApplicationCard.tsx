@@ -12,6 +12,7 @@ import {
 import { formatDate } from '@dmr.is/utils/client'
 
 import {
+  AdvertPublicationDto,
   ApplicationDto,
   ApplicationStatusEnum,
   ApplicationTypeEnum,
@@ -38,16 +39,53 @@ export const ApplicationCard = ({ application }: Props) => {
         : 'Innsent'
 
   // get publication only for common applications
-  const publications =
-    application.type === ApplicationTypeEnum.COMMON
-      ? application.publications || []
-      : []
+  const adverts = application.adverts || []
 
-  // check if all publications are published
-  const allPublished =
-    publications.length > 0
-      ? publications.every((pub) => pub.publishedAt != null)
-      : false
+  let publications: Array<{ title?: string; publishedAt?: string }> = []
+  let allPublished = false
+
+  if (application.type === ApplicationTypeEnum.COMMON) {
+    publications =
+      adverts[0]?.publications.map((pub) => ({
+        title: pub.publishedAt ? `Birting ${pub.version} útgefin` : undefined,
+        publishedAt: pub.publishedAt,
+      })) || []
+
+    // check if all publications are published
+    allPublished =
+      publications.length > 0
+        ? publications.every((pub) => pub.publishedAt != null)
+        : false
+  } else {
+    let skiptafundurCount = 0
+    adverts.forEach((advert) => {
+      advert.publications.forEach((pub) => {
+        // if skiptafundur, just count how many were published
+        if (advert.type.title == 'Skiptafundur' && pub.publishedAt) {
+          skiptafundurCount++
+          // if Skiptalok is published, mark all as published
+        } else if (advert.type.title == 'Skiptalok' && pub.publishedAt) {
+          allPublished = true
+        } else {
+          publications.push({
+            title: pub.publishedAt
+              ? `${advert.type.title} (${pub.version}) útgefin`
+              : undefined,
+            publishedAt: pub.publishedAt,
+          })
+        }
+      })
+    })
+    // add skiptafundur publication if any were published
+    if (skiptafundurCount > 0) {
+      publications.push({
+        title:
+          skiptafundurCount +
+          ` ${skiptafundurCount > 1 ? ' skiptafundir útgefnir' : 'skiptafundur útgefinn'}`,
+        publishedAt: new Date().toString(), // just to mark as published
+      })
+    }
+  }
 
   if (allPublished) {
     statusText = 'Útgefið'
@@ -58,6 +96,7 @@ export const ApplicationCard = ({ application }: Props) => {
       <Stack space={2}>
         <Inline justifyContent="spaceBetween">
           <Text color="purple400" variant="eyebrow" title="Uppfært">
+            Uppfært:{' '}
             {`${formatDate(application.updatedAt, "dd. MMMM yyyy 'kl.' HH:mm")}`}
           </Text>
           <Inline space={1}>
@@ -66,11 +105,10 @@ export const ApplicationCard = ({ application }: Props) => {
                 (pub, i) =>
                   !!pub.publishedAt && (
                     <Tag key={i} variant={'mint'}>
-                      Birting {pub.version} {'útgefin'}
+                      {pub.title}
                     </Tag>
                   ),
               )}
-
             <Tag
               variant={
                 allPublished
