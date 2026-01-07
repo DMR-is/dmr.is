@@ -14,11 +14,7 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import {
-  AdvertDto,
-  ApplicationDetailedDto,
-  ApplicationTypeEnum,
-} from '../../gen/fetch'
+import { AdvertDto, ApplicationTypeEnum } from '../../gen/fetch'
 import { PageRoutes } from '../../lib/constants'
 import { AddAdvertsToApplicationMenu } from '../adverts/AddAdvertsToApplicationMenu'
 import { AdvertList } from '../adverts/AdvertList'

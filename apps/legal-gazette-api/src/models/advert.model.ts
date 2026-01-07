@@ -566,9 +566,10 @@ export class AdvertModel extends BaseModel<
         assignedUser: model.assignedUser?.id,
         publications: model.publications.map((p) => p.fromModel()),
       }
-    } catch (error) {
+    } catch (error: any) {
       this.logger.warn('Error converting from AdvertModel to AdvertDto', {
         context: 'AdvertModel',
+        error: error.message,
       })
       throw new InternalServerErrorException()
     }

@@ -38,19 +38,60 @@ export const ApplicationCard = ({ application }: Props) => {
         : 'Innsent'
 
   // get publication only for common applications
-  const publications =
-    application.type === ApplicationTypeEnum.COMMON
-      ? application.publications || []
-      : []
+  const adverts = application.adverts || []
 
-  // check if all publications are published
-  const allPublished =
-    publications.length > 0
-      ? publications.every((pub) => pub.publishedAt != null)
-      : false
+  const publications: Array<{ title?: string; publishedAt?: string }> = []
+  let allPublished = false
 
-  if (allPublished) {
-    statusText = 'Útgefið'
+  if (application.type === ApplicationTypeEnum.COMMON) {
+    let pubCount = 0
+    const advertPubs =
+      adverts[0]?.publications.map((pub) => {
+        if (pub.publishedAt) {
+          pubCount++
+        }
+        return pub
+      }) || []
+
+    if (pubCount > 0) {
+      publications.push({
+        title: pubCount + '/' + advertPubs.length + ' birtingum útgefnar',
+        publishedAt: new Date().toString(), // just to mark as published
+      })
+
+      // check if all publications are published
+      allPublished = pubCount === advertPubs.length
+    }
+
+    if (allPublished) {
+      statusText = 'Útgefin'
+    }
+  } else {
+    let advertsCount = 0
+    let pubCount = 0
+    adverts.forEach((advert) => {
+      advert.publications.forEach((pub) => {
+        if (pub.publishedAt) {
+          advertsCount++
+        }
+        // if Skiptalok is published, mark all as published
+        if (advert.type.title == 'Skiptalok') {
+          allPublished = true
+        }
+        pubCount++
+      })
+    })
+
+    if (advertsCount > 0) {
+      publications.push({
+        title: advertsCount + '/' + pubCount + ' auglýsingum útgefnar',
+        publishedAt: new Date().toString(), // just to mark as published
+      })
+    }
+
+    if (allPublished) {
+      statusText = 'Útgefið'
+    }
   }
 
   return (
@@ -58,6 +99,7 @@ export const ApplicationCard = ({ application }: Props) => {
       <Stack space={2}>
         <Inline justifyContent="spaceBetween">
           <Text color="purple400" variant="eyebrow" title="Uppfært">
+            Uppfært:{' '}
             {`${formatDate(application.updatedAt, "dd. MMMM yyyy 'kl.' HH:mm")}`}
           </Text>
           <Inline space={1}>
@@ -65,12 +107,11 @@ export const ApplicationCard = ({ application }: Props) => {
               publications.map(
                 (pub, i) =>
                   !!pub.publishedAt && (
-                    <Tag key={i} variant={'mint'}>
-                      Birting {pub.version} {'útgefin'}
+                    <Tag key={i} variant={'mint'} disabled>
+                      {pub.title}
                     </Tag>
                   ),
               )}
-
             <Tag
               variant={
                 allPublished
@@ -81,6 +122,7 @@ export const ApplicationCard = ({ application }: Props) => {
                       ? 'blueberry'
                       : 'mint'
               }
+              disabled
             >
               {statusText}
             </Tag>

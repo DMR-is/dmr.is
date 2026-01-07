@@ -4401,9 +4401,9 @@
           "type": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           },
-          "publications": {
+          "adverts": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
+            "items": { "$ref": "#/components/schemas/AdvertDto" }
           },
           "currentStep": { "type": "number" }
         },
@@ -4465,9 +4465,9 @@
           "type": {
             "allOf": [{ "$ref": "#/components/schemas/ApplicationTypeEnum" }]
           },
-          "publications": {
+          "adverts": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/AdvertPublicationDto" }
+            "items": { "$ref": "#/components/schemas/AdvertDto" }
           },
           "currentStep": { "type": "number" },
           "answers": { "type": "object", "default": {} }
