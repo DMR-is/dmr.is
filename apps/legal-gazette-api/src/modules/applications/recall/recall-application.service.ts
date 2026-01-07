@@ -2,7 +2,11 @@ import addDays from 'date-fns/addDays'
 import { Op } from 'sequelize'
 import z from 'zod'
 
-import { BadRequestException, Inject, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
@@ -46,6 +50,7 @@ export class RecallApplicationService implements IRecallApplicationService {
     @InjectModel(ApplicationModel)
     private applicationModel: typeof ApplicationModel,
   ) {}
+
   async getMinDateForDivisionEnding(
     applicationId: string,
   ): Promise<GetMinDateResponseDto> {

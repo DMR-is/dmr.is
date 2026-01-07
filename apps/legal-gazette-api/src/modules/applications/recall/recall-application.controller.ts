@@ -17,6 +17,7 @@ import {
 } from '@dmr.is/modules/guards/auth'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
+import { ApplicationOwnershipGuard } from '../../../core/guards/application-ownership.guard'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import {
   CreateDivisionEndingDto,
@@ -58,6 +59,7 @@ export class RecallApplicationController {
     return this.applicationService.addDivisionEnding(applicationId, body, user)
   }
 
+  @UseGuards(ApplicationOwnershipGuard)
   @Get(':applicationId/divisionMeeting/minDate')
   @LGResponse({
     operationId: 'getMinDateForDivisionMeeting',
@@ -69,6 +71,7 @@ export class RecallApplicationController {
     return this.applicationService.getMinDateForDivisionMeeting(applicationId)
   }
 
+  @UseGuards(ApplicationOwnershipGuard)
   @Get(':applicationId/divisionEnding/minDate')
   @LGResponse({
     operationId: 'getMinDateForDivisionEnding',
