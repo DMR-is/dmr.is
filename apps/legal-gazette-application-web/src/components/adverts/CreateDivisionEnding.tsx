@@ -1,5 +1,4 @@
 'use client'
-import { useParams } from 'next/navigation'
 
 import { addYears } from 'date-fns'
 import get from 'lodash/get'
@@ -35,16 +34,19 @@ import { DivisionSignatureFields } from '../form/fields/DivisionSignatureFields'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
+  applicationId: string
+  title?: string
   isVisible: boolean
   onVisibilityChange(isVisible: boolean): void
 }
 
 export const CreateDivisionEnding = ({
+  applicationId,
+  title,
   isVisible,
   onVisibilityChange,
 }: Props) => {
   const trpc = useTRPC()
-  const { id } = useParams()
   const queryClient = useQueryClient()
   const { mutate: addDivisionEnding, isPending } = useMutation(
     trpc.addDivisionEnding.mutationOptions(),
@@ -52,12 +54,12 @@ export const CreateDivisionEnding = ({
 
   const { data } = useQuery(
     trpc.getMininumDateForDivisionMeeting.queryOptions({
-      applicationId: id as string,
+      applicationId: applicationId,
     }),
   )
 
   const { data: application } = useQuery(
-    trpc.getApplicationById.queryOptions({ id: id as string }),
+    trpc.getApplicationById.queryOptions({ id: applicationId }),
   )
 
   useEffect(() => {
@@ -114,7 +116,7 @@ export const CreateDivisionEnding = ({
     if (formValidation.success) {
       addDivisionEnding(
         {
-          applicationId: id as string,
+          applicationId: applicationId,
           ...formState,
         },
         {
@@ -175,6 +177,11 @@ export const CreateDivisionEnding = ({
                         <Icon icon="close" />
                       </button>
                     </Inline>
+                    {title && (
+                      <Text variant="h4" fontWeight="medium">
+                        {title}
+                      </Text>
+                    )}
                     <Stack space={[2, 3]}>
                       <GridRow rowGap={[1, 2]}>
                         <GridColumn span="12/12">

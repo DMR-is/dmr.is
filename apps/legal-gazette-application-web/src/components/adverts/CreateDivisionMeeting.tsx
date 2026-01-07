@@ -1,5 +1,4 @@
 'use client'
-import { useParams } from 'next/navigation'
 
 import { addYears } from 'date-fns'
 import get from 'lodash/get'
@@ -35,6 +34,8 @@ import { DivisionSignatureFields } from '../form/fields/DivisionSignatureFields'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
+  applicationId: string
+  title?: string
   isVisible: boolean
   onVisibilityChange: (isVisible: boolean) => void
 }
@@ -53,26 +54,28 @@ const initFormState: CreateDivisionMeetingDto = {
 }
 
 export const CreateDivisionMeeting = ({
+  applicationId,
+  title,
   isVisible,
   onVisibilityChange,
 }: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
-  const { id: applicationId } = useParams()
+
   const { mutate: addDivisionMeeting, isPending } = useMutation(
     trpc.addDivisionMeeting.mutationOptions(),
   )
 
   const { data } = useQuery(
     trpc.getMininumDateForDivisionMeeting.queryOptions({
-      applicationId: applicationId as string,
+      applicationId: applicationId,
     }),
   )
 
   const [submitClicked, setSubmitClicked] = useState(false)
 
   const { data: application } = useQuery(
-    trpc.getApplicationById.queryOptions({ id: applicationId as string }),
+    trpc.getApplicationById.queryOptions({ id: applicationId }),
   )
 
   useEffect(() => {
@@ -117,7 +120,7 @@ export const CreateDivisionMeeting = ({
     if (formValidation.success) {
       addDivisionMeeting(
         {
-          applicationId: applicationId as string,
+          applicationId: applicationId,
           ...formState,
         },
         {
@@ -176,7 +179,7 @@ export const CreateDivisionMeeting = ({
                 <GridColumn span={['12/12', '8/12']} offset={['0', '2/12']}>
                   <Box padding={[2, 3, 4]} width="full" background="white">
                     <Stack space={[3, 4]}>
-                      <Stack space={[1, 2]}>
+                      <Stack space={0}>
                         <Inline
                           align="right"
                           alignY="center"
@@ -184,10 +187,16 @@ export const CreateDivisionMeeting = ({
                           space={[1, 2]}
                         >
                           <Text variant="h3">Bæta við skiptafundi</Text>
+
                           <button onClick={closeModal} type="button">
                             <Icon icon="close" />
                           </button>
                         </Inline>
+                        {title && (
+                          <Text variant="h4" fontWeight="medium">
+                            {title}
+                          </Text>
+                        )}
                       </Stack>
                       <Stack space={[1, 2]}>
                         <GridRow>

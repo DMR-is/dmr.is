@@ -17,6 +17,8 @@ import {
   ApplicationTypeEnum,
 } from '../../gen/fetch'
 import { PageRoutes } from '../../lib/constants'
+import { AddAdvertsToApplicationMenu } from '../adverts/AddAdvertsToApplicationMenu'
+import { cardDropdownStyle } from './application.css'
 
 type Props = {
   application: ApplicationDto
@@ -55,7 +57,7 @@ export const ApplicationCard = ({ application }: Props) => {
 
     if (pubCount > 0) {
       publications.push({
-        title: pubCount + '/' + advertPubs.length + ' birtingum útgefnar',
+        title: pubCount + '/' + advertPubs.length + ' birtingar útgefnar',
         publishedAt: new Date().toString(), // just to mark as published
       })
 
@@ -84,7 +86,7 @@ export const ApplicationCard = ({ application }: Props) => {
 
     if (advertsCount > 0) {
       publications.push({
-        title: advertsCount + '/' + pubCount + ' auglýsingum útgefnar',
+        title: advertsCount + '/' + pubCount + ' auglýsingar útgefnar',
         publishedAt: new Date().toString(), // just to mark as published
       })
     }
@@ -96,7 +98,7 @@ export const ApplicationCard = ({ application }: Props) => {
 
   return (
     <Box borderRadius="large" border="standard" padding={3} background="white">
-      <Stack space={2}>
+      <Stack space={1}>
         <Inline justifyContent="spaceBetween">
           <Text color="purple400" variant="eyebrow" title="Uppfært">
             Uppfært:{' '}
@@ -126,6 +128,16 @@ export const ApplicationCard = ({ application }: Props) => {
             >
               {statusText}
             </Tag>
+            {application.type !== ApplicationTypeEnum.COMMON &&
+              ApplicationStatusEnum.SUBMITTED &&
+              !allPublished && (
+                <div className={cardDropdownStyle}>
+                  <AddAdvertsToApplicationMenu
+                    applicationId={application.id}
+                    title={application.title + ' - ' + application.subtitle}
+                  />
+                </div>
+              )}
           </Inline>
         </Inline>
 
