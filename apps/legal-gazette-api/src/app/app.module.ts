@@ -57,16 +57,12 @@ import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.mo
     AuthorizationGuardModule, // Makes AuthorizationGuard available globally
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
+    // Throttling requests for controllers that use the ThrottlerGuard
     ThrottlerModule.forRoot([
       {
-        name: 'short',
-        ttl: 60000, // 1 minute
-        limit: 10, // 10 requests per minute
-      },
-      {
-        name: 'long',
+        name: 'default',
         ttl: 3600000, // 1 hour
-        limit: 100, // 100 requests per hour
+        limit: 5000, // 5000 request per hour
       },
     ]),
     SequelizeModule.forRootAsync({

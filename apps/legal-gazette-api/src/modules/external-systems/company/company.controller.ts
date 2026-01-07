@@ -29,8 +29,10 @@ import { ICompanyService } from './company.service.interface'
 })
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, MachineClientGuard, ThrottlerGuard)
-// Added throttling to limit requests to 5000 per hour
-@Throttle({ long: { limit: 5000, ttl: 3600000 } })
+// We can set different throttling limits for different endpoints if needed
+// Example: 5000 requests per hour
+// @Throttle({ default: { limit: 5000, ttl: 3600000 } })
+
 export class CompanyController {
   constructor(
     @Inject(ICompanyService) private readonly companyService: ICompanyService,
