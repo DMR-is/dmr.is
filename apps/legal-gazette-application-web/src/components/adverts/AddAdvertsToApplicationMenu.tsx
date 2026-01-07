@@ -23,6 +23,7 @@ export const AddAdvertsToApplicationMenu = ({
         title="Bæta við"
         icon="add"
         iconType="outline"
+        openOnHover
         items={[
           {
             title: 'Skiptafundi',
