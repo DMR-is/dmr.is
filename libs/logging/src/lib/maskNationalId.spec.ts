@@ -1,4 +1,4 @@
-import { maskNationalId } from './maskNationalId'
+import { maskNationalId, maskPiiInObject } from './maskNationalId'
 
 describe('maskNationalId', () => {
   const ENV = process.env
@@ -42,5 +42,127 @@ describe('maskNationalId', () => {
 
     // Assert
     expect(result).toBe('https://island.is/api/--MASKED--/--MASKED--/info')
+  })
+})
+
+describe('maskPiiInObject', () => {
+  it('should mask nationalId field', () => {
+    const result = maskPiiInObject({
+      name: 'John',
+      nationalId: '0101307789',
+    })
+
+    expect(result).toEqual({
+      name: 'John',
+      nationalId: '**REMOVE_PII: $&**',
+    })
+  })
+
+  it('should mask kennitala field', () => {
+    const result = maskPiiInObject({
+      kennitala: '0202306789',
+    })
+
+    expect(result?.kennitala).toBe('**REMOVE_PII: $&**')
+  })
+
+  it('should mask ssn field', () => {
+    const result = maskPiiInObject({
+      ssn: '0303305678',
+    })
+
+    expect(result?.ssn).toBe('**REMOVE_PII: $&**')
+  })
+
+  it('should mask national_id field', () => {
+    const result = maskPiiInObject({
+      national_id: '0101307789',
+    })
+
+    expect(result?.national_id).toBe('**REMOVE_PII: $&**')
+  })
+
+  it('should mask nested PII fields', () => {
+    const result = maskPiiInObject({
+      user: {
+        name: 'John',
+        nationalId: '0202306789',
+        address: {
+          city: 'Reykjavik',
+          ssn: '0303305678',
+        },
+      },
+    })
+
+    expect(result).toEqual({
+      user: {
+        name: 'John',
+        nationalId: '**REMOVE_PII: $&**',
+        address: {
+          city: 'Reykjavik',
+          ssn: '**REMOVE_PII: $&**',
+        },
+      },
+    })
+  })
+
+  it('should mask PII in arrays', () => {
+    const result = maskPiiInObject({
+      users: [
+        { name: 'Alice', nationalId: '0101307789' },
+        { name: 'Bob', kennitala: '0202306789' },
+      ],
+    })
+
+    expect(result).toEqual({
+      users: [
+        { name: 'Alice', nationalId: '**REMOVE_PII: $&**' },
+        { name: 'Bob', kennitala: '**REMOVE_PII: $&**' },
+      ],
+    })
+  })
+
+  it('should handle null and undefined', () => {
+    expect(maskPiiInObject(null)).toBeNull()
+    expect(maskPiiInObject(undefined)).toBeUndefined()
+  })
+
+  it('should handle null/undefined PII fields', () => {
+    const result = maskPiiInObject({
+      nationalId: null,
+      kennitala: undefined,
+    })
+
+    expect(result?.nationalId).toBeNull()
+    expect(result?.kennitala).toBeUndefined()
+  })
+
+  it('should not modify non-PII fields', () => {
+    const result = maskPiiInObject({
+      userId: '12345',
+      action: 'create',
+    })
+
+    expect(result).toEqual({
+      userId: '12345',
+      action: 'create',
+    })
+  })
+
+  it('should not mask invalid kennitalas', () => {
+    const result = maskPiiInObject({
+      nationalId: '9999999999', // Invalid kennitala
+    })
+
+    expect(result?.nationalId).toBe('9999999999')
+  })
+
+  it('should not mask company kennitalas', () => {
+    // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
+    const result = maskPiiInObject({
+      kennitala: '4208694809', // Company kennitala (day > 31)
+    })
+
+    expect(result?.kennitala).toBe('4208694809')
   })
 })

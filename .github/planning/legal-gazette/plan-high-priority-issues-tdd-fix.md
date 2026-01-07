@@ -29,7 +29,7 @@ This plan outlines a TDD approach to fixing the 15 remaining high priority issue
 | H-2 | Missing Ownership Validation on Recall Endpoints | `recall-application.controller.ts` | Unauthorized access | ✅ Complete |
 | H-3 | No Rate Limiting on External System Endpoints | Foreclosure, Company controllers | DoS vulnerability | ✅ Complete |
 | H-4 | No Input Sanitization for HTML Content | `foreclosure.service.ts` | XSS vulnerability | ⬜ Not Started |
-| H-5 | PII (National IDs) Logged Without Masking | Multiple files | GDPR violation | ⬜ Not Started |
+| H-5 | PII (National IDs) Logged Without Masking | Multiple files | GDPR violation | ✅ Complete |
 
 ### Phase 3: Data Integrity Issues (Before Production) 🟠
 
@@ -58,22 +58,22 @@ This plan outlines a TDD approach to fixing the 15 remaining high priority issue
 
 Based on dependencies, risk, and production readiness:
 
-| Priority | Issue | Reason | Effort |
-|----------|-------|--------|--------|
-| 1 | H-2 | Security - authorization bypass | 2h |
-| 2 | H-4 | Security - XSS vulnerability | 4h |
-| 3 | H-5 | Security - GDPR compliance | 3h |
-| 4 | H-6 | Data integrity - duplicate publication numbers | 3h |
-| 5 | H-7 | Data integrity - prevent published version deletion | 2h |
-| 6 | H-8, H-9 | Data integrity - application state machine | 4h |
-| 7 | H-10 | Data integrity - transaction safety | 2h |
-| 8 | H-3 | Security - rate limiting | 2h |
-| 9 | H-11 | Data integrity - foreign key constraints | 4h |
-| 10 | H-15 | Reliability - timeouts | 3h |
-| 11 | H-12 | Reliability - PDF retry | 8h |
-| 12 | H-13 | Reliability - TBR retry | 8h |
-| 13 | H-14 | Reliability - payment polling | 4h |
-| 14 | H-16 | Reliability - token refresh | 4h |
+| Priority | Issue | Reason | Effort | Status |
+|----------|-------|--------|--------|--------|
+| 1 | H-2 | Security - authorization bypass | 2h | ✅ Complete |
+| 2 | H-5 | Security - GDPR compliance | 3h | ✅ Complete |
+| 3 | H-4 | Security - XSS vulnerability | 4h | ⬜ Not Started |
+| 4 | H-6 | Data integrity - duplicate publication numbers | 3h | ⬜ Not Started |
+| 5 | H-7 | Data integrity - prevent published version deletion | 2h | ⬜ Not Started |
+| 6 | H-8, H-9 | Data integrity - application state machine | 4h | ⬜ Not Started |
+| 7 | H-10 | Data integrity - transaction safety | 2h | ⬜ Not Started |
+| 8 | H-3 | Security - rate limiting | 2h | ✅ Complete |
+| 9 | H-11 | Data integrity - foreign key constraints | 4h | ⬜ Not Started |
+| 10 | H-15 | Reliability - timeouts | 3h | ⬜ Not Started |
+| 11 | H-12 | Reliability - PDF retry | 8h | ⬜ Not Started |
+| 12 | H-13 | Reliability - TBR retry | 8h | ⬜ Not Started |
+| 13 | H-14 | Reliability - payment polling | 4h | ⬜ Not Started |
+| 14 | H-16 | Reliability - token refresh | 4h | ⬜ Not Started |
 
 ---
 
@@ -358,7 +358,7 @@ export class ForeclosureController {
 **Completion Date:** January 7, 2026
 
 **Key Implementation Details:**
-- ✅ **Dual Rate Limiting**: Short-term (10 req/min) + long-term (100 req/hour) windows
+- ✅ **Rate Limiting**: Default 5000 (req/hour) window
 - ✅ **Guard-Based**: ThrottlerGuard applied to ForeclosureController and CompanyController
 - ✅ **Declarative Config**: @Throttle decorator specifies limits at controller level
 - ✅ **Test Coverage**: Tests verify module config, guard presence, and rate limiting behavior
@@ -622,12 +622,28 @@ Known locations:
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Create maskNationalId utility | ⬜ Not Started | |
-| Extend logger formatter | ⬜ Not Started | Optional: auto-mask |
-| Write test file | ⬜ Not Started | |
-| Update all log statements | ⬜ Not Started | Audit codebase |
-| Verify tests pass | ⬜ Not Started | |
-| Code review | ⬜ Not Started | |
+| Create maskPiiInObject in logging lib | ✅ Complete | Added to libs/logging/src/lib/maskNationalId.ts |
+| Extend logger formatter | ✅ Complete | Updated libs/logging/src/lib/formatters.ts |
+| Write test files | ✅ Complete | 14 tests in maskNationalId.spec.ts, 10 in formatters.spec.ts |
+| Verify tests pass | ✅ Complete | All 27 logging tests passing |
+| Code review | ⬜ Pending | |
+
+**Completion Date:** January 7, 2026
+
+**Key Implementation:**
+- ✅ Added `maskPiiInObject()` function to `@dmr.is/logging` library
+- ✅ Recursively masks PII fields: `nationalId`, `kennitala`, `ssn`, `national_id`
+- ✅ Handles nested objects and arrays
+- ✅ Preserves Winston symbols (MESSAGE)
+- ✅ Environment-aware: dev shows `**REMOVE_PII: [kt]**`, prod shows `--MASKED--`
+- ✅ Reuses existing `maskNationalId()` validator logic
+- ✅ No code duplication - all PII masking centralized in logging library
+
+**Files Modified:**
+- `libs/logging/src/lib/maskNationalId.ts` - Added maskPiiInObject function
+- `libs/logging/src/lib/formatters.ts` - Integrated metadata masking
+- `libs/logging/src/lib/maskNationalId.spec.ts` - Added 14 new tests
+- `libs/logging/src/lib/formatters.spec.ts` - Added 9 new tests
 
 ---
 
