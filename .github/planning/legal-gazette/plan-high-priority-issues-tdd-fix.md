@@ -26,7 +26,7 @@ This plan outlines a TDD approach to fixing the 15 remaining high priority issue
 | ID | Issue | Location | Impact | Status |
 |----|-------|----------|--------|--------|
 | H-1 | MachineClientGuard Scope Validation | `authorization.guard.ts` | Security bypass | ✅ Complete |
-| H-2 | Missing Ownership Validation on Recall Endpoints | `recall-application.controller.ts` | Unauthorized access | ⬜ Not Started |
+| H-2 | Missing Ownership Validation on Recall Endpoints | `recall-application.controller.ts` | Unauthorized access | ✅ Complete |
 | H-3 | No Rate Limiting on External System Endpoints | Foreclosure, Company controllers | DoS vulnerability | ⬜ Not Started |
 | H-4 | No Input Sanitization for HTML Content | `foreclosure.service.ts` | XSS vulnerability | ⬜ Not Started |
 | H-5 | PII (National IDs) Logged Without Masking | Multiple files | GDPR violation | ⬜ Not Started |
@@ -184,11 +184,11 @@ async getMinDateForDivisionMeeting(
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Write test file | ⬜ Not Started | |
-| Verify tests fail | ⬜ Not Started | |
-| Implement fix | ⬜ Not Started | |
-| Verify tests pass | ⬜ Not Started | |
-| Code review | ⬜ Not Started | |
+| Write test file | ✅ Complete | Controller and service tests created |
+| Verify tests fail | ✅ Complete | Tests failed as expected - no ownership validation |
+| Implement fix | ✅ Complete | Added validateApplicationOwnership method |
+| Verify tests pass | ✅ Complete | All 22 tests passing (12 controller, 10 service) |
+| Code review | ⬜ Pending | |
 
 ---
 
@@ -1288,7 +1288,7 @@ nx test legal-gazette-api
 | Date | Phase | Status | Notes |
 |------|-------|--------|-------|
 | Jan 7, 2026 | Plan Created | ✅ Complete | |
-| | H-2 Ownership | ⬜ Not Started | |
+| Jan 7, 2026 | H-2 Ownership | ✅ Complete | Added ownership validation in service layer |
 | | H-4 XSS Prevention | ⬜ Not Started | |
 | | H-5 PII Masking | ⬜ Not Started | |
 | | H-6 Race Condition | ⬜ Not Started | |

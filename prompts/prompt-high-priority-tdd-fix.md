@@ -53,10 +53,12 @@ For each issue, follow these steps **in order**:
 2. Improve naming or structure if beneficial
 3. Ensure tests still pass after refactoring
 
-### Step 7: Update Planning Document
-1. Mark the issue as complete in `plan-high-priority-issues-tdd-fix.md`
-2. Update the progress tracking table
-3. Note any decisions made or deviations from the plan
+### Step 7: Update Planning Document (REQUIRED)
+1. Mark the issue as complete in `.github/planning/legal-gazette/plan-high-priority-issues-tdd-fix.md`:
+   - Update the status in the Phase 2 summary table (⬜ → ✅)
+   - Update the issue's detailed Status table (mark steps as ✅ Complete)
+   - Update the Progress Tracking table with completion date
+2. Note any decisions made or deviations from the plan
 
 ### Step 8: Proceed to Next Issue
 1. Ask the user: "Issue [ID] is complete. Should I proceed to the next issue [Next ID]: [Title]?"
@@ -104,7 +106,10 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
 1. **NEVER skip the test-first approach** - Always write tests before implementation
 2. **ALWAYS wait for user confirmation** after writing tests
 3. **ONE issue at a time** - Complete each issue fully before moving to the next
-4. **Update the plan** - Keep the planning document synchronized with progress
+4. **ALWAYS update the plan** - After completing each issue, update `.github/planning/legal-gazette/plan-high-priority-issues-tdd-fix.md` with:
+   - ✅ status in summary tables
+   - Completion notes in status table
+   - Date and notes in progress tracking
 5. **Run full test suite** - Ensure no regressions after each fix
 6. **Follow project conventions** - Use the correct logger, import paths, etc.
 
