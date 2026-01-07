@@ -602,6 +602,12 @@
             "required": false,
             "in": "query",
             "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "externalId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
           }
         ],
         "responses": {
@@ -4930,6 +4936,7 @@
           "caption": { "type": "string", "nullable": true },
           "content": { "type": "string" },
           "divisionMeetingLocation": { "type": "string", "nullable": true },
+          "externalId": { "type": "string", "nullable": true },
           "templateType": {
             "description": "Template type of the advert",
             "allOf": [{ "$ref": "#/components/schemas/AdvertTemplateType" }]
