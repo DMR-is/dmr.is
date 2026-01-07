@@ -64,7 +64,7 @@ export const CaseTableReady = ({
     },
     {
       field: 'caseInstitution',
-      sortable: false,
+      sortable: true,
       size: 'tiny',
       children: formatMessage(messages.tables.ready.columns.institution),
     },

@@ -48,6 +48,12 @@ export const CaseTableSubmitted = ({ cases, paging }: TableProps) => {
       sortable: false,
       children: formatMessage(messages.tables.submitted.columns.employee),
     },
+    {
+      field: 'caseInstitution',
+      sortable: false,
+      size: 'tiny',
+      children: formatMessage(messages.tables.ready.columns.institution),
+    },
   ]
 
   const rows = cases?.map((row) => {
@@ -82,6 +88,11 @@ export const CaseTableSubmitted = ({ cases, paging }: TableProps) => {
       caseEmployee: (
         <Text truncate variant="medium">
           {row.assignedTo?.displayName}
+        </Text>
+      ),
+      caseInstitution: (
+        <Text whiteSpace="nowrap" variant="medium">
+          {row.involvedParty.title}
         </Text>
       ),
     }
