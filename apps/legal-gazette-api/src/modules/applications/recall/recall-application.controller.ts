@@ -65,8 +65,9 @@ export class RecallApplicationController {
   })
   async getMinDateForDivisionMeeting(
     @Param('applicationId') applicationId: string,
+    @CurrentUser() user: DMRUser,
   ): Promise<GetMinDateResponseDto> {
-    return this.applicationService.getMinDateForDivisionMeeting(applicationId)
+    return this.applicationService.getMinDateForDivisionMeeting(applicationId, user)
   }
 
   @Get(':applicationId/divisionEnding/minDate')
@@ -76,7 +77,8 @@ export class RecallApplicationController {
   })
   async getMinDateForDivisionEnding(
     @Param('applicationId') applicationId: string,
+    @CurrentUser() user: DMRUser,
   ): Promise<GetMinDateResponseDto> {
-    return this.applicationService.getMinDateForDivisionEnding(applicationId)
+    return this.applicationService.getMinDateForDivisionEnding(applicationId, user)
   }
 }

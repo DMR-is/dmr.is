@@ -23,10 +23,12 @@ export interface IRecallApplicationService {
 
   getMinDateForDivisionMeeting(
     applicationId: string,
+    user: DMRUser,
   ): Promise<GetMinDateResponseDto>
 
   getMinDateForDivisionEnding(
     applicationId: string,
+    user: DMRUser,
   ): Promise<GetMinDateResponseDto>
 }
 
