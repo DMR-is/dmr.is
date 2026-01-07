@@ -14,7 +14,7 @@ A comprehensive code review of the Legal Gazette system identified **77 issues**
 | Severity | Count | Completed | Remaining | Status |
 |----------|-------|-----------|-----------|--------|
 | 🔴 Critical | 5 | 5 | 0 | ✅ 100% Complete |
-| 🟠 High | 16 | 1 | 15 | 🟡 In Progress |
+| 🟠 High | 16 | 2 | 14 | 🟡 In Progress |
 | 🟡 Medium | 39 | 0 | 39 | ⬜ Not Started |
 | 🟢 Low | 17 | 0 | 17 | ⬜ Not Started |
 
@@ -24,6 +24,7 @@ A comprehensive code review of the Legal Gazette system identified **77 issues**
 - ✅ C-4: Subscriber TBR orphan prevention (PENDING status tracking)
 - ✅ C-5: Advert TBR orphan prevention (PENDING status tracking)
 - ✅ H-1: Authorization guard scope validation fixed (exact match)
+- ✅ H-2: Ownership validation implemented via reusable ApplicationOwnershipGuard (23 tests passing)
 - ⚠️ C-2: Publishing without payment - needs additional business logic validation
 
 **Key Risk Areas:**
@@ -64,18 +65,19 @@ A comprehensive code review of the Legal Gazette system identified **77 issues**
 ### Phase 2: High Priority Security (Before Production) 🟠
 
 **Estimated Effort:** 2-3 days  
-**Status:** 🟡 In Progress (1/5 complete)
+**Status:** 🟡 In Progress (2/5 complete)
 
 | ID | Issue | File(s) | Effort | Status |
 |----|-------|---------|--------|--------|
 | H-1 | MachineClientGuard Uses `.includes()` for Scope Validation | `authorization.guard.ts` | 1h | ✅ Done |
-| H-2 | Missing Ownership Validation on Recall Min Date Endpoints | `recall-application.controller.ts` | 2h | ⬜ |
+| H-2 | Missing Ownership Validation on Recall Min Date Endpoints | `recall-application.controller.ts` | 2h | ✅ Done |
 | H-3 | No Rate Limiting on External System Endpoints | Foreclosure, Company controllers | 2h | ⬜ |
 | H-4 | No Input Sanitization for HTML Content in External DTOs | `foreclosure.service.ts` | 4h | ⬜ |
 | H-5 | PII (National IDs) Logged Without Masking | `authorization.guard.ts`, listeners | 3h | ⬜ |
 
 **Implementation Notes:**
 - **H-1**: ✅ Fixed in `authorization.guard.ts` - now uses `user.scope.split(' ')` with exact `includes()` match instead of substring matching. Methods `hasMatchingScope()` and `getMatchingScopes()` properly validate JWT scopes.
+- **H-2**: ✅ Implemented `ApplicationOwnershipGuard` as reusable NestJS guard pattern. Guard validates `application.applicantNationalId` matches `user.nationalId`, with admin scope bypass. Applied to recall min date endpoints with `@UseGuards(ApplicationOwnershipGuard)`. Tests: 7 guard unit tests, 8 controller tests (including metadata verification), 8 service tests (business logic only). Service layer simplified - removed ownership validation, service now contains only date calculation logic. Key benefit: separation of concerns (guards=authorization, services=business logic).
 
 ---
 

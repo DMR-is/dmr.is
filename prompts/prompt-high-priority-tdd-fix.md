@@ -53,12 +53,17 @@ For each issue, follow these steps **in order**:
 2. Improve naming or structure if beneficial
 3. Ensure tests still pass after refactoring
 
-### Step 7: Update Planning Document (REQUIRED)
+### Step 7: Update Planning Documents (REQUIRED)
 1. Mark the issue as complete in `.github/planning/legal-gazette/plan-high-priority-issues-tdd-fix.md`:
    - Update the status in the Phase 2 summary table (⬜ → ✅)
    - Update the issue's detailed Status table (mark steps as ✅ Complete)
    - Update the Progress Tracking table with completion date
-2. Note any decisions made or deviations from the plan
+   - Note any decisions made or deviations from the plan
+2. Update `.github/planning/legal-gazette/plan-code-review-findings.md`:
+   - Update summary table severity counts (Completed/Remaining)
+   - Add issue ID to "Recent Progress" section with brief implementation note
+   - Update Phase 2 summary table (mark issue as ✅ Done, update progress count)
+   - Add implementation notes explaining the solution approach and key details
 
 ### Step 8: Proceed to Next Issue
 1. Ask the user: "Issue [ID] is complete. Should I proceed to the next issue [Next ID]: [Title]?"
@@ -106,10 +111,9 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
 1. **NEVER skip the test-first approach** - Always write tests before implementation
 2. **ALWAYS wait for user confirmation** after writing tests
 3. **ONE issue at a time** - Complete each issue fully before moving to the next
-4. **ALWAYS update the plan** - After completing each issue, update `.github/planning/legal-gazette/plan-high-priority-issues-tdd-fix.md` with:
-   - ✅ status in summary tables
-   - Completion notes in status table
-   - Date and notes in progress tracking
+4. **ALWAYS update both planning documents** - After completing each issue:
+   - Update `.github/planning/legal-gazette/plan-high-priority-issues-tdd-fix.md` with completion status, dates, notes
+   - Update `.github/planning/legal-gazette/plan-code-review-findings.md` with implementation details, progress counts
 5. **Run full test suite** - Ensure no regressions after each fix
 6. **Follow project conventions** - Use the correct logger, import paths, etc.
 

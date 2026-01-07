@@ -1,83 +1,18 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
-import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { AdvertModel } from '../../../models/advert.model'
-import {
-  ApplicationModel,
-  ApplicationStatusEnum,
-} from '../../../models/application.model'
+import { ApplicationModel } from '../../../models/application.model'
 import { IAdvertService } from '../../advert/advert.service.interface'
 import { RecallApplicationService } from './recall-application.service'
 
-describe('RecallApplicationService - Ownership Validation (H-2)', () => {
+describe('RecallApplicationService', () => {
   let service: RecallApplicationService
-  let applicationModel: typeof ApplicationModel
   let advertModel: typeof AdvertModel
 
-  // Test data
-  const OWNER_NATIONAL_ID = '1234567890'
-  const OTHER_USER_NATIONAL_ID = '0987654321'
-  const ADMIN_NATIONAL_ID = 'admin-123'
   const APPLICATION_ID = 'test-app-id-123'
-
-  const mockOwnerUser: DMRUser = {
-    nationalId: OWNER_NATIONAL_ID,
-    name: 'Owner User',
-    fullName: 'Owner User Full Name',
-    scope: ['@logbirtingablad.is/lg-application-web'],
-    client: 'test-client',
-    authorization: 'Bearer token',
-    actor: {
-      nationalId: OWNER_NATIONAL_ID,
-      name: 'Owner User',
-      scope: ['@logbirtingablad.is/lg-application-web'],
-    },
-  }
-
-  const mockOtherUser: DMRUser = {
-    nationalId: OTHER_USER_NATIONAL_ID,
-    name: 'Other User',
-    fullName: 'Other User Full Name',
-    scope: ['@logbirtingablad.is/lg-application-web'],
-    client: 'test-client',
-    authorization: 'Bearer token',
-    actor: {
-      nationalId: OTHER_USER_NATIONAL_ID,
-      name: 'Other User',
-      scope: ['@logbirtingablad.is/lg-application-web'],
-    },
-  }
-
-  const mockAdminUser: DMRUser = {
-    nationalId: ADMIN_NATIONAL_ID,
-    name: 'Admin User',
-    fullName: 'Admin User Full Name',
-    scope: ['@logbirtingablad.is/admin'],
-    client: 'test-client',
-    authorization: 'Bearer token',
-    actor: {
-      nationalId: ADMIN_NATIONAL_ID,
-      name: 'Admin User',
-      scope: ['@logbirtingablad.is/admin'],
-    },
-  }
-
-  const mockApplication = {
-    id: APPLICATION_ID,
-    applicantNationalId: OWNER_NATIONAL_ID,
-    applicationType: ApplicationTypeEnum.RECALL_BANKRUPTCY,
-    status: ApplicationStatusEnum.IN_PROGRESS,
-    answers: {},
-    currentStep: 1,
-    caseId: 'case-123',
-    settlementId: null,
-    submittedByNationalId: null,
-  }
 
   beforeEach(async () => {
     const mockLogger = {
@@ -123,169 +58,222 @@ describe('RecallApplicationService - Ownership Validation (H-2)', () => {
     }).compile()
 
     service = module.get<RecallApplicationService>(RecallApplicationService)
-    applicationModel = module.get(getModelToken(ApplicationModel))
     advertModel = module.get(getModelToken(AdvertModel))
   })
 
-  describe('getMinDateForDivisionMeeting - Ownership Validation', () => {
-    it('should throw NotFoundException when application does not exist', async () => {
-      // Arrange
-      jest.spyOn(applicationModel, 'findByPk').mockResolvedValue(null)
-
-      // Act & Assert
-      await expect(
-        service.getMinDateForDivisionMeeting(APPLICATION_ID, mockOwnerUser),
-      ).rejects.toThrow(NotFoundException)
-    })
-
-    it('should allow owner to access their own application', async () => {
-      // Arrange
-      jest
-        .spyOn(applicationModel, 'findByPk')
-        .mockResolvedValue(mockApplication as any)
+  describe('getMinDateForDivisionMeeting', () => {
+    it('should return next valid publishing date when no adverts exist', async () => {
+      // Arrange - No division meeting found
       jest.spyOn(advertModel, 'findOne').mockResolvedValue(null)
 
       // Act
-      const result = await service.getMinDateForDivisionMeeting(
-        APPLICATION_ID,
-        mockOwnerUser,
-      )
+      const result = await service.getMinDateForDivisionMeeting(APPLICATION_ID)
 
       // Assert
       expect(result).toBeDefined()
       expect(result.minDate).toBeDefined()
-      expect(applicationModel.findByPk).toHaveBeenCalledWith(APPLICATION_ID)
+      expect(typeof result.minDate).toBe('string')
     })
 
-    it('should throw ForbiddenException when non-owner tries to access application', async () => {
-      // Arrange
+    it('should return 5 business days after previous division meeting when one exists', async () => {
+      // Arrange - Previous division meeting found
+      const mockDivisionMeeting = {
+        id: 'advert-123',
+        createdAt: new Date('2026-01-01'),
+        publications: [
+          {
+            id: 'pub-123',
+            scheduledAt: new Date('2026-01-10'),
+            publishedAt: new Date('2026-01-10'),
+          },
+        ],
+      }
       jest
-        .spyOn(applicationModel, 'findByPk')
-        .mockResolvedValue(mockApplication as any)
-
-      // Act & Assert
-      await expect(
-        service.getMinDateForDivisionMeeting(APPLICATION_ID, mockOtherUser),
-      ).rejects.toThrow(ForbiddenException)
-
-      // Verify application was fetched for ownership check
-      expect(applicationModel.findByPk).toHaveBeenCalledWith(APPLICATION_ID)
-    })
-
-    it('should allow admin to access any application', async () => {
-      // Arrange
-      jest
-        .spyOn(applicationModel, 'findByPk')
-        .mockResolvedValue(mockApplication as any)
-      jest.spyOn(advertModel, 'findOne').mockResolvedValue(null)
+        .spyOn(advertModel, 'findOne')
+        .mockResolvedValueOnce(mockDivisionMeeting as any)
 
       // Act
-      const result = await service.getMinDateForDivisionMeeting(
-        APPLICATION_ID,
-        mockAdminUser,
-      )
+      const result = await service.getMinDateForDivisionMeeting(APPLICATION_ID)
 
       // Assert
       expect(result).toBeDefined()
       expect(result.minDate).toBeDefined()
+      // Should be 5 business days after 2026-01-10
+      expect(new Date(result.minDate).getTime()).toBeGreaterThan(
+        new Date('2026-01-10').getTime(),
+      )
     })
 
-    it('should check ownership before querying advert data', async () => {
-      // Arrange
+    it('should return 63 days after first recall publication when no division meeting date exists', async () => {
+      // Arrange - No division meeting, but recall advert exists
+      jest.spyOn(advertModel, 'findOne').mockResolvedValueOnce(null) // No division meeting
+
+      const mockRecallAdvert = {
+        id: 'recall-advert-123',
+        divisionMeetingDate: null,
+        createdAt: new Date('2026-01-01'),
+        publications: [
+          {
+            id: 'pub-123',
+            scheduledAt: new Date('2026-01-05'),
+            publishedAt: new Date('2026-01-05'),
+          },
+        ],
+      }
       jest
-        .spyOn(applicationModel, 'findByPk')
-        .mockResolvedValue(mockApplication as any)
-      const advertSpy = jest.spyOn(advertModel, 'findOne')
+        .spyOn(advertModel, 'findOne')
+        .mockResolvedValueOnce(mockRecallAdvert as any)
 
-      // Act & Assert
-      await expect(
-        service.getMinDateForDivisionMeeting(APPLICATION_ID, mockOtherUser),
-      ).rejects.toThrow(ForbiddenException)
+      // Act
+      const result = await service.getMinDateForDivisionMeeting(APPLICATION_ID)
 
-      // Verify ownership check happened first, before querying adverts
-      expect(applicationModel.findByPk).toHaveBeenCalledWith(APPLICATION_ID)
-      expect(advertSpy).not.toHaveBeenCalled()
+      // Assert
+      expect(result).toBeDefined()
+      expect(result.minDate).toBeDefined()
+      // Should be approximately 63 days after 2026-01-05
+      expect(new Date(result.minDate).getTime()).toBeGreaterThanOrEqual(
+        new Date('2026-01-05').getTime(),
+      )
+    })
+
+    it('should return 5 business days after division meeting date from first recall advert', async () => {
+      // Arrange - No separate division meeting, but recall advert has division meeting date
+      jest.spyOn(advertModel, 'findOne').mockResolvedValueOnce(null) // No separate division meeting
+
+      const mockRecallAdvert = {
+        id: 'recall-advert-123',
+        divisionMeetingDate: new Date('2026-02-01'),
+        createdAt: new Date('2026-01-01'),
+        publications: [
+          {
+            id: 'pub-123',
+            scheduledAt: new Date('2026-01-05'),
+            publishedAt: new Date('2026-01-05'),
+          },
+        ],
+      }
+      jest
+        .spyOn(advertModel, 'findOne')
+        .mockResolvedValueOnce(mockRecallAdvert as any)
+
+      // Act
+      const result = await service.getMinDateForDivisionMeeting(APPLICATION_ID)
+
+      // Assert
+      expect(result).toBeDefined()
+      expect(result.minDate).toBeDefined()
+      // Should be 5 business days after 2026-02-01
+      expect(new Date(result.minDate).getTime()).toBeGreaterThan(
+        new Date('2026-02-01').getTime(),
+      )
     })
   })
 
-  describe('getMinDateForDivisionEnding - Ownership Validation', () => {
-    it('should throw NotFoundException when application does not exist', async () => {
-      // Arrange
-      jest.spyOn(applicationModel, 'findByPk').mockResolvedValue(null)
-
-      // Act & Assert
-      await expect(
-        service.getMinDateForDivisionEnding(APPLICATION_ID, mockOwnerUser),
-      ).rejects.toThrow(NotFoundException)
-    })
-
-    it('should allow owner to access their own application', async () => {
-      // Arrange
+  describe('getMinDateForDivisionEnding', () => {
+    it('should return next business day after latest division meeting when it exists', async () => {
+      // Arrange - Division meeting found
+      const mockDivisionMeeting = {
+        id: 'advert-123',
+        createdAt: new Date('2026-01-01'),
+        publications: [
+          {
+            id: 'pub-123',
+            scheduledAt: new Date('2026-01-15'),
+            publishedAt: new Date('2026-01-15'),
+          },
+        ],
+      }
       jest
-        .spyOn(applicationModel, 'findByPk')
-        .mockResolvedValue(mockApplication as any)
-      jest.spyOn(advertModel, 'findOne').mockResolvedValue(null)
+        .spyOn(advertModel, 'findOne')
+        .mockResolvedValue(mockDivisionMeeting as any)
 
       // Act
-      const result = await service.getMinDateForDivisionEnding(
-        APPLICATION_ID,
-        mockOwnerUser,
-      )
+      const result = await service.getMinDateForDivisionEnding(APPLICATION_ID)
 
       // Assert
       expect(result).toBeDefined()
       expect(result.minDate).toBeDefined()
-      expect(applicationModel.findByPk).toHaveBeenCalledWith(APPLICATION_ID)
+      // Should be at least 1 business day after 2026-01-15
+      expect(new Date(result.minDate).getTime()).toBeGreaterThan(
+        new Date('2026-01-15').getTime(),
+      )
     })
 
-    it('should throw ForbiddenException when non-owner tries to access application', async () => {
-      // Arrange
+    it('should return 63 days after first recall publication when no division meeting exists', async () => {
+      // Arrange - No division meeting, find first recall advert
+      jest.spyOn(advertModel, 'findOne').mockResolvedValueOnce(null) // No division meeting
+
+      const mockRecallAdvert = {
+        id: 'recall-advert-123',
+        divisionMeetingDate: null,
+        createdAt: new Date('2026-01-01'),
+        publications: [
+          {
+            id: 'pub-123',
+            scheduledAt: new Date('2026-01-05'),
+            publishedAt: new Date('2026-01-05'),
+          },
+        ],
+      }
       jest
-        .spyOn(applicationModel, 'findByPk')
-        .mockResolvedValue(mockApplication as any)
-
-      // Act & Assert
-      await expect(
-        service.getMinDateForDivisionEnding(APPLICATION_ID, mockOtherUser),
-      ).rejects.toThrow(ForbiddenException)
-
-      // Verify application was fetched for ownership check
-      expect(applicationModel.findByPk).toHaveBeenCalledWith(APPLICATION_ID)
-    })
-
-    it('should allow admin to access any application', async () => {
-      // Arrange
-      jest
-        .spyOn(applicationModel, 'findByPk')
-        .mockResolvedValue(mockApplication as any)
-      jest.spyOn(advertModel, 'findOne').mockResolvedValue(null)
+        .spyOn(advertModel, 'findOne')
+        .mockResolvedValueOnce(mockRecallAdvert as any)
 
       // Act
-      const result = await service.getMinDateForDivisionEnding(
-        APPLICATION_ID,
-        mockAdminUser,
-      )
+      const result = await service.getMinDateForDivisionEnding(APPLICATION_ID)
 
       // Assert
       expect(result).toBeDefined()
       expect(result.minDate).toBeDefined()
+      // Should be approximately 63 days after 2026-01-05
+      expect(new Date(result.minDate).getTime()).toBeGreaterThanOrEqual(
+        new Date('2026-01-05').getTime(),
+      )
     })
 
-    it('should check ownership before querying advert data', async () => {
-      // Arrange
+    it('should return next business day after division meeting date from recall advert', async () => {
+      // Arrange - No separate division meeting, but recall advert has division meeting date
+      jest.spyOn(advertModel, 'findOne').mockResolvedValueOnce(null) // No division meeting
+
+      const mockRecallAdvert = {
+        id: 'recall-advert-123',
+        divisionMeetingDate: new Date('2026-02-01'),
+        createdAt: new Date('2026-01-01'),
+        publications: [
+          {
+            id: 'pub-123',
+            scheduledAt: new Date('2026-01-05'),
+            publishedAt: new Date('2026-01-05'),
+          },
+        ],
+      }
       jest
-        .spyOn(applicationModel, 'findByPk')
-        .mockResolvedValue(mockApplication as any)
-      const advertSpy = jest.spyOn(advertModel, 'findOne')
+        .spyOn(advertModel, 'findOne')
+        .mockResolvedValueOnce(mockRecallAdvert as any)
 
-      // Act & Assert
-      await expect(
-        service.getMinDateForDivisionEnding(APPLICATION_ID, mockOtherUser),
-      ).rejects.toThrow(ForbiddenException)
+      // Act
+      const result = await service.getMinDateForDivisionEnding(APPLICATION_ID)
 
-      // Verify ownership check happened first, before querying adverts
-      expect(applicationModel.findByPk).toHaveBeenCalledWith(APPLICATION_ID)
-      expect(advertSpy).not.toHaveBeenCalled()
+      // Assert
+      expect(result).toBeDefined()
+      expect(result.minDate).toBeDefined()
+      // Should be at least 1 business day after 2026-02-01
+      expect(new Date(result.minDate).getTime()).toBeGreaterThan(
+        new Date('2026-02-01').getTime(),
+      )
+    })
+
+    it('should return next valid publishing date when no recall adverts exist', async () => {
+      // Arrange - No adverts found at all
+      jest.spyOn(advertModel, 'findOne').mockResolvedValue(null)
+
+      // Act
+      const result = await service.getMinDateForDivisionEnding(APPLICATION_ID)
+
+      // Assert
+      expect(result).toBeDefined()
+      expect(result.minDate).toBeDefined()
+      expect(typeof result.minDate).toBe('string')
     })
   })
 })

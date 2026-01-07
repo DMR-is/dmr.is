@@ -4,10 +4,8 @@ import z from 'zod'
 
 import {
   BadRequestException,
-  ForbiddenException,
   Inject,
   Injectable,
-  NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -53,63 +51,9 @@ export class RecallApplicationService implements IRecallApplicationService {
     private applicationModel: typeof ApplicationModel,
   ) {}
 
-  /**
-   * Validates that the user has permission to access the application.
-   * Throws NotFoundException if application doesn't exist.
-   * Throws ForbiddenException if user is not the owner and not an admin.
-   */
-  private async validateApplicationOwnership(
-    applicationId: string,
-    user: DMRUser,
-  ): Promise<ApplicationModel> {
-    const application = await this.applicationModel.findByPk(applicationId)
-
-    if (!application) {
-      this.logger.warn('Application not found', {
-        context: 'RecallApplicationService',
-        applicationId,
-        userNationalId: user.nationalId,
-      })
-      throw new NotFoundException(
-        `Application with id ${applicationId} not found`,
-      )
-    }
-
-    // Check if user is admin (has admin scope)
-    const isAdmin = user.scope.includes('@logbirtingablad.is/admin')
-
-    // Check if user owns the application
-    const isOwner = application.applicantNationalId === user.nationalId
-
-    if (!isAdmin && !isOwner) {
-      this.logger.warn('User attempted to access application they do not own', {
-        context: 'RecallApplicationService',
-        applicationId,
-        userNationalId: user.nationalId,
-        applicantNationalId: application.applicantNationalId,
-      })
-      throw new ForbiddenException(
-        'You do not have permission to access this application',
-      )
-    }
-
-    this.logger.debug('Application ownership validated', {
-      context: 'RecallApplicationService',
-      applicationId,
-      userNationalId: user.nationalId,
-      isAdmin,
-      isOwner,
-    })
-
-    return application
-  }
-
   async getMinDateForDivisionEnding(
     applicationId: string,
-    user: DMRUser,
   ): Promise<GetMinDateResponseDto> {
-    // Validate ownership before processing
-    await this.validateApplicationOwnership(applicationId, user)
     // The min date for division ending can be the day after latest division meeting
     // if no division meeting exists then it should be 2 months and 1 week after the first recall advert publication date
 
@@ -355,11 +299,7 @@ export class RecallApplicationService implements IRecallApplicationService {
   }
   async getMinDateForDivisionMeeting(
     applicationId: string,
-    user: DMRUser,
   ): Promise<GetMinDateResponseDto> {
-    // Validate ownership before processing
-    await this.validateApplicationOwnership(applicationId, user)
-
     // first we check if there has already been advertised skiptafundur before
     // if so then the minDate is one week later than the previous skiptafundur date
     // if not we get the first publication date from the recall advert

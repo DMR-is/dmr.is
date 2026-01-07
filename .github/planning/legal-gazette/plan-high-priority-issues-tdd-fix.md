@@ -95,88 +95,146 @@ The `RecallApplicationController` endpoints for `getMinDateForDivisionMeeting` a
 - Information disclosure vulnerability
 - Authorization bypass
 
+#### Solution Implemented
+
+**Guard-Based Authorization** - Created reusable `ApplicationOwnershipGuard` to handle ownership validation across all endpoints needing application access control.
+
+**Files Changed:**
+- Created: `apps/legal-gazette-api/src/core/guards/application-ownership.guard.ts`
+- Created: `apps/legal-gazette-api/src/core/guards/application-ownership.guard.spec.ts`
+- Modified: `apps/legal-gazette-api/src/modules/applications/recall/recall-application.controller.ts`
+- Modified: `apps/legal-gazette-api/src/modules/applications/recall/recall-application.service.ts`
+- Modified: `apps/legal-gazette-api/src/modules/applications/recall/recall-application.service.interface.ts`
+- Updated: `apps/legal-gazette-api/src/modules/applications/recall/recall-application.controller.spec.ts`
+- Rewritten: `apps/legal-gazette-api/src/modules/applications/recall/recall-application.service.spec.ts`
+
 #### Test Plan
 
-**Test File:** `apps/legal-gazette-api/src/modules/applications/recall/recall-application.service.spec.ts`
+#### Test Plan
 
+**Test Files:**
+- `apps/legal-gazette-api/src/core/guards/application-ownership.guard.spec.ts` (7 tests)
+- `apps/legal-gazette-api/src/modules/applications/recall/recall-application.controller.spec.ts` (8 tests)
+- `apps/legal-gazette-api/src/modules/applications/recall/recall-application.service.spec.ts` (8 tests)
+
+**Guard Tests (ApplicationOwnershipGuard):**
 ```typescript
-describe('Recall Application Ownership Validation (H-2)', () => {
+describe('ApplicationOwnershipGuard', () => {
+  it('should allow access when user is the owner')
+  it('should allow access when user is an admin')
+  it('should throw NotFoundException when application does not exist')
+  it('should throw ForbiddenException when user is not owner and not admin')
+  it('should allow access when user is both owner and admin')
+  it('should handle missing user in request')
+  it('should handle missing applicationId in params')
+})
+```
+
+**Controller Tests:**
+```typescript
+describe('RecallApplicationController', () => {
   describe('getMinDateForDivisionMeeting', () => {
-    it('should throw ForbiddenException when user does not own application', async () => {
-      // Setup: Create application owned by user A
-      // Action: User B calls getMinDateForDivisionMeeting
-      // Assert: Should throw ForbiddenException
-    })
-
-    it('should return min date when user owns application', async () => {
-      // Setup: Create application owned by user A
-      // Action: User A calls getMinDateForDivisionMeeting
-      // Assert: Should return valid date
-    })
-
-    it('should allow delegated access when actor owns application', async () => {
-      // Setup: Create application owned by user A
-      // Action: User B (delegating for A) calls endpoint
-      // Assert: Should return valid date
-    })
+    it('should call service method when ApplicationOwnershipGuard passes')
+    it('should have ApplicationOwnershipGuard configured on method')
   })
-
   describe('getMinDateForDivisionEnding', () => {
-    it('should throw ForbiddenException when user does not own application', async () => {
-      // Same pattern as above
-    })
-
-    it('should return min date when user owns application', async () => {
-      // Same pattern as above
-    })
+    it('should call service method when ApplicationOwnershipGuard passes')
+    it('should have ApplicationOwnershipGuard configured on method')
   })
+  // Tests for addDivisionMeeting and addDivisionEnding
+})
+```
 
-  describe('addDivisionMeeting', () => {
-    it('should throw ForbiddenException when user does not own application', async () => {
-      // Same pattern
-    })
+**Service Tests (Business Logic Only):**
+```typescript
+describe('RecallApplicationService', () => {
+  describe('getMinDateForDivisionMeeting', () => {
+    it('should return next valid publishing date when no adverts exist')
+    it('should return 5 business days after previous division meeting')
+    it('should return 63 days after first recall publication')
+    it('should return 5 business days after division meeting date from recall advert')
   })
-
-  describe('addDivisionEnding', () => {
-    it('should throw ForbiddenException when user does not own application', async () => {
-      // Same pattern
-    })
+  describe('getMinDateForDivisionEnding', () => {
+    it('should return next business day after latest division meeting')
+    it('should return 63 days after first recall publication')
+    it('should return next business day after division meeting date')
+    it('should return next valid publishing date when no adverts exist')
   })
 })
 ```
 
 #### Implementation
 
+**Step 1: Create ApplicationOwnershipGuard**
 ```typescript
-// In recall-application.service.ts
-async getMinDateForDivisionMeeting(
-  applicationId: string,
-  user: DMRUser,
-): Promise<GetMinDateResponseDto> {
-  // NEW: Verify ownership
-  const application = await this.applicationModel.findByPk(applicationId, {
-    attributes: ['id', 'createdByNationalId'],
-  })
+// apps/legal-gazette-api/src/core/guards/application-ownership.guard.ts
+@Injectable()
+export class ApplicationOwnershipGuard implements CanActivate {
+  constructor(
+    @InjectModel(ApplicationModel) private applicationModel: typeof ApplicationModel,
+    @Inject(LOGGER_PROVIDER) private logger: Logger,
+  ) {}
 
-  if (!application) {
-    throw new NotFoundException(`Application ${applicationId} not found`)
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest()
+    const user: DMRUser = request.user
+    const { applicationId } = request.params
+
+    const application = await this.applicationModel.findByPk(applicationId)
+    if (!application) {
+      throw new NotFoundException(`Application with id ${applicationId} not found`)
+    }
+
+    const isAdmin = user?.scope?.includes('@logbirtingablad.is/admin') ?? false
+    const isOwner = application.applicantNationalId === user?.nationalId
+
+    if (!isAdmin && !isOwner) {
+      this.logger.warn('User attempted to access application they do not own', {
+        applicationId,
+        userNationalId: user?.nationalId,
+      })
+      throw new ForbiddenException('You do not have permission to access this application')
+    }
+
+    return true
   }
-
-  const userNationalId = user.actor?.nationalId ?? user.nationalId
-  if (application.createdByNationalId !== userNationalId) {
-    throw new ForbiddenException('You do not have permission to access this application')
-  }
-
-  // ... existing logic
 }
+```
 
-// Update controller to pass user
+**Step 2: Apply Guard to Controller Endpoints**
+```typescript
+// In recall-application.controller.ts
+import { ApplicationOwnershipGuard } from '../../../core/guards/application-ownership.guard'
+
+@UseGuards(ApplicationOwnershipGuard)
 @Get(':applicationId/divisionMeeting/minDate')
 async getMinDateForDivisionMeeting(
   @Param('applicationId') applicationId: string,
-  @CurrentUser() user: DMRUser,  // ADD THIS
 ): Promise<GetMinDateResponseDto> {
-  return this.applicationService.getMinDateForDivisionMeeting(applicationId, user)
+  return this.applicationService.getMinDateForDivisionMeeting(applicationId)
+}
+
+@UseGuards(ApplicationOwnershipGuard)
+@Get(':applicationId/divisionEnding/minDate')
+async getMinDateForDivisionEnding(
+  @Param('applicationId') applicationId: string,
+): Promise<GetMinDateResponseDto> {
+  return this.applicationService.getMinDateForDivisionEnding(applicationId)
+}
+```
+
+**Step 3: Simplify Service (Remove Authorization Logic)**
+```typescript
+// In recall-application.service.ts
+// REMOVED: validateApplicationOwnership() method
+// REMOVED: user parameter from getMinDateForDivisionMeeting/Ending
+
+async getMinDateForDivisionMeeting(
+  applicationId: string,
+): Promise<GetMinDateResponseDto> {
+  // Pure business logic - no authorization checks
+  // Guard handles authorization before method is called
+  // ...
 }
 ```
 
@@ -184,11 +242,22 @@ async getMinDateForDivisionMeeting(
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Write test file | ✅ Complete | Controller and service tests created |
+| Write test files | ✅ Complete | Guard tests (7), controller tests (8), service tests (8) |
 | Verify tests fail | ✅ Complete | Tests failed as expected - no ownership validation |
-| Implement fix | ✅ Complete | Added validateApplicationOwnership method |
-| Verify tests pass | ✅ Complete | All 22 tests passing (12 controller, 10 service) |
+| Implement ApplicationOwnershipGuard | ✅ Complete | Reusable guard for all application ownership checks |
+| Apply guard to controller | ✅ Complete | Added @UseGuards(ApplicationOwnershipGuard) to endpoints |
+| Simplify service | ✅ Complete | Removed validation logic, pure business logic only |
+| Verify tests pass | ✅ Complete | All 23 tests passing (7 guard + 8 controller + 8 service) |
 | Code review | ⬜ Pending | |
+
+**Completion Date:** January 7, 2026
+
+**Key Benefits:**
+- ✅ **Separation of Concerns**: Authorization in guard, business logic in service
+- ✅ **Reusability**: Guard can be applied to any endpoint needing ownership checks
+- ✅ **Declarative**: Clear `@UseGuards()` decorator shows authorization requirement
+- ✅ **Testability**: Guard, controller, and service tested independently
+- ✅ **NestJS Best Practice**: Follows framework patterns for guards
 
 ---
 
@@ -1288,7 +1357,7 @@ nx test legal-gazette-api
 | Date | Phase | Status | Notes |
 |------|-------|--------|-------|
 | Jan 7, 2026 | Plan Created | ✅ Complete | |
-| Jan 7, 2026 | H-2 Ownership | ✅ Complete | Added ownership validation in service layer |
+| Jan 7, 2026 | H-2 Ownership | ✅ Complete | Guard-based authorization with ApplicationOwnershipGuard (23 tests passing) |
 | | H-4 XSS Prevention | ⬜ Not Started | |
 | | H-5 PII Masking | ⬜ Not Started | |
 | | H-6 Race Condition | ⬜ Not Started | |
@@ -1302,7 +1371,7 @@ nx test legal-gazette-api
 
 ## Open Questions
 
-1. **H-2**: Should delegated users (actor) have access to applications created by the person they represent?
+1. ~~**H-2**: Should delegated users (actor) have access to applications created by the person they represent?~~ **RESOLVED:** Guard checks user.nationalId against applicantNationalId, admin scope bypasses check
 2. **H-3**: What rate limits are appropriate? 10/min? 100/hour?
 3. **H-4**: Should we use DOMPurify (more thorough) or simple escaping (lighter)?
 4. **H-5**: Should we implement auto-masking in the logger, or require explicit masking calls?

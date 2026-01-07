@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
+import { ApplicationOwnershipGuard } from '../../../core/guards/application-ownership.guard'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { RecallApplicationController } from './recall-application.controller'
 import { IRecallApplicationService } from './recall-application.service.interface'
@@ -45,20 +46,6 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
     },
   }
 
-  const mockAdminUser: DMRUser = {
-    nationalId: 'admin-123',
-    name: 'Admin User',
-    fullName: 'Admin User Full Name',
-    scope: ['@logbirtingablad.is/admin'],
-    client: 'test-client',
-    authorization: 'Bearer token',
-    actor: {
-      nationalId: 'admin-123',
-      name: 'Admin User',
-      scope: ['@logbirtingablad.is/admin'],
-    },
-  }
-
   const mockMinDateResponse = {
     minDate: '2026-01-15T00:00:00.000Z',
   }
@@ -84,6 +71,8 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       .useValue({ canActivate: () => true })
       .overrideGuard(AuthorizationGuard)
       .useValue({ canActivate: () => true })
+      .overrideGuard(ApplicationOwnershipGuard)
+      .useValue({ canActivate: () => true })
       .compile()
 
     controller = module.get<RecallApplicationController>(
@@ -93,138 +82,52 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
   })
 
   describe('getMinDateForDivisionMeeting', () => {
-    it('should allow owner to get recall min date for their own application', async () => {
+    it('should call service method when ApplicationOwnershipGuard passes', async () => {
       // Arrange
       service.getMinDateForDivisionMeeting.mockResolvedValue(mockMinDateResponse)
 
       // Act
-      const result = await controller.getMinDateForDivisionMeeting(
-        APPLICATION_ID,
-        mockOwnerUser,
-      )
+      const result = await controller.getMinDateForDivisionMeeting(APPLICATION_ID)
 
       // Assert
       expect(result).toEqual(mockMinDateResponse)
-      expect(service.getMinDateForDivisionMeeting).toHaveBeenCalledWith(
-        APPLICATION_ID,
-        mockOwnerUser,
-      )
+      expect(service.getMinDateForDivisionMeeting).toHaveBeenCalledWith(APPLICATION_ID)
+      expect(service.getMinDateForDivisionMeeting).toHaveBeenCalledTimes(1)
     })
 
-    it('should throw ForbiddenException when non-owner tries to get recall min date', async () => {
-      // Arrange
-      service.getMinDateForDivisionMeeting.mockRejectedValue(
-        new ForbiddenException('You do not have permission to access this application'),
-      )
-
-      // Act & Assert
-      await expect(
-        controller.getMinDateForDivisionMeeting(APPLICATION_ID, mockOtherUser),
-      ).rejects.toThrow(ForbiddenException)
-    })
-
-    it('should allow admin to get recall min date for any application', async () => {
-      // Arrange
-      service.getMinDateForDivisionMeeting.mockResolvedValue(mockMinDateResponse)
-
-      // Act
-      const result = await controller.getMinDateForDivisionMeeting(
-        APPLICATION_ID,
-        mockAdminUser,
-      )
-
-      // Assert
-      expect(result).toEqual(mockMinDateResponse)
-      expect(service.getMinDateForDivisionMeeting).toHaveBeenCalledWith(
-        APPLICATION_ID,
-        mockAdminUser,
-      )
-    })
-
-    it('should validate ownership before processing request', async () => {
-      // Arrange
-      service.getMinDateForDivisionMeeting.mockRejectedValue(
-        new ForbiddenException('You do not have permission to access this application'),
-      )
-
-      // Act & Assert
-      await expect(
-        controller.getMinDateForDivisionMeeting(APPLICATION_ID, mockOtherUser),
-      ).rejects.toThrow(ForbiddenException)
-
-      // Verify service was called to check ownership
-      expect(service.getMinDateForDivisionMeeting).toHaveBeenCalledWith(
-        APPLICATION_ID,
-        mockOtherUser,
-      )
+    describe('ApplicationOwnershipGuard behavior', () => {
+      it('should have ApplicationOwnershipGuard configured on method', () => {
+        // Verify the guard decorator is applied by checking the guards metadata
+        // This confirms the guard will be invoked at runtime
+        const guards = Reflect.getMetadata('__guards__', controller.getMinDateForDivisionMeeting)
+        expect(guards).toBeDefined()
+        expect(guards).toContain(ApplicationOwnershipGuard)
+      })
     })
   })
 
   describe('getMinDateForDivisionEnding', () => {
-    it('should allow owner to get recall min date for their own application', async () => {
+    it('should call service method when ApplicationOwnershipGuard passes', async () => {
       // Arrange
       service.getMinDateForDivisionEnding.mockResolvedValue(mockMinDateResponse)
 
       // Act
-      const result = await controller.getMinDateForDivisionEnding(
-        APPLICATION_ID,
-        mockOwnerUser,
-      )
+      const result = await controller.getMinDateForDivisionEnding(APPLICATION_ID, )
 
       // Assert
       expect(result).toEqual(mockMinDateResponse)
-      expect(service.getMinDateForDivisionEnding).toHaveBeenCalledWith(
-        APPLICATION_ID,
-        mockOwnerUser,
-      )
+      expect(service.getMinDateForDivisionEnding).toHaveBeenCalledWith(APPLICATION_ID)
+      expect(service.getMinDateForDivisionEnding).toHaveBeenCalledTimes(1)
     })
 
-    it('should throw ForbiddenException when non-owner tries to get recall min date', async () => {
-      // Arrange
-      service.getMinDateForDivisionEnding.mockRejectedValue(
-        new ForbiddenException('You do not have permission to access this application'),
-      )
-
-      // Act & Assert
-      await expect(
-        controller.getMinDateForDivisionEnding(APPLICATION_ID, mockOtherUser),
-      ).rejects.toThrow(ForbiddenException)
-    })
-
-    it('should allow admin to get recall min date for any application', async () => {
-      // Arrange
-      service.getMinDateForDivisionEnding.mockResolvedValue(mockMinDateResponse)
-
-      // Act
-      const result = await controller.getMinDateForDivisionEnding(
-        APPLICATION_ID,
-        mockAdminUser,
-      )
-
-      // Assert
-      expect(result).toEqual(mockMinDateResponse)
-      expect(service.getMinDateForDivisionEnding).toHaveBeenCalledWith(
-        APPLICATION_ID,
-        mockAdminUser,
-      )
-    })
-
-    it('should validate ownership before processing request', async () => {
-      // Arrange
-      service.getMinDateForDivisionEnding.mockRejectedValue(
-        new ForbiddenException('You do not have permission to access this application'),
-      )
-
-      // Act & Assert
-      await expect(
-        controller.getMinDateForDivisionEnding(APPLICATION_ID, mockOtherUser),
-      ).rejects.toThrow(ForbiddenException)
-
-      // Verify service was called to check ownership
-      expect(service.getMinDateForDivisionEnding).toHaveBeenCalledWith(
-        APPLICATION_ID,
-        mockOtherUser,
-      )
+    describe('ApplicationOwnershipGuard behavior', () => {
+      it('should have ApplicationOwnershipGuard configured on method', () => {
+        // Verify the guard decorator is applied by checking the guards metadata
+        // This confirms the guard will be invoked at runtime
+        const guards = Reflect.getMetadata('__guards__', controller.getMinDateForDivisionEnding)
+        expect(guards).toBeDefined()
+        expect(guards).toContain(ApplicationOwnershipGuard)
+      })
     })
   })
 
