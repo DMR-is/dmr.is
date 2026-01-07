@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler'
 
 import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
@@ -26,7 +27,9 @@ import { IForeclosureService } from './foreclosure.service.interface'
   version: '1',
 })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard, MachineClientGuard)
+@UseGuards(TokenJwtAuthGuard, MachineClientGuard, ThrottlerGuard)
+// Added throttling to limit requests to 5000 per hour
+@Throttle({ long: { limit: 5000, ttl: 3600000 } })
 export class ForeclosureController {
   constructor(
     @Inject(IForeclosureService)

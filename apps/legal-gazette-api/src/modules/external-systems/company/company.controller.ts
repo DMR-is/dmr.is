@@ -8,6 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler'
 
 import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
@@ -27,7 +28,9 @@ import { ICompanyService } from './company.service.interface'
   version: '1',
 })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard, MachineClientGuard)
+@UseGuards(TokenJwtAuthGuard, MachineClientGuard, ThrottlerGuard)
+// Added throttling to limit requests to 5000 per hour
+@Throttle({ long: { limit: 5000, ttl: 3600000 } })
 export class CompanyController {
   constructor(
     @Inject(ICompanyService) private readonly companyService: ICompanyService,

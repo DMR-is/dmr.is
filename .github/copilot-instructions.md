@@ -1,6 +1,6 @@
 # DMR.is Monorepo - GitHub Copilot Instructions
 
-> **📚 Specialized Documentation**  
+> **📚 Specialized Documentation**
 > This file provides quick reference and critical conventions. For detailed patterns:
 > - **Next.js Architecture** (App Router, Server/Client Components, routing): [nextjs-architecture-guide.md](./nextjs-architecture-guide.md)
 > - **Documentation Guide** (how to use these files): [README-documentation.md](./README-documentation.md)
@@ -282,7 +282,7 @@ export class SharedController {
 export class MixedController {
   @Get('admin-only')
   adminOnly() { ... }  // Inherits @AdminAccess()
-  
+
   @ApplicationWebScopes()  // Method-level scope
   @Get('shared')
   shared() { ... }  // Admin OR application-web
@@ -313,13 +313,13 @@ const APPLICATION_WEB_NATIONAL_ID = '1122334455'
 
 // User factories
 const createAdminUser = () => ({ nationalId: ADMIN_NATIONAL_ID, scope: '' })
-const createPublicWebUser = () => ({ 
-  nationalId: PUBLIC_WEB_NATIONAL_ID, 
-  scope: '@logbirtingablad.is/logbirtingabladid' 
+const createPublicWebUser = () => ({
+  nationalId: PUBLIC_WEB_NATIONAL_ID,
+  scope: '@logbirtingablad.is/logbirtingabladid'
 })
-const createApplicationWebUser = () => ({ 
-  nationalId: APPLICATION_WEB_NATIONAL_ID, 
-  scope: '@logbirtingablad.is/lg-application-web' 
+const createApplicationWebUser = () => ({
+  nationalId: APPLICATION_WEB_NATIONAL_ID,
+  scope: '@logbirtingablad.is/lg-application-web'
 })
 
 describe('MyController - Guard Authorization', () => {
@@ -531,7 +531,12 @@ module.exports = {
 ### Testing and Building
 
 ```bash
-nx test <project>        # Run Jest tests
+# Run Jest tests
+nx test <project>                                    # Run all tests for a project
+nx test <project> --testFile=<path/to/file.spec.ts> # Run a specific test file (faster, recommended)
+nx test <project> --testPathPattern="<pattern>"      # Run tests matching pattern (runs all tests, slower)
+
+# Other commands
 nx lint <project>        # ESLint with auto-fix
 nx tsc <project>         # Type-check without emit
 nx build <project>       # Build for production
@@ -539,6 +544,8 @@ nx build <project>       # Build for production
 # Run multiple projects
 nx run-many --target=test --projects=legal-gazette-api,legal-gazette-web
 ```
+
+**Testing Best Practice**: When running specific test files, use `--testFile` instead of `--testPathPattern`. The `--testFile` flag runs only the specified file, while `--testPathPattern` runs all tests first then filters, which is much slower.
 
 ## Next.js Application Architecture
 
@@ -677,11 +684,11 @@ Expose via Session Manager:
    nx run <app>:codegen
    ```
 
-2. **Wrong Logger**: 
+2. **Wrong Logger**:
    - Using `@dmr.is/logging` in Next.js middleware → fails in Edge Runtime
    - Using `console.log` instead of logger → no structured logging/PII protection
 
-3. **Wrong Port**: 
+3. **Wrong Port**:
    - Legal Gazette API: 4100 (default)
    - Official Journal API: 4000 (default)
    - Check `process.env.*_PORT` in `.env` files
@@ -690,7 +697,7 @@ Expose via Session Manager:
    ```typescript
    // ❌ Wrong
    import { Service } from 'libs/shared/modules/src/service'
-   
+
    // ✅ Correct
    import { Service } from '@dmr.is/modules'
    ```
@@ -699,7 +706,7 @@ Expose via Session Manager:
    ```typescript
    // ❌ Wrong - causes silent startup failures
    static async forRoot() { ... }
-   
+
    // ✅ Correct
    static forRoot() { ... }
    ```
@@ -773,7 +780,7 @@ nx run-many --target=serve --projects=legal-gazette-api,legal-gazette-web --para
 - **Testing**: Write tests for business logic and API endpoints
 - **Documentation**: JSDoc comments for complex functions
 - **Plan Files**: When working on a feature with a `plan-*.md` file, **always update the plan** to reflect current progress (mark phases complete, update status tables, note decisions made)
-- **Naming**: 
+- **Naming**:
   - Components: PascalCase
   - Files: kebab-case for multi-word, camelCase for single word
   - Constants: UPPER_SNAKE_CASE
@@ -793,7 +800,7 @@ nx run-many --target=serve --projects=legal-gazette-api,legal-gazette-web --para
    nx run legal-gazette-api:dev-init
    nx serve legal-gazette-api
    nx serve legal-gazette-web
-   
+
    # Official Journal
    nx run official-journal-api:dev-init
    nx serve official-journal-web

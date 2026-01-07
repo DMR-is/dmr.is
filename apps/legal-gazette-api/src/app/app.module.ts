@@ -3,6 +3,7 @@ import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
 import { SequelizeModule } from '@nestjs/sequelize'
+import { ThrottlerModule } from '@nestjs/throttler'
 
 import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
@@ -56,6 +57,18 @@ import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.mo
     AuthorizationGuardModule, // Makes AuthorizationGuard available globally
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 60000, // 1 minute
+        limit: 10, // 10 requests per minute
+      },
+      {
+        name: 'long',
+        ttl: 3600000, // 1 hour
+        limit: 100, // 100 requests per hour
+      },
+    ]),
     SequelizeModule.forRootAsync({
       imports: [
         DMRSequelizeConfigModule.register({

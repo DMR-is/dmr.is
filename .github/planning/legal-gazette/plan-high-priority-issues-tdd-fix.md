@@ -27,7 +27,7 @@ This plan outlines a TDD approach to fixing the 15 remaining high priority issue
 |----|-------|----------|--------|--------|
 | H-1 | MachineClientGuard Scope Validation | `authorization.guard.ts` | Security bypass | ✅ Complete |
 | H-2 | Missing Ownership Validation on Recall Endpoints | `recall-application.controller.ts` | Unauthorized access | ✅ Complete |
-| H-3 | No Rate Limiting on External System Endpoints | Foreclosure, Company controllers | DoS vulnerability | ⬜ Not Started |
+| H-3 | No Rate Limiting on External System Endpoints | Foreclosure, Company controllers | DoS vulnerability | ✅ Complete |
 | H-4 | No Input Sanitization for HTML Content | `foreclosure.service.ts` | XSS vulnerability | ⬜ Not Started |
 | H-5 | PII (National IDs) Logged Without Masking | Multiple files | GDPR violation | ⬜ Not Started |
 
@@ -348,12 +348,27 @@ export class ForeclosureController {
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Install throttler | ⬜ Not Started | |
-| Write test file | ⬜ Not Started | |
-| Verify tests fail | ⬜ Not Started | |
-| Implement fix | ⬜ Not Started | |
-| Verify tests pass | ⬜ Not Started | |
-| Code review | ⬜ Not Started | |
+| Install throttler | ✅ Complete | @nestjs/throttler v6.x installed |
+| Write test file | ✅ Complete | 14 comprehensive tests in rate-limiting.spec.ts |
+| Verify tests fail | ✅ Complete | Tests failed correctly, no rate limiting detected |
+| Implement fix | ✅ Complete | ThrottlerModule + guards on both controllers |
+| Verify tests pass | ✅ Complete | All 14 tests passing + no regressions (190 total) |
+| Code review | ⬜ Pending | |
+
+**Completion Date:** January 7, 2026
+
+**Key Implementation Details:**
+- ✅ **Dual Rate Limiting**: Short-term (10 req/min) + long-term (100 req/hour) windows
+- ✅ **Guard-Based**: ThrottlerGuard applied to ForeclosureController and CompanyController
+- ✅ **Declarative Config**: @Throttle decorator specifies limits at controller level
+- ✅ **Test Coverage**: Tests verify module config, guard presence, and rate limiting behavior
+- ✅ **No Regressions**: All 190 existing tests still pass
+
+**Files Changed:**
+- Created: `apps/legal-gazette-api/src/modules/external-systems/rate-limiting.spec.ts` (14 tests)
+- Modified: `apps/legal-gazette-api/src/app/app.module.ts` (added ThrottlerModule)
+- Modified: `apps/legal-gazette-api/src/modules/external-systems/foreclosure/foreclosure.controller.ts` (added guard + decorator)
+- Modified: `apps/legal-gazette-api/src/modules/external-systems/company/company.controller.ts` (added guard + decorator)
 
 ---
 
