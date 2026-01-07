@@ -18,3 +18,50 @@ export const maskNationalId = (text: string) => {
   })
   return text
 }
+
+/**
+ * Recursively masks PII fields (nationalId, kennitala, ssn, national_id) in objects and arrays.
+ * Uses the existing maskNationalId function to mask valid kennitölur.
+ */
+export const maskPiiInObject = <T>(obj: T): T => {
+  if (obj === null || obj === undefined) {
+    return obj
+  }
+
+  if (typeof obj !== 'object') {
+    return obj
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => maskPiiInObject(item)) as T
+  }
+
+  const result: Record<string | symbol, unknown> = {}
+  const piiFieldNames = ['nationalId', 'kennitala', 'ssn', 'national_id']
+
+  // Handle both string and symbol keys
+  const allKeys = [
+    ...Object.keys(obj),
+    ...Object.getOwnPropertySymbols(obj),
+  ]
+
+  for (const key of allKeys) {
+    const value = (obj as Record<string | symbol, unknown>)[key]
+
+    if (typeof key === 'string' && piiFieldNames.includes(key)) {
+      if (typeof value === 'string') {
+        // Use existing maskNationalId logic to validate and mask
+        const masked = maskNationalId(value)
+        result[key] = masked === value ? value : replaceString
+      } else {
+        result[key] = value
+      }
+    } else if (typeof value === 'object' && value !== null) {
+      result[key] = maskPiiInObject(value)
+    } else {
+      result[key] = value
+    }
+  }
+
+  return result as T
+}

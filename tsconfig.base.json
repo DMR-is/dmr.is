@@ -97,6 +97,9 @@
       ],
       "@island.is/shared/utils": [
         "submodules/island.is/libs/shared/utils/src/index.ts"
+      ],
+      "@island.is/shared/pii": [
+        "submodules/island.is/libs/shared/pii/src/index.ts"
       ]
     }
   },
