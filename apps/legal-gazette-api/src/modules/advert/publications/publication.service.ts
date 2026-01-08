@@ -25,7 +25,6 @@ import {
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,
 } from '../../../models/advert-publication.model'
-import { CategoryModel } from '../../../models/category.model'
 import { StatusIdEnum } from '../../../models/status.model'
 import { AdvertPublishedEvent } from './events/advert-published.event'
 import { IPublicationService } from './publication.service.interface'
