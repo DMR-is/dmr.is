@@ -36,7 +36,7 @@ This plan outlines a TDD approach to fixing the 15 remaining high priority issue
 | ID | Issue | Location | Impact | Status |
 |----|-------|----------|--------|--------|
 | H-6 | Publication Number Generation Race Condition | `publication.service.ts` | Duplicate numbers | ✅ Complete |
-| H-7 | Published Versions Can Be Hard-Deleted | `publication.service.ts` | Data loss | ⬜ Not Started |
+| H-7 | Published Versions Can Be Hard-Deleted | `publication.service.ts` | Data loss | ✅ Complete |
 | H-8 | Missing Status Check on Application Submission | `application.service.ts` | Invalid state | ⬜ Not Started |
 | H-9 | Missing Status Check on Application Update | `application.service.ts` | Invalid state | ⬜ Not Started |
 | H-10 | No Transaction in AdvertPublishedListener | `advert-published.listener.ts` | Partial updates | ⬜ Not Started |
@@ -64,7 +64,7 @@ Based on dependencies, risk, and production readiness:
 | 2 | H-5 | Security - GDPR compliance | 3h | ✅ Complete |
 | 3 | H-4 | Security - XSS vulnerability | 4h | ⬜ Not Started |
 | 4 | H-6 | Data integrity - duplicate publication numbers | 3h | ✅ Complete |
-| 5 | H-7 | Data integrity - prevent published version deletion | 2h | ⬜ Not Started |
+| 5 | H-7 | Data integrity - prevent published version deletion | 2h | ✅ Complete |
 | 6 | H-8, H-9 | Data integrity - application state machine | 4h | ⬜ Not Started |
 | 7 | H-10 | Data integrity - transaction safety | 2h | ⬜ Not Started |
 | 8 | H-3 | Security - rate limiting | 2h | ✅ Complete |
@@ -935,16 +935,33 @@ async deleteAdvertPublication(id: string, pubId: string): Promise<void> {
 }
 ```
 
+#### Solution Implemented
+
+**Protection Against Published Version Deletion** - Added validation to prevent deletion of published versions and proper null checking for non-existent publications.
+
+**Files Changed:**
+- Modified: `apps/legal-gazette-api/src/modules/advert/publications/publication.service.ts`
+- Updated: `apps/legal-gazette-api/src/modules/advert/publications/publication.service.spec.ts` (6 new tests)
+
+**Key Implementation Details:**
+1. **Published Version Check**: Added validation to throw `BadRequestException` if `publishedAt` is set
+2. **Not Found Check**: Added validation to throw `NotFoundException` if publication doesn't exist
+3. **M-2 Fix**: Replaced `forEach` with `for...of` loop to properly await version number updates
+
 #### Status
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Write test file | ⬜ Not Started | |
-| Verify tests fail | ⬜ Not Started | |
-| Add publishedAt check | ⬜ Not Started | |
-| Fix forEach async (M-2) | ⬜ Not Started | |
-| Verify tests pass | ⬜ Not Started | |
-| Code review | ⬜ Not Started | |
+| Write test file | ✅ Complete | 6 tests added to publication.service.spec.ts |
+| Verify tests fail | ✅ Complete | 2 tests failed as expected (no publishedAt check, no null check) |
+| Add publishedAt check | ✅ Complete | Throws BadRequestException with "Cannot delete published versions" |
+| Add not found check | ✅ Complete | Throws NotFoundException with "Publication not found" |
+| Fix forEach async (M-2) | ✅ Complete | Changed to for...of loop to properly await updates |
+| Verify tests pass | ✅ Complete | All 13 tests passing (7 H-6 + 6 H-7) |
+| Run full suite | ✅ Complete | All 203 tests passing, no regressions |
+| Code review | ⬜ Pending | |
+
+**Completion Date:** January 8, 2026
 
 ---
 
@@ -1413,8 +1430,8 @@ nx test legal-gazette-api
 | Jan 7, 2026 | H-3 Rate Limiting | ✅ Complete | ThrottlerGuard on external endpoints (14 tests passing) |
 | Jan 7, 2026 | H-5 PII Masking | ✅ Complete | Auto-masking in logger metadata (24 tests passing) |
 | Jan 8, 2026 | H-6 Race Condition | ✅ Complete | Pessimistic locking + radix fix (7 tests, 197 total passing) |
+| Jan 8, 2026 | H-7 Delete Prevention | ✅ Complete | Published version protection + M-2 fix (6 tests, 203 total passing) |
 | | H-4 XSS Prevention | ⬜ Not Started | |
-| | H-7 Delete Prevention | ⬜ Not Started | |
 | | H-8/H-9 State Machine | ⬜ Not Started | |
 | | H-10 Transaction | ⬜ Not Started | Partially done in C-5 |
 | | H-11 FK Constraints | ⬜ Not Started | |
