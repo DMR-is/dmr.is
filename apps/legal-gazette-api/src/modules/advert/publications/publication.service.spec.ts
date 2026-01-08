@@ -127,7 +127,8 @@ describe('PublicationService - Publication Number Generation', () => {
       // Adding 1 gives 10, padded to "010"
       // With radix 10, "009" is parsed as 9 in base 10 = 9 in base 10
       // Adding 1 gives 10, padded to "010"
-      // NOTE: This test demonstrates the bug exists when numbers like "010" are parsed with radix 11
+      // NOTE: This test verifies that using radix 10 correctly handles numbers ending in "009";
+      //       the following test case with "010" demonstrates the radix 11 parsing bug.
 
       const updateCalls = mockAdvert.update.mock.calls
       expect(updateCalls.length).toBeGreaterThan(0)
