@@ -1,8 +1,9 @@
-import { IsString } from 'class-validator'
+import { IsEmail, IsOptional, IsString } from 'class-validator'
 import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
+import { Paging } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'
@@ -116,4 +117,41 @@ export class GetUsersResponse {
     type: [UserDto],
   })
   users!: UserDto[]
+}
+
+export class GetUsersWithPagingResponse {
+  @ApiProperty({
+    type: [UserDto],
+  })
+  users!: UserDto[]
+
+  @ApiProperty({ type: Paging })
+  paging!: Paging
+}
+
+export class CreateUserDto {
+  @ApiProperty({ type: String })
+  @IsString()
+  nationalId!: string
+
+  @ApiProperty({ type: String })
+  @IsEmail()
+  email!: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  phone?: string
+}
+
+export class UpdateUserDto {
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsEmail()
+  email?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  phone?: string
 }

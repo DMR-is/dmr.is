@@ -80,7 +80,7 @@ export const DataTableColumn = ({
           onSort ? onSort(field) : handleSort(field)
         }}
       >
-        <Inline space={1} flexWrap="nowrap" alignY="center">
+        <Inline align={align} space={1} flexWrap="nowrap" alignY="center">
           {typeof children === 'string' ? (
             <Text variant="medium" fontWeight="semiBold">
               {children}

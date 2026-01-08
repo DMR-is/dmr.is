@@ -10,6 +10,7 @@ import { Reflector } from '@nestjs/core'
 import { getLogger } from '@dmr.is/logging'
 import { SCOPES_KEY } from '@dmr.is/modules/guards/auth'
 
+import { UserDto } from '../../models/users.model'
 import { IUsersService } from '../../modules/users/users.service.interface'
 import { ADMIN_KEY } from '../decorators/admin.decorator'
 
@@ -102,13 +103,21 @@ export class AuthorizationGuard implements CanActivate {
 
     // Case 3 & 4: @AdminAccess() present - need to check admin status
     // First check if user has admin access (user exists in UserModel)
-    const isAdmin = await this.checkAdminAccess(user)
+    try {
+      const adminUser = await this.checkAdminAccess(user)
 
-    if (isAdmin) {
+      request.user = {
+        ...request.user,
+        adminUserId: adminUser.id,
+      }
+
       logger.debug('Admin access granted', {
         nationalId: user?.nationalId,
       })
+
       return true
+    } catch (error) {
+      // Admin check failed, proceed to scope check if needed
     }
 
     // Case 3: @AdminAccess() only - admin check failed, deny
@@ -175,23 +184,24 @@ export class AuthorizationGuard implements CanActivate {
    */
   private async checkAdminAccess(
     user: { nationalId?: string } | undefined,
-  ): Promise<boolean> {
+  ): Promise<UserDto> {
     if (!user?.nationalId) {
       logger.debug('Admin check skipped: No nationalId in request')
-      return false
+      throw new ForbiddenException('Admin access required')
     }
 
     try {
       const dbUser = await this.usersService.getUserByNationalId(
         user.nationalId,
       )
-      return !!dbUser
+
+      return dbUser
     } catch (error) {
       logger.warn('Admin lookup failed', {
         nationalId: user.nationalId,
         error: error instanceof Error ? error.message : 'Unknown error',
       })
-      return false
+      throw new ForbiddenException('Admin access required')
     }
   }
 

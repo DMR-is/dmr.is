@@ -1,5 +1,6 @@
 import { Expose, Transform } from 'class-transformer'
 import { IsNumber, IsOptional } from 'class-validator'
+import { z } from 'zod'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -46,3 +47,8 @@ export class PagingQuery {
   })
   pageSize!: number
 }
+
+export const pagingInput = z.object({
+  page: z.number().min(1).optional().default(DEFAULT_PAGE_NUMBER),
+  pageSize: z.number().min(1).max(100).optional().default(DEFAULT_PAGE_SIZE),
+})

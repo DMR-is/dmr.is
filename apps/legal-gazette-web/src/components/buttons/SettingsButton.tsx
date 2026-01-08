@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react'
 
 import { DropdownMenu } from '@dmr.is/ui/components/island-is'
@@ -12,7 +14,15 @@ export const SettingsButton = () => {
       icon: 'wallet',
       iconType: 'outline',
     },
+    {
+      title: 'Ritstjórar',
+      href: '/stillingar/ritstjorar',
+      icon: 'person',
+      iconType: 'outline',
+    },
   ]
 
   return <DropdownMenu icon="settings" iconType="outline" items={items} />
 }
+
+export default SettingsButton
