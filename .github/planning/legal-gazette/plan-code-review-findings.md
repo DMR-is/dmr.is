@@ -14,7 +14,7 @@ A comprehensive code review of the Legal Gazette system identified **77 issues**
 | Severity | Count | Completed | Remaining | Status |
 |----------|-------|-----------|-----------|--------|
 | 🔴 Critical | 5 | 5 | 0 | ✅ 100% Complete |
-| 🟠 High | 16 | 8 | 8 | 🟡 In Progress |
+| 🟠 High | 16 | 9 | 7 | 🟡 In Progress |
 | 🟡 Medium | 39 | 0 | 39 | ⬜ Not Started |
 | 🟢 Low | 17 | 0 | 17 | ⬜ Not Started |
 
@@ -26,6 +26,7 @@ A comprehensive code review of the Legal Gazette system identified **77 issues**
 - ✅ H-1: Authorization guard scope validation fixed (exact match)
 - ✅ H-2: Ownership validation implemented via reusable ApplicationOwnershipGuard (23 tests passing)
 - ✅ H-3: Rate limiting implemented on external system endpoints (14 tests passing, dual window protection)
+- ✅ H-4: HTML escaping for XSS prevention in external systems (29 tests passing, 218 total)
 - ✅ H-5: PII masking in logger metadata (automatic masking, 27 tests passing)
 - ✅ H-6: Publication number race condition fixed with pessimistic locking (7 tests passing, 197 total)
 - ✅ H-7: Published version deletion prevention (6 tests passing, 203 total)
@@ -69,21 +70,22 @@ A comprehensive code review of the Legal Gazette system identified **77 issues**
 
 ### Phase 2: High Priority Security (Before Production) 🟠
 
-**Estimated Effort:** 2-3 days  
-**Status:** 🟡 In Progress (4/5 complete)
+**Estimated Effort:** 2-3 days
+**Status:** ✅ Complete (5/5 complete)
 
 | ID | Issue | File(s) | Effort | Status |
 |----|-------|---------|--------|--------|
 | H-1 | MachineClientGuard Uses `.includes()` for Scope Validation | `authorization.guard.ts` | 1h | ✅ Done |
 | H-2 | Missing Ownership Validation on Recall Min Date Endpoints | `recall-application.controller.ts` | 2h | ✅ Done |
 | H-3 | No Rate Limiting on External System Endpoints | Foreclosure, Company controllers | 2h | ✅ Done |
-| H-4 | No Input Sanitization for HTML Content in External DTOs | `foreclosure.service.ts` | 4h | ⬜ |
+| H-4 | No Input Sanitization for HTML Content in External DTOs | `foreclosure.service.ts` | 4h | ✅ Done |
 | H-5 | PII (National IDs) Logged Without Masking | `authorization.guard.ts`, listeners | 3h | ✅ Done |
 
 **Implementation Notes:**
 - **H-1**: ✅ Fixed in `authorization.guard.ts` - now uses `user.scope.split(' ')` with exact `includes()` match instead of substring matching. Methods `hasMatchingScope()` and `getMatchingScopes()` properly validate JWT scopes.
 - **H-2**: ✅ Implemented `ApplicationOwnershipGuard` as reusable NestJS guard pattern. Guard validates `application.applicantNationalId` matches `user.nationalId`, with admin scope bypass. Applied to recall min date endpoints with `@UseGuards(ApplicationOwnershipGuard)`. Tests: 7 guard unit tests, 8 controller tests (including metadata verification), 8 service tests (business logic only). Service layer simplified - removed ownership validation, service now contains only date calculation logic. Key benefit: separation of concerns (guards=authorization, services=business logic).
 - **H-3**: ✅ Implemented rate limiting using `@nestjs/throttler` with dual-window protection. Configuration: short-term (10 req/min, ttl: 60000ms) and long-term (100 req/hour, ttl: 3600000ms) windows. Applied ThrottlerGuard and @Throttle decorator to both ForeclosureController and CompanyController. Tests: 14 comprehensive tests verify ThrottlerModule config, guard presence on controllers, and rate limiting behavior. All 190 existing tests still pass (no regressions). Key benefit: DoS protection on public external system endpoints without affecting user experience.
+- **H-4**: ✅ Implemented HTML escaping for XSS prevention in foreclosure service. Created reusable `escapeHtml()` utility in `@dmr.is/utils` that converts HTML special characters (`<`, `>`, `&`, `"`, `'`) to HTML entities. Applied to all user-provided text fields from external systems: `foreclosureRegion`, `foreclosureAddress`, `responsibleParty.name`, `signature.name`, `signature.onBehalfOf`, and all property fields (`propertyName`, `claimant`, `respondent`). Tests: 21 utility tests covering edge cases, complex XSS payloads, and real-world examples + 8 integration tests in foreclosure service (29 total tests, 218 suite total). Key benefit: prevents stored XSS attacks while preserving legitimate text content.
 - **H-5**: ✅ Implemented automatic PII masking in `@dmr.is/logging` library. Added `maskPiiInObject()` function to recursively mask PII fields (`nationalId`, `kennitala`, `ssn`, `national_id`) in log metadata. Extended existing `maskNationalIdFormatter()` to handle both message strings and metadata objects. Tests: 14 tests for maskPiiInObject, 10 tests for formatter integration (27 total logging tests passing). Environment-aware: dev shows `**REMOVE_PII: [kt]**`, prod shows `--MASKED--`. Key benefit: automatic GDPR compliance for all logs without requiring code changes in applications. No code duplication - all PII masking centralized in logging library using existing validator logic.
 
 ---
