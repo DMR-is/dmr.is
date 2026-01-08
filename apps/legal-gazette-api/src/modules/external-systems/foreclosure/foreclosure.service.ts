@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { escapeHtml } from '@dmr.is/utils'
 
 import { CategoryDefaultIdEnum } from '../../../models/category.model'
 import {
@@ -53,17 +54,35 @@ export class ForeclosureService implements IForeclosureService {
   ): Promise<ForeclosureDto> {
     this.logger.info('Creating new foreclosure sale')
 
+    // Escape HTML in all text fields to prevent XSS
+    const escapedRegion = escapeHtml(body.foreclosureRegion) ?? ''
+    const escapedAddress = escapeHtml(body.foreclosureAddress) ?? ''
+    const escapedCreatedBy = escapeHtml(body.responsibleParty.name) ?? ''
+    const escapedSignatureName =
+      escapeHtml(body.responsibleParty.signature.name) ?? ''
+    const escapedOnBehalfOf = escapeHtml(
+      body.responsibleParty.signature.onBehalfOf,
+    )
+
+    // Escape properties
+    const escapedProperties = body.properties.map((property) => ({
+      ...property,
+      propertyName: escapeHtml(property.propertyName) ?? '',
+      claimant: escapeHtml(property.claimant) ?? '',
+      respondent: escapeHtml(property.respondent) ?? '',
+    }))
+
     const { id: advertId } = await this.advertService.createAdvert({
       typeId: TypeIdEnum.FORECLOSURE,
       categoryId: CategoryDefaultIdEnum.FORECLOSURES,
-      title: `Nauðungarsölur - ${body.foreclosureRegion}`,
-      createdBy: body.responsibleParty.name,
+      title: `Nauðungarsölur - ${escapedRegion}`,
+      createdBy: escapedCreatedBy,
       createdByNationalId: body.responsibleParty.nationalId,
       signature: {
-        name: body.responsibleParty.signature.name,
+        name: escapedSignatureName,
         date: body.responsibleParty.signature.date,
         location: body.responsibleParty.signature.location,
-        onBehalfOf: body.responsibleParty.signature.onBehalfOf,
+        onBehalfOf: escapedOnBehalfOf,
       },
       scheduledAt: [body.foreclosureDate],
       isFromExternalSystem: true,
@@ -73,10 +92,10 @@ export class ForeclosureService implements IForeclosureService {
       {
         advertId: advertId,
         caseNumberIdentifier: body.caseNumberIdentifier,
-        foreclosureAddress: body.foreclosureAddress,
+        foreclosureAddress: escapedAddress,
         foreclosureDate: new Date(body.foreclosureDate),
-        foreclosureRegion: body.foreclosureRegion,
-        properties: body.properties,
+        foreclosureRegion: escapedRegion,
+        properties: escapedProperties,
       },
       { returning: true, include: [ForeclosurePropertyModel] },
     )
@@ -90,14 +109,15 @@ export class ForeclosureService implements IForeclosureService {
     id: string,
     body: CreateForeclosurePropertyDto,
   ): Promise<ForeclosurePropertyDto> {
+    // Escape HTML in all text fields to prevent XSS
     const newProperty = await this.foreclosurePropertyModel.create(
       {
         foreclosureId: id,
-        propertyName: body.propertyName,
+        propertyName: escapeHtml(body.propertyName) ?? '',
         propertyNumber: body.propertyNumber,
         propertyTotalPrice: body.propertyTotalPrice,
-        claimant: body.claimant,
-        respondent: body.respondent,
+        claimant: escapeHtml(body.claimant) ?? '',
+        respondent: escapeHtml(body.respondent) ?? '',
       },
       { returning: true },
     )

@@ -28,7 +28,7 @@ This plan outlines a TDD approach to fixing the 15 remaining high priority issue
 | H-1 | MachineClientGuard Scope Validation | `authorization.guard.ts` | Security bypass | ✅ Complete |
 | H-2 | Missing Ownership Validation on Recall Endpoints | `recall-application.controller.ts` | Unauthorized access | ✅ Complete |
 | H-3 | No Rate Limiting on External System Endpoints | Foreclosure, Company controllers | DoS vulnerability | ✅ Complete |
-| H-4 | No Input Sanitization for HTML Content | `foreclosure.service.ts` | XSS vulnerability | ⬜ Not Started |
+| H-4 | No Input Sanitization for HTML Content | `foreclosure.service.ts` | XSS vulnerability | ✅ Complete |
 | H-5 | PII (National IDs) Logged Without Masking | Multiple files | GDPR violation | ✅ Complete |
 
 ### Phase 3: Data Integrity Issues (Before Production) 🟠
@@ -481,16 +481,125 @@ async createForeclosureSale(body: CreateForeclosureSaleDto): Promise<Foreclosure
 }
 ```
 
+#### Solution Implemented
+
+**HTML Entity Escaping** - Created reusable `escapeHtml()` utility function that converts HTML special characters to entities, preventing XSS attacks in plain text fields.
+
+**Files Changed:**
+- Created: `libs/shared/utils/src/lib/escapeHtml.ts` - HTML escape utility
+- Created: `libs/shared/utils/src/lib/escapeHtml.spec.ts` - 21 comprehensive tests
+- Modified: `libs/shared/utils/src/index.ts` - Export escapeHtml
+- Modified: `apps/legal-gazette-api/src/modules/external-systems/foreclosure/foreclosure.service.ts` - Apply escaping
+- Created: `apps/legal-gazette-api/src/modules/external-systems/foreclosure/foreclosure.service.spec.ts` - 8 tests
+
+#### Test Plan
+
+**Test Files:**
+- `libs/shared/utils/src/lib/escapeHtml.spec.ts` (21 tests)
+- `apps/legal-gazette-api/src/modules/external-systems/foreclosure/foreclosure.service.spec.ts` (8 tests)
+
+**Utility Tests (escapeHtml):**
+```typescript
+describe('escapeHtml', () => {
+  it('should escape script tags')
+  it('should escape img tags')
+  it('should escape iframe tags')
+  it('should escape ampersands, quotes, and special characters')
+  it('should handle complex XSS payloads')
+  it('should return undefined/null for undefined/null input')
+  it('should preserve legitimate text while escaping HTML')
+  // ... 21 tests total
+})
+```
+
+**Service Tests:**
+```typescript
+describe('ForeclosureService - HTML Escaping', () => {
+  describe('createForeclosureSale', () => {
+    it('should escape HTML in foreclosureRegion field')
+    it('should escape HTML in foreclosureAddress field')
+    it('should escape HTML in responsibleParty.name field')
+    it('should escape HTML in signature.name field')
+    it('should escape HTML in signature.onBehalfOf field')
+    it('should escape HTML in property fields (propertyName, claimant, respondent)')
+    it('should preserve legitimate text content while escaping HTML')
+  })
+  describe('createForeclosureProperty', () => {
+    it('should escape HTML in all property fields when creating a new property')
+  })
+})
+```
+
+#### Implementation
+
+**Utility Function:**
+```typescript
+// libs/shared/utils/src/lib/escapeHtml.ts
+export function escapeHtml(
+  unsafe: string | null | undefined,
+): string | null | undefined {
+  if (unsafe === null) return null
+  if (unsafe === undefined) return undefined
+
+  return unsafe
+    .replace(/&/g, '&amp;')   // Must be first to avoid double-escaping
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+```
+
+**Applied in Service:**
+```typescript
+// In foreclosure.service.ts - createForeclosureSale method
+import { escapeHtml } from '@dmr.is/utils'
+
+// Escape all user-provided text fields
+const escapedRegion = escapeHtml(body.foreclosureRegion) ?? ''
+const escapedAddress = escapeHtml(body.foreclosureAddress) ?? ''
+const escapedCreatedBy = escapeHtml(body.responsibleParty.name) ?? ''
+const escapedSignatureName = escapeHtml(body.responsibleParty.signature.name) ?? ''
+const escapedOnBehalfOf = escapeHtml(body.responsibleParty.signature.onBehalfOf)
+
+const escapedProperties = body.properties.map((property) => ({
+  ...property,
+  propertyName: escapeHtml(property.propertyName) ?? '',
+  claimant: escapeHtml(property.claimant) ?? '',
+  respondent: escapeHtml(property.respondent) ?? '',
+}))
+
+// Use escaped values when creating advert and foreclosure records
+```
+
 #### Status
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Create sanitization utility | ⬜ Not Started | |
-| Write test file | ⬜ Not Started | |
-| Verify tests fail | ⬜ Not Started | |
-| Implement fix | ⬜ Not Started | |
-| Verify tests pass | ⬜ Not Started | |
-| Code review | ⬜ Not Started | |
+| Create escapeHtml utility | ✅ Complete | Simple, well-tested utility in @dmr.is/utils |
+| Write utility tests | ✅ Complete | 21 tests covering all edge cases |
+| Write service tests | ✅ Complete | 8 tests for foreclosure service escaping |
+| Verify tests fail | ✅ Complete | All 8 tests failed correctly (RED phase) |
+| Implement fix in service | ✅ Complete | Applied escapeHtml to all text fields |
+| Verify tests pass | ✅ Complete | All 8 new tests + 210 existing = 218 total passing (GREEN phase) |
+| Code review | ⬜ Pending | |
+
+**Completion Date:** January 8, 2026
+
+**Key Benefits:**
+- ✅ **XSS Prevention**: All user input from external systems is escaped before storage
+- ✅ **Reusable Utility**: `escapeHtml()` can be used across the entire codebase
+- ✅ **Well-Tested**: 21 utility tests + 8 integration tests = 29 total tests
+- ✅ **No Data Loss**: Preserves original text while converting HTML to entities
+- ✅ **Simple & Fast**: Pure function with no dependencies
+- ✅ **Type-Safe**: Handles null/undefined gracefully
+
+**Character Escaping:**
+- `<` → `&lt;`
+- `>` → `&gt;`
+- `&` → `&amp;` (escaped first to avoid double-escaping)
+- `"` → `&quot;`
+- `'` → `&#39;`
 
 ---
 
@@ -1444,7 +1553,7 @@ nx test legal-gazette-api
 | Jan 8, 2026 | H-6 Race Condition | ✅ Complete | Pessimistic locking + radix fix (7 tests, 197 total passing) |
 | Jan 8, 2026 | H-7 Delete Prevention | ✅ Complete | Published version protection + M-2 fix (6 tests, 203 total passing) |
 | Jan 8, 2026 | H-8/H-9 State Machine | ✅ Complete | Status validation guards (7 tests, 210 total passing) |
-| | H-4 XSS Prevention | ⬜ Not Started | |
+| Jan 8, 2026 | H-4 XSS Prevention | ✅ Complete | HTML escaping utility + foreclosure service (29 tests, 218 total passing) |
 | | H-10 Transaction | ⬜ Not Started | Partially done in C-5 |
 | | H-11 FK Constraints | ⬜ Not Started | |
 | | Phase 4 Reliability | ⬜ Not Started | Post-release |
