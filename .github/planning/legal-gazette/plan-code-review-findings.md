@@ -14,7 +14,7 @@ A comprehensive code review of the Legal Gazette system identified **77 issues**
 | Severity | Count | Completed | Remaining | Status |
 |----------|-------|-----------|-----------|--------|
 | 🔴 Critical | 5 | 5 | 0 | ✅ 100% Complete |
-| 🟠 High | 16 | 6 | 10 | 🟡 In Progress |
+| 🟠 High | 16 | 8 | 8 | 🟡 In Progress |
 | 🟡 Medium | 39 | 0 | 39 | ⬜ Not Started |
 | 🟢 Low | 17 | 0 | 17 | ⬜ Not Started |
 
@@ -29,6 +29,7 @@ A comprehensive code review of the Legal Gazette system identified **77 issues**
 - ✅ H-5: PII masking in logger metadata (automatic masking, 27 tests passing)
 - ✅ H-6: Publication number race condition fixed with pessimistic locking (7 tests passing, 197 total)
 - ✅ H-7: Published version deletion prevention (6 tests passing, 203 total)
+- ✅ H-8/H-9: Application status validation guards (7 tests passing, 210 total)
 - ⚠️ C-2: Publishing without payment - needs additional business logic validation
 
 **Key Risk Areas:**
@@ -90,20 +91,21 @@ A comprehensive code review of the Legal Gazette system identified **77 issues**
 ### Phase 3: High Priority Data Integrity (Before Production) 🟠
 
 **Estimated Effort:** 2-3 days
-**Status:** 🟡 In Progress (2/6 complete)
+**Status:** 🟡 In Progress (4/6 complete)
 
 | ID | Issue | File(s) | Effort | Status |
 |----|-------|---------|--------|--------|
 | H-6 | Publication Number Generation Race Condition | `publication.service.ts` | 3h | ✅ Done |
 | H-7 | Published Versions Can Be Hard-Deleted | `publication.service.ts` | 2h | ✅ Done |
-| H-8 | Missing Status Check on Application Submission | `application.service.ts` | 2h | ⬜ |
-| H-9 | Missing Status Check on Application Update | `application.service.ts` | 2h | ⬜ |
+| H-8 | Missing Status Check on Application Submission | `application.service.ts` | 2h | ✅ Done |
+| H-9 | Missing Status Check on Application Update | `application.service.ts` | 2h | ✅ Done |
 | H-10 | No Transaction in AdvertPublishedListener | `advert-published.listener.ts` | 2h | ⬜ |
 | H-11 | Missing ON DELETE Behavior for Foreign Keys | Migration files | 4h | ⬜ |
 
 **Implementation Notes:**
 - **H-6**: ✅ Fixed race condition in publication number generation using pessimistic locking. Added `Transaction.LOCK.UPDATE` to findOne query and passed transaction context to prevent concurrent reads. Also fixed radix bug (M-1): changed `parseInt(publicationNumber.slice(8), 11)` to radix 10. Applied fixes to both `publication.service.ts` and `publishing.task.ts`. Tests: 7 new tests in `publication.service.spec.ts` verify radix parsing, transaction usage, pessimistic locking, and general behavior. All 197 tests passing (no regressions). Key benefit: prevents duplicate publication numbers under concurrent load and ensures correct sequential numbering.
 - **H-7**: ✅ Fixed published version deletion vulnerability in `publication.service.ts:deleteAdvertPublication()` with three changes: (1) Added `findOne()` check to validate publication exists before deletion, throwing `NotFoundException` if not found, (2) Added `publishedAt` validation to prevent deletion of published versions, throwing `BadRequestException` with message "Cannot delete published versions", (3) Fixed M-2 bug by replacing `forEach` with `for...of` loop to properly await version number updates. Tests: 6 comprehensive tests in `publication.service.spec.ts` cover published version protection, unpublished deletion (happy path), not found error, last publication protection, and version renumbering (M-2 fix validation). All 203 tests passing with no regressions. Key benefit: prevents accidental data loss of published legal gazette versions.
+- **H-8/H-9**: ✅ Implemented status validation guards in `application.service.ts`. Added two private constants: `SUBMITTABLE_STATUSES = [ApplicationStatusEnum.DRAFT]` and `EDITABLE_STATUSES = [ApplicationStatusEnum.DRAFT]`. Both `submitApplication()` and `updateApplication()` now check status before processing and throw descriptive `BadRequestException` if status is invalid (e.g., "Cannot submit application with status 'SUBMITTED'. Application must be in DRAFT status."). Tests: 7 comprehensive tests in new `application.service.spec.ts` file verify all non-DRAFT statuses are rejected for both operations. All 210 tests passing (no regressions). Key benefits: (1) Early validation before expensive schema parsing operations, (2) Clear error messages for users, (3) State machine enforcement prevents invalid transitions, (4) Extensible design via constants allows easy addition of valid statuses.
 
 ---
 
