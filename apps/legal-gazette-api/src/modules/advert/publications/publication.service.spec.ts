@@ -27,7 +27,7 @@ const mockSequelize = {
   transaction: jest.fn(),
 }
 
-describe('PublicationService - H-6: Publication Number Generation', () => {
+describe('PublicationService - Publication Number Generation', () => {
   let service: IPublicationService
   let advertModel: typeof AdvertModel
   let advertPublicationModel: typeof AdvertPublicationModel
