@@ -2,7 +2,12 @@ import addDays from 'date-fns/addDays'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
-import { BadRequestException, Inject, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -153,6 +158,20 @@ export class PublicationService implements IPublicationService {
       throw new BadRequestException('At least one publication must remain')
     }
 
+    // Check if publication exists
+    const publication = await this.advertPublicationModel.findOne({
+      where: { id: pubId, advertId: id },
+    })
+
+    if (!publication) {
+      throw new NotFoundException('Publication not found')
+    }
+
+    // Prevent deletion of published versions
+    if (publication.publishedAt) {
+      throw new BadRequestException('Cannot delete published versions')
+    }
+
     await this.advertPublicationModel.destroy({
       where: {
         id: pubId,
@@ -169,9 +188,10 @@ export class PublicationService implements IPublicationService {
       ],
     })
 
-    publications.forEach(async (publication, index) => {
-      await publication.update({ versionNumber: index + 1 })
-    })
+    // FIX M-2: Use for...of instead of forEach with async to properly await
+    for (let index = 0; index < publications.length; index++) {
+      await publications[index].update({ versionNumber: index + 1 })
+    }
   }
 
   async updateAdvertPublication(
