@@ -77,7 +77,7 @@ describe('PublicationService - Publication Number Generation', () => {
     jest.clearAllMocks()
   })
 
-  describe('publishAdvertPublication - radix bug (M-1)', () => {
+  describe('publishAdvertPublication - decimal parsing correctness', () => {
     it('should correctly parse publication number with radix 10', async () => {
       // Setup: Mock existing publication ending in "009"
       const existingAdvert = {
