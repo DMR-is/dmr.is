@@ -6,7 +6,6 @@ import {
   Button,
   Icon,
   Stack,
-  Text,
 } from '@island.is/island-ui/core'
 
 import { ApplicationAttachmentTypeTitleEnum } from '../../gen/fetch'
@@ -158,7 +157,11 @@ export const Attachments = () => {
                     }
                     color="blue400"
                   />
-                  <Text>{a.fileName}</Text>
+                  <span
+                    style={{ display: 'inline-block', wordBreak: 'break-word' }}
+                  >
+                    {a.fileName}
+                  </span>
                 </Box>
 
                 <Box display="flex" alignItems="center" columnGap={2}>
