@@ -37,8 +37,8 @@ This plan outlines a TDD approach to fixing the 15 remaining high priority issue
 |----|-------|----------|--------|--------|
 | H-6 | Publication Number Generation Race Condition | `publication.service.ts` | Duplicate numbers | ✅ Complete |
 | H-7 | Published Versions Can Be Hard-Deleted | `publication.service.ts` | Data loss | ✅ Complete |
-| H-8 | Missing Status Check on Application Submission | `application.service.ts` | Invalid state | ⬜ Not Started |
-| H-9 | Missing Status Check on Application Update | `application.service.ts` | Invalid state | ⬜ Not Started |
+| H-8 | Missing Status Check on Application Submission | `application.service.ts` | Invalid state | ✅ Complete |
+| H-9 | Missing Status Check on Application Update | `application.service.ts` | Invalid state | ✅ Complete |
 | H-10 | No Transaction in AdvertPublishedListener | `advert-published.listener.ts` | Partial updates | ⬜ Not Started |
 | H-11 | Missing ON DELETE Behavior for Foreign Keys | Migrations | Orphan records | ⬜ Not Started |
 
@@ -65,7 +65,7 @@ Based on dependencies, risk, and production readiness:
 | 3 | H-4 | Security - XSS vulnerability | 4h | ⬜ Not Started |
 | 4 | H-6 | Data integrity - duplicate publication numbers | 3h | ✅ Complete |
 | 5 | H-7 | Data integrity - prevent published version deletion | 2h | ✅ Complete |
-| 6 | H-8, H-9 | Data integrity - application state machine | 4h | ⬜ Not Started |
+| 6 | H-8, H-9 | Data integrity - application state machine | 4h | ✅ Complete |
 | 7 | H-10 | Data integrity - transaction safety | 2h | ⬜ Not Started |
 | 8 | H-3 | Security - rate limiting | 2h | ✅ Complete |
 | 9 | H-11 | Data integrity - foreign key constraints | 4h | ⬜ Not Started |
@@ -969,87 +969,89 @@ async deleteAdvertPublication(id: string, pubId: string): Promise<void> {
 
 #### Problem Statement
 
-Application submission and update methods don't validate that the application is in a valid state for the operation. For example, submitting an already-submitted application should fail.
+Application submission and update methods don't validate that the application is in a valid state for the operation. Users could submit already-submitted applications or modify applications after submission.
 
 #### Current Code Location
 
 [apps/legal-gazette-api/src/modules/applications/application.service.ts](apps/legal-gazette-api/src/modules/applications/application.service.ts)
 
+#### Impact
+
+- Users can re-submit already submitted applications
+- Users can modify applications after they've been submitted
+- Data integrity violations in application workflow
+- Invalid state transitions
+
+#### Solution Implemented
+
+**Status Validation Guards** - Added status checks at the beginning of both `submitApplication()` and `updateApplication()` methods to validate that the application is in a valid state before processing.
+
+**Files Changed:**
+- Created: `apps/legal-gazette-api/src/modules/applications/application.service.spec.ts` (7 tests)
+- Modified: `apps/legal-gazette-api/src/modules/applications/application.service.ts`
+
 #### Test Plan
 
-**Test File:** `apps/legal-gazette-api/src/modules/applications/application.service.spec.ts`
+**Test File:** `apps/legal-gazette-api/src/modules/applications/application.service.spec.ts` (7 tests)
 
 ```typescript
-describe('Application State Machine (H-8, H-9)', () => {
-  describe('submitApplication (H-8)', () => {
-    it('should throw BadRequestException when application is already SUBMITTED', async () => {
-      // Setup: Create application with status SUBMITTED
-      // Action: Call submitApplication
-      // Assert: Should throw 'Application has already been submitted'
-    })
-
-    it('should throw BadRequestException when application is PROCESSING', async () => {
-      // Same pattern for PROCESSING status
-    })
-
-    it('should throw BadRequestException when application is COMPLETED', async () => {
-      // Same pattern for COMPLETED status
-    })
-
-    it('should allow submission when status is DRAFT', async () => {
-      // Setup: Create application with status DRAFT
-      // Action: Call submitApplication
-      // Assert: Should succeed, status should become SUBMITTED
-    })
+describe('ApplicationService - Status Validation', () => {
+  describe('submitApplication - Status Check Validation', () => {
+    it('should throw BadRequestException when application is already SUBMITTED')
+    it('should throw BadRequestException when application is IN_PROGRESS')
+    it('should throw BadRequestException when application is FINISHED')
   })
 
-  describe('updateApplication (H-9)', () => {
-    it('should throw BadRequestException when application is SUBMITTED', async () => {
-      // Can't modify submitted applications
-    })
-
-    it('should throw BadRequestException when application is COMPLETED', async () => {
-      // Can't modify completed applications
-    })
-
-    it('should allow updates when status is DRAFT', async () => {
-      // Can modify drafts
-    })
+  describe('updateApplication - Status Check Validation', () => {
+    it('should allow updates when application status is DRAFT')
+    it('should throw BadRequestException when application is SUBMITTED')
+    it('should throw BadRequestException when application is IN_PROGRESS')
+    it('should throw BadRequestException when application is FINISHED')
   })
 })
 ```
 
 #### Implementation
 
+**Added Constants:**
 ```typescript
-// In application.service.ts
 private readonly SUBMITTABLE_STATUSES = [ApplicationStatusEnum.DRAFT]
 private readonly EDITABLE_STATUSES = [ApplicationStatusEnum.DRAFT]
+```
 
+**H-8: submitApplication Status Guard**
+```typescript
 async submitApplication(id: string, user: DMRUser): Promise<void> {
-  const application = await this.applicationModel.findByPkOrThrow(id)
+  const application = await this.applicationModel.findOneOrThrow({
+    where: { id: applicationId, applicantNationalId: user.nationalId },
+  })
 
+  // Validate application status before submission
   if (!this.SUBMITTABLE_STATUSES.includes(application.status)) {
     throw new BadRequestException(
-      `Cannot submit application with status '${application.status}'. ` +
-      `Application must be in DRAFT status.`
+      `Cannot submit application with status '${application.status}'. Application must be in DRAFT status.`,
     )
   }
 
-  // ... rest of submission logic
+  // ... rest of submission logic (unchanged)
 }
+```
 
+**H-9: updateApplication Status Guard**
+```typescript
 async updateApplication(id: string, body: UpdateApplicationDto, user: DMRUser): Promise<void> {
-  const application = await this.applicationModel.findByPkOrThrow(id)
+  const application = await this.applicationModel.findOneOrThrow({
+    where: { id: applicationId, applicantNationalId: user.nationalId },
+  })
 
+  // Validate application status before update
   if (!this.EDITABLE_STATUSES.includes(application.status)) {
     throw new BadRequestException(
-      `Cannot modify application with status '${application.status}'. ` +
-      `Application must be in DRAFT status.`
+      `Cannot modify application with status '${application.status}'. Application must be in DRAFT status.`,
     )
   }
 
-  // ... rest of update logic
+  // ... rest of update logic (unchanged)
 }
 ```
 
@@ -1057,12 +1059,22 @@ async updateApplication(id: string, body: UpdateApplicationDto, user: DMRUser): 
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Write test file | ⬜ Not Started | |
-| Verify tests fail | ⬜ Not Started | |
-| Implement H-8 fix | ⬜ Not Started | |
-| Implement H-9 fix | ⬜ Not Started | |
-| Verify tests pass | ⬜ Not Started | |
-| Code review | ⬜ Not Started | |
+| Write test file | ✅ Complete | 7 tests in application.service.spec.ts |
+| Verify tests fail | ✅ Complete | All tests failed correctly - validation missing |
+| Implement H-8 fix | ✅ Complete | Added SUBMITTABLE_STATUSES guard in submitApplication |
+| Implement H-9 fix | ✅ Complete | Added EDITABLE_STATUSES guard in updateApplication |
+| Verify tests pass | ✅ Complete | All 7 tests passing |
+| Run full suite | ✅ Complete | All 210 tests passing, no regressions |
+| Code review | ⬜ Pending | |
+
+**Completion Date:** January 8, 2026
+
+**Key Benefits:**
+- ✅ **Early Validation**: Status checked before expensive operations (parsing, database updates)
+- ✅ **Clear Error Messages**: Users receive descriptive error explaining why operation failed
+- ✅ **State Machine Enforcement**: Only DRAFT applications can be submitted or modified
+- ✅ **Minimal Code Change**: Simple guard pattern, easy to maintain and extend
+- ✅ **Extensible**: Constants make it easy to add more valid statuses if requirements change
 
 ---
 
@@ -1431,8 +1443,8 @@ nx test legal-gazette-api
 | Jan 7, 2026 | H-5 PII Masking | ✅ Complete | Auto-masking in logger metadata (24 tests passing) |
 | Jan 8, 2026 | H-6 Race Condition | ✅ Complete | Pessimistic locking + radix fix (7 tests, 197 total passing) |
 | Jan 8, 2026 | H-7 Delete Prevention | ✅ Complete | Published version protection + M-2 fix (6 tests, 203 total passing) |
+| Jan 8, 2026 | H-8/H-9 State Machine | ✅ Complete | Status validation guards (7 tests, 210 total passing) |
 | | H-4 XSS Prevention | ⬜ Not Started | |
-| | H-8/H-9 State Machine | ⬜ Not Started | |
 | | H-10 Transaction | ⬜ Not Started | Partially done in C-5 |
 | | H-11 FK Constraints | ⬜ Not Started | |
 | | Phase 4 Reliability | ⬜ Not Started | Post-release |

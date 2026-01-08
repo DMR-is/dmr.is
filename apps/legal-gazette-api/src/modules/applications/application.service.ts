@@ -59,6 +59,9 @@ import { IApplicationService } from './application.service.interface'
 
 @Injectable()
 export class ApplicationService implements IApplicationService {
+  private readonly SUBMITTABLE_STATUSES = [ApplicationStatusEnum.DRAFT]
+  private readonly EDITABLE_STATUSES = [ApplicationStatusEnum.DRAFT]
+
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IAdvertService)
@@ -476,6 +479,13 @@ export class ApplicationService implements IApplicationService {
       where: { id: applicationId, applicantNationalId: user.nationalId },
     })
 
+    // Validate application status before update
+    if (!this.EDITABLE_STATUSES.includes(application.status)) {
+      throw new BadRequestException(
+        `Cannot modify application with status '${application.status}'. Application must be in DRAFT status.`,
+      )
+    }
+
     const parsedData = updateApplicationInput.parse({
       type: application.applicationType,
       answers: body.answers,
@@ -657,6 +667,13 @@ export class ApplicationService implements IApplicationService {
     const application = await this.applicationModel.findOneOrThrow({
       where: { id: applicationId, applicantNationalId: user.nationalId },
     })
+
+    // Validate application status before submission
+    if (!this.SUBMITTABLE_STATUSES.includes(application.status)) {
+      throw new BadRequestException(
+        `Cannot submit application with status '${application.status}'. Application must be in DRAFT status.`,
+      )
+    }
 
     switch (application.applicationType) {
       case ApplicationTypeEnum.COMMON:
