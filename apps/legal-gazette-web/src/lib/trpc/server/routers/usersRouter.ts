@@ -37,4 +37,7 @@ export const usersRouter = router({
         updateUserDto: input,
       }),
     ),
+  restoreUser: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ ctx, input }) => ctx.api.restoreUser(input)),
 })

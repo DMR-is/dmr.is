@@ -24,6 +24,8 @@ export interface IUsersService {
     body: UpdateUserDto,
     user: DMRUser,
   ): Promise<UserDto>
+
+  restoreUser(nationalId: string, user: DMRUser): Promise<UserDto>
 }
 
 export const IUsersService = Symbol('IUsersService')

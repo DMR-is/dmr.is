@@ -32,6 +32,21 @@ export class UsersService implements IUsersService {
     @Inject(ILGNationalRegistryService)
     private readonly nationalRegistryService: LGNationalRegistryService,
   ) {}
+  async restoreUser(userId: string, user: DMRUser): Promise<UserDto> {
+    const userToRestore = await this.userModel.findByPkOrThrow(userId, {
+      paranoid: false,
+    })
+
+    await userToRestore.restore()
+
+    this.logger.info('Admin user restored', {
+      restoredByUserId: user.adminUserId,
+      restoredUserId: userId,
+      context: LOGGING_CONTEXT,
+    })
+
+    return userToRestore.fromModel()
+  }
   async updateUser(
     userId: string,
     body: UpdateUserDto,

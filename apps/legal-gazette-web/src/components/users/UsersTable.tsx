@@ -38,10 +38,12 @@ export const UsersTable = ({
     {
       field: 'name',
       children: 'Nafn',
+      size: 'tiny',
     },
     {
       field: 'email',
       children: 'Netfang',
+      size: 'tiny',
     },
     {
       field: 'nationalId',
@@ -50,6 +52,7 @@ export const UsersTable = ({
     {
       field: 'isActive',
       children: 'Staða',
+      size: 'tiny',
     },
   ]
 
@@ -68,7 +71,7 @@ export const UsersTable = ({
       email: user.email || '-',
       nationalId: user.nationalId,
       isActive: (
-        <Tag variant={user.isActive ? 'mint' : 'red'}>
+        <Tag disabled variant={user.isActive ? 'mint' : 'red'}>
           {user.isActive ? 'Virkur' : 'Óvirkur'}
         </Tag>
       ),

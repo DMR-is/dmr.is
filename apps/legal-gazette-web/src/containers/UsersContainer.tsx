@@ -14,9 +14,10 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { TRPCErrorAlert } from '../components/trpc/TRPCErrorAlert'
-import { CreateUser } from '../components/users/CreateUser'
-import { DeleteUser } from '../components/users/DeleteUser'
-import { UpdateUser } from '../components/users/UpdateUser'
+import { CreateUserModal } from '../components/users/CreateUserModal'
+import { DeleteUserButton } from '../components/users/DeleteUserButton'
+import { RestoreUserButton } from '../components/users/RestoreUserButton'
+import { UpdateUserModal } from '../components/users/UpdateUserModal'
 import { UsersTable } from '../components/users/UsersTable'
 import { pagingParams } from '../lib/nuqs/paging-params'
 import { useTRPC } from '../lib/trpc/client/trpc'
@@ -93,6 +94,22 @@ export const UsersContainer = () => {
     }),
   )
 
+  const { mutate: restoreUserMutation, isPending: isRestoringUser } =
+    useMutation(
+      trpc.restoreUser.mutationOptions({
+        onMutate: async () => {
+          await queryClient.cancelQueries(trpc.getUsers.queryFilter())
+        },
+        onSuccess: () => {
+          toast.success(`Notandi endurheimtur`)
+          queryClient.invalidateQueries(trpc.getUsers.queryFilter())
+        },
+        onError: () => {
+          toast.error(`Ekki tókst að endurheimta notanda`)
+        },
+      }),
+    )
+
   return (
     <GridContainer>
       <GridRow rowGap={[2, 3]} marginBottom={[2, 3]}>
@@ -133,7 +150,7 @@ export const UsersContainer = () => {
               nationalId: us.nationalId,
               isActive: us.isActive,
               actions: [
-                <UpdateUser
+                <UpdateUserModal
                   intiallyVisible={false}
                   isUpdatingUser={isUpdatingUser}
                   shouldReset={shouldResetUpdateState}
@@ -142,14 +159,21 @@ export const UsersContainer = () => {
                     updateUserMutation({ userId: us.id, ...user })
                   }
                 />,
-                <DeleteUser
-                  loading={isDeletingUser}
-                  onDelete={() => deleteUserMutation({ id: us.id })}
-                />,
+                us.isActive ? (
+                  <DeleteUserButton
+                    loading={isDeletingUser}
+                    onDelete={() => deleteUserMutation({ id: us.id })}
+                  />
+                ) : (
+                  <RestoreUserButton
+                    onRestore={() => restoreUserMutation({ userId: us.id })}
+                    loading={isRestoringUser}
+                  />
+                ),
               ],
             }))}
             actionButton={
-              <CreateUser
+              <CreateUserModal
                 intiallyVisible={false}
                 shouldReset={shouldResetCreateState}
                 shouldClose={isCreateModalOpen}

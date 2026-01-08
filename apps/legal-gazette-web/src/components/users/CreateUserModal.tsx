@@ -1,4 +1,5 @@
-import { isNotEmpty } from 'class-validator'
+'use client'
+
 import { useEffect, useState } from 'react'
 
 import {
@@ -11,34 +12,50 @@ import {
 } from '@dmr.is/ui/components/island-is'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
-import { updateUserInput } from '../../lib/inputs'
+import { createUserInput } from '../../lib/inputs'
 
 type Props = {
   intiallyVisible?: boolean
-  isUpdatingUser?: boolean
+  isCreatingUser?: boolean
   shouldReset?: boolean
   shouldClose?: boolean
-  onUpdateUser?: (user: { email?: string; phone?: string }) => void
+  onCreateUser?: (user: {
+    nationalId: string
+    email: string
+    phone?: string
+  }) => void
 }
 
-const initialState = {
-  email: undefined,
+const intialState = {
+  nationalId: '',
+  email: '',
   phone: undefined,
 }
 
-export const UpdateUser = ({
-  intiallyVisible,
-  isUpdatingUser,
-  shouldReset,
+export const CreateUserModal = ({
+  intiallyVisible = false,
+  isCreatingUser,
   shouldClose,
-  onUpdateUser,
+  shouldReset,
+  onCreateUser,
 }: Props) => {
-  const [state, setState] = useState(initialState)
+  const [state, setState] = useState(intialState)
   const [visible, setVisible] = useState(intiallyVisible)
+
+  const disclosure = (
+    <Button
+      circle
+      size="small"
+      icon="add"
+      iconType="outline"
+      title="Bæta við notanda"
+      onClick={() => setVisible((prev) => !prev)}
+    />
+  )
 
   useEffect(() => {
     if (shouldReset) {
-      setState(initialState)
+      setState(intialState)
     }
   }, [shouldReset])
 
@@ -52,30 +69,35 @@ export const UpdateUser = ({
     setState((prev) => ({ ...prev, [key]: value }))
   }
 
-  const disclosure = (
-    <Button circle variant="ghost" size="small" icon="pencil" />
-  )
-
-  const isEmailOrPhoneProvided =
-    isNotEmpty(state.email) || isNotEmpty(state.phone)
-  const isDisabled =
-    updateUserInput.omit({ userId: true }).safeParse(state).success === false
+  const isDisabled = createUserInput.safeParse(state).success === false
 
   return (
     <Modal
-      baseId="update-user"
+      baseId="create-user-modal"
       disclosure={disclosure}
-      title="Uppfæra notanda"
-      onVisibilityChange={setVisible}
-      toggleClose={() => setVisible(false)}
       isVisible={visible}
+      onVisibilityChange={setVisible}
+      title="Bæta við ritstjóra"
+      toggleClose={() => setVisible(false)}
     >
       <GridContainer>
-        <GridRow rowGap={[2, 3]} marginBottom={[2, 3]}>
+        <GridRow rowGap={[2, 3]}>
           <GridColumn span={['12/12', '6/12']}>
             <Input
               backgroundColor="blue"
               size="sm"
+              required
+              name="new-user-national-id"
+              label="Kennitala"
+              onChange={(e) => updateState('nationalId', e.target.value)}
+              value={state.nationalId}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12']}>
+            <Input
+              backgroundColor="blue"
+              size="sm"
+              required
               name="new-user-email"
               label="Netfang"
               onChange={(e) => updateState('email', e.target.value)}
@@ -84,7 +106,6 @@ export const UpdateUser = ({
           </GridColumn>
           <GridColumn span={['12/12', '6/12']}>
             <Input
-              type="tel"
               backgroundColor="blue"
               size="sm"
               name="new-user-phone"
@@ -93,16 +114,17 @@ export const UpdateUser = ({
               value={state.phone}
             />
           </GridColumn>
-          <GridColumn span="12/12">
+          <GridColumn span={['12/12', '6/12']}>
             <Inline align={['left', 'right']}>
               <Button
-                disabled={isDisabled || !isEmailOrPhoneProvided}
-                loading={isUpdatingUser}
+                disabled={isDisabled}
+                loading={isCreatingUser}
                 icon="add"
                 variant="ghost"
                 onClick={() => {
-                  if (onUpdateUser) {
-                    onUpdateUser({
+                  if (onCreateUser) {
+                    onCreateUser({
+                      nationalId: state.nationalId,
                       email: state.email,
                       phone: state.phone,
                     })

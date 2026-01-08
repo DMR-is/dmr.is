@@ -1,20 +1,21 @@
 import { Button } from '@dmr.is/ui/components/island-is'
 
 type Props = {
-  onDelete?: () => void
+  onRestore?: () => void
   loading?: boolean
 }
 
-export const DeleteUser = ({ onDelete, loading }: Props) => {
+export const RestoreUserButton = ({ onRestore, loading }: Props) => {
   return (
     <Button
+      title="Endurheimta notanda"
       circle
+      variant="ghost"
       loading={loading}
       size="small"
-      colorScheme="destructive"
-      icon="trash"
+      icon="share"
       iconType="outline"
-      onClick={() => onDelete?.()}
+      onClick={() => onRestore?.()}
     />
   )
 }

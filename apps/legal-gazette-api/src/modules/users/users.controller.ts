@@ -90,4 +90,13 @@ export class UsersController {
   ): Promise<UserDto> {
     return this.usersService.updateUser(userId, updateUserDto, user)
   }
+
+  @Post(':userId/restore')
+  @LGResponse({ operationId: 'restoreUser', type: UserDto })
+  restoreUser(
+    @Param('userId') userId: string,
+    @CurrentUser() user: DMRUser,
+  ): Promise<UserDto> {
+    return this.usersService.restoreUser(userId, user)
+  }
 }
