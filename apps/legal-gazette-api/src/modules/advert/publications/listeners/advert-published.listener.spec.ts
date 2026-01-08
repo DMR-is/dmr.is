@@ -187,7 +187,7 @@ describe('AdvertPublishedListener', () => {
       priceCalculatorService.getPaymentData.mockResolvedValue({
         feeCodeId: 'fee-code-123',
         paymentData: {
-          advertId: 'advert-123',
+          id: 'advert-123',
           chargeCategory: 'LEGAL_ENTITY',
           chargeBase: 'advert-123',
           debtorNationalId: '0101801234',

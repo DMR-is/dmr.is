@@ -298,23 +298,42 @@ export class PublicationService implements IPublicationService {
 
       await publication.update({ publishedAt: new Date() })
 
-      t.afterCommit(() => {
-        this.logger.debug(
-          'Successfully published advert publication, emitting advert.published event',
+      this.logger.info(
+        'Advert publication marked as published, emitting ADVERT_PUBLISHED event',
+        {
+          context: 'PublicationService',
+          advertId: advert.id,
+          publicationId: publication.id,
+        },
+      )
+
+      const payload: AdvertPublishedEvent = {
+        advert: advert.fromModelToDetailed(),
+        publication: publication.fromModel(),
+        html: advert.htmlMarkup(publication.versionLetter),
+      }
+
+      // Emit event for TBR transaction creation and WAIT for it to complete
+      // This happens BEFORE transaction commits - if it fails, entire transaction rolls back
+      // emitAsync returns a Promise that resolves when all listeners complete
+      // If any listener throws, the error propagates and transaction is rolled back (requires suppressErrors: false on listener)
+      try {
+        await this.eventEmitter.emitAsync(
+          LegalGazetteEvents.ADVERT_PUBLISHED,
+          payload,
+        )
+      } catch (error) {
+        this.logger.error(
+          'Error occurred while emitting ADVERT_PUBLISHED event',
           {
             context: 'PublicationService',
             advertId: advert.id,
             publicationId: publication.id,
+            error: error instanceof Error ? error.message : 'Unknown error',
           },
         )
-        const payload: AdvertPublishedEvent = {
-          advert: advert.fromModelToDetailed(),
-          publication: publication.fromModel(),
-          html: advert.htmlMarkup(publication.versionLetter),
-        }
-
-        this.eventEmitter.emit(LegalGazetteEvents.ADVERT_PUBLISHED, payload)
-      })
+        throw error
+      }
     })
   }
 }

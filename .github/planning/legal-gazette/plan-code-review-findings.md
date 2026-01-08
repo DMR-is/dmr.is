@@ -13,7 +13,7 @@ A comprehensive code review of the Legal Gazette system identified **77 issues**
 
 | Severity | Count | Completed | Remaining | Status |
 |----------|-------|-----------|-----------|--------|
-| 🔴 Critical | 5 | 5 | 0 | ✅ 100% Complete |
+| 🔴 Critical | 5 | 4 | 1 | 🟡 In Progress |
 | 🟠 High | 16 | 10 | 6 | 🟡 In Progress |
 | 🟡 Medium | 39 | 0 | 39 | ⬜ Not Started |
 | 🟢 Low | 17 | 0 | 17 | ⬜ Not Started |
@@ -53,14 +53,14 @@ A comprehensive code review of the Legal Gazette system identified **77 issues**
 | ID | Issue | File(s) | Effort | Status |
 |----|-------|---------|--------|--------|
 | C-1 | Published Adverts Can Be Modified Without Status Check | `advert.service.ts` | 2h | ✅ Done |
-| C-2 | Publishing Before Payment Confirmation Possible | `publication.service.ts` | 4h | ✅ Done |
+| C-2 | Publishing Before Payment Confirmation Possible | `publication.service.ts` | 4h | ⚠️ Partial |
 | C-3 | Race Condition - Duplicate Payment Requests | `subscribers.service.ts` | 4h | ✅ Done |
 | C-4 | Orphaned TBR Claims When DB Fails (Subscriber) | `subscriber-created.listener.ts` | 8h | ✅ Done |
 | C-5 | Orphaned TBR Claims When DB Fails (Advert) | `advert-published.listener.ts` | 8h | ✅ Done |
 
 **Implementation Notes:**
 - **C-1**: ✅ Implemented status check preventing modification of PUBLISHED, REJECTED, WITHDRAWN adverts. Comprehensive tests in `advert.service.spec.ts` verify all scenarios.
-- **C-2**: ✅ Publishing workflow validates payment is confirmed before allowing publication. TBR transaction must have `paidAt` timestamp for payment-required categories.
+- **C-2**: ⚠️ Design documented but code validation NOT implemented. See H-17 in plan-high-priority-issues-tdd-fix.md for implementation plan.
 - **C-3**: ✅ Fixed with two-layer protection:
   1. **Idempotency check**: Returns success if subscription already active and not expired
   2. **PostgreSQL advisory lock**: `runWithUserLock()` prevents concurrent requests for same user (prevents double-click, retry storms)
@@ -284,7 +284,7 @@ async updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDetailedDto
 
 ---
 
-#### ✅ C-2: Publishing Before Payment Confirmation Possible [RESOLVED]
+#### ⚠️ C-2: Publishing Before Payment Confirmation Possible [PARTIAL]
 
 **Location:** `apps/legal-gazette-api/src/modules/advert/publications/publication.service.ts`
 
@@ -296,27 +296,22 @@ The `publishAdverts` method only checks `statusId`. There's no validation that p
 - Business model bypassed
 - Free publications possible
 
-**Resolution:**
-The publishing workflow has been designed so that:
-1. **Payment happens FIRST** via `AdvertPublishedListener` when status changes to PUBLISHED
-2. TBR transaction record is created with PENDING status before TBR API call
-3. Once TBR confirms payment, status updates to CREATED
-4. Admin then manually verifies payment via TBR dashboard
-5. Only after payment confirmation (`transaction.paidAt` is set) can the advert be published to public
+**Current Status:**
+The design was documented but **code validation was NOT implemented**. The current flow:
 
-**Current Flow:**
-```
-1. Advert moves to READY_FOR_PUBLICATION status
-2. Admin clicks "Publish" → triggers ADVERT_PUBLISHED event
-3. AdvertPublishedListener creates PENDING TBR transaction
-4. TBR API called → transaction status CREATED
-5. TBR processes payment (async)
-6. Admin manually verifies in TBR dashboard
-7. Admin updates transaction.paidAt in DB
-8. Publication visible to public
-```
+1. `publishAdvertPublication()` marks advert as PUBLISHED
+2. Transaction COMMITS (advert is now public)
+3. `afterCommit`: Emits `ADVERT_PUBLISHED` event
+4. Listener creates TBR payment (may fail after advert is already published)
 
-**Note:** The actual publishing to public-facing website already requires payment confirmation through the admin workflow. The critical path is protected by the PENDING → CREATED → PAID status flow.
+**Required Fix (H-17):**
+Before publishing, validate that:
+1. If category requires payment → `transaction.paidAt` must be set
+2. If category is exempt (government, court) → skip payment validation
+
+See **H-17 in plan-high-priority-issues-tdd-fix.md** for detailed implementation plan.
+
+**Note:** The actual publishing to public-facing website relies on the admin workflow. However, the critical code-level validation is missing.
 
 ---
 
