@@ -20,7 +20,9 @@ describe('AuthorizationGuard', () => {
   let usersService: jest.Mocked<IUsersService>
 
   // Helper to create mock ExecutionContext
-  const createMockContext = (user: MockUser | null = null): ExecutionContext => {
+  const createMockContext = (
+    user: MockUser | null = null,
+  ): ExecutionContext => {
     const mockRequest = { user }
     return {
       switchToHttp: () => ({
@@ -38,6 +40,7 @@ describe('AuthorizationGuard', () => {
     name: 'Test User',
     email: 'test@test.com',
     phone: '1234567',
+    isActive: true,
   })
 
   // Error thrown when user is not found in database
@@ -146,7 +149,8 @@ describe('AuthorizationGuard', () => {
     it('should allow access when user has matching scope among multiple', async () => {
       const context = createMockContext({
         nationalId: '1234567890',
-        scope: '@dmr.is/some-other @logbirtingablad.is/logbirtingabladid @dmr.is/another',
+        scope:
+          '@dmr.is/some-other @logbirtingablad.is/logbirtingabladid @dmr.is/another',
       })
 
       const result = await guard.canActivate(context)
@@ -210,7 +214,10 @@ describe('AuthorizationGuard', () => {
         jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
           if (key === ADMIN_KEY) return undefined
           if (key === SCOPES_KEY)
-            return ['@logbirtingablad.is/logbirtingabladid', '@logbirtingablad.is/lg-application-web']
+            return [
+              '@logbirtingablad.is/logbirtingabladid',
+              '@logbirtingablad.is/lg-application-web',
+            ]
           return undefined
         })
       })
@@ -229,7 +236,8 @@ describe('AuthorizationGuard', () => {
       it('should allow when user has both required scopes', async () => {
         const context = createMockContext({
           nationalId: '1234567890',
-          scope: '@logbirtingablad.is/logbirtingabladid @logbirtingablad.is/lg-application-web',
+          scope:
+            '@logbirtingablad.is/logbirtingabladid @logbirtingablad.is/lg-application-web',
         })
 
         const result = await guard.canActivate(context)
@@ -440,7 +448,8 @@ describe('AuthorizationGuard', () => {
       it('should allow access when user has matching scope among multiple', async () => {
         const context = createMockContext({
           nationalId: '1234567890',
-          scope: '@dmr.is/other @logbirtingablad.is/lg-application-web @dmr.is/another',
+          scope:
+            '@dmr.is/other @logbirtingablad.is/lg-application-web @dmr.is/another',
         })
         usersService.getUserByNationalId.mockRejectedValue(userNotFoundError)
 
@@ -537,7 +546,10 @@ describe('AuthorizationGuard', () => {
         jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
           if (key === ADMIN_KEY) return true
           if (key === SCOPES_KEY)
-            return ['@logbirtingablad.is/logbirtingabladid', '@logbirtingablad.is/lg-application-web']
+            return [
+              '@logbirtingablad.is/logbirtingabladid',
+              '@logbirtingablad.is/lg-application-web',
+            ]
           return undefined
         })
       })

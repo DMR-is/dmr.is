@@ -49,6 +49,7 @@ const createMockUserDto = (nationalId: string): UserDto => ({
   name: 'Admin User',
   email: 'admin@test.com',
   phone: '1234567',
+  isActive: true,
 })
 
 describe('AdvertController - Guard Authorization', () => {
