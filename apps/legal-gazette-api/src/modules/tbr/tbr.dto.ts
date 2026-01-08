@@ -51,7 +51,7 @@ export class TBRPaymentExpensesDto {
 
 export class TBRPostPaymentBodyDto {
   @ApiProperty({ type: String, description: 'Advert id or Subscriber id' })
-  id?: string
+  id!: string
   // advertId is deprecated, use id instead
 
   @ApiProperty({ type: String, description: 'Charge category' })

@@ -252,15 +252,7 @@ export class PublicationService implements IPublicationService {
 
       const advert = await this.advertModel
         .withScope('detailed')
-        .findByPkOrThrow(advertId, {
-          include: [
-            {
-              model: CategoryModel,
-              as: 'category',
-              required: true,
-            },
-          ],
-        })
+        .findByPkOrThrow(advertId)
 
       const publication = await this.advertPublicationModel.findOneOrThrow({
         where: { id: publicationId, advertId },
@@ -307,8 +299,8 @@ export class PublicationService implements IPublicationService {
 
       await publication.update({ publishedAt: new Date() })
 
-      this.logger.debug(
-        'Successfully published advert publication, emitting advert.published event',
+      this.logger.info(
+        'Advert publication marked as published, emitting ADVERT_PUBLISHED event',
         {
           context: 'PublicationService',
           advertId: advert.id,
