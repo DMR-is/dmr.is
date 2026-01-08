@@ -420,6 +420,104 @@ describe('PublicationService - Publication Number Generation', () => {
       // Assert: advert.update should NOT be called (already has publication number)
       expect(mockAdvert.update).not.toHaveBeenCalled()
     })
+
+    it('should rollback transaction when event emitter throws error', async () => {
+      // Setup: Normal advert and publication, but event emitter will fail
+      const mockAdvert = {
+        id: 'advert-8',
+        publicationNumber: '20260108001',
+        fromModelToDetailed: jest.fn().mockReturnValue({ id: 'advert-8' }),
+        htmlMarkup: jest.fn().mockReturnValue('<html></html>'),
+      }
+
+      const mockPublication = {
+        id: 'pub-8',
+        advertId: 'advert-8',
+        publishedAt: null,
+        versionLetter: 'A',
+        update: jest.fn().mockResolvedValue(undefined),
+        fromModel: jest.fn().mockReturnValue({ id: 'pub-8' }),
+      }
+
+      const mockEventEmitter = {
+        emitAsync: jest
+          .fn()
+          .mockRejectedValue(new Error('TBR transaction creation failed')),
+      }
+
+      // Create a mock transaction that tracks if it was committed
+      let transactionCommitted = false
+      const mockTransaction = {
+        commit: jest.fn().mockImplementation(() => {
+          transactionCommitted = true
+          return Promise.resolve()
+        }),
+        rollback: jest.fn().mockImplementation(() => {
+          transactionCommitted = false
+          return Promise.resolve()
+        }),
+      } as unknown as Transaction
+
+      // Mock sequelize.transaction to simulate rollback on error
+      mockSequelize.transaction.mockImplementation(async (callback) => {
+        try {
+          await callback(mockTransaction)
+          await mockTransaction.commit()
+        } catch (error) {
+          await mockTransaction.rollback()
+          throw error
+        }
+      })
+
+      const mockScopedModel = {
+        findByPkOrThrow: jest.fn().mockResolvedValue(mockAdvert),
+      }
+      ;(advertModel.withScope as jest.Mock).mockReturnValue(mockScopedModel)
+      ;(advertPublicationModel.findOneOrThrow as jest.Mock).mockResolvedValue(
+        mockPublication,
+      )
+
+      // Create a new service instance with the mocked event emitter
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          PublicationService,
+          {
+            provide: getModelToken(AdvertModel),
+            useValue: advertModel,
+          },
+          {
+            provide: getModelToken(AdvertPublicationModel),
+            useValue: advertPublicationModel,
+          },
+          {
+            provide: Sequelize,
+            useValue: mockSequelize,
+          },
+          {
+            provide: LOGGER_PROVIDER,
+            useValue: mockLogger,
+          },
+          {
+            provide: EventEmitter2,
+            useValue: mockEventEmitter,
+          },
+        ],
+      }).compile()
+
+      const testService = module.get<IPublicationService>(PublicationService)
+
+      // Action & Assert: Should throw the error from event emitter
+      await expect(
+        testService.publishAdvertPublication('advert-8', 'pub-8'),
+      ).rejects.toThrow('TBR transaction creation failed')
+
+      // Assert: Transaction should have been rolled back
+      expect(mockTransaction.rollback).toHaveBeenCalled()
+      expect(transactionCommitted).toBe(false)
+
+      // Assert: Event emitter should have been called
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalled()
+    })
   })
 })
 

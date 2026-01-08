@@ -139,13 +139,13 @@ export class TBRService implements ITBRService {
 
   async postPayment(body: TBRPostPaymentBodyDto): Promise<void> {
     this.logger.info('Creating TBR claim', {
-      advertId: body.advertId,
+      advertId: body.id,
     })
 
     await this.request('/claim', {
       method: 'POST',
       body: JSON.stringify({
-        UUID: body.advertId,
+        UUID: body.id,
         office: this.config.officeId,
         chargeCategory: body.chargeCategory,
         chargeBase: body.chargeBase,

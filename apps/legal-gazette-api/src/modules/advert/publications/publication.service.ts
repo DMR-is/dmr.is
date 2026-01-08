@@ -25,6 +25,7 @@ import {
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,
 } from '../../../models/advert-publication.model'
+import { CategoryModel } from '../../../models/category.model'
 import { StatusIdEnum } from '../../../models/status.model'
 import { AdvertPublishedEvent } from './events/advert-published.event'
 import { IPublicationService } from './publication.service.interface'
@@ -251,7 +252,15 @@ export class PublicationService implements IPublicationService {
 
       const advert = await this.advertModel
         .withScope('detailed')
-        .findByPkOrThrow(advertId)
+        .findByPkOrThrow(advertId, {
+          include: [
+            {
+              model: CategoryModel,
+              as: 'category',
+              required: true,
+            },
+          ],
+        })
 
       const publication = await this.advertPublicationModel.findOneOrThrow({
         where: { id: publicationId, advertId },
@@ -298,42 +307,42 @@ export class PublicationService implements IPublicationService {
 
       await publication.update({ publishedAt: new Date() })
 
-      t.afterCommit(async () => {
-        this.logger.debug(
-          'Successfully published advert publication, emitting advert.published event',
+      this.logger.debug(
+        'Successfully published advert publication, emitting advert.published event',
+        {
+          context: 'PublicationService',
+          advertId: advert.id,
+          publicationId: publication.id,
+        },
+      )
+
+      const payload: AdvertPublishedEvent = {
+        advert: advert.fromModelToDetailed(),
+        publication: publication.fromModel(),
+        html: advert.htmlMarkup(publication.versionLetter),
+      }
+
+      // Emit event for TBR transaction creation and WAIT for it to complete
+      // This happens BEFORE transaction commits - if it fails, entire transaction rolls back
+      // emitAsync returns a Promise that resolves when all listeners complete
+      // If any listener throws, the error propagates and transaction is rolled back (requires suppressErrors: false on listener)
+      try {
+        await this.eventEmitter.emitAsync(
+          LegalGazetteEvents.ADVERT_PUBLISHED,
+          payload,
+        )
+      } catch (error) {
+        this.logger.error(
+          'Error occurred while emitting ADVERT_PUBLISHED event',
           {
             context: 'PublicationService',
             advertId: advert.id,
             publicationId: publication.id,
+            error: error instanceof Error ? error.message : 'Unknown error',
           },
         )
-        const payload: AdvertPublishedEvent = {
-          advert: advert.fromModelToDetailed(),
-          publication: publication.fromModel(),
-          html: advert.htmlMarkup(publication.versionLetter),
-        }
-
-        // Emit event for payment processing and WAIT for it to complete
-        // emitAsync returns a Promise that resolves when all listeners complete
-        // If any listener throws, the error propagates here (requires suppressErrors: false on listener)
-        try {
-          await this.eventEmitter.emitAsync(
-            LegalGazetteEvents.ADVERT_PUBLISHED,
-            payload,
-          )
-        } catch (error) {
-          this.logger.error(
-            'Error occurred while emitting ADVERT_PUBLISHED event',
-            {
-              context: 'PublicationService',
-              advertId: advert.id,
-              publicationId: publication.id,
-              error: error instanceof Error ? error.message : 'Unknown error',
-            },
-          )
-          throw error
-        }
-      })
+        throw error
+      }
     })
   }
 }

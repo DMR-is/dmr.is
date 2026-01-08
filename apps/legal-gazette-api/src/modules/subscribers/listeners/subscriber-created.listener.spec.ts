@@ -196,7 +196,7 @@ describe('SubscriberCreatedListener', () => {
       await listener.createSubscriptionPayment(event)
 
       expect(tbrService.postPayment).toHaveBeenCalledWith({
-        advertId: 'subscriber-123',
+        id: 'subscriber-123',
         chargeCategory: 'PERSON_CATEGORY',
         chargeBase: 'subscriber-123',
         debtorNationalId: '0101801234',
@@ -492,7 +492,7 @@ describe('SubscriberCreatedListener', () => {
       // Verify TBR called with correct subscriber data
       expect(tbrService.postPayment).toHaveBeenCalledWith(
         expect.objectContaining({
-          advertId: 'sub-456',
+          id: 'sub-456',
           debtorNationalId: '0101801234',
         }),
       )

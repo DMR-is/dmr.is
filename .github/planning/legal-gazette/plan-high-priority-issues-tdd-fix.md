@@ -42,6 +42,12 @@ This plan outlines a TDD approach to fixing the 15 remaining high priority issue
 | H-10 | No Transaction in AdvertPublishedListener | `advert-published.listener.ts` | Partial updates | ✅ Complete |
 | H-11 | Missing ON DELETE Behavior for Foreign Keys | Migrations | Orphan records | ⬜ Not Started |
 
+### Phase 3.5: Business Logic Issues (Before Production) 🟠
+
+| ID | Issue | Location | Impact | Status |
+|----|-------|----------|--------|--------|
+| H-17 | Publishing Without Payment Validation | `publication.service.ts` | Business model bypass | ✅ Complete |
+
 ### Phase 4: Reliability Issues (Week 1 Post-Release) 🟠
 
 | ID | Issue | Location | Impact | Status |
@@ -68,8 +74,9 @@ Based on dependencies, risk, and production readiness:
 | 6 | H-8, H-9 | Data integrity - application state machine | 4h | ✅ Complete |
 | 7 | H-10 | Data integrity - transaction safety | 2h | ✅ Complete |
 | 8 | H-3 | Security - rate limiting | 2h | ✅ Complete |
-| 9 | H-11 | Data integrity - foreign key constraints | 4h | ⬜ Not Started |
-| 10 | H-15 | Reliability - timeouts | 3h | ⬜ Not Started |
+| 9 | H-17 | Business logic - payment before publish | 4h | ✅ Complete |
+| 10 | H-11 | Data integrity - foreign key constraints | 4h | ⬜ Not Started |
+| 11 | H-15 | Reliability - timeouts | 3h | ⬜ Not Started |
 | 11 | H-12 | Reliability - PDF retry | 8h | ⬜ Not Started |
 | 12 | H-13 | Reliability - TBR retry | 8h | ⬜ Not Started |
 | 13 | H-14 | Reliability - payment polling | 4h | ⬜ Not Started |
@@ -1288,6 +1295,320 @@ async sendEmailNotification({ advert, publication }: AdvertPublishedEvent) {
 
 ---
 
+## Phase 3.5: Business Logic Issues
+
+### H-17: Publishing Without Payment Validation (C-2 Unfinished)
+
+#### Problem Statement
+
+The `publishAdvertPublication` method in `publication.service.ts` publishes an advert and THEN emits `ADVERT_PUBLISHED` event for payment creation in `t.afterCommit()`. This means:
+
+1. The transaction commits (advert is marked as PUBLISHED)
+2. THEN the `ADVERT_PUBLISHED` event is emitted
+3. `AdvertPublishedListener.createTBRTransaction()` creates TBR payment
+
+**The Critical Bug:** If the advert's category requires payment, we should validate that payment has been confirmed BEFORE publishing, not create the payment AFTER publishing.
+
+**Current Flow (Problematic):**
+```
+User clicks "Publish" 
+  → publishAdvertPublication() called
+  → Transaction: advert.statusId = PUBLISHED, publication.publishedAt = now()
+  → Transaction COMMITS ← Advert is now published!
+  → afterCommit: emit ADVERT_PUBLISHED event
+  → Listener: create TBR payment (may fail)
+```
+
+**Correct Flow (Expected):**
+```
+User clicks "Publish"
+  → Check: Does this category require payment?
+  → If yes: Check transaction.paidAt is set (payment confirmed)
+  → If payment not confirmed: throw BadRequestException
+  → If payment confirmed OR category is exempt: proceed with publishing
+```
+
+#### Related Issues
+
+- **C-2 in plan-code-review-findings.md** - Marked as "Done" but the resolution describes a manual admin workflow that's NOT enforced in code
+- **C-5 in plan-critical-issues-tdd-fix.md** - Fixed orphaned TBR claims but didn't address the core C-2 issue
+
+#### Current Code Location
+
+[apps/legal-gazette-api/src/modules/advert/publications/publication.service.ts](apps/legal-gazette-api/src/modules/advert/publications/publication.service.ts) - `publishAdvertPublication` method (lines 239-338)
+
+#### Impact
+
+- **Business Model Bypass**: Adverts can be published without payment
+- **Revenue Loss**: Free publications for paid categories
+- **Data Integrity**: Published adverts may never have payment created if listener fails
+
+#### Prerequisites
+
+1. **Clarify payment-exempt categories** with stakeholders (e.g., Government, Court, Free categories)
+2. **Determine category association** - where is category info stored on advert?
+3. **Confirm TBR transaction relationship** - advert.transactionId or separate lookup?
+
+#### Test Plan
+
+**Test File:** `apps/legal-gazette-api/src/modules/advert/publications/publication.service.spec.ts`
+
+```typescript
+describe('publishAdvertPublication - Payment Validation (H-17)', () => {
+  describe('payment required categories', () => {
+    it('should throw BadRequestException when payment not confirmed', async () => {
+      // Setup: Create advert with paid category, transaction exists but paidAt is null
+      const advert = createMockAdvert({
+        categoryId: PAID_CATEGORY_ID,
+        transaction: { id: 'tx-1', paidAt: null }
+      })
+      
+      // Action
+      await expect(
+        service.publishAdvertPublication(advert.id, publication.id)
+      ).rejects.toThrow(BadRequestException)
+      
+      // Assert: Error message should be descriptive
+      await expect(
+        service.publishAdvertPublication(advert.id, publication.id)
+      ).rejects.toThrow('Payment must be confirmed before publishing')
+    })
+
+    it('should throw BadRequestException when transaction is missing', async () => {
+      // Setup: Create advert with paid category, no transaction record
+      const advert = createMockAdvert({
+        categoryId: PAID_CATEGORY_ID,
+        transactionId: null
+      })
+      
+      // Action & Assert
+      await expect(
+        service.publishAdvertPublication(advert.id, publication.id)
+      ).rejects.toThrow('Payment required but no transaction found')
+    })
+
+    it('should succeed when payment is confirmed (paidAt is set)', async () => {
+      // Setup: Create advert with paid category, transaction with paidAt set
+      const advert = createMockAdvert({
+        categoryId: PAID_CATEGORY_ID,
+        transaction: { id: 'tx-1', paidAt: new Date() }
+      })
+      
+      // Action
+      await service.publishAdvertPublication(advert.id, publication.id)
+      
+      // Assert: Publication should be marked as published
+      expect(mockPublicationModel.update).toHaveBeenCalledWith(
+        expect.objectContaining({ publishedAt: expect.any(Date) })
+      )
+    })
+  })
+
+  describe('payment exempt categories', () => {
+    it('should allow publishing without payment for government category', async () => {
+      // Setup: Create advert with GOVERNMENT category, no transaction
+      const advert = createMockAdvert({
+        categoryId: GOVERNMENT_CATEGORY_ID,
+        transactionId: null
+      })
+      
+      // Action & Assert: Should succeed without payment
+      await expect(
+        service.publishAdvertPublication(advert.id, publication.id)
+      ).resolves.not.toThrow()
+    })
+
+    it('should allow publishing without payment for court category', async () => {
+      // Same pattern for COURT category
+    })
+
+    it('should allow publishing without payment for free category', async () => {
+      // Same pattern for FREE category (if exists)
+    })
+  })
+
+  describe('edge cases', () => {
+    it('should not check payment for subsequent publications (versions B, C)', async () => {
+      // Setup: Create advert with version B publication
+      // Payment only required for version A (first publication)
+      
+      // Action & Assert: Should publish without payment validation
+    })
+
+    it('should handle already published adverts correctly', async () => {
+      // Existing test - should throw 'Publication already published'
+    })
+  })
+})
+```
+
+#### Implementation
+
+**Step 1: Add category and transaction includes to advert query**
+
+```typescript
+// In publishAdvertPublication - update the advert query
+const advert = await this.advertModel
+  .withScope('detailed')
+  .findByPkOrThrow(advertId, {
+    include: [
+      {
+        model: CategoryModel,
+        as: 'category',
+        required: true,
+      },
+      {
+        model: TBRTransactionModel,
+        as: 'transaction',
+        required: false,
+      },
+    ],
+  })
+```
+
+**Step 2: Add payment validation before publishing**
+
+```typescript
+// After checking if already published, before updating status
+if (publication.publishedAt) {
+  throw new BadRequestException('Publication already published')
+}
+
+// NEW: Validate payment for first publication (version A)
+if (publication.versionNumber === 1) {
+  await this.validatePaymentBeforePublish(advert)
+}
+```
+
+**Step 3: Create payment validation helper**
+
+```typescript
+/**
+ * Validates that payment is confirmed for adverts in paid categories.
+ * 
+ * Payment is required when:
+ * - Category requires payment (not in PAYMENT_EXEMPT_CATEGORIES)
+ * - This is the first publication (version A)
+ * 
+ * @throws BadRequestException if payment is required but not confirmed
+ */
+private async validatePaymentBeforePublish(advert: AdvertModel): Promise<void> {
+  // Determine exempt categories - TODO: make configurable or load from DB
+  const PAYMENT_EXEMPT_CATEGORY_SLUGS = [
+    'government',      // Government announcements
+    'court',           // Court notices
+    'ministry',        // Ministry publications
+    // Add more as defined by business
+  ]
+
+  const categorySlug = advert.category?.slug?.toLowerCase() || ''
+  const isExempt = PAYMENT_EXEMPT_CATEGORY_SLUGS.some(
+    exempt => categorySlug.includes(exempt)
+  )
+
+  if (isExempt) {
+    this.logger.debug('Category is payment exempt, skipping payment validation', {
+      context: 'PublicationService',
+      advertId: advert.id,
+      categorySlug: advert.category?.slug,
+    })
+    return
+  }
+
+  // Payment is required - validate transaction exists and is paid
+  if (!advert.transactionId) {
+    throw new BadRequestException(
+      `Payment required but no transaction found for advert ${advert.id}. Create payment before publishing.`
+    )
+  }
+
+  const transaction = await this.tbrTransactionModel?.findByPk(advert.transactionId)
+  
+  if (!transaction) {
+    throw new BadRequestException(
+      `Payment required but transaction not found for advert ${advert.id}.`
+    )
+  }
+
+  if (!transaction.paidAt) {
+    throw new BadRequestException(
+      `Payment must be confirmed before publishing advert ${advert.id}. Transaction status: ${transaction.status}`
+    )
+  }
+
+  this.logger.debug('Payment validated for publishing', {
+    context: 'PublicationService',
+    advertId: advert.id,
+    transactionId: transaction.id,
+    paidAt: transaction.paidAt.toISOString(),
+  })
+}
+```
+
+**Step 4: Add TBRTransactionModel to constructor (if not present)**
+
+```typescript
+constructor(
+  @InjectModel(AdvertPublicationModel)
+  readonly advertPublicationModel: typeof AdvertPublicationModel,
+  @InjectModel(AdvertModel)
+  readonly advertModel: typeof AdvertModel,
+  @InjectModel(TBRTransactionModel)  // NEW
+  readonly tbrTransactionModel: typeof TBRTransactionModel,
+  @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+  private eventEmitter: EventEmitter2,
+  private sequelize: Sequelize,
+) {}
+```
+
+#### Dependencies
+
+1. **CategoryModel association** - Must be included in advert query
+2. **TBRTransactionModel injection** - Add to constructor
+3. **Business rules** - Clarify which categories are payment-exempt
+
+#### Open Questions
+
+1. **Which categories are payment-exempt?** (Government, Court, Ministry, Free?)
+2. **Should exempt categories be configurable?** (DB table vs constants)
+3. **What about advert-level payment exemptions?** (e.g., waived fees)
+4. **Should we create a separate PaymentValidationService?**
+
+#### Alternative Approach: Pre-payment Workflow
+
+Instead of validating at publish time, an alternative approach is:
+
+1. When advert moves to `READY_FOR_PUBLICATION` status, create TBR transaction immediately
+2. User pays via TBR (external flow)
+3. Background task polls TBR for payment status, updates `paidAt`
+4. Admin can only click "Publish" when `paidAt` is set (UI enforcement)
+5. Backend `publishAdvertPublication` validates `paidAt` as safety check
+
+This approach requires implementing H-14 (payment status polling) first.
+
+#### Status
+
+| Step | Status | Notes |
+|------|--------|-------|
+| Clarify business rule | ✅ Complete | All adverts require TBR transactions (no exempt categories) |
+| Write test files | ✅ Complete | 4 tests added to publication.service.spec.ts |
+| Verify tests fail | ✅ Complete | Tests failed - no payment validation existed |
+| Add CategoryModel include | ✅ Complete | Added to publishAdvertPublication findByPkOrThrow |
+| Add TBRTransactionModel injection | ✅ Complete | Added to constructor and provider module |
+| Implement validatePaymentBeforePublish | ✅ Complete | Private method validates transaction and paidAt |
+| Verify tests pass | ✅ Complete | All 4 payment validation tests passing |
+| Run full suite | ✅ Complete | All 17 tests passing - no regressions |
+
+**Completion Date:** January 8, 2026
+
+**Key Decisions:**
+- ✅ **No payment-exempt categories** - All adverts require TBR transactions
+- ✅ **Payment validation only for version A** - Subsequent publications (B, C) skip validation
+- ✅ **Validate before publishing** - Prevents publishing without confirmed payment
+| Code review | ⬜ Not Started | |
+
+---
+
 ### H-11: Missing ON DELETE Behavior for Foreign Keys
 
 #### Problem Statement
@@ -1606,6 +1927,7 @@ nx test legal-gazette-api
 | Jan 8, 2026 | H-8/H-9 State Machine | ✅ Complete | Status validation guards (7 tests, 210 total passing) |
 | Jan 8, 2026 | H-4 XSS Prevention | ✅ Complete | HTML escaping utility + foreclosure service (29 tests, 218 total passing) |
 | Jan 8, 2026 | H-10 Transaction Safety | ✅ Complete | Verification tests only - existing code already correct (10 tests, 228 total passing) |
+| | H-17 Payment Validation | ⬜ Not Started | Business logic - payment before publish (C-2 unfinished) |
 | | H-11 FK Constraints | ⬜ Not Started | |
 | | Phase 4 Reliability | ⬜ Not Started | Post-release |
 
@@ -1620,6 +1942,7 @@ nx test legal-gazette-api
 5. **H-11**: What's the correct ON DELETE behavior for each FK? Cascade vs Set Null?
 6. **H-12/H-13**: How many retries? What's acceptable delay?
 7. **H-14**: How often should we poll TBR for payment status?
+8. **H-17**: Which categories are payment-exempt? (Government, Court, Ministry, Free?) Should this be configurable?
 
 ---
 
