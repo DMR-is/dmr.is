@@ -39,7 +39,7 @@ This plan outlines a TDD approach to fixing the 15 remaining high priority issue
 | H-7 | Published Versions Can Be Hard-Deleted | `publication.service.ts` | Data loss | ✅ Complete |
 | H-8 | Missing Status Check on Application Submission | `application.service.ts` | Invalid state | ✅ Complete |
 | H-9 | Missing Status Check on Application Update | `application.service.ts` | Invalid state | ✅ Complete |
-| H-10 | No Transaction in AdvertPublishedListener | `advert-published.listener.ts` | Partial updates | ⬜ Not Started |
+| H-10 | No Transaction in AdvertPublishedListener | `advert-published.listener.ts` | Partial updates | ✅ Complete |
 | H-11 | Missing ON DELETE Behavior for Foreign Keys | Migrations | Orphan records | ⬜ Not Started |
 
 ### Phase 4: Reliability Issues (Week 1 Post-Release) 🟠
@@ -66,7 +66,7 @@ Based on dependencies, risk, and production readiness:
 | 4 | H-6 | Data integrity - duplicate publication numbers | 3h | ✅ Complete |
 | 5 | H-7 | Data integrity - prevent published version deletion | 2h | ✅ Complete |
 | 6 | H-8, H-9 | Data integrity - application state machine | 4h | ✅ Complete |
-| 7 | H-10 | Data integrity - transaction safety | 2h | ⬜ Not Started |
+| 7 | H-10 | Data integrity - transaction safety | 2h | ✅ Complete |
 | 8 | H-3 | Security - rate limiting | 2h | ✅ Complete |
 | 9 | H-11 | Data integrity - foreign key constraints | 4h | ⬜ Not Started |
 | 10 | H-15 | Reliability - timeouts | 3h | ⬜ Not Started |
@@ -1201,39 +1201,90 @@ The `AdvertPublishedListener` methods (PDF generation, email, TBR transaction) r
 
 This issue is **partially resolved** by C-4/C-5 fixes which wrap TBR operations in transactions. The remaining concern is PDF generation and email sending coordination.
 
+#### Solution Implemented
+
+**Verification via Tests** - The existing implementation already handles H-10 correctly. Added comprehensive tests to verify error handling and coordination.
+
+**Files Changed:**
+- Updated: `apps/legal-gazette-api/src/modules/advert/publications/listeners/advert-published.listener.spec.ts` (10 new tests)
+
+**No Code Changes Required** - The current implementation already has proper error handling:
+- PDF generation failures caught with `.catch()` and logged
+- Email sending failures caught with `.catch()` and logged
+- TBR transactions wrapped in database transactions (C-5 fix)
+- All three operations execute independently via event listeners
+
 #### Test Plan
 
+**Test File:** `apps/legal-gazette-api/src/modules/advert/publications/listeners/advert-published.listener.spec.ts` (10 new tests)
+
 ```typescript
-describe('AdvertPublishedListener Transaction Safety (H-10)', () => {
-  it('should complete TBR transaction in single DB transaction', async () => {
-    // Already tested in C-5 tests
+describe('Error Handling and Coordination (H-10)', () => {
+  describe('PDF generation failures', () => {
+    it('should not throw when PDF generation fails')
+    it('should log error when PDF generation fails')
+    it('should succeed when PDF generation succeeds')
   })
 
-  it('should not fail silently when PDF generation fails', async () => {
-    // Setup: Mock PDF service to throw error
-    // Action: Emit ADVERT_PUBLISHED event
-    // Assert: Error should be logged, but not re-thrown (publication still valid)
+  describe('Email sending failures', () => {
+    it('should not throw when email sending fails')
+    it('should log error when email sending fails')
+    it('should succeed when email sending succeeds')
+    it('should skip email sending when no communication channels exist')
+    it('should skip email sending when communication channels is null/undefined')
   })
 
-  it('should not fail silently when email fails', async () => {
-    // Setup: Mock SES to throw error
-    // Action: Emit ADVERT_PUBLISHED event
-    // Assert: Error should be logged, but not re-thrown
+  describe('Independent failure handling', () => {
+    it('should allow PDF to fail without affecting TBR transaction')
+    it('should allow email to fail without affecting TBR transaction')
   })
 })
 ```
 
 #### Implementation
 
-The current implementation already handles failures gracefully with `.catch()` for PDF and email. The main transaction work was done in C-5. Mark as **mostly complete** after C-5 verification.
+**Existing Error Handling (No Changes Needed):**
+
+```typescript
+// PDF generation (line 221-246)
+@OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED)
+async generatePdf({ advert, publication, html }: AdvertPublishedEvent) {
+  await this.pdfService
+    .generatePdfAndSaveToS3(...)
+    .catch((error) => {
+      this.logger.error('Failed to generate PDF after publication', { ... })
+    })
+}
+
+// Email notification (line 177-219)
+@OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED)
+async sendEmailNotification({ advert, publication }: AdvertPublishedEvent) {
+  await this.sesService.sendMail(message).catch((error) => {
+    this.logger.error('Failed to send email after publication', { ... })
+  })
+}
+
+// TBR transaction (line 42-175) - Already has transaction handling from C-5
+```
 
 #### Status
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Verify C-5 implementation | ⬜ Not Started | TBR transaction wrapped |
-| Add tests for PDF/email | ⬜ Not Started | Error handling verification |
-| Code review | ⬜ Not Started | |
+| Verify C-5 implementation | ✅ Complete | TBR transaction already wrapped in C-5 fix |
+| Add tests for PDF/email | ✅ Complete | 10 tests added (3 PDF + 5 email + 2 coordination) |
+| Verify tests pass | ✅ Complete | All 10 new tests passing (228 total) |
+| Run full suite | ✅ Complete | All 228 tests passing, no regressions |
+| Code review | ⬜ Pending | |
+
+**Completion Date:** January 8, 2026
+
+**Key Findings:**
+- ✅ **Graceful Degradation**: PDF and email failures don't prevent publication
+- ✅ **Error Logging**: All failures properly logged for monitoring
+- ✅ **Independent Execution**: Event listeners execute independently via NestJS EventEmitter
+- ✅ **Transaction Safety**: TBR operations wrapped in database transactions (C-5)
+- ✅ **No Code Changes Required**: Existing implementation already follows best practices
 
 ---
 
@@ -1554,7 +1605,7 @@ nx test legal-gazette-api
 | Jan 8, 2026 | H-7 Delete Prevention | ✅ Complete | Published version protection + M-2 fix (6 tests, 203 total passing) |
 | Jan 8, 2026 | H-8/H-9 State Machine | ✅ Complete | Status validation guards (7 tests, 210 total passing) |
 | Jan 8, 2026 | H-4 XSS Prevention | ✅ Complete | HTML escaping utility + foreclosure service (29 tests, 218 total passing) |
-| | H-10 Transaction | ⬜ Not Started | Partially done in C-5 |
+| Jan 8, 2026 | H-10 Transaction Safety | ✅ Complete | Verification tests only - existing code already correct (10 tests, 228 total passing) |
 | | H-11 FK Constraints | ⬜ Not Started | |
 | | Phase 4 Reliability | ⬜ Not Started | Post-release |
 
