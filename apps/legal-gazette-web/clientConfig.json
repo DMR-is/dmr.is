@@ -5559,9 +5559,10 @@
           "nationalId": { "type": "string" },
           "email": { "type": "string" },
           "phone": { "type": "string" },
-          "name": { "type": "string" }
+          "name": { "type": "string" },
+          "isActive": { "type": "boolean" }
         },
-        "required": ["id", "nationalId", "email", "name"]
+        "required": ["id", "nationalId", "email", "name", "isActive"]
       },
       "GetUsersResponse": {
         "type": "object",

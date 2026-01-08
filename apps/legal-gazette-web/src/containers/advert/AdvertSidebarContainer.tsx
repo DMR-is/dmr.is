@@ -53,6 +53,7 @@ export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
         options={usersData?.users.map((user) => ({
           label: user.name,
           value: user.id,
+          disabled: !user.isActive,
         }))}
       />
       <ChangeStatusButtons

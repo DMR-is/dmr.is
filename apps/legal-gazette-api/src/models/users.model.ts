@@ -1,4 +1,4 @@
-import { IsEmail, IsOptional, IsString } from 'class-validator'
+import { IsBoolean, IsEmail, IsOptional, IsString } from 'class-validator'
 import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
@@ -27,7 +27,7 @@ export type UserCreateAttributes = {
 
 @BaseTable({ tableName: LegalGazetteModels.USERS })
 @DefaultScope(() => ({
-  attributes: ['id', 'nationalId', 'firstName', 'lastName', 'email', 'phone'],
+  paranoid: false,
   orderBy: [
     ['firstName', 'ASC'],
     ['lastName', 'ASC'],
@@ -84,6 +84,7 @@ export class UserModel extends BaseModel<UserAttributes, UserCreateAttributes> {
       name: `${model.firstName} ${model.lastName}`,
       email: model.email,
       phone: model?.phone ?? undefined,
+      isActive: !model.deletedAt,
     }
   }
 
@@ -110,6 +111,12 @@ export class UserDto extends PickType(UserModel, [
   })
   @IsString()
   phone?: string
+
+  @ApiProperty({
+    type: Boolean,
+  })
+  @IsBoolean()
+  isActive!: boolean
 }
 
 export class GetUsersResponse {

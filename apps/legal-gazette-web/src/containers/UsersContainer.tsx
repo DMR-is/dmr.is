@@ -102,6 +102,18 @@ export const UsersContainer = () => {
             variant="small"
             image={{ src: '/assets/banner-small-image.svg', alt: '' }}
             centerImage={true}
+            breadcrumbs={{
+              items: [
+                {
+                  title: 'Stjórnborð',
+                  href: '/',
+                },
+                {
+                  title: 'Ritstjórar',
+                  href: '/stillingar/ritstjorar',
+                },
+              ],
+            }}
           >
             <Text>
               Hér er hægt að eiga við ritstjóra Lögbirtingablaðsins. Hægt er að
@@ -119,6 +131,7 @@ export const UsersContainer = () => {
               name: us.name,
               email: us.email,
               nationalId: us.nationalId,
+              isActive: us.isActive,
               actions: [
                 <UpdateUser
                   intiallyVisible={false}

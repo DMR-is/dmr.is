@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Box, Inline } from '@dmr.is/ui/components/island-is'
+import { Box, Inline, Tag } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
 
@@ -10,6 +10,7 @@ import { TRPCErrorAlert } from '../trpc/TRPCErrorAlert'
 type UserItem = {
   id: string
   name: string
+  isActive: boolean
   email?: string
   nationalId: string
   actions?: React.ReactElement[]
@@ -46,6 +47,10 @@ export const UsersTable = ({
       field: 'nationalId',
       children: 'Kennitala',
     },
+    {
+      field: 'isActive',
+      children: 'Staða',
+    },
   ]
 
   if (actionButton) {
@@ -62,6 +67,11 @@ export const UsersTable = ({
       name: user.name,
       email: user.email || '-',
       nationalId: user.nationalId,
+      isActive: (
+        <Tag variant={user.isActive ? 'mint' : 'red'}>
+          {user.isActive ? 'Virkur' : 'Óvirkur'}
+        </Tag>
+      ),
       actions: actionButton ? (
         <Box width="full">
           <Inline alignY="center" space={[1, 2]} flexWrap="nowrap">

@@ -182,7 +182,7 @@ export type AdvertCreateAttributes = {
       { model: CategoryModel },
       { model: CourtDistrictModel },
       { model: TypeModel },
-      { model: UserModel },
+      { model: UserModel, paranoid: false },
       { model: AdvertPublicationModel, as: 'publications' },
       { model: SettlementModel },
       { model: CommunicationChannelModel },

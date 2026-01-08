@@ -63,6 +63,7 @@ export class UsersService implements IUsersService {
 
     await this.userModel.destroy({
       where: { id: userId },
+      force: false,
     })
 
     this.logger.info('Admin user deleted', {
