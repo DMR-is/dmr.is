@@ -47,13 +47,14 @@ export class PublishingTaskService implements IPublishingTaskService {
       },
       order: [['publicationNumber', 'DESC']],
       limit: 1,
+      lock: Transaction.LOCK.UPDATE,
       transaction: transaction,
     })
 
     let count = 1
 
     if (maxPublication?.publicationNumber) {
-      count = parseInt(maxPublication.publicationNumber.slice(8), 11) + 1
+      count = parseInt(maxPublication.publicationNumber.slice(8), 10) + 1
     }
 
     const publicationNumber = `${year}${month}${day}${count.toString().padStart(3, '0')}`

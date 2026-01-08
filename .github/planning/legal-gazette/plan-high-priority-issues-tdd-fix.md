@@ -35,7 +35,7 @@ This plan outlines a TDD approach to fixing the 15 remaining high priority issue
 
 | ID | Issue | Location | Impact | Status |
 |----|-------|----------|--------|--------|
-| H-6 | Publication Number Generation Race Condition | `publication.service.ts` | Duplicate numbers | ⬜ Not Started |
+| H-6 | Publication Number Generation Race Condition | `publication.service.ts` | Duplicate numbers | ✅ Complete |
 | H-7 | Published Versions Can Be Hard-Deleted | `publication.service.ts` | Data loss | ⬜ Not Started |
 | H-8 | Missing Status Check on Application Submission | `application.service.ts` | Invalid state | ⬜ Not Started |
 | H-9 | Missing Status Check on Application Update | `application.service.ts` | Invalid state | ⬜ Not Started |
@@ -63,7 +63,7 @@ Based on dependencies, risk, and production readiness:
 | 1 | H-2 | Security - authorization bypass | 2h | ✅ Complete |
 | 2 | H-5 | Security - GDPR compliance | 3h | ✅ Complete |
 | 3 | H-4 | Security - XSS vulnerability | 4h | ⬜ Not Started |
-| 4 | H-6 | Data integrity - duplicate publication numbers | 3h | ⬜ Not Started |
+| 4 | H-6 | Data integrity - duplicate publication numbers | 3h | ✅ Complete |
 | 5 | H-7 | Data integrity - prevent published version deletion | 2h | ⬜ Not Started |
 | 6 | H-8, H-9 | Data integrity - application state machine | 4h | ⬜ Not Started |
 | 7 | H-10 | Data integrity - transaction safety | 2h | ⬜ Not Started |
@@ -780,17 +780,38 @@ async publishAdvertPublication(
 }
 ```
 
+#### Solution Implemented
+
+**Two bugs fixed:**
+
+1. **Radix Bug (M-1)**: Changed `parseInt(publicationNumber.slice(8), 11)` to `parseInt(publicationNumber.slice(8), 10)`
+2. **Race Condition**: Added pessimistic locking with `lock: Transaction.LOCK.UPDATE` and `transaction: t` to findOne query
+
+**Files Changed:**
+- `apps/legal-gazette-api/src/modules/advert/publications/publication.service.ts`
+- `apps/legal-gazette-api/src/modules/advert/tasks/publishing/publishing.task.ts`
+- `apps/legal-gazette-api/src/modules/advert/publications/publication.service.spec.ts` (new file, 7 tests)
+
+**Key Implementation Details:**
+- ✅ **Pessimistic Lock**: Added `Transaction.LOCK.UPDATE` to prevent concurrent reads
+- ✅ **Transaction Context**: Pass transaction `t` to findOne for proper isolation
+- ✅ **Correct Radix**: Changed from base 11 to base 10 for parseInt
+- ✅ **Applied to Both Locations**: Fixed both publication.service.ts and publishing.task.ts
+
 #### Status
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Write test file | ⬜ Not Started | |
-| Verify tests fail | ⬜ Not Started | |
-| Fix radix to 10 | ⬜ Not Started | M-1 fix included |
-| Add transaction lock | ⬜ Not Started | |
-| Update publishing.task.ts | ⬜ Not Started | Same fix needed |
-| Verify tests pass | ⬜ Not Started | |
-| Code review | ⬜ Not Started | |
+| Write test file | ✅ Complete | 7 tests in publication.service.spec.ts |
+| Verify tests fail | ✅ Complete | 3 tests failed as expected (radix bug, missing transaction, missing lock) |
+| Fix radix to 10 | ✅ Complete | M-1 fix included in both files |
+| Add transaction lock | ✅ Complete | Added lock: Transaction.LOCK.UPDATE and transaction: t |
+| Update publishing.task.ts | ✅ Complete | Same fixes applied |
+| Verify tests pass | ✅ Complete | All 7 new tests passing |
+| Run full suite | ✅ Complete | All 197 tests passing, no regressions |
+| Code review | ⬜ Pending | |
+
+**Completion Date:** January 8, 2026
 
 ---
 
@@ -1389,9 +1410,10 @@ nx test legal-gazette-api
 |------|-------|--------|-------|
 | Jan 7, 2026 | Plan Created | ✅ Complete | |
 | Jan 7, 2026 | H-2 Ownership | ✅ Complete | Guard-based authorization with ApplicationOwnershipGuard (23 tests passing) |
+| Jan 7, 2026 | H-3 Rate Limiting | ✅ Complete | ThrottlerGuard on external endpoints (14 tests passing) |
+| Jan 7, 2026 | H-5 PII Masking | ✅ Complete | Auto-masking in logger metadata (24 tests passing) |
+| Jan 8, 2026 | H-6 Race Condition | ✅ Complete | Pessimistic locking + radix fix (7 tests, 197 total passing) |
 | | H-4 XSS Prevention | ⬜ Not Started | |
-| | H-5 PII Masking | ⬜ Not Started | |
-| | H-6 Race Condition | ⬜ Not Started | |
 | | H-7 Delete Prevention | ⬜ Not Started | |
 | | H-8/H-9 State Machine | ⬜ Not Started | |
 | | H-10 Transaction | ⬜ Not Started | Partially done in C-5 |

@@ -1,5 +1,5 @@
 import addDays from 'date-fns/addDays'
-import { Op } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
@@ -256,11 +256,13 @@ export class PublicationService implements IPublicationService {
           },
           order: [['publicationNumber', 'DESC']],
           limit: 1,
+          lock: Transaction.LOCK.UPDATE,
+          transaction: t,
         })
 
         const publishCount = (
           maxPublication && maxPublication.publicationNumber
-            ? parseInt(maxPublication.publicationNumber.slice(8), 11) + 1
+            ? parseInt(maxPublication.publicationNumber.slice(8), 10) + 1
             : 1
         )
           .toString()
