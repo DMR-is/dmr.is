@@ -1,6 +1,8 @@
 'use client'
 
-import { Select, SkeletonLoader } from '@dmr.is/ui/components/island-is'
+import { useMemo } from 'react'
+
+import { Select } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 import { StatusIdEnum } from '../../lib/constants'
@@ -9,7 +11,7 @@ type Props = {
   advertId: string
   currentStatusId?: string
   assignedUserId?: string
-  options?: { label: string; value: string }[]
+  options?: { label: string; value: string; disabled?: boolean }[]
   isLoading?: boolean
 }
 
@@ -23,25 +25,26 @@ export const EmployeeSelect = ({
   const { assignUser, isAssigningUser, assignAndUpdateStatus } =
     useUpdateAdvert(advertId)
 
-  if (isLoading) {
-    return (
-      <SkeletonLoader background="purple200" height={64} borderRadius="large" />
-    )
-  }
+  const selected = options?.find((option) => option.value === assignedUserId)
 
-  if (!options) {
-    return null
-  }
+  const filteredOptions = useMemo(() => {
+    if (!options) return []
+    return options?.filter((option) => {
+      if (option.value === assignedUserId) {
+        return true
+      }
 
-  const selected = options.find((option) => option.value === assignedUserId)
+      return !option.disabled
+    })
+  }, [selected, options])
 
   return (
     <Select
       size="sm"
       label="Starfsmaður"
-      options={options}
-      isLoading={isAssigningUser}
-      defaultValue={selected}
+      options={filteredOptions}
+      isLoading={isLoading || isAssigningUser}
+      value={selected}
       onChange={(opt) => {
         if (!opt) return
         if (currentStatusId === StatusIdEnum.SUBMITTED) {

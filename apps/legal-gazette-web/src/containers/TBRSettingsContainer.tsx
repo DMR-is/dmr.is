@@ -49,7 +49,8 @@ export const TBRSettingsContainer = () => {
             centerImage={true}
           >
             <Text>
-              Hér er hægt að sjá notendur sem eru í áskrift hjá TBR. Hægt er að
+              Hér er hægt að sjá notendur sem eru í áskrift hjá TBR. Notendur í
+              áskrift fá reglulega greiðlur en ekki stakar greiðslur. Hægt er að
               slökkva og kveikja á áskriftarleið ásamt því að bæta við og
               fjarlæga notendur.
             </Text>
