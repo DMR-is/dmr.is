@@ -1836,24 +1836,14 @@ export class PaymentStatusTask {
 **Solution:** Created centralized `fetchWithTimeout()` utility in `@dmr.is/utils` with 10-second default timeout.
 
 **Files Modified:**
-- ✅ `libs/shared/utils/src/lib/httpUtils.ts` - New `fetchWithTimeout()` utility
+
 - ✅ `libs/shared/utils/src/index.ts` - Export httpUtils
 - ✅ `apps/legal-gazette-api/src/modules/tbr/tbr.service.ts` - Use `fetchWithTimeout`
 - ✅ `libs/clients/national-registry/national-registry.service.ts` - Use `fetchWithTimeout` (2 calls)
 - ✅ `libs/clients/company-registry/company-regsitry.service.ts` - Use `fetchWithTimeout` (1 call)
 
 **Files Created:**
-- ✅ `libs/clients/national-registry/project.json` + tsconfig + jest.config.ts
-- ✅ `libs/clients/company-registry/project.json` + tsconfig + jest.config.ts
-- ✅ `libs/clients/national-registry/national-registry.service.spec.ts` (6 tests)
-- ✅ `libs/clients/company-registry/company-registry.service.spec.ts` (5 tests)
-- ✅ `apps/legal-gazette-api/src/modules/tbr/tbr.service.spec.ts` (6 tests)
-
-**Test Results:**
-- National Registry Client: 4/6 tests passing (timeout signal verified ✅)
-- Company Registry Client: 4/5 tests passing (timeout signal verified ✅)
-- TBR Service: 4/6 tests passing (timeout signal verified ✅)
-- Full Legal Gazette API suite: **234/236 tests passing** (no regressions)
+- ✅ `libs/shared/utils/src/lib/httpUtils.ts` - New `fetchWithTimeout()` utility
 
 **Implementation:**
 
@@ -1884,7 +1874,6 @@ const response = await fetchWithTimeout(url, {
 - ✅ Centralized timeout configuration (DRY principle)
 - ✅ All external API calls protected against hanging requests
 - ✅ Reusable across entire monorepo
-- ✅ Well-tested and documented
 - ✅ No regressions introduced
 
 ---
