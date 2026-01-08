@@ -23,7 +23,6 @@ describe('AdvertPublishedListener', () => {
   let tbrService: jest.Mocked<ITBRService>
   let tbrTransactionModel: jest.Mocked<typeof TBRTransactionModel>
   let priceCalculatorService: jest.Mocked<IPriceCalculatorService>
-  let _sequelize: jest.Mocked<Sequelize>
 
   // Test data factories - use Partial to avoid needing all fields
   const createMockAdvert = (overrides = {}) => ({
@@ -166,7 +165,6 @@ describe('AdvertPublishedListener', () => {
     tbrService = module.get(ITBRService)
     tbrTransactionModel = module.get(getModelToken(TBRTransactionModel))
     priceCalculatorService = module.get(IPriceCalculatorService)
-    _sequelize = module.get(Sequelize)
   })
 
   // ==========================================
@@ -317,6 +315,189 @@ describe('AdvertPublishedListener', () => {
 
         // TBR should NOT be called if we can't create the PENDING record
         expect(tbrService.postPayment).not.toHaveBeenCalled()
+      })
+    })
+  })
+
+  // ==========================================
+  // Error Handling and Coordination (H-10)
+  // ==========================================
+  describe('Error Handling and Coordination (H-10)', () => {
+    let pdfService: jest.Mocked<PdfService>
+    let sesService: jest.Mocked<IAWSService>
+    let logger: any
+
+    beforeEach(() => {
+      pdfService = listener['pdfService'] as jest.Mocked<PdfService>
+      sesService = listener['sesService'] as jest.Mocked<IAWSService>
+      logger = listener['logger']
+    })
+
+    describe('PDF generation failures', () => {
+      it('should not throw when PDF generation fails', async () => {
+        const mockError = new Error('PDF generation timeout')
+        pdfService.generatePdfAndSaveToS3.mockRejectedValue(mockError)
+
+        const event = createMockEvent()
+
+        // Should not throw - PDF failure should be caught
+        await expect(listener.generatePdf(event)).resolves.not.toThrow()
+      })
+
+      it('should log error when PDF generation fails', async () => {
+        const mockError = new Error('PDF generation timeout')
+        pdfService.generatePdfAndSaveToS3.mockRejectedValue(mockError)
+
+        const event = createMockEvent()
+        await listener.generatePdf(event)
+
+        expect(logger.error).toHaveBeenCalledWith(
+          'Failed to generate PDF after publication',
+          expect.objectContaining({
+            error: mockError,
+            advertId: event.publication.advertId,
+            publicationId: event.publication.id,
+          }),
+        )
+      })
+
+      it('should succeed when PDF generation succeeds', async () => {
+        pdfService.generatePdfAndSaveToS3.mockResolvedValue({
+          s3Url: 'https://s3.amazonaws.com/bucket/file.pdf',
+          key: 'file.pdf',
+          pdfBuffer: Buffer.from('mock pdf'),
+        })
+
+        const event = createMockEvent()
+        await listener.generatePdf(event)
+
+        expect(pdfService.generatePdfAndSaveToS3).toHaveBeenCalledWith(
+          event.html,
+          event.publication.advertId,
+          event.publication.id,
+          event.advert.title,
+        )
+        expect(logger.error).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('Email sending failures', () => {
+      it('should not throw when email sending fails', async () => {
+        const mockError = new Error('SES service unavailable')
+        sesService.sendMail.mockRejectedValue(mockError)
+
+        const event = createMockEvent()
+
+        // Should not throw - email failure should be caught
+        await expect(
+          listener.sendEmailNotification(event),
+        ).resolves.not.toThrow()
+      })
+
+      it('should log error when email sending fails', async () => {
+        const mockError = new Error('SES service unavailable')
+        sesService.sendMail.mockRejectedValue(mockError)
+
+        const event = createMockEvent()
+        await listener.sendEmailNotification(event)
+
+        expect(logger.error).toHaveBeenCalledWith(
+          'Failed to send email after publication',
+          expect.objectContaining({
+            error: mockError,
+            advertId: event.advert.id,
+            publicationId: event.publication.id,
+          }),
+        )
+      })
+
+      it('should succeed when email sending succeeds', async () => {
+        sesService.sendMail.mockResolvedValue(undefined)
+
+        const event = createMockEvent()
+        await listener.sendEmailNotification(event)
+
+        expect(sesService.sendMail).toHaveBeenCalledWith(
+          expect.objectContaining({
+            from: 'Lögbirtingablaðið <noreply@logbirtingablad.is>',
+            to: 'test@example.com',
+          }),
+        )
+        expect(logger.error).not.toHaveBeenCalled()
+      })
+
+      it('should skip email sending when no communication channels exist', async () => {
+        const event = createMockEvent()
+        // Override communicationChannels after creation
+        ;(event.advert as any).communicationChannels = []
+
+        await listener.sendEmailNotification(event)
+
+        expect(sesService.sendMail).not.toHaveBeenCalled()
+        expect(logger.warn).toHaveBeenCalledWith(
+          'No emails found for advert, skipping email notification',
+          expect.anything(),
+        )
+      })
+
+      it('should skip email sending when communication channels is null/undefined', async () => {
+        const event = createMockEvent()
+        // Override communicationChannels after creation
+        ;(event.advert as any).communicationChannels = null
+
+        await listener.sendEmailNotification(event)
+
+        expect(sesService.sendMail).not.toHaveBeenCalled()
+        expect(logger.warn).toHaveBeenCalledWith(
+          'No emails found for advert, skipping email notification',
+          expect.anything(),
+        )
+      })
+    })
+
+    describe('Independent failure handling', () => {
+      it('should allow PDF to fail without affecting TBR transaction', async () => {
+        pdfService.generatePdfAndSaveToS3.mockRejectedValue(
+          new Error('PDF timeout'),
+        )
+
+        const event = createMockEvent()
+
+        // Both should execute independently
+        await Promise.all([
+          listener.generatePdf(event),
+          listener.createTBRTransaction(event),
+        ])
+
+        // PDF should fail gracefully
+        expect(logger.error).toHaveBeenCalledWith(
+          'Failed to generate PDF after publication',
+          expect.anything(),
+        )
+
+        // TBR should succeed
+        expect(tbrService.postPayment).toHaveBeenCalled()
+      })
+
+      it('should allow email to fail without affecting TBR transaction', async () => {
+        sesService.sendMail.mockRejectedValue(new Error('SES unavailable'))
+
+        const event = createMockEvent()
+
+        // Both should execute independently
+        await Promise.all([
+          listener.sendEmailNotification(event),
+          listener.createTBRTransaction(event),
+        ])
+
+        // Email should fail gracefully
+        expect(logger.error).toHaveBeenCalledWith(
+          'Failed to send email after publication',
+          expect.anything(),
+        )
+
+        // TBR should succeed
+        expect(tbrService.postPayment).toHaveBeenCalled()
       })
     })
   })
