@@ -1,5 +1,7 @@
 'use client'
 
+import { useParams } from 'next/navigation'
+
 import { useState } from 'react'
 
 import {
@@ -33,6 +35,7 @@ export const ApplicationSubmitted = ({
   title,
   subtitle,
 }: Props) => {
+  const { id: applicationId } = useParams()
   const [showAsCards, setShowAsCards] = useState(false)
 
   const pageTitle =
@@ -63,7 +66,9 @@ export const ApplicationSubmitted = ({
                   {applicationType !== ApplicationTypeEnum.COMMON && (
                     <GridColumn span={['12/12', '3/12']}>
                       <Inline align="right">
-                        <AddAdvertsToApplicationMenu />
+                        <AddAdvertsToApplicationMenu
+                          applicationId={applicationId as string}
+                        />
                       </Inline>
                     </GridColumn>
                   )}

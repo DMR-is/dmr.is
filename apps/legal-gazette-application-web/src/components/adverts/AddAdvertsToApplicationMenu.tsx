@@ -7,7 +7,13 @@ import { DropdownMenu } from '@dmr.is/ui/components/island-is'
 import { CreateDivisionEnding } from './CreateDivisionEnding'
 import { CreateDivisionMeeting } from './CreateDivisionMeeting'
 
-export const AddAdvertsToApplicationMenu = () => {
+export const AddAdvertsToApplicationMenu = ({
+  applicationId,
+  title,
+}: {
+  applicationId: string
+  title?: string
+}) => {
   const [toggleDivisionMeeting, setToggleDivisionMeeting] = useState(false)
   const [toggleDivisionEnding, setToggleDivisionEnding] = useState(false)
 
@@ -15,8 +21,9 @@ export const AddAdvertsToApplicationMenu = () => {
     <>
       <DropdownMenu
         title="Bæta við"
-        icon="hammer"
+        icon="add"
         iconType="outline"
+        openOnHover
         items={[
           {
             title: 'Skiptafundi',
@@ -29,10 +36,14 @@ export const AddAdvertsToApplicationMenu = () => {
         ]}
       />
       <CreateDivisionMeeting
+        applicationId={applicationId}
+        title={title}
         isVisible={toggleDivisionMeeting}
         onVisibilityChange={setToggleDivisionMeeting}
       />
       <CreateDivisionEnding
+        applicationId={applicationId}
+        title={title}
         isVisible={toggleDivisionEnding}
         onVisibilityChange={setToggleDivisionEnding}
       />
