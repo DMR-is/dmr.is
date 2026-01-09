@@ -1,9 +1,55 @@
 # Plan: Related Entities Status Protection (C-1 Extension)
 
 > **Created:** January 2, 2026  
-> **Status:** 🟡 Research Complete - Implementation Pending  
+> **Updated:** January 9, 2026  
+> **Status:** 🔴 Not Implemented - All Phases Pending  
 > **Related Issue:** C-1 (Published Adverts Can Be Modified)  
 > **Priority:** High - Same data integrity risk as C-1
+
+---
+
+## Current Implementation Status
+
+### ✅ Phase 0: C-1 Core Fix (COMPLETE)
+
+**Status:** Implemented and tested in `advert.service.ts`
+
+**Implementation Details:**
+- File: `apps/legal-gazette-api/src/modules/advert/advert.service.ts` (lines 375-423)
+- Method: `updateAdvert()`
+- Protection: Inline status check before updates
+
+```typescript
+// Current implementation (lines 386-392)
+const nonEditableStatuses = [
+  StatusIdEnum.PUBLISHED,
+  StatusIdEnum.REJECTED,
+  StatusIdEnum.WITHDRAWN,
+]
+
+if (nonEditableStatuses.includes(advert.statusId)) {
+  throw new BadRequestException('Cannot modify published adverts')
+}
+```
+
+**Test Coverage:**
+- File: `apps/legal-gazette-api/src/modules/advert/advert.service.spec.ts` (lines 162+)
+- ✅ Tests modification of PUBLISHED adverts (title, content, category, type)
+- ✅ Tests REJECTED status protection
+- ✅ Tests WITHDRAWN status protection
+- ✅ Tests that non-terminal statuses can be modified
+
+**Note:** Currently uses inline logic instead of shared utility. Should be refactored to use utility from Phase 1.
+
+### ❌ Phases 1-5: Related Entities (NOT IMPLEMENTED)
+
+**Critical Finding:** NO protection exists for related entities:
+- Settlement updates can modify data for published adverts
+- Signature create/update operations are unprotected
+- Communication channel operations are unprotected
+- Foreclosure property operations are unprotected
+
+**Risk:** Data integrity violations possible through indirect modifications.
 
 ---
 
@@ -206,29 +252,119 @@ async updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDetailedDto
 ## Implementation Phases
 
 ### Phase 1: Create Shared Utility ⬜ Not Started
+
+**Status:** NOT IMPLEMENTED - Utility file does not exist
+
+**Current State:**
+- ❌ File `apps/legal-gazette-api/src/core/utils/advert-status.util.ts` does not exist
+- ❌ No shared utility functions available
+- ℹ️ C-1 fix uses inline logic in `advert.service.ts`
+
+**Required Tasks:**
 - Create `advert-status.util.ts` with reusable functions
 - Refactor C-1 fix to use the utility
 - Add unit tests for utility functions
 
+**Estimated Effort:** 1h
+
+---
+
 ### Phase 2: Settlement Module ⬜ Not Started
+
+**Status:** NOT IMPLEMENTED - No protection exists
+
+**Current State:**
+- ❌ `SettlementService.updateSettlement()` has NO status checks
+- ❌ No test file exists (`settlement.service.spec.ts` not found)
+- ⚠️ VULNERABLE: Can modify settlement data for published adverts
+
+**Files to Modify:**
+- `apps/legal-gazette-api/src/modules/settlement/settlement.service.ts` (line 16: `updateSettlement`)
+
+**Required Tasks:**
 - Add tests for settlement update with published advert
 - Implement status check in `SettlementService.updateSettlement()`
 - Verify tests pass
 
+**Estimated Effort:** 2h
+
+---
+
 ### Phase 3: Signature Module ⬜ Not Started
+
+**Status:** NOT IMPLEMENTED - No protection exists
+
+**Current State:**
+- ❌ `SignatureService.createSignature()` has NO status checks
+- ❌ `SignatureService.updateSignature()` has NO status checks
+- ❌ No test file exists (`signature.service.spec.ts` not found)
+- ⚠️ VULNERABLE: Can create/modify signatures for published adverts
+
+**Files to Modify:**
+- `apps/legal-gazette-api/src/modules/advert/signature/signature.service.ts`
+  - Line 35: `updateSignature()`
+  - Line 47: `createSignature()`
+
+**Required Tasks:**
 - Add tests for signature create/update with published advert
-- Implement status checks in signature service
+- Implement status checks in signature service methods
 - Verify tests pass
+
+**Estimated Effort:** 2h
+
+---
 
 ### Phase 4: Communication Channel Module ⬜ Not Started
+
+**Status:** NOT IMPLEMENTED - No protection exists
+
+**Current State:**
+- ❌ `CommunicationChannelService.createChannel()` has NO status checks
+- ❌ `CommunicationChannelService.updateChannel()` has NO status checks
+- ❌ `CommunicationChannelService.deleteChannel()` has NO status checks
+- ❌ No test file exists (`communication-channel.service.spec.ts` not found)
+- ⚠️ VULNERABLE: Can create/modify/delete channels for published adverts
+
+**Files to Modify:**
+- `apps/legal-gazette-api/src/modules/communication-channel/communication-channel.service.ts`
+  - Line 26: `createChannel()`
+  - Line 41: `deleteChannel()`
+  - Line 47: `updateChannel()`
+
+**Required Tasks:**
 - Add tests for channel create/update/delete with published advert
-- Implement status checks in communication channel service
+- Implement status checks in all CUD operations
 - Verify tests pass
 
+**Estimated Effort:** 2h
+
+---
+
 ### Phase 5: Foreclosure Module ⬜ Not Started
+
+**Status:** PARTIALLY IMPLEMENTED - Only delete operation protected
+
+**Current State:**
+- ✅ `ForeclosureService.deleteForclosureSale()` protected (marks advert as withdrawn)
+- ❌ `ForeclosureService.createForeclosureProperty()` has NO status checks
+- ❌ `ForeclosureService.deletePropertyFromForeclosure()` has NO status checks
+- ⚠️ VULNERABLE: Can add/remove properties for published foreclosure adverts
+
+**Files to Modify:**
+- `apps/legal-gazette-api/src/modules/external-systems/foreclosure/foreclosure.service.ts`
+  - Line 119: `createForeclosureProperty()`
+  - Line 136: `deletePropertyFromForeclosure()`
+
+**Test Coverage:**
+- File exists: `apps/legal-gazette-api/src/modules/external-systems/foreclosure/foreclosure.service.spec.ts`
+- Tests focus on XSS protection, not status protection
+
+**Required Tasks:**
 - Add tests for property add/delete with published advert
-- Implement status checks in foreclosure service
+- Implement status checks in property operations
 - Verify tests pass
+
+**Estimated Effort:** 3h
 
 ---
 
@@ -263,24 +399,29 @@ async updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDetailedDto
 | Date | Phase | Status | Notes |
 |------|-------|--------|-------|
 | Jan 2, 2026 | Research | ✅ Complete | Identified 5 affected modules |
-| | Phase 1 | ⬜ Not Started | |
-| | Phase 2 | ⬜ Not Started | |
-| | Phase 3 | ⬜ Not Started | |
-| | Phase 4 | ⬜ Not Started | |
-| | Phase 5 | ⬜ Not Started | |
+| Jan 9, 2026 | C-1 Core | ✅ Complete | Inline implementation in `advert.service.ts`, full test coverage |
+| Jan 9, 2026 | Phase 1 | ⬜ Not Started | Utility file does not exist |
+| Jan 9, 2026 | Phase 2 | ⬜ Not Started | Settlement service has no protection |
+| Jan 9, 2026 | Phase 3 | ⬜ Not Started | Signature service has no protection |
+| Jan 9, 2026 | Phase 4 | ⬜ Not Started | Communication channel service has no protection |
+| Jan 9, 2026 | Phase 5 | ⬜ Not Started | Foreclosure property operations have no protection |
 
 ---
 
 ## Notes
 
+- **C-1 Core Fix:** Implemented inline in `advert.service.ts` with comprehensive test coverage
+- **Next Priority:** Phase 1 (shared utility) should be completed before implementing Phases 2-5
 - This is an extension of C-1 and should be prioritized after the main critical issues are resolved
 - Consider adding API-level documentation warning consumers about status restrictions
 - May need to coordinate with frontend to show appropriate error messages
+- **Refactoring Opportunity:** Once Phase 1 utility is created, refactor C-1 fix to use shared utility
+- **Test Gap:** Related entity services (Settlement, Signature, Communication Channel) lack dedicated test files
 
 ---
 
 **Document Owner:** Development Team  
-**Last Updated:** January 2, 2026  
+**Last Updated:** January 9, 2026  
 **Related Documents:** 
 - [plan-critical-issues-tdd-fix.md](plan-critical-issues-tdd-fix.md)
 - [plan-code-review-findings.md](plan-code-review-findings.md)

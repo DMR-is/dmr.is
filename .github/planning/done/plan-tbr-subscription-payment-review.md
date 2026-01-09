@@ -3,6 +3,12 @@
 ## Review Date
 December 29, 2025
 
+## Last Updated
+January 9, 2026
+
+## Status
+✅ **IMPLEMENTATION COMPLETE** - All critical fixes implemented and verified.
+
 ## Purpose
 Critical review of the TBR subscription payment implementation, identifying issues, inconsistencies, and areas requiring clarification.
 
@@ -242,7 +248,7 @@ So `subscribedTo` is the expiry date, not "when subscription ended". If null mea
      - `subscribedTo` = expiry date (1 year after purchase, always updates on renewal)
 
 3. **Event semantics:** Should `SUBSCRIBER_CREATED` be renamed to reflect it's about payment/subscription purchase?
-   - 🔲 **Not decided yet**
+   - ✅ **ANSWER:** No, keeping existing name. Not worth the refactoring effort.
 
 4. **Subscription amount:** 3,000 ISK or 4,500 ISK?
    - ✅ **ANSWER:** 4,500 ISK default (via env variable)
@@ -262,15 +268,15 @@ So `subscribedTo` is the expiry date, not "when subscription ended". If null mea
 
 | Component | Status | Issues | Action Needed |
 |-----------|--------|--------|---------------|
-| Database schema | ✅ Fixed | - | Migration created |
-| Subscriber model | ✅ OK | - | - |
-| Payment model | ✅ Fixed | Added `activatedByNationalId` | - |
-| Subscriber service | ✅ Fixed | No longer activates prematurely | - |
-| Payment listener | ✅ Fixed | Correct `subscribedFrom`/`subscribedTo` logic | - |
-| tRPC router | ✅ OK | - | - |
-| Frontend form | 🔲 Not Started | Form not connected | Fix #8 |
-| Tests | 🔲 Not Started | - | Fix #13 |
-| Plan document | ✅ Updated | Legacy removed, field names fixed | - |
+| Database schema | ✅ Complete | - | - |
+| Subscriber model | ✅ Complete | - | - |
+| Payment model | ✅ Complete | Refactored to `SubscriberTransactionModel` with `activatedByNationalId` | - |
+| Subscriber service | ✅ Complete | No longer activates prematurely, uses advisory locks | - |
+| Payment listener | ✅ Complete | Correct `subscribedFrom`/`subscribedTo` logic, transaction boundaries | - |
+| tRPC router | ✅ Complete | - | - |
+| Frontend form | ✅ Complete | `RegistrationButton` calls mutation, refreshes session | - |
+| Tests | ✅ Complete | 692 lines of tests in `subscriber-created.listener.spec.ts` | - |
+| Plan document | ✅ Complete | Legacy removed, field names fixed | - |
 
 ---
 
@@ -292,18 +298,18 @@ So `subscribedTo` is the expiry date, not "when subscription ended". If null mea
 
 | # | Task | Status |
 |---|------|--------|
-| 8 | Implement frontend form with mutation call | 🔲 |
-| 9 | Add session refresh after subscription purchase | 🔲 |
-| 10 | Add transaction boundaries in listener | 🔲 |
+| 8 | Implement frontend form with mutation call | ✅ Done - `RegistrationButton.tsx` |
+| 9 | Add session refresh after subscription purchase | ✅ Done - calls `await update()` |
+| 10 | Add transaction boundaries in listener | ✅ Done - uses `sequelize.transaction()` |
 
 ### Technical Debt
 
 | # | Task | Status |
 |---|------|--------|
-| 11 | Consider renaming event to `SUBSCRIPTION_PURCHASED` | 🔲 |
-| 12 | Use kennitala package for national ID validation | 🔲 |
-| 13 | Add comprehensive tests | 🔲 |
-| 14 | Document TBR integration (fee codes, categories) | 🔲 |
+| 11 | ~~Consider renaming event to `SUBSCRIPTION_PURCHASED`~~ | ❌ Won't Do |
+| 12 | Use kennitala package for national ID validation | ✅ Done - uses `Kennitala.isCompany()` |
+| 13 | Add comprehensive tests | ✅ Done - 692 lines in listener spec |
+| 14 | Document TBR integration (fee codes, categories) | 🔲 Future |
 
 ---
 
@@ -375,7 +381,21 @@ ALTER TABLE subscriber_payments ADD COLUMN activated_by_national_id TEXT NOT NUL
 2. ✅ Review document updated with answers
 3. ✅ Code fixes #1-7 implemented
 4. ✅ Main plan document updated
-5. 🔲 Run migration: `nx run legal-gazette-api:migrate`
-6. 🔲 Implement frontend form (Phase 3)
-7. 🔲 Add tests (Phase 4)
+5. ✅ Migration applied
+6. ✅ Frontend form implemented (`RegistrationButton.tsx`)
+7. ✅ Tests added (692 lines)
+
+---
+
+## Completion Notes (January 9, 2026)
+
+All implementation tasks have been completed:
+
+- **Service layer**: Uses advisory locks for idempotency, emits event without premature activation
+- **Listener**: Creates PENDING transaction, calls TBR, updates to CREATED on success, activates subscriber with correct `subscribedFrom`/`subscribedTo` logic
+- **Model**: Refactored from `SubscriberPaymentModel` to `SubscriberTransactionModel` (junction table)
+- **Frontend**: `RegistrationButton` component with mutation call, session refresh, and error toast
+- **Tests**: Comprehensive test coverage in `subscriber-created.listener.spec.ts`
+
+The event remains named `SUBSCRIBER_CREATED` - renaming was deemed not worth the effort.
 
