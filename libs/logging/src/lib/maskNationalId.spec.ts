@@ -165,4 +165,38 @@ describe('maskPiiInObject', () => {
 
     expect(result?.kennitala).toBe('4208694809')
   })
+
+  it('should handle circular references without stack overflow', () => {
+    // Create an object with a circular reference
+    interface CircularObject {
+      name: string
+      nationalId: string
+      self?: CircularObject
+      parent?: CircularObject
+    }
+
+    const obj: CircularObject = {
+      name: 'Test',
+      nationalId: '0101307789',
+    }
+    // Create circular reference
+    obj.self = obj
+
+    // Create nested circular reference
+    const parent: CircularObject = {
+      name: 'Parent',
+      nationalId: '0202306789',
+    }
+    parent.parent = parent
+    obj.parent = parent
+
+    // This would cause "Maximum call stack size exceeded" without circular reference handling
+    const result = maskPiiInObject(obj)
+
+    // Should still mask the PII fields
+    expect(result.nationalId).toBe('**REMOVE_PII: $&**')
+    expect(result.name).toBe('Test')
+    // Circular reference should be preserved (returns original object)
+    expect(result.self).toBe(obj)
+  })
 })
