@@ -54,7 +54,7 @@ This plan outlines a TDD approach to fixing the 15 remaining high priority issue
 |----|-------|----------|--------|--------|
 | H-12 | PDF Generation Failure Without Retry | `advert-published.listener.ts` | Missing PDFs | ⬜ Not Started |
 | H-13 | TBR Payment Creation Without Failure Recovery | `advert-published.listener.ts` | Lost payments | ⬜ Not Started |
-| H-14 | Missing Payment Status Polling | New task service | Stale payment status | ⬜ Not Started |
+| H-14 | Missing Payment Status Polling | `advert-payment.task.ts` | Stale payment status | ✅ Complete |
 | H-15 | External API Calls Lack Request Timeouts | External services | Hanging requests | ✅ Complete |
 | H-16 | National Registry Token Never Refreshed | `national-registry.service.ts` | Auth failures | ⬜ Not Started |
 
@@ -79,7 +79,7 @@ Based on dependencies, risk, and production readiness:
 | 11 | H-15 | Reliability - timeouts | 3h | ✅ Complete |
 | 11 | H-12 | Reliability - PDF retry | 8h | ⬜ Not Started |
 | 12 | H-13 | Reliability - TBR retry | 8h | ⬜ Not Started |
-| 13 | H-14 | Reliability - payment polling | 4h | ⬜ Not Started |
+| 13 | H-14 | Reliability - payment polling | 1h | ✅ Complete |
 | 14 | H-16 | Reliability - token refresh | 4h | ⬜ Not Started |
 
 ---
@@ -1785,45 +1785,127 @@ async generatePdf({ advert, publication, html }: AdvertPublishedEvent) {
 
 ---
 
-### H-14: Payment Status Polling
+### H-14: Payment Status Polling ✅ COMPLETED
 
-Create a scheduled task to poll TBR for payment status updates.
+**Status:** ✅ Completed (Jan 9, 2026)
 
+**Problem:** The planning document indicated "Missing Payment Status Polling" but this was incorrect - the implementation already existed at [advert-payment.task.ts](apps/legal-gazette-api/src/modules/advert/tasks/payment/advert-payment.task.ts:1-169). The real issue was **missing test coverage** for this critical functionality.
+
+**Solution:** Added comprehensive test coverage for the existing payment polling implementation.
+
+**Files Changed:**
+- Created: `apps/legal-gazette-api/src/modules/advert/tasks/payment/advert-payment.task.spec.ts` (15 tests)
+
+**Existing Implementation Details:**
 ```typescript
-// apps/legal-gazette-api/src/modules/advert/tasks/payment/payment-status.task.ts
+// apps/legal-gazette-api/src/modules/advert/tasks/payment/advert-payment.task.ts
 @Injectable()
-export class PaymentStatusTask {
-  @Cron('*/5 * * * *') // Every 5 minutes
-  async pollPaymentStatus() {
-    // Find transactions with status CREATED (pending payment)
-    const pendingTransactions = await this.tbrTransactionModel.findAll({
-      where: { 
-        status: TBRTransactionStatus.CREATED,
-        createdAt: { [Op.gt]: subDays(new Date(), 30) }, // Last 30 days
+export class AdvertPaymentTaskService {
+  @Cron('*/15 * * * *') // Every 15 minutes
+  async run() {
+    // Uses distributed lock to prevent duplicate runs across containers
+    await this.lock.runWithDistributedLock(
+      TASK_JOB_IDS.payment,
+      async () => {
+        await this.updateTBRPayments()
       },
-      limit: 100,
+      { cooldownMs: 10 * 60 * 1000 } // 10 minute cooldown
+    )
+  }
+
+  async updateTBRPayments() {
+    // Query pending transactions
+    const pendingTransactions = await this.tbrTransactionModel.findAll({
+      where: {
+        transactionType: 'ADVERT',
+        chargeCategory: { [Op.eq]: process.env.LG_TBR_CHARGE_CATEGORY_PERSON },
+        paidAt: { [Op.eq]: null },
+        status: TBRTransactionStatus.CREATED,
+      },
     })
 
-    for (const transaction of pendingTransactions) {
-      try {
-        const status = await this.tbrService.getPaymentStatus(transaction.id)
-        
-        if (status.paid) {
-          await transaction.update({
-            status: TBRTransactionStatus.PAID,
-            paidAt: status.paidAt,
-          })
+    // Process in chunks (default 25, configurable via TBR_CHUNK_SIZE)
+    const chunks = []
+    for (let i = 0; i < pendingTransactions.length; i += this.chunkSize) {
+      chunks.push(pendingTransactions.slice(i, i + this.chunkSize))
+    }
+
+    // Check each transaction with TBR service
+    for (const chunk of chunks) {
+      const promises = chunk.map((transaction) =>
+        this.tbrService.getPaymentStatus({
+          chargeBase: transaction.chargeBase,
+          chargeCategory: transaction.chargeCategory,
+          debtorNationalId: transaction.debtorNationalId,
+        }),
+      )
+      const results = await Promise.allSettled(promises)
+
+      // Update paid transactions
+      for (const [i, result] of results.entries()) {
+        if (result.status === 'fulfilled' && result.value.paid) {
+          const transaction = chunk[i]
+          transaction.status = TBRTransactionStatus.PAID
+          transaction.paidAt = new Date()
+          await transaction.save()
         }
-      } catch (error) {
-        this.logger.warn('Failed to poll payment status', {
-          transactionId: transaction.id,
-          error: error.message,
-        })
       }
+
+      // Wait 1 second between chunks to avoid overwhelming TBR service
+      await new Promise((resolve) => setTimeout(resolve, 1000))
     }
   }
 }
 ```
+
+**Test Coverage (15 tests):**
+
+1. **Core Functionality (4 tests)**
+   - Skip job when no pending transactions
+   - Update transaction when payment completed
+   - Don't update when payment still pending
+   - Process multiple transactions in single chunk
+
+2. **Error Handling (3 tests)**
+   - Log error and continue when TBR service fails
+   - Handle payment canceled status
+   - Continue processing despite errors
+
+3. **Chunking Behavior (2 tests)**
+   - Process in configurable chunk sizes
+   - Respect TBR_CHUNK_SIZE environment variable
+
+4. **Distributed Lock Integration (2 tests)**
+   - Execute when lock acquired
+   - Skip when lock unavailable
+
+5. **Query Filtering (2 tests)**
+   - Only query ADVERT + CREATED status
+   - Filter by charge category from environment
+
+6. **Logging (2 tests)**
+   - Log job start/finish with duration
+   - Log each chunk processed
+
+**Status Table:**
+
+| Step | Status | Notes |
+|------|--------|-------|
+| Discovered existing implementation | ✅ Complete | Implementation already exists and is production-ready |
+| Write comprehensive test coverage | ✅ Complete | 15 tests covering all functionality |
+| Verify tests pass | ✅ Complete | All 15 tests passing |
+| Run full suite | ✅ Complete | All 245 tests passing, no regressions |
+| Code review | ⬜ Pending | |
+
+**Completion Date:** January 9, 2026
+
+**Key Findings:**
+- ✅ **Implementation Already Exists**: Fully functional payment polling task running every 15 minutes
+- ✅ **Distributed Locking**: Prevents duplicate runs across containers with 10-minute cooldown
+- ✅ **Chunked Processing**: Processes in configurable chunks (default 25) to avoid overwhelming TBR
+- ✅ **Graceful Error Handling**: Uses Promise.allSettled to continue on failures
+- ✅ **Proper Logging**: Comprehensive logging for monitoring and debugging
+- ✅ **Now Well-Tested**: 15 comprehensive tests ensure reliability
 
 ---
 
@@ -1957,7 +2039,8 @@ nx test legal-gazette-api
 | Jan 8, 2026 | H-8/H-9 State Machine | ✅ Complete | Status validation guards (7 tests, 210 total passing) |
 | Jan 8, 2026 | H-4 XSS Prevention | ✅ Complete | HTML escaping utility + foreclosure service (29 tests, 218 total passing) |
 | Jan 8, 2026 | H-10 Transaction Safety | ✅ Complete | Verification tests only - existing code already correct (10 tests, 228 total passing) |
-| | H-17 Payment Validation | ⬜ Not Started | Business logic - payment before publish (C-2 unfinished) |
+| Jan 8, 2026 | H-17 Payment Validation | ✅ Complete | Payment before publish validation (4 tests, 232 total passing) |
+| Jan 9, 2026 | H-14 Payment Polling | ✅ Complete | Test coverage for existing implementation (15 tests, 245 total passing) |
 | | H-11 FK Constraints | ⬜ Not Started | |
 | | Phase 4 Reliability | ⬜ Not Started | Post-release |
 
