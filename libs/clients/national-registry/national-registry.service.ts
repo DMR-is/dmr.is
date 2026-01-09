@@ -1,4 +1,7 @@
 import { Injectable } from '@nestjs/common'
+
+import { fetchWithTimeout } from '@dmr.is/utils'
+
 import { INationalRegistryService } from './national-registry.service.interface'
 import { GetPersonDto, NationalRegistryError } from './national-registry.dto'
 
@@ -46,7 +49,7 @@ export class NationalRegistryService implements INationalRegistryService {
       return
     }
 
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${process.env.NATIONAL_REGISTRY_API_LOGIN_PATH}`,
       {
         method: 'POST',
@@ -82,7 +85,7 @@ export class NationalRegistryService implements INationalRegistryService {
   async getPersonByNationalId(nationalId: string): Promise<GetPersonDto> {
     await this.authenticate()
 
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${process.env.NATIONAL_REGISTRY_API_LOOKUP_PATH}`,
       {
         method: 'POST',

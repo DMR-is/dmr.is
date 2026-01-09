@@ -152,7 +152,7 @@ This implementation addresses the core issue identified in C-2 (Publishing Befor
 | H-12 | PDF Generation Failure Without Retry | `advert-published.listener.ts` | 8h | ⬜ |
 | H-13 | TBR Payment Creation Without Failure Recovery | `advert-published.listener.ts` | 8h | ⬜ |
 | H-14 | Missing Payment Status Polling for Subscriptions | New task service | 4h | ⬜ |
-| H-15 | External API Calls Lack Request Timeouts | External services | 3h | ⬜ |
+| H-15 | External API Calls Lack Request Timeouts | External services | 3h | ✅ |
 | H-16 | National Registry Token Never Refreshed | `national-registry.service.ts` | 4h | ⬜ |
 
 ---
