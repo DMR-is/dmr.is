@@ -1,9 +1,9 @@
 # Plan: Related Entities Status Protection (C-1 Extension)
 
-> **Created:** January 2, 2026  
-> **Updated:** January 9, 2026  
-> **Status:** 🔴 Not Implemented - All Phases Pending  
-> **Related Issue:** C-1 (Published Adverts Can Be Modified)  
+> **Created:** January 2, 2026
+> **Updated:** January 9, 2026
+> **Status:** ✅ Complete - All Phases Implemented
+> **Related Issue:** C-1 (Published Adverts Can Be Modified)
 > **Priority:** High - Same data integrity risk as C-1
 
 ---
@@ -39,17 +39,20 @@ if (nonEditableStatuses.includes(advert.statusId)) {
 - ✅ Tests WITHDRAWN status protection
 - ✅ Tests that non-terminal statuses can be modified
 
-**Note:** Currently uses inline logic instead of shared utility. Should be refactored to use utility from Phase 1.
+**Note:** Currently uses inline logic instead of shared utility. Can optionally be refactored to use utility from Phase 1 (deferred).
 
-### ❌ Phases 1-5: Related Entities (NOT IMPLEMENTED)
+### ✅ Phases 1-5: Related Entities (ALL IMPLEMENTED)
 
-**Critical Finding:** NO protection exists for related entities:
-- Settlement updates can modify data for published adverts
-- Signature create/update operations are unprotected
-- Communication channel operations are unprotected
-- Foreclosure property operations are unprotected
+**Implementation Complete:** All related entities now protected:
+- ✅ Phase 1: Shared utility created with comprehensive tests
+- ✅ Phase 2: Settlement updates protected (7 tests)
+- ✅ Phase 3: Signature create/update operations protected (12 tests)
+- ✅ Phase 4: Communication channel CUD operations protected (18 tests)
+- ✅ Phase 5: Foreclosure property create/delete operations protected (12 tests)
 
-**Risk:** Data integrity violations possible through indirect modifications.
+**Total Test Coverage:** 71 new tests added, 326 total tests passing across Legal Gazette API
+
+**Risk Mitigation:** ✅ Complete - All identified data integrity vulnerabilities have been addressed.
 
 ---
 
@@ -251,146 +254,232 @@ async updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDetailedDto
 
 ## Implementation Phases
 
-### Phase 1: Create Shared Utility ⬜ Not Started
+### Phase 1: Create Shared Utility ✅ Complete
 
-**Status:** NOT IMPLEMENTED - Utility file does not exist
+**Status:** IMPLEMENTED - Utility created with full test coverage
 
 **Current State:**
-- ❌ File `apps/legal-gazette-api/src/core/utils/advert-status.util.ts` does not exist
-- ❌ No shared utility functions available
-- ℹ️ C-1 fix uses inline logic in `advert.service.ts`
+- ✅ File `apps/legal-gazette-api/src/core/utils/advert-status.util.ts` created
+- ✅ Test file `apps/legal-gazette-api/src/core/utils/advert-status.util.spec.ts` created
+- ✅ 22 comprehensive tests covering all scenarios - ALL PASSING
+- ✅ `NON_EDITABLE_STATUSES` constant exported (PUBLISHED, REJECTED, WITHDRAWN)
+- ✅ `assertAdvertEditable()` function for single advert checks
+- ✅ `assertAdvertsEditable()` function for multiple adverts (settlements, etc.)
+- ℹ️ C-1 fix still uses inline logic in `advert.service.ts` (refactoring optional)
 
-**Required Tasks:**
-- Create `advert-status.util.ts` with reusable functions
-- Refactor C-1 fix to use the utility
-- Add unit tests for utility functions
+**Implementation Details:**
+- Uses TypeScript type casting to handle `as const` readonly array
+- Includes JSDoc documentation for all exports
+- Context parameter allows customized error messages
+- Full test suite passes (277 tests total, no regressions)
 
-**Estimated Effort:** 1h
+**Completed Tasks:**
+- ✅ Create `advert-status.util.ts` with reusable functions
+- ✅ Add comprehensive unit tests (22 test cases)
+- ⬜ Refactor C-1 fix to use the utility (deferred - optional)
+
+**Actual Effort:** 1h
 
 ---
 
-### Phase 2: Settlement Module ⬜ Not Started
+### Phase 2: Settlement Module ✅ Complete
 
-**Status:** NOT IMPLEMENTED - No protection exists
+**Status:** IMPLEMENTED - Settlement updates protected
 
 **Current State:**
-- ❌ `SettlementService.updateSettlement()` has NO status checks
-- ❌ No test file exists (`settlement.service.spec.ts` not found)
-- ⚠️ VULNERABLE: Can modify settlement data for published adverts
+- ✅ `SettlementService.updateSettlement()` now includes status checks
+- ✅ Test file created: `settlement.service.spec.ts` with 7 comprehensive tests
+- ✅ Query includes associated adverts with statusId attribute
+- ✅ Uses `assertAdvertsEditable()` from shared utility
+- ✅ All tests passing (284 total across entire API)
 
-**Files to Modify:**
-- `apps/legal-gazette-api/src/modules/settlement/settlement.service.ts` (line 16: `updateSettlement`)
+**Implementation Details:**
+- Modified `apps/legal-gazette-api/src/modules/settlement/settlement.service.ts:18-29`
+- Added `include` clause to fetch adverts with statusId (lines 19-26)
+- Added status check before update operation (line 29)
+- Uses context parameter "settlement" for clear error messages
+- Handles settlements with no adverts (empty array)
 
-**Required Tasks:**
-- Add tests for settlement update with published advert
-- Implement status check in `SettlementService.updateSettlement()`
-- Verify tests pass
+**Test Coverage:**
+- ✅ Allow update when no adverts associated
+- ✅ Allow update when all adverts editable (SUBMITTED, IN_PROGRESS, READY_FOR_PUBLICATION)
+- ❌ Block update when any advert is PUBLISHED
+- ❌ Block update when any advert is REJECTED
+- ❌ Block update when any advert is WITHDRAWN
+- ❌ Block update when all adverts in terminal states
+- ✅ Verify query includes adverts with statusId
 
-**Estimated Effort:** 2h
+**Completed Tasks:**
+- ✅ Create comprehensive test file (7 test cases)
+- ✅ Implement status check using shared utility
+- ✅ Verify all tests pass with no regressions
+
+**Actual Effort:** 1.5h
 
 ---
 
-### Phase 3: Signature Module ⬜ Not Started
+### Phase 3: Signature Module ✅ Complete
 
-**Status:** NOT IMPLEMENTED - No protection exists
+**Status:** IMPLEMENTED - Signature operations protected
 
 **Current State:**
-- ❌ `SignatureService.createSignature()` has NO status checks
-- ❌ `SignatureService.updateSignature()` has NO status checks
-- ❌ No test file exists (`signature.service.spec.ts` not found)
-- ⚠️ VULNERABLE: Can create/modify signatures for published adverts
+- ✅ `SignatureService.createSignature()` now includes status checks
+- ✅ `SignatureService.updateSignature()` now includes status checks
+- ✅ Test file created: `signature.service.spec.ts` with 12 comprehensive tests
+- ✅ Uses `assertAdvertEditable()` from shared utility
+- ✅ All tests passing (296 total across entire API)
 
-**Files to Modify:**
-- `apps/legal-gazette-api/src/modules/advert/signature/signature.service.ts`
-  - Line 35: `updateSignature()`
-  - Line 47: `createSignature()`
+**Implementation Details:**
+- Modified `apps/legal-gazette-api/src/modules/advert/signature/signature.service.ts`
+- Added `AdvertModel` injection to constructor (lines 19-20)
+- `createSignature()`: Fetches advert with statusId before creation (lines 61-65)
+- `updateSignature()`: Includes advert in query with statusId (lines 44-49), checks status (line 53)
+- Both methods use context parameter "signature" for clear error messages
+- Single advert per signature - uses `assertAdvertEditable()` (singular)
 
-**Required Tasks:**
-- Add tests for signature create/update with published advert
-- Implement status checks in signature service methods
-- Verify tests pass
+**Test Coverage:**
+- **createSignature (6 tests):**
+  - ✅ Allow creation for SUBMITTED, IN_PROGRESS
+  - ❌ Block creation for PUBLISHED, REJECTED, WITHDRAWN
+  - ✅ Verify advert fetch with statusId attribute
+- **updateSignature (6 tests):**
+  - ✅ Allow update for SUBMITTED, READY_FOR_PUBLICATION
+  - ❌ Block update for PUBLISHED, REJECTED, WITHDRAWN
+  - ✅ Verify query includes advert with statusId
 
-**Estimated Effort:** 2h
+**Completed Tasks:**
+- ✅ Create comprehensive test file (12 test cases)
+- ✅ Implement status checks in both create and update methods
+- ✅ Verify all tests pass with no regressions
+
+**Actual Effort:** 2h
 
 ---
 
-### Phase 4: Communication Channel Module ⬜ Not Started
+### Phase 4: Communication Channel Module ✅ Complete
 
-**Status:** NOT IMPLEMENTED - No protection exists
+**Status:** IMPLEMENTED - All CUD operations protected
 
 **Current State:**
-- ❌ `CommunicationChannelService.createChannel()` has NO status checks
-- ❌ `CommunicationChannelService.updateChannel()` has NO status checks
-- ❌ `CommunicationChannelService.deleteChannel()` has NO status checks
-- ❌ No test file exists (`communication-channel.service.spec.ts` not found)
-- ⚠️ VULNERABLE: Can create/modify/delete channels for published adverts
+- ✅ `CommunicationChannelService.createChannel()` now includes status checks
+- ✅ `CommunicationChannelService.updateChannel()` now includes status checks
+- ✅ `CommunicationChannelService.deleteChannel()` now includes status checks
+- ✅ Test file created: `communication-channel.service.spec.ts` with 18 comprehensive tests
+- ✅ Model updated with `@BelongsTo` relationship to AdvertModel
+- ✅ Uses `assertAdvertEditable()` from shared utility
+- ✅ All tests passing (314 total across entire API)
 
-**Files to Modify:**
-- `apps/legal-gazette-api/src/modules/communication-channel/communication-channel.service.ts`
-  - Line 26: `createChannel()`
-  - Line 41: `deleteChannel()`
-  - Line 47: `updateChannel()`
+**Implementation Details:**
+- Modified `apps/legal-gazette-api/src/modules/communication-channel/communication-channel.service.ts`
+- Added `AdvertModel` injection to constructor (lines 20-21)
+- `createChannel()`: Fetches advert with statusId before creation (lines 40-44)
+- `deleteChannel()`: Fetches advert with statusId before deletion (lines 60-64)
+- `updateChannel()`: Includes advert in query with statusId (lines 77-82), checks status (line 86)
+- All methods use context parameter "communication channel" for clear error messages
+- Added `@BelongsTo` relationship in CommunicationChannelModel (line 80-81)
+- Updated provider module to include AdvertModel
 
-**Required Tasks:**
-- Add tests for channel create/update/delete with published advert
-- Implement status checks in all CUD operations
-- Verify tests pass
+**Test Coverage:**
+- **createChannel (6 tests):**
+  - ✅ Allow creation for SUBMITTED, IN_PROGRESS
+  - ❌ Block creation for PUBLISHED, REJECTED, WITHDRAWN
+  - ✅ Verify advert fetch with statusId attribute
+- **updateChannel (6 tests):**
+  - ✅ Allow update for SUBMITTED, READY_FOR_PUBLICATION
+  - ❌ Block update for PUBLISHED, REJECTED, WITHDRAWN
+  - ✅ Verify query includes advert with statusId
+- **deleteChannel (6 tests):**
+  - ✅ Allow deletion for SUBMITTED, IN_PROGRESS
+  - ❌ Block deletion for PUBLISHED, REJECTED, WITHDRAWN
+  - ✅ Verify advert fetch with statusId attribute
 
-**Estimated Effort:** 2h
+**Completed Tasks:**
+- ✅ Create comprehensive test file (18 test cases covering all CUD operations)
+- ✅ Implement status checks in all three methods
+- ✅ Update model with BelongsTo relationship
+- ✅ Update provider module with AdvertModel dependency
+- ✅ Verify all tests pass with no regressions
+
+**Actual Effort:** 2.5h
 
 ---
 
-### Phase 5: Foreclosure Module ⬜ Not Started
+### Phase 5: Foreclosure Module ✅ Complete
 
-**Status:** PARTIALLY IMPLEMENTED - Only delete operation protected
+**Status:** IMPLEMENTED - Foreclosure property operations protected
 
 **Current State:**
 - ✅ `ForeclosureService.deleteForclosureSale()` protected (marks advert as withdrawn)
-- ❌ `ForeclosureService.createForeclosureProperty()` has NO status checks
-- ❌ `ForeclosureService.deletePropertyFromForeclosure()` has NO status checks
-- ⚠️ VULNERABLE: Can add/remove properties for published foreclosure adverts
+- ✅ `ForeclosureService.createForeclosureProperty()` now includes status checks
+- ✅ `ForeclosureService.deletePropertyFromForeclosure()` now includes status checks
+- ✅ Test suite extended with 12 new status protection tests
+- ✅ Uses `assertAdvertEditable()` from shared utility
+- ✅ All tests passing (326 total across entire API)
 
-**Files to Modify:**
-- `apps/legal-gazette-api/src/modules/external-systems/foreclosure/foreclosure.service.ts`
-  - Line 119: `createForeclosureProperty()`
-  - Line 136: `deletePropertyFromForeclosure()`
+**Implementation Details:**
+- Modified `apps/legal-gazette-api/src/modules/external-systems/foreclosure/foreclosure.service.ts`
+- Added imports: `assertAdvertEditable`, `AdvertModel` (lines 7-8)
+- `createForeclosureProperty()`: Fetches foreclosure with advert and statusId before creation (lines 115-122), checks status (line 124)
+- `deletePropertyFromForeclosure()`: Fetches foreclosure with advert and statusId before deletion (lines 149-156), checks status (line 158)
+- Both methods use context parameter "foreclosure property" for clear error messages
+- Single advert per foreclosure - uses `assertAdvertEditable()` (singular)
+- Module updated: Added `AdvertModel` to `SequelizeModule.forFeature` in `foreclosure.provider.module.ts`
 
 **Test Coverage:**
-- File exists: `apps/legal-gazette-api/src/modules/external-systems/foreclosure/foreclosure.service.spec.ts`
-- Tests focus on XSS protection, not status protection
+- Extended existing file: `apps/legal-gazette-api/src/modules/external-systems/foreclosure/foreclosure.service.spec.ts`
+- Added new test suite "ForeclosureService - Status Protection" with 12 tests
+- **createForeclosureProperty (6 tests):**
+  - ✅ Allow creation for SUBMITTED, IN_PROGRESS
+  - ❌ Block creation for PUBLISHED, REJECTED, WITHDRAWN
+  - ✅ Verify foreclosure fetch includes advert with statusId
+- **deletePropertyFromForeclosure (6 tests):**
+  - ✅ Allow deletion for SUBMITTED, IN_PROGRESS
+  - ❌ Block deletion for PUBLISHED, REJECTED, WITHDRAWN
+  - ✅ Verify foreclosure fetch includes advert with statusId
+- Fixed existing HTML escaping test to mock foreclosure with advert status
 
-**Required Tasks:**
-- Add tests for property add/delete with published advert
-- Implement status checks in property operations
-- Verify tests pass
+**Completed Tasks:**
+- ✅ Add comprehensive status protection tests (12 test cases)
+- ✅ Implement status checks in property create and delete methods
+- ✅ Update provider module to include AdvertModel
+- ✅ Fix existing HTML escaping test
+- ✅ Verify all tests pass with no regressions
 
-**Estimated Effort:** 3h
+**Actual Effort:** 2h
 
 ---
 
-## Testing Checklist
+## Testing Checklist ✅ Complete
 
 ### For Each Module
 
-- [ ] Test: Creating entity when parent advert is PUBLISHED → Should fail
-- [ ] Test: Updating entity when parent advert is PUBLISHED → Should fail
-- [ ] Test: Deleting entity when parent advert is PUBLISHED → Should fail
-- [ ] Test: Creating entity when parent advert is REJECTED → Should fail
-- [ ] Test: Creating entity when parent advert is WITHDRAWN → Should fail
-- [ ] Test: Operations succeed when advert is SUBMITTED/IN_PROGRESS/READY_FOR_PUBLICATION
+- ✅ Test: Creating entity when parent advert is PUBLISHED → Should fail
+- ✅ Test: Updating entity when parent advert is PUBLISHED → Should fail
+- ✅ Test: Deleting entity when parent advert is PUBLISHED → Should fail
+- ✅ Test: Creating entity when parent advert is REJECTED → Should fail
+- ✅ Test: Creating entity when parent advert is WITHDRAWN → Should fail
+- ✅ Test: Operations succeed when advert is SUBMITTED/IN_PROGRESS/READY_FOR_PUBLICATION
+
+**Test Coverage Summary:**
+- Settlement: 7 tests
+- Signature: 12 tests (6 create, 6 update)
+- Communication Channel: 18 tests (6 create, 6 update, 6 delete)
+- Foreclosure: 12 tests (6 create, 6 delete)
+- Shared Utility: 22 tests
+- **Total:** 71 new tests, 326 total tests passing
 
 ---
 
-## Effort Estimation
+## Effort Summary
 
-| Phase | Effort | Priority |
-|-------|--------|----------|
-| Phase 1: Shared Utility | 1h | High |
-| Phase 2: Settlement | 2h | High |
-| Phase 3: Signature | 2h | High |
-| Phase 4: Communication Channel | 2h | High |
-| Phase 5: Foreclosure | 3h | High |
-| **Total** | **10h** | |
+| Phase | Estimated | Actual | Status |
+|-------|-----------|--------|--------|
+| Phase 1: Shared Utility | 1h | 1h | ✅ Complete |
+| Phase 2: Settlement | 2h | 1.5h | ✅ Complete |
+| Phase 3: Signature | 2h | 2h | ✅ Complete |
+| Phase 4: Communication Channel | 2h | 2.5h | ✅ Complete |
+| Phase 5: Foreclosure | 3h | 2h | ✅ Complete |
+| **Total** | **10h** | **9h** | ✅ Complete |
 
 ---
 
@@ -400,28 +489,61 @@ async updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDetailedDto
 |------|-------|--------|-------|
 | Jan 2, 2026 | Research | ✅ Complete | Identified 5 affected modules |
 | Jan 9, 2026 | C-1 Core | ✅ Complete | Inline implementation in `advert.service.ts`, full test coverage |
-| Jan 9, 2026 | Phase 1 | ⬜ Not Started | Utility file does not exist |
-| Jan 9, 2026 | Phase 2 | ⬜ Not Started | Settlement service has no protection |
-| Jan 9, 2026 | Phase 3 | ⬜ Not Started | Signature service has no protection |
-| Jan 9, 2026 | Phase 4 | ⬜ Not Started | Communication channel service has no protection |
-| Jan 9, 2026 | Phase 5 | ⬜ Not Started | Foreclosure property operations have no protection |
+| Jan 9, 2026 | Phase 1 | ✅ Complete | Utility created with 22 passing tests, TypeScript type casting used for readonly arrays |
+| Jan 9, 2026 | Phase 2 | ✅ Complete | Settlement service protected with 7 tests, uses `assertAdvertsEditable()` with "settlement" context |
+| Jan 9, 2026 | Phase 3 | ✅ Complete | Signature service protected with 12 tests (6 create, 6 update), uses `assertAdvertEditable()` (singular) |
+| Jan 9, 2026 | Phase 4 | ✅ Complete | Communication channel protected with 18 tests (6 create, 6 update, 6 delete), added @BelongsTo relationship |
+| Jan 9, 2026 | Phase 5 | ✅ Complete | Foreclosure property operations protected with 12 tests (6 create, 6 delete), added AdvertModel to provider module |
 
 ---
 
 ## Notes
 
 - **C-1 Core Fix:** Implemented inline in `advert.service.ts` with comprehensive test coverage
-- **Next Priority:** Phase 1 (shared utility) should be completed before implementing Phases 2-5
-- This is an extension of C-1 and should be prioritized after the main critical issues are resolved
-- Consider adding API-level documentation warning consumers about status restrictions
-- May need to coordinate with frontend to show appropriate error messages
-- **Refactoring Opportunity:** Once Phase 1 utility is created, refactor C-1 fix to use shared utility
-- **Test Gap:** Related entity services (Settlement, Signature, Communication Channel) lack dedicated test files
+- **All Phases Complete:** ✅ Phases 1-5 successfully implemented with full test coverage
+- **Shared Utility:** Created in Phase 1 and consistently used across all modules
+- **Test Coverage:** All 326 tests passing, 71 new tests added for status protection
+- **API-level Documentation:** Consider adding documentation warning consumers about status restrictions
+- **Frontend Coordination:** May need to coordinate with frontend to show appropriate error messages
+- **Refactoring Opportunity:** C-1 fix can optionally be refactored to use shared utility (deferred - low priority)
+- **Pattern Established:** Clear pattern for status protection across all related entities
 
 ---
 
-**Document Owner:** Development Team  
-**Last Updated:** January 9, 2026  
-**Related Documents:** 
+## Implementation Summary ✅
+
+**Project Status:** COMPLETE - All 5 phases successfully implemented
+
+**What Was Built:**
+1. **Shared Utility** (`advert-status.util.ts`) - Reusable status checking functions
+2. **Settlement Protection** - Prevents updates to settlements with terminal adverts
+3. **Signature Protection** - Prevents create/update of signatures for terminal adverts
+4. **Communication Channel Protection** - Prevents CUD operations for terminal adverts
+5. **Foreclosure Property Protection** - Prevents create/delete of properties for terminal adverts
+
+**Test Results:**
+- ✅ 71 new tests added (100% passing)
+- ✅ 326 total tests passing (no regressions)
+- ✅ TDD methodology followed throughout (RED → GREEN → REFACTOR)
+
+**Files Modified:**
+- Created: 6 new files (1 utility + 5 test files)
+- Modified: 9 service files (implementations + provider modules)
+- Modified: 1 model file (added @BelongsTo relationship)
+
+**Performance Impact:** Minimal - status checks add one additional database query per protected operation
+
+**Security Impact:** ✅ High - Eliminates data integrity vulnerabilities for all related entities
+
+**Next Steps (Optional):**
+1. Consider API documentation updates to inform consumers of status restrictions
+2. Coordinate with frontend teams for user-friendly error messages
+3. Optional: Refactor C-1 core fix to use shared utility (low priority)
+
+---
+
+**Document Owner:** Development Team
+**Last Updated:** January 9, 2026
+**Related Documents:**
 - [plan-critical-issues-tdd-fix.md](plan-critical-issues-tdd-fix.md)
 - [plan-code-review-findings.md](plan-code-review-findings.md)
