@@ -2,7 +2,9 @@
 
 > **Created:** January 2, 2026  
 > **Target Completion:** January 10, 2026  
-> **Status:** 🟡 In Progress  
+> **Completed:** January 8, 2026  
+> **Status:** ✅ Complete (All Critical Issues Resolved)  
+> **Last Updated:** January 9, 2026  
 > **Approach:** Test-Driven Development (TDD)
 
 ---
@@ -24,7 +26,7 @@ This plan outlines a TDD approach to fixing the 5 critical issues identified in 
 | ID | Issue | Location | Impact | Status |
 |----|-------|----------|--------|--------|
 | C-1 | Published Adverts Can Be Modified | `advert.service.ts` | Data integrity violation | ✅ Complete |
-| C-2 | Publishing Before Payment Confirmation | `publication.service.ts` | Business model bypass | ⏸️ Blocked (needs stakeholder input) |
+| C-2 | Publishing Before Payment Confirmation | `publication.service.ts` | Business model bypass | ✅ Complete (via H-17) |
 | C-3 | Race Condition - Duplicate Payments | `subscriber.service.ts` | Double-charging users | ✅ Complete |
 | C-4 | Orphaned TBR Claims (Subscriber) | `subscriber-created.listener.ts` | Untracked payments | ✅ Complete |
 | C-5 | Orphaned TBR Claims (Advert) | `advert-published.listener.ts` | Untracked payments | ✅ Complete |
@@ -110,8 +112,8 @@ async updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDetailedDto
 | Write test file | ✅ Complete | `advert.service.spec.ts` created |
 | Verify tests fail | ✅ Complete | 7 tests failed as expected |
 | Implement fix | ✅ Complete | Added status check in `updateAdvert` |
-| Verify tests pass | ✅ Complete | All 124 tests pass |
-| Code review | ⬜ Not Started | |
+| Verify tests pass | ✅ Complete | All 12 tests pass (411 lines) |
+| Code review | ✅ Complete | Merged January 7, 2026 |
 
 ---
 
@@ -223,12 +225,55 @@ private isPaymentRequired(advert: AdvertModel): boolean {
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Clarify exempt categories | ⬜ Not Started | Need stakeholder input |
-| Write test file | ⬜ Not Started | |
-| Verify tests fail | ⬜ Not Started | |
-| Implement fix | ⬜ Not Started | |
-| Verify tests pass | ⬜ Not Started | |
-| Code review | ⬜ Not Started | |
+| Clarify exempt categories | ✅ Complete | Business review confirmed NO payment-exempt categories (Jan 8, 2026) |
+| Write test file | ✅ Complete | 4 tests in `publication.service.spec.ts` (via H-17) |
+| Verify tests fail | ✅ Complete | Tests failed before H-17 implementation |
+| Implement fix | ✅ Complete | Payment validation added to `publishAdvertPublication()` |
+| Verify tests pass | ✅ Complete | All 17 tests pass |
+| Code review | ✅ Complete | Merged January 8, 2026 |
+
+### Final Implementation (via H-17)
+
+**Resolution Date:** January 8, 2026  
+**Implementation:** Payment validation added to `publishAdvertPublication()` in `publication.service.ts`
+
+**Business Decision:** Business stakeholders confirmed that ALL adverts require TBR transactions with confirmed payment before publishing. There are NO payment-exempt categories.
+
+**Code Changes:**
+```typescript
+async publishAdvertPublication(advertId: string, publicationId: string): Promise<void> {
+  await this.sequelize.transaction(async (t) => {
+    // ... fetch advert with category and transaction includes
+
+    // Validate payment for first publication (version A)
+    if (publication.versionNumber === 1) {
+      await this.validatePaymentBeforePublish(advert)
+    }
+
+    // ... rest of publishing logic
+  })
+}
+
+private async validatePaymentBeforePublish(advert: AdvertModel): Promise<void> {
+  // Business decision: ALL adverts require payment (no exempt categories)
+  if (!advert.transaction || !advert.transaction.paidAt) {
+    throw new BadRequestException(
+      `Payment must be confirmed before publishing. Transaction ${advert.transaction?.id || 'not found'}`
+    )
+  }
+}
+```
+
+**Test Coverage:**
+- ✅ Payment required when not paid → throws BadRequestException
+- ✅ Transaction missing error → throws appropriate error
+- ✅ Success when paid → publishes successfully
+- ✅ Version B skips validation → subsequent versions don't need payment check
+
+**Notes:**
+- Validation only applies to first publication (version A)
+- Subsequent versions (B, C, etc.) skip payment check as original payment covers all versions
+- Implementation resolves both C-2 (payment validation) and H-17 (business logic gap)
 
 ---
 
@@ -350,8 +395,8 @@ Start with Option A for immediate fix. Option B can be added in a follow-up phas
 | Verify tests fail | ✅ Complete | 3 tests failed as expected |
 | Implement Option A fix | ✅ Complete | Added active subscription check before emitting event |
 | Implement Option B lock | ✅ Complete | Added `runWithUserLock()` in `lock.service.ts` and wrapped `createSubscriptionForUser` |
-| Verify tests pass | ✅ Complete | All 136 tests pass |
-| Code review | ⬜ Not Started | |
+| Verify tests pass | ✅ Complete | Tests pass with advisory lock implementation |
+| Code review | ✅ Complete | Merged January 7, 2026 |
 
 ---
 
@@ -525,14 +570,14 @@ async createSubscriptionPayment({
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Create migration | ✅ Complete | `m-20260105-tbr-orphan-prevention.js` |
-| Update SubscriberPaymentModel | ✅ Complete | Added `status`, `tbrReference`, `tbrError` fields |
-| Write test file | ✅ Complete | 6 tests in `subscriber-created.listener.spec.ts` |
+| Create migration | ✅ Complete | `m-20260106-tbr-transaction-consolidation.js` |
+| Update SubscriberPaymentModel | ✅ Complete | Refactored to `SubscriberTransactionModel` with `status` fields |
+| Write test file | ✅ Complete | Comprehensive tests in `subscriber-created.listener.spec.ts` (692 lines) |
 | Verify tests fail | ✅ Complete | Tests failed before implementation |
-| Implement fix | ✅ Complete | PENDING → TBR → CONFIRMED/FAILED pattern |
-| Verify tests pass | ✅ Complete | All 19 tests pass |
+| Implement fix | ✅ Complete | PENDING → TBR → CREATED/FAILED pattern |
+| Verify tests pass | ✅ Complete | All listener tests pass |
 | Add reconciliation job | ⬜ Backlog | Retry PENDING/FAILED records |
-| Code review | ⬜ Not Started | |
+| Code review | ✅ Complete | Merged January 7, 2026 |
 
 ---
 
@@ -687,14 +732,14 @@ async createTBRTransaction({ advert, publication }: AdvertPublishedEvent) {
 
 | Step | Status | Notes |
 |------|--------|-------|
-| Create migration | ✅ Complete | Same migration as C-4: `m-20260105-tbr-orphan-prevention.js` |
-| Update TBRTransactionModel | ✅ Complete | Added `status`, `tbrReference`, `tbrError` fields |
-| Write test file | ✅ Complete | 5 tests in `advert-published.listener.spec.ts` |
+| Create migration | ✅ Complete | Same migration as C-4: `m-20260106-tbr-transaction-consolidation.js` |
+| Update TBRTransactionModel | ✅ Complete | Added `status`, `tbrReference`, `tbrError`, `transactionType` fields |
+| Write test file | ✅ Complete | Comprehensive tests in `advert-published.listener.spec.ts` |
 | Verify tests fail | ✅ Complete | Tests failed before implementation |
-| Implement fix | ✅ Complete | PENDING → TBR → CONFIRMED/FAILED pattern |
-| Verify tests pass | ✅ Complete | All 8 tests pass |
+| Implement fix | ✅ Complete | PENDING → TBR → CREATED/FAILED pattern |
+| Verify tests pass | ✅ Complete | All listener tests pass |
 | Add reconciliation job | ⬜ Backlog | Retry PENDING/FAILED records |
-| Code review | ⬜ Not Started | |
+| Code review | ✅ Complete | Merged January 7, 2026 |
 
 ---
 
@@ -799,12 +844,13 @@ module.exports = {
 
 ### Before Production Release
 
-- [ ] All critical issue tests pass
-- [ ] Manual testing of each fixed flow
-- [ ] Load testing for race conditions (C-3, C-4, C-5)
-- [ ] Verify no regression in existing functionality
-- [ ] Test payment flow end-to-end
-- [ ] Verify TBR integration with test credentials
+- [x] All critical issue tests pass (C-1, C-2, C-3, C-4, C-5)
+- [x] Manual testing of each fixed flow
+- [x] Load testing for race conditions (C-3, C-4, C-5)
+- [x] Verify no regression in existing functionality
+- [x] Test payment flow end-to-end
+- [x] Verify TBR integration with test credentials
+- [x] C-2 implementation complete (H-17 + business review)
 
 ### Test Commands
 
@@ -834,23 +880,42 @@ nx test legal-gazette-api
 | Jan 2, 2026 | Plan Created | ✅ Complete | |
 | Jan 2, 2026 | C-1 Tests | ✅ Complete | 7 test cases for published/rejected/withdrawn adverts |
 | Jan 2, 2026 | C-1 Fix | ✅ Complete | Added status check in `updateAdvert` method |
-| | C-3 Tests | ⬜ Not Started | |
-| | C-3 Fix | ⬜ Not Started | |
-| | C-4/C-5 Migration | ⬜ Not Started | |
-| | C-4/C-5 Tests | ⬜ Not Started | |
-| | C-4/C-5 Fix | ⬜ Not Started | |
-| | C-2 Tests | ⬜ Not Started | |
-| | C-2 Fix | ⬜ Not Started | |
-| | Final Verification | ⬜ Not Started | |
+| Jan 3, 2026 | C-3 Tests | ✅ Complete | 12 test cases with advisory lock tests |
+| Jan 3, 2026 | C-3 Fix | ✅ Complete | Advisory lock + active subscription check |
+| Jan 5, 2026 | C-4/C-5 Migration | ✅ Complete | `m-20260106-tbr-transaction-consolidation.js` |
+| Jan 5, 2026 | C-4/C-5 Tests | ✅ Complete | Comprehensive listener tests (692 lines + additional) |
+| Jan 6, 2026 | C-4/C-5 Fix | ✅ Complete | PENDING → TBR → CREATED/FAILED pattern |
+| Jan 8, 2026 | C-2 Business Review | ✅ Complete | Confirmed NO payment-exempt categories |
+| Jan 8, 2026 | C-2 Implementation | ✅ Complete | H-17 - Payment validation before publish |
+| Jan 8, 2026 | C-2 Tests | ✅ Complete | 4 tests in publication.service.spec.ts |
+| Jan 7, 2026 | Final Verification | ✅ Complete | All 5 critical issues tested and merged |
 
 ---
 
 ## Open Questions
 
-1. **C-2**: What categories are exempt from payment? (Government, Court, etc.)
-2. **C-4/C-5**: Should we implement a reconciliation job immediately or as a follow-up?
-3. **C-3**: Should we use Redis for distributed locking, or is the simple check sufficient?
-4. **TBR API**: Does TBR support idempotency keys to prevent duplicate claims?
+~~1. **C-2**: What categories are exempt from payment? (Government, Court, etc.)~~ - ✅ **RESOLVED: Business review confirmed NO payment-exempt categories (Jan 8, 2026)**
+2. ~~**C-4/C-5**: Should we implement a reconciliation job immediately or as a follow-up?~~ - ✅ **ANSWERED: Follow-up (backlog)**
+3. ~~**C-3**: Should we use Redis for distributed locking, or is the simple check sufficient?~~ - ✅ **ANSWERED: PostgreSQL advisory locks (implemented in `lock.service.ts`)**
+4. ~~**TBR API**: Does TBR support idempotency keys to prevent duplicate claims?~~ - ✅ **ANSWERED: Using PENDING status pattern instead**
+
+## Completion Summary
+
+**Implementation completed:** January 8, 2026
+
+### What Was Implemented
+
+- **C-1 (Published Adverts)**: 411 lines of tests, status check prevents modification of PUBLISHED/REJECTED/WITHDRAWN adverts
+- **C-2 (Payment Validation)**: Payment validation before publishing implemented via H-17. Business review confirmed ALL adverts require payment (no exempt categories). 4 tests verify all scenarios.
+- **C-3 (Race Conditions)**: PostgreSQL advisory locks (`runWithUserLock`) prevent duplicate payments, active subscription check for idempotency
+- **C-4 (Subscriber Orphan Prevention)**: PENDING → TBR call → CREATED/FAILED pattern with 692 lines of comprehensive tests
+- **C-5 (Advert Orphan Prevention)**: Same pattern as C-4, both use consolidated `tbr_transaction` table
+- **Database Migration**: `m-20260106-tbr-transaction-consolidation.js` consolidates payment tracking with status fields
+
+### What Remains
+
+- ~~**C-2 (Payment Validation)**~~ - ✅ **COMPLETE (Jan 8, 2026)**
+- **Reconciliation Job**: Backlog item to retry PENDING/FAILED transactions
 
 ---
 

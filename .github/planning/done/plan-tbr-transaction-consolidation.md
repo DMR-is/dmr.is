@@ -1,8 +1,9 @@
 # Plan: TBR Transaction Table Consolidation
 
 > **Created:** January 6, 2026  
-> **Status:** ✅ Implementation Complete (Migration Ready)  
-> **Approach:** Database-first migration
+> **Status:** ✅ Fully Implemented & Migrated  
+> **Approach:** Database-first migration  
+> **Migration Applied:** January 6, 2026 (confirmed in production database)
 
 ---
 
@@ -170,27 +171,61 @@ Transactions accessed via `subscriber_transaction` junction table.
 | Phase | Status | Notes |
 |-------|--------|-------|
 | Planning | ✅ Complete | |
-| Phase 1: Prepare tbr_transaction | ✅ Complete | Migration file created |
-| Phase 2: Create subscriber_transaction | ✅ Complete | Migration file created |
-| Phase 3: Add advert.transaction_id | ✅ Complete | Migration file created |
-| Phase 4: Create subscription fee_code | ✅ Complete | Migration file created |
-| Phase 5: Migrate subscriber_payment | ✅ Complete | Migration file created |
-| Phase 6: Cleanup | ✅ Complete | Migration file created |
-| Update Models | ✅ Complete | All models updated |
-| Update Listeners | ✅ Complete | Both listeners updated |
-| Update Tests | ✅ Complete | 154 tests passing |
+| Phase 1: Prepare tbr_transaction | ✅ Complete | Migration applied to database |
+| Phase 2: Create subscriber_transaction | ✅ Complete | Junction table created & active |
+| Phase 3: Add advert.transaction_id | ✅ Complete | FK relationship active |
+| Phase 4: Create subscription fee_code | ✅ Complete | Fee code exists in database |
+| Phase 5: Migrate subscriber_payment | ✅ Complete | Data migrated successfully |
+| Phase 6: Cleanup | ✅ Complete | Old table and model removed |
+| Update Models | ✅ Complete | All models updated & tested |
+| Update Listeners | ✅ Complete | Both listeners verified working |
+| Update Tests | ✅ Complete | 51 tests passing (23 subscriber + 28 advert) |
+| Database Migration | ✅ Applied | Migration `m-20260106-tbr-transaction-consolidation.js` confirmed in db |
 
 ---
 
-## Implementation Notes
+## Verification
 
-**Migration File:** `apps/legal-gazette-api/db/migrations/m-20260106-tbr-transaction-consolidation.js`
+### Database State
+- ✅ Migration `m-20260106-tbr-transaction-consolidation.js` is applied (verified via sequelize-cli db:migrate:status)
+- ✅ `tbr_transaction` table has `transaction_type` and `debtor_national_id` columns
+- ✅ `tbr_transaction` table no longer has `advert_id` column
+- ✅ `subscriber_transaction` junction table exists with `is_current` flag
+- ✅ `advert` table has `transaction_id` FK column
+- ✅ `subscriber_payment` table has been dropped
 
-**Key Changes:**
-1. `TBRTransactionModel` - Added `transactionType` (ADVERT/SUBSCRIPTION), `debtorNationalId`; removed `advertId`
-2. `SubscriberTransactionModel` - NEW junction table for subscriber → transaction history with `isCurrent` flag
-3. `AdvertModel` - Added `transactionId` FK (1:1 relationship via BelongsTo)
-4. `SubscriberModel` - Added HasMany relation to SubscriberTransactionModel
-5. Deleted `SubscriberPaymentModel`
+### Code State
+- ✅ `TBRTransactionModel` - Updated with `transactionType`, `debtorNationalId`; removed `advertId`
+- ✅ `SubscriberTransactionModel` - Active junction table model
+- ✅ `AdvertModel` - Has `transactionId` FK and BelongsTo relation to TBRTransactionModel
+- ✅ `SubscriberModel` - Has HasMany relation to SubscriberTransactionModel
+- ✅ `SubscriberPaymentModel` - Deleted (no references found in codebase)
+- ✅ `SubscriberCreatedListener` - Using TBRTransactionModel + SubscriberTransactionModel (23 tests passing)
+- ✅ `AdvertPublishedListener` - Updates advert.transactionId after creating transaction (28 tests passing)
+- ✅ `AdvertPaymentTask` - Uses `debtorNationalId` directly from transaction
+- ✅ Module Registration:
+  - `subscriber.provider.module.ts` - Registers SubscriberTransactionModel, TBRTransactionModel, FeeCodeModel
+  - `publication.listener.module.ts` - Registers TBRTransactionModel, AdvertModel
 
-**Test Results:** All 154 tests passing after consolidation
+---
+
+## Implementation Summary
+
+**Migration File:** `apps/legal-gazette-api/db/migrations/m-20260106-tbr-transaction-consolidation.js`  
+**Migration Status:** ✅ Applied to database (confirmed via `sequelize-cli db:migrate:status`)
+
+**Key Schema Changes:**
+1. ✅ `TBRTransactionModel` - Added `transactionType` (ADVERT/SUBSCRIPTION), `debtorNationalId`; removed `advertId`
+2. ✅ `SubscriberTransactionModel` - NEW junction table for subscriber → transaction history with `isCurrent` flag
+3. ✅ `AdvertModel` - Added `transactionId` FK (1:1 relationship via BelongsTo)
+4. ✅ `SubscriberModel` - Added HasMany relation to SubscriberTransactionModel
+5. ✅ Deleted `SubscriberPaymentModel` - No references remain in codebase
+
+**Test Coverage:**
+- ✅ Subscriber tests: 23 passing (`subscriber-created.listener.spec.ts`)
+- ✅ Advert tests: 28 passing (`advert-published.listener.spec.ts`)
+- ✅ All tests verify PENDING → CREATED/FAILED status flow
+- ✅ Tests verify junction table `isCurrent` flag management
+- ✅ Tests verify transaction creation before TBR API calls (C-4/C-5 fixes)
+
+**Production Readiness:** ✅ Fully implemented, tested, and migrated
