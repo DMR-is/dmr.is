@@ -3,7 +3,7 @@ import z from 'zod'
 import { protectedProcedure, router } from '../trpc'
 
 const getCategoriesSchema = z.object({
-  type: z.uuid(),
+  type: z.uuid().optional(),
 })
 
 export const baseEntityRouter = router({

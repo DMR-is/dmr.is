@@ -1063,6 +1063,192 @@
         "tags": ["Legal gazette - internal API"]
       }
     },
+    "/api/v1/adverts/create/template/common": {
+      "post": {
+        "operationId": "createAdvertAndCommonApplication",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdvertAndCommonApplicationBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/adverts/create/template/recall-bankruptcy": {
+      "post": {
+        "operationId": "createAdvertAndRecallBankruptcyApplication",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdvertAndRecallBankruptcyApplicationBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/adverts/create/template/recall-deceased": {
+      "post": {
+        "operationId": "createAdvertAndRecallDeceasedApplication",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdvertAndRecallDeceasedApplicationBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
     "/api/v1/issues/all": {
       "get": {
         "operationId": "getAllPublishedIssues",
@@ -5312,6 +5498,51 @@
         "type": "object",
         "properties": { "id": { "type": "string" } },
         "required": ["id"]
+      },
+      "CommonAdvertAndApplicationFieldsDto": {
+        "type": "object",
+        "properties": {
+          "typeId": { "type": "string" },
+          "categoryId": { "type": "string" },
+          "caption": { "type": "string" },
+          "content": { "type": "string" }
+        },
+        "required": ["typeId", "categoryId", "caption", "content"]
+      },
+      "CreateAdvertAndCommonApplicationBodyDto": {
+        "type": "object",
+        "properties": {
+          "applicantNationalId": { "type": "string" },
+          "additionalText": { "type": "string" },
+          "fields": {
+            "$ref": "#/components/schemas/CommonAdvertAndApplicationFieldsDto"
+          },
+          "signatue": { "$ref": "#/components/schemas/CreateSignatureDto" },
+          "communicationChannels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
+          },
+          "publishingDates": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [
+          "applicantNationalId",
+          "fields",
+          "signatue",
+          "communicationChannels",
+          "publishingDates"
+        ]
+      },
+      "CreateAdvertAndRecallBankruptcyApplicationBodyDto": {
+        "type": "object",
+        "properties": { "applicantNationalId": { "type": "string" } },
+        "required": ["applicantNationalId"]
+      },
+      "CreateAdvertAndRecallDeceasedApplicationBodyDto": {
+        "type": "object",
+        "properties": { "applicantNationalId": { "type": "string" } },
+        "required": ["applicantNationalId"]
       },
       "IssueDto": {
         "type": "object",

@@ -9,6 +9,9 @@ import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import {
+  CreateAdvertAndCommonApplicationBodyDto,
+  CreateAdvertAndRecallBankruptcyApplicationBodyDto,
+  CreateAdvertAndRecallDeceasedApplicationBodyDto,
   CreateAdvertDto,
   CreateAdvertResponseDto,
 } from '../../../models/advert.model'
@@ -37,5 +40,38 @@ export class AdvertCreateController {
       createdBy: user.fullName,
       createdByNationalId: user.nationalId,
     })
+  }
+
+  @Post('/template/common')
+  @LGResponse({ operationId: 'createAdvertAndCommonApplication' })
+  createAdvertAndCommonApplication(
+    @Body() body: CreateAdvertAndCommonApplicationBodyDto,
+    @CurrentUser() user: DMRUser,
+  ): Promise<void> {
+    return this.advertService.createAdvertAndCommonApplication(body, user)
+  }
+
+  @Post('/template/recall-bankruptcy')
+  @LGResponse({ operationId: 'createAdvertAndRecallBankruptcyApplication' })
+  createAdvertAndRecallBankruptcyApplication(
+    @Body() body: CreateAdvertAndRecallBankruptcyApplicationBodyDto,
+    @CurrentUser() user: DMRUser,
+  ): Promise<void> {
+    return this.advertService.createAdvertAndRecallBankruptcyApplication(
+      body,
+      user,
+    )
+  }
+
+  @Post('/template/recall-deceased')
+  @LGResponse({ operationId: 'createAdvertAndRecallDeceasedApplication' })
+  createAdvertAndRecallDeceasedApplication(
+    @Body() body: CreateAdvertAndRecallDeceasedApplicationBodyDto,
+    @CurrentUser() user: DMRUser,
+  ): Promise<void> {
+    return this.advertService.createAdvertAndRecallDeceasedApplication(
+      body,
+      user,
+    )
   }
 }

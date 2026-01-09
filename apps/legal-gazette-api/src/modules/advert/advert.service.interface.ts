@@ -3,6 +3,9 @@ import { PagingQuery } from '@dmr.is/shared/dto'
 
 import {
   AdvertDetailedDto,
+  CreateAdvertAndCommonApplicationBodyDto,
+  CreateAdvertAndRecallBankruptcyApplicationBodyDto,
+  CreateAdvertAndRecallDeceasedApplicationBodyDto,
   CreateAdvertInternalDto,
   GetAdvertsDto,
   GetAdvertsQueryDto,
@@ -42,6 +45,21 @@ export interface IAdvertService {
   ): Promise<void>
 
   createAdvert(body: CreateAdvertInternalDto): Promise<AdvertDetailedDto>
+
+  createAdvertAndCommonApplication(
+    body: CreateAdvertAndCommonApplicationBodyDto,
+    currentUser: DMRUser,
+  ): Promise<void>
+
+  createAdvertAndRecallBankruptcyApplication(
+    body: CreateAdvertAndRecallBankruptcyApplicationBodyDto,
+    currentUser: DMRUser,
+  ): Promise<void>
+
+  createAdvertAndRecallDeceasedApplication(
+    body: CreateAdvertAndRecallDeceasedApplicationBodyDto,
+    currentUser: DMRUser,
+  ): Promise<void>
 
   getMyAdverts(query: PagingQuery, user: DMRUser): Promise<GetMyAdvertsDto>
 

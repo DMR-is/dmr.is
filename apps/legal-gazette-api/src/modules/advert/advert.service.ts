@@ -14,6 +14,9 @@ import { LegalGazetteEvents } from '../../core/constants'
 import {
   AdvertDetailedDto,
   AdvertModel,
+  CreateAdvertAndCommonApplicationBodyDto,
+  CreateAdvertAndRecallBankruptcyApplicationBodyDto,
+  CreateAdvertAndRecallDeceasedApplicationBodyDto,
   CreateAdvertInternalDto,
   GetAdvertsDto,
   GetAdvertsQueryDto,
@@ -46,6 +49,26 @@ export class AdvertService implements IAdvertService {
     private readonly eventEmitter: EventEmitter2,
     private readonly sequelize: Sequelize,
   ) {}
+
+  async createAdvertAndCommonApplication(
+    body: CreateAdvertAndCommonApplicationBodyDto,
+    currentUser: DMRUser,
+  ): Promise<void> {
+    throw new Error('Method not implemented.')
+  }
+
+  createAdvertAndRecallBankruptcyApplication(
+    body: CreateAdvertAndRecallBankruptcyApplicationBodyDto,
+    currentUser: DMRUser,
+  ): Promise<void> {
+    throw new Error('Method not implemented.')
+  }
+  createAdvertAndRecallDeceasedApplication(
+    body: CreateAdvertAndRecallDeceasedApplicationBodyDto,
+    currentUser: DMRUser,
+  ): Promise<void> {
+    throw new Error('Method not implemented.')
+  }
 
   async rejectAdvert(advertId: string, currentUser: DMRUser): Promise<void> {
     await this.sequelize.transaction(async (t) => {

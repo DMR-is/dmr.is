@@ -4,8 +4,7 @@ import { parseAsStringEnum, useQueryState } from 'nuqs'
 import { useEffect } from 'react'
 
 import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
-import { Drawer } from '@dmr.is/ui/components/Drawer/Drawer'
-import { Button, Inline, Stack } from '@dmr.is/ui/components/island-is'
+import { Inline, Stack } from '@dmr.is/ui/components/island-is'
 
 import {
   GridColumn,
@@ -19,7 +18,9 @@ import { useFilterContext } from '../../hooks/useFilters'
 import { StatusIdEnum } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import CaseFilters from '../CaseFilters/CaseFilters'
-import { CreateAdvert } from '../create-advert/CreateAdvert'
+import { CreateCommonAdvertModal } from '../create-advert/CreateCommonAdvertModal'
+import { CreateBankruptcyAdvertModal } from '../create-advert/CreateRecallBankruptcyAdvertModal'
+import { CreateDeceasedAdvertModal } from '../create-advert/CreateRecallDeceasedAdvertModal'
 import { RitstjornHero } from '../ritstjorn/Hero'
 import AdvertsCompleted from '../Tables/AdvertsCompleted'
 import PublishingTab from '../tabs/PublishingTab'
@@ -95,20 +96,11 @@ export const PageContainer = ({ advertCount }: Props) => {
             <Stack space={[0]}>
               <Inline space={2} justifyContent={'spaceBetween'}>
                 <CaseFilters />
-                <Drawer
-                  disclosure={
-                    <Button
-                      variant="utility"
-                      size="small"
-                      icon="document"
-                      iconType="outline"
-                    >
-                      Stofna auglýsingu
-                    </Button>
-                  }
-                >
-                  <CreateAdvert />
-                </Drawer>
+                <Inline space={[1, 2]}>
+                  <CreateCommonAdvertModal />
+                  <CreateBankruptcyAdvertModal />
+                  <CreateDeceasedAdvertModal />
+                </Inline>
               </Inline>
               <Tabs
                 label=""
