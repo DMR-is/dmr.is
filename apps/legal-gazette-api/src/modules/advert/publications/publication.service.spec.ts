@@ -80,8 +80,9 @@ describe('PublicationService - Publication Number Generation', () => {
   describe('publishAdvertPublication - decimal parsing correctness', () => {
     it('should correctly parse publication number with radix 10', async () => {
       // Setup: Mock existing publication ending in "009"
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
       const existingAdvert = {
-        publicationNumber: '20260108009',
+        publicationNumber: `${today}009`,
       }
 
       const mockAdvert = {
@@ -134,7 +135,7 @@ describe('PublicationService - Publication Number Generation', () => {
       expect(updateCalls.length).toBeGreaterThan(0)
 
       const publicationNumber = updateCalls[0][0].publicationNumber
-      expect(publicationNumber).toBe('20260108010')
+      expect(publicationNumber).toBe(`${today}010`)
     })
 
     it('should handle publication numbers ending with "010" correctly', async () => {
@@ -142,8 +143,9 @@ describe('PublicationService - Publication Number Generation', () => {
       // With radix 11: "010" parsed as 0*11^2 + 1*11^1 + 0*11^0 = 11
       // Adding 1 gives 12, padded to "012" - WRONG!
       // With radix 10: "010" parsed as 10, adding 1 gives 11, padded to "011" - CORRECT
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
       const existingAdvert = {
-        publicationNumber: '20260108010',
+        publicationNumber: `${today}010`,
       }
 
       const mockAdvert = {
@@ -188,7 +190,7 @@ describe('PublicationService - Publication Number Generation', () => {
       const publicationNumber = updateCalls[0][0].publicationNumber
 
       // This will FAIL with radix 11 bug, showing it returns "012" instead of "011"
-      expect(publicationNumber).toBe('20260108011')
+      expect(publicationNumber).toBe(`${today}011`)
     })
 
     it('should handle first publication of the day', async () => {
