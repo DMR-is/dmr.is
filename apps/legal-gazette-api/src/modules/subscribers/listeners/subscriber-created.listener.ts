@@ -143,7 +143,7 @@ export class SubscriberCreatedListener {
     // Step 2: Call TBR API (external call - cannot be rolled back)
     try {
       await this.tbrService.postPayment({
-        advertId: subscriber.id, // Using subscriberId as unique identifier
+        id: subscriber.id, // Using subscriberId as unique identifier
         chargeCategory,
         chargeBase,
         debtorNationalId: subscriber.nationalId,

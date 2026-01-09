@@ -38,7 +38,7 @@ export class AdvertPublishedListener {
     private readonly sequelize: Sequelize,
   ) {}
 
-  @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED)
+  @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED, { suppressErrors: false })
   async createTBRTransaction({ advert, publication }: AdvertPublishedEvent) {
     if (publication.version !== AdvertVersionEnum.A) return
 

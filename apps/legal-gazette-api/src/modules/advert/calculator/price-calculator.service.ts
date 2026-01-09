@@ -126,7 +126,7 @@ export class PriceCalculatorService implements IPriceCalculatorService {
       return {
         feeCodeId: feeCodeModel.id,
         paymentData: {
-          advertId: advertId,
+          id: advertId,
           chargeBase: advert.publicationNumber,
           chargeCategory: isPerson
             ? process.env.LG_TBR_CHARGE_CATEGORY_PERSON!
@@ -158,7 +158,7 @@ export class PriceCalculatorService implements IPriceCalculatorService {
     return {
       feeCodeId: feeCodeModel.id,
       paymentData: {
-        advertId: advertId,
+        id: advertId,
         chargeBase: advert.publicationNumber,
         chargeCategory: isPerson
           ? process.env.LG_TBR_CHARGE_CATEGORY_PERSON!

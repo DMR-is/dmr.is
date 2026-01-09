@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { fetchWithTimeout } from '@dmr.is/utils'
 
 import { ITBRConfig } from './tbr.config'
 import {
@@ -88,14 +89,13 @@ export class TBRService implements ITBRService {
         context: 'TBRService',
       })
 
-      const response = await fetch(endpoint, {
+      const response = await fetchWithTimeout(endpoint, {
         headers: {
           Authorization: `Basic ${this.credentials}`,
           'Content-Type': 'application/json',
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           'X-Road-Client': process.env.XROAD_DMR_CLIENT!,
         },
-        signal: AbortSignal.timeout(10000), // 10 seconds
         ...options,
       })
 
@@ -139,13 +139,13 @@ export class TBRService implements ITBRService {
 
   async postPayment(body: TBRPostPaymentBodyDto): Promise<void> {
     this.logger.info('Creating TBR claim', {
-      advertId: body.advertId,
+      advertId: body.id,
     })
 
     await this.request('/claim', {
       method: 'POST',
       body: JSON.stringify({
-        UUID: body.advertId,
+        UUID: body.id,
         office: this.config.officeId,
         chargeCategory: body.chargeCategory,
         chargeBase: body.chargeBase,
