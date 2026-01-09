@@ -4,6 +4,8 @@
 .cursor
 .claude
 
+prompts/
+
 # compiled output
 /dist
 /tmp

@@ -9,6 +9,7 @@ import {
   ValidateNested,
 } from 'class-validator'
 import {
+  BelongsTo,
   Column,
   DataType,
   DefaultScope,
@@ -75,6 +76,9 @@ export class CommunicationChannelModel extends BaseModel<
   })
   @ApiProperty({ type: String, required: false })
   phone?: string | null
+
+  @BelongsTo(() => AdvertModel)
+  advert!: AdvertModel
 
   static fromModel(model: CommunicationChannelModel): CommunicationChannelDto {
     return {
