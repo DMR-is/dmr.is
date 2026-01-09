@@ -6,6 +6,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IAWSService } from '@dmr.is/modules'
+import { withRetry } from '@dmr.is/utils'
 
 import { LegalGazetteEvents } from '../../../../core/constants'
 import { AdvertModel } from '../../../../models/advert.model'
@@ -108,9 +109,24 @@ export class AdvertPublishedListener {
       throw error
     }
 
-    // Step 2: Call TBR API (external call - cannot be rolled back)
+    // Step 2: Call TBR API with retry logic (external call - cannot be rolled back)
     try {
-      await this.tbrService.postPayment(paymentData)
+      await withRetry(
+        () => this.tbrService.postPayment(paymentData),
+        {
+          maxRetries: 3,
+          baseDelayMs: 1000,
+          maxDelayMs: 10000,
+          onRetry: (attempt, error) => {
+            this.logger.warn(`TBR payment retry attempt ${attempt}`, {
+              error: error.message,
+              advertId: advert.id,
+              transactionId: transactionRecord.id,
+              context: LOGGING_CONTEXT,
+            })
+          },
+        },
+      )
 
       this.logger.info('TBR payment posted successfully', {
         advertId: advert.id,
@@ -227,21 +243,36 @@ export class AdvertPublishedListener {
       context: LOGGING_CONTEXT,
     })
 
-    await this.pdfService
-      .generatePdfAndSaveToS3(
-        html,
-        publication.advertId,
-        publication.id,
-        advert.title,
-      )
-      .catch((error) => {
-        this.logger.error('Failed to generate PDF after publication', {
-          error: error,
-          advertId: publication.advertId,
-          publicationId: publication.id,
-          version: publication.version,
-          context: LOGGING_CONTEXT,
-        })
+    await withRetry(
+      () =>
+        this.pdfService.generatePdfAndSaveToS3(
+          html,
+          publication.advertId,
+          publication.id,
+          advert.title,
+        ),
+      {
+        maxRetries: 3,
+        baseDelayMs: 1000,
+        maxDelayMs: 10000,
+        onRetry: (attempt, error) => {
+          this.logger.warn(`PDF generation retry attempt ${attempt}`, {
+            error: error.message,
+            advertId: publication.advertId,
+            publicationId: publication.id,
+            version: publication.version,
+            context: LOGGING_CONTEXT,
+          })
+        },
+      },
+    ).catch((error) => {
+      this.logger.error('Failed to generate PDF after publication', {
+        error: error,
+        advertId: publication.advertId,
+        publicationId: publication.id,
+        version: publication.version,
+        context: LOGGING_CONTEXT,
       })
+    })
   }
 }

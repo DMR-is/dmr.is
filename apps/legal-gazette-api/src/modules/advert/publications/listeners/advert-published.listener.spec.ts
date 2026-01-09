@@ -218,6 +218,18 @@ describe('AdvertPublishedListener', () => {
   // Orphaned TBR Claims Prevention (C-5)
   // ==========================================
   describe('Orphaned TBR Claims Prevention (C-5)', () => {
+    beforeEach(() => {
+      // Mock setTimeout to execute immediately for fast testing (needed for retry logic)
+      jest.spyOn(global, 'setTimeout').mockImplementation((callback) => {
+        ;(callback as () => void)()
+        return {} as NodeJS.Timeout
+      })
+    })
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
     describe('transaction record creation order', () => {
       it('should create PENDING transaction record BEFORE calling TBR API', async () => {
         const callOrder: string[] = []
@@ -331,6 +343,16 @@ describe('AdvertPublishedListener', () => {
       pdfService = listener['pdfService'] as jest.Mocked<PdfService>
       sesService = listener['sesService'] as jest.Mocked<IAWSService>
       logger = listener['logger']
+
+      // Mock setTimeout to execute immediately for fast testing (needed for retry logic)
+      jest.spyOn(global, 'setTimeout').mockImplementation((callback) => {
+        ;(callback as () => void)()
+        return {} as NodeJS.Timeout
+      })
+    })
+
+    afterEach(() => {
+      jest.restoreAllMocks()
     })
 
     describe('PDF generation failures', () => {
@@ -499,6 +521,257 @@ describe('AdvertPublishedListener', () => {
         // TBR should succeed
         expect(tbrService.postPayment).toHaveBeenCalled()
       })
+    })
+  })
+
+  // ==========================================
+  // PDF Generation Retry Logic
+  // ==========================================
+  describe('PDF Generation Retry Logic', () => {
+    let pdfService: jest.Mocked<PdfService>
+    let logger: any
+
+    beforeEach(() => {
+      pdfService = listener['pdfService'] as jest.Mocked<PdfService>
+      logger = listener['logger']
+      jest.clearAllMocks()
+
+      // Mock setTimeout to execute immediately for fast testing
+      jest.spyOn(global, 'setTimeout').mockImplementation((callback) => {
+        ;(callback as () => void)()
+        return {} as NodeJS.Timeout
+      })
+    })
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('should retry PDF generation on transient failure', async () => {
+      // Simulate transient failure: fail twice, then succeed
+      pdfService.generatePdfAndSaveToS3
+        .mockRejectedValueOnce(new Error('Network timeout'))
+        .mockRejectedValueOnce(new Error('Network timeout'))
+        .mockResolvedValueOnce({
+          s3Url: 'https://s3.amazonaws.com/bucket/file.pdf',
+          key: 'file.pdf',
+          pdfBuffer: Buffer.from('mock pdf'),
+        })
+
+      const event = createMockEvent()
+      await listener.generatePdf(event)
+
+      // Should have called PDF generation 3 times (2 failures + 1 success)
+      expect(pdfService.generatePdfAndSaveToS3).toHaveBeenCalledTimes(3)
+
+      // Should log retry attempts
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('PDF generation retry'),
+        expect.anything(),
+      )
+    })
+
+    it('should give up after max retries and log final error', async () => {
+      // Simulate persistent failure
+      pdfService.generatePdfAndSaveToS3.mockRejectedValue(
+        new Error('Persistent S3 failure'),
+      )
+
+      const event = createMockEvent()
+      await listener.generatePdf(event)
+
+      // Should have attempted 4 times (initial + 3 retries)
+      expect(pdfService.generatePdfAndSaveToS3).toHaveBeenCalledTimes(4)
+
+      // Should log final error
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to generate PDF after publication'),
+        expect.objectContaining({
+          error: expect.any(Error),
+          advertId: event.publication.advertId,
+        }),
+      )
+    })
+
+    it('should succeed immediately if first attempt succeeds', async () => {
+      pdfService.generatePdfAndSaveToS3.mockResolvedValue({
+        s3Url: 'https://s3.amazonaws.com/bucket/file.pdf',
+        key: 'file.pdf',
+        pdfBuffer: Buffer.from('mock pdf'),
+      })
+
+      const event = createMockEvent()
+      await listener.generatePdf(event)
+
+      // Should only call once (no retries needed)
+      expect(pdfService.generatePdfAndSaveToS3).toHaveBeenCalledTimes(1)
+      expect(logger.warn).not.toHaveBeenCalled()
+      expect(logger.error).not.toHaveBeenCalled()
+    })
+
+    it('should use exponential backoff between retries', async () => {
+      const delays: number[] = []
+
+      // Mock timer to track delays
+      jest.spyOn(global, 'setTimeout').mockImplementation((callback, delay) => {
+        delays.push(delay as number)
+        return callback() as any
+      })
+
+      // Simulate failures
+      pdfService.generatePdfAndSaveToS3
+        .mockRejectedValueOnce(new Error('Failure 1'))
+        .mockRejectedValueOnce(new Error('Failure 2'))
+        .mockResolvedValueOnce({
+          s3Url: 'https://s3.amazonaws.com/bucket/file.pdf',
+          key: 'file.pdf',
+          pdfBuffer: Buffer.from('mock pdf'),
+        })
+
+      const event = createMockEvent()
+      await listener.generatePdf(event)
+
+      // Should use exponential backoff: 1000ms, 2000ms
+      expect(delays).toEqual(expect.arrayContaining([1000, 2000]))
+
+      jest.restoreAllMocks()
+    })
+
+    it('should cap delay at maximum value', async () => {
+      const delays: number[] = []
+
+      jest.spyOn(global, 'setTimeout').mockImplementation((callback, delay) => {
+        delays.push(delay as number)
+        return callback() as any
+      })
+
+      // Simulate many failures to test max delay cap
+      pdfService.generatePdfAndSaveToS3
+        .mockRejectedValueOnce(new Error('Failure 1'))
+        .mockRejectedValueOnce(new Error('Failure 2'))
+        .mockRejectedValueOnce(new Error('Failure 3'))
+        .mockRejectedValueOnce(new Error('Failure 4'))
+
+      const event = createMockEvent()
+      await listener.generatePdf(event)
+
+      // All delays should be <= 10000ms (max delay)
+      delays.forEach((delay) => {
+        expect(delay).toBeLessThanOrEqual(10000)
+      })
+
+      jest.restoreAllMocks()
+    })
+  })
+
+  // ==========================================
+  // TBR Payment Retry Logic
+  // ==========================================
+  describe('TBR Payment Retry Logic', () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+
+      // Mock setTimeout to execute immediately for fast testing
+      jest.spyOn(global, 'setTimeout').mockImplementation((callback) => {
+        ;(callback as () => void)()
+        return {} as NodeJS.Timeout
+      })
+    })
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('should retry TBR payment on transient failure', async () => {
+      // Simulate transient failure: fail twice, then succeed
+      tbrService.postPayment
+        .mockRejectedValueOnce(new Error('Network timeout'))
+        .mockRejectedValueOnce(new Error('Network timeout'))
+        .mockResolvedValueOnce(undefined)
+
+      const event = createMockEvent()
+      await listener.createTBRTransaction(event)
+
+      // Should have called TBR payment 3 times (2 failures + 1 success)
+      expect(tbrService.postPayment).toHaveBeenCalledTimes(3)
+
+      // Transaction should be marked as CREATED (successful)
+      expect(tbrTransactionModel.create).toHaveBeenCalled()
+    })
+
+    it('should give up after max retries and mark transaction as FAILED', async () => {
+      // Simulate persistent failure
+      tbrService.postPayment.mockRejectedValue(
+        new Error('Persistent TBR API failure'),
+      )
+
+      const event = createMockEvent()
+
+      await expect(listener.createTBRTransaction(event)).rejects.toThrow(
+        'Persistent TBR API failure',
+      )
+
+      // Should have attempted 4 times (initial + 3 retries)
+      expect(tbrService.postPayment).toHaveBeenCalledTimes(4)
+
+      // Transaction should be created as PENDING first
+      expect(tbrTransactionModel.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: TBRTransactionStatus.PENDING,
+        }),
+        expect.anything(),
+      )
+    })
+
+    it('should succeed immediately if first TBR call succeeds', async () => {
+      tbrService.postPayment.mockResolvedValue(undefined)
+
+      const event = createMockEvent()
+      await listener.createTBRTransaction(event)
+
+      // Should only call once (no retries needed)
+      expect(tbrService.postPayment).toHaveBeenCalledTimes(1)
+    })
+
+    it('should use exponential backoff between TBR retries', async () => {
+      const delays: number[] = []
+
+      // Mock timer to track delays
+      jest.spyOn(global, 'setTimeout').mockImplementation((callback, delay) => {
+        delays.push(delay as number)
+        return callback() as any
+      })
+
+      // Simulate failures
+      tbrService.postPayment
+        .mockRejectedValueOnce(new Error('Failure 1'))
+        .mockRejectedValueOnce(new Error('Failure 2'))
+        .mockResolvedValueOnce(undefined)
+
+      const event = createMockEvent()
+      await listener.createTBRTransaction(event)
+
+      // Should use exponential backoff: 1000ms, 2000ms
+      expect(delays).toEqual(expect.arrayContaining([1000, 2000]))
+
+      jest.restoreAllMocks()
+    })
+
+    it('should log retry attempts for TBR payment', async () => {
+      const mockLogger = listener['logger']
+
+      tbrService.postPayment
+        .mockRejectedValueOnce(new Error('Transient failure'))
+        .mockResolvedValueOnce(undefined)
+
+      const event = createMockEvent()
+      await listener.createTBRTransaction(event)
+
+      // Should log warning for retry attempt
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('TBR payment retry'),
+        expect.anything(),
+      )
     })
   })
 })

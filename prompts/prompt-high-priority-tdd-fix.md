@@ -116,6 +116,7 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
    - Update `.github/planning/legal-gazette/plan-code-review-findings.md` with implementation details, progress counts
 5. **Run full test suite** - Ensure no regressions after each fix
 6. **Follow project conventions** - Use the correct logger, import paths, etc.
+7. **Do not insert identifier in test description** - Test description and other documentation should be self explanatory, not referencing internal id of this plan
 
 ## Commands Reference
 
