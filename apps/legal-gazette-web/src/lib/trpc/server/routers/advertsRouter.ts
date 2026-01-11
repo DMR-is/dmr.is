@@ -61,7 +61,7 @@ export const advertsRouter = router({
     .query(async ({ ctx, input }) => {
       // return await ctx.api.getAdvertById({ id: input.id })
       try {
-        const advert = await ctx.api.getAdvertById({ id: input.id })
+        const advert = await ctx.api.getAdvertById({ advertId: input.id })
         return advert
       } catch (error) {
         const trpcError = await createTRPCError(error)
