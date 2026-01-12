@@ -272,7 +272,7 @@ describe('SubscriberCreatedListener', () => {
           chargeBase: 'subscriber-123',
           chargeCategory: 'PERSON_CATEGORY',
           debtorNationalId: '0101801234',
-          status: TBRTransactionStatus.PENDING,
+          status: TBRTransactionStatus.INIT,
         },
         expect.objectContaining({ transaction: expect.anything() }),
       )
@@ -503,7 +503,7 @@ describe('SubscriberCreatedListener', () => {
           transactionType: TBRTransactionType.SUBSCRIPTION,
           feeCodeId: 'fee-code-uuid-123',
           debtorNationalId: '0101801234',
-          status: TBRTransactionStatus.PENDING,
+          status: TBRTransactionStatus.INIT,
         }),
         expect.anything(),
       )
@@ -591,7 +591,7 @@ describe('SubscriberCreatedListener', () => {
 
         expect(tbrTransactionModel.create).toHaveBeenCalledWith(
           expect.objectContaining({
-            status: TBRTransactionStatus.PENDING,
+            status: TBRTransactionStatus.INIT,
           }),
           expect.anything(),
         )
@@ -653,7 +653,9 @@ describe('SubscriberCreatedListener', () => {
 
         const event = createMockEvent()
 
-        await expect(listener.createSubscriptionPayment(event)).rejects.toThrow()
+        await expect(
+          listener.createSubscriptionPayment(event),
+        ).rejects.toThrow()
 
         // Subscriber should NOT be updated when TBR fails
         expect(subscriberModel.update).not.toHaveBeenCalled()
@@ -689,4 +691,3 @@ describe('SubscriberCreatedListener', () => {
     })
   })
 })
-

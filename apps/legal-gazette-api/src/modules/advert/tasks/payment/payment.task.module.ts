@@ -1,15 +1,18 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { AdvertModel } from '../../../../models/advert.model'
 import { TBRTransactionModel } from '../../../../models/tbr-transactions.model'
 import { TBRModule } from '../../../tbr/tbr.module'
+import { PriceCalculatorProviderModule } from '../../calculator/price-calculator.provider.module'
 import { PgAdvisoryLockModule } from '../lock.module'
-import { AdvertPaymentTaskService } from './advert-payment.task'
-import { IAdvertPaymentTaskService } from './advert-payment.task.interface'
+import { PaymentTaskService } from './payment.task'
+import { IPaymentTaskService } from './payment.task.interface'
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([TBRTransactionModel]),
+    SequelizeModule.forFeature([TBRTransactionModel, AdvertModel]),
+    PriceCalculatorProviderModule,
     TBRModule.forRoot({
       credentials: process.env.LG_TBR_CREDENTIALS!,
       officeId: process.env.LG_TBR_OFFICE_ID!,
@@ -19,10 +22,10 @@ import { IAdvertPaymentTaskService } from './advert-payment.task.interface'
   ],
   providers: [
     {
-      provide: IAdvertPaymentTaskService,
-      useClass: AdvertPaymentTaskService,
+      provide: IPaymentTaskService,
+      useClass: PaymentTaskService,
     },
   ],
-  exports: [IAdvertPaymentTaskService],
+  exports: [IPaymentTaskService],
 })
-export class AdvertPaymentTaskModule {}
+export class PaymentTaskModule {}
