@@ -993,7 +993,7 @@ export class CreateAdvertAndCommonApplicationBodyDto {
   @ApiProperty({ type: CreateSignatureDto })
   @ValidateNested()
   @Type(() => CreateSignatureDto)
-  signatue!: CreateSignatureDto
+  signature!: CreateSignatureDto
 
   @ApiProperty({ type: [CreateCommunicationChannelDto] })
   @IsArray()

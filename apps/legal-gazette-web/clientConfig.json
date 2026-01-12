@@ -5649,7 +5649,7 @@
           "fields": {
             "$ref": "#/components/schemas/CommonAdvertAndApplicationFieldsDto"
           },
-          "signatue": { "$ref": "#/components/schemas/CreateSignatureDto" },
+          "signature": { "$ref": "#/components/schemas/CreateSignatureDto" },
           "communicationChannels": {
             "type": "array",
             "items": {
@@ -5661,7 +5661,7 @@
         "required": [
           "applicantNationalId",
           "fields",
-          "signatue",
+          "signature",
           "communicationChannels",
           "publishingDates"
         ]

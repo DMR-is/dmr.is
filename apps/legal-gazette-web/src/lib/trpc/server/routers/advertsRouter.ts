@@ -5,6 +5,7 @@ import { createTRPCError } from '@dmr.is/trpc/utils/errorHandler'
 
 import { SortDirectionEnum } from '../../../../gen/fetch'
 import { StatusIdEnum } from '../../../constants'
+import { createAdvertAndCommonApplicationInput } from '../../../inputs'
 import { protectedProcedure, router } from '../trpc'
 
 const getAdvertsRequestSchema = z.object({
@@ -152,6 +153,25 @@ export const advertsRouter = router({
     .mutation(async ({ ctx, input }) => {
       return await ctx.api.rejectAdvert({
         id: input.id,
+      })
+    }),
+  createAdvertAndCommonApplication: protectedProcedure
+    .input(createAdvertAndCommonApplicationInput)
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.api.createAdvertAndCommonApplication({
+        createAdvertAndCommonApplicationBodyDto: {
+          applicantNationalId: input.applicantNationalId,
+          communicationChannels: input.communicationChannels,
+          fields: {
+            caption: input.fields.caption,
+            categoryId: input.fields.category.id,
+            content: input.fields.html,
+            typeId: input.fields.type.id,
+          },
+          publishingDates: input.publishingDates,
+          signature: input.signature,
+          additionalText: input.additionalText,
+        },
       })
     }),
 })

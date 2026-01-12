@@ -1,4 +1,3 @@
-'use client'
 import Kennitala from 'kennitala'
 import { useState } from 'react'
 
@@ -24,10 +23,18 @@ export const CreateAdvertApplicant = ({ onChange }: Props) => {
   const [val, setVal] = useState('')
   const [error, setError] = useState(false)
 
-  const { mutate, data, isPending } = useMutation(
-    trpc.getPersonByNationalId.mutationOptions({
-      onSuccess: (data) => {
-        onChange(data.person?.nafn || '')
+  const {
+    mutate,
+    data: legalEntityName,
+    isPending,
+  } = useMutation(
+    trpc.getLegalEntityNameByNationalId.mutationOptions({
+      onSuccess: () => {
+        onChange(val)
+      },
+      onError: (_err, variables) => {
+        setVal(variables.nationalId)
+        onChange(variables.nationalId)
       },
     }),
   )
@@ -74,7 +81,7 @@ export const CreateAdvertApplicant = ({ onChange }: Props) => {
             readOnly
             size="sm"
             name="person.name"
-            value={data?.person?.nafn}
+            value={legalEntityName}
             label="Nafn aðila"
           />
         </GridColumn>

@@ -1,3 +1,5 @@
+import Kennitala from 'kennitala'
+
 import { Inject, Injectable } from '@nestjs/common'
 
 import {
@@ -19,6 +21,25 @@ export class LGNationalRegistryService implements ILGNationalRegistryService {
     @Inject(ICompanyRegistryClientService)
     private companyRegistryService: ICompanyRegistryClientService,
   ) {}
+  async getEntityNameByNationalId(nationalId: string): Promise<string> {
+    if (Kennitala.isPerson(nationalId)) {
+      const { person } = await this.getPersonByNationalId(nationalId)
+
+      if (!person) {
+        throw new Error('Person not found')
+      }
+
+      return person.nafn
+    }
+
+    const company = await this.getCompanyByNationalId(nationalId)
+
+    if (!company.legalEntity) {
+      throw new Error('Company not found')
+    }
+
+    return company.legalEntity.name
+  }
   async getPersonByNationalId(nationalId: string): Promise<GetPersonDto> {
     try {
       return this.nationalRegistryService.getPersonByNationalId(nationalId)

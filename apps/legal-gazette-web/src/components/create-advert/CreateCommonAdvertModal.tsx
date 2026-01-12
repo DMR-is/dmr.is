@@ -11,6 +11,7 @@ import {
   Inline,
   Input,
   Text,
+  toast,
 } from '@dmr.is/ui/components/island-is'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
@@ -24,7 +25,7 @@ import { CreateAdvertCommunicationChannel } from './CreateAdvertCommunicationCha
 import { CreateAdvertPublications } from './CreateAdvertPublications'
 import { CreateAdvertSignature } from './CreateAdvertSignature'
 
-import { useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type CreateAdvertAndCommonApplicationBody = z.infer<
   typeof createAdvertAndCommonApplicationInput
@@ -57,9 +58,36 @@ export const CreateCommonAdvertModal = () => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
+  const { mutate, isPending } = useMutation(
+    trpc.createAdvertAndCommonApplication.mutationOptions({
+      onSuccess: () => {
+        toast.success('Auglýsing búin til')
+        queryClient.invalidateQueries(trpc.getAdvertsInProgress.queryFilter())
+        setState(initalState)
+        setIsVisible(false)
+      },
+      onError: () => {
+        toast.error('Ekki tókst að búa til auglýsingu')
+      },
+    }),
+  )
+
   const [isVisible, setIsVisible] = useState(false)
   const [state, setState] =
     useState<CreateAdvertAndCommonApplicationBody>(initalState)
+
+  const onSubmit = () => {
+    const check = createAdvertAndCommonApplicationInput.safeParse(state)
+
+    if (!check.success) {
+      const err = z.treeifyError(check.error)
+
+      console.log('Validation errors:', err)
+      return
+    }
+
+    mutate(state)
+  }
 
   const disclosure = (
     <Button
@@ -188,7 +216,9 @@ export const CreateCommonAdvertModal = () => {
         <GridRow>
           <GridColumn span="12/12">
             <Inline align="right">
-              <Button>Búa til auglýsingu</Button>
+              <Button loading={isPending} onClick={onSubmit}>
+                Búa til auglýsingu
+              </Button>
             </Inline>
           </GridColumn>
         </GridRow>

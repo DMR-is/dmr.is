@@ -1,3 +1,4 @@
+import Kennitala from 'kennitala'
 import z from 'zod'
 
 import { LegalEntityDto } from '../../../../gen/fetch'
@@ -13,6 +14,44 @@ const getPersonByNationalIdInputSchema = z.object({
 })
 
 export const nationalRegistryRouter = router({
+  getLegalEntityNameByNationalId: protectedProcedure
+    .input(getPersonByNationalIdInputSchema)
+    .mutation(async ({ input, ctx }): Promise<string> => {
+      const { nationalId } = input
+
+      if (!Kennitala.isValid(nationalId)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Invalid national ID format',
+        })
+      }
+
+      const isPerson = Kennitala.isPerson(nationalId)
+
+      if (isPerson) {
+        const person = await ctx.api.getPersonByNationalId({ nationalId })
+
+        if (person.person === null) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Person not found',
+          })
+        }
+
+        return person.person.nafn
+      }
+
+      const company = await ctx.api.getCompanyByNationalId({ nationalId })
+
+      if (company.legalEntity === null) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Company not found',
+        })
+      }
+
+      return company.legalEntity.name
+    }),
   getPersonByNationalId: protectedProcedure
     .input(getPersonByNationalIdInputSchema)
     .mutation(async ({ input, ctx }) => {

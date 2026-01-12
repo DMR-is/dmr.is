@@ -1,4 +1,3 @@
-'use client'
 import { useState } from 'react'
 
 import {
@@ -17,9 +16,7 @@ type Props = {
 }
 
 export const CreateAdvertPublications = ({ onChange }: Props) => {
-  const [publications, setPublications] = useState<string[]>([
-    new Date().toISOString(),
-  ])
+  const [publications, setPublications] = useState<string[]>([])
 
   const canAdd = publications.length < 3
   const canRemove = publications.length > 1
