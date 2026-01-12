@@ -217,14 +217,13 @@ export const CommunicationChannelFields = () => {
                 </Stack>
               </Box>
             )}
-            {channels.length > 0 ? (
+            {channels.length > 0 && (
               <T.Table>
                 <T.Head>
                   <T.Row>
                     <T.HeadData>Netfang</T.HeadData>
                     <T.HeadData>Nafn</T.HeadData>
                     <T.HeadData>Símanúmer</T.HeadData>
-                    <T.HeadData></T.HeadData>
                     <T.HeadData></T.HeadData>
                   </T.Row>
                 </T.Head>
@@ -235,46 +234,32 @@ export const CommunicationChannelFields = () => {
                       <T.Data>{channel.name}</T.Data>
                       <T.Data>{channel.phone}</T.Data>
                       <T.Data>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsEditing(channel.email)
-                            setCurrentChannel(channel)
-                            setToggleAdd(true)
-                          }}
-                        >
-                          <Icon size="small" icon="pencil" color="blue400" />
-                        </button>
-                      </T.Data>
-                      <T.Data>
-                        <button
-                          type="button"
-                          onClick={() => removeChannel(index)}
-                        >
-                          <Icon
-                            size="small"
-                            icon="trash"
-                            color="red400"
-                            type="outline"
-                          />
-                        </button>
+                        <Inline space={3} justifyContent={'flexEnd'}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsEditing(channel.email)
+                              setCurrentChannel(channel)
+                              setToggleAdd(true)
+                            }}
+                          >
+                            <Icon size="small" icon="pencil" color="blue400" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => removeChannel(index)}
+                          >
+                            <Icon size="small" icon="trash" color="blue400" />
+                          </button>
+                        </Inline>
                       </T.Data>
                     </T.Row>
                   ))}
                 </T.Body>
               </T.Table>
-            ) : (
-              <AlertMessage
-                type="info"
-                title="Engar samskiptaleiðir valdar"
-                message="Að minnsta kosti þarf ein samskiptaleið að vera til staðar"
-              />
             )}
-            <Button
-              size="medium"
-              icon="filter"
-              onClick={() => setToggleAdd(true)}
-            >
+            <Button size="medium" icon="add" onClick={() => setToggleAdd(true)}>
               Bæta við samskiptaleið
             </Button>
           </Stack>

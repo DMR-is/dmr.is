@@ -39,14 +39,13 @@ export const RecallFormSteps = (
         }),
         fields: [
           {
-            title: 'Skilyrði fyrir birtingu',
             content: <PrerequisitesSteps />,
           },
         ],
       },
       {
         title: 'Grunnupplýsingar',
-        stepTitle: 'Upplýsingar',
+        stepTitle: 'Grunnupplýsingar',
         validationSchema: baseApplicationSchemaRefined
           .pick({
             additionalText: true,
@@ -59,19 +58,12 @@ export const RecallFormSteps = (
           }),
         fields: [
           {
-            title: 'Dómstóll og úrskurðardagur',
-            intro: <Text>Dómstóll og úrskurðardagur eru nauðsynlegir</Text>,
             content: <RecallAdvertFields />,
           },
           {
             title: 'Undirritun',
-            intro: (
-              <Text>
-                Fylla þarf út eitt af eftirfarandi: nafn, staðsetningu eða
-                dagsetningu undirritunar
-              </Text>
-            ),
             content: <SignatureFields />,
+            space: [0],
           },
         ],
       },
@@ -91,32 +83,25 @@ export const RecallFormSteps = (
             }),
         fields: [
           {
-            title: isBankruptcy ? 'Nánar um þrotabúið' : 'Nánar um dánarbúið',
             intro: (
               <Text>
-                {`${`Sláðu inn kennitölu hér fyrir neðan og við munum sækja upplýsingar um `}${isBankruptcy ? 'þrotabúið' : 'dánarbúið'}`}
+                {`${`Sláðu inn kennitölu hér fyrir neðan og við munum sækja upplýsingar um `}${isBankruptcy ? 'þrotabúið' : 'dánarbúið'}.`}
               </Text>
             ),
             content: <RecallSettlementFields />,
           },
           {
             title: 'Upplýsingar um skiptastjóra',
-            // intro: <Text>Fylla þarf út nafn og staðsetningu skiptastjóra</Text>,
             content: <RecallLiquidatorFields />,
           },
           {
             title: 'Kröfulýsingar',
-            intro: (
-              <Text>
-                Kröfulýsingar sem berast skiptastjóri á eftirfarandi máta
-              </Text>
-            ),
             content: <RecallRequirementStatementFields />,
           },
         ],
       },
       {
-        title: 'Birtingardagar',
+        title: 'Óskir um birtingu',
         stepTitle: 'Birting',
         validationSchema: baseApplicationSchemaRefined
           .pick({
@@ -127,11 +112,10 @@ export const RecallFormSteps = (
           }),
         fields: [
           {
-            title: 'Birting',
+            title: 'Birtingardagar',
             intro: (
               <Text>
-                Veldu dagsetningar hér fyrir neðan um ósk um birtingardaga. Að
-                minnsta kosti tveir birtingardagar eru nauðsynlegir og mest
+                Að minnsta kosti tveir birtingardagar eru nauðsynlegir og mest
                 þrír.
               </Text>
             ),
@@ -141,9 +125,9 @@ export const RecallFormSteps = (
             title: 'Samskiptaleiðir',
             intro: (
               <Text>
-                Bættu við upplýsingum um tengiliða, tengiliðir í
-                samskiptaleiðium fá tilkynningar varðandi útgáfu á
-                auglýsingunni.
+                Hér getur þú skráð inn tölvupóstfang og símanúmer þess sem best
+                er að hafa samskipti við vegna auglýsingarinnar, hægt er að skrá
+                fleirri.
               </Text>
             ),
             content: <CommunicationChannelFields />,
@@ -166,13 +150,14 @@ export const RecallFormSteps = (
             }),
         fields: [
           {
-            title: 'Skiptafundur',
             intro: isBankruptcy ? (
-              <Text>Hvar og hvenær fyrsti skiptafundur fer fram</Text>
+              <Text>
+                Bættu við hvar og hvenær fyrsti skiptafundur fer fram.
+              </Text>
             ) : (
               <Text>
                 Fylltu út reitina hér fyrir neðan ef þú vilt auglýsa skiptafund
-                með innköllunni
+                með innköllunni.
               </Text>
             ),
             content: <RecallDivisionFields isBankruptcy={isBankruptcy} />,

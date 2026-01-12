@@ -119,7 +119,7 @@ export const RecallPublishingFields = () => {
                   <Inline
                     space={[1, 2]}
                     flexWrap="wrap"
-                    alignY="center"
+                    alignY="bottom"
                     key={index}
                   >
                     <DatePickerController
@@ -133,11 +133,10 @@ export const RecallPublishingFields = () => {
                       onChange={(date) => onDateChange(date, index)}
                     />
                     <Button
-                      circle
                       icon="trash"
                       iconType="outline"
-                      size="default"
-                      colorScheme="destructive"
+                      size="small"
+                      variant="utility"
                       disabled={currentDates.length <= 1}
                       onClick={() => removeDate(index)}
                     />
