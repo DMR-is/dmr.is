@@ -3,7 +3,6 @@ import {
   Column,
   DataType,
   ForeignKey,
-  HasMany,
 } from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
@@ -101,7 +100,7 @@ export class TBRTransactionModel extends BaseModel<
   @Column({
     type: DataType.STRING,
     allowNull: false,
-    defaultValue: TBRTransactionStatus.PENDING,
+    defaultValue: TBRTransactionStatus.INIT,
   })
   status!: TBRTransactionStatus
 
