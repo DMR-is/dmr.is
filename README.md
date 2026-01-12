@@ -46,7 +46,8 @@ Examples:
 - `fix/resolve-login-timeout` - Bug fix
 - `chore/update-dependencies` - Maintenance tasks
 
-Title should include {type}({project}): What was done
+Title should include {type}({scope}): What was done
+See [.github/workflows/pr.yml](.github/workflows/pr.yml) for allowed types and scopes.
 
 Examples:
 
