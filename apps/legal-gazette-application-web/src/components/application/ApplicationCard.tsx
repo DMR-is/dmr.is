@@ -96,9 +96,14 @@ export const ApplicationCard = ({ application }: Props) => {
     }
   }
 
+  const recallInProgress =
+    application.type !== ApplicationTypeEnum.COMMON &&
+    application.status === ApplicationStatusEnum.SUBMITTED &&
+    !allPublished
+
   return (
     <Box borderRadius="large" border="standard" padding={3} background="white">
-      <Stack space={1}>
+      <Stack space={0}>
         <Inline justifyContent="spaceBetween">
           <Text color="purple400" variant="eyebrow" title="Uppfært">
             Uppfært:{' '}
@@ -128,23 +133,26 @@ export const ApplicationCard = ({ application }: Props) => {
             >
               {statusText}
             </Tag>
-            {application.type !== ApplicationTypeEnum.COMMON &&
-              ApplicationStatusEnum.SUBMITTED &&
-              !allPublished && (
-                <div className={cardDropdownStyle}>
-                  <AddAdvertsToApplicationMenu
-                    applicationId={application.id}
-                    title={application.title + ' - ' + application.subtitle}
-                  />
-                </div>
-              )}
           </Inline>
         </Inline>
 
         <Stack space={1}>
           <Text variant="h3">{application.title}</Text>
-          <Inline justifyContent="spaceBetween" alignY="center">
+          {recallInProgress && (
             <Text variant="medium">{application.subtitle}</Text>
+          )}
+          <Inline justifyContent="spaceBetween" alignY="center">
+            {recallInProgress ? (
+              <div className={cardDropdownStyle}>
+                <AddAdvertsToApplicationMenu
+                  asButtons
+                  applicationId={application.id}
+                  title={application.title + ' - ' + application.subtitle}
+                />
+              </div>
+            ) : (
+              <Text variant="medium">{application.subtitle}</Text>
+            )}
             <LinkV2 href={url}>
               <Button
                 variant="text"
