@@ -20,6 +20,7 @@ import { PagingQuery } from '@dmr.is/shared/dto'
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
+import { OwnershipGuard } from '../../../core/guards/ownership.guard'
 import {
   AdvertDetailedDto,
   GetAdvertsDto,
@@ -67,20 +68,24 @@ export class AdvertController {
   @ApplicationWebScopes()
   @Get('getMyLegacyAdverts')
   @LGResponse({ operationId: 'getMyLegacyAdverts', type: GetMyAdvertsDto })
-  getMyLegacyAdverts(@Query() query: PagingQuery, @CurrentUser() user: DMRUser) {
-    return this.advertService.getMyLegacyAdverts(query, user)
-  }
-
-  @Get(':id')
-  @LGResponse({ operationId: 'getAdvertById', type: AdvertDetailedDto })
-  getAdvertById(
-    @Param('id', new UUIDValidationPipe()) id: string,
+  getMyLegacyAdverts(
+    @Query() query: PagingQuery,
     @CurrentUser() user: DMRUser,
   ) {
-    return this.advertService.getAdvertById(id, user)
+    return this.advertService.getMyLegacyAdverts(query, user)
+  }
+  @UseGuards(OwnershipGuard)
+  @Get(':advertId')
+  @LGResponse({ operationId: 'getAdvertById', type: AdvertDetailedDto })
+  getAdvertById(
+    @Param('advertId', new UUIDValidationPipe()) advertId: string,
+    @CurrentUser() user: DMRUser,
+  ) {
+    return this.advertService.getAdvertById(advertId, user)
   }
 
   @ApplicationWebScopes()
+  @UseGuards(OwnershipGuard)
   @Get('byCaseId/:caseId')
   @LGResponse({ operationId: 'getAdvertsByCaseId', type: GetAdvertsDto })
   getAdvertByCaseId(@Param('caseId', new UUIDValidationPipe()) caseId: string) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is'
 
@@ -13,7 +13,7 @@ type Props = {
 }
 export const ApplicationSubmittedContainer = ({ application }: Props) => {
   const trpc = useTRPC()
-  const { data, error, isLoading } = useSuspenseQuery(
+  const { data, error, isLoading } = useQuery(
     trpc.getAdvertByCaseId.queryOptions({
       caseId: application.caseId,
     }),
