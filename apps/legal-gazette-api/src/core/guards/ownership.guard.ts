@@ -59,12 +59,14 @@ export class OwnershipGuard implements CanActivate {
           where: {
             id: resourceId,
           },
+          attributes: ['id', 'applicantNationalId'],
         })
       case 'advertModel':
         return this.advertModel.findOne({
           where: {
             id: resourceId,
           },
+          attributes: ['id', 'createdByNationalId'],
         })
       case 'caseModel':
         // Currently only used by admins
@@ -72,6 +74,7 @@ export class OwnershipGuard implements CanActivate {
           where: {
             id: resourceId,
           },
+          attributes: ['id'],
         })
       default:
         return null

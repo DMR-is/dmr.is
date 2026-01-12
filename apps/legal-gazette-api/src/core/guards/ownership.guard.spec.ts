@@ -137,6 +137,7 @@ describe('OwnershipGuard', () => {
       expect(results).toBe(true)
       expect(applicationModel.findOne).toHaveBeenCalledWith({
         where: { id: 'app-123' },
+        attributes: ['id', 'applicantNationalId'],
       })
       expect(logger.debug).toHaveBeenCalledWith(
         'Ownership validated',
@@ -156,7 +157,7 @@ describe('OwnershipGuard', () => {
       const results = await guard.canActivate(context)
       expect(results).toBe(true)
       expect(advertModel.findOne).toHaveBeenCalledWith({
-        where: { id: 'adv-123' },
+        where: { id: 'adv-123' }, attributes: ['id', 'createdByNationalId'],
       })
       expect(logger.debug).toHaveBeenCalledWith(
         'Ownership validated',
