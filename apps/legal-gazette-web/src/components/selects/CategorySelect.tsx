@@ -13,13 +13,14 @@ type Props = {
   selectedId?: string
   isClearable?: boolean
   disabled?: boolean
+  required?: boolean
 }
 
 export const CategorySelect = ({
   onSelect,
   typeId,
   selectedId,
-  isLoading = false,
+  required,
   isClearable,
   disabled,
 }: Props) => {
@@ -44,6 +45,7 @@ export const CategorySelect = ({
 
   return (
     <Select
+      required={required}
       noOptionsMessage="Veldu tegund fyrst"
       key={selectedId}
       isLoading={isPending}

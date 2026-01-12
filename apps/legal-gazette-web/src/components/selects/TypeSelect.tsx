@@ -9,10 +9,16 @@ import { useTRPC } from '../../lib/trpc/client/trpc'
 type Props = {
   onSelect?: (type?: TypeDto) => void
   selectedId?: string
+  required?: boolean
   disabled?: boolean
 }
 
-export const TypeSelect = ({ onSelect, selectedId, disabled }: Props) => {
+export const TypeSelect = ({
+  onSelect,
+  selectedId,
+  required,
+  disabled,
+}: Props) => {
   const trpc = useTRPC()
   const { data } = useQuery(
     trpc.getTypes.queryOptions({ excludeUnassignable: true }),
@@ -33,6 +39,7 @@ export const TypeSelect = ({ onSelect, selectedId, disabled }: Props) => {
   return (
     <Select
       size="sm"
+      required={required}
       backgroundColor="blue"
       label="Tegund auglýsingar"
       placeholder="Veldu tegund"

@@ -8,13 +8,21 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
+  Inline,
+  Input,
+  Text,
 } from '@dmr.is/ui/components/island-is'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
 import { createAdvertAndCommonApplicationInput } from '../../lib/inputs'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { Editor } from '../editor/HTMLEditor'
 import { CategorySelect } from '../selects/CategorySelect'
 import { TypeSelect } from '../selects/TypeSelect'
+import { CreateAdvertApplicant } from './CreateAdvertApplicant'
+import { CreateAdvertCommunicationChannel } from './CreateAdvertCommunicationChannel'
+import { CreateAdvertPublications } from './CreateAdvertPublications'
+import { CreateAdvertSignature } from './CreateAdvertSignature'
 
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -71,43 +79,120 @@ export const CreateCommonAdvertModal = () => {
       baseId="create-advert-and-common-application-modal"
       onVisibilityChange={setIsVisible}
       isVisible={isVisible}
-      title="Bæta við almennri auglýsingu og umsókn"
+      title="Almenn auglýsing"
     >
-      <GridContainer></GridContainer>
-      <GridRow>
-        <GridColumn span={['12/12', '6/12']}>
-          <TypeSelect
-            selectedId={state.fields.type.id}
-            onSelect={(type) => {
-              if (!type) return
-              setState((prev) => ({
-                ...prev,
-                fields: {
-                  ...prev.fields,
-                  type: type,
-                  category: { id: '', title: '', slug: '' }, // Reset category when type changes
-                },
-              }))
-            }}
-          />
-        </GridColumn>
-        <GridColumn span={['12/12', '6/12']}>
-          <CategorySelect
-            typeId={state.fields.type.id}
-            selectedId={state.fields.category.id}
-            onSelect={(cat) => {
-              if (!cat) return
-              setState((prev) => ({
-                ...prev,
-                fields: {
-                  ...prev.fields,
-                  category: cat,
-                },
-              }))
-            }}
-          />
-        </GridColumn>
-      </GridRow>
+      <GridContainer>
+        <GridRow rowGap={[2, 3]}>
+          <GridColumn span="12/12">
+            <CreateAdvertApplicant
+              onChange={(nationalId) =>
+                setState((prev) => ({
+                  ...prev,
+                  applicantNationalId: nationalId,
+                }))
+              }
+            />
+          </GridColumn>
+          <GridColumn span="12/12">
+            <Text variant="h4">Grunnupplýsingar</Text>
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12']}>
+            <TypeSelect
+              required
+              selectedId={state.fields.type.id}
+              onSelect={(type) => {
+                if (!type) return
+                setState((prev) => ({
+                  ...prev,
+                  fields: {
+                    ...prev.fields,
+                    type: type,
+                    category: { id: '', title: '', slug: '' }, // Reset category when type changes
+                  },
+                }))
+              }}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12']}>
+            <CategorySelect
+              required
+              typeId={state.fields.type.id}
+              selectedId={state.fields.category.id}
+              onSelect={(cat) => {
+                if (!cat) return
+                setState((prev) => ({
+                  ...prev,
+                  fields: {
+                    ...prev.fields,
+                    category: cat,
+                  },
+                }))
+              }}
+            />
+          </GridColumn>
+          <GridColumn span="12/12">
+            <Input
+              size="sm"
+              backgroundColor="blue"
+              name="new-advert-caption"
+              label="Yfirskrift"
+              required
+              onChange={(e) =>
+                setState((prev) => ({
+                  ...prev,
+                  fields: {
+                    ...prev.fields,
+                    caption: e.target.value,
+                  },
+                }))
+              }
+            />
+          </GridColumn>
+          <GridColumn span="12/12">
+            <Editor
+              onChange={(val) =>
+                setState((prev) => ({
+                  ...prev,
+                  fields: {
+                    ...prev.fields,
+                    html: val,
+                  },
+                }))
+              }
+            />
+          </GridColumn>
+        </GridRow>
+      </GridContainer>
+      <CreateAdvertSignature
+        onChange={(signature) =>
+          setState((prev) => ({ ...prev, signature: signature }))
+        }
+      />
+      <CreateAdvertPublications
+        onChange={(pubDates) =>
+          setState((prev) => ({
+            ...prev,
+            publishingDates: pubDates,
+          }))
+        }
+      />
+      <CreateAdvertCommunicationChannel
+        onChange={(channels) =>
+          setState((prev) => ({
+            ...prev,
+            communicationChannels: channels,
+          }))
+        }
+      />
+      <GridContainer>
+        <GridRow>
+          <GridColumn span="12/12">
+            <Inline align="right">
+              <Button>Búa til auglýsingu</Button>
+            </Inline>
+          </GridColumn>
+        </GridRow>
+      </GridContainer>
     </Modal>
   )
 }
