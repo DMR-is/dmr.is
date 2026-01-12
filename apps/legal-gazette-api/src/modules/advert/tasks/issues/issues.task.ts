@@ -39,16 +39,22 @@ export class IssuesTaskService implements IIssuesTask {
     timeZone: 'Atlantic/Reykjavik',
   })
   async run() {
-    const { ran } = await this.lock.runWithSessionLock(
+    const { ran, reason } = await this.lock.runWithDistributedLock(
       TASK_JOB_IDS.issues,
       async () => {
         await this.dailyIssueGeneration()
       },
-      { minHoldMs: 5000 },
+      {
+        cooldownMs: 60 * 60 * 1000, // 60 minutes
+        containerId: process.env.HOSTNAME,
+      },
     )
 
-    if (!ran)
-      this.logger.debug('IssuesTask skipped (lock held by another container)')
+    if (!ran) {
+      this.logger.debug(`IssuesTask skipped (${reason})`, {
+        context: LOGGING_CONTEXT,
+      })
+    }
   }
 
   async dailyIssueGeneration(): Promise<void> {
