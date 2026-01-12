@@ -30,7 +30,7 @@ export const CommonFormSteps: LegalGazetteForm = {
     },
     {
       title: 'Grunnupplýsingar',
-      stepTitle: 'Upplýsingar',
+      stepTitle: 'Grunnupplýsingar',
       validationSchema: commonApplicationAnswersRefined.pick({
         signature: true,
         fields: true,
@@ -68,10 +68,22 @@ export const CommonFormSteps: LegalGazetteForm = {
       fields: [
         {
           title: 'Birtingardagar',
+          intro: (
+            <Text>
+              Að minnsta kosti einn birtingardagur er nauðsynlegur og mest þrír.
+            </Text>
+          ),
           content: <PublishingFields />,
         },
         {
           title: 'Samskiptaleiðir',
+          intro: (
+            <Text>
+              Hér getur þú skráð inn tölvupóstfang og símanúmer þess sem best er
+              að hafa samskipti við vegna auglýsingarinnar, hægt er að skrá
+              fleirri.
+            </Text>
+          ),
           content: <CommunicationChannelFields />,
         },
       ],

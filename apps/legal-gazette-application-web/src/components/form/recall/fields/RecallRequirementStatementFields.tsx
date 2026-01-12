@@ -93,6 +93,7 @@ export const RecallRequirementStatementFields = () => {
         <InputController
           key={recallRequirementStatementType}
           name={'fields.settlementFields.recallRequirementStatementLocation'}
+          required
           label={
             recallRequirementStatementType ===
             ApplicationRequirementStatementEnum.LIQUIDATORLOCATION

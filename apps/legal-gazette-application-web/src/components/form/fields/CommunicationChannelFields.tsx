@@ -217,7 +217,7 @@ export const CommunicationChannelFields = () => {
                 </Stack>
               </Box>
             )}
-            {channels.length > 0 ? (
+            {channels.length > 0 && (
               <T.Table>
                 <T.Head>
                   <T.Row>
@@ -258,12 +258,6 @@ export const CommunicationChannelFields = () => {
                   ))}
                 </T.Body>
               </T.Table>
-            ) : (
-              <AlertMessage
-                type="info"
-                title="Engar samskiptaleiðir valdar"
-                message="Að minnsta kosti þarf ein samskiptaleið að vera til staðar"
-              />
             )}
             <Button size="medium" icon="add" onClick={() => setToggleAdd(true)}>
               Bæta við samskiptaleið

@@ -19,7 +19,7 @@ import { ApplicationSidebar } from './ApplicationSidebar'
 
 type Props = {
   children: React.ReactNode
-  title: string | React.ReactNode
+  title: React.ReactNode
   form: LegalGazetteForm
 }
 
