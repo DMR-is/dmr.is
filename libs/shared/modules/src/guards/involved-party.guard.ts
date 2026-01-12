@@ -19,7 +19,7 @@ export class InvolvedPartyGuard implements CanActivate {
         return true
       }
 
-      const involvedPartyIds = request.involvedParties
+      const involvedPartyIds = request.user.involvedParties
 
       const applicationId = request.params.id
 
