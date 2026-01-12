@@ -106,7 +106,7 @@ export type ApplicationCreateAttributes = {
     include: [
       { model: SettlementModel, as: 'settlement' },
       {
-        model: AdvertModel.scope('listview'),
+        model: AdvertModel.scope('simpleview'),
         as: 'adverts',
         required: false,
         separate: true,
@@ -225,7 +225,8 @@ export class ApplicationModel extends BaseModel<
       title: model.title,
       type: model.applicationType,
       subtitle: model.getSubtitle(),
-      adverts: model.adverts?.flatMap((advert) => advert.fromModel()) || [],
+      adverts:
+        model.adverts?.flatMap((advert) => advert.fromModelToSimple()) || [],
       currentStep: model.currentStep,
     }
   }

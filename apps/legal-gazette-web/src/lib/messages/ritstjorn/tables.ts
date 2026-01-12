@@ -78,9 +78,15 @@ export const ritstjornTableMessages = {
     },
     owner: {
       id: 'lg.web:ritstjorn-tables.submitted.columns.owner',
-      defaultMessage: 'Eigandi',
+      defaultMessage: 'Starfs.',
       description:
-        'Column header for the owner of adverts in the submitted table',
+        'Column header for the employee of adverts in the submitted table',
+    },
+    sender: {
+      id: 'lg.web:ritstjorn-tables.submitted.columns.sender',
+      defaultMessage: 'Innsendandi',
+      description:
+        'Column header for the sender of adverts in the submitted table',
     },
     status: {
       id: 'lg.web:ritstjorn-tables.submitted.columns.status',

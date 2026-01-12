@@ -75,7 +75,7 @@ import {
 import { StatusDto, StatusIdEnum, StatusModel } from './status.model'
 import { TBRTransactionModel } from './tbr-transactions.model'
 import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
-import { UserModel } from './users.model'
+import { UserDto, UserModel } from './users.model'
 
 export enum AdvertTemplateType {
   COMMON = 'COMMON',
@@ -176,6 +176,15 @@ export type AdvertCreateAttributes = {
       { model: AdvertPublicationModel, as: 'publications' },
       // we need user model for assigned user
       { model: UserModel },
+    ],
+  },
+  simpleview: {
+    include: [
+      { model: StatusModel },
+      { model: CategoryModel },
+      { model: TypeModel },
+      // we need the publication model to get scheduledAt
+      { model: AdvertPublicationModel, as: 'publications' },
     ],
   },
   detailed: {
@@ -563,7 +572,7 @@ export class AdvertModel extends BaseModel<
         createdBy: model.createdBy,
         scheduledAt: date.toISOString(),
         title: model.title,
-        assignedUser: model.assignedUser?.id,
+        assignedUser: model.assignedUser?.fromModel(),
         publications: model.publications.map((p) => p.fromModel()),
       }
     } catch (error: any) {
@@ -614,6 +623,45 @@ export class AdvertModel extends BaseModel<
 
   fromModelToDetailed(userId?: string): AdvertDetailedDto {
     return AdvertModel.fromModelToDetailed(this, userId)
+  }
+
+  static fromModelToSimple(model: AdvertModel): AdvertDto {
+    const publishing = model.publications.find(
+      (pub) => pub.publishedAt === null,
+    )
+
+    const date = publishing
+      ? publishing.scheduledAt
+      : model.publications[model.publications.length - 1].scheduledAt
+
+    try {
+      return {
+        id: model.id,
+        createdAt: model.createdAt.toISOString(),
+        updatedAt: model.updatedAt.toISOString(),
+        hasInternalComments: false,
+        deletedAt: model.deletedAt?.toISOString(),
+        category: model.category.fromModel(),
+        type: model.type.fromModel(),
+        status: model.status.fromModel(),
+        createdBy: model.createdBy,
+        scheduledAt: date.toISOString(),
+        title: model.title,
+        publications: model.publications.map((p) => p.fromModel()),
+      }
+    } catch (error) {
+      this.logger.warn(
+        'Error converting from AdvertModel to ExternalAdvertDto',
+        {
+          context: 'AdvertModel',
+        },
+      )
+      throw new InternalServerErrorException()
+    }
+  }
+
+  fromModelToSimple(): AdvertDto {
+    return AdvertModel.fromModelToSimple(this)
   }
 
   static fromModelToExternal(model: AdvertModel): ExternalAdvertDto {
@@ -759,10 +807,11 @@ export class AdvertDetailedDto extends DetailedDto {
   @IsDateString()
   scheduledAt!: string
 
-  @ApiProperty({ type: String, required: false })
+  @ApiProperty({ type: UserDto, required: false })
   @IsOptional()
-  @IsString()
-  assignedUser?: string
+  @ValidateNested()
+  @Type(() => UserDto)
+  assignedUser?: UserDto
 
   @ApiProperty({ type: Boolean })
   @IsBoolean()

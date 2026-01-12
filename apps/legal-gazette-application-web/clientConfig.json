@@ -3811,6 +3811,18 @@
         },
         "required": ["id", "title", "slug"]
       },
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "name": { "type": "string" },
+          "isActive": { "type": "boolean" }
+        },
+        "required": ["id", "nationalId", "email", "name", "isActive"]
+      },
       "CommentTypeEnum": {
         "type": "string",
         "enum": ["SUBMIT", "ASSIGN", "STATUS_UPDATE", "COMMENT"]
@@ -3915,7 +3927,7 @@
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": { "$ref": "#/components/schemas/StatusDto" },
           "scheduledAt": { "type": "string" },
-          "assignedUser": { "type": "string" },
+          "assignedUser": { "$ref": "#/components/schemas/UserDto" },
           "hasInternalComments": { "type": "boolean" },
           "comments": {
             "type": "array",
@@ -4014,7 +4026,7 @@
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": { "$ref": "#/components/schemas/StatusDto" },
           "scheduledAt": { "type": "string" },
-          "assignedUser": { "type": "string" },
+          "assignedUser": { "$ref": "#/components/schemas/UserDto" },
           "hasInternalComments": { "type": "boolean" }
         },
         "required": [
