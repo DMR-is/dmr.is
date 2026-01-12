@@ -343,7 +343,7 @@ export const useUpdateAdvert = (id: string) => {
 
   const assignUser = useCallback(
     (userId: string) => {
-      if (userId === advert?.assignedUser) {
+      if (userId === advert?.assignedUser?.id) {
         return
       }
       return assignUserMutation({ id, userId })
