@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { assertAdvertsEditable } from '../../core/utils/advert-status.util'
+import { AdvertModel } from '../../models/advert.model'
 import {
   SettlementModel,
   UpdateSettlementDto,
@@ -14,7 +16,17 @@ export class SettlementService {
   ) {}
 
   async updateSettlement(id: string, body: UpdateSettlementDto): Promise<void> {
-    const settlement = await this.settlementModel.findByPkOrThrow(id)
+    const settlement = await this.settlementModel.findByPkOrThrow(id, {
+      include: [
+        {
+          model: AdvertModel,
+          attributes: ['id', 'statusId'],
+        },
+      ],
+    })
+
+    // Prevent modification if any associated advert is in a terminal state
+    assertAdvertsEditable(settlement.adverts || [], 'settlement')
 
     await settlement.update({
       liquidatorName: body.liquidatorName,

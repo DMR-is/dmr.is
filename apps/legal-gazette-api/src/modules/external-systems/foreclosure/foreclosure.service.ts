@@ -4,6 +4,8 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { escapeHtml } from '@dmr.is/utils'
 
+import { assertAdvertEditable } from '../../../core/utils/advert-status.util'
+import { AdvertModel } from '../../../models/advert.model'
 import { CategoryDefaultIdEnum } from '../../../models/category.model'
 import {
   CreateForeclosureSaleDto,
@@ -109,6 +111,18 @@ export class ForeclosureService implements IForeclosureService {
     id: string,
     body: CreateForeclosurePropertyDto,
   ): Promise<ForeclosurePropertyDto> {
+    // Check advert status before creating property
+    const foreclosure = await this.foreclosureModel.findByPkOrThrow(id, {
+      include: [
+        {
+          model: AdvertModel,
+          attributes: ['id', 'statusId'],
+        },
+      ],
+    })
+
+    assertAdvertEditable(foreclosure.advert, 'foreclosure property')
+
     // Escape HTML in all text fields to prevent XSS
     const newProperty = await this.foreclosurePropertyModel.create(
       {
@@ -131,6 +145,18 @@ export class ForeclosureService implements IForeclosureService {
     id: string,
     propertyNumber: string,
   ): Promise<void> {
+    // Check advert status before deleting property
+    const foreclosure = await this.foreclosureModel.findByPkOrThrow(id, {
+      include: [
+        {
+          model: AdvertModel,
+          attributes: ['id', 'statusId'],
+        },
+      ],
+    })
+
+    assertAdvertEditable(foreclosure.advert, 'foreclosure property')
+
     const property = await this.foreclosurePropertyModel.findOneOrThrow({
       where: { foreclosureId: id, propertyNumber },
     })
