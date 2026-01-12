@@ -40,7 +40,8 @@ export const AdvertsCompleted = () => {
     efni: advert.title,
     tegund: advert.type.title,
     flokkur: advert.category.title,
-    owner: advert.createdBy,
+    sender: advert.createdBy,
+    owner: advert.assignedUser?.name,
     href: `/ritstjorn/${advert.id}`,
     hasLink: true,
   }))
@@ -93,6 +94,10 @@ export const AdvertsCompleted = () => {
             {
               field: 'owner',
               children: formatMessage(ritstjornTableMessages.columns.owner),
+            },
+            {
+              field: 'sender',
+              children: formatMessage(ritstjornTableMessages.columns.sender),
             },
           ] as const
         }

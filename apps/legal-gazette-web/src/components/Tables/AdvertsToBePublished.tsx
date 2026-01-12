@@ -33,7 +33,8 @@ export const AdvertsToBePublished = ({
     flokkur: advert.category.title,
     efni: advert.title,
     utgafudagur: formatDate(advert.scheduledAt),
-    owner: advert.createdBy,
+    sender: advert.createdBy,
+    owner: advert.assignedUser?.name,
     href: `/ritstjorn/${advert.id}`,
     hasLink: true,
   }))
@@ -64,6 +65,10 @@ export const AdvertsToBePublished = ({
           {
             field: 'owner',
             children: formatMessage(ritstjornTableMessages.columns.owner),
+          },
+          {
+            field: 'sender',
+            children: formatMessage(ritstjornTableMessages.columns.sender),
           },
         ] as const
       }

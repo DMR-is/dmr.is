@@ -49,7 +49,7 @@ export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
         currentStatusId={advert.status.id}
         isLoading={isLoadingEmployees}
         advertId={advert.id}
-        assignedUserId={advert.assignedUser}
+        assignedUserId={advert.assignedUser?.id}
         options={usersData?.users.map((user) => ({
           label: user.name,
           value: user.id,
