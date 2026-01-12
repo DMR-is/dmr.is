@@ -7,9 +7,10 @@ import z from 'zod'
  * @field content - The actual field component to render
  */
 export type FormField = {
-  title: string
+  title?: string | React.ReactNode
   intro?: React.ReactNode
   content: React.ReactNode
+  space?: [number]
 }
 
 /**

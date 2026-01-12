@@ -3,12 +3,7 @@ import { useFormContext } from 'react-hook-form'
 
 import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
-import {
-  Box,
-  FormStepper,
-  Section,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { Box, FormStepper, Section } from '@dmr.is/ui/components/island-is'
 
 import { SkeletonLoader } from '@island.is/island-ui/core'
 
@@ -47,16 +42,6 @@ export const ApplicationSidebar = ({ form }: Props) => {
     const isActive = i === currentStep
     const isComplete = i < currentStep
 
-    const hasSubsteps = step.fields.length > 1
-
-    const subSections = hasSubsteps
-      ? step.fields.map((subStep, j) => (
-          <Text variant="medium" key={j}>
-            {subStep.title}
-          </Text>
-        ))
-      : []
-
     return (
       <Section
         key={step.stepTitle}
@@ -64,7 +49,6 @@ export const ApplicationSidebar = ({ form }: Props) => {
         isActive={isActive}
         isComplete={isComplete}
         sectionIndex={i}
-        subSections={subSections}
       />
     )
   })

@@ -21,7 +21,6 @@ export const CommonFormSteps: LegalGazetteForm = {
       stepTitle: 'Skilyrði',
       fields: [
         {
-          title: 'Skilyrði fyrir birtingu',
           content: <PrerequisitesSteps />,
         },
       ],
@@ -38,22 +37,29 @@ export const CommonFormSteps: LegalGazetteForm = {
       }),
       fields: [
         {
-          title: 'Tegund og flokkur auglýsingar',
           content: <CommonAdvertFields />,
         },
         {
-          title: 'Meginmál auglýsingar',
+          title: (
+            <>
+              Meginmál auglýsingar{' '}
+              <Text fontWeight="regular" color="red600" as="span">
+                *
+              </Text>
+            </>
+          ),
           content: <AdvertContentField />,
         },
         {
           title: 'Undirritun',
 
           content: <SignatureFields />,
+          space: [0],
         },
       ],
     },
     {
-      title: 'Birtingardagar',
+      title: 'Óskir um birtingu',
       stepTitle: 'Birting',
       validationSchema: commonApplicationAnswersRefined.pick({
         publishingDates: true,
