@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 
 import { isEmail } from 'class-validator'
 import { useCallback, useEffect, useState } from 'react'
-import z from 'zod'
+import * as z from 'zod'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {

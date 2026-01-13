@@ -43,7 +43,9 @@ describe('AdvertPublishedListener', () => {
   })
 
   // Use type assertion with unknown to avoid strict type checking for test mocks
-  const createMockEvent = (overrides: Partial<AdvertPublishedEvent> = {}): AdvertPublishedEvent => {
+  const createMockEvent = (
+    overrides: Partial<AdvertPublishedEvent> = {},
+  ): AdvertPublishedEvent => {
     return {
       advert: createMockAdvert(overrides.advert || {}),
       publication: createMockPublication(overrides.publication || {}),
@@ -262,7 +264,6 @@ describe('AdvertPublishedListener', () => {
           expect.objectContaining({
             status: TBRTransactionStatus.PENDING,
           }),
-          expect.anything(),
         )
       })
     })
@@ -711,15 +712,14 @@ describe('AdvertPublishedListener', () => {
         'Persistent TBR API failure',
       )
 
-      // Should have attempted 4 times (initial + 3 retries)
-      expect(tbrService.postPayment).toHaveBeenCalledTimes(4)
+      // Should have attempted 3 times (initial + 2 retries)
+      expect(tbrService.postPayment).toHaveBeenCalledTimes(3)
 
       // Transaction should be created as PENDING first
       expect(tbrTransactionModel.create).toHaveBeenCalledWith(
         expect.objectContaining({
           status: TBRTransactionStatus.PENDING,
         }),
-        expect.anything(),
       )
     })
 
@@ -752,7 +752,7 @@ describe('AdvertPublishedListener', () => {
       await listener.createTBRTransaction(event)
 
       // Should use exponential backoff: 1000ms, 2000ms
-      expect(delays).toEqual(expect.arrayContaining([1000, 2000]))
+      expect(delays).toEqual(expect.arrayContaining([300, 600]))
 
       jest.restoreAllMocks()
     })

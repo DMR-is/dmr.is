@@ -63,134 +63,105 @@ export class AdvertPublishedListener {
 
     const expenses = paymentData.expenses[0]
 
-    // C-5 Fix: Create PENDING transaction record BEFORE calling TBR API
-    // This ensures we have a record of the payment attempt even if TBR succeeds
-    // but subsequent operations fail (prevents orphaned TBR claims)
-    let transactionRecord: TBRTransactionModel
     try {
-      transactionRecord = await this.sequelize.transaction(
-        async (transaction) => {
-          // Create the transaction record
-          const tbrTransaction = await this.tbrTransactionModel.create(
-            {
-              transactionType: TBRTransactionType.ADVERT,
-              feeCodeId: feeCodeId,
-              feeCodeMultiplier: expenses.quantity,
-              totalPrice: expenses.sum,
-              chargeCategory: paymentData.chargeCategory,
-              chargeBase: paymentData.chargeBase,
-              debtorNationalId: paymentData.debtorNationalId,
-              status: TBRTransactionStatus.PENDING,
-            },
+      const tbrTransaction = await this.tbrTransactionModel.create({
+        transactionType: TBRTransactionType.ADVERT,
+        feeCodeId: feeCodeId,
+        feeCodeMultiplier: expenses.quantity,
+        totalPrice: expenses.sum,
+        chargeCategory: paymentData.chargeCategory,
+        chargeBase: paymentData.chargeBase,
+        debtorNationalId: paymentData.debtorNationalId,
+        status: TBRTransactionStatus.PENDING,
+      })
+
+      // Update the advert with the transaction reference
+      await this.advertModel.update(
+        { transactionId: tbrTransaction.id },
+        { where: { id: advert.id } },
+      )
+      // Step 2: Call TBR API with retry logic (external call - cannot be rolled back)
+      try {
+        await withRetry(() => this.tbrService.postPayment(paymentData), {
+          maxRetries: 2,
+          baseDelayMs: 300,
+          maxDelayMs: 2000,
+          onRetry: (attempt, error) => {
+            this.logger.warn(`TBR payment retry attempt ${attempt}`, {
+              error: error.message,
+              advertId: advert.id,
+              transactionId: tbrTransaction.id,
+              context: LOGGING_CONTEXT,
+            })
+          },
+        })
+
+        this.logger.info('TBR payment posted successfully', {
+          advertId: advert.id,
+          transactionId: tbrTransaction.id,
+          context: LOGGING_CONTEXT,
+        })
+
+        // Update transaction record to CONFIRMED after successful TBR call
+        await this.sequelize.transaction(async (transaction) => {
+          await tbrTransaction.update(
+            { status: TBRTransactionStatus.CREATED },
             { transaction },
           )
+        })
 
-          // Update the advert with the transaction reference
-          await this.advertModel.update(
-            { transactionId: tbrTransaction.id },
-            { where: { id: advert.id }, transaction },
+        this.logger.info('Transaction record updated to CONFIRMED', {
+          transactionId: tbrTransaction.id,
+          context: LOGGING_CONTEXT,
+        })
+      } catch (error) {
+        // TBR call failed - update transaction record to FAILED
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error'
+
+        this.logger.error('TBR payment failed, marking transaction as FAILED', {
+          advertId: advert.id,
+          transactionId: tbrTransaction.id,
+          error: errorMessage,
+          context: LOGGING_CONTEXT,
+        })
+        try {
+          await this.sequelize.transaction(async (transaction) => {
+            await tbrTransaction.update(
+              {
+                status: TBRTransactionStatus.FAILED,
+                tbrError: errorMessage,
+              },
+              { transaction },
+            )
+          })
+        } catch (updateError) {
+          this.logger.error(
+            'Failed to update transaction record to FAILED status',
+            {
+              transactionId: tbrTransaction.id,
+              originalError: errorMessage,
+              updateError:
+                updateError instanceof Error
+                  ? updateError.message
+                  : 'Unknown error',
+              context: LOGGING_CONTEXT,
+            },
           )
-
-          return tbrTransaction
-        },
-      )
-
-      this.logger.info('Created PENDING transaction record before TBR call', {
-        transactionId: transactionRecord.id,
-        advertId: advert.id,
-        context: LOGGING_CONTEXT,
-      })
+        }
+        throw error
+      }
     } catch (error) {
-      this.logger.error('Failed to create PENDING transaction record', {
+      this.logger.error('Failed to create TBR transaction', {
         advertId: advert.id,
         error: error instanceof Error ? error.message : 'Unknown error',
         context: LOGGING_CONTEXT,
       })
       throw error
     }
-
-    // Step 2: Call TBR API with retry logic (external call - cannot be rolled back)
-    try {
-      await withRetry(
-        () => this.tbrService.postPayment(paymentData),
-        {
-          maxRetries: 3,
-          baseDelayMs: 1000,
-          maxDelayMs: 10000,
-          onRetry: (attempt, error) => {
-            this.logger.warn(`TBR payment retry attempt ${attempt}`, {
-              error: error.message,
-              advertId: advert.id,
-              transactionId: transactionRecord.id,
-              context: LOGGING_CONTEXT,
-            })
-          },
-        },
-      )
-
-      this.logger.info('TBR payment posted successfully', {
-        advertId: advert.id,
-        transactionId: transactionRecord.id,
-        context: LOGGING_CONTEXT,
-      })
-
-      // Update transaction record to CONFIRMED after successful TBR call
-      await this.sequelize.transaction(async (transaction) => {
-        await transactionRecord.update(
-          { status: TBRTransactionStatus.CREATED },
-          { transaction },
-        )
-      })
-
-      this.logger.info('Transaction record updated to CONFIRMED', {
-        transactionId: transactionRecord.id,
-        context: LOGGING_CONTEXT,
-      })
-    } catch (error) {
-      // TBR call failed - update transaction record to FAILED
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error'
-
-      this.logger.error(
-        'TBR payment failed, marking transaction as FAILED',
-        {
-          advertId: advert.id,
-          transactionId: transactionRecord.id,
-          error: errorMessage,
-          context: LOGGING_CONTEXT,
-        },
-      )
-
-      try {
-        await this.sequelize.transaction(async (transaction) => {
-          await transactionRecord.update(
-            {
-              status: TBRTransactionStatus.FAILED,
-              tbrError: errorMessage,
-            },
-            { transaction },
-          )
-        })
-      } catch (updateError) {
-        this.logger.error(
-          'Failed to update transaction record to FAILED status',
-          {
-            transactionId: transactionRecord.id,
-            originalError: errorMessage,
-            updateError:
-              updateError instanceof Error
-                ? updateError.message
-                : 'Unknown error',
-            context: LOGGING_CONTEXT,
-          },
-        )
-      }
-
-      throw error
-    }
   }
 
-  @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED)
+  @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED_SIDE_EFFECTS)
   async sendEmailNotification({ advert, publication }: AdvertPublishedEvent) {
     this.logger.info('Sending email notification for advert', {
       advertId: advert.id,
@@ -234,7 +205,7 @@ export class AdvertPublishedListener {
     })
   }
 
-  @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED)
+  @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED_SIDE_EFFECTS)
   async generatePdf({ advert, publication, html }: AdvertPublishedEvent) {
     this.logger.info('Generating PDF for advert', {
       advertId: publication.advertId,

@@ -1,7 +1,7 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import { ParsedUrlQuery } from 'querystring'
-import { z } from 'zod'
+import * as z from 'zod'
 
 import { EditorFileUploader } from '@dmr.is/regulations-tools/EditorFrame'
 import { BaseEntity } from '@dmr.is/shared/dto'

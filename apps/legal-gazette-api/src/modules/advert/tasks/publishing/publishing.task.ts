@@ -175,6 +175,10 @@ export class PublishingTaskService implements IPublishingTaskService {
           }
           transaction.afterCommit(() => {
             this.eventEmitter.emit(LegalGazetteEvents.ADVERT_PUBLISHED, payload)
+            this.eventEmitter.emit(
+              LegalGazetteEvents.ADVERT_PUBLISHED_SIDE_EFFECTS,
+              payload,
+            )
           })
         })
 

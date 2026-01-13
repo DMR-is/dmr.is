@@ -1,5 +1,5 @@
 import addDays from 'date-fns/addDays'
-import { Op, Transaction } from 'sequelize'
+import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
 import {
@@ -276,7 +276,6 @@ export class PublicationService implements IPublicationService {
           },
           order: [['publicationNumber', 'DESC']],
           limit: 1,
-          lock: Transaction.LOCK.UPDATE,
           transaction: t,
         })
 
@@ -320,6 +319,11 @@ export class PublicationService implements IPublicationService {
       try {
         await this.eventEmitter.emitAsync(
           LegalGazetteEvents.ADVERT_PUBLISHED,
+          payload,
+        )
+
+        this.eventEmitter.emit(
+          LegalGazetteEvents.ADVERT_PUBLISHED_SIDE_EFFECTS,
           payload,
         )
       } catch (error) {

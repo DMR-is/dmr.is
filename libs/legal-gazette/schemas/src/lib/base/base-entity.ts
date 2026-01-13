@@ -1,4 +1,4 @@
-import z from 'zod'
+import * as z from 'zod'
 
 export const baseEntitySchema = z.object({
   id: z.uuid('Auðkenni er nauðsynlegt'),

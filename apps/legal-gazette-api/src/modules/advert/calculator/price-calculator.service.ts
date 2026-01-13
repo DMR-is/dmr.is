@@ -6,6 +6,7 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -100,9 +101,13 @@ export class PriceCalculatorService implements IPriceCalculatorService {
   }
 
   async getPaymentData(advertId: string): Promise<GetPaymentDataResponseDto> {
-    const advert = await this.advertModel.findByPkOrThrow(advertId, {
+    const advert = await this.advertModel.scope('detailed').findByPk(advertId, {
       include: [{ model: TypeModel, include: [{ model: FeeCodeModel }] }],
     })
+
+    if (!advert) {
+      throw new NotFoundException('Advert not found')
+    }
 
     if (!advert.publicationNumber) {
       throw new BadRequestException('Advert is not published')

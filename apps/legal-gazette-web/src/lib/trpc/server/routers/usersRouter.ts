@@ -1,4 +1,4 @@
-import z from 'zod'
+import * as z from 'zod'
 
 import { createUserInput, updateUserInput } from '../../../inputs'
 import { protectedProcedure, router } from '../trpc'
