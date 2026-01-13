@@ -1,5 +1,5 @@
 import { isDateString, isString } from 'class-validator'
-import z from 'zod'
+import * as z from 'zod'
 
 export const divisionMeetingSchema = z.object({
   meetingDate: z.string().nullable().optional(),

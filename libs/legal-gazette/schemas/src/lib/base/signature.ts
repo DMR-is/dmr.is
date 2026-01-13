@@ -1,11 +1,11 @@
 import { isString } from 'class-validator'
-import z from 'zod'
+import * as zod from 'zod'
 
-export const signatureSchema = z.object({
-  name: z.string().optional().nullable(),
-  location: z.string().optional().nullable(),
-  date: z.iso.datetime().optional().nullable(),
-  onBehalfOf: z.string().optional().nullable(),
+export const signatureSchema = zod.object({
+  name: zod.string().optional().nullable(),
+  location: zod.string().optional().nullable(),
+  date: zod.string().optional().nullable(),
+  onBehalfOf: zod.string().optional().nullable(),
 })
 
 export const signatureSchemaRefined = signatureSchema.refine((schema) => {

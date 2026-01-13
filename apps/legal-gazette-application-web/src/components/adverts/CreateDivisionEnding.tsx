@@ -1,6 +1,6 @@
 'use client'
 
-import { addYears } from 'date-fns'
+import addYears  from 'date-fns/addYears'
 import get from 'lodash/get'
 import { useEffect, useState } from 'react'
 

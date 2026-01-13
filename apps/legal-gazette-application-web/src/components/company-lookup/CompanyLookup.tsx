@@ -4,7 +4,7 @@ import Kennitala from 'kennitala'
 import get from 'lodash/get'
 import { useCallback, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
-import z from 'zod'
+import * as z from 'zod'
 
 import {
   companySchema,

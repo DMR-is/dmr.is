@@ -1,7 +1,7 @@
 import { useSession } from 'next-auth/react'
 
 import { useState } from 'react'
-import { z } from 'zod'
+import * as z from 'zod'
 
 import { toast } from '@island.is/island-ui/core'
 

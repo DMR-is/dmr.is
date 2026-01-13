@@ -1,7 +1,6 @@
 import deepmerge from 'deepmerge'
 import get from 'lodash/get'
-import { Op } from 'sequelize'
-import z from 'zod'
+import * as z from 'zod'
 
 import {
   BadRequestException,

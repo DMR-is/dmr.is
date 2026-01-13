@@ -1,7 +1,6 @@
-import _ from 'lodash'
 import { useCallback } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
-import z from 'zod'
+import * as z from 'zod'
 
 import {
   ApplicationTypeEnum,
