@@ -19,11 +19,22 @@ export const sidebarStyles = style({
   },
 })
 
-export const cardDropdownStyle = style({ marginTop: theme.spacing[1] })
+export const cardTagButtonStyle = style({})
+globalStyle(`${cardTagButtonStyle} button:hover svg path`, {
+  stroke: 'white',
+})
+globalStyle(`${cardTagButtonStyle} button:focus svg path`, {
+  stroke: 'black',
+})
+globalStyle(`${cardTagButtonStyle} svg`, {
+  marginTop: '4px',
+})
 
-globalStyle(`${cardDropdownStyle} button`, {
+export const cardExtraButtonStyle = style({ marginTop: theme.spacing[1] })
+
+globalStyle(`${cardExtraButtonStyle} button`, {
   fontSize: '14px',
   padding: '12px',
-  minHeight: '32px',
+  minHeight: '40px',
   color: theme.color.blue400,
 })

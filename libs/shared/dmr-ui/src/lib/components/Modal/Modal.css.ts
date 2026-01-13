@@ -12,5 +12,6 @@ export const modalContent = style({
   maxHeight: '80vh',
   overflowY: 'auto',
   padding: '24px',
-  borderRadius: '16px',
+  borderRadius: '8px',
+  filter: 'drop-shadow(0 4px 70px rgba(0, 97, 255, .1))',
 })

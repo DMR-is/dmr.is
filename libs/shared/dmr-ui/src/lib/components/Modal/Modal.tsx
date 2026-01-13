@@ -1,5 +1,7 @@
 'use client'
 
+import { SpanType } from 'submodules/island.is/libs/island-ui/core/src/lib/Grid/GridColumn/GridColumn.css'
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Box,
@@ -25,6 +27,7 @@ type Props = {
   >
   children: React.ReactNode
   toggleClose?: () => void
+  width?: 'small' | 'large'
 }
 
 export const Modal = ({
@@ -34,7 +37,12 @@ export const Modal = ({
   onVisibilityChange,
   disclosure,
   children,
+  width = 'large',
 }: Props) => {
+  const columnSpan: SpanType =
+    width === 'small' ? ['10/12', '10/12', '10/12', '6/12'] : ['10/12', '8/12']
+  const columnOffset: SpanType =
+    width === 'small' ? ['1/12', '1/12', '1/12', '3/12'] : ['1/12', '2/12']
   return (
     <ModalBase
       baseId={baseId}
@@ -48,7 +56,7 @@ export const Modal = ({
         <Box dataTestId="modal-debug" className={styles.modalBase}>
           <GridContainer>
             <GridRow>
-              <GridColumn span={['10/12', '8/12']} offset={['1/12', '2/12']}>
+              <GridColumn span={columnSpan} offset={columnOffset}>
                 <Box className={styles.modalContent}>
                   <Stack space={2}>
                     <Inline

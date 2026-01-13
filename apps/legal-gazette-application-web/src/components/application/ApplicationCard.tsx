@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 import {
   Box,
   Button,
@@ -9,7 +11,10 @@ import {
   Tag,
   Text,
 } from '@dmr.is/ui/components/island-is'
+import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import { formatDate } from '@dmr.is/utils/client'
+
+import { Icon } from '@island.is/island-ui/core'
 
 import {
   ApplicationDto,
@@ -18,13 +23,15 @@ import {
 } from '../../gen/fetch'
 import { PageRoutes } from '../../lib/constants'
 import { AddAdvertsToApplicationMenu } from '../adverts/AddAdvertsToApplicationMenu'
-import { cardDropdownStyle } from './application.css'
+import { cardExtraButtonStyle, cardTagButtonStyle } from './application.css'
 
 type Props = {
   application: ApplicationDto
 }
 
 export const ApplicationCard = ({ application }: Props) => {
+  const [openModal, setOpenModal] = useState(false)
+
   const url =
     application.type === ApplicationTypeEnum.COMMON
       ? `${PageRoutes.APPLICATION_COMMON}/${application.id}`
@@ -39,12 +46,11 @@ export const ApplicationCard = ({ application }: Props) => {
         ? 'Í vinnslu hjá ritstjórn'
         : 'Innsent'
 
-  // get publication only for common applications
   const adverts = application.adverts || []
-
   const publications: Array<{ title?: string; publishedAt?: string }> = []
   let allPublished = false
 
+  // count publications for common adverts
   if (application.type === ApplicationTypeEnum.COMMON) {
     let pubCount = 0
     const advertPubs =
@@ -68,6 +74,7 @@ export const ApplicationCard = ({ application }: Props) => {
     if (allPublished) {
       statusText = 'Útgefin'
     }
+    // count publications for da´narbúa and þrotabú adverts
   } else {
     let advertsCount = 0
     let pubCount = 0
@@ -101,6 +108,8 @@ export const ApplicationCard = ({ application }: Props) => {
     application.status === ApplicationStatusEnum.SUBMITTED &&
     !allPublished
 
+  const canBeRemoved = publications.length == 0 && !allPublished
+
   return (
     <Box borderRadius="large" border="standard" padding={3} background="white">
       <Stack space={0}>
@@ -133,6 +142,23 @@ export const ApplicationCard = ({ application }: Props) => {
             >
               {statusText}
             </Tag>
+            {canBeRemoved && (
+              <div className={cardTagButtonStyle} title="Afturkalla">
+                <Tag
+                  variant="red"
+                  onClick={() => {
+                    setOpenModal(true)
+                  }}
+                >
+                  <Icon
+                    icon="trash"
+                    type="outline"
+                    size="small"
+                    color="red600"
+                  />
+                </Tag>
+              </div>
+            )}
           </Inline>
         </Inline>
 
@@ -143,7 +169,7 @@ export const ApplicationCard = ({ application }: Props) => {
           )}
           <Inline justifyContent="spaceBetween" alignY="center">
             {recallInProgress ? (
-              <div className={cardDropdownStyle}>
+              <div className={cardExtraButtonStyle}>
                 <AddAdvertsToApplicationMenu
                   asButtons
                   applicationId={application.id}
@@ -168,6 +194,44 @@ export const ApplicationCard = ({ application }: Props) => {
           </Inline>
         </Stack>
       </Stack>
+      <Modal
+        baseId={application.id}
+        isVisible={openModal}
+        onVisibilityChange={(isVisible) => {
+          if (!isVisible) {
+            setOpenModal(false)
+          }
+        }}
+        width="small"
+      >
+        <Box padding={3} paddingTop={0}>
+          <Stack space={2}>
+            <Text variant="h2">Afturkalla auglýsingu</Text>
+            <Text marginBottom={3}>
+              Ert þú viss um að þú viljir afturkalla þessa auglýsingu? Þú munt
+              missa allar upplýsingar sem tengjast henni.
+            </Text>
+            <Inline justifyContent="spaceBetween" space={2}>
+              <Button
+                variant="ghost"
+                onClick={() => setOpenModal(false)}
+                size="medium"
+              >
+                Hætta við
+              </Button>
+              <Button
+                onClick={() => {
+                  setOpenModal(false)
+                }}
+                size="medium"
+                fluid
+              >
+                Afturkalla
+              </Button>
+            </Inline>
+          </Stack>
+        </Box>
+      </Modal>
     </Box>
   )
 }
