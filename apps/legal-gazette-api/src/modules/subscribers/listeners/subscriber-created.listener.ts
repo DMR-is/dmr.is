@@ -113,7 +113,7 @@ export class SubscriberCreatedListener {
               chargeBase,
               chargeCategory,
               debtorNationalId: subscriber.nationalId,
-              status: TBRTransactionStatus.INIT,
+              status: TBRTransactionStatus.PENDING,
             },
             { transaction },
           )

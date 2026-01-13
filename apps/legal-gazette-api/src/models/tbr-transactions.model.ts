@@ -100,7 +100,7 @@ export class TBRTransactionModel extends BaseModel<
   @Column({
     type: DataType.STRING,
     allowNull: false,
-    defaultValue: TBRTransactionStatus.INIT,
+    defaultValue: TBRTransactionStatus.PENDING,
   })
   status!: TBRTransactionStatus
 
