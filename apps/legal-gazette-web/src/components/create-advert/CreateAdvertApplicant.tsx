@@ -3,12 +3,12 @@ import { useState } from 'react'
 
 import {
   AlertMessage,
+  GridColumn,
   GridContainer,
   GridRow,
   Input,
+  Text,
 } from '@dmr.is/ui/components/island-is'
-
-import { GridColumn } from '@island.is/island-ui/core'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
@@ -23,14 +23,13 @@ export const CreateAdvertApplicant = ({ onChange }: Props) => {
   const [val, setVal] = useState('')
   const [error, setError] = useState(false)
 
-  const {
-    mutate,
-    data: legalEntityName,
-    isPending,
-  } = useMutation(
+  const [name, setName] = useState('')
+
+  const { mutate, isPending } = useMutation(
     trpc.getLegalEntityNameByNationalId.mutationOptions({
-      onSuccess: () => {
+      onSuccess: (data) => {
         onChange(val)
+        setName(data)
       },
       onError: (_err, variables) => {
         setVal(variables.nationalId)
@@ -39,14 +38,15 @@ export const CreateAdvertApplicant = ({ onChange }: Props) => {
     }),
   )
 
-  const handleChange = (val: string) => {
-    setVal(val)
+  const handleChange = (nationalId: string) => {
+    setVal(nationalId)
+    if (nationalId.length !== 10) setName('')
     if (error) setError(false)
-    if (Kennitala.isValid(val)) {
-      return mutate({ nationalId: val })
+    if (Kennitala.isValid(nationalId)) {
+      return mutate({ nationalId: nationalId })
     }
 
-    if (val.length === 10) {
+    if (nationalId.length === 10) {
       setError(true)
     }
   }
@@ -63,6 +63,9 @@ export const CreateAdvertApplicant = ({ onChange }: Props) => {
             />
           </GridColumn>
         )}
+        <GridColumn span="12/12">
+          <Text variant="h4">Upplýsingar um innsendanda</Text>
+        </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <Input
             loading={isPending}
@@ -81,7 +84,7 @@ export const CreateAdvertApplicant = ({ onChange }: Props) => {
             readOnly
             size="sm"
             name="person.name"
-            value={legalEntityName}
+            value={name}
             label="Nafn aðila"
           />
         </GridColumn>

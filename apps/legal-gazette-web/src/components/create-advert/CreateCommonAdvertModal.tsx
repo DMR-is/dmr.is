@@ -81,8 +81,11 @@ export const CreateCommonAdvertModal = () => {
 
     if (!check.success) {
       const err = z.treeifyError(check.error)
+      // eslint-disable-next-line no-console
+      console.error('Validation errors:', err)
 
-      console.log('Validation errors:', err)
+      toast.error('Vinsamlegast fylltu út öll nauðsynleg svæði')
+
       return
     }
 

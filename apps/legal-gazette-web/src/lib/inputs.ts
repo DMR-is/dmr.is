@@ -1,6 +1,10 @@
 import z from 'zod'
 
-import { commonApplicationAnswersRefined } from '@dmr.is/legal-gazette/schemas'
+import {
+  commonApplicationAnswersRefined,
+  recallBankruptcyAnswersRefined,
+  recallDeceasedAnswersRefined,
+} from '@dmr.is/legal-gazette/schemas'
 
 export const createUserInput = z.object({
   email: z.email(),
@@ -20,5 +24,15 @@ export const updateUserInput = z
 
 export const createAdvertAndCommonApplicationInput =
   commonApplicationAnswersRefined.extend({
+    applicantNationalId: z.string().min(10).max(10),
+  })
+
+export const createAdvertAndRecallBankruptcyApplicationInput =
+  recallBankruptcyAnswersRefined.extend({
+    applicantNationalId: z.string().min(10).max(10),
+  })
+
+export const createAdvertAndDeceasedApplicationInput =
+  recallDeceasedAnswersRefined.extend({
     applicantNationalId: z.string().min(10).max(10),
   })
