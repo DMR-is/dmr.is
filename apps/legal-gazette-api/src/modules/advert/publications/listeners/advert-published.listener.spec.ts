@@ -648,7 +648,6 @@ describe('AdvertPublishedListener', () => {
   // TBR Payment Retry Logic
   // ==========================================
   describe('TBR Payment Retry Logic', () => {
-<<<<<<< HEAD
     beforeEach(() => {
       jest.clearAllMocks()
 
@@ -703,8 +702,6 @@ describe('AdvertPublishedListener', () => {
       )
     })
 
-=======
->>>>>>> 324cefad (updating payment task update)
     it('should succeed immediately if first TBR call succeeds', async () => {
       tbrService.postPayment.mockResolvedValue(undefined)
 
@@ -714,7 +711,6 @@ describe('AdvertPublishedListener', () => {
       // Should only call once (no retries needed)
       expect(tbrService.postPayment).toHaveBeenCalledTimes(1)
     })
-<<<<<<< HEAD
 
     it('should use exponential backoff between TBR retries', async () => {
       const delays: number[] = []
@@ -756,7 +752,5 @@ describe('AdvertPublishedListener', () => {
         expect.anything(),
       )
     })
-=======
->>>>>>> 324cefad (updating payment task update)
   })
 })

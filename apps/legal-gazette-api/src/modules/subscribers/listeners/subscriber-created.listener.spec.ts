@@ -272,7 +272,7 @@ describe('SubscriberCreatedListener', () => {
           chargeBase: '0101801234',
           chargeCategory: 'PERSON_CATEGORY',
           debtorNationalId: '0101801234',
-          status: TBRTransactionStatus.INIT,
+          status: TBRTransactionStatus.PENDING,
         },
         expect.objectContaining({ transaction: expect.anything() }),
       )
@@ -503,7 +503,7 @@ describe('SubscriberCreatedListener', () => {
           transactionType: TBRTransactionType.SUBSCRIPTION,
           feeCodeId: 'fee-code-uuid-123',
           debtorNationalId: '0101801234',
-          status: TBRTransactionStatus.INIT,
+          status: TBRTransactionStatus.PENDING,
         }),
         expect.anything(),
       )
@@ -591,7 +591,7 @@ describe('SubscriberCreatedListener', () => {
 
         expect(tbrTransactionModel.create).toHaveBeenCalledWith(
           expect.objectContaining({
-            status: TBRTransactionStatus.INIT,
+            status: TBRTransactionStatus.PENDING,
           }),
           expect.anything(),
         )
