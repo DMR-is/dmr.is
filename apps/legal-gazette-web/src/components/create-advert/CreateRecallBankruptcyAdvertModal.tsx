@@ -10,6 +10,7 @@ import { CreateAdvertAdditionalText } from './CreateAdvertAdditionalText'
 import { CreateAdvertApplicant } from './CreateAdvertApplicant'
 import { CreateAdvertCommunicationChannel } from './CreateAdvertCommunicationChannel'
 import { CreateAdvertCourtDistrict } from './CreateAdvertCourtDistrict'
+import { CreateAdvertDivisionMeeting } from './CreateAdvertDivisionMeeting'
 import { CreateAdvertPublications } from './CreateAdvertPublications'
 import { CreateAdvertSettlement } from './CreateAdvertSettlement'
 import { CreateAdvertSignature } from './CreateAdvertSignature'
@@ -85,10 +86,22 @@ export const CreateBankruptcyAdvertModal = () => {
           }))
         }
       />
-      <CreateAdvertSettlement />
       <CreateAdvertSignature
         onChange={(signature) =>
           setState((prev) => ({ ...prev, signature: signature }))
+        }
+      />
+      <CreateAdvertSettlement />
+      <CreateAdvertDivisionMeeting
+        required={true}
+        onChange={(divisionMeeting) =>
+          setState((prev) => ({
+            ...prev,
+            fields: {
+              ...prev.fields,
+              divisionMeetingFields: divisionMeeting,
+            },
+          }))
         }
       />
       <CreateAdvertPublications
