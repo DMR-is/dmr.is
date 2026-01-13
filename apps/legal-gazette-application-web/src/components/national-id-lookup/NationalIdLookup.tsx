@@ -90,7 +90,7 @@ export const NationalIdLookup = ({
   return (
     <Input
       id="fields.settlementFields.nationalId"
-      readOnly={isValidId}
+      required
       size="sm"
       backgroundColor="blue"
       loading={isPending}
