@@ -98,10 +98,10 @@ export const RemoveApplicationAdvert = ({
             Afturkalla {isSingleAdvert ? 'auglýsingu' : 'mál'}{' '}
           </Text>
           <Text marginBottom={3}>
-            Ert þú viss um að þú viljir afturkalla{' '}
+            Ertu viss um að þú viljir afturkalla{' '}
             {isSingleAdvert
-              ? 'þessa auglýsingu? Þú munt missa allar upplýsingar sem tengjast henni.'
-              : 'þetta mál? Þú munt missa allar auglýsingar og upplýsingar sem tengjast því.'}
+              ? 'þessa auglýsingu? Þessi aðgerð eyðir henni og öllum upplýsingum sem tengjast henni.'
+              : 'þetta mál? Þessi aðgerð eyðir því og öllum auglýsingum og upplýsingum sem tengjast því.'}
           </Text>
           <Inline justifyContent="spaceBetween" space={2}>
             <Button
