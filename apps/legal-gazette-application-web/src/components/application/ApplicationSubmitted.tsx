@@ -91,7 +91,11 @@ export const ApplicationSubmitted = ({
               {showAsCards ? (
                 <AdvertList adverts={adverts} />
               ) : (
-                <AdvertTable adverts={adverts} />
+                <AdvertTable
+                  adverts={adverts}
+                  applicationId={applicationId as string}
+                  type={applicationType}
+                />
               )}
             </Stack>
           </Box>

@@ -11,7 +11,6 @@ import {
   Tag,
   Text,
 } from '@dmr.is/ui/components/island-is'
-import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import { formatDate } from '@dmr.is/utils/client'
 
 import { Icon } from '@island.is/island-ui/core'
@@ -24,6 +23,7 @@ import {
 import { PageRoutes } from '../../lib/constants'
 import { AddAdvertsToApplicationMenu } from '../adverts/AddAdvertsToApplicationMenu'
 import { cardExtraButtonStyle, cardTagButtonStyle } from './application.css'
+import { RemoveApplicationAdvert } from './RemoveApplicationAdvert'
 
 type Props = {
   application: ApplicationDto
@@ -194,44 +194,14 @@ export const ApplicationCard = ({ application }: Props) => {
           </Inline>
         </Stack>
       </Stack>
-      <Modal
-        baseId={application.id}
-        isVisible={openModal}
-        onVisibilityChange={(isVisible) => {
-          if (!isVisible) {
-            setOpenModal(false)
-          }
-        }}
-        width="small"
-      >
-        <Box padding={3} paddingTop={0}>
-          <Stack space={2}>
-            <Text variant="h2">Afturkalla auglýsingu</Text>
-            <Text marginBottom={3}>
-              Ert þú viss um að þú viljir afturkalla þessa auglýsingu? Þú munt
-              missa allar upplýsingar sem tengjast henni.
-            </Text>
-            <Inline justifyContent="spaceBetween" space={2}>
-              <Button
-                variant="ghost"
-                onClick={() => setOpenModal(false)}
-                size="medium"
-              >
-                Hætta við
-              </Button>
-              <Button
-                onClick={() => {
-                  setOpenModal(false)
-                }}
-                size="medium"
-                fluid
-              >
-                Afturkalla
-              </Button>
-            </Inline>
-          </Stack>
-        </Box>
-      </Modal>
+      {openModal && (
+        <RemoveApplicationAdvert
+          applicationId={application.id}
+          type={application.type}
+          openModal={openModal}
+          setOpenModal={setOpenModal}
+        />
+      )}
     </Box>
   )
 }

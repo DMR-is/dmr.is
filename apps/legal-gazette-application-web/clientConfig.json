@@ -2856,6 +2856,63 @@
         "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
+      },
+      "delete": {
+        "operationId": "deleteApplication",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
       }
     },
     "/api/v1/applications/{applicationId}/preview": {
@@ -2946,6 +3003,71 @@
               }
             }
           },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/applications/{applicationId}/{advertId}": {
+      "delete": {
+        "operationId": "deleteAdvertFromApplication",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
           "400": {
             "description": "",
             "content": {

@@ -47,6 +47,30 @@ export class AdvertService implements IAdvertService {
     private readonly sequelize: Sequelize,
   ) {}
 
+  async deleteAdvert(advertId: string): Promise<void> {
+    const advert = await this.advertModel.findByPkOrThrow(advertId)
+
+    const deletableStatuses = [
+      StatusIdEnum.SUBMITTED,
+      StatusIdEnum.IN_PROGRESS,
+      StatusIdEnum.READY_FOR_PUBLICATION,
+    ]
+
+    if (!deletableStatuses.includes(advert.statusId)) {
+      this.logger.warn(
+        `Advert with id ${advertId} is in status ${advert.statusId} and cannot be deleted`,
+      )
+
+      throw new BadRequestException('Advert cannot be deleted')
+    }
+
+    this.logger.info('Destroying advert', {
+      advertId,
+      context: 'AdvertService',
+    })
+    await this.advertModel.destroy({ where: { id: advertId } })
+  }
+
   async rejectAdvert(advertId: string, currentUser: DMRUser): Promise<void> {
     await this.sequelize.transaction(async (t) => {
       const user = await this.userModel.unscoped().findOneOrThrow({

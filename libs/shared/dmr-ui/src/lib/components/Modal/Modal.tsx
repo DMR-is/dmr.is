@@ -35,6 +35,7 @@ export const Modal = ({
   isVisible = false,
   title,
   onVisibilityChange,
+  toggleClose,
   disclosure,
   children,
   width = 'large',
@@ -66,7 +67,10 @@ export const Modal = ({
                       {!!title && <Text variant="h3">{title}</Text>}
                       <Button
                         variant="ghost"
-                        onClick={closeModal}
+                        onClick={() => {
+                          if (toggleClose) toggleClose()
+                          closeModal()
+                        }}
                         circle={true}
                         size="small"
                         icon="close"

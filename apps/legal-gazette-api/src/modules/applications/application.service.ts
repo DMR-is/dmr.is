@@ -33,27 +33,24 @@ import {
 import { getAdvertHTMLMarkupPreview } from '../../core/templates/html'
 import { mapIndexToVersion } from '../../core/utils'
 import {
+  AdvertModel,
   AdvertTemplateType,
   CreateAdvertInternalDto,
 } from '../../models/advert.model'
+import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
   ApplicationModel,
   ApplicationStatusEnum,
-  CreateDivisionEndingDto,
-  CreateDivisionMeetingDto,
   GetApplicationsDto,
   GetHTMLPreview,
   IslandIsSubmitApplicationDto,
   UpdateApplicationDto,
 } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
-import {
-  CategoryDefaultIdEnum,
-  CategoryModel,
-} from '../../models/category.model'
-import { TypeIdEnum } from '../../models/type.model'
+import { CategoryModel } from '../../models/category.model'
+import { StatusIdEnum } from '../../models/status.model'
 import { IAdvertService } from '../advert/advert.service.interface'
 import { IApplicationService } from './application.service.interface'
 
@@ -72,6 +69,23 @@ export class ApplicationService implements IApplicationService {
     @InjectModel(CategoryModel)
     private readonly categoryModel: typeof CategoryModel,
   ) {}
+
+  async deleteApplication(applicationId: string): Promise<void> {
+    const application = await this.applicationModel.findByPkOrThrow(
+      applicationId,
+      {
+        include: [{ model: AdvertModel }],
+      },
+    )
+
+    const deletePromises = application.adverts?.map((ad) =>
+      this.advertService.deleteAdvert(ad.id),
+    )
+
+    await Promise.all(deletePromises || [])
+    await application.destroy()
+  }
+
   async previewApplication(
     applicationId: string,
     user: DMRUser,

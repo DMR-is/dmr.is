@@ -21,7 +21,7 @@ export const sidebarStyles = style({
 
 export const cardTagButtonStyle = style({})
 globalStyle(`${cardTagButtonStyle} button:hover svg path`, {
-  stroke: 'white',
+  stroke: 'white !important',
 })
 globalStyle(`${cardTagButtonStyle} button:focus svg path`, {
   stroke: 'black',

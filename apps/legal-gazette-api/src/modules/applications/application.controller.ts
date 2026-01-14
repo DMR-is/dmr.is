@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Inject,
   Param,
@@ -25,6 +26,7 @@ import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
+import { OwnershipGuard } from '../../core/guards/ownership.guard'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
@@ -33,6 +35,7 @@ import {
   GetHTMLPreview,
   UpdateApplicationDto,
 } from '../../models/application.model'
+import { IAdvertService } from '../advert/advert.service.interface'
 import { IPriceCalculatorService } from '../advert/calculator/price-calculator.service.interface'
 import { IApplicationService } from './application.service.interface'
 
@@ -45,6 +48,7 @@ import { IApplicationService } from './application.service.interface'
 })
 export class ApplicationController {
   constructor(
+    @Inject(IAdvertService) private readonly advertService: IAdvertService,
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
     @Inject(IPriceCalculatorService)
@@ -146,5 +150,24 @@ export class ApplicationController {
         user,
       )
     return { price }
+  }
+
+  @Delete(':applicationId/:advertId')
+  @UseGuards(OwnershipGuard)
+  @LGResponse({ operationId: 'deleteAdvertFromApplication' })
+  async deleteAdvertFromApplication(
+    @Param('applicationId') _applicationId: string, // USED FOR OWNERSHIP GUARD TO VERIFY OWNERSHIP
+    @Param('advertId') advertId: string,
+  ): Promise<void> {
+    return this.advertService.deleteAdvert(advertId)
+  }
+
+  @Delete(':applicationId')
+  @UseGuards(OwnershipGuard)
+  @LGResponse({ operationId: 'deleteApplication' })
+  async deleteApplication(
+    @Param('applicationId') applicationId: string,
+  ): Promise<void> {
+    return this.applicationService.deleteApplication(applicationId)
   }
 }
