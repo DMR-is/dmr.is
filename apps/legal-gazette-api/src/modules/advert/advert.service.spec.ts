@@ -8,8 +8,11 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { AdvertModel, UpdateAdvertDto } from '../../models/advert.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
+import { ApplicationModel } from '../../models/application.model'
+import { CaseModel } from '../../models/case.model'
 import { StatusIdEnum } from '../../models/status.model'
 import { UserModel } from '../../models/users.model'
+import { ILGNationalRegistryService } from '../national-registry/national-registry.service.interface'
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
 import { AdvertService } from './advert.service'
 
@@ -112,6 +115,12 @@ describe('AdvertService', () => {
           useValue: createMockLogger(),
         },
         {
+          provide: ILGNationalRegistryService,
+          useValue: {
+            getEntityNameByNationalId: jest.fn().mockResolvedValue('Test Entity'),
+          },
+        },
+        {
           provide: getModelToken(AdvertModel),
           useValue: mockAdvertModel,
         },
@@ -129,6 +138,18 @@ describe('AdvertService', () => {
         {
           provide: ITypeCategoriesService,
           useValue: mockTypeCategoriesService,
+        },
+        {
+          provide: getModelToken(CaseModel),
+          useValue: {
+            create: jest.fn(),
+          },
+        },
+        {
+          provide: getModelToken(ApplicationModel),
+          useValue: {
+            create: jest.fn(),
+          },
         },
         {
           provide: EventEmitter2,

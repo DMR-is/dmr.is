@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common'
+import { BadRequestException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
@@ -55,7 +55,7 @@ describe('ApplicationService - Status Validation', () => {
 
   beforeEach(async () => {
     const mockApplicationModel = {
-      findOneOrThrow: jest.fn(),
+      findByPkOrThrow: jest.fn(),
       findOne: jest.fn(),
       create: jest.fn(),
       scope: jest.fn().mockReturnThis(),
@@ -84,7 +84,10 @@ describe('ApplicationService - Status Validation', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ApplicationService,
-        { provide: getModelToken(ApplicationModel), useValue: mockApplicationModel },
+        {
+          provide: getModelToken(ApplicationModel),
+          useValue: mockApplicationModel,
+        },
         { provide: getModelToken(CaseModel), useValue: mockCaseModel },
         { provide: getModelToken(CategoryModel), useValue: mockCategoryModel },
         { provide: IAdvertService, useValue: mockAdvertService },
@@ -108,18 +111,18 @@ describe('ApplicationService - Status Validation', () => {
         applicationType: ApplicationTypeEnum.COMMON,
       })
 
-      applicationModel.findOneOrThrow.mockResolvedValue(submittedApplication)
+      applicationModel.findByPkOrThrow.mockResolvedValue(submittedApplication)
 
       const user = createTestUser()
 
       // Action & Assert: Should throw BadRequestException BEFORE schema validation
-      await expect(
-        service.submitApplication('app-123', user),
-      ).rejects.toThrow(BadRequestException)
+      await expect(service.submitApplication('app-123', user)).rejects.toThrow(
+        BadRequestException,
+      )
 
-      await expect(
-        service.submitApplication('app-123', user),
-      ).rejects.toThrow(/Cannot submit application with status 'SUBMITTED'/)
+      await expect(service.submitApplication('app-123', user)).rejects.toThrow(
+        /Cannot submit application with status 'SUBMITTED'/,
+      )
 
       // Verify submission logic was NOT called
       expect(advertService.createAdvert).not.toHaveBeenCalled()
@@ -132,18 +135,18 @@ describe('ApplicationService - Status Validation', () => {
         applicationType: ApplicationTypeEnum.COMMON,
       })
 
-      applicationModel.findOneOrThrow.mockResolvedValue(inProgressApplication)
+      applicationModel.findByPkOrThrow.mockResolvedValue(inProgressApplication)
 
       const user = createTestUser()
 
       // Action & Assert: Should throw BadRequestException BEFORE schema validation
-      await expect(
-        service.submitApplication('app-123', user),
-      ).rejects.toThrow(BadRequestException)
+      await expect(service.submitApplication('app-123', user)).rejects.toThrow(
+        BadRequestException,
+      )
 
-      await expect(
-        service.submitApplication('app-123', user),
-      ).rejects.toThrow(/Cannot submit application with status 'IN_PROGRESS'/)
+      await expect(service.submitApplication('app-123', user)).rejects.toThrow(
+        /Cannot submit application with status 'IN_PROGRESS'/,
+      )
 
       expect(advertService.createAdvert).not.toHaveBeenCalled()
     })
@@ -155,18 +158,18 @@ describe('ApplicationService - Status Validation', () => {
         applicationType: ApplicationTypeEnum.COMMON,
       })
 
-      applicationModel.findOneOrThrow.mockResolvedValue(finishedApplication)
+      applicationModel.findByPkOrThrow.mockResolvedValue(finishedApplication)
 
       const user = createTestUser()
 
       // Action & Assert: Should throw BadRequestException BEFORE schema validation
-      await expect(
-        service.submitApplication('app-123', user),
-      ).rejects.toThrow(BadRequestException)
+      await expect(service.submitApplication('app-123', user)).rejects.toThrow(
+        BadRequestException,
+      )
 
-      await expect(
-        service.submitApplication('app-123', user),
-      ).rejects.toThrow(/Cannot submit application with status 'FINISHED'/)
+      await expect(service.submitApplication('app-123', user)).rejects.toThrow(
+        /Cannot submit application with status 'FINISHED'/,
+      )
 
       expect(advertService.createAdvert).not.toHaveBeenCalled()
     })
@@ -185,9 +188,8 @@ describe('ApplicationService - Status Validation', () => {
         },
       })
 
-      applicationModel.findOneOrThrow.mockResolvedValue(draftApplication)
+      applicationModel.findByPkOrThrow.mockResolvedValue(draftApplication)
 
-      const user = createTestUser()
       const updateDto: UpdateApplicationDto = {
         currentStep: 2,
         answers: {
@@ -198,7 +200,7 @@ describe('ApplicationService - Status Validation', () => {
       }
 
       // Action: Update the application
-      const result = await service.updateApplication('app-123', updateDto, user)
+      const result = await service.updateApplication('app-123', updateDto)
 
       // Assert: Application should be updated
       expect(draftApplication.update).toHaveBeenCalled()
@@ -212,9 +214,8 @@ describe('ApplicationService - Status Validation', () => {
         applicationType: ApplicationTypeEnum.RECALL_BANKRUPTCY,
       })
 
-      applicationModel.findOneOrThrow.mockResolvedValue(submittedApplication)
+      applicationModel.findByPkOrThrow.mockResolvedValue(submittedApplication)
 
-      const user = createTestUser()
       const updateDto: UpdateApplicationDto = {
         currentStep: 2,
         answers: {
@@ -226,11 +227,11 @@ describe('ApplicationService - Status Validation', () => {
 
       // Action & Assert: Should throw BadRequestException
       await expect(
-        service.updateApplication('app-123', updateDto, user),
+        service.updateApplication('app-123', updateDto),
       ).rejects.toThrow(BadRequestException)
 
       await expect(
-        service.updateApplication('app-123', updateDto, user),
+        service.updateApplication('app-123', updateDto),
       ).rejects.toThrow(/Cannot modify application with status 'SUBMITTED'/)
 
       expect(submittedApplication.update).not.toHaveBeenCalled()
@@ -243,9 +244,8 @@ describe('ApplicationService - Status Validation', () => {
         applicationType: ApplicationTypeEnum.COMMON,
       })
 
-      applicationModel.findOneOrThrow.mockResolvedValue(inProgressApplication)
+      applicationModel.findByPkOrThrow.mockResolvedValue(inProgressApplication)
 
-      const user = createTestUser()
       const updateDto: UpdateApplicationDto = {
         currentStep: 2,
         answers: {},
@@ -253,11 +253,11 @@ describe('ApplicationService - Status Validation', () => {
 
       // Action & Assert: Should throw BadRequestException
       await expect(
-        service.updateApplication('app-123', updateDto, user),
+        service.updateApplication('app-123', updateDto),
       ).rejects.toThrow(BadRequestException)
 
       await expect(
-        service.updateApplication('app-123', updateDto, user),
+        service.updateApplication('app-123', updateDto),
       ).rejects.toThrow(/Cannot modify application with status 'IN_PROGRESS'/)
 
       expect(inProgressApplication.update).not.toHaveBeenCalled()
@@ -270,9 +270,8 @@ describe('ApplicationService - Status Validation', () => {
         applicationType: ApplicationTypeEnum.COMMON,
       })
 
-      applicationModel.findOneOrThrow.mockResolvedValue(finishedApplication)
+      applicationModel.findByPkOrThrow.mockResolvedValue(finishedApplication)
 
-      const user = createTestUser()
       const updateDto: UpdateApplicationDto = {
         currentStep: 2,
         answers: {},
@@ -280,11 +279,11 @@ describe('ApplicationService - Status Validation', () => {
 
       // Action & Assert: Should throw BadRequestException
       await expect(
-        service.updateApplication('app-123', updateDto, user),
+        service.updateApplication('app-123', updateDto),
       ).rejects.toThrow(BadRequestException)
 
       await expect(
-        service.updateApplication('app-123', updateDto, user),
+        service.updateApplication('app-123', updateDto),
       ).rejects.toThrow(/Cannot modify application with status 'FINISHED'/)
 
       expect(finishedApplication.update).not.toHaveBeenCalled()
