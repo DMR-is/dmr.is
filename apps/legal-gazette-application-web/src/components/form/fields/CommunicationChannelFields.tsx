@@ -126,9 +126,9 @@ export const CommunicationChannelFields = () => {
                   <Text variant="h4">Bæta við samskiptaleið</Text>
                   <GridContainer>
                     <Stack space={[2, 3]}>
-                      <GridRow>
-                        <GridColumn span={['12/12', '8/12']}>
-                          <Stack space={[1, 2]}>
+                      <Stack space={[1, 2]}>
+                        <GridRow>
+                          <GridColumn span={['12/12', '7/12']}>
                             <Input
                               required
                               label="Netfang"
@@ -143,6 +143,25 @@ export const CommunicationChannelFields = () => {
                                 })
                               }
                             />
+                          </GridColumn>
+                          <GridColumn span={['12/12', '5/12']}>
+                            <Input
+                              label="Símanúmer"
+                              size="sm"
+                              name="phone"
+                              placeholder="Símanúmer"
+                              value={currentChannel.phone}
+                              onChange={(e) =>
+                                setCurrentChannel({
+                                  ...currentChannel,
+                                  phone: e.target.value,
+                                })
+                              }
+                            />
+                          </GridColumn>
+                        </GridRow>
+                        <GridRow>
+                          <GridColumn span={['12/12', '7/12']}>
                             <Input
                               label="Nafn"
                               size="sm"
@@ -156,24 +175,9 @@ export const CommunicationChannelFields = () => {
                                 })
                               }
                             />
-                          </Stack>
-                        </GridColumn>
-                        <GridColumn span={['12/12', '4/12']}>
-                          <Input
-                            label="Símanúmer"
-                            size="sm"
-                            name="phone"
-                            placeholder="Símanúmer"
-                            value={currentChannel.phone}
-                            onChange={(e) =>
-                              setCurrentChannel({
-                                ...currentChannel,
-                                phone: e.target.value,
-                              })
-                            }
-                          />
-                        </GridColumn>
-                      </GridRow>
+                          </GridColumn>
+                        </GridRow>
+                      </Stack>
                       <GridRow>
                         <GridColumn span="12/12">
                           <Inline
