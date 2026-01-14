@@ -10,7 +10,6 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { getHtmlTextLength } from '@dmr.is/utils'
@@ -41,11 +40,10 @@ export class PriceCalculatorService implements IPriceCalculatorService {
 
   async getEstimatedPriceForApplication(
     applicationId: string,
-    user: DMRUser,
   ): Promise<number> {
     const [application, preview] = await Promise.all([
-      this.applicationService.getApplicationById(applicationId, user),
-      this.applicationService.previewApplication(applicationId, user),
+      this.applicationService.getApplicationById(applicationId),
+      this.applicationService.previewApplication(applicationId),
     ])
 
     let typeId = null

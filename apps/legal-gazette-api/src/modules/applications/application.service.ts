@@ -15,7 +15,6 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import {
   ApplicationTypeEnum,
   commonApplicationAnswersRefined,
-  communicationChannelSchema,
   recallBankruptcyAnswersRefined,
   recallDeceasedAnswersRefined,
   updateApplicationInput,
@@ -40,19 +39,13 @@ import {
   ApplicationDto,
   ApplicationModel,
   ApplicationStatusEnum,
-  CreateDivisionEndingDto,
-  CreateDivisionMeetingDto,
   GetApplicationsDto,
   GetHTMLPreview,
   IslandIsSubmitApplicationDto,
   UpdateApplicationDto,
 } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
-import {
-  CategoryDefaultIdEnum,
-  CategoryModel,
-} from '../../models/category.model'
-import { TypeIdEnum } from '../../models/type.model'
+import { CategoryModel } from '../../models/category.model'
 import { IAdvertService } from '../advert/advert.service.interface'
 import { IApplicationService } from './application.service.interface'
 
@@ -71,13 +64,9 @@ export class ApplicationService implements IApplicationService {
     @InjectModel(CategoryModel)
     private readonly categoryModel: typeof CategoryModel,
   ) {}
-  async previewApplication(
-    applicationId: string,
-    user: DMRUser,
-  ): Promise<GetHTMLPreview> {
-    const application = await this.applicationModel.findOneOrThrow({
-      where: { id: applicationId, applicantNationalId: user.nationalId },
-    })
+  async previewApplication(applicationId: string): Promise<GetHTMLPreview> {
+    const application =
+      await this.applicationModel.findByPkOrThrow(applicationId)
 
     let typeId: string | undefined
     let templateType: AdvertTemplateType | undefined
@@ -356,11 +345,9 @@ export class ApplicationService implements IApplicationService {
   async updateApplication(
     applicationId: string,
     body: UpdateApplicationDto,
-    user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
-    const application = await this.applicationModel.findOneOrThrow({
-      where: { id: applicationId, applicantNationalId: user.nationalId },
-    })
+    const application =
+      await this.applicationModel.findByPkOrThrow(applicationId)
 
     // Validate application status before update
     if (!this.EDITABLE_STATUSES.includes(application.status)) {
@@ -412,29 +399,18 @@ export class ApplicationService implements IApplicationService {
 
   async getApplicationByCaseId(
     caseId: string,
-    user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
-    const application = await this.applicationModel.findOne({
-      where: { caseId: caseId, applicantNationalId: user.nationalId },
+    const application = await this.applicationModel.findOneOrThrow({
+      where: { caseId: caseId },
     })
-
-    if (!application) {
-      throw new NotFoundException()
-    }
 
     return application.fromModelToDetailedDto()
   }
   async getApplicationById(
     applicationId: string,
-    user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
-    const application = await this.applicationModel.findOne({
-      where: { id: applicationId, applicantNationalId: user.nationalId },
-    })
-
-    if (!application) {
-      throw new NotFoundException()
-    }
+    const application =
+      await this.applicationModel.findByPkOrThrow(applicationId)
 
     return application.fromModelToDetailedDto()
   }
@@ -530,9 +506,8 @@ export class ApplicationService implements IApplicationService {
     })
   }
   async submitApplication(applicationId: string, user: DMRUser): Promise<void> {
-    const application = await this.applicationModel.findOneOrThrow({
-      where: { id: applicationId, applicantNationalId: user.nationalId },
-    })
+    const application =
+      await this.applicationModel.findByPkOrThrow(applicationId)
 
     // Validate application status before submission
     if (!this.SUBMITTABLE_STATUSES.includes(application.status)) {
