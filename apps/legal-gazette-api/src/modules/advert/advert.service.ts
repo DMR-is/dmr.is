@@ -33,6 +33,8 @@ import { TypeModel } from '../../models/type.model'
 import { UserModel } from '../../models/users.model'
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
 import { IAdvertService } from './advert.service.interface'
+
+const LOGGING_CONTEXT = 'AdvertService'
 @Injectable()
 export class AdvertService implements IAdvertService {
   constructor(
@@ -102,6 +104,9 @@ export class AdvertService implements IAdvertService {
       if (!moveableStatuses.includes(currentStatusId.statusId)) {
         this.logger.warn(
           `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to next status`,
+          {
+            context: LOGGING_CONTEXT,
+          }
         )
 
         throw new BadRequestException('Advert cannot be moved to next status')
@@ -153,6 +158,9 @@ export class AdvertService implements IAdvertService {
       if (!moveableStatuses.includes(currentStatusId.statusId)) {
         this.logger.warn(
           `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to previous status`,
+          {
+            context: LOGGING_CONTEXT,
+          }
         )
 
         throw new BadRequestException(
@@ -220,7 +228,7 @@ export class AdvertService implements IAdvertService {
       if (body.scheduledAt.length === 0) {
         this.logger.warn('Tried to create advert without publication dates', {
           body,
-          context: 'AdvertService',
+          context: LOGGING_CONTEXT,
         })
         throw new BadRequestException(
           'At least one scheduled publication date is required',
@@ -229,7 +237,7 @@ export class AdvertService implements IAdvertService {
 
       this.logger.info('Creating advert', {
         body,
-        context: 'AdvertService',
+        context: LOGGING_CONTEXT,
       })
 
       const advert = await this.advertModel.scope('detailed').create(

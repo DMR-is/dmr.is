@@ -21,6 +21,7 @@ import { TypeIdEnum } from '../../../models/type.model'
 import { IAdvertService } from '../../advert/advert.service.interface'
 import { IForeclosureService } from './foreclosure.service.interface'
 
+const LOGGING_CONTEXT = 'ForeclosureService'
 @Injectable()
 export class ForeclosureService implements IForeclosureService {
   constructor(
@@ -54,7 +55,7 @@ export class ForeclosureService implements IForeclosureService {
   async createForeclosureSale(
     body: CreateForeclosureSaleDto,
   ): Promise<ForeclosureDto> {
-    this.logger.info('Creating new foreclosure sale')
+    this.logger.info('Creating new foreclosure sale', { context: LOGGING_CONTEXT })
 
     // Escape HTML in all text fields to prevent XSS
     const escapedRegion = escapeHtml(body.foreclosureRegion) ?? ''

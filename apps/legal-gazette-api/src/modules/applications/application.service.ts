@@ -15,7 +15,6 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import {
   ApplicationTypeEnum,
   commonApplicationAnswersRefined,
-  communicationChannelSchema,
   recallBankruptcyAnswersRefined,
   recallDeceasedAnswersRefined,
   updateApplicationInput,
@@ -40,21 +39,17 @@ import {
   ApplicationDto,
   ApplicationModel,
   ApplicationStatusEnum,
-  CreateDivisionEndingDto,
-  CreateDivisionMeetingDto,
   GetApplicationsDto,
   GetHTMLPreview,
   IslandIsSubmitApplicationDto,
   UpdateApplicationDto,
 } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
-import {
-  CategoryDefaultIdEnum,
-  CategoryModel,
-} from '../../models/category.model'
-import { TypeIdEnum } from '../../models/type.model'
+import { CategoryModel } from '../../models/category.model'
 import { IAdvertService } from '../advert/advert.service.interface'
 import { IApplicationService } from './application.service.interface'
+
+const LOGGER_CONTEXT = 'ApplicationService'
 
 @Injectable()
 export class ApplicationService implements IApplicationService {
@@ -262,7 +257,7 @@ export class ApplicationService implements IApplicationService {
 
         if (!check.success) {
           this.logger.error('Failed to parse application answers', {
-            context: 'ApplicationService',
+            context: LOGGER_CONTEXT,
             applicationId: application.id,
             error: z.treeifyError(check.error),
           })
@@ -284,7 +279,7 @@ export class ApplicationService implements IApplicationService {
 
         if (!check.success) {
           this.logger.error('Failed to parse application answers', {
-            context: 'ApplicationService',
+            context: LOGGER_CONTEXT,
             applicationId: application.id,
             error: z.treeifyError(check.error),
           })
@@ -303,6 +298,10 @@ export class ApplicationService implements IApplicationService {
       default:
         this.logger.warn(
           `Attempted to submit recall application with unknown type: ${application.applicationType}`,
+          {
+            context: LOGGER_CONTEXT,
+            applicationId: application.id,
+          },
         )
         throw new BadRequestException()
     }
@@ -552,6 +551,10 @@ export class ApplicationService implements IApplicationService {
       default:
         this.logger.warn(
           `Attempted to submit application with unknown type: ${application.applicationType}`,
+          {
+            context: LOGGER_CONTEXT,
+            applicationId: application.id,
+          },
         )
         throw new BadRequestException()
     }

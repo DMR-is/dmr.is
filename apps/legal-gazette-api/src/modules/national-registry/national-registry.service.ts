@@ -10,6 +10,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ILGNationalRegistryService } from './national-registry.service.interface'
 
+const LOGGING_CONTEXT = 'LGNationalRegistryService'
 @Injectable()
 export class LGNationalRegistryService implements ILGNationalRegistryService {
   constructor(
@@ -23,7 +24,9 @@ export class LGNationalRegistryService implements ILGNationalRegistryService {
     try {
       return this.nationalRegistryService.getPersonByNationalId(nationalId)
     } catch (error) {
-      this.logger.error(`Failed to get person by national id`, error)
+      this.logger.error(`Failed to get person by national id`, error, {
+        context: LOGGING_CONTEXT,
+      })
 
       return { person: null }
     }
@@ -33,7 +36,9 @@ export class LGNationalRegistryService implements ILGNationalRegistryService {
     try {
       return this.companyRegistryService.getCompany(nationalId)
     } catch (error) {
-      this.logger.error(`Failed to get company by national id`, error)
+      this.logger.error(`Failed to get company by national id`, error, {
+        context: LOGGING_CONTEXT,
+      })
 
       return { legalEntity: null }
     }
