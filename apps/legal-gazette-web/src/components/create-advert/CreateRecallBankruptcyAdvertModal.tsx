@@ -13,8 +13,8 @@ import { CreateAdvertCommunicationChannel } from './CreateAdvertCommunicationCha
 import { CreateAdvertCourtDistrict } from './CreateAdvertCourtDistrict'
 import { CreateAdvertDivisionMeeting } from './CreateAdvertDivisionMeeting'
 import { CreateAdvertPublications } from './CreateAdvertPublications'
-import { CreateAdvertSettlement } from './CreateAdvertSettlement'
 import { CreateAdvertSignature } from './CreateAdvertSignature'
+import { CreateBankruptcySettlement } from './CreateBankruptcySettlement'
 import { SubmitCreateAdvert } from './SubmitCreateAdvert'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -134,7 +134,7 @@ export const CreateBankruptcyAdvertModal = ({
           setState((prev) => ({ ...prev, signature: signature }))
         }
       />
-      <CreateAdvertSettlement
+      <CreateBankruptcySettlement
         onChange={(settlement) =>
           setState((prev) => ({
             ...prev,

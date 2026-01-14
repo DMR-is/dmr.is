@@ -1,9 +1,11 @@
+import { isDateString } from 'class-validator'
 import Kennitala from 'kennitala'
 import { useEffect, useState } from 'react'
 import z from 'zod'
 
 import {
   ApplicationRequirementStatementEnum,
+  companySchema,
   settlementSchemaRefined,
 } from '@dmr.is/legal-gazette/schemas'
 import {
@@ -18,14 +20,21 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { CreateDeceasedCompanies } from './CreateDeceasedCompanies'
 
 import { useMutation } from '@tanstack/react-query'
 
 const schema = settlementSchemaRefined.extend({
-  deadlineDate: z.iso.datetime(),
+  dateOfDeath: z.iso
+    .datetime('Dánardagur bús er nauðsynlegur')
+    .refine((date) => isDateString(date), {
+      message: 'Dánardagur bús er nauðsynlegur',
+    }),
+  companies: z.array(companySchema).optional(),
+  type: z.enum(['DEFAULT', 'UNDIVIDED', 'OWNER']).optional(),
 })
 
-export const requirementsStatementOptions = [
+const requirementsStatementOptions = [
   {
     label: 'Staðsetning skiptastjóra',
     value: 'LIQUIDATOR_LOCATION',
@@ -40,6 +49,21 @@ export const requirementsStatementOptions = [
   },
 ]
 
+const settlementTypeOptions = [
+  {
+    label: 'Hefðbundið dánarbú',
+    value: 'DEFAULT',
+  },
+  {
+    label: 'Óskipt dánarbú',
+    value: 'UNDIVIDED',
+  },
+  {
+    label: 'Eiganda samlagsfélags',
+    value: 'OWNER',
+  },
+]
+
 type Settlement = z.infer<typeof schema>
 
 const initalState: Settlement = {
@@ -48,17 +72,19 @@ const initalState: Settlement = {
   liquidatorName: '',
   name: '',
   nationalId: '',
-  deadlineDate: '',
+  dateOfDeath: '',
   recallRequirementStatementLocation: '',
   recallRequirementStatementType:
     ApplicationRequirementStatementEnum.LIQUIDATORLOCATION,
+  companies: [],
+  type: 'DEFAULT',
 }
 
 type Props = {
   onChange?: (data: Settlement) => void
 }
 
-export const CreateAdvertSettlement = ({ onChange }: Props) => {
+export const CreateDeceasedSettlement = ({ onChange }: Props) => {
   const trpc = useTRPC()
 
   const { mutate, isPending } = useMutation(
@@ -103,8 +129,32 @@ export const CreateAdvertSettlement = ({ onChange }: Props) => {
     <GridContainer>
       <GridRow rowGap={[2, 3]}>
         <GridColumn span="12/12">
-          <Text variant="h4">Upplýsingar um bú</Text>
+          <Text marginBottom={[2, 3]} variant="h4">
+            Upplýsingar um bú
+          </Text>
         </GridColumn>
+      </GridRow>
+      <GridRow>
+        <GridColumn paddingBottom={[2, 3]}>
+          <Select
+            size="sm"
+            backgroundColor="blue"
+            name="settlement.type"
+            label="Tegund bús"
+            defaultValue={settlementTypeOptions[0]}
+            options={settlementTypeOptions}
+            onChange={(opt) => {
+              if (!opt) return
+              return setState((prev) => ({
+                ...prev,
+                type: opt.value as 'DEFAULT' | 'UNDIVIDED' | 'OWNER',
+                companies: [],
+              }))
+            }}
+          />
+        </GridColumn>
+      </GridRow>
+      <GridRow rowGap={[2, 3]}>
         <GridColumn span={['12/12', '6/12']}>
           <Input
             loading={isPending}
@@ -120,13 +170,13 @@ export const CreateAdvertSettlement = ({ onChange }: Props) => {
             locale="is"
             size="sm"
             backgroundColor="blue"
-            label="Frestdagur bús"
+            label="Dánardagur bús"
             placeholderText=""
-            name="settlement.deadlineDate"
+            name="settlement.dateOfDeath"
             handleChange={(date) =>
               setState((prev) => ({
                 ...prev,
-                deadlineDate: date.toISOString(),
+                dateOfDeath: date.toISOString(),
               }))
             }
           />
@@ -161,6 +211,15 @@ export const CreateAdvertSettlement = ({ onChange }: Props) => {
             }
           />
         </GridColumn>
+        {state.type === 'OWNER' && (
+          <GridColumn span="12/12">
+            <CreateDeceasedCompanies
+              onChange={(companies) =>
+                setState((prev) => ({ ...prev, companies: companies }))
+              }
+            />
+          </GridColumn>
+        )}
         <GridColumn span={['12/12', '6/12']}>
           <Input
             size="sm"

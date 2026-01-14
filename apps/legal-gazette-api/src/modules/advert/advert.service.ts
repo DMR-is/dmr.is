@@ -246,7 +246,107 @@ export class AdvertService implements IAdvertService {
     body: CreateRecallDeceasedAdvertAndApplicationDto,
     currentUser: DMRUser,
   ): Promise<void> {
-    throw new Error('Method not implemented.')
+    const applicantName =
+      await this.nationalRegistryService.getEntityNameByNationalId(
+        body.applicantNationalId,
+      )
+
+    const newCase = await this.caseModel.create(
+      {
+        involvedPartyNationalId: body.applicantNationalId,
+      },
+      {
+        returning: ['id'],
+      },
+    )
+
+    const application = await this.applicationModel.create(
+      {
+        caseId: newCase.id,
+        applicantNationalId: body.applicantNationalId,
+        applicationType: ApplicationTypeEnum.RECALL_BANKRUPTCY,
+        status: ApplicationStatusEnum.SUBMITTED,
+        submittedByNationalId: currentUser.nationalId,
+        answers: {
+          additionalText: body.additionalText,
+          communicationChannels: body.communicationChannels,
+          prequisitesAccepted: true,
+          publishingDates: body.publishingDates,
+          signature: {
+            ...body.signature,
+            date: body.signature.date
+              ? body.signature.date.toISOString()
+              : null,
+          },
+          fields: {
+            courtAndJudgmentFields: {
+              courtDistrict: {
+                id: body.fields.courtDistrictId,
+                slug: '',
+                title: '',
+              },
+              judgmentDate: body.fields.judgmentDate,
+            },
+            divisionMeetingFields: {
+              meetingDate: body.fields.meetingDate,
+              meetingLocation: body.fields.meetingLocation,
+            },
+            settlementFields: {
+              nationalId: body.fields.settlementNationalId,
+              name: body.fields.settlementName,
+              address: body.fields.settlementAddress,
+              deadlineDate: body.fields.settlementDate,
+              liquidatorLocation: body.fields.liquidatorLocation,
+              liquidatorName: body.fields.liquidatorName,
+              recallRequirementStatementLocation:
+                body.fields.requirementStatementLocation,
+              recallRequirementStatementType: body.fields.requirementStatement,
+            },
+          },
+        },
+      },
+      {
+        returning: ['id'],
+      },
+    )
+
+    const advert = await this.createAdvert({
+      templateType: AdvertTemplateType.RECALL_BANKRUPTCY,
+      caseId: newCase.id,
+      typeId: TypeIdEnum.RECALL_BANKRUPTCY,
+      categoryId: CategoryDefaultIdEnum.RECALLS,
+      createdBy: applicantName,
+      createdByNationalId: body.applicantNationalId,
+      applicationId: application.id,
+      additionalText: body.additionalText,
+      title: `Innköllun dánarbús - ${body.fields.settlementName}`,
+      divisionMeetingDate: body.fields.meetingDate,
+      divisionMeetingLocation: body.fields.meetingLocation,
+      courtDistrictId: body.fields.courtDistrictId,
+      judgementDate: body.fields.judgmentDate,
+      settlement: {
+        settlementType: body.fields.settlementType,
+        nationalId: body.fields.settlementNationalId,
+        name: body.fields.settlementName,
+        address: body.fields.settlementAddress,
+        dateOfDeath: body.fields.settlementDate,
+        companies: body.fields.companies,
+        liquidatorLocation: body.fields.liquidatorLocation,
+        liquidatorName: body.fields.liquidatorName,
+        recallStatementLocation: body.fields.requirementStatementLocation,
+        recallStatementType: body.fields.requirementStatement,
+      },
+      scheduledAt: body.publishingDates,
+      communicationChannels: body.communicationChannels,
+      signature: body.signature,
+    })
+
+    this.logger.info('Created advert and recall bankruptcy application', {
+      caseId: newCase.id,
+      applicationId: application.id,
+      advertId: advert.id,
+      context: 'AdvertService',
+    })
   }
 
   async rejectAdvert(advertId: string, currentUser: DMRUser): Promise<void> {
@@ -464,6 +564,7 @@ export class AdvertService implements IAdvertService {
         settlementId: body.settlementId,
         settlement: body.settlement
           ? {
+              type: body.settlement.settlementType,
               liquidatorLocation: body.settlement.liquidatorLocation,
               liquidatorName: body.settlement.liquidatorName,
               liquidatorRecallStatementType:

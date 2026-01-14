@@ -13,6 +13,8 @@ import {
 
 import { ApiProperty, IntersectionType } from '@nestjs/swagger'
 
+import { SettlementType } from '@dmr.is/legal-gazette/schemas'
+
 import { ApplicationRequirementStatementEnum } from '../../models/application.model'
 import { CreateCommunicationChannelDto } from '../../models/communication-channel.model'
 import { CreateSignatureDto } from '../../models/signature.model'
@@ -64,6 +66,16 @@ export class CommonAdvertFieldsDto {
   content!: string
 }
 
+export class RecallDeceasedCompanyDto {
+  @ApiProperty({ type: String })
+  @IsString()
+  companyName!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  companyNationalId!: string
+}
+
 export class RecallAdvertFieldsDto {
   @ApiProperty({ type: String })
   @IsUUID()
@@ -72,6 +84,11 @@ export class RecallAdvertFieldsDto {
   @ApiProperty({ type: String })
   @IsDateString()
   judgmentDate!: string
+
+  @ApiProperty({ enum: SettlementType, required: false })
+  @IsOptional()
+  @IsEnum(SettlementType)
+  settlementType?: SettlementType
 
   @ApiProperty({ type: String })
   @IsString()
@@ -104,6 +121,13 @@ export class RecallAdvertFieldsDto {
   @ApiProperty({ type: String })
   @IsString()
   requirementStatementLocation!: string
+
+  @ApiProperty({ type: [RecallDeceasedCompanyDto], required: false })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RecallDeceasedCompanyDto)
+  companies!: RecallDeceasedCompanyDto[]
 }
 
 export class RecallDivisionMeetingFieldsDto {
@@ -152,7 +176,7 @@ export class CreateRecallBankruptcyAdvertAndApplicationDto extends SharedApplica
   fields!: RecallBankruptcyFieldsDto
 }
 
-export class CreateRecallDeceasedAdvertAndApplicationDto {
+export class CreateRecallDeceasedAdvertAndApplicationDto extends SharedApplicationFieldsDto {
   @ApiProperty({ type: RecallDeceasedFieldsDto })
   @ValidateNested()
   @Type(() => RecallDeceasedFieldsDto)

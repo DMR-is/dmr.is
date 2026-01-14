@@ -5,11 +5,13 @@ import { createTRPCError } from '@dmr.is/trpc/utils/errorHandler'
 
 import {
   RecallBankruptcyFieldsDtoRequirementStatementEnum,
+  RecallDeceasedFieldsDtoRequirementStatementEnum,
   SortDirectionEnum,
 } from '../../../../gen/fetch'
 import { StatusIdEnum } from '../../../constants'
 import {
   createAdvertAndCommonApplicationInput,
+  createAdvertAndDeceasedApplicationInput,
   createAdvertAndRecallBankruptcyApplicationInput,
 } from '../../../inputs'
 import { protectedProcedure, router } from '../trpc'
@@ -207,6 +209,41 @@ export const advertsRouter = router({
             settlementDate: input.fields.settlementFields.deadlineDate,
             settlementName: input.fields.settlementFields.name,
             settlementNationalId: input.fields.settlementFields.nationalId,
+          },
+        },
+      })
+    }),
+  createRecallDeceasedAdvertAndApplication: protectedProcedure
+    .input(createAdvertAndDeceasedApplicationInput)
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.api.createAdvertAndRecallDeceasedApplication({
+        createRecallDeceasedAdvertAndApplicationDto: {
+          applicantNationalId: input.applicantNationalId,
+          communicationChannels: input.communicationChannels,
+          publishingDates: input.publishingDates,
+          signature: input.signature,
+          additionalText: input.additionalText,
+          fields: {
+            courtDistrictId:
+              input.fields.courtAndJudgmentFields.courtDistrict.id,
+            judgmentDate: input.fields.courtAndJudgmentFields.judgmentDate,
+            meetingDate:
+              input.fields.divisionMeetingFields?.meetingDate ?? undefined,
+            meetingLocation:
+              input.fields.divisionMeetingFields?.meetingLocation ?? undefined,
+            liquidatorLocation:
+              input.fields.settlementFields.liquidatorLocation,
+            liquidatorName: input.fields.settlementFields.liquidatorName,
+            requirementStatementLocation:
+              input.fields.settlementFields.recallRequirementStatementLocation,
+            requirementStatement: input.fields.settlementFields
+              .recallRequirementStatementType as unknown as RecallDeceasedFieldsDtoRequirementStatementEnum,
+            settlementAddress: input.fields.settlementFields.address,
+            settlementDate: input.fields.settlementFields.dateOfDeath,
+            settlementName: input.fields.settlementFields.name,
+            settlementNationalId: input.fields.settlementFields.nationalId,
+            settlementType: input.fields.settlementFields.type,
+            companies: input.fields.settlementFields.companies,
           },
         },
       })
