@@ -459,8 +459,6 @@ export class RecallApplicationService implements IRecallApplicationService {
     const application = await this.applicationModel.findOneOrThrow({
       where: {
         id: applicationId,
-        submittedByNationalId: user.nationalId,
-        status: ApplicationStatusEnum.DRAFT,
         applicationType: {
           [Op.or]: [
             ApplicationTypeEnum.RECALL_BANKRUPTCY,
