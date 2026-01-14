@@ -14,6 +14,7 @@ import {
 import { CaseModel } from '../../models/case.model'
 import { CategoryModel } from '../../models/category.model'
 import { IAdvertService } from '../advert/advert.service.interface'
+import { IRecallApplicationService } from './recall/recall-application.service.interface'
 import { ApplicationService } from './application.service'
 
 // Test user factory
@@ -66,6 +67,11 @@ describe('ApplicationService - Status Validation', () => {
       createAdvert: jest.fn().mockResolvedValue({ id: 'advert-123' }),
     }
 
+    const mockRecallApplicationService = {
+      createRecallBankruptcyApplicationAndAdvert: jest.fn(),
+      createRecallDeceasedApplicationAndAdvert: jest.fn(),
+    }
+
     const mockCaseModel = {
       create: jest.fn(),
       findByPk: jest.fn(),
@@ -91,6 +97,10 @@ describe('ApplicationService - Status Validation', () => {
         { provide: getModelToken(CaseModel), useValue: mockCaseModel },
         { provide: getModelToken(CategoryModel), useValue: mockCategoryModel },
         { provide: IAdvertService, useValue: mockAdvertService },
+        {
+          provide: IRecallApplicationService,
+          useValue: mockRecallApplicationService,
+        },
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
       ],
     }).compile()
