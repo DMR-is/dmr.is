@@ -51,7 +51,8 @@ export const AdvertsInProgress = () => {
     status: <StatusTag status={advert.status} />,
     tegund: advert.type.title,
     efni: advert.title,
-    owner: advert.createdBy,
+    sender: advert.createdBy,
+    owner: advert.assignedUser?.name,
     href: `/ritstjorn/${advert.id}`,
     hasLink: true,
   }))
@@ -111,6 +112,10 @@ export const AdvertsInProgress = () => {
         {
           field: 'owner',
           children: formatMessage(ritstjornTableMessages.columns.owner),
+        },
+        {
+          field: 'sender',
+          children: formatMessage(ritstjornTableMessages.columns.sender),
         },
       ]}
       rows={rows}

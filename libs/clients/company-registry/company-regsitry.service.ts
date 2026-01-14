@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from '@dmr.is/utils'
+
 import { GetCompanyDto } from './company-registry.dto'
 import { ICompanyRegistryClientService } from './company-registry.service.interface'
 
@@ -7,7 +9,7 @@ export class CompanyRegistryClientService
   private baseUrl = 'https://api.skattur.cloud/legalentities/v2'
 
   async getCompany(nationalId: string): Promise<GetCompanyDto> {
-    const response = await fetch(`${this.baseUrl}/${nationalId}`, {
+    const response = await fetchWithTimeout(`${this.baseUrl}/${nationalId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

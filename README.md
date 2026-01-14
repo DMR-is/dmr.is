@@ -36,6 +36,26 @@ This is particularly useful when making changes to apis, you can test the codege
 - It will run the client configuration placed under `tmp/swagger/client-config.json`
 - If the file does not exist in your repository simply create it with the swagger-json you need to test.
 
+## Pull requests
+
+We use conventional commits for branch names.
+
+Examples:
+
+- `feat/add-user-authentication` - New feature
+- `fix/resolve-login-timeout` - Bug fix
+- `chore/update-dependencies` - Maintenance tasks
+
+Title should include {type}({scope}): What was done
+See [.github/workflows/pr.yml](.github/workflows/pr.yml) for allowed types and scopes.
+
+Examples:
+
+- fix(ojoi): Fixing something for official journal
+- fix(regulations): Fixing something for regulations
+- fix(lg): Fixing something for legal-gazette
+- fix(shared): Fixing something that affects more than one project.
+
 ## Git submodules
 
 Submodules are configured with [.envrc.git](./.envrc.git) by adding [post-checkout](https://git-scm.com/docs/githooks#_post_checkout) and [post-merge](https://git-scm.com/docs/githooks#_post_merge) hooks to the repository. This means that after cloning the repository, the submodules are automatically initialized and updated.

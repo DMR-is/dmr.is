@@ -1,3 +1,6 @@
 export * from './lib/serverUtils'
 export * from './lib/cleanLegacyHtml'
 export * from './lib/dateUtils'
+export * from './lib/escapeHtml'
+export * from './lib/httpUtils'
+export * from './lib/withRetry'

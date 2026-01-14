@@ -203,70 +203,6 @@
         "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - application web API"]
-      },
-      "get": {
-        "operationId": "getAdvertById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdvertDetailedDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Legal gazette - application web API"]
       }
     },
     "/api/v1/adverts/{id}/status/next": {
@@ -760,6 +696,72 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetMyAdvertsDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/adverts/{advertId}": {
+      "get": {
+        "operationId": "getAdvertById",
+        "parameters": [
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdvertDetailedDto" }
               }
             }
           },
@@ -3809,6 +3811,18 @@
         },
         "required": ["id", "title", "slug"]
       },
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "name": { "type": "string" },
+          "isActive": { "type": "boolean" }
+        },
+        "required": ["id", "nationalId", "email", "name", "isActive"]
+      },
       "CommentTypeEnum": {
         "type": "string",
         "enum": ["SUBMIT", "ASSIGN", "STATUS_UPDATE", "COMMENT"]
@@ -3913,7 +3927,7 @@
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": { "$ref": "#/components/schemas/StatusDto" },
           "scheduledAt": { "type": "string" },
-          "assignedUser": { "type": "string" },
+          "assignedUser": { "$ref": "#/components/schemas/UserDto" },
           "hasInternalComments": { "type": "boolean" },
           "comments": {
             "type": "array",
@@ -4012,7 +4026,7 @@
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": { "$ref": "#/components/schemas/StatusDto" },
           "scheduledAt": { "type": "string" },
-          "assignedUser": { "type": "string" },
+          "assignedUser": { "$ref": "#/components/schemas/UserDto" },
           "hasInternalComments": { "type": "boolean" }
         },
         "required": [

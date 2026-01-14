@@ -4,8 +4,8 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
-import { ApplicationOwnershipGuard } from '../../../core/guards/application-ownership.guard'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
+import { OwnershipGuard } from '../../../core/guards/ownership.guard'
 import { RecallApplicationController } from './recall-application.controller'
 import { IRecallApplicationService } from './recall-application.service.interface'
 
@@ -71,7 +71,7 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       .useValue({ canActivate: () => true })
       .overrideGuard(AuthorizationGuard)
       .useValue({ canActivate: () => true })
-      .overrideGuard(ApplicationOwnershipGuard)
+      .overrideGuard(OwnershipGuard)
       .useValue({ canActivate: () => true })
       .compile()
 
@@ -82,7 +82,7 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
   })
 
   describe('getMinDateForDivisionMeeting', () => {
-    it('should call service method when ApplicationOwnershipGuard passes', async () => {
+    it('should call service method when OwnershipGuard passes', async () => {
       // Arrange
       service.getMinDateForDivisionMeeting.mockResolvedValue(mockMinDateResponse)
 
@@ -95,19 +95,19 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       expect(service.getMinDateForDivisionMeeting).toHaveBeenCalledTimes(1)
     })
 
-    describe('ApplicationOwnershipGuard behavior', () => {
-      it('should have ApplicationOwnershipGuard configured on method', () => {
+    describe('OwnershipGuard behavior', () => {
+      it('should have OwnershipGuard configured on method', () => {
         // Verify the guard decorator is applied by checking the guards metadata
         // This confirms the guard will be invoked at runtime
         const guards = Reflect.getMetadata('__guards__', controller.getMinDateForDivisionMeeting)
         expect(guards).toBeDefined()
-        expect(guards).toContain(ApplicationOwnershipGuard)
+        expect(guards).toContain(OwnershipGuard)
       })
     })
   })
 
   describe('getMinDateForDivisionEnding', () => {
-    it('should call service method when ApplicationOwnershipGuard passes', async () => {
+    it('should call service method when OwnershipGuard passes', async () => {
       // Arrange
       service.getMinDateForDivisionEnding.mockResolvedValue(mockMinDateResponse)
 
@@ -120,13 +120,13 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       expect(service.getMinDateForDivisionEnding).toHaveBeenCalledTimes(1)
     })
 
-    describe('ApplicationOwnershipGuard behavior', () => {
-      it('should have ApplicationOwnershipGuard configured on method', () => {
+    describe('OwnershipGuard behavior', () => {
+      it('should have OwnershipGuard configured on method', () => {
         // Verify the guard decorator is applied by checking the guards metadata
         // This confirms the guard will be invoked at runtime
         const guards = Reflect.getMetadata('__guards__', controller.getMinDateForDivisionEnding)
         expect(guards).toBeDefined()
-        expect(guards).toContain(ApplicationOwnershipGuard)
+        expect(guards).toContain(OwnershipGuard)
       })
     })
   })

@@ -7,7 +7,7 @@ Integrate TBR (Tollur og Bókhald Ríkisins) payment system for Legal Gazette su
 ## Planning Date
 
 December 3, 2025  
-**Last Updated:** December 29, 2025
+**Last Updated:** January 9, 2026
 
 ---
 
@@ -92,16 +92,19 @@ Reference implementation for advert payments:
 
 #### 3.1 Add Transaction Boundaries
 
-Wrapped database operations in the listener with a transaction to ensure atomicity:
-- [x] Create payment record and update subscriber in a single transaction
-- [x] TBR call happens OUTSIDE transaction (can't roll back external API calls)
-- [x] If any DB operation fails after TBR call, logs CRITICAL error for manual intervention
+**✅ Implemented:** Full transaction handling with three-step flow
+- [x] Step 1: Create PENDING transaction record in database BEFORE calling TBR (prevents orphaned TBR claims)
+- [x] Step 2: Call TBR API (external call - cannot be rolled back)
+- [x] Step 3: Activate subscriber in separate transaction
+- [x] Transaction record updated to CREATED on success, FAILED on TBR error
+- [x] If DB operations fail after TBR success, logs CRITICAL error for manual intervention
 
 #### 3.2 Error Recovery
 
 - [x] Handle partial failures (TBR succeeds but DB fails) - logs critical error with full context
+- [x] Update transaction status to FAILED when TBR call fails
 - [ ] Add retry mechanism for transient failures (future enhancement)
-- [x] Log all payment attempts for auditing
+- [x] Log all payment attempts for auditing with transaction IDs
 
 ---
 
@@ -109,42 +112,56 @@ Wrapped database operations in the listener with a transaction to ensure atomici
 
 #### 4.1 Listener Tests
 
-- [x] `SubscriberCreatedListener` creates TBR payment correctly (personal & company categories)
-- [x] `SubscriberCreatedListener` saves payment record with `activatedByNationalId`
-- [x] `SubscriberCreatedListener` sets `subscribedFrom` only if null
-- [x] `SubscriberCreatedListener` always updates `subscribedTo`
-- [x] `SubscriberCreatedListener` handles TBR errors gracefully
-- [x] Transaction rollback works correctly on failure
-- [x] Full flow integration tests (TBR → Payment Record → Activate)
+**✅ Fully Implemented:** 23 tests passing
+- [x] Fee code lookup by code string
+- [x] Fee code not found error handling
+- [x] TBR payment creation with correct parameters for personal & company IDs
+- [x] TBR payment failure handling
+- [x] TBR transaction record creation with correct data
+- [x] Subscriber-transaction junction record creation
+- [x] Previous transactions marked as not current (supports renewals)
+- [x] Actor national ID tracking (delegation support)
+- [x] `subscribedFrom` set for new subscription only
+- [x] `subscribedFrom` NOT updated for renewal
+- [x] `subscribedTo` set to 1 year from now
+- [x] DB operations wrapped in transactions
+- [x] PENDING transaction record creation before TBR call (C-4 fix)
+- [x] Transaction record updated to CREATED after successful TBR
+- [x] Transaction record updated to FAILED when TBR fails
+- [x] Subscriber NOT activated when TBR fails
+- [x] Transaction record persists even if subscriber update fails
+- [x] Full flow integration tests (Fee Lookup → TBR Transaction → Junction → TBR API → Activate)
 - [x] Renewal flow preserves original `subscribedFrom`
 
-#### 4.2 Utility Tests
-
-- [x] `isCompanyNationalId` correctly identifies company vs person (10 test cases)
-- [x] Invalid national IDs handled as personal
-
-**Test Results**: 24 tests passing
+**Test Results**: All 23 tests passing (verified Jan 9, 2026)
 
 ---
 
-### Phase 5: Frontend Updates 🔲 Not Started
+### Phase 5: Frontend Updates ✅ Complete
 
 #### 5.1 Registration Flow
 
-Update registration page to show:
-1. Subscription fee information before registration
-2. Call `createSubscription` mutation on form submit
-3. Success message indicating payment will be processed
-4. Clear indication that subscription is now active
+**✅ Implemented:** Full registration flow in `legal-gazette-public-web`
+- [x] Subscription fee information displayed (4,500 kr árleg áskrift)
+- [x] Payment notice: "Við skráninguna verður til greiðsluseðill"
+- [x] Terms checkbox: "Ég samþykki að greiðsluseðill verði sendur í heimabanka"
+- [x] `RegistrationButton` component calls `createSubscription` tRPC mutation
+- [x] Form fields show read-only user info (name, nationalId)
+- [x] Active subscription check with info alert if already subscribed
+- [x] Redirect to home page after successful registration
 
 #### 5.2 Session Refresh
 
-- Call `update()` on session after successful subscription to reflect `isActive: true`
+**✅ Implemented:** Session update in `RegistrationButton`
+- [x] Calls `update()` from `useSession` after successful subscription
+- [x] Session reflects `isActive: true` after update
+- [x] Automatic redirect to home page after 1 second
 
 #### 5.3 Error Handling
 
-- Display error if TBR payment creation fails
-- Provide retry mechanism or contact support option
+**✅ Implemented:** Error toast on failure
+- [x] Display error toast if mutation fails or returns `success: false`
+- [x] Error message: "Villa kom upp við skráningu, vinsamlegast hafið samband við þjónustuver"
 
 ---
 
@@ -179,20 +196,23 @@ Update registration page to show:
 | File | Type | Description | Status |
 |------|------|-------------|--------|
 | `subscriber-created.event.ts` | Event | Event emitted when subscription is purchased | ✅ Complete |
-| `subscriber-created.listener.ts` | Listener | Handles TBR payment and subscriber activation | ✅ Complete |
-| `subscriber-payment.model.ts` | Model | Tracks subscription payment records | ✅ Complete |
-| `m-20251203NR4-subscriber-payments.js` | Migration | Creates subscriber_payments table | ✅ Complete |
-| `m-20251229-subscriber-payments-alter.js` | Migration | Removes UNIQUE constraint, adds activatedByNationalId | ✅ Complete |
+| `subscriber-created.listener.ts` | Listener | Handles TBR payment and subscriber activation (274 lines) | ✅ Complete |
+| `subscriber-created.listener.spec.ts` | Tests | Comprehensive test suite (693 lines, 23 tests) | ✅ Complete |
+| `subscriber-transaction.model.ts` | Model | Junction table for subscriber-transaction relationship | ✅ Complete |
+| `tbr-transactions.model.ts` | Model | Unified TBR transaction model (adverts & subscriptions) | ✅ Complete |
+| `m-20260106-tbr-transaction-consolidation.js` | Migration | Creates unified tbr_transactions and subscriber_transaction tables | ✅ Complete |
 
 ### Files Modified
 
 | File | Changes | Status |
 |------|---------|--------|
-| `constants.ts` | Added `SUBSCRIBER_CREATED` event and `SUBSCRIBER_PAYMENT` model | ✅ Complete |
-| `subscriber.service.ts` | Emit event with actorNationalId (no activation here) | ✅ Complete |
+| `constants.ts` | Added `SUBSCRIBER_CREATED` event and `SUBSCRIBER_TRANSACTION` model | ✅ Complete |
+| `subscriber.service.ts` | Emit event with actorNationalId, idempotency checks, user lock | ✅ Complete |
+| `subscriber.service.spec.ts` | Tests for duplicate prevention (C-3), delegation support | ✅ Complete |
 | `subscriber.provider.module.ts` | Register listener and TBR module | ✅ Complete |
-| `app.module.ts` | Register `SubscriberPaymentModel` | ✅ Complete |
-| `app/skraning/@register/page.tsx` | Show payment info and call mutation | 🔲 Not Started |
+| `app.module.ts` | Register `SubscriberTransactionModel` and `TBRTransactionModel` | ✅ Complete |
+| `app/skraning/@register/page.tsx` | Show payment info, terms checkbox, registration form | ✅ Complete |
+| `RegistrationButton.tsx` | Call mutation, session update, redirect | ✅ Complete |
 
 ---
 
@@ -202,9 +222,9 @@ Update registration page to show:
 |-------|--------|-------|
 | Phase 1: Research & Configuration | ✅ Complete | TBR integration reviewed, fee codes configured via env vars |
 | Phase 2: Backend Implementation | ✅ Complete | Event-based listener, correct activation flow, renewal support |
-| Phase 3: Transaction Boundaries | 🔲 Not Started | Add atomicity and error recovery |
-| Phase 4: Unit Tests | 🔲 Not Started | Test listener, service, and utilities |
-| Phase 5: Frontend Updates | 🔲 Not Started | Registration page needs form connection |
+| Phase 3: Transaction Boundaries | ✅ Complete | Three-step flow with PENDING → CREATED/FAILED status tracking |
+| Phase 4: Unit Tests | ✅ Complete | 23 tests passing, includes C-4 orphaned claims prevention |
+| Phase 5: Frontend Updates | ✅ Complete | Full registration flow in legal-gazette-public-web |
 
 ## Environment Variables
 
@@ -265,17 +285,31 @@ sequenceDiagram
 | `subscribedFrom` | Date \| null | First day of subscription (preserved on renewal) | On first payment only |
 | `subscribedTo` | Date \| null | Subscription expiry date | On every payment (now + 1 year) |
 
-### Payment Record Fields
+### Transaction Record Fields
+
+**Table: `tbr_transactions`** (unified for adverts and subscriptions)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | Transaction ID |
+| `transactionType` | enum | ADVERT or SUBSCRIPTION |
+| `feeCodeId` | UUID | Reference to fee code |
+| `feeCodeMultiplier` | number | Quantity/multiplier |
+| `totalPrice` | number | Total amount in ISK |
+| `chargeBase` | string | TBR charge base (advert/subscriber ID) |
+| `chargeCategory` | string | TBR category (person vs company) |
+| `debtorNationalId` | string | National ID being charged |
+| `status` | enum | PENDING, CREATED, FAILED, PAID, CANCELLED |
+| `tbrError` | string \| null | Error message if TBR call failed |
+
+**Table: `subscriber_transaction`** (junction table)
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `subscriberId` | UUID | Reference to subscriber |
+| `transactionId` | UUID | Reference to TBR transaction |
 | `activatedByNationalId` | string | National ID of actor who purchased (supports delegations) |
-| `amount` | number | Payment amount in ISK |
-| `chargeBase` | string | TBR charge base (subscriber ID) |
-| `chargeCategory` | string | TBR category (person vs company) |
-| `feeCode` | string | TBR fee code |
-| `paidAt` | Date \| null | When payment was confirmed (null = pending) |
+| `isCurrent` | boolean | Whether this is the current/active subscription transaction |
 
 ---
 
@@ -301,29 +335,28 @@ The system now supports subscription renewals:
 
 ## Testing Checklist
 
-### Phase 3: Transaction Boundaries
+### Backend Tests ✅ Complete
 
-- [ ] Listener uses Sequelize transaction for DB operations
-- [ ] Payment record and subscriber update are atomic
-- [ ] Partial failure handling is tested
-- [ ] Error logging captures all payment attempts
+- [x] Listener uses Sequelize transaction for DB operations
+- [x] Transaction record creation and subscriber update in separate transactions
+- [x] Partial failure handling tested (TBR succeeds but DB fails)
+- [x] Error logging captures all payment attempts with transaction IDs
+- [x] `SubscriberCreatedListener` creates TBR payment correctly (23 tests)
+- [x] `SubscriberCreatedListener` saves transaction with `activatedByNationalId`
+- [x] `SubscriberCreatedListener` sets `subscribedFrom` only if null
+- [x] `SubscriberCreatedListener` always updates `subscribedTo`
+- [x] `SubscriberCreatedListener` handles TBR errors gracefully
+- [x] `SubscriberCreatedListener` updates transaction status correctly
+- [x] `SubscriberService` does NOT activate subscriber (only emits event)
+- [x] `SubscriberService` correctly determines actor nationalId
+- [x] Company vs person ID detection using Kennitala library
 
-### Phase 4: Unit Tests
-
-- [ ] `SubscriberCreatedListener` creates TBR payment correctly
-- [ ] `SubscriberCreatedListener` saves payment record with `activatedByNationalId`
-- [ ] `SubscriberCreatedListener` sets `subscribedFrom` only if null
-- [ ] `SubscriberCreatedListener` always updates `subscribedTo`
-- [ ] `SubscriberCreatedListener` handles TBR errors gracefully
-- [ ] `SubscriberCreatedListener` rolls back transaction on failure
-- [ ] `SubscriberService` does NOT activate subscriber (only emits event)
-- [ ] `SubscriberService` correctly determines actor nationalId
-- [ ] `isCompanyNationalId` correctly identifies company vs person
-
-### Phase 5: E2E Tests (Frontend)
+### Frontend Tests 🔲 Not Started
 
 - [ ] New user registration creates payment and activates subscription
 - [ ] Existing subscriber can renew (extends subscribedTo, keeps subscribedFrom)
 - [ ] Delegation: actor national ID is correctly tracked
 - [ ] Session refresh after subscription shows isActive = true
 - [ ] Error states are displayed correctly
+
+**Note:** Frontend functionality is implemented and working, but automated E2E tests not yet created.

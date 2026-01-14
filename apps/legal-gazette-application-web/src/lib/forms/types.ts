@@ -1,4 +1,6 @@
-import z from 'zod'
+import * as z from 'zod'
+
+import { ResponsiveSpace } from '@island.is/island-ui/core'
 
 /**
  * Form field is render inside a form step
@@ -7,9 +9,10 @@ import z from 'zod'
  * @field content - The actual field component to render
  */
 export type FormField = {
-  title: string
+  title?: React.ReactNode
   intro?: React.ReactNode
   content: React.ReactNode
+  space?: ResponsiveSpace
 }
 
 /**

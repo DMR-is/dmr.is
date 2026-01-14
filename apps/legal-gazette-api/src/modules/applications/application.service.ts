@@ -1,7 +1,6 @@
 import deepmerge from 'deepmerge'
 import get from 'lodash/get'
-import { Op } from 'sequelize'
-import z from 'zod'
+import * as z from 'zod'
 
 import {
   BadRequestException,
@@ -59,6 +58,9 @@ import { IApplicationService } from './application.service.interface'
 
 @Injectable()
 export class ApplicationService implements IApplicationService {
+  private readonly SUBMITTABLE_STATUSES = [ApplicationStatusEnum.DRAFT]
+  private readonly EDITABLE_STATUSES = [ApplicationStatusEnum.DRAFT]
+
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IAdvertService)
@@ -360,6 +362,13 @@ export class ApplicationService implements IApplicationService {
       where: { id: applicationId, applicantNationalId: user.nationalId },
     })
 
+    // Validate application status before update
+    if (!this.EDITABLE_STATUSES.includes(application.status)) {
+      throw new BadRequestException(
+        `Cannot modify application with status '${application.status}'. Application must be in DRAFT status.`,
+      )
+    }
+
     const parsedData = updateApplicationInput.parse({
       type: application.applicationType,
       answers: body.answers,
@@ -373,32 +382,15 @@ export class ApplicationService implements IApplicationService {
     const mergedAnswers = deepmerge(currentAnswers, incomingAnswers, {
       customMerge: (key) => {
         if (key === 'companies') {
-          return (_current, incoming) => incoming
+          return (_, incoming) => incoming
         }
 
         if (key === 'publishingDates') {
-          return (_current, incoming) => incoming
+          return (_, incoming) => incoming
         }
 
         if (key === 'communicationChannels') {
-          return (current, incoming) => {
-            const merged = [...current]
-
-            incoming.forEach(
-              (sourceChannel: z.infer<typeof communicationChannelSchema>) => {
-                const index = merged.findIndex(
-                  (t) => t.email === sourceChannel.email,
-                )
-                if (index > -1) {
-                  merged[index] = sourceChannel
-                } else {
-                  merged.push(sourceChannel)
-                }
-              },
-            )
-
-            return merged
-          }
+          return (_, incoming) => incoming
         }
       },
     })
@@ -541,6 +533,13 @@ export class ApplicationService implements IApplicationService {
     const application = await this.applicationModel.findOneOrThrow({
       where: { id: applicationId, applicantNationalId: user.nationalId },
     })
+
+    // Validate application status before submission
+    if (!this.SUBMITTABLE_STATUSES.includes(application.status)) {
+      throw new BadRequestException(
+        `Cannot submit application with status '${application.status}'. Application must be in DRAFT status.`,
+      )
+    }
 
     switch (application.applicationType) {
       case ApplicationTypeEnum.COMMON:

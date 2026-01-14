@@ -1,6 +1,6 @@
 import { NextApiHandler } from 'next'
 
-import { z } from 'zod'
+import * as z from 'zod'
 export type HandlerDecorator = (handler: NextApiHandler) => NextApiHandler
 
 export const overrideAttachmentSchema = z.object({

@@ -1,6 +1,6 @@
 import { isString } from 'class-validator'
 import Kennitala from 'kennitala'
-import z from 'zod'
+import * as z from 'zod'
 
 import { ApplicationRequirementStatementEnum } from '../constants'
 
@@ -47,6 +47,8 @@ export const settlementSchemaRefined = z.object({
     message: 'Sendingarmáti kröfulýsingar er nauðsynlegur',
   }),
   recallRequirementStatementLocation: z
-    .string('Staðsetning kröfulýsingar er nauðsynleg')
-    .min(1, { message: 'Staðsetning kröfulýsingar er nauðsynleg' }),
+    .string('Staðsetning kröfulýsingar eða tölvupóstur er nauðsynleg')
+    .min(1, {
+      message: 'Staðsetning kröfulýsingar eða tölvupóstur er nauðsynleg',
+    }),
 })

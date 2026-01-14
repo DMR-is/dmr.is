@@ -1,6 +1,6 @@
 'use client'
 
-import { addYears } from 'date-fns'
+import addYears  from 'date-fns/addYears'
 import get from 'lodash/get'
 import { useEffect, useState } from 'react'
 
@@ -165,91 +165,93 @@ export const CreateDivisionEnding = ({
               <GridRow rowGap={[2, 3, 4]}>
                 <GridColumn span={['12/12', '8/12']} offset={['0', '2/12']}>
                   <Box padding={[2, 3, 4]} width="full" background="white">
-                    <Inline
-                      space={2}
-                      alignY="center"
-                      justifyContent="spaceBetween"
-                    >
-                      <Text marginBottom={[1, 2]} variant="h3">
-                        Bæta við skiptalokum
-                      </Text>
-                      <button onClick={closeModal} type="button">
-                        <Icon icon="close" />
-                      </button>
-                    </Inline>
-                    {title && (
-                      <Text variant="h4" fontWeight="medium">
-                        {title}
-                      </Text>
-                    )}
                     <Stack space={[2, 3]}>
-                      <GridRow rowGap={[1, 2]}>
-                        <GridColumn span="12/12">
-                          <Text variant="h4">Birting og kröfur</Text>
-                        </GridColumn>
-                        <GridColumn span={['12/12', '6/12']}>
-                          <DatePicker
-                            minDate={minDate}
-                            maxDate={maxDate}
-                            excludeDates={invalidPublishingDates}
-                            maxYear={addYears(new Date(), 3).getFullYear()}
-                            minYear={new Date().getFullYear()}
-                            required
-                            size="sm"
-                            locale="is"
-                            backgroundColor="blue"
-                            name="declaredClaims"
-                            label="Birting"
-                            placeholderText=""
-                            errorMessage={fieldErrors?.scheduledAt?.[0]}
-                            handleChange={(date) =>
-                              setFormState({
-                                ...formState,
-                                meetingDate: date.toISOString(),
-                              })
-                            }
-                          />
-                        </GridColumn>
-                        <GridColumn span={['12/12', '6/12']}>
-                          <Input
-                            required
-                            size="sm"
-                            backgroundColor="blue"
-                            type="number"
-                            name="declaredClaims"
-                            label="Lýstar kröfur"
-                            errorMessage={fieldErrors?.declaredClaims?.[0]}
-                            onChange={(e) => {
-                              const value = e.target.value
-                                ? Number(e.target.value)
-                                : -1
-                              setFormState({
-                                ...formState,
-                                declaredClaims: value,
-                              })
-                            }}
-                          />
-                        </GridColumn>
-                      </GridRow>
-                      <DivisionSignatureFields
-                        formState={formState}
-                        setFormState={setFormState}
-                        fieldErrors={fieldErrors}
-                      />
-                      <GridRow>
-                        <GridColumn span="12/12">
-                          <Inline align="right" alignY="center">
-                            <Button
-                              type="submit"
-                              icon="add"
-                              iconType="outline"
-                              loading={isPending}
-                            >
-                              Bæta við skiptalokum
-                            </Button>
-                          </Inline>
-                        </GridColumn>
-                      </GridRow>
+                      <Stack space={0}>
+                        <Inline
+                          space={2}
+                          alignY="center"
+                          justifyContent="spaceBetween"
+                        >
+                          <Text variant="h3">Bæta við skiptalokum</Text>
+                          <button onClick={closeModal} type="button">
+                            <Icon icon="close" />
+                          </button>
+                        </Inline>
+                        {title && (
+                          <Text variant="h4" fontWeight="medium">
+                            {title}
+                          </Text>
+                        )}
+                      </Stack>
+                      <Stack space={[2, 3]}>
+                        <GridRow rowGap={[1, 2]}>
+                          <GridColumn span="12/12">
+                            <Text variant="h4">Birting og kröfur</Text>
+                          </GridColumn>
+                          <GridColumn span={['12/12', '6/12']}>
+                            <DatePicker
+                              minDate={minDate}
+                              maxDate={maxDate}
+                              excludeDates={invalidPublishingDates}
+                              maxYear={addYears(new Date(), 3).getFullYear()}
+                              minYear={new Date().getFullYear()}
+                              required
+                              size="sm"
+                              locale="is"
+                              backgroundColor="blue"
+                              name="declaredClaims"
+                              label="Birting"
+                              placeholderText=""
+                              errorMessage={fieldErrors?.scheduledAt?.[0]}
+                              handleChange={(date) =>
+                                setFormState({
+                                  ...formState,
+                                  meetingDate: date.toISOString(),
+                                })
+                              }
+                            />
+                          </GridColumn>
+                          <GridColumn span={['12/12', '6/12']}>
+                            <Input
+                              required
+                              size="sm"
+                              backgroundColor="blue"
+                              type="number"
+                              name="declaredClaims"
+                              label="Lýstar kröfur"
+                              errorMessage={fieldErrors?.declaredClaims?.[0]}
+                              onChange={(e) => {
+                                const value = e.target.value
+                                  ? Number(e.target.value)
+                                  : -1
+                                setFormState({
+                                  ...formState,
+                                  declaredClaims: value,
+                                })
+                              }}
+                            />
+                          </GridColumn>
+                        </GridRow>
+                        <DivisionSignatureFields
+                          formState={formState}
+                          setFormState={setFormState}
+                          fieldErrors={fieldErrors}
+                        />
+                        <GridRow>
+                          <GridColumn span="12/12">
+                            <Inline align="right" alignY="center">
+                              <Button
+                                type="submit"
+                                icon="add"
+                                iconType="outline"
+                                loading={isPending}
+                              >
+                                Bæta við skiptalokum
+                              </Button>
+                            </Inline>
+                          </GridColumn>
+                        </GridRow>
+                      </Stack>
                     </Stack>
                   </Box>
                 </GridColumn>

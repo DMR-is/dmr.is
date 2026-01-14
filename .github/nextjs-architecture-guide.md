@@ -693,7 +693,7 @@ export function AdvertContainer({ id }: { id: string }) {
 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import * as z from 'zod'
 
 const schema = z.object({
   title: z.string().min(1),

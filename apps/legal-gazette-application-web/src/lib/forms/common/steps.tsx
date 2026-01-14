@@ -21,7 +21,6 @@ export const CommonFormSteps: LegalGazetteForm = {
       stepTitle: 'Skilyrði',
       fields: [
         {
-          title: 'Skilyrði fyrir birtingu',
           content: <PrerequisitesSteps />,
         },
       ],
@@ -31,29 +30,36 @@ export const CommonFormSteps: LegalGazetteForm = {
     },
     {
       title: 'Grunnupplýsingar',
-      stepTitle: 'Upplýsingar',
+      stepTitle: 'Grunnupplýsingar',
       validationSchema: commonApplicationAnswersRefined.pick({
         signature: true,
         fields: true,
       }),
       fields: [
         {
-          title: 'Tegund og flokkur auglýsingar',
           content: <CommonAdvertFields />,
         },
         {
-          title: 'Meginmál auglýsingar',
+          title: (
+            <>
+              Meginmál auglýsingar{' '}
+              <Text fontWeight="regular" color="red600" as="span">
+                *
+              </Text>
+            </>
+          ),
           content: <AdvertContentField />,
         },
         {
           title: 'Undirritun',
 
           content: <SignatureFields />,
+          space: [0],
         },
       ],
     },
     {
-      title: 'Birtingardagar',
+      title: 'Óskir um birtingu',
       stepTitle: 'Birting',
       validationSchema: commonApplicationAnswersRefined.pick({
         publishingDates: true,
@@ -62,10 +68,22 @@ export const CommonFormSteps: LegalGazetteForm = {
       fields: [
         {
           title: 'Birtingardagar',
+          intro: (
+            <Text>
+              Að minnsta kosti einn birtingardagur er nauðsynlegur og mest þrír.
+            </Text>
+          ),
           content: <PublishingFields />,
         },
         {
           title: 'Samskiptaleiðir',
+          intro: (
+            <Text>
+              Hér getur þú skráð inn tölvupóstfang og símanúmer þess sem best er
+              að hafa samskipti við vegna auglýsingarinnar, hægt er að skrá
+              fleirri.
+            </Text>
+          ),
           content: <CommunicationChannelFields />,
         },
       ],

@@ -45,16 +45,16 @@ export const CaseTableInReview = ({ cases, paging }: TableProps) => {
       children: formatMessage(messages.tables.inReview.columns.employee),
     },
     {
-      field: 'caseInstitution',
-      sortable: false,
-      size: 'tiny',
-      children: formatMessage(messages.tables.ready.columns.institution),
-    },
-    {
       field: 'caseTag',
       sortable: false,
       size: 'tiny',
       children: formatMessage(messages.tables.inReview.columns.tags),
+    },
+    {
+      field: 'caseInstitution',
+      sortable: false,
+      size: 'tiny',
+      children: formatMessage(messages.tables.ready.columns.institution),
     },
   ]
 
@@ -88,12 +88,12 @@ export const CaseTableInReview = ({ cases, paging }: TableProps) => {
         {row.assignedTo?.displayName}
       </Text>
     ),
+    caseTag: <CaseTag tag={row.tag?.title} />,
     caseInstitution: (
       <Text whiteSpace="nowrap" variant="medium">
         {row.involvedParty.title}
       </Text>
     ),
-    caseTag: <CaseTag tag={row.tag?.title} />,
   }))
 
   return <DataTable columns={columns} rows={rows} paging={paging} />

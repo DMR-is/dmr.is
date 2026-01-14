@@ -44,7 +44,7 @@ export const SignatureFields = () => {
   return (
     <>
       <Text
-        marginBottom={1}
+        marginBottom={2}
         variant="small"
         fontWeight={errors?.signature ? 'semiBold' : 'regular'}
         color={(errors?.signature && 'red600') || 'dark400'}

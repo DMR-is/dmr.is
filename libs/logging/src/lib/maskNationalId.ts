@@ -22,8 +22,9 @@ export const maskNationalId = (text: string) => {
 /**
  * Recursively masks PII fields (nationalId, kennitala, ssn, national_id) in objects and arrays.
  * Uses the existing maskNationalId function to mask valid kennitölur.
+ * Handles circular references to prevent infinite recursion.
  */
-export const maskPiiInObject = <T>(obj: T): T => {
+export const maskPiiInObject = <T>(obj: T, seen = new WeakSet<object>()): T => {
   if (obj === null || obj === undefined) {
     return obj
   }
@@ -32,8 +33,14 @@ export const maskPiiInObject = <T>(obj: T): T => {
     return obj
   }
 
+  // Prevent infinite recursion on circular references
+  if (seen.has(obj as object)) {
+    return obj
+  }
+  seen.add(obj as object)
+
   if (Array.isArray(obj)) {
-    return obj.map((item) => maskPiiInObject(item)) as T
+    return obj.map((item) => maskPiiInObject(item, seen)) as T
   }
 
   const result: Record<string | symbol, unknown> = {}
@@ -57,7 +64,7 @@ export const maskPiiInObject = <T>(obj: T): T => {
         result[key] = value
       }
     } else if (typeof value === 'object' && value !== null) {
-      result[key] = maskPiiInObject(value)
+      result[key] = maskPiiInObject(value, seen)
     } else {
       result[key] = value
     }

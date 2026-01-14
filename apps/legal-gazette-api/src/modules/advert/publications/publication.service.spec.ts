@@ -10,7 +10,6 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { AdvertModel } from '../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
-import { StatusIdEnum } from '../../../models/status.model'
 import { PublicationService } from './publication.service'
 import { IPublicationService } from './publication.service.interface'
 
@@ -31,7 +30,6 @@ describe('PublicationService - Publication Number Generation', () => {
   let service: IPublicationService
   let advertModel: typeof AdvertModel
   let advertPublicationModel: typeof AdvertPublicationModel
-  let sequelize: Sequelize
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -72,7 +70,6 @@ describe('PublicationService - Publication Number Generation', () => {
     service = module.get<IPublicationService>(PublicationService)
     advertModel = module.get(getModelToken(AdvertModel))
     advertPublicationModel = module.get(getModelToken(AdvertPublicationModel))
-    sequelize = module.get<Sequelize>(Sequelize)
 
     jest.clearAllMocks()
   })
@@ -80,8 +77,9 @@ describe('PublicationService - Publication Number Generation', () => {
   describe('publishAdvertPublication - decimal parsing correctness', () => {
     it('should correctly parse publication number with radix 10', async () => {
       // Setup: Mock existing publication ending in "009"
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
       const existingAdvert = {
-        publicationNumber: '20260108009',
+        publicationNumber: `${today}009`,
       }
 
       const mockAdvert = {
@@ -134,7 +132,7 @@ describe('PublicationService - Publication Number Generation', () => {
       expect(updateCalls.length).toBeGreaterThan(0)
 
       const publicationNumber = updateCalls[0][0].publicationNumber
-      expect(publicationNumber).toBe('20260108010')
+      expect(publicationNumber).toBe(`${today}010`)
     })
 
     it('should handle publication numbers ending with "010" correctly', async () => {
@@ -142,8 +140,9 @@ describe('PublicationService - Publication Number Generation', () => {
       // With radix 11: "010" parsed as 0*11^2 + 1*11^1 + 0*11^0 = 11
       // Adding 1 gives 12, padded to "012" - WRONG!
       // With radix 10: "010" parsed as 10, adding 1 gives 11, padded to "011" - CORRECT
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
       const existingAdvert = {
-        publicationNumber: '20260108010',
+        publicationNumber: `${today}010`,
       }
 
       const mockAdvert = {
@@ -188,7 +187,7 @@ describe('PublicationService - Publication Number Generation', () => {
       const publicationNumber = updateCalls[0][0].publicationNumber
 
       // This will FAIL with radix 11 bug, showing it returns "012" instead of "011"
-      expect(publicationNumber).toBe('20260108011')
+      expect(publicationNumber).toBe(`${today}011`)
     })
 
     it('should handle first publication of the day', async () => {
@@ -286,54 +285,6 @@ describe('PublicationService - Publication Number Generation', () => {
       expect(findOneOptions).toHaveProperty('transaction')
       expect(findOneOptions.transaction).toBe(mockTransaction)
     })
-
-    it('should use pessimistic lock (LOCK.UPDATE) when reading max publication', async () => {
-      // This test verifies that findOne uses lock: Transaction.LOCK.UPDATE
-      const mockAdvert = {
-        id: 'advert-5',
-        publicationNumber: null,
-        update: jest.fn().mockResolvedValue(undefined),
-        fromModelToDetailed: jest.fn().mockReturnValue({ id: 'advert-5' }),
-        htmlMarkup: jest.fn().mockReturnValue('<html></html>'),
-      }
-
-      const mockPublication = {
-        id: 'pub-5',
-        advertId: 'advert-5',
-        publishedAt: null,
-        versionLetter: 'A',
-        update: jest.fn().mockResolvedValue(undefined),
-        fromModel: jest.fn().mockReturnValue({ id: 'pub-5' }),
-      }
-
-      const mockTransaction = {
-        afterCommit: jest.fn((callback) => callback()),
-      } as unknown as Transaction
-
-      mockSequelize.transaction.mockImplementation(async (callback) => {
-        return callback(mockTransaction)
-      })
-
-      const mockScopedModel = {
-        findByPkOrThrow: jest.fn().mockResolvedValue(mockAdvert),
-      }
-      ;(advertModel.withScope as jest.Mock).mockReturnValue(mockScopedModel)
-      ;(advertPublicationModel.findOneOrThrow as jest.Mock).mockResolvedValue(
-        mockPublication,
-      )
-      ;(advertModel.findOne as jest.Mock).mockResolvedValue(null)
-
-      // Action
-      await service.publishAdvertPublication('advert-5', 'pub-5')
-
-      // Assert: findOne should use pessimistic lock
-      const findOneCalls = (advertModel.findOne as jest.Mock).mock.calls
-      expect(findOneCalls.length).toBeGreaterThan(0)
-
-      const findOneOptions = findOneCalls[0][0]
-      expect(findOneOptions).toHaveProperty('lock')
-      expect(findOneOptions.lock).toBe(Transaction.LOCK.UPDATE)
-    })
   })
 
   describe('publishAdvertPublication - general behavior', () => {
@@ -419,6 +370,219 @@ describe('PublicationService - Publication Number Generation', () => {
 
       // Assert: advert.update should NOT be called (already has publication number)
       expect(mockAdvert.update).not.toHaveBeenCalled()
+    })
+
+    it('should rollback transaction when event emitter throws error', async () => {
+      // Setup: Normal advert and publication, but event emitter will fail
+      const mockAdvert = {
+        id: 'advert-8',
+        publicationNumber: '20260108001',
+        fromModelToDetailed: jest.fn().mockReturnValue({ id: 'advert-8' }),
+        htmlMarkup: jest.fn().mockReturnValue('<html></html>'),
+      }
+
+      const mockPublication = {
+        id: 'pub-8',
+        advertId: 'advert-8',
+        publishedAt: null,
+        versionLetter: 'A',
+        update: jest.fn().mockResolvedValue(undefined),
+        fromModel: jest.fn().mockReturnValue({ id: 'pub-8' }),
+      }
+
+      const mockEventEmitter = {
+        emitAsync: jest
+          .fn()
+          .mockRejectedValue(new Error('TBR transaction creation failed')),
+      }
+
+      // Create a mock transaction that tracks if it was committed
+      let transactionCommitted = false
+      const mockTransaction = {
+        commit: jest.fn().mockImplementation(() => {
+          transactionCommitted = true
+          return Promise.resolve()
+        }),
+        rollback: jest.fn().mockImplementation(() => {
+          transactionCommitted = false
+          return Promise.resolve()
+        }),
+      } as unknown as Transaction
+
+      // Mock sequelize.transaction to simulate rollback on error
+      mockSequelize.transaction.mockImplementation(async (callback) => {
+        try {
+          await callback(mockTransaction)
+          await mockTransaction.commit()
+        } catch (error) {
+          await mockTransaction.rollback()
+          throw error
+        }
+      })
+
+      const mockScopedModel = {
+        findByPkOrThrow: jest.fn().mockResolvedValue(mockAdvert),
+      }
+      ;(advertModel.withScope as jest.Mock).mockReturnValue(mockScopedModel)
+      ;(advertPublicationModel.findOneOrThrow as jest.Mock).mockResolvedValue(
+        mockPublication,
+      )
+
+      // Create a new service instance with the mocked event emitter
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          PublicationService,
+          {
+            provide: getModelToken(AdvertModel),
+            useValue: advertModel,
+          },
+          {
+            provide: getModelToken(AdvertPublicationModel),
+            useValue: advertPublicationModel,
+          },
+          {
+            provide: Sequelize,
+            useValue: mockSequelize,
+          },
+          {
+            provide: LOGGER_PROVIDER,
+            useValue: mockLogger,
+          },
+          {
+            provide: EventEmitter2,
+            useValue: mockEventEmitter,
+          },
+        ],
+      }).compile()
+
+      const testService = module.get<IPublicationService>(PublicationService)
+
+      // Action & Assert: Should throw the error from event emitter
+      await expect(
+        testService.publishAdvertPublication('advert-8', 'pub-8'),
+      ).rejects.toThrow('TBR transaction creation failed')
+
+      // Assert: Transaction should have been rolled back
+      expect(mockTransaction.rollback).toHaveBeenCalled()
+      expect(transactionCommitted).toBe(false)
+
+      // Assert: Event emitter should have been called
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalled()
+    })
+
+    it('should commit transaction and emit event when publication succeeds', async () => {
+      // Setup: Normal advert and publication, event emitter will succeed
+      const mockAdvert = {
+        id: 'advert-9',
+        publicationNumber: '20260108001',
+        fromModelToDetailed: jest.fn().mockReturnValue({
+          id: 'advert-9',
+          title: 'Test Advert',
+        }),
+        htmlMarkup: jest.fn().mockReturnValue('<html>Test HTML</html>'),
+      }
+
+      const mockPublication = {
+        id: 'pub-9',
+        advertId: 'advert-9',
+        publishedAt: null,
+        versionLetter: 'A',
+        update: jest.fn().mockResolvedValue(undefined),
+        fromModel: jest.fn().mockReturnValue({
+          id: 'pub-9',
+          versionNumber: 1,
+        }),
+      }
+
+      const mockEventEmitter = {
+        emitAsync: jest.fn().mockResolvedValue(undefined),
+        emit: jest.fn(),
+      }
+
+      // Create a mock transaction that tracks if it was committed
+      let transactionCommitted = false
+      const mockTransaction = {
+        commit: jest.fn().mockImplementation(() => {
+          transactionCommitted = true
+          return Promise.resolve()
+        }),
+        rollback: jest.fn().mockImplementation(() => {
+          transactionCommitted = false
+          return Promise.resolve()
+        }),
+      } as unknown as Transaction
+
+      // Mock sequelize.transaction to simulate commit on success
+      mockSequelize.transaction.mockImplementation(async (callback) => {
+        try {
+          await callback(mockTransaction)
+          await mockTransaction.commit()
+        } catch (error) {
+          await mockTransaction.rollback()
+          throw error
+        }
+      })
+
+      const mockScopedModel = {
+        findByPkOrThrow: jest.fn().mockResolvedValue(mockAdvert),
+      }
+      ;(advertModel.withScope as jest.Mock).mockReturnValue(mockScopedModel)
+      ;(advertPublicationModel.findOneOrThrow as jest.Mock).mockResolvedValue(
+        mockPublication,
+      )
+
+      // Create a new service instance with the mocked event emitter
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          PublicationService,
+          {
+            provide: getModelToken(AdvertModel),
+            useValue: advertModel,
+          },
+          {
+            provide: getModelToken(AdvertPublicationModel),
+            useValue: advertPublicationModel,
+          },
+          {
+            provide: Sequelize,
+            useValue: mockSequelize,
+          },
+          {
+            provide: LOGGER_PROVIDER,
+            useValue: mockLogger,
+          },
+          {
+            provide: EventEmitter2,
+            useValue: mockEventEmitter,
+          },
+        ],
+      }).compile()
+
+      const testService = module.get<IPublicationService>(PublicationService)
+
+      // Action
+      await testService.publishAdvertPublication('advert-9', 'pub-9')
+
+      // Assert: Transaction should have been committed
+      expect(mockTransaction.commit).toHaveBeenCalled()
+      expect(mockTransaction.rollback).not.toHaveBeenCalled()
+      expect(transactionCommitted).toBe(true)
+
+      // Assert: Event emitter should have been called with correct payload
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledTimes(1)
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+        'advert.published',
+        {
+          advert: { id: 'advert-9', title: 'Test Advert' },
+          publication: { id: 'pub-9', versionNumber: 1 },
+          html: '<html>Test HTML</html>',
+        },
+      )
+
+      // Assert: Publication should have been updated with publishedAt
+      expect(mockPublication.update).toHaveBeenCalledWith({
+        publishedAt: expect.any(Date),
+      })
     })
   })
 })

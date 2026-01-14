@@ -95,7 +95,7 @@ export const RecallSettlementDefault = () => {
       <GridColumn span={['12/12', '6/12']}>
         <DatePickerController
           name="fields.settlementFields.dateOfDeath"
-          maxDate={undefined}
+          maxDate={new Date()}
           minDate={undefined}
           label="Dánardagur"
           required

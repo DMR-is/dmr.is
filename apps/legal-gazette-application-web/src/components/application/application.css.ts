@@ -19,11 +19,11 @@ export const sidebarStyles = style({
   },
 })
 
-export const cardDropdownStyle = style({})
+export const cardDropdownStyle = style({ marginTop: theme.spacing[1] })
 
-globalStyle(`${cardDropdownStyle} > button`, {
+globalStyle(`${cardDropdownStyle} button`, {
   fontSize: '14px',
-  padding: '8px',
+  padding: '12px',
   minHeight: '32px',
   color: theme.color.blue400,
 })

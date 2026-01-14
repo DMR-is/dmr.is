@@ -26,18 +26,16 @@ export const DivisionSignatureFields = ({
   return (
     <GridRow rowGap={[1, 2]}>
       <GridColumn span="12/12">
-        <Text variant="h4">
-          Undirritun{' '}
-          <Text fontWeight="regular" color="red600" as="span">
-            *
-          </Text>
-        </Text>
+        <Text variant="h4">Undirritun</Text>
         <Text
           variant="small"
           fontWeight={fieldErrors?.signature ? 'semiBold' : 'regular'}
           color={(fieldErrors?.signature && 'red600') || 'dark400'}
         >
-          Fylla þarf út nafn, staðsetningu eða dagsetningu undirritunar
+          Fylla þarf út nafn, staðsetningu eða dagsetningu undirritunar{' '}
+          <Text fontWeight="regular" color="red600" as="span">
+            *
+          </Text>
         </Text>
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
