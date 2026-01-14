@@ -2,7 +2,7 @@ import { useState } from 'react'
 import z from 'zod'
 
 import { ApplicationRequirementStatementEnum } from '@dmr.is/legal-gazette/schemas'
-import { Button, toast } from '@dmr.is/ui/components/island-is'
+import { toast } from '@dmr.is/ui/components/island-is'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
 import { createAdvertAndRecallBankruptcyApplicationInput } from '../../lib/inputs'
@@ -57,7 +57,13 @@ const initalState: CreateAdvertAndRecallBankruptcyApplicationBody = {
   },
 }
 
-export const CreateBankruptcyAdvertModal = () => {
+export const CreateBankruptcyAdvertModal = ({
+  isVisible,
+  setIsVisible,
+}: {
+  isVisible: boolean
+  setIsVisible: (isVisible: boolean) => void
+}) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
@@ -77,7 +83,6 @@ export const CreateBankruptcyAdvertModal = () => {
 
   const [state, setState] =
     useState<CreateAdvertAndRecallBankruptcyApplicationBody>(initalState)
-  const [isVisible, setIsVisible] = useState(false)
 
   const onSubmit = () => {
     const check =
@@ -96,15 +101,8 @@ export const CreateBankruptcyAdvertModal = () => {
     mutate(state)
   }
 
-  const disclosure = (
-    <Button variant="utility" size="small" icon="add" iconType="outline">
-      Innköllun þrotabús
-    </Button>
-  )
-
   return (
     <Modal
-      disclosure={disclosure}
       title="Innköllun þrotabús"
       baseId="create-recall-bankruptcy-advert-modal"
       isVisible={isVisible}

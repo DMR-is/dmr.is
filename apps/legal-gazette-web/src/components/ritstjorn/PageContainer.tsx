@@ -18,9 +18,7 @@ import { useFilterContext } from '../../hooks/useFilters'
 import { StatusIdEnum } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import CaseFilters from '../CaseFilters/CaseFilters'
-import { CreateCommonAdvertModal } from '../create-advert/CreateCommonAdvertModal'
-import { CreateBankruptcyAdvertModal } from '../create-advert/CreateRecallBankruptcyAdvertModal'
-import { CreateDeceasedAdvertModal } from '../create-advert/CreateRecallDeceasedAdvertModal'
+import { CretaeAdvertMenu } from '../create-advert/CreateAdvertMenu'
 import { RitstjornHero } from '../ritstjorn/Hero'
 import AdvertsCompleted from '../Tables/AdvertsCompleted'
 import PublishingTab from '../tabs/PublishingTab'
@@ -96,11 +94,12 @@ export const PageContainer = ({ advertCount }: Props) => {
             <Stack space={[0]}>
               <Inline space={2} justifyContent={'spaceBetween'}>
                 <CaseFilters />
-                <Inline space={[1, 2]}>
+                <CretaeAdvertMenu />
+                {/* <Inline space={[1, 2]}>
                   <CreateCommonAdvertModal />
                   <CreateBankruptcyAdvertModal />
                   <CreateDeceasedAdvertModal />
-                </Inline>
+                </Inline> */}
               </Inline>
               <Tabs
                 label=""

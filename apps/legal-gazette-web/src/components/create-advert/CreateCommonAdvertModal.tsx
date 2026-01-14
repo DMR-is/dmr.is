@@ -4,7 +4,6 @@ import { useState } from 'react'
 import z from 'zod'
 
 import {
-  Button,
   GridColumn,
   GridContainer,
   GridRow,
@@ -54,7 +53,13 @@ const initalState: CreateAdvertAndCommonApplicationBody = {
   },
 }
 
-export const CreateCommonAdvertModal = () => {
+export const CreateCommonAdvertModal = ({
+  isVisible,
+  setIsVisible,
+}: {
+  isVisible: boolean
+  setIsVisible: (isVisible: boolean) => void
+}) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
@@ -72,7 +77,6 @@ export const CreateCommonAdvertModal = () => {
     }),
   )
 
-  const [isVisible, setIsVisible] = useState(false)
   const [state, setState] =
     useState<CreateAdvertAndCommonApplicationBody>(initalState)
 
@@ -92,21 +96,8 @@ export const CreateCommonAdvertModal = () => {
     mutate(state)
   }
 
-  const disclosure = (
-    <Button
-      variant="utility"
-      size="small"
-      icon="add"
-      iconType="outline"
-      onClick={() => setIsVisible(true)}
-    >
-      Almenn auglýsing
-    </Button>
-  )
-
   return (
     <Modal
-      disclosure={disclosure}
       baseId="create-advert-and-common-application-modal"
       onVisibilityChange={setIsVisible}
       isVisible={isVisible}
