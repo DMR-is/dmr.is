@@ -1,5 +1,3 @@
-'use client'
-
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Select } from '@dmr.is/ui/components/island-is'
 

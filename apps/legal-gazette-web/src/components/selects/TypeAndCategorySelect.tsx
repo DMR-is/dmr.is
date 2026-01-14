@@ -15,22 +15,28 @@ type Props = {
 
 export const TypeAndCategorySelect = ({
   typeId,
-  types,
   onUpdateType,
   categoryId,
-  categories,
   onUpdateCategory,
 }: Props) => {
   return (
     <>
       <GridColumn span={['12/12', '6/12']}>
-        <TypeSelect types={types} selectedId={typeId} onSelect={onUpdateType} />
+        <TypeSelect
+          selectedId={typeId}
+          onSelect={(type) => {
+            if (!type) return
+            return onUpdateType(type.id)
+          }}
+        />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
         <CategorySelect
-          categories={categories}
           selectedId={categoryId}
-          onSelect={onUpdateCategory}
+          onSelect={(category) => {
+            if (!category) return
+            return onUpdateCategory(category.id)
+          }}
         />
       </GridColumn>
     </>

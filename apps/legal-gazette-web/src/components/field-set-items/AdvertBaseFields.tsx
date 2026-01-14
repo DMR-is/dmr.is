@@ -24,8 +24,6 @@ type Props = {
 export const AdvertBaseFields = ({
   id,
   canEdit = false,
-  types,
-  categories,
   typeId,
   categoryId,
   title,
@@ -45,17 +43,15 @@ export const AdvertBaseFields = ({
         <GridColumn span={['12/12', '6/12']}>
           <TypeSelect
             disabled={!canEdit}
-            types={types.map((t) => t)}
             selectedId={typeId}
-            onSelect={(id) => updateType(id ?? '')}
+            onSelect={(type) => updateType(type?.id ?? '')}
           />
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <CategorySelect
             disabled={!canEdit}
             selectedId={categoryId}
-            onSelect={(id) => updateCategory(id ?? '')}
-            categories={categories}
+            onSelect={(category) => updateCategory(category?.id ?? '')}
             isLoading={isUpdatingAdvert}
           />
         </GridColumn>
