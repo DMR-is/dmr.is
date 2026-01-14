@@ -7,11 +7,13 @@ import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
+import {
+  CreateCommonAdvertAndApplicationDto,
+  CreateRecallBankruptcyAdvertAndApplicationDto,
+  CreateRecallDeceasedAdvertAndApplicationDto,
+} from '../../../core/dto/advert-application.dto'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import {
-  CreateAdvertAndCommonApplicationBodyDto,
-  CreateAdvertAndRecallBankruptcyApplicationBodyDto,
-  CreateAdvertAndRecallDeceasedApplicationBodyDto,
   CreateAdvertDto,
   CreateAdvertResponseDto,
 } from '../../../models/advert.model'
@@ -45,7 +47,7 @@ export class AdvertCreateController {
   @Post('/template/common')
   @LGResponse({ operationId: 'createAdvertAndCommonApplication' })
   createAdvertAndCommonApplication(
-    @Body() body: CreateAdvertAndCommonApplicationBodyDto,
+    @Body() body: CreateCommonAdvertAndApplicationDto,
     @CurrentUser() user: DMRUser,
   ): Promise<void> {
     return this.advertService.createAdvertAndCommonApplication(body, user)
@@ -54,7 +56,7 @@ export class AdvertCreateController {
   @Post('/template/recall-bankruptcy')
   @LGResponse({ operationId: 'createAdvertAndRecallBankruptcyApplication' })
   createAdvertAndRecallBankruptcyApplication(
-    @Body() body: CreateAdvertAndRecallBankruptcyApplicationBodyDto,
+    @Body() body: CreateRecallBankruptcyAdvertAndApplicationDto,
     @CurrentUser() user: DMRUser,
   ): Promise<void> {
     return this.advertService.createAdvertAndRecallBankruptcyApplication(
@@ -66,7 +68,7 @@ export class AdvertCreateController {
   @Post('/template/recall-deceased')
   @LGResponse({ operationId: 'createAdvertAndRecallDeceasedApplication' })
   createAdvertAndRecallDeceasedApplication(
-    @Body() body: CreateAdvertAndRecallDeceasedApplicationBodyDto,
+    @Body() body: CreateRecallDeceasedAdvertAndApplicationDto,
     @CurrentUser() user: DMRUser,
   ): Promise<void> {
     return this.advertService.createAdvertAndRecallDeceasedApplication(

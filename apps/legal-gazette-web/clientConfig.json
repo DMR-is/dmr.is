@@ -1072,7 +1072,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateAdvertAndCommonApplicationBodyDto"
+                "$ref": "#/components/schemas/CreateCommonAdvertAndApplicationDto"
               }
             }
           }
@@ -1134,7 +1134,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateAdvertAndRecallBankruptcyApplicationBodyDto"
+                "$ref": "#/components/schemas/CreateRecallBankruptcyAdvertAndApplicationDto"
               }
             }
           }
@@ -1196,7 +1196,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateAdvertAndRecallDeceasedApplicationBodyDto"
+                "$ref": "#/components/schemas/CreateRecallDeceasedAdvertAndApplicationDto"
               }
             }
           }
@@ -5010,6 +5010,7 @@
               "Forbidden",
               "BadRequest",
               "InternalServerError",
+              "ConnectionAcquireTimeoutError",
               "UnknownError"
             ],
             "example": [
@@ -5022,6 +5023,7 @@
               "Forbidden",
               "BadRequest",
               "InternalServerError",
+              "ConnectionAcquireTimeoutError",
               "UnknownError"
             ]
           },
@@ -5631,7 +5633,7 @@
         "properties": { "id": { "type": "string" } },
         "required": ["id"]
       },
-      "CommonAdvertAndApplicationFieldsDto": {
+      "CommonAdvertFieldsDto": {
         "type": "object",
         "properties": {
           "typeId": { "type": "string" },
@@ -5641,14 +5643,11 @@
         },
         "required": ["typeId", "categoryId", "caption", "content"]
       },
-      "CreateAdvertAndCommonApplicationBodyDto": {
+      "CreateCommonAdvertAndApplicationDto": {
         "type": "object",
         "properties": {
           "applicantNationalId": { "type": "string" },
           "additionalText": { "type": "string" },
-          "fields": {
-            "$ref": "#/components/schemas/CommonAdvertAndApplicationFieldsDto"
-          },
           "signature": { "$ref": "#/components/schemas/CreateSignatureDto" },
           "communicationChannels": {
             "type": "array",
@@ -5656,25 +5655,120 @@
               "$ref": "#/components/schemas/CreateCommunicationChannelDto"
             }
           },
-          "publishingDates": { "type": "array", "items": { "type": "string" } }
+          "publishingDates": { "type": "array", "items": { "type": "string" } },
+          "fields": { "$ref": "#/components/schemas/CommonAdvertFieldsDto" }
         },
         "required": [
           "applicantNationalId",
-          "fields",
           "signature",
           "communicationChannels",
-          "publishingDates"
+          "publishingDates",
+          "fields"
         ]
       },
-      "CreateAdvertAndRecallBankruptcyApplicationBodyDto": {
+      "RecallBankruptcyFieldsDto": {
         "type": "object",
-        "properties": { "applicantNationalId": { "type": "string" } },
-        "required": ["applicantNationalId"]
+        "properties": {
+          "meetingDate": { "type": "string" },
+          "meetingLocation": { "type": "string" },
+          "courtDistrictId": { "type": "string" },
+          "judgmentDate": { "type": "string" },
+          "settlementNationalId": { "type": "string" },
+          "settlementName": { "type": "string" },
+          "settlementAddress": { "type": "string" },
+          "settlementDate": { "type": "string" },
+          "liquidatorName": { "type": "string" },
+          "liquidatorLocation": { "type": "string" },
+          "requirementStatement": {
+            "type": "string",
+            "enum": [
+              "LIQUIDATOR_LOCATION",
+              "CUSTOM_LIQUIDATOR_LOCATION",
+              "CUSTOM_LIQUIDATOR_EMAIL"
+            ]
+          },
+          "requirementStatementLocation": { "type": "string" }
+        },
+        "required": [
+          "meetingDate",
+          "meetingLocation",
+          "courtDistrictId",
+          "judgmentDate",
+          "settlementNationalId",
+          "settlementName",
+          "settlementAddress",
+          "settlementDate",
+          "liquidatorName",
+          "liquidatorLocation",
+          "requirementStatement",
+          "requirementStatementLocation"
+        ]
       },
-      "CreateAdvertAndRecallDeceasedApplicationBodyDto": {
+      "CreateRecallBankruptcyAdvertAndApplicationDto": {
         "type": "object",
-        "properties": { "applicantNationalId": { "type": "string" } },
-        "required": ["applicantNationalId"]
+        "properties": {
+          "applicantNationalId": { "type": "string" },
+          "additionalText": { "type": "string" },
+          "signature": { "$ref": "#/components/schemas/CreateSignatureDto" },
+          "communicationChannels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
+          },
+          "publishingDates": { "type": "array", "items": { "type": "string" } },
+          "fields": { "$ref": "#/components/schemas/RecallBankruptcyFieldsDto" }
+        },
+        "required": [
+          "applicantNationalId",
+          "signature",
+          "communicationChannels",
+          "publishingDates",
+          "fields"
+        ]
+      },
+      "RecallDeceasedFieldsDto": {
+        "type": "object",
+        "properties": {
+          "meetingDate": { "type": "string" },
+          "meetingLocation": { "type": "string" },
+          "courtDistrictId": { "type": "string" },
+          "judgmentDate": { "type": "string" },
+          "settlementNationalId": { "type": "string" },
+          "settlementName": { "type": "string" },
+          "settlementAddress": { "type": "string" },
+          "settlementDate": { "type": "string" },
+          "liquidatorName": { "type": "string" },
+          "liquidatorLocation": { "type": "string" },
+          "requirementStatement": {
+            "type": "string",
+            "enum": [
+              "LIQUIDATOR_LOCATION",
+              "CUSTOM_LIQUIDATOR_LOCATION",
+              "CUSTOM_LIQUIDATOR_EMAIL"
+            ]
+          },
+          "requirementStatementLocation": { "type": "string" }
+        },
+        "required": [
+          "courtDistrictId",
+          "judgmentDate",
+          "settlementNationalId",
+          "settlementName",
+          "settlementAddress",
+          "settlementDate",
+          "liquidatorName",
+          "liquidatorLocation",
+          "requirementStatement",
+          "requirementStatementLocation"
+        ]
+      },
+      "CreateRecallDeceasedAdvertAndApplicationDto": {
+        "type": "object",
+        "properties": {
+          "fields": { "$ref": "#/components/schemas/RecallDeceasedFieldsDto" }
+        },
+        "required": ["fields"]
       },
       "IssueDto": {
         "type": "object",

@@ -78,12 +78,16 @@ export const CreateAdvertCourtDistrict = ({ onChange }: Props) => {
             backgroundColor="blue"
             label="Úrskurðadagur"
             placeholderText={undefined}
-            handleChange={(date) =>
+            handleChange={(date) => {
               setState((prev) => ({
                 ...prev,
                 judgmentDate: date.toISOString(),
               }))
-            }
+              onChange({
+                ...state,
+                judgmentDate: date.toISOString(),
+              })
+            }}
           />
         </GridColumn>
       </GridRow>

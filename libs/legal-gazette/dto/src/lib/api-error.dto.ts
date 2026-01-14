@@ -10,6 +10,7 @@ export enum ApiErrorName {
   Forbidden = 'Forbidden',
   BadRequest = 'BadRequest',
   InternalServerError = 'InternalServerError',
+  ConnectionAcquireTimeoutError = 'ConnectionAcquireTimeoutError',
   UnknownError = 'UnknownError',
 }
 

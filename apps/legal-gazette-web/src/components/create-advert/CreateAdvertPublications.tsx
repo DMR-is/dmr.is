@@ -42,6 +42,13 @@ export const CreateAdvertPublications = ({ onChange }: Props) => {
                   placeholderText=""
                   size="sm"
                   backgroundColor="blue"
+                  handleChange={(date) => {
+                    const updatedPubs = publications.map((pub, i) =>
+                      i === index ? date.toISOString() : pub,
+                    )
+                    setPublications(updatedPubs)
+                    handleChange(updatedPubs)
+                  }}
                 />
                 <Button
                   disabled={!canRemove}

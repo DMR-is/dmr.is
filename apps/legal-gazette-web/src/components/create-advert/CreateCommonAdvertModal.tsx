@@ -8,7 +8,6 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
-  Inline,
   Input,
   Text,
   toast,
@@ -24,6 +23,7 @@ import { CreateAdvertApplicant } from './CreateAdvertApplicant'
 import { CreateAdvertCommunicationChannel } from './CreateAdvertCommunicationChannel'
 import { CreateAdvertPublications } from './CreateAdvertPublications'
 import { CreateAdvertSignature } from './CreateAdvertSignature'
+import { SubmitCreateAdvert } from './SubmitCreateAdvert'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -215,17 +215,7 @@ export const CreateCommonAdvertModal = () => {
           }))
         }
       />
-      <GridContainer>
-        <GridRow>
-          <GridColumn span="12/12">
-            <Inline align="right">
-              <Button loading={isPending} onClick={onSubmit}>
-                Búa til auglýsingu
-              </Button>
-            </Inline>
-          </GridColumn>
-        </GridRow>
-      </GridContainer>
+      <SubmitCreateAdvert onSubmit={onSubmit} isPending={isPending} />
     </Modal>
   )
 }

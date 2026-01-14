@@ -1,5 +1,5 @@
 import Kennitala from 'kennitala'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import z from 'zod'
 
 import {
@@ -21,10 +21,8 @@ import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useMutation } from '@tanstack/react-query'
 
-type Props = {}
-
 const schema = settlementSchemaRefined.extend({
-  deadline: z.iso.datetime(),
+  deadlineDate: z.iso.datetime(),
 })
 
 export const requirementsStatementOptions = [
@@ -50,16 +48,22 @@ const initalState: Settlement = {
   liquidatorName: '',
   name: '',
   nationalId: '',
-  deadline: '',
+  deadlineDate: '',
   recallRequirementStatementLocation: '',
   recallRequirementStatementType:
     ApplicationRequirementStatementEnum.LIQUIDATORLOCATION,
 }
 
-export const CreateAdvertSettlement = () => {
+type Props = {
+  onChange?: (data: Settlement) => void
+}
+
+export const CreateAdvertSettlement = ({ onChange }: Props) => {
   const trpc = useTRPC()
 
-  const { mutate } = useMutation(trpc.getPersonByNationalId.mutationOptions({}))
+  const { mutate, isPending } = useMutation(
+    trpc.getPersonByNationalId.mutationOptions({}),
+  )
 
   const [state, setState] = useState(initalState)
 
@@ -91,6 +95,10 @@ export const CreateAdvertSettlement = () => {
     }
   }
 
+  useEffect(() => {
+    onChange?.(state)
+  }, [state])
+
   return (
     <GridContainer>
       <GridRow rowGap={[2, 3]}>
@@ -99,6 +107,7 @@ export const CreateAdvertSettlement = () => {
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <Input
+            loading={isPending}
             size="sm"
             backgroundColor="blue"
             name="settlement.nationalId"
@@ -117,7 +126,7 @@ export const CreateAdvertSettlement = () => {
             handleChange={(date) =>
               setState((prev) => ({
                 ...prev,
-                deadline: date.toISOString(),
+                deadlineDate: date.toISOString(),
               }))
             }
           />
@@ -128,6 +137,7 @@ export const CreateAdvertSettlement = () => {
             backgroundColor="blue"
             name="settlement.name"
             label="Nafn bús"
+            value={state.name}
             onChange={(e) =>
               setState((prev) => ({
                 ...prev,
@@ -142,6 +152,7 @@ export const CreateAdvertSettlement = () => {
             backgroundColor="blue"
             name="settlement.address"
             label="Heimilisfang bús"
+            value={state.address}
             onChange={(e) =>
               setState((prev) => ({
                 ...prev,
