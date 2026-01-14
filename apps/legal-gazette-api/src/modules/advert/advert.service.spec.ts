@@ -57,7 +57,9 @@ const createMockAdvert = (overrides: Partial<MockAdvert> = {}): MockAdvert => {
   return advert
 }
 
-const createMockUpdateDto = (overrides: Partial<UpdateAdvertDto> = {}): UpdateAdvertDto => ({
+const createMockUpdateDto = (
+  overrides: Partial<UpdateAdvertDto> = {},
+): UpdateAdvertDto => ({
   title: 'Updated Title',
   content: '<p>Updated content</p>',
   ...overrides,
@@ -117,7 +119,9 @@ describe('AdvertService', () => {
         {
           provide: ILGNationalRegistryService,
           useValue: {
-            getEntityNameByNationalId: jest.fn().mockResolvedValue('Test Entity'),
+            getEntityNameByNationalId: jest
+              .fn()
+              .mockResolvedValue('Test Entity'),
           },
         },
         {
@@ -191,14 +195,16 @@ describe('AdvertService', () => {
           title: 'Original Title',
         })
         advertModel.withScope.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(publishedAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(publishedAdvert)
 
         const updateDto = createMockUpdateDto({ title: 'New Title' })
 
         // Act & Assert: Should throw BadRequestException
-        await expect(service.updateAdvert('advert-123', updateDto)).rejects.toThrow(
-          'Cannot modify published adverts',
-        )
+        await expect(
+          service.updateAdvert('advert-123', updateDto),
+        ).rejects.toThrow('Cannot modify published adverts')
 
         // Verify update was NOT called
         expect(publishedAdvert.update).not.toHaveBeenCalled()
@@ -211,14 +217,18 @@ describe('AdvertService', () => {
           content: '<p>Original content</p>',
         })
         advertModel.withScope.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(publishedAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(publishedAdvert)
 
-        const updateDto = createMockUpdateDto({ content: '<p>Modified content</p>' })
+        const updateDto = createMockUpdateDto({
+          content: '<p>Modified content</p>',
+        })
 
         // Act & Assert
-        await expect(service.updateAdvert('advert-123', updateDto)).rejects.toThrow(
-          'Cannot modify published adverts',
-        )
+        await expect(
+          service.updateAdvert('advert-123', updateDto),
+        ).rejects.toThrow('Cannot modify published adverts')
 
         expect(publishedAdvert.update).not.toHaveBeenCalled()
       })
@@ -230,14 +240,16 @@ describe('AdvertService', () => {
           categoryId: 'original-category',
         })
         advertModel.withScope.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(publishedAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(publishedAdvert)
 
         const updateDto = createMockUpdateDto({ categoryId: 'new-category' })
 
         // Act & Assert
-        await expect(service.updateAdvert('advert-123', updateDto)).rejects.toThrow(
-          'Cannot modify published adverts',
-        )
+        await expect(
+          service.updateAdvert('advert-123', updateDto),
+        ).rejects.toThrow('Cannot modify published adverts')
 
         expect(publishedAdvert.update).not.toHaveBeenCalled()
       })
@@ -249,14 +261,16 @@ describe('AdvertService', () => {
           typeId: 'original-type',
         })
         advertModel.withScope.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(publishedAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(publishedAdvert)
 
         const updateDto = createMockUpdateDto({ typeId: 'new-type' })
 
         // Act & Assert
-        await expect(service.updateAdvert('advert-123', updateDto)).rejects.toThrow(
-          'Cannot modify published adverts',
-        )
+        await expect(
+          service.updateAdvert('advert-123', updateDto),
+        ).rejects.toThrow('Cannot modify published adverts')
 
         expect(publishedAdvert.update).not.toHaveBeenCalled()
         expect(typeCategoriesService.findByTypeId).not.toHaveBeenCalled()
@@ -268,7 +282,9 @@ describe('AdvertService', () => {
           statusId: StatusIdEnum.PUBLISHED,
         })
         advertModel.withScope.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(publishedAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(publishedAdvert)
 
         const updateDto = createMockUpdateDto()
 
@@ -290,14 +306,16 @@ describe('AdvertService', () => {
           statusId: StatusIdEnum.REJECTED,
         })
         advertModel.withScope.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(rejectedAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(rejectedAdvert)
 
         const updateDto = createMockUpdateDto()
 
         // Act & Assert
-        await expect(service.updateAdvert('advert-123', updateDto)).rejects.toThrow(
-          'Cannot modify published adverts',
-        )
+        await expect(
+          service.updateAdvert('advert-123', updateDto),
+        ).rejects.toThrow('Cannot modify published adverts')
       })
     })
 
@@ -308,14 +326,16 @@ describe('AdvertService', () => {
           statusId: StatusIdEnum.WITHDRAWN,
         })
         advertModel.withScope.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(withdrawnAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(withdrawnAdvert)
 
         const updateDto = createMockUpdateDto()
 
         // Act & Assert
-        await expect(service.updateAdvert('advert-123', updateDto)).rejects.toThrow(
-          'Cannot modify published adverts',
-        )
+        await expect(
+          service.updateAdvert('advert-123', updateDto),
+        ).rejects.toThrow('Cannot modify published adverts')
       })
     })
 
@@ -327,7 +347,9 @@ describe('AdvertService', () => {
           title: 'Original Title',
         })
         advertModel.withScope.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(submittedAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(submittedAdvert)
 
         const updateDto = createMockUpdateDto({ title: 'Updated Title' })
 
@@ -349,7 +371,9 @@ describe('AdvertService', () => {
           statusId: StatusIdEnum.IN_PROGRESS,
         })
         advertModel.withScope.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(inProgressAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(inProgressAdvert)
 
         const updateDto = createMockUpdateDto({ title: 'Updated Title' })
 
@@ -369,7 +393,9 @@ describe('AdvertService', () => {
         advertModel.withScope.mockReturnThis()
         advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(readyAdvert)
 
-        const updateDto = createMockUpdateDto({ content: '<p>Updated content</p>' })
+        const updateDto = createMockUpdateDto({
+          content: '<p>Updated content</p>',
+        })
 
         // Act
         const result = await service.updateAdvert('advert-123', updateDto)
@@ -390,7 +416,9 @@ describe('AdvertService', () => {
           statusId: StatusIdEnum.SUBMITTED,
         })
         advertModel.withScope.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(editableAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(editableAdvert)
       })
 
       it('should update typeId and fetch corresponding category', async () => {
@@ -401,7 +429,13 @@ describe('AdvertService', () => {
             id: 'new-type-id',
             title: 'Test Type',
             slug: 'test-type',
-            categories: [{ id: 'derived-category-id', title: 'Test Category', slug: 'test-cat' }],
+            categories: [
+              {
+                id: 'derived-category-id',
+                title: 'Test Category',
+                slug: 'test-cat',
+              },
+            ],
           },
         })
 
@@ -409,7 +443,9 @@ describe('AdvertService', () => {
         await service.updateAdvert('advert-123', updateDto)
 
         // Assert
-        expect(typeCategoriesService.findByTypeId).toHaveBeenCalledWith('new-type-id')
+        expect(typeCategoriesService.findByTypeId).toHaveBeenCalledWith(
+          'new-type-id',
+        )
       })
 
       it('should update caption when provided', async () => {
