@@ -17,7 +17,7 @@ import { IPriceCalculatorService } from '../../calculator/price-calculator.servi
 import { PgAdvisoryLockService } from '../lock.service'
 import { IPaymentTaskService } from './payment.task.interface'
 
-const LOGGING_CONTEXT = 'PaymentService'
+const LOGGING_CONTEXT = 'PaymentTaskService'
 
 @Injectable()
 export class PaymentTaskService implements IPaymentTaskService {
