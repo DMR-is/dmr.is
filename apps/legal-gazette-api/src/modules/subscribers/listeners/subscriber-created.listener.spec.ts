@@ -653,7 +653,9 @@ describe('SubscriberCreatedListener', () => {
 
         const event = createMockEvent()
 
-        await expect(listener.createSubscriptionPayment(event)).rejects.toThrow()
+        await expect(
+          listener.createSubscriptionPayment(event),
+        ).rejects.toThrow()
 
         // Subscriber should NOT be updated when TBR fails
         expect(subscriberModel.update).not.toHaveBeenCalled()
@@ -689,4 +691,3 @@ describe('SubscriberCreatedListener', () => {
     })
   })
 })
-

@@ -62,7 +62,7 @@ For each issue, we will:
 |----|-------|----------|--------|--------|
 | H-12 | PDF Generation Failure Without Retry | `advert-published.listener.ts` | Missing PDFs | ✅ Complete |
 | H-13 | TBR Payment Creation Without Failure Recovery | `advert-published.listener.ts` | Lost payments | ✅ Complete |
-| H-14 | Missing Payment Status Polling | `advert-payment.task.ts` | Stale payment status | ✅ Complete |
+| H-14 | Missing Payment Status Polling | `payment.task.ts` | Stale payment status | ✅ Complete |
 | H-15 | External API Calls Lack Request Timeouts | External services | Hanging requests | ✅ Complete |
 | H-16 | National Registry Token Never Refreshed | `national-registry.service.ts` | Auth failures | 🟡 Partially Complete |
 
@@ -1963,18 +1963,18 @@ The retry logic works seamlessly with the C-5 fix:
 
 **Status:** ✅ Completed (Jan 9, 2026)
 
-**Problem:** The planning document indicated "Missing Payment Status Polling" but this was incorrect - the implementation already existed at [advert-payment.task.ts](apps/legal-gazette-api/src/modules/advert/tasks/payment/advert-payment.task.ts:1-169). The real issue was **missing test coverage** for this critical functionality.
+**Problem:** The planning document indicated "Missing Payment Status Polling" but this was incorrect - the implementation already existed at [payment.task.ts](apps/legal-gazette-api/src/modules/advert/tasks/payment/payment.task.ts:1-169). The real issue was **missing test coverage** for this critical functionality.
 
 **Solution:** Added comprehensive test coverage for the existing payment polling implementation.
 
 **Files Changed:**
-- Created: `apps/legal-gazette-api/src/modules/advert/tasks/payment/advert-payment.task.spec.ts` (15 tests)
+- Created: `apps/legal-gazette-api/src/modules/advert/tasks/payment/payment.task.spec.ts` (15 tests)
 
 **Existing Implementation Details:**
 ```typescript
-// apps/legal-gazette-api/src/modules/advert/tasks/payment/advert-payment.task.ts
+// apps/legal-gazette-api/src/modules/advert/tasks/payment/payment.task.ts
 @Injectable()
-export class AdvertPaymentTaskService {
+export class PaymentTaskService {
   @Cron('*/15 * * * *') // Every 15 minutes
   async run() {
     // Uses distributed lock to prevent duplicate runs across containers

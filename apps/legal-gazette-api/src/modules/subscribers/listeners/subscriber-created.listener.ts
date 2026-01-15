@@ -21,8 +21,7 @@ import { SubscriberCreatedEvent } from '../events/subscriber-created.event'
 
 const logger = getLogger('SubscriberCreatedListener')
 
-const SUBSCRIPTION_FEE_CODE =
-  process.env.LG_SUBSCRIPTION_FEE_CODE || 'RL401'
+const SUBSCRIPTION_FEE_CODE = process.env.LG_SUBSCRIPTION_FEE_CODE || 'RL401'
 const SUBSCRIPTION_AMOUNT = parseInt(
   process.env.LG_SUBSCRIPTION_AMOUNT || '4500',
   10,
@@ -43,11 +42,15 @@ export class SubscriberCreatedListener {
     private readonly sequelize: Sequelize,
   ) {
     if (!process.env.LG_TBR_CHARGE_CATEGORY_PERSON) {
-      throw new Error('LG_TBR_CHARGE_CATEGORY_PERSON environment variable is required')
+      throw new Error(
+        'LG_TBR_CHARGE_CATEGORY_PERSON environment variable is required',
+      )
     }
 
     if (!process.env.LG_TBR_CHARGE_CATEGORY_COMPANY) {
-      throw new Error('LG_TBR_CHARGE_CATEGORY_COMPANY environment variable is required')
+      throw new Error(
+        'LG_TBR_CHARGE_CATEGORY_COMPANY environment variable is required',
+      )
     }
   }
 
@@ -89,51 +92,53 @@ export class SubscriberCreatedListener {
     // but subsequent database operations fail (prevents orphaned TBR claims)
     let transactionRecord: TBRTransactionModel
     try {
-      transactionRecord = await this.sequelize.transaction(async (transaction) => {
-        // Mark any existing current transactions as not current
-        await this.subscriberTransactionModel.update(
-          { isCurrent: false },
-          {
-            where: { subscriberId: subscriber.id, isCurrent: true },
-            transaction,
-          },
-        )
+      transactionRecord = await this.sequelize.transaction(
+        async (transaction) => {
+          // Mark any existing current transactions as not current
+          await this.subscriberTransactionModel.update(
+            { isCurrent: false },
+            {
+              where: { subscriberId: subscriber.id, isCurrent: true },
+              transaction,
+            },
+          )
 
-        // Create the TBR transaction record
-        const tbrTransaction = await this.tbrTransactionModel.create(
-          {
-            transactionType: TBRTransactionType.SUBSCRIPTION,
-            feeCodeId: feeCode.id,
-            feeCodeMultiplier: 1,
-            totalPrice: SUBSCRIPTION_AMOUNT,
-            chargeBase,
-            chargeCategory,
-            debtorNationalId: subscriber.nationalId,
-            status: TBRTransactionStatus.PENDING,
-          },
-          { transaction },
-        )
+          // Create the TBR transaction record
+          const tbrTransaction = await this.tbrTransactionModel.create(
+            {
+              transactionType: TBRTransactionType.SUBSCRIPTION,
+              feeCodeId: feeCode.id,
+              feeCodeMultiplier: 1,
+              totalPrice: SUBSCRIPTION_AMOUNT,
+              chargeBase,
+              chargeCategory,
+              debtorNationalId: subscriber.nationalId,
+              status: TBRTransactionStatus.PENDING,
+            },
+            { transaction },
+          )
 
-        // Create the subscriber-transaction junction record
-        await this.subscriberTransactionModel.create(
-          {
-            subscriberId: subscriber.id,
-            transactionId: tbrTransaction.id,
-            activatedByNationalId: actorNationalId,
-            isCurrent: true,
-          },
-          { transaction },
-        )
+          // Create the subscriber-transaction junction record
+          await this.subscriberTransactionModel.create(
+            {
+              subscriberId: subscriber.id,
+              transactionId: tbrTransaction.id,
+              activatedByNationalId: actorNationalId,
+              isCurrent: true,
+            },
+            { transaction },
+          )
 
-        return tbrTransaction
-      })
+          return tbrTransaction
+        },
+      )
 
-      logger.info('Created PENDING transaction record before TBR call', {
+      logger.info('Created INIT transaction record before TBR call', {
         transactionId: transactionRecord.id,
         subscriberId: subscriber.id,
       })
     } catch (error) {
-      logger.error('Failed to create PENDING transaction record', {
+      logger.error('Failed to create INIT transaction record', {
         subscriberId: subscriber.id,
         error: error instanceof Error ? error.message : 'Unknown error',
       })
@@ -180,11 +185,14 @@ export class SubscriberCreatedListener {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error'
 
-      logger.error('TBR payment request failed, marking transaction as FAILED', {
-        subscriberId: subscriber.id,
-        transactionId: transactionRecord.id,
-        error: errorMessage,
-      })
+      logger.error(
+        'TBR payment request failed, marking transaction as FAILED',
+        {
+          subscriberId: subscriber.id,
+          transactionId: transactionRecord.id,
+          error: errorMessage,
+        },
+      )
 
       try {
         await this.sequelize.transaction(async (transaction) => {
@@ -213,7 +221,6 @@ export class SubscriberCreatedListener {
     // Step 3: Activate subscriber (only after TBR success and payment confirmed)
     try {
       await this.sequelize.transaction(async (transaction) => {
-
         // Fetch current subscriber to check if subscribedFrom already exists
         const existingSubscriber = await this.subscriberModel.findByPk(
           subscriber.id,

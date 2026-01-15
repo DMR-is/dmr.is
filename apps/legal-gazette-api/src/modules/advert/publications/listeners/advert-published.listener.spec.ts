@@ -83,6 +83,12 @@ describe('AdvertPublishedListener', () => {
   beforeEach(async () => {
     jest.clearAllMocks()
 
+    // Mock setTimeout globally to execute immediately for all tests (speeds up retry logic)
+    jest.spyOn(global, 'setTimeout').mockImplementation((callback) => {
+      ;(callback as () => void)()
+      return {} as NodeJS.Timeout
+    })
+
     // Default mock TBR transaction record with update method for C-5 pattern
     const defaultMockTransactionRecord = {
       id: 'transaction-default',
@@ -169,6 +175,10 @@ describe('AdvertPublishedListener', () => {
     priceCalculatorService = module.get(IPriceCalculatorService)
   })
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   // ==========================================
   // Basic TBR Transaction Tests
   // ==========================================
@@ -220,20 +230,8 @@ describe('AdvertPublishedListener', () => {
   // Orphaned TBR Claims Prevention (C-5)
   // ==========================================
   describe('Orphaned TBR Claims Prevention (C-5)', () => {
-    beforeEach(() => {
-      // Mock setTimeout to execute immediately for fast testing (needed for retry logic)
-      jest.spyOn(global, 'setTimeout').mockImplementation((callback) => {
-        ;(callback as () => void)()
-        return {} as NodeJS.Timeout
-      })
-    })
-
-    afterEach(() => {
-      jest.restoreAllMocks()
-    })
-
     describe('transaction record creation order', () => {
-      it('should create PENDING transaction record BEFORE calling TBR API', async () => {
+      it('should create INIT transaction record BEFORE calling TBR API', async () => {
         const callOrder: string[] = []
 
         tbrTransactionModel.create.mockImplementation(async () => {
@@ -314,8 +312,8 @@ describe('AdvertPublishedListener', () => {
       })
     })
 
-    describe('PENDING record creation failure', () => {
-      it('should NOT call TBR if PENDING record creation fails', async () => {
+    describe('INIT record creation failure', () => {
+      it('should NOT call TBR if INIT record creation fails', async () => {
         tbrTransactionModel.create.mockRejectedValue(
           new Error('Database connection lost'),
         )
@@ -326,7 +324,7 @@ describe('AdvertPublishedListener', () => {
           'Database connection lost',
         )
 
-        // TBR should NOT be called if we can't create the PENDING record
+        // TBR should NOT be called if we can't create the INIT record
         expect(tbrService.postPayment).not.toHaveBeenCalled()
       })
     })
@@ -344,16 +342,6 @@ describe('AdvertPublishedListener', () => {
       pdfService = listener['pdfService'] as jest.Mocked<PdfService>
       sesService = listener['sesService'] as jest.Mocked<IAWSService>
       logger = listener['logger']
-
-      // Mock setTimeout to execute immediately for fast testing (needed for retry logic)
-      jest.spyOn(global, 'setTimeout').mockImplementation((callback) => {
-        ;(callback as () => void)()
-        return {} as NodeJS.Timeout
-      })
-    })
-
-    afterEach(() => {
-      jest.restoreAllMocks()
     })
 
     describe('PDF generation failures', () => {
@@ -536,16 +524,6 @@ describe('AdvertPublishedListener', () => {
       pdfService = listener['pdfService'] as jest.Mocked<PdfService>
       logger = listener['logger']
       jest.clearAllMocks()
-
-      // Mock setTimeout to execute immediately for fast testing
-      jest.spyOn(global, 'setTimeout').mockImplementation((callback) => {
-        ;(callback as () => void)()
-        return {} as NodeJS.Timeout
-      })
-    })
-
-    afterEach(() => {
-      jest.restoreAllMocks()
     })
 
     it('should retry PDF generation on transient failure', async () => {

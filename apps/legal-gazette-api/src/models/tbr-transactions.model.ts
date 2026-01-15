@@ -3,7 +3,6 @@ import {
   Column,
   DataType,
   ForeignKey,
-  HasMany,
 } from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'

@@ -7,21 +7,32 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { TASK_JOB_IDS } from '../../../../core/constants'
-import { TBRTransactionModel, TBRTransactionStatus } from '../../../../models/tbr-transactions.model'
+import { AdvertModel } from '../../../../models/advert.model'
+import {
+  TBRTransactionModel,
+  TBRTransactionStatus,
+} from '../../../../models/tbr-transactions.model'
 import { ITBRService } from '../../../tbr/tbr.service.interface'
+import { IPriceCalculatorService } from '../../calculator/price-calculator.service.interface'
 import { PgAdvisoryLockService } from '../lock.service'
-import { IAdvertPaymentTaskService } from './advert-payment.task.interface'
+import { IPaymentTaskService } from './payment.task.interface'
 
-const LOGGING_CONTEXT = 'AdvertPaymentService'
+const LOGGING_CONTEXT = 'PaymentTaskService'
 
 @Injectable()
-export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
+export class PaymentTaskService implements IPaymentTaskService {
   private readonly chunkSize: number = 25
+  private readonly chunkDelayMs: number = 1000
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(ITBRService) private readonly tbrService: ITBRService,
+    @Inject(IPriceCalculatorService)
+    private readonly priceCalculatorService: IPriceCalculatorService,
+
     @InjectModel(TBRTransactionModel)
     private readonly tbrTransactionModel: typeof TBRTransactionModel,
+    @InjectModel(AdvertModel)
+    private readonly advertModel: typeof AdvertModel,
     private readonly lock: PgAdvisoryLockService,
   ) {
     const tbrChunk = process.env.TBR_CHUNK_SIZE
@@ -31,10 +42,18 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
     if (!Number.isNaN(tbrChunk)) {
       this.chunkSize = tbrChunk
     }
+
+    const tbrChunkDelay = process.env.TBR_CHUNK_DELAY_MS
+      ? parseInt(process.env.TBR_CHUNK_DELAY_MS, 10)
+      : 1000
+
+    if (!Number.isNaN(tbrChunkDelay)) {
+      this.chunkDelayMs = tbrChunkDelay
+    }
   }
 
   @Cron('*/15 * * * *', {
-    name: 'payment-job',
+    name: 'update-payment-job',
   })
   async run() {
     // Use distributed lock with 10-minute cooldown (cron runs every 15 min)
@@ -42,7 +61,7 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
     const { ran, reason } = await this.lock.runWithDistributedLock(
       TASK_JOB_IDS.payment,
       async () => {
-        await this.updateTBRPayments()
+        await this.updateCreatedTBRPayments()
       },
       {
         cooldownMs: 10 * 60 * 1000, // 10 minutes
@@ -57,19 +76,18 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
     }
   }
 
-  async updateTBRPayments() {
+  async updateCreatedTBRPayments() {
     const now = new Date()
-    this.logger.info('Starting TBR payment status update job', {
-      timestamp: now.toISOString(),
-      context: LOGGING_CONTEXT,
-    })
+    this.logger.info(
+      'Starting TBR payment status update job for created payments',
+      {
+        timestamp: now.toISOString(),
+        context: LOGGING_CONTEXT,
+      },
+    )
 
     const pendingTransactions = await this.tbrTransactionModel.findAll({
       where: {
-        transactionType: 'ADVERT',
-        chargeCategory: {
-          [Op.eq]: process.env.LG_TBR_CHARGE_CATEGORY_PERSON,
-        },
         paidAt: {
           [Op.eq]: null,
         },
@@ -150,8 +168,8 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
           context: LOGGING_CONTEXT,
         })
       } finally {
-        // wait a second before processing the next chunk
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        // wait before processing the next chunk to avoid overwhelming TBR service
+        await new Promise((resolve) => setTimeout(resolve, this.chunkDelayMs))
       }
     }
 

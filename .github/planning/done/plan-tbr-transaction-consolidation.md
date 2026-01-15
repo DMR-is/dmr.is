@@ -134,7 +134,7 @@ Transactions accessed via `subscriber_transaction` junction table.
 - [x] `advert-published.listener.ts` - Update advert.transactionId after creating transaction
 
 ### Services
-- [x] `advert-payment.task.ts` - Updated to use debtorNationalId directly
+- [x] `payment.task.ts` - Updated to use debtorNationalId directly
 - [x] Any service using SubscriberPaymentModel - Updated
 
 ### Modules
