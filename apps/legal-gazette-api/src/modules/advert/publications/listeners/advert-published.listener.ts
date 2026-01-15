@@ -163,6 +163,9 @@ export class AdvertPublishedListener {
 
   @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED_SIDE_EFFECTS)
   async sendEmailNotification({ advert, publication }: AdvertPublishedEvent) {
+    const sendFromEmailAddress =
+      process.env.SEND_FROM_EMAIL_ADDRESS ?? 'noreply@logbirtingablad.is'
+
     this.logger.info('Sending email notification for advert', {
       advertId: advert.id,
       publicationId: publication.id,
@@ -186,9 +189,9 @@ export class AdvertPublishedListener {
     }
 
     const message = {
-      from: `Lögbirtingablaðið <noreply@logbirtingablad.is>`,
+      from: `Lögbirtingablaðið <${sendFromEmailAddress}>`,
       to: emails?.join(','),
-      replyTo: 'noreply@logbirtingablad.is',
+      replyTo: sendFromEmailAddress,
       subject: `Auglýsing ${advert.publicationNumber} - ${advert.type.title} ${advert.title} hefur verið útgefin`,
       text: `Auglýsing ${advert.publicationNumber} hefur verið útgefin`,
       html: `<h2>Auglýsing hefur verið útgefin:</h2><h3>${advert.publicationNumber} - ${advert.type.title} ${advert.title}</h3><p><a href="https://logbirtingarblad.is/${advert.id}" target="_blank">Skoða auglýsingu</a></p>`,
