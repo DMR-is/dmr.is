@@ -5,7 +5,6 @@ export enum PageRoutes {
   APPLICATION_THROTABU = '/auglysingar/innkollun-throtabus',
   APPLICATION_DANARBU = '/auglysingar/innkollun-danarbus',
   APPLICATION_COMMON = '/auglysingar/almenn-auglysing',
-  ISLAND_IS_COMMONA_APPLICATION = 'https://island.is/umsoknir/logbirtingarblad',
 }
 
 export enum DateFormats {
