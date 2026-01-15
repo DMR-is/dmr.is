@@ -175,9 +175,9 @@ module.exports = {
               node.type === 'Identifier'
                 ? node.name
                 : node.type === 'ArrayExpression' &&
-                  node.elements[0].type === 'Identifier'
-                ? node.elements[0].name
-                : null
+                    node.elements[0].type === 'Identifier'
+                  ? node.elements[0].name
+                  : null
 
             const isScalarType =
               identifierName === null ||
@@ -520,6 +520,57 @@ module.exports = {
           // If class has @AdminAccess and method has scope decorator, that's valid (OR logic)
           // If class has no auth and method has no auth, error was already reported on class
           // No additional method-level reporting needed for basic enforcement
+        },
+      }
+    },
+  },
+  'disallow-common-typos': {
+    meta: {
+      type: 'problem',
+      docs: {
+        description: 'disallow common typos in string literals',
+        category: 'Possible Errors',
+        recommended: true,
+      },
+      messages: {
+        typoFound: 'Did you mean "{{correct}}"? Found "{{incorrect}}".',
+      },
+      schema: [],
+    },
+    create: function (context) {
+      // Map of incorrect -> correct spellings
+      const typos = {
+        logbirtingarblad: 'logbirtingablad',
+        logbirtingarblað: 'logbirtingablað',
+      }
+
+      function checkForTypos(value, node) {
+        if (typeof value !== 'string') return
+
+        const lowerValue = value.toLowerCase()
+
+        for (const [incorrect, correct] of Object.entries(typos)) {
+          if (lowerValue.includes(incorrect.toLowerCase())) {
+            context.report({
+              node,
+              messageId: 'typoFound',
+              data: {
+                incorrect,
+                correct,
+              },
+            })
+          }
+        }
+      }
+
+      return {
+        Literal(node) {
+          checkForTypos(node.value, node)
+        },
+        TemplateElement(node) {
+          if (node.value?.cooked) {
+            checkForTypos(node.value.cooked, node)
+          }
         },
       }
     },

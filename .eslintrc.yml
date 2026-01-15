@@ -37,6 +37,7 @@ overrides:
       no-console:
         - error
         - allow: ['dir']
+      local-rules/disallow-common-typos: warn
   - files:
       - '*.ts'
       - '*.tsx'
