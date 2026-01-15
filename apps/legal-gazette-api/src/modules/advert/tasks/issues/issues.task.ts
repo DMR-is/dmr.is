@@ -34,10 +34,15 @@ export class IssuesTaskService implements IIssuesTask {
     private readonly lock: PgAdvisoryLockService,
   ) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_7AM, {
-    name: 'daily-pdf-generation',
-    timeZone: 'Atlantic/Reykjavik',
-  })
+  @Cron(
+    process.env.NODE_ENV === 'production'
+      ? CronExpression.EVERY_DAY_AT_7AM
+      : CronExpression.EVERY_DAY_AT_9AM,
+    {
+      name: 'daily-pdf-generation',
+      timeZone: 'Atlantic/Reykjavik',
+    },
+  )
   async run() {
     const { ran, reason } = await this.lock.runWithDistributedLock(
       TASK_JOB_IDS.issues,
