@@ -124,6 +124,7 @@ export class IssuesTaskService implements IIssuesTask {
               'title',
               'ASC',
             ],
+            ['publishedAt', 'ASC'],
           ],
         })
       if (publications.length === 0) {
@@ -144,7 +145,7 @@ export class IssuesTaskService implements IIssuesTask {
       const combinedHtml = publications
         .map(
           (pub) =>
-            `<div class="advert-container">${pub.advert.htmlMarkup()}</div><div class="page-break"></div>`,
+            `<div class="advert-container">${pub.advert.htmlMarkup()}</div><div class="advert-divider-line"></div>`,
         )
         .join('')
 

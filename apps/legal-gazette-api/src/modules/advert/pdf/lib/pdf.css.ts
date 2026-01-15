@@ -618,4 +618,14 @@ export const pdfStyles = `
         text-align: right;
         margin-block: 0;
       }
+
+      .advert-divider-line {
+        margin-top: 1.2em;
+        margin-bottom: 1.2em;
+        height: 1px;
+        background: #000;
+        width: 360px;
+        margin-left: auto;
+        margin-right: auto;
+      }
 `
