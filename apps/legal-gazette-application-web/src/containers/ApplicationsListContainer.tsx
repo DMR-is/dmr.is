@@ -27,11 +27,8 @@ export function ApplicationsListContainer() {
   if (isLoading) {
     return (
       <GridContainer>
-        <GridRow>
-          <GridColumn
-            span={['12/12', '12/12', '12/12', '10/12']}
-            offset={['0', '0', '0', '1/12']}
-          >
+        <GridRow marginTop={3}>
+          <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
             <SkeletonLoader
               repeat={3}
               height={200}
