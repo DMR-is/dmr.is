@@ -232,7 +232,7 @@ describe('AdvertPublishedListener', () => {
   // ==========================================
   describe('Orphaned TBR Claims Prevention (C-5)', () => {
     describe('transaction record creation order', () => {
-      it('should create INIT transaction record BEFORE calling TBR API', async () => {
+      it('should create PENDING transaction record BEFORE calling TBR API', async () => {
         const callOrder: string[] = []
 
         tbrTransactionModel.create.mockImplementation(async () => {
@@ -313,8 +313,8 @@ describe('AdvertPublishedListener', () => {
       })
     })
 
-    describe('INIT record creation failure', () => {
-      it('should NOT call TBR if INIT record creation fails', async () => {
+    describe('PENDING record creation failure', () => {
+      it('should NOT call TBR if PENDING record creation fails', async () => {
         tbrTransactionModel.create.mockRejectedValue(
           new Error('Database connection lost'),
         )
@@ -325,7 +325,7 @@ describe('AdvertPublishedListener', () => {
           'Database connection lost',
         )
 
-        // TBR should NOT be called if we can't create the INIT record
+        // TBR should NOT be called if we can't create the PENDING record
         expect(tbrService.postPayment).not.toHaveBeenCalled()
       })
     })
