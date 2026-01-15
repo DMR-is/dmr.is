@@ -103,12 +103,11 @@ export class AdvertPublishedListener {
         })
 
         // Update transaction record to CONFIRMED after successful TBR call
-        await this.sequelize.transaction(async (transaction) => {
-          await tbrTransaction.update(
-            { status: TBRTransactionStatus.CREATED },
-            { transaction },
-          )
-        })
+
+        await this.tbrTransactionModel.update(
+          { status: TBRTransactionStatus.CREATED },
+          { where: { id: tbrTransaction.id } },
+        )
 
         this.logger.info('Transaction record updated to CONFIRMED', {
           transactionId: tbrTransaction.id,
@@ -194,7 +193,7 @@ export class AdvertPublishedListener {
       replyTo: sendFromEmailAddress,
       subject: `Auglýsing ${advert.publicationNumber} - ${advert.type.title} ${advert.title} hefur verið útgefin`,
       text: `Auglýsing ${advert.publicationNumber} hefur verið útgefin`,
-      html: `<h2>Auglýsing hefur verið útgefin:</h2><h3>${advert.publicationNumber} - ${advert.type.title} ${advert.title}</h3><p><a href="https://logbirtingablad.is/${advert.id}" target="_blank">Skoða auglýsingu</a></p>`,
+      html: `<h2>Auglýsing hefur verið útgefin:</h2><h3>${advert.publicationNumber} - ${advert.type.title} ${advert.title}</h3><p><a href="https://logbirtingablad.is/auglysingar/${advert.id}" target="_blank">Skoða auglýsingu</a></p>`,
     }
 
     await this.sesService.sendMail(message).catch((error) => {
