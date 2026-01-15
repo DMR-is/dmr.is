@@ -18,10 +18,10 @@ type Props = {
   onPageChange?: (page: number) => void
 }
 
-export const MyAdvertsList = ({ adverts, paging, onPageChange }: Props) => {
+export const OldAdvertsList = ({ adverts, paging, onPageChange }: Props) => {
   return (
     <GridContainer>
-      <GridRow marginBottom={8}>
+      <GridRow marginTop={3} marginBottom={8}>
         <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
           <Stack space={[2, 3, 4]}>
             {adverts.map((advert) => (

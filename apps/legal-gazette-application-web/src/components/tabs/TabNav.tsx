@@ -1,11 +1,8 @@
 'use client'
 
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import { Box, Text } from '@island.is/island-ui/core'
-
-import * as styles from './Tabs.css'
+import { Button, Inline, LinkV2, Text } from '@island.is/island-ui/core'
 
 type Tab = {
   id: string
@@ -31,23 +28,40 @@ export const TabNav = () => {
   const activeTab = getActiveTab()
 
   return (
-    <Box className={styles.tabsTablist}>
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab.id
-        return (
-          <Link key={tab.id} href={tab.href} className={styles.tabLink}>
-            <Box className={styles.tabsTab({ active: isActive })}>
-              <Text
-                variant="h4"
-                fontWeight={isActive ? 'semiBold' : 'regular'}
-                color={isActive ? 'blue400' : 'dark400'}
-              >
-                {tab.label}
-              </Text>
-            </Box>
-          </Link>
-        )
-      })}
-    </Box>
+    <Inline justifyContent={'spaceBetween'}>
+      {activeTab === 'applications' ? (
+        <>
+          <Text variant="h3">Mínar auglýsingar</Text>
+          <LinkV2 href="/eldriauglysingar">
+            <Button variant="text">Eldri auglýsingar</Button>
+          </LinkV2>
+        </>
+      ) : (
+        <>
+          <Text variant="h3">Eldri auglýsingar</Text>
+          <LinkV2 href="/">
+            <Button variant="text">Mínar auglýsingar</Button>
+          </LinkV2>
+        </>
+      )}
+    </Inline>
+    // <Box className={styles.tabsTablist}>
+    //   {tabs.map((tab) => {
+    //     const isActive = activeTab === tab.id
+    //     return (
+    //       <Link key={tab.id} href={tab.href} className={styles.tabLink}>
+    //         <Box className={styles.tabsTab({ active: isActive })}>
+    //           <Text
+    //             variant="h4"
+    //             fontWeight={isActive ? 'semiBold' : 'regular'}
+    //             color={isActive ? 'blue400' : 'dark400'}
+    //           >
+    //             {tab.label}
+    //           </Text>
+    //         </Box>
+    //       </Link>
+    //     )
+    //   })}
+    // </Box>
   )
 }

@@ -41,9 +41,13 @@ export const Modal = ({
   width = 'large',
 }: Props) => {
   const columnSpan: SpanType =
-    width === 'small' ? ['10/12', '10/12', '10/12', '6/12'] : ['10/12', '8/12']
+    width === 'small'
+      ? ['10/12', '10/12', '10/12', '6/12']
+      : ['12/12', '12/12', '12/12', '10/12', '8/12']
   const columnOffset: SpanType =
-    width === 'small' ? ['1/12', '1/12', '1/12', '3/12'] : ['1/12', '2/12']
+    width === 'small'
+      ? ['1/12', '1/12', '1/12', '3/12']
+      : ['0', '0', '0', '1/12', '2/12']
   return (
     <ModalBase
       baseId={baseId}

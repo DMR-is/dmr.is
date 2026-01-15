@@ -63,7 +63,7 @@ export const AdvertCard = ({ advert }: Props) => {
         padding={3}
         background="white"
       >
-        <Stack space={2}>
+        <Stack space={0}>
           <Inline justifyContent="spaceBetween">
             <Text color="purple400" variant="eyebrow">
               {advert.publishedAt
@@ -73,11 +73,13 @@ export const AdvertCard = ({ advert }: Props) => {
             </Text>
             <Inline space={1}>
               {isLegacy && (
-                <Tag variant="darkerBlue" outlined>
+                <Tag variant="darkerBlue" outlined disabled>
                   Eldri auglýsing
                 </Tag>
               )}
-              <Tag variant={getStatusVariant()}>{statusText}</Tag>
+              <Tag variant={getStatusVariant()} disabled>
+                {statusText}
+              </Tag>
             </Inline>
           </Inline>
 
@@ -90,7 +92,7 @@ export const AdvertCard = ({ advert }: Props) => {
               {advert.html && (
                 <Button
                   variant="text"
-                  icon="eye"
+                  icon="document"
                   iconType="outline"
                   size="small"
                   onClick={() => setIsModalOpen(true)}
@@ -107,6 +109,7 @@ export const AdvertCard = ({ advert }: Props) => {
         <AdvertPublicationModal
           id={`advert-modal-${advert.id}`}
           html={advert.html}
+          isLegacy
           isVisible={isModalOpen}
           onVisibilityChange={setIsModalOpen}
         />

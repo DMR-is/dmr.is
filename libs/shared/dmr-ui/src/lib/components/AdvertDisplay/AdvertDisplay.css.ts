@@ -56,3 +56,33 @@ globalStyle('.advert.legal-gazette .advertSignature p', {
   textAlign: 'right',
   marginBlock: 0,
 })
+
+export const legacyText = style({
+  fontWeight: '300',
+})
+globalStyle(`${legacyText} p, div`, {
+  fontWeight: '300',
+  fontSize: '10pt',
+  marginBottom: '.5em',
+  lineHeight: '1.35em',
+})
+globalStyle(`${legacyText} .advertText p, div `, {
+  fontSize: '1em',
+})
+globalStyle(`${legacyText} .advertText td`, {
+  padding: '.125em .33em .125em 0',
+})
+globalStyle(`${legacyText} strong, b`, {
+  fontWeight: 'bold',
+})
+globalStyle(`${legacyText} .advertType`, {
+  fontSize: '1.2em',
+  fontWeight: 'bold',
+})
+globalStyle(`${legacyText} .advertType > td`, {
+  paddingBottom: '4px',
+})
+globalStyle(`.advertText table `, {
+  tableLayout: 'fixed',
+  width: '100%',
+})
