@@ -78,10 +78,12 @@ export class PublicationService implements IPublicationService {
         offset,
       })
 
+    const erroredRows: string[] = []
     const mapped = publications.rows.flatMap((pub) => {
       try {
         return pub.fromModelToPublishedDto()
       } catch (e) {
+        erroredRows.push(pub.id)
         this.logger.error('Error mapping publication to DTO', {
           error: e,
           publicationId: pub.id,
@@ -91,10 +93,10 @@ export class PublicationService implements IPublicationService {
     })
 
     const paging = generatePaging(
-      publications.rows,
+      publications.rows.filter((pub) => !erroredRows.includes(pub.id)),
       query.page,
       query.pageSize,
-      publications.count,
+      publications.count - erroredRows.length,
     )
 
     return {
