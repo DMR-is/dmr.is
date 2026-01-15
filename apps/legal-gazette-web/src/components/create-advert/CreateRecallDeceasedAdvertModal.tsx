@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import z from 'zod'
 
-import { ApplicationRequirementStatementEnum } from '@dmr.is/legal-gazette/schemas'
-import { Button, toast } from '@dmr.is/ui/components/island-is'
+import {
+  ApplicationRequirementStatementEnum,
+  parseZodError,
+} from '@dmr.is/legal-gazette/schemas'
+import { toast } from '@dmr.is/ui/components/island-is'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
 import { createAdvertAndDeceasedApplicationInput } from '../../lib/inputs'
@@ -12,6 +15,7 @@ import { CreateAdvertApplicant } from './CreateAdvertApplicant'
 import { CreateAdvertCommunicationChannel } from './CreateAdvertCommunicationChannel'
 import { CreateAdvertCourtDistrict } from './CreateAdvertCourtDistrict'
 import { CreateAdvertDivisionMeeting } from './CreateAdvertDivisionMeeting'
+import { CreateAdvertErrors } from './CreateAdvertErrors'
 import { CreateAdvertPublications } from './CreateAdvertPublications'
 import { CreateAdvertSignature } from './CreateAdvertSignature'
 import { CreateDeceasedSettlement } from './CreateDeceasedSettlement'
@@ -59,9 +63,19 @@ const initalState: CreateAdvertAndDeceasedBankruptcyApplicationBody = {
   },
 }
 
-export const CreateDeceasedAdvertModal = () => {
+type Props = {
+  isVisible: boolean
+  setIsVisible: (isVisible: boolean) => void
+}
+
+export const CreateDeceasedAdvertModal = ({
+  isVisible,
+  setIsVisible,
+}: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+
+  const [errors, setErrors] = useState<{ path: string; message: string }[]>([])
 
   const { mutate, isPending } = useMutation(
     trpc.createRecallDeceasedAdvertAndApplication.mutationOptions({
@@ -79,11 +93,11 @@ export const CreateDeceasedAdvertModal = () => {
 
   const [state, setState] =
     useState<CreateAdvertAndDeceasedBankruptcyApplicationBody>(initalState)
-  const [isVisible, setIsVisible] = useState(false)
 
   const onSubmit = () => {
     const check = createAdvertAndDeceasedApplicationInput.safeParse(state)
-
+    const parsedErrors = parseZodError(check.error)
+    setErrors(parsedErrors.filter((err) => err.path !== undefined))
     if (!check.success) {
       const err = z.treeifyError(check.error)
       // eslint-disable-next-line no-console
@@ -97,17 +111,10 @@ export const CreateDeceasedAdvertModal = () => {
     mutate(state)
   }
 
-  const disclosure = (
-    <Button variant="utility" size="small" icon="add" iconType="outline">
-      Innköllun dánarbús
-    </Button>
-  )
-
   return (
     <Modal
-      disclosure={disclosure}
       title="Innköllun dánarbús"
-      baseId="create-recall-bankruptcy-advert-modal"
+      baseId="create-recall-deceased-advert-modal"
       isVisible={isVisible}
       onVisibilityChange={setIsVisible}
     >
@@ -176,6 +183,7 @@ export const CreateDeceasedAdvertModal = () => {
           }))
         }
       />
+      <CreateAdvertErrors errors={errors} onResetErrors={() => setErrors([])} />
       <SubmitCreateAdvert onSubmit={onSubmit} isPending={isPending} />
     </Modal>
   )

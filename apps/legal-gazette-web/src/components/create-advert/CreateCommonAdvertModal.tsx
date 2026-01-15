@@ -1,8 +1,7 @@
-'use client'
-
 import { useState } from 'react'
 import z from 'zod'
 
+import { parseZodError } from '@dmr.is/legal-gazette/schemas'
 import {
   GridColumn,
   GridContainer,
@@ -20,6 +19,7 @@ import { CategorySelect } from '../selects/CategorySelect'
 import { TypeSelect } from '../selects/TypeSelect'
 import { CreateAdvertApplicant } from './CreateAdvertApplicant'
 import { CreateAdvertCommunicationChannel } from './CreateAdvertCommunicationChannel'
+import { CreateAdvertErrors } from './CreateAdvertErrors'
 import { CreateAdvertPublications } from './CreateAdvertPublications'
 import { CreateAdvertSignature } from './CreateAdvertSignature'
 import { SubmitCreateAdvert } from './SubmitCreateAdvert'
@@ -79,15 +79,15 @@ export const CreateCommonAdvertModal = ({
 
   const [state, setState] =
     useState<CreateAdvertAndCommonApplicationBody>(initalState)
+  const [errors, setErrors] = useState<{ path: string; message: string }[]>([])
 
   const onSubmit = () => {
     const check = createAdvertAndCommonApplicationInput.safeParse(state)
 
-    if (!check.success) {
-      const err = z.treeifyError(check.error)
-      // eslint-disable-next-line no-console
-      console.error('Validation errors:', err)
+    const parsedErrors = parseZodError(check.error)
+    setErrors(parsedErrors.filter((err) => err.path !== undefined))
 
+    if (!check.success) {
       toast.error('Vinsamlegast fylltu út öll nauðsynleg svæði')
 
       return
@@ -206,6 +206,7 @@ export const CreateCommonAdvertModal = ({
           }))
         }
       />
+      <CreateAdvertErrors errors={errors} onResetErrors={() => setErrors([])} />
       <SubmitCreateAdvert onSubmit={onSubmit} isPending={isPending} />
     </Modal>
   )

@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import z from 'zod'
 
-import { ApplicationRequirementStatementEnum } from '@dmr.is/legal-gazette/schemas'
+import {
+  ApplicationRequirementStatementEnum,
+  parseZodError,
+} from '@dmr.is/legal-gazette/schemas'
 import { toast } from '@dmr.is/ui/components/island-is'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
@@ -12,6 +15,7 @@ import { CreateAdvertApplicant } from './CreateAdvertApplicant'
 import { CreateAdvertCommunicationChannel } from './CreateAdvertCommunicationChannel'
 import { CreateAdvertCourtDistrict } from './CreateAdvertCourtDistrict'
 import { CreateAdvertDivisionMeeting } from './CreateAdvertDivisionMeeting'
+import { CreateAdvertErrors } from './CreateAdvertErrors'
 import { CreateAdvertPublications } from './CreateAdvertPublications'
 import { CreateAdvertSignature } from './CreateAdvertSignature'
 import { CreateBankruptcySettlement } from './CreateBankruptcySettlement'
@@ -67,6 +71,8 @@ export const CreateBankruptcyAdvertModal = ({
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
+  const [errors, setErrors] = useState<{ path: string; message: string }[]>([])
+
   const { mutate, isPending } = useMutation(
     trpc.createRecallBankruptcyAdvertAndApplication.mutationOptions({
       onSuccess: () => {
@@ -88,11 +94,10 @@ export const CreateBankruptcyAdvertModal = ({
     const check =
       createAdvertAndRecallBankruptcyApplicationInput.safeParse(state)
 
-    if (!check.success) {
-      const err = z.treeifyError(check.error)
-      // eslint-disable-next-line no-console
-      console.error('Validation errors:', err)
+    const parsedErrors = parseZodError(check.error)
+    setErrors(parsedErrors.filter((err) => err.path !== undefined))
 
+    if (!check.success) {
       toast.error('Vinsamlegast fylltu út öll nauðsynleg svæði')
 
       return
@@ -173,6 +178,7 @@ export const CreateBankruptcyAdvertModal = ({
           }))
         }
       />
+      <CreateAdvertErrors errors={errors} onResetErrors={() => setErrors([])} />
       <SubmitCreateAdvert onSubmit={onSubmit} isPending={isPending} />
     </Modal>
   )

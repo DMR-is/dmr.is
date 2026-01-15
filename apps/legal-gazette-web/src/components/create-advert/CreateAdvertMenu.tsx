@@ -19,7 +19,7 @@ export const CretaeAdvertMenu = () => {
         title="Stofna"
         icon="add"
         iconType="outline"
-        openOnHover
+        openOnHover={false}
         items={[
           {
             title: 'Almenn auglýsing',
