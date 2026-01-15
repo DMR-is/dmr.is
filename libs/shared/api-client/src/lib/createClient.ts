@@ -1,6 +1,13 @@
+import { createUrlFromHost } from '@dmr.is/utils/client'
+
 import { createEnhancedFetch } from './createEnhancedFetch'
 
-type WebClient = 'LGAdmin' | 'OJOIAdmin' | 'LGWeb' | 'LGApplicationWeb' | 'LGPublicWeb'
+type WebClient =
+  | 'LGAdmin'
+  | 'OJOIAdmin'
+  | 'LGWeb'
+  | 'LGApplicationWeb'
+  | 'LGPublicWeb'
 
 const getPath = (client: WebClient) => {
   if (process.env.NODE_ENV !== 'production') {
@@ -11,19 +18,12 @@ const getPath = (client: WebClient) => {
   if (typeof window === 'undefined') {
     return process.env.DMR_ADMIN_API_BASE_PATH as string
   }
-
-  const host = window.location.host.split('.')
-  if (client === 'OJOIAdmin') {
-    // Removing first part of the domain (ritstjorn) and adding admin-api of OJOI
-    // Example: https://ritstjorn.example.com -> https://admin-api.example.com
-    host.shift()
-    host.unshift('admin-api')
-  } else {
-    // Not removing first part of domain for LG, and adding api.internal for LG
-    // Example: https://example.com -> https://api.internal.example.com
-    host.unshift('api.internal')
-  }
-  return `https://${host.join('.')}`
+  const url = createUrlFromHost(
+    window.location.host,
+    client === 'OJOIAdmin',
+    client === 'OJOIAdmin' ? 'admin-api' : 'api.internal',
+  )
+  return url
 }
 
 type CParameters = {
@@ -38,12 +38,14 @@ const getAccessToken = (tokens: string | Array<string>) => {
     if (tokens.length === 1) {
       return tokens[0]
     }
-    return tokens.map((t, i) =>{
-      if (i === 0) {
-        return t
-      }
-      return `, Bearer ${t}`
-    }).join('')
+    return tokens
+      .map((t, i) => {
+        if (i === 0) {
+          return t
+        }
+        return `, Bearer ${t}`
+      })
+      .join('')
   }
   return tokens
 }

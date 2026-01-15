@@ -1,4 +1,8 @@
-import { ICELANDIC_ALPHABET, sortAlphabetically } from './clientUtils'
+import {
+  createUrlFromHost,
+  ICELANDIC_ALPHABET,
+  sortAlphabetically,
+} from './clientUtils'
 
 describe('clientUtils', () => {
   describe('sortAlphabetically', () => {
@@ -48,6 +52,89 @@ describe('clientUtils', () => {
       expect(sortAlphabetically('ás', 'ba')).toBeLessThan(0)
       expect(sortAlphabetically('Ísafjörður', 'Jökulsárlón')).toBeLessThan(0)
       expect(sortAlphabetically('Ísafjörður', 'Hafnarfjörður')).toBeGreaterThan(0)
+    })
+  })
+
+  describe('createUrlFromHost', () => {
+    const originalWindow = global.window
+
+    beforeEach(() => {
+      global.window = { location: { host: 'example.com' } } as Window &
+        typeof globalThis
+    })
+
+    afterEach(() => {
+      global.window = originalWindow
+    })
+
+    describe('logbirtingablad.is domain', () => {
+      it('should create auglysendur.logbirtingablad.is from logbirtingablad.is', () => {
+        const result = createUrlFromHost('logbirtingablad.is', false, 'auglysendur')
+        expect(result).toBe('https://auglysendur.logbirtingablad.is')
+      })
+
+      it('should create logbirtingablad.is from auglysendur.logbirtingablad.is', () => {
+        const result = createUrlFromHost('auglysendur.logbirtingablad.is', true)
+        expect(result).toBe('https://logbirtingablad.is')
+      })
+
+      it('should create ritstjorn.logbirtingablad.is from auglysendur.logbirtingablad.is', () => {
+        const result = createUrlFromHost(
+          'auglysendur.logbirtingablad.is',
+          true,
+          'ritstjorn',
+        )
+        expect(result).toBe('https://ritstjorn.logbirtingablad.is')
+      })
+    })
+
+    describe('stjornartidindi.is domain', () => {
+      it('should create api.stjornartidindi.is from ritstjorn.stjornartidindi.is', () => {
+        const result = createUrlFromHost(
+          'ritstjorn.stjornartidindi.is',
+          true,
+          'api',
+        )
+        expect(result).toBe('https://api.stjornartidindi.is')
+      })
+
+      it('should create api.stjornartidindi.is from stjornartidindi.is', () => {
+        const result = createUrlFromHost('stjornartidindi.is', false, 'api')
+        expect(result).toBe('https://api.stjornartidindi.is')
+      })
+
+      it('should create stjornartidindi.is from ritstjorn.stjornartidindi.is', () => {
+        const result = createUrlFromHost('ritstjorn.stjornartidindi.is', true)
+        expect(result).toBe('https://stjornartidindi.is')
+      })
+
+      it('should create ritstjorn.stjornartidindi.is from api.stjornartidindi.is', () => {
+        const result = createUrlFromHost(
+          'api.stjornartidindi.is',
+          true,
+          'ritstjorn',
+        )
+        expect(result).toBe('https://ritstjorn.stjornartidindi.is')
+      })
+    })
+
+    describe('edge cases', () => {
+      it('should return empty string when window.location is not available', () => {
+        // @ts-expect-error - intentionally setting location to undefined for test
+        global.window = { location: undefined }
+        const result = createUrlFromHost('logbirtingablad.is', false, 'auglysendur')
+        expect(result).toBe('')
+      })
+
+      it('should handle host without subdomain when shouldShift is false', () => {
+        const result = createUrlFromHost('logbirtingablad.is', false)
+        expect(result).toBe('https://logbirtingablad.is')
+      })
+
+      it('should handle shifting without adding new subdomain', () => {
+        const result = createUrlFromHost('sub.logbirtingablad.is', true)
+        expect(result).toBe('https://logbirtingablad.is')
+      })
     })
   })
 })
