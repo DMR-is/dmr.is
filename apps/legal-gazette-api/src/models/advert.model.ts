@@ -17,6 +17,7 @@ import {
 import { BulkCreateOptions } from 'sequelize'
 import {
   BeforeBulkCreate,
+  BeforeDestroy,
   BelongsTo,
   Column,
   DataType,
@@ -451,6 +452,15 @@ export class AdvertModel extends BaseModel<
     const found = this.comments.find((c) => c.type === CommentTypeEnum.COMMENT)
 
     return found ? true : false
+  }
+
+  @BeforeDestroy
+  static async beforeDestroyHook(instance: AdvertModel) {
+    const logger = getLogger('AdvertModel')
+    logger.info(`Soft deleting advert ${instance.id}`, {
+      advertId: instance.id,
+      applicationId: instance.applicationId,
+    })
   }
 
   htmlMarkup(version?: AdvertVersionEnum): string {

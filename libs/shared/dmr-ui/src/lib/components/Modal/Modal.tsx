@@ -14,6 +14,8 @@ import {
 } from '../../island-is'
 import * as styles from './Modal.css'
 
+type SpanType = React.ComponentProps<typeof GridColumn>['span']
+
 type Props = {
   baseId?: string
   isVisible?: boolean
@@ -25,6 +27,7 @@ type Props = {
   >
   children: React.ReactNode
   toggleClose?: () => void
+  width?: 'small' | 'large'
 }
 
 export const Modal = ({
@@ -32,9 +35,15 @@ export const Modal = ({
   isVisible = false,
   title,
   onVisibilityChange,
+  toggleClose,
   disclosure,
   children,
+  width = 'large',
 }: Props) => {
+  const columnSpan: SpanType =
+    width === 'small' ? ['10/12', '10/12', '10/12', '6/12'] : ['10/12', '8/12']
+  const columnOffset: SpanType =
+    width === 'small' ? ['1/12', '1/12', '1/12', '3/12'] : ['1/12', '2/12']
   return (
     <ModalBase
       baseId={baseId}
@@ -48,7 +57,7 @@ export const Modal = ({
         <Box dataTestId="modal-debug" className={styles.modalBase}>
           <GridContainer>
             <GridRow>
-              <GridColumn span={['10/12', '8/12']} offset={['1/12', '2/12']}>
+              <GridColumn span={columnSpan} offset={columnOffset}>
                 <Box className={styles.modalContent}>
                   <Stack space={2}>
                     <Inline
@@ -58,7 +67,10 @@ export const Modal = ({
                       {!!title && <Text variant="h3">{title}</Text>}
                       <Button
                         variant="ghost"
-                        onClick={closeModal}
+                        onClick={() => {
+                          if (toggleClose) toggleClose()
+                          closeModal()
+                        }}
                         circle={true}
                         size="small"
                         icon="close"

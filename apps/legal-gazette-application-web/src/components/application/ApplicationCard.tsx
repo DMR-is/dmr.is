@@ -1,8 +1,11 @@
 'use client'
 
+import { useState } from 'react'
+
 import {
   Box,
   Button,
+  Icon,
   Inline,
   LinkV2,
   Stack,
@@ -18,13 +21,16 @@ import {
 } from '../../gen/fetch'
 import { PageRoutes } from '../../lib/constants'
 import { AddAdvertsToApplicationMenu } from '../adverts/AddAdvertsToApplicationMenu'
-import { cardDropdownStyle } from './application.css'
+import { cardExtraButtonStyle, cardTagButtonStyle } from './application.css'
+import { RemoveApplicationAdvert } from './RemoveApplicationAdvert'
 
 type Props = {
   application: ApplicationDto
 }
 
 export const ApplicationCard = ({ application }: Props) => {
+  const [openModal, setOpenModal] = useState(false)
+
   const url =
     application.type === ApplicationTypeEnum.COMMON
       ? `${PageRoutes.APPLICATION_COMMON}/${application.id}`
@@ -39,12 +45,11 @@ export const ApplicationCard = ({ application }: Props) => {
         ? 'Í vinnslu hjá ritstjórn'
         : 'Innsent'
 
-  // get publication only for common applications
   const adverts = application.adverts || []
-
   const publications: Array<{ title?: string; publishedAt?: string }> = []
   let allPublished = false
 
+  // count publications for common adverts
   if (application.type === ApplicationTypeEnum.COMMON) {
     let pubCount = 0
     const advertPubs =
@@ -68,6 +73,7 @@ export const ApplicationCard = ({ application }: Props) => {
     if (allPublished) {
       statusText = 'Útgefin'
     }
+    // count publications for da´narbúa and þrotabú adverts
   } else {
     let advertsCount = 0
     let pubCount = 0
@@ -101,6 +107,8 @@ export const ApplicationCard = ({ application }: Props) => {
     application.status === ApplicationStatusEnum.SUBMITTED &&
     !allPublished
 
+  const canBeRemoved = publications.length == 0 && !allPublished
+
   return (
     <Box borderRadius="large" border="standard" padding={3} background="white">
       <Stack space={0}>
@@ -133,6 +141,23 @@ export const ApplicationCard = ({ application }: Props) => {
             >
               {statusText}
             </Tag>
+            {canBeRemoved && (
+              <div className={cardTagButtonStyle} title="Afturkalla">
+                <Tag
+                  variant="red"
+                  onClick={() => {
+                    setOpenModal(true)
+                  }}
+                >
+                  <Icon
+                    icon="trash"
+                    type="outline"
+                    size="small"
+                    color="red600"
+                  />
+                </Tag>
+              </div>
+            )}
           </Inline>
         </Inline>
 
@@ -143,7 +168,7 @@ export const ApplicationCard = ({ application }: Props) => {
           )}
           <Inline justifyContent="spaceBetween" alignY="center">
             {recallInProgress ? (
-              <div className={cardDropdownStyle}>
+              <div className={cardExtraButtonStyle}>
                 <AddAdvertsToApplicationMenu
                   asButtons
                   applicationId={application.id}
@@ -168,6 +193,14 @@ export const ApplicationCard = ({ application }: Props) => {
           </Inline>
         </Stack>
       </Stack>
+      {openModal && (
+        <RemoveApplicationAdvert
+          applicationId={application.id}
+          type={application.type}
+          openModal={openModal}
+          setOpenModal={setOpenModal}
+        />
+      )}
     </Box>
   )
 }

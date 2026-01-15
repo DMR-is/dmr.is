@@ -155,4 +155,19 @@ export const applicationRouter = router({
         applicationId: input.applicationId,
       })
     }),
+  deleteApplication: protectedProcedure
+    .input(z.object({ applicationId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.api.deleteApplication({
+        applicationId: input.applicationId,
+      })
+    }),
+  deleteAdvertFromApplication: protectedProcedure
+    .input(z.object({ applicationId: z.string(), advertId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.api.deleteAdvertFromApplication({
+        applicationId: input.applicationId,
+        advertId: input.advertId,
+      })
+    }),
 })

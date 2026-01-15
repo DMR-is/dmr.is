@@ -39,6 +39,8 @@ export interface IApplicationService {
   ): Promise<ApplicationDetailedDto>
 
   previewApplication(applicationId: string): Promise<GetHTMLPreview>
+
+  deleteApplication(applicationId: string): Promise<void>
 }
 
 export const IApplicationService = Symbol('IApplicationService')

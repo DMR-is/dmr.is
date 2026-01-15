@@ -4,6 +4,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { AdvertModel } from '../../models/advert.model'
 import { ApplicationModel } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
+import { AdvertProviderModule } from '../advert/advert.provider.module'
 import { PriceCalculatorProviderModule } from '../advert/calculator/price-calculator.provider.module'
 import { RecallApplicationController } from './recall/recall-application.controller'
 import { RecallApplicationProviderModule } from './recall/recall-application.provider.module'
@@ -11,6 +12,7 @@ import { ApplicationController } from './application.controller'
 import { ApplicationProviderModule } from './application.provider.module'
 @Module({
   imports: [
+    AdvertProviderModule,
     RecallApplicationProviderModule,
     ApplicationProviderModule,
     PriceCalculatorProviderModule,

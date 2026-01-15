@@ -69,6 +69,8 @@ export interface IAdvertService {
     query: PagingQuery,
     user: DMRUser,
   ): Promise<GetMyAdvertsDto>
+
+  deleteAdvert(advertId: string): Promise<void>
 }
 
 export const IAdvertService = Symbol('IAdvertService')

@@ -238,7 +238,7 @@ export const CommunicationChannelFields = () => {
                       <T.Data>{channel.name}</T.Data>
                       <T.Data>{channel.phone}</T.Data>
                       <T.Data>
-                        <Inline space={3} justifyContent={'flexEnd'}>
+                        <Inline space={3} justifyContent={'center'}>
                           <button
                             type="button"
                             onClick={() => {
@@ -247,14 +247,24 @@ export const CommunicationChannelFields = () => {
                               setToggleAdd(true)
                             }}
                           >
-                            <Icon size="small" icon="pencil" color="blue400" />
+                            <Icon
+                              size="small"
+                              icon="pencil"
+                              type="outline"
+                              color="blue400"
+                            />
                           </button>
 
                           <button
                             type="button"
                             onClick={() => removeChannel(index)}
                           >
-                            <Icon size="small" icon="trash" color="blue400" />
+                            <Icon
+                              size="small"
+                              icon="trash"
+                              type="outline"
+                              color="blue400"
+                            />
                           </button>
                         </Inline>
                       </T.Data>
