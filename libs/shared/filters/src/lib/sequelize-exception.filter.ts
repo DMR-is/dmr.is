@@ -1,5 +1,6 @@
 import {
   BaseError,
+  ConnectionAcquireTimeoutError,
   ForeignKeyConstraintError,
   TimeoutError,
   UniqueConstraintError,
@@ -29,6 +30,11 @@ export class SequelizeExceptionFilter implements ExceptionFilter {
 
     err.name = ApiErrorName.UnknownError
     err.message = 'An unexpected error occurred.'
+
+    if (exception instanceof ConnectionAcquireTimeoutError) {
+      err.name = ApiErrorName.ConnectionAcquireTimeoutError
+      err.statusCode = 504
+    }
 
     if (exception instanceof ValidationError) {
       err.name = ApiErrorName.ValidationError

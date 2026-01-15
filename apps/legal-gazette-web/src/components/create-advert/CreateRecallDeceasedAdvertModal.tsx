@@ -1,0 +1,188 @@
+import { useState } from 'react'
+import z from 'zod'
+
+import {
+  ApplicationRequirementStatementEnum,
+  parseZodError,
+} from '@dmr.is/legal-gazette/schemas'
+import { toast } from '@dmr.is/ui/components/island-is'
+import { Modal } from '@dmr.is/ui/components/Modal/Modal'
+
+import { createAdvertAndDeceasedApplicationInput } from '../../lib/inputs'
+import { useTRPC } from '../../lib/trpc/client/trpc'
+import { CreateAdvertAdditionalText } from './CreateAdvertAdditionalText'
+import { CreateAdvertApplicant } from './CreateAdvertApplicant'
+import { CreateAdvertCommunicationChannel } from './CreateAdvertCommunicationChannel'
+import { CreateAdvertCourtDistrict } from './CreateAdvertCourtDistrict'
+import { CreateAdvertDivisionMeeting } from './CreateAdvertDivisionMeeting'
+import { CreateAdvertErrors } from './CreateAdvertErrors'
+import { CreateAdvertPublications } from './CreateAdvertPublications'
+import { CreateAdvertSignature } from './CreateAdvertSignature'
+import { CreateDeceasedSettlement } from './CreateDeceasedSettlement'
+import { SubmitCreateAdvert } from './SubmitCreateAdvert'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+
+type CreateAdvertAndDeceasedBankruptcyApplicationBody = z.infer<
+  typeof createAdvertAndDeceasedApplicationInput
+>
+
+const initalState: CreateAdvertAndDeceasedBankruptcyApplicationBody = {
+  applicantNationalId: '',
+  additionalText: undefined,
+  prequisitesAccepted: true,
+  communicationChannels: [],
+  publishingDates: [],
+  signature: {},
+  fields: {
+    courtAndJudgmentFields: {
+      courtDistrict: {
+        id: '',
+        title: '',
+        slug: '',
+      },
+      judgmentDate: '',
+    },
+    divisionMeetingFields: {
+      meetingDate: '',
+      meetingLocation: '',
+    },
+    settlementFields: {
+      address: '',
+      dateOfDeath: '',
+      liquidatorLocation: '',
+      liquidatorName: '',
+      name: '',
+      nationalId: '',
+      recallRequirementStatementLocation: '',
+      recallRequirementStatementType:
+        ApplicationRequirementStatementEnum.LIQUIDATORLOCATION,
+      companies: [],
+      type: 'DEFAULT',
+    },
+  },
+}
+
+type Props = {
+  isVisible: boolean
+  setIsVisible: (isVisible: boolean) => void
+}
+
+export const CreateDeceasedAdvertModal = ({
+  isVisible,
+  setIsVisible,
+}: Props) => {
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+
+  const [errors, setErrors] = useState<{ path: string; message: string }[]>([])
+
+  const { mutate, isPending } = useMutation(
+    trpc.createRecallDeceasedAdvertAndApplication.mutationOptions({
+      onSuccess: () => {
+        toast.success('Auglýsing búin til')
+        queryClient.invalidateQueries(trpc.getAdvertsInProgress.queryFilter())
+        setState(initalState)
+        setIsVisible(false)
+      },
+      onError: () => {
+        toast.error('Ekki tókst að búa til auglýsingu')
+      },
+    }),
+  )
+
+  const [state, setState] =
+    useState<CreateAdvertAndDeceasedBankruptcyApplicationBody>(initalState)
+
+  const onSubmit = () => {
+    const check = createAdvertAndDeceasedApplicationInput.safeParse(state)
+    const parsedErrors = parseZodError(check.error)
+    setErrors(parsedErrors.filter((err) => err.path !== undefined))
+    if (!check.success) {
+      const err = z.treeifyError(check.error)
+
+      toast.error('Vinsamlegast fylltu út öll nauðsynleg svæði')
+
+      return
+    }
+
+    mutate(state)
+  }
+
+  return (
+    <Modal
+      title="Innköllun dánarbús"
+      baseId="create-recall-deceased-advert-modal"
+      isVisible={isVisible}
+      onVisibilityChange={setIsVisible}
+    >
+      <CreateAdvertApplicant
+        onChange={(nationalId) =>
+          setState((prev) => ({ ...prev, applicantNationalId: nationalId }))
+        }
+      />
+      <CreateAdvertCourtDistrict
+        onChange={(courtDistrict) =>
+          setState((prev) => ({
+            ...prev,
+            fields: { ...prev.fields, courtAndJudgmentFields: courtDistrict },
+          }))
+        }
+      />
+      <CreateAdvertAdditionalText
+        onChange={(val) =>
+          setState((prev) => ({
+            ...prev,
+            additionalText: val,
+          }))
+        }
+      />
+      <CreateAdvertSignature
+        onChange={(signature) =>
+          setState((prev) => ({ ...prev, signature: signature }))
+        }
+      />
+      <CreateDeceasedSettlement
+        onChange={(settlement) =>
+          setState((prev) => ({
+            ...prev,
+            fields: {
+              ...prev.fields,
+              settlementFields: settlement,
+            },
+          }))
+        }
+      />
+      <CreateAdvertDivisionMeeting
+        required={true}
+        onChange={(divisionMeeting) =>
+          setState((prev) => ({
+            ...prev,
+            fields: {
+              ...prev.fields,
+              divisionMeetingFields: divisionMeeting,
+            },
+          }))
+        }
+      />
+      <CreateAdvertPublications
+        onChange={(pubDates) =>
+          setState((prev) => ({
+            ...prev,
+            publishingDates: pubDates,
+          }))
+        }
+      />
+      <CreateAdvertCommunicationChannel
+        onChange={(channels) =>
+          setState((prev) => ({
+            ...prev,
+            communicationChannels: channels,
+          }))
+        }
+      />
+      <CreateAdvertErrors errors={errors} onResetErrors={() => setErrors([])} />
+      <SubmitCreateAdvert onSubmit={onSubmit} isPending={isPending} />
+    </Modal>
+  )
+}

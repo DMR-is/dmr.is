@@ -9,6 +9,7 @@ import {
 } from '@dmr.is/modules/guards/auth'
 import { NationalIdValidationPipe } from '@dmr.is/pipelines'
 
+import { AdminAccess } from '../../core/decorators'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import { ILGNationalRegistryService } from './national-registry.service.interface'
@@ -20,6 +21,7 @@ import { ILGNationalRegistryService } from './national-registry.service.interfac
 @ApiExtraModels(LegalEntityDto)
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
+@AdminAccess()
 @ApplicationWebScopes()
 export class LGNationalRegistryController {
   constructor(

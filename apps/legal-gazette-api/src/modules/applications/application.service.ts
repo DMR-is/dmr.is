@@ -1,13 +1,11 @@
 import deepmerge from 'deepmerge'
 import get from 'lodash/get'
-import * as z from 'zod'
 
 import {
   BadRequestException,
   Inject,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -15,9 +13,6 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import {
   ApplicationTypeEnum,
   commonApplicationAnswersRefined,
-  communicationChannelSchema,
-  recallBankruptcyAnswersRefined,
-  recallDeceasedAnswersRefined,
   updateApplicationInput,
 } from '@dmr.is/legal-gazette/schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -26,34 +21,25 @@ import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import {
   RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
-  RECALL_CATEGORY_ID,
   RECALL_DECEASED_ADVERT_TYPE_ID,
 } from '../../core/constants'
 import { getAdvertHTMLMarkupPreview } from '../../core/templates/html'
 import { mapIndexToVersion } from '../../core/utils'
-import {
-  AdvertTemplateType,
-  CreateAdvertInternalDto,
-} from '../../models/advert.model'
+import { AdvertTemplateType } from '../../models/advert.model'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
   ApplicationModel,
   ApplicationStatusEnum,
-  CreateDivisionEndingDto,
-  CreateDivisionMeetingDto,
   GetApplicationsDto,
   GetHTMLPreview,
   IslandIsSubmitApplicationDto,
   UpdateApplicationDto,
 } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
-import {
-  CategoryDefaultIdEnum,
-  CategoryModel,
-} from '../../models/category.model'
-import { TypeIdEnum } from '../../models/type.model'
+import { CategoryModel } from '../../models/category.model'
 import { IAdvertService } from '../advert/advert.service.interface'
+import { IRecallApplicationService } from './recall/recall-application.service.interface'
 import { IApplicationService } from './application.service.interface'
 
 @Injectable()
@@ -63,6 +49,8 @@ export class ApplicationService implements IApplicationService {
 
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(IRecallApplicationService)
+    private readonly recallApplicationService: IRecallApplicationService,
     @Inject(IAdvertService)
     private readonly advertService: IAdvertService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
@@ -71,13 +59,9 @@ export class ApplicationService implements IApplicationService {
     @InjectModel(CategoryModel)
     private readonly categoryModel: typeof CategoryModel,
   ) {}
-  async previewApplication(
-    applicationId: string,
-    user: DMRUser,
-  ): Promise<GetHTMLPreview> {
-    const application = await this.applicationModel.findOneOrThrow({
-      where: { id: applicationId, applicantNationalId: user.nationalId },
-    })
+  async previewApplication(applicationId: string): Promise<GetHTMLPreview> {
+    const application =
+      await this.applicationModel.findByPkOrThrow(applicationId)
 
     let typeId: string | undefined
     let templateType: AdvertTemplateType | undefined
@@ -246,121 +230,12 @@ export class ApplicationService implements IApplicationService {
     })
   }
 
-  private async submitRecallApplication(
-    application: ApplicationModel,
-    user: DMRUser,
-  ) {
-    let data
-
-    let createObj: CreateAdvertInternalDto = {} as CreateAdvertInternalDto
-
-    switch (application.applicationType) {
-      case ApplicationTypeEnum.RECALL_BANKRUPTCY: {
-        const check = recallBankruptcyAnswersRefined.safeParse(
-          application.answers,
-        )
-
-        if (!check.success) {
-          this.logger.error('Failed to parse application answers', {
-            context: 'ApplicationService',
-            applicationId: application.id,
-            error: z.treeifyError(check.error),
-          })
-          throw new BadRequestException('Invalid application data')
-        }
-
-        data = check.data
-        Object.assign(createObj, {
-          settlement: {
-            deadline: data.fields.settlementFields.deadlineDate,
-          },
-        })
-        break
-      }
-      case ApplicationTypeEnum.RECALL_DECEASED: {
-        const check = recallDeceasedAnswersRefined.safeParse(
-          application.answers,
-        )
-
-        if (!check.success) {
-          this.logger.error('Failed to parse application answers', {
-            context: 'ApplicationService',
-            applicationId: application.id,
-            error: z.treeifyError(check.error),
-          })
-          throw new BadRequestException('Invalid application data')
-        }
-
-        data = check.data
-        Object.assign(createObj, {
-          settlement: {
-            dateOfDeath: data.fields.settlementFields.dateOfDeath,
-            type: data.fields.settlementFields.type,
-          },
-        })
-        break
-      }
-      default:
-        this.logger.warn(
-          `Attempted to submit recall application with unknown type: ${application.applicationType}`,
-        )
-        throw new BadRequestException()
-    }
-
-    const title =
-      application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
-        ? `Innköllun þrotabús - ${data.fields.settlementFields.name}`
-        : `Innköllun dánarbús - ${data.fields.settlementFields.name}`
-
-    createObj = {
-      applicationId: application.id,
-      templateType:
-        application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
-          ? AdvertTemplateType.RECALL_BANKRUPTCY
-          : AdvertTemplateType.RECALL_DECEASED,
-      caseId: application.caseId,
-      typeId:
-        application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
-          ? RECALL_BANKRUPTCY_ADVERT_TYPE_ID
-          : RECALL_DECEASED_ADVERT_TYPE_ID,
-      categoryId: RECALL_CATEGORY_ID,
-      createdBy: user.name,
-      createdByNationalId: user.nationalId,
-      signature: {
-        ...data.signature,
-        date: data.signature?.date ? new Date(data.signature.date) : undefined,
-      },
-      title: title,
-      divisionMeetingDate: data.fields.divisionMeetingFields?.meetingDate,
-      divisionMeetingLocation:
-        data.fields.divisionMeetingFields?.meetingLocation,
-      judgementDate: data.fields.courtAndJudgmentFields?.judgmentDate,
-      courtDistrictId: data.fields.courtAndJudgmentFields?.courtDistrict.id,
-      communicationChannels: data.communicationChannels,
-      scheduledAt: data.publishingDates,
-      settlement: {
-        ...data.fields.settlementFields,
-        ...createObj.settlement,
-      },
-    }
-
-    const advert = await this.advertService.createAdvert(createObj)
-
-    await application.update({
-      status: ApplicationStatusEnum.SUBMITTED,
-      settlementId: advert.settlement?.id,
-      submittedByNationalId: user.actor?.nationalId || user.nationalId,
-    })
-  }
-
   async updateApplication(
     applicationId: string,
     body: UpdateApplicationDto,
-    user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
-    const application = await this.applicationModel.findOneOrThrow({
-      where: { id: applicationId, applicantNationalId: user.nationalId },
-    })
+    const application =
+      await this.applicationModel.findByPkOrThrow(applicationId)
 
     // Validate application status before update
     if (!this.EDITABLE_STATUSES.includes(application.status)) {
@@ -412,29 +287,18 @@ export class ApplicationService implements IApplicationService {
 
   async getApplicationByCaseId(
     caseId: string,
-    user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
-    const application = await this.applicationModel.findOne({
-      where: { caseId: caseId, applicantNationalId: user.nationalId },
+    const application = await this.applicationModel.findOneOrThrow({
+      where: { caseId: caseId },
     })
-
-    if (!application) {
-      throw new NotFoundException()
-    }
 
     return application.fromModelToDetailedDto()
   }
   async getApplicationById(
     applicationId: string,
-    user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
-    const application = await this.applicationModel.findOne({
-      where: { id: applicationId, applicantNationalId: user.nationalId },
-    })
-
-    if (!application) {
-      throw new NotFoundException()
-    }
+    const application =
+      await this.applicationModel.findByPkOrThrow(applicationId)
 
     return application.fromModelToDetailedDto()
   }
@@ -530,9 +394,8 @@ export class ApplicationService implements IApplicationService {
     })
   }
   async submitApplication(applicationId: string, user: DMRUser): Promise<void> {
-    const application = await this.applicationModel.findOneOrThrow({
-      where: { id: applicationId, applicantNationalId: user.nationalId },
-    })
+    const application =
+      await this.applicationModel.findByPkOrThrow(applicationId)
 
     // Validate application status before submission
     if (!this.SUBMITTABLE_STATUSES.includes(application.status)) {
@@ -547,7 +410,10 @@ export class ApplicationService implements IApplicationService {
         break
       case ApplicationTypeEnum.RECALL_BANKRUPTCY:
       case ApplicationTypeEnum.RECALL_DECEASED:
-        await this.submitRecallApplication(application, user)
+        await this.recallApplicationService.submitRecallApplication(
+          application.id,
+          user,
+        )
         break
       default:
         this.logger.warn(

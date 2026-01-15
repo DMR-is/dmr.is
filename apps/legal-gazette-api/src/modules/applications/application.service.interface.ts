@@ -29,26 +29,16 @@ export interface IApplicationService {
 
   submitApplication(applicationId: string, user: DMRUser): Promise<void>
 
-  getApplicationById(
-    applicationId: string,
-    user: DMRUser,
-  ): Promise<ApplicationDetailedDto>
+  getApplicationById(applicationId: string): Promise<ApplicationDetailedDto>
 
-  getApplicationByCaseId(
-    caseId: string,
-    user: DMRUser,
-  ): Promise<ApplicationDetailedDto>
+  getApplicationByCaseId(caseId: string): Promise<ApplicationDetailedDto>
 
   updateApplication(
     applicationId: string,
     body: UpdateApplicationDto,
-    user: DMRUser,
   ): Promise<ApplicationDetailedDto>
 
-  previewApplication(
-    applicationId: string,
-    user: DMRUser,
-  ): Promise<GetHTMLPreview>
+  previewApplication(applicationId: string): Promise<GetHTMLPreview>
 }
 
 export const IApplicationService = Symbol('IApplicationService')
