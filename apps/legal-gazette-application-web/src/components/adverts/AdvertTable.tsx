@@ -5,11 +5,10 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Inline } from 'submodules/island.is/libs/island-ui/core/src/lib/Inline/Inline'
 
+import { Icon, Tag } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
 import { formatDate } from '@dmr.is/utils/client'
-
-import { Icon, Tag } from '@island.is/island-ui/core'
 
 import { AdvertDto } from '../../gen/fetch'
 import { ApplicationTypeEnum } from '../../gen/fetch'

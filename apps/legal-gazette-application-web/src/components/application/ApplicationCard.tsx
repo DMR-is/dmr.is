@@ -5,6 +5,7 @@ import { useState } from 'react'
 import {
   Box,
   Button,
+  Icon,
   Inline,
   LinkV2,
   Stack,
@@ -12,8 +13,6 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 import { formatDate } from '@dmr.is/utils/client'
-
-import { Icon } from '@island.is/island-ui/core'
 
 import {
   ApplicationDto,

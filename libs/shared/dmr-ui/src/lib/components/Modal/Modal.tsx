@@ -1,7 +1,5 @@
 'use client'
 
-import { SpanType } from 'submodules/island.is/libs/island-ui/core/src/lib/Grid/GridColumn/GridColumn.css'
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Box,
@@ -15,6 +13,8 @@ import {
   Text,
 } from '../../island-is'
 import * as styles from './Modal.css'
+
+type SpanType = React.ComponentProps<typeof GridColumn>['span']
 
 type Props = {
   baseId?: string
