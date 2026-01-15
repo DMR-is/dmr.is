@@ -133,12 +133,12 @@ export class SubscriberCreatedListener {
         },
       )
 
-      logger.info('Created INIT transaction record before TBR call', {
+      logger.info('Created PENDING transaction record before TBR call', {
         transactionId: transactionRecord.id,
         subscriberId: subscriber.id,
       })
     } catch (error) {
-      logger.error('Failed to create INIT transaction record', {
+      logger.error('Failed to create PENDING transaction record', {
         subscriberId: subscriber.id,
         error: error instanceof Error ? error.message : 'Unknown error',
       })
