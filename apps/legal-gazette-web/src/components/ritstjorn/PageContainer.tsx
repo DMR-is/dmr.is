@@ -95,11 +95,6 @@ export const PageContainer = ({ advertCount }: Props) => {
               <Inline space={2} justifyContent={'spaceBetween'}>
                 <CaseFilters />
                 <CretaeAdvertMenu />
-                {/* <Inline space={[1, 2]}>
-                  <CreateCommonAdvertModal />
-                  <CreateBankruptcyAdvertModal />
-                  <CreateDeceasedAdvertModal />
-                </Inline> */}
               </Inline>
               <Tabs
                 label=""
