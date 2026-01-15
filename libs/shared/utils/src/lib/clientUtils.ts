@@ -84,3 +84,19 @@ export function getIcelandicDative(days: number) {
   }
   return 'dögum'
 }
+
+
+export const createUrlFromHost = (host: string, shouldShift: boolean, unshift?: string)  => {
+  if (!window.location) {
+    return ''
+  } else {
+    const hostParts = host.split('.')
+    if (shouldShift) {
+      hostParts.shift()
+    }
+    if (unshift) {
+      hostParts.unshift(unshift)
+    }
+    return `https://${hostParts.join('.')}`
+  }
+}
