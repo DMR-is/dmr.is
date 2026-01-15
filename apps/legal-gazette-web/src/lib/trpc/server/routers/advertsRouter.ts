@@ -6,6 +6,7 @@ import { createTRPCError } from '@dmr.is/trpc/utils/errorHandler'
 import {
   RecallBankruptcyFieldsDtoRequirementStatementEnum,
   RecallDeceasedFieldsDtoRequirementStatementEnum,
+  RecallDeceasedFieldsDtoSettlementTypeEnum,
   SortDirectionEnum,
 } from '../../../../gen/fetch'
 import { StatusIdEnum } from '../../../constants'
@@ -242,7 +243,8 @@ export const advertsRouter = router({
             settlementDate: input.fields.settlementFields.dateOfDeath,
             settlementName: input.fields.settlementFields.name,
             settlementNationalId: input.fields.settlementFields.nationalId,
-            settlementType: input.fields.settlementFields.type,
+            settlementType: input.fields.settlementFields
+              .type as RecallDeceasedFieldsDtoSettlementTypeEnum,
             companies: input.fields.settlementFields.companies,
           },
         },
