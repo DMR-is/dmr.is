@@ -78,7 +78,17 @@ export class PublicationService implements IPublicationService {
         offset,
       })
 
-    const mapped = publications.rows.map((pub) => pub.fromModelToPublishedDto())
+    const mapped = publications.rows.flatMap((pub) => {
+      try {
+        return pub.fromModelToPublishedDto()
+      } catch (e) {
+        this.logger.error('Error mapping publication to DTO', {
+          error: e,
+          publicationId: pub.id,
+        })
+        return []
+      }
+    })
 
     const paging = generatePaging(
       publications.rows,
