@@ -1,6 +1,6 @@
 import { Expose, Transform } from 'class-transformer'
 import { IsNumber, IsOptional } from 'class-validator'
-import { z } from 'zod'
+import * as z from 'zod'
 
 import { ApiProperty } from '@nestjs/swagger'
 

@@ -1,6 +1,6 @@
 import addDays from 'date-fns/addDays'
 import { Op } from 'sequelize'
-import z from 'zod'
+import * as z from 'zod'
 
 import {
   BadRequestException,

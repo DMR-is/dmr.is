@@ -1,4 +1,4 @@
-import z from 'zod'
+import * as z from 'zod'
 
 import { communicationChannelSchema } from '../base/communication-channels'
 import { signatureSchemaRefined } from '../base/signature'
@@ -14,9 +14,9 @@ export const createDivisionMeetingInput = z.object({
 })
 
 export const createDivisionEndingInput = createDivisionMeetingInput.extend({
-  declaredClaims: z
-    .number()
-    .min(0, { message: 'Lýstar kröfur þurfa vera 0 eða hærri' }),
+  declaredClaims: z.number().min(0, {
+    message: 'Lýstar kröfur þurfa vera 0 eða hærri',
+  }),
   meetingLocation: z.string().optional(),
 })
 

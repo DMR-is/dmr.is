@@ -1,4 +1,4 @@
-import z from 'zod'
+import * as z from 'zod'
 
 import { LegalEntityDto } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'

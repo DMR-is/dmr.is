@@ -1,7 +1,6 @@
 import deepmerge from 'deepmerge'
 import get from 'lodash/get'
-import { Op } from 'sequelize'
-import z from 'zod'
+import * as z from 'zod'
 
 import {
   BadRequestException,
@@ -397,32 +396,15 @@ export class ApplicationService implements IApplicationService {
     const mergedAnswers = deepmerge(currentAnswers, incomingAnswers, {
       customMerge: (key) => {
         if (key === 'companies') {
-          return (_current, incoming) => incoming
+          return (_, incoming) => incoming
         }
 
         if (key === 'publishingDates') {
-          return (_current, incoming) => incoming
+          return (_, incoming) => incoming
         }
 
         if (key === 'communicationChannels') {
-          return (current, incoming) => {
-            const merged = [...current]
-
-            incoming.forEach(
-              (sourceChannel: z.infer<typeof communicationChannelSchema>) => {
-                const index = merged.findIndex(
-                  (t) => t.email === sourceChannel.email,
-                )
-                if (index > -1) {
-                  merged[index] = sourceChannel
-                } else {
-                  merged.push(sourceChannel)
-                }
-              },
-            )
-
-            return merged
-          }
+          return (_, incoming) => incoming
         }
       },
     })

@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import * as z from 'zod'
 
 import { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 

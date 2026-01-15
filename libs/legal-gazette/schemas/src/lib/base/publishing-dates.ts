@@ -1,4 +1,4 @@
-import z from 'zod'
+import * as z from 'zod'
 
 const validateFuture = (dates: string[]) => {
   const now = new Date()

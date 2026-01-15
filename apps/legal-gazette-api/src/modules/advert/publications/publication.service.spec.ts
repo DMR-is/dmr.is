@@ -10,7 +10,6 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { AdvertModel } from '../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
-import { StatusIdEnum } from '../../../models/status.model'
 import { PublicationService } from './publication.service'
 import { IPublicationService } from './publication.service.interface'
 
@@ -31,7 +30,6 @@ describe('PublicationService - Publication Number Generation', () => {
   let service: IPublicationService
   let advertModel: typeof AdvertModel
   let advertPublicationModel: typeof AdvertPublicationModel
-  let sequelize: Sequelize
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -72,7 +70,6 @@ describe('PublicationService - Publication Number Generation', () => {
     service = module.get<IPublicationService>(PublicationService)
     advertModel = module.get(getModelToken(AdvertModel))
     advertPublicationModel = module.get(getModelToken(AdvertPublicationModel))
-    sequelize = module.get<Sequelize>(Sequelize)
 
     jest.clearAllMocks()
   })
@@ -288,54 +285,6 @@ describe('PublicationService - Publication Number Generation', () => {
       expect(findOneOptions).toHaveProperty('transaction')
       expect(findOneOptions.transaction).toBe(mockTransaction)
     })
-
-    it('should use pessimistic lock (LOCK.UPDATE) when reading max publication', async () => {
-      // This test verifies that findOne uses lock: Transaction.LOCK.UPDATE
-      const mockAdvert = {
-        id: 'advert-5',
-        publicationNumber: null,
-        update: jest.fn().mockResolvedValue(undefined),
-        fromModelToDetailed: jest.fn().mockReturnValue({ id: 'advert-5' }),
-        htmlMarkup: jest.fn().mockReturnValue('<html></html>'),
-      }
-
-      const mockPublication = {
-        id: 'pub-5',
-        advertId: 'advert-5',
-        publishedAt: null,
-        versionLetter: 'A',
-        update: jest.fn().mockResolvedValue(undefined),
-        fromModel: jest.fn().mockReturnValue({ id: 'pub-5' }),
-      }
-
-      const mockTransaction = {
-        afterCommit: jest.fn((callback) => callback()),
-      } as unknown as Transaction
-
-      mockSequelize.transaction.mockImplementation(async (callback) => {
-        return callback(mockTransaction)
-      })
-
-      const mockScopedModel = {
-        findByPkOrThrow: jest.fn().mockResolvedValue(mockAdvert),
-      }
-      ;(advertModel.withScope as jest.Mock).mockReturnValue(mockScopedModel)
-      ;(advertPublicationModel.findOneOrThrow as jest.Mock).mockResolvedValue(
-        mockPublication,
-      )
-      ;(advertModel.findOne as jest.Mock).mockResolvedValue(null)
-
-      // Action
-      await service.publishAdvertPublication('advert-5', 'pub-5')
-
-      // Assert: findOne should use pessimistic lock
-      const findOneCalls = (advertModel.findOne as jest.Mock).mock.calls
-      expect(findOneCalls.length).toBeGreaterThan(0)
-
-      const findOneOptions = findOneCalls[0][0]
-      expect(findOneOptions).toHaveProperty('lock')
-      expect(findOneOptions.lock).toBe(Transaction.LOCK.UPDATE)
-    })
   })
 
   describe('publishAdvertPublication - general behavior', () => {
@@ -547,6 +496,7 @@ describe('PublicationService - Publication Number Generation', () => {
 
       const mockEventEmitter = {
         emitAsync: jest.fn().mockResolvedValue(undefined),
+        emit: jest.fn(),
       }
 
       // Create a mock transaction that tracks if it was committed

@@ -47,17 +47,18 @@ export class PublishingTaskService implements IPublishingTaskService {
       },
       order: [['publicationNumber', 'DESC']],
       limit: 1,
-      lock: Transaction.LOCK.UPDATE,
       transaction: transaction,
     })
 
-    let count = 1
+    const publishCount = (
+      maxPublication && maxPublication.publicationNumber
+        ? parseInt(maxPublication.publicationNumber.slice(8), 10) + 1
+        : 1
+    )
+      .toString()
+      .padStart(3, '0')
 
-    if (maxPublication?.publicationNumber) {
-      count = parseInt(maxPublication.publicationNumber.slice(8), 10) + 1
-    }
-
-    const publicationNumber = `${year}${month}${day}${count.toString().padStart(3, '0')}`
+    const publicationNumber = `${year}${month}${day}${publishCount}`
 
     this.logger.debug(
       `Generated next publication number: ${publicationNumber}`,
@@ -106,6 +107,12 @@ export class PublishingTaskService implements IPublishingTaskService {
           [Op.lte]: end,
         },
       },
+      include: [
+        {
+          model: AdvertModel.scope('detailed'),
+          as: 'advert',
+        },
+      ],
     })
 
     if (publicationsToBePublished.length === 0) {
@@ -125,23 +132,9 @@ export class PublishingTaskService implements IPublishingTaskService {
       },
     )
 
-    const advert = await this.advertModel.scope('detailed').findOne({
-      where: { id: publicationsToBePublished[0]?.advertId },
-    })
-
-    if (!advert) {
-      this.logger.warn(
-        `Advert not found for publication with ID: ${publicationsToBePublished[0]?.id}`,
-        {
-          context: LOGGER_CONTEXT,
-          publicationId: publicationsToBePublished[0]?.id,
-        },
-      )
-      return
-    }
-
     for (const [index, pub] of publicationsToBePublished.entries()) {
-      this.logger.debug(
+      const advert = pub.advert
+      this.logger.info(
         `Processing publication ${index + 1} of ${publicationsToBePublished.length}`,
         {
           context: LOGGER_CONTEXT,
@@ -157,8 +150,10 @@ export class PublishingTaskService implements IPublishingTaskService {
             ? await this.getNextPublicationNumber(pub.scheduledAt, transaction)
             : advert.publicationNumber
 
-          pub.publishedAt = new Date()
-          await pub.save({ transaction: transaction })
+          await pub.update(
+            { publishedAt: new Date() },
+            { transaction: transaction },
+          )
 
           await advert.update(
             {
@@ -173,9 +168,30 @@ export class PublishingTaskService implements IPublishingTaskService {
             publication: pub.fromModel(),
             html: advert.htmlMarkup(pub.versionLetter),
           }
-          transaction.afterCommit(() => {
-            this.eventEmitter.emit(LegalGazetteEvents.ADVERT_PUBLISHED, payload)
-          })
+
+          try {
+            await this.eventEmitter.emitAsync(
+              LegalGazetteEvents.ADVERT_PUBLISHED,
+              payload,
+            )
+
+            this.eventEmitter.emit(
+              LegalGazetteEvents.ADVERT_PUBLISHED_SIDE_EFFECTS,
+              payload,
+            )
+          } catch (error) {
+
+            this.logger.error(
+              'Error occurred while emitting ADVERT_PUBLISHED event',
+              {
+                context: 'PublicationService',
+                advertId: advert.id,
+                publicationId: pub.id,
+                error: error instanceof Error ? error.message : 'Unknown error',
+              },
+            )
+            throw error
+          }
         })
 
         this.logger.info(`Published advert publication with ID: ${pub.id}`, {

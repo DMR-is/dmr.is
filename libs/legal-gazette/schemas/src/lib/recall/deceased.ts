@@ -1,5 +1,5 @@
 import { isDateString, isString } from 'class-validator'
-import z from 'zod'
+import * as z from 'zod'
 
 import {
   baseApplicationSchema,

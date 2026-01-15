@@ -1,5 +1,5 @@
 import { isDateString } from 'class-validator'
-import z from 'zod'
+import * as z from 'zod'
 
 import { baseEntitySchema } from '../base/base-entity'
 
