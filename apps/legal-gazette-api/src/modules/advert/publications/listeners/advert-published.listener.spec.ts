@@ -96,6 +96,7 @@ describe('AdvertPublishedListener', () => {
 
     const mockTbrTransactionModel = {
       create: jest.fn().mockResolvedValue(defaultMockTransactionRecord),
+      update: jest.fn().mockResolvedValue([1]),
     }
 
     const mockPriceCalculatorService = {
@@ -280,7 +281,7 @@ describe('AdvertPublishedListener', () => {
         const event = createMockEvent()
         await listener.createTBRTransaction(event)
 
-        expect(mockTransactionRecord.update).toHaveBeenCalledWith(
+        expect(tbrTransactionModel.update).toHaveBeenCalledWith(
           expect.objectContaining({
             status: TBRTransactionStatus.CREATED,
           }),

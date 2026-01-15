@@ -103,12 +103,11 @@ export class AdvertPublishedListener {
         })
 
         // Update transaction record to CONFIRMED after successful TBR call
-        await this.sequelize.transaction(async (transaction) => {
-          await tbrTransaction.update(
-            { status: TBRTransactionStatus.CREATED },
-            { transaction },
-          )
-        })
+
+        await this.tbrTransactionModel.update(
+          { status: TBRTransactionStatus.CREATED },
+          { where: { id: tbrTransaction.id } },
+        )
 
         this.logger.info('Transaction record updated to CONFIRMED', {
           transactionId: tbrTransaction.id,
