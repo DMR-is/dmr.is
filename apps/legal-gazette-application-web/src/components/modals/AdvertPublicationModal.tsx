@@ -19,6 +19,7 @@ type Props = {
   id: string
   html: string
   isVisible?: boolean
+  isLegacy?: boolean
   onVisibilityChange?: (visible: boolean) => void
 }
 
@@ -26,6 +27,7 @@ export const AdvertPublicationModal = ({
   id,
   html,
   isVisible = false,
+  isLegacy = false,
   onVisibilityChange,
 }: Props) => {
   return (
@@ -38,7 +40,10 @@ export const AdvertPublicationModal = ({
       {({ closeModal }) => (
         <GridContainer>
           <GridRow>
-            <GridColumn span={['10/12']} offset={['1/12']}>
+            <GridColumn
+              span={['12/12', '12/12', '12/12', '10/12', '8/12']}
+              offset={['0', '0', '0', '1/12', '2/12']}
+            >
               <Box className={styles.advertModalWrapperStyle}>
                 <Box className={styles.advertModalStyle} padding={[2, 3, 4]}>
                   <Stack space={2}>
@@ -47,10 +52,11 @@ export const AdvertPublicationModal = ({
                         variant="ghost"
                         onClick={closeModal}
                         circle={true}
+                        size="small"
                         icon="close"
                       />
                     </Inline>
-                    <AdvertDisplay html={html} />
+                    <AdvertDisplay html={html} withStyles={!isLegacy} />
                   </Stack>
                 </Box>
               </Box>

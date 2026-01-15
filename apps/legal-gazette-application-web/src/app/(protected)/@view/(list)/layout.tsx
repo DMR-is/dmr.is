@@ -21,14 +21,15 @@ export default function ViewListLayout({
         <GridContainer>
           <GridRow>
             <GridColumn
-              span={['12/12', '10/12', '10/12', '10/12']}
-              offset={['0', '1/12', '1/12', '1/12']}
+              span={['12/12', '12/12', '12/12', '10/12']}
+              offset={['0', '0', '0', '1/12']}
             >
               <TabNav />
             </GridColumn>
           </GridRow>
+
+          {children}
         </GridContainer>
-        {children}
       </Stack>
       <Footer site="applications" />
     </>

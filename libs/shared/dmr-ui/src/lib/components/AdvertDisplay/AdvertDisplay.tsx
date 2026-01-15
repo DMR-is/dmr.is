@@ -46,7 +46,7 @@ export const AdvertDisplay = ({
         </Box>
         {html && (
           <Box
-            className={withStyles ? styles.bodyText : undefined}
+            className={withStyles ? styles.bodyText : styles.legacyText}
             dangerouslySetInnerHTML={{
               __html: html,
             }}

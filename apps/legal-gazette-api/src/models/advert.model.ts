@@ -36,7 +36,7 @@ import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
 import { getLogger } from '@dmr.is/logging'
 import { Paging } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
-import { cleanLegacyHtml } from '@dmr.is/utils'
+import { cleanLegalGazetteLegacyHtml } from '@dmr.is/utils'
 
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'
@@ -465,7 +465,7 @@ export class AdvertModel extends BaseModel<
 
   htmlMarkup(version?: AdvertVersionEnum): string {
     if (this.legacyHtml) {
-      return cleanLegacyHtml(this.legacyHtml)
+      return cleanLegalGazetteLegacyHtml(this.legacyHtml)
     }
 
     try {

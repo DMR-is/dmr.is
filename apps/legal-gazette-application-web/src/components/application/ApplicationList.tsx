@@ -1,9 +1,5 @@
 'use client'
 
-import { useQueryState } from 'next-usequerystate'
-
-import { parseAsInteger } from 'nuqs/server'
-
 import { Pagination } from '@dmr.is/ui/components/island-is'
 import {
   GridColumn,
@@ -29,7 +25,7 @@ export const ApplicationList = ({
 }: Props) => {
   return (
     <GridContainer>
-      <GridRow marginBottom={8}>
+      <GridRow marginTop={3} marginBottom={8}>
         <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
           <Stack space={[2, 3, 4]}>
             {applications.map((application, i) => (

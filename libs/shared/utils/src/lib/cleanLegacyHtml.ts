@@ -293,6 +293,11 @@ const baseOptions: sanitizeHtml.IOptions = {
   },
 }
 
+const removeStyleAttributes = (input: string) => {
+  // Remove all style="..." attributes using regex
+  return input.replace(/\sstyle=("|').*?("|')/gi, '')
+}
+
 export const simpleSanitize = (html: string) => {
   return sanitizeHtml(html, baseOptions)
 }
@@ -311,6 +316,12 @@ export function cleanLegacyHtml(input: string): string {
   const pre = rewriteRootTablesOnly(src)
   const cleaned = sanitizeHtml(pre, baseOptions)
   return cleaned.replace(/\r?\n/g, '') // strip newlines
+}
+
+export function cleanLegalGazetteLegacyHtml(html: string): string {
+  const src = sanitizeHtml(html, baseOptions)
+  const cleaned = removeStyleAttributes(src)
+  return cleaned
 }
 
 export default cleanLegacyHtml

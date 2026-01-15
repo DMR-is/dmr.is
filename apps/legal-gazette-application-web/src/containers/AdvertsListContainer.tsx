@@ -11,7 +11,7 @@ import {
   SkeletonLoader,
 } from '@dmr.is/ui/components/island-is'
 
-import { MyAdvertsList } from '../components/adverts/MyAdvertsList'
+import { OldAdvertsList } from '../components/adverts/OldAdvertsList'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
 export function AdvertsListContainer() {
@@ -56,7 +56,7 @@ export function AdvertsListContainer() {
   }
 
   return (
-    <MyAdvertsList
+    <OldAdvertsList
       adverts={data.adverts ?? []}
       paging={data.paging}
       onPageChange={setPage}
