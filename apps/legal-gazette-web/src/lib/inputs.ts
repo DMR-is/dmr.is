@@ -1,5 +1,11 @@
 import * as z from 'zod'
 
+import {
+  commonApplicationAnswersRefined,
+  recallBankruptcyAnswersRefined,
+  recallDeceasedAnswersRefined,
+} from '@dmr.is/legal-gazette/schemas'
+
 export const createUserInput = z.object({
   email: z.email(),
   nationalId: z.string().min(10).max(10),
@@ -14,4 +20,28 @@ export const updateUserInput = z
   })
   .refine((data) => data.email || data.phone, {
     message: 'At least one of email or phone must be provided',
+  })
+
+export const createAdvertAndCommonApplicationInput =
+  commonApplicationAnswersRefined.extend({
+    applicantNationalId: z
+      .string()
+      .min(10, { error: 'Kennitala verður að vera 10 stafir' })
+      .max(10, { error: 'Kennitala verður að vera 10 stafir' }),
+  })
+
+export const createAdvertAndRecallBankruptcyApplicationInput =
+  recallBankruptcyAnswersRefined.extend({
+    applicantNationalId: z
+      .string()
+      .min(10, { error: 'Kennitala verður að vera 10 stafir' })
+      .max(10, { error: 'Kennitala verður að vera 10 stafir' }),
+  })
+
+export const createAdvertAndDeceasedApplicationInput =
+  recallDeceasedAnswersRefined.extend({
+    applicantNationalId: z
+      .string()
+      .min(10, { error: 'Kennitala verður að vera 10 stafir' })
+      .max(10, { error: 'Kennitala verður að vera 10 stafir' }),
   })

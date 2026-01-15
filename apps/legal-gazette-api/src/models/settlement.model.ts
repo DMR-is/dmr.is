@@ -1,5 +1,6 @@
 import {
   IsDateString,
+  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
@@ -204,6 +205,11 @@ export class SettlementDto extends PickType(SettlementModel, [
 }
 
 export class CreateSettlementDto {
+  @ApiProperty({ enum: SettlementType, required: false })
+  @IsOptional()
+  @IsEnum(SettlementType)
+  settlementType?: SettlementType
+
   @ApiProperty({ type: String, required: true })
   @IsString()
   @MaxLength(255)

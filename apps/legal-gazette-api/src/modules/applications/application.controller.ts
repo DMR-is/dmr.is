@@ -72,6 +72,7 @@ export class ApplicationController {
 
   @Post('submitApplication/:applicationId')
   @LGResponse({ operationId: 'submitApplication' })
+  @UseGuards(OwnershipGuard)
   async submitApplication(
     @Param('applicationId') applicationId: string,
     @CurrentUser() user: DMRUser,
@@ -93,11 +94,11 @@ export class ApplicationController {
     operationId: 'getApplicationById',
     type: ApplicationDetailedDto,
   })
+  @UseGuards(OwnershipGuard)
   async getApplicationById(
     @Param('applicationId') applicationId: string,
-    @CurrentUser() user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
-    return this.applicationService.getApplicationById(applicationId, user)
+    return this.applicationService.getApplicationById(applicationId)
   }
 
   @Get('getApplicationByCaseId/:caseId')
@@ -105,11 +106,11 @@ export class ApplicationController {
     operationId: 'getApplicationByCaseId',
     type: ApplicationDetailedDto,
   })
+  @UseGuards(OwnershipGuard)
   async getApplicationByCaseId(
     @Param('caseId') caseId: string,
-    @CurrentUser() user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
-    return this.applicationService.getApplicationByCaseId(caseId, user)
+    return this.applicationService.getApplicationByCaseId(caseId)
   }
 
   @Patch(':applicationId')
@@ -118,21 +119,21 @@ export class ApplicationController {
     type: ApplicationDetailedDto,
   })
   @UsePipes(new ValidationPipe({ transform: true, whitelist: false }))
+  @UseGuards(OwnershipGuard)
   async updateApplication(
     @Param('applicationId') applicationId: string,
     @Body() body: UpdateApplicationDto,
-    @CurrentUser() user: DMRUser,
   ): Promise<ApplicationDetailedDto> {
-    return this.applicationService.updateApplication(applicationId, body, user)
+    return this.applicationService.updateApplication(applicationId, body)
   }
 
   @Get(':applicationId/preview')
   @LGResponse({ operationId: 'previewApplication', type: GetHTMLPreview })
+  @UseGuards(OwnershipGuard)
   async previewApplication(
     @Param('applicationId') applicationId: string,
-    @CurrentUser() user: DMRUser,
   ): Promise<GetHTMLPreview> {
-    return this.applicationService.previewApplication(applicationId, user)
+    return this.applicationService.previewApplication(applicationId)
   }
 
   @Get(':applicationId/price')
@@ -140,14 +141,13 @@ export class ApplicationController {
     operationId: 'getApplicationPrice',
     type: GetApplicationEstimatedPriceDto,
   })
+  @UseGuards(OwnershipGuard)
   async getApplicationPrice(
     @Param('applicationId') applicationId: string,
-    @CurrentUser() user: DMRUser,
   ): Promise<GetApplicationEstimatedPriceDto> {
     const price =
       await this.priceCalculatorService.getEstimatedPriceForApplication(
         applicationId,
-        user,
       )
     return { price }
   }

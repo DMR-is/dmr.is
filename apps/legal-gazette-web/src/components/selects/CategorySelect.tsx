@@ -1,55 +1,58 @@
-'use client'
-
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Select } from '@dmr.is/ui/components/island-is'
 
 import { CategoryDto } from '../../gen/fetch'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 
 type Props = {
-  onSelect?: (id: string) => void
+  typeId?: string
+  onSelect?: (category?: CategoryDto) => void
   isLoading?: boolean
   selectedId?: string
-  categories: CategoryDto[]
   isClearable?: boolean
   disabled?: boolean
+  required?: boolean
 }
 
 export const CategorySelect = ({
   onSelect,
+  typeId,
   selectedId,
-  isLoading = false,
-  categories = [],
+  required,
   isClearable,
   disabled,
 }: Props) => {
-  const selected = categories.find((c) => c.id === selectedId)
-  const options = categories.map((category) => ({
+  const trpc = useTRPC()
+  const { data, isPending } = useQuery(
+    trpc.getCategories.queryOptions({ type: typeId }),
+  )
+
+  const options = data?.categories.map((category) => ({
     label: category.title,
     value: category.id,
   }))
 
+  const selected = data?.categories.find((t) => t.id === selectedId)
+
   const handleChange = (opt: { label: string; value: string } | null) => {
     if (opt?.value) {
-      onSelect?.(opt.value)
+      const found = data?.categories.find((c) => c.id === opt.value)
+      onSelect?.(found)
     }
   }
 
-  const isDisabled =
-    disabled || categories.length === 0 || categories.length === 1
-
   return (
     <Select
+      required={required}
+      noOptionsMessage="Veldu tegund fyrst"
       key={selectedId}
-      isLoading={isLoading}
-      isDisabled={isDisabled}
+      isLoading={isPending}
+      isDisabled={disabled}
       size="sm"
       backgroundColor="blue"
       label="Flokkur auglýsingar"
       placeholder="Veldu flokk"
-      value={
-        categories.length > 0 && selected
-          ? { label: selected.title, value: selected.id }
-          : null
-      }
+      value={selected ? { label: selected.title, value: selected.id } : null}
       options={options}
       isClearable={isClearable}
       onChange={handleChange}

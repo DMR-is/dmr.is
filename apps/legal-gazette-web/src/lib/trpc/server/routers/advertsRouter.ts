@@ -3,8 +3,18 @@ import * as z from 'zod'
 import { communicationChannelSchema } from '@dmr.is/legal-gazette/schemas'
 import { createTRPCError } from '@dmr.is/trpc/utils/errorHandler'
 
-import { SortDirectionEnum } from '../../../../gen/fetch'
+import {
+  RecallBankruptcyFieldsDtoRequirementStatementEnum,
+  RecallDeceasedFieldsDtoRequirementStatementEnum,
+  RecallDeceasedFieldsDtoSettlementTypeEnum,
+  SortDirectionEnum,
+} from '../../../../gen/fetch'
 import { StatusIdEnum } from '../../../constants'
+import {
+  createAdvertAndCommonApplicationInput,
+  createAdvertAndDeceasedApplicationInput,
+  createAdvertAndRecallBankruptcyApplicationInput,
+} from '../../../inputs'
 import { protectedProcedure, router } from '../trpc'
 
 const getAdvertsRequestSchema = z.object({
@@ -152,6 +162,92 @@ export const advertsRouter = router({
     .mutation(async ({ ctx, input }) => {
       return await ctx.api.rejectAdvert({
         id: input.id,
+      })
+    }),
+  createAdvertAndCommonApplication: protectedProcedure
+    .input(createAdvertAndCommonApplicationInput)
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.api.createAdvertAndCommonApplication({
+        createCommonAdvertAndApplicationDto: {
+          applicantNationalId: input.applicantNationalId,
+          communicationChannels: input.communicationChannels,
+          fields: {
+            caption: input.fields.caption,
+            categoryId: input.fields.category.id,
+            content: input.fields.html,
+            typeId: input.fields.type.id,
+          },
+          publishingDates: input.publishingDates,
+          signature: input.signature,
+          additionalText: input.additionalText,
+        },
+      })
+    }),
+  createRecallBankruptcyAdvertAndApplication: protectedProcedure
+    .input(createAdvertAndRecallBankruptcyApplicationInput)
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.api.createAdvertAndRecallBankruptcyApplication({
+        createRecallBankruptcyAdvertAndApplicationDto: {
+          applicantNationalId: input.applicantNationalId,
+          communicationChannels: input.communicationChannels,
+          publishingDates: input.publishingDates,
+          signature: input.signature,
+          additionalText: input.additionalText,
+          fields: {
+            courtDistrictId:
+              input.fields.courtAndJudgmentFields.courtDistrict.id,
+            judgmentDate: input.fields.courtAndJudgmentFields.judgmentDate,
+            meetingDate: input.fields.divisionMeetingFields.meetingDate,
+            meetingLocation: input.fields.divisionMeetingFields.meetingLocation,
+            liquidatorLocation:
+              input.fields.settlementFields.liquidatorLocation,
+            liquidatorName: input.fields.settlementFields.liquidatorName,
+            requirementStatementLocation:
+              input.fields.settlementFields.recallRequirementStatementLocation,
+            requirementStatement: input.fields.settlementFields
+              .recallRequirementStatementType as unknown as RecallBankruptcyFieldsDtoRequirementStatementEnum,
+            settlementAddress: input.fields.settlementFields.address,
+            settlementDate: input.fields.settlementFields.deadlineDate,
+            settlementName: input.fields.settlementFields.name,
+            settlementNationalId: input.fields.settlementFields.nationalId,
+          },
+        },
+      })
+    }),
+  createRecallDeceasedAdvertAndApplication: protectedProcedure
+    .input(createAdvertAndDeceasedApplicationInput)
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.api.createAdvertAndRecallDeceasedApplication({
+        createRecallDeceasedAdvertAndApplicationDto: {
+          applicantNationalId: input.applicantNationalId,
+          communicationChannels: input.communicationChannels,
+          publishingDates: input.publishingDates,
+          signature: input.signature,
+          additionalText: input.additionalText,
+          fields: {
+            courtDistrictId:
+              input.fields.courtAndJudgmentFields.courtDistrict.id,
+            judgmentDate: input.fields.courtAndJudgmentFields.judgmentDate,
+            meetingDate:
+              input.fields.divisionMeetingFields?.meetingDate ?? undefined,
+            meetingLocation:
+              input.fields.divisionMeetingFields?.meetingLocation ?? undefined,
+            liquidatorLocation:
+              input.fields.settlementFields.liquidatorLocation,
+            liquidatorName: input.fields.settlementFields.liquidatorName,
+            requirementStatementLocation:
+              input.fields.settlementFields.recallRequirementStatementLocation,
+            requirementStatement: input.fields.settlementFields
+              .recallRequirementStatementType as unknown as RecallDeceasedFieldsDtoRequirementStatementEnum,
+            settlementAddress: input.fields.settlementFields.address,
+            settlementDate: input.fields.settlementFields.dateOfDeath,
+            settlementName: input.fields.settlementFields.name,
+            settlementNationalId: input.fields.settlementFields.nationalId,
+            settlementType: input.fields.settlementFields
+              .type as RecallDeceasedFieldsDtoSettlementTypeEnum,
+            companies: input.fields.settlementFields.companies,
+          },
+        },
       })
     }),
 })

@@ -58,7 +58,10 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
             <AdvertReadonlyFields
               id={advert.id}
               publicationNumber={advert.publicationNumber}
-              createdAt={formatDate(advert.createdAt, 'dd. MMMM yyyy')}
+              createdAt={formatDate(
+                advert.createdAt,
+                "dd. MMMM yyyy 'kl.' HH:mm",
+              )}
               createdBy={advert.createdBy}
               paid={!!advert.paidAt}
               totalPrice={advert.totalPrice}

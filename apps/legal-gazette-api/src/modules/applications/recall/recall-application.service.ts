@@ -2,11 +2,7 @@ import addDays from 'date-fns/addDays'
 import { Op } from 'sequelize'
 import * as z from 'zod'
 
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-} from '@nestjs/common'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
@@ -192,8 +188,6 @@ export class RecallApplicationService implements IRecallApplicationService {
     const application = await this.applicationModel.findOneOrThrow({
       where: {
         id: applicationId,
-        submittedByNationalId: user.nationalId,
-        status: ApplicationStatusEnum.SUBMITTED,
         applicationType: {
           [Op.or]: [
             ApplicationTypeEnum.RECALL_BANKRUPTCY,
@@ -465,8 +459,6 @@ export class RecallApplicationService implements IRecallApplicationService {
     const application = await this.applicationModel.findOneOrThrow({
       where: {
         id: applicationId,
-        submittedByNationalId: user.nationalId,
-        status: ApplicationStatusEnum.DRAFT,
         applicationType: {
           [Op.or]: [
             ApplicationTypeEnum.RECALL_BANKRUPTCY,

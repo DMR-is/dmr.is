@@ -1065,6 +1065,192 @@
         "tags": ["Legal gazette - application web API"]
       }
     },
+    "/api/v1/adverts/create/template/common": {
+      "post": {
+        "operationId": "createAdvertAndCommonApplication",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommonAdvertAndApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/adverts/create/template/recall-bankruptcy": {
+      "post": {
+        "operationId": "createAdvertAndRecallBankruptcyApplication",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecallBankruptcyAdvertAndApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
+    "/api/v1/adverts/create/template/recall-deceased": {
+      "post": {
+        "operationId": "createAdvertAndRecallDeceasedApplication",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecallDeceasedAdvertAndApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
     "/api/v1/types/slug/{slug}": {
       "get": {
         "operationId": "getTypeBySlug",
@@ -3727,6 +3913,7 @@
               "Forbidden",
               "BadRequest",
               "InternalServerError",
+              "ConnectionAcquireTimeoutError",
               "UnknownError"
             ],
             "example": [
@@ -3739,6 +3926,7 @@
               "Forbidden",
               "BadRequest",
               "InternalServerError",
+              "ConnectionAcquireTimeoutError",
               "UnknownError"
             ]
           },
@@ -4359,6 +4547,143 @@
         "type": "object",
         "properties": { "id": { "type": "string" } },
         "required": ["id"]
+      },
+      "CommonAdvertFieldsDto": {
+        "type": "object",
+        "properties": {
+          "typeId": { "type": "string" },
+          "categoryId": { "type": "string" },
+          "caption": { "type": "string" },
+          "content": { "type": "string" }
+        },
+        "required": ["typeId", "categoryId", "caption", "content"]
+      },
+      "CreateCommonAdvertAndApplicationDto": {
+        "type": "object",
+        "properties": {
+          "applicantNationalId": { "type": "string" },
+          "additionalText": { "type": "string" },
+          "signature": { "$ref": "#/components/schemas/CreateSignatureDto" },
+          "communicationChannels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
+          },
+          "publishingDates": { "type": "array", "items": { "type": "string" } },
+          "fields": { "$ref": "#/components/schemas/CommonAdvertFieldsDto" }
+        },
+        "required": [
+          "applicantNationalId",
+          "signature",
+          "communicationChannels",
+          "publishingDates",
+          "fields"
+        ]
+      },
+      "RecallBankruptcyFieldsDto": {
+        "type": "object",
+        "properties": {
+          "meetingDate": { "type": "string" },
+          "meetingLocation": { "type": "string" },
+          "courtDistrictId": { "type": "string" },
+          "judgmentDate": { "type": "string" },
+          "settlementNationalId": { "type": "string" },
+          "settlementName": { "type": "string" },
+          "settlementAddress": { "type": "string" },
+          "settlementDate": { "type": "string" },
+          "liquidatorName": { "type": "string" },
+          "liquidatorLocation": { "type": "string" },
+          "requirementStatement": {
+            "type": "string",
+            "enum": [
+              "LIQUIDATOR_LOCATION",
+              "CUSTOM_LIQUIDATOR_LOCATION",
+              "CUSTOM_LIQUIDATOR_EMAIL"
+            ]
+          },
+          "requirementStatementLocation": { "type": "string" }
+        },
+        "required": [
+          "meetingDate",
+          "meetingLocation",
+          "courtDistrictId",
+          "judgmentDate",
+          "settlementNationalId",
+          "settlementName",
+          "settlementAddress",
+          "settlementDate",
+          "liquidatorName",
+          "liquidatorLocation",
+          "requirementStatement",
+          "requirementStatementLocation"
+        ]
+      },
+      "CreateRecallBankruptcyAdvertAndApplicationDto": {
+        "type": "object",
+        "properties": {
+          "applicantNationalId": { "type": "string" },
+          "additionalText": { "type": "string" },
+          "signature": { "$ref": "#/components/schemas/CreateSignatureDto" },
+          "communicationChannels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
+          },
+          "publishingDates": { "type": "array", "items": { "type": "string" } },
+          "fields": { "$ref": "#/components/schemas/RecallBankruptcyFieldsDto" }
+        },
+        "required": [
+          "applicantNationalId",
+          "signature",
+          "communicationChannels",
+          "publishingDates",
+          "fields"
+        ]
+      },
+      "RecallDeceasedFieldsDto": {
+        "type": "object",
+        "properties": {
+          "meetingDate": { "type": "string" },
+          "meetingLocation": { "type": "string" },
+          "courtDistrictId": { "type": "string" },
+          "judgmentDate": { "type": "string" },
+          "settlementNationalId": { "type": "string" },
+          "settlementName": { "type": "string" },
+          "settlementAddress": { "type": "string" },
+          "settlementDate": { "type": "string" },
+          "liquidatorName": { "type": "string" },
+          "liquidatorLocation": { "type": "string" },
+          "requirementStatement": {
+            "type": "string",
+            "enum": [
+              "LIQUIDATOR_LOCATION",
+              "CUSTOM_LIQUIDATOR_LOCATION",
+              "CUSTOM_LIQUIDATOR_EMAIL"
+            ]
+          },
+          "requirementStatementLocation": { "type": "string" }
+        },
+        "required": [
+          "courtDistrictId",
+          "judgmentDate",
+          "settlementNationalId",
+          "settlementName",
+          "settlementAddress",
+          "settlementDate",
+          "liquidatorName",
+          "liquidatorLocation",
+          "requirementStatement",
+          "requirementStatementLocation"
+        ]
+      },
+      "CreateRecallDeceasedAdvertAndApplicationDto": {
+        "type": "object",
+        "properties": {
+          "fields": { "$ref": "#/components/schemas/RecallDeceasedFieldsDto" }
+        },
+        "required": ["fields"]
       },
       "TypeModel": {
         "type": "object",
