@@ -15,6 +15,7 @@ import {
   LinkV2,
   Text,
 } from '@dmr.is/ui/components/island-is'
+import { createUrlFromHost } from '@dmr.is/utils/client'
 
 import { SearchIssuesPage } from '../search-issues-page/SearchIssuesPage'
 
@@ -27,11 +28,15 @@ type QuickLink = {
 export const LandingPageContent = () => {
   const { data: session } = useSession()
 
-  // TODO: breyta í rétta tengla fyrir prod
+  const auglysendurUrl = createUrlFromHost(
+    window.location.host,
+    false,
+    'auglysendur',
+  )
   const quickLinks: QuickLink[] = [
     {
-      title: 'Innri vefur auglýsanda',
-      href: 'https://umsoknir.legal-gazette.dev.dmr-dev.cloud',
+      title: 'Senda inn auglýsingu',
+      href: auglysendurUrl,
       variant: 'primary',
       icon: 'open',
     },
