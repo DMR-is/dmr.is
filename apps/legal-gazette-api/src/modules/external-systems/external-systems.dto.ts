@@ -4,12 +4,9 @@ import {
   IsBoolean,
   IsDateString,
   IsDefined,
-  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
-  Max,
-  Min,
   ValidateNested,
 } from 'class-validator'
 
@@ -323,15 +320,14 @@ export class AdditionalAnnouncementsDto {
   companyLocation!: string
 
   @ApiProperty({
-    enum: AnnouncementItem,
-    enumName: 'AnnouncementItem',
+    type: String,
     isArray: true,
     description: 'List of additional announcements to create (Tegundir)',
     example: ['A', 'J'],
   })
   @IsArray()
-  @IsEnum(AnnouncementItem, { each: true })
-  announcementItems!: AnnouncementItem[]
+  @IsString({ each: true })
+  announcementItems!: string[]
 }
 
 export class CreateAdditionalAnnouncementsDto {
@@ -344,26 +340,9 @@ export class CreateAdditionalAnnouncementsDto {
   @ValidateNested()
   responsibleParty!: ObjectIssuer
 
-  @ApiProperty({
-    type: Number,
-    description:
-      'The year of the additional announcements to create (1900 - 2100)',
-    example: 2024,
-  })
-  @IsNumber()
-  @Min(1900)
-  @Max(2100)
-  announcementYear!: number
-
-  @ApiProperty({
-    type: Number,
-    description: 'The month of the additional announcements to create (0 - 11)',
-    example: 6,
-  })
-  @IsNumber()
-  @Min(0)
-  @Max(11)
-  announcementMonth!: number
+  @ApiProperty({ type: String, required: true })
+  @IsDateString()
+  announcementDate!: string
 
   @ApiProperty({
     type: [AdditionalAnnouncementsDto],
