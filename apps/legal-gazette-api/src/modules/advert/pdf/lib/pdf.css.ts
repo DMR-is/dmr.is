@@ -630,7 +630,8 @@ export const pdfStyles = `
       }
 
       .advert-divider-line:last-of-type {
-        display: none;}
+        display: none;
+      }
 
       .advert-container .advertHeading {
         margin-top: 4px;
