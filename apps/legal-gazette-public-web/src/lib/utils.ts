@@ -46,9 +46,14 @@ export const isDate = (date: unknown): date is Date => {
   return date instanceof Date && !isNaN(date.getTime())
 }
 
+// Gets base url from server side environment variables
+// Strips http:// and https:// from the url
 export const getBaseUrlFromServerSide = (): string => {
+  let url = ''
   if (process.env.NODE_ENV === 'development') {
-    return process.env.LG_PUBLIC_WEB_URL!
+    url = process.env.LG_PUBLIC_WEB_URL!
+  } else {
+    url = (process.env.BASE_URL ?? process.env.IDENTITY_SERVER_LOGOUT_URL)! // Fallback to ID server logout URL if BASE_URL is not set yet
   }
-  return (process.env.BASE_URL ?? process.env.IDENTITY_SERVER_LOGOUT_URL)! // Fallback to ID server logout URL if BASE_URL is not set yet
+  return url.replace(/^https?:\/\//, '')
 }
