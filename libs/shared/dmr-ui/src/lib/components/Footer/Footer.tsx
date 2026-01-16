@@ -1,5 +1,7 @@
 'use client'
 
+import { createUrlFromHost } from '@dmr.is/utils/client'
+
 import {
   Box,
   GridColumn,
@@ -10,7 +12,6 @@ import {
   Stack,
   Text,
 } from '@island.is/island-ui/core'
-import { createUrlFromHost } from 'libs/shared/utils/src/lib/clientUtils'
 
 import { HeaderLogo } from '../Header/HeaderLogo'
 import * as styles from './footer.css'
@@ -78,22 +79,22 @@ export const Footer = ({ site = 'web' }: { site?: 'web' | 'applications' }) => {
       ? [
           {
             title: 'Innri vefur auglýsanda',
-            href: 'https://umsoknir.legal-gazette.dev.dmr-dev.cloud',
+            href: logbirtingUrl,
           },
           {
             title: 'Stjórnartíðindi',
-            href: 'https://island.is/stjornartidindi',
+            href: stjornartidindiUrl,
           },
         ]
       : site === 'applications'
         ? [
             {
               title: 'Vefur Lögbirtingablaðs',
-              href: 'https://legal-gazette.dev.dmr-dev.cloud',
+              href: logbirtingUrl,
             },
             {
               title: 'Stjórnartíðindi',
-              href: 'https://island.is/stjornartidindi',
+              href: stjornartidindiUrl,
             },
           ]
         : []

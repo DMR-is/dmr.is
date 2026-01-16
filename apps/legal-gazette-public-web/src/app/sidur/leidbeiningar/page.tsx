@@ -30,7 +30,6 @@ export default function Page() {
                 id={'i1'}
                 labelVariant="h4"
                 label="Hvað er auglýsingakerfi Lögbirtingablaðsins"
-                startExpanded
               >
                 <Box>
                   <Text>
