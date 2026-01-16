@@ -1,3 +1,5 @@
+'use client'
+
 import {
   Accordion,
   AccordionItem,
@@ -11,6 +13,8 @@ import {
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
+
+import { VideoIframe } from '@island.is/island-ui/core'
 
 export default function Page() {
   return (
@@ -199,6 +203,19 @@ export default function Page() {
                         auglýsanda.
                       </Text>
                     </Stack>
+                    <Stack space={2}>
+                      <Text fontWeight="medium">
+                        Myndbönd með leiðbeiningum fyrir umboð
+                      </Text>
+                      <VideoIframe
+                        src="https://www.youtube.com/embed/JqV0zeeyu9s"
+                        title="default"
+                      />
+                      <VideoIframe
+                        src="https://www.youtube.com/embed/JqV0zeeyu9s"
+                        title="default"
+                      />
+                    </Stack>
                   </Stack>
                 </Box>
               </AccordionItem>
@@ -258,10 +275,19 @@ export default function Page() {
               </AccordionItem>
             </Accordion>
 
-            {/* <Stack space={3}>
-              <Text variant="h3">Myndband með leiðbeiningum</Text>
-              <video width="100%" controls></video>
-            </Stack> */}
+            <Stack space={3}>
+              <Text variant="h3">
+                Myndbönd með leiðbeiningum fyrir aulýsingakerfi
+              </Text>
+              <VideoIframe
+                src="https://www.youtube.com/embed/JqV0zeeyu9s"
+                title="default"
+              />
+              <VideoIframe
+                src="https://www.youtube.com/embed/JqV0zeeyu9s"
+                title="default"
+              />
+            </Stack>
 
             <Stack space={3}>
               <Text variant="h3">Algengar spurningar</Text>
