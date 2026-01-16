@@ -629,10 +629,6 @@ export const pdfStyles = `
         margin-right: auto;
       }
 
-      .advert-divider-line:last-child {
-        display: none !important;
-      }
-
       .advert-container .advertHeading {
         margin-top: 4px;
       }
