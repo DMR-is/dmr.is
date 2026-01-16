@@ -1,4 +1,5 @@
 'use client'
+import { createUrlFromHost } from '@dmr.is/utils/client'
 
 import {
   Box,
@@ -46,28 +47,34 @@ export const Footer = ({ site = 'web' }: { site?: 'web' | 'applications' }) => {
     },
   ]
 
-  // TODO: Before launch on prod, replace legal-gazette.dev URL's with prod URL's
+  const logbirtingUrl = createUrlFromHost(
+    window.location.host,
+    false,
+    site === 'web' ? 'auglysendur' : '',
+  )
+  const stjornartidindiUrl = 'https://island.is/stjornartidindi'
+
   const externalLinks =
     site === 'web'
       ? [
           {
             title: 'Innri vefur auglýsanda',
-            href: 'https://umsoknir.legal-gazette.dev.dmr-dev.cloud',
+            href: logbirtingUrl,
           },
           {
             title: 'Stjórnartíðindi',
-            href: 'https://island.is/stjornartidindi',
+            href: stjornartidindiUrl,
           },
         ]
       : site === 'applications'
         ? [
             {
               title: 'Vefur Lögbirtingablaðs',
-              href: 'https://legal-gazette.dev.dmr-dev.cloud',
+              href: logbirtingUrl,
             },
             {
               title: 'Stjórnartíðindi',
-              href: 'https://island.is/stjornartidindi',
+              href: stjornartidindiUrl,
             },
           ]
         : []
