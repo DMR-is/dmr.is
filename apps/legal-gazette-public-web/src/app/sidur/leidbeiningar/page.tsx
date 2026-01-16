@@ -1,3 +1,5 @@
+'use client'
+
 import {
   Accordion,
   AccordionItem,
@@ -11,6 +13,8 @@ import {
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
+
+import { VideoIframe } from '@island.is/island-ui/core'
 
 export default function Page() {
   return (
@@ -132,8 +136,8 @@ export default function Page() {
                       </Text>
 
                       <Text>
-                        Prófkúruhafi getur gefið umboð til notenda til að gefa
-                        öðrum umboð. Þá fer prófkúra hafi í gegnum umboðsferlið
+                        Prókúruhafi getur gefið umboð til notenda til að gefa
+                        öðrum umboð. Þá fer prókúruhafi í gegnum umboðsferlið
                         hér að ofan og gefur notanda umboð fyrir kerfi
                         Lögbirtingarblaðsins
                       </Text>
@@ -199,6 +203,19 @@ export default function Page() {
                         auglýsanda.
                       </Text>
                     </Stack>
+                    <Stack space={2}>
+                      <Text fontWeight="medium">
+                        Myndbönd með leiðbeiningum fyrir umboð
+                      </Text>
+                      <VideoIframe
+                        src="https://www.youtube.com/embed/JqV0zeeyu9s"
+                        title="default"
+                      />
+                      <VideoIframe
+                        src="https://www.youtube.com/embed/JqV0zeeyu9s"
+                        title="default"
+                      />
+                    </Stack>
                   </Stack>
                 </Box>
               </AccordionItem>
@@ -259,8 +276,17 @@ export default function Page() {
             </Accordion>
 
             <Stack space={3}>
-              <Text variant="h3">Myndband með leiðbeiningum</Text>
-              <video width="100%" controls></video>
+              <Text variant="h3">
+                Myndbönd með leiðbeiningum fyrir aulýsingakerfi
+              </Text>
+              <VideoIframe
+                src="https://www.youtube.com/embed/JqV0zeeyu9s"
+                title="default"
+              />
+              <VideoIframe
+                src="https://www.youtube.com/embed/JqV0zeeyu9s"
+                title="default"
+              />
             </Stack>
 
             <Stack space={3}>
