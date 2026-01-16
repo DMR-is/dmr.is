@@ -10,6 +10,7 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
+  LinkV2,
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
@@ -38,7 +39,8 @@ export default function Login() {
               <Text variant="intro">
                 Skráðu þig inn á innri vef auglýsanda með rafrænum skilríkjum.
               </Text>
-              <Box marginTop={[2, 2, 3]}>
+
+              <Box marginTop={[1, 2]}>
                 <Button
                   onClick={async (e) => {
                     e.preventDefault()
@@ -55,6 +57,28 @@ export default function Login() {
                 >
                   Skrá inn með rafrænum skilríkjum
                 </Button>
+              </Box>
+              <Box marginTop={[2, 4]}>
+                <Text variant="intro" marginTop={2}>
+                  Hér má sjá{' '}
+                  <Text
+                    color="blue400"
+                    fontWeight="medium"
+                    as="span"
+                    variant="intro"
+                  >
+                    <LinkV2
+                      href="https://logbirtingablad.is/sidur/leidbeiningar"
+                      underlineVisibility="always"
+                      underline="normal"
+                      newTab
+                    >
+                      ítarlegri upplýsingar
+                    </LinkV2>
+                  </Text>{' '}
+                  um innskráningu ásamt umboðsvirkni ef notanda vill senda
+                  auglýsingu í nafni fyrirtækis.
+                </Text>
               </Box>
             </Stack>
           </Box>

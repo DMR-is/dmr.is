@@ -1,4 +1,5 @@
 'use client'
+
 import { createUrlFromHost } from '@dmr.is/utils/client'
 
 import {
@@ -16,43 +17,62 @@ import { HeaderLogo } from '../Header/HeaderLogo'
 import * as styles from './footer.css'
 
 export const Footer = ({ site = 'web' }: { site?: 'web' | 'applications' }) => {
-  const innerLinks = [
-    {
-      title: 'Auglýsingarflokkar',
-      href: '/sidur/auglysingaflokkar',
-    },
-    {
-      title: 'Gjaldskrá',
-      href: '/sidur/gjaldskra',
-    },
-    {
-      title: 'Um Lögbirtingablaðið',
-      href: '/sidur/about',
-    },
-    {
-      title: 'Áskriftarskilmálar',
-      href: '/sidur/skilmalar',
-    },
-    {
-      title: 'Útgefin tölublöð',
-      href: '/sidur/utgefintolublod',
-    },
-    {
-      title: 'Leiðbeiningar',
-      href: '/sidur/leidbeiningar',
-    },
-    {
-      title: 'Gerast áskrifandi',
-      href: '/skraning',
-    },
-  ]
-
   const logbirtingUrl = createUrlFromHost(
     window.location.host,
     false,
     site === 'web' ? 'auglysendur' : '',
   )
   const stjornartidindiUrl = 'https://island.is/stjornartidindi'
+
+  const innerLinks =
+    site === 'web'
+      ? [
+          {
+            title: 'Auglýsingarflokkar',
+            href: '/sidur/auglysingaflokkar',
+          },
+          {
+            title: 'Gjaldskrá',
+            href: '/sidur/gjaldskra',
+          },
+          {
+            title: 'Um Lögbirtingablaðið',
+            href: '/sidur/about',
+          },
+          {
+            title: 'Áskriftarskilmálar',
+            href: '/sidur/skilmalar',
+          },
+          {
+            title: 'Útgefin tölublöð',
+            href: '/sidur/utgefintolublod',
+          },
+          {
+            title: 'Leiðbeiningar',
+            href: '/sidur/leidbeiningar',
+          },
+          {
+            title: 'Gerast áskrifandi',
+            href: '/skraning',
+          },
+        ]
+      : site === 'applications'
+        ? [
+            {
+              title: 'Leiðbeiningar',
+              href: logbirtingUrl + '/sidur/leidbeiningar',
+            },
+            {
+              title: 'Auglýsingarflokkar',
+              href: logbirtingUrl + '/sidur/auglysingaflokkar',
+            },
+
+            {
+              title: 'Um Lögbirtingablaðið',
+              href: logbirtingUrl + '/sidur/about',
+            },
+          ]
+        : []
 
   const externalLinks =
     site === 'web'
@@ -114,37 +134,37 @@ export const Footer = ({ site = 'web' }: { site?: 'web' | 'applications' }) => {
               <div className={styles.footerDivider} />
             </GridColumn>
 
-            {site === 'web' && (
-              <GridColumn span={['12/12', '6/12', '6/12', '6/12']}>
-                <Stack space={2}>
-                  <Text variant="eyebrow" color="blue400" paddingTop={4}>
-                    Hlekkir
-                  </Text>
-                  <Inline space={8}>
-                    <Stack space={1}>
-                      {innerLinks.map(
-                        ({ title, href }, index) =>
-                          index < 4 && (
-                            <Text key={index} variant="small" color="blue600">
-                              <a href={href}>{title}</a>
-                            </Text>
-                          ),
-                      )}
-                    </Stack>
-                    <Stack space={1}>
-                      {innerLinks.map(
-                        ({ title, href }, index) =>
-                          index >= 4 && (
-                            <Text key={index} variant="small" color="blue600">
-                              <a href={href}>{title}</a>
-                            </Text>
-                          ),
-                      )}
-                    </Stack>
-                  </Inline>
-                </Stack>
-              </GridColumn>
-            )}
+            {/* {site === 'web' && ( */}
+            <GridColumn span={['12/12', '6/12', '6/12', '6/12']}>
+              <Stack space={2}>
+                <Text variant="eyebrow" color="blue400" paddingTop={4}>
+                  Hlekkir
+                </Text>
+                <Inline space={8}>
+                  <Stack space={1}>
+                    {innerLinks.map(
+                      ({ title, href }, index) =>
+                        index < 4 && (
+                          <Text key={index} variant="small" color="blue600">
+                            <a href={href}>{title}</a>
+                          </Text>
+                        ),
+                    )}
+                  </Stack>
+                  <Stack space={1}>
+                    {innerLinks.map(
+                      ({ title, href }, index) =>
+                        index >= 4 && (
+                          <Text key={index} variant="small" color="blue600">
+                            <a href={href}>{title}</a>
+                          </Text>
+                        ),
+                    )}
+                  </Stack>
+                </Inline>
+              </Stack>
+            </GridColumn>
+            {/* )} */}
           </GridRow>
         </GridContainer>
       </Box>

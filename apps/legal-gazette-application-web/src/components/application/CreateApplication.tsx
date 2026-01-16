@@ -53,6 +53,10 @@ export const CreateApplication = () => {
 
   return (
     <Box marginTop={2}>
+      <Text marginBottom={2}>
+        Hér getur þú valið um hverskonar auglýsingu þú vilt senda inn til
+        Lögbirtingablaðsins:
+      </Text>
       <Inline space={2}>
         <Button
           variant="utility"

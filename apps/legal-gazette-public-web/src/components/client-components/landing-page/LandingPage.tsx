@@ -13,6 +13,7 @@ import {
   GridContainer,
   GridRow,
   LinkV2,
+  Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
 import { createUrlFromHost } from '@dmr.is/utils/client'
@@ -72,26 +73,56 @@ export const LandingPageContent = () => {
                 imageSpan={'4/12'}
                 withOffset={false}
                 image={{ src: '/images/hero-page-image.svg' }}
-                description="Dómsmálaráðuneytið gefur út Lögbirtingablaðið. Það kom fyrst út í prentuðu formi í árið 1908 og í dag er blaðið einnig aðgengilegt á netinu þar sem hægt er að nálgast öll tölublöð sem komið hafa út frá 1. janúar 2001."
-                button={quickLinks?.map((link, i) => (
-                  <Button
-                    key={i}
-                    size="small"
-                    icon={link.icon}
-                    iconType="outline"
-                    variant={link.variant}
-                  >
-                    <LinkV2 key={i} href={link.href}>
-                      {link.title}
-                    </LinkV2>
-                  </Button>
-                ))}
+                description={
+                  <Box marginBottom={[2, 2, 2, 2, 0]}>
+                    <Text variant="intro">
+                      Velkomin á nýja síðu Lögbirtingablaðsins.
+                      Dómsmálaráðuneytið gefur út Lögbirtingablaðið. Það kom
+                      fyrst út í prentuðu formi í árið 1908 og í dag er blaðið
+                      einnig aðgengilegt á netinu þar sem hægt er að nálgast öll
+                      tölublöð sem komið hafa út frá 1. janúar 2001.
+                    </Text>
+                    <Text variant="intro" marginTop={2}>
+                      Hér má sjá{' '}
+                      <Text
+                        color="blue400"
+                        fontWeight="medium"
+                        as="span"
+                        variant="intro"
+                      >
+                        <LinkV2
+                          href="/sidur/leidbeiningar"
+                          underlineVisibility="always"
+                          underline="normal"
+                        >
+                          leiðbeiningar
+                        </LinkV2>
+                      </Text>{' '}
+                      fyrir alla vefi Lögbirtingablaðsins.
+                    </Text>
+                  </Box>
+                }
                 alignHeader={'spaceBetween'}
               >
                 <GridContainer>
                   <GridRow>
                     <GridColumn>
-                      <Text variant="default">
+                      <Box marginBottom={6} style={{ marginTop: '-24px' }}>
+                        {quickLinks?.map((link, i) => (
+                          <Button
+                            key={i}
+                            size="small"
+                            icon={link.icon}
+                            iconType="outline"
+                            variant={link.variant}
+                          >
+                            <LinkV2 key={i} href={link.href}>
+                              {link.title}
+                            </LinkV2>
+                          </Button>
+                        ))}
+                      </Box>
+                      <Text>
                         Samkvæmt lögum nr. 15/2005 skal birta í Lögbirtingablaði
                         dómsmálaauglýsingar, svo sem stefnur til dóms, úrskurði
                         um töku búa til opinberra skipta og áskoranir um

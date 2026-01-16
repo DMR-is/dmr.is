@@ -18,7 +18,7 @@ type SpanType = React.ComponentProps<typeof GridColumn>['span']
 
 export type HeroProps = {
   title?: string
-  description?: string
+  description?: string | React.ReactNode
   breadcrumbs?: React.ComponentProps<typeof Breadcrumbs>
   image?: ImageProps
   children?: React.ReactNode

@@ -1,9 +1,9 @@
 'use client'
 
-import { Box } from '@dmr.is/ui/components/island-is'
+import Hero from '@dmr.is/ui/components/Hero/Hero'
+import { Box, LinkV2, Text } from '@dmr.is/ui/components/island-is'
 
 import { CreateApplication } from '../application/CreateApplication'
-import { Hero } from './Hero'
 
 export const UmsoknirHero = () => {
   return (
@@ -11,7 +11,29 @@ export const UmsoknirHero = () => {
       <Hero
         variant="small"
         title="Lögbirtingablaðið - auglýsingar"
-        description="Hér getur þú valið um hverskonar auglýsingu þú vilt senda inn til Lögbirtingablaðsins."
+        description={
+          <Box style={{ maxWidth: '800px' }}>
+            <Text variant="intro">
+              Velkomin á nýja síðu fyrir auglýsendur Lögbirtingablaðsins. Hér má
+              sjá{' '}
+              <Text
+                color="blue400"
+                fontWeight="medium"
+                as="span"
+                variant="intro"
+              >
+                <LinkV2
+                  href="https://logbirtingablad.is/sidur/leidbeiningar"
+                  underlineVisibility="always"
+                  underline="normal"
+                >
+                  leiðbeiningar
+                </LinkV2>
+              </Text>{' '}
+              fyrir alla vefi Lögbirtingablaðsins.
+            </Text>
+          </Box>
+        }
         contentSpan={['12/12', '8/12']}
         imageSpan={['12/12', '3/12']}
         image={{
