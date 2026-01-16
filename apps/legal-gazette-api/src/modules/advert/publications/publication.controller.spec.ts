@@ -195,6 +195,7 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       expect(result).toBe(true)
       expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
         ADMIN_NATIONAL_ID,
+        true,
       )
     })
 
@@ -205,6 +206,7 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       // Admin check is performed first even for scoped users
       expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
         PUBLIC_WEB_NATIONAL_ID,
+        true,
       )
     })
 
@@ -218,6 +220,7 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       // Admin check is performed first even for scoped users
       expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
         APPLICATION_WEB_NATIONAL_ID,
+        true,
       )
     })
 
@@ -229,6 +232,7 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       await expect(authorizationGuard.canActivate(context)).rejects.toThrow()
       expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
         RANDOM_NATIONAL_ID,
+        true,
       )
     })
 
@@ -299,6 +303,7 @@ describe('AdvertPublicationController - Guard Authorization', () => {
         expect(result).toBe(true)
         expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
           ADMIN_NATIONAL_ID,
+          true,
         )
       })
 

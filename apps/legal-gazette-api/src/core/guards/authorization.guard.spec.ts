@@ -281,6 +281,7 @@ describe('AuthorizationGuard', () => {
 
         expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
           '1234567890',
+          true,
         )
       })
 

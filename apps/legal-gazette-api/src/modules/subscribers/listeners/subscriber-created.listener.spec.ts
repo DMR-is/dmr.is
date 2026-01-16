@@ -198,7 +198,7 @@ describe('SubscriberCreatedListener', () => {
       expect(tbrService.postPayment).toHaveBeenCalledWith({
         id: 'subscriber-123',
         chargeCategory: 'PERSON_CATEGORY',
-        chargeBase: 'subscriber-123',
+        chargeBase: '0101801234',
         debtorNationalId: '0101801234',
         expenses: [
           {
@@ -269,7 +269,7 @@ describe('SubscriberCreatedListener', () => {
           feeCodeId: 'fee-code-uuid-123',
           feeCodeMultiplier: 1,
           totalPrice: 4500,
-          chargeBase: 'subscriber-123',
+          chargeBase: '0101801234',
           chargeCategory: 'PERSON_CATEGORY',
           debtorNationalId: '0101801234',
           status: TBRTransactionStatus.PENDING,
@@ -653,7 +653,9 @@ describe('SubscriberCreatedListener', () => {
 
         const event = createMockEvent()
 
-        await expect(listener.createSubscriptionPayment(event)).rejects.toThrow()
+        await expect(
+          listener.createSubscriptionPayment(event),
+        ).rejects.toThrow()
 
         // Subscriber should NOT be updated when TBR fails
         expect(subscriberModel.update).not.toHaveBeenCalled()
@@ -689,4 +691,3 @@ describe('SubscriberCreatedListener', () => {
     })
   })
 })
-

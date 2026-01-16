@@ -182,6 +182,7 @@ describe('AdvertController - Guard Authorization', () => {
         expect(result).toBe(true)
         expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
           ADMIN_NATIONAL_ID,
+          true,
         )
       })
 
