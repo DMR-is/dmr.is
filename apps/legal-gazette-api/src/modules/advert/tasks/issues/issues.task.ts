@@ -41,7 +41,7 @@ export class IssuesTaskService implements IIssuesTask {
   @Cron(
     isProduction
       ? CronExpression.EVERY_DAY_AT_7AM
-      : CronExpression.EVERY_DAY_AT_NOON,
+      : CronExpression.EVERY_30_MINUTES,
     {
       name: 'daily-pdf-generation',
       timeZone: 'Atlantic/Reykjavik',
@@ -54,7 +54,7 @@ export class IssuesTaskService implements IIssuesTask {
         await this.dailyIssueGeneration()
       },
       {
-        cooldownMs: 60 * 60 * 1000, // 60 minutes
+        cooldownMs: 30 * 60 * 1000, // 30 minutes
         containerId: process.env.HOSTNAME,
       },
     )
@@ -119,7 +119,12 @@ export class IssuesTaskService implements IIssuesTask {
               [Op.lte]: now,
             },
           },
-          include: [{ model: AdvertModel }],
+          include: [
+            {
+              model: AdvertModel.scope('detailed'),
+              include: [{ model: CategoryModel, as: 'category' }],
+            },
+          ],
           attributes: ['id', 'advertId', 'publishedAt', 'versionNumber'],
           order: [
             [
