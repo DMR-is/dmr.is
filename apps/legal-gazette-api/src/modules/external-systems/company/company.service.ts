@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 
 import { formatDate } from '@dmr.is/utils'
 
@@ -27,9 +27,41 @@ export class CompanyService implements ICompanyService {
   ): Promise<void> {
     const nextWednesday = getNextWednesday()
 
+    const allowedAnnouncementItemsTypes = [
+      'A',
+      'B',
+      'C',
+      'D',
+      'E',
+      'F',
+      'G',
+      'H',
+      'J',
+      'K',
+      'L',
+      'M',
+      'N',
+      'O',
+      'P',
+      'R',
+      'S',
+      'T',
+    ]
+
     const { announcementDate } = body
 
     const intro = `<p>Eftirtalin hlutafélög og einkahlutafélög hafa sent hlutafélagaskrá tilkynningar í ${formatDate(announcementDate, 'MMMM yyyy')}, samanber skýringar á táknum hér fyrir neðan:</p>`
+
+    // check if there exists any invalid announcement item types
+    for (const announcement of body.announcements) {
+      for (const item of announcement.announcementItems) {
+        if (!allowedAnnouncementItemsTypes.includes(item)) {
+          throw new BadRequestException(
+            `Invalid announcement item type: ${item}. Allowed types are: ${allowedAnnouncementItemsTypes.join(', ')}`,
+          )
+        }
+      }
+    }
 
     const announcementsMarkup = body.announcements
       .map((an, i) =>
