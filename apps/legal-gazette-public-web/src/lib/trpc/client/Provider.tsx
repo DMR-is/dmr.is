@@ -28,7 +28,7 @@ function getQueryClient() {
 
 function getBaseUrl() {
   if (typeof window !== 'undefined') return '' // browser should use relative url
-  return getBaseUrlFromServerSide()// dev SSR should use localhost
+  return getBaseUrlFromServerSide(true)// dev SSR should use localhost
 }
 function getUrl() {
   const base = getBaseUrl()

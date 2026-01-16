@@ -125,10 +125,14 @@ export const loginRedirect = (callbackUrl?: string) => {
   }
 }
 
-export const getBaseUrlFromServerSide = (): string => {
+// Gets base url from server side environment variables
+// Strips http:// and https:// from the url
+export const getBaseUrlFromServerSide = (includePrefix = false): string => {
+  let url = ''
   if (process.env.NODE_ENV === 'development') {
-    return process.env.LG_WEB_URL!
+    url = process.env.LG_WEB_URL!
+  } else {
+    url = (process.env.BASE_URL ?? process.env.IDENTITY_SERVER_LOGOUT_URL)!
   }
-  return (process.env.BASE_URL ?? process.env.IDENTITY_SERVER_LOGOUT_URL)!
+  return includePrefix ? url : url.replace(/^https?:\/\//, '')
 }
-
