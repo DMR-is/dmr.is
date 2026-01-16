@@ -4,11 +4,8 @@ import Hero from '@dmr.is/ui/components/Hero/Hero'
 import { Box, LinkV2, Text } from '@dmr.is/ui/components/island-is'
 
 import { CreateApplication } from '../application/CreateApplication'
-import { createUrlFromHost } from 'libs/shared/utils/src/lib/clientUtils'
 
 export const UmsoknirHero = () => {
-  const logbirtinUrl = createUrlFromHost(window.location.host, false)
-
   return (
     <Box paddingY={[3, 4, 5, 6]}>
       <Hero
@@ -26,7 +23,7 @@ export const UmsoknirHero = () => {
                 variant="intro"
               >
                 <LinkV2
-                  href={logbirtinUrl + '/sidur/leidbeiningar'}
+                  href="https://logbirtingablad.is/sidur/leidbeiningar"
                   underlineVisibility="always"
                   underline="normal"
                 >
