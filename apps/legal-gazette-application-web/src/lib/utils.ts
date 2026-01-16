@@ -102,3 +102,10 @@ export function getDotNotationPaths(
     return value ? [path] : []
   })
 }
+
+export const getBaseUrlFromServerSide = (): string => {
+  if (process.env.NODE_ENV === 'development') {
+    return process.env.LG_APPLICATION_WEB_URL!
+  }
+  return (process.env.BASE_URL ?? process.env.IDENTITY_SERVER_LOGOUT_URL)! // Fallback to ID server logout URL if BASE_URL is not set yet
+}

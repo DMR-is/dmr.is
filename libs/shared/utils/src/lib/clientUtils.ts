@@ -87,7 +87,7 @@ export function getIcelandicDative(days: number) {
 
 
 export const createUrlFromHost = (host: string, shouldShift: boolean, unshift?: string)  => {
-  if (!window.location) {
+  if (typeof window === 'undefined' || !window.location) {
     return ''
   } else {
     const hostParts = host.split('.')

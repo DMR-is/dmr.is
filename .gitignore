@@ -5,6 +5,7 @@
 .claude
 
 prompts/
+example/skills/
 
 # compiled output
 /dist

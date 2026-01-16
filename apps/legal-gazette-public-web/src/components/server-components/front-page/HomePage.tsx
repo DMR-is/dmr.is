@@ -1,5 +1,5 @@
 import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
-import { Footer } from '@dmr.is/ui/components/Footer/Footer'
+import { LGFooter } from '@dmr.is/ui/components/Footer/LGFooter'
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 import {
   Box,
@@ -11,10 +11,12 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { trpc } from '../../../lib/trpc/client/server'
+import { getBaseUrlFromServerSide } from '../../../lib/utils'
 import { PublicationCard } from '../../client-components/cards/PublicationCard'
 import { BannerSearch } from '../../client-components/front-page/banner-search/BannerSearch'
 
 export const HomePage = async () => {
+  const baseUrl = getBaseUrlFromServerSide()
   const quickLinks: React.ComponentProps<typeof BannerSearch>['quickLinks'] = [
     {
       title: 'Allar auglýsingar',
@@ -105,7 +107,7 @@ export const HomePage = async () => {
           </GridRow>
         </GridContainer>
       </Box>
-      <Footer />
+      <LGFooter baseUrl={baseUrl} />
     </>
   )
 }
