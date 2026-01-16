@@ -162,9 +162,13 @@ export class UsersService implements IUsersService {
     return { users: employees.map((user) => user.fromModel()) }
   }
 
-  async getUserByNationalId(nationalId: string): Promise<UserDto> {
+  async getUserByNationalId(
+    nationalId: string,
+    paranoid?: boolean,
+  ): Promise<UserDto> {
     const user = await this.userModel.findOneOrThrow({
       where: { nationalId },
+      paranoid: paranoid ?? true,
     })
 
     return user.fromModel()

@@ -26,7 +26,7 @@ type Props = {
   title: string
   subtitle: string
   applicationType: ApplicationTypeEnum
-  adverts: AdvertDto[]
+  adverts?: AdvertDto[]
 }
 
 export const ApplicationSubmitted = ({
@@ -88,14 +88,17 @@ export const ApplicationSubmitted = ({
                   </GridRow>
                 )}
               </Stack>
-              {showAsCards ? (
-                <AdvertList adverts={adverts} />
+              {adverts ? (
+                showAsCards ? (
+                  <AdvertList adverts={adverts} />
+                ) : (
+                  <AdvertTable
+                    applicationId={applicationId as string}
+                    adverts={adverts}
+                  />
+                )
               ) : (
-                <AdvertTable
-                  adverts={adverts}
-                  applicationId={applicationId as string}
-                  type={applicationType}
-                />
+                <Text>Engar auglýsingar fundust</Text>
               )}
             </Stack>
           </Box>

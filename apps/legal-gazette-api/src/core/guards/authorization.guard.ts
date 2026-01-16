@@ -193,6 +193,7 @@ export class AuthorizationGuard implements CanActivate {
     try {
       const dbUser = await this.usersService.getUserByNationalId(
         user.nationalId,
+        true,
       )
 
       return dbUser

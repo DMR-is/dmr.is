@@ -4470,6 +4470,10 @@
       "CreateSettlementDto": {
         "type": "object",
         "properties": {
+          "settlementType": {
+            "type": "string",
+            "enum": ["DEFAULT", "UNDIVIDED", "OWNER"]
+          },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
           "recallStatementLocation": { "type": "string" },
@@ -4581,6 +4585,14 @@
           "fields"
         ]
       },
+      "RecallDeceasedCompanyDto": {
+        "type": "object",
+        "properties": {
+          "companyName": { "type": "string" },
+          "companyNationalId": { "type": "string" }
+        },
+        "required": ["companyName", "companyNationalId"]
+      },
       "RecallBankruptcyFieldsDto": {
         "type": "object",
         "properties": {
@@ -4588,6 +4600,10 @@
           "meetingLocation": { "type": "string" },
           "courtDistrictId": { "type": "string" },
           "judgmentDate": { "type": "string" },
+          "settlementType": {
+            "type": "string",
+            "enum": ["DEFAULT", "UNDIVIDED", "OWNER"]
+          },
           "settlementNationalId": { "type": "string" },
           "settlementName": { "type": "string" },
           "settlementAddress": { "type": "string" },
@@ -4602,7 +4618,11 @@
               "CUSTOM_LIQUIDATOR_EMAIL"
             ]
           },
-          "requirementStatementLocation": { "type": "string" }
+          "requirementStatementLocation": { "type": "string" },
+          "companies": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RecallDeceasedCompanyDto" }
+          }
         },
         "required": [
           "meetingDate",
@@ -4649,6 +4669,10 @@
           "meetingLocation": { "type": "string" },
           "courtDistrictId": { "type": "string" },
           "judgmentDate": { "type": "string" },
+          "settlementType": {
+            "type": "string",
+            "enum": ["DEFAULT", "UNDIVIDED", "OWNER"]
+          },
           "settlementNationalId": { "type": "string" },
           "settlementName": { "type": "string" },
           "settlementAddress": { "type": "string" },
@@ -4663,7 +4687,11 @@
               "CUSTOM_LIQUIDATOR_EMAIL"
             ]
           },
-          "requirementStatementLocation": { "type": "string" }
+          "requirementStatementLocation": { "type": "string" },
+          "companies": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RecallDeceasedCompanyDto" }
+          }
         },
         "required": [
           "courtDistrictId",
@@ -4681,9 +4709,25 @@
       "CreateRecallDeceasedAdvertAndApplicationDto": {
         "type": "object",
         "properties": {
+          "applicantNationalId": { "type": "string" },
+          "additionalText": { "type": "string" },
+          "signature": { "$ref": "#/components/schemas/CreateSignatureDto" },
+          "communicationChannels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateCommunicationChannelDto"
+            }
+          },
+          "publishingDates": { "type": "array", "items": { "type": "string" } },
           "fields": { "$ref": "#/components/schemas/RecallDeceasedFieldsDto" }
         },
-        "required": ["fields"]
+        "required": [
+          "applicantNationalId",
+          "signature",
+          "communicationChannels",
+          "publishingDates",
+          "fields"
+        ]
       },
       "TypeModel": {
         "type": "object",

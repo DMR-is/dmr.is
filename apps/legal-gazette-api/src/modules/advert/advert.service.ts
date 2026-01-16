@@ -235,6 +235,10 @@ export class AdvertService implements IAdvertService {
       signature: body.signature,
     })
 
+    if (advert.settlement?.id) {
+      await application.update({ settlementId: advert.settlement.id })
+    }
+
     this.logger.info('Created advert and recall bankruptcy application', {
       caseId: newCase.id,
       applicationId: application.id,
@@ -340,6 +344,10 @@ export class AdvertService implements IAdvertService {
       communicationChannels: body.communicationChannels,
       signature: body.signature,
     })
+
+    if (advert.settlement?.id) {
+      await application.update({ settlementId: advert.settlement.id })
+    }
 
     this.logger.info('Created advert and recall bankruptcy application', {
       caseId: newCase.id,

@@ -10,7 +10,7 @@ import {
 } from '../../models/users.model'
 
 export interface IUsersService {
-  getUserByNationalId(nationalId: string): Promise<UserDto>
+  getUserByNationalId(nationalId: string, paranoid?: boolean): Promise<UserDto>
 
   getEmployees(): Promise<GetUsersResponse>
 
