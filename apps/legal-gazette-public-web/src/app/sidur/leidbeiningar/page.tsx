@@ -132,8 +132,8 @@ export default function Page() {
                       </Text>
 
                       <Text>
-                        Prófkúruhafi getur gefið umboð til notenda til að gefa
-                        öðrum umboð. Þá fer prófkúra hafi í gegnum umboðsferlið
+                        Prókúruhafi getur gefið umboð til notenda til að gefa
+                        öðrum umboð. Þá fer prókúruhafi í gegnum umboðsferlið
                         hér að ofan og gefur notanda umboð fyrir kerfi
                         Lögbirtingarblaðsins
                       </Text>
@@ -258,10 +258,10 @@ export default function Page() {
               </AccordionItem>
             </Accordion>
 
-            <Stack space={3}>
+            {/* <Stack space={3}>
               <Text variant="h3">Myndband með leiðbeiningum</Text>
               <video width="100%" controls></video>
-            </Stack>
+            </Stack> */}
 
             <Stack space={3}>
               <Text variant="h3">Algengar spurningar</Text>

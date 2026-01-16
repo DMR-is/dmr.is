@@ -282,7 +282,7 @@ export default function Page() {
                   </tr>
 
                   <tr>
-                    <td>
+                    <td colSpan={2}>
                       <p style={{ margin: '8px 0 4px' }}>3. Annað:</p>
 
                       <p style={{ marginLeft: '40px' }}>
