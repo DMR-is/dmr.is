@@ -27,11 +27,9 @@ export class CompanyService implements ICompanyService {
   ): Promise<void> {
     const nextWednesday = getNextWednesday()
 
-    const { announcementMonth, announcementYear } = body
+    const { announcementDate } = body
 
-    const date = new Date(announcementYear, announcementMonth, 1)
-
-    const intro = `<p>Eftirtalin hlutafélög og einkahlutafélög hafa sent hlutafélagaskrá tilkynningar í ${formatDate(date, 'MMMM yyyy')}, samanber skýringar á táknum hér fyrir neðan:</p>`
+    const intro = `<p>Eftirtalin hlutafélög og einkahlutafélög hafa sent hlutafélagaskrá tilkynningar í ${formatDate(announcementDate, 'MMMM yyyy')}, samanber skýringar á táknum hér fyrir neðan:</p>`
 
     const announcementsMarkup = body.announcements
       .map((an, i) =>
@@ -163,7 +161,7 @@ export class CompanyService implements ICompanyService {
         onBehalfOf: body.responsibleParty.signature.onBehalfOf,
       },
       scheduledAt: [nextWednesday.toISOString()],
-      caption: `${formatDate(date, 'MMMM yyyy')}`,
+      caption: `${formatDate(announcementDate, 'MMMM yyyy')}`,
       isFromExternalSystem: true,
     })
   }
