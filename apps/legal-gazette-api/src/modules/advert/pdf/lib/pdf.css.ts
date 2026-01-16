@@ -611,7 +611,7 @@ export const pdfStyles = `
 
       .advert.legal-gazette p {
         text-align: justify;
-        margin-block: 1em;
+        margin-block: 0.25em;
       }
 
       .advert.legal-gazette .advertSignature p {
@@ -628,6 +628,9 @@ export const pdfStyles = `
         margin-left: auto;
         margin-right: auto;
       }
+
+      .advert-divider-line:last-of-type {
+        display: none;}
 
       .advert-container .advertHeading {
         margin-top: 4px;
