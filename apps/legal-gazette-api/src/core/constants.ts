@@ -76,6 +76,7 @@ export const UNASSIGNABLE_CATEGORY_IDS = [
 
 export const UNASSIGNABLE_TYPE_IDS = [
   '82425CC8-B32E-4ADE-9EE4-BC6F8261B735', // Almennar auglýsingar
+  '0A066E81-31AD-4F80-94D2-CE81F68F5368', // Handbækur
 ]
 
 export const TASK_JOB_IDS = {
