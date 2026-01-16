@@ -112,11 +112,10 @@ export const lastPageFooter = (
       padding-top: 4px;
       font-size: 12px;
       font-family: 'Times New Roman', serif;
-      border-bottom: 1px solid #000;
     ">
-      <span style="text-align: right; font-size: 16px;">
+      <div style="text-align: right; font-size: 16px;">
         Lögbirtingablað,
-      </span>
+      </div>
       <br>
       <div style="margin-top: 2px; text-align: right; font-size: 14px;">
         ${issueNr}. tölublað ${year}.
@@ -124,8 +123,10 @@ export const lastPageFooter = (
     </div>
 
     <div style="
-      width: 100%;
+      width: 45%;
+      margin-left: auto;
       border-bottom: 1px solid #000;
+      border-top: 1px solid #000;
       padding-top: 4px;
       padding-bottom: 4px;
       font-size: 12px;
