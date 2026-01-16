@@ -30,11 +30,7 @@ type QuickLink = {
 export const LandingPageContent = (props: { baseUrl: string }) => {
   const { data: session } = useSession()
 
-  const auglysendurUrl = createUrlFromHost(
-    window.location.host,
-    false,
-    'auglysendur',
-  )
+  const auglysendurUrl = createUrlFromHost(props.baseUrl, false, 'auglysendur')
   const quickLinks: QuickLink[] = [
     {
       title: 'Senda inn auglýsingu',
