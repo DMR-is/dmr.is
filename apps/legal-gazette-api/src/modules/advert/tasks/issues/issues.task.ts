@@ -39,9 +39,7 @@ export class IssuesTaskService implements IIssuesTask {
   ) {}
 
   @Cron(
-    isProduction
-      ? CronExpression.EVERY_DAY_AT_7AM
-      : CronExpression.EVERY_30_MINUTES,
+    isProduction ? CronExpression.EVERY_DAY_AT_7AM : '0 */20 * * * *', // Every 20 minutes in non-production
     {
       name: 'daily-pdf-generation',
       timeZone: 'Atlantic/Reykjavik',
@@ -54,7 +52,7 @@ export class IssuesTaskService implements IIssuesTask {
         await this.dailyIssueGeneration()
       },
       {
-        cooldownMs: 20 * 60 * 1000, // 20 minutes
+        cooldownMs: 15 * 60 * 1000, // 15 minutes
         containerId: process.env.HOSTNAME,
       },
     )

@@ -628,4 +628,13 @@ export const pdfStyles = `
         margin-left: auto;
         margin-right: auto;
       }
+
+      .advert-container .advertHeading {
+        margin-top: 4px;
+      }
+
+      .advert-container .advertSerial {
+        margin: 0;
+      }
+
 `

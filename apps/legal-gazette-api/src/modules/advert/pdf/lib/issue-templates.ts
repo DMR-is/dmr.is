@@ -103,42 +103,37 @@ export const lastPageFooter = (
 ) => `
   <div style="
     width: 100%;
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    flex-direction: column;
     margin-top: 2cm;
   ">
     <div style="
       padding-bottom: 2px;
-      width: 50%;
+      width: 100%;
       border-top: 2px solid #000;
       padding-top: 4px;
       font-size: 12px;
       font-family: 'Times New Roman', serif;
       border-bottom: 1px solid #000;
     ">
-      <span style="text-align: left; font-size: 14px;">
+      <span style="text-align: right; font-size: 16px;">
         Lögbirtingablað,
       </span>
       <br>
-      <div style="margin-top: 2px; text-align: left; font-size: 12px;">
+      <div style="margin-top: 2px; text-align: right; font-size: 14px;">
         ${issueNr}. tölublað ${year}.
       </div>
     </div>
 
     <div style="
-      padding-bottom: 2px;
-      width: 50%;
+      width: 100%;
       border-bottom: 1px solid #000;
       padding-top: 4px;
+      padding-bottom: 4px;
       font-size: 12px;
       font-family: 'Times New Roman', serif;
     ">
-      <span style="text-align: left; font-size: 12px;">
+      <span style="text-align: right; font-size: 12px; display:block;">
         Útgefandi og ábyrgðarmaður, sýslumaðurinn á Suðurlandi
       </span>
-      <br>
       <div style="
         margin-top: 2px;
         text-align: right;
@@ -147,8 +142,8 @@ export const lastPageFooter = (
       ">
         ${syslumadur}
       </div>
-      <div class="sub_signature">Afritun eða dreifing þessa efnis er óheimil. Efnið kann að innihalda persónuupplýsingar sem njóta verndar samkvæmt lögum nr. 90/2018 og reglugerð (ESB) 2016/679 (GDPR). Óheimil meðferð getur varðað við lög.</div>
     </div>
+    <div style="font-size: 12px; margin-top: 32px; text-align: left;">Afritun eða dreifing þessa efnis er óheimil. Efnið kann að innihalda persónuupplýsingar sem njóta verndar samkvæmt lögum nr. 90/2018 og reglugerð (ESB) 2016/679 (GDPR). Óheimil meðferð getur varðað við lög.</div>
   </div>
 `
 
