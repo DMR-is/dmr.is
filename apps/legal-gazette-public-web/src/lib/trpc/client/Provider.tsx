@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 
 import { makeQueryClient } from '@dmr.is/trpc/client/query-client'
 
+import { getBaseUrlFromServerSide } from '../../utils'
 import { AppRouter } from '../server/routers/_app'
 import { TRPCProvider } from './trpc'
 
@@ -27,7 +28,7 @@ function getQueryClient() {
 
 function getBaseUrl() {
   if (typeof window !== 'undefined') return '' // browser should use relative url
-  return `${process.env.LG_PUBLIC_WEB_URL ?? process.env.BASE_URL ?? process.env.IDENTITY_SERVER_LOGOUT_URL}` // dev SSR should use localhost
+  return getBaseUrlFromServerSide()// dev SSR should use localhost
 }
 function getUrl() {
   const base = getBaseUrl()

@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react'
 
 import { Icon } from 'submodules/island.is/libs/island-ui/core/src/lib/IconRC/iconMap'
 
-import { Footer } from '@dmr.is/ui/components/Footer/Footer'
+import { LGFooter } from '@dmr.is/ui/components/Footer/LGFooter'
 import Hero from '@dmr.is/ui/components/Hero/Hero'
 import {
   Box,
@@ -26,7 +26,8 @@ type QuickLink = {
   variant: 'primary' | 'ghost' | 'text' | 'utility'
   icon?: Icon
 }
-export const LandingPageContent = () => {
+
+export const LandingPageContent = (props: { baseUrl: string }) => {
   const { data: session } = useSession()
 
   const auglysendurUrl = createUrlFromHost(
@@ -158,7 +159,7 @@ export const LandingPageContent = () => {
           </GridContainer>
         </Box>
       </Box>
-      <Footer />
+      <LGFooter baseUrl={props.baseUrl} site="web" />
     </>
   )
 }

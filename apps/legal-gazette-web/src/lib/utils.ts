@@ -124,3 +124,11 @@ export const loginRedirect = (callbackUrl?: string) => {
     },
   }
 }
+
+export const getBaseUrlFromServerSide = (): string => {
+  if (process.env.NODE_ENV === 'development') {
+    return process.env.LG_WEB_URL!
+  }
+  return (process.env.BASE_URL ?? process.env.IDENTITY_SERVER_LOGOUT_URL)!
+}
+

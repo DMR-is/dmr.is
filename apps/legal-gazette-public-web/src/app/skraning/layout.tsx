@@ -1,11 +1,11 @@
-import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 
-import { Footer } from '@dmr.is/ui/components/Footer/Footer'
+import { LGFooter } from '@dmr.is/ui/components/Footer/LGFooter'
 import { Header } from '@dmr.is/ui/components/Header/Header'
 import { HeaderLogin } from '@dmr.is/ui/components/Header/HeaderLogin'
 
 import { authOptions } from '../../lib/authOptions'
+import { getBaseUrlFromServerSide } from '../../lib/utils'
 
 export default async function RootLayout({
   register,
@@ -15,10 +15,7 @@ export default async function RootLayout({
   login: React.ReactNode
 }) {
   const session = await getServerSession(authOptions)
-
-  // if (session && session.user.isActive) {
-  //   redirect('/')
-  // }
+  const baseUrl = getBaseUrlFromServerSide()
   return (
     <>
       {session ? (
@@ -32,7 +29,7 @@ export default async function RootLayout({
           {login}
         </>
       )}
-      <Footer />
+      <LGFooter baseUrl={baseUrl} />
     </>
   )
 }

@@ -15,12 +15,16 @@ import {
 
 import { HeaderLogo } from '../Header/HeaderLogo'
 import * as styles from './footer.css'
+type LGFooterProps = {
+  site?: 'web' | 'applications'
+  baseUrl: string
+}
 
-export const Footer = ({ site = 'web' }: { site?: 'web' | 'applications' }) => {
+export const LGFooter = ({ site = 'web', baseUrl }: LGFooterProps) => {
   const logbirtingUrl = createUrlFromHost(
-    window.location.host,
-    false,
-    site === 'web' ? 'auglysendur' : '',
+    baseUrl,
+    site === 'applications', // Shifting when on application page because it has subdomain
+    site === 'web' ? 'auglysendur' : '', // Unshifting auglysendur when on public page to add subdomain
   )
   const stjornartidindiUrl = 'https://island.is/stjornartidindi'
 

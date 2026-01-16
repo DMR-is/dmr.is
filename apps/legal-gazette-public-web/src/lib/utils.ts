@@ -45,3 +45,10 @@ export const formatDate = (date: string | Date): string => {
 export const isDate = (date: unknown): date is Date => {
   return date instanceof Date && !isNaN(date.getTime())
 }
+
+export const getBaseUrlFromServerSide = (): string => {
+  if (process.env.NODE_ENV === 'development') {
+    return process.env.LG_PUBLIC_WEB_URL!
+  }
+  return (process.env.BASE_URL ?? process.env.IDENTITY_SERVER_LOGOUT_URL)! // Fallback to ID server logout URL if BASE_URL is not set yet
+}

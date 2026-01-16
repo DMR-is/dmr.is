@@ -1,4 +1,4 @@
-import { Footer } from '@dmr.is/ui/components/Footer/Footer'
+import { LGFooter } from '@dmr.is/ui/components/Footer/LGFooter'
 import {
   GridColumn,
   GridContainer,
@@ -8,12 +8,15 @@ import {
 
 import { UmsoknirHero } from '../../../../components/hero/UmsoknirHero'
 import { TabNav } from '../../../../components/tabs/TabNav'
+import { getBaseUrlFromServerSide } from '../../../../lib/utils'
 
 export default function ViewListLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+const baseUrl = getBaseUrlFromServerSide()
+
   return (
     <>
       <Stack space={4}>
@@ -31,7 +34,7 @@ export default function ViewListLayout({
           {children}
         </GridContainer>
       </Stack>
-      <Footer site="applications" />
+      <LGFooter baseUrl={baseUrl} site="applications" />
     </>
   )
 }

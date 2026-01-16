@@ -10,6 +10,7 @@ import { TRPCProvider } from './trpc'
 import type { QueryClient } from '@tanstack/react-query'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { createTRPCClient, httpBatchLink } from '@trpc/client'
+import { getBaseUrlFromServerSide } from '../../utils'
 
 let clientQueryClientSingleton: QueryClient | undefined
 
@@ -27,7 +28,7 @@ function getQueryClient() {
 function getBaseUrl() {
   if (typeof window !== 'undefined') return '' // browser should use relative url
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}` // SSR should use vercel url
-  return `${process.env.LG_WEB_URL ?? process.env.BASE_URL ?? process.env.IDENTITY_SERVER_LOGOUT_URL}` // dev SSR should use localhost
+  return getBaseUrlFromServerSide() // dev SSR should use localhost
 }
 function getUrl() {
   const base = getBaseUrl()
