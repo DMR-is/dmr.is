@@ -3,7 +3,7 @@
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
 
-import { ApplicationDetailedDto, ApplicationStatusEnum } from '../gen/fetch'
+import { ApplicationStatusEnum } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
 import { ApplicationSubmittedContainer } from './ApplicationSubmittedContainer'
 import { CommonFormContainer } from './CommonFormContainer'

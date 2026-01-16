@@ -12,43 +12,45 @@ type Props = {
   application: ApplicationDetailedDto
 }
 export const ApplicationSubmittedContainer = ({ application }: Props) => {
-  const trpc = useTRPC()
-  const { data, error, isLoading } = useQuery(
-    trpc.getAdvertByCaseId.queryOptions({
-      caseId: application.caseId,
-    }),
-  )
-
-  if (isLoading) {
-    return <SkeletonLoader height={450} borderRadius="large" />
-  }
-
-  if (error) {
-    return (
-      <AlertMessage
-        type="error"
-        title="Villa kom upp"
-        message="Vinsamlegast reyndu aftur síðar"
-      />
-    )
-  }
-
-  if (!data) {
-    return (
-      <AlertMessage
-        type="warning"
-        title="Engar birtingar fundust fyrir þessa auglýsingu"
-        message="Vinsamlegast reyndu aftur síðar"
-      />
-    )
-  }
-
   return (
     <ApplicationSubmitted
-      adverts={data.adverts}
+      adverts={application.adverts}
       applicationType={application.type}
       title={application.title}
       subtitle={application.subtitle ?? ''}
     />
   )
+
+  // if (isLoading) {
+  //   return <SkeletonLoader height={450} borderRadius="large" />
+  // }
+
+  // if (error) {
+  //   return (
+  //     <AlertMessage
+  //       type="error"
+  //       title="Villa kom upp"
+  //       message="Vinsamlegast reyndu aftur síðar"
+  //     />
+  //   )
+  // }
+
+  // if (!data) {
+  //   return (
+  //     <AlertMessage
+  //       type="warning"
+  //       title="Engar birtingar fundust fyrir þessa auglýsingu"
+  //       message="Vinsamlegast reyndu aftur síðar"
+  //     />
+  //   )
+  // }
+
+  // return (
+  //   <ApplicationSubmitted
+  //     adverts={data.adverts}
+  //     applicationType={application.type}
+  //     title={application.title}
+  //     subtitle={application.subtitle ?? ''}
+  //   />
+  // )
 }

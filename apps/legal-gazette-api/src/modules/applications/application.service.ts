@@ -320,8 +320,12 @@ export class ApplicationService implements IApplicationService {
   async getApplicationById(
     applicationId: string,
   ): Promise<ApplicationDetailedDto> {
-    const application =
-      await this.applicationModel.findByPkOrThrow(applicationId)
+    const application = await this.applicationModel.findByPkOrThrow(
+      applicationId,
+      {
+        include: [{ model: AdvertModel.scope('listview') }],
+      },
+    )
 
     return application.fromModelToDetailedDto()
   }
