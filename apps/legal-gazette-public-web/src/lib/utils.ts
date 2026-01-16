@@ -48,12 +48,12 @@ export const isDate = (date: unknown): date is Date => {
 
 // Gets base url from server side environment variables
 // Strips http:// and https:// from the url
-export const getBaseUrlFromServerSide = (): string => {
+export const getBaseUrlFromServerSide = (includePrefix = false): string => {
   let url = ''
   if (process.env.NODE_ENV === 'development') {
     url = process.env.LG_PUBLIC_WEB_URL!
   } else {
     url = (process.env.BASE_URL ?? process.env.IDENTITY_SERVER_LOGOUT_URL)! // Fallback to ID server logout URL if BASE_URL is not set yet
   }
-  return url.replace(/^https?:\/\//, '')
+  return includePrefix ? url : url.replace(/^https?:\/\//, '')
 }

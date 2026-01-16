@@ -28,7 +28,7 @@ function getQueryClient() {
 function getBaseUrl() {
   if (typeof window !== 'undefined') return '' // browser should use relative url
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}` // SSR should use vercel url
-  return getBaseUrlFromServerSide() // dev SSR should use localhost
+  return getBaseUrlFromServerSide(true) // dev SSR should use localhost
 }
 function getUrl() {
   const base = getBaseUrl()
