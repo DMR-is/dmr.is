@@ -21,6 +21,10 @@ import { IIssuesTask } from './issues.task.interface'
 const LOGGING_CONTEXT = 'IssuesTask'
 const YEAR_ESTABLISHED = 1907
 
+const isProduction = process.env.API_ENV
+  ? process.env.API_ENV === 'prod'
+  : !process.env.IDENTITY_SERVER_DOMAIN?.includes('devland.is')
+
 @Injectable()
 export class IssuesTaskService implements IIssuesTask {
   constructor(
@@ -35,9 +39,9 @@ export class IssuesTaskService implements IIssuesTask {
   ) {}
 
   @Cron(
-    process.env.NODE_ENV === 'production'
+    isProduction
       ? CronExpression.EVERY_DAY_AT_7AM
-      : CronExpression.EVERY_DAY_AT_9AM,
+      : CronExpression.EVERY_DAY_AT_NOON,
     {
       name: 'daily-pdf-generation',
       timeZone: 'Atlantic/Reykjavik',
