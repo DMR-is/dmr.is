@@ -116,8 +116,7 @@ export const lastPageFooter = (
       <div style="text-align: right; font-size: 16px;">
         Lögbirtingablað,
       </div>
-      <br>
-      <div style="margin-top: 2px; text-align: right; font-size: 14px;">
+      <div style="margin-top: 5px; text-align: right; font-size: 14px;">
         ${issueNr}. tölublað ${year}.
       </div>
     </div>
