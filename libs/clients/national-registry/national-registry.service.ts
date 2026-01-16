@@ -1,16 +1,19 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Inject } from '@nestjs/common'
 
 import { fetchWithTimeout } from '@dmr.is/utils'
+import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
 
 import { INationalRegistryService } from './national-registry.service.interface'
 import { GetPersonDto, NationalRegistryError } from './national-registry.dto'
+
+const LOGGING_CONTEXT = 'NationalRegistryClientService'
 
 @Injectable()
 export class NationalRegistryService implements INationalRegistryService {
   private audkenni: string | null = null
   private token: string | null = null
 
-  constructor() {
+  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
     if (!process.env.NATIONAL_REGISTRY_API_LOGIN_PATH) {
       console.error(
         'National registry login path not set in env NATIONAL_REGISTRY_API_LOGIN_PATH',
@@ -46,6 +49,9 @@ export class NationalRegistryService implements INationalRegistryService {
 
   private async authenticate() {
     if (this.token && this.audkenni) {
+      this.logger.debug('Already authenticated with national registry', {
+        context: LOGGING_CONTEXT,
+      })
       return
     }
 
@@ -64,9 +70,16 @@ export class NationalRegistryService implements INationalRegistryService {
     )
 
     if (!response.ok) {
+      this.logger.warning('Failed to authenticate with national registry', {
+        context: LOGGING_CONTEXT,
+        status: response.status,
+      })
       const error = await response.json()
 
-      console.error(error)
+      this.logger.error('National registry authentication error', {
+        context: LOGGING_CONTEXT,
+        error,
+      })
 
       throw new NationalRegistryError({
         type: error.type,
@@ -85,6 +98,9 @@ export class NationalRegistryService implements INationalRegistryService {
   async getPersonByNationalId(nationalId: string): Promise<GetPersonDto> {
     await this.authenticate()
 
+    this.logger.info('Fetching person from national registry', {
+      context: LOGGING_CONTEXT,
+    })
     const response = await fetchWithTimeout(
       `${process.env.NATIONAL_REGISTRY_API_LOOKUP_PATH}`,
       {
@@ -101,7 +117,16 @@ export class NationalRegistryService implements INationalRegistryService {
     )
 
     if (!response.ok) {
+      this.logger.warning('Failed to fetch person from national registry', {
+        context: LOGGING_CONTEXT,
+        status: response.status,
+      })
       const error = await response.json()
+
+      this.logger.error('National registry fetch person error', {
+        context: LOGGING_CONTEXT,
+        error,
+      })
 
       throw new NationalRegistryError({
         type: error.type,
