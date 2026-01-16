@@ -54,7 +54,7 @@ export class IssuesTaskService implements IIssuesTask {
         await this.dailyIssueGeneration()
       },
       {
-        cooldownMs: 30 * 60 * 1000, // 30 minutes
+        cooldownMs: 20 * 60 * 1000, // 20 minutes
         containerId: process.env.HOSTNAME,
       },
     )
