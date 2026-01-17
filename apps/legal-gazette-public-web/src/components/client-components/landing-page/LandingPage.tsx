@@ -12,8 +12,8 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
+  Inline,
   LinkV2,
-  Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
 import { createUrlFromHost } from '@dmr.is/utils/client'
@@ -105,19 +105,21 @@ export const LandingPageContent = (props: { baseUrl: string }) => {
                   <GridRow>
                     <GridColumn>
                       <Box marginBottom={6} style={{ marginTop: '-24px' }}>
-                        {quickLinks?.map((link, i) => (
-                          <Button
-                            key={i}
-                            size="small"
-                            icon={link.icon}
-                            iconType="outline"
-                            variant={link.variant}
-                          >
-                            <LinkV2 key={i} href={link.href}>
-                              {link.title}
-                            </LinkV2>
-                          </Button>
-                        ))}
+                        <Inline space={2}>
+                          {quickLinks?.map((link, i) => (
+                            <Button
+                              key={i}
+                              size="small"
+                              icon={link.icon}
+                              iconType="outline"
+                              variant={link.variant}
+                            >
+                              <LinkV2 key={i} href={link.href}>
+                                {link.title}
+                              </LinkV2>
+                            </Button>
+                          ))}
+                        </Inline>
                       </Box>
                       <Text>
                         Samkvæmt lögum nr. 15/2005 skal birta í Lögbirtingablaði
