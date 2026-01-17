@@ -1,8 +1,6 @@
-import { LGFooter } from '@dmr.is/ui/components/Footer/LGFooter'
 import { Box, GridContainer, Stack } from '@dmr.is/ui/components/island-is'
 
 import { NavigateBack } from '../../../components/client-components/navigate-back/NavigateBack'
-import { getBaseUrlFromServerSide } from '../../../lib/utils'
 import * as styles from './grid-layout.css'
 
 export default async function Layout({
@@ -14,7 +12,6 @@ export default async function Layout({
   sidebar: React.ReactNode
   related: React.ReactNode
 }) {
-  const baseUrl = getBaseUrlFromServerSide()
 
   return (
     <>
@@ -32,7 +29,6 @@ export default async function Layout({
         </Box>
       </GridContainer>
       {related && <Box>{related}</Box>}
-      <LGFooter baseUrl={baseUrl} />
     </>
   )
 }
