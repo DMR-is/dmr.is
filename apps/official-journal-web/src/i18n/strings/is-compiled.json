@@ -1093,8 +1093,7 @@
       "value": "Bæta þarf við athugasemd til þess að leiðrétta mál"
     }
   ],
-  "web.page.caseSingle:banner.description": [
-  ],
+  "web.page.caseSingle:banner.description": [],
   "web.page.caseSingle:banner.title": [
     {
       "type": 0,
@@ -1236,7 +1235,7 @@
   "web.page.dashboard:imageWithText.new.description": [
     {
       "type": 0,
-      "value": "Fyrir ritsjórn án þess að fara í gegnum umsóknarkerfi island.is"
+      "value": "Fyrir ritstjórn án þess að fara í gegnum umsóknarkerfi island.is"
     }
   ],
   "web.page.dashboard:imageWithText.new.linkText": [

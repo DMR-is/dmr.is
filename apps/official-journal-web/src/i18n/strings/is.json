@@ -792,7 +792,7 @@
     "description": "Statistics heading for the dashboard"
   },
   "web.page.dashboard:imageWithText.new.description": {
-    "defaultMessage": "Fyrir ritsjórn án þess að fara í gegnum umsóknarkerfi island.is",
+    "defaultMessage": "Fyrir ritstjórn án þess að fara í gegnum umsóknarkerfi island.is",
     "description": "Description for the new image with text on the dashboard"
   },
   "web.page.dashboard:imageWithText.new.linkText": {
