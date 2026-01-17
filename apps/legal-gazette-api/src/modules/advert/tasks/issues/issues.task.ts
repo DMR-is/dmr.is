@@ -152,9 +152,9 @@ export class IssuesTaskService implements IIssuesTask {
       const combinedHtml = publications
         .map(
           (pub) =>
-            `<div class="advert-container">${pub.advert.htmlMarkup()}</div><div class="advert-divider-line"></div>`,
+            `<div class="advert-container">${pub.advert.htmlMarkup()}</div>`,
         )
-        .join('')
+        .join('<div class="advert-divider-line"></div>')
 
       const title = `Lögbirtingablaðið - Útgáfa ${formatDate(now, 'd. MMMM yyyy')}`
 
