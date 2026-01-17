@@ -21,7 +21,7 @@ export const HeroContainer = () => {
         <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
           <LinkCard
             href={Route.RITSTJORN}
-            title="Ritsjórn"
+            title="Ritstjórn"
             description="Umsýsla frá innsendingu, í vinnslu og til útgáfu."
             image={{
               src: '/assets/ritstjorn-image.svg',

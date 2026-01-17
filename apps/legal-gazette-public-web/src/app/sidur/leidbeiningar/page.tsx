@@ -208,11 +208,11 @@ export default function Page() {
                         Myndbönd með leiðbeiningum fyrir umboð
                       </Text>
                       <VideoIframe
-                        src="https://www.youtube.com/embed/JqV0zeeyu9s"
+                        src="https://www.youtube.com/embed/sDHeQdnVpAU?si=Qsz5XhsUm2vwc5l1"
                         title="default"
                       />
                       <VideoIframe
-                        src="https://www.youtube.com/embed/JqV0zeeyu9s"
+                        src="https://www.youtube.com/embed/NuFQqKxyBLk?si=M-gUxYpi2XBc8vlR"
                         title="default"
                       />
                     </Stack>
@@ -280,11 +280,11 @@ export default function Page() {
                 Myndbönd með leiðbeiningum fyrir aulýsingakerfi
               </Text>
               <VideoIframe
-                src="https://www.youtube.com/embed/JqV0zeeyu9s"
+                src="https://www.youtube.com/embed/Dxd9emfI7Tw?si=EnBnrk7xrKuCwbl7"
                 title="default"
               />
               <VideoIframe
-                src="https://www.youtube.com/embed/JqV0zeeyu9s"
+                src="https://www.youtube.com/embed/VJu5c0zc0xE?si=F3xiyX32QSda_40d"
                 title="default"
               />
             </Stack>
