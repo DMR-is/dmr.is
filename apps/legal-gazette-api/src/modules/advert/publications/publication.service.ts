@@ -235,20 +235,18 @@ export class PublicationService implements IPublicationService {
     id: string,
     version: AdvertVersionEnum,
   ): Promise<AdvertPublicationDetailedDto> {
-    const advertPromise = this.advertModel
+    const advert = await this.advertModel
       .withScope('detailed')
       .findByPkOrThrow(id)
-    const publicationPromise = this.advertPublicationModel.findOneOrThrow({
+
+    const isLegacy = !!advert.legacyId
+
+    const publication = await this.advertPublicationModel.findOneOrThrow({
       where: {
         advertId: id,
-        versionNumber: mapVersionToIndex(version),
+        ...(isLegacy ? {} : { versionNumber: mapVersionToIndex(version) }),
       },
     })
-
-    const [advert, publication] = await Promise.all([
-      advertPromise,
-      publicationPromise,
-    ])
 
     return {
       advert: advert.fromModel(),
