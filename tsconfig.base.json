@@ -15,14 +15,14 @@
     "strict": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "types": ["node", "Multer", "../../node_modules/@types/node"],
+    "types": ["node", "multer"],
     "typeRoots": ["node_modules/@types"],
     "paths": {
       "@dmr.is/api-client/*": ["libs/shared/api-client/src/lib/*"],
       "@dmr.is/apm": ["libs/apm/src/index.ts"],
       "@dmr.is/auth/*": ["libs/shared/auth/src/lib/*"],
       "@dmr.is/clients/national-registry": [
-        "libs/clients/national-registry/index.ts"
+        "libs/clients/national-registry/src/index.ts"
       ],
       "@dmr.is/clients/company-registry": [
         "libs/clients/company-registry/index.ts"
