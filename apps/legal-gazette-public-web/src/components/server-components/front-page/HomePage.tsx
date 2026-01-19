@@ -5,6 +5,7 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
+  LinkV2,
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
@@ -58,7 +59,35 @@ export const HomePage = async () => {
               imageSpan={'4/12'}
               withOffset={false}
               image={{ src: '/images/hero-page-image.svg' }}
-              description="Dómsmálaráðuneytið gefur út Lögbirtingablaðið. Það kom fyrst út í prentuðu formi í árið 1908 og í dag er blaðið einnig aðgengilegt á netinu þar sem hægt er að nálgast öll tölublöð sem komið hafa út frá 1. janúar 2001."
+              description={
+                <Box marginBottom={[2, 2, 2, 2, 0]}>
+                  <Text variant="intro">
+                    Velkomin á nýja síðu Lögbirtingablaðsins. Dómsmálaráðuneytið
+                    gefur út Lögbirtingablaðið. Það kom fyrst út í prentuðu
+                    formi í árið 1908 og í dag er blaðið einnig aðgengilegt á
+                    netinu þar sem hægt er að nálgast öll tölublöð sem komið
+                    hafa út frá 1. janúar 2001.
+                  </Text>
+                  <Text variant="intro" marginTop={2}>
+                    Hér má sjá{' '}
+                    <Text
+                      color="blue400"
+                      fontWeight="medium"
+                      as="span"
+                      variant="intro"
+                    >
+                      <LinkV2
+                        href="/sidur/leidbeiningar"
+                        underlineVisibility="always"
+                        underline="normal"
+                      >
+                        leiðbeiningar
+                      </LinkV2>
+                    </Text>{' '}
+                    fyrir alla vefi Lögbirtingablaðsins.
+                  </Text>
+                </Box>
+              }
               alignHeader={'spaceBetween'}
             >
               <Box
