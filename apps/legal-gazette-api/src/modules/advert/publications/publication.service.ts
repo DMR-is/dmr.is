@@ -11,6 +11,7 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { Cacheable, CacheEvictTopics } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
@@ -63,6 +64,7 @@ export class PublicationService implements IPublicationService {
     })
   }
 
+  @Cacheable({ tagBy: [0], topic: 'advert-publications' })
   async getPublications(
     query: GetPublicationsQueryDto,
   ): Promise<GetPublicationsDto> {
@@ -246,6 +248,7 @@ export class PublicationService implements IPublicationService {
     }
   }
 
+  @CacheEvictTopics('lg-advert-publications')
   async publishAdvertPublication(
     advertId: string,
     publicationId: string,

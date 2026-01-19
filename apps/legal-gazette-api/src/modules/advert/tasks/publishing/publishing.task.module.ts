@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { createRedisCacheOptions } from '@dmr.is/utils/cache'
+
 import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../../models/advert-publication.model'
 import { PgAdvisoryLockModule } from '../lock.module'
@@ -9,6 +11,7 @@ import { IPublishingTaskService } from './publishing.task.interface'
 
 @Module({
   imports: [
+    createRedisCacheOptions('lg-advert-publications'),
     SequelizeModule.forFeature([AdvertPublicationModel, AdvertModel]),
     PgAdvisoryLockModule,
   ],
