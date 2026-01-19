@@ -15,7 +15,7 @@
     "strict": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "types": ["node", "Multer", "../../node_modules/@types/node"],
+    "types": ["node", "multer"],
     "typeRoots": ["node_modules/@types"],
     "paths": {
       "@dmr.is/api-client/*": ["libs/shared/api-client/src/lib/*"],
