@@ -8,15 +8,12 @@ import {
 
 import { UmsoknirHero } from '../../../../components/hero/UmsoknirHero'
 import { TabNav } from '../../../../components/tabs/TabNav'
-import { getBaseUrlFromServerSide } from '../../../../lib/utils'
 
 export default function ViewListLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-const baseUrl = getBaseUrlFromServerSide()
-
   return (
     <>
       <Stack space={4}>
@@ -34,7 +31,7 @@ const baseUrl = getBaseUrlFromServerSide()
           {children}
         </GridContainer>
       </Stack>
-      <LGFooter baseUrl={baseUrl} site="applications" />
+      <LGFooter site="applications" />
     </>
   )
 }
