@@ -1,5 +1,6 @@
 'use client'
 
+import { EmbeddedVideo } from '@dmr.is/ui/components/EmbeddedVideo/EmbeddedVideo'
 import {
   Accordion,
   AccordionItem,
@@ -15,7 +16,6 @@ import {
 } from '@dmr.is/ui/components/island-is'
 
 import { VideoIframe } from '@island.is/island-ui/core'
-
 export default function Page() {
   return (
     <GridContainer>
@@ -207,13 +207,15 @@ export default function Page() {
                       <Text fontWeight="medium">
                         Myndbönd með leiðbeiningum fyrir umboð
                       </Text>
-                      <VideoIframe
-                        src="https://www.youtube.com/embed/sDHeQdnVpAU?si=Qsz5XhsUm2vwc5l1"
-                        title="default"
+
+                      <EmbeddedVideo
+                        url="https://www.youtube.com/embed/sDHeQdnVpAU?si=Qsz5XhsUm2vwc5l1"
+                        thumbnailImageUrl={'/images/videoImage1.png'}
                       />
-                      <VideoIframe
-                        src="https://www.youtube.com/embed/NuFQqKxyBLk?si=M-gUxYpi2XBc8vlR"
-                        title="default"
+
+                      <EmbeddedVideo
+                        url="https://www.youtube.com/embed/NuFQqKxyBLk?si=M-gUxYpi2XBc8vlR"
+                        thumbnailImageUrl={'/images/videoImage1.png'}
                       />
                     </Stack>
                   </Stack>
@@ -279,13 +281,15 @@ export default function Page() {
               <Text variant="h3">
                 Myndbönd með leiðbeiningum fyrir aulýsingakerfi
               </Text>
-              <VideoIframe
-                src="https://www.youtube.com/embed/Dxd9emfI7Tw?si=EnBnrk7xrKuCwbl7"
-                title="default"
+
+              <EmbeddedVideo
+                url="https://www.youtube.com/embed/Dxd9emfI7Tw?si=EnBnrk7xrKuCwbl7"
+                thumbnailImageUrl={'/images/videoImage1.png'}
               />
-              <VideoIframe
-                src="https://www.youtube.com/embed/VJu5c0zc0xE?si=F3xiyX32QSda_40d"
-                title="default"
+
+              <EmbeddedVideo
+                url="https://www.youtube.com/embed/VJu5c0zc0xE?si=F3xiyX32QSda_40d"
+                thumbnailImageUrl={'/images/videoImage1.png'}
               />
             </Stack>
 
