@@ -133,13 +133,13 @@ describe('PaymentTaskService - Payment Status Polling', () => {
     jest.clearAllMocks()
   })
 
-  describe('updateCreatedTBRPayments - Core Functionality', () => {
+  describe('updateTBRPayments - Core Functionality', () => {
     it('should skip job when no pending transactions exist', async () => {
       // Arrange
       tbrTransactionModel.findAll.mockResolvedValue([])
 
       // Act
-      await service.updateCreatedTBRPayments()
+      await service.updateTBRPayments()
 
       // Assert
       expect(tbrTransactionModel.findAll).toHaveBeenCalledWith({
@@ -164,7 +164,7 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       )
 
       // Act
-      await service.updateCreatedTBRPayments()
+      await service.updateTBRPayments()
 
       // Assert
       expect(tbrService.getPaymentStatus).toHaveBeenCalledWith({
@@ -196,7 +196,7 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       )
 
       // Act
-      await service.updateCreatedTBRPayments()
+      await service.updateTBRPayments()
 
       // Assert
       expect(tbrService.getPaymentStatus).toHaveBeenCalled()
@@ -218,7 +218,7 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       )
 
       // Act
-      await service.updateCreatedTBRPayments()
+      await service.updateTBRPayments()
 
       // Assert
       expect(tbrService.getPaymentStatus).toHaveBeenCalledTimes(3)
@@ -243,7 +243,7 @@ describe('PaymentTaskService - Payment Status Polling', () => {
         .mockResolvedValueOnce(createMockPaymentResponse({ paid: true }))
 
       // Act
-      await service.updateCreatedTBRPayments()
+      await service.updateTBRPayments()
 
       // Assert
       expect(logger.error).toHaveBeenCalledWith(
@@ -273,7 +273,7 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       )
 
       // Act
-      await service.updateCreatedTBRPayments()
+      await service.updateTBRPayments()
 
       // Assert
       expect(mockTransaction.save).not.toHaveBeenCalled()
@@ -287,7 +287,7 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       tbrService.getPaymentStatus.mockRejectedValue(new Error('Network error'))
 
       // Act
-      await service.updateCreatedTBRPayments()
+      await service.updateTBRPayments()
 
       // Assert
       expect(logger.error).toHaveBeenCalledWith(
@@ -310,7 +310,7 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       )
 
       // Act
-      await service.updateCreatedTBRPayments()
+      await service.updateTBRPayments()
 
       // Assert
       expect(logger.info).toHaveBeenCalledWith(
@@ -342,7 +342,7 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       )
 
       // Act
-      await service.updateCreatedTBRPayments()
+      await service.updateTBRPayments()
 
       // Assert - Should be 1 chunk since 10 < 25
       expect(logger.info).toHaveBeenCalledWith(
@@ -403,7 +403,7 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       tbrTransactionModel.findAll.mockResolvedValue([])
 
       // Act
-      await service.updateCreatedTBRPayments()
+      await service.updateTBRPayments()
 
       // Assert
       expect(tbrTransactionModel.findAll).toHaveBeenCalledWith({
@@ -419,7 +419,7 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       tbrTransactionModel.findAll.mockResolvedValue([])
 
       // Act
-      await service.updateCreatedTBRPayments()
+      await service.updateTBRPayments()
 
       // Assert
       expect(tbrTransactionModel.findAll).toHaveBeenCalledWith(
@@ -442,7 +442,7 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       )
 
       // Act
-      await service.updateCreatedTBRPayments()
+      await service.updateTBRPayments()
 
       // Assert
       expect(logger.info).toHaveBeenCalledWith(
@@ -471,7 +471,7 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       )
 
       // Act
-      await service.updateCreatedTBRPayments()
+      await service.updateTBRPayments()
 
       // Assert
       expect(logger.info).toHaveBeenCalledWith(

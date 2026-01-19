@@ -1,7 +1,9 @@
+import { Cache } from 'cache-manager'
 import addDays from 'date-fns/addDays'
 import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import {
   BadRequestException,
   Inject,
@@ -34,6 +36,8 @@ const LOGGING_CONTEXT = 'PublicationService'
 @Injectable()
 export class PublicationService implements IPublicationService {
   constructor(
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+
     @InjectModel(AdvertPublicationModel)
     readonly advertPublicationModel: typeof AdvertPublicationModel,
     @InjectModel(AdvertModel)
@@ -66,7 +70,7 @@ export class PublicationService implements IPublicationService {
     })
   }
 
-  @Cacheable({ tagBy: [0], topic: 'advert-publications-all' })
+  @Cacheable({ tagBy: [0], topic: 'advert-publications-all', service: 'lg' })
   async getPublications(
     query: GetPublicationsQueryDto,
   ): Promise<GetPublicationsDto> {

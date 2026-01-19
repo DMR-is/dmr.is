@@ -53,7 +53,7 @@ export class PaymentTaskService implements IPaymentTaskService {
   }
 
   @Cron('*/15 * * * *', {
-    name: 'update-payment-job',
+    name: 'payment-job',
   })
   async run() {
     // Use distributed lock with 10-minute cooldown (cron runs every 15 min)
@@ -61,7 +61,7 @@ export class PaymentTaskService implements IPaymentTaskService {
     const { ran, reason } = await this.lock.runWithDistributedLock(
       TASK_JOB_IDS.payment,
       async () => {
-        await this.updateCreatedTBRPayments()
+        await this.updateTBRPayments()
       },
       {
         cooldownMs: 10 * 60 * 1000, // 10 minutes
@@ -76,7 +76,7 @@ export class PaymentTaskService implements IPaymentTaskService {
     }
   }
 
-  async updateCreatedTBRPayments() {
+  async updateTBRPayments() {
     const now = new Date()
     this.logger.info(
       'Starting TBR payment status update job for created payments',

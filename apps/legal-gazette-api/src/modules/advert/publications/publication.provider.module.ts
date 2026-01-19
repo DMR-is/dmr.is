@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AwsModule } from '@dmr.is/modules'
+import { createRedisCacheOptions } from '@dmr.is/utils/cache'
 
 import { AdvertModel } from '../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
@@ -11,6 +12,7 @@ import { IPublicationService } from './publication.service.interface'
 
 @Module({
   imports: [
+    createRedisCacheOptions('lg-advert-publications'),
     SequelizeModule.forFeature([
       AdvertModel,
       AdvertPublicationModel,
