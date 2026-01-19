@@ -4975,6 +4975,108 @@
         "summary": "",
         "tags": ["Legal gazette - internal API"]
       }
+    },
+    "/api/v1/payments": {
+      "get": {
+        "operationId": "getPaymentsList",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 1, "example": 1, "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 10, "example": 10, "type": "number" }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "direction",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/SortDirectionEnum" }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GetPaymentsDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
     }
   },
   "info": {
@@ -6283,6 +6385,50 @@
           }
         },
         "required": ["entity"]
+      },
+      "TBRTransactionType": {
+        "type": "string",
+        "enum": ["ADVERT", "SUBSCRIPTION"]
+      },
+      "TBRTransactionStatus": {
+        "type": "string",
+        "enum": ["PENDING", "CREATED", "FAILED", "PAID"]
+      },
+      "PaymentDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "type": {
+            "allOf": [{ "$ref": "#/components/schemas/TBRTransactionType" }]
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/TBRTransactionStatus" }]
+          },
+          "totalPrice": { "type": "number" },
+          "debtorNationalId": { "type": "string" },
+          "paidAt": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "type",
+          "status",
+          "totalPrice",
+          "debtorNationalId",
+          "paidAt",
+          "createdAt"
+        ]
+      },
+      "GetPaymentsDto": {
+        "type": "object",
+        "properties": {
+          "payments": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PaymentDto" }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["payments", "paging"]
       },
       "BaseEntityDto": {
         "type": "object",

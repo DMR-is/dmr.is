@@ -15,6 +15,7 @@ import { CommentControllerModule } from '../comment/comment.controller.module'
 import { CommunicationChannelControllerModule } from '../communication-channel/communication-channel.module'
 import { FeeCodeModule } from '../fee-code/fee-code.controller.module'
 import { LGNationalRegistryControllerModule } from '../national-registry/national-registry.controller.module'
+import { PaymentsControllerModule } from '../payments/payment.controller.module'
 import { TBRCompanySettingsControllerModule } from '../settings/tbr-company/tbr-company-settings.controller.module'
 import { SettlementControllerModule } from '../settlement/settlement.controller.module'
 import { UserControllerModule } from '../users/users.controller.module'
@@ -39,6 +40,7 @@ import { UserControllerModule } from '../users/users.controller.module'
     SignatureControllerModule,
     TBRCompanySettingsControllerModule,
     LGNationalRegistryControllerModule,
+    PaymentsControllerModule,
   ],
 })
 export class InternalWebSwaggerModule {}
