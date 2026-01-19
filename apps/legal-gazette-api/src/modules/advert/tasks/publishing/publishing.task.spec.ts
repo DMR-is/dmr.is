@@ -1,6 +1,7 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
@@ -103,12 +104,18 @@ describe('PublishingTaskService - Event Emission', () => {
 
     // Mock lock service
     const mockLockService = {
-      runWithSessionLock: jest
-        .fn()
-        .mockImplementation(async (lockKey, fn) => {
-          await fn()
-          return { ran: true }
-        }),
+      runWithSessionLock: jest.fn().mockImplementation(async (lockKey, fn) => {
+        await fn()
+        return { ran: true }
+      }),
+    }
+
+    // Mock cache manager
+    const mockCacheManager = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      reset: jest.fn(),
     }
 
     const module: TestingModule = await Test.createTestingModule({
@@ -117,6 +124,10 @@ describe('PublishingTaskService - Event Emission', () => {
         {
           provide: LOGGER_PROVIDER,
           useValue: mockLogger,
+        },
+        {
+          provide: CACHE_MANAGER,
+          useValue: mockCacheManager,
         },
         {
           provide: EventEmitter2,
@@ -151,9 +162,9 @@ describe('PublishingTaskService - Event Emission', () => {
   describe('Event Emission with emitAsync', () => {
     it('should use emitAsync for ADVERT_PUBLISHED event', async () => {
       const mockPublication = createMockPublication()
-      publicationModel.findAll.mockResolvedValue(
-        [mockPublication] as unknown as AdvertPublicationModel[],
-      )
+      publicationModel.findAll.mockResolvedValue([
+        mockPublication,
+      ] as unknown as AdvertPublicationModel[])
       advertModel.findOne.mockResolvedValue(null)
 
       await service.publishAdverts()
@@ -170,9 +181,9 @@ describe('PublishingTaskService - Event Emission', () => {
 
     it('should use regular emit for ADVERT_PUBLISHED_SIDE_EFFECTS event', async () => {
       const mockPublication = createMockPublication()
-      publicationModel.findAll.mockResolvedValue(
-        [mockPublication] as unknown as AdvertPublicationModel[],
-      )
+      publicationModel.findAll.mockResolvedValue([
+        mockPublication,
+      ] as unknown as AdvertPublicationModel[])
 
       await service.publishAdverts()
 
@@ -188,9 +199,9 @@ describe('PublishingTaskService - Event Emission', () => {
 
     it('should await emitAsync before committing transaction', async () => {
       const mockPublication = createMockPublication()
-      publicationModel.findAll.mockResolvedValue(
-        [mockPublication] as unknown as AdvertPublicationModel[],
-      )
+      publicationModel.findAll.mockResolvedValue([
+        mockPublication,
+      ] as unknown as AdvertPublicationModel[])
 
       const emitOrder: string[] = []
       eventEmitter.emitAsync.mockImplementation(async () => {
@@ -219,9 +230,9 @@ describe('PublishingTaskService - Event Emission', () => {
 
     it('should catch and log errors from emitAsync', async () => {
       const mockPublication = createMockPublication()
-      publicationModel.findAll.mockResolvedValue(
-        [mockPublication] as unknown as AdvertPublicationModel[],
-      )
+      publicationModel.findAll.mockResolvedValue([
+        mockPublication,
+      ] as unknown as AdvertPublicationModel[])
 
       const testError = new Error('TBR payment failed')
       eventEmitter.emitAsync.mockRejectedValue(testError)
@@ -241,13 +252,12 @@ describe('PublishingTaskService - Event Emission', () => {
 
     it('should rollback transaction when emitAsync throws', async () => {
       const mockPublication = createMockPublication()
-      publicationModel.findAll.mockResolvedValue(
-        [mockPublication] as unknown as AdvertPublicationModel[],
-      )
+      publicationModel.findAll.mockResolvedValue([
+        mockPublication,
+      ] as unknown as AdvertPublicationModel[])
 
       const testError = new Error('TBR payment failed')
       eventEmitter.emitAsync.mockRejectedValue(testError)
-
       ;(sequelize.transaction as jest.Mock).mockImplementation(
         async (callback: (t: Transaction) => Promise<void>) => {
           const tx = {
@@ -271,9 +281,10 @@ describe('PublishingTaskService - Event Emission', () => {
     it('should continue processing remaining publications if one fails', async () => {
       const mockPub1 = createMockPublication({ id: 'pub-1' })
       const mockPub2 = createMockPublication({ id: 'pub-2' })
-      publicationModel.findAll.mockResolvedValue(
-        [mockPub1, mockPub2] as unknown as AdvertPublicationModel[],
-      )
+      publicationModel.findAll.mockResolvedValue([
+        mockPub1,
+        mockPub2,
+      ] as unknown as AdvertPublicationModel[])
 
       // Make first emission fail, second succeed
       eventEmitter.emitAsync
@@ -315,9 +326,10 @@ describe('PublishingTaskService - Event Emission', () => {
         advert: advert2,
       })
 
-      publicationModel.findAll.mockResolvedValue(
-        [pub1, pub2] as unknown as AdvertPublicationModel[],
-      )
+      publicationModel.findAll.mockResolvedValue([
+        pub1,
+        pub2,
+      ] as unknown as AdvertPublicationModel[])
 
       await service.publishAdverts()
 
@@ -363,9 +375,9 @@ describe('PublishingTaskService - Event Emission', () => {
   describe('Publication Number Generation', () => {
     it('should not use Transaction.LOCK.UPDATE', async () => {
       const mockPublication = createMockPublication()
-      publicationModel.findAll.mockResolvedValue(
-        [mockPublication] as unknown as AdvertPublicationModel[],
-      )
+      publicationModel.findAll.mockResolvedValue([
+        mockPublication,
+      ] as unknown as AdvertPublicationModel[])
       advertModel.findOne.mockResolvedValue(null)
 
       await service.publishAdverts()
@@ -382,9 +394,9 @@ describe('PublishingTaskService - Event Emission', () => {
   describe('Publication Update Pattern', () => {
     it('should use publication.update() instead of save()', async () => {
       const mockPublication = createMockPublication()
-      publicationModel.findAll.mockResolvedValue(
-        [mockPublication] as unknown as AdvertPublicationModel[],
-      )
+      publicationModel.findAll.mockResolvedValue([
+        mockPublication,
+      ] as unknown as AdvertPublicationModel[])
 
       await service.publishAdverts()
 
@@ -396,9 +408,9 @@ describe('PublishingTaskService - Event Emission', () => {
 
     it('should update publication with current timestamp', async () => {
       const mockPublication = createMockPublication()
-      publicationModel.findAll.mockResolvedValue(
-        [mockPublication] as unknown as AdvertPublicationModel[],
-      )
+      publicationModel.findAll.mockResolvedValue([
+        mockPublication,
+      ] as unknown as AdvertPublicationModel[])
 
       const beforeTime = Date.now()
       await service.publishAdverts()
@@ -429,9 +441,9 @@ describe('PublishingTaskService - Event Emission', () => {
 
     it('should log error details when event emission fails', async () => {
       const mockPublication = createMockPublication()
-      publicationModel.findAll.mockResolvedValue(
-        [mockPublication] as unknown as AdvertPublicationModel[],
-      )
+      publicationModel.findAll.mockResolvedValue([
+        mockPublication,
+      ] as unknown as AdvertPublicationModel[])
 
       const customError = new Error('Custom TBR error')
       eventEmitter.emitAsync.mockRejectedValue(customError)
@@ -450,9 +462,9 @@ describe('PublishingTaskService - Event Emission', () => {
   describe('Transaction Semantics', () => {
     it('should emit events INSIDE transaction, not in afterCommit', async () => {
       const mockPublication = createMockPublication()
-      publicationModel.findAll.mockResolvedValue(
-        [mockPublication] as unknown as AdvertPublicationModel[],
-      )
+      publicationModel.findAll.mockResolvedValue([
+        mockPublication,
+      ] as unknown as AdvertPublicationModel[])
 
       let emitCalledInsideTransaction = false
       let transactionCompleted = false

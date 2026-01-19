@@ -24,6 +24,7 @@ export type StoreKeyMapper =
   | 'ojoi-user'
   | 'ojoi-journal'
   | 'ojoi-statistics'
+  | 'lg-advert-publications'
 
 export const createRedisCacheOptions = (namespace: StoreKeyMapper) => {
   if (process.env.ENABLE_REDIS !== 'true') {

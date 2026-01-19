@@ -1,12 +1,15 @@
+import { Cache } from 'cache-manager'
 import { isEmpty } from 'class-validator'
 import { Op, Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { Inject, Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { evictByTopics } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { LegalGazetteEvents, TASK_JOB_IDS } from '../../../../core/constants'
@@ -23,6 +26,7 @@ const LOGGER_CONTEXT = 'PublishingTaskService'
 export class PublishingTaskService implements IPublishingTaskService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     @InjectModel(AdvertPublicationModel)
     private readonly publicationModel: typeof AdvertPublicationModel,
@@ -180,7 +184,6 @@ export class PublishingTaskService implements IPublishingTaskService {
               payload,
             )
           } catch (error) {
-
             this.logger.error(
               'Error occurred while emitting ADVERT_PUBLISHED event',
               {
@@ -207,5 +210,12 @@ export class PublishingTaskService implements IPublishingTaskService {
         continue
       }
     }
+
+    // evict cache after publishing all adverts
+    this.logger.info('Evicting advert publications cache', {
+      context: LOGGER_CONTEXT,
+    })
+
+    evictByTopics(this.cacheManager, ['advert-publications-all'])
   }
 }
