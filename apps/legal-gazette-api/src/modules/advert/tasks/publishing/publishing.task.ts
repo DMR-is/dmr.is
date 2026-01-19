@@ -9,7 +9,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { CacheEvictTopics, evictByTopics } from '@dmr.is/decorators'
+import { evictByTopics } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { LegalGazetteEvents, TASK_JOB_IDS } from '../../../../core/constants'
@@ -216,6 +216,6 @@ export class PublishingTaskService implements IPublishingTaskService {
       context: LOGGER_CONTEXT,
     })
 
-    evictByTopics(this.cacheManager, ['lg-advert-publications'])
+    evictByTopics(this.cacheManager, ['advert-publications-all'])
   }
 }

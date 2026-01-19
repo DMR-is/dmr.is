@@ -64,7 +64,7 @@ export class PublicationService implements IPublicationService {
     })
   }
 
-  @Cacheable({ tagBy: [0], topic: 'advert-publications' })
+  @Cacheable({ tagBy: [0], topic: 'advert-publications-all' })
   async getPublications(
     query: GetPublicationsQueryDto,
   ): Promise<GetPublicationsDto> {
@@ -248,7 +248,7 @@ export class PublicationService implements IPublicationService {
     }
   }
 
-  @CacheEvictTopics('lg-advert-publications')
+  @CacheEvictTopics('advert-publications-all')
   async publishAdvertPublication(
     advertId: string,
     publicationId: string,
