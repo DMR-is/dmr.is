@@ -65,7 +65,6 @@ export const DataTableColumn = ({
   return (
     <T.HeadData
       style={inlineStyles}
-      color="red400"
       box={{
         paddingLeft: [1, 2],
         paddingRight: [1, 2],
