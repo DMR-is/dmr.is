@@ -166,7 +166,7 @@ This implementation addresses the core issue identified in C-2 (Publishing Befor
 |----|-------|---------|--------|--------|
 | M-1 | Wrong Radix in parseInt for Publication Number | `publication.service.ts` | 0.5h | ✅ Fixed in H-6 |
 | M-2 | forEach with async Does Not Await Properly | `publication.service.ts` | 0.5h | ✅ Fixed in H-7 |
-| M-3 | Advert Payment Task Only Checks Person Category | `advert-payment.task.ts` | 1h | ⬜ |
+| M-3 | Advert Payment Task Only Checks Person Category | `payment.task.ts` | 1h | ⬜ |
 
 ---
 

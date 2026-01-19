@@ -1,6 +1,7 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { getModelToken } from '@nestjs/sequelize'
@@ -26,6 +27,13 @@ const mockSequelize = {
   transaction: jest.fn(),
 }
 
+const mockCacheManager = {
+  get: jest.fn(),
+  set: jest.fn(),
+  del: jest.fn(),
+  reset: jest.fn(),
+}
+
 describe('PublicationService - Publication Number Generation', () => {
   let service: IPublicationService
   let advertModel: typeof AdvertModel
@@ -35,6 +43,11 @@ describe('PublicationService - Publication Number Generation', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PublicationService,
+
+        {
+          provide: CACHE_MANAGER,
+          useValue: mockCacheManager,
+        },
         {
           provide: getModelToken(AdvertModel),
           useValue: {
@@ -441,6 +454,10 @@ describe('PublicationService - Publication Number Generation', () => {
             useValue: advertPublicationModel,
           },
           {
+            provide: CACHE_MANAGER,
+            useValue: mockCacheManager,
+          },
+          {
             provide: Sequelize,
             useValue: mockSequelize,
           },
@@ -544,6 +561,10 @@ describe('PublicationService - Publication Number Generation', () => {
             useValue: advertPublicationModel,
           },
           {
+            provide: CACHE_MANAGER,
+            useValue: mockCacheManager,
+          },
+          {
             provide: Sequelize,
             useValue: mockSequelize,
           },
@@ -611,6 +632,10 @@ describe('PublicationService - Delete Publication Protection', () => {
             findAll: jest.fn(),
             destroy: jest.fn(),
           },
+        },
+        {
+          provide: CACHE_MANAGER,
+          useValue: mockCacheManager,
         },
         {
           provide: Sequelize,

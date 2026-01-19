@@ -38,6 +38,8 @@ type TBRGetPaymentResponse = {
 
 type TBRPathString = `/${string}`
 
+const LOGGING_CONTEXT = 'TBRService'
+
 @Injectable()
 export class TBRService implements ITBRService {
   private readonly credentials: string
@@ -86,7 +88,7 @@ export class TBRService implements ITBRService {
         message: `/${endpoint.split('/').slice(-2).join('/')}`,
         path: path,
         method: options?.method || 'GET',
-        context: 'TBRService',
+        context: LOGGING_CONTEXT,
       })
 
       const response = await fetchWithTimeout(endpoint, {
@@ -107,7 +109,7 @@ export class TBRService implements ITBRService {
             status: response.status,
             error: err,
             detail: err?.error?.detail,
-            context: 'TBRService',
+            context: LOGGING_CONTEXT,
           })
 
           throw new NotFoundException('TBR claim not found')
@@ -116,7 +118,7 @@ export class TBRService implements ITBRService {
         this.logger.error('TBR request failed', {
           url: path,
           status: response.status,
-          context: 'TBRService',
+          context: LOGGING_CONTEXT,
           error: err,
           detail: err?.error?.detail,
         })
@@ -129,7 +131,7 @@ export class TBRService implements ITBRService {
       this.logger.error('TBR request error when requesting:', {
         message: endpoint,
         url: path,
-        context: 'TBRService',
+        context: LOGGING_CONTEXT,
         error: error,
         detail: error instanceof Error ? error.message : undefined,
       })
@@ -140,6 +142,7 @@ export class TBRService implements ITBRService {
   async postPayment(body: TBRPostPaymentBodyDto): Promise<void> {
     this.logger.info('Creating TBR claim', {
       advertId: body.id,
+      context: LOGGING_CONTEXT,
     })
 
     await this.request('/claim', {

@@ -32,6 +32,7 @@ type CacheableOptions = {
   tagBy?: number[]
   topic?: string // NEW (single)
   topics?: string[] // NEW (multiple)
+  service?: 'ojoi' | 'lg'
 }
 
 const topicKey = (topic: string) => `__topic:${topic}`
@@ -150,7 +151,13 @@ export async function evictByTags(
  *   - compute, set envelope, index by tagBy values (if provided), return result
  */
 export const Cacheable = (opts: CacheableOptions = {}) => {
-  const { ttlMs = CACHE_TTL, tagBy = [], topic, topics } = opts
+  const {
+    ttlMs = CACHE_TTL,
+    tagBy = [],
+    topic,
+    topics,
+    service = 'ojoi',
+  } = opts
 
   return function (
     _target: unknown,
@@ -167,6 +174,7 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
       }
       const cache = (this as any).cacheManager as Cache
       const key = buildCacheKey(propertyKey, args)
+      const isLegalGazette = service === 'lg'
 
       // Try cache
       const envelope = (await cache.get<CachedEnvelope>(key)) || null
@@ -182,7 +190,9 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
               const fresh = await originalMethod.apply(this, args)
               let dataForCache: unknown | undefined
               try {
-                dataForCache = ResultWrapper.unwrap(fresh) // throws if err
+                dataForCache = isLegalGazette
+                  ? fresh
+                  : ResultWrapper.unwrap(fresh) // throws if err
               } catch {
                 // Keep serving the old cached value; don't overwrite with an error
                 return
@@ -224,14 +234,14 @@ export const Cacheable = (opts: CacheableOptions = {}) => {
             context: LOGGING_CONTEXT,
           })
         }
-        return ResultWrapper.ok(envelope.data)
+        return isLegalGazette ? envelope.data : ResultWrapper.ok(envelope.data)
       }
 
       // Miss: compute
       const result = await originalMethod.apply(this, args)
       let dataForCache: unknown | undefined
       try {
-        dataForCache = ResultWrapper.unwrap(result) // throws if err
+        dataForCache = isLegalGazette ? result : ResultWrapper.unwrap(result) // throws if err
       } catch {
         // Do NOT cache errors
         return result

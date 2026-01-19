@@ -37,6 +37,7 @@ import { TypeIdEnum } from '../../../models/type.model'
 import { IAdvertService } from '../../advert/advert.service.interface'
 import { IRecallApplicationService } from './recall-application.service.interface'
 
+const LOGGING_CONTEXT = 'RecallApplicationService'
 @Injectable()
 export class RecallApplicationService implements IRecallApplicationService {
   constructor(
@@ -88,7 +89,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       this.logger.debug(
         `Found previous division meeting advert, setting next min meeting date to`,
         {
-          context: 'ApplicationService',
+          context: LOGGING_CONTEXT,
           message: nextMeetingDate,
           applicationId: applicationId,
           advertId: divisionMeeting.id,
@@ -101,7 +102,7 @@ export class RecallApplicationService implements IRecallApplicationService {
     }
 
     this.logger.debug(`No division meeting advert found for application`, {
-      context: 'ApplicationService',
+      context: LOGGING_CONTEXT,
       applicationId: applicationId,
     })
 
@@ -130,7 +131,7 @@ export class RecallApplicationService implements IRecallApplicationService {
 
     if (!firstRecallAdvert || firstRecallAdvert.publications.length === 0) {
       this.logger.warn(`No recall adverts found for application`, {
-        context: 'RecallApplicationService',
+        context: LOGGING_CONTEXT,
         applicationId: applicationId,
       })
 
@@ -146,7 +147,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       this.logger.debug(
         `Found division meeting date on first recall advert, setting next min meeting date to`,
         {
-          context: 'ApplicationService',
+          context: LOGGING_CONTEXT,
           message: nextMinDate,
           applicationId: applicationId,
           advertId: firstRecallAdvert.id,
@@ -169,7 +170,7 @@ export class RecallApplicationService implements IRecallApplicationService {
     this.logger.debug(
       `No division meeting date found on first recall advert, setting next min meeting date to`,
       {
-        context: 'ApplicationService',
+        context: LOGGING_CONTEXT,
         message: nextMinDate,
         applicationId: applicationId,
         advertId: firstRecallAdvert.id,
@@ -244,7 +245,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       this.logger.error(
         `Cannot create division ending advert without judgement date set on recall advert`,
         {
-          context: 'RecallApplicationService',
+          context: LOGGING_CONTEXT,
           applicationId: applicationId,
         },
       )
@@ -337,7 +338,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       this.logger.debug(
         `Found previous division meeting advert, setting next min meeting date to`,
         {
-          context: 'ApplicationService',
+          context: LOGGING_CONTEXT,
           message: nextMinMeetingDate,
           applicationId: applicationId,
           advertId: divisionMeeting.id,
@@ -350,7 +351,7 @@ export class RecallApplicationService implements IRecallApplicationService {
     }
 
     this.logger.debug(`No division meeting advert found for application`, {
-      context: 'ApplicationService',
+      context: LOGGING_CONTEXT,
       applicationId: applicationId,
     })
 
@@ -383,7 +384,7 @@ export class RecallApplicationService implements IRecallApplicationService {
 
     if (!firstRecallAdvert) {
       this.logger.warn(`No recall adverts found for application`, {
-        context: 'ApplicationService',
+        context: LOGGING_CONTEXT,
         applicationId: applicationId,
       })
 
@@ -395,7 +396,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       this.logger.warn(
         `No publications found for first recall advert of application`,
         {
-          context: 'ApplicationService',
+          context: LOGGING_CONTEXT,
           applicationId: applicationId,
           advertId: firstRecallAdvert.id,
         },
@@ -419,7 +420,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       this.logger.debug(
         `Found division meeting date in first recall advert, setting min date based on that date`,
         {
-          context: 'ApplicationService',
+          context: LOGGING_CONTEXT,
           applicationId: applicationId,
           advertId: firstRecallAdvert.id,
           previousMeetingDate: previousMeetingDate,
@@ -442,7 +443,7 @@ export class RecallApplicationService implements IRecallApplicationService {
     this.logger.debug(
       `No division meeting date found in first recall advert, setting min date based on first publication date`,
       {
-        context: 'ApplicationService',
+        context: LOGGING_CONTEXT,
         applicationId: applicationId,
         advertId: firstRecallAdvert.id,
         previousMeetingDate: previousMeetingDate.toISOString(),
@@ -503,7 +504,7 @@ export class RecallApplicationService implements IRecallApplicationService {
 
         if (!check.success) {
           this.logger.error('Failed to parse application answers', {
-            context: 'ApplicationService',
+            context: LOGGING_CONTEXT,
             applicationId: application.id,
             error: z.treeifyError(check.error),
           })
@@ -522,6 +523,10 @@ export class RecallApplicationService implements IRecallApplicationService {
       default:
         this.logger.warn(
           `Attempted to submit recall application with unknown type: ${application.applicationType}`,
+          {
+            context: LOGGING_CONTEXT,
+            applicationId: application.id,
+          },
         )
         throw new BadRequestException()
     }

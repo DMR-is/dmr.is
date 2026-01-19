@@ -6,6 +6,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { TASK_JOB_IDS } from '../../../../core/constants'
+import { AdvertModel } from '../../../../models/advert.model'
 import {
   TBRTransactionModel,
   TBRTransactionStatus,
@@ -13,8 +14,9 @@ import {
 } from '../../../../models/tbr-transactions.model'
 import { TBRGetPaymentResponseDto } from '../../../tbr/tbr.dto'
 import { ITBRService } from '../../../tbr/tbr.service.interface'
+import { IPriceCalculatorService } from '../../calculator/price-calculator.service.interface'
 import { PgAdvisoryLockService } from '../lock.service'
-import { AdvertPaymentTaskService } from './advert-payment.task'
+import { PaymentTaskService } from './payment.task'
 
 // Test constants
 const MOCK_TBR_PERSON_CATEGORY = 'person-category'
@@ -50,10 +52,11 @@ const createMockPaymentResponse = (
   ...overrides,
 })
 
-describe('AdvertPaymentTaskService - Payment Status Polling', () => {
-  let service: AdvertPaymentTaskService
+describe('PaymentTaskService - Payment Status Polling', () => {
+  let service: PaymentTaskService
   let tbrService: jest.Mocked<ITBRService>
   let tbrTransactionModel: any
+  let priceCalculatorService: any
   let lockService: jest.Mocked<PgAdvisoryLockService>
   let logger: jest.Mocked<Logger>
 
@@ -61,6 +64,7 @@ describe('AdvertPaymentTaskService - Payment Status Polling', () => {
     // Setup environment variables
     process.env.LG_TBR_CHARGE_CATEGORY_PERSON = MOCK_TBR_PERSON_CATEGORY
     process.env.TBR_CHUNK_SIZE = '25'
+    process.env.TBR_CHUNK_DELAY_MS = '0' // Disable delay in tests
     process.env.HOSTNAME = MOCK_CONTAINER_ID
 
     const mockTBRService = {
@@ -72,9 +76,13 @@ describe('AdvertPaymentTaskService - Payment Status Polling', () => {
       findAll: jest.fn(),
     }
 
+    const mockAdvertModel = {}
+
     const mockLockService = {
       runWithDistributedLock: jest.fn(),
     }
+
+    const mockPriceCalculatorService = {}
 
     const mockLogger = {
       info: jest.fn(),
@@ -85,14 +93,22 @@ describe('AdvertPaymentTaskService - Payment Status Polling', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        AdvertPaymentTaskService,
+        PaymentTaskService,
         {
           provide: ITBRService,
           useValue: mockTBRService,
         },
         {
+          provide: IPriceCalculatorService,
+          useValue: mockPriceCalculatorService,
+        },
+        {
           provide: getModelToken(TBRTransactionModel),
           useValue: mockTBRTransactionModel,
+        },
+        {
+          provide: getModelToken(AdvertModel),
+          useValue: mockAdvertModel,
         },
         {
           provide: PgAdvisoryLockService,
@@ -105,8 +121,9 @@ describe('AdvertPaymentTaskService - Payment Status Polling', () => {
       ],
     }).compile()
 
-    service = module.get<AdvertPaymentTaskService>(AdvertPaymentTaskService)
+    service = module.get<PaymentTaskService>(PaymentTaskService)
     tbrService = module.get(ITBRService)
+    priceCalculatorService = module.get(IPriceCalculatorService)
     tbrTransactionModel = module.get(getModelToken(TBRTransactionModel))
     lockService = module.get(PgAdvisoryLockService)
     logger = module.get(LOGGER_PROVIDER)
@@ -127,8 +144,6 @@ describe('AdvertPaymentTaskService - Payment Status Polling', () => {
       // Assert
       expect(tbrTransactionModel.findAll).toHaveBeenCalledWith({
         where: {
-          transactionType: 'ADVERT',
-          chargeCategory: { [Op.eq]: MOCK_TBR_PERSON_CATEGORY },
           paidAt: { [Op.eq]: null },
           status: TBRTransactionStatus.CREATED,
         },
@@ -269,9 +284,7 @@ describe('AdvertPaymentTaskService - Payment Status Polling', () => {
       // Arrange
       const mockTransaction = createMockTransaction()
       tbrTransactionModel.findAll.mockResolvedValue([mockTransaction])
-      tbrService.getPaymentStatus.mockRejectedValue(
-        new Error('Network error'),
-      )
+      tbrService.getPaymentStatus.mockRejectedValue(new Error('Network error'))
 
       // Act
       await service.updateTBRPayments()
@@ -385,7 +398,7 @@ describe('AdvertPaymentTaskService - Payment Status Polling', () => {
   })
 
   describe('Query Filtering', () => {
-    it('should only query ADVERT transactions with CREATED status', async () => {
+    it('should only query created that have no payment', async () => {
       // Arrange
       tbrTransactionModel.findAll.mockResolvedValue([])
 
@@ -395,8 +408,6 @@ describe('AdvertPaymentTaskService - Payment Status Polling', () => {
       // Assert
       expect(tbrTransactionModel.findAll).toHaveBeenCalledWith({
         where: {
-          transactionType: 'ADVERT',
-          chargeCategory: { [Op.eq]: MOCK_TBR_PERSON_CATEGORY },
           paidAt: { [Op.eq]: null },
           status: TBRTransactionStatus.CREATED,
         },
@@ -414,7 +425,7 @@ describe('AdvertPaymentTaskService - Payment Status Polling', () => {
       expect(tbrTransactionModel.findAll).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            chargeCategory: { [Op.eq]: MOCK_TBR_PERSON_CATEGORY },
+            paidAt: { [Op.eq]: null },
           }),
         }),
       )
@@ -435,7 +446,7 @@ describe('AdvertPaymentTaskService - Payment Status Polling', () => {
 
       // Assert
       expect(logger.info).toHaveBeenCalledWith(
-        'Starting TBR payment status update job',
+        'Starting TBR payment status update job for created payments',
         expect.objectContaining({
           timestamp: expect.any(String),
         }),

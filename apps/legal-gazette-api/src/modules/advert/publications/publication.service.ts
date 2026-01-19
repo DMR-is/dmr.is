@@ -1,7 +1,9 @@
+import { Cache } from 'cache-manager'
 import addDays from 'date-fns/addDays'
 import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import {
   BadRequestException,
   Inject,
@@ -29,9 +31,13 @@ import {
 import { StatusIdEnum } from '../../../models/status.model'
 import { AdvertPublishedEvent } from './events/advert-published.event'
 import { IPublicationService } from './publication.service.interface'
+
+const LOGGING_CONTEXT = 'PublicationService'
 @Injectable()
 export class PublicationService implements IPublicationService {
   constructor(
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+
     @InjectModel(AdvertPublicationModel)
     readonly advertPublicationModel: typeof AdvertPublicationModel,
     @InjectModel(AdvertModel)
@@ -64,7 +70,7 @@ export class PublicationService implements IPublicationService {
     })
   }
 
-  @Cacheable({ tagBy: [0], topic: 'advert-publications-all' })
+  @Cacheable({ tagBy: [0], topic: 'advert-publications-all', service: 'lg' })
   async getPublications(
     query: GetPublicationsQueryDto,
   ): Promise<GetPublicationsDto> {
@@ -132,7 +138,10 @@ export class PublicationService implements IPublicationService {
       const publication = advert.publications?.[0]
 
       if (!publication) {
-        this.logger.error(`No publication found for advert ${advert.id}`)
+        this.logger.error(`No publication found for advert ${advert.id}`, {
+          advertId: advert.id,
+          context: LOGGING_CONTEXT,
+        })
         throw new BadRequestException('No publication found for advert')
       }
 
@@ -258,6 +267,7 @@ export class PublicationService implements IPublicationService {
       this.logger.info(
         `Publishing advert publication at ${pubDate.toISOString()}`,
         {
+          context: LOGGING_CONTEXT,
           advertId,
           publicationId,
           date: pubDate.toISOString(),
@@ -315,7 +325,7 @@ export class PublicationService implements IPublicationService {
       this.logger.info(
         'Advert publication marked as published, emitting ADVERT_PUBLISHED event',
         {
-          context: 'PublicationService',
+          context: LOGGING_CONTEXT,
           advertId: advert.id,
           publicationId: publication.id,
         },
@@ -345,7 +355,7 @@ export class PublicationService implements IPublicationService {
         this.logger.error(
           'Error occurred while emitting ADVERT_PUBLISHED event',
           {
-            context: 'PublicationService',
+            context: LOGGING_CONTEXT,
             advertId: advert.id,
             publicationId: publication.id,
             error: error instanceof Error ? error.message : 'Unknown error',

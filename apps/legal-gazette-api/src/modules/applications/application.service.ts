@@ -25,12 +25,7 @@ import {
 } from '../../core/constants'
 import { getAdvertHTMLMarkupPreview } from '../../core/templates/html'
 import { mapIndexToVersion } from '../../core/utils'
-import {
-  AdvertModel,
-  AdvertTemplateType,
-  CreateAdvertInternalDto,
-} from '../../models/advert.model'
-import { AdvertPublicationModel } from '../../models/advert-publication.model'
+import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
@@ -43,10 +38,11 @@ import {
 } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
 import { CategoryModel } from '../../models/category.model'
-import { StatusIdEnum } from '../../models/status.model'
 import { IAdvertService } from '../advert/advert.service.interface'
 import { IRecallApplicationService } from './recall/recall-application.service.interface'
 import { IApplicationService } from './application.service.interface'
+
+const LOGGER_CONTEXT = 'ApplicationService'
 
 @Injectable()
 export class ApplicationService implements IApplicationService {
@@ -445,6 +441,10 @@ export class ApplicationService implements IApplicationService {
       default:
         this.logger.warn(
           `Attempted to submit application with unknown type: ${application.applicationType}`,
+          {
+            context: LOGGER_CONTEXT,
+            applicationId: application.id,
+          },
         )
         throw new BadRequestException()
     }

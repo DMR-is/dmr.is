@@ -11,3 +11,14 @@ services:
       - POSTGRES_INITDB_ARGS=--locale-provider=icu --icu-locale=is-IS
     ports:
       - '5434:5432'
+  redis:
+    container_name: cache
+    image: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - redis:/data
+
+volumes:
+  redis:
+    driver: local
