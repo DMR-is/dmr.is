@@ -22,7 +22,7 @@
       "@dmr.is/apm": ["libs/apm/src/index.ts"],
       "@dmr.is/auth/*": ["libs/shared/auth/src/lib/*"],
       "@dmr.is/clients/national-registry": [
-        "libs/clients/national-registry/index.ts"
+        "libs/clients/national-registry/src/index.ts"
       ],
       "@dmr.is/clients/company-registry": [
         "libs/clients/company-registry/index.ts"
