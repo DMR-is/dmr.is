@@ -1,8 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing'
 import {
   BadGatewayException,
   InternalServerErrorException,
 } from '@nestjs/common'
+import { Test, TestingModule } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { fetchWithTimeout } from '@dmr.is/utils'
@@ -19,7 +19,7 @@ const mockFetchWithTimeout = fetchWithTimeout as jest.MockedFunction<
 
 describe('NationalRegistryService', () => {
   let service: NationalRegistryService
-  let mockLogger: any
+  let mockLogger: Record<string, jest.Mock>
 
   const mockEnv = {
     NATIONAL_REGISTRY_API_LOGIN_PATH: 'https://api.example.com/login',
@@ -142,7 +142,7 @@ describe('NationalRegistryService', () => {
             }),
           ),
           headers: { get: () => 'application/json' },
-        } as any)
+        } as unknown as Response)
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
@@ -155,7 +155,7 @@ describe('NationalRegistryService', () => {
             }),
           ),
           headers: { get: () => 'application/json' },
-        } as any)
+        } as unknown as Response)
 
       await service.getPersonByNationalId('1234567890')
 
@@ -177,7 +177,7 @@ describe('NationalRegistryService', () => {
           }),
         ),
         headers: { get: () => 'application/json' },
-      } as any)
+      } as unknown as Response)
 
       // Second call should use cached credentials
       await service.getPersonByNationalId('0987654321')
@@ -202,7 +202,7 @@ describe('NationalRegistryService', () => {
           }),
         ),
         headers: { get: () => 'application/json' },
-      } as any)
+      } as unknown as Response)
 
       await expect(service.getPersonByNationalId('1234567890')).rejects.toThrow(
         BadGatewayException,
@@ -221,7 +221,7 @@ describe('NationalRegistryService', () => {
         statusText: 'Internal Server Error',
         text: jest.fn().mockResolvedValue('Not JSON response'),
         headers: { get: () => 'text/html' },
-      } as any)
+      } as unknown as Response)
 
       await expect(service.getPersonByNationalId('1234567890')).rejects.toThrow(
         BadGatewayException,
@@ -241,7 +241,7 @@ describe('NationalRegistryService', () => {
           .fn()
           .mockResolvedValue(JSON.stringify({ audkenni: 'auth-123' })), // Missing accessToken
         headers: { get: () => 'application/json' },
-      } as any)
+      } as unknown as Response)
 
       await expect(service.getPersonByNationalId('1234567890')).rejects.toThrow(
         BadGatewayException,
@@ -266,7 +266,7 @@ describe('NationalRegistryService', () => {
             JSON.stringify({ audkenni: 'auth-123', accessToken: 'token-456' }),
           ),
         headers: { get: () => 'application/json' },
-      } as any)
+      } as unknown as Response)
     })
 
     it('should fetch person successfully', async () => {
@@ -281,7 +281,7 @@ describe('NationalRegistryService', () => {
         status: 200,
         text: jest.fn().mockResolvedValue(JSON.stringify(mockPerson)),
         headers: { get: () => 'application/json' },
-      } as any)
+      } as unknown as Response)
 
       const result = await service.getPersonByNationalId('1234567890')
 
@@ -306,7 +306,7 @@ describe('NationalRegistryService', () => {
           }),
         ),
         headers: { get: () => 'application/json' },
-      } as any)
+      } as unknown as Response)
 
       await expect(service.getPersonByNationalId('9999999999')).rejects.toThrow(
         BadGatewayException,
@@ -325,7 +325,7 @@ describe('NationalRegistryService', () => {
         statusText: 'Unauthorized',
         text: jest.fn().mockResolvedValue('Invalid token'),
         headers: { get: () => 'text/plain' },
-      } as any)
+      } as unknown as Response)
 
       await expect(service.getPersonByNationalId('1234567890')).rejects.toThrow(
         BadGatewayException,
@@ -343,7 +343,7 @@ describe('NationalRegistryService', () => {
         status: 200,
         text: jest.fn().mockResolvedValue('Not valid JSON'),
         headers: { get: () => 'text/html' },
-      } as any)
+      } as unknown as Response)
 
       await expect(service.getPersonByNationalId('1234567890')).rejects.toThrow(
         BadGatewayException,
@@ -365,7 +365,7 @@ describe('NationalRegistryService', () => {
           .fn()
           .mockResolvedValue(JSON.stringify({ person: mockPerson })),
         headers: { get: () => 'application/json' },
-      } as any)
+      } as unknown as Response)
 
       await service.getPersonByNationalId('1234567890')
 
@@ -413,13 +413,13 @@ describe('NationalRegistryService', () => {
             }),
           ),
           headers: { get: () => 'application/json' },
-        } as any)
+        } as unknown as Response)
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
           text: jest.fn().mockResolvedValue(JSON.stringify(mockPerson)),
           headers: { get: () => 'application/json' },
-        } as any)
+        } as unknown as Response)
 
       const result = await service.getPersonByNationalId('1234567890')
       expect(result.person).toEqual(mockPerson)
@@ -437,13 +437,13 @@ describe('NationalRegistryService', () => {
             }),
           ),
           headers: { get: () => 'application/json' },
-        } as any)
+        } as unknown as Response)
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
           text: jest.fn().mockResolvedValue('{ invalid json'),
           headers: { get: () => 'application/json' },
-        } as any)
+        } as unknown as Response)
 
       await expect(service.getPersonByNationalId('1234567890')).rejects.toThrow(
         BadGatewayException,

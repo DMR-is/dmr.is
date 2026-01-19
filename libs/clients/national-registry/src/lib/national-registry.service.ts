@@ -1,18 +1,46 @@
 import {
-  Injectable,
-  Inject,
-  InternalServerErrorException,
   BadGatewayException,
-  ServiceUnavailableException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
 } from '@nestjs/common'
 
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { fetchWithTimeout } from '@dmr.is/utils'
-import { LOGGER_PROVIDER, Logger } from '@dmr.is/logging'
 
+import { GetPersonDto, PersonDto } from './national-registry.dto'
 import { INationalRegistryService } from './national-registry.service.interface'
-import { GetPersonDto } from './national-registry.dto'
 
 const LOGGING_CONTEXT = 'NationalRegistryClientService'
+
+interface AuthResponse {
+  audkenni: string
+  accessToken: string
+}
+
+interface ErrorResponse {
+  title?: string
+  detail?: string
+}
+
+function isAuthResponse(data: unknown): data is AuthResponse {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'audkenni' in data &&
+    typeof (data as AuthResponse).audkenni === 'string' &&
+    'accessToken' in data &&
+    typeof (data as AuthResponse).accessToken === 'string'
+  )
+}
+
+function getErrorMessage(error: unknown): string {
+  if (typeof error === 'object' && error !== null) {
+    const err = error as ErrorResponse
+    return err.title || err.detail || 'Unknown error'
+  }
+  return 'Unknown error'
+}
 
 @Injectable()
 export class NationalRegistryService implements INationalRegistryService {
@@ -57,7 +85,7 @@ export class NationalRegistryService implements INationalRegistryService {
     }
   }
 
-  private parseJsonSafely<T = any>(
+  private parseJsonSafely<T = unknown>(
     responseText: string,
     errorContext: string,
   ): T {
@@ -121,7 +149,7 @@ export class NationalRegistryService implements INationalRegistryService {
           responseBody: responseText.substring(0, 500), // Log first 500 chars
         })
 
-        let error: any
+        let error: unknown
         try {
           error = this.parseJsonSafely(
             responseText,
@@ -139,18 +167,24 @@ export class NationalRegistryService implements INationalRegistryService {
         })
 
         throw new BadGatewayException(
-          `National registry authentication failed: ${error.title || error.detail || 'Unknown error'}`,
+          `National registry authentication failed: ${getErrorMessage(error)}`,
         )
       }
 
-      const data = this.parseJsonSafely(responseText, 'authentication response')
+      const data = this.parseJsonSafely<unknown>(
+        responseText,
+        'authentication response',
+      )
 
-      if (!data.audkenni || !data.accessToken) {
+      if (!isAuthResponse(data)) {
         this.logger.error('Authentication response missing required fields', {
           context: LOGGING_CONTEXT,
-          hasAudkenni: !!data.audkenni,
-          hasAccessToken: !!data.accessToken,
-          responseKeys: Object.keys(data),
+          hasAudkenni:
+            typeof data === 'object' && data !== null && 'audkenni' in data,
+          hasAccessToken:
+            typeof data === 'object' && data !== null && 'accessToken' in data,
+          responseKeys:
+            typeof data === 'object' && data !== null ? Object.keys(data) : [],
         })
         throw new BadGatewayException(
           'National registry authentication response missing required fields',
@@ -217,7 +251,7 @@ export class NationalRegistryService implements INationalRegistryService {
           responseBody: responseText.substring(0, 500),
         })
 
-        let error: any
+        let error: unknown
         try {
           error = this.parseJsonSafely(
             responseText,
@@ -244,11 +278,11 @@ export class NationalRegistryService implements INationalRegistryService {
         })
 
         throw new BadGatewayException(
-          `National registry person lookup failed: ${error.title || error.detail || 'Unknown error'}`,
+          `National registry person lookup failed: ${getErrorMessage(error)}`,
         )
       }
 
-      const person = this.parseJsonSafely(
+      const person = this.parseJsonSafely<PersonDto | null>(
         responseText,
         'person lookup response',
       )
