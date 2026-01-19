@@ -244,7 +244,7 @@ export class PublicationService implements IPublicationService {
     const publication = await this.advertPublicationModel.findOneOrThrow({
       where: {
         advertId: id,
-        versionNumber: isLegacy ? 1 : mapVersionToIndex(version),
+        ...(isLegacy ? {} : { versionNumber: mapVersionToIndex(version) }),
       },
     })
 
