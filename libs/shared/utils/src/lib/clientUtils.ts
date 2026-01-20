@@ -40,6 +40,7 @@ const dateFormats = [
   'MMMM',
   'EEEE',
   "dd. MMMM yyyy 'kl.' HH:mm",
+  "d.MM.yy 'kl.' HH:mm",
 ] as const
 
 export const formatDate = (
@@ -85,8 +86,11 @@ export function getIcelandicDative(days: number) {
   return 'dögum'
 }
 
-
-export const createUrlFromHost = (host: string, shouldShift: boolean, unshift?: string)  => {
+export const createUrlFromHost = (
+  host: string,
+  shouldShift: boolean,
+  unshift?: string,
+) => {
   if (typeof window === 'undefined' || !window.location) {
     return ''
   } else {

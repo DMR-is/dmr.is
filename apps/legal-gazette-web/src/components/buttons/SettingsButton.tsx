@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-import { DropdownMenu } from '@dmr.is/ui/components/island-is'
+import { Button, DropdownMenu } from '@dmr.is/ui/components/island-is'
 
 type SettingsItems = React.ComponentProps<typeof DropdownMenu>['items']
 
@@ -20,9 +20,19 @@ export const SettingsButton = () => {
       icon: 'person',
       iconType: 'outline',
     },
+    {
+      title: 'Greiðslur',
+      href: '/greidslur',
+      icon: 'card',
+      iconType: 'outline',
+    },
   ]
 
-  return <DropdownMenu icon="settings" iconType="outline" items={items} />
+  const disclosure = <Button size="small" variant="utility" icon="dots" />
+
+  return (
+    <DropdownMenu disclosure={disclosure} iconType="outline" items={items} />
+  )
 }
 
 export default SettingsButton
