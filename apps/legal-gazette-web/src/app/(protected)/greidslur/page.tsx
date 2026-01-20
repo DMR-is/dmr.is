@@ -1,17 +1,21 @@
-import { fetchQuery } from '@dmr.is/trpc/client/server'
+import { HydrateClient, prefetch } from '@dmr.is/trpc/client/server'
 
 import { PaymentsContainer } from '../../../containers/PaymentsContainer'
-import { loadSearchParams } from '../../../lib/nuqs/search-params'
+import { pagingParamsCache } from '../../../lib/nuqs/paging-params'
 import { trpc } from '../../../lib/trpc/client/server'
 
-export default async function PaymentsPage({
-  searchParams,
-}: {
+type Props = {
   searchParams: Record<string, string>
-}) {
-  const payments = await fetchQuery(trpc.getPayments.queryOptions())
+}
 
-  const params = await loadSearchParams(searchParams)
+export default async function PaymentsPage({ searchParams }: Props) {
+  const { page, pageSize } = pagingParamsCache.parse(searchParams)
 
-  return <PaymentsContainer payments={payments} initialParams={params} />
+  prefetch(trpc.getPayments.queryOptions({ page, pageSize }))
+
+  return (
+    <HydrateClient>
+      <PaymentsContainer />
+    </HydrateClient>
+  )
 }

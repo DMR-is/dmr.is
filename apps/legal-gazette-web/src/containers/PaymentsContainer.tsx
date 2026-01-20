@@ -3,137 +3,68 @@
 import { useQueryStates } from 'nuqs'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
+import Hero from '@dmr.is/ui/components/Hero/Hero'
 import {
   GridColumn,
   GridContainer,
   GridRow,
-  Tag,
   Text,
 } from '@dmr.is/ui/components/island-is'
-import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
-import { formatDate } from '@dmr.is/utils/client'
 
-import {
-  GetPaymentsDto,
-  TBRTransactionStatus,
-  TBRTransactionType,
-} from '../gen/fetch'
-import { loadSearchParams, serverSearchParams } from '../lib/nuqs/search-params'
+import { PaymentsTable } from '../components/payments/PaymentsTable'
+import { TRPCErrorAlert } from '../components/trpc/TRPCErrorAlert'
+import { pagingParams } from '../lib/nuqs/paging-params'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
-import { useQueryClient } from '@tanstack/react-query'
+export const PaymentsContainer = () => {
+  const [params, setParams] = useQueryStates(pagingParams)
 
-type Props = {
-  payments: GetPaymentsDto
-  initialParams: Awaited<ReturnType<typeof loadSearchParams>>
-}
-
-const mapTRPStatus = (
-  status: TBRTransactionStatus,
-): { title: string; variant: React.ComponentProps<typeof Tag>['variant'] } => {
-  switch (status) {
-    case TBRTransactionStatus.CREATED:
-      return { title: 'Búið til', variant: 'blue' }
-    case TBRTransactionStatus.PAID:
-      return { title: 'Greitt', variant: 'mint' }
-    case TBRTransactionStatus.FAILED:
-      return { title: 'Misheppnað', variant: 'red' }
-    case TBRTransactionStatus.PENDING:
-      return { title: 'Í vinnslu', variant: 'yellow' }
-    default:
-      return { title: 'Óþekkt staða', variant: 'rose' }
-  }
-}
-
-export const PaymentsContainer = ({ payments, initialParams }: Props) => {
   const trpc = useTRPC()
-  const queryClient = useQueryClient()
 
-  const [params, setParams] = useQueryStates(serverSearchParams, {
-    shallow: false,
-  })
-
-  const { data, isPending } = useQuery(
-    trpc.getPayments.queryOptions(undefined, { initialData: payments }),
+  const { data, isPending, error } = useQuery(
+    trpc.getPayments.queryOptions(params),
   )
-
-  const columns = [
-    {
-      field: 'debtorNationalId',
-      children: 'Kennitala skuldara',
-    },
-    {
-      field: 'type',
-      children: 'Tegund',
-    },
-    {
-      field: 'status',
-      children: 'Staða TBR',
-    },
-    {
-      field: 'totalPrice',
-      children: 'Heildarverð',
-    },
-    {
-      field: 'paidAt',
-      children: 'Greitt',
-    },
-    {
-      field: 'createdAt',
-      children: 'Búið til',
-    },
-    {
-      field: 'chargeBase',
-      children: 'Gjaldgrunnur',
-    },
-    {
-      field: 'chargeCategory',
-      children: 'Gjaldflokkur',
-    },
-    {
-      field: 'tbrReference',
-      children: 'Tilvísun TBR',
-    },
-    {
-      field: 'tbrError',
-      children: 'Villa frá TBR',
-    },
-  ]
-
-  const rows =
-    data?.payments.map((p) => {
-      const mappedStatus = mapTRPStatus(p.status)
-      return {
-        debtorNationalId: <Text variant="small">{p.debtorNationalId}</Text>,
-        type: p.type === TBRTransactionType.ADVERT ? 'Auglýsing' : 'Áskrift',
-        status: <Tag variant={mappedStatus.variant}>{mappedStatus.title}</Tag>,
-        totalPrice: p.totalPrice,
-        paidAt: p.paidAt ? (
-          formatDate(new Date(p.paidAt), "d.MM.yy 'kl.' HH:mm")
-        ) : (
-          <Tag disabled variant="red">
-            Ógreitt
-          </Tag>
-        ),
-        createdAt: formatDate(new Date(p.createdAt), "d.MM.yy 'kl.' HH:mm"),
-        chargeBase: p.chargeBase,
-        chargeCategory: p.chargeCategory,
-        tbrReference: p.tbrReference,
-        tbrError: p.tbrError,
-      }
-    }) || []
 
   return (
     <GridContainer>
-      <GridRow>
-        <GridColumn span="12/12">
-          <DataTable
-            columns={columns}
-            rows={rows}
+      <GridRow rowGap={[2, 3]} marginBottom={[2, 3]}>
+        <GridColumn paddingTop={[2, 3]} span="12/12">
+          <Hero
+            title="Greiðslur"
+            variant="small"
+            image={{ src: '/assets/banner-small-image.svg', alt: '' }}
+            centerImage={true}
+            breadcrumbs={{
+              items: [
+                {
+                  title: 'Stjórnborð',
+                  href: '/',
+                },
+                {
+                  title: 'Greiðslur',
+                  href: '/greidslur',
+                },
+              ],
+            }}
+          >
+            <Text>
+              Hér er hægt að skoða allar greiðslur í kerfinu. Þetta sýnir stöðu
+              TBR viðskipta fyrir auglýsingar og áskriftir.
+            </Text>
+          </Hero>
+        </GridColumn>
+        <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
+          {error && <TRPCErrorAlert error={error} />}
+          <PaymentsTable
             loading={isPending}
+            payments={data?.payments}
             paging={data?.paging}
-            onPageChange={(page) => setParams({ page })}
-            onPageSizeChange={(pageSize) => setParams({ pageSize })}
+            onPageChange={(page) =>
+              setParams((prev) => ({ ...prev, page: page }))
+            }
+            onPageSizeChange={(pageSize) =>
+              setParams((prev) => ({ ...prev, pageSize }))
+            }
           />
         </GridColumn>
       </GridRow>
