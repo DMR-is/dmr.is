@@ -4,10 +4,10 @@ import React from 'react'
 
 import { Button, DropdownMenu } from '@dmr.is/ui/components/island-is'
 
-type SettingsItems = React.ComponentProps<typeof DropdownMenu>['items']
+type MenuItems = React.ComponentProps<typeof DropdownMenu>['items']
 
-export const SettingsButton = () => {
-  const items: SettingsItems = [
+export const MenuButton = () => {
+  const items: MenuItems = [
     {
       title: 'Reikningsviðskipti',
       href: '/stillingar/tbr',
@@ -35,4 +35,4 @@ export const SettingsButton = () => {
   )
 }
 
-export default SettingsButton
+export default MenuButton
