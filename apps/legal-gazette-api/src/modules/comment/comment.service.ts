@@ -30,17 +30,14 @@ export class CommentService implements ICommentService {
     advertId: string,
     actorId: string,
     actorName: string,
-  ): Promise<CommentDto> {
-    const newComment = await this.commentModel.create({
+  ): Promise<void> {
+    await this.commentModel.create({
       type: CommentTypeEnum.SUBMIT,
       advertId: advertId,
       statusId: StatusIdEnum.SUBMITTED,
       actorId: actorId,
       actor: actorName,
     })
-
-    await newComment.reload()
-    return newComment.fromModel()
   }
 
   private async getAdvertStatusId(advertId: string): Promise<string> {
@@ -75,22 +72,19 @@ export class CommentService implements ICommentService {
   async createSubmitComment(
     advertId: string,
     body: CreateSubmitCommentDto,
-  ): Promise<CommentDto> {
+  ): Promise<void> {
     const [actor, statusId] = await Promise.all([
       this.findActor(body.actorId),
       this.getAdvertStatusId(advertId),
     ])
 
-    const newComment = await this.commentModel.create({
+    await this.commentModel.create({
       type: CommentTypeEnum.SUBMIT,
       advertId: advertId,
       statusId: statusId,
       actorId: actor.id,
       actor: actor.fullName,
     })
-
-    await newComment.reload()
-    return newComment.fromModel()
   }
 
   async createAssignComment(

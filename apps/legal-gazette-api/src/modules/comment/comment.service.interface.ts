@@ -14,7 +14,7 @@ export interface ICommentService {
   createSubmitComment(
     advertId: string,
     body: CreateSubmitCommentDto,
-  ): Promise<CommentDto>
+  ): Promise<void>
 
   createAssignComment(
     advertId: string,
@@ -30,7 +30,7 @@ export interface ICommentService {
     advertId: string,
     actorId: string,
     actorName: string,
-  ): Promise<CommentDto>
+  ): Promise<void>
 
   createTextComment(
     advertId: string,
