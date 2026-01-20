@@ -164,6 +164,13 @@ export const advertsRouter = router({
         id: input.id,
       })
     }),
+  reactivateAdvert: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.api.reactivateAdvert({
+        id: input.id,
+      })
+    }),
   createAdvertAndCommonApplication: protectedProcedure
     .input(createAdvertAndCommonApplicationInput)
     .mutation(async ({ ctx, input }) => {

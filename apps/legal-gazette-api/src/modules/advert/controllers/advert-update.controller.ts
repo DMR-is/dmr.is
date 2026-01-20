@@ -97,4 +97,13 @@ export class AdvertUpdateController {
   ): Promise<void> {
     return this.advertService.rejectAdvert(advertId, currentUser)
   }
+
+  @Post('reactivate')
+  @LGResponse({ operationId: 'reactivateAdvert' })
+  async reactivateAdvert(
+    @Param('id', new UUIDValidationPipe()) advertId: string,
+    @CurrentUser() currentUser: DMRUser,
+  ): Promise<void> {
+    return this.advertService.reactivateAdvert(advertId, currentUser)
+  }
 }
