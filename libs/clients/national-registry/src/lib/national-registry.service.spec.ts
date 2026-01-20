@@ -148,16 +148,21 @@ describe('NationalRegistryService', () => {
           status: 200,
           text: jest.fn().mockResolvedValue(
             JSON.stringify({
-              person: {
-                kennitala: '1234567890',
-                nafn: 'Test Person',
-              },
+              stada: '1',
+              kennitala: '1234567890',
+              nafn: 'Test Entity',
+              loghHusk: 'Test Legal Address',
+              heimili: 'Test Address',
+              postaritun: '101 Reykjavík',
+              sveitarfelag: 'Reykjavík',
+              svfNr: '0000',
+              kynkodi: 1,
             }),
           ),
           headers: { get: () => 'application/json' },
         } as unknown as Response)
 
-      await service.getPersonByNationalId('1234567890')
+      await service.getEntityByNationalId('1234567890')
 
       // Should authenticate on first call
       expect(mockFetchWithTimeout).toHaveBeenCalledTimes(2)
@@ -166,21 +171,28 @@ describe('NationalRegistryService', () => {
         { context: 'NationalRegistryClientService' },
       )
 
-      // Mock second person lookup
+      // Mock second entity lookup
       mockFetchWithTimeout.mockResolvedValueOnce({
         ok: true,
         status: 200,
         text: jest.fn().mockResolvedValue(
           JSON.stringify({
+            stada: '1',
             kennitala: '0987654321',
-            nafn: 'Another Person',
+            nafn: 'Another Entity',
+            loghHusk: 'Another Legal Address',
+            heimili: 'Another Address',
+            postaritun: '200 Kópavogur',
+            sveitarfelag: 'Kópavogur',
+            svfNr: '1000',
+            kynkodi: 2,
           }),
         ),
         headers: { get: () => 'application/json' },
       } as unknown as Response)
 
       // Second call should use cached credentials
-      await service.getPersonByNationalId('0987654321')
+      await service.getEntityByNationalId('0987654321')
       expect(mockFetchWithTimeout).toHaveBeenCalledTimes(3) // Only 1 more call (no re-auth)
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Already authenticated with national registry',
@@ -204,7 +216,7 @@ describe('NationalRegistryService', () => {
         headers: { get: () => 'application/json' },
       } as unknown as Response)
 
-      await expect(service.getPersonByNationalId('1234567890')).rejects.toThrow(
+      await expect(service.getEntityByNationalId('1234567890')).rejects.toThrow(
         BadGatewayException,
       )
 
@@ -223,7 +235,7 @@ describe('NationalRegistryService', () => {
         headers: { get: () => 'text/html' },
       } as unknown as Response)
 
-      await expect(service.getPersonByNationalId('1234567890')).rejects.toThrow(
+      await expect(service.getEntityByNationalId('1234567890')).rejects.toThrow(
         BadGatewayException,
       )
 
@@ -243,7 +255,7 @@ describe('NationalRegistryService', () => {
         headers: { get: () => 'application/json' },
       } as unknown as Response)
 
-      await expect(service.getPersonByNationalId('1234567890')).rejects.toThrow(
+      await expect(service.getEntityByNationalId('1234567890')).rejects.toThrow(
         BadGatewayException,
       )
 
@@ -254,7 +266,7 @@ describe('NationalRegistryService', () => {
     })
   })
 
-  describe('getPersonByNationalId', () => {
+  describe('getEntityByNationalId', () => {
     beforeEach(() => {
       // Mock successful authentication
       mockFetchWithTimeout.mockResolvedValueOnce({
@@ -269,30 +281,36 @@ describe('NationalRegistryService', () => {
       } as unknown as Response)
     })
 
-    it('should fetch person successfully', async () => {
-      const mockPerson = {
+    it('should fetch entity successfully', async () => {
+      const mockEntity = {
+        stada: '1',
         kennitala: '1234567890',
-        nafn: 'Test Person',
+        nafn: 'Test Entity',
+        loghHusk: 'Test Legal Address',
         heimili: 'Test Address',
+        postaritun: '101 Reykjavík',
+        sveitarfelag: 'Reykjavík',
+        svfNr: '0000',
+        kynkodi: 1,
       }
 
       mockFetchWithTimeout.mockResolvedValueOnce({
         ok: true,
         status: 200,
-        text: jest.fn().mockResolvedValue(JSON.stringify(mockPerson)),
+        text: jest.fn().mockResolvedValue(JSON.stringify(mockEntity)),
         headers: { get: () => 'application/json' },
       } as unknown as Response)
 
-      const result = await service.getPersonByNationalId('1234567890')
+      const result = await service.getEntityByNationalId('1234567890')
 
-      expect(result).toEqual({ person: mockPerson })
+      expect(result).toEqual({ entity: mockEntity })
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Successfully fetched person from national registry',
+        'Successfully fetched entity from national registry',
         { context: 'NationalRegistryClientService' },
       )
     })
 
-    it('should throw BadGatewayException on person lookup failure', async () => {
+    it('should throw BadGatewayException on entity lookup failure', async () => {
       mockFetchWithTimeout.mockResolvedValueOnce({
         ok: false,
         status: 404,
@@ -300,20 +318,20 @@ describe('NationalRegistryService', () => {
         text: jest.fn().mockResolvedValue(
           JSON.stringify({
             type: 'not-found',
-            title: 'Person not found',
+            title: 'Entity not found',
             status: 404,
-            detail: 'No person with that kennitala',
+            detail: 'No entity with that kennitala',
           }),
         ),
         headers: { get: () => 'application/json' },
       } as unknown as Response)
 
-      await expect(service.getPersonByNationalId('9999999999')).rejects.toThrow(
+      await expect(service.getEntityByNationalId('9999999999')).rejects.toThrow(
         BadGatewayException,
       )
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'National registry fetch person error',
+        'National registry fetch entity error',
         expect.objectContaining({ context: 'NationalRegistryClientService' }),
       )
     })
@@ -327,7 +345,7 @@ describe('NationalRegistryService', () => {
         headers: { get: () => 'text/plain' },
       } as unknown as Response)
 
-      await expect(service.getPersonByNationalId('1234567890')).rejects.toThrow(
+      await expect(service.getEntityByNationalId('1234567890')).rejects.toThrow(
         BadGatewayException,
       )
 
@@ -337,7 +355,7 @@ describe('NationalRegistryService', () => {
       )
     })
 
-    it('should throw BadGatewayException on person lookup JSON parse failure', async () => {
+    it('should throw BadGatewayException on entity lookup JSON parse failure', async () => {
       mockFetchWithTimeout.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -345,32 +363,40 @@ describe('NationalRegistryService', () => {
         headers: { get: () => 'text/html' },
       } as unknown as Response)
 
-      await expect(service.getPersonByNationalId('1234567890')).rejects.toThrow(
+      await expect(service.getEntityByNationalId('1234567890')).rejects.toThrow(
         BadGatewayException,
       )
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to parse person lookup response as JSON',
+        'Failed to parse entity lookup response as JSON',
         expect.objectContaining({ context: 'NationalRegistryClientService' }),
       )
     })
 
     it('should log debug information for responses', async () => {
-      const mockPerson = { kennitala: '1234567890', nafn: 'Test Person' }
+      const mockEntity = {
+        stada: '1',
+        kennitala: '1234567890',
+        nafn: 'Test Entity',
+        loghHusk: 'Test Legal Address',
+        heimili: 'Test Address',
+        postaritun: '101 Reykjavík',
+        sveitarfelag: 'Reykjavík',
+        svfNr: '0000',
+        kynkodi: 1,
+      }
 
       mockFetchWithTimeout.mockResolvedValueOnce({
         ok: true,
         status: 200,
-        text: jest
-          .fn()
-          .mockResolvedValue(JSON.stringify({ person: mockPerson })),
+        text: jest.fn().mockResolvedValue(JSON.stringify(mockEntity)),
         headers: { get: () => 'application/json' },
       } as unknown as Response)
 
-      await service.getPersonByNationalId('1234567890')
+      await service.getEntityByNationalId('1234567890')
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'National registry person lookup response',
+        'National registry entity lookup response',
         expect.objectContaining({
           context: 'NationalRegistryClientService',
           status: 200,
@@ -384,12 +410,12 @@ describe('NationalRegistryService', () => {
         new Error('Network connection failed'),
       )
 
-      await expect(service.getPersonByNationalId('1234567890')).rejects.toThrow(
+      await expect(service.getEntityByNationalId('1234567890')).rejects.toThrow(
         'Network connection failed',
       )
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Unexpected error during national registry person lookup',
+        'Unexpected error during national registry entity lookup',
         expect.objectContaining({
           context: 'NationalRegistryClientService',
           error: 'Network connection failed',
@@ -400,7 +426,17 @@ describe('NationalRegistryService', () => {
 
   describe('parseJsonSafely', () => {
     it('should parse valid JSON successfully', async () => {
-      const mockPerson = { kennitala: '1234567890', nafn: 'Test Person' }
+      const mockEntity = {
+        stada: '1',
+        kennitala: '1234567890',
+        nafn: 'Test Entity',
+        loghHusk: 'Test Legal Address',
+        heimili: 'Test Address',
+        postaritun: '101 Reykjavík',
+        sveitarfelag: 'Reykjavík',
+        svfNr: '0000',
+        kynkodi: 1,
+      }
 
       mockFetchWithTimeout
         .mockResolvedValueOnce({
@@ -417,12 +453,12 @@ describe('NationalRegistryService', () => {
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
-          text: jest.fn().mockResolvedValue(JSON.stringify(mockPerson)),
+          text: jest.fn().mockResolvedValue(JSON.stringify(mockEntity)),
           headers: { get: () => 'application/json' },
         } as unknown as Response)
 
-      const result = await service.getPersonByNationalId('1234567890')
-      expect(result.person).toEqual(mockPerson)
+      const result = await service.getEntityByNationalId('1234567890')
+      expect(result.entity).toEqual(mockEntity)
     })
 
     it('should throw BadGatewayException and log details on invalid JSON', async () => {
@@ -445,12 +481,12 @@ describe('NationalRegistryService', () => {
           headers: { get: () => 'application/json' },
         } as unknown as Response)
 
-      await expect(service.getPersonByNationalId('1234567890')).rejects.toThrow(
+      await expect(service.getEntityByNationalId('1234567890')).rejects.toThrow(
         BadGatewayException,
       )
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to parse person lookup response as JSON',
+        'Failed to parse entity lookup response as JSON',
         expect.objectContaining({
           context: 'NationalRegistryClientService',
           parseError: expect.any(String),
