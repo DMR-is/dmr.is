@@ -48,9 +48,14 @@ export const ApplicationCard = ({ application }: Props) => {
   const adverts = application.adverts || []
   const publications: Array<{ title?: string; publishedAt?: string }> = []
   let allPublished = false
+  let rejected = false
 
   // count publications for common adverts
   if (application.type === ApplicationTypeEnum.COMMON) {
+    if (adverts[0]?.status.slug === 'hafnad') {
+      statusText = 'Hafnað'
+      rejected = true
+    }
     let pubCount = 0
     const advertPubs =
       adverts[0]?.publications.map((pub) => {
@@ -107,7 +112,7 @@ export const ApplicationCard = ({ application }: Props) => {
     application.status === ApplicationStatusEnum.SUBMITTED &&
     !allPublished
 
-  const canBeRemoved = publications.length == 0 && !allPublished
+  const canBeRemoved = publications.length == 0 && !allPublished && !rejected
 
   return (
     <Box borderRadius="large" border="standard" padding={3} background="white">
@@ -129,13 +134,15 @@ export const ApplicationCard = ({ application }: Props) => {
               )}
             <Tag
               variant={
-                allPublished
-                  ? 'mint'
-                  : application.status === ApplicationStatusEnum.DRAFT
-                    ? 'blue'
-                    : ApplicationStatusEnum.SUBMITTED
-                      ? 'blueberry'
-                      : 'mint'
+                rejected
+                  ? 'red'
+                  : allPublished
+                    ? 'mint'
+                    : application.status === ApplicationStatusEnum.DRAFT
+                      ? 'blue'
+                      : ApplicationStatusEnum.SUBMITTED
+                        ? 'blueberry'
+                        : 'mint'
               }
               disabled
             >

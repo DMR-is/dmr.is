@@ -83,6 +83,13 @@ export const AdvertTable = ({
     }
   }
 
+  const isPublished = (ad: AdvertDto) => {
+    return ad.status.slug === 'utgefid'
+  }
+
+  const isRejected = (ad: AdvertDto) => {
+    return ad.status.slug === 'hafnad'
+  }
   return (
     <>
       <DataTable
@@ -96,28 +103,36 @@ export const AdvertTable = ({
           children: <AdvertPublications advert={ad} />,
           isExpandable: true,
           startExpanded: index === adverts.length - 1,
-          actions: ad.status.slug !== 'utgefid' && (
-            <Inline justifyContent={'flexEnd'}>
-              <button
-                style={{ display: 'inline-block' }}
-                className={cardTagButtonStyle}
-                title="Afturkalla"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  e.preventDefault()
-                }}
-              >
-                <Tag variant="red" onClick={() => openRemoveAdvertModal(ad.id)}>
-                  <Icon
-                    icon="trash"
-                    type="outline"
-                    size="small"
-                    color="red600"
-                  />
-                </Tag>
-              </button>
-            </Inline>
-          ),
+          actions:
+            !isPublished(ad) && !isRejected(ad) ? (
+              <Inline justifyContent={'flexEnd'}>
+                <button
+                  style={{ display: 'inline-block' }}
+                  className={cardTagButtonStyle}
+                  title="Afturkalla"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                  }}
+                >
+                  <Tag
+                    variant="red"
+                    onClick={() => openRemoveAdvertModal(ad.id)}
+                  >
+                    <Icon
+                      icon="trash"
+                      type="outline"
+                      size="small"
+                      color="red600"
+                    />
+                  </Tag>
+                </button>
+              </Inline>
+            ) : isRejected(ad) ? (
+              <Tag variant="red" disabled>
+                Hafnað
+              </Tag>
+            ) : null,
         }))}
       />
       {openModal && (
