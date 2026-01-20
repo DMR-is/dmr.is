@@ -33,7 +33,7 @@ export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
   } = useQuery(
     trpc.getPublication.queryOptions({
       advertId: id,
-      version: AdvertVersionEnum.A,
+      version: advert.publications[0]?.version as AdvertVersionEnum,
     }),
   )
 
