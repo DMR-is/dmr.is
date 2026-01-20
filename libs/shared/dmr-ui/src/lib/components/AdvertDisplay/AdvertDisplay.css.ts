@@ -24,12 +24,22 @@ globalStyle(
   },
 )
 
-globalStyle(`.advertContent table `, {
+globalStyle(`${bodyText} table, .advertContent table `, {
   tableLayout: 'fixed',
 })
-globalStyle(`.advertContent table td, .advertContent table th`, {
-  border: 'none',
-  paddingRight: '1em',
+globalStyle(
+  `${bodyText} table td, ${bodyText} table th, .advertContent table td, .advertContent table th`,
+  {
+    border: 'none',
+    padding: '.125em .5em .125em 0',
+  },
+)
+
+globalStyle(`${bodyText} p `, {
+  marginBottom: '.5em',
+})
+globalStyle(`${bodyText} h1 `, {
+  marginTop: '1em',
 })
 
 globalStyle('.advert.legal-gazette .advert', {
@@ -82,7 +92,7 @@ globalStyle(`${legacyText} .advertType`, {
 globalStyle(`${legacyText} .advertType > td`, {
   paddingBottom: '4px',
 })
-globalStyle(`.advertText table `, {
+globalStyle(`${legacyText} table `, {
   tableLayout: 'fixed',
   width: '100%',
 })
