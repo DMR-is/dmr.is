@@ -18,6 +18,7 @@ import { LGNationalRegistryControllerModule } from '../national-registry/nationa
 import { PaymentsControllerModule } from '../payments/payment.controller.module'
 import { TBRCompanySettingsControllerModule } from '../settings/tbr-company/tbr-company-settings.controller.module'
 import { SettlementControllerModule } from '../settlement/settlement.controller.module'
+import { SubscriberControllerModule } from '../subscribers/subscriber.controller.module'
 import { UserControllerModule } from '../users/users.controller.module'
 
 @Module({
@@ -37,6 +38,7 @@ import { UserControllerModule } from '../users/users.controller.module'
     FeeCodeModule,
     SettlementControllerModule,
     UserControllerModule,
+    SubscriberControllerModule,
     SignatureControllerModule,
     TBRCompanySettingsControllerModule,
     LGNationalRegistryControllerModule,
