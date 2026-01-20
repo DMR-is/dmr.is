@@ -38,8 +38,10 @@ export const ChangeStatusButtons = ({
   const {
     moveToNextStatus,
     moveToPreviousStatus,
+    reactivateAdvert,
     isMovingToNextStatus,
     isMovingToPreviousStatus,
+    isReactivating,
   } = useUpdateAdvert(advertId)
   const trpc = useTRPC()
   const queryClient = useQueryClient()
@@ -56,7 +58,7 @@ export const ChangeStatusButtons = ({
   )
 
   const isLoading =
-    isMovingToNextStatus || isMovingToPreviousStatus || isRejecting
+    isMovingToNextStatus || isMovingToPreviousStatus || isRejecting || isReactivating
 
   const prevMovableStatuses: string[] = [
     StatusIdEnum.READY_FOR_PUBLICATION,
@@ -109,6 +111,20 @@ export const ChangeStatusButtons = ({
           label="Staða auglýsingar"
         />
       </Box>
+      {currentStatus.id === StatusIdEnum.REJECTED && (
+        <Button
+          fluid
+          size="small"
+          disabled={isLoading || !canEdit}
+          loading={isReactivating}
+          icon="reload"
+          onClick={reactivateAdvert}
+        >
+          <Text color="white" variant="small" fontWeight="semiBold">
+            Endurvirkja auglýsingu
+          </Text>
+        </Button>
+      )}
       {canMoveToPreviousStatus && (
         <Button
           fluid
@@ -170,16 +186,18 @@ export const ChangeStatusButtons = ({
             &nbsp;Skoða auglýsingu&nbsp;
           </Text>
         </Button>
-        <Button
-          disabled={!canEdit}
-          colorScheme="destructive"
-          size="small"
-          onClick={() => rejectAdvert({ id: advertId })}
-        >
-          <Text color="white" fontWeight="semiBold" variant="small">
-            &nbsp;Hafna auglýsingu&nbsp;
-          </Text>
-        </Button>
+        {currentStatus.id !== StatusIdEnum.REJECTED && (
+          <Button
+            disabled={!canEdit}
+            colorScheme="destructive"
+            size="small"
+            onClick={() => rejectAdvert({ id: advertId })}
+          >
+            <Text color="white" fontWeight="semiBold" variant="small">
+              &nbsp;Hafna auglýsingu&nbsp;
+            </Text>
+          </Button>
+        )}
       </Inline>
     </Stack>
   )

@@ -419,6 +419,54 @@ export class AdvertService implements IAdvertService {
     })
   }
 
+  async reactivateAdvert(advertId: string, currentUser: DMRUser): Promise<void> {
+    await this.sequelize.transaction(async (t) => {
+      const user = await this.userModel.unscoped().findOneOrThrow({
+        attributes: ['id', 'nationalId'],
+        where: { nationalId: currentUser.nationalId },
+      })
+      const advert = await this.advertModel
+        .unscoped()
+        .findByPkOrThrow(advertId, {
+          attributes: ['id', 'statusId', 'assignedUserId'],
+        })
+
+      // Only REJECTED adverts can be reactivated
+      if (advert.statusId !== StatusIdEnum.REJECTED) {
+        this.logger.warn(
+          `Cannot reactivate advert ${advertId} - status is ${advert.statusId}`,
+          {
+            context: LOGGING_CONTEXT,
+          },
+        )
+        throw new BadRequestException(
+          'Only rejected adverts can be reactivated',
+        )
+      }
+
+      // Check if user is assigned to the advert
+      if (advert.assignedUserId !== user.id) {
+        this.logger.warn(
+          `User with id ${user.id} is not assigned to advert ${advertId}`,
+          {
+            context: LOGGING_CONTEXT,
+          },
+        )
+        throw new BadRequestException('User is not assigned to this advert')
+      }
+
+      await advert.update({ statusId: StatusIdEnum.IN_PROGRESS })
+
+      t.afterCommit(() => {
+        this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
+          advertId,
+          actorId: currentUser.nationalId,
+          statusId: StatusIdEnum.IN_PROGRESS,
+        })
+      })
+    })
+  }
+
   async moveAdvertToNextStatus(
     advertId: string,
     currentUser: DMRUser,
