@@ -115,6 +115,9 @@ export class PublishingTaskService implements IPublishingTaskService {
         {
           model: AdvertModel.scope('detailed'),
           as: 'advert',
+          where: {
+            statusId: StatusIdEnum.READY_FOR_PUBLICATION,
+          }
         },
       ],
     })
