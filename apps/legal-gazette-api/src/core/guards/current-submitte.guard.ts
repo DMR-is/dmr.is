@@ -27,7 +27,7 @@ export class CurrentNationalRegistryPersonGuard implements CanActivate {
       }
 
       const person =
-        await this.nationalRegistryService.getPersonByNationalId(nationalId)
+        await this.nationalRegistryService.getEntityByNationalId(nationalId)
 
       request.person = person
 

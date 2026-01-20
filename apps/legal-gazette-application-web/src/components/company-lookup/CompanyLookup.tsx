@@ -44,28 +44,36 @@ export const CompanyLookup = () => {
   >[]
 
   const { mutate, isPending } = useMutation(
-    trpc.getCompanyByNationalId.mutationOptions({
+    trpc.getEntityByNationalId.mutationOptions({
       onMutate: () => {
         if (inputError) {
           setInputError(undefined)
         }
       },
-      onSuccess: (legalEntity) => {
+      onSuccess: ({ entity }) => {
+        if (!entity) {
+          toast.error(
+            `Ekkert fyrirtæki fannst með kennitölu ${lookupResults?.companyNationalId}.`,
+          )
+          setLookupResults({ companyName: '', companyNationalId: '' })
+          return
+        }
+
         const isIncluded = companies.find(
-          (c) => c.companyNationalId === legalEntity.nationalId,
+          (c) => c.companyNationalId === entity.kennitala,
         )
 
         if (isIncluded) {
           setLookupResults({ companyName: '', companyNationalId: '' })
-          toast.info(`Fyrirtækið ${legalEntity.name} er þegar skráð í búið.`)
+          toast.info(`Fyrirtækið ${entity.nafn} er þegar skráð í búið.`)
           return
         }
 
         setLookupResults({
-          companyNationalId: legalEntity.nationalId,
-          companyName: legalEntity.name,
+          companyNationalId: entity.kennitala,
+          companyName: entity.nafn,
         })
-        toast.success(`Fyrirtækið ${legalEntity.name} hefur verið bætt við.`)
+        toast.success(`Fyrirtækið ${entity.nafn} hefur verið bætt við.`)
       },
       onError: (error, variables) => {
         const message =

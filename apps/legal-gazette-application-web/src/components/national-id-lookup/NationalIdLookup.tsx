@@ -36,12 +36,12 @@ export const NationalIdLookup = ({
   const { formState, clearErrors } =
     useFormContext<RecallApplicationWebSchema>()
   const { mutate, isPending } = useMutation(
-    trpc.getPersonByNationalId.mutationOptions({
+    trpc.getEntityByNationalId.mutationOptions({
       onMutate: () => {
         setErrorMessage?.(null)
       },
-      onSuccess: ({ person }) => {
-        if (person === null) {
+      onSuccess: ({ entity }) => {
+        if (entity === null) {
           toast.error('Ekkert fannst fyrir gefna kennitölu', {
             toastId: 'national-id-lookup-fail',
           })
@@ -50,11 +50,11 @@ export const NationalIdLookup = ({
         }
 
         onSuccessfulLookup?.({
-          nationalId: person.kennitala,
-          name: person.nafn,
-          address: person.heimili,
-          zipCode: person.postaritun.split('-')[0],
-          city: person.sveitarfelag,
+          nationalId: entity.kennitala,
+          name: entity.nafn,
+          address: entity.heimili,
+          zipCode: entity.postaritun.split('-')[0],
+          city: entity.sveitarfelag,
         })
       },
       onError: (_err) => {

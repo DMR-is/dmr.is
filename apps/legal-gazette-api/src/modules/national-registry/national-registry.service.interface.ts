@@ -1,9 +1,9 @@
-import { GetCompanyDto } from '@dmr.is/clients/company-registry'
-import { GetPersonDto } from '@dmr.is/clients/national-registry'
+import { GetNationalRegistryEntityDto } from '@dmr.is/clients/national-registry'
 
 export interface ILGNationalRegistryService {
-  getPersonByNationalId(nationalId: string): Promise<GetPersonDto>
-  getCompanyByNationalId(nationalId: string): Promise<GetCompanyDto>
+  getEntityByNationalId(
+    nationalId: string,
+  ): Promise<GetNationalRegistryEntityDto>
   getEntityNameByNationalId(nationalId: string): Promise<string>
 }
 
