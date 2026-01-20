@@ -5021,6 +5021,24 @@
             "required": false,
             "in": "query",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/TBRTransactionType" }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/TBRTransactionStatus" }
+          },
+          {
+            "name": "paid",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "boolean" }
           }
         ],
         "responses": {
@@ -5029,6 +5047,67 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/GetPaymentsDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/payments/sync": {
+      "post": {
+        "operationId": "syncPayments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncPaymentsResponseDto"
+                }
               }
             }
           },
@@ -6437,6 +6516,24 @@
           "paging": { "$ref": "#/components/schemas/Paging" }
         },
         "required": ["payments", "paging"]
+      },
+      "SyncPaymentsResponseDto": {
+        "type": "object",
+        "properties": {
+          "processed": {
+            "type": "number",
+            "description": "Number of transactions processed"
+          },
+          "updated": {
+            "type": "number",
+            "description": "Number of transactions updated to paid"
+          },
+          "failed": {
+            "type": "number",
+            "description": "Number of transactions that failed to sync"
+          }
+        },
+        "required": ["processed", "updated", "failed"]
       },
       "BaseEntityDto": {
         "type": "object",

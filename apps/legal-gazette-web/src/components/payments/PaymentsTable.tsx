@@ -1,6 +1,12 @@
 'use client'
 
-import { Box, Tag, Text } from '@dmr.is/ui/components/island-is'
+import {
+  Box,
+  GridColumn,
+  GridRow,
+  Tag,
+  Text,
+} from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
 import { formatDate } from '@dmr.is/utils/client'
@@ -48,6 +54,45 @@ const mapTransactionType = (type: TBRTransactionType): string => {
   }
 }
 
+type PaymentDetailsProps = {
+  payment: PaymentDto
+}
+
+const PaymentDetails = ({ payment }: PaymentDetailsProps) => {
+  return (
+    <Box padding={2} background="blue100" borderRadius="standard">
+      <GridRow rowGap={2}>
+        <GridColumn span={['12/12', '6/12', '3/12']}>
+          <Text variant="eyebrow">Búið til</Text>
+          <Text>
+            {formatDate(new Date(payment.createdAt), "d.MM.yy 'kl.' HH:mm")}
+          </Text>
+        </GridColumn>
+        <GridColumn span={['12/12', '6/12', '3/12']}>
+          <Text variant="eyebrow">Gjaldgrunnur</Text>
+          <Text>{payment.chargeBase || '-'}</Text>
+        </GridColumn>
+        <GridColumn span={['12/12', '6/12', '3/12']}>
+          <Text variant="eyebrow">Gjaldflokkur</Text>
+          <Text>{payment.chargeCategory || '-'}</Text>
+        </GridColumn>
+        <GridColumn span={['12/12', '6/12', '3/12']}>
+          <Text variant="eyebrow">Tilvísun TBR</Text>
+          <Text>{payment.tbrReference || '-'}</Text>
+        </GridColumn>
+        {payment.tbrError && (
+          <GridColumn span="12/12">
+            <Text variant="eyebrow">Villa frá TBR</Text>
+            <Box marginTop={1}>
+              <Tag variant="red">{payment.tbrError}</Tag>
+            </Box>
+          </GridColumn>
+        )}
+      </GridRow>
+    </Box>
+  )
+}
+
 export const PaymentsTable = ({
   payments,
   paging,
@@ -67,11 +112,6 @@ export const PaymentsTable = ({
       size: 'tiny',
     },
     {
-      field: 'status',
-      children: 'Staða TBR',
-      size: 'tiny',
-    },
-    {
       field: 'totalPrice',
       children: 'Heildarverð',
       size: 'tiny',
@@ -82,28 +122,8 @@ export const PaymentsTable = ({
       size: 'tiny',
     },
     {
-      field: 'createdAt',
-      children: 'Búið til',
-      size: 'tiny',
-    },
-    {
-      field: 'chargeBase',
-      children: 'Gjaldgrunnur',
-      size: 'tiny',
-    },
-    {
-      field: 'chargeCategory',
-      children: 'Gjaldflokkur',
-      size: 'tiny',
-    },
-    {
-      field: 'tbrReference',
-      children: 'Tilvísun TBR',
-      size: 'tiny',
-    },
-    {
-      field: 'tbrError',
-      children: 'Villa frá TBR',
+      field: 'status',
+      children: 'Staða TBR',
       size: 'tiny',
     },
   ]
@@ -113,7 +133,6 @@ export const PaymentsTable = ({
     return {
       debtorNationalId: <Text variant="small">{payment.debtorNationalId}</Text>,
       type: mapTransactionType(payment.type),
-      status: <Tag variant={mappedStatus.variant}>{mappedStatus.title}</Tag>,
       totalPrice: payment.totalPrice.toLocaleString('is-IS') + ' kr.',
       paidAt: payment.paidAt ? (
         formatDate(new Date(payment.paidAt), "d.MM.yy 'kl.' HH:mm")
@@ -122,17 +141,9 @@ export const PaymentsTable = ({
           Ógreitt
         </Tag>
       ),
-      createdAt: formatDate(new Date(payment.createdAt), "d.MM.yy 'kl.' HH:mm"),
-      chargeBase: payment.chargeBase || '-',
-      chargeCategory: payment.chargeCategory || '-',
-      tbrReference: payment.tbrReference || '-',
-      tbrError: payment.tbrError ? (
-        <Box title={payment.tbrError}>
-          <Tag variant="red">Villa</Tag>
-        </Box>
-      ) : (
-        '-'
-      ),
+      status: <Tag variant={mappedStatus.variant}>{mappedStatus.title}</Tag>,
+      isExpandable: true,
+      children: <PaymentDetails payment={payment} />,
     }
   })
 
