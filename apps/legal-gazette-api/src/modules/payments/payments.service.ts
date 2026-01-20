@@ -58,15 +58,7 @@ export class PaymentsService implements IPaymentsService {
     }
 
     const transactions = await this.tbrTransactionModel.findAndCountAll({
-      where: {
-        ...where,
-        [Op.or]: query.search
-          ? [
-              { debtorNationalId: { [Op.like]: `%${query.search}%` } },
-              { chargeBase: { [Op.like]: `%${query.search}%` } },
-            ]
-          : undefined,
-      },
+      where: where,
       limit,
       offset,
       order: [['createdAt', 'DESC']],

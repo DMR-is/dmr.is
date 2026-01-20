@@ -132,6 +132,10 @@ export class TBRTransactionModel extends BaseModel<
       debtorNationalId: model.debtorNationalId,
       paidAt: model.paidAt ? model.paidAt.toISOString() : null,
       createdAt: model.createdAt.toISOString(),
+      chargeBase: model.chargeBase,
+      chargeCategory: model.chargeCategory,
+      tbrReference: model.tbrReference,
+      tbrError: model.tbrError,
     }
   }
 

@@ -31,6 +31,18 @@ export class PaymentDto {
 
   @ApiProperty({ type: String })
   createdAt!: string
+
+  @ApiProperty({ type: String })
+  chargeBase!: string
+
+  @ApiProperty({ type: String })
+  chargeCategory!: string
+
+  @ApiProperty({ type: String, nullable: true })
+  tbrReference!: string | null
+
+  @ApiProperty({ type: String, nullable: true })
+  tbrError!: string | null
 }
 
 export class GetPaymentsDto {

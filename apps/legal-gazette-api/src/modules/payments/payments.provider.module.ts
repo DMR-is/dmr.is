@@ -3,7 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { TBRTransactionModel } from '../../models/tbr-transactions.model'
 import { TBRModule } from '../tbr/tbr.module'
-import { PaymentsService } from './payment.service'
+import { PaymentsService } from './payments.service'
 import { IPaymentsService } from './payments.service.interface'
 
 @Module({

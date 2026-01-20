@@ -6407,7 +6407,11 @@
           "totalPrice": { "type": "number" },
           "debtorNationalId": { "type": "string" },
           "paidAt": { "type": "string", "nullable": true },
-          "createdAt": { "type": "string" }
+          "createdAt": { "type": "string" },
+          "chargeBase": { "type": "string" },
+          "chargeCategory": { "type": "string" },
+          "tbrReference": { "type": "string", "nullable": true },
+          "tbrError": { "type": "string", "nullable": true }
         },
         "required": [
           "id",
@@ -6416,7 +6420,11 @@
           "totalPrice",
           "debtorNationalId",
           "paidAt",
-          "createdAt"
+          "createdAt",
+          "chargeBase",
+          "chargeCategory",
+          "tbrReference",
+          "tbrError"
         ]
       },
       "GetPaymentsDto": {
