@@ -23,4 +23,4 @@ import { IPaymentsService } from './payments.service.interface'
   ],
   exports: [IPaymentsService],
 })
-export class PyamentsProviderModule {}
+export class PaymentsProviderModule {}

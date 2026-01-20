@@ -5,8 +5,7 @@ import { Op, WhereOptions } from 'sequelize'
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { LOGGER_PROVIDER } from '@dmr.is/logging'
-import { Logger } from '@dmr.is/logging-next'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import {
@@ -63,9 +62,12 @@ export class PaymentsService implements IPaymentsService {
       return { processed: 0, updated: 0, failed: 0 }
     }
 
-    this.logger.info(`Found ${pendingTransactions.length} pending transactions`, {
-      context: LOGGING_CONTEXT,
-    })
+    this.logger.info(
+      `Found ${pendingTransactions.length} pending transactions`,
+      {
+        context: LOGGING_CONTEXT,
+      },
+    )
 
     let updated = 0
     let failed = 0

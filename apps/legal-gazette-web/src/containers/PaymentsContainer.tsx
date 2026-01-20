@@ -16,9 +16,9 @@ import {
   toast,
 } from '@dmr.is/ui/components/island-is'
 
-import { TBRTransactionStatus, TBRTransactionType } from '../gen/fetch'
 import { PaymentsTable } from '../components/payments/PaymentsTable'
 import { TRPCErrorAlert } from '../components/trpc/TRPCErrorAlert'
+import { TBRTransactionStatus, TBRTransactionType } from '../gen/fetch'
 import { paymentsParams } from '../lib/nuqs/payments-params'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
@@ -115,10 +115,14 @@ export const PaymentsContainer = () => {
                   label="Tegund"
                   size="sm"
                   options={typeOptions}
-                  value={typeOptions.find((opt) => opt.value === (params.type ?? ''))}
+                  value={typeOptions.find(
+                    (opt) => opt.value === (params.type ?? ''),
+                  )}
                   onChange={(opt) =>
                     setParams({
-                      type: opt?.value ? (opt.value as TBRTransactionType) : null,
+                      type: opt?.value
+                        ? (opt.value as TBRTransactionType)
+                        : null,
                       page: 1,
                     })
                   }
@@ -130,10 +134,14 @@ export const PaymentsContainer = () => {
                   label="Staða TBR"
                   size="sm"
                   options={statusOptions}
-                  value={statusOptions.find((opt) => opt.value === (params.status ?? ''))}
+                  value={statusOptions.find(
+                    (opt) => opt.value === (params.status ?? ''),
+                  )}
                   onChange={(opt) =>
                     setParams({
-                      status: opt?.value ? (opt.value as TBRTransactionStatus) : null,
+                      status: opt?.value
+                        ? (opt.value as TBRTransactionStatus)
+                        : null,
                       page: 1,
                     })
                   }
@@ -146,7 +154,9 @@ export const PaymentsContainer = () => {
                   size="sm"
                   options={paidOptions}
                   value={paidOptions.find(
-                    (opt) => opt.value === (params.paid === null ? '' : String(params.paid)),
+                    (opt) =>
+                      opt.value ===
+                      (params.paid === null ? '' : String(params.paid)),
                   )}
                   onChange={(opt) =>
                     setParams({
@@ -178,9 +188,7 @@ export const PaymentsContainer = () => {
             loading={isPending}
             payments={data?.payments}
             paging={data?.paging}
-            onPageChange={(page) =>
-              setParams((prev) => ({ ...prev, page: page }))
-            }
+            onPageChange={(page) => setParams((prev) => ({ ...prev, page }))}
             onPageSizeChange={(pageSize) =>
               setParams((prev) => ({ ...prev, pageSize }))
             }
