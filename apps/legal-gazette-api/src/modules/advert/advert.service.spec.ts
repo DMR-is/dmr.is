@@ -1052,7 +1052,9 @@ describe('AdvertService', () => {
         const orCondition = callArgs.where[Op.and][0][Op.or]
 
         expect(
-          orCondition.some((field: any) => field.hasOwnProperty('title')),
+          orCondition.some((field: any) =>
+            Object.prototype.hasOwnProperty.call(field, 'title'),
+          ),
         ).toBe(true)
       })
 
@@ -1073,7 +1075,9 @@ describe('AdvertService', () => {
         const orCondition = callArgs.where[Op.and][0][Op.or]
 
         expect(
-          orCondition.some((field: any) => field.hasOwnProperty('content')),
+          orCondition.some((field: any) =>
+            Object.prototype.hasOwnProperty.call(field, 'content'),
+          ),
         ).toBe(true)
       })
 
@@ -1094,7 +1098,9 @@ describe('AdvertService', () => {
         const orCondition = callArgs.where[Op.and][0][Op.or]
 
         expect(
-          orCondition.some((field: any) => field.hasOwnProperty('caption')),
+          orCondition.some((field: any) =>
+            Object.prototype.hasOwnProperty.call(field, 'caption'),
+          ),
         ).toBe(true)
       })
 
@@ -1116,7 +1122,7 @@ describe('AdvertService', () => {
 
         expect(
           orCondition.some((field: any) =>
-            field.hasOwnProperty('additionalText'),
+            Object.prototype.hasOwnProperty.call(field, 'additionalText'),
           ),
         ).toBe(true)
       })
@@ -1138,7 +1144,9 @@ describe('AdvertService', () => {
         const orCondition = callArgs.where[Op.and][0][Op.or]
 
         expect(
-          orCondition.some((field: any) => field.hasOwnProperty('createdBy')),
+          orCondition.some((field: any) =>
+            Object.prototype.hasOwnProperty.call(field, 'createdBy'),
+          ),
         ).toBe(true)
       })
     })
