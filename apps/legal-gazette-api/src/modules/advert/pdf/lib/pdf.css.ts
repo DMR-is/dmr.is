@@ -584,14 +584,15 @@ export const pdfStyles = `
 
       /* ======================================================================= */
 
-      .advertContent table {
+      .table {
         table-layout: fixed;
+        background: red;
       }
 
-      .advertContent table td,
-      .advertContent table th {
+      .table td,
+      .table th {
         border: none;
-        padding-right: 1em;
+        padding: '.25em .5em .25em 0',
       }
 
       .advert.legal-gazette .advert {
@@ -635,6 +636,15 @@ export const pdfStyles = `
 
       .advert-container .advertSerial {
         margin: 0;
+      }
+
+      .advertType {
+        fontSize: 1.2em;
+        fontWeight: bold;
+      }
+
+      .advertType > td {
+        margin-bottom: 4px;
       }
 
 `
