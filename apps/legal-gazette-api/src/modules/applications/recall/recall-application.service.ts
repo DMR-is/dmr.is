@@ -228,6 +228,11 @@ export class RecallApplicationService implements IRecallApplicationService {
     body: CreateDivisionEndingDto,
     user: DMRUser,
   ): Promise<void> {
+    this.logger.info('Adding division ending advert for application', {
+      context: LOGGING_CONTEXT,
+      applicationId: applicationId,
+    })
+
     const { judgementDate } = await this.advertModel.findOneOrThrow({
       attributes: ['id', 'judgementDate'],
       where: {
@@ -252,10 +257,9 @@ export class RecallApplicationService implements IRecallApplicationService {
       throw new BadRequestException('Judgement date not set on recall advert')
     }
 
-    const application = await this.applicationModel.findOneOrThrow({
+    const application = await this.applicationModel.findOne({
       where: {
         id: applicationId,
-        submittedByNationalId: user.nationalId,
         status: ApplicationStatusEnum.SUBMITTED,
         applicationType: {
           [Op.or]: [
@@ -265,6 +269,17 @@ export class RecallApplicationService implements IRecallApplicationService {
         },
       },
     })
+
+    if (!application) {
+      this.logger.error(
+        `Cannot create division ending advert for application that is not in SUBMITTED status`,
+        {
+          context: LOGGING_CONTEXT,
+          applicationId: applicationId,
+        },
+      )
+      throw new BadRequestException('Application is not in SUBMITTED status')
+    }
 
     await this.advertService.createAdvert({
       applicationId: application.id,
