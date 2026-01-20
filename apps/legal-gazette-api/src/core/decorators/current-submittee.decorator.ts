@@ -4,14 +4,17 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 
-import { PersonDto } from '@dmr.is/clients/national-registry'
+import { NationalRegistryEntityDto } from '@dmr.is/clients/national-registry'
 import { logger } from '@dmr.is/logging'
 
 /**
  * Get the national registry person of the current user
  */
 export const CurrentSubmittee = createParamDecorator(
-  async (data: unknown, ctx: ExecutionContext): Promise<PersonDto> => {
+  async (
+    data: unknown,
+    ctx: ExecutionContext,
+  ): Promise<NationalRegistryEntityDto> => {
     const request = ctx.switchToHttp().getRequest()
 
     if (!request.person) {

@@ -4849,9 +4849,9 @@
         "tags": ["Legal gazette - internal API"]
       }
     },
-    "/api/v1/national-registry/person/{nationalId}": {
+    "/api/v1/national-registry/entity/{nationalId}": {
       "get": {
-        "operationId": "getPersonByNationalId",
+        "operationId": "getEntityByNationalId",
         "parameters": [
           {
             "name": "nationalId",
@@ -4865,73 +4865,9 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetPersonDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Legal gazette - internal API"]
-      }
-    },
-    "/api/v1/national-registry/company/{nationalId}": {
-      "get": {
-        "operationId": "getCompanyByNationalId",
-        "parameters": [
-          {
-            "name": "nationalId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetCompanyDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/GetNationalRegistryEntityDto"
+                }
               }
             }
           },
@@ -6252,323 +6188,7 @@
           "phone": { "type": "string" }
         }
       },
-      "DeregistrationDto": {
-        "type": "object",
-        "properties": {
-          "deregistered": {
-            "type": "boolean",
-            "description": "Whether the entity is deregistered"
-          },
-          "deregistrationDate": {
-            "type": "string",
-            "description": "Date of deregistration"
-          },
-          "bankrupcy": {
-            "type": "boolean",
-            "description": "Whether the entity is in bankruptcy"
-          },
-          "bankrupcyDate": {
-            "type": "string",
-            "description": "Date of bankruptcy"
-          },
-          "insolvency": {
-            "type": "boolean",
-            "description": "Whether the entity is insolvent"
-          },
-          "insolvencyDate": {
-            "type": "string",
-            "description": "Date of insolvency"
-          }
-        },
-        "required": ["deregistered", "bankrupcy", "insolvency"]
-      },
-      "LegalFormDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "description": "Legal form identifier" },
-          "name": { "type": "string", "description": "Legal form name" }
-        },
-        "required": ["id", "name"]
-      },
-      "ArticlesOfAssociationDto": {
-        "type": "object",
-        "properties": {
-          "shareCapital": {
-            "type": "number",
-            "description": "Share capital amount"
-          },
-          "shareGroup": {
-            "type": "string",
-            "description": "Share group classification"
-          },
-          "shareCapitalCurrency": {
-            "type": "string",
-            "description": "Currency of share capital"
-          },
-          "signatures": {
-            "type": "string",
-            "description": "Signature requirements"
-          },
-          "votingRights": {
-            "type": "string",
-            "description": "Voting rights description"
-          },
-          "restrictionHandlingOfShares": {
-            "type": "boolean",
-            "description": "Whether there are restrictions on handling of shares"
-          },
-          "liabilityForRedemptionOfShares": {
-            "type": "boolean",
-            "description": "Whether there is liability for redemption of shares"
-          },
-          "specialRights": {
-            "type": "boolean",
-            "description": "Whether there are special rights"
-          },
-          "lastUpdated": {
-            "type": "string",
-            "description": "Last updated timestamp"
-          }
-        },
-        "required": [
-          "shareCapital",
-          "shareGroup",
-          "shareCapitalCurrency",
-          "signatures",
-          "votingRights",
-          "restrictionHandlingOfShares",
-          "liabilityForRedemptionOfShares",
-          "specialRights",
-          "lastUpdated"
-        ]
-      },
-      "ActivityCodeTypeDto": {
-        "type": "object",
-        "properties": {
-          "name": { "type": "string", "description": "Activity code type name" }
-        },
-        "required": ["name"]
-      },
-      "ActivityCodeDto": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "description": "Activity code type",
-            "allOf": [{ "$ref": "#/components/schemas/ActivityCodeTypeDto" }]
-          },
-          "codeSystem": {
-            "type": "string",
-            "description": "Code system identifier"
-          },
-          "id": { "type": "string", "description": "Activity code identifier" },
-          "name": { "type": "string", "description": "Activity code name" }
-        },
-        "required": ["type", "codeSystem", "id", "name"]
-      },
-      "VatDto": {
-        "type": "object",
-        "properties": {
-          "vatNumber": {
-            "type": "string",
-            "description": "VAT registration number"
-          },
-          "registered": {
-            "type": "string",
-            "description": "VAT registration date"
-          },
-          "deRegistered": {
-            "type": "string",
-            "description": "VAT deregistration date"
-          },
-          "activityCode": {
-            "description": "VAT activity code",
-            "allOf": [{ "$ref": "#/components/schemas/ActivityCodeDto" }]
-          }
-        },
-        "required": ["vatNumber", "registered", "activityCode"]
-      },
-      "AddressTypeDto": {
-        "type": "object",
-        "properties": {
-          "name": { "type": "string", "description": "Address type name" }
-        },
-        "required": ["name"]
-      },
-      "AddressDto": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "description": "Address type",
-            "allOf": [{ "$ref": "#/components/schemas/AddressTypeDto" }]
-          },
-          "addressName": { "type": "string", "description": "Street address" },
-          "attention": { "type": "string", "description": "Attention/care of" },
-          "postcode": { "type": "string", "description": "Postal code" },
-          "city": { "type": "string", "description": "City name" },
-          "isPostbox": {
-            "type": "boolean",
-            "description": "Whether this is a post office box"
-          },
-          "country": { "type": "string", "description": "Country name" },
-          "municipalityId": {
-            "type": "string",
-            "description": "Municipality identifier"
-          },
-          "municipality": {
-            "type": "string",
-            "description": "Municipality name"
-          }
-        },
-        "required": [
-          "type",
-          "addressName",
-          "postcode",
-          "city",
-          "isPostbox",
-          "country"
-        ]
-      },
-      "RelationshipDto": {
-        "type": "object",
-        "properties": {
-          "type": { "type": "string", "description": "Relationship type" },
-          "position": {
-            "type": "string",
-            "description": "Position/role in the relationship"
-          },
-          "nationalId": {
-            "type": "string",
-            "description": "National ID of the related entity"
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of the related entity"
-          },
-          "address": {
-            "description": "Address of the related entity",
-            "allOf": [{ "$ref": "#/components/schemas/AddressDto" }]
-          }
-        },
-        "required": ["type", "position", "nationalId", "name", "address"]
-      },
-      "LinkDto": {
-        "type": "object",
-        "properties": {
-          "rel": { "type": "string", "description": "Link relationship type" },
-          "href": { "type": "string", "description": "Link URL" }
-        },
-        "required": ["rel", "href"]
-      },
-      "LegalEntityDto": {
-        "type": "object",
-        "properties": {
-          "nationalId": {
-            "type": "string",
-            "description": "National ID of the legal entity"
-          },
-          "name": {
-            "type": "string",
-            "description": "Primary name of the entity"
-          },
-          "additionalName": {
-            "type": "string",
-            "description": "Additional name or trading name"
-          },
-          "purposeOfEntity": {
-            "type": "string",
-            "description": "Purpose of the entity"
-          },
-          "initialCapital": {
-            "type": "number",
-            "description": "Initial capital amount"
-          },
-          "accountingYear": {
-            "type": "string",
-            "description": "Accounting year period"
-          },
-          "dateOfBylaws": { "type": "string", "description": "Date of bylaws" },
-          "dateOfAgreements": {
-            "type": "string",
-            "description": "Date of agreements"
-          },
-          "dateOfBoardChange": {
-            "type": "string",
-            "description": "Date of board change"
-          },
-          "registered": {
-            "type": "string",
-            "description": "Registration date"
-          },
-          "status": {
-            "type": "string",
-            "description": "Current status of the entity"
-          },
-          "deregistration": {
-            "description": "Deregistration information",
-            "allOf": [{ "$ref": "#/components/schemas/DeregistrationDto" }]
-          },
-          "legalForm": {
-            "description": "Legal form information",
-            "allOf": [{ "$ref": "#/components/schemas/LegalFormDto" }]
-          },
-          "registryComment": {
-            "type": "string",
-            "description": "Registry comment"
-          },
-          "articlesOfAssociation": {
-            "description": "Articles of association",
-            "allOf": [
-              { "$ref": "#/components/schemas/ArticlesOfAssociationDto" }
-            ]
-          },
-          "activityCode": {
-            "description": "Activity codes",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/ActivityCodeDto" }
-          },
-          "vat": {
-            "description": "VAT registrations",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/VatDto" }
-          },
-          "address": {
-            "description": "Addresses",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/AddressDto" }
-          },
-          "relationships": {
-            "description": "Related entities and relationships",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/RelationshipDto" }
-          },
-          "links": {
-            "description": "Related links",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/LinkDto" }
-          },
-          "lastUpdated": {
-            "type": "string",
-            "description": "Last updated timestamp"
-          }
-        },
-        "required": [
-          "nationalId",
-          "name",
-          "purposeOfEntity",
-          "initialCapital",
-          "accountingYear",
-          "registered",
-          "status",
-          "legalForm",
-          "activityCode",
-          "vat",
-          "address",
-          "relationships",
-          "links",
-          "lastUpdated"
-        ]
-      },
-      "PersonDto": {
+      "NationalRegistryEntityDto": {
         "type": "object",
         "properties": {
           "stada": { "type": "string" },
@@ -6593,25 +6213,17 @@
           "kynkodi"
         ]
       },
-      "GetPersonDto": {
+      "GetNationalRegistryEntityDto": {
         "type": "object",
         "properties": {
-          "person": {
+          "entity": {
             "nullable": true,
-            "allOf": [{ "$ref": "#/components/schemas/PersonDto" }]
+            "allOf": [
+              { "$ref": "#/components/schemas/NationalRegistryEntityDto" }
+            ]
           }
         },
-        "required": ["person"]
-      },
-      "GetCompanyDto": {
-        "type": "object",
-        "properties": {
-          "legalEntity": {
-            "nullable": true,
-            "allOf": [{ "$ref": "#/components/schemas/LegalEntityDto" }]
-          }
-        },
-        "required": ["legalEntity"]
+        "required": ["entity"]
       },
       "BaseEntityDto": {
         "type": "object",

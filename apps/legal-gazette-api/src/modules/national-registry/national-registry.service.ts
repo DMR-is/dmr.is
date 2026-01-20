@@ -1,13 +1,9 @@
-import Kennitala from 'kennitala'
-
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 
 import {
-  GetCompanyDto,
-  ICompanyRegistryClientService,
-} from '@dmr.is/clients/company-registry'
-import { INationalRegistryService } from '@dmr.is/clients/national-registry'
-import { GetPersonDto } from '@dmr.is/clients/national-registry'
+  GetNationalRegistryEntityDto,
+  INationalRegistryService,
+} from '@dmr.is/clients/national-registry'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ILGNationalRegistryService } from './national-registry.service.interface'
@@ -19,49 +15,27 @@ export class LGNationalRegistryService implements ILGNationalRegistryService {
     @Inject(LOGGER_PROVIDER) private logger: Logger,
     @Inject(INationalRegistryService)
     private nationalRegistryService: INationalRegistryService,
-    @Inject(ICompanyRegistryClientService)
-    private companyRegistryService: ICompanyRegistryClientService,
   ) {}
   async getEntityNameByNationalId(nationalId: string): Promise<string> {
-    if (Kennitala.isPerson(nationalId)) {
-      const { person } = await this.getPersonByNationalId(nationalId)
+    const { entity } = await this.getEntityByNationalId(nationalId)
 
-      if (!person) {
-        throw new Error('Person not found')
-      }
-
-      return person.nafn
+    if (!entity) {
+      throw new NotFoundException('National registry entity not found')
     }
 
-    const company = await this.getCompanyByNationalId(nationalId)
-
-    if (!company.legalEntity) {
-      throw new Error('Company not found')
-    }
-
-    return company.legalEntity.name
+    return entity.nafn
   }
-  async getPersonByNationalId(nationalId: string): Promise<GetPersonDto> {
+  async getEntityByNationalId(
+    nationalId: string,
+  ): Promise<GetNationalRegistryEntityDto> {
     try {
-      return this.nationalRegistryService.getPersonByNationalId(nationalId)
+      return this.nationalRegistryService.getEntityByNationalId(nationalId)
     } catch (error) {
-      this.logger.error(`Failed to get person by national id`, error, {
+      this.logger.error(`Failed to get national registry entity`, error, {
         context: LOGGING_CONTEXT,
       })
 
-      return { person: null }
-    }
-  }
-
-  async getCompanyByNationalId(nationalId: string): Promise<GetCompanyDto> {
-    try {
-      return this.companyRegistryService.getCompany(nationalId)
-    } catch (error) {
-      this.logger.error(`Failed to get company by national id`, error, {
-        context: LOGGING_CONTEXT,
-      })
-
-      return { legalEntity: null }
+      return { entity: null }
     }
   }
 }

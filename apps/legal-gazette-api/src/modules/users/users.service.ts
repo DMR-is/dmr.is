@@ -105,18 +105,18 @@ export class UsersService implements IUsersService {
       return softDeletedUser.fromModel()
     }
 
-    const { person } = await this.nationalRegistryService.getPersonByNationalId(
+    const { entity } = await this.nationalRegistryService.getEntityByNationalId(
       body.nationalId,
     )
 
-    if (!person) {
-      this.logger.warn(`No person found with nationalId`, {
+    if (!entity) {
+      this.logger.warn(`No entity found with nationalId`, {
         context: LOGGING_CONTEXT,
       })
-      throw new BadRequestException('No person found with given nationalId')
+      throw new BadRequestException('No entity found with given nationalId')
     }
 
-    const split = person.nafn.split(' ')
+    const split = entity.nafn.split(' ')
     const firstName = split[0]
     const lastName = split.slice(1).join(' ')
 

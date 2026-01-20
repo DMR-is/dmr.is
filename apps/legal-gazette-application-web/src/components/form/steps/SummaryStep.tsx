@@ -41,7 +41,7 @@ export const SummaryStep = () => {
   )
 
   const { mutate: getPersonInfo, isPending } = useMutation(
-    trpc.getPersonByNationalId.mutationOptions({}),
+    trpc.getEntityByNationalId.mutationOptions({}),
   )
   const session = useSession()
   const [items, setItems] = useState<{ title: string; value: any }[]>([])
@@ -58,11 +58,11 @@ export const SummaryStep = () => {
         onSuccess: (data) => {
           const submitteeNationalId = session.data?.user?.nationalId
 
-          if (data?.person?.kennitala === submitteeNationalId) {
+          if (data?.entity?.kennitala === submitteeNationalId) {
             setItems((prev) => [
               {
                 title: 'Eigandi auglýsingar',
-                value: data?.person?.nafn,
+                value: data?.entity?.nafn,
               },
               ...prev,
             ])
@@ -70,7 +70,7 @@ export const SummaryStep = () => {
             setItems((prev) => [
               {
                 title: 'Eigandi auglýsingar',
-                value: data?.person?.nafn,
+                value: data?.entity?.nafn,
               },
               {
                 title: 'Innsendandi',

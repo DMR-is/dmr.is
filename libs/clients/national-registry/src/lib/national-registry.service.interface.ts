@@ -1,6 +1,8 @@
-import { GetPersonDto } from './national-registry.dto'
+import { GetNationalRegistryEntityDto } from './national-registry.dto'
 
 export interface INationalRegistryService {
-  getPersonByNationalId(nationalId: string): Promise<GetPersonDto>
+  getEntityByNationalId(
+    nationalId: string,
+  ): Promise<GetNationalRegistryEntityDto>
 }
 export const INationalRegistryService = 'INationalRegistryService'

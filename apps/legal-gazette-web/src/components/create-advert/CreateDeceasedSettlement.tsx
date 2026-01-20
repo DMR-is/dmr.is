@@ -88,7 +88,7 @@ export const CreateDeceasedSettlement = ({ onChange }: Props) => {
   const trpc = useTRPC()
 
   const { mutate, isPending } = useMutation(
-    trpc.getPersonByNationalId.mutationOptions({}),
+    trpc.getEntityByNationalId.mutationOptions({}),
   )
 
   const [state, setState] = useState(initalState)
@@ -104,13 +104,13 @@ export const CreateDeceasedSettlement = ({ onChange }: Props) => {
           nationalId: id,
         },
         {
-          onSuccess: ({ person }) => {
-            if (!person) return
+          onSuccess: ({ entity }) => {
+            if (!entity) return
             setState((prev) => ({
               ...prev,
-              address: person.heimili,
-              name: person.nafn,
-              nationalId: person.kennitala,
+              address: entity.heimili,
+              name: entity.nafn,
+              nationalId: entity.kennitala,
             }))
           },
           onError: (_error) => {
