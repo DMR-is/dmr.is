@@ -4,7 +4,7 @@ import { useFormContext } from 'react-hook-form'
 
 import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { AlertMessage } from '@dmr.is/ui/components/island-is'
-import { GridColumn, GridRow, Text } from '@dmr.is/ui/components/island-is'
+import { GridColumn, GridRow } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
 import { POSTPONE_LIMIT } from '../../../../../lib/constants'
@@ -15,6 +15,10 @@ import {
 import { DatePickerController } from '../../../controllers/DatePickerController'
 import { InputController } from '../../../controllers/InputController'
 
+type ErrorState = {
+  title: string
+  message: string
+} | null
 export const RecallBankruptcySettlementFields = () => {
   const { getValues, setValue } = useFormContext<RecallApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
@@ -25,10 +29,29 @@ export const RecallBankruptcySettlementFields = () => {
       type: 'RECALL',
     })
 
-  const [onLookupError, setOnLookupError] = useState<{
-    title: string
-    message: string
-  } | null>(null)
+  const [onLookupError, setOnLookupError] = useState<ErrorState>(null)
+  const [kennitalaValue, setKennitalaValue] = useState<string | null>(null)
+
+  const onLookupErrorHandler = (error: ErrorState) => {
+    setOnLookupError(error)
+    if (!error) return
+
+    // update application with nationalId even though it was not found in
+    // national registry, so that user can proceed even if lookup fails
+    debouncedUpdateApplication(
+      {
+        fields: {
+          settlementFields: {
+            nationalId: kennitalaValue,
+          },
+        },
+      },
+      {
+        successMessage: 'Kennitala vistuð',
+        errorMessage: 'Ekki tókst að vista kennitölu',
+      },
+    )
+  }
 
   const onSuccessfulLookup = ({
     address,
@@ -77,7 +100,7 @@ export const RecallBankruptcySettlementFields = () => {
     <GridRow rowGap={[2, 3]}>
       {onLookupError && (
         <GridColumn span="12/12">
-          <AlertMessage type="error" {...onLookupError} />
+          <AlertMessage type="warning" {...onLookupError} />
         </GridColumn>
       )}
       <GridColumn span={['12/12', '6/12']}>
@@ -85,7 +108,12 @@ export const RecallBankruptcySettlementFields = () => {
           defaultValue={getValues('fields.settlementFields.nationalId') ?? ''}
           onSuccessfulLookup={onSuccessfulLookup}
           onReset={resetLookupFields}
-          onError={setOnLookupError}
+          onError={(error: ErrorState) => {
+            onLookupErrorHandler(error)
+          }}
+          onChange={(val) => {
+            setKennitalaValue(val)
+          }}
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
