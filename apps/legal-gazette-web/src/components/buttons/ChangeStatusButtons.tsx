@@ -58,7 +58,10 @@ export const ChangeStatusButtons = ({
   )
 
   const isLoading =
-    isMovingToNextStatus || isMovingToPreviousStatus || isRejecting || isReactivating
+    isMovingToNextStatus ||
+    isMovingToPreviousStatus ||
+    isRejecting ||
+    isReactivating
 
   const prevMovableStatuses: string[] = [
     StatusIdEnum.READY_FOR_PUBLICATION,
@@ -115,7 +118,7 @@ export const ChangeStatusButtons = ({
         <Button
           fluid
           size="small"
-          disabled={isLoading || !canEdit}
+          disabled={isLoading}
           loading={isReactivating}
           icon="reload"
           onClick={reactivateAdvert}

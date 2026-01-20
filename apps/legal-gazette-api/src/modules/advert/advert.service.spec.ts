@@ -27,6 +27,7 @@ interface MockAdvert {
   content: string
   categoryId: string
   typeId: string
+  assignedUserId: string | null
   fromModelToDetailed: () => unknown
   update: jest.Mock
 }
@@ -39,6 +40,7 @@ const createMockAdvert = (overrides: Partial<MockAdvert> = {}): MockAdvert => {
     content: overrides.content || '<p>Test content</p>',
     categoryId: overrides.categoryId || 'category-123',
     typeId: overrides.typeId || 'type-123',
+    assignedUserId: overrides.assignedUserId ?? null,
     fromModelToDetailed: jest.fn().mockReturnValue({
       id: overrides.id || 'advert-123',
       title: overrides.title || 'Test Advert',
@@ -70,6 +72,23 @@ const createMockLogger = () => ({
   warn: jest.fn(),
   error: jest.fn(),
   debug: jest.fn(),
+})
+
+interface MockUser {
+  id: string
+  nationalId: string
+}
+
+const createMockUser = (overrides: Partial<MockUser> = {}): MockUser => ({
+  id: overrides.id || 'user-123',
+  nationalId: overrides.nationalId || '1234567890',
+})
+
+// eslint-disable-next-line @typescript-eslint/no-inferrable-types
+const createMockDMRUser = (nationalId: string = '1234567890') => ({
+  nationalId,
+  name: 'Test User',
+  scope: ['@logbirtingablad.is/logbirtingabladid'],
 })
 
 // ==========================================
@@ -462,6 +481,295 @@ describe('AdvertService', () => {
             caption: 'New Caption',
           }),
         )
+      })
+    })
+  })
+
+  // ==========================================
+  // reactivateAdvert - Reactivate rejected adverts
+  // ==========================================
+  describe('reactivateAdvert', () => {
+    let userModel: {
+      unscoped: jest.Mock
+      findOneOrThrow: jest.Mock
+    }
+    let eventEmitter: {
+      emit: jest.Mock
+    }
+
+    beforeEach(async () => {
+      // Get mocks from module
+      const module = await Test.createTestingModule({
+        providers: [
+          AdvertService,
+          {
+            provide: LOGGER_PROVIDER,
+            useValue: createMockLogger(),
+          },
+          {
+            provide: ILGNationalRegistryService,
+            useValue: {
+              getEntityNameByNationalId: jest
+                .fn()
+                .mockResolvedValue('Test Entity'),
+            },
+          },
+          {
+            provide: getModelToken(AdvertModel),
+            useValue: {
+              withScope: jest.fn().mockReturnThis(),
+              unscoped: jest.fn().mockReturnThis(),
+              findByPkOrThrow: jest.fn(),
+            },
+          },
+          {
+            provide: getModelToken(UserModel),
+            useValue: {
+              unscoped: jest.fn().mockReturnThis(),
+              findOneOrThrow: jest.fn(),
+            },
+          },
+          {
+            provide: getModelToken(AdvertPublicationModel),
+            useValue: {},
+          },
+          {
+            provide: ITypeCategoriesService,
+            useValue: {
+              findByTypeId: jest.fn(),
+            },
+          },
+          {
+            provide: getModelToken(CaseModel),
+            useValue: {
+              create: jest.fn(),
+            },
+          },
+          {
+            provide: getModelToken(ApplicationModel),
+            useValue: {
+              create: jest.fn(),
+            },
+          },
+          {
+            provide: EventEmitter2,
+            useValue: {
+              emit: jest.fn(),
+            },
+          },
+          {
+            provide: Sequelize,
+            useValue: {
+              transaction: jest.fn().mockImplementation(async (callback) => {
+                const mockTransaction = {
+                  commit: jest.fn(),
+                  rollback: jest.fn(),
+                  afterCommit: jest.fn((cb) => cb()),
+                }
+                return callback(mockTransaction)
+              }),
+            },
+          },
+        ],
+      }).compile()
+
+      service = module.get<AdvertService>(AdvertService)
+      advertModel = module.get(getModelToken(AdvertModel))
+      userModel = module.get(getModelToken(UserModel))
+      eventEmitter = module.get(EventEmitter2)
+    })
+
+    describe('when advert is REJECTED and user is assigned', () => {
+      it('should successfully reactivate the advert to IN_PROGRESS status', async () => {
+        // Arrange
+        const mockUser = createMockUser({ id: 'user-123', nationalId: '1234567890' })
+        const rejectedAdvert = createMockAdvert({
+          id: 'advert-123',
+          statusId: StatusIdEnum.REJECTED,
+          assignedUserId: 'user-123',
+        })
+
+        userModel.unscoped.mockReturnThis()
+        userModel.findOneOrThrow = jest.fn().mockResolvedValue(mockUser)
+        advertModel.unscoped.mockReturnThis()
+        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(rejectedAdvert)
+
+        const currentUser = createMockDMRUser('1234567890')
+
+        // Act
+        await service.reactivateAdvert('advert-123', currentUser as any)
+
+        // Assert
+        expect(rejectedAdvert.update).toHaveBeenCalledWith({
+          statusId: StatusIdEnum.IN_PROGRESS,
+        })
+      })
+
+      it('should emit STATUS_CHANGED event after successful reactivation', async () => {
+        // Arrange
+        const mockUser = createMockUser({ id: 'user-123', nationalId: '1234567890' })
+        const rejectedAdvert = createMockAdvert({
+          id: 'advert-123',
+          statusId: StatusIdEnum.REJECTED,
+          assignedUserId: 'user-123',
+        })
+
+        userModel.unscoped.mockReturnThis()
+        userModel.findOneOrThrow = jest.fn().mockResolvedValue(mockUser)
+        advertModel.unscoped.mockReturnThis()
+        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(rejectedAdvert)
+
+        const currentUser = createMockDMRUser('1234567890')
+
+        // Act
+        await service.reactivateAdvert('advert-123', currentUser as any)
+
+        // Assert
+        expect(eventEmitter.emit).toHaveBeenCalledWith(
+          'advert.status.changed',
+          expect.objectContaining({
+            advertId: 'advert-123',
+            actorId: '1234567890',
+            statusId: StatusIdEnum.IN_PROGRESS,
+          }),
+        )
+      })
+    })
+
+    describe('when advert is not REJECTED', () => {
+      it.each([
+        { status: StatusIdEnum.SUBMITTED, name: 'SUBMITTED' },
+        { status: StatusIdEnum.IN_PROGRESS, name: 'IN_PROGRESS' },
+        { status: StatusIdEnum.READY_FOR_PUBLICATION, name: 'READY_FOR_PUBLICATION' },
+        { status: StatusIdEnum.PUBLISHED, name: 'PUBLISHED' },
+        { status: StatusIdEnum.WITHDRAWN, name: 'WITHDRAWN' },
+      ])('should throw BadRequestException when status is $name', async ({ status }) => {
+        // Arrange
+        const mockUser = createMockUser({ id: 'user-123', nationalId: '1234567890' })
+        const advert = createMockAdvert({
+          id: 'advert-123',
+          statusId: status,
+          assignedUserId: 'user-123',
+        })
+
+        userModel.unscoped.mockReturnThis()
+        userModel.findOneOrThrow = jest.fn().mockResolvedValue(mockUser)
+        advertModel.unscoped.mockReturnThis()
+        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(advert)
+
+        const currentUser = createMockDMRUser('1234567890')
+
+        // Act & Assert
+        await expect(
+          service.reactivateAdvert('advert-123', currentUser as any),
+        ).rejects.toThrow('Only rejected adverts can be reactivated')
+
+        // Verify update was NOT called
+        expect(advert.update).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('when user is not assigned to the advert', () => {
+      it('should throw BadRequestException when user is not assigned', async () => {
+        // Arrange
+        const mockUser = createMockUser({ id: 'user-123', nationalId: '1234567890' })
+        const rejectedAdvert = createMockAdvert({
+          id: 'advert-123',
+          statusId: StatusIdEnum.REJECTED,
+          assignedUserId: 'different-user-456', // Different user is assigned
+        })
+
+        userModel.unscoped.mockReturnThis()
+        userModel.findOneOrThrow = jest.fn().mockResolvedValue(mockUser)
+        advertModel.unscoped.mockReturnThis()
+        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(rejectedAdvert)
+
+        const currentUser = createMockDMRUser('1234567890')
+
+        // Act & Assert
+        await expect(
+          service.reactivateAdvert('advert-123', currentUser as any),
+        ).rejects.toThrow('User is not assigned to this advert')
+
+        // Verify update was NOT called
+        expect(rejectedAdvert.update).not.toHaveBeenCalled()
+      })
+
+      it('should throw BadRequestException when no user is assigned', async () => {
+        // Arrange
+        const mockUser = createMockUser({ id: 'user-123', nationalId: '1234567890' })
+        const rejectedAdvert = createMockAdvert({
+          id: 'advert-123',
+          statusId: StatusIdEnum.REJECTED,
+          assignedUserId: null, // No user assigned
+        })
+
+        userModel.unscoped.mockReturnThis()
+        userModel.findOneOrThrow = jest.fn().mockResolvedValue(mockUser)
+        advertModel.unscoped.mockReturnThis()
+        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(rejectedAdvert)
+
+        const currentUser = createMockDMRUser('1234567890')
+
+        // Act & Assert
+        await expect(
+          service.reactivateAdvert('advert-123', currentUser as any),
+        ).rejects.toThrow('User is not assigned to this advert')
+
+        // Verify update was NOT called
+        expect(rejectedAdvert.update).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('error handling', () => {
+      it('should include BadRequestException type in status validation error', async () => {
+        // Arrange
+        const mockUser = createMockUser({ id: 'user-123', nationalId: '1234567890' })
+        const submittedAdvert = createMockAdvert({
+          statusId: StatusIdEnum.SUBMITTED,
+          assignedUserId: 'user-123',
+        })
+
+        userModel.unscoped.mockReturnThis()
+        userModel.findOneOrThrow = jest.fn().mockResolvedValue(mockUser)
+        advertModel.unscoped.mockReturnThis()
+        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(submittedAdvert)
+
+        const currentUser = createMockDMRUser('1234567890')
+
+        // Act & Assert
+        try {
+          await service.reactivateAdvert('advert-123', currentUser as any)
+          fail('Expected BadRequestException to be thrown')
+        } catch (error) {
+          expect(error).toBeInstanceOf(Error)
+          expect((error as Error).name).toBe('BadRequestException')
+        }
+      })
+
+      it('should include BadRequestException type in authorization error', async () => {
+        // Arrange
+        const mockUser = createMockUser({ id: 'user-123', nationalId: '1234567890' })
+        const rejectedAdvert = createMockAdvert({
+          statusId: StatusIdEnum.REJECTED,
+          assignedUserId: 'different-user',
+        })
+
+        userModel.unscoped.mockReturnThis()
+        userModel.findOneOrThrow = jest.fn().mockResolvedValue(mockUser)
+        advertModel.unscoped.mockReturnThis()
+        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(rejectedAdvert)
+
+        const currentUser = createMockDMRUser('1234567890')
+
+        // Act & Assert
+        try {
+          await service.reactivateAdvert('advert-123', currentUser as any)
+          fail('Expected BadRequestException to be thrown')
+        } catch (error) {
+          expect(error).toBeInstanceOf(Error)
+          expect((error as Error).name).toBe('BadRequestException')
+        }
       })
     })
   })
