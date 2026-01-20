@@ -1,5 +1,4 @@
 import {
-  CommentDto,
   CreateAssignCommentDto,
   CreateStatusUpdateCommentDto,
   CreateSubmitCommentDto,
@@ -14,28 +13,25 @@ export interface ICommentService {
   createSubmitComment(
     advertId: string,
     body: CreateSubmitCommentDto,
-  ): Promise<CommentDto>
+  ): Promise<void>
 
   createAssignComment(
     advertId: string,
     body: CreateAssignCommentDto,
-  ): Promise<CommentDto>
+  ): Promise<void>
 
   createStatusUpdateComment(
     advertId: string,
     body: CreateStatusUpdateCommentDto,
-  ): Promise<CommentDto>
+  ): Promise<void>
 
   createSubmitCommentForExternalSystem(
     advertId: string,
     actorId: string,
     actorName: string,
-  ): Promise<CommentDto>
+  ): Promise<void>
 
-  createTextComment(
-    advertId: string,
-    body: CreateTextCommentDto,
-  ): Promise<CommentDto>
+  createTextComment(advertId: string, body: CreateTextCommentDto): Promise<void>
 }
 
 export const ICommentService = Symbol('ICommentService')

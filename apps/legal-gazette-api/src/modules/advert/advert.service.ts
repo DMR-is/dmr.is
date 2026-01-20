@@ -419,7 +419,10 @@ export class AdvertService implements IAdvertService {
     })
   }
 
-  async reactivateAdvert(advertId: string, currentUser: DMRUser): Promise<void> {
+  async reactivateAdvert(
+    advertId: string,
+    currentUser: DMRUser,
+  ): Promise<void> {
     await this.sequelize.transaction(async (t) => {
       const user = await this.userModel.unscoped().findOneOrThrow({
         attributes: ['id', 'nationalId'],
@@ -488,7 +491,7 @@ export class AdvertService implements IAdvertService {
           `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to next status`,
           {
             context: LOGGING_CONTEXT,
-          }
+          },
         )
 
         throw new BadRequestException('Advert cannot be moved to next status')
@@ -542,7 +545,7 @@ export class AdvertService implements IAdvertService {
           `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to previous status`,
           {
             context: LOGGING_CONTEXT,
-          }
+          },
         )
 
         throw new BadRequestException(
@@ -694,13 +697,17 @@ export class AdvertService implements IAdvertService {
       statusId: advert.statusId,
       actorId: advert.createdByNationalId,
     })
-    this.eventEmitter.emit(LegalGazetteEvents.ADVERT_CREATED, {
-      advertId: advert.id,
-      statusId: advert.statusId,
-      actorId: advert.createdByNationalId,
-      actorName: advert.createdBy,
-      external: body.isFromExternalSystem,
-    })
+
+    await this.eventEmitter.emitAsync(
+      LegalGazetteEvents.CREATE_SUBMIT_COMMENT,
+      {
+        advertId: advert.id,
+        statusId: advert.statusId,
+        actorId: advert.createdByNationalId,
+        actorName: advert.createdBy,
+        external: body.isFromExternalSystem,
+      },
+    )
 
     return advert.fromModelToDetailed()
   }

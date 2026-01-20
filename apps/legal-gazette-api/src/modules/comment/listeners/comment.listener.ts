@@ -19,7 +19,7 @@ export class CommentListener {
     @Inject(ICommentService) private readonly commentService: ICommentService,
   ) {}
 
-  @OnEvent(LegalGazetteEvents.ADVERT_CREATED)
+  @OnEvent(LegalGazetteEvents.CREATE_SUBMIT_COMMENT)
   async handleAdvertCreatedEvent(payload: CreateSubmitCommentEvent) {
     if (payload.external) {
       if (!payload.actorId || !payload.actorName) {

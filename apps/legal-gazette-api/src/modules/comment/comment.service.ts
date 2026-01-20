@@ -5,7 +5,6 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { AdvertModel } from '../../models/advert.model'
 import {
-  CommentDto,
   CommentModel,
   CommentTypeEnum,
   CreateAssignCommentDto,
@@ -30,17 +29,14 @@ export class CommentService implements ICommentService {
     advertId: string,
     actorId: string,
     actorName: string,
-  ): Promise<CommentDto> {
-    const newComment = await this.commentModel.create({
+  ): Promise<void> {
+    await this.commentModel.create({
       type: CommentTypeEnum.SUBMIT,
       advertId: advertId,
       statusId: StatusIdEnum.SUBMITTED,
       actorId: actorId,
       actor: actorName,
     })
-
-    await newComment.reload()
-    return newComment.fromModel()
   }
 
   private async getAdvertStatusId(advertId: string): Promise<string> {
@@ -75,35 +71,32 @@ export class CommentService implements ICommentService {
   async createSubmitComment(
     advertId: string,
     body: CreateSubmitCommentDto,
-  ): Promise<CommentDto> {
+  ): Promise<void> {
     const [actor, statusId] = await Promise.all([
       this.findActor(body.actorId),
       this.getAdvertStatusId(advertId),
     ])
 
-    const newComment = await this.commentModel.create({
+    await this.commentModel.create({
       type: CommentTypeEnum.SUBMIT,
       advertId: advertId,
       statusId: statusId,
       actorId: actor.id,
       actor: actor.fullName,
     })
-
-    await newComment.reload()
-    return newComment.fromModel()
   }
 
   async createAssignComment(
     advertId: string,
     body: CreateAssignCommentDto,
-  ): Promise<CommentDto> {
+  ): Promise<void> {
     const [actor, receiver, statusId] = await Promise.all([
       this.findActor(body.actorId),
       this.findActor(body.receiverId),
       this.getAdvertStatusId(advertId),
     ])
 
-    const newComment = await this.commentModel.create({
+    await this.commentModel.create({
       type: CommentTypeEnum.ASSIGN,
       advertId: advertId,
       statusId: statusId,
@@ -112,15 +105,12 @@ export class CommentService implements ICommentService {
       receiverId: receiver.id,
       receiver: receiver.fullName,
     })
-
-    await newComment.reload()
-    return newComment.fromModel()
   }
 
   async createStatusUpdateComment(
     advertId: string,
     body: CreateStatusUpdateCommentDto,
-  ): Promise<CommentDto> {
+  ): Promise<void> {
     const [actor, statusId] = await Promise.all([
       this.findActor(body.actorId),
       this.getAdvertStatusId(advertId),
@@ -128,7 +118,7 @@ export class CommentService implements ICommentService {
 
     const receiver = await this.statusModel.findByPkOrThrow(body.receiverId)
 
-    const newComment = await this.commentModel.create({
+    await this.commentModel.create({
       type: CommentTypeEnum.STATUS_UPDATE,
       advertId: advertId,
       statusId: statusId,
@@ -137,21 +127,18 @@ export class CommentService implements ICommentService {
       receiverId: receiver.id,
       receiver: receiver.title,
     })
-
-    await newComment.reload()
-    return newComment.fromModel()
   }
 
   async createTextComment(
     advertId: string,
     body: CreateTextCommentDto,
-  ): Promise<CommentDto> {
+  ): Promise<void> {
     const [actor, statusId] = await Promise.all([
       this.findActor(body.actorId),
       this.getAdvertStatusId(advertId),
     ])
 
-    const newComment = await this.commentModel.create({
+    await this.commentModel.create({
       type: CommentTypeEnum.COMMENT,
       advertId: advertId,
       statusId: statusId,
@@ -159,8 +146,5 @@ export class CommentService implements ICommentService {
       actor: actor.fullName,
       comment: body.comment,
     })
-
-    await newComment.reload()
-    return newComment.fromModel()
   }
 }
