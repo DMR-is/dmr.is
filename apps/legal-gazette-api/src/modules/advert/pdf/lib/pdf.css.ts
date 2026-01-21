@@ -224,7 +224,7 @@ export const pdfStyles = `
       sup {
         vertical-align: baseline;
         font-size: var(--font-size--small);
-        line-height: 0;
+        line-height: 1;
         position: relative;
         top: -0.4em;
       }
@@ -258,7 +258,7 @@ export const pdfStyles = `
         text-align: left;
         vertical-align: top;
         width: auto;
-        border: var(--table-border);
+        border: none;
         page-break-inside: avoid;
       }
 
@@ -583,11 +583,6 @@ export const pdfStyles = `
       }
 
       /* ======================================================================= */
-
-      .table {
-        table-layout: fixed;
-        background: red;
-      }
 
       .table td,
       .table th {

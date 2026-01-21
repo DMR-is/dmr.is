@@ -24,9 +24,6 @@ globalStyle(
   },
 )
 
-globalStyle(`${bodyText} table, .advertContent table `, {
-  tableLayout: 'fixed',
-})
 globalStyle(
   `${bodyText} table td, ${bodyText} table th, .advertContent table td, .advertContent table th`,
   {
@@ -91,8 +88,4 @@ globalStyle(`${legacyText} .advertType, ${bodyText} .advertType`, {
 })
 globalStyle(`${legacyText} .advertType > td, ${bodyText} .advertType > td`, {
   paddingBottom: '4px',
-})
-globalStyle(`${legacyText} table `, {
-  tableLayout: 'fixed',
-  width: '100%',
 })
