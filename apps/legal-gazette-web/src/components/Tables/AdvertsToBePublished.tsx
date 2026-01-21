@@ -7,23 +7,36 @@ import { formatDate } from '@dmr.is/utils/client'
 
 import { Checkbox } from '@island.is/island-ui/core'
 
-import { AdvertDto } from '../../gen/fetch'
+import { useFilterContext } from '../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
+import { useTRPC } from '../../lib/trpc/client/trpc'
+
+import { useQuery } from '@tanstack/react-query'
 
 type Props = {
   selectedAdvertIds?: string[]
   onToggle?: (advertId: string) => void
-  adverts?: AdvertDto[]
 }
 
 export const AdvertsToBePublished = ({
-  adverts = [],
   selectedAdvertIds = [],
   onToggle,
 }: Props) => {
   const { formatMessage } = useIntl()
+  const { params, setParams } = useFilterContext()
+  const trpc = useTRPC()
 
-  const rows = adverts.map((advert) => ({
+  const { data } = useQuery(
+    trpc.getReadyForPublicationAdverts.queryOptions({
+      categoryId: params.categoryId,
+      page: params.page,
+      pageSize: params.pageSize,
+      search: params.search,
+      typeId: params.typeId,
+    }),
+  )
+
+  const rows = data?.adverts.map((advert) => ({
     checkbox: (
       <Checkbox
         checked={selectedAdvertIds.includes(advert.id)}
@@ -73,6 +86,10 @@ export const AdvertsToBePublished = ({
         ] as const
       }
       rows={rows}
+      paging={data?.paging}
+      onPageChange={(page) => setParams({ page: page })}
+      onPageSizeChange={(pageSize) => setParams({ pageSize: pageSize })}
+      showPageSizeSelect={true}
     />
   )
 }

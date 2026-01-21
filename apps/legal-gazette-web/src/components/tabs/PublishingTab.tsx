@@ -12,7 +12,7 @@ import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import AdvertsToBePublished from '../Tables/AdvertsToBePublished'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 export const PublishingTab = () => {
   const [selectedAdvertIds, setSelectedAdvertIds] = useState<string[]>([])
@@ -65,16 +65,6 @@ export const PublishingTab = () => {
     }),
   )
 
-  const { data } = useQuery(
-    trpc.getReadyForPublicationAdverts.queryOptions({
-      categoryId: params.categoryId,
-      page: params.page,
-      pageSize: params.pageSize,
-      search: params.search,
-      typeId: params.typeId,
-    }),
-  )
-
   const handleAdvertToggle = (id: string) => {
     setSelectedAdvertIds((prevSelected) =>
       prevSelected.includes(id)
@@ -84,10 +74,9 @@ export const PublishingTab = () => {
   }
 
   return (
-    <Box background="white">
+    <Box background="white" paddingTop={4}>
       <Stack space={[3, 4, 5]}>
         <AdvertsToBePublished
-          adverts={data?.adverts}
           selectedAdvertIds={selectedAdvertIds}
           onToggle={handleAdvertToggle}
         />

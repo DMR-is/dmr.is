@@ -36,6 +36,7 @@ export const AdvertsInProgress = () => {
     ),
   )
 
+  console.log(data?.paging)
   const rows = data?.adverts.map((advert) => ({
     icon: advert.hasInternalComments ? (
       <Tooltip
