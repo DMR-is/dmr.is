@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common'
 
+import { LoggingModule } from '@dmr.is/logging'
+
 import { NationalRegistryService } from './national-registry.service'
 import { INationalRegistryService } from './national-registry.service.interface'
 
 @Module({
-  imports: [],
+  imports: [LoggingModule],
   controllers: [],
   providers: [
     {
