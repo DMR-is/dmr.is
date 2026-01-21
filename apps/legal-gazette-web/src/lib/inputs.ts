@@ -1,3 +1,4 @@
+import Kennitala from 'kennitala'
 import * as z from 'zod'
 
 import {
@@ -22,26 +23,17 @@ export const updateUserInput = z
     message: 'At least one of email or phone must be provided',
   })
 
+const applicantNationalId = z.object({
+  applicantNationalId: z.string().refine((val) => Kennitala.isValid(val), {
+    message: 'Kennitala er ekki gild',
+  }),
+})
+
 export const createAdvertAndCommonApplicationInput =
-  commonApplicationAnswersRefined.extend({
-    applicantNationalId: z
-      .string()
-      .min(10, { error: 'Kennitala verður að vera 10 stafir' })
-      .max(10, { error: 'Kennitala verður að vera 10 stafir' }),
-  })
+  commonApplicationAnswersRefined.extend(applicantNationalId.shape)
 
 export const createAdvertAndRecallBankruptcyApplicationInput =
-  recallBankruptcyAnswersRefined.extend({
-    applicantNationalId: z
-      .string()
-      .min(10, { error: 'Kennitala verður að vera 10 stafir' })
-      .max(10, { error: 'Kennitala verður að vera 10 stafir' }),
-  })
+  recallBankruptcyAnswersRefined.extend(applicantNationalId.shape)
 
 export const createAdvertAndDeceasedApplicationInput =
-  recallDeceasedAnswersRefined.extend({
-    applicantNationalId: z
-      .string()
-      .min(10, { error: 'Kennitala verður að vera 10 stafir' })
-      .max(10, { error: 'Kennitala verður að vera 10 stafir' }),
-  })
+  recallDeceasedAnswersRefined.extend(applicantNationalId.shape)
