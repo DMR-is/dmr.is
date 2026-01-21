@@ -52,10 +52,6 @@ export const ApplicationCard = ({ application }: Props) => {
 
   // count publications for common adverts
   if (application.type === ApplicationTypeEnum.COMMON) {
-    if (adverts[0]?.status.slug === 'hafnad') {
-      statusText = 'Hafnað'
-      rejected = true
-    }
     let pubCount = 0
     const advertPubs =
       adverts[0]?.publications.map((pub) => {
@@ -78,7 +74,13 @@ export const ApplicationCard = ({ application }: Props) => {
     if (allPublished) {
       statusText = 'Útgefin'
     }
-    // count publications for da´narbúa and þrotabú adverts
+
+    if (adverts[0]?.status.slug === 'hafnad') {
+      statusText = 'Hafnað'
+      rejected = true
+    }
+
+    // count publications for dánarbúa and þrotabú adverts
   } else {
     let advertsCount = 0
     let pubCount = 0
@@ -91,8 +93,18 @@ export const ApplicationCard = ({ application }: Props) => {
         if (advert.type.title == 'Skiptalok') {
           allPublished = true
         }
+
         pubCount++
       })
+
+      // if the Innköllun advert is rejected, mark application as rejected
+      if (
+        advert.type.slug.includes('Innkollun') &&
+        advert.status.slug === 'hafnad'
+      ) {
+        statusText = 'Hafnað'
+        rejected = true
+      }
     })
 
     if (advertsCount > 0) {

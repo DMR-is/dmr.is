@@ -87,6 +87,17 @@ export const AdvertTable = ({
     return ad.status.slug === 'utgefid'
   }
 
+  const isAllPublished = (ad: AdvertDto) => {
+    let publishedCount = 0
+    ad.publications.forEach((pub) => {
+      if (pub.publishedAt) {
+        publishedCount++
+      }
+    })
+
+    return publishedCount === ad.publications.length
+  }
+
   const isRejected = (ad: AdvertDto) => {
     return ad.status.slug === 'hafnad'
   }
@@ -103,9 +114,9 @@ export const AdvertTable = ({
           children: <AdvertPublications advert={ad} />,
           isExpandable: true,
           startExpanded: index === adverts.length - 1,
-          actions:
-            !isPublished(ad) && !isRejected(ad) ? (
-              <Inline justifyContent={'flexEnd'}>
+          actions: (
+            <Inline justifyContent={'flexEnd'}>
+              {!isPublished(ad) && !isRejected(ad) ? (
                 <button
                   style={{ display: 'inline-block' }}
                   className={cardTagButtonStyle}
@@ -127,12 +138,17 @@ export const AdvertTable = ({
                     />
                   </Tag>
                 </button>
-              </Inline>
-            ) : isRejected(ad) ? (
-              <Tag variant="red" disabled>
-                Hafnað
-              </Tag>
-            ) : null,
+              ) : isAllPublished(ad) ? (
+                <Tag variant="mint" disabled>
+                  Útgefin
+                </Tag>
+              ) : isRejected(ad) ? (
+                <Tag variant="red" disabled>
+                  Hafnað
+                </Tag>
+              ) : null}
+            </Inline>
+          ),
         }))}
       />
       {openModal && (
