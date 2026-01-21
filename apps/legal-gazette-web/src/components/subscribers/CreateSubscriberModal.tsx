@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 
 import {
+  Box,
   Button,
   DatePicker,
   GridColumn,
@@ -50,14 +51,17 @@ export const CreateSubscriberModal = ({
   const [visible, setVisible] = useState(initiallyVisible)
 
   const disclosure = (
-    <Button
-      circle
-      size="small"
-      icon="add"
-      iconType="outline"
-      title="Bæta við áskrifanda"
-      onClick={() => setVisible((prev) => !prev)}
-    />
+    <Box background={'white'}>
+      <Button
+        size="small"
+        variant="utility"
+        icon="add"
+        colorScheme="primary"
+        iconType="outline"
+        title="Bæta við áskrifanda"
+        onClick={() => setVisible((prev) => !prev)}
+      />
+    </Box>
   )
 
   useEffect(() => {

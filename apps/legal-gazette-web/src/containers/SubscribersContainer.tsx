@@ -15,9 +15,7 @@ import {
   toast,
 } from '@dmr.is/ui/components/island-is'
 
-import { ActivateSubscriberButton } from '../components/subscribers/ActivateSubscriberButton'
 import { CreateSubscriberModal } from '../components/subscribers/CreateSubscriberModal'
-import { DeactivateSubscriberButton } from '../components/subscribers/DeactivateSubscriberButton'
 import { SubscribersTable } from '../components/subscribers/SubscribersTable'
 import { UpdateSubscriberModal } from '../components/subscribers/UpdateSubscriberModal'
 import { TRPCErrorAlert } from '../components/trpc/TRPCErrorAlert'
@@ -73,11 +71,11 @@ export const SubscribersContainer = () => {
         await queryClient.cancelQueries(trpc.getSubscribers.queryFilter())
       },
       onSuccess: () => {
-        toast.success(`Áskrifandi afvirkjaður`)
+        toast.success(`Áskrifandi gerður óvirkur`)
         queryClient.invalidateQueries(trpc.getSubscribers.queryFilter())
       },
       onError: () => {
-        toast.error(`Ekki tókst að afvirkja áskrifanda`)
+        toast.error(`Ekki tókst að gera áskrifanda óvirkan`)
       },
     }),
   )
@@ -176,30 +174,22 @@ export const SubscribersContainer = () => {
                     shouldReset={shouldResetUpdateState}
                     shouldClose={isUpdateModalOpen}
                     currentEndDate={sub.subscribedTo}
+                    isActive={sub.isActive}
+                    isActivating={isActivatingSubscriber}
+                    isDeactivating={isDeactivatingSubscriber}
                     onUpdateSubscriber={(data) =>
                       updateSubscriberMutation({
                         subscriberId: sub.id,
                         subscribedTo: data.subscribedTo,
                       })
                     }
+                    onActivate={() =>
+                      activateSubscriberMutation({ subscriberId: sub.id })
+                    }
+                    onDeactivate={() =>
+                      deactivateSubscriberMutation({ subscriberId: sub.id })
+                    }
                   />,
-                  sub.isActive ? (
-                    <DeactivateSubscriberButton
-                      key="deactivate"
-                      loading={isDeactivatingSubscriber}
-                      onDeactivate={() =>
-                        deactivateSubscriberMutation({ subscriberId: sub.id })
-                      }
-                    />
-                  ) : (
-                    <ActivateSubscriberButton
-                      key="activate"
-                      onActivate={() =>
-                        activateSubscriberMutation({ subscriberId: sub.id })
-                      }
-                      loading={isActivatingSubscriber}
-                    />
-                  ),
                 ],
               }))}
               actionButton={

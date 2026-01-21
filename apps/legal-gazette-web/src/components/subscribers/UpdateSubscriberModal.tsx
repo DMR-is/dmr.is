@@ -19,7 +19,12 @@ type Props = {
   shouldReset?: boolean
   shouldClose?: boolean
   currentEndDate?: string | null
+  isActive?: boolean
+  isActivating?: boolean
+  isDeactivating?: boolean
   onUpdateSubscriber?: (data: { subscribedTo: string }) => void
+  onActivate?: () => void
+  onDeactivate?: () => void
 }
 
 export const UpdateSubscriberModal = ({
@@ -28,7 +33,12 @@ export const UpdateSubscriberModal = ({
   shouldClose,
   shouldReset,
   currentEndDate,
+  isActive,
+  isActivating,
+  isDeactivating,
   onUpdateSubscriber,
+  onActivate,
+  onDeactivate,
 }: Props) => {
   const getInitialDate = () => {
     if (currentEndDate) {
@@ -78,7 +88,7 @@ export const UpdateSubscriberModal = ({
       <Box>
         <GridContainer>
           <GridRow rowGap={[2, 3]}>
-            <GridColumn span={['12/12', '6/12']}>
+            <GridColumn span={['12/12', '5/12']}>
               <DatePicker
                 label="Áskrift til"
                 placeholderText="Veldu dagsetningu"
@@ -89,8 +99,8 @@ export const UpdateSubscriberModal = ({
                 size="sm"
               />
             </GridColumn>
-            <GridColumn span={['12/12', '6/12']}>
-              <Inline align={['left', 'right']}>
+            <GridColumn span={['12/12', '7/12']}>
+              <Inline align={['left', 'right']} space={2}>
                 <Button
                   loading={isUpdatingSubscriber}
                   icon="checkmark"
@@ -103,8 +113,30 @@ export const UpdateSubscriberModal = ({
                     }
                   }}
                 >
-                  Vista breytingar
+                  Uppfæra tímabil
                 </Button>
+                {isActive ? (
+                  <Button
+                    loading={isDeactivating}
+                    icon="removeCircle"
+                    iconType="outline"
+                    variant="ghost"
+                    colorScheme="destructive"
+                    onClick={() => onDeactivate?.()}
+                  >
+                    Loka áskrift
+                  </Button>
+                ) : (
+                  <Button
+                    loading={isActivating}
+                    icon="checkmarkCircle"
+                    iconType="outline"
+                    variant="ghost"
+                    onClick={() => onActivate?.()}
+                  >
+                    Virkja áskrift
+                  </Button>
+                )}
               </Inline>
             </GridColumn>
           </GridRow>
