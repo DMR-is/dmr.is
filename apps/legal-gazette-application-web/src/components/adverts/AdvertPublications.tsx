@@ -36,6 +36,7 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
       <Stack space={[2]}>
         {advert.publications.map((pub, i) => {
           const isPublished = !!pub.publishedAt
+          const isRejected = advert.status.slug === 'hafnad'
 
           return (
             <Fragment key={i}>
@@ -46,8 +47,16 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
                     : formatDate(pub.scheduledAt)
                 }
                 tag={{
-                  label: isPublished ? 'Útgefin' : 'Á áætlun',
-                  variant: isPublished ? 'mint' : 'blueberry',
+                  label: isPublished
+                    ? 'Útgefin'
+                    : isRejected
+                      ? 'Hafnað'
+                      : 'Á áætlun',
+                  variant: isPublished
+                    ? 'mint'
+                    : isRejected
+                      ? 'red'
+                      : 'blueberry',
                   outlined: false,
                 }}
                 headingVariant="h4"
