@@ -8,7 +8,6 @@ import {
   AlertMessage,
   GridColumn,
   GridRow,
-  Text,
 } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
@@ -18,7 +17,10 @@ import {
 } from '../../../../national-id-lookup/NationalIdLookup'
 import { DatePickerController } from '../../../controllers/DatePickerController'
 import { InputController } from '../../../controllers/InputController'
-
+type ErrorState = {
+  title: string
+  message: string
+} | null
 export const RecallSettlementDefault = () => {
   const { getValues, setValue } = useFormContext<RecallApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
@@ -33,6 +35,28 @@ export const RecallSettlementDefault = () => {
     title: string
     message: string
   } | null>(null)
+  const [kennitalaValue, setKennitalaValue] = useState<string | null>(null)
+
+  const onLookupErrorHandler = (error: ErrorState) => {
+    setOnLookupError(error)
+    if (!error) return
+
+    // update application with nationalId even though it was not found in
+    // national registry, so that user can proceed even if lookup fails
+    debouncedUpdateApplication(
+      {
+        fields: {
+          settlementFields: {
+            nationalId: kennitalaValue,
+          },
+        },
+      },
+      {
+        successMessage: 'Kennitala vistuð',
+        errorMessage: 'Ekki tókst að vista kennitölu',
+      },
+    )
+  }
 
   const onSuccessfulLookup = ({
     address,
@@ -81,7 +105,7 @@ export const RecallSettlementDefault = () => {
     <GridRow rowGap={[2, 3]}>
       {onLookupError && (
         <GridColumn span="12/12">
-          <AlertMessage type="error" {...onLookupError} />
+          <AlertMessage type="warning" {...onLookupError} />
         </GridColumn>
       )}
       <GridColumn span={['12/12', '6/12']}>
@@ -89,7 +113,12 @@ export const RecallSettlementDefault = () => {
           defaultValue={getValues('fields.settlementFields.nationalId') ?? ''}
           onSuccessfulLookup={onSuccessfulLookup}
           onReset={resetLookupFields}
-          onError={setOnLookupError}
+          onError={(error: ErrorState) => {
+            onLookupErrorHandler(error)
+          }}
+          onChange={(val) => {
+            setKennitalaValue(val)
+          }}
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
