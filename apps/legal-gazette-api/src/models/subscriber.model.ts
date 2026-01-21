@@ -101,7 +101,6 @@ export class SubscriberModel extends BaseModel<
   @ApiProperty({
     type: Date,
     nullable: true,
-    description: 'NULL means subscription is still active',
   })
   subscribedTo!: Date | null
 

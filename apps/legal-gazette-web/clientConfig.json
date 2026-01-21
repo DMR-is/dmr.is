@@ -4216,124 +4216,6 @@
         "tags": ["Legal gazette - internal API"]
       }
     },
-    "/api/v1/subscribers/me": {
-      "get": {
-        "operationId": "getMySubscriber",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/SubscriberDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Legal gazette - internal API"]
-      }
-    },
-    "/api/v1/subscribers/create-subscription": {
-      "post": {
-        "operationId": "createSubscription",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/MutationResponse" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Legal gazette - internal API"]
-      }
-    },
     "/api/v1/subscribers-admin": {
       "get": {
         "operationId": "getSubscribersAdmin",
@@ -6828,8 +6710,7 @@
           "subscribedTo": {
             "format": "date-time",
             "type": "string",
-            "nullable": true,
-            "description": "NULL means subscription is still active"
+            "nullable": true
           }
         },
         "required": [
@@ -6841,11 +6722,6 @@
           "subscribedFrom",
           "subscribedTo"
         ]
-      },
-      "MutationResponse": {
-        "type": "object",
-        "properties": { "success": { "type": "boolean" } },
-        "required": ["success"]
       },
       "GetSubscribersWithPagingResponse": {
         "type": "object",

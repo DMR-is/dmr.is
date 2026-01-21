@@ -1195,6 +1195,7 @@
               "Forbidden",
               "BadRequest",
               "InternalServerError",
+              "ConnectionAcquireTimeoutError",
               "UnknownError"
             ],
             "example": [
@@ -1207,6 +1208,7 @@
               "Forbidden",
               "BadRequest",
               "InternalServerError",
+              "ConnectionAcquireTimeoutError",
               "UnknownError"
             ]
           },
@@ -1293,8 +1295,7 @@
           "subscribedTo": {
             "format": "date-time",
             "type": "string",
-            "nullable": true,
-            "description": "NULL means subscription is still active"
+            "nullable": true
           }
         },
         "required": [
