@@ -24,6 +24,7 @@ type Props = {
   onSuccessfulLookup?: (results: NationalIdLookupResults) => void
   onReset?: () => void
   onError?: (error: { title: string; message: string } | null) => void
+  onChange: (nationalId: string) => void
 }
 
 export const NationalIdLookup = ({
@@ -31,6 +32,7 @@ export const NationalIdLookup = ({
   onSuccessfulLookup,
   onReset,
   onError: setErrorMessage,
+  onChange,
 }: Props) => {
   const trpc = useTRPC()
   const { formState, clearErrors } =
@@ -62,7 +64,6 @@ export const NationalIdLookup = ({
           title: 'Ekki tókst að sækja upplýsingar fyrir kennitölu',
           message: 'Athugaðu hvort kennitala sé rétt.',
         })
-        onReset?.()
       },
     }),
   )
@@ -70,6 +71,7 @@ export const NationalIdLookup = ({
 
   const onChangeHandler = (val: string) => {
     clearErrors('fields.settlementFields.nationalId')
+    onChange(val)
     setNationalId(val)
   }
 

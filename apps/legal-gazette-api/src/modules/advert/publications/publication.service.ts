@@ -319,6 +319,7 @@ export class PublicationService implements IPublicationService {
       }
 
       await publication.update({ publishedAt: new Date() })
+      await Promise.all([publication.reload(), advert.reload()])
 
       this.logger.info(
         'Advert publication marked as published, emitting ADVERT_PUBLISHED event',
