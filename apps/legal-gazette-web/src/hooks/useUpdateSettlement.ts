@@ -201,10 +201,10 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
         },
         {
           onSuccess: () => {
-            toast.success('Frestur til að gera kröfu vistaður')
+            toast.success('Frestdagur vistaður')
           },
           onError: () => {
-            toast.error('Ekki tókst að vista frest til að gera kröfu')
+            toast.error('Ekki tókst að vista frestdag')
           },
         },
       )

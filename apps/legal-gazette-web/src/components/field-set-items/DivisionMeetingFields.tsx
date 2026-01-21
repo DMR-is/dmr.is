@@ -50,6 +50,7 @@ export const DivisionMeetingFields = ({
             backgroundColor="blue"
             locale="is"
             label="Dagsetning skiptafundar"
+            showTimeInput
             placeholderText=""
             selected={
               divisionMeetingDate ? new Date(divisionMeetingDate) : null
