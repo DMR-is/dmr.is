@@ -123,8 +123,9 @@ export class PgAdvisoryLockService {
     for (let i = 0; i < str.length; i++) {
       hash = (hash * 33) ^ str.charCodeAt(i)
     }
-    // Ensure positive 32-bit integer
-    return hash >>> 0
+    // Convert to signed 32-bit integer and ensure positive
+    // PostgreSQL's INTEGER type is signed (max: 2,147,483,647)
+    return Math.abs(hash | 0)
   }
 
   /**
