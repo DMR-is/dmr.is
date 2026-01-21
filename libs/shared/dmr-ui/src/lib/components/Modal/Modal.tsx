@@ -28,6 +28,7 @@ type Props = {
   children: React.ReactNode
   toggleClose?: () => void
   width?: 'small' | 'large'
+  allowOverflow?: boolean
 }
 
 export const Modal = ({
@@ -39,6 +40,7 @@ export const Modal = ({
   disclosure,
   children,
   width = 'large',
+  allowOverflow = false,
 }: Props) => {
   const columnSpan: SpanType =
     width === 'small'
@@ -62,7 +64,10 @@ export const Modal = ({
           <GridContainer>
             <GridRow>
               <GridColumn span={columnSpan} offset={columnOffset}>
-                <Box className={styles.modalContent}>
+                <Box
+                  className={styles.modalContent}
+                  style={{ overflowY: allowOverflow ? 'visible' : 'auto' }}
+                >
                   <Stack space={2}>
                     <Inline
                       justifyContent={title ? 'spaceBetween' : 'flexEnd'}

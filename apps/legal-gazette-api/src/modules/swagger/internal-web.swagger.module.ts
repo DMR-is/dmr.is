@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 
+import { SubscriberAdminControllerModule } from '../admin-subscribers/subscriber-admin.controller.module'
 import { AdvertControllerModule } from '../advert/advert.controller.module'
 import { IssuesControllerModule } from '../advert/issues/issues.controller.module'
 import { PublicationControllerModule } from '../advert/publications/publication.controller.module'
@@ -37,6 +38,7 @@ import { UserControllerModule } from '../users/users.controller.module'
     FeeCodeModule,
     SettlementControllerModule,
     UserControllerModule,
+    SubscriberAdminControllerModule,
     SignatureControllerModule,
     TBRCompanySettingsControllerModule,
     LGNationalRegistryControllerModule,

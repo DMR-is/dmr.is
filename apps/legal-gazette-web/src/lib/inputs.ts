@@ -37,3 +37,14 @@ export const createAdvertAndRecallBankruptcyApplicationInput =
 
 export const createAdvertAndDeceasedApplicationInput =
   recallDeceasedAnswersRefined.extend(applicantNationalId.shape)
+
+export const createSubscriberInput = z.object({
+  nationalId: z.string().min(10).max(10),
+  email: z.email().optional(),
+  subscribedTo: z.string(),
+})
+
+export const updateSubscriberEndDateInput = z.object({
+  subscriberId: z.string(),
+  subscribedTo: z.string(),
+})

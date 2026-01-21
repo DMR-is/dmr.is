@@ -21,6 +21,12 @@ export const MenuButton = () => {
       iconType: 'outline',
     },
     {
+      title: 'Áskrifendur',
+      href: '/stillingar/askrifendur',
+      icon: 'people',
+      iconType: 'outline',
+    },
+    {
       title: 'Greiðslur',
       href: '/greidslur',
       icon: 'card',
