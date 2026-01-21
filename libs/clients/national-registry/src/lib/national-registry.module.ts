@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 
+import { NationalRegistryService } from './national-registry.service'
 import { INationalRegistryService } from './national-registry.service.interface'
 
 @Module({
