@@ -126,6 +126,18 @@ export const ApplicationCard = ({ application }: Props) => {
 
   const canBeRemoved = publications.length == 0 && !allPublished && !rejected
 
+  const getStatusTagVariant = () => {
+    if (rejected) return 'red'
+    else if (allPublished) return 'mint'
+    else if (application.status === ApplicationStatusEnum.DRAFT) return 'blue'
+    else if (
+      application.status === ApplicationStatusEnum.SUBMITTED ||
+      statusText === 'Innsent'
+    )
+      return 'blueberry'
+    return 'mint'
+  }
+
   return (
     <Box borderRadius="large" border="standard" padding={3} background="white">
       <Stack space={0}>
@@ -144,20 +156,7 @@ export const ApplicationCard = ({ application }: Props) => {
                     </Tag>
                   ),
               )}
-            <Tag
-              variant={
-                rejected
-                  ? 'red'
-                  : allPublished
-                    ? 'mint'
-                    : application.status === ApplicationStatusEnum.DRAFT
-                      ? 'blue'
-                      : ApplicationStatusEnum.SUBMITTED
-                        ? 'blueberry'
-                        : 'mint'
-              }
-              disabled
-            >
+            <Tag variant={getStatusTagVariant()} disabled>
               {statusText}
             </Tag>
             {canBeRemoved && (
