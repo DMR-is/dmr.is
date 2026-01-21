@@ -78,9 +78,11 @@ export const advertsRouter = router({
         throw trpcError
       }
     }),
-  getAdvertsCount: protectedProcedure.query(async ({ ctx }) => {
-    return await ctx.api.getAdvertsCount()
-  }),
+  getAdvertsCount: protectedProcedure
+    .input(getAdvertsRequestSchema)
+    .query(async ({ ctx, input }) => {
+      return await ctx.api.getAdvertsCount(input)
+    }),
   getAdvertsInProgress: protectedProcedure
     .input(getAdvertsRequestSchema)
     .query(async ({ ctx, input }) => {

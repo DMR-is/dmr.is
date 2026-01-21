@@ -104,6 +104,7 @@ describe('AdvertService', () => {
     findByPkOrThrow: jest.Mock
     scope: jest.Mock
     findAndCountAll: jest.Mock
+    count: jest.Mock
   }
   let typeCategoriesService: jest.Mocked<ITypeCategoriesService>
 
@@ -1369,6 +1370,488 @@ describe('AdvertService', () => {
         const orderClause = callArgs.order[0]
 
         expect(orderClause[1]).toBe('desc')
+      })
+    })
+  })
+
+  // ==========================================
+  // getAdvertsCount - Tab-based counting with filters
+  // ==========================================
+  describe('getAdvertsCount', () => {
+    beforeEach(() => {
+      advertModel.unscoped = jest.fn().mockReturnThis()
+      advertModel.count = jest.fn()
+    })
+
+    describe('without filters', () => {
+      it('should count all tabs when no filters are provided', async () => {
+        // Arrange
+        advertModel.count = jest
+          .fn()
+          .mockResolvedValueOnce(15) // submitted + in_progress
+          .mockResolvedValueOnce(8) // ready_for_publication
+          .mockResolvedValueOnce(42) // published + rejected + withdrawn
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+        }
+
+        // Act
+        const result = await service.getAdvertsCount(query as any)
+
+        // Assert
+        expect(result).toEqual({
+          submittedTab: { count: 15 },
+          readyForPublicationTab: { count: 8 },
+          finishedTab: { count: 42 },
+        })
+        expect(advertModel.count).toHaveBeenCalledTimes(3)
+      })
+
+      it('should count adverts in submitted tab (SUBMITTED + IN_PROGRESS)', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(10)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+        }
+
+        // Act
+        await service.getAdvertsCount(query as any)
+
+        // Assert - First call should be for submitted tab with both statuses
+        const firstCall = (advertModel.count as jest.Mock).mock.calls[0][0]
+        expect(firstCall.where.statusId[Op.in]).toEqual([
+          StatusIdEnum.SUBMITTED,
+          StatusIdEnum.IN_PROGRESS,
+        ])
+      })
+
+      it('should count adverts in ready for publication tab', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(10)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+        }
+
+        // Act
+        await service.getAdvertsCount(query as any)
+
+        // Assert - Second call should be for ready for publication
+        const secondCall = (advertModel.count as jest.Mock).mock.calls[1][0]
+        expect(secondCall.where.statusId[Op.in]).toEqual([
+          StatusIdEnum.READY_FOR_PUBLICATION,
+        ])
+      })
+
+      it('should count adverts in finished tab (PUBLISHED + REJECTED + WITHDRAWN)', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(10)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+        }
+
+        // Act
+        await service.getAdvertsCount(query as any)
+
+        // Assert - Third call should be for finished tab with all terminal statuses
+        const thirdCall = (advertModel.count as jest.Mock).mock.calls[2][0]
+        expect(thirdCall.where.statusId[Op.in]).toEqual([
+          StatusIdEnum.PUBLISHED,
+          StatusIdEnum.REJECTED,
+          StatusIdEnum.WITHDRAWN,
+        ])
+      })
+    })
+
+    describe('with statusId filter', () => {
+      it('should only count submitted tab when statusId is SUBMITTED', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(5)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+          statusId: [StatusIdEnum.SUBMITTED],
+        }
+
+        // Act
+        const result = await service.getAdvertsCount(query as any)
+
+        // Assert
+        expect(result).toEqual({
+          submittedTab: { count: 5 },
+          readyForPublicationTab: { count: 0 },
+          finishedTab: { count: 0 },
+        })
+        expect(advertModel.count).toHaveBeenCalledTimes(1)
+      })
+
+      it('should only count submitted tab when statusId is IN_PROGRESS', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(3)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+          statusId: [StatusIdEnum.IN_PROGRESS],
+        }
+
+        // Act
+        const result = await service.getAdvertsCount(query as any)
+
+        // Assert
+        expect(result).toEqual({
+          submittedTab: { count: 3 },
+          readyForPublicationTab: { count: 0 },
+          finishedTab: { count: 0 },
+        })
+      })
+
+      it('should count both SUBMITTED and IN_PROGRESS when both are in statusId', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(12)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+          statusId: [StatusIdEnum.SUBMITTED, StatusIdEnum.IN_PROGRESS],
+        }
+
+        // Act
+        const result = await service.getAdvertsCount(query as any)
+
+        // Assert
+        expect(result.submittedTab.count).toBe(12)
+        const firstCall = (advertModel.count as jest.Mock).mock.calls[0][0]
+        expect(firstCall.where.statusId[Op.in]).toEqual([
+          StatusIdEnum.SUBMITTED,
+          StatusIdEnum.IN_PROGRESS,
+        ])
+      })
+
+      it('should only count ready for publication tab when statusId is READY_FOR_PUBLICATION', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(7)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+          statusId: [StatusIdEnum.READY_FOR_PUBLICATION],
+        }
+
+        // Act
+        const result = await service.getAdvertsCount(query as any)
+
+        // Assert
+        expect(result).toEqual({
+          submittedTab: { count: 0 },
+          readyForPublicationTab: { count: 7 },
+          finishedTab: { count: 0 },
+        })
+      })
+
+      it('should only count finished tab when statusId includes PUBLISHED', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(20)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+          statusId: [StatusIdEnum.PUBLISHED],
+        }
+
+        // Act
+        const result = await service.getAdvertsCount(query as any)
+
+        // Assert
+        expect(result).toEqual({
+          submittedTab: { count: 0 },
+          readyForPublicationTab: { count: 0 },
+          finishedTab: { count: 20 },
+        })
+      })
+
+      it('should count all finished statuses when multiple finished statuses provided', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(35)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+          statusId: [
+            StatusIdEnum.PUBLISHED,
+            StatusIdEnum.REJECTED,
+            StatusIdEnum.WITHDRAWN,
+          ],
+        }
+
+        // Act
+        const result = await service.getAdvertsCount(query as any)
+
+        // Assert
+        expect(result.finishedTab.count).toBe(35)
+        const firstCall = (advertModel.count as jest.Mock).mock.calls[0][0]
+        expect(firstCall.where.statusId[Op.in]).toEqual([
+          StatusIdEnum.PUBLISHED,
+          StatusIdEnum.REJECTED,
+          StatusIdEnum.WITHDRAWN,
+        ])
+      })
+    })
+
+    describe('with typeId filter', () => {
+      it('should apply typeId filter to all tabs', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(5)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+          typeId: ['type-1', 'type-2'],
+        }
+
+        // Act
+        await service.getAdvertsCount(query as any)
+
+        // Assert - All three calls should have typeId filter
+        const calls = (advertModel.count as jest.Mock).mock.calls
+        calls.forEach((call) => {
+          expect(call[0].where.typeId[Op.in]).toEqual(['type-1', 'type-2'])
+        })
+      })
+    })
+
+    describe('with categoryId filter', () => {
+      it('should apply categoryId filter to all tabs', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(5)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+          categoryId: ['category-1', 'category-2'],
+        }
+
+        // Act
+        await service.getAdvertsCount(query as any)
+
+        // Assert - All three calls should have categoryId filter
+        const calls = (advertModel.count as jest.Mock).mock.calls
+        calls.forEach((call) => {
+          expect(call[0].where.categoryId[Op.in]).toEqual([
+            'category-1',
+            'category-2',
+          ])
+        })
+      })
+    })
+
+    describe('with date filters', () => {
+      it('should apply date range filter to all tabs', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(5)
+
+        const dateFrom = new Date('2024-01-01')
+        const dateTo = new Date('2024-12-31')
+        const query = {
+          page: 1,
+          pageSize: 10,
+          dateFrom,
+          dateTo,
+        }
+
+        // Act
+        await service.getAdvertsCount(query as any)
+
+        // Assert - All three calls should have date range filter
+        const calls = (advertModel.count as jest.Mock).mock.calls
+        calls.forEach((call) => {
+          expect(call[0].where.createdAt[Op.between]).toEqual([
+            dateFrom,
+            dateTo,
+          ])
+        })
+      })
+
+      it('should apply dateFrom filter without dateTo', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(5)
+
+        const dateFrom = new Date('2024-01-01')
+        const query = {
+          page: 1,
+          pageSize: 10,
+          dateFrom,
+        }
+
+        // Act
+        await service.getAdvertsCount(query as any)
+
+        // Assert
+        const calls = (advertModel.count as jest.Mock).mock.calls
+        calls.forEach((call) => {
+          expect(call[0].where.createdAt[Op.gte]).toEqual(dateFrom)
+        })
+      })
+
+      it('should apply dateTo filter without dateFrom', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(5)
+
+        const dateTo = new Date('2024-12-31')
+        const query = {
+          page: 1,
+          pageSize: 10,
+          dateTo,
+        }
+
+        // Act
+        await service.getAdvertsCount(query as any)
+
+        // Assert
+        const calls = (advertModel.count as jest.Mock).mock.calls
+        calls.forEach((call) => {
+          expect(call[0].where.createdAt[Op.lte]).toEqual(dateTo)
+        })
+      })
+    })
+
+    describe('with search filter', () => {
+      it('should search by national ID when format matches', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(2)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: '123456-7890',
+        }
+
+        // Act
+        await service.getAdvertsCount(query as any)
+
+        // Assert - All tabs should search by createdByNationalId
+        const calls = (advertModel.count as jest.Mock).mock.calls
+        calls.forEach((call) => {
+          expect(call[0].where.createdByNationalId).toBe('1234567890')
+        })
+      })
+
+      it('should search by publication number when format matches', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(1)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: '123/2024',
+        }
+
+        // Act
+        await service.getAdvertsCount(query as any)
+
+        // Assert
+        const calls = (advertModel.count as jest.Mock).mock.calls
+        calls.forEach((call) => {
+          expect(call[0].where.publicationNumber).toBe('123/2024')
+        })
+      })
+
+      it('should use full-text search for non-matching format', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(5)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: 'test advert',
+        }
+
+        // Act
+        await service.getAdvertsCount(query as any)
+
+        // Assert - Should have Op.and conditions for multi-word search
+        const calls = (advertModel.count as jest.Mock).mock.calls
+        calls.forEach((call) => {
+          expect(call[0].where[Op.and]).toBeDefined()
+          expect(call[0].where[Op.and]).toHaveLength(2) // 'test' and 'advert'
+        })
+      })
+    })
+
+    describe('with combined filters', () => {
+      it('should apply all filters together', async () => {
+        // Arrange
+        advertModel.count = jest
+          .fn()
+          .mockResolvedValueOnce(3)
+          .mockResolvedValueOnce(1)
+          .mockResolvedValueOnce(8)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+          typeId: ['type-1'],
+          categoryId: ['category-1'],
+          search: 'test',
+          dateFrom: new Date('2024-01-01'),
+        }
+
+        // Act
+        const result = await service.getAdvertsCount(query as any)
+
+        // Assert
+        expect(result).toEqual({
+          submittedTab: { count: 3 },
+          readyForPublicationTab: { count: 1 },
+          finishedTab: { count: 8 },
+        })
+
+        // Verify all filters are applied
+        const calls = (advertModel.count as jest.Mock).mock.calls
+        calls.forEach((call) => {
+          expect(call[0].where).toHaveProperty('typeId')
+          expect(call[0].where).toHaveProperty('categoryId')
+          expect(call[0].where).toHaveProperty('createdAt')
+          expect(call[0].where[Op.and]).toBeDefined()
+        })
+      })
+
+      it('should combine statusId filter with other filters correctly', async () => {
+        // Arrange
+        advertModel.count = jest.fn().mockResolvedValue(4)
+
+        const query = {
+          page: 1,
+          pageSize: 10,
+          statusId: [StatusIdEnum.PUBLISHED],
+          typeId: ['type-1'],
+          search: '123/2024',
+        }
+
+        // Act
+        const result = await service.getAdvertsCount(query as any)
+
+        // Assert
+        expect(result).toEqual({
+          submittedTab: { count: 0 },
+          readyForPublicationTab: { count: 0 },
+          finishedTab: { count: 4 },
+        })
+
+        // Only finished tab should be counted
+        expect(advertModel.count).toHaveBeenCalledTimes(1)
+        const call = (advertModel.count as jest.Mock).mock.calls[0][0]
+        expect(call.where.statusId[Op.in]).toEqual([StatusIdEnum.PUBLISHED])
+        expect(call.where.typeId[Op.in]).toEqual(['type-1'])
+        expect(call.where.publicationNumber).toBe('123/2024')
       })
     })
   })

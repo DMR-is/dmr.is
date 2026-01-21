@@ -50,6 +50,10 @@ import { ILGNationalRegistryService } from '../national-registry/national-regist
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
 import { IAdvertService } from './advert.service.interface'
 
+// Search pattern constants
+const NATIONAL_ID_PATTERN = /^\d{6}-?\d{4}$/
+const PUBLICATION_NUMBER_PATTERN = /^\d+\/\d{4}$/
+
 const LOGGING_CONTEXT = 'AdvertService'
 @Injectable()
 export class AdvertService implements IAdvertService {
@@ -812,55 +816,175 @@ export class AdvertService implements IAdvertService {
     return updated.fromModelToDetailed()
   }
 
-  async getAdvertsCount(): Promise<GetAdvertsStatusCounterDto> {
-    const submittedCount = this.advertModel
-      .unscoped()
-      .countByStatus(StatusIdEnum.SUBMITTED)
-    const inProgressCount = this.advertModel
-      .unscoped()
-      .countByStatus(StatusIdEnum.IN_PROGRESS)
-    const readyForPublicationCount = this.advertModel
-      .unscoped()
-      .countByStatus(StatusIdEnum.READY_FOR_PUBLICATION)
+  async getAdvertsCount(
+    query: GetAdvertsQueryDto,
+  ): Promise<GetAdvertsStatusCounterDto> {
+    // Build where options with the same filters as getAdverts
+    const whereOptions: WhereOptions = {}
 
-    const publishedCount = this.advertModel
-      .unscoped()
-      .countByStatus(StatusIdEnum.PUBLISHED)
-
-    const rejectedCount = this.advertModel
-      .unscoped()
-      .countByStatus(StatusIdEnum.REJECTED)
-
-    const withdrawnCount = this.advertModel
-      .unscoped()
-      .countByStatus(StatusIdEnum.WITHDRAWN)
-
-    const [
-      submitted,
-      inProgress,
-      readyForPublication,
-      published,
-      rejected,
-      withdrawn,
-    ] = await Promise.all([
-      submittedCount,
-      inProgressCount,
-      readyForPublicationCount,
-      publishedCount,
-      rejectedCount,
-      withdrawnCount,
-    ])
-
-    return {
-      submitted: {
-        ...submitted,
-        count: submitted.count + inProgress.count,
-      },
-      readyForPublication,
-      rejected,
-      published,
-      withdrawn,
+    if (query.typeId) {
+      Object.assign(whereOptions, { typeId: { [Op.in]: query.typeId } })
     }
+
+    if (query.categoryId) {
+      Object.assign(whereOptions, { categoryId: { [Op.in]: query.categoryId } })
+    }
+
+    if (query.dateFrom && query.dateTo) {
+      Object.assign(whereOptions, {
+        createdAt: {
+          [Op.between]: [query.dateFrom, query.dateTo],
+        },
+      })
+    }
+
+    if (query.dateFrom && !query.dateTo) {
+      Object.assign(whereOptions, {
+        createdAt: {
+          [Op.gte]: query.dateFrom,
+        },
+      })
+    }
+
+    if (!query.dateFrom && query.dateTo) {
+      Object.assign(whereOptions, {
+        createdAt: {
+          [Op.lte]: query.dateTo,
+        },
+      })
+    }
+
+    if (query.search) {
+      const searchTerm = query.search.trim()
+
+      // Check if it looks like a national ID (10 digits, optionally with dash)
+      const isNationalIdFormat = NATIONAL_ID_PATTERN.test(searchTerm)
+
+      // Check if it looks like a publication number (e.g., "123/2024")
+      const isPublicationNumber = PUBLICATION_NUMBER_PATTERN.test(searchTerm)
+
+      if (isNationalIdFormat) {
+        // Exact national ID search (fast with index)
+        const cleanedId = searchTerm.replace('-', '')
+        Object.assign(whereOptions, {
+          createdByNationalId: cleanedId,
+        })
+      } else if (isPublicationNumber) {
+        // Exact publication number search (fast with index)
+        Object.assign(whereOptions, {
+          publicationNumber: searchTerm,
+        })
+      } else {
+        // Full-text search for content
+        const searchWords = searchTerm
+          .split(/\s+/)
+          .filter((word) => word.length > 0)
+
+        // Build AND conditions for multi-word search
+        const searchConditions = searchWords.map((word) => ({
+          [Op.or]: [
+            { title: { [Op.iLike]: `%${word}%` } },
+            { content: { [Op.iLike]: `%${word}%` } },
+            { caption: { [Op.iLike]: `%${word}%` } },
+            { additionalText: { [Op.iLike]: `%${word}%` } },
+            { createdBy: { [Op.iLike]: `%${word}%` } },
+          ],
+        }))
+
+        Object.assign(whereOptions, {
+          [Op.and]: searchConditions,
+        })
+      }
+    }
+
+    // Determine which tab statuses to count based on statusId filter
+    const submittedTabStatuses = [
+      StatusIdEnum.SUBMITTED,
+      StatusIdEnum.IN_PROGRESS,
+    ]
+    const readyForPublicationTabStatuses = [StatusIdEnum.READY_FOR_PUBLICATION]
+    const finishedTabStatuses = [
+      StatusIdEnum.PUBLISHED,
+      StatusIdEnum.REJECTED,
+      StatusIdEnum.WITHDRAWN,
+    ]
+
+    let countSubmittedTab = true
+    let countReadyForPublicationTab = true
+    let countFinishedTab = true
+
+    // If statusId filter is provided, only count relevant tabs
+    if (query.statusId && query.statusId.length > 0) {
+      const hasSubmittedStatus = query.statusId.some((id) =>
+        submittedTabStatuses.includes(id as StatusIdEnum),
+      )
+      const hasReadyStatus = query.statusId.some((id) =>
+        readyForPublicationTabStatuses.includes(id as StatusIdEnum),
+      )
+      const hasFinishedStatus = query.statusId.some((id) =>
+        finishedTabStatuses.includes(id as StatusIdEnum),
+      )
+
+      countSubmittedTab = hasSubmittedStatus
+      countReadyForPublicationTab = hasReadyStatus
+      countFinishedTab = hasFinishedStatus
+    }
+
+    // Count for each tab
+    const submittedTabCount = countSubmittedTab
+      ? await this.advertModel.unscoped().count({
+          where: {
+            ...whereOptions,
+            statusId: {
+              [Op.in]: query.statusId?.length
+                ? query.statusId.filter((id) =>
+                    submittedTabStatuses.includes(id as StatusIdEnum),
+                  )
+                : submittedTabStatuses,
+            },
+          },
+        })
+      : 0
+
+    const readyForPublicationTabCount = countReadyForPublicationTab
+      ? await this.advertModel.unscoped().count({
+          where: {
+            ...whereOptions,
+            statusId: {
+              [Op.in]: readyForPublicationTabStatuses,
+            },
+          },
+        })
+      : 0
+
+    const finishedTabCount = countFinishedTab
+      ? await this.advertModel.unscoped().count({
+          where: {
+            ...whereOptions,
+            statusId: {
+              [Op.in]: query.statusId?.length
+                ? query.statusId.filter((id) =>
+                    finishedTabStatuses.includes(id as StatusIdEnum),
+                  )
+                : finishedTabStatuses,
+            },
+          },
+        })
+      : 0
+
+    const dto = {
+      submittedTab: {
+        count: submittedTabCount,
+      },
+      readyForPublicationTab: {
+        count: readyForPublicationTabCount,
+      },
+      finishedTab: {
+        count: finishedTabCount,
+      },
+    }
+
+    return dto
   }
 
   async getAdverts(query: GetAdvertsQueryDto): Promise<GetAdvertsDto> {
@@ -911,10 +1035,10 @@ export class AdvertService implements IAdvertService {
       const searchTerm = query.search.trim()
 
       // Check if it looks like a national ID (10 digits, optionally with dash)
-      const isNationalIdFormat = /^\d{6}-?\d{4}$/.test(searchTerm)
+      const isNationalIdFormat = NATIONAL_ID_PATTERN.test(searchTerm)
 
       // Check if it looks like a publication number (e.g., "123/2024")
-      const isPublicationNumber = /^\d+\/\d{4}$/.test(searchTerm)
+      const isPublicationNumber = PUBLICATION_NUMBER_PATTERN.test(searchTerm)
 
       if (isNationalIdFormat) {
         // Exact national ID search (fast with index)
