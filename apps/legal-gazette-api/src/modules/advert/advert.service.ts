@@ -50,6 +50,10 @@ import { ILGNationalRegistryService } from '../national-registry/national-regist
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
 import { IAdvertService } from './advert.service.interface'
 
+// Search pattern constants
+const NATIONAL_ID_PATTERN = /^\d{6}-?\d{4}$/
+const PUBLICATION_NUMBER_PATTERN = /^\d+\/\d{4}$/
+
 const LOGGING_CONTEXT = 'AdvertService'
 @Injectable()
 export class AdvertService implements IAdvertService {
@@ -854,10 +858,10 @@ export class AdvertService implements IAdvertService {
       const searchTerm = query.search.trim()
 
       // Check if it looks like a national ID (10 digits, optionally with dash)
-      const isNationalIdFormat = /^\d{6}-?\d{4}$/.test(searchTerm)
+      const isNationalIdFormat = NATIONAL_ID_PATTERN.test(searchTerm)
 
       // Check if it looks like a publication number (e.g., "123/2024")
-      const isPublicationNumber = /^\d+\/\d{4}$/.test(searchTerm)
+      const isPublicationNumber = PUBLICATION_NUMBER_PATTERN.test(searchTerm)
 
       if (isNationalIdFormat) {
         // Exact national ID search (fast with index)
@@ -1031,10 +1035,10 @@ export class AdvertService implements IAdvertService {
       const searchTerm = query.search.trim()
 
       // Check if it looks like a national ID (10 digits, optionally with dash)
-      const isNationalIdFormat = /^\d{6}-?\d{4}$/.test(searchTerm)
+      const isNationalIdFormat = NATIONAL_ID_PATTERN.test(searchTerm)
 
       // Check if it looks like a publication number (e.g., "123/2024")
-      const isPublicationNumber = /^\d+\/\d{4}$/.test(searchTerm)
+      const isPublicationNumber = PUBLICATION_NUMBER_PATTERN.test(searchTerm)
 
       if (isNationalIdFormat) {
         // Exact national ID search (fast with index)
