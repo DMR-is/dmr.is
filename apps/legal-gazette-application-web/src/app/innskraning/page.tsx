@@ -76,8 +76,8 @@ export default function Login() {
                       ítarlegri upplýsingar
                     </LinkV2>
                   </Text>{' '}
-                  um innskráningu ásamt umboðsvirkni ef notanda vill senda
-                  auglýsingu í nafni fyrirtækis.
+                  um innskráningu ásamt umboðsvirkni ef notandi/innsendandi vill
+                  senda auglýsingu í nafni fyrirtækis.
                 </Text>
               </Box>
             </Stack>

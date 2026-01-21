@@ -277,7 +277,7 @@ export default function Page() {
 
             <Stack space={3}>
               <Text variant="h3">
-                Myndbönd með leiðbeiningum fyrir aulýsingakerfi
+                Myndbönd með leiðbeiningum fyrir auglýsingakerfi
               </Text>
               <VideoIframe
                 src="https://www.youtube.com/embed/Dxd9emfI7Tw?si=EnBnrk7xrKuCwbl7"
