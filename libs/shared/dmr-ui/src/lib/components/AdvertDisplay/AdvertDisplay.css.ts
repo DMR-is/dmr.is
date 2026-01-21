@@ -31,7 +31,7 @@ globalStyle(
   `${bodyText} table td, ${bodyText} table th, .advertContent table td, .advertContent table th`,
   {
     border: 'none',
-    padding: '.125em .5em .125em 0',
+    padding: '.25em .5em .25em 0',
   },
 )
 
@@ -85,11 +85,11 @@ globalStyle(`${legacyText} .advertText td`, {
 globalStyle(`${legacyText} strong, ${legacyText} b`, {
   fontWeight: 'bold',
 })
-globalStyle(`${legacyText} .advertType`, {
+globalStyle(`${legacyText} .advertType, ${bodyText} .advertType`, {
   fontSize: '1.2em',
   fontWeight: 'bold',
 })
-globalStyle(`${legacyText} .advertType > td`, {
+globalStyle(`${legacyText} .advertType > td, ${bodyText} .advertType > td`, {
   paddingBottom: '4px',
 })
 globalStyle(`${legacyText} table `, {

@@ -908,25 +908,66 @@ export class AdvertService implements IAdvertService {
     }
 
     if (query.search) {
-      Object.assign(whereOptions, {
-        [Op.or]: [
-          { title: { [Op.iLike]: `%${query.search}%` } },
-          { content: { [Op.iLike]: `%${query.search}%` } },
-          { caption: { [Op.iLike]: `%${query.search}%` } },
-        ],
-      })
+      const searchTerm = query.search.trim()
+
+      // Check if it looks like a national ID (10 digits, optionally with dash)
+      const isNationalIdFormat = /^\d{6}-?\d{4}$/.test(searchTerm)
+
+      // Check if it looks like a publication number (e.g., "123/2024")
+      const isPublicationNumber = /^\d+\/\d{4}$/.test(searchTerm)
+
+      if (isNationalIdFormat) {
+        // Exact national ID search (fast with index)
+        const cleanedId = searchTerm.replace('-', '')
+        Object.assign(whereOptions, {
+          createdByNationalId: cleanedId,
+        })
+      } else if (isPublicationNumber) {
+        // Exact publication number search (fast with index)
+        Object.assign(whereOptions, {
+          publicationNumber: searchTerm,
+        })
+      } else {
+        // Full-text search for content
+        const searchWords = searchTerm
+          .split(/\s+/)
+          .filter((word) => word.length > 0)
+
+        // Build AND conditions for multi-word search
+        const searchConditions = searchWords.map((word) => ({
+          [Op.or]: [
+            { title: { [Op.iLike]: `%${word}%` } },
+            { content: { [Op.iLike]: `%${word}%` } },
+            { caption: { [Op.iLike]: `%${word}%` } },
+            { additionalText: { [Op.iLike]: `%${word}%` } },
+            { createdBy: { [Op.iLike]: `%${word}%` } },
+          ],
+        }))
+
+        Object.assign(whereOptions, {
+          [Op.and]: searchConditions,
+        })
+      }
     }
 
     const order: Order = []
     const direction = query.direction || 'desc'
 
     if (query.sortBy === 'birting') {
+      // Sort by next scheduled publication (published_at IS NULL) first,
+      // then by latest published publication
+      // This ensures upcoming publications are prioritized
       order.push([
-        {
-          model: AdvertPublicationModel,
-          as: 'publications',
-        },
-        'scheduledAt',
+        this.sequelize.literal(`
+          (
+            SELECT COALESCE(
+              MIN(CASE WHEN "published_at" IS NULL THEN "scheduled_at" END),
+              MAX("published_at")
+            )
+            FROM "advert_publication" AS "publications"
+            WHERE "publications"."advert_id" = "AdvertModel"."id"
+          )
+        `),
         direction,
       ])
     } else {

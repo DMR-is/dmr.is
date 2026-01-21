@@ -1,3 +1,4 @@
+import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
 import { EventEmitter2 } from '@nestjs/event-emitter'
@@ -101,6 +102,8 @@ describe('AdvertService', () => {
     withScope: jest.Mock
     unscoped: jest.Mock
     findByPkOrThrow: jest.Mock
+    scope: jest.Mock
+    findAndCountAll: jest.Mock
   }
   let typeCategoriesService: jest.Mocked<ITypeCategoriesService>
 
@@ -117,6 +120,8 @@ describe('AdvertService', () => {
       findOne: jest.fn(),
       count: jest.fn(),
       countByStatus: jest.fn(),
+      scope: jest.fn().mockReturnThis(),
+      findAndCountAll: jest.fn(),
     }
 
     // Mock TypeCategoriesService
@@ -192,6 +197,7 @@ describe('AdvertService', () => {
               }
               return callback(mockTransaction)
             }),
+            literal: jest.fn((sql: string) => ({ val: sql })),
           },
         },
       ],
@@ -582,7 +588,10 @@ describe('AdvertService', () => {
     describe('when advert is REJECTED and user is assigned', () => {
       it('should successfully reactivate the advert to IN_PROGRESS status', async () => {
         // Arrange
-        const mockUser = createMockUser({ id: 'user-123', nationalId: '1234567890' })
+        const mockUser = createMockUser({
+          id: 'user-123',
+          nationalId: '1234567890',
+        })
         const rejectedAdvert = createMockAdvert({
           id: 'advert-123',
           statusId: StatusIdEnum.REJECTED,
@@ -592,7 +601,9 @@ describe('AdvertService', () => {
         userModel.unscoped.mockReturnThis()
         userModel.findOneOrThrow = jest.fn().mockResolvedValue(mockUser)
         advertModel.unscoped.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(rejectedAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(rejectedAdvert)
 
         const currentUser = createMockDMRUser('1234567890')
 
@@ -607,7 +618,10 @@ describe('AdvertService', () => {
 
       it('should emit STATUS_CHANGED event after successful reactivation', async () => {
         // Arrange
-        const mockUser = createMockUser({ id: 'user-123', nationalId: '1234567890' })
+        const mockUser = createMockUser({
+          id: 'user-123',
+          nationalId: '1234567890',
+        })
         const rejectedAdvert = createMockAdvert({
           id: 'advert-123',
           statusId: StatusIdEnum.REJECTED,
@@ -617,7 +631,9 @@ describe('AdvertService', () => {
         userModel.unscoped.mockReturnThis()
         userModel.findOneOrThrow = jest.fn().mockResolvedValue(mockUser)
         advertModel.unscoped.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(rejectedAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(rejectedAdvert)
 
         const currentUser = createMockDMRUser('1234567890')
 
@@ -640,39 +656,51 @@ describe('AdvertService', () => {
       it.each([
         { status: StatusIdEnum.SUBMITTED, name: 'SUBMITTED' },
         { status: StatusIdEnum.IN_PROGRESS, name: 'IN_PROGRESS' },
-        { status: StatusIdEnum.READY_FOR_PUBLICATION, name: 'READY_FOR_PUBLICATION' },
+        {
+          status: StatusIdEnum.READY_FOR_PUBLICATION,
+          name: 'READY_FOR_PUBLICATION',
+        },
         { status: StatusIdEnum.PUBLISHED, name: 'PUBLISHED' },
         { status: StatusIdEnum.WITHDRAWN, name: 'WITHDRAWN' },
-      ])('should throw BadRequestException when status is $name', async ({ status }) => {
-        // Arrange
-        const mockUser = createMockUser({ id: 'user-123', nationalId: '1234567890' })
-        const advert = createMockAdvert({
-          id: 'advert-123',
-          statusId: status,
-          assignedUserId: 'user-123',
-        })
+      ])(
+        'should throw BadRequestException when status is $name',
+        async ({ status }) => {
+          // Arrange
+          const mockUser = createMockUser({
+            id: 'user-123',
+            nationalId: '1234567890',
+          })
+          const advert = createMockAdvert({
+            id: 'advert-123',
+            statusId: status,
+            assignedUserId: 'user-123',
+          })
 
-        userModel.unscoped.mockReturnThis()
-        userModel.findOneOrThrow = jest.fn().mockResolvedValue(mockUser)
-        advertModel.unscoped.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(advert)
+          userModel.unscoped.mockReturnThis()
+          userModel.findOneOrThrow = jest.fn().mockResolvedValue(mockUser)
+          advertModel.unscoped.mockReturnThis()
+          advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(advert)
 
-        const currentUser = createMockDMRUser('1234567890')
+          const currentUser = createMockDMRUser('1234567890')
 
-        // Act & Assert
-        await expect(
-          service.reactivateAdvert('advert-123', currentUser as any),
-        ).rejects.toThrow('Only rejected adverts can be reactivated')
+          // Act & Assert
+          await expect(
+            service.reactivateAdvert('advert-123', currentUser as any),
+          ).rejects.toThrow('Only rejected adverts can be reactivated')
 
-        // Verify update was NOT called
-        expect(advert.update).not.toHaveBeenCalled()
-      })
+          // Verify update was NOT called
+          expect(advert.update).not.toHaveBeenCalled()
+        },
+      )
     })
 
     describe('when user is not assigned to the advert', () => {
       it('should throw BadRequestException when user is not assigned', async () => {
         // Arrange
-        const mockUser = createMockUser({ id: 'user-123', nationalId: '1234567890' })
+        const mockUser = createMockUser({
+          id: 'user-123',
+          nationalId: '1234567890',
+        })
         const rejectedAdvert = createMockAdvert({
           id: 'advert-123',
           statusId: StatusIdEnum.REJECTED,
@@ -682,7 +710,9 @@ describe('AdvertService', () => {
         userModel.unscoped.mockReturnThis()
         userModel.findOneOrThrow = jest.fn().mockResolvedValue(mockUser)
         advertModel.unscoped.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(rejectedAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(rejectedAdvert)
 
         const currentUser = createMockDMRUser('1234567890')
 
@@ -697,7 +727,10 @@ describe('AdvertService', () => {
 
       it('should throw BadRequestException when no user is assigned', async () => {
         // Arrange
-        const mockUser = createMockUser({ id: 'user-123', nationalId: '1234567890' })
+        const mockUser = createMockUser({
+          id: 'user-123',
+          nationalId: '1234567890',
+        })
         const rejectedAdvert = createMockAdvert({
           id: 'advert-123',
           statusId: StatusIdEnum.REJECTED,
@@ -707,7 +740,9 @@ describe('AdvertService', () => {
         userModel.unscoped.mockReturnThis()
         userModel.findOneOrThrow = jest.fn().mockResolvedValue(mockUser)
         advertModel.unscoped.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(rejectedAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(rejectedAdvert)
 
         const currentUser = createMockDMRUser('1234567890')
 
@@ -724,7 +759,10 @@ describe('AdvertService', () => {
     describe('error handling', () => {
       it('should include BadRequestException type in status validation error', async () => {
         // Arrange
-        const mockUser = createMockUser({ id: 'user-123', nationalId: '1234567890' })
+        const mockUser = createMockUser({
+          id: 'user-123',
+          nationalId: '1234567890',
+        })
         const submittedAdvert = createMockAdvert({
           statusId: StatusIdEnum.SUBMITTED,
           assignedUserId: 'user-123',
@@ -733,7 +771,9 @@ describe('AdvertService', () => {
         userModel.unscoped.mockReturnThis()
         userModel.findOneOrThrow = jest.fn().mockResolvedValue(mockUser)
         advertModel.unscoped.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(submittedAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(submittedAdvert)
 
         const currentUser = createMockDMRUser('1234567890')
 
@@ -749,7 +789,10 @@ describe('AdvertService', () => {
 
       it('should include BadRequestException type in authorization error', async () => {
         // Arrange
-        const mockUser = createMockUser({ id: 'user-123', nationalId: '1234567890' })
+        const mockUser = createMockUser({
+          id: 'user-123',
+          nationalId: '1234567890',
+        })
         const rejectedAdvert = createMockAdvert({
           statusId: StatusIdEnum.REJECTED,
           assignedUserId: 'different-user',
@@ -758,7 +801,9 @@ describe('AdvertService', () => {
         userModel.unscoped.mockReturnThis()
         userModel.findOneOrThrow = jest.fn().mockResolvedValue(mockUser)
         advertModel.unscoped.mockReturnThis()
-        advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(rejectedAdvert)
+        advertModel.findByPkOrThrow = jest
+          .fn()
+          .mockResolvedValue(rejectedAdvert)
 
         const currentUser = createMockDMRUser('1234567890')
 
@@ -770,6 +815,560 @@ describe('AdvertService', () => {
           expect(error).toBeInstanceOf(Error)
           expect((error as Error).name).toBe('BadRequestException')
         }
+      })
+    })
+  })
+
+  describe('getAdverts', () => {
+    const mockAdverts = [
+      {
+        id: 'advert-1',
+        title: 'Innköllun þrotabús',
+        content: '<p>Þrotabú content</p>',
+        createdByNationalId: '1234567890',
+        publicationNumber: '123/2024',
+        fromModel: jest.fn().mockReturnValue({
+          id: 'advert-1',
+          title: 'Innköllun þrotabús',
+        }),
+      },
+      {
+        id: 'advert-2',
+        title: 'Skipti dánarbús',
+        content: '<p>Dánarbú content</p>',
+        createdByNationalId: '0987654321',
+        publicationNumber: '456/2024',
+        fromModel: jest.fn().mockReturnValue({
+          id: 'advert-2',
+          title: 'Skipti dánarbús',
+        }),
+      },
+    ]
+
+    beforeEach(() => {
+      advertModel.scope = jest.fn().mockReturnThis()
+      advertModel.findAndCountAll = jest.fn().mockResolvedValue({
+        rows: mockAdverts,
+        count: mockAdverts.length,
+      })
+    })
+
+    describe('search by national ID', () => {
+      it('should search by exact national ID when format matches (with dash)', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: '123456-7890',
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        expect(advertModel.findAndCountAll).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              createdByNationalId: '1234567890',
+            }),
+          }),
+        )
+      })
+
+      it('should search by exact national ID when format matches (without dash)', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: '1234567890',
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        expect(advertModel.findAndCountAll).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              createdByNationalId: '1234567890',
+            }),
+          }),
+        )
+      })
+
+      it('should NOT use national ID search for partial numbers', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: '12345', // Only 5 digits
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert - Should use text search instead
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        expect(callArgs.where).not.toHaveProperty('createdByNationalId')
+      })
+    })
+
+    describe('search by publication number', () => {
+      it('should search by exact publication number when format matches', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: '123/2024',
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        expect(advertModel.findAndCountAll).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              publicationNumber: '123/2024',
+            }),
+          }),
+        )
+      })
+
+      it('should NOT use publication number search for invalid format', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: '123/24', // Invalid year format
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert - Should use text search instead
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        expect(callArgs.where).not.toHaveProperty('publicationNumber')
+      })
+    })
+
+    describe('text search', () => {
+      it('should search across multiple fields for single word', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: 'þrotabú',
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        const whereConditions = callArgs.where
+
+        // Should have Op.and with one condition
+        expect(whereConditions[Op.and]).toBeDefined()
+        const andConditions = whereConditions[Op.and]
+        expect(andConditions).toHaveLength(1)
+
+        // The condition should have Op.or for multiple fields
+        const orCondition = andConditions[0]
+        expect(orCondition[Op.or]).toBeDefined()
+        const orFields = orCondition[Op.or]
+
+        // Should search in 5 fields
+        expect(orFields).toHaveLength(5)
+      })
+
+      it('should use AND logic for multi-word search', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: 'Jón Jónsson þrotabú',
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        const whereConditions = callArgs.where
+
+        // Should have Op.and with 3 conditions (one per word)
+        expect(whereConditions[Op.and]).toBeDefined()
+        const andConditions = whereConditions[Op.and]
+        expect(andConditions).toHaveLength(3)
+
+        // Each word should have its own OR conditions across fields
+        andConditions.forEach((condition: any) => {
+          expect(condition[Op.or]).toBeDefined()
+          expect(condition[Op.or]).toHaveLength(5)
+        })
+      })
+
+      it('should filter out empty strings from multi-word search', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: '  Jón   Jónsson  ', // Extra spaces
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        const whereConditions = callArgs.where
+
+        // Should have 2 conditions (ignoring empty strings from spaces)
+        expect(whereConditions[Op.and]).toBeDefined()
+        const andConditions = whereConditions[Op.and]
+        expect(andConditions).toHaveLength(2)
+      })
+
+      it('should search in title field', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: 'test',
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        const orCondition = callArgs.where[Op.and][0][Op.or]
+
+        expect(
+          orCondition.some((field: any) =>
+            Object.prototype.hasOwnProperty.call(field, 'title'),
+          ),
+        ).toBe(true)
+      })
+
+      it('should search in content field', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: 'test',
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        const orCondition = callArgs.where[Op.and][0][Op.or]
+
+        expect(
+          orCondition.some((field: any) =>
+            Object.prototype.hasOwnProperty.call(field, 'content'),
+          ),
+        ).toBe(true)
+      })
+
+      it('should search in caption field', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: 'test',
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        const orCondition = callArgs.where[Op.and][0][Op.or]
+
+        expect(
+          orCondition.some((field: any) =>
+            Object.prototype.hasOwnProperty.call(field, 'caption'),
+          ),
+        ).toBe(true)
+      })
+
+      it('should search in additionalText field', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: 'test',
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        const orCondition = callArgs.where[Op.and][0][Op.or]
+
+        expect(
+          orCondition.some((field: any) =>
+            Object.prototype.hasOwnProperty.call(field, 'additionalText'),
+          ),
+        ).toBe(true)
+      })
+
+      it('should search in createdBy field', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: 'test',
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        const orCondition = callArgs.where[Op.and][0][Op.or]
+
+        expect(
+          orCondition.some((field: any) =>
+            Object.prototype.hasOwnProperty.call(field, 'createdBy'),
+          ),
+        ).toBe(true)
+      })
+    })
+
+    describe('combined filters with search', () => {
+      it('should combine search with typeId filter', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: 'þrotabú',
+          typeId: ['type-1', 'type-2'],
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        expect(callArgs.where).toHaveProperty('typeId')
+        expect(callArgs.where[Op.and]).toBeDefined()
+      })
+
+      it('should combine search with statusId filter', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: '1234567890',
+          statusId: [StatusIdEnum.PUBLISHED],
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        expect(callArgs.where).toHaveProperty('statusId')
+        expect(callArgs.where).toHaveProperty('createdByNationalId')
+      })
+
+      it('should combine search with date filters', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: '123/2024',
+          dateFrom: new Date('2024-01-01'),
+          dateTo: new Date('2024-12-31'),
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        expect(callArgs.where).toHaveProperty('createdAt')
+        expect(callArgs.where).toHaveProperty('publicationNumber')
+      })
+    })
+
+    describe('no search term', () => {
+      it('should not add search conditions when search is empty', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: '',
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        expect(callArgs.where[Op.and]).toBeUndefined()
+        expect(callArgs.where).not.toHaveProperty('createdByNationalId')
+        expect(callArgs.where).not.toHaveProperty('publicationNumber')
+      })
+
+      it('should not add search conditions when search is undefined', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        expect(callArgs.where[Op.and]).toBeUndefined()
+        expect(callArgs.where).not.toHaveProperty('createdByNationalId')
+        expect(callArgs.where).not.toHaveProperty('publicationNumber')
+      })
+    })
+
+    describe('pagination and results', () => {
+      it('should return paginated results with correct structure', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          search: 'þrotabú',
+        }
+
+        // Act
+        const result = await service.getAdverts(query as any)
+
+        // Assert
+        expect(result).toHaveProperty('adverts')
+        expect(result).toHaveProperty('paging')
+        expect(result.adverts).toHaveLength(2)
+        expect(result.paging).toHaveProperty('page', 1)
+        expect(result.paging).toHaveProperty('pageSize', 10)
+      })
+
+      it('should apply limit and offset correctly', async () => {
+        // Arrange
+        const query = {
+          page: 2,
+          pageSize: 5,
+          search: 'test',
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        expect(advertModel.findAndCountAll).toHaveBeenCalledWith(
+          expect.objectContaining({
+            limit: 5,
+            offset: 5,
+          }),
+        )
+      })
+    })
+
+    describe('sorting', () => {
+      it('should sort by createdAt when sortBy is not specified', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        expect(callArgs.order).toEqual([['createdAt', 'desc']])
+      })
+
+      it('should sort by createdAt when sortBy is explicitly set to createdAt', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          sortBy: 'createdAt',
+          direction: 'asc',
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        expect(callArgs.order).toEqual([['createdAt', 'asc']])
+      })
+
+      it('should use SQL subquery for birting sort to prioritize next scheduled publication', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          sortBy: 'birting',
+          direction: 'asc',
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        const orderClause = callArgs.order[0]
+
+        // Should use literal SQL with COALESCE for smart date selection
+        expect(orderClause[0]).toHaveProperty('val')
+        expect(orderClause[0].val).toContain('COALESCE')
+        expect(orderClause[0].val).toContain('MIN(CASE WHEN')
+        expect(orderClause[0].val).toContain('"published_at" IS NULL')
+        expect(orderClause[0].val).toContain('MAX')
+        expect(orderClause[1]).toBe('asc')
+      })
+
+      it('should use descending order by default for birting sort', async () => {
+        // Arrange
+        const query = {
+          page: 1,
+          pageSize: 10,
+          sortBy: 'birting',
+        }
+
+        // Act
+        await service.getAdverts(query as any)
+
+        // Assert
+        const callArgs = (advertModel.findAndCountAll as jest.Mock).mock
+          .calls[0][0]
+        const orderClause = callArgs.order[0]
+
+        expect(orderClause[1]).toBe('desc')
       })
     })
   })

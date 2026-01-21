@@ -82,25 +82,21 @@ export const LandingPageContent = (props: { baseUrl: string }) => {
                       einnig aðgengilegt á netinu þar sem hægt er að nálgast öll
                       tölublöð sem komið hafa út frá 1. janúar 2001.
                     </Text>
-                    <Text variant="intro" marginTop={2}>
+                    <Text variant="h5" marginTop={2}>
                       Hér má sjá{' '}
-                      <Text
-                        color="blue400"
-                        as="span"
-                        fontWeight="medium"
-                        variant="intro"
-                      >
+                      <Box component="span">
                         <LinkV2
                           href="/sidur/leidbeiningar"
                           underlineVisibility="always"
                           underline="normal"
+                          color="blue400"
                           newTab
                         >
                           leiðbeiningar
                         </LinkV2>
-                      </Text>{' '}
-                      um innskráningu ásamt umboðsvirkni ef notanda vill senda
-                      auglýsingu í nafni fyrirtækis.
+                      </Box>{' '}
+                      um innskráningu ásamt umboðsvirkni ef notandi/innsendandi
+                      vill senda auglýsingu í nafni fyrirtækis.
                     </Text>
                   </Box>
                 }
