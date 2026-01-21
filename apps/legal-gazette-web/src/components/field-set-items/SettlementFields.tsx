@@ -107,7 +107,7 @@ export const SettlementFields = ({
               placeholderText=""
               backgroundColor="blue"
               name="settlement-deadline"
-              label="Frestur til að gera kröfu"
+              label="Frestdagur"
               locale="is"
               selected={
                 settlement.deadline ? new Date(settlement.deadline) : undefined
