@@ -48,8 +48,8 @@ export class AdvertController {
     operationId: 'getAdvertsCount',
     type: GetAdvertsStatusCounterDto,
   })
-  getAdvertsCount() {
-    return this.advertService.getAdvertsCount()
+  getAdvertsCount(@Query() query: GetAdvertsQueryDto) {
+    return this.advertService.getAdvertsCount(query)
   }
 
   @Get()

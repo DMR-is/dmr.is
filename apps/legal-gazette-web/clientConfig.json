@@ -476,7 +476,74 @@
     "/api/v1/adverts/count": {
       "get": {
         "operationId": "getAdvertsCount",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 1, "example": 1, "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 10, "example": 10, "type": "number" }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "direction",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/SortDirectionEnum" }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "statusId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "typeId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "externalId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -5540,42 +5607,27 @@
           "comments"
         ]
       },
-      "AdvertStatusCounterItemDto": {
+      "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
+      "AdvertTabCountItemDto": {
         "type": "object",
-        "properties": {
-          "status": { "$ref": "#/components/schemas/StatusDto" },
-          "count": { "type": "number" }
-        },
-        "required": ["status", "count"]
+        "properties": { "count": { "type": "number" } },
+        "required": ["count"]
       },
       "GetAdvertsStatusCounterDto": {
         "type": "object",
         "properties": {
-          "submitted": {
-            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          "submittedTab": {
+            "$ref": "#/components/schemas/AdvertTabCountItemDto"
           },
-          "readyForPublication": {
-            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          "readyForPublicationTab": {
+            "$ref": "#/components/schemas/AdvertTabCountItemDto"
           },
-          "withdrawn": {
-            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
-          },
-          "rejected": {
-            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
-          },
-          "published": {
-            "$ref": "#/components/schemas/AdvertStatusCounterItemDto"
+          "finishedTab": {
+            "$ref": "#/components/schemas/AdvertTabCountItemDto"
           }
         },
-        "required": [
-          "submitted",
-          "readyForPublication",
-          "withdrawn",
-          "rejected",
-          "published"
-        ]
+        "required": ["submittedTab", "readyForPublicationTab", "finishedTab"]
       },
-      "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
       "AdvertDto": {
         "type": "object",
         "properties": {

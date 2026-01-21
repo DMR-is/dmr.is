@@ -27,10 +27,7 @@ import {
   Scopes,
 } from 'sequelize-typescript'
 
-import {
-  BadRequestException,
-  InternalServerErrorException,
-} from '@nestjs/common'
+import { InternalServerErrorException } from '@nestjs/common'
 import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
 
 import { getLogger } from '@dmr.is/logging'
@@ -498,40 +495,6 @@ export class AdvertModel extends BaseModel<
     options.individualHooks = true
   }
 
-  static async countByStatus(
-    statusId: StatusIdEnum,
-  ): Promise<AdvertStatusCounterItemDto> {
-    this.logger.info(`Counting adverts with status ID: ${statusId}`, {
-      context: 'AdvertModel',
-    })
-
-    const [status, count] = await Promise.all([
-      StatusModel.findByPk(statusId),
-      this.count({
-        where: {
-          statusId,
-        },
-      }),
-    ])
-
-    if (!status) {
-      this.logger.error(`Advert status with ID ${statusId} not found`, {
-        context: 'AdvertModel',
-      })
-
-      throw new BadRequestException('Invalid advert status')
-    }
-
-    return {
-      status: {
-        id: status.id,
-        title: status.title,
-        slug: status.slug,
-      },
-      count,
-    }
-  }
-
   static canEdit(model: AdvertModel, userId?: string): boolean {
     try {
       const editableStateIds = [
@@ -585,10 +548,11 @@ export class AdvertModel extends BaseModel<
         assignedUser: model.assignedUser?.fromModel(),
         publications: model.publications.map((p) => p.fromModel()),
       }
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
       this.logger.warn('Error converting from AdvertModel to AdvertDto', {
         context: 'AdvertModel',
-        error: error.message,
+        error: message,
       })
       throw new InternalServerErrorException()
     }
@@ -947,29 +911,20 @@ export class GetAdvertsQueryDto extends QueryDto {
   externalId?: string[]
 }
 
-export class AdvertStatusCounterItemDto {
-  @ApiProperty({ type: StatusDto })
-  status!: StatusDto
-
+export class AdvertTabCountItemDto {
   @ApiProperty({ type: Number })
   count!: number
 }
 
 export class GetAdvertsStatusCounterDto {
-  @ApiProperty({ type: AdvertStatusCounterItemDto })
-  submitted!: AdvertStatusCounterItemDto
+  @ApiProperty({ type: AdvertTabCountItemDto })
+  submittedTab!: AdvertTabCountItemDto
 
-  @ApiProperty({ type: AdvertStatusCounterItemDto })
-  readyForPublication!: AdvertStatusCounterItemDto
+  @ApiProperty({ type: AdvertTabCountItemDto })
+  readyForPublicationTab!: AdvertTabCountItemDto
 
-  @ApiProperty({ type: AdvertStatusCounterItemDto })
-  withdrawn!: AdvertStatusCounterItemDto
-
-  @ApiProperty({ type: AdvertStatusCounterItemDto })
-  rejected!: AdvertStatusCounterItemDto
-
-  @ApiProperty({ type: AdvertStatusCounterItemDto })
-  published!: AdvertStatusCounterItemDto
+  @ApiProperty({ type: AdvertTabCountItemDto })
+  finishedTab!: AdvertTabCountItemDto
 }
 
 // ============================================================================

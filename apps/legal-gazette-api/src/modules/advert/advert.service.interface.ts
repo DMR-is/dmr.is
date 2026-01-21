@@ -22,7 +22,9 @@ export interface IAdvertService {
 
   getAdvertById(id: string, currentUser: DMRUser): Promise<AdvertDetailedDto>
 
-  getAdvertsCount(): Promise<GetAdvertsStatusCounterDto>
+  getAdvertsCount(
+    query: GetAdvertsQueryDto,
+  ): Promise<GetAdvertsStatusCounterDto>
 
   updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDetailedDto>
 

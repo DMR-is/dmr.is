@@ -13,7 +13,6 @@ import {
   Tabs,
 } from '@island.is/island-ui/core'
 
-import { GetAdvertsStatusCounterDto } from '../../gen/fetch'
 import { useFilterContext } from '../../hooks/useFilters'
 import { StatusIdEnum } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
@@ -24,18 +23,24 @@ import AdvertsCompleted from '../Tables/AdvertsCompleted'
 import PublishingTab from '../tabs/PublishingTab'
 import { SubmittedTab } from '../tabs/SubmittedTab'
 
-type Props = {
-  advertCount: GetAdvertsStatusCounterDto
-}
-
 const TabIds = ['innsendar', 'utgafa', 'yfirlit']
 
-export const PageContainer = ({ advertCount }: Props) => {
+export const PageContainer = () => {
   const [tab, setTab] = useQueryState('tab', parseAsStringEnum(TabIds))
-  const { setParams, setStatusOptions, resetStatusOptions } = useFilterContext()
+  const { setParams, setStatusOptions, resetStatusOptions, params } =
+    useFilterContext()
 
   const trpc = useTRPC()
   const { data, isPending } = useSuspenseQuery(trpc.getStatuses.queryOptions())
+
+  const { data: countData } = useSuspenseQuery(
+    trpc.getAdvertsCount.queryOptions({
+      categoryId: params.categoryId,
+      typeId: params.typeId,
+      search: params.search,
+      statusId: params.statusId,
+    }),
+  )
 
   const handleTabChange = (tab: string) => {
     resetStatusOptions()
@@ -80,10 +85,13 @@ export const PageContainer = ({ advertCount }: Props) => {
     }
   }, [tab, isPending, setStatusOptions, data])
 
-  const completedCount =
-    advertCount.rejected.count +
-    advertCount.published.count +
-    advertCount.withdrawn.count
+  const submittedCount = countData ? countData.submittedTab.count : '...'
+
+  const readyForPublicationCount = countData
+    ? countData.readyForPublicationTab.count
+    : '...'
+
+  const finishedCount = countData ? countData.finishedTab.count : '...'
 
   return (
     <>
@@ -104,17 +112,17 @@ export const PageContainer = ({ advertCount }: Props) => {
                 tabs={[
                   {
                     id: 'innsendar',
-                    label: `Innsent / í vinnslu (${advertCount.submitted.count})`,
+                    label: `Innsent / í vinnslu (${submittedCount})`,
                     content: <SubmittedTab key="submitted-tab" />,
                   },
                   {
                     id: 'utgafa',
-                    label: `Tilbúið til útgáfu (${advertCount.readyForPublication.count})`,
+                    label: `Tilbúið til útgáfu (${readyForPublicationCount})`,
                     content: <PublishingTab key="publishing-tab" />,
                   },
                   {
                     id: 'yfirlit',
-                    label: `Öll mál (${completedCount})`,
+                    label: `Öll mál (${finishedCount})`,
                     content: <AdvertsCompleted key="overview-tab" />,
                   },
                 ]}
