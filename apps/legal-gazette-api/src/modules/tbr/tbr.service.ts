@@ -102,7 +102,24 @@ export class TBRService implements ITBRService {
       })
 
       if (!response.ok) {
-        const err = await response.json()
+        let err
+        let rawBody
+        try {
+          // Clone response to capture raw body before parsing
+          const clonedErrorResponse = response.clone()
+          rawBody = await clonedErrorResponse.text()
+          err = await response.json()
+        } catch (parseError) {
+          this.logger.error('Failed to parse error response', {
+            status: response.status,
+            statusText: response.statusText,
+            rawBody: rawBody,
+            parseError:
+              parseError instanceof Error ? parseError.message : parseError,
+            context: LOGGING_CONTEXT,
+          })
+          err = { error: { detail: 'Failed to parse error response' } }
+        }
 
         if (response.status === 404) {
           this.logger.error('TBR claim not found', {
@@ -125,6 +142,25 @@ export class TBRService implements ITBRService {
 
         throw new InternalServerErrorException('TBR request failed')
       }
+
+      // Clone response to read body for logging without consuming it
+      const clonedResponse = response.clone()
+      let responseBody
+      try {
+        responseBody = await clonedResponse.json()
+      } catch (parseError) {
+        responseBody = await clonedResponse.text()
+      }
+
+      this.logger.info('TBR request successful', {
+        path: path,
+        method: options?.method || 'GET',
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        responseBody: responseBody,
+        context: LOGGING_CONTEXT,
+      })
 
       return response
     } catch (error) {
