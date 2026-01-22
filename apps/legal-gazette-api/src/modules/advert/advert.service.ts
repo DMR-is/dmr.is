@@ -904,6 +904,9 @@ export class AdvertService implements IAdvertService {
     ]
     const readyForPublicationTabStatuses = [StatusIdEnum.READY_FOR_PUBLICATION]
     const finishedTabStatuses = [
+      StatusIdEnum.SUBMITTED,
+      StatusIdEnum.READY_FOR_PUBLICATION,
+      StatusIdEnum.IN_PROGRESS,
       StatusIdEnum.PUBLISHED,
       StatusIdEnum.REJECTED,
       StatusIdEnum.WITHDRAWN,
@@ -1094,11 +1097,28 @@ export class AdvertService implements IAdvertService {
         `),
         direction,
       ])
+    } else if (query.sortBy === 'utgafudagur') {
+      // Sort by next scheduled publication first, then by latest published publication,
+      order.push([
+        this.sequelize.literal(`
+          (
+            SELECT COALESCE(
+              MIN(CASE WHEN "scheduled_at" IS NULL THEN "published_at" END),
+              MAX("scheduled_at")
+            )
+            FROM "advert_publication" AS "publications"
+            WHERE "publications"."advert_id" = "AdvertModel"."id"
+          )
+        `),
+        direction,
+      ])
     } else {
       order.push(['createdAt', direction])
     }
 
     const results = await this.advertModel.scope('listview').findAndCountAll({
+      distinct: true,
+      col: '"AdvertModel"."id"',
       limit,
       offset,
       where: whereOptions,

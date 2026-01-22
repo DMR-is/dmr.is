@@ -23,7 +23,7 @@ export const AdvertsToBePublished = ({
   onToggle,
 }: Props) => {
   const { formatMessage } = useIntl()
-  const { params, setParams } = useFilterContext()
+  const { params, setParams, handleSort } = useFilterContext()
   const trpc = useTRPC()
 
   const { data } = useQuery(
@@ -33,6 +33,8 @@ export const AdvertsToBePublished = ({
       pageSize: params.pageSize,
       search: params.search,
       typeId: params.typeId,
+      direction: params.direction ?? undefined,
+      sortBy: params.sortBy ?? undefined,
     }),
   )
 
@@ -43,9 +45,9 @@ export const AdvertsToBePublished = ({
         onChange={() => onToggle?.(advert.id)}
       />
     ),
+    utgafudagur: formatDate(advert.updatedAt),
     flokkur: advert.category.title,
     efni: advert.title,
-    utgafudagur: formatDate(advert.scheduledAt),
     sender: advert.createdBy,
     owner: advert.assignedUser?.name,
     href: `/ritstjorn/${advert.id}`,
@@ -62,6 +64,15 @@ export const AdvertsToBePublished = ({
             size: 'tiny',
           },
           {
+            field: 'utgafudagur',
+            children: formatMessage(
+              ritstjornTableMessages.columns.publishingDate,
+            ),
+            size: 'tiny',
+            sortable: true,
+            onSort: handleSort,
+          },
+          {
             field: 'flokkur',
             children: formatMessage(ritstjornTableMessages.columns.category),
           },
@@ -69,12 +80,7 @@ export const AdvertsToBePublished = ({
             field: 'efni',
             children: formatMessage(ritstjornTableMessages.columns.content),
           },
-          {
-            field: 'utgafudagur',
-            children: formatMessage(
-              ritstjornTableMessages.columns.publishingDate,
-            ),
-          },
+
           {
             field: 'owner',
             children: formatMessage(ritstjornTableMessages.columns.owner),

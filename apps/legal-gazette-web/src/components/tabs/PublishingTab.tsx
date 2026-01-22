@@ -32,6 +32,8 @@ export const PublishingTab = () => {
             pageSize: params.pageSize,
             search: params.search,
             typeId: params.typeId,
+            direction: params.direction ?? undefined,
+            sortBy: params.sortBy ?? undefined,
           }),
         )
         setSelectedAdvertIds([])
@@ -55,6 +57,8 @@ export const PublishingTab = () => {
             pageSize: params.pageSize,
             search: params.search,
             typeId: params.typeId,
+            direction: params.direction ?? undefined,
+            sortBy: params.sortBy ?? undefined,
           }),
         )
         setSelectedAdvertIds([])
