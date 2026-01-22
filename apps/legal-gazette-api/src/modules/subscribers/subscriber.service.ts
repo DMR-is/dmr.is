@@ -69,16 +69,13 @@ export class SubscriberService implements ISubscriberService {
     const lockResult = await this.lock.runWithUserLock(
       user.nationalId,
       async (tx) => {
-        const subscriber = await this.subscriberModel.findOne({
-          where: { nationalId: user.nationalId },
-          transaction: tx,
-        })
-
-        if (!subscriber) {
-          throw new NotFoundException(
-            `Subscriber with nationalId ${user.nationalId} not found.`,
-          )
-        }
+        const subscriber = await this.subscriberModel.findOneOrThrow(
+          {
+            where: { nationalId: user.nationalId },
+            transaction: tx,
+          },
+          'Subscriber not found when creating subscription',
+        )
 
         // Check if subscription is already active and not expired (idempotency check)
         if (subscriber.isActive && subscriber.subscribedTo) {
