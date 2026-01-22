@@ -1491,7 +1491,7 @@ describe('AdvertService', () => {
         expect(result).toEqual({
           submittedTab: { count: 5 },
           readyForPublicationTab: { count: 0 },
-          finishedTab: { count: 0 },
+          finishedTab: { count: 5 },
         })
         expect(advertModel.count).toHaveBeenCalledTimes(1)
       })
@@ -1513,7 +1513,7 @@ describe('AdvertService', () => {
         expect(result).toEqual({
           submittedTab: { count: 3 },
           readyForPublicationTab: { count: 0 },
-          finishedTab: { count: 0 },
+          finishedTab: { count: 3 },
         })
       })
 
