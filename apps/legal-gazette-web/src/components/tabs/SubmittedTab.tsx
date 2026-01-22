@@ -4,7 +4,7 @@ import AdvertsInProgress from '../Tables/AdvertsInProgress'
 
 export const SubmittedTab = () => {
   return (
-    <Box background="white">
+    <Box background="white" paddingTop={4}>
       <AdvertsInProgress />
     </Box>
   )

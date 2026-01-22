@@ -904,6 +904,9 @@ export class AdvertService implements IAdvertService {
     ]
     const readyForPublicationTabStatuses = [StatusIdEnum.READY_FOR_PUBLICATION]
     const finishedTabStatuses = [
+      StatusIdEnum.SUBMITTED,
+      StatusIdEnum.READY_FOR_PUBLICATION,
+      StatusIdEnum.IN_PROGRESS,
       StatusIdEnum.PUBLISHED,
       StatusIdEnum.REJECTED,
       StatusIdEnum.WITHDRAWN,
@@ -1099,6 +1102,8 @@ export class AdvertService implements IAdvertService {
     }
 
     const results = await this.advertModel.scope('listview').findAndCountAll({
+      distinct: true,
+      col: '"AdvertModel"."id"',
       limit,
       offset,
       where: whereOptions,

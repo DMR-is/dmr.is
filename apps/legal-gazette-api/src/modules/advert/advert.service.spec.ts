@@ -1448,7 +1448,7 @@ describe('AdvertService', () => {
         ])
       })
 
-      it('should count adverts in finished tab (PUBLISHED + REJECTED + WITHDRAWN)', async () => {
+      it('should count adverts in finished tab (PUBLISHED + REJECTED + WITHDRAWN + SUBMITTED + READY_FOR_PUBLICATION + IN_PROGRESS)', async () => {
         // Arrange
         advertModel.count = jest.fn().mockResolvedValue(10)
 
@@ -1463,6 +1463,9 @@ describe('AdvertService', () => {
         // Assert - Third call should be for finished tab with all terminal statuses
         const thirdCall = (advertModel.count as jest.Mock).mock.calls[2][0]
         expect(thirdCall.where.statusId[Op.in]).toEqual([
+          StatusIdEnum.SUBMITTED,
+          StatusIdEnum.READY_FOR_PUBLICATION,
+          StatusIdEnum.IN_PROGRESS,
           StatusIdEnum.PUBLISHED,
           StatusIdEnum.REJECTED,
           StatusIdEnum.WITHDRAWN,
@@ -1488,9 +1491,8 @@ describe('AdvertService', () => {
         expect(result).toEqual({
           submittedTab: { count: 5 },
           readyForPublicationTab: { count: 0 },
-          finishedTab: { count: 0 },
+          finishedTab: { count: 5 },
         })
-        expect(advertModel.count).toHaveBeenCalledTimes(1)
       })
 
       it('should only count submitted tab when statusId is IN_PROGRESS', async () => {
@@ -1510,7 +1512,7 @@ describe('AdvertService', () => {
         expect(result).toEqual({
           submittedTab: { count: 3 },
           readyForPublicationTab: { count: 0 },
-          finishedTab: { count: 0 },
+          finishedTab: { count: 3 },
         })
       })
 
@@ -1553,7 +1555,7 @@ describe('AdvertService', () => {
         expect(result).toEqual({
           submittedTab: { count: 0 },
           readyForPublicationTab: { count: 7 },
-          finishedTab: { count: 0 },
+          finishedTab: { count: 7 },
         })
       })
 

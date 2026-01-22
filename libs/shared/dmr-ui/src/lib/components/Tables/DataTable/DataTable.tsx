@@ -36,7 +36,7 @@ export const DataTable = <T extends readonly DataTableColumnProps[]>({
   const hasLinkRows = rows?.some((row) => !!row.hasLink)
 
   return (
-    <Stack space={4}>
+    <Stack space={3}>
       <T.Table style={{ tableLayout: layout, width: '100%' }}>
         <T.Head>
           <T.Row>
