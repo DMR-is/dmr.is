@@ -1448,7 +1448,7 @@ describe('AdvertService', () => {
         ])
       })
 
-      it('should count adverts in finished tab (PUBLISHED + REJECTED + WITHDRAWN)', async () => {
+      it('should count adverts in finished tab (PUBLISHED + REJECTED + WITHDRAWN + SUBMITTED + READY_FOR_PUBLICATION + IN_PROGRESS)', async () => {
         // Arrange
         advertModel.count = jest.fn().mockResolvedValue(10)
 
@@ -1463,6 +1463,9 @@ describe('AdvertService', () => {
         // Assert - Third call should be for finished tab with all terminal statuses
         const thirdCall = (advertModel.count as jest.Mock).mock.calls[2][0]
         expect(thirdCall.where.statusId[Op.in]).toEqual([
+          StatusIdEnum.SUBMITTED,
+          StatusIdEnum.READY_FOR_PUBLICATION,
+          StatusIdEnum.IN_PROGRESS,
           StatusIdEnum.PUBLISHED,
           StatusIdEnum.REJECTED,
           StatusIdEnum.WITHDRAWN,
