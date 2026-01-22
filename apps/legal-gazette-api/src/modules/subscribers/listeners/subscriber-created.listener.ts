@@ -17,6 +17,7 @@ import {
   TBRTransactionStatus,
   TBRTransactionType,
 } from '../../../models/tbr-transactions.model'
+import { IPriceCalculatorService } from '../../advert/calculator/price-calculator.service.interface'
 import { ITBRService } from '../../tbr/tbr.service.interface'
 import { SubscriberCreatedEvent } from '../events/subscriber-created.event'
 
@@ -32,6 +33,8 @@ const SUBSCRIPTION_AMOUNT = parseInt(
 export class SubscriberCreatedListener {
   constructor(
     @Inject(ITBRService) private readonly tbrService: ITBRService,
+    @Inject(IPriceCalculatorService)
+    private readonly priceCalculatorService: IPriceCalculatorService,
     @InjectModel(TBRTransactionModel)
     private readonly tbrTransactionModel: typeof TBRTransactionModel,
     @InjectModel(SubscriberTransactionModel)
@@ -66,13 +69,10 @@ export class SubscriberCreatedListener {
       actorNationalId,
     })
 
-    // Determine charge category based on national ID format
-    const isCompany = Kennitala.isCompany(subscriber.nationalId)
-    const chargeCategory = (
-      isCompany
-        ? process.env.LG_TBR_CHARGE_CATEGORY_COMPANY
-        : process.env.LG_TBR_CHARGE_CATEGORY_PERSON
-    ) as string
+    // Determine charge category based on national ID and TBR company settings
+    const chargeCategory = await this.priceCalculatorService.getChargeCategory(
+      subscriber.nationalId,
+    )
 
     // Look up fee code ID for subscriptions
     const feeCode = await this.feeCodeModel.findOne({

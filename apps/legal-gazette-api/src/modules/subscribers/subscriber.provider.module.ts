@@ -5,6 +5,7 @@ import { FeeCodeModel } from '../../models/fee-code.model'
 import { SubscriberModel } from '../../models/subscriber.model'
 import { SubscriberTransactionModel } from '../../models/subscriber-transaction.model'
 import { TBRTransactionModel } from '../../models/tbr-transactions.model'
+import { PriceCalculatorProviderModule } from '../advert/calculator/price-calculator.provider.module'
 import { PgAdvisoryLockModule } from '../advert/tasks/lock.module'
 import { TBRModule } from '../tbr/tbr.module'
 import { SubscriberCreatedListener } from './listeners/subscriber-created.listener'
@@ -19,6 +20,7 @@ import { ISubscriberService } from './subscriber.service.interface'
       TBRTransactionModel,
       FeeCodeModel,
     ]),
+    PriceCalculatorProviderModule,
     PgAdvisoryLockModule,
     TBRModule.forRoot({
       credentials: process.env.LG_TBR_CREDENTIALS || '',
