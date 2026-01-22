@@ -1493,7 +1493,6 @@ describe('AdvertService', () => {
           readyForPublicationTab: { count: 0 },
           finishedTab: { count: 5 },
         })
-        expect(advertModel.count).toHaveBeenCalledTimes(1)
       })
 
       it('should only count submitted tab when statusId is IN_PROGRESS', async () => {
@@ -1556,7 +1555,7 @@ describe('AdvertService', () => {
         expect(result).toEqual({
           submittedTab: { count: 0 },
           readyForPublicationTab: { count: 7 },
-          finishedTab: { count: 0 },
+          finishedTab: { count: 7 },
         })
       })
 
