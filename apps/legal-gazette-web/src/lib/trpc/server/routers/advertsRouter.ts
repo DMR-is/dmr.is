@@ -238,9 +238,9 @@ export const advertsRouter = router({
               input.fields.courtAndJudgmentFields.courtDistrict.id,
             judgmentDate: input.fields.courtAndJudgmentFields.judgmentDate,
             meetingDate:
-              input.fields.divisionMeetingFields?.meetingDate ?? undefined,
+              input.fields.divisionMeetingFields?.meetingDate || undefined,
             meetingLocation:
-              input.fields.divisionMeetingFields?.meetingLocation ?? undefined,
+              input.fields.divisionMeetingFields?.meetingLocation || undefined,
             liquidatorLocation:
               input.fields.settlementFields.liquidatorLocation,
             liquidatorName: input.fields.settlementFields.liquidatorName,

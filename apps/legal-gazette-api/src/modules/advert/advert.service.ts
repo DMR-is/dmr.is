@@ -274,7 +274,7 @@ export class AdvertService implements IAdvertService {
       {
         caseId: newCase.id,
         applicantNationalId: body.applicantNationalId,
-        applicationType: ApplicationTypeEnum.RECALL_BANKRUPTCY,
+        applicationType: ApplicationTypeEnum.RECALL_DECEASED,
         status: ApplicationStatusEnum.SUBMITTED,
         submittedByNationalId: currentUser.nationalId,
         answers: {
@@ -321,9 +321,9 @@ export class AdvertService implements IAdvertService {
     )
 
     const advert = await this.createAdvert({
-      templateType: AdvertTemplateType.RECALL_BANKRUPTCY,
+      templateType: AdvertTemplateType.RECALL_DECEASED,
       caseId: newCase.id,
-      typeId: TypeIdEnum.RECALL_BANKRUPTCY,
+      typeId: TypeIdEnum.RECALL_DECEASED,
       categoryId: CategoryDefaultIdEnum.RECALLS,
       createdBy: applicantName,
       createdByNationalId: body.applicantNationalId,
@@ -355,7 +355,7 @@ export class AdvertService implements IAdvertService {
       await application.update({ settlementId: advert.settlement.id })
     }
 
-    this.logger.info('Created advert and recall bankruptcy application', {
+    this.logger.info('Created advert and recall deceased application', {
       caseId: newCase.id,
       applicationId: application.id,
       advertId: advert.id,

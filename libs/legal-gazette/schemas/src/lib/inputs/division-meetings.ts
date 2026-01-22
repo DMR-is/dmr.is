@@ -4,12 +4,14 @@ import { communicationChannelSchema } from '../base/communication-channels'
 import { signatureSchemaRefined } from '../base/signature'
 
 export const createDivisionMeetingInput = z.object({
-  meetingDate: z.iso.datetime({ error: 'Fundardagur er nauðsynlegur' }),
+  meetingDate: z.iso.datetime({
+    error: 'Dagsetning skiptafundar er nauðsynlegur',
+  }),
   additionalText: z.string().optional(),
   communicationChannels: z.array(communicationChannelSchema),
   signature: signatureSchemaRefined,
   meetingLocation: z.string().refine((location) => location.length > 0, {
-    message: 'Fundarstaður er nauðsynlegur',
+    message: 'Staðsetning skiptafundar er nauðsynlegur',
   }),
 })
 
