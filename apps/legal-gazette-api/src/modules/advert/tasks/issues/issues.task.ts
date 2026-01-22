@@ -156,8 +156,6 @@ export class IssuesTaskService implements IIssuesTask {
         )
         .join('<div class="advert-divider-line"></div>')
 
-      const title = `Lögbirtingablaðið - Útgáfa ${formatDate(now, 'd. MMMM yyyy')}`
-
       const currentYear = now.getFullYear()
 
       const startOfYear = new Date(currentYear, 0, 1)
@@ -192,6 +190,8 @@ export class IssuesTaskService implements IIssuesTask {
       }
 
       const districtCommissioner = issueSettings?.districtCommissioner ?? ''
+
+      const title = `Lögbirtingablaðið nr. ${nextIssueNumber} - ${currentYear}`
 
       const pdfGenInfo = await this.pdfService.generatePdfIssueFromHtml(
         `${pdfMetaTitle(title)}${combinedHtml}`,

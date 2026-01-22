@@ -144,7 +144,7 @@ export const pdfStyles = `
 
       p,
       li {
-        page-break-inside: avoid;
+        break-inside: avoid-column;
       }
 
       pre {
@@ -259,7 +259,11 @@ export const pdfStyles = `
         vertical-align: top;
         width: auto;
         border: none;
-        page-break-inside: avoid;
+        break-inside: auto;
+      }
+
+      td p {
+        break-inside: avoid;
       }
 
       tr:not(:first-child) > th,
@@ -613,6 +617,10 @@ export const pdfStyles = `
       .advert.legal-gazette .advertSignature p {
         text-align: right;
         margin-block: 0;
+      }
+      
+      .advertSignature {
+        margin-top: 0.65em;
       }
 
       .advert-divider-line {
