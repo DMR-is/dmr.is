@@ -91,11 +91,23 @@ describe('SubscriberCreatedListener', () => {
     // Default mock transaction record with update method for C-4 pattern
     const defaultMockTransactionRecord = {
       id: 'transaction-default',
-      update: jest.fn().mockResolvedValue(undefined),
+      chargeBase: 'abc123def456', // Mock 12-char hex value
+      update: jest.fn().mockImplementation(function (this: any, data: any) {
+        // Update the mock object's properties when update is called
+        Object.assign(this, data)
+        return Promise.resolve(undefined)
+      }),
     }
 
     const mockTbrTransactionModel = {
-      create: jest.fn().mockResolvedValue(defaultMockTransactionRecord),
+      create: jest.fn().mockImplementation((data: any) => {
+        // Create a new mock with the provided chargeBase
+        return Promise.resolve({
+          ...defaultMockTransactionRecord,
+          chargeBase:
+            data.chargeBase || defaultMockTransactionRecord.chargeBase,
+        })
+      }),
     }
 
     const mockSubscriberTransactionModel = {
@@ -198,7 +210,7 @@ describe('SubscriberCreatedListener', () => {
       expect(tbrService.postPayment).toHaveBeenCalledWith({
         id: 'subscriber-123',
         chargeCategory: 'PERSON_CATEGORY',
-        chargeBase: '0101801234',
+        chargeBase: expect.any(String), // Crypto-generated 12-char key
         debtorNationalId: '0101801234',
         expenses: [
           {
@@ -269,13 +281,24 @@ describe('SubscriberCreatedListener', () => {
           feeCodeId: 'fee-code-uuid-123',
           feeCodeMultiplier: 1,
           totalPrice: 4500,
-          chargeBase: '0101801234',
+          chargeBase: expect.stringMatching(/^[0-9a-f]{12}$/), // Crypto-generated 12-char hex
           chargeCategory: 'PERSON_CATEGORY',
           debtorNationalId: '0101801234',
           status: TBRTransactionStatus.PENDING,
         },
         expect.objectContaining({ transaction: expect.anything() }),
       )
+    })
+
+    it('should generate unique 12-character chargeBase for each subscription', async () => {
+      const event = createMockEvent()
+
+      await listener.createSubscriptionPayment(event)
+
+      // Verify create was called with a 12-character hex string for chargeBase
+      const createCall = tbrTransactionModel.create.mock.calls[0][0] as any
+      expect(createCall.chargeBase).toMatch(/^[0-9a-f]{12}$/)
+      expect(createCall.chargeBase).toHaveLength(12)
     })
 
     it('should create subscriber-transaction junction record', async () => {
