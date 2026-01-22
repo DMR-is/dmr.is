@@ -34,14 +34,8 @@ export const recallDeceasedSchemaRefined = z.object({
   courtAndJudgmentFields: courtAndJudgmentSchemaRefined,
   divisionMeetingFields: z
     .object({
-      meetingDate: z.iso
-        .datetime('Fundardagur er nauðsynlegur')
-        .optional()
-        .nullable(),
-      meetingLocation: z
-        .string('Fundarstaður er nauðsynlegur')
-        .optional()
-        .nullable(),
+      meetingDate: z.string().optional().nullable(),
+      meetingLocation: z.string().optional().nullable(),
     })
     .optional(),
   settlementFields: settlementSchemaRefined

@@ -154,7 +154,7 @@ export const CreateDeceasedAdvertModal = ({
         }
       />
       <CreateAdvertDivisionMeeting
-        required={true}
+        required={false}
         onChange={(divisionMeeting) =>
           setState((prev) => ({
             ...prev,
