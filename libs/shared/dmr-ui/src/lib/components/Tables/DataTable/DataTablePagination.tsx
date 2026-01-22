@@ -47,7 +47,7 @@ export const DataTablePagination = ({
         )}
       />
       {showPageSizeSelect && (
-        <Box style={{ marginTop: '-48x', height: '48px' }}>
+        <Box style={{ height: '48px' }}>
           <Select
             size="xs"
             value={{

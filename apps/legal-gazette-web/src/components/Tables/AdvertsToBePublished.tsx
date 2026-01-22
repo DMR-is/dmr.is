@@ -70,7 +70,7 @@ export const AdvertsToBePublished = ({
             ),
             size: 'tiny',
             sortable: true,
-            onSort: handleSort,
+            onSort: () => handleSort('birting'),
           },
           {
             field: 'flokkur',
