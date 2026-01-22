@@ -23,6 +23,7 @@ export enum TBRTransactionStatus {
   CREATED = 'CREATED',
   FAILED = 'FAILED',
   PAID = 'PAID',
+  CANCELED = 'CANCELED',
 }
 
 /**

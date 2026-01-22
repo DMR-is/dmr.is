@@ -19,7 +19,7 @@ import { PgAdvisoryLockService } from '../lock.service'
 import { PaymentTaskService } from './payment.task'
 
 // Test constants
-const MOCK_TBR_PERSON_CATEGORY = 'person-category'
+const MOCK_TBR_PERSON_CATEGORY = 'LR1'
 const MOCK_CONTAINER_ID = 'container-1'
 
 // Mock factory functions
@@ -145,6 +145,7 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       expect(tbrTransactionModel.findAll).toHaveBeenCalledWith({
         where: {
           paidAt: { [Op.eq]: null },
+          chargeCategory: MOCK_TBR_PERSON_CATEGORY,
           status: TBRTransactionStatus.CREATED,
         },
       })
@@ -276,8 +277,8 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       await service.updateTBRPayments()
 
       // Assert
-      expect(mockTransaction.save).not.toHaveBeenCalled()
-      expect(mockTransaction.status).toBe(TBRTransactionStatus.CREATED)
+      expect(mockTransaction.save).toHaveBeenCalled()
+      expect(mockTransaction.status).toBe(TBRTransactionStatus.CANCELED)
     })
 
     it('should continue processing even if one chunk encounters errors', async () => {
@@ -409,6 +410,7 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       expect(tbrTransactionModel.findAll).toHaveBeenCalledWith({
         where: {
           paidAt: { [Op.eq]: null },
+          chargeCategory: MOCK_TBR_PERSON_CATEGORY,
           status: TBRTransactionStatus.CREATED,
         },
       })

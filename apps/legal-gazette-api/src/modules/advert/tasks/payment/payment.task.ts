@@ -1,7 +1,7 @@
 import { Op } from 'sequelize'
 
 import { Inject, Injectable } from '@nestjs/common'
-import { Cron } from '@nestjs/schedule'
+import { Cron, CronExpression } from '@nestjs/schedule'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -22,7 +22,7 @@ const LOGGING_CONTEXT = 'PaymentTaskService'
 @Injectable()
 export class PaymentTaskService implements IPaymentTaskService {
   private readonly chunkSize: number = 25
-  private readonly chunkDelayMs: number = 1000
+  private readonly chunkDelayMs: number = 500
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(ITBRService) private readonly tbrService: ITBRService,
@@ -37,7 +37,7 @@ export class PaymentTaskService implements IPaymentTaskService {
   ) {
     const tbrChunk = process.env.TBR_CHUNK_SIZE
       ? parseInt(process.env.TBR_CHUNK_SIZE, 10)
-      : 25
+      : 10
 
     if (!Number.isNaN(tbrChunk)) {
       this.chunkSize = tbrChunk
@@ -52,7 +52,7 @@ export class PaymentTaskService implements IPaymentTaskService {
     }
   }
 
-  @Cron('*/15 * * * *', {
+  @Cron(CronExpression.EVERY_DAY_AT_7AM, {
     name: 'payment-job',
   })
   async run() {
@@ -91,6 +91,7 @@ export class PaymentTaskService implements IPaymentTaskService {
         paidAt: {
           [Op.eq]: null,
         },
+        chargeCategory: process.env.LG_TBR_CHARGE_CATEGORY_PERSON, // Only process LR1
         status: TBRTransactionStatus.CREATED,
       },
     })
@@ -129,12 +130,12 @@ export class PaymentTaskService implements IPaymentTaskService {
       )
 
       try {
-        const promises = chunk.map((transaction) =>
+        const promises = chunk.map((transaction, i) =>
           this.tbrService.getPaymentStatus({
             chargeBase: transaction.chargeBase,
             chargeCategory: transaction.chargeCategory,
             debtorNationalId: transaction.debtorNationalId,
-          }),
+          }, i),
         )
         const results = await Promise.allSettled(promises)
 
@@ -151,6 +152,14 @@ export class PaymentTaskService implements IPaymentTaskService {
               })
               transaction.status = TBRTransactionStatus.PAID
               transaction.paidAt = new Date()
+              await transaction.save()
+            } else if (paymentData.canceled) {
+              this.logger.info('TBR payment canceled, updating transaction', {
+                chargeBase: transaction.chargeBase,
+                transactionId: transaction.id,
+                context: LOGGING_CONTEXT,
+              })
+              transaction.status = TBRTransactionStatus.CANCELED
               await transaction.save()
             }
           } else {
