@@ -16,7 +16,6 @@ import {
   GetDepartmentsResponse,
   GetInstitutionResponse,
   GetInstitutionsResponse,
-  GetLeanAdvertsResponse,
   GetMainCategoriesResponse,
   GetMainCategoryResponse,
   GetSimilarAdvertsResponse,
@@ -35,9 +34,6 @@ export interface IJournalService {
   getAdverts(
     params?: GetAdvertsQueryParams,
   ): Promise<ResultWrapper<GetAdvertsResponse>>
-  getAdvertsLean(
-    params?: GetAdvertsQueryParams,
-  ): Promise<ResultWrapper<GetLeanAdvertsResponse>>
   getSimilarAdverts(
     advertId: string,
     limit?: number,
