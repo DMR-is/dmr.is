@@ -1,4 +1,12 @@
-import { Controller, Get, Inject, Post, Query, UseGuards } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
@@ -10,6 +18,7 @@ import {
   SyncPaymentsResponseDto,
 } from '../../core/dto/payments.dto'
 import { AuthorizationGuard } from '../../core/guards'
+import { TBRGetPaymentResponseDto } from '../tbr/tbr.dto'
 import { IPaymentsService } from './payments.service.interface'
 
 @Controller({
@@ -31,6 +40,17 @@ export class PaymentsController {
     @Query() query: GetPaymentsQuery,
   ): Promise<GetPaymentsDto> {
     return this.paymentsService.getPayments(query)
+  }
+
+  @Get(':transactionId')
+  @LGResponse({
+    operationId: 'getPaymentByTransactionId',
+    type: TBRGetPaymentResponseDto,
+  })
+  async getPaymentByTransactionId(
+    @Param('transactionId') transactionId: string,
+  ): Promise<TBRGetPaymentResponseDto> {
+    return this.paymentsService.getPaymentByTransactionId(transactionId)
   }
 
   @Post('sync')

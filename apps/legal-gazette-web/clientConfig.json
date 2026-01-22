@@ -5511,6 +5511,74 @@
         "tags": ["Legal gazette - internal API"]
       }
     },
+    "/api/v1/payments/{transactionId}": {
+      "get": {
+        "operationId": "getPaymentByTransactionId",
+        "parameters": [
+          {
+            "name": "transactionId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TBRGetPaymentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
     "/api/v1/payments/sync": {
       "post": {
         "operationId": "syncPayments",
@@ -6970,6 +7038,16 @@
           "paging": { "$ref": "#/components/schemas/Paging" }
         },
         "required": ["payments", "paging"]
+      },
+      "TBRGetPaymentResponseDto": {
+        "type": "object",
+        "properties": {
+          "paid": { "type": "boolean" },
+          "created": { "type": "boolean" },
+          "canceled": { "type": "boolean" },
+          "capital": { "type": "number" }
+        },
+        "required": ["paid", "created", "canceled", "capital"]
       },
       "SyncPaymentsResponseDto": {
         "type": "object",
