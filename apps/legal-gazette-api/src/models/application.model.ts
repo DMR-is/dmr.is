@@ -36,6 +36,7 @@ import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'
+import { QueryDto } from '../core/dto/query.dto'
 import { AdvertDto, AdvertModel } from './advert.model'
 import {
   AdvertPublicationDto,

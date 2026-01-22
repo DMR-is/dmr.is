@@ -1,5 +1,8 @@
+import endOfDay from 'date-fns/endOfDay'
+import startOfDay from 'date-fns/startOfDay'
 import deepmerge from 'deepmerge'
 import get from 'lodash/get'
+import { Op, Sequelize, WhereOptions } from 'sequelize'
 
 import {
   BadRequestException,
@@ -23,6 +26,7 @@ import {
   RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
   RECALL_DECEASED_ADVERT_TYPE_ID,
 } from '../../core/constants'
+import { GetMyApplicationsQueryDto } from '../../core/dto/application.dto'
 import { getAdvertHTMLMarkupPreview } from '../../core/templates/html'
 import { mapIndexToVersion } from '../../core/utils'
 import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
@@ -358,18 +362,131 @@ export class ApplicationService implements IApplicationService {
   }
 
   async getMyApplications(
-    query: PagingQuery,
+    query: GetMyApplicationsQueryDto,
     user: DMRUser,
   ): Promise<GetApplicationsDto> {
     const { limit, offset } = getLimitAndOffset(query)
+
+    const where: WhereOptions<ApplicationModel> = {
+      applicantNationalId: user.nationalId,
+    }
+
+    if (query.dateFrom && query.dateTo) {
+      where.createdAt = {
+        [Op.between]: [
+          startOfDay(new Date(query.dateFrom)),
+          endOfDay(new Date(query.dateTo)),
+        ],
+      }
+    } else if (query.dateFrom) {
+      where.createdAt = {
+        [Op.gte]: startOfDay(new Date(query.dateFrom)),
+      }
+    } else if (query.dateTo) {
+      where.createdAt = {
+        [Op.lte]: endOfDay(new Date(query.dateTo)),
+      }
+    }
+
+    if (query.type) {
+      where.applicationType = query.type
+    }
+
+    if (query.status) {
+      where.status = query.status
+    }
+
+    if (query.search && query.search.trim().length > 0) {
+      const searchTerm = query.search.trim()
+      const searchWords = searchTerm
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((word) => word.length > 0)
+
+      // Build AND conditions for multi-word search across JSONB fields
+      const searchConditions = searchWords.map((word) => {
+        const likePattern = `%${word}%`
+        return {
+          [Op.or]: [
+            // Search in answers->fields->caption
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(
+                  Sequelize.json("answers->'fields'->>'caption'"),
+                  'text',
+                ),
+              ),
+              Op.iLike,
+              likePattern,
+            ),
+            // Search in answers->fields->html
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(
+                  Sequelize.json("answers->'fields'->>'html'"),
+                  'text',
+                ),
+              ),
+              Op.iLike,
+              likePattern,
+            ),
+            // Search in answers->fields->type->title
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(
+                  Sequelize.json("answers->'fields'->'type'->>'title'"),
+                  'text',
+                ),
+              ),
+              Op.iLike,
+              likePattern,
+            ),
+            // Search in answers->fields->settlementFields->name (for recall applications)
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(
+                  Sequelize.json(
+                    "answers->'fields'->'settlementFields'->>'name'",
+                  ),
+                  'text',
+                ),
+              ),
+              Op.iLike,
+              likePattern,
+            ),
+            // Search in answers->additionalText
+            Sequelize.where(
+              Sequelize.fn(
+                'LOWER',
+                Sequelize.cast(
+                  Sequelize.json("answers->>'additionalText'"),
+                  'text',
+                ),
+              ),
+              Op.iLike,
+              likePattern,
+            ),
+          ],
+        }
+      })
+
+      Object.assign(where, {
+        [Op.and]: searchConditions,
+      })
+    }
+
     const applications = await this.applicationModel
       .scope('listview')
       .findAndCountAll({
+        distinct: true,
+        col: '"ApplicationModel"."id"',
         limit,
         offset,
-        where: {
-          applicantNationalId: user.nationalId,
-        },
+        where,
       })
 
     const mapped = applications.rows.map((app) => app.fromModel())
