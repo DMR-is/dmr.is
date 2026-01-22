@@ -1,9 +1,6 @@
 import { z } from 'zod'
 
-import {
-  TBRTransactionStatus,
-  TBRTransactionType,
-} from '../../../../gen/fetch'
+import { TBRTransactionStatus, TBRTransactionType } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
 const getPaymentsInput = z.object({
@@ -15,6 +12,11 @@ const getPaymentsInput = z.object({
 })
 
 export const paymentsRouter = router({
+  getPaymentByTransactionId: protectedProcedure
+    .input(z.object({ transactionId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.api.getPaymentByTransactionId(input)
+    }),
   getPayments: protectedProcedure
     .input(getPaymentsInput)
     .query(async ({ ctx, input }) => {

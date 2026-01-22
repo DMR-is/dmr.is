@@ -17,6 +17,7 @@ import {
   TBRTransactionModel,
   TBRTransactionStatus,
 } from '../../models/tbr-transactions.model'
+import { TBRGetPaymentResponseDto } from '../tbr/tbr.dto'
 import { TBRService } from '../tbr/tbr.service'
 import { ITBRService } from '../tbr/tbr.service.interface'
 import { IPaymentsService } from './payments.service.interface'
@@ -32,11 +33,13 @@ export class PaymentsService implements IPaymentsService {
     private readonly tbrTransactionModel: typeof TBRTransactionModel,
   ) {}
 
-  async getPaymentByTransactionId(transactionId: string): Promise<void> {
+  async getPaymentByTransactionId(
+    transactionId: string,
+  ): Promise<TBRGetPaymentResponseDto> {
     const transaction =
       await this.tbrTransactionModel.findByPkOrThrow(transactionId)
 
-    await this.tbrService.getPaymentStatus({
+    return this.tbrService.getPaymentStatus({
       chargeCategory: transaction.chargeCategory,
       chargeBase: transaction.chargeBase,
       debtorNationalId: transaction.debtorNationalId,
