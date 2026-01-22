@@ -1,4 +1,6 @@
 import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator'
+import endOfDay from 'date-fns/endOfDay'
+import startOfDay from 'date-fns/startOfDay'
 import { BulkCreateOptions, Op, WhereOptions } from 'sequelize'
 import {
   BeforeBulkCreate,
@@ -82,24 +84,19 @@ export type AdvertPublicationsCreateAttributes = {
     if (query.dateFrom && query.dateTo) {
       Object.assign(publicationWhereOptions, {
         publishedAt: {
-          [Op.between]: [query.dateFrom, query.dateTo],
+          [Op.between]: [
+            startOfDay(new Date(query.dateFrom)),
+            endOfDay(new Date(query.dateTo)),
+          ],
         },
       })
-    }
-
-    if (query.dateFrom && !query.dateTo) {
+    } else if (query.dateFrom) {
       Object.assign(publicationWhereOptions, {
-        publishedAt: {
-          [Op.gte]: query.dateFrom,
-        },
+        publishedAt: { [Op.gte]: startOfDay(new Date(query.dateFrom)) },
       })
-    }
-
-    if (!query.dateFrom && query.dateTo) {
+    } else if (query.dateTo) {
       Object.assign(publicationWhereOptions, {
-        publishedAt: {
-          [Op.lte]: query.dateTo,
-        },
+        publishedAt: { [Op.lte]: endOfDay(new Date(query.dateTo)) },
       })
     }
 
