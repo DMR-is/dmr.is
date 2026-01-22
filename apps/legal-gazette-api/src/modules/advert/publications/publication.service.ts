@@ -79,6 +79,10 @@ export class PublicationService implements IPublicationService {
       pageSize: query.pageSize,
     })
 
+    if (query.dateTo) {
+      // so that dateTo includes the date itself in the results
+      query.dateTo = addDays(new Date(query.dateTo), 1).toISOString()
+    }
     const publications = await this.advertPublicationModel
       .scope({ method: ['published', query] })
       .findAndCountAll({
