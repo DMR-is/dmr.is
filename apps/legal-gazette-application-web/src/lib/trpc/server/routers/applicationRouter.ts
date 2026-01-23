@@ -6,7 +6,12 @@ import {
   updateApplicationWithIdInput,
 } from '@dmr.is/legal-gazette/schemas'
 
-import { CreateApplicationApplicationTypeEnum } from '../../../../gen/fetch'
+import {
+  ApplicationStatusEnum,
+  ApplicationTypeEnum,
+  CreateApplicationApplicationTypeEnum,
+  SortDirectionEnum,
+} from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
 export const createApplicationSchema = z.enum(
@@ -20,6 +25,13 @@ export const getCategoriesSchema = z.object({
 export const getApplicationsSchema = z.object({
   page: z.number().min(1).optional().default(1),
   pageSize: z.number().min(1).max(100).optional().default(10),
+  sortBy: z.string().optional(),
+  direction: z.enum(SortDirectionEnum).optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  search: z.string().optional(),
+  type: z.enum(ApplicationTypeEnum).optional(),
+  status: z.enum(ApplicationStatusEnum).optional(),
 })
 
 export const applicationRouter = router({
@@ -63,12 +75,9 @@ export const applicationRouter = router({
       })
     }),
   getApplications: protectedProcedure
-    .input(getApplicationsSchema.optional())
+    .input(getApplicationsSchema)
     .query(async ({ ctx, input }) => {
-      return await ctx.api.getMyApplications({
-        page: input?.page,
-        pageSize: input?.pageSize,
-      })
+      return await ctx.api.getMyApplications(input)
     }),
   getApplicationById: protectedProcedure
     .input(z.object({ id: z.string() }))

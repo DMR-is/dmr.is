@@ -1,58 +1,74 @@
 'use client'
 
-import { Pagination } from '@dmr.is/ui/components/island-is'
 import {
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Stack,
-  Text,
+  AlertMessage,
+  Pagination,
+  SkeletonLoader,
 } from '@dmr.is/ui/components/island-is'
+import { Stack, Text } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationDto, Paging } from '../../gen/fetch'
 import { ApplicationCard } from './ApplicationCard'
 
 type Props = {
-  applications: ApplicationDto[]
-  paging: Paging
+  isLoading?: boolean
+  applications?: ApplicationDto[]
+  paging?: Paging
+  error?: string
   onPageChange?: (page: number) => void
 }
 
 export const ApplicationList = ({
   applications,
   paging,
+  isLoading,
+  error,
   onPageChange,
 }: Props) => {
+  if (isLoading) {
+    return (
+      <SkeletonLoader
+        repeat={5}
+        height={152}
+        borderRadius="large"
+        space={[2, 3]}
+      />
+    )
+  }
+
   return (
-    <GridContainer>
-      <GridRow marginTop={3} marginBottom={8}>
-        <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
-          <Stack space={[2, 3, 4]}>
-            {applications.map((application, i) => (
-              <ApplicationCard application={application} key={i} />
-            ))}
-            {applications.length === 0 && (
-              <Text>Þú hefur ekki stofnað neinar auglýsingar ennþá.</Text>
-            )}
-            {paging.totalPages > 1 && (
-              <Pagination
-                page={paging.page}
-                itemsPerPage={paging.pageSize}
-                totalItems={paging.totalItems}
-                totalPages={paging.totalPages}
-                renderLink={(page, className, children) => (
-                  <button
-                    className={className}
-                    onClick={() => onPageChange?.(page)}
-                  >
-                    {children}
-                  </button>
-                )}
-              />
-            )}
-          </Stack>
-        </GridColumn>
-      </GridRow>
-    </GridContainer>
+    <Stack space={[2, 3, 4]}>
+      <Text variant="h2">Mínar auglýsingar</Text>
+
+      {error && (
+        <AlertMessage
+          type="error"
+          title="Ekki tókst að sækja auglýsingar"
+          message={error}
+        />
+      )}
+
+      {applications && applications.length > 0 ? (
+        applications?.map((application, i) => (
+          <ApplicationCard application={application} key={i} />
+        ))
+      ) : (
+        <Text>Engar auglýsingar fundust, kannski þarf að breyta síu</Text>
+      )}
+
+      {paging && paging.totalPages > 1 && (
+        <Pagination
+          page={paging.page}
+          itemsPerPage={paging.pageSize}
+          totalItems={paging.totalItems}
+          totalPages={paging.totalPages}
+          renderLink={(page, className, children) => (
+            <button className={className} onClick={() => onPageChange?.(page)}>
+              {children}
+            </button>
+          )}
+        />
+      )}
+    </Stack>
   )
 }

@@ -1,7 +1,7 @@
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
-import { PagingQuery } from '@dmr.is/shared/dto'
 
+import { GetMyApplicationsQueryDto } from '../../core/dto/application.dto'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
@@ -13,7 +13,7 @@ import {
 
 export interface IApplicationService {
   getMyApplications(
-    query: PagingQuery,
+    query: GetMyApplicationsQueryDto,
     user: DMRUser,
   ): Promise<GetApplicationsDto>
 
