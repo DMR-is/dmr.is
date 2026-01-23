@@ -1,4 +1,3 @@
-import subDays from 'date-fns/subDays'
 import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
@@ -7,7 +6,6 @@ import { AlertMessage } from '@dmr.is/ui/components/island-is'
 import { GridColumn, GridRow } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
-import { POSTPONE_LIMIT } from '../../../../../lib/constants'
 import {
   NationalIdLookup,
   NationalIdLookupResults,
@@ -120,7 +118,6 @@ export const RecallBankruptcySettlementFields = () => {
         <DatePickerController
           name="fields.settlementFields.deadlineDate"
           maxDate={new Date()}
-          minDate={subDays(new Date(), POSTPONE_LIMIT)}
           label="Frestdagur þrotabús"
           required
           onChange={(val) =>
