@@ -168,11 +168,14 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       await service.updateTBRPayments()
 
       // Assert
-      expect(tbrService.getPaymentStatus).toHaveBeenCalledWith({
-        chargeBase: mockTransaction.chargeBase,
-        chargeCategory: mockTransaction.chargeCategory,
-        debtorNationalId: mockTransaction.debtorNationalId,
-      })
+      expect(tbrService.getPaymentStatus).toHaveBeenCalledWith(
+        {
+          chargeBase: mockTransaction.chargeBase,
+          chargeCategory: mockTransaction.chargeCategory,
+          debtorNationalId: mockTransaction.debtorNationalId,
+        },
+        0,
+      )
       expect(mockTransaction.status).toBe(TBRTransactionStatus.PAID)
       expect(mockTransaction.paidAt).toBeInstanceOf(Date)
       expect(mockTransaction.save).toHaveBeenCalled()
