@@ -13,9 +13,9 @@ const TYPE_SLUGS = [
   'almenn-auglysing',
   'innkollun-throtabus',
   'innkollun-danarbus',
-] as const
+]
 
-const STATUS_SLUGS = ['drog', 'i-vinnslu', 'innsent', 'lokid'] as const
+const STATUS_SLUGS = ['drog', 'i-vinnslu', 'innsent', 'lokid']
 
 export const useApplicationFilters = () => {
   const [params, setParams] = useQueryStates(
