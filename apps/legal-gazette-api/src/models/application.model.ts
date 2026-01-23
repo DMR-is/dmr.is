@@ -201,7 +201,7 @@ export class ApplicationModel extends BaseModel<
 
     return `${type || 'Almenn auglýsing'}`
   }
-  getSubtitle = () => {
+  get subtitle() {
     if (
       this.applicationType === ApplicationTypeEnum.RECALL_DECEASED ||
       this.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
@@ -212,7 +212,7 @@ export class ApplicationModel extends BaseModel<
     return get(this.answers, 'fields.caption', '')
   }
 
-  getPreviewTitle = () => {
+  get previewTitle() {
     if (this.applicationType === ApplicationTypeEnum.RECALL_DECEASED) {
       return (
         'Innköllun dánarbús - ' +
@@ -241,7 +241,7 @@ export class ApplicationModel extends BaseModel<
       status: model.status,
       title: model.title,
       type: model.applicationType,
-      subtitle: model.getSubtitle(),
+      subtitle: model.subtitle,
       adverts:
         model.adverts?.flatMap((advert) => advert.fromModelToSimple()) || [],
       currentStep: model.currentStep,
