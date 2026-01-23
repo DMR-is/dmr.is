@@ -102,7 +102,6 @@ export const CommonFormSteps: LegalGazetteForm = {
       stepTitle: 'Samantekt',
       fields: [
         {
-          title: 'Samantekt',
           content: <SummaryStep />,
         },
       ],

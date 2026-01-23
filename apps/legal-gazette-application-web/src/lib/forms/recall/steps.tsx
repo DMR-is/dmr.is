@@ -149,7 +149,6 @@ export const RecallFormSteps = (
         stepTitle: 'Samantekt',
         fields: [
           {
-            title: 'Samantekt',
             content: <SummaryStep />,
           },
         ],
