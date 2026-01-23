@@ -36,6 +36,7 @@ const statusOptions = [
   { label: 'Greitt', value: TBRTransactionStatus.PAID },
   { label: 'Misheppnað', value: TBRTransactionStatus.FAILED },
   { label: 'Í vinnslu', value: TBRTransactionStatus.PENDING },
+  { label: 'Hætt við', value: TBRTransactionStatus.CANCELED },
 ]
 
 const paidOptions = [

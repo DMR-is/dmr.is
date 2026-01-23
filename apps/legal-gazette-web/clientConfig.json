@@ -6993,7 +6993,7 @@
       },
       "TBRTransactionStatus": {
         "type": "string",
-        "enum": ["PENDING", "CREATED", "FAILED", "PAID"]
+        "enum": ["PENDING", "CREATED", "FAILED", "PAID", "CANCELED"]
       },
       "PaymentDto": {
         "type": "object",

@@ -39,11 +39,23 @@ export class PaymentsService implements IPaymentsService {
     const transaction =
       await this.tbrTransactionModel.findByPkOrThrow(transactionId)
 
-    return this.tbrService.getPaymentStatus({
+    const paymentData = await this.tbrService.getPaymentStatus({
       chargeCategory: transaction.chargeCategory,
       chargeBase: transaction.chargeBase,
       debtorNationalId: transaction.debtorNationalId,
     })
+
+    if (paymentData.paid && transaction.status !== TBRTransactionStatus.PAID) {
+      this.logger.info('TBR payment completed, updating transaction', {
+        chargeBase: transaction.chargeBase,
+        transactionId: transaction.id,
+        context: LOGGING_CONTEXT,
+      })
+      transaction.status = TBRTransactionStatus.PAID
+      transaction.paidAt = new Date()
+      await transaction.save()
+    }
+    return paymentData
   }
 
   async syncPayments(): Promise<SyncPaymentsResponseDto> {
@@ -75,12 +87,12 @@ export class PaymentsService implements IPaymentsService {
     let updated = 0
     let failed = 0
 
-    const promises = pendingTransactions.map((transaction) =>
+    const promises = pendingTransactions.map((transaction, i) =>
       this.tbrService.getPaymentStatus({
         chargeBase: transaction.chargeBase,
         chargeCategory: transaction.chargeCategory,
         debtorNationalId: transaction.debtorNationalId,
-      }),
+      }, i),
     )
 
     const results = await Promise.allSettled(promises)
@@ -98,6 +110,15 @@ export class PaymentsService implements IPaymentsService {
           })
           transaction.status = TBRTransactionStatus.PAID
           transaction.paidAt = new Date()
+          await transaction.save()
+          updated++
+        } else if (paymentData.canceled) {
+          this.logger.info('TBR payment canceled, updating transaction', {
+            chargeBase: transaction.chargeBase,
+            transactionId: transaction.id,
+            context: LOGGING_CONTEXT,
+          })
+          transaction.status = TBRTransactionStatus.CANCELED
           await transaction.save()
           updated++
         }

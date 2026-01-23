@@ -81,10 +81,11 @@ export class TBRService implements ITBRService {
   private async request(
     path: TBRPathString,
     options?: Omit<RequestInit, 'headers'>,
+    index?: number,
   ) {
     const endpoint = new URL(`${this.config.tbrBasePath}${path}`).toString()
     try {
-      this.logger.info('Making TBR request to:', {
+      this.logger.info(`Making TBR ${index !== undefined ? `request #${index} to` : 'request to'}:`, {
         message: `/${endpoint.split('/').slice(-2).join('/')}`,
         path: path,
         method: options?.method || 'GET',
@@ -132,7 +133,7 @@ export class TBRService implements ITBRService {
           throw new NotFoundException('TBR claim not found')
         }
 
-        this.logger.error('TBR request failed', {
+        this.logger.error(`TBR request ${index !== undefined ? `#${index} ` : ''}failed`, {
           url: path,
           status: response.status,
           context: LOGGING_CONTEXT,
@@ -152,7 +153,7 @@ export class TBRService implements ITBRService {
         responseBody = await clonedResponse.text()
       }
 
-      this.logger.info('TBR request successful', {
+      this.logger.info(`TBR request ${index !== undefined ? `#${index} ` : ''}successful`, {
         path: path,
         method: options?.method || 'GET',
         status: response.status,
@@ -164,7 +165,7 @@ export class TBRService implements ITBRService {
 
       return response
     } catch (error) {
-      this.logger.error('TBR request error when requesting:', {
+      this.logger.error(`TBR request error when requesting ${index !== undefined ? `#${index} ` : ''}:`, {
         message: endpoint,
         url: path,
         context: LOGGING_CONTEXT,
@@ -204,12 +205,14 @@ export class TBRService implements ITBRService {
 
   async getPaymentStatus(
     query: TBRGetPaymentQueryDto,
+    index?: number,
   ): Promise<TBRGetPaymentResponseDto> {
     const response = await this.request(
       `/claim/${query.debtorNationalId}?office=${this.config.officeId}&chargeCategory=${query.chargeCategory}&chargeBase=${query.chargeBase}`,
       {
         method: 'GET',
       },
+      index,
     )
 
     const json = (await response.json()) as TBRGetPaymentResponse

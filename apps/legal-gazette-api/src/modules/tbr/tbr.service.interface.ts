@@ -8,6 +8,7 @@ export interface ITBRService {
   postPayment(body: TBRPostPaymentBodyDto): Promise<void>
   getPaymentStatus(
     query: TBRGetPaymentQueryDto,
+    index?: number,
   ): Promise<TBRGetPaymentResponseDto>
 }
 

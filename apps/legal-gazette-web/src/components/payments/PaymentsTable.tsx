@@ -44,6 +44,8 @@ const mapTBRStatus = (
       return { title: 'Búið til', variant: 'blue' }
     case TBRTransactionStatus.PAID:
       return { title: 'Greitt', variant: 'mint' }
+    case TBRTransactionStatus.CANCELED:
+      return { title: 'Hætt við', variant: 'disabled' }
     case TBRTransactionStatus.FAILED:
       return { title: 'Misheppnað', variant: 'red' }
     case TBRTransactionStatus.PENDING:
