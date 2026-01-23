@@ -6,7 +6,7 @@ export default async function RedirectToFirstPublication({
   params: { id: string }
 }) {
   if (params.id) {
-    redirect(`/auglysingar/${params.id}/a`)
+    redirect(`/auglysingar/${params.id}/A`)
   }
 
   return notFound()
