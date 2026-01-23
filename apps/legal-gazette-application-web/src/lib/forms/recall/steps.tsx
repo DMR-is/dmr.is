@@ -140,7 +140,6 @@ export const RecallFormSteps = (
         stepTitle: 'Forskoðun',
         fields: [
           {
-            title: 'Forskoðun',
             content: <PreviewStep />,
           },
         ],

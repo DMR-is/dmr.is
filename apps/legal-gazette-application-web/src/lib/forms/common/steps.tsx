@@ -93,7 +93,6 @@ export const CommonFormSteps: LegalGazetteForm = {
       stepTitle: 'Forskoðun',
       fields: [
         {
-          title: 'Forskoðun',
           content: <PreviewStep />,
         },
       ],

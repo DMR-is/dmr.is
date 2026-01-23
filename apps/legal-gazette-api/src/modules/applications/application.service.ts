@@ -120,7 +120,7 @@ export class ApplicationService implements IApplicationService {
     }))
 
     const previewHTML = getAdvertHTMLMarkupPreview({
-      title: application.title,
+      title: application.getPreviewTitle(),
       templateType: templateType,
       typeId: typeId,
       additionalText: get(application.answers, 'additionalText'),

@@ -212,6 +212,23 @@ export class ApplicationModel extends BaseModel<
     return get(this.answers, 'fields.caption', '')
   }
 
+  getPreviewTitle = () => {
+    if (this.applicationType === ApplicationTypeEnum.RECALL_DECEASED) {
+      return (
+        'Innköllun dánarbús - ' +
+        get(this.answers, 'fields.settlementFields.name', '')
+      )
+    }
+    if (this.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY) {
+      return (
+        'Innköllun þrotabús - ' +
+        get(this.answers, 'fields.settlementFields.name', '')
+      )
+    }
+
+    return get(this.answers, 'fields.caption', '')
+  }
+
   static fromModel(model: ApplicationModel): ApplicationDto {
     return {
       id: model.id,
