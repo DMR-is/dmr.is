@@ -25,6 +25,7 @@ import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
+import { GetMyApplicationsQueryDto } from '../../core/dto/application.dto'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import { OwnershipGuard } from '../../core/guards/ownership.guard'
 import {
@@ -83,7 +84,7 @@ export class ApplicationController {
   @Get('getMyApplications')
   @LGResponse({ operationId: 'getMyApplications', type: GetApplicationsDto })
   async getMyApplications(
-    @Query() query: PagingQuery,
+    @Query() query: GetMyApplicationsQueryDto,
     @CurrentUser() user: DMRUser,
   ): Promise<GetApplicationsDto> {
     return this.applicationService.getMyApplications(query, user)
