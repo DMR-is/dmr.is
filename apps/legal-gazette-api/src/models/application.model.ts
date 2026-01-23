@@ -202,12 +202,29 @@ export class ApplicationModel extends BaseModel<
 
     return `${type || 'Almenn auglýsing'}`
   }
-  getSubtitle = () => {
+  get subtitle() {
     if (
       this.applicationType === ApplicationTypeEnum.RECALL_DECEASED ||
       this.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
     ) {
       return get(this.answers, 'fields.settlementFields.name', '')
+    }
+
+    return get(this.answers, 'fields.caption', '')
+  }
+
+  get previewTitle() {
+    if (this.applicationType === ApplicationTypeEnum.RECALL_DECEASED) {
+      return (
+        'Innköllun dánarbús - ' +
+        get(this.answers, 'fields.settlementFields.name', '')
+      )
+    }
+    if (this.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY) {
+      return (
+        'Innköllun þrotabús - ' +
+        get(this.answers, 'fields.settlementFields.name', '')
+      )
     }
 
     return get(this.answers, 'fields.caption', '')
@@ -225,7 +242,7 @@ export class ApplicationModel extends BaseModel<
       status: model.status,
       title: model.title,
       type: model.applicationType,
-      subtitle: model.getSubtitle(),
+      subtitle: model.subtitle,
       adverts:
         model.adverts?.flatMap((advert) => advert.fromModelToSimple()) || [],
       currentStep: model.currentStep,
