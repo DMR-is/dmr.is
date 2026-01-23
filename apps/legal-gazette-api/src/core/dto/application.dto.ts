@@ -1,3 +1,5 @@
+import { IsEnum, IsOptional } from 'class-validator'
+
 import { ApiProperty } from '@nestjs/swagger'
 
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
@@ -11,6 +13,8 @@ export class GetMyApplicationsQueryDto extends QueryDto {
     enumName: 'ApplicationTypeEnum',
     required: false,
   })
+  @IsOptional()
+  @IsEnum(ApplicationTypeEnum)
   type?: ApplicationTypeEnum
 
   @ApiProperty({
@@ -18,5 +22,7 @@ export class GetMyApplicationsQueryDto extends QueryDto {
     enumName: 'ApplicationStatusEnum',
     required: false,
   })
+  @IsOptional()
+  @IsEnum(ApplicationStatusEnum)
   status?: ApplicationStatusEnum
 }

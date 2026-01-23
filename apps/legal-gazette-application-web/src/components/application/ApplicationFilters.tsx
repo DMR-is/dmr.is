@@ -8,12 +8,12 @@ import {
   Inline,
   Input,
   Select,
-  SkeletonLoader,
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationStatusEnum, ApplicationTypeEnum } from '../../gen/fetch'
+import { useApplicationFilters } from '../../hooks/useApplicationFilters'
 import * as styles from './application.css'
 
 const PAGE_SIZE_OPTIONS = [
@@ -36,27 +36,9 @@ const STATUS_OPTIONS = [
   { value: ApplicationStatusEnum.FINISHED, label: 'Lokið' },
 ]
 
-type Props = {
-  onSearchChange: (value: string) => void
-  onTypeChange: (value: string) => void
-  onStatusChange: (value: string) => void
-  onDateFromChange: (date: Date | null) => void
-  onDateToChange: (date: Date | null) => void
-  onSortByChange: (value: string) => void
-  onPageSizeChange: (value: number) => void
-  onResetFilters: () => void
-}
+export const ApplicationFilters = () => {
+  const { params, updateParams, resetFilters } = useApplicationFilters()
 
-export const ApplicationFilters = ({
-  onSearchChange,
-  onTypeChange,
-  onStatusChange,
-  onDateFromChange,
-  onDateToChange,
-  onSortByChange,
-  onPageSizeChange,
-  onResetFilters,
-}: Props) => {
   return (
     <GridContainer className={styles.sidebarStyles}>
       <GridRow marginBottom={[2, 3]}>
@@ -68,7 +50,7 @@ export const ApplicationFilters = ({
               icon="reload"
               iconType="outline"
               size="small"
-              onClick={onResetFilters}
+              onClick={resetFilters}
             >
               Hreinsa
             </Button>
@@ -84,93 +66,68 @@ export const ApplicationFilters = ({
               placeholder="Sláðu inn leitarstreng"
               size="xs"
               icon={{ name: 'search', type: 'outline' }}
-              onChange={(event) => onSearchChange(event.target.value)}
+              value={params.search || ''}
+              onChange={(event) => updateParams({ search: event.target.value })}
             />
             <Divider />
             <Select
-              isClearable
+              isClearable={true}
               options={TYPE_OPTIONS}
               label="Tegund auglýsingar"
               size="xs"
               placeholder="Veldu tegund"
-              onChange={(opt) => {
-                if (!opt) return onTypeChange('')
-                return onTypeChange(opt.value)
-              }}
+              onChange={(opt) => updateParams({ type: opt?.value })}
+              value={
+                params.type
+                  ? TYPE_OPTIONS.find((opt) => opt.value === params.type)
+                  : null
+              }
             />
             <Select
-              isClearable
+              isClearable={true}
               options={STATUS_OPTIONS}
               label="Staða auglýsingar"
               size="xs"
               placeholder="Veldu stöðu"
-              onChange={(opt) => {
-                if (!opt) return onStatusChange('')
-                return onStatusChange(opt.value)
-              }}
+              onChange={(opt) => updateParams({ status: opt?.value })}
+              value={
+                params.status
+                  ? STATUS_OPTIONS.find((opt) => opt.value === params.status)
+                  : null
+              }
             />
-            <Stack space={1}>
-              <DatePicker
-                locale="is"
-                label="Dagsetning frá"
-                placeholderText="Frá og með degi..."
-                size="xs"
-                handleChange={(date) => onDateFromChange(date)}
-              />
-              <Inline align="right">
-                <Button
-                  size="small"
-                  variant="text"
-                  icon="reload"
-                  onClick={() => onDateFromChange(null)}
-                >
-                  Hreinsa val
-                </Button>
-              </Inline>
-            </Stack>
-            <Stack space={1}>
-              <DatePicker
-                locale="is"
-                label="Dagsetning til"
-                placeholderText="Til og með degi..."
-                size="xs"
-                handleChange={(date) => onDateToChange(date)}
-              />
-              <Inline align="right">
-                <Button
-                  size="small"
-                  variant="text"
-                  icon="reload"
-                  onClick={() => onDateToChange(null)}
-                >
-                  Hreinsa val
-                </Button>
-              </Inline>
-            </Stack>
-            <Select
-              isClearable
-              placeholder="Raða eftir"
-              label="Raða eftir"
+            <DatePicker
+              locale="is"
+              label="Dagsetning frá"
+              placeholderText="Frá og með degi..."
               size="xs"
-              options={[
-                { value: 'dateDesc', label: 'Dagsetningu (nýjast fyrst)' },
-                { value: 'dateAsc', label: 'Dagsetningu (eldst fyrst)' },
-              ]}
-              onChange={(opt) => {
-                if (!opt) return onSortByChange('')
-                return onSortByChange(opt.value)
-              }}
+              handleChange={(date) => updateParams({ dateFrom: date })}
+              selected={params.dateFrom}
+              maxDate={params.dateTo || new Date()}
+            />
+            <DatePicker
+              locale="is"
+              label="Dagsetning til"
+              maxDate={new Date()}
+              minDate={params.dateFrom || undefined}
+              placeholderText="Til og með degi..."
+              size="xs"
+              handleChange={(date) => updateParams({ dateTo: date })}
+              selected={params.dateTo}
             />
             <Select
-              isClearable
               placeholder="Fjöldi niðurstaða"
               label="Fjöldi niðurstaða"
               size="xs"
               options={PAGE_SIZE_OPTIONS}
-              onChange={(opt) => {
-                if (!opt) return onPageSizeChange(5)
-                return onPageSizeChange(opt.value)
-              }}
+              onChange={(opt) => updateParams({ pageSize: opt?.value })}
+              value={
+                params.pageSize
+                  ? PAGE_SIZE_OPTIONS.find(
+                      (opt) => opt.value === params.pageSize,
+                    )
+                  : null
+              }
             />
           </Stack>
         </GridColumn>

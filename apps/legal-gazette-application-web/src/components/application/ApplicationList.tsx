@@ -48,12 +48,14 @@ export const ApplicationList = ({
         />
       )}
 
-      {applications?.length === 0 && (
-        <Text>Þú hefur ekki stofnað neinar auglýsingar ennþá.</Text>
+      {applications && applications.length > 0 ? (
+        applications?.map((application, i) => (
+          <ApplicationCard application={application} key={i} />
+        ))
+      ) : (
+        <Text>Engar auglýsingar fundust, kannski þarf að breyta síu</Text>
       )}
-      {applications?.map((application, i) => (
-        <ApplicationCard application={application} key={i} />
-      ))}
+
       {paging && paging.totalPages > 1 && (
         <Pagination
           page={paging.page}
