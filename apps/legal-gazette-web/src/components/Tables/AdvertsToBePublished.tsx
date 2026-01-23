@@ -45,7 +45,7 @@ export const AdvertsToBePublished = ({
         onChange={() => onToggle?.(advert.id)}
       />
     ),
-    utgafudagur: formatDate(advert.updatedAt),
+    utgafudagur: formatDate(advert.scheduledAt),
     flokkur: advert.category.title,
     efni: advert.title,
     sender: advert.createdBy,
