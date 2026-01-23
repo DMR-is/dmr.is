@@ -9,7 +9,11 @@ import {
   GridRow,
 } from '@dmr.is/ui/components/island-is'
 
-import { ApplicationFilters } from '../components/application/ApplicationFilters'
+import {
+  ApplicationFilters,
+  mapStatusToEnum,
+  mapTypeToEnum,
+} from '../components/application/ApplicationFilters'
 import { ApplicationList } from '../components/application/ApplicationList'
 import { useApplicationFilters } from '../hooks/useApplicationFilters'
 import { useTRPC } from '../lib/trpc/client/trpc'
@@ -26,8 +30,8 @@ export function ApplicationsListContainer() {
       dateFrom: params.dateFrom ? params.dateFrom.toISOString() : undefined,
       dateTo: params.dateTo ? params.dateTo.toISOString() : undefined,
       search: params.search || undefined,
-      type: params.type || undefined,
-      status: params.status || undefined,
+      type: mapTypeToEnum(params.type),
+      status: mapStatusToEnum(params.status),
       sortBy: params.sortBy || undefined,
       direction: params.direction || undefined,
     }),

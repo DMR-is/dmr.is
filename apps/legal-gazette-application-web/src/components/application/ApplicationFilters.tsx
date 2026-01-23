@@ -23,18 +23,46 @@ const PAGE_SIZE_OPTIONS = [
   { value: 50, label: '50' },
 ]
 
+// URL-friendly slugs for type filter
 const TYPE_OPTIONS = [
-  { value: ApplicationTypeEnum.COMMON, label: 'Almenn auglýsing' },
-  { value: ApplicationTypeEnum.RECALLBANKRUPTCY, label: 'Innköllun þrotabús' },
-  { value: ApplicationTypeEnum.RECALLDECEASED, label: 'Innköllun dánarbús' },
+  { value: 'almenn-auglysing', label: 'Almenn auglýsing' },
+  { value: 'innkollun-throtabus', label: 'Innköllun þrotabús' },
+  { value: 'innkollun-danarbus', label: 'Innköllun dánarbús' },
 ]
 
+// URL-friendly slugs for status filter
 const STATUS_OPTIONS = [
-  { value: ApplicationStatusEnum.DRAFT, label: 'Drög' },
-  { value: ApplicationStatusEnum.INPROGRESS, label: 'Í vinnslu' },
-  { value: ApplicationStatusEnum.SUBMITTED, label: 'Innsent' },
-  { value: ApplicationStatusEnum.FINISHED, label: 'Lokið' },
+  { value: 'drog', label: 'Drög' },
+  { value: 'i-vinnslu', label: 'Í vinnslu' },
+  { value: 'innsent', label: 'Innsent' },
+  { value: 'lokid', label: 'Lokið' },
 ]
+
+// Mapping functions to convert between URL slugs and API enums
+export const mapTypeToEnum = (
+  type: string | null | undefined,
+): ApplicationTypeEnum | undefined => {
+  if (!type) return undefined
+  const typeMap: Record<string, ApplicationTypeEnum> = {
+    'almenn-auglysing': ApplicationTypeEnum.COMMON,
+    'innkollun-throtabus': ApplicationTypeEnum.RECALLBANKRUPTCY,
+    'innkollun-danarbus': ApplicationTypeEnum.RECALLDECEASED,
+  }
+  return typeMap[type]
+}
+
+export const mapStatusToEnum = (
+  status: string | null | undefined,
+): ApplicationStatusEnum | undefined => {
+  if (!status) return undefined
+  const statusMap: Record<string, ApplicationStatusEnum> = {
+    drog: ApplicationStatusEnum.DRAFT,
+    'i-vinnslu': ApplicationStatusEnum.INPROGRESS,
+    innsent: ApplicationStatusEnum.SUBMITTED,
+    lokid: ApplicationStatusEnum.FINISHED,
+  }
+  return statusMap[status]
+}
 
 export const ApplicationFilters = () => {
   const { params, updateParams, resetFilters } = useApplicationFilters()

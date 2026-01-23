@@ -6,11 +6,16 @@ import {
   useQueryStates,
 } from 'nuqs'
 
-import {
-  ApplicationStatusEnum,
-  ApplicationTypeEnum,
-  SortDirectionEnum,
-} from '../gen/fetch'
+import { SortDirectionEnum } from '../gen/fetch'
+
+// URL-friendly slug values for type and status filters
+const TYPE_SLUGS = [
+  'almenn-auglysing',
+  'innkollun-throtabus',
+  'innkollun-danarbus',
+] as const
+
+const STATUS_SLUGS = ['drog', 'i-vinnslu', 'innsent', 'lokid'] as const
 
 export const useApplicationFilters = () => {
   const [params, setParams] = useQueryStates(
@@ -22,8 +27,8 @@ export const useApplicationFilters = () => {
       direction: parseAsStringEnum(Object.values(SortDirectionEnum)),
       dateFrom: parseAsIsoDate,
       dateTo: parseAsIsoDate,
-      type: parseAsStringEnum(Object.values(ApplicationTypeEnum)),
-      status: parseAsStringEnum(Object.values(ApplicationStatusEnum)),
+      type: parseAsStringEnum(TYPE_SLUGS),
+      status: parseAsStringEnum(STATUS_SLUGS),
     },
     {
       shallow: true,
