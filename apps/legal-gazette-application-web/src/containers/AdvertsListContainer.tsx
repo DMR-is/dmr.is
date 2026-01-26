@@ -14,7 +14,7 @@ import {
 import { OldAdvertsList } from '../components/adverts/OldAdvertsList'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
-export function AdvertsListContainer() {
+export function OldAdvertsListContainer() {
   const trpc = useTRPC()
   const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
 

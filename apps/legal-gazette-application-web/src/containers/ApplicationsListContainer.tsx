@@ -7,6 +7,7 @@ import {
   GridColumn,
   GridContainer,
   GridRow,
+  LinkV2,
 } from '@dmr.is/ui/components/island-is'
 
 import {
@@ -41,9 +42,11 @@ export function ApplicationsListContainer() {
     <GridContainer>
       <GridRow marginBottom={[2, 3]}>
         <GridColumn span="12/12">
-          <Button size="small" variant="text" icon="arrowForward">
-            Eldri auglýsingar
-          </Button>
+          <LinkV2 href="/auglysingar/eldri-auglysingar">
+            <Button size="small" variant="text" icon="arrowForward">
+              Eldri auglýsingar
+            </Button>
+          </LinkV2>
         </GridColumn>
       </GridRow>
       <GridRow marginBottom={[4, 6]}>
