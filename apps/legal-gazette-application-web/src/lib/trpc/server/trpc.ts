@@ -5,8 +5,18 @@ import { getServerClient } from '../../api/serverClient'
 import { initTRPC, TRPCError } from '@trpc/server'
 
 export const createTRPCContext = cache(async () => {
-  return {
-    api: await getServerClient(),
+  try {
+    return {
+      api: await getServerClient(),
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message === 'No session found') {
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: e.message })
+    }
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'An unexpected error occurred',
+    })
   }
 })
 
