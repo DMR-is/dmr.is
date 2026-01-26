@@ -63,8 +63,8 @@ export function OldAdvertsListContainer() {
               <Stack space={1}>
                 <Text variant="h3">Engar eldri auglýsingar fundust</Text>
                 <Text>
-                  Engar auglýsingar fundust úr eldri kerfum, stofnaðar fyrir 17.
-                  janúar
+                  Engar auglýsingar fundust úr eldri kerfum, birtar fyrir 17.
+                  janúar 2026
                 </Text>
               </Stack>
             </Box>

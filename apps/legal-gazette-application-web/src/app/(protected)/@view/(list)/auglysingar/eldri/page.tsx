@@ -20,7 +20,14 @@ export default function MyOldAdvertsPage() {
           <GridRow>
             <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
               <Inline space={2} alignY="bottom" justifyContent={'spaceBetween'}>
-                <Text variant="h3">Eldri auglýsingar</Text>
+                <Stack space={1}>
+                  <Text variant="h3">Eldri auglýsingar</Text>
+                  <Text>
+                    Auglýsingar sem voru stofnaðar í eldri kerfum og birtar
+                    fyrir 17. janúar 2026
+                  </Text>
+                </Stack>
+
                 <LinkV2 href="/auglysingar">
                   <Button size="small" variant="utility" colorScheme="white">
                     Mínar auglýsingar
