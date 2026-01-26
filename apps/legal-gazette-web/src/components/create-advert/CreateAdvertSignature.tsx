@@ -11,14 +11,16 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
+type Signature = z.infer<typeof signatureSchemaRefined>
+
 type Props = {
-  onChange: (signature: z.infer<typeof signatureSchemaRefined>) => void
+  onChange: (signature: Signature) => void
 }
 
-const initalState = {
+const initalState: Signature = {
   name: '',
   location: '',
-  signatureDate: '',
+  date: '',
   onBehalfOf: '',
 }
 
@@ -43,7 +45,7 @@ export const CreateAdvertSignature = ({ onChange }: Props) => {
             backgroundColor="blue"
             label="Nafn undirritunar"
             name="signature-name"
-            value={state.name}
+            value={state.name ?? ''}
             onChange={(e) => handleChange('name', e.target.value)}
           />
         </GridColumn>
@@ -53,22 +55,21 @@ export const CreateAdvertSignature = ({ onChange }: Props) => {
             backgroundColor="blue"
             label="Staðsetning undirritunar"
             name="signature-location"
-            value={state.location}
+            value={state.location ?? ''}
             onChange={(e) => handleChange('location', e.target.value)}
           />
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <DatePicker
             size="sm"
+            locale="is"
             appearInline={false}
             backgroundColor="blue"
             label="Dagsetning undirritunar"
             name="signature-signature-date"
             placeholderText={undefined}
-            selected={new Date(state.signatureDate)}
-            handleChange={(date) =>
-              handleChange('signatureDate', date.toISOString())
-            }
+            selected={state.date ? new Date(state.date) : undefined}
+            handleChange={(date) => handleChange('date', date.toISOString())}
           />
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
@@ -77,7 +78,7 @@ export const CreateAdvertSignature = ({ onChange }: Props) => {
             backgroundColor="blue"
             label="Fyrir hönd"
             name="signature-on-behalf-of"
-            value={state.onBehalfOf}
+            value={state.onBehalfOf ?? ''}
             onChange={(e) => handleChange('onBehalfOf', e.target.value)}
           />
         </GridColumn>
