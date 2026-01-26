@@ -18,7 +18,6 @@ import {
 import { Option } from '@island.is/island-ui/core'
 
 import { useFilters } from '../../../../hooks/useFilters'
-import { usePublications } from '../../../../hooks/usePublications'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { isDate } from '../../../../lib/utils'
 
@@ -27,7 +26,6 @@ import { useQuery } from '@tanstack/react-query'
 export const SearchSidebar = () => {
   const trpc = useTRPC()
   const { filters, setFilters, reset } = useFilters()
-  const { totalItems } = usePublications()
 
   const THIS_YEAR = new Date().getFullYear()
   const MIN_DATE = new Date('2000-01-01')
@@ -196,23 +194,6 @@ export const SearchSidebar = () => {
             }}
           />
         </Stack>
-      </Box>
-      <Box paddingLeft={1} marginBottom={4}>
-        {totalItems ? (
-          <Text>
-            <strong>
-              {filters.page > 1 ? filters.pageSize * (filters.page - 1) + 1 : 1}
-            </strong>
-            {' – '}
-            <strong>
-              {filters.page * filters.pageSize < totalItems
-                ? filters.page * filters.pageSize
-                : totalItems}
-            </strong>
-            {' af '}
-            <strong>{totalItems}</strong> niðurstöðum
-          </Text>
-        ) : null}
       </Box>
     </Stack>
   )

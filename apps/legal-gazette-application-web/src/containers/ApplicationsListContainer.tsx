@@ -3,12 +3,12 @@
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import {
   Box,
-  Button,
   GridColumn,
   GridContainer,
   GridRow,
-  LinkV2,
 } from '@dmr.is/ui/components/island-is'
+
+import { Stack } from '@island.is/island-ui/core'
 
 import {
   ApplicationFilters,
@@ -39,42 +39,31 @@ export function ApplicationsListContainer() {
   )
 
   return (
-    <GridContainer>
-      <GridRow marginBottom={[2, 3]}>
-        <GridColumn span="12/12">
-          <LinkV2 href="/auglysingar/eldri-auglysingar">
-            <Button size="small" variant="text" icon="arrowForward">
-              Eldri auglýsingar
-            </Button>
-          </LinkV2>
-        </GridColumn>
-      </GridRow>
-      <GridRow marginBottom={[4, 6]}>
-        <GridColumn span={['12/12', '4/12']} position="relative">
-          <Box
-            position="sticky"
-            top={[3, 4]}
-            background="blue100"
-            borderRadius="large"
-            padding={[2, 3]}
-          >
-            <ApplicationFilters />
-          </Box>
-        </GridColumn>
-        <GridColumn span={['0', '8/12']}>
-          <ApplicationList
-            isLoading={isLoading}
-            applications={data?.applications}
-            paging={data?.paging}
-            error={
-              error
-                ? 'Ekki náðist samband við vefþjón eða hann gat ekki svarað beiðninni'
-                : undefined
-            }
-            onPageChange={(page) => updateParams({ page })}
-          />
-        </GridColumn>
-      </GridRow>
-    </GridContainer>
+    <Box background={'blue100'} paddingTop={[3, 5]} paddingBottom={[6, 8]}>
+      <GridContainer>
+        <GridRow marginTop={0} marginBottom={[4, 6]}>
+          <GridColumn span={['12/12', '3/12']} position="relative">
+            <Stack space={2}>
+              <Box position="sticky" top={[3, 4]} marginTop={1}>
+                <ApplicationFilters />
+              </Box>
+            </Stack>
+          </GridColumn>
+          <GridColumn span={['0', '9/12']}>
+            <ApplicationList
+              isLoading={isLoading}
+              applications={data?.applications}
+              paging={data?.paging}
+              error={
+                error
+                  ? 'Ekki náðist samband við vefþjón eða hann gat ekki svarað beiðninni'
+                  : undefined
+              }
+              onPageChange={(page) => updateParams({ page })}
+            />
+          </GridColumn>
+        </GridRow>
+      </GridContainer>
+    </Box>
   )
 }

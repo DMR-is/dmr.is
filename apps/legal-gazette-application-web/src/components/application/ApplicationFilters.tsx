@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react'
+
 import {
+  Box,
   Button,
   DatePicker,
-  Divider,
   GridColumn,
   GridContainer,
   GridRow,
@@ -32,10 +34,10 @@ const TYPE_OPTIONS = [
 
 // URL-friendly slugs for status filter
 const STATUS_OPTIONS = [
-  { value: 'drog', label: 'Drög' },
-  { value: 'i-vinnslu', label: 'Í vinnslu' },
-  { value: 'innsent', label: 'Innsent' },
-  { value: 'lokid', label: 'Lokið' },
+  { value: 'drog', label: 'Í vinnslu hjá notanda' },
+  // { value: 'i-vinnslu', label: 'Í vinnslu' }, // currently no application status maps to this
+  { value: 'innsent', label: 'Í vinnslu hjá ritsjórn' },
+  { value: 'lokid', label: 'Innsent og útgefið' },
 ]
 
 // Mapping functions to convert between URL slugs and API enums
@@ -57,7 +59,7 @@ export const mapStatusToEnum = (
   if (!status) return undefined
   const statusMap: Record<string, ApplicationStatusEnum> = {
     drog: ApplicationStatusEnum.DRAFT,
-    'i-vinnslu': ApplicationStatusEnum.INPROGRESS,
+    // 'i-vinnslu': ApplicationStatusEnum.INPROGRESS,  // currently no application status maps to this
     innsent: ApplicationStatusEnum.SUBMITTED,
     lokid: ApplicationStatusEnum.FINISHED,
   }
@@ -66,13 +68,30 @@ export const mapStatusToEnum = (
 
 export const ApplicationFilters = () => {
   const { params, updateParams, resetFilters } = useApplicationFilters()
+  const [filterActive, setFilterActive] = useState(false)
+
+  useEffect(() => {
+    const isActive =
+      !!params.search ||
+      !!params.type ||
+      !!params.status ||
+      !!params.dateFrom ||
+      !!params.dateTo
+    setFilterActive(isActive)
+  }, [
+    params.search,
+    params.type,
+    params.status,
+    params.dateFrom,
+    params.dateTo,
+  ])
 
   return (
-    <GridContainer className={styles.sidebarStyles}>
-      <GridRow marginBottom={[2, 3]}>
-        <GridColumn span="12/12">
-          <Inline justifyContent="spaceBetween" alignY="center">
-            <Text variant="h4">Leit</Text>
+    <Stack space={[2, 3]}>
+      <Stack space={[3, 4]}>
+        <Inline justifyContent="spaceBetween" alignY="center">
+          <Text variant="h4">Leit og síun</Text>
+          {filterActive && (
             <Button
               variant="text"
               icon="reload"
@@ -82,84 +101,100 @@ export const ApplicationFilters = () => {
             >
               Hreinsa
             </Button>
-          </Inline>
-        </GridColumn>
-      </GridRow>
-      <GridRow>
-        <GridColumn span="12/12">
-          <Stack space={2}>
-            <Input
-              name="application-search"
-              label="Leita í mínum auglýsingum"
-              placeholder="Sláðu inn leitarstreng"
-              size="xs"
-              icon={{ name: 'search', type: 'outline' }}
-              value={params.search || ''}
-              onChange={(event) => updateParams({ search: event.target.value })}
-            />
-            <Divider />
-            <Select
-              isClearable={true}
-              options={TYPE_OPTIONS}
-              label="Tegund auglýsingar"
-              size="xs"
-              placeholder="Veldu tegund"
-              onChange={(opt) => updateParams({ type: opt?.value })}
-              value={
-                params.type
-                  ? TYPE_OPTIONS.find((opt) => opt.value === params.type)
-                  : null
-              }
-            />
-            <Select
-              isClearable={true}
-              options={STATUS_OPTIONS}
-              label="Staða auglýsingar"
-              size="xs"
-              placeholder="Veldu stöðu"
-              onChange={(opt) => updateParams({ status: opt?.value })}
-              value={
-                params.status
-                  ? STATUS_OPTIONS.find((opt) => opt.value === params.status)
-                  : null
-              }
-            />
-            <DatePicker
-              locale="is"
-              label="Dagsetning frá"
-              placeholderText="Frá og með degi..."
-              size="xs"
-              handleChange={(date) => updateParams({ dateFrom: date })}
-              selected={params.dateFrom}
-              maxDate={params.dateTo || new Date()}
-            />
-            <DatePicker
-              locale="is"
-              label="Dagsetning til"
-              maxDate={new Date()}
-              minDate={params.dateFrom || undefined}
-              placeholderText="Til og með degi..."
-              size="xs"
-              handleChange={(date) => updateParams({ dateTo: date })}
-              selected={params.dateTo}
-            />
-            <Select
-              placeholder="Fjöldi niðurstaða"
-              label="Fjöldi niðurstaða"
-              size="xs"
-              options={PAGE_SIZE_OPTIONS}
-              onChange={(opt) => updateParams({ pageSize: opt?.value })}
-              value={
-                params.pageSize
-                  ? PAGE_SIZE_OPTIONS.find(
-                      (opt) => opt.value === params.pageSize,
-                    )
-                  : null
-              }
-            />
-          </Stack>
-        </GridColumn>
-      </GridRow>
-    </GridContainer>
+          )}
+        </Inline>
+        <Input
+          name="application-search"
+          placeholder="Leita í mínum auglýsingum"
+          size="xs"
+          icon={{ name: 'search', type: 'outline' }}
+          value={params.search || ''}
+          onChange={(event) => updateParams({ search: event.target.value })}
+        />
+      </Stack>
+
+      <Box
+        position="sticky"
+        top={[3, 4]}
+        background="white"
+        borderRadius="large"
+        padding={[2, 3]}
+      >
+        <GridContainer className={styles.sidebarStyles}>
+          <GridRow>
+            <GridColumn span="12/12">
+              <Stack space={[1, 2]}>
+                <Select
+                  isClearable={true}
+                  options={TYPE_OPTIONS}
+                  label="Tegund"
+                  size="xs"
+                  placeholder="Allar tegundir"
+                  backgroundColor="blue"
+                  onChange={(opt) => updateParams({ type: opt?.value })}
+                  value={
+                    params.type
+                      ? TYPE_OPTIONS.find((opt) => opt.value === params.type)
+                      : null
+                  }
+                />
+                <Select
+                  isClearable={true}
+                  options={STATUS_OPTIONS}
+                  label="Staða"
+                  size="xs"
+                  placeholder="Allar stöður"
+                  backgroundColor="blue"
+                  onChange={(opt) => updateParams({ status: opt?.value })}
+                  value={
+                    params.status
+                      ? STATUS_OPTIONS.find(
+                          (opt) => opt.value === params.status,
+                        )
+                      : null
+                  }
+                />
+                <DatePicker
+                  locale="is"
+                  label="Dagsetning frá"
+                  placeholderText=""
+                  backgroundColor="blue"
+                  size="xs"
+                  handleChange={(date) => updateParams({ dateFrom: date })}
+                  selected={params.dateFrom}
+                  maxDate={params.dateTo || new Date()}
+                />
+                <DatePicker
+                  locale="is"
+                  label="Dagsetning til"
+                  maxDate={new Date()}
+                  minDate={params.dateFrom || undefined}
+                  placeholderText=""
+                  backgroundColor="blue"
+                  size="xs"
+                  handleChange={(date) => updateParams({ dateTo: date })}
+                  selected={params.dateTo}
+                />
+                <Select
+                  placeholder="Fjöldi niðurstaða"
+                  label="Fjöldi niðurstaða"
+                  backgroundColor="blue"
+                  size="xs"
+                  options={PAGE_SIZE_OPTIONS}
+                  onChange={(opt) => updateParams({ pageSize: opt?.value })}
+                  value={
+                    params.pageSize
+                      ? PAGE_SIZE_OPTIONS.find(
+                          (opt) => opt.value === params.pageSize,
+                        )
+                      : null
+                  }
+                />
+              </Stack>
+            </GridColumn>
+          </GridRow>
+        </GridContainer>
+      </Box>
+    </Stack>
   )
 }

@@ -4,7 +4,7 @@ import { style } from '@vanilla-extract/css'
 
 export const gridLayout = style({
   display: 'grid',
-  gridTemplateColumns: 'minmax(auto, 450px) minmax(0, 1fr)',
+  gridTemplateColumns: 'minmax(auto, 320px) minmax(0, 1fr)',
   gridTemplateAreas: `"sidebar main"`,
   gap: theme.spacing[4],
 
@@ -20,7 +20,7 @@ export const sidebarStyle = style({
   top: '0px',
   position: 'sticky',
   alignSelf: 'start',
-  maxWidth: '450px',
+  maxWidth: '320px',
 
   '@media': {
     [`(max-width: ${theme.breakpoints.md}px)`]: {

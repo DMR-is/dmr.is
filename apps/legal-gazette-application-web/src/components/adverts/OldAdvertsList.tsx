@@ -23,13 +23,11 @@ export const OldAdvertsList = ({ adverts, paging, onPageChange }: Props) => {
     <GridContainer>
       <GridRow marginTop={3} marginBottom={8}>
         <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
-          <Stack space={[2, 3, 4]}>
+          <Stack space={[2, 3]}>
             {adverts.map((advert) => (
               <AdvertCard advert={advert} key={advert.id} />
             ))}
-            {adverts.length === 0 && (
-              <Text variant="intro">Engar eldri auglýsingar fundust.</Text>
-            )}
+
             {paging.totalPages > 1 && (
               <Pagination
                 page={paging.page}
