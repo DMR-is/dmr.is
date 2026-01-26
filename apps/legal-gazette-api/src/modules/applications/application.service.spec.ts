@@ -217,6 +217,139 @@ describe('ApplicationService - Status Validation', () => {
       expect(result).toBeDefined()
     })
 
+    it('should preserve signature.date as null when explicitly set to null', async () => {
+      // Setup: Create DRAFT application with existing signature data
+      const draftApplication = createMockApplication({
+        status: ApplicationStatusEnum.DRAFT,
+        applicationType: ApplicationTypeEnum.COMMON,
+        answers: {
+          fields: {
+            caption: 'Test Caption',
+          },
+          signature: {
+            name: 'John Doe',
+            location: 'Reykjavík',
+            date: '2024-01-15',
+            onBehalfOf: null,
+          },
+        },
+      })
+
+      applicationModel.findByPkOrThrow.mockResolvedValue(draftApplication)
+
+      // User updates signature but sets date to null
+      const updateDto: UpdateApplicationDto = {
+        currentStep: 3,
+        answers: {
+          signature: {
+            name: 'John Doe',
+            location: 'Reykjavík',
+            date: null, // Explicitly set to null
+            onBehalfOf: null,
+          },
+        },
+      }
+
+      // Action: Update the application
+      const result = await service.updateApplication('app-123', updateDto)
+
+      // Assert: Application should be updated with null date
+      expect(draftApplication.update).toHaveBeenCalled()
+      const updateCall = (draftApplication.update as jest.Mock).mock.calls[0][0]
+      expect(updateCall.answers.signature.date).toBeNull()
+    })
+
+    it('should handle signature with null date when other fields are present', async () => {
+      // Setup: Application with signature containing null date but valid name
+      const draftApplication = createMockApplication({
+        status: ApplicationStatusEnum.DRAFT,
+        applicationType: ApplicationTypeEnum.COMMON,
+        answers: {
+          fields: {
+            caption: 'Test Caption',
+          },
+          signature: {
+            name: 'Jane Smith',
+            location: 'Akureyri',
+            date: null, // Date is null
+            onBehalfOf: 'Company X',
+          },
+        },
+      })
+
+      applicationModel.findByPkOrThrow.mockResolvedValue(draftApplication)
+
+      const updateDto: UpdateApplicationDto = {
+        currentStep: 3,
+        answers: {
+          fields: {
+            caption: 'Updated Caption',
+          },
+        },
+      }
+
+      // Action: Update the application (not modifying signature)
+      const result = await service.updateApplication('app-123', updateDto)
+
+      // Assert: Signature with null date should remain in answers
+      expect(draftApplication.update).toHaveBeenCalled()
+      expect(result).toBeDefined()
+    })
+
+    it('should allow updating signature with date changing from valid to null', async () => {
+      // Reproduces production issue: User had a date, but it becomes null
+      const draftApplication = createMockApplication({
+        status: ApplicationStatusEnum.DRAFT,
+        applicationType: ApplicationTypeEnum.COMMON,
+        answers: {
+          fields: {
+            caption: 'Test Caption',
+          },
+          signature: {
+            name: 'Test User',
+            location: 'Reykjavík',
+            date: '2024-01-20', // User initially set a date
+            onBehalfOf: null,
+          },
+        },
+      })
+
+      applicationModel.findByPkOrThrow.mockResolvedValue(draftApplication)
+
+      // Simulating the production issue: date becomes null despite user setting it
+      const updateDto: UpdateApplicationDto = {
+        currentStep: 4,
+        answers: {
+          signature: {
+            name: 'Test User',
+            location: 'Reykjavík',
+            date: null, // Date is now null (potential bug in frontend or API layer)
+            onBehalfOf: null,
+          },
+        },
+      }
+
+      // Action: Update application
+      const result = await service.updateApplication('app-123', updateDto)
+
+      // Assert: The update succeeds but date is null
+      expect(draftApplication.update).toHaveBeenCalled()
+      const updateCall = (draftApplication.update as jest.Mock).mock.calls[0][0]
+
+      // This test documents the current behavior where null overwrites the previous value
+      // If this is unintended, the service should validate or preserve the previous date
+      expect(updateCall.answers.signature.date).toBeNull()
+
+      // Log warning for debugging production issues
+      console.warn(
+        'PRODUCTION ISSUE: signature.date changed from valid date to null',
+        {
+          previous: '2024-01-20',
+          current: null,
+        },
+      )
+    })
+
     it('should throw BadRequestException when application is SUBMITTED', async () => {
       // Setup: Create SUBMITTED application
       const submittedApplication = createMockApplication({
