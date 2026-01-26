@@ -339,15 +339,6 @@ describe('ApplicationService - Status Validation', () => {
       // This test documents the current behavior where null overwrites the previous value
       // If this is unintended, the service should validate or preserve the previous date
       expect(updateCall.answers.signature.date).toBeNull()
-
-      // Log warning for debugging production issues
-      console.warn(
-        'PRODUCTION ISSUE: signature.date changed from valid date to null',
-        {
-          previous: '2024-01-20',
-          current: null,
-        },
-      )
     })
 
     it('should throw BadRequestException when application is SUBMITTED', async () => {
