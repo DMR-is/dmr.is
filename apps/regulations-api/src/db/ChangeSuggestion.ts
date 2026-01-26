@@ -1,8 +1,13 @@
+import S3 from 'aws-sdk/clients/s3'
 import fetch from 'node-fetch'
 import { QueryTypes } from 'sequelize'
 
 import type { HTMLText, PlainText, RegName } from '../routes/types'
 import { db } from '../utils/sequelize'
+
+const s3 = new S3({
+  region: process.env.AWS_REGION_NAME || 'eu-west-1',
+})
 
 export type ChangeSuggestionStatus =
   | 'pending'
@@ -31,6 +36,7 @@ export type ChangeSuggestionCreateInput = {
   text: HTMLText
   changeset?: string | null
   status?: ChangeSuggestionStatus
+  filekey?: string
 }
 
 export type ChangeSuggestionUpdateInput = {
@@ -164,6 +170,36 @@ export async function getChangeSuggestion(
 export async function createChangeSuggestion(
   data: ChangeSuggestionCreateInput,
 ): Promise<ChangeSuggestion> {
+  let textContent: HTMLText = data.text
+
+  // If a filekey is provided, use the file, otherwise use the provided text
+  if (data.filekey) {
+    const bucketName = process.env.UI_PATH_FILES_BUCKET
+
+    if (!bucketName) {
+      throw new Error('UI_PATH_FILES_BUCKET environment variable is not set')
+    }
+
+    try {
+      const s3Object = await s3
+        .getObject({
+          Bucket: bucketName,
+          Key: data.filekey,
+        })
+        .promise()
+
+      if (!s3Object.Body) {
+        throw new Error(`File not found in S3: ${data.filekey}`)
+      }
+
+      textContent = s3Object.Body.toString('utf-8') as HTMLText
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error'
+      throw new Error(`Failed to fetch file from S3: ${errorMessage}`)
+    }
+  }
+
   const query = `
     INSERT INTO "regulationchangesuggestion" 
       ("regulationId", "changingId", title, text, changeset, status, "appliedChangeId", "decidedBy", "decidedAt", "createdAt")
@@ -177,7 +213,7 @@ export async function createChangeSuggestion(
       regulationId: data.regulationId,
       changingId: data.changingId,
       title: data.title,
-      text: data.text,
+      text: textContent, // Use fetched content or original text
       changeset: data.changeset ?? null,
       status: data.status ?? 'pending',
     },
