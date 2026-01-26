@@ -17,11 +17,10 @@ export const RecallRequirementStatementFields = () => {
 
   const metadata = getValues('metadata')
 
-  const { updateApplication, debouncedUpdateApplication } =
-    useUpdateApplication({
-      id: metadata.applicationId,
-      type: 'RECALL',
-    })
+  const { updateLocalOnly } = useUpdateApplication({
+    id: metadata.applicationId,
+    type: 'RECALL',
+  })
 
   const liquidatorLocation = watch('fields.settlementFields.liquidatorLocation')
 
@@ -60,20 +59,14 @@ export const RecallRequirementStatementFields = () => {
       location,
     )
 
-    updateApplication(
-      {
-        fields: {
-          settlementFields: {
-            recallRequirementStatementType: statementType,
-            recallRequirementStatementLocation: location,
-          },
+    updateLocalOnly({
+      fields: {
+        settlementFields: {
+          recallRequirementStatementType: statementType,
+          recallRequirementStatementLocation: location,
         },
       },
-      {
-        successMessage: 'Val á kröfulýsingu vistað',
-        errorMessage: 'Ekki tókst að vista val á kröfulýsingu',
-      },
-    )
+    })
   }
 
   return (
@@ -104,19 +97,14 @@ export const RecallRequirementStatementFields = () => {
                 : 'Tölvupóstur'
           }
           onChange={(val) =>
-            debouncedUpdateApplication(
-              {
-                fields: {
-                  settlementFields: {
-                    recallRequirementStatementLocation: val,
-                  },
+            // Save to localStorage only - server sync happens on navigation
+            updateLocalOnly({
+              fields: {
+                settlementFields: {
+                  recallRequirementStatementLocation: val,
                 },
               },
-              {
-                successMessage: 'Staðsetning skiptastjóra vistuð',
-                errorMessage: 'Ekki tókst að vista staðsetningu skiptastjóra',
-              },
-            )
+            })
           }
           readonly={
             recallRequirementStatementType ===

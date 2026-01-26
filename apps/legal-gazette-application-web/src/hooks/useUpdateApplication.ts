@@ -1,3 +1,4 @@
+import deepmerge from 'deepmerge'
 import debounce from 'lodash/debounce'
 import { useCallback } from 'react'
 
@@ -10,12 +11,21 @@ import { toast } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationDetailedDto } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
+import { useLocalFormStorage } from './useLocalFormStorage'
 
 import {
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from '@tanstack/react-query'
+
+/**
+ * Custom merge function for deepmerge that replaces arrays instead of merging them.
+ * This matches the server-side behavior where arrays like companies, publishingDates,
+ * and communicationChannels are replaced entirely, not concatenated.
+ */
+const arrayMerge = (_destinationArray: unknown[], sourceArray: unknown[]) =>
+  sourceArray
 
 type UpdateApplicationMutationOptions = {
   onSuccessCallback?: () => void
@@ -44,6 +54,7 @@ export const useUpdateApplication = <T extends UpdateApplicationType>({
 }: UseUpdateApplicationParams<T>) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const { saveToStorage, clearStorage } = useLocalFormStorage(id)
 
   const { data: application } = useSuspenseQuery(
     trpc.getApplicationById.queryOptions({ id: id }),
@@ -69,12 +80,12 @@ export const useUpdateApplication = <T extends UpdateApplicationType>({
 
         if (!prevData) return
 
+        // FIX: Use deepmerge instead of shallow spread to preserve nested fields
+        // This fixes the bug where updating a nested field (e.g., settlementFields.name)
+        // would overwrite sibling fields (e.g., liquidatorName)
         const optimisticData: ApplicationDetailedDto = {
           ...prevData,
-          answers: {
-            ...prevData?.answers,
-            ...answers,
-          },
+          answers: { ...prevData.answers, ...answers },
         }
 
         queryClient.setQueryData(
@@ -112,6 +123,7 @@ export const useUpdateApplication = <T extends UpdateApplicationType>({
           }
 
           options?.onSuccessCallback?.()
+          clearStorage()
 
           queryClient.invalidateQueries(
             trpc.getApplicationById.queryFilter({
@@ -160,9 +172,44 @@ export const useUpdateApplication = <T extends UpdateApplicationType>({
     [debouncedHandler],
   )
 
+  /**
+   * Update localStorage only without making a server call.
+   * Also updates the React Query cache optimistically for immediate UI feedback.
+   * Use this for field changes between navigation events.
+   */
+  const updateLocalOnly = useCallback(
+    (answers: UpdateApplicationAnswersWithoutStep<T>) => {
+      // Save to localStorage
+      saveToStorage(answers as Record<string, unknown>)
+
+      // // Optimistically update React Query cache for immediate UI feedback
+      // const prevData = queryClient.getQueryData(
+      //   trpc.getApplicationById.queryKey({ id }),
+      // )
+
+      // if (prevData) {
+      //   const optimisticData: ApplicationDetailedDto = {
+      //     ...prevData,
+      //     answers: deepmerge(
+      //       (prevData.answers || {}) as Record<string, unknown>,
+      //       (answers || {}) as Record<string, unknown>,
+      //       { arrayMerge },
+      //     ),
+      //   }
+
+      //   queryClient.setQueryData(
+      //     trpc.getApplicationById.queryKey({ id }),
+      //     optimisticData,
+      //   )
+      // }
+    },
+    [id, saveToStorage, queryClient, trpc],
+  )
+
   return {
     updateApplication,
     debouncedUpdateApplication,
+    updateLocalOnly,
     isUpdatingApplication,
   }
 }

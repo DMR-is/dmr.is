@@ -6,7 +6,7 @@ import { identityServerConfig } from './identityServerConfig'
 
 const LOGGING_CATEGORY = 'refreshAccessToken'
 
-const renewalSeconds = 10 // seconds
+const renewalSeconds = 20 // seconds
 
 export const isExpired = (
   accessToken: string,

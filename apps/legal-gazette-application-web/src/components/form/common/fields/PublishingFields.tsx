@@ -28,7 +28,7 @@ export const PublishingFields = () => {
 
   const { metadata } = getValues()
   const currentDates = watch('publishingDates', []) as string[]
-  const { updateApplication } = useUpdateApplication({
+  const { updateLocalOnly } = useUpdateApplication({
     id: metadata.applicationId,
     type: 'COMMON',
   })
@@ -38,12 +38,9 @@ export const PublishingFields = () => {
       setValue('publishingDates', newDates)
       const payload = { publishingDates: newDates }
 
-      updateApplication(payload, {
-        successMessage: 'Birtingardagar vistaðir',
-        errorMessage: 'Ekki tókst að vista birtingardaga',
-      })
+      updateLocalOnly(payload)
     },
-    [setValue, updateApplication],
+    [setValue, updateLocalOnly],
   )
 
   const addDate = useCallback(() => {

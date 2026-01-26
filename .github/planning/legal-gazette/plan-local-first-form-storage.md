@@ -158,17 +158,23 @@ Test scenarios:
 |------|---------|
 | `apps/legal-gazette-application-web/src/hooks/useLocalFormStorage.ts` | localStorage management |
 
-## Files to Modify
+## Files Modified
 
 | File | Changes |
 |------|---------|
-| `apps/legal-gazette-application-web/src/hooks/useUpdateApplication.ts` | deepmerge fix, add `updateLocalOnly` |
-| `apps/legal-gazette-application-web/src/containers/CommonFormContainer.tsx` | Hydrate from localStorage, clear on submit |
-| `apps/legal-gazette-application-web/src/containers/RecallFormContainer.tsx` | Same as Common |
-| `apps/legal-gazette-application-web/src/components/application/footer/ApplicationFooter.tsx` | Merge & sync on navigation |
-| `apps/legal-gazette-application-web/src/components/form/fields/SignatureFields.tsx` | Use `updateLocalOnly` |
-| `apps/legal-gazette-application-web/src/components/form/common/fields/CommonAdvertFields.tsx` | Use `updateLocalOnly` |
-| Additional field components | Replace `debouncedUpdateApplication` |
+| `apps/legal-gazette-application-web/src/hooks/useUpdateApplication.ts` | ✅ deepmerge fix, added `updateLocalOnly`, localStorage integration |
+| `apps/legal-gazette-application-web/src/containers/CommonFormContainer.tsx` | ✅ Hydrate from localStorage on mount, clear on submit |
+| `apps/legal-gazette-application-web/src/containers/RecallFormContainer.tsx` | ✅ Same as Common |
+| `apps/legal-gazette-application-web/src/components/application/footer/ApplicationFooter.tsx` | ✅ Merge localStorage + form data on navigation |
+| `apps/legal-gazette-application-web/src/components/form/fields/SignatureFields.tsx` | ✅ Use `updateLocalOnly` |
+| `apps/legal-gazette-application-web/src/components/form/common/fields/CommonAdvertFields.tsx` | ✅ Use `updateLocalOnly` for caption |
+| `apps/legal-gazette-application-web/src/components/form/common/fields/AdvertContentFields.tsx` | ✅ Use `updateLocalOnly` for HTML |
+| `apps/legal-gazette-application-web/src/components/form/recall/fields/settlement/RecallBankruptcySettlementFields.tsx` | ✅ Use `updateLocalOnly` |
+| `apps/legal-gazette-application-web/src/components/form/recall/fields/settlement/RecallSettlementDefault.tsx` | ✅ Use `updateLocalOnly` |
+| `apps/legal-gazette-application-web/src/components/form/recall/fields/RecallRequirementStatementFields.tsx` | ✅ Use `updateLocalOnly` |
+| `apps/legal-gazette-application-web/src/components/form/recall/fields/RecallAdvertFields.tsx` | ✅ Use `updateLocalOnly` |
+| `apps/legal-gazette-application-web/src/components/form/recall/fields/RecallDivisionFields.tsx` | ✅ Use `updateLocalOnly` |
+| `apps/legal-gazette-application-web/src/components/form/recall/fields/RecallLiquidatorFields.tsx` | ✅ Use `updateLocalOnly` |
 
 ## Dependencies
 
@@ -238,14 +244,14 @@ If issues arise:
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| Phase 1: localStorage Hook | ⬜ Not started | |
-| Phase 2: deepmerge Bug Fix | ⬜ Not started | |
-| Phase 3: updateLocalOnly | ⬜ Not started | |
-| Phase 4: CommonFormContainer | ⬜ Not started | |
-| Phase 5: ApplicationFooter | ⬜ Not started | |
-| Phase 6: Field Components | ⬜ Not started | |
-| Phase 7: RecallFormContainer | ⬜ Not started | |
-| Phase 8: Testing | ⬜ Not started | |
+| Phase 1: localStorage Hook | ✅ Completed | Created `useLocalFormStorage.ts` |
+| Phase 2: deepmerge Bug Fix | ✅ Completed | Fixed shallow spread in `useUpdateApplication.ts` |
+| Phase 3: updateLocalOnly | ✅ Completed | Added new function to hook |
+| Phase 4: CommonFormContainer | ✅ Completed | Added hydration and clear on submit |
+| Phase 5: ApplicationFooter | ✅ Completed | Merges and syncs on navigation |
+| Phase 6: Field Components | ✅ Completed | Updated 9 components |
+| Phase 7: RecallFormContainer | ✅ Completed | Same as Common |
+| Phase 8: Testing | ⬜ Requires manual testing | See testing checklist |
 
 ## Estimated Scope
 

@@ -29,7 +29,7 @@ export const CommunicationChannelFields = () => {
 
   const metadata = getValues('metadata')
 
-  const { updateApplication } = useUpdateApplication({
+  const { updateLocalOnly } = useUpdateApplication({
     id: metadata.applicationId,
     type: 'COMMON',
   })
@@ -69,17 +69,7 @@ export const CommunicationChannelFields = () => {
     setValue('communicationChannels', channels, {
       shouldValidate: true,
     })
-    updateApplication(
-      { communicationChannels: channels },
-      {
-        successMessage: isEditing
-          ? 'Samskiptaleið uppfærð'
-          : 'Samskiptaleið bætt við',
-        errorMessage: isEditing
-          ? 'Ekki tókst að uppfæra samskiptaleið'
-          : 'Ekki tókst að bæta við samskiptaleið',
-      },
-    )
+    updateLocalOnly({ communicationChannels: channels })
     setToggleAdd(false)
     setIsEditing('')
     setCurrentChannel({ email: '', name: '', phone: '' })
@@ -88,13 +78,7 @@ export const CommunicationChannelFields = () => {
   const removeChannel = (index: number) => {
     const updatedChannels = channels.filter((_, i) => i !== index)
     setValue('communicationChannels', updatedChannels)
-    updateApplication(
-      { communicationChannels: updatedChannels },
-      {
-        successMessage: 'Samskiptaleið fjarlægð',
-        errorMessage: 'Ekki tókst að fjarlægja samskiptaleið',
-      },
-    )
+    updateLocalOnly({ communicationChannels: updatedChannels })
     trigger('communicationChannels')
   }
 
