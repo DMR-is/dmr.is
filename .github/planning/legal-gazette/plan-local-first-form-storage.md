@@ -115,22 +115,27 @@ Changes:
 
 ### Phase 6: Update Field Components
 
-**Status**: ⬜ Not started
+**Status**: ✅ Completed
 
 For each field component using `debouncedUpdateApplication`:
 
 1. Replace with `updateLocalOnly` (no server call)
 2. Remove success/error toast messages for field changes
-3. Keep immediate `updateApplication` for type/category changes (if needed)
+3. All field changes use `updateLocalOnly` except initial checkmark handler
 
-**Components to update:**
+**Components updated:**
 
 - `SignatureFields.tsx`
 - `CommonAdvertFields.tsx`
-- `RecallSettlementFields.tsx`
-- `CommunicationChannelsField.tsx`
-- `PublishingDatesField.tsx`
-- Other field components as identified
+- `AdvertContentFields.tsx`
+- `RecallBankruptcySettlementFields.tsx`
+- `RecallSettlementDefault.tsx`
+- `RecallRequirementStatementFields.tsx`
+- `RecallAdvertFields.tsx`
+- `RecallDivisionFields.tsx`
+- `RecallLiquidatorFields.tsx`
+
+**Note**: User also updated all non-debounced calls to use localStorage, with server sync only happening on step change (navigation). The only exception is the initial checkmark handler which still syncs immediately.
 
 ### Phase 7: Update RecallFormContainer
 
@@ -206,6 +211,12 @@ Test scenarios:
 **Choice**: Implement both fixes
 **Rationale**: deepmerge fix provides safety net even with local-first approach. Belt and suspenders.
 
+### Decision 5: Server Sync Only on Step Change
+
+**Choice**: All field changes use localStorage, server sync only on navigation (Next/Back)
+**Rationale**: Eliminates partial update bugs, reduces API calls, improves responsiveness.
+**Exception**: Initial checkmark handler still syncs immediately (user requirement).
+
 ## Risk Assessment
 
 | Risk | Likelihood | Impact | Mitigation |
@@ -222,16 +233,18 @@ Test scenarios:
 
 ## Testing Checklist
 
-- [ ] Form hydrates from localStorage on page load
-- [ ] Field changes save to localStorage (check DevTools → Application → Local Storage)
-- [ ] Next button syncs to server and clears localStorage
-- [ ] Back button syncs to server and clears localStorage
+- [x] Form hydrates from localStorage on page load
+- [x] Field changes save to localStorage (check DevTools → Application → Local Storage)
+- [x] Next button syncs to server and clears localStorage
+- [x] Back button syncs to server and clears localStorage
 - [ ] Final submit clears localStorage
 - [ ] Multi-tab: second tab overwrites first tab's localStorage
 - [ ] Browser close/reopen preserves form data
-- [ ] Nested field updates don't lose sibling fields (deepmerge fix)
-- [ ] Type/category changes still sync immediately (if keeping that behavior)
-- [ ] Recall forms work same as Common forms
+- [x] Nested field updates don't lose sibling fields (deepmerge fix)
+- [x] Type/category changes use local storage (except initial checkmark handler)
+- [x] Recall forms work same as Common forms
+- [x] HTML Editor hydrates correctly from localStorage
+- [x] HTML Editor maintains focus when typing
 
 ## Rollback Plan
 
@@ -252,6 +265,39 @@ If issues arise:
 | Phase 6: Field Components | ✅ Completed | Updated 9 components |
 | Phase 7: RecallFormContainer | ✅ Completed | Same as Common |
 | Phase 8: Testing | ⬜ Requires manual testing | See testing checklist |
+
+## Bug Fixes During Implementation
+
+### Bug 1: HTML Editor not hydrating from localStorage
+
+**Problem**: The `Editor` component uses `defaultValue` which only sets the value on mount. When localStorage hydration ran after mount, the Editor didn't update.
+
+**Solution**: Added a `key` prop to the Editor that increments when the HTML value changes from an external source (localStorage hydration), forcing it to remount with the new value.
+
+### Bug 2: HTML Editor losing focus when typing
+
+**Problem**: After fixing Bug 1, the Editor was remounting on every keystroke because the useEffect couldn't distinguish between user typing and external hydration.
+
+**Solution**: Added `isInternalChangeRef` to track when changes originate from the Editor's `onChange` handler. The useEffect now skips key updates for internal changes, only remounting for external hydration.
+
+**File**: `apps/legal-gazette-application-web/src/components/form/common/fields/AdvertContentFields.tsx`
+
+```typescript
+const isInternalChangeRef = useRef(false)
+
+// In useEffect:
+if (isInternalChangeRef.current) {
+  isInternalChangeRef.current = false
+  previousHtmlRef.current = fields?.html
+  return // Skip key update for internal changes
+}
+
+// In onChange:
+onChange={(val) => {
+  isInternalChangeRef.current = true // Mark as internal before setValue
+  // ... rest of handler
+}}
+```
 
 ## Estimated Scope
 
