@@ -123,7 +123,7 @@ describe('middleware-helpers', () => {
         const response = NextResponse.next()
 
         const largeToken = createLargeToken()
-        const result = updateCookie(largeToken, request, response)
+        updateCookie(largeToken, request, response)
 
         // Verify new chunks are set
         const chunk0 = request.cookies.get(`${SESSION_COOKIE}.0`)
@@ -165,11 +165,11 @@ describe('middleware-helpers', () => {
         // Reconstruct token from all chunks
         let reconstructed = ''
         let i = 0
-        while (true) {
-          const chunk = request.cookies.get(`${SESSION_COOKIE}.${i}`)
-          if (!chunk) break
+        let chunk = request.cookies.get(`${SESSION_COOKIE}.${i}`)
+        while (chunk) {
           reconstructed += chunk.value
           i++
+          chunk = request.cookies.get(`${SESSION_COOKIE}.${i}`)
         }
 
         expect(reconstructed).toBe(largeToken)
