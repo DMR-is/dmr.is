@@ -6,7 +6,9 @@ export const useLogOut = () => {
   const { data: session } = useSession()
 
   const logOut = () => {
-    sessionStorage.clear()
+    if (typeof window !== 'undefined') {
+      sessionStorage?.clear()
+    }
 
     signOut({
       callbackUrl: signOutUrl(window, session?.idToken as string),
@@ -16,6 +18,8 @@ export const useLogOut = () => {
 }
 
 export const forceLogin = (callbackUrl: string) => {
-  sessionStorage.clear()
+  if (typeof window !== 'undefined') {
+    sessionStorage?.clear()
+  }
   signIn(identityServerId, { callbackUrl })
 }
