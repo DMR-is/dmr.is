@@ -86,13 +86,7 @@ export const CommonAdvertFields = () => {
 
               setValue('fields.type', typeToUpdateTo)
 
-              updateApplication(
-                { fields: { type: typeToUpdateTo } },
-                {
-                  successMessage: 'Tegund auglýsingar vistuð',
-                  errorMessage: 'Ekki tókst að vista tegund auglýsingar',
-                },
-              )
+              updateLocalOnly({ fields: { type: typeToUpdateTo } })
             }}
           />
         </GridColumn>

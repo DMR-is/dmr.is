@@ -85,7 +85,11 @@ export const useUpdateApplication = <T extends UpdateApplicationType>({
         // would overwrite sibling fields (e.g., liquidatorName)
         const optimisticData: ApplicationDetailedDto = {
           ...prevData,
-          answers: { ...prevData.answers, ...answers },
+          answers: deepmerge(
+            (prevData.answers || {}) as Record<string, unknown>,
+            (answers || {}) as Record<string, unknown>,
+            { arrayMerge },
+          ),
         }
 
         queryClient.setQueryData(

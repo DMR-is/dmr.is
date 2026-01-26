@@ -1,9 +1,11 @@
+'use client'
+
 import { useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 
 import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 
-import { GridColumn, GridRow, Text } from '@island.is/island-ui/core'
+import { GridColumn, GridRow } from '@island.is/island-ui/core'
 
 import { ApplicationRequirementStatementEnum } from '../../../../gen/fetch'
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
