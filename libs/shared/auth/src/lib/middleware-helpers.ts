@@ -12,6 +12,57 @@ const SESSION_COOKIE = SESSION_SECURE
   : 'next-auth.session-token'
 const SESSION_TIMEOUT = 60 * 60 // 1 hour
 
+/**
+ * NextAuth's chunk size for cookies (4096 - overhead = 3933 bytes)
+ * @see https://github.com/nextauthjs/next-auth/blob/main/packages/core/src/lib/cookie.ts
+ */
+const CHUNK_SIZE = 3933
+
+interface CookieOptions {
+  httpOnly: boolean
+  maxAge: number
+  secure: boolean
+  sameSite: 'lax' | 'strict' | 'none'
+}
+
+/**
+ * Deletes all existing session cookies including chunks.
+ *
+ * When delegation is used, NextAuth automatically chunks large session tokens
+ * into multiple cookies (e.g., session-token.0, session-token.1).
+ *
+ * @returns Array of cookie names that were deleted
+ */
+function deleteExistingChunks(
+  request: NextRequest,
+  baseName: string,
+): string[] {
+  const cookiesToDelete: string[] = []
+
+  // Collect all cookies that match the session pattern
+  for (const cookie of request.cookies.getAll()) {
+    if (cookie.name === baseName || cookie.name.startsWith(`${baseName}.`)) {
+      cookiesToDelete.push(cookie.name)
+    }
+  }
+
+  // Delete them from the request
+  for (const cookieName of cookiesToDelete) {
+    request.cookies.delete(cookieName)
+  }
+
+  return cookiesToDelete
+}
+
+/**
+ * Checks if the existing session uses chunked cookies.
+ */
+function hasChunkedCookies(request: NextRequest, baseName: string): boolean {
+  return request.cookies
+    .getAll()
+    .some((cookie) => cookie.name.startsWith(`${baseName}.`))
+}
+
 export function updateCookie(
   sessionToken: string | null,
   request: NextRequest,
@@ -26,21 +77,52 @@ export function updateCookie(
    */
 
   if (sessionToken) {
-    // Set the session token in the request and response cookies for a valid session
-    request.cookies.set(SESSION_COOKIE, sessionToken)
+    // Create a new response to ensure headers are fresh
     response = NextResponse.next({
       request: {
         headers: request.headers,
       },
     })
-    response.cookies.set(SESSION_COOKIE, sessionToken, {
+    const cookieOptions: CookieOptions = {
       httpOnly: true,
       maxAge: SESSION_TIMEOUT,
       secure: SESSION_SECURE,
       sameSite: 'lax',
-    })
+    }
+    /**
+     * When delegation is used, tokens can exceed 4KB, requiring chunking.
+     * This function mimics NextAuth's chunking behavior to prevent
+     * "Invalid Compact JWE" errors.
+     *
+     * @see https://github.com/nextauthjs/next-auth/blob/main/packages/core/src/lib/cookie.ts
+     */
+    if (sessionToken.length <= CHUNK_SIZE) {
+      // Single cookie - no chunking needed
+      request.cookies.set(SESSION_COOKIE, sessionToken)
+      response.cookies.set(SESSION_COOKIE, sessionToken, cookieOptions)
+    } else {
+      // Split into chunks
+      const chunkCount = Math.ceil(sessionToken.length / CHUNK_SIZE)
+      for (let i = 0; i < chunkCount; i++) {
+        const chunkName = `${SESSION_COOKIE}.${i}`
+        const chunkValue = sessionToken.substring(
+          i * CHUNK_SIZE,
+          (i + 1) * CHUNK_SIZE,
+        )
+        request.cookies.set(chunkName, chunkValue)
+        response.cookies.set(chunkName, chunkValue, cookieOptions)
+      }
+    }
   } else {
-    response.cookies.delete(SESSION_COOKIE)
+    if (hasChunkedCookies(request, SESSION_COOKIE)) {
+      const deletedCookies = deleteExistingChunks(request, SESSION_COOKIE)
+      // Also delete from response
+      for (const cookieName of deletedCookies) {
+        response.cookies.delete(cookieName)
+      }
+    } else {
+      response.cookies.delete(SESSION_COOKIE)
+    }
   }
 
   return response
