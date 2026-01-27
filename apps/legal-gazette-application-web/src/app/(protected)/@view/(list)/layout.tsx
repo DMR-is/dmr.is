@@ -1,5 +1,5 @@
 import { LGFooter } from '@dmr.is/ui/components/Footer/LGFooter'
-import { GridContainer, Stack } from '@dmr.is/ui/components/island-is'
+import { Stack } from '@dmr.is/ui/components/island-is'
 
 import { UmsoknirHero } from '../../../../components/hero/UmsoknirHero'
 
@@ -10,9 +10,9 @@ export default function ViewListLayout({
 }) {
   return (
     <>
-      <Stack space={4}>
+      <Stack space={2}>
         <UmsoknirHero />
-        <GridContainer>{children}</GridContainer>
+        {children}
       </Stack>
       <LGFooter site="applications" />
     </>

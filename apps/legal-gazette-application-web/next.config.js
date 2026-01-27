@@ -8,6 +8,15 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
  **/
 const nextConfig = {
   output: 'standalone',
+  async redirects() {
+    return [
+      {
+        source: '/eldriauglysingar',
+        destination: '/auglysingar/eldri',
+        permanent: true,
+      },
+    ]
+  },
   webpack: (config, { isServer }) => {
     config.resolve.alias.canvas = false
 
