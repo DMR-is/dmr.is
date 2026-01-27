@@ -147,8 +147,8 @@ export const ApplicationFooter = () => {
   ])
   return (
     <Box
-      paddingY={[2, 5]}
-      paddingX={[2, 12]}
+      paddingY={[2, 2, 4, 5]}
+      paddingX={[2, 2, 4, 12]}
       background="white"
       borderTopWidth="standard"
       borderColor="purple100"

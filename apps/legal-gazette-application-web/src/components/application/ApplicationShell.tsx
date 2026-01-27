@@ -30,9 +30,9 @@ export const ApplicationShell = ({ children, title, form }: Props) => {
         <GridColumn span={['12/12', '12/12', '9/12']}>
           <Box
             className={styles.applicationShellStyles}
-            paddingTop={[4, 9]}
-            paddingBottom={[2, 6]}
-            paddingX={[2, 12]}
+            paddingTop={[4, 4, 4, 9]}
+            paddingBottom={[2, 2, 4, 6]}
+            paddingX={[2, 2, 4, 12]}
             background="white"
           >
             <Inline alignY="center" justifyContent="spaceBetween" space={2}>
