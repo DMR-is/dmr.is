@@ -6,7 +6,7 @@ import { getElement, getTableCell, getTableHeaderCell } from '../element'
 export function getRecallBankruptcyTemplate(model: AdvertModel): string {
   // Render what we can, gracefully handle missing data
   const settlement = model.settlement
-  const deadline = settlement?.deadline
+  const date = settlement?.date
   const judgementDate = model.judgementDate
   const divisionMeetingDate = model.divisionMeetingDate
   const divisionMeetingLocation = model.divisionMeetingLocation
@@ -25,7 +25,7 @@ export function getRecallBankruptcyTemplate(model: AdvertModel): string {
     `${settlement?.name || ''},<br />kt. ${settlement?.nationalId || ''},<br />${settlement?.address || ''}`,
   )
   const deadlineCell = getTableCell(
-    deadline ? formatDate(deadline, 'd. MMMM yyyy') : '',
+    date ? formatDate(date, 'd. MMMM yyyy') : '',
   )
   const divisionMeetingCell = getTableCell(
     `${divisionMeetingDate ? formatDate(divisionMeetingDate, 'EEEE') : ''}<br />${divisionMeetingDate ? formatDate(divisionMeetingDate, 'd. MMMM yyyy') : ''}<br />kl. ${divisionMeetingDate ? formatDate(divisionMeetingDate, 'HH:mm') : ''}`,

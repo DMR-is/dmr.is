@@ -11,7 +11,7 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
   // Render what we can, gracefully handle missing data
   const judgementDate = model.judgementDate
   const name = model.settlement?.name
-  const dateOfDeath = model.settlement?.dateOfDeath
+  const dateOfDeath = model.settlement?.date
   const nationalId = model.settlement?.nationalId
   const address = model.settlement?.address
   const liquidatorLocation = model.settlement?.liquidatorLocation

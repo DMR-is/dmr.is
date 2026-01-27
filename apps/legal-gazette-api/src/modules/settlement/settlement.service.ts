@@ -51,13 +51,8 @@ export class SettlementService {
     if (body.address !== undefined) {
       updateData.address = body.address
     }
-    if (body.deadline !== undefined) {
-      updateData.deadline = body.deadline ? new Date(body.deadline) : null
-    }
-    if (body.dateOfDeath !== undefined) {
-      updateData.dateOfDeath = body.dateOfDeath
-        ? new Date(body.dateOfDeath)
-        : null
+    if (body.date !== undefined) {
+      updateData.date = body.date ? new Date(body.date) : null
     }
     if (body.declaredClaims !== undefined) {
       updateData.declaredClaims = body.declaredClaims

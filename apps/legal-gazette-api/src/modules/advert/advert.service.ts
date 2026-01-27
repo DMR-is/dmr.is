@@ -230,7 +230,7 @@ export class AdvertService implements IAdvertService {
         nationalId: body.fields.settlementNationalId,
         name: body.fields.settlementName,
         address: body.fields.settlementAddress,
-        deadline: body.fields.settlementDate,
+        date: body.fields.settlementDate,
         liquidatorLocation: body.fields.liquidatorLocation,
         liquidatorName: body.fields.liquidatorName,
         recallStatementLocation: body.fields.requirementStatementLocation,
@@ -339,7 +339,7 @@ export class AdvertService implements IAdvertService {
         nationalId: body.fields.settlementNationalId,
         name: body.fields.settlementName,
         address: body.fields.settlementAddress,
-        dateOfDeath: body.fields.settlementDate,
+        date: body.fields.settlementDate,
         companies: body.fields.companies,
         liquidatorLocation: body.fields.liquidatorLocation,
         liquidatorName: body.fields.liquidatorName,
@@ -667,12 +667,14 @@ export class AdvertService implements IAdvertService {
               liquidatorRecallStatementLocation:
                 body.settlement.recallStatementLocation,
               address: body.settlement.address,
-              dateOfDeath: body.settlement.dateOfDeath
-                ? new Date(body.settlement.dateOfDeath)
-                : null,
-              deadline: body.settlement.deadline
-                ? new Date(body.settlement.deadline)
-                : null,
+              // Support both new 'date' field and legacy 'deadline'/'dateOfDeath' fields
+              date: body.settlement.date
+                ? new Date(body.settlement.date)
+                : body.settlement.deadline
+                  ? new Date(body.settlement.deadline)
+                  : body.settlement.dateOfDeath
+                    ? new Date(body.settlement.dateOfDeath)
+                    : null,
               name: body.settlement.name,
               nationalId: body.settlement.nationalId,
               declaredClaims: body.settlement.declaredClaims ?? null,

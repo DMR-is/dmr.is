@@ -505,9 +505,13 @@ export class RecallApplicationService implements IRecallApplicationService {
         }
 
         data = check.data
+        // Transform legacy deadlineDate to new date field
+        const bankruptcyDate =
+          data.fields.settlementFields.date ||
+          data.fields.settlementFields.deadlineDate
         Object.assign(createObj, {
           settlement: {
-            deadline: data.fields.settlementFields.deadlineDate,
+            date: bankruptcyDate,
           },
         })
         break
@@ -527,9 +531,13 @@ export class RecallApplicationService implements IRecallApplicationService {
         }
 
         data = check.data
+        // Transform legacy dateOfDeath to new date field
+        const deceasedDate =
+          data.fields.settlementFields.date ||
+          data.fields.settlementFields.dateOfDeath
         Object.assign(createObj, {
           settlement: {
-            dateOfDeath: data.fields.settlementFields.dateOfDeath,
+            date: deceasedDate,
             type: data.fields.settlementFields.type,
           },
         })

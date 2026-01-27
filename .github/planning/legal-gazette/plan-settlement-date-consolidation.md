@@ -373,7 +373,7 @@ export const recallDeceasedSchemaRefined = z.object({
 ```typescript
 import * as z from 'zod'
 
-### Phase 4: Service Layer Updates ⏸️ Not Started
+### Phase 4: Service Layer Updates 🟡 In Progress
 
 **Goal:** Update business logic to use new `date` field while handling legacy data transformation.
   recallBankruptcyApplicationSchemaLegacy,
@@ -420,7 +420,7 @@ export const updateApplicationWithIdInput = z
 - ✅ Both legacy and modern schemas accepted
 - ✅ Type checking passes
 
-**Status:** ⏸️ Not Started
+**Status:** ✅ Complete
 
 ---
 

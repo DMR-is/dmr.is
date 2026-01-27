@@ -15,6 +15,7 @@ export const settlementSchema = z.object({
     .optional()
     .nullable(),
   recallRequirementStatementLocation: z.string().optional().nullable(),
+  date: z.string().optional().nullable(),
 })
 
 export const settlementSchemaRefined = z.object({

@@ -192,16 +192,19 @@ export class ApplicationService implements IApplicationService {
           'fields.settlementFields.liquidatorRecallStatementType',
           undefined,
         ),
-        deadline: get(
-          application.answers,
-          'fields.settlementFields.deadlineDate',
-          undefined,
-        ),
-        dateOfDeath: get(
-          application.answers,
-          'fields.settlementFields.dateOfDeath',
-          undefined,
-        ),
+        // Support both new 'date' field and legacy 'deadlineDate'/'dateOfDeath' fields
+        date:
+          get(application.answers, 'fields.settlementFields.date', undefined) ||
+          get(
+            application.answers,
+            'fields.settlementFields.deadlineDate',
+            undefined,
+          ) ||
+          get(
+            application.answers,
+            'fields.settlementFields.dateOfDeath',
+            undefined,
+          ),
         address: get(
           application.answers,
           'fields.settlementFields.address',

@@ -124,8 +124,7 @@ export type AdvertPreviewData = {
     name?: string
     nationalId?: string
     address?: string
-    deadline?: Date | string | null
-    dateOfDeath?: Date | string | null
+    date?: Date | string | null
     declaredClaims?: number | null
     companies?: any[]
   } | null
@@ -195,15 +194,10 @@ export function getAdvertHTMLMarkupPreview(
       ? {
           ...data.settlement,
           // Convert string dates to Date objects if needed
-          deadline: data.settlement.deadline
-            ? typeof data.settlement.deadline === 'string'
-              ? new Date(data.settlement.deadline)
-              : data.settlement.deadline
-            : null,
-          dateOfDeath: data.settlement.dateOfDeath
-            ? typeof data.settlement.dateOfDeath === 'string'
-              ? new Date(data.settlement.dateOfDeath)
-              : data.settlement.dateOfDeath
+          date: data.settlement.date
+            ? typeof data.settlement.date === 'string'
+              ? new Date(data.settlement.date)
+              : data.settlement.date
             : null,
         }
       : null,
