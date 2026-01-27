@@ -34,6 +34,12 @@ export const ritstjornTableMessages = {
       description:
         'Column header for the creation date of adverts in the submitted table',
     },
+    publishedAt: {
+      id: 'lg.web:ritstjorn-tables.submitted.columns.publishedAt',
+      defaultMessage: 'Útgáfa',
+      description:
+        'Column header for the published date of adverts in the submitted table',
+    },
     publishingNumber: {
       id: 'lg.web:ritstjorn-tables.submitted.columns.publishingNumber',
       defaultMessage: 'Útgáfunúmer',
