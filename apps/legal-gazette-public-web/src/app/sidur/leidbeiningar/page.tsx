@@ -14,8 +14,6 @@ import {
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
-
-import { VideoIframe } from '@island.is/island-ui/core'
 export default function Page() {
   return (
     <GridContainer>
@@ -210,12 +208,12 @@ export default function Page() {
 
                       <EmbeddedVideo
                         url="https://www.youtube.com/embed/sDHeQdnVpAU?si=Qsz5XhsUm2vwc5l1"
-                        thumbnailImageUrl={'/images/videoImage1.png'}
+                        thumbnailImageUrl={'/images/leidbeiningarVideo1.png'}
                       />
 
                       <EmbeddedVideo
                         url="https://www.youtube.com/embed/NuFQqKxyBLk?si=M-gUxYpi2XBc8vlR"
-                        thumbnailImageUrl={'/images/videoImage1.png'}
+                        thumbnailImageUrl={'/images/leidbeiningarVideo2.png'}
                       />
                     </Stack>
                   </Stack>
@@ -284,12 +282,12 @@ export default function Page() {
 
               <EmbeddedVideo
                 url="https://www.youtube.com/embed/Dxd9emfI7Tw?si=EnBnrk7xrKuCwbl7"
-                thumbnailImageUrl={'/images/videoImage1.png'}
+                thumbnailImageUrl={'/images/leidbeiningarVideo3.png'}
               />
 
               <EmbeddedVideo
                 url="https://www.youtube.com/embed/VJu5c0zc0xE?si=F3xiyX32QSda_40d"
-                thumbnailImageUrl={'/images/videoImage1.png'}
+                thumbnailImageUrl={'/images/leidbeiningarVideo4.png'}
               />
             </Stack>
 
