@@ -183,37 +183,31 @@ export const useUpdateApplication = <T extends UpdateApplicationType>({
    */
   const updateLocalOnly = useCallback(
     (answers: UpdateApplicationAnswersWithoutStep<T>) => {
-      // Save to localStorage
       saveToStorage(answers as Record<string, unknown>)
-
-      // // Optimistically update React Query cache for immediate UI feedback
-      // const prevData = queryClient.getQueryData(
-      //   trpc.getApplicationById.queryKey({ id }),
-      // )
-
-      // if (prevData) {
-      //   const optimisticData: ApplicationDetailedDto = {
-      //     ...prevData,
-      //     answers: deepmerge(
-      //       (prevData.answers || {}) as Record<string, unknown>,
-      //       (answers || {}) as Record<string, unknown>,
-      //       { arrayMerge },
-      //     ),
-      //   }
-
-      //   queryClient.setQueryData(
-      //     trpc.getApplicationById.queryKey({ id }),
-      //     optimisticData,
-      //   )
-      // }
     },
     [id, saveToStorage, queryClient, trpc],
+  )
+
+  const debounceLocalHandler = useCallback(
+    debounce(
+      (answers: UpdateApplicationAnswers<T>) => updateLocalOnly(answers),
+      200,
+    ),
+    [updateLocalOnly],
+  )
+
+  const debouncedUpdateApplicationLocalOnly = useCallback(
+    (answers: UpdateApplicationAnswers<T>) => {
+      debounceLocalHandler.cancel()
+      return debounceLocalHandler(answers)
+    },
+    [debounceLocalHandler],
   )
 
   return {
     updateApplication,
     debouncedUpdateApplication,
-    updateLocalOnly,
+    updateLocalOnly: debouncedUpdateApplicationLocalOnly,
     isUpdatingApplication,
   }
 }
