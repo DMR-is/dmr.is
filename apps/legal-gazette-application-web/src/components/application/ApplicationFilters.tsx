@@ -88,7 +88,7 @@ export const ApplicationFilters = () => {
 
   return (
     <Stack space={[2, 3]}>
-      <Stack space={[3, 4]}>
+      <Stack space={[2, 4]}>
         <Inline justifyContent="spaceBetween" alignY="center">
           <Text variant="h4">Leit og síun</Text>
           {filterActive && (
@@ -119,6 +119,7 @@ export const ApplicationFilters = () => {
         background="white"
         borderRadius="large"
         padding={[2, 3]}
+        marginBottom={2}
       >
         <GridContainer className={styles.sidebarStyles}>
           <GridRow>

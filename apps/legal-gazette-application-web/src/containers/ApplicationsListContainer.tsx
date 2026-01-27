@@ -42,14 +42,17 @@ export function ApplicationsListContainer() {
     <Box background={'blue100'} paddingTop={[3, 5]} paddingBottom={[6, 8]}>
       <GridContainer>
         <GridRow marginTop={0} marginBottom={[4, 6]}>
-          <GridColumn span={['12/12', '3/12']} position="relative">
+          <GridColumn
+            span={['12/12', '12/12', '12/12', '4/12', '3/12']}
+            position="relative"
+          >
             <Stack space={2}>
               <Box position="sticky" top={[3, 4]} marginTop={1}>
                 <ApplicationFilters />
               </Box>
             </Stack>
           </GridColumn>
-          <GridColumn span={['0', '9/12']}>
+          <GridColumn span={['12/12', '12/12', '12/12', '8/12', '9/12']}>
             <ApplicationList
               isLoading={isLoading}
               applications={data?.applications}

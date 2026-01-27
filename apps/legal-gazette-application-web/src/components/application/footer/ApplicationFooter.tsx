@@ -147,14 +147,14 @@ export const ApplicationFooter = () => {
   ])
   return (
     <Box
-      paddingY={[3, 5]}
-      paddingX={[9, 12]}
+      paddingY={[2, 5]}
+      paddingX={[2, 12]}
       background="white"
       borderTopWidth="standard"
       borderColor="purple100"
       className={styles.shellFooter}
     >
-      <Inline justifyContent="spaceBetween" alignY="center">
+      <Inline justifyContent="spaceBetween" alignY="center" space={1}>
         <Button
           disabled={!canGoBack || isUpdatingApplication}
           type="button"
