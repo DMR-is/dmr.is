@@ -22,11 +22,10 @@ export const CommonAdvertFields = () => {
 
   const fieldValues = getValues('fields')
 
-  const { updateApplication, debouncedUpdateApplication } =
-    useUpdateApplication({
-      id: metadata.applicationId,
-      type: 'COMMON',
-    })
+  const { updateLocalOnly } = useUpdateApplication({
+    id: metadata.applicationId,
+    type: 'COMMON',
+  })
 
   const {
     data: categoriesData,
@@ -51,13 +50,7 @@ export const CommonAdvertFields = () => {
       category: newCategory,
     }
 
-    updateApplication(
-      { fields: payload },
-      {
-        successMessage: 'Tegund auglýsingar vistuð',
-        errorMessage: 'Ekki tókst að vista tegund auglýsingar',
-      },
-    )
+    updateLocalOnly({ fields: payload })
   }, [categoriesData?.categories, formState.isDirty])
 
   const typeOptions = metadata.typeOptions.map((typeOption) => ({
@@ -93,13 +86,7 @@ export const CommonAdvertFields = () => {
 
               setValue('fields.type', typeToUpdateTo)
 
-              updateApplication(
-                { fields: { type: typeToUpdateTo } },
-                {
-                  successMessage: 'Tegund auglýsingar vistuð',
-                  errorMessage: 'Ekki tókst að vista tegund auglýsingar',
-                },
-              )
+              updateLocalOnly({ fields: { type: typeToUpdateTo } })
             }}
           />
         </GridColumn>
@@ -114,13 +101,9 @@ export const CommonAdvertFields = () => {
               const categoryToUpdateTo = categoriesData?.categories.find(
                 (category) => category.id === val,
               )
-              return updateApplication(
-                { fields: { category: categoryToUpdateTo } },
-                {
-                  successMessage: 'Flokkur vistaður',
-                  errorMessage: 'Ekki tókst að vista flokk',
-                },
-              )
+              return updateLocalOnly({
+                fields: { category: categoryToUpdateTo },
+              })
             }}
           />
         </GridColumn>
@@ -129,15 +112,10 @@ export const CommonAdvertFields = () => {
             name="fields.caption"
             label="Yfirskrift"
             required
-            onChange={(val) =>
-              debouncedUpdateApplication(
-                { fields: { caption: val } },
-                {
-                  successMessage: 'Yfirskrift vistuð',
-                  errorMessage: 'Ekki tókst að vista yfirskrift',
-                },
-              )
-            }
+            onChange={(val) => {
+              // Save to localStorage only - server sync happens on blur / navigation
+              updateLocalOnly({ fields: { caption: val } })
+            }}
           />
         </GridColumn>
       </GridRow>

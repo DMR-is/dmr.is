@@ -87,7 +87,9 @@ export class TokenJwtAuthGuard implements CanActivate {
 
       // Verify the token with the public key
       const payload = jwt.verify(token, publicKey, {
+        issuer: `https://${process.env.IDENTITY_SERVER_DOMAIN}`,
         algorithms: ['RS256'],
+        clockTolerance: 20, // 20 seconds clock tolerance
       }) as jwt.JwtPayload
       const user = idToken
         ? this.userInfoFromIdToken(tokens[1], publicKey, payload.sub as string)

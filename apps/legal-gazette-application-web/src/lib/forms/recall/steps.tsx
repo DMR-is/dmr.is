@@ -11,8 +11,8 @@ import {
 import { Text } from '@dmr.is/ui/components/island-is'
 
 import { CommunicationChannelFields } from '../../../components/form/fields/CommunicationChannelFields'
+import { PublishingFields } from '../../../components/form/fields/PublishingFields'
 import { SignatureFields } from '../../../components/form/fields/SignatureFields'
-import { RecallPublishingFields } from '../../../components/form/recall/fields/PublishingFields'
 import { RecallAdvertFields } from '../../../components/form/recall/fields/RecallAdvertFields'
 import { RecallDivisionFields } from '../../../components/form/recall/fields/RecallDivisionFields'
 import { RecallLiquidatorFields } from '../../../components/form/recall/fields/RecallLiquidatorFields'
@@ -119,7 +119,7 @@ export const RecallFormSteps = (
                 þrír.
               </Text>
             ),
-            content: <RecallPublishingFields />,
+            content: <PublishingFields applicationType="RECALL" />,
           },
           {
             title: 'Samskiptaleiðir',

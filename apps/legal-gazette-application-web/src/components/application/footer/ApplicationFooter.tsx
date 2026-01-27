@@ -10,6 +10,7 @@ import {
 } from '@dmr.is/legal-gazette/schemas'
 import { Box, Button, Inline } from '@dmr.is/ui/components/island-is'
 
+import { useLocalFormStorage } from '../../../hooks/useLocalFormStorage'
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 import { CommonFormSteps } from '../../../lib/forms/common/steps'
 import { RecallFormSteps } from '../../../lib/forms/recall/steps'
@@ -51,6 +52,7 @@ export const ApplicationFooter = () => {
   const { getValues, setValue, setError, clearErrors } =
     useFormContext<BaseApplicationWebSchema>()
   const id = getValues('metadata.applicationId')
+  const { getMergedData } = useLocalFormStorage(id)
   const { updateApplication, isUpdatingApplication } = useUpdateApplication({
     id: id,
     type: 'COMMON',
@@ -66,8 +68,14 @@ export const ApplicationFooter = () => {
 
   const goBack = useCallback(() => {
     if (!canGoBack) return
+
+    // Get all form values and merge with localStorage
+    const { metadata: _metadata, ...answers } = getValues()
+    const mergedAnswers = getMergedData(answers)
+
+    // Submit all data to server on navigation (both directions save)
     updateApplication(
-      { currentStep: currentStep - 1 },
+      { ...mergedAnswers, currentStep: currentStep - 1 },
       {
         onSuccessCallback: () => {
           clearErrors()
@@ -75,7 +83,7 @@ export const ApplicationFooter = () => {
         },
       },
     )
-  }, [canGoBack, updateApplication, currentStep, setValue])
+  }, [canGoBack, updateApplication, currentStep, setValue, getValues, getMergedData, clearErrors])
 
   const goForward = useCallback(() => {
     if (!canContinue) return
@@ -129,8 +137,13 @@ export const ApplicationFooter = () => {
       }
     }
 
+    // Get all form values and merge with localStorage
+    const { metadata: _formMetadata, ...allAnswers } = getValues()
+    const mergedAnswers = getMergedData(allAnswers)
+
+    // Submit all data to server on navigation
     updateApplication(
-      { currentStep: currentStep + 1 },
+      { ...mergedAnswers, currentStep: currentStep + 1 },
       {
         onSuccessCallback: () => {
           setValue('metadata.currentStep', currentStep + 1)
@@ -144,6 +157,8 @@ export const ApplicationFooter = () => {
     setValue,
     metadata.type,
     setError,
+    getValues,
+    getMergedData,
   ])
   return (
     <Box

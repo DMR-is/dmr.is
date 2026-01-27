@@ -20,11 +20,10 @@ export const RecallAdvertFields = () => {
 
   const { data: courtOptions } = useQuery(trpc.getCourtDistricts.queryOptions())
 
-  const { updateApplication, debouncedUpdateApplication } =
-    useUpdateApplication({
-      id: applicationId,
-      type: 'RECALL',
-    })
+  const { updateLocalOnly } = useUpdateApplication({
+    id: applicationId,
+    type: 'RECALL',
+  })
 
   const courtOptionsData =
     courtOptions?.courtDistricts.map((court) => ({
@@ -47,19 +46,13 @@ export const RecallAdvertFields = () => {
               )
 
               setValue('fields.courtAndJudgmentFields.courtDistrict', found)
-              return updateApplication(
-                {
-                  fields: {
-                    courtAndJudgmentFields: {
-                      courtDistrict: found,
-                    },
+              return updateLocalOnly({
+                fields: {
+                  courtAndJudgmentFields: {
+                    courtDistrict: found,
                   },
                 },
-                {
-                  successMessage: 'Dómstóll vistaður',
-                  errorMessage: 'Ekki tókst að vista dómstól',
-                },
-              )
+              })
             }}
           />
         </GridColumn>
@@ -69,17 +62,11 @@ export const RecallAdvertFields = () => {
             label="Úrskurðardagur"
             required
             onChange={(val) =>
-              updateApplication(
-                {
-                  fields: {
-                    courtAndJudgmentFields: { judgmentDate: val.toISOString() },
-                  },
+              updateLocalOnly({
+                fields: {
+                  courtAndJudgmentFields: { judgmentDate: val.toISOString() },
                 },
-                {
-                  successMessage: 'Úrskurðardagur vistaður',
-                  errorMessage: 'Ekki tókst að vista úrskurðardag',
-                },
-              )
+              })
             }
           />
         </GridColumn>
@@ -89,13 +76,8 @@ export const RecallAdvertFields = () => {
             name="additionalText"
             label="Frjáls texti"
             onChange={(val) =>
-              debouncedUpdateApplication(
-                { additionalText: val },
-                {
-                  successMessage: 'Frjáls texti vistaður',
-                  errorMessage: 'Ekki tókst að vista frjálsan texta',
-                },
-              )
+              // Save to localStorage only - server sync happens on navigation
+              updateLocalOnly({ additionalText: val })
             }
           />
         </GridColumn>

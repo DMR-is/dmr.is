@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback } from 'react'
+import deepmerge from 'deepmerge'
+import { useCallback, useEffect } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 
 import {
@@ -9,17 +10,21 @@ import {
   recallBankruptcyAnswersRefined,
   recallDeceasedAnswersRefined,
 } from '@dmr.is/legal-gazette/schemas'
+import { getLogger } from '@dmr.is/logging-next'
 import { Box } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationShell } from '../components/application/ApplicationShell'
 import { FormStep } from '../components/form-step/FormStep'
 import { ApplicationDetailedDto } from '../gen/fetch'
+import { useLocalFormStorage } from '../hooks/useLocalFormStorage'
 import { useSubmitApplication } from '../hooks/useSubmitApplication'
 import { recallForm } from '../lib/forms/recall/form'
 import { RecallFormSteps } from '../lib/forms/recall/steps'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
+
+const logger = getLogger('RecallFormContainer')
 
 type Props = {
   application: ApplicationDetailedDto
@@ -55,6 +60,7 @@ export const RecallFormContainer = ({
     ),
   )
 
+  const { loadFromStorage, clearStorage } = useLocalFormStorage(application.id)
   const { onValidSubmit, onInvalidSubmit } = useSubmitApplication(
     application.id,
   )
@@ -87,6 +93,25 @@ export const RecallFormContainer = ({
     }),
   )
 
+  // Hydrate form from localStorage on mount
+  // This restores any unsaved changes if the user closed the browser
+  useEffect(() => {
+    const storedData = loadFromStorage()
+    if (storedData) {
+      logger.info('Hydrating form from localStorage', {
+        applicationId: application.id,
+      })
+
+      const currentValues = methods.getValues()
+      // Merge localStorage data with current form values (localStorage wins)
+      const mergedValues = deepmerge(currentValues, storedData, {
+        arrayMerge: (_dest, source) => source,
+      }) as RecallApplicationWebSchema
+
+      methods.reset(mergedValues)
+    }
+  }, [loadFromStorage, methods, application.id])
+
   const onSubmit = useCallback(
     (_data: RecallApplicationWebSchema) => {
       // Manually get values to ensure we have the latest data
@@ -118,9 +143,11 @@ export const RecallFormContainer = ({
         }
       }
 
+      // Clear localStorage before submitting - server sync will complete the process
+      clearStorage()
       onValidSubmit()
     },
-    [mappedType, methods, onValidSubmit, onInvalidSubmit],
+    [mappedType, methods, onValidSubmit, onInvalidSubmit, clearStorage],
   )
 
   const stepToRender = form.steps.at(application.currentStep)
@@ -133,9 +160,15 @@ export const RecallFormContainer = ({
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit, onInvalidSubmit)}>
-        <ApplicationShell form={form} title={stepToRender.title}>
+        <ApplicationShell
+          form={form}
+          title={stepToRender.title}
+        >
           <Box paddingY={[2, 3]}>
-            <FormStep items={stepToRender.fields} />
+            <FormStep
+              items={stepToRender.fields}
+              loading={!methods.formState.isReady}
+            />
           </Box>
         </ApplicationShell>
       </form>
