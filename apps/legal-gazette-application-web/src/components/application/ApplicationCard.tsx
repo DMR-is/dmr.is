@@ -140,8 +140,8 @@ export const ApplicationCard = ({ application }: Props) => {
 
   return (
     <Box borderRadius="large" border="standard" padding={3} background="white">
-      <Stack space={0}>
-        <Inline justifyContent="spaceBetween">
+      <Stack space={[1, 0]}>
+        <Inline justifyContent="spaceBetween" space={1}>
           <Text color="purple400" variant="eyebrow" title="Uppfært">
             Uppfært:{' '}
             {`${formatDate(application.updatedAt, "dd. MMMM yyyy 'kl.' HH:mm")}`}
@@ -184,7 +184,12 @@ export const ApplicationCard = ({ application }: Props) => {
           {recallInProgress && (
             <Text variant="medium">{application.subtitle}</Text>
           )}
-          <Inline justifyContent="spaceBetween" alignY="center">
+          <Inline
+            justifyContent="spaceBetween"
+            alignY="center"
+            collapseBelow="sm"
+            space={1}
+          >
             {recallInProgress ? (
               <div className={cardExtraButtonStyle}>
                 <AddAdvertsToApplicationMenu

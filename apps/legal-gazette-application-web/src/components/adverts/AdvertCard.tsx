@@ -63,8 +63,8 @@ export const AdvertCard = ({ advert }: Props) => {
         padding={3}
         background="white"
       >
-        <Stack space={0}>
-          <Inline justifyContent="spaceBetween">
+        <Stack space={[1, 0]}>
+          <Inline justifyContent="spaceBetween" space={1}>
             <Text color="purple400" variant="eyebrow">
               {advert.publishedAt
                 ? `Birt: ${formatDate(advert.publishedAt)}`
@@ -85,7 +85,12 @@ export const AdvertCard = ({ advert }: Props) => {
 
           <Stack space={1}>
             <Text variant="h3">{advert.title}</Text>
-            <Inline justifyContent="spaceBetween" alignY="center">
+            <Inline
+              justifyContent="spaceBetween"
+              alignY="center"
+              space={1}
+              collapseBelow="sm"
+            >
               <Text variant="medium">
                 {advert.type?.title} - {advert.category?.title}
               </Text>

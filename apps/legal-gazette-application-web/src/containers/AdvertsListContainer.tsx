@@ -31,7 +31,10 @@ export function OldAdvertsListContainer() {
     return (
       <GridContainer>
         <GridRow marginTop={3}>
-          <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
+          <GridColumn
+            span={['12/12', '12/12', '12/12', '12/12', '10/12']}
+            offset={['0', '0', '0', '0', '1/12']}
+          >
             <SkeletonLoader
               repeat={3}
               height={200}
@@ -58,7 +61,10 @@ export function OldAdvertsListContainer() {
     return (
       <GridContainer>
         <GridRow marginTop={3}>
-          <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
+          <GridColumn
+            span={['12/12', '12/12', '12/12', '12/12', '10/12']}
+            offset={['0', '0', '0', '0', '1/12']}
+          >
             <Box background={'white'} borderRadius="large" padding={[4, 5]}>
               <Stack space={1}>
                 <Text variant="h3">Engar eldri auglýsingar fundust</Text>

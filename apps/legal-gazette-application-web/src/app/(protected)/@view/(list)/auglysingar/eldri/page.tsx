@@ -18,7 +18,10 @@ export default function MyOldAdvertsPage() {
       <Stack space={2}>
         <GridContainer>
           <GridRow>
-            <GridColumn span={['12/12', '10/12']} offset={['0', '1/12']}>
+            <GridColumn
+              span={['12/12', '12/12', '12/12', '12/12', '10/12']}
+              offset={['0', '0', '0', '0', '1/12']}
+            >
               <Inline space={2} alignY="bottom" justifyContent={'spaceBetween'}>
                 <Stack space={1}>
                   <Text variant="h3">Eldri auglýsingar</Text>
