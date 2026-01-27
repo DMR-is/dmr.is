@@ -193,7 +193,9 @@ export const CommunicationChannelFields = () => {
                               size="small"
                               icon="add"
                               disabled={
-                                !currentChannel.email || isEmailAlreadyAdded || !isEmail(currentChannel.email)
+                                !currentChannel.email ||
+                                isEmailAlreadyAdded ||
+                                !isEmail(currentChannel.email)
                               }
                             >
                               Bæta við

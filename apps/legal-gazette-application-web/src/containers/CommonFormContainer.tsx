@@ -118,7 +118,7 @@ export const CommonFormContainer = ({ application }: Props) => {
       <form onSubmit={methods.handleSubmit(onSubmit, onInvalidSubmit)}>
         <ApplicationShell form={CommonFormSteps} title={stepToRender.title}>
           <Box paddingY={[2, 3]}>
-            <FormStep items={stepToRender.fields} />
+            <FormStep items={stepToRender.fields} loading={!methods.formState.isReady} />
           </Box>
         </ApplicationShell>
       </form>
