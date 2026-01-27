@@ -21,8 +21,15 @@
         "name": "next"
       }
     ],
-    "types": ["jest", "node"],
-    "lib": ["dom", "dom.iterable", "es2019"],
+    "types": [
+      "jest",
+      "node"
+    ],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "es2019"
+    ],
     "moduleResolution": "node"
   },
   "exclude": [
@@ -37,5 +44,11 @@
     "src/**/*.spec.jsx",
     "src/**/*.test.jsx"
   ],
-  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"]
+  "include": [
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "next-auth.d.ts"
+  ]
 }
