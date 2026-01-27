@@ -22,8 +22,10 @@ import { mapIndexToVersion, mapVersionToIndex } from '../../../core/utils'
 import { AdvertModel } from '../../../models/advert.model'
 import {
   AdvertPublicationDetailedDto,
+  AdvertPublicationDto,
   AdvertPublicationModel,
   AdvertVersionEnum,
+  GetPublicationsDetailedDto,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,
@@ -111,6 +113,56 @@ export class PublicationService implements IPublicationService {
       publications: mapped,
       paging,
     }
+  }
+
+  async getPublicationsDetailed(
+    query: GetPublicationsQueryDto,
+  ): Promise<GetPublicationsDetailedDto> {
+    const { limit, offset } = getLimitAndOffset({
+      page: query.page,
+      pageSize: query.pageSize,
+    })
+
+    const publications = await this.advertPublicationModel
+      .scope({ method: ['published', query] })
+      .findAndCountAll({
+        limit,
+        offset,
+      })
+
+    const erroredRows: string[] = []
+    const mapped = await Promise.all(
+      publications.rows.map(async (pub) => {
+        try {
+          const advert = await this.advertModel
+            .withScope('listview')
+            .findByPkOrThrow(pub.advertId)
+          return {
+            html: advert.htmlMarkup(),
+            publication: pub.fromModel(),
+          }
+        } catch (e) {
+          erroredRows.push(pub.id)
+          this.logger.error(
+            'Error mapping advert publication detailed to DTO',
+            {
+              error: e,
+              publicationId: pub.id,
+            },
+          )
+          return { html: '', publication: {} as AdvertPublicationDto }
+        }
+      }),
+    )
+
+    const paging = generatePaging(
+      publications.rows.filter((pub) => !erroredRows.includes(pub.id)),
+      query.page,
+      query.pageSize,
+      publications.count - erroredRows.length,
+    )
+
+    return { result: mapped, paging }
   }
 
   async publishAdverts(advertIds: string[]): Promise<void> {

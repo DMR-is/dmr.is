@@ -40,10 +40,12 @@ export const AdvertDisplay = ({
             </Text>
           </Box>
         )}
-        <Box textAlign="center" marginBottom={[2, 3, 4]}>
-          {type && <Text variant="h3">{type}</Text>}
-          {title && <Text variant="h4">{title}</Text>}
-        </Box>
+        {(type || title) && (
+          <Box textAlign="center" marginBottom={[2, 3, 4]}>
+            {type && <Text variant="h3">{type}</Text>}
+            {title && <Text variant="h4">{title}</Text>}
+          </Box>
+        )}
         {html && (
           <Box
             className={withStyles ? styles.bodyText : styles.legacyText}
