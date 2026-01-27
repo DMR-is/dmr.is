@@ -1,3 +1,4 @@
+import { isEmail } from 'class-validator'
 import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
@@ -192,7 +193,7 @@ export const CommunicationChannelFields = () => {
                               size="small"
                               icon="add"
                               disabled={
-                                !currentChannel.email || isEmailAlreadyAdded
+                                !currentChannel.email || isEmailAlreadyAdded || !isEmail(currentChannel.email)
                               }
                             >
                               Bæta við
