@@ -9,6 +9,7 @@ import {
   SkeletonLoader,
 } from '@dmr.is/ui/components/island-is'
 import { Stack, Text } from '@dmr.is/ui/components/island-is'
+import { PagingTotalItemsText } from '@dmr.is/ui/components/PagingTotaItemsText/PagingTotalItemsText'
 
 import { Inline } from '@island.is/island-ui/core'
 
@@ -44,25 +45,11 @@ export const ApplicationList = ({
   return (
     <Stack space={[1, 2, 3]}>
       <Inline justifyContent="spaceBetween" alignY="center">
-        {/* <Text variant="h3">Mínar auglýsingar</Text> */}
         <Box>
-          {paging?.totalItems ? (
-            <Text>
-              <strong>
-                {paging?.page > 1
-                  ? paging?.pageSize * (paging?.page - 1) + 1
-                  : 1}
-              </strong>
-              {' – '}
-              <strong>
-                {paging?.page * paging?.pageSize < paging?.totalItems
-                  ? paging?.page * paging?.pageSize
-                  : paging?.totalItems}
-              </strong>
-              {' af '}
-              <strong>{paging?.totalItems}</strong> niðurstöðum
-            </Text>
-          ) : null}
+          <PagingTotalItemsText
+            paging={paging}
+            totalItems={paging?.totalItems}
+          />
         </Box>
         <LinkV2 href="/auglysingar/eldri">
           <Button size="small" variant="utility" colorScheme="white">

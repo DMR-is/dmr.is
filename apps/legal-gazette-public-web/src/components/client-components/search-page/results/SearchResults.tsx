@@ -1,32 +1,23 @@
 'use client'
 
-import { useState } from 'react'
-
 import {
   AlertMessage,
   Box,
   Breadcrumbs,
-  Button,
-  Checkbox,
-  Inline,
   Pagination,
   SkeletonLoader,
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { PublishedPublicationDto } from '../../../../gen/fetch'
 import { useFilters } from '../../../../hooks/useFilters'
 import { usePublications } from '../../../../hooks/usePublications'
 import { PublicationCard } from '../../cards/PublicationCard'
 
 export const SearchResults = () => {
   const { filters, setFilters } = useFilters()
-  const [advvertsSelected, setAdvertsSelected] = useState<
-    PublishedPublicationDto[]
-  >([])
 
-  const { data, totalItems, isLoading, error } = usePublications()
+  const { data, isLoading, error } = usePublications()
 
   if (error) {
     return (
@@ -54,38 +45,11 @@ export const SearchResults = () => {
         <Stack space={[1]}>
           <Breadcrumbs items={breadcrumbs} />
           <Box>
-            <Text variant="h2">Leit í Lögbirtingablaði</Text>
+            <Text marginBottom={[1]} variant="h2">
+              Leit í Lögbirtingablaði
+            </Text>
           </Box>
         </Stack>
-        <Inline space={1} alignY="center" justifyContent="spaceBetween">
-          {totalItems ? (
-            <Text marginTop={1}>
-              <strong>
-                {filters.page > 1
-                  ? filters.pageSize * (filters.page - 1) + 1
-                  : 1}
-              </strong>
-              {' – '}
-              <strong>
-                {filters.page * filters.pageSize < totalItems
-                  ? filters.page * filters.pageSize
-                  : totalItems}
-              </strong>
-              {' af '}
-              <strong>{totalItems}</strong> niðurstöðum
-            </Text>
-          ) : (
-            <div></div>
-          )}
-          <Button
-            variant="utility"
-            onClick={() => setAdvertsSelected([])}
-            icon="copy"
-            iconType="outline"
-          >
-            Skoða sýnliegar auglýsingar
-          </Button>
-        </Inline>
         {isLoading ? (
           <SkeletonLoader
             height={230}
