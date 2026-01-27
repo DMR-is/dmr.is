@@ -152,7 +152,7 @@ export const SettlementFields = ({
               backgroundColor="blue"
               type="number"
               label="Lýstar kröfur"
-              defaultValue={settlement.declaredClaims}
+              defaultValue={settlement.declaredClaims ?? undefined}
               onBlur={(evt) => {
                 updateDeclaredClaims(Number(evt.target.value))
               }}

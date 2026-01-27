@@ -52,6 +52,11 @@ export class CommentService implements ICommentService {
     const isId = isUUID(actorId)
     if (isId) return await this.userModel.findByPkOrThrow(actorId)
 
+    // BUG FOUND: This could be users submitting from the application web
+    // We need to use the national registry module here to fetch user info
+    // first we should do the userModel findOne to see if we have the user in our DB
+    // if not found we should call the national registry
+
     return await this.userModel.findOneOrThrow({
       where: {
         nationalId: actorId,

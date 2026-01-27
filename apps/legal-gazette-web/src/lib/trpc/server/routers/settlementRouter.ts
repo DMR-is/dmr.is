@@ -1,5 +1,9 @@
 import * as z from 'zod'
 
+import {
+  ApplicationRequirementStatementEnum,
+  SettlementType,
+} from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
 const updateSettlementSchema = z.object({
@@ -12,6 +16,11 @@ const updateSettlementSchema = z.object({
   declaredClaims: z.number().optional(),
   settlementDeadline: z.iso.datetime().nullable().optional(),
   settlementDateOfDeath: z.iso.datetime().nullable().optional(),
+  liquidatorRecallStatementLocation: z.string().optional(),
+  liquidatorRecallStatementType: z
+    .enum(ApplicationRequirementStatementEnum)
+    .optional(),
+  type: z.enum(SettlementType).optional(),
 })
 
 export const settlementRouter = router({
@@ -21,7 +30,21 @@ export const settlementRouter = router({
       const { id, ...updateSettlementDto } = input
       return await ctx.api.updateSettlement({
         id,
-        updateSettlementDto: updateSettlementDto,
+        updateSettlementDto: {
+          address: updateSettlementDto.settlementAddress,
+          name: updateSettlementDto.settlementName,
+          nationalId: updateSettlementDto.settlementNationalId,
+          liquidatorLocation: updateSettlementDto.liquidatorLocation,
+          liquidatorName: updateSettlementDto.liquidatorName,
+          declaredClaims: updateSettlementDto.declaredClaims,
+          deadline: updateSettlementDto.settlementDeadline,
+          dateOfDeath: updateSettlementDto.settlementDateOfDeath,
+          liquidatorRecallStatementLocation:
+            updateSettlementDto.liquidatorRecallStatementLocation,
+          liquidatorRecallStatementType:
+            updateSettlementDto.liquidatorRecallStatementType,
+          type: updateSettlementDto.type,
+        },
       })
     }),
 })

@@ -2,6 +2,8 @@ import { BadRequestException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
+import { LOGGER_PROVIDER } from '@dmr.is/logging'
+
 import { AdvertModel } from '../../models/advert.model'
 import {
   SettlementModel,
@@ -19,9 +21,7 @@ interface MockAdvert {
   statusId: StatusIdEnum
 }
 
-const createMockAdvert = (
-  overrides: Partial<MockAdvert> = {},
-): MockAdvert => ({
+const createMockAdvert = (overrides: Partial<MockAdvert> = {}): MockAdvert => ({
   id: overrides.id || 'advert-123',
   statusId: overrides.statusId || StatusIdEnum.SUBMITTED,
 })
@@ -78,12 +78,23 @@ describe('SettlementService - Status Protection', () => {
       findByPkOrThrow: jest.fn(),
     }
 
+    const mockLogger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+    }
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SettlementService,
         {
           provide: getModelToken(SettlementModel),
           useValue: mockSettlementModel,
+        },
+        {
+          provide: LOGGER_PROVIDER,
+          useValue: mockLogger,
         },
       ],
     }).compile()
@@ -154,7 +165,9 @@ describe('SettlementService - Status Protection', () => {
 
       await expect(
         service.updateSettlement('settlement-123', updateDto),
-      ).rejects.toThrow('Cannot modify settlement - has published/finalized adverts')
+      ).rejects.toThrow(
+        'Cannot modify settlement - has published/finalized adverts',
+      )
 
       expect(settlement.update).not.toHaveBeenCalled()
     })
@@ -233,6 +246,174 @@ describe('SettlementService - Status Protection', () => {
           ],
         }),
       )
+    })
+
+    describe('Partial Update Behavior', () => {
+      it('should only update fields that are provided in the DTO', async () => {
+        const settlement = createMockSettlement({
+          liquidatorName: 'Original Liquidator',
+          liquidatorLocation: 'Original Location',
+          name: 'Original Name',
+          nationalId: '1234567890',
+          address: 'Original Address',
+          adverts: [],
+        })
+        settlementModel.findByPkOrThrow.mockResolvedValue(
+          settlement as unknown as SettlementModel,
+        )
+
+        const partialUpdate: UpdateSettlementDto = {
+          liquidatorName: 'Updated Liquidator',
+        }
+
+        await service.updateSettlement('settlement-123', partialUpdate)
+
+        expect(settlement.update).toHaveBeenCalledWith({
+          liquidatorName: 'Updated Liquidator',
+        })
+        expect(settlement.update).toHaveBeenCalledTimes(1)
+      })
+
+      it('should not include undefined fields in the update', async () => {
+        const settlement = createMockSettlement({ adverts: [] })
+        settlementModel.findByPkOrThrow.mockResolvedValue(
+          settlement as unknown as SettlementModel,
+        )
+
+        const partialUpdate: UpdateSettlementDto = {
+          name: 'New Name',
+          address: 'New Address',
+        }
+
+        await service.updateSettlement('settlement-123', partialUpdate)
+
+        const updateCall = settlement.update.mock.calls[0][0]
+        expect(updateCall).toEqual({
+          name: 'New Name',
+          address: 'New Address',
+        })
+        expect(updateCall).not.toHaveProperty('liquidatorName')
+        expect(updateCall).not.toHaveProperty('nationalId')
+      })
+
+      it('should handle null values for date fields', async () => {
+        const settlement = createMockSettlement({
+          deadline: new Date('2024-01-01'),
+          dateOfDeath: new Date('2023-01-01'),
+          adverts: [],
+        })
+        settlementModel.findByPkOrThrow.mockResolvedValue(
+          settlement as unknown as SettlementModel,
+        )
+
+        const updateWithNulls: UpdateSettlementDto = {
+          deadline: null,
+          dateOfDeath: null,
+        }
+
+        await service.updateSettlement('settlement-123', updateWithNulls)
+
+        expect(settlement.update).toHaveBeenCalledWith({
+          deadline: null,
+          dateOfDeath: null,
+        })
+      })
+
+      it('should convert date strings to Date objects', async () => {
+        const settlement = createMockSettlement({ adverts: [] })
+        settlementModel.findByPkOrThrow.mockResolvedValue(
+          settlement as unknown as SettlementModel,
+        )
+
+        const updateWithDates: UpdateSettlementDto = {
+          deadline: '2024-12-31T23:59:59.000Z',
+          dateOfDeath: '2023-06-15T00:00:00.000Z',
+        }
+
+        await service.updateSettlement('settlement-123', updateWithDates)
+
+        const updateCall = settlement.update.mock.calls[0][0]
+        expect(updateCall.deadline).toBeInstanceOf(Date)
+        expect(updateCall.dateOfDeath).toBeInstanceOf(Date)
+        expect(updateCall.deadline?.toISOString()).toBe(
+          '2024-12-31T23:59:59.000Z',
+        )
+        expect(updateCall.dateOfDeath?.toISOString()).toBe(
+          '2023-06-15T00:00:00.000Z',
+        )
+      })
+
+      it('should handle all optional fields correctly', async () => {
+        const settlement = createMockSettlement({ adverts: [] })
+        settlementModel.findByPkOrThrow.mockResolvedValue(
+          settlement as unknown as SettlementModel,
+        )
+
+        const fullUpdate: UpdateSettlementDto = {
+          liquidatorName: 'New Liquidator',
+          liquidatorLocation: 'New Location',
+          liquidatorRecallStatementLocation: 'New Statement Location',
+          liquidatorRecallStatementType: 'COURTHOUSE' as any,
+          name: 'New Name',
+          nationalId: '9876543210',
+          address: 'New Address',
+          deadline: '2024-12-31T23:59:59.000Z',
+          dateOfDeath: '2023-06-15T00:00:00.000Z',
+          declaredClaims: 5,
+          type: 'ESTATE' as any,
+        }
+
+        await service.updateSettlement('settlement-123', fullUpdate)
+
+        const updateCall = settlement.update.mock.calls[0][0]
+        expect(updateCall).toMatchObject({
+          liquidatorName: 'New Liquidator',
+          liquidatorLocation: 'New Location',
+          liquidatorRecallStatementLocation: 'New Statement Location',
+          liquidatorRecallStatementType: 'COURTHOUSE',
+          name: 'New Name',
+          nationalId: '9876543210',
+          address: 'New Address',
+          declaredClaims: 5,
+          type: 'ESTATE',
+        })
+        expect(updateCall.deadline).toBeInstanceOf(Date)
+        expect(updateCall.dateOfDeath).toBeInstanceOf(Date)
+      })
+
+      it('should allow updating only declaredClaims', async () => {
+        const settlement = createMockSettlement({
+          declaredClaims: 10,
+          adverts: [],
+        })
+        settlementModel.findByPkOrThrow.mockResolvedValue(
+          settlement as unknown as SettlementModel,
+        )
+
+        await service.updateSettlement('settlement-123', { declaredClaims: 15 })
+
+        expect(settlement.update).toHaveBeenCalledWith({
+          declaredClaims: 15,
+        })
+      })
+
+      it('should allow setting declaredClaims to null', async () => {
+        const settlement = createMockSettlement({
+          declaredClaims: 10,
+          adverts: [],
+        })
+        settlementModel.findByPkOrThrow.mockResolvedValue(
+          settlement as unknown as SettlementModel,
+        )
+
+        await service.updateSettlement('settlement-123', {
+          declaredClaims: null,
+        })
+
+        expect(settlement.update).toHaveBeenCalledWith({
+          declaredClaims: null,
+        })
+      })
     })
   })
 })
