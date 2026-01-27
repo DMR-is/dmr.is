@@ -28,8 +28,7 @@ type SettlementAttributes = {
   name: string
   nationalId: string
   address: string
-  deadline: Date | null
-  dateOfDeath: Date | null
+  date: Date | null
   declaredClaims: number | null
   liquidatorRecallStatementLocation?: string | null
   liquidatorRecallStatementType?: string | null
@@ -108,17 +107,9 @@ export class SettlementModel extends BaseModel<
     type: DataType.DATE,
     allowNull: true,
     defaultValue: null,
-    field: 'deadline_date',
+    field: 'date',
   })
-  deadline!: Date | null
-
-  @Column({
-    type: DataType.DATE,
-    allowNull: true,
-    defaultValue: null,
-    field: 'date_of_death',
-  })
-  dateOfDeath!: Date | null
+  date!: Date | null
 
   @Column({
     type: DataType.INTEGER,
@@ -145,8 +136,7 @@ export class SettlementModel extends BaseModel<
       name: model.name,
       nationalId: model.nationalId,
       address: model.address,
-      deadline: model.deadline ? model.deadline.toISOString() : null,
-      dateOfDeath: model.dateOfDeath ? model.dateOfDeath.toISOString() : null,
+      date: model.date ? model.date.toISOString() : null,
       declaredClaims: model.declaredClaims,
     }
   }
@@ -221,14 +211,9 @@ export class SettlementDto {
   address!: string
 
   @ApiProperty({ type: String, required: false, nullable: true })
-  @ValidateIf((o) => o.deadline !== null)
+  @ValidateIf((o) => o.date !== null)
   @IsDateString()
-  deadline!: string | null
-
-  @ApiProperty({ type: String, required: false, nullable: true })
-  @ValidateIf((o) => o.dateOfDeath !== null)
-  @IsDateString()
-  dateOfDeath!: string | null
+  date!: string | null
 
   @ApiProperty({ type: Number, required: false, nullable: true })
   @IsOptional()
@@ -287,12 +272,7 @@ export class CreateSettlementDto {
   @ApiProperty({ type: String, required: false })
   @IsOptional()
   @IsDateString()
-  deadline?: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsDateString()
-  dateOfDeath?: string
+  date?: string
 
   @ApiProperty({ type: [SettlementCompanyDto], required: false })
   @IsOptional()

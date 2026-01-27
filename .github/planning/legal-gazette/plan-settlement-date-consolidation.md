@@ -602,11 +602,11 @@ date?: string
 
 **Testing:**
 
-- ✅ Model unit tests pass
+- ✅ Model unit tests updated and passing
 - ✅ Type checking passes (`nx tsc legal-gazette-api`)
-- ✅ No TypeScript errors in dependent files
+- ⏳ No TypeScript errors in dependent files
 
-**Status:** ⏸️ Not Started
+**Status:** 🟡 In Progress
 
 ---
 
