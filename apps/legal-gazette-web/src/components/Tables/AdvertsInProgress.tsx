@@ -46,7 +46,9 @@ export const AdvertsInProgress = () => {
         text="Þessi auglýsing er með skráðar athugasemdir frá ritstjóra"
       />
     ) : undefined,
-    birting: formatDate(advert.scheduledAt),
+    birting: advert.scheduledAt
+      ? formatDate(advert.scheduledAt)
+      : 'Engin útgáfudagsetning skráð',
     skraning: formatDate(advert.createdAt),
     status: <StatusTag status={advert.status} />,
     tegund: advert.type.title,
