@@ -4108,7 +4108,10 @@
           },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
-          "liquidatorRecallStatementLocation": { "type": "string" },
+          "liquidatorRecallStatementLocation": {
+            "type": "string",
+            "nullable": true
+          },
           "liquidatorRecallStatementType": {
             "allOf": [
               {
@@ -4119,9 +4122,9 @@
           "name": { "type": "string" },
           "nationalId": { "type": "string" },
           "address": { "type": "string" },
-          "declaredClaims": { "type": "number" },
           "deadline": { "type": "string", "nullable": true },
-          "dateOfDeath": { "type": "string", "nullable": true }
+          "dateOfDeath": { "type": "string", "nullable": true },
+          "declaredClaims": { "type": "number", "nullable": true }
         },
         "required": [
           "id",
@@ -4131,8 +4134,7 @@
           "liquidatorRecallStatementType",
           "name",
           "nationalId",
-          "address",
-          "deadline"
+          "address"
         ]
       },
       "CommunicationChannelDto": {
@@ -4340,7 +4342,8 @@
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": { "$ref": "#/components/schemas/StatusDto" },
-          "scheduledAt": { "type": "string" },
+          "scheduledAt": { "type": "string", "nullable": true },
+          "lastPublishedAt": { "type": "string", "nullable": true },
           "assignedUser": { "$ref": "#/components/schemas/UserDto" },
           "hasInternalComments": { "type": "boolean" },
           "comments": {
@@ -4365,6 +4368,7 @@
           "type",
           "status",
           "scheduledAt",
+          "lastPublishedAt",
           "hasInternalComments",
           "comments"
         ]
@@ -4424,9 +4428,10 @@
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": { "$ref": "#/components/schemas/StatusDto" },
-          "scheduledAt": { "type": "string" },
+          "scheduledAt": { "type": "string", "nullable": true },
           "assignedUser": { "$ref": "#/components/schemas/UserDto" },
-          "hasInternalComments": { "type": "boolean" }
+          "hasInternalComments": { "type": "boolean" },
+          "lastPublishedAt": { "type": "string", "nullable": true }
         },
         "required": [
           "id",
@@ -4439,7 +4444,8 @@
           "type",
           "status",
           "scheduledAt",
-          "hasInternalComments"
+          "hasInternalComments",
+          "lastPublishedAt"
         ]
       },
       "Paging": {
