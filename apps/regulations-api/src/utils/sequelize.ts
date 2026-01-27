@@ -7,6 +7,7 @@ import { DB_Regulation } from '../models/Regulation'
 import { DB_Regulation_LawChapter } from '../models/Regulation_LawChapter'
 import { DB_RegulationCancel } from '../models/RegulationCancel'
 import { DB_RegulationChange } from '../models/RegulationChange'
+import { DB_RegulationChangeSuggestion } from '../models/RegulationChangeSuggestion'
 import { DB_Task } from '../models/Task'
 
 export let db: Sequelize
@@ -34,6 +35,7 @@ export const connectSequelize = async () => {
       DB_RegulationCancel,
       DB_Regulation_LawChapter,
       DB_Task,
+      DB_RegulationChangeSuggestion,
     ],
     // Options passed down to the `mysql2` driver
     pool: {
