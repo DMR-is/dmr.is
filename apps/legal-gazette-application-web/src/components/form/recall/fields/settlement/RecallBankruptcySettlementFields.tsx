@@ -21,11 +21,10 @@ export const RecallBankruptcySettlementFields = () => {
   const { getValues, setValue } = useFormContext<RecallApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
 
-  const { updateApplication, debouncedUpdateApplication } =
-    useUpdateApplication({
-      id: applicationId,
-      type: 'RECALL',
-    })
+  const { updateLocalOnly } = useUpdateApplication({
+    id: applicationId,
+    type: 'RECALL',
+  })
 
   const [onLookupError, setOnLookupError] = useState<ErrorState>(null)
   const [kennitalaValue, setKennitalaValue] = useState<string | null>(null)
@@ -36,19 +35,14 @@ export const RecallBankruptcySettlementFields = () => {
 
     // update application with nationalId even though it was not found in
     // national registry, so that user can proceed even if lookup fails
-    debouncedUpdateApplication(
-      {
-        fields: {
-          settlementFields: {
-            nationalId: kennitalaValue,
-          },
+    // Save to localStorage only - server sync happens on navigation
+    updateLocalOnly({
+      fields: {
+        settlementFields: {
+          nationalId: kennitalaValue,
         },
       },
-      {
-        successMessage: 'Kennitala vistuð',
-        errorMessage: 'Ekki tókst að vista kennitölu',
-      },
-    )
+    })
   }
 
   const onSuccessfulLookup = ({
@@ -64,26 +58,20 @@ export const RecallBankruptcySettlementFields = () => {
       `${address}, ${zipCode} ${city}`,
     )
     setValue('fields.settlementFields.nationalId', nationalId)
-    updateApplication(
-      {
-        fields: {
-          settlementFields: {
-            name: name,
-            address: `${address}, ${zipCode} ${city}`,
-            nationalId: nationalId,
-          },
+    updateLocalOnly({
+      fields: {
+        settlementFields: {
+          name: name,
+          address: `${address}, ${zipCode} ${city}`,
+          nationalId: nationalId,
         },
       },
-      {
-        successMessage: 'Upplýsingar um þrotabú vistaðar',
-        errorMessage: 'Ekki tókst að vista upplýsingar um þrotabú',
-      },
-    )
+    })
   }
 
   const resetLookupFields = () => {
     setValue('fields.settlementFields.nationalId', '')
-    updateApplication({
+    updateLocalOnly({
       fields: {
         settlementFields: {
           name: '',
@@ -121,19 +109,13 @@ export const RecallBankruptcySettlementFields = () => {
           label="Frestdagur þrotabús"
           required
           onChange={(val) =>
-            updateApplication(
-              {
-                fields: {
-                  settlementFields: {
-                    deadlineDate: val.toISOString(),
-                  },
+            updateLocalOnly({
+              fields: {
+                settlementFields: {
+                  deadlineDate: val.toISOString(),
                 },
               },
-              {
-                successMessage: 'Frestdagur þrotabús vistaður',
-                errorMessage: 'Ekki tókst að vista frestdag þrotabús',
-              },
-            )
+            })
           }
         />
       </GridColumn>
@@ -143,19 +125,14 @@ export const RecallBankruptcySettlementFields = () => {
           label="Nafn þrotabús"
           required
           onChange={(val) =>
-            debouncedUpdateApplication(
-              {
-                fields: {
-                  settlementFields: {
-                    name: val,
-                  },
+            // Save to localStorage only - server sync happens on navigation
+            updateLocalOnly({
+              fields: {
+                settlementFields: {
+                  name: val,
                 },
               },
-              {
-                successMessage: 'Nafn þrotabús vistað',
-                errorMessage: 'Ekki tókst að vista nafn þrotabús',
-              },
-            )
+            })
           }
         />
       </GridColumn>
@@ -165,19 +142,14 @@ export const RecallBankruptcySettlementFields = () => {
           name="fields.settlementFields.address"
           label="Heimilisfang þrotabús"
           onChange={(val) =>
-            debouncedUpdateApplication(
-              {
-                fields: {
-                  settlementFields: {
-                    address: val,
-                  },
+            // Save to localStorage only - server sync happens on navigation
+            updateLocalOnly({
+              fields: {
+                settlementFields: {
+                  address: val,
                 },
               },
-              {
-                successMessage: 'Heimilisfang þrotabús vistað',
-                errorMessage: 'Ekki tókst að vista heimilisfang þrotabús',
-              },
-            )
+            })
           }
         />
       </GridColumn>

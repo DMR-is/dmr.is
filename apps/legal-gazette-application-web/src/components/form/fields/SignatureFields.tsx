@@ -21,7 +21,7 @@ export const SignatureFields = () => {
   } = useFormContext<BaseApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
 
-  const { debouncedUpdateApplication } = useUpdateApplication({
+  const { updateLocalOnly } = useUpdateApplication({
     id: applicationId,
     type: 'COMMON',
   })
@@ -32,13 +32,8 @@ export const SignatureFields = () => {
   ) => {
     clearErrors('signature')
 
-    debouncedUpdateApplication(
-      { signature: { [key]: value } },
-      {
-        errorMessage: 'Ekki tókst að uppfæra undirritun',
-        successMessage: 'Undirritun uppfærð',
-      },
-    )
+    // Save to localStorage only - server sync happens on navigation
+    updateLocalOnly({ signature: { [key]: value } })
   }
 
   return (

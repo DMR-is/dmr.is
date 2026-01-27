@@ -26,7 +26,7 @@ export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
   const { getValues, watch } = useFormContext<RecallApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
 
-  const { debouncedUpdateApplication } = useUpdateApplication({
+  const { updateLocalOnly } = useUpdateApplication({
     id: applicationId,
     type: 'RECALL',
   })
@@ -49,19 +49,14 @@ export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
           name="fields.divisionMeetingFields.meetingLocation"
           label="Staðsetning skiptafundar"
           onChange={(location) =>
-            debouncedUpdateApplication(
-              {
-                fields: {
-                  divisionMeetingFields: {
-                    meetingLocation: location,
-                  },
+            // Save to localStorage only - server sync happens on navigation
+            updateLocalOnly({
+              fields: {
+                divisionMeetingFields: {
+                  meetingLocation: location,
                 },
               },
-              {
-                successMessage: 'Staðsetning skiptafundar vistuð',
-                errorMessage: 'Ekki tókst að vista staðsetningu skiptafundar',
-              },
-            )
+            })
           }
         />
       </GridColumn>
@@ -78,19 +73,14 @@ export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
             maxDate={maxDate}
             excludeDates={excludeDates}
             onChange={(date) =>
-              debouncedUpdateApplication(
-                {
-                  fields: {
-                    divisionMeetingFields: {
-                      meetingDate: date.toISOString(),
-                    },
+              // Save to localStorage only - server sync happens on navigation
+              updateLocalOnly({
+                fields: {
+                  divisionMeetingFields: {
+                    meetingDate: date.toISOString(),
                   },
                 },
-                {
-                  successMessage: 'Dagsetning skiptafundar vistuð',
-                  errorMessage: 'Ekki tókst að vista dagsetningu skiptafundar',
-                },
-              )
+              })
             }
           />
         )}

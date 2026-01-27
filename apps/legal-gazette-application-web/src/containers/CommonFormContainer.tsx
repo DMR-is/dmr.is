@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback } from 'react'
+import deepmerge from 'deepmerge'
+import { useCallback, useEffect } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 
 import {
@@ -8,37 +9,36 @@ import {
   commonApplicationAnswersRefined,
   CommonApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
+import { getLogger } from '@dmr.is/logging-next'
 import { Box } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationShell } from '../components/application/ApplicationShell'
 import { FormStep } from '../components/form-step/FormStep'
 import { ApplicationDetailedDto } from '../gen/fetch'
+import { useLocalFormStorage } from '../hooks/useLocalFormStorage'
 import { useSubmitApplication } from '../hooks/useSubmitApplication'
 import { commonForm } from '../lib/forms/common/form'
 import { CommonFormSteps } from '../lib/forms/common/steps'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
+import { useSuspenseQuery } from '@tanstack/react-query'
 
+const logger = getLogger('CommonFormContainer')
 type Props = {
   application: ApplicationDetailedDto
 }
 
-export const CommonFormContainer = ({
-  application: initalApplication,
-}: Props) => {
+export const CommonFormContainer = ({ application }: Props) => {
   const trpc = useTRPC()
   const { data: baseEntities } = useSuspenseQuery(
     trpc.getBaseEntities.queryOptions(),
   )
 
-  const { data: application } = useQuery(
-    trpc.getApplicationById.queryOptions(
-      { id: initalApplication.id },
-      { initialData: initalApplication },
-    ),
-  )
+  if (!application) {
+    return null
+  }
 
+  const { loadFromStorage, clearStorage } = useLocalFormStorage(application.id)
   const { onValidSubmit, onInvalidSubmit } = useSubmitApplication(
     application.id,
   )
@@ -65,6 +65,26 @@ export const CommonFormContainer = ({
       },
     }),
   )
+
+  // Hydrate form from localStorage on mount
+  // This restores any unsaved changes if the user closed the browser
+  useEffect(() => {
+    const storedData = loadFromStorage()
+    if (storedData) {
+      logger.debug('Hydrating form from localStorage', {
+        applicationId: application.id,
+      })
+
+      const currentValues = methods.getValues()
+      // Merge localStorage data with current form values (localStorage wins)
+      const mergedValues = deepmerge(currentValues, storedData, {
+        arrayMerge: (_dest, source) => source,
+      }) as CommonApplicationWebSchema
+
+      methods.reset(mergedValues)
+    }
+  }, [loadFromStorage, methods, application.id])
+
   const onSubmit = useCallback(
     (_data: CommonApplicationWebSchema) => {
       // Manually get the values to ensure we have the latest state
@@ -80,9 +100,11 @@ export const CommonFormContainer = ({
         return onInvalidSubmit(data)
       }
 
+      // Clear localStorage before submitting - server sync will complete the process
+      clearStorage()
       onValidSubmit()
     },
-    [methods, onValidSubmit, onInvalidSubmit],
+    [methods, onValidSubmit, onInvalidSubmit, clearStorage],
   )
 
   const stepToRender = CommonFormSteps.steps.at(application.currentStep)
@@ -96,7 +118,7 @@ export const CommonFormContainer = ({
       <form onSubmit={methods.handleSubmit(onSubmit, onInvalidSubmit)}>
         <ApplicationShell form={CommonFormSteps} title={stepToRender.title}>
           <Box paddingY={[2, 3]}>
-            <FormStep items={stepToRender.fields} />
+            <FormStep items={stepToRender.fields} loading={!methods.formState.isReady} />
           </Box>
         </ApplicationShell>
       </form>

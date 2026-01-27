@@ -1,12 +1,13 @@
-import { Stack, Text } from '@dmr.is/ui/components/island-is'
+import { SkeletonLoader, Stack, Text } from '@dmr.is/ui/components/island-is'
 
 import { FormField } from '../../lib/forms/types'
 
 type Props = {
   items: FormField[]
+  loading?: boolean
 }
 
-export const FormStep = ({ items }: Props) => {
+export const FormStep = ({ items, loading }: Props) => {
   return (
     <Stack space={[2, 4]}>
       {items.map((item, index) => (
@@ -16,7 +17,10 @@ export const FormStep = ({ items }: Props) => {
               {item.title && <Text variant="h4">{item.title}</Text>}
               {item.intro && item.intro}
             </Stack>
-            {item.content}
+            {loading ? (
+            <SkeletonLoader height={126} space={[2, 3]} borderRadius="large" />)
+            : (<>{item.content}</>
+            )}
           </Stack>
         </div>
       ))}
