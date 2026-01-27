@@ -9,7 +9,9 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import {
   ApplicationTypeEnum,
   recallBankruptcyAnswersRefined,
+  recallBankruptcyAnswersRefinedLegacy,
   recallDeceasedAnswersRefined,
+  recallDeceasedAnswersRefinedLegacy,
 } from '@dmr.is/legal-gazette/schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { addBusinessDays, getNextValidPublishingDate } from '@dmr.is/utils/date'
@@ -47,6 +49,195 @@ export class RecallApplicationService implements IRecallApplicationService {
     @InjectModel(ApplicationModel)
     private applicationModel: typeof ApplicationModel,
   ) {}
+
+  private async submitRecallBankruptcyApplication(applicationId: string) {
+    const application = await this.applicationModel.findOneOrThrow({
+      where: {
+        id: applicationId,
+        applicationType: {
+          [Op.or]: [
+            ApplicationTypeEnum.RECALL_BANKRUPTCY,
+            ApplicationTypeEnum.RECALL_DECEASED,
+          ],
+        },
+      },
+      include: [AdvertModel],
+    })
+
+    // First we check if the application answers is of modern refined schema
+    const modernCheck = recallBankruptcyAnswersRefined.safeParse(
+      application.answers,
+    )
+
+    if (modernCheck.success) {
+      this.logger.info(
+        'Successfully parsed application answers with modern schema, creating advert',
+        {
+          applicationType: application.applicationType,
+          context: LOGGING_CONTEXT,
+          applicationId: application.id,
+        },
+
+        await this.advertService.createAdvert({
+          templateType: AdvertTemplateType.RECALL_BANKRUPTCY,
+          title: `Innköllun þrotabús - ${modernCheck.data.fields.settlementFields.name}`,
+          caseId: application.caseId,
+          applicationId: application.id,
+          categoryId: RECALL_CATEGORY_ID,
+          typeId: RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
+          additionalText: modernCheck.data.additionalText,
+          createdBy: '',
+          createdByNationalId: '',
+          divisionMeetingDate:
+            modernCheck.data.fields.divisionMeetingFields?.meetingDate,
+          divisionMeetingLocation:
+            modernCheck.data.fields.divisionMeetingFields?.meetingLocation,
+          courtDistrictId:
+            modernCheck.data.fields.courtAndJudgmentFields.courtDistrict.id,
+          judgementDate:
+            modernCheck.data.fields.courtAndJudgmentFields.judgmentDate,
+          scheduledAt: modernCheck.data.publishingDates,
+          communicationChannels: modernCheck.data.communicationChannels,
+          settlement: {
+            name: modernCheck.data.fields.settlementFields.name,
+            nationalId: modernCheck.data.fields.settlementFields.nationalId,
+            address: modernCheck.data.fields.settlementFields.address,
+            date: modernCheck.data.fields.settlementFields.date,
+            liquidatorLocation:
+              modernCheck.data.fields.settlementFields.liquidatorLocation,
+            liquidatorName:
+              modernCheck.data.fields.settlementFields.liquidatorName,
+            recallStatementLocation:
+              modernCheck.data.fields.settlementFields
+                .recallRequirementStatementLocation,
+            recallStatementType:
+              modernCheck.data.fields.settlementFields
+                .recallRequirementStatementType,
+          },
+          signature: {
+            location: modernCheck.data.signature?.location,
+            name: modernCheck.data.signature?.name,
+            onBehalfOf: modernCheck.data.signature?.onBehalfOf,
+            date: modernCheck.data.signature?.date
+              ? new Date(modernCheck.data.signature.date)
+              : undefined,
+          },
+        }),
+      )
+
+      await this.applicationModel.update(
+        {
+          status: ApplicationStatusEnum.SUBMITTED,
+        },
+        {
+          where: {
+            id: application.id,
+          },
+        },
+      )
+
+      return
+    } else {
+      this.logger.info(
+        'Failed to parse application answers with modern schema, trying legacy schema',
+        {
+          context: LOGGING_CONTEXT,
+          applicationId: application.id,
+          applicationType: application.applicationType,
+          error: z.treeifyError(modernCheck.error),
+        },
+      )
+    }
+
+    const legacyCheck = recallBankruptcyAnswersRefinedLegacy.safeParse(
+      application.answers,
+    )
+
+    if (!legacyCheck.success) {
+      const modernErrors = modernCheck.success
+        ? null
+        : z.treeifyError(modernCheck.error)
+      const legacyErrors = legacyCheck.success
+        ? null
+        : z.treeifyError(legacyCheck.error)
+      this.logger.error(
+        'Failed to parse application answers with both modern and legacy schema',
+        {
+          context: LOGGING_CONTEXT,
+          applicationId: application.id,
+          applicationType: application.applicationType,
+          modernError: modernErrors,
+          legacyError: legacyErrors,
+        },
+      )
+      throw new BadRequestException('Invalid application data')
+    }
+
+    this.logger.info(
+      'Successfully parsed application answers with legacy schema, creating advert',
+      {
+        applicationType: application.applicationType,
+        context: LOGGING_CONTEXT,
+        applicationId: application.id,
+      },
+    )
+
+    await this.advertService.createAdvert({
+      templateType: AdvertTemplateType.RECALL_BANKRUPTCY,
+      title: `Innköllun þrotabús - ${legacyCheck.data.fields.settlementFields.name}`,
+      caseId: application.caseId,
+      applicationId: application.id,
+      categoryId: RECALL_CATEGORY_ID,
+      typeId: RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
+      additionalText: legacyCheck.data.additionalText,
+      createdBy: '',
+      createdByNationalId: '',
+      divisionMeetingDate:
+        legacyCheck.data.fields.divisionMeetingFields?.meetingDate,
+      divisionMeetingLocation:
+        legacyCheck.data.fields.divisionMeetingFields?.meetingLocation,
+      courtDistrictId:
+        legacyCheck.data.fields.courtAndJudgmentFields.courtDistrict.id,
+      judgementDate:
+        legacyCheck.data.fields.courtAndJudgmentFields.judgmentDate,
+      scheduledAt: legacyCheck.data.publishingDates,
+      communicationChannels: legacyCheck.data.communicationChannels,
+      settlement: {
+        name: legacyCheck.data.fields.settlementFields.name,
+        nationalId: legacyCheck.data.fields.settlementFields.nationalId,
+        address: legacyCheck.data.fields.settlementFields.address,
+        date: legacyCheck.data.fields.settlementFields.deadlineDate,
+        liquidatorLocation:
+          legacyCheck.data.fields.settlementFields.liquidatorLocation,
+        liquidatorName: legacyCheck.data.fields.settlementFields.liquidatorName,
+        recallStatementLocation:
+          legacyCheck.data.fields.settlementFields
+            .recallRequirementStatementLocation,
+        recallStatementType:
+          legacyCheck.data.fields.settlementFields
+            .recallRequirementStatementType,
+      },
+      signature: {
+        location: legacyCheck.data.signature?.location,
+        name: legacyCheck.data.signature?.name,
+        onBehalfOf: legacyCheck.data.signature?.onBehalfOf,
+        date: legacyCheck.data.signature?.date
+          ? new Date(legacyCheck.data.signature.date)
+          : undefined,
+      },
+    })
+
+    await this.applicationModel.update(
+      {
+        status: ApplicationStatusEnum.SUBMITTED,
+      },
+      {
+        where: {
+          id: application.id,
+        },
+      },
+    )
+  }
 
   async getMinDateForDivisionEnding(
     applicationId: string,
@@ -491,56 +682,83 @@ export class RecallApplicationService implements IRecallApplicationService {
 
     switch (application.applicationType) {
       case ApplicationTypeEnum.RECALL_BANKRUPTCY: {
-        const check = recallBankruptcyAnswersRefined.safeParse(
+        // Try modern schema first, then legacy schema
+        let check = recallBankruptcyAnswersRefined.safeParse(
           application.answers,
         )
 
         if (!check.success) {
-          this.logger.error('Failed to parse application answers', {
-            context: 'ApplicationService',
-            applicationId: application.id,
-            error: z.treeifyError(check.error),
-          })
-          throw new BadRequestException('Invalid application data')
-        }
+          // Try legacy schema
+          check = recallBankruptcyAnswersRefinedLegacy.safeParse(
+            application.answers,
+          )
 
-        data = check.data
-        // Transform legacy deadlineDate to new date field
-        const bankruptcyDate =
-          data.fields.settlementFields.date ||
-          data.fields.settlementFields.deadlineDate
-        Object.assign(createObj, {
-          settlement: {
-            date: bankruptcyDate,
-          },
-        })
+          if (!check.success) {
+            this.logger.error('Failed to parse application answers', {
+              context: 'ApplicationService',
+              applicationId: application.id,
+              error: z.treeifyError(check.error),
+            })
+            throw new BadRequestException('Invalid application data')
+          }
+
+          // Legacy schema - transform deadlineDate to date
+          data = check.data
+          const legacyDate = (data.fields.settlementFields as any).deadlineDate
+          Object.assign(createObj, {
+            settlement: {
+              date: legacyDate,
+            },
+          })
+        } else {
+          // Modern schema - use date directly
+          data = check.data
+          Object.assign(createObj, {
+            settlement: {
+              date: data.fields.settlementFields.date,
+            },
+          })
+        }
         break
       }
       case ApplicationTypeEnum.RECALL_DECEASED: {
-        const check = recallDeceasedAnswersRefined.safeParse(
-          application.answers,
-        )
+        // Try modern schema first, then legacy schema
+        let check = recallDeceasedAnswersRefined.safeParse(application.answers)
 
         if (!check.success) {
-          this.logger.error('Failed to parse application answers', {
-            context: LOGGING_CONTEXT,
-            applicationId: application.id,
-            error: z.treeifyError(check.error),
-          })
-          throw new BadRequestException('Invalid application data')
-        }
+          // Try legacy schema
+          check = recallDeceasedAnswersRefinedLegacy.safeParse(
+            application.answers,
+          )
 
-        data = check.data
-        // Transform legacy dateOfDeath to new date field
-        const deceasedDate =
-          data.fields.settlementFields.date ||
-          data.fields.settlementFields.dateOfDeath
-        Object.assign(createObj, {
-          settlement: {
-            date: deceasedDate,
-            type: data.fields.settlementFields.type,
-          },
-        })
+          if (!check.success) {
+            this.logger.error('Failed to parse application answers', {
+              context: LOGGING_CONTEXT,
+              applicationId: application.id,
+              error: z.treeifyError(check.error),
+            })
+            throw new BadRequestException('Invalid application data')
+          }
+
+          // Legacy schema - transform dateOfDeath to date
+          data = check.data
+          const legacyDate = (data.fields.settlementFields as any).dateOfDeath
+          Object.assign(createObj, {
+            settlement: {
+              date: legacyDate,
+              type: data.fields.settlementFields.type,
+            },
+          })
+        } else {
+          // Modern schema - use date directly
+          data = check.data
+          Object.assign(createObj, {
+            settlement: {
+              date: data.fields.settlementFields.date,
+              type: data.fields.settlementFields.type,
+            },
+          })
+        }
         break
       }
       default:
