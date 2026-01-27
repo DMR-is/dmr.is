@@ -44,15 +44,22 @@ export const publicProcedure = t.procedure.use(({ ctx, next }) => {
 })
 
 export const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
-  const api = await getServerClient()
+  try {
+    const api = await getServerClient()
 
-  if (!api) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' })
+    return next({
+      ctx: {
+        ...ctx,
+        api,
+      },
+    })
+  } catch (e) {
+    if (e instanceof Error && e.message === 'No session found') {
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: e.message })
+    }
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'An unexpected error occurred',
+    })
   }
-  return next({
-    ctx: {
-      ...ctx,
-      api,
-    },
-  })
 })

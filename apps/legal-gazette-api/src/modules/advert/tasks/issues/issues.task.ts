@@ -20,6 +20,7 @@ import { IIssuesTask } from './issues.task.interface'
 
 const LOGGING_CONTEXT = 'IssuesTask'
 const YEAR_ESTABLISHED = 1907
+const EVERY_WEEKDAY_AT_7_AM = '0 7 * * 1-5'
 
 const isProduction = process.env.API_ENV
   ? process.env.API_ENV === 'prod'
@@ -39,7 +40,7 @@ export class IssuesTaskService implements IIssuesTask {
   ) {}
 
   @Cron(
-    isProduction ? CronExpression.EVERY_DAY_AT_7AM : '0 */20 * * * *', // Every 20 minutes in non-production
+    isProduction ? EVERY_WEEKDAY_AT_7_AM : CronExpression.EVERY_DAY_AT_10AM,
     {
       name: 'daily-pdf-generation',
       timeZone: 'Atlantic/Reykjavik',
@@ -156,8 +157,6 @@ export class IssuesTaskService implements IIssuesTask {
         )
         .join('<div class="advert-divider-line"></div>')
 
-      const title = `Lögbirtingablaðið - Útgáfa ${formatDate(now, 'd. MMMM yyyy')}`
-
       const currentYear = now.getFullYear()
 
       const startOfYear = new Date(currentYear, 0, 1)
@@ -192,6 +191,8 @@ export class IssuesTaskService implements IIssuesTask {
       }
 
       const districtCommissioner = issueSettings?.districtCommissioner ?? ''
+
+      const title = `Lögbirtingablaðið nr. ${nextIssueNumber} - ${currentYear}`
 
       const pdfGenInfo = await this.pdfService.generatePdfIssueFromHtml(
         `${pdfMetaTitle(title)}${combinedHtml}`,

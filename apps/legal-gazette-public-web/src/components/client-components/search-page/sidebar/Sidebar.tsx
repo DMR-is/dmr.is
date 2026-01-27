@@ -14,6 +14,7 @@ import {
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
+import { PagingTotalItemsText } from '@dmr.is/ui/components/PagingTotaItemsText/PagingTotalItemsText'
 
 import { Option } from '@island.is/island-ui/core'
 
@@ -198,21 +199,7 @@ export const SearchSidebar = () => {
         </Stack>
       </Box>
       <Box paddingLeft={1} marginBottom={4}>
-        {totalItems ? (
-          <Text>
-            <strong>
-              {filters.page > 1 ? filters.pageSize * (filters.page - 1) + 1 : 1}
-            </strong>
-            {' – '}
-            <strong>
-              {filters.page * filters.pageSize < totalItems
-                ? filters.page * filters.pageSize
-                : totalItems}
-            </strong>
-            {' af '}
-            <strong>{totalItems}</strong> niðurstöðum
-          </Text>
-        ) : null}
+        <PagingTotalItemsText paging={filters} totalItems={totalItems} />
       </Box>
     </Stack>
   )

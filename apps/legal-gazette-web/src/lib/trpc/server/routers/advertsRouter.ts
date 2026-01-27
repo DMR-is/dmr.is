@@ -78,9 +78,11 @@ export const advertsRouter = router({
         throw trpcError
       }
     }),
-  getAdvertsCount: protectedProcedure.query(async ({ ctx }) => {
-    return await ctx.api.getAdvertsCount()
-  }),
+  getAdvertsCount: protectedProcedure
+    .input(getAdvertsRequestSchema)
+    .query(async ({ ctx, input }) => {
+      return await ctx.api.getAdvertsCount(input)
+    }),
   getAdvertsInProgress: protectedProcedure
     .input(getAdvertsRequestSchema)
     .query(async ({ ctx, input }) => {
@@ -164,6 +166,13 @@ export const advertsRouter = router({
         id: input.id,
       })
     }),
+  reactivateAdvert: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.api.reactivateAdvert({
+        id: input.id,
+      })
+    }),
   createAdvertAndCommonApplication: protectedProcedure
     .input(createAdvertAndCommonApplicationInput)
     .mutation(async ({ ctx, input }) => {
@@ -229,9 +238,9 @@ export const advertsRouter = router({
               input.fields.courtAndJudgmentFields.courtDistrict.id,
             judgmentDate: input.fields.courtAndJudgmentFields.judgmentDate,
             meetingDate:
-              input.fields.divisionMeetingFields?.meetingDate ?? undefined,
+              input.fields.divisionMeetingFields?.meetingDate || undefined,
             meetingLocation:
-              input.fields.divisionMeetingFields?.meetingLocation ?? undefined,
+              input.fields.divisionMeetingFields?.meetingLocation || undefined,
             liquidatorLocation:
               input.fields.settlementFields.liquidatorLocation,
             liquidatorName: input.fields.settlementFields.liquidatorName,

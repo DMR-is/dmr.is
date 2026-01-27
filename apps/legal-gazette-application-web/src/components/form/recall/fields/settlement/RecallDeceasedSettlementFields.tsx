@@ -9,7 +9,6 @@ import {
   AlertMessage,
   GridColumn,
   GridRow,
-  Text,
 } from '@dmr.is/ui/components/island-is'
 
 import { RecallSettlementDefault } from './RecallSettlementDefault'

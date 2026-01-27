@@ -11,6 +11,7 @@ import {
   CreateUserAssignedCommentEvent,
 } from '../events/create-submit-comment.event'
 
+const LOGGING_CONTEXT = 'CommentListener'
 @Injectable()
 export class CommentListener {
   constructor(
@@ -18,7 +19,7 @@ export class CommentListener {
     @Inject(ICommentService) private readonly commentService: ICommentService,
   ) {}
 
-  @OnEvent(LegalGazetteEvents.ADVERT_CREATED)
+  @OnEvent(LegalGazetteEvents.CREATE_SUBMIT_COMMENT)
   async handleAdvertCreatedEvent(payload: CreateSubmitCommentEvent) {
     if (payload.external) {
       if (!payload.actorId || !payload.actorName) {
@@ -26,7 +27,7 @@ export class CommentListener {
           'Missing actorId or actorName for external submit comment, skipping comment creation',
           {
             advertId: payload.advertId,
-            context: 'CommentListener',
+            context: LOGGING_CONTEXT,
           },
         )
 
@@ -35,7 +36,7 @@ export class CommentListener {
 
       this.logger.info('Creating submit comment for external system', {
         advertId: payload.advertId,
-        context: 'CommentListener',
+        context: LOGGING_CONTEXT,
       })
       try {
         return await this.commentService.createSubmitCommentForExternalSystem(
@@ -49,7 +50,7 @@ export class CommentListener {
           {
             advertId: payload.advertId,
             error,
-            context: 'CommentListener',
+            context: LOGGING_CONTEXT,
           },
         )
         return
@@ -58,7 +59,7 @@ export class CommentListener {
 
     this.logger.info('Creating submit comment', {
       advertId: payload.advertId,
-      context: 'CommentListener',
+      context: LOGGING_CONTEXT,
     })
     await this.commentService.createSubmitComment(payload.advertId, {
       actorId: payload.actorId,
@@ -69,7 +70,7 @@ export class CommentListener {
   async handleStatusChangedEvent(payload: CreateStatusChangeCommentEvent) {
     this.logger.info('Handling status.changed event', {
       payload,
-      context: 'CommentListener',
+      context: LOGGING_CONTEXT,
     })
 
     await this.commentService.createStatusUpdateComment(payload.advertId, {
@@ -82,7 +83,7 @@ export class CommentListener {
   async handleUserAssignedEvent(payload: CreateUserAssignedCommentEvent) {
     this.logger.info('Handling user.assigned event', {
       payload,
-      context: 'CommentListener',
+      context: LOGGING_CONTEXT,
     })
     await this.commentService.createAssignComment(payload.advertId, {
       actorId: payload.actorId,

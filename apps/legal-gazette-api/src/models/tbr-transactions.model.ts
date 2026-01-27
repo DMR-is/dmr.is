@@ -3,12 +3,12 @@ import {
   Column,
   DataType,
   ForeignKey,
-  HasMany,
 } from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'
+import { PaymentDto } from '../core/dto/payments.dto'
 import { FeeCodeModel } from './fee-code.model'
 
 /**
@@ -23,6 +23,7 @@ export enum TBRTransactionStatus {
   CREATED = 'CREATED',
   FAILED = 'FAILED',
   PAID = 'PAID',
+  CANCELED = 'CANCELED',
 }
 
 /**
@@ -86,7 +87,12 @@ export class TBRTransactionModel extends BaseModel<
   })
   feeCodeMultiplier!: number
 
-  @Column({ type: DataType.DATE, allowNull: true, defaultValue: null, field: 'paid_at' })
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    defaultValue: null,
+    field: 'paid_at',
+  })
   paidAt!: Date | null
 
   @Column({ type: DataType.STRING, allowNull: false, field: 'charge_base' })
@@ -95,7 +101,11 @@ export class TBRTransactionModel extends BaseModel<
   @Column({ type: DataType.STRING, allowNull: false, field: 'charge_category' })
   chargeCategory!: string
 
-  @Column({ type: DataType.STRING, allowNull: false, field: 'debtor_national_id' })
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    field: 'debtor_national_id',
+  })
   debtorNationalId!: string
 
   @Column({
@@ -113,6 +123,26 @@ export class TBRTransactionModel extends BaseModel<
 
   @BelongsTo(() => FeeCodeModel)
   feeCode!: FeeCodeModel
+
+  static fromModelToPaymentDto(model: TBRTransactionModel): PaymentDto {
+    return {
+      id: model.id,
+      type: model.transactionType,
+      status: model.status,
+      totalPrice: model.totalPrice,
+      debtorNationalId: model.debtorNationalId,
+      paidAt: model.paidAt ? model.paidAt.toISOString() : null,
+      createdAt: model.createdAt.toISOString(),
+      chargeBase: model.chargeBase,
+      chargeCategory: model.chargeCategory,
+      tbrReference: model.tbrReference,
+      tbrError: model.tbrError,
+    }
+  }
+
+  fromModelToPaymentDto(): PaymentDto {
+    return TBRTransactionModel.fromModelToPaymentDto(this)
+  }
 
   // Note: Relation to SubscriberTransactionModel is defined there to avoid circular imports
   // Note: Relation to AdvertModel is now from AdvertModel.transactionId

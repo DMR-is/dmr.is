@@ -74,9 +74,9 @@ export class PublishingTaskService implements IPublishingTaskService {
     return publicationNumber
   }
 
-  @Cron(CronExpression.EVERY_HOUR, {
-    name: 'publishing-job',
-  })
+  // @Cron(CronExpression.EVERY_HOUR, {
+  //   name: 'publishing-job',
+  // })
   async run() {
     const { ran } = await this.lock.runWithSessionLock(
       TASK_JOB_IDS.publishing,
@@ -115,6 +115,9 @@ export class PublishingTaskService implements IPublishingTaskService {
         {
           model: AdvertModel.scope('detailed'),
           as: 'advert',
+          where: {
+            statusId: StatusIdEnum.READY_FOR_PUBLICATION,
+          }
         },
       ],
     })

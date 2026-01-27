@@ -40,6 +40,10 @@ export const emptyRowMessageWrapper = style({
     },
   },
 })
+
+export const tableCell = style({
+  fontSize: '16px',
+})
 export const linkTableCell = style({
   borderBottom: `1px solid ${theme.color.blue200}`,
   position: 'sticky',

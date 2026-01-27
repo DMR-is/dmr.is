@@ -1,12 +1,11 @@
 import Kennitala from 'kennitala'
 import z from 'zod'
 
-import { LegalEntityDto } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
 import { TRPCError } from '@trpc/server'
 
-const getPersonByNationalIdInputSchema = z.object({
+const getEntityByNationalIdInputSchema = z.object({
   nationalId: z
     .string()
     .min(10, 'National ID must be 10 characters')
@@ -15,7 +14,7 @@ const getPersonByNationalIdInputSchema = z.object({
 
 export const nationalRegistryRouter = router({
   getLegalEntityNameByNationalId: protectedProcedure
-    .input(getPersonByNationalIdInputSchema)
+    .input(getEntityByNationalIdInputSchema)
     .mutation(async ({ input, ctx }): Promise<string> => {
       const { nationalId } = input
 
@@ -26,52 +25,21 @@ export const nationalRegistryRouter = router({
         })
       }
 
-      const isPerson = Kennitala.isPerson(nationalId)
+      const entity = await ctx.api.getEntityByNationalId({ nationalId })
 
-      if (isPerson) {
-        const person = await ctx.api.getPersonByNationalId({ nationalId })
-
-        if (person.person === null) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Person not found',
-          })
-        }
-
-        return person.person.nafn
+      if (!entity.entity) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Entity not found' })
       }
 
-      const company = await ctx.api.getCompanyByNationalId({ nationalId })
-
-      if (company.legalEntity === null) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Company not found',
-        })
-      }
-
-      return company.legalEntity.name
+      return entity.entity.nafn
     }),
-  getPersonByNationalId: protectedProcedure
-    .input(getPersonByNationalIdInputSchema)
+  getEntityByNationalId: protectedProcedure
+    .input(getEntityByNationalIdInputSchema)
     .mutation(async ({ input, ctx }) => {
       const { nationalId } = input
 
-      const person = await ctx.api.getPersonByNationalId({ nationalId })
+      const person = await ctx.api.getEntityByNationalId({ nationalId })
 
       return person
-    }),
-  getCompanyByNationalId: protectedProcedure
-    .input(getPersonByNationalIdInputSchema)
-    .mutation(async ({ input, ctx }): Promise<LegalEntityDto> => {
-      const { nationalId } = input
-
-      const company = await ctx.api.getCompanyByNationalId({ nationalId })
-
-      if (company.legalEntity === null) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Company not found' })
-      }
-
-      return company.legalEntity
     }),
 })

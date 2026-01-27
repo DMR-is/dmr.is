@@ -43,7 +43,9 @@ interface MockSubscriber {
   fromModel: () => MockSubscriber
 }
 
-const createMockSubscriber = (overrides: Partial<MockSubscriber> = {}): MockSubscriber => {
+const createMockSubscriber = (
+  overrides: Partial<MockSubscriber> = {},
+): MockSubscriber => {
   const subscriber: MockSubscriber = {
     id: 'subscriber-123',
     nationalId: '0101801234',
@@ -72,15 +74,15 @@ const createMockSubscriber = (overrides: Partial<MockSubscriber> = {}): MockSubs
  * Can be configured to simulate lock being held by another process.
  */
 const createMockLockService = (lockHeld = false) => ({
-  runWithUserLock: jest.fn().mockImplementation(
-    async <T>(_userKey: string, fn: () => Promise<T>) => {
+  runWithUserLock: jest
+    .fn()
+    .mockImplementation(async <T>(_userKey: string, fn: () => Promise<T>) => {
       if (lockHeld) {
         return { success: false, reason: 'lock_held' }
       }
       const result = await fn()
       return { success: true, result }
-    },
-  ),
+    }),
 })
 
 // ==========================================
@@ -92,6 +94,7 @@ describe('SubscriberService', () => {
   let subscriberModel: {
     findOne: jest.Mock
     findOrCreate: jest.Mock
+    findOneOrThrow: jest.Mock
     update: jest.Mock
   }
   let eventEmitter: jest.Mocked<EventEmitter2>
@@ -103,6 +106,7 @@ describe('SubscriberService', () => {
     const mockSubscriberModel = {
       findOne: jest.fn(),
       findOrCreate: jest.fn(),
+      findOneOrThrow: jest.fn(),
       update: jest.fn(),
     }
 
@@ -153,7 +157,7 @@ describe('SubscriberService', () => {
           subscribedFrom: new Date('2025-01-01'),
           subscribedTo: futureDate,
         })
-        subscriberModel.findOne.mockResolvedValue(activeSubscriber)
+        subscriberModel.findOneOrThrow.mockResolvedValue(activeSubscriber)
 
         const user = createMockUser()
 
@@ -172,20 +176,32 @@ describe('SubscriberService', () => {
           isActive: true,
           subscribedTo: futureDate,
         })
-        subscriberModel.findOne.mockResolvedValue(activeSubscriber)
+        subscriberModel.findOneOrThrow.mockResolvedValue(activeSubscriber)
 
-        const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }
+        const logger = {
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+          debug: jest.fn(),
+        }
         const module: TestingModule = await Test.createTestingModule({
           providers: [
             SubscriberService,
             { provide: LOGGER_PROVIDER, useValue: logger },
-            { provide: getModelToken(SubscriberModel), useValue: subscriberModel },
+            {
+              provide: getModelToken(SubscriberModel),
+              useValue: subscriberModel,
+            },
             { provide: EventEmitter2, useValue: eventEmitter },
-            { provide: PgAdvisoryLockService, useValue: createMockLockService() },
+            {
+              provide: PgAdvisoryLockService,
+              useValue: createMockLockService(),
+            },
           ],
         }).compile()
 
-        const serviceWithLogger = module.get<SubscriberService>(SubscriberService)
+        const serviceWithLogger =
+          module.get<SubscriberService>(SubscriberService)
 
         // Act
         await serviceWithLogger.createSubscriptionForUser(createMockUser())
@@ -207,7 +223,7 @@ describe('SubscriberService', () => {
           subscribedFrom: new Date('2024-01-01'),
           subscribedTo: pastDate,
         })
-        subscriberModel.findOne.mockResolvedValue(expiredSubscriber)
+        subscriberModel.findOneOrThrow.mockResolvedValue(expiredSubscriber)
 
         const user = createMockUser()
 
@@ -234,7 +250,7 @@ describe('SubscriberService', () => {
           subscribedFrom: null,
           subscribedTo: null,
         })
-        subscriberModel.findOne.mockResolvedValue(inactiveSubscriber)
+        subscriberModel.findOneOrThrow.mockResolvedValue(inactiveSubscriber)
 
         const user = createMockUser()
 
@@ -255,7 +271,11 @@ describe('SubscriberService', () => {
     describe('when subscriber does not exist', () => {
       it('should throw NotFoundException', async () => {
         // Arrange
-        subscriberModel.findOne.mockResolvedValue(null)
+        subscriberModel.findOneOrThrow.mockRejectedValue(
+          new NotFoundException(
+            'Subscriber not found when creating subscription',
+          ),
+        )
 
         const user = createMockUser()
 
@@ -275,7 +295,7 @@ describe('SubscriberService', () => {
           isActive: true,
           subscribedTo: futureDate,
         })
-        subscriberModel.findOne.mockResolvedValue(activeSubscriber)
+        subscriberModel.findOneOrThrow.mockResolvedValue(activeSubscriber)
 
         const user = createMockUser()
 
@@ -298,7 +318,7 @@ describe('SubscriberService', () => {
           isActive: true,
           subscribedTo: new Date(now.getTime() - 1000), // 1 second ago
         })
-        subscriberModel.findOne.mockResolvedValue(subscriber)
+        subscriberModel.findOneOrThrow.mockResolvedValue(subscriber)
 
         const user = createMockUser()
 
@@ -316,7 +336,7 @@ describe('SubscriberService', () => {
           isActive: false,
           subscribedTo: futureDate,
         })
-        subscriberModel.findOne.mockResolvedValue(subscriber)
+        subscriberModel.findOneOrThrow.mockResolvedValue(subscriber)
 
         const user = createMockUser()
 
@@ -332,7 +352,7 @@ describe('SubscriberService', () => {
       it('should use actor nationalId when present (delegation)', async () => {
         // Arrange
         const inactiveSubscriber = createMockSubscriber({ isActive: false })
-        subscriberModel.findOne.mockResolvedValue(inactiveSubscriber)
+        subscriberModel.findOneOrThrow.mockResolvedValue(inactiveSubscriber)
 
         const user = createMockUser({
           nationalId: '0101801234',
@@ -356,7 +376,7 @@ describe('SubscriberService', () => {
       it('should acquire lock with user nationalId', async () => {
         // Arrange
         const inactiveSubscriber = createMockSubscriber({ isActive: false })
-        subscriberModel.findOne.mockResolvedValue(inactiveSubscriber)
+        subscriberModel.findOneOrThrow.mockResolvedValue(inactiveSubscriber)
 
         const user = createMockUser({ nationalId: '1234567890' })
 
@@ -394,7 +414,7 @@ describe('SubscriberService', () => {
         // First call - lock acquired, emits event
         lockService.runWithUserLock
           .mockImplementationOnce(async (_key, fn) => {
-            subscriberModel.findOne.mockResolvedValue(inactiveSubscriber)
+            subscriberModel.findOneOrThrow.mockResolvedValue(inactiveSubscriber)
             const result = await fn()
             return { success: true, result }
           })

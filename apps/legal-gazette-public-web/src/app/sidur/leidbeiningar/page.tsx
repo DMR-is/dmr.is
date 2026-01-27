@@ -38,15 +38,15 @@ export default function Page() {
                 <Box>
                   <Text>
                     Hér má sjá rafrænt ferli fyrir alla sem senda inn auglýsingu
-                    í lögbirtingablaðið, einstaklinga og fyrirtæki.
+                    í Lögbirtingablaðið, einstaklinga og fyrirtæki.
                     <br />
-                    Kerfið gerir ferlið skilvirkara og einfaldara í notkun,
+                    Kerfið gerir ferlið skilvirkara og einfaldara í notkun og
                     býður notendum upp á að fylgjast með stöðu auglýsingar meðan
                     auglýsingin vinnst í ritstjórn.
                     <br />
-                    Einnig býður kerfið notendum að halda utan um innkallanir
-                    svo sem þrotabús og dánarsbús sem bera margar auglýsingar á
-                    skilvirkan hátt.
+                    Einnig býður kerfið notendum að halda á skilvirkan hátt utan
+                    um innkallanir svo sem þrotabús og dánarbús sem geta
+                    innihaldið margar auglýsingar.
                   </Text>
                 </Box>
               </AccordionItem>
@@ -66,7 +66,7 @@ export default function Page() {
                     <Stack space={1}>
                       <Text variant="h4">
                         Umboð - hvernig skrái ég auglýsingu inn í nafni
-                        fyrirtækis
+                        fyrirtækis?
                       </Text>
 
                       <Text>
@@ -77,11 +77,11 @@ export default function Page() {
                         <br />
                         Til að geta farið inn í umboði annars þarf prókúruhafi
                         viðeigandi kennitölu að gefa viðeigandi einstaklingum
-                        umboð í gegnum ísland.is.
+                        umboð í gegnum Ísland.is.
                       </Text>
                     </Stack>
                     <Text>
-                      Notandi með prókúruréttindi fyrirtækis getur veitt öðrum
+                      Notandi með prókúru fyrirtækis getur veitt öðrum
                       einstaklingum umboð til að senda inn auglýsingar fyrir
                       viðkomandi fyrirtæki eða félag:
                     </Text>
@@ -98,24 +98,24 @@ export default function Page() {
                         </LinkV2>
                       </Bullet>
                       <Bullet>
-                        Valin stofnunin sem úthluta á réttindum vegna
+                        Valin stofnun/félag sem úthluta á réttindum vegna.
                       </Bullet>
-                      <Bullet>Smellt á hnappinn „Skrá nýtt umboð“</Bullet>
+                      <Bullet>Smellt á hnappinn „Skrá nýtt umboð“.</Bullet>
                       <Bullet>
                         Skráð kennitala þess aðila sem mun senda inn í umboði
-                        fyrirtækis
+                        fyrirtækis.
                       </Bullet>
-                      <Bullet>Valin aðgangsstýring: „Lögbirtingablað“</Bullet>
+                      <Bullet>Valin aðgangsstýring: „Lögbirtingablað“.</Bullet>
                       <Bullet>
                         Smellt á hnappinn „Velja réttindi“ til að fara í næsta
-                        skref
+                        skref.
                       </Bullet>
                       <Bullet>
                         Viðeigandi réttindi valin: „Umsókn um auglýsingu í
-                        Lögbirtingablaðið“
+                        Lögbirtingablaðið“.
                       </Bullet>
-                      <Bullet>Smellt á hnappinn „Skrá nýtt umboð“</Bullet>
-                      <Bullet>Loks er smellt á „Staðfesta“ hnapp</Bullet>
+                      <Bullet>Smellt á hnappinn „Skrá nýtt umboð“.</Bullet>
+                      <Bullet>Loks er smellt á „Staðfesta“ hnapp.</Bullet>
                     </BulletList>
                     <Box>
                       <Text as="span">Hér má lesa meira um </Text>
@@ -125,14 +125,14 @@ export default function Page() {
                         color="blue400"
                         underline="normal"
                       >
-                        umboðskerfi ísland.is
+                        umboðskerfi Ísland.is
                       </LinkV2>
                       <Text as="span">.</Text>
                     </Box>
 
                     <Stack space={1}>
                       <Text variant="h4">
-                        Umboð - hvernig gef ég umboð til að gefa umboð áfram
+                        Umboð - hvernig gef ég umboð til að gefa umboð áfram?
                       </Text>
 
                       <Text>
@@ -160,23 +160,23 @@ export default function Page() {
                         Prókúruhafi gefur notanda umboð fyrir kerfi
                         Lögbirtingarblaðsins.
                       </Bullet>
-                      <Bullet>Smellt á hnappinn „Skrá nýtt umboð“</Bullet>
+                      <Bullet>Smellt á hnappinn „Skrá nýtt umboð“.</Bullet>
                       <Bullet>
                         Skráð kennitala þess aðila sem mun senda inn í umboði
                         fyrirtækis.
                       </Bullet>
                       <Bullet>
-                        Valin aðgangsstýring: “Mínar síður Ísland.is“
+                        Valin aðgangsstýring: “Mínar síður Ísland.is“.
                       </Bullet>
                       <Bullet>
                         Smellt á hnappinn „Velja réttindi“ til að fara í næsta
-                        skref
+                        skref.
                       </Bullet>
                       <Bullet>
                         Viðeigandi réttindi valin: „Aðgangsstýring - gefur leyfi
-                        til að veita öðrum aðgang að upplýsingum og aðgerðum“
+                        til að veita öðrum aðgang að upplýsingum og aðgerðum“.
                       </Bullet>
-                      <Bullet>Smellt á hnappinn „Skrá nýtt umboð“</Bullet>
+                      <Bullet>Smellt á hnappinn „Skrá nýtt umboð“.</Bullet>
                       <Bullet>Loks er smellt á „Staðfesta“ hnapp.</Bullet>
                     </BulletList>
 
@@ -205,7 +205,7 @@ export default function Page() {
                     </Stack>
                     <Stack space={2}>
                       <Text fontWeight="medium">
-                        Myndbönd með leiðbeiningum fyrir umboð
+                        Myndbönd með leiðbeiningum fyrir umboð:
                       </Text>
 
                       <EmbeddedVideo
@@ -279,7 +279,7 @@ export default function Page() {
 
             <Stack space={3}>
               <Text variant="h3">
-                Myndbönd með leiðbeiningum fyrir aulýsingakerfi
+                Myndbönd með leiðbeiningum fyrir auglýsingakerfi
               </Text>
 
               <EmbeddedVideo
@@ -299,18 +299,18 @@ export default function Page() {
               <Accordion singleExpand={false}>
                 <AccordionItem
                   id="l1"
-                  label="Hvernig fæ ég aðgang að til að lesa auglýsingar í lögbirtingarblaðinu?"
+                  label="Hvernig fæ ég aðgang að til að lesa auglýsingar í Lögbirtingablaðinu?"
                   labelVariant="h5"
                 >
                   <Box>
                     <Stack space={1}>
                       <Text>
                         Hægt er að sækja pdf útgáfu af eldri málum á ytri vef
-                        lögbirtingarblaðsins. Einnig er hægt að sækja um áskrift
-                        að lögbirtingarblaðinu og geta þá lesið auglýsingar
-                        strax við útgáfu. Einstaklingur skráir sig inn með
-                        rafrænum skilríkjum, kerfið leiðir notanda í nýskráningu
-                        til að gerast áskrifandi ef áskrift er ekki til staðar.
+                        Lögbirtingablaðsins. Einnig er hægt að sækja um áskrift
+                        að Lögbirtingablaðinu og geta þá lesið auglýsingar strax
+                        við útgáfu. Einstaklingur skráir sig inn með rafrænum
+                        skilríkjum, kerfið leiðir notanda í nýskráningu til að
+                        gerast áskrifandi ef áskrift er ekki til staðar.
                       </Text>
 
                       <Text fontWeight="medium">
@@ -318,11 +318,12 @@ export default function Page() {
                         viðkomandi.
                       </Text>
                       <Text>
-                        Umboð: Einstaklingar sem skrá sig inn í umboði annars
-                        kennitölu en sinni eigin fær upp þau réttindi sem
-                        viðkomandi kennitala er með. Ef fyrirtæki er ekki með
-                        áskrift býðst einstaklingi sem er að skrá sig inn í
-                        umboði að kaupa áskrift fyrir hönd fyrirtækis.
+                        Umboð: Einstaklingar sem skrá sig inn í umboði annarra
+                        kennitölu en þeirra eigin fær upp þau réttindi sem
+                        tilheyra viðkomandi kennitölu. Ef fyrirtæki er ekki með
+                        áskrift býðst einstaklingi sem skráir sig inn á
+                        grundvelli umboðs að kaupa áskrift fyrir hönd
+                        fyrirtækis.
                       </Text>
                     </Stack>
                   </Box>

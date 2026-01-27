@@ -24,6 +24,7 @@ type Props = {
   onSuccessfulLookup?: (results: NationalIdLookupResults) => void
   onReset?: () => void
   onError?: (error: { title: string; message: string } | null) => void
+  onChange: (nationalId: string) => void
 }
 
 export const NationalIdLookup = ({
@@ -31,17 +32,18 @@ export const NationalIdLookup = ({
   onSuccessfulLookup,
   onReset,
   onError: setErrorMessage,
+  onChange,
 }: Props) => {
   const trpc = useTRPC()
   const { formState, clearErrors } =
     useFormContext<RecallApplicationWebSchema>()
   const { mutate, isPending } = useMutation(
-    trpc.getPersonByNationalId.mutationOptions({
+    trpc.getEntityByNationalId.mutationOptions({
       onMutate: () => {
         setErrorMessage?.(null)
       },
-      onSuccess: ({ person }) => {
-        if (person === null) {
+      onSuccess: ({ entity }) => {
+        if (entity === null) {
           toast.error('Ekkert fannst fyrir gefna kennitölu', {
             toastId: 'national-id-lookup-fail',
           })
@@ -50,11 +52,11 @@ export const NationalIdLookup = ({
         }
 
         onSuccessfulLookup?.({
-          nationalId: person.kennitala,
-          name: person.nafn,
-          address: person.heimili,
-          zipCode: person.postaritun.split('-')[0],
-          city: person.sveitarfelag,
+          nationalId: entity.kennitala,
+          name: entity.nafn,
+          address: entity.heimili,
+          zipCode: entity.postaritun.split('-')[0],
+          city: entity.sveitarfelag,
         })
       },
       onError: (_err) => {
@@ -62,7 +64,6 @@ export const NationalIdLookup = ({
           title: 'Ekki tókst að sækja upplýsingar fyrir kennitölu',
           message: 'Athugaðu hvort kennitala sé rétt.',
         })
-        onReset?.()
       },
     }),
   )
@@ -70,6 +71,7 @@ export const NationalIdLookup = ({
 
   const onChangeHandler = (val: string) => {
     clearErrors('fields.settlementFields.nationalId')
+    onChange(val)
     setNationalId(val)
   }
 

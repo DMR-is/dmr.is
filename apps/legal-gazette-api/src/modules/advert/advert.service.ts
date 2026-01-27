@@ -49,6 +49,12 @@ import { UserModel } from '../../models/users.model'
 import { ILGNationalRegistryService } from '../national-registry/national-registry.service.interface'
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
 import { IAdvertService } from './advert.service.interface'
+
+// Search pattern constants
+const NATIONAL_ID_PATTERN = /^\d{6}-?\d{4}$/
+const PUBLICATION_NUMBER_PATTERN = /^\d+\/\d{4}$/
+
+const LOGGING_CONTEXT = 'AdvertService'
 @Injectable()
 export class AdvertService implements IAdvertService {
   constructor(
@@ -268,7 +274,7 @@ export class AdvertService implements IAdvertService {
       {
         caseId: newCase.id,
         applicantNationalId: body.applicantNationalId,
-        applicationType: ApplicationTypeEnum.RECALL_BANKRUPTCY,
+        applicationType: ApplicationTypeEnum.RECALL_DECEASED,
         status: ApplicationStatusEnum.SUBMITTED,
         submittedByNationalId: currentUser.nationalId,
         answers: {
@@ -315,9 +321,9 @@ export class AdvertService implements IAdvertService {
     )
 
     const advert = await this.createAdvert({
-      templateType: AdvertTemplateType.RECALL_BANKRUPTCY,
+      templateType: AdvertTemplateType.RECALL_DECEASED,
       caseId: newCase.id,
-      typeId: TypeIdEnum.RECALL_BANKRUPTCY,
+      typeId: TypeIdEnum.RECALL_DECEASED,
       categoryId: CategoryDefaultIdEnum.RECALLS,
       createdBy: applicantName,
       createdByNationalId: body.applicantNationalId,
@@ -349,7 +355,7 @@ export class AdvertService implements IAdvertService {
       await application.update({ settlementId: advert.settlement.id })
     }
 
-    this.logger.info('Created advert and recall bankruptcy application', {
+    this.logger.info('Created advert and recall deceased application', {
       caseId: newCase.id,
       applicationId: application.id,
       advertId: advert.id,
@@ -417,6 +423,57 @@ export class AdvertService implements IAdvertService {
     })
   }
 
+  async reactivateAdvert(
+    advertId: string,
+    currentUser: DMRUser,
+  ): Promise<void> {
+    await this.sequelize.transaction(async (t) => {
+      const user = await this.userModel.unscoped().findOneOrThrow({
+        attributes: ['id', 'nationalId'],
+        where: { nationalId: currentUser.nationalId },
+      })
+      const advert = await this.advertModel
+        .unscoped()
+        .findByPkOrThrow(advertId, {
+          attributes: ['id', 'statusId', 'assignedUserId'],
+        })
+
+      // Only REJECTED adverts can be reactivated
+      if (advert.statusId !== StatusIdEnum.REJECTED) {
+        this.logger.warn(
+          `Cannot reactivate advert ${advertId} - status is ${advert.statusId}`,
+          {
+            context: LOGGING_CONTEXT,
+          },
+        )
+        throw new BadRequestException(
+          'Only rejected adverts can be reactivated',
+        )
+      }
+
+      // Check if user is assigned to the advert
+      if (advert.assignedUserId !== user.id) {
+        this.logger.warn(
+          `User with id ${user.id} is not assigned to advert ${advertId}`,
+          {
+            context: LOGGING_CONTEXT,
+          },
+        )
+        throw new BadRequestException('User is not assigned to this advert')
+      }
+
+      await advert.update({ statusId: StatusIdEnum.IN_PROGRESS })
+
+      t.afterCommit(() => {
+        this.eventEmitter.emit(LegalGazetteEvents.STATUS_CHANGED, {
+          advertId,
+          actorId: currentUser.nationalId,
+          statusId: StatusIdEnum.IN_PROGRESS,
+        })
+      })
+    })
+  }
+
   async moveAdvertToNextStatus(
     advertId: string,
     currentUser: DMRUser,
@@ -436,6 +493,9 @@ export class AdvertService implements IAdvertService {
       if (!moveableStatuses.includes(currentStatusId.statusId)) {
         this.logger.warn(
           `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to next status`,
+          {
+            context: LOGGING_CONTEXT,
+          },
         )
 
         throw new BadRequestException('Advert cannot be moved to next status')
@@ -487,6 +547,9 @@ export class AdvertService implements IAdvertService {
       if (!moveableStatuses.includes(currentStatusId.statusId)) {
         this.logger.warn(
           `Advert with id ${advertId} is in status ${currentStatusId.statusId} and cannot be moved to previous status`,
+          {
+            context: LOGGING_CONTEXT,
+          },
         )
 
         throw new BadRequestException(
@@ -552,7 +615,7 @@ export class AdvertService implements IAdvertService {
     if (body.scheduledAt.length === 0) {
       this.logger.warn('Tried to create advert without publication dates', {
         body,
-        context: 'AdvertService',
+        context: LOGGING_CONTEXT,
       })
       throw new BadRequestException(
         'At least one scheduled publication date is required',
@@ -638,14 +701,26 @@ export class AdvertService implements IAdvertService {
       statusId: advert.statusId,
       actorId: advert.createdByNationalId,
     })
-    this.eventEmitter.emit(LegalGazetteEvents.ADVERT_CREATED, {
-      advertId: advert.id,
-      statusId: advert.statusId,
-      actorId: advert.createdByNationalId,
-      actorName: advert.createdBy,
-      external: body.isFromExternalSystem,
-    })
 
+    await this.eventEmitter.emitAsync(
+      LegalGazetteEvents.CREATE_SUBMIT_COMMENT,
+      {
+        advertId: advert.id,
+        statusId: advert.statusId,
+        actorId: advert.createdByNationalId,
+        actorName: advert.createdBy,
+        external: body.isFromExternalSystem,
+      },
+    )
+
+    this.logger.info('Advert created successfully', {
+      advertId: advert.id,
+      applicationId: advert.applicationId,
+      type: advert.typeId,
+      category: advert.categoryId,
+      status: advert.statusId,
+      context: 'AdvertService',
+    })
     return advert.fromModelToDetailed()
   }
 
@@ -749,55 +824,178 @@ export class AdvertService implements IAdvertService {
     return updated.fromModelToDetailed()
   }
 
-  async getAdvertsCount(): Promise<GetAdvertsStatusCounterDto> {
-    const submittedCount = this.advertModel
-      .unscoped()
-      .countByStatus(StatusIdEnum.SUBMITTED)
-    const inProgressCount = this.advertModel
-      .unscoped()
-      .countByStatus(StatusIdEnum.IN_PROGRESS)
-    const readyForPublicationCount = this.advertModel
-      .unscoped()
-      .countByStatus(StatusIdEnum.READY_FOR_PUBLICATION)
+  async getAdvertsCount(
+    query: GetAdvertsQueryDto,
+  ): Promise<GetAdvertsStatusCounterDto> {
+    // Build where options with the same filters as getAdverts
+    const whereOptions: WhereOptions = {}
 
-    const publishedCount = this.advertModel
-      .unscoped()
-      .countByStatus(StatusIdEnum.PUBLISHED)
-
-    const rejectedCount = this.advertModel
-      .unscoped()
-      .countByStatus(StatusIdEnum.REJECTED)
-
-    const withdrawnCount = this.advertModel
-      .unscoped()
-      .countByStatus(StatusIdEnum.WITHDRAWN)
-
-    const [
-      submitted,
-      inProgress,
-      readyForPublication,
-      published,
-      rejected,
-      withdrawn,
-    ] = await Promise.all([
-      submittedCount,
-      inProgressCount,
-      readyForPublicationCount,
-      publishedCount,
-      rejectedCount,
-      withdrawnCount,
-    ])
-
-    return {
-      submitted: {
-        ...submitted,
-        count: submitted.count + inProgress.count,
-      },
-      readyForPublication,
-      rejected,
-      published,
-      withdrawn,
+    if (query.typeId) {
+      Object.assign(whereOptions, { typeId: { [Op.in]: query.typeId } })
     }
+
+    if (query.categoryId) {
+      Object.assign(whereOptions, { categoryId: { [Op.in]: query.categoryId } })
+    }
+
+    if (query.dateFrom && query.dateTo) {
+      Object.assign(whereOptions, {
+        createdAt: {
+          [Op.between]: [query.dateFrom, query.dateTo],
+        },
+      })
+    }
+
+    if (query.dateFrom && !query.dateTo) {
+      Object.assign(whereOptions, {
+        createdAt: {
+          [Op.gte]: query.dateFrom,
+        },
+      })
+    }
+
+    if (!query.dateFrom && query.dateTo) {
+      Object.assign(whereOptions, {
+        createdAt: {
+          [Op.lte]: query.dateTo,
+        },
+      })
+    }
+
+    if (query.search) {
+      const searchTerm = query.search.trim()
+
+      // Check if it looks like a national ID (10 digits, optionally with dash)
+      const isNationalIdFormat = NATIONAL_ID_PATTERN.test(searchTerm)
+
+      // Check if it looks like a publication number (e.g., "123/2024")
+      const isPublicationNumber = PUBLICATION_NUMBER_PATTERN.test(searchTerm)
+
+      if (isNationalIdFormat) {
+        // Exact national ID search (fast with index)
+        const cleanedId = searchTerm.replace('-', '')
+        Object.assign(whereOptions, {
+          createdByNationalId: cleanedId,
+        })
+      } else if (isPublicationNumber) {
+        // Exact publication number search (fast with index)
+        Object.assign(whereOptions, {
+          publicationNumber: searchTerm,
+        })
+      } else {
+        // Full-text search for content
+        const searchWords = searchTerm
+          .split(/\s+/)
+          .filter((word) => word.length > 0)
+
+        // Build AND conditions for multi-word search
+        const searchConditions = searchWords.map((word) => ({
+          [Op.or]: [
+            { title: { [Op.iLike]: `%${word}%` } },
+            { content: { [Op.iLike]: `%${word}%` } },
+            { caption: { [Op.iLike]: `%${word}%` } },
+            { additionalText: { [Op.iLike]: `%${word}%` } },
+            { createdBy: { [Op.iLike]: `%${word}%` } },
+          ],
+        }))
+
+        Object.assign(whereOptions, {
+          [Op.and]: searchConditions,
+        })
+      }
+    }
+
+    // Determine which tab statuses to count based on statusId filter
+    const submittedTabStatuses = [
+      StatusIdEnum.SUBMITTED,
+      StatusIdEnum.IN_PROGRESS,
+    ]
+    const readyForPublicationTabStatuses = [StatusIdEnum.READY_FOR_PUBLICATION]
+    const finishedTabStatuses = [
+      StatusIdEnum.SUBMITTED,
+      StatusIdEnum.READY_FOR_PUBLICATION,
+      StatusIdEnum.IN_PROGRESS,
+      StatusIdEnum.PUBLISHED,
+      StatusIdEnum.REJECTED,
+      StatusIdEnum.WITHDRAWN,
+    ]
+
+    let countSubmittedTab = true
+    let countReadyForPublicationTab = true
+    let countFinishedTab = true
+
+    // If statusId filter is provided, only count relevant tabs
+    if (query.statusId && query.statusId.length > 0) {
+      const hasSubmittedStatus = query.statusId.some((id) =>
+        submittedTabStatuses.includes(id as StatusIdEnum),
+      )
+      const hasReadyStatus = query.statusId.some((id) =>
+        readyForPublicationTabStatuses.includes(id as StatusIdEnum),
+      )
+      const hasFinishedStatus = query.statusId.some((id) =>
+        finishedTabStatuses.includes(id as StatusIdEnum),
+      )
+
+      countSubmittedTab = hasSubmittedStatus
+      countReadyForPublicationTab = hasReadyStatus
+      countFinishedTab = hasFinishedStatus
+    }
+
+    // Count for each tab
+    const submittedTabCount = countSubmittedTab
+      ? await this.advertModel.unscoped().count({
+          where: {
+            ...whereOptions,
+            statusId: {
+              [Op.in]: query.statusId?.length
+                ? query.statusId.filter((id) =>
+                    submittedTabStatuses.includes(id as StatusIdEnum),
+                  )
+                : submittedTabStatuses,
+            },
+          },
+        })
+      : 0
+
+    const readyForPublicationTabCount = countReadyForPublicationTab
+      ? await this.advertModel.unscoped().count({
+          where: {
+            ...whereOptions,
+            statusId: {
+              [Op.in]: readyForPublicationTabStatuses,
+            },
+          },
+        })
+      : 0
+
+    const finishedTabCount = countFinishedTab
+      ? await this.advertModel.unscoped().count({
+          where: {
+            ...whereOptions,
+            statusId: {
+              [Op.in]: query.statusId?.length
+                ? query.statusId.filter((id) =>
+                    finishedTabStatuses.includes(id as StatusIdEnum),
+                  )
+                : finishedTabStatuses,
+            },
+          },
+        })
+      : 0
+
+    const dto = {
+      submittedTab: {
+        count: submittedTabCount,
+      },
+      readyForPublicationTab: {
+        count: readyForPublicationTabCount,
+      },
+      finishedTab: {
+        count: finishedTabCount,
+      },
+    }
+
+    return dto
   }
 
   async getAdverts(query: GetAdvertsQueryDto): Promise<GetAdvertsDto> {
@@ -845,25 +1043,66 @@ export class AdvertService implements IAdvertService {
     }
 
     if (query.search) {
-      Object.assign(whereOptions, {
-        [Op.or]: [
-          { title: { [Op.iLike]: `%${query.search}%` } },
-          { content: { [Op.iLike]: `%${query.search}%` } },
-          { caption: { [Op.iLike]: `%${query.search}%` } },
-        ],
-      })
+      const searchTerm = query.search.trim()
+
+      // Check if it looks like a national ID (10 digits, optionally with dash)
+      const isNationalIdFormat = NATIONAL_ID_PATTERN.test(searchTerm)
+
+      // Check if it looks like a publication number (e.g., "123/2024")
+      const isPublicationNumber = PUBLICATION_NUMBER_PATTERN.test(searchTerm)
+
+      if (isNationalIdFormat) {
+        // Exact national ID search (fast with index)
+        const cleanedId = searchTerm.replace('-', '')
+        Object.assign(whereOptions, {
+          createdByNationalId: cleanedId,
+        })
+      } else if (isPublicationNumber) {
+        // Exact publication number search (fast with index)
+        Object.assign(whereOptions, {
+          publicationNumber: searchTerm,
+        })
+      } else {
+        // Full-text search for content
+        const searchWords = searchTerm
+          .split(/\s+/)
+          .filter((word) => word.length > 0)
+
+        // Build AND conditions for multi-word search
+        const searchConditions = searchWords.map((word) => ({
+          [Op.or]: [
+            { title: { [Op.iLike]: `%${word}%` } },
+            { content: { [Op.iLike]: `%${word}%` } },
+            { caption: { [Op.iLike]: `%${word}%` } },
+            { additionalText: { [Op.iLike]: `%${word}%` } },
+            { createdBy: { [Op.iLike]: `%${word}%` } },
+          ],
+        }))
+
+        Object.assign(whereOptions, {
+          [Op.and]: searchConditions,
+        })
+      }
     }
 
     const order: Order = []
     const direction = query.direction || 'desc'
 
     if (query.sortBy === 'birting') {
+      // Sort by next scheduled publication (published_at IS NULL) first,
+      // then by latest published publication
+      // This ensures upcoming publications are prioritized
       order.push([
-        {
-          model: AdvertPublicationModel,
-          as: 'publications',
-        },
-        'scheduledAt',
+        this.sequelize.literal(`
+          (
+            SELECT COALESCE(
+              MIN(CASE WHEN "published_at" IS NULL THEN "scheduled_at" END),
+              MAX("published_at")
+            )
+            FROM "advert_publication" AS "publications"
+            WHERE "publications"."advert_id" = "AdvertModel"."id"
+          )
+        `),
         direction,
       ])
     } else {
@@ -871,6 +1110,8 @@ export class AdvertService implements IAdvertService {
     }
 
     const results = await this.advertModel.scope('listview').findAndCountAll({
+      distinct: true,
+      col: '"AdvertModel"."id"',
       limit,
       offset,
       where: whereOptions,

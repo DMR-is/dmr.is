@@ -83,6 +83,24 @@ export const AdvertTable = ({
     }
   }
 
+  const isPublished = (ad: AdvertDto) => {
+    return ad.status.slug === 'utgefid'
+  }
+
+  const isAllPublished = (ad: AdvertDto) => {
+    let publishedCount = 0
+    ad.publications.forEach((pub) => {
+      if (pub.publishedAt) {
+        publishedCount++
+      }
+    })
+
+    return publishedCount === ad.publications.length
+  }
+
+  const isRejected = (ad: AdvertDto) => {
+    return ad.status.slug === 'hafnad'
+  }
   return (
     <>
       <DataTable
@@ -96,26 +114,39 @@ export const AdvertTable = ({
           children: <AdvertPublications advert={ad} />,
           isExpandable: true,
           startExpanded: index === adverts.length - 1,
-          actions: ad.status.slug !== 'utgefid' && (
+          actions: (
             <Inline justifyContent={'flexEnd'}>
-              <button
-                style={{ display: 'inline-block' }}
-                className={cardTagButtonStyle}
-                title="Afturkalla"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  e.preventDefault()
-                }}
-              >
-                <Tag variant="red" onClick={() => openRemoveAdvertModal(ad.id)}>
-                  <Icon
-                    icon="trash"
-                    type="outline"
-                    size="small"
-                    color="red600"
-                  />
+              {!isPublished(ad) && !isRejected(ad) ? (
+                <button
+                  style={{ display: 'inline-block' }}
+                  className={cardTagButtonStyle}
+                  title="Afturkalla"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                  }}
+                >
+                  <Tag
+                    variant="red"
+                    onClick={() => openRemoveAdvertModal(ad.id)}
+                  >
+                    <Icon
+                      icon="trash"
+                      type="outline"
+                      size="small"
+                      color="red600"
+                    />
+                  </Tag>
+                </button>
+              ) : isAllPublished(ad) ? (
+                <Tag variant="mint" disabled>
+                  Útgefin
                 </Tag>
-              </button>
+              ) : isRejected(ad) ? (
+                <Tag variant="red" disabled>
+                  Hafnað
+                </Tag>
+              ) : null}
             </Inline>
           ),
         }))}

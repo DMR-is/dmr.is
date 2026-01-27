@@ -48,6 +48,7 @@ export const ApplicationCard = ({ application }: Props) => {
   const adverts = application.adverts || []
   const publications: Array<{ title?: string; publishedAt?: string }> = []
   let allPublished = false
+  let rejected = false
 
   // count publications for common adverts
   if (application.type === ApplicationTypeEnum.COMMON) {
@@ -73,7 +74,13 @@ export const ApplicationCard = ({ application }: Props) => {
     if (allPublished) {
       statusText = 'Útgefin'
     }
-    // count publications for da´narbúa and þrotabú adverts
+
+    if (adverts[0]?.status.slug === 'hafnad') {
+      statusText = 'Hafnað'
+      rejected = true
+    }
+
+    // count publications for dánarbúa and þrotabú adverts
   } else {
     let advertsCount = 0
     let pubCount = 0
@@ -86,8 +93,18 @@ export const ApplicationCard = ({ application }: Props) => {
         if (advert.type.title == 'Skiptalok') {
           allPublished = true
         }
+
         pubCount++
       })
+
+      // if the Innköllun advert is rejected, mark application as rejected
+      if (
+        advert.type.slug.includes('Innkollun') &&
+        advert.status.slug === 'hafnad'
+      ) {
+        statusText = 'Hafnað'
+        rejected = true
+      }
     })
 
     if (advertsCount > 0) {
@@ -107,12 +124,24 @@ export const ApplicationCard = ({ application }: Props) => {
     application.status === ApplicationStatusEnum.SUBMITTED &&
     !allPublished
 
-  const canBeRemoved = publications.length == 0 && !allPublished
+  const canBeRemoved = publications.length == 0 && !allPublished && !rejected
+
+  const getStatusTagVariant = () => {
+    if (rejected) return 'red'
+    else if (allPublished) return 'mint'
+    else if (application.status === ApplicationStatusEnum.DRAFT) return 'blue'
+    else if (
+      application.status === ApplicationStatusEnum.SUBMITTED ||
+      statusText === 'Innsent'
+    )
+      return 'blueberry'
+    return 'mint'
+  }
 
   return (
     <Box borderRadius="large" border="standard" padding={3} background="white">
-      <Stack space={0}>
-        <Inline justifyContent="spaceBetween">
+      <Stack space={[1, 0]}>
+        <Inline justifyContent="spaceBetween" space={1}>
           <Text color="purple400" variant="eyebrow" title="Uppfært">
             Uppfært:{' '}
             {`${formatDate(application.updatedAt, "dd. MMMM yyyy 'kl.' HH:mm")}`}
@@ -127,18 +156,7 @@ export const ApplicationCard = ({ application }: Props) => {
                     </Tag>
                   ),
               )}
-            <Tag
-              variant={
-                allPublished
-                  ? 'mint'
-                  : application.status === ApplicationStatusEnum.DRAFT
-                    ? 'blue'
-                    : ApplicationStatusEnum.SUBMITTED
-                      ? 'blueberry'
-                      : 'mint'
-              }
-              disabled
-            >
+            <Tag variant={getStatusTagVariant()} disabled>
               {statusText}
             </Tag>
             {canBeRemoved && (
@@ -166,7 +184,12 @@ export const ApplicationCard = ({ application }: Props) => {
           {recallInProgress && (
             <Text variant="medium">{application.subtitle}</Text>
           )}
-          <Inline justifyContent="spaceBetween" alignY="center">
+          <Inline
+            justifyContent="spaceBetween"
+            alignY="center"
+            collapseBelow="sm"
+            space={1}
+          >
             {recallInProgress ? (
               <div className={cardExtraButtonStyle}>
                 <AddAdvertsToApplicationMenu

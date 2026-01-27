@@ -41,6 +41,7 @@ export class RecallApplicationController {
 
   @Post(':applicationId/addDivisionMeeting')
   @LGResponse({ operationId: 'addDivisionMeeting' })
+  @UseGuards(OwnershipGuard)
   async addDivisionMeeting(
     @Param('applicationId') applicationId: string,
     @Body() body: CreateDivisionMeetingDto,
@@ -51,6 +52,7 @@ export class RecallApplicationController {
 
   @Post(':applicationId/addDivisionEnding')
   @LGResponse({ operationId: 'addDivisionEnding' })
+  @UseGuards(OwnershipGuard)
   async addDivisionEnding(
     @Param('applicationId') applicationId: string,
     @Body() body: CreateDivisionEndingDto,

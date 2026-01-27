@@ -47,7 +47,7 @@ export const AdvertsCompleted = () => {
   }))
 
   return (
-    <Box background="white">
+    <Box background="white" paddingTop={4}>
       <DataTable
         noDataMessage={formatMessage(
           ritstjornTableMessages.general.noDataMessage,

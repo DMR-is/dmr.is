@@ -7,32 +7,47 @@ import { formatDate } from '@dmr.is/utils/client'
 
 import { Checkbox } from '@island.is/island-ui/core'
 
-import { AdvertDto } from '../../gen/fetch'
+import { useFilterContext } from '../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
+import { useTRPC } from '../../lib/trpc/client/trpc'
+
+import { useQuery } from '@tanstack/react-query'
 
 type Props = {
   selectedAdvertIds?: string[]
   onToggle?: (advertId: string) => void
-  adverts?: AdvertDto[]
 }
 
 export const AdvertsToBePublished = ({
-  adverts = [],
   selectedAdvertIds = [],
   onToggle,
 }: Props) => {
   const { formatMessage } = useIntl()
+  const { params, setParams, handleSort } = useFilterContext()
+  const trpc = useTRPC()
 
-  const rows = adverts.map((advert) => ({
+  const { data } = useQuery(
+    trpc.getReadyForPublicationAdverts.queryOptions({
+      categoryId: params.categoryId,
+      page: params.page,
+      pageSize: params.pageSize,
+      search: params.search,
+      typeId: params.typeId,
+      direction: params.direction ?? undefined,
+      sortBy: params.sortBy ?? undefined,
+    }),
+  )
+
+  const rows = data?.adverts.map((advert) => ({
     checkbox: (
       <Checkbox
         checked={selectedAdvertIds.includes(advert.id)}
         onChange={() => onToggle?.(advert.id)}
       />
     ),
+    utgafudagur: formatDate(advert.scheduledAt),
     flokkur: advert.category.title,
     efni: advert.title,
-    utgafudagur: formatDate(advert.scheduledAt),
     sender: advert.createdBy,
     owner: advert.assignedUser?.name,
     href: `/ritstjorn/${advert.id}`,
@@ -49,6 +64,15 @@ export const AdvertsToBePublished = ({
             size: 'tiny',
           },
           {
+            field: 'utgafudagur',
+            children: formatMessage(
+              ritstjornTableMessages.columns.publishingDate,
+            ),
+            size: 'tiny',
+            sortable: true,
+            onSort: () => handleSort('birting'),
+          },
+          {
             field: 'flokkur',
             children: formatMessage(ritstjornTableMessages.columns.category),
           },
@@ -56,12 +80,7 @@ export const AdvertsToBePublished = ({
             field: 'efni',
             children: formatMessage(ritstjornTableMessages.columns.content),
           },
-          {
-            field: 'utgafudagur',
-            children: formatMessage(
-              ritstjornTableMessages.columns.publishingDate,
-            ),
-          },
+
           {
             field: 'owner',
             children: formatMessage(ritstjornTableMessages.columns.owner),
@@ -73,6 +92,10 @@ export const AdvertsToBePublished = ({
         ] as const
       }
       rows={rows}
+      paging={data?.paging}
+      onPageChange={(page) => setParams({ page: page })}
+      onPageSizeChange={(pageSize) => setParams({ pageSize: pageSize })}
+      showPageSizeSelect={true}
     />
   )
 }

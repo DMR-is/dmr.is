@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-export class PersonDto {
+export class NationalRegistryEntityDto {
   @ApiProperty({ type: String })
   stada!: string
   @ApiProperty({ type: String })
@@ -21,7 +21,7 @@ export class PersonDto {
   kynkodi!: number
 }
 
-export class GetPersonDto {
-  @ApiProperty({ type: PersonDto, nullable: true })
-  person!: PersonDto | null
+export class GetNationalRegistryEntityDto {
+  @ApiProperty({ type: NationalRegistryEntityDto, nullable: true })
+  entity!: NationalRegistryEntityDto | null
 }

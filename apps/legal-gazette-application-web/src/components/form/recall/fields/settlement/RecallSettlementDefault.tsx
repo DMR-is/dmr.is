@@ -8,7 +8,6 @@ import {
   AlertMessage,
   GridColumn,
   GridRow,
-  Text,
 } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
@@ -18,21 +17,40 @@ import {
 } from '../../../../national-id-lookup/NationalIdLookup'
 import { DatePickerController } from '../../../controllers/DatePickerController'
 import { InputController } from '../../../controllers/InputController'
-
+type ErrorState = {
+  title: string
+  message: string
+} | null
 export const RecallSettlementDefault = () => {
   const { getValues, setValue } = useFormContext<RecallApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
 
-  const { updateApplication, debouncedUpdateApplication } =
-    useUpdateApplication({
-      id: applicationId,
-      type: 'RECALL',
-    })
+  const { updateLocalOnly } = useUpdateApplication({
+    id: applicationId,
+    type: 'RECALL',
+  })
 
   const [onLookupError, setOnLookupError] = useState<{
     title: string
     message: string
   } | null>(null)
+  const [kennitalaValue, setKennitalaValue] = useState<string | null>(null)
+
+  const onLookupErrorHandler = (error: ErrorState) => {
+    setOnLookupError(error)
+    if (!error) return
+
+    // update application with nationalId even though it was not found in
+    // national registry, so that user can proceed even if lookup fails
+    // Save to localStorage only - server sync happens on navigation
+    updateLocalOnly({
+      fields: {
+        settlementFields: {
+          nationalId: kennitalaValue,
+        },
+      },
+    })
+  }
 
   const onSuccessfulLookup = ({
     address,
@@ -47,26 +65,20 @@ export const RecallSettlementDefault = () => {
       `${address}, ${zipCode} ${city}`,
     )
     setValue('fields.settlementFields.nationalId', nationalId)
-    updateApplication(
-      {
-        fields: {
-          settlementFields: {
-            name: name,
-            address: `${address}, ${zipCode} ${city}`,
-            nationalId: nationalId,
-          },
+    updateLocalOnly({
+      fields: {
+        settlementFields: {
+          name: name,
+          address: `${address}, ${zipCode} ${city}`,
+          nationalId: nationalId,
         },
       },
-      {
-        successMessage: 'Upplýsingar um þrotabú vistaðar',
-        errorMessage: 'Ekki tókst að vista upplýsingar um þrotabú',
-      },
-    )
+    })
   }
 
   const resetLookupFields = () => {
     setValue('fields.settlementFields.nationalId', '')
-    updateApplication({
+    updateLocalOnly({
       fields: {
         settlementFields: {
           name: '',
@@ -81,7 +93,7 @@ export const RecallSettlementDefault = () => {
     <GridRow rowGap={[2, 3]}>
       {onLookupError && (
         <GridColumn span="12/12">
-          <AlertMessage type="error" {...onLookupError} />
+          <AlertMessage type="warning" {...onLookupError} />
         </GridColumn>
       )}
       <GridColumn span={['12/12', '6/12']}>
@@ -89,7 +101,12 @@ export const RecallSettlementDefault = () => {
           defaultValue={getValues('fields.settlementFields.nationalId') ?? ''}
           onSuccessfulLookup={onSuccessfulLookup}
           onReset={resetLookupFields}
-          onError={setOnLookupError}
+          onError={(error: ErrorState) => {
+            onLookupErrorHandler(error)
+          }}
+          onChange={(val) => {
+            setKennitalaValue(val)
+          }}
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>
@@ -100,7 +117,7 @@ export const RecallSettlementDefault = () => {
           label="Dánardagur"
           required
           onChange={(val) => (
-            updateApplication({
+            updateLocalOnly({
               fields: {
                 settlementFields: {
                   dateOfDeath: val.toISOString(),
@@ -120,19 +137,14 @@ export const RecallSettlementDefault = () => {
           label={`Nafn dánarbús`}
           required
           onChange={(val) =>
-            debouncedUpdateApplication(
-              {
-                fields: {
-                  settlementFields: {
-                    name: val,
-                  },
+            // Save to localStorage only - server sync happens on navigation
+            updateLocalOnly({
+              fields: {
+                settlementFields: {
+                  name: val,
                 },
               },
-              {
-                successMessage: `Nafn dánarbús vistað`,
-                errorMessage: `Ekki tókst að vista nafn dánarbús`,
-              },
-            )
+            })
           }
         />
       </GridColumn>
@@ -143,19 +155,14 @@ export const RecallSettlementDefault = () => {
           name="fields.settlementFields.address"
           label="Síðasta heimilisfang"
           onChange={(val) =>
-            debouncedUpdateApplication(
-              {
-                fields: {
-                  settlementFields: {
-                    address: val,
-                  },
+            // Save to localStorage only - server sync happens on navigation
+            updateLocalOnly({
+              fields: {
+                settlementFields: {
+                  address: val,
                 },
               },
-              {
-                successMessage: `Heimilisfang dánarbús vistað`,
-                errorMessage: `Ekki tókst að vista heimilisfang dánarbús`,
-              },
-            )
+            })
           }
         />
       </GridColumn>

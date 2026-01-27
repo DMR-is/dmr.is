@@ -3,8 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { LOGGER_PROVIDER } from '@dmr.is/logging'
-import { Logger } from '@dmr.is/logging-next'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { LegalGazetteEvents } from '../../core/constants'
 import { MutationResponse } from '../../core/dto/mutation.do'
@@ -13,6 +12,7 @@ import { PgAdvisoryLockService } from '../advert/tasks/lock.service'
 import { SubscriberCreatedEvent } from './events/subscriber-created.event'
 import { ISubscriberService } from './subscriber.service.interface'
 
+const LOGGING_CONTEXT = 'SubscriberService'
 @Injectable()
 export class SubscriberService implements ISubscriberService {
   constructor(
@@ -39,6 +39,7 @@ export class SubscriberService implements ISubscriberService {
       this.logger.info('Subscriber subscription has expired', {
         subscriberId: subscriber.id,
         subscribedTo: subscriber.subscribedTo,
+        context: LOGGING_CONTEXT,
       })
       // Subscription has expired, update subscriber
       const updatedSubscriber = await this.subscriberModel.update(
@@ -68,16 +69,13 @@ export class SubscriberService implements ISubscriberService {
     const lockResult = await this.lock.runWithUserLock(
       user.nationalId,
       async (tx) => {
-        const subscriber = await this.subscriberModel.findOne({
-          where: { nationalId: user.nationalId },
-          transaction: tx,
-        })
-
-        if (!subscriber) {
-          throw new NotFoundException(
-            `Subscriber with nationalId ${user.nationalId} not found.`,
-          )
-        }
+        const subscriber = await this.subscriberModel.findOneOrThrow(
+          {
+            where: { nationalId: user.nationalId },
+            transaction: tx,
+          },
+          'Subscriber not found when creating subscription',
+        )
 
         // Check if subscription is already active and not expired (idempotency check)
         if (subscriber.isActive && subscriber.subscribedTo) {
@@ -85,6 +83,7 @@ export class SubscriberService implements ISubscriberService {
           if (expiryDate > new Date()) {
             this.logger.info('Subscription already active, skipping payment', {
               category: 'subscriber-service',
+              context: LOGGING_CONTEXT,
               subscriberId: subscriber.id,
               expiresAt: subscriber.subscribedTo,
             })
@@ -114,6 +113,7 @@ export class SubscriberService implements ISubscriberService {
     if (!lockResult.success) {
       this.logger.info('Subscription request blocked by concurrent request', {
         category: 'subscriber-service',
+        context: LOGGING_CONTEXT,
         nationalId: user.nationalId,
         reason: lockResult.reason,
       })

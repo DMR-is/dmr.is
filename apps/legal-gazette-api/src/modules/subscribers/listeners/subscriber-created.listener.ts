@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import Kennitala from 'kennitala'
 import { Sequelize } from 'sequelize-typescript'
 
@@ -16,6 +17,7 @@ import {
   TBRTransactionStatus,
   TBRTransactionType,
 } from '../../../models/tbr-transactions.model'
+import { IPriceCalculatorService } from '../../advert/calculator/price-calculator.service.interface'
 import { ITBRService } from '../../tbr/tbr.service.interface'
 import { SubscriberCreatedEvent } from '../events/subscriber-created.event'
 
@@ -31,6 +33,8 @@ const SUBSCRIPTION_AMOUNT = parseInt(
 export class SubscriberCreatedListener {
   constructor(
     @Inject(ITBRService) private readonly tbrService: ITBRService,
+    @Inject(IPriceCalculatorService)
+    private readonly priceCalculatorService: IPriceCalculatorService,
     @InjectModel(TBRTransactionModel)
     private readonly tbrTransactionModel: typeof TBRTransactionModel,
     @InjectModel(SubscriberTransactionModel)
@@ -65,15 +69,10 @@ export class SubscriberCreatedListener {
       actorNationalId,
     })
 
-    // Determine charge category based on national ID format
-    const isCompany = Kennitala.isCompany(subscriber.nationalId)
-    const chargeCategory = (
-      isCompany
-        ? process.env.LG_TBR_CHARGE_CATEGORY_COMPANY
-        : process.env.LG_TBR_CHARGE_CATEGORY_PERSON
-    ) as string
-
-    const chargeBase = subscriber.nationalId
+    // Determine charge category based on national ID and TBR company settings
+    const chargeCategory = await this.priceCalculatorService.getChargeCategory(
+      subscriber.nationalId,
+    )
 
     // Look up fee code ID for subscriptions
     const feeCode = await this.feeCodeModel.findOne({
@@ -103,6 +102,15 @@ export class SubscriberCreatedListener {
             },
           )
 
+          // Set chargeBase to unique subscription transaction ID (max 12 chars)
+          // Using crypto to generate a random 12-character alphanumeric key
+          const uniqueSubscriberKey = crypto.randomBytes(6).toString('hex')
+
+          logger.info('Generated unique chargeBase for subscription', {
+            subscriberId: subscriber.id,
+            chargeBase: uniqueSubscriberKey,
+          })
+
           // Create the TBR transaction record
           const tbrTransaction = await this.tbrTransactionModel.create(
             {
@@ -110,7 +118,7 @@ export class SubscriberCreatedListener {
               feeCodeId: feeCode.id,
               feeCodeMultiplier: 1,
               totalPrice: SUBSCRIPTION_AMOUNT,
-              chargeBase,
+              chargeBase: uniqueSubscriberKey,
               chargeCategory,
               debtorNationalId: subscriber.nationalId,
               status: TBRTransactionStatus.PENDING,
@@ -146,6 +154,9 @@ export class SubscriberCreatedListener {
     }
 
     // Step 2: Call TBR API (external call - cannot be rolled back)
+    // Use the unique chargeBase from the transaction record
+    const chargeBase = transactionRecord.chargeBase
+
     try {
       await this.tbrService.postPayment({
         id: subscriber.id, // Using subscriberId as unique identifier
@@ -269,7 +280,7 @@ export class SubscriberCreatedListener {
           subscriberId: subscriber.id,
           actorNationalId,
           chargeCategory,
-          chargeBase,
+          chargeBase: transactionRecord.chargeBase,
           amount: SUBSCRIPTION_AMOUNT,
           error: error instanceof Error ? error.message : 'Unknown error',
         },

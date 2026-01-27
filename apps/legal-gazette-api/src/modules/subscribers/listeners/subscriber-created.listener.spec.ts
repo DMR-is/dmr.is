@@ -11,14 +11,15 @@ import {
   TBRTransactionStatus,
   TBRTransactionType,
 } from '../../../models/tbr-transactions.model'
+import { IPriceCalculatorService } from '../../advert/calculator/price-calculator.service.interface'
 import { ITBRService } from '../../tbr/tbr.service.interface'
 import { SubscriberCreatedEvent } from '../events/subscriber-created.event'
 import { SubscriberCreatedListener } from './subscriber-created.listener'
 
 // Mock environment variables before importing the listener
 const MOCK_ENV = {
-  LG_TBR_CHARGE_CATEGORY_PERSON: 'PERSON_CATEGORY',
-  LG_TBR_CHARGE_CATEGORY_COMPANY: 'COMPANY_CATEGORY',
+  LG_TBR_CHARGE_CATEGORY_PERSON: 'RL1',
+  LG_TBR_CHARGE_CATEGORY_COMPANY: 'RL2',
   LG_SUBSCRIPTION_FEE_CODE: 'RL401',
   LG_SUBSCRIPTION_AMOUNT: '4500',
 }
@@ -26,6 +27,7 @@ const MOCK_ENV = {
 describe('SubscriberCreatedListener', () => {
   let listener: SubscriberCreatedListener
   let tbrService: jest.Mocked<ITBRService>
+  let priceCalculatorService: jest.Mocked<IPriceCalculatorService>
   let tbrTransactionModel: jest.Mocked<typeof TBRTransactionModel>
   let subscriberTransactionModel: jest.Mocked<typeof SubscriberTransactionModel>
   let subscriberModel: jest.Mocked<typeof SubscriberModel>
@@ -88,14 +90,32 @@ describe('SubscriberCreatedListener', () => {
       getPaymentStatus: jest.fn(),
     }
 
+    const mockPriceCalculatorService: jest.Mocked<IPriceCalculatorService> = {
+      getChargeCategory: jest.fn().mockResolvedValue('RL1'),
+      getPaymentData: jest.fn(),
+      getEstimatedPriceForApplication: jest.fn(),
+    }
+
     // Default mock transaction record with update method for C-4 pattern
     const defaultMockTransactionRecord = {
       id: 'transaction-default',
-      update: jest.fn().mockResolvedValue(undefined),
+      chargeBase: 'abc123def456', // Mock 12-char hex value
+      update: jest.fn().mockImplementation(function (this: any, data: any) {
+        // Update the mock object's properties when update is called
+        Object.assign(this, data)
+        return Promise.resolve(undefined)
+      }),
     }
 
     const mockTbrTransactionModel = {
-      create: jest.fn().mockResolvedValue(defaultMockTransactionRecord),
+      create: jest.fn().mockImplementation((data: any) => {
+        // Create a new mock with the provided chargeBase
+        return Promise.resolve({
+          ...defaultMockTransactionRecord,
+          chargeBase:
+            data.chargeBase || defaultMockTransactionRecord.chargeBase,
+        })
+      }),
     }
 
     const mockSubscriberTransactionModel = {
@@ -124,6 +144,10 @@ describe('SubscriberCreatedListener', () => {
           useValue: mockTbrService,
         },
         {
+          provide: IPriceCalculatorService,
+          useValue: mockPriceCalculatorService,
+        },
+        {
           provide: getModelToken(TBRTransactionModel),
           useValue: mockTbrTransactionModel,
         },
@@ -148,6 +172,7 @@ describe('SubscriberCreatedListener', () => {
 
     listener = module.get<SubscriberCreatedListener>(SubscriberCreatedListener)
     tbrService = module.get(ITBRService)
+    priceCalculatorService = module.get(IPriceCalculatorService)
     tbrTransactionModel = module.get(getModelToken(TBRTransactionModel))
     subscriberTransactionModel = module.get(
       getModelToken(SubscriberTransactionModel),
@@ -185,6 +210,89 @@ describe('SubscriberCreatedListener', () => {
   })
 
   // ==========================================
+  // Charge Category Determination Tests
+  // ==========================================
+  describe('Charge Category Determination', () => {
+    it('should call priceCalculatorService.getChargeCategory with subscriber nationalId', async () => {
+      const event = createMockEvent({
+        subscriber: createMockSubscriber({ nationalId: '0101801234' }),
+      })
+
+      await listener.createSubscriptionPayment(event)
+
+      expect(priceCalculatorService.getChargeCategory).toHaveBeenCalledWith(
+        '0101801234',
+      )
+    })
+
+    it('should use RL1 when priceCalculatorService returns it', async () => {
+      priceCalculatorService.getChargeCategory.mockResolvedValue(
+        'RL1',
+      )
+      const event = createMockEvent({
+        subscriber: createMockSubscriber({ nationalId: '0101801234' }),
+      })
+
+      await listener.createSubscriptionPayment(event)
+
+      expect(tbrTransactionModel.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          chargeCategory: 'RL1',
+        }),
+        expect.anything(),
+      )
+      expect(tbrService.postPayment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          chargeCategory: 'RL1',
+        }),
+      )
+    })
+
+    it('should use RL2 when priceCalculatorService returns it', async () => {
+      priceCalculatorService.getChargeCategory.mockResolvedValue(
+        'RL2',
+      )
+      const event = createMockEvent({
+        // eslint-disable-next-line local-rules/disallow-kennitalas
+        subscriber: createMockSubscriber({ nationalId: '5402696029' }),
+      })
+
+      await listener.createSubscriptionPayment(event)
+
+      expect(tbrTransactionModel.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          chargeCategory: 'RL2',
+        }),
+        expect.anything(),
+      )
+      expect(tbrService.postPayment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          chargeCategory: 'RL2',
+        }),
+      )
+    })
+
+    it('should call getChargeCategory before creating transaction record', async () => {
+      const callOrder: string[] = []
+
+      priceCalculatorService.getChargeCategory.mockImplementation(async () => {
+        callOrder.push('getChargeCategory')
+        return 'RL1'
+      })
+
+      tbrTransactionModel.create.mockImplementation(async () => {
+        callOrder.push('createTransaction')
+        return { id: 'transaction-123', update: jest.fn() }
+      })
+
+      const event = createMockEvent()
+      await listener.createSubscriptionPayment(event)
+
+      expect(callOrder).toEqual(['getChargeCategory', 'createTransaction'])
+    })
+  })
+
+  // ==========================================
   // TBR Payment Creation Tests
   // ==========================================
   describe('TBR Payment Creation', () => {
@@ -197,8 +305,8 @@ describe('SubscriberCreatedListener', () => {
 
       expect(tbrService.postPayment).toHaveBeenCalledWith({
         id: 'subscriber-123',
-        chargeCategory: 'PERSON_CATEGORY',
-        chargeBase: '0101801234',
+        chargeCategory: 'RL1',
+        chargeBase: expect.any(String), // Crypto-generated 12-char key
         debtorNationalId: '0101801234',
         expenses: [
           {
@@ -212,19 +320,22 @@ describe('SubscriberCreatedListener', () => {
       })
     })
 
-    it('should create TBR payment with COMPANY_CATEGORY for company ID', async () => {
+    it('should use charge category from price calculator service', async () => {
+      priceCalculatorService.getChargeCategory.mockResolvedValue(
+        'RL1',
+      )
       const event = createMockEvent({
-        // eslint-disable-next-line local-rules/disallow-kennitalas
-        subscriber: createMockSubscriber({ nationalId: '5402696029' }), // Company ID (starts with 5)
+        subscriber: createMockSubscriber({ nationalId: '0101801234' }),
       })
 
       await listener.createSubscriptionPayment(event)
 
+      expect(priceCalculatorService.getChargeCategory).toHaveBeenCalledWith(
+        '0101801234',
+      )
       expect(tbrService.postPayment).toHaveBeenCalledWith(
         expect.objectContaining({
-          chargeCategory: 'COMPANY_CATEGORY',
-          // eslint-disable-next-line local-rules/disallow-kennitalas
-          debtorNationalId: '5402696029',
+          chargeCategory: 'RL1',
         }),
       )
     })
@@ -269,13 +380,24 @@ describe('SubscriberCreatedListener', () => {
           feeCodeId: 'fee-code-uuid-123',
           feeCodeMultiplier: 1,
           totalPrice: 4500,
-          chargeBase: '0101801234',
-          chargeCategory: 'PERSON_CATEGORY',
+          chargeBase: expect.stringMatching(/^[0-9a-f]{12}$/), // Crypto-generated 12-char hex
+          chargeCategory: 'RL1',
           debtorNationalId: '0101801234',
           status: TBRTransactionStatus.PENDING,
         },
         expect.objectContaining({ transaction: expect.anything() }),
       )
+    })
+
+    it('should generate unique 12-character chargeBase for each subscription', async () => {
+      const event = createMockEvent()
+
+      await listener.createSubscriptionPayment(event)
+
+      // Verify create was called with a 12-character hex string for chargeBase
+      const createCall = tbrTransactionModel.create.mock.calls[0][0] as any
+      expect(createCall.chargeBase).toMatch(/^[0-9a-f]{12}$/)
+      expect(createCall.chargeBase).toHaveLength(12)
     })
 
     it('should create subscriber-transaction junction record', async () => {

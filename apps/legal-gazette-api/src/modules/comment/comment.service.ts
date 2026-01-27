@@ -30,17 +30,14 @@ export class CommentService implements ICommentService {
     advertId: string,
     actorId: string,
     actorName: string,
-  ): Promise<CommentDto> {
-    const newComment = await this.commentModel.create({
+  ): Promise<void> {
+    await this.commentModel.create({
       type: CommentTypeEnum.SUBMIT,
       advertId: advertId,
       statusId: StatusIdEnum.SUBMITTED,
       actorId: actorId,
       actor: actorName,
     })
-
-    await newComment.reload()
-    return newComment.fromModel()
   }
 
   private async getAdvertStatusId(advertId: string): Promise<string> {
@@ -54,6 +51,11 @@ export class CommentService implements ICommentService {
   private async findActor(actorId: string) {
     const isId = isUUID(actorId)
     if (isId) return await this.userModel.findByPkOrThrow(actorId)
+
+    // BUG FOUND: This could be users submitting from the application web
+    // We need to use the national registry module here to fetch user info
+    // first we should do the userModel findOne to see if we have the user in our DB
+    // if not found we should call the national registry
 
     return await this.userModel.findOneOrThrow({
       where: {
@@ -75,22 +77,19 @@ export class CommentService implements ICommentService {
   async createSubmitComment(
     advertId: string,
     body: CreateSubmitCommentDto,
-  ): Promise<CommentDto> {
+  ): Promise<void> {
     const [actor, statusId] = await Promise.all([
       this.findActor(body.actorId),
       this.getAdvertStatusId(advertId),
     ])
 
-    const newComment = await this.commentModel.create({
+    await this.commentModel.create({
       type: CommentTypeEnum.SUBMIT,
       advertId: advertId,
       statusId: statusId,
       actorId: actor.id,
       actor: actor.fullName,
     })
-
-    await newComment.reload()
-    return newComment.fromModel()
   }
 
   async createAssignComment(

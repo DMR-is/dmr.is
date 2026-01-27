@@ -65,36 +65,38 @@ export const LandingPageContent = (props: { baseUrl: string }) => {
             >
               <Hero
                 title="Lögbirtingablað"
-                contentSpan={['12/12', '12/12', '12/12', '7/12']}
+                contentSpan={['12/12', '12/12', '12/12', '8/12']}
                 imageSpan={'4/12'}
                 withOffset={false}
                 image={{ src: '/images/hero-page-image.svg' }}
                 description={
-                  <Box marginBottom={[2, 2, 2, 2, 0]}>
+                  <Box
+                    marginBottom={[2, 2, 2, 2, 0]}
+                    style={{ maxWidth: '690px' }}
+                  >
                     <Text variant="intro">
                       Velkomin á nýja síðu Lögbirtingablaðsins.
+                      <br />
                       Dómsmálaráðuneytið gefur út Lögbirtingablaðið. Það kom
                       fyrst út í prentuðu formi í árið 1908 og í dag er blaðið
                       einnig aðgengilegt á netinu þar sem hægt er að nálgast öll
                       tölublöð sem komið hafa út frá 1. janúar 2001.
                     </Text>
-                    <Text variant="intro" marginTop={2}>
+                    <Text variant="h5" marginTop={2}>
                       Hér má sjá{' '}
-                      <Text
-                        color="blue400"
-                        fontWeight="medium"
-                        as="span"
-                        variant="intro"
-                      >
+                      <Box component="span">
                         <LinkV2
                           href="/sidur/leidbeiningar"
                           underlineVisibility="always"
                           underline="normal"
+                          color="blue400"
+                          newTab
                         >
                           leiðbeiningar
                         </LinkV2>
-                      </Text>{' '}
-                      fyrir alla vefi Lögbirtingablaðsins.
+                      </Box>{' '}
+                      um innskráningu ásamt umboðsvirkni ef notandi/innsendandi
+                      vill senda auglýsingu í nafni fyrirtækis.
                     </Text>
                   </Box>
                 }
@@ -103,7 +105,7 @@ export const LandingPageContent = (props: { baseUrl: string }) => {
                 <GridContainer>
                   <GridRow>
                     <GridColumn>
-                      <Box marginBottom={6} style={{ marginTop: '-24px' }}>
+                      <Box marginBottom={6} style={{ marginTop: '-16px' }}>
                         <Inline space={2}>
                           {quickLinks?.map((link, i) => (
                             <Button

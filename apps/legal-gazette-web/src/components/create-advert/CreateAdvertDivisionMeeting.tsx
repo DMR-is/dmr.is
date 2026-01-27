@@ -34,21 +34,6 @@ export const CreateAdvertDivisionMeeting = ({ required, onChange }: Props) => {
           <Text variant="h4">Skiptafundur</Text>
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
-          <DatePicker
-            locale="is"
-            backgroundColor="blue"
-            size="sm"
-            label="Dagsetning skiptafundar"
-            name="meetingDate"
-            handleChange={(date) => {
-              setState((prev) => ({ ...prev, meetingDate: date.toISOString() }))
-              onChange({ ...state, meetingDate: date.toISOString() })
-            }}
-            required={required}
-            placeholderText={undefined}
-          />
-        </GridColumn>
-        <GridColumn span={['12/12', '6/12']}>
           <Input
             size="sm"
             backgroundColor="blue"
@@ -60,6 +45,22 @@ export const CreateAdvertDivisionMeeting = ({ required, onChange }: Props) => {
               onChange({ ...state, meetingLocation: e.target.value })
             }}
             required={required}
+          />
+        </GridColumn>
+        <GridColumn span={['12/12', '6/12']}>
+          <DatePicker
+            locale="is"
+            backgroundColor="blue"
+            size="sm"
+            label="Dagsetning skiptafundar"
+            name="meetingDate"
+            showTimeInput
+            handleChange={(date) => {
+              setState((prev) => ({ ...prev, meetingDate: date.toISOString() }))
+              onChange({ ...state, meetingDate: date.toISOString() })
+            }}
+            required={required}
+            placeholderText={undefined}
           />
         </GridColumn>
       </GridRow>

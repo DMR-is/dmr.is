@@ -1,39 +1,58 @@
 import { Op } from 'sequelize'
 
 import { Inject, Injectable } from '@nestjs/common'
-import { Cron } from '@nestjs/schedule'
+import { Cron, CronExpression } from '@nestjs/schedule'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { TASK_JOB_IDS } from '../../../../core/constants'
-import { TBRTransactionModel, TBRTransactionStatus } from '../../../../models/tbr-transactions.model'
+import { AdvertModel } from '../../../../models/advert.model'
+import {
+  TBRTransactionModel,
+  TBRTransactionStatus,
+} from '../../../../models/tbr-transactions.model'
 import { ITBRService } from '../../../tbr/tbr.service.interface'
+import { IPriceCalculatorService } from '../../calculator/price-calculator.service.interface'
 import { PgAdvisoryLockService } from '../lock.service'
-import { IAdvertPaymentTaskService } from './advert-payment.task.interface'
+import { IPaymentTaskService } from './payment.task.interface'
 
-const LOGGING_CONTEXT = 'AdvertPaymentService'
+const LOGGING_CONTEXT = 'PaymentTaskService'
 
 @Injectable()
-export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
+export class PaymentTaskService implements IPaymentTaskService {
   private readonly chunkSize: number = 25
+  private readonly chunkDelayMs: number = 500
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(ITBRService) private readonly tbrService: ITBRService,
+    @Inject(IPriceCalculatorService)
+    private readonly priceCalculatorService: IPriceCalculatorService,
+
     @InjectModel(TBRTransactionModel)
     private readonly tbrTransactionModel: typeof TBRTransactionModel,
+    @InjectModel(AdvertModel)
+    private readonly advertModel: typeof AdvertModel,
     private readonly lock: PgAdvisoryLockService,
   ) {
     const tbrChunk = process.env.TBR_CHUNK_SIZE
       ? parseInt(process.env.TBR_CHUNK_SIZE, 10)
-      : 25
+      : 10
 
     if (!Number.isNaN(tbrChunk)) {
       this.chunkSize = tbrChunk
     }
+
+    const tbrChunkDelay = process.env.TBR_CHUNK_DELAY_MS
+      ? parseInt(process.env.TBR_CHUNK_DELAY_MS, 10)
+      : 1000
+
+    if (!Number.isNaN(tbrChunkDelay)) {
+      this.chunkDelayMs = tbrChunkDelay
+    }
   }
 
-  @Cron('*/15 * * * *', {
+  @Cron(CronExpression.EVERY_DAY_AT_7AM, {
     name: 'payment-job',
   })
   async run() {
@@ -59,20 +78,20 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
 
   async updateTBRPayments() {
     const now = new Date()
-    this.logger.info('Starting TBR payment status update job', {
-      timestamp: now.toISOString(),
-      context: LOGGING_CONTEXT,
-    })
+    this.logger.info(
+      'Starting TBR payment status update job for created payments',
+      {
+        timestamp: now.toISOString(),
+        context: LOGGING_CONTEXT,
+      },
+    )
 
     const pendingTransactions = await this.tbrTransactionModel.findAll({
       where: {
-        transactionType: 'ADVERT',
-        chargeCategory: {
-          [Op.eq]: process.env.LG_TBR_CHARGE_CATEGORY_PERSON,
-        },
         paidAt: {
           [Op.eq]: null,
         },
+        chargeCategory: process.env.LG_TBR_CHARGE_CATEGORY_PERSON, // Only process LR1
         status: TBRTransactionStatus.CREATED,
       },
     })
@@ -111,12 +130,12 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
       )
 
       try {
-        const promises = chunk.map((transaction) =>
+        const promises = chunk.map((transaction, i) =>
           this.tbrService.getPaymentStatus({
             chargeBase: transaction.chargeBase,
             chargeCategory: transaction.chargeCategory,
             debtorNationalId: transaction.debtorNationalId,
-          }),
+          }, i),
         )
         const results = await Promise.allSettled(promises)
 
@@ -134,6 +153,14 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
               transaction.status = TBRTransactionStatus.PAID
               transaction.paidAt = new Date()
               await transaction.save()
+            } else if (paymentData.canceled) {
+              this.logger.info('TBR payment canceled, updating transaction', {
+                chargeBase: transaction.chargeBase,
+                transactionId: transaction.id,
+                context: LOGGING_CONTEXT,
+              })
+              transaction.status = TBRTransactionStatus.CANCELED
+              await transaction.save()
             }
           } else {
             this.logger.error('Error fetching TBR payment status', {
@@ -150,8 +177,8 @@ export class AdvertPaymentTaskService implements IAdvertPaymentTaskService {
           context: LOGGING_CONTEXT,
         })
       } finally {
-        // wait a second before processing the next chunk
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        // wait before processing the next chunk to avoid overwhelming TBR service
+        await new Promise((resolve) => setTimeout(resolve, this.chunkDelayMs))
       }
     }
 

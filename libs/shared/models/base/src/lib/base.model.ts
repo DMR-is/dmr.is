@@ -67,9 +67,46 @@ export abstract class BaseModel<
   }
 
   @BeforeFind
-  static logBeforeFind(): void {
-    this.logger.debug('Looking for entities', {
+  static logBeforeFind(options: FindOptions): void {
+    const opts = options as Record<string, unknown>
+    const includeMap = opts.includeMap as
+      | Record<string, Record<string, unknown>>
+      | undefined
+
+    this.logger.debug(`Executing query on ${this.name}`, {
       context: this.name,
+      query: {
+        model: (opts.model as { name?: string } | undefined)?.name,
+        attributes: options.attributes,
+        where: options.where,
+        limit: options.limit,
+        offset: options.offset,
+        order: options.order,
+        group: options.group,
+        includeNames: opts.includeNames,
+        includeDetails: includeMap
+          ? Object.keys(includeMap).map((key) => {
+              const inc = includeMap[key]
+              return {
+                as: inc?.as,
+                model: (inc?.model as { name?: string } | undefined)?.name,
+                required: inc?.required,
+                separate: inc?.separate,
+                attributes: inc?.attributes,
+                where: inc?.where,
+                limit: inc?.limit,
+                order: inc?.order,
+              }
+            })
+          : undefined,
+        hasJoin: opts.hasJoin,
+        hasSingleAssociation: opts.hasSingleAssociation,
+        hasMultiAssociation: opts.hasMultiAssociation,
+        subQuery: options.subQuery,
+        required: opts.required,
+        rejectOnEmpty: opts.rejectOnEmpty,
+        transactionId: (options.transaction as { id?: string } | undefined)?.id,
+      },
     })
   }
 
@@ -87,10 +124,12 @@ export abstract class BaseModel<
   static async findOneOrThrow<T extends BaseModel>(
     this: ModelStatic<T>,
     options: FindOptions<T>,
-    errorMessage = 'Entity not found',
+    errorMessage?: string,
   ): Promise<T> {
     const result = await this.findOne(options)
-    if (!result) throw new NotFoundException(errorMessage)
+
+    if (!result)
+      throw new NotFoundException(errorMessage || `${this.name} not found`)
     return result
   }
 

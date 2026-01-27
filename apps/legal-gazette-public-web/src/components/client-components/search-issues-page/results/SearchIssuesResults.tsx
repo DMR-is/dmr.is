@@ -2,7 +2,7 @@
 
 import {
   Box,
-  Icon,
+  Button,
   LinkV2,
   SkeletonLoader,
   Stack,
@@ -58,11 +58,15 @@ export const SearchIssuesResults = () => {
                 nr: issue.issue,
                 date: formatDate(issue.publishDate),
                 link: (
-                  <LinkV2 href={issue.url ?? '#'}>
-                    <span style={{ display: 'flex', gap: '3px' }}>
-                      <Icon icon="document" type="outline" size="small" />
+                  <LinkV2 href={issue.url ?? '#'} newTab>
+                    <Button
+                      variant="text"
+                      size="small"
+                      icon="document"
+                      iconType="outline"
+                    >
                       Sækja pdf
-                    </span>
+                    </Button>
                   </LinkV2>
                 ),
               })) || []

@@ -1,6 +1,7 @@
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { getModelToken } from '@nestjs/sequelize'
@@ -26,6 +27,13 @@ const mockSequelize = {
   transaction: jest.fn(),
 }
 
+const mockCacheManager = {
+  get: jest.fn(),
+  set: jest.fn(),
+  del: jest.fn(),
+  reset: jest.fn(),
+}
+
 describe('PublicationService - Publication Number Generation', () => {
   let service: IPublicationService
   let advertModel: typeof AdvertModel
@@ -35,6 +43,11 @@ describe('PublicationService - Publication Number Generation', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PublicationService,
+
+        {
+          provide: CACHE_MANAGER,
+          useValue: mockCacheManager,
+        },
         {
           provide: getModelToken(AdvertModel),
           useValue: {
@@ -86,6 +99,7 @@ describe('PublicationService - Publication Number Generation', () => {
         id: 'advert-1',
         publicationNumber: null,
         update: jest.fn().mockResolvedValue(undefined),
+        reload: jest.fn().mockResolvedValue(undefined),
         fromModelToDetailed: jest.fn().mockReturnValue({ id: 'advert-1' }),
         htmlMarkup: jest.fn().mockReturnValue('<html></html>'),
       }
@@ -96,6 +110,7 @@ describe('PublicationService - Publication Number Generation', () => {
         publishedAt: null,
         versionLetter: 'A',
         update: jest.fn().mockResolvedValue(undefined),
+        reload: jest.fn().mockResolvedValue(undefined),
         fromModel: jest.fn().mockReturnValue({ id: 'pub-1' }),
       }
 
@@ -149,6 +164,7 @@ describe('PublicationService - Publication Number Generation', () => {
         id: 'advert-2',
         publicationNumber: null,
         update: jest.fn().mockResolvedValue(undefined),
+        reload: jest.fn().mockResolvedValue(undefined),
         fromModelToDetailed: jest.fn().mockReturnValue({ id: 'advert-2' }),
         htmlMarkup: jest.fn().mockReturnValue('<html></html>'),
       }
@@ -159,6 +175,7 @@ describe('PublicationService - Publication Number Generation', () => {
         publishedAt: null,
         versionLetter: 'A',
         update: jest.fn().mockResolvedValue(undefined),
+        reload: jest.fn().mockResolvedValue(undefined),
         fromModel: jest.fn().mockReturnValue({ id: 'pub-2' }),
       }
 
@@ -196,6 +213,7 @@ describe('PublicationService - Publication Number Generation', () => {
         id: 'advert-3',
         publicationNumber: null,
         update: jest.fn().mockResolvedValue(undefined),
+        reload: jest.fn().mockResolvedValue(undefined),
         fromModelToDetailed: jest.fn().mockReturnValue({ id: 'advert-3' }),
         htmlMarkup: jest.fn().mockReturnValue('<html></html>'),
       }
@@ -206,6 +224,7 @@ describe('PublicationService - Publication Number Generation', () => {
         publishedAt: null,
         versionLetter: 'A',
         update: jest.fn().mockResolvedValue(undefined),
+        reload: jest.fn().mockResolvedValue(undefined),
         fromModel: jest.fn().mockReturnValue({ id: 'pub-3' }),
       }
 
@@ -244,6 +263,7 @@ describe('PublicationService - Publication Number Generation', () => {
         id: 'advert-4',
         publicationNumber: null,
         update: jest.fn().mockResolvedValue(undefined),
+        reload: jest.fn().mockResolvedValue(undefined),
         fromModelToDetailed: jest.fn().mockReturnValue({ id: 'advert-4' }),
         htmlMarkup: jest.fn().mockReturnValue('<html></html>'),
       }
@@ -254,6 +274,7 @@ describe('PublicationService - Publication Number Generation', () => {
         publishedAt: null,
         versionLetter: 'A',
         update: jest.fn().mockResolvedValue(undefined),
+        reload: jest.fn().mockResolvedValue(undefined),
         fromModel: jest.fn().mockReturnValue({ id: 'pub-4' }),
       }
 
@@ -333,6 +354,7 @@ describe('PublicationService - Publication Number Generation', () => {
         id: 'advert-7',
         publicationNumber: '20260108001',
         update: jest.fn().mockResolvedValue(undefined),
+        reload: jest.fn().mockResolvedValue(undefined),
         fromModelToDetailed: jest.fn().mockReturnValue({ id: 'advert-7' }),
         htmlMarkup: jest.fn().mockReturnValue('<html></html>'),
       }
@@ -343,6 +365,7 @@ describe('PublicationService - Publication Number Generation', () => {
         publishedAt: null,
         versionLetter: 'A',
         update: jest.fn().mockResolvedValue(undefined),
+        reload: jest.fn().mockResolvedValue(undefined),
         fromModel: jest.fn().mockReturnValue({ id: 'pub-7' }),
       }
 
@@ -377,6 +400,7 @@ describe('PublicationService - Publication Number Generation', () => {
       const mockAdvert = {
         id: 'advert-8',
         publicationNumber: '20260108001',
+        reload: jest.fn().mockResolvedValue(undefined),
         fromModelToDetailed: jest.fn().mockReturnValue({ id: 'advert-8' }),
         htmlMarkup: jest.fn().mockReturnValue('<html></html>'),
       }
@@ -387,6 +411,7 @@ describe('PublicationService - Publication Number Generation', () => {
         publishedAt: null,
         versionLetter: 'A',
         update: jest.fn().mockResolvedValue(undefined),
+        reload: jest.fn().mockResolvedValue(undefined),
         fromModel: jest.fn().mockReturnValue({ id: 'pub-8' }),
       }
 
@@ -441,6 +466,10 @@ describe('PublicationService - Publication Number Generation', () => {
             useValue: advertPublicationModel,
           },
           {
+            provide: CACHE_MANAGER,
+            useValue: mockCacheManager,
+          },
+          {
             provide: Sequelize,
             useValue: mockSequelize,
           },
@@ -475,6 +504,7 @@ describe('PublicationService - Publication Number Generation', () => {
       const mockAdvert = {
         id: 'advert-9',
         publicationNumber: '20260108001',
+        reload: jest.fn().mockResolvedValue(undefined),
         fromModelToDetailed: jest.fn().mockReturnValue({
           id: 'advert-9',
           title: 'Test Advert',
@@ -488,6 +518,7 @@ describe('PublicationService - Publication Number Generation', () => {
         publishedAt: null,
         versionLetter: 'A',
         update: jest.fn().mockResolvedValue(undefined),
+        reload: jest.fn().mockResolvedValue(undefined),
         fromModel: jest.fn().mockReturnValue({
           id: 'pub-9',
           versionNumber: 1,
@@ -542,6 +573,10 @@ describe('PublicationService - Publication Number Generation', () => {
           {
             provide: getModelToken(AdvertPublicationModel),
             useValue: advertPublicationModel,
+          },
+          {
+            provide: CACHE_MANAGER,
+            useValue: mockCacheManager,
           },
           {
             provide: Sequelize,
@@ -611,6 +646,10 @@ describe('PublicationService - Delete Publication Protection', () => {
             findAll: jest.fn(),
             destroy: jest.fn(),
           },
+        },
+        {
+          provide: CACHE_MANAGER,
+          useValue: mockCacheManager,
         },
         {
           provide: Sequelize,

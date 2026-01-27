@@ -5,11 +5,11 @@ import { formatDate } from '@dmr.is/utils'
 import { getElement } from './element'
 
 function formatDateAndLocation(location?: string | null, date?: Date | null) {
-  if (isDefined(location) && isDefined(date)) {
+  if (!isEmpty(location) && isDefined(date)) {
     return `${location}, ${formatDate(date, 'dd. MMMM yyyy')}`
   }
 
-  if (isDefined(location)) {
+  if (!isEmpty(location)) {
     return `${location}`
   }
 

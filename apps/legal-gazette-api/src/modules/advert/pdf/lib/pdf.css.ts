@@ -144,7 +144,7 @@ export const pdfStyles = `
 
       p,
       li {
-        page-break-inside: avoid;
+        break-inside: avoid-column;
       }
 
       pre {
@@ -224,7 +224,7 @@ export const pdfStyles = `
       sup {
         vertical-align: baseline;
         font-size: var(--font-size--small);
-        line-height: 0;
+        line-height: 1;
         position: relative;
         top: -0.4em;
       }
@@ -258,8 +258,12 @@ export const pdfStyles = `
         text-align: left;
         vertical-align: top;
         width: auto;
-        border: var(--table-border);
-        page-break-inside: avoid;
+        border: none;
+        break-inside: auto;
+      }
+
+      td p {
+        break-inside: avoid;
       }
 
       tr:not(:first-child) > th,
@@ -584,14 +588,10 @@ export const pdfStyles = `
 
       /* ======================================================================= */
 
-      .advertContent table {
-        table-layout: fixed;
-      }
-
-      .advertContent table td,
-      .advertContent table th {
+      .table td,
+      .table th {
         border: none;
-        padding-right: 1em;
+        padding: '.25em .5em .25em 0',
       }
 
       .advert.legal-gazette .advert {
@@ -618,6 +618,10 @@ export const pdfStyles = `
         text-align: right;
         margin-block: 0;
       }
+      
+      .advertSignature {
+        margin-top: 0.65em;
+      }
 
       .advert-divider-line {
         margin-top: 1.2em;
@@ -635,6 +639,15 @@ export const pdfStyles = `
 
       .advert-container .advertSerial {
         margin: 0;
+      }
+
+      .advertType {
+        fontSize: 1.2em;
+        fontWeight: bold;
+      }
+
+      .advertType > td {
+        margin-bottom: 4px;
       }
 
 `

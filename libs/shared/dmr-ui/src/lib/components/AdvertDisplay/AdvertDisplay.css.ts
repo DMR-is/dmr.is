@@ -1,13 +1,9 @@
-import {
-  regulationContentStyling,
-  regulationTitleStyling,
-} from '@island.is/regulations/styling'
+import { regulationContentStyling } from '@island.is/regulations/styling'
 
 import { globalStyle, style } from '@vanilla-extract/css'
 
 export const bodyText = style({})
 regulationContentStyling(bodyText)
-regulationTitleStyling(bodyText)
 
 globalStyle(
   `
@@ -24,12 +20,19 @@ globalStyle(
   },
 )
 
-globalStyle(`.advertContent table `, {
-  tableLayout: 'fixed',
+globalStyle(
+  `${bodyText} table td, ${bodyText} table th, .advertContent table td, .advertContent table th`,
+  {
+    border: 'none',
+    padding: '.25em .5em .25em 0',
+  },
+)
+
+globalStyle(`${bodyText} p `, {
+  marginBottom: '.5em',
 })
-globalStyle(`.advertContent table td, .advertContent table th`, {
-  border: 'none',
-  paddingRight: '1em',
+globalStyle(`${bodyText} h1 `, {
+  marginTop: '1em',
 })
 
 globalStyle('.advert.legal-gazette .advert', {
@@ -75,14 +78,10 @@ globalStyle(`${legacyText} .advertText td`, {
 globalStyle(`${legacyText} strong, ${legacyText} b`, {
   fontWeight: 'bold',
 })
-globalStyle(`${legacyText} .advertType`, {
+globalStyle(`${legacyText} .advertType, ${bodyText} .advertType`, {
   fontSize: '1.2em',
   fontWeight: 'bold',
 })
-globalStyle(`${legacyText} .advertType > td`, {
+globalStyle(`${legacyText} .advertType > td, ${bodyText} .advertType > td`, {
   paddingBottom: '4px',
-})
-globalStyle(`.advertText table `, {
-  tableLayout: 'fixed',
-  width: '100%',
 })

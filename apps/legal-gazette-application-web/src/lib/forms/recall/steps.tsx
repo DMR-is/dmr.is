@@ -11,8 +11,8 @@ import {
 import { Text } from '@dmr.is/ui/components/island-is'
 
 import { CommunicationChannelFields } from '../../../components/form/fields/CommunicationChannelFields'
+import { PublishingFields } from '../../../components/form/fields/PublishingFields'
 import { SignatureFields } from '../../../components/form/fields/SignatureFields'
-import { RecallPublishingFields } from '../../../components/form/recall/fields/PublishingFields'
 import { RecallAdvertFields } from '../../../components/form/recall/fields/RecallAdvertFields'
 import { RecallDivisionFields } from '../../../components/form/recall/fields/RecallDivisionFields'
 import { RecallLiquidatorFields } from '../../../components/form/recall/fields/RecallLiquidatorFields'
@@ -29,7 +29,7 @@ export const RecallFormSteps = (
     | ApplicationTypeEnum.RECALL_DECEASED,
 ): LegalGazetteForm => {
   const isBankruptcy = type === ApplicationTypeEnum.RECALL_BANKRUPTCY
-  return {
+  const allSteps: LegalGazetteForm = {
     steps: [
       {
         title: 'Skilyrði fyrir birtingu',
@@ -119,7 +119,7 @@ export const RecallFormSteps = (
                 þrír.
               </Text>
             ),
-            content: <RecallPublishingFields />,
+            content: <PublishingFields applicationType="RECALL" />,
           },
           {
             title: 'Samskiptaleiðir',
@@ -134,42 +134,12 @@ export const RecallFormSteps = (
           },
         ],
       },
-      {
-        title: 'Skiptafundur',
-        stepTitle: 'Skiptafundur',
-        validationSchema: isBankruptcy
-          ? z.object({
-              fields: recallBankruptcySchemaRefined.pick({
-                divisionMeetingFields: true,
-              }),
-            })
-          : z.object({
-              fields: recallDeceasedSchemaRefined.pick({
-                divisionMeetingFields: true,
-              }),
-            }),
-        fields: [
-          {
-            intro: isBankruptcy ? (
-              <Text>
-                Bættu við hvar og hvenær fyrsti skiptafundur fer fram.
-              </Text>
-            ) : (
-              <Text>
-                Fylltu út reitina hér fyrir neðan ef þú vilt auglýsa skiptafund
-                með innköllunni.
-              </Text>
-            ),
-            content: <RecallDivisionFields isBankruptcy={isBankruptcy} />,
-          },
-        ],
-      },
+
       {
         title: 'Forskoðun',
         stepTitle: 'Forskoðun',
         fields: [
           {
-            title: 'Forskoðun',
             content: <PreviewStep />,
           },
         ],
@@ -179,11 +149,34 @@ export const RecallFormSteps = (
         stepTitle: 'Samantekt',
         fields: [
           {
-            title: 'Samantekt',
             content: <SummaryStep />,
           },
         ],
       },
     ],
   }
+
+  if (isBankruptcy) {
+    // Add Skiptafundur step for bankruptcy recalls
+    const divisionStep: LegalGazetteForm['steps'][number] = {
+      title: 'Skiptafundur',
+      stepTitle: 'Skiptafundur',
+      validationSchema: z.object({
+        fields: recallBankruptcySchemaRefined.pick({
+          divisionMeetingFields: true,
+        }),
+      }),
+      fields: [
+        {
+          intro: (
+            <Text>Bættu við hvar og hvenær fyrsti skiptafundur fer fram.</Text>
+          ),
+          content: <RecallDivisionFields isBankruptcy={isBankruptcy} />,
+        },
+      ],
+    }
+    allSteps.steps.splice(4, 0, divisionStep)
+  }
+
+  return allSteps
 }

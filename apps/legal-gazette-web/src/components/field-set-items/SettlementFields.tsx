@@ -107,7 +107,7 @@ export const SettlementFields = ({
               placeholderText=""
               backgroundColor="blue"
               name="settlement-deadline"
-              label="Frestur til að gera kröfu"
+              label="Frestdagur"
               locale="is"
               selected={
                 settlement.deadline ? new Date(settlement.deadline) : undefined
@@ -152,7 +152,7 @@ export const SettlementFields = ({
               backgroundColor="blue"
               type="number"
               label="Lýstar kröfur"
-              defaultValue={settlement.declaredClaims}
+              defaultValue={settlement.declaredClaims ?? undefined}
               onBlur={(evt) => {
                 updateDeclaredClaims(Number(evt.target.value))
               }}

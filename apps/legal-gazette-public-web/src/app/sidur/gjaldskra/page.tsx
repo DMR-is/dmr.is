@@ -15,110 +15,20 @@ export default function Page() {
           offset={['0', '0', '0', '1/12']}
         >
           <Text variant="h2" as="h1" marginBottom={4}>
-            Gjaldskrá
+            Gjaldskrá fyrir Lögbirtingablað
           </Text>
-          <Box
-            border="standard"
-            borderRadius="standard"
-            padding={[1, 2, 4]}
-            marginBottom={4}
-          >
-            <Text as="div" variant="small">
-              <table align="center">
-                <thead></thead>
+
+          <Box>
+            <Text as="div">
+              <table align="left">
                 <tbody>
                   <tr>
-                    <td align="left">Nr. 82/2019</td>
-                    <td align="right">15. janúar 2019</td>
-                  </tr>
-                  <tr>
-                    <td align="center" colSpan={2}>
-                      <h2>AUGLÝSING</h2>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="center" colSpan={2}>
-                      um breyting á gjaldskrá fyrir Lögbirtingablað, nr.
-                      1300/2017.
-                    </td>
-                  </tr>
-                  <br />
-                  <tr>
-                    <td align="center" colSpan={2}>
-                      1. gr.
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="center" colSpan={2}>
-                      Í stað fjárhæðarinnar „2.300“ í 3. tölul. 2. gr.
-                      gjaldskrárinnar kemur: 3.000.
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td align="center" colSpan={2}>
-                      2. gr.
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="center" colSpan={2}>
-                      Auglýsing þessi um breyting á gjaldskránni er sett skv. 2.
-                      mgr. 7. gr. laga um Stjórnartíðindi og Lögbirtingablað,
-                      nr. 15 10. mars 2005 með síðari breytingum og tekur gildi
-                      þegar í stað.
-                    </td>
-                  </tr>
-                  <br />
-                  <tr>
-                    <td align="center" colSpan={2}>
-                      <i>Dómsmálaráðuneytinu, 15. janúar 2019.</i>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="center" colSpan={2}>
-                      <b>Sigríður Á. Andersen.</b>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td align="right" colSpan={2}>
-                      <i>Haukur Guðmundsson.</i>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </Text>
-          </Box>
-          <Box border="standard" borderRadius="standard" padding={[1, 2, 4]}>
-            <Text as="div" variant="small">
-              <table align="center">
-                <thead></thead>
-                <tbody>
-                  <tr>
-                    <td align="left">Nr. 1300/2017</td>
-                    <td align="right" width="50%">
-                      27. desember 2017
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="center" colSpan={2}>
-                      <h2>GJALDSKRÁ</h2>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colSpan={2} align="center">
-                      fyrir Lögbirtingablað.
-                    </td>
-                  </tr>
-                  <br />
-                  <tr>
-                    <td align="center" colSpan={2}>
-                      <p>1. gr.</p>
+                    <td colSpan={2}>
                       <p>
                         Samkvæmt 3. mgr. 6. gr. laga um Stjórnartíðindi og
-                        Lögbirtingablað, nr. 15 10. mars 2005, eru gjöld fyrir
-                        auglýsingar sem birtast í Lögbirtingablaði hér með
-                        ákveðin þannig:
+                        Lögbirtingablað, nr. 15/2005, eru gjöld fyrir
+                        auglýsingar sem birtast í Lögbirtingablaði ákveðin í
+                        gjaldskrá sem birt er í Stjórnartíðindum.
                       </p>
                       <br />
                       <p style={{ textAlign: 'left', marginBottom: '8px' }}>
@@ -294,6 +204,7 @@ export default function Page() {
                         fylgiskjals sem birtist með auglýsingu er kr. 5.000.
                       </p>
                       <br />
+                      <br />
                       <p style={{ textAlign: 'center', marginBottom: '4px' }}>
                         2. gr.
                       </p>
@@ -311,37 +222,13 @@ export default function Page() {
                         }}
                       >
                         <p>
-                          1. Áskrift að prentaðri útgáfu Lögbirtingablaðs er kr.
-                          82.000 fyrir árið. <br />
-                          2. Verð einstakra blaða er kr. 802. <br />
-                          3. Verð fyrir netáskrift er kr. 2.300 fyrir árið.
+                          1. Verð fyrir netáskrift er kr. 4.500 fyrir árið.{' '}
+                          <br />
+                          2. Fyrir Lögbirtingablað í prentuðu formi skal
+                          greiddur kostnaður við prentun og sendingu, hvort
+                          heldur sem er við sölu eða í áskrift.
                         </p>
                       </blockquote>
-                      <br />
-                      <p style={{ textAlign: 'center', marginBottom: '4px' }}>
-                        3. gr.
-                      </p>
-                      <p style={{ textAlign: 'center' }}>
-                        Gjaldskrá þessi, sem kemur í stað gjaldskrár nr.
-                        1028/2015, öðlast gildi 15. janúar 2018.
-                      </p>
-                    </td>
-                  </tr>
-                  <br />
-                  <tr>
-                    <td align="center" colSpan={2}>
-                      <i>Dómsmálaráðuneytinu, 27. desember 2017.</i>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="center" colSpan={2}>
-                      <b>Sigríður Á. Andersen.</b>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td align="right" colSpan={2}>
-                      <i>HBryndís Helgadóttir.</i>
                     </td>
                   </tr>
                 </tbody>

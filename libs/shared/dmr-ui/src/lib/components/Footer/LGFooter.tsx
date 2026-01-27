@@ -1,7 +1,5 @@
 'use client'
 
-import { createUrlFromHost } from '@dmr.is/utils/client'
-
 import {
   Box,
   GridColumn,
@@ -17,15 +15,10 @@ import { HeaderLogo } from '../Header/HeaderLogo'
 import * as styles from './footer.css'
 type LGFooterProps = {
   site?: 'web' | 'applications'
-  baseUrl: string
 }
 
-export const LGFooter = ({ site = 'web', baseUrl }: LGFooterProps) => {
-  const logbirtingUrl = createUrlFromHost(
-    baseUrl,
-    site === 'applications', // Shifting when on application page because it has subdomain
-    site === 'web' ? 'auglysendur' : '', // Unshifting auglysendur when on public page to add subdomain
-  )
+export const LGFooter = ({ site = 'web' }: LGFooterProps) => {
+  const otherLogbirtingSite = `https://${site === 'web' ? 'auglysendur.' : ''}logbirtingablad.is`
   const stjornartidindiUrl = 'https://island.is/stjornartidindi'
 
   const innerLinks =
@@ -64,16 +57,16 @@ export const LGFooter = ({ site = 'web', baseUrl }: LGFooterProps) => {
         ? [
             {
               title: 'Leiðbeiningar',
-              href: logbirtingUrl + '/sidur/leidbeiningar',
+              href: otherLogbirtingSite + '/sidur/leidbeiningar',
             },
             {
               title: 'Auglýsingarflokkar',
-              href: logbirtingUrl + '/sidur/auglysingaflokkar',
+              href: otherLogbirtingSite + '/sidur/auglysingaflokkar',
             },
 
             {
               title: 'Um Lögbirtingablaðið',
-              href: logbirtingUrl + '/sidur/about',
+              href: otherLogbirtingSite + '/sidur/about',
             },
           ]
         : []
@@ -83,7 +76,7 @@ export const LGFooter = ({ site = 'web', baseUrl }: LGFooterProps) => {
       ? [
           {
             title: 'Innri vefur auglýsanda',
-            href: logbirtingUrl,
+            href: otherLogbirtingSite,
           },
           {
             title: 'Stjórnartíðindi',
@@ -94,7 +87,7 @@ export const LGFooter = ({ site = 'web', baseUrl }: LGFooterProps) => {
         ? [
             {
               title: 'Vefur Lögbirtingablaðs',
-              href: logbirtingUrl,
+              href: otherLogbirtingSite,
             },
             {
               title: 'Stjórnartíðindi',

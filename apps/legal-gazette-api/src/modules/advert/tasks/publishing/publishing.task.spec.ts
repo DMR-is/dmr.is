@@ -14,6 +14,7 @@ import {
   AdvertPublicationModel,
   AdvertVersionEnum,
 } from '../../../../models/advert-publication.model'
+import { StatusIdEnum } from '../../../../models/status.model'
 import { PgAdvisoryLockService } from '../lock.service'
 import { PublishingTaskService } from './publishing.task'
 
@@ -354,7 +355,7 @@ describe('PublishingTaskService - Event Emission', () => {
       expect(eventEmitter.emitAsync).toHaveBeenCalledTimes(2)
     })
 
-    it('should include advert model in findAll query', async () => {
+    it('should include advert model in findAll query with statusId filter', async () => {
       publicationModel.findAll.mockResolvedValue([])
 
       await service.publishAdverts()
@@ -365,6 +366,9 @@ describe('PublishingTaskService - Event Emission', () => {
             {
               model: expect.anything(),
               as: 'advert',
+              where: {
+                statusId: StatusIdEnum.READY_FOR_PUBLICATION,
+              },
             },
           ],
         }),

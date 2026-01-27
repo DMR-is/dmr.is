@@ -12,7 +12,7 @@ import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import AdvertsToBePublished from '../Tables/AdvertsToBePublished'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 export const PublishingTab = () => {
   const [selectedAdvertIds, setSelectedAdvertIds] = useState<string[]>([])
@@ -32,6 +32,8 @@ export const PublishingTab = () => {
             pageSize: params.pageSize,
             search: params.search,
             typeId: params.typeId,
+            direction: params.direction ?? undefined,
+            sortBy: params.sortBy ?? undefined,
           }),
         )
         setSelectedAdvertIds([])
@@ -55,6 +57,8 @@ export const PublishingTab = () => {
             pageSize: params.pageSize,
             search: params.search,
             typeId: params.typeId,
+            direction: params.direction ?? undefined,
+            sortBy: params.sortBy ?? undefined,
           }),
         )
         setSelectedAdvertIds([])
@@ -62,16 +66,6 @@ export const PublishingTab = () => {
       onError: () => {
         toast.error('Ekki tókst að uppfæra stöðu auglýsingar')
       },
-    }),
-  )
-
-  const { data } = useQuery(
-    trpc.getReadyForPublicationAdverts.queryOptions({
-      categoryId: params.categoryId,
-      page: params.page,
-      pageSize: params.pageSize,
-      search: params.search,
-      typeId: params.typeId,
     }),
   )
 
@@ -84,10 +78,9 @@ export const PublishingTab = () => {
   }
 
   return (
-    <Box background="white">
+    <Box background="white" paddingTop={4}>
       <Stack space={[3, 4, 5]}>
         <AdvertsToBePublished
-          adverts={data?.adverts}
           selectedAdvertIds={selectedAdvertIds}
           onToggle={handleAdvertToggle}
         />

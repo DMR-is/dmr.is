@@ -1,5 +1,5 @@
 export enum LegalGazetteEvents {
-  ADVERT_CREATED = 'advert.created',
+  CREATE_SUBMIT_COMMENT = 'advert.create.submit.comment',
   ADVERT_PUBLISHED = 'advert.published',
   ADVERT_PUBLISHED_SIDE_EFFECTS = 'advert.published.side.effects',
   STATUS_CHANGED = 'advert.status.changed',

@@ -38,6 +38,8 @@ type TBRGetPaymentResponse = {
 
 type TBRPathString = `/${string}`
 
+const LOGGING_CONTEXT = 'TBRService'
+
 @Injectable()
 export class TBRService implements ITBRService {
   private readonly credentials: string
@@ -79,14 +81,15 @@ export class TBRService implements ITBRService {
   private async request(
     path: TBRPathString,
     options?: Omit<RequestInit, 'headers'>,
+    index?: number,
   ) {
     const endpoint = new URL(`${this.config.tbrBasePath}${path}`).toString()
     try {
-      this.logger.info('Making TBR request to:', {
+      this.logger.info(`Making TBR ${index !== undefined ? `request #${index} to` : 'request to'}:`, {
         message: `/${endpoint.split('/').slice(-2).join('/')}`,
         path: path,
         method: options?.method || 'GET',
-        context: 'TBRService',
+        context: LOGGING_CONTEXT,
       })
 
       const response = await fetchWithTimeout(endpoint, {
@@ -100,23 +103,40 @@ export class TBRService implements ITBRService {
       })
 
       if (!response.ok) {
-        const err = await response.json()
+        let err
+        let rawBody
+        try {
+          // Clone response to capture raw body before parsing
+          const clonedErrorResponse = response.clone()
+          rawBody = await clonedErrorResponse.text()
+          err = await response.json()
+        } catch (parseError) {
+          this.logger.error('Failed to parse error response', {
+            status: response.status,
+            statusText: response.statusText,
+            rawBody: rawBody,
+            parseError:
+              parseError instanceof Error ? parseError.message : parseError,
+            context: LOGGING_CONTEXT,
+          })
+          err = { error: { detail: 'Failed to parse error response' } }
+        }
 
         if (response.status === 404) {
           this.logger.error('TBR claim not found', {
             status: response.status,
             error: err,
             detail: err?.error?.detail,
-            context: 'TBRService',
+            context: LOGGING_CONTEXT,
           })
 
           throw new NotFoundException('TBR claim not found')
         }
 
-        this.logger.error('TBR request failed', {
+        this.logger.error(`TBR request ${index !== undefined ? `#${index} ` : ''}failed`, {
           url: path,
           status: response.status,
-          context: 'TBRService',
+          context: LOGGING_CONTEXT,
           error: err,
           detail: err?.error?.detail,
         })
@@ -124,12 +144,31 @@ export class TBRService implements ITBRService {
         throw new InternalServerErrorException('TBR request failed')
       }
 
+      // Clone response to read body for logging without consuming it
+      const clonedResponse = response.clone()
+      let responseBody
+      try {
+        responseBody = await clonedResponse.json()
+      } catch (parseError) {
+        responseBody = await clonedResponse.text()
+      }
+
+      this.logger.info(`TBR request ${index !== undefined ? `#${index} ` : ''}successful`, {
+        path: path,
+        method: options?.method || 'GET',
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        responseBody: responseBody,
+        context: LOGGING_CONTEXT,
+      })
+
       return response
     } catch (error) {
-      this.logger.error('TBR request error when requesting:', {
+      this.logger.error(`TBR request error when requesting ${index !== undefined ? `#${index} ` : ''}:`, {
         message: endpoint,
         url: path,
-        context: 'TBRService',
+        context: LOGGING_CONTEXT,
         error: error,
         detail: error instanceof Error ? error.message : undefined,
       })
@@ -140,6 +179,7 @@ export class TBRService implements ITBRService {
   async postPayment(body: TBRPostPaymentBodyDto): Promise<void> {
     this.logger.info('Creating TBR claim', {
       advertId: body.id,
+      context: LOGGING_CONTEXT,
     })
 
     await this.request('/claim', {
@@ -165,12 +205,14 @@ export class TBRService implements ITBRService {
 
   async getPaymentStatus(
     query: TBRGetPaymentQueryDto,
+    index?: number,
   ): Promise<TBRGetPaymentResponseDto> {
     const response = await this.request(
       `/claim/${query.debtorNationalId}?office=${this.config.officeId}&chargeCategory=${query.chargeCategory}&chargeBase=${query.chargeBase}`,
       {
         method: 'GET',
       },
+      index,
     )
 
     const json = (await response.json()) as TBRGetPaymentResponse

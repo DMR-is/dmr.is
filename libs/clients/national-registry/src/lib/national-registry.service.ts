@@ -8,7 +8,10 @@ import {
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { fetchWithTimeout } from '@dmr.is/utils'
 
-import { GetPersonDto, PersonDto } from './national-registry.dto'
+import {
+  GetNationalRegistryEntityDto,
+  NationalRegistryEntityDto,
+} from './national-registry.dto'
 import { INationalRegistryService } from './national-registry.service.interface'
 
 const LOGGING_CONTEXT = 'NationalRegistryClientService'
@@ -142,7 +145,7 @@ export class NationalRegistryService implements INationalRegistryService {
       })
 
       if (!response.ok) {
-        this.logger.warning('Failed to authenticate with national registry', {
+        this.logger.warn('Failed to authenticate with national registry', {
           context: LOGGING_CONTEXT,
           status: response.status,
           statusText: response.statusText,
@@ -210,11 +213,13 @@ export class NationalRegistryService implements INationalRegistryService {
     }
   }
 
-  async getPersonByNationalId(nationalId: string): Promise<GetPersonDto> {
+  async getEntityByNationalId(
+    nationalId: string,
+  ): Promise<GetNationalRegistryEntityDto> {
     try {
       await this.authenticate()
 
-      this.logger.info('Fetching person from national registry', {
+      this.logger.info('Fetching entity from national registry', {
         context: LOGGING_CONTEXT,
       })
 
@@ -235,7 +240,7 @@ export class NationalRegistryService implements INationalRegistryService {
 
       const responseText = await response.text()
 
-      this.logger.debug('National registry person lookup response', {
+      this.logger.debug('National registry entity lookup response', {
         context: LOGGING_CONTEXT,
         status: response.status,
         statusText: response.statusText,
@@ -244,7 +249,7 @@ export class NationalRegistryService implements INationalRegistryService {
       })
 
       if (!response.ok) {
-        this.logger.warning('Failed to fetch person from national registry', {
+        this.logger.warn('Failed to fetch entity from national registry', {
           context: LOGGING_CONTEXT,
           status: response.status,
           statusText: response.statusText,
@@ -255,7 +260,7 @@ export class NationalRegistryService implements INationalRegistryService {
         try {
           error = this.parseJsonSafely(
             responseText,
-            'person lookup error response',
+            'entity lookup error response',
           )
         } catch (parseError) {
           // If 401, token might be expired, reset auth
@@ -268,33 +273,33 @@ export class NationalRegistryService implements INationalRegistryService {
           }
 
           throw new BadGatewayException(
-            `National registry person lookup failed with status ${response.status}: ${responseText.substring(0, 200)}`,
+            `National registry entity lookup failed with status ${response.status}: ${responseText.substring(0, 200)}`,
           )
         }
 
-        this.logger.error('National registry fetch person error', {
+        this.logger.error('National registry fetch entity error', {
           context: LOGGING_CONTEXT,
           error,
         })
 
         throw new BadGatewayException(
-          `National registry person lookup failed: ${getErrorMessage(error)}`,
+          `National registry entity lookup failed: ${getErrorMessage(error)}`,
         )
       }
 
-      const person = this.parseJsonSafely<PersonDto | null>(
+      const entity = this.parseJsonSafely<NationalRegistryEntityDto | null>(
         responseText,
-        'person lookup response',
+        'entity lookup response',
       )
 
-      this.logger.info('Successfully fetched person from national registry', {
+      this.logger.info('Successfully fetched entity from national registry', {
         context: LOGGING_CONTEXT,
       })
 
-      return { person }
+      return { entity }
     } catch (error) {
       this.logger.error(
-        'Unexpected error during national registry person lookup',
+        'Unexpected error during national registry entity lookup',
         {
           context: LOGGING_CONTEXT,
           error: error instanceof Error ? error.message : String(error),

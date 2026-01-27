@@ -22,7 +22,9 @@ export interface IAdvertService {
 
   getAdvertById(id: string, currentUser: DMRUser): Promise<AdvertDetailedDto>
 
-  getAdvertsCount(): Promise<GetAdvertsStatusCounterDto>
+  getAdvertsCount(
+    query: GetAdvertsQueryDto,
+  ): Promise<GetAdvertsStatusCounterDto>
 
   updateAdvert(id: string, body: UpdateAdvertDto): Promise<AdvertDetailedDto>
 
@@ -39,6 +41,7 @@ export interface IAdvertService {
 
   markAdvertAsWithdrawn(advertId: string): Promise<void>
   rejectAdvert(advertId: string, currentUser: DMRUser): Promise<void>
+  reactivateAdvert(advertId: string, currentUser: DMRUser): Promise<void>
 
   assignAdvertToEmployee(
     advertId: string,

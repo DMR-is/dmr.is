@@ -15,6 +15,8 @@ import { TASK_NAMESPACE } from '../../../core/constants'
  * 1. pg_try_advisory_xact_lock - Prevents concurrent execution
  * 2. job_runs table - Prevents duplicate runs within a time window
  */
+
+const LOGGING_CONTEXT = 'PgAdvisoryLockService'
 @Injectable()
 export class PgAdvisoryLockService {
   constructor(
@@ -76,7 +78,7 @@ export class PgAdvisoryLockService {
         if (elapsed < cooldownMs) {
           this.logger.debug(
             `Job ${lockKey} skipped - ran ${elapsed}ms ago (cooldown: ${cooldownMs}ms)`,
-            { containerId },
+            { containerId, context: LOGGING_CONTEXT },
           )
           return { ran: false, reason: 'cooldown' }
         }
@@ -96,9 +98,16 @@ export class PgAdvisoryLockService {
       )
 
       // Step 4: Execute the job
-      this.logger.debug(`Job ${lockKey} starting on container ${containerId}`)
+      this.logger.debug(`Job ${lockKey} starting on container ${containerId}`, {
+        context: LOGGING_CONTEXT,
+      })
       await fn()
-      this.logger.debug(`Job ${lockKey} completed on container ${containerId}`)
+      this.logger.debug(
+        `Job ${lockKey} completed on container ${containerId}`,
+        {
+          context: LOGGING_CONTEXT,
+        },
+      )
 
       return { ran: true }
       // Lock automatically released when transaction commits
@@ -114,8 +123,9 @@ export class PgAdvisoryLockService {
     for (let i = 0; i < str.length; i++) {
       hash = (hash * 33) ^ str.charCodeAt(i)
     }
-    // Ensure positive 32-bit integer
-    return hash >>> 0
+    // Convert to signed 32-bit integer and ensure positive
+    // PostgreSQL's INTEGER type is signed (max: 2,147,483,647)
+    return Math.abs(hash | 0)
   }
 
   /**
@@ -144,7 +154,9 @@ export class PgAdvisoryLockService {
   async runWithUserLock<T>(
     userKey: string,
     fn: (tx: Transaction) => Promise<T>,
-  ): Promise<{ success: true; result: T } | { success: false; reason: 'lock_held' }> {
+  ): Promise<
+    { success: true; result: T } | { success: false; reason: 'lock_held' }
+  > {
     const USER_LOCK_NAMESPACE = 2000
     const lockKey = this.stringToLockKey(userKey)
 
@@ -164,6 +176,7 @@ export class PgAdvisoryLockService {
         this.logger.debug(`User lock blocked for key: ${userKey}`, {
           lockKey,
           namespace: USER_LOCK_NAMESPACE,
+          context: LOGGING_CONTEXT,
         })
         return { success: false, reason: 'lock_held' }
       }
@@ -224,6 +237,7 @@ export class PgAdvisoryLockService {
         } catch (e) {
           this.logger.warn(
             `Failed to unlock advisory lock (${namespace}, ${lockKey}): ${String(e)}`,
+            { context: LOGGING_CONTEXT },
           )
         }
       }

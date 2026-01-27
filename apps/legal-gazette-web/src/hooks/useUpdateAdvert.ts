@@ -310,6 +310,56 @@ export const useUpdateAdvert = (id: string) => {
     }),
   )
 
+  const { mutate: reactivateAdvertMutation, isPending: isReactivating } =
+    useMutation(
+      trpc.reactivateAdvert.mutationOptions({
+        onMutate: async (variables) => {
+          await queryClient.cancelQueries(
+            trpc.getAdvert.queryFilter({ id: variables.id }),
+          )
+          const prevData = queryClient.getQueryData(
+            trpc.getAdvert.queryKey({ id: variables.id }),
+          ) as AdvertDetailedDto
+
+          const inProgressStatus = statuses.find(
+            (status) => status.id === StatusIdEnum.IN_PROGRESS,
+          )
+
+          if (inProgressStatus) {
+            queryClient.setQueryData(
+              trpc.getAdvert.queryKey({ id: variables.id }),
+              {
+                ...prevData,
+                status: inProgressStatus as StatusDto,
+              },
+            )
+          }
+
+          return prevData
+        },
+        onSuccess: (_, variables) => {
+          toast.success('Auglýsing endurvirkjuð', {
+            toastId: 'reactivateAdvert',
+          })
+          queryClient.invalidateQueries(
+            trpc.getAdvert.queryFilter({ id: variables.id }),
+          )
+          queryClient.invalidateQueries(
+            trpc.getComments.queryFilter({ advertId: variables.id }),
+          )
+        },
+        onError: (_, variables, mutateResults) => {
+          toast.error('Ekki tókst að endurvirkja auglýsingu', {
+            toastId: 'reactivateAdvertError',
+          })
+          queryClient.setQueryData(
+            trpc.getAdvert.queryKey({ id: variables.id }),
+            mutateResults,
+          )
+        },
+      }),
+    )
+
   const updateAdvert = useCallback(
     (data: UpdateAdvertDto, options: UpdateOptions = {}) => {
       const {
@@ -527,15 +577,21 @@ export const useUpdateAdvert = (id: string) => {
     moveToPreviousStatusMutation({ id })
   }, [id, moveToPreviousStatusMutation])
 
+  const reactivateAdvert = useCallback(() => {
+    reactivateAdvertMutation({ id })
+  }, [id, reactivateAdvertMutation])
+
   return {
     isUpdatingAdvert,
     isMovingToNextStatus,
     isMovingToPreviousStatus,
     isAssigningUser,
     isAssigningAndUpdatingStatus,
+    isReactivating,
     assignAndUpdateStatus,
     moveToNextStatus,
     moveToPreviousStatus,
+    reactivateAdvert,
     assignUser,
     updateTitle,
     updateCaption,
