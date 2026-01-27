@@ -2,10 +2,16 @@
 
 import {
   AlertMessage,
+  Box,
+  Button,
+  LinkV2,
   Pagination,
   SkeletonLoader,
 } from '@dmr.is/ui/components/island-is'
 import { Stack, Text } from '@dmr.is/ui/components/island-is'
+import { PagingTotalItemsText } from '@dmr.is/ui/components/PagingTotaItemsText/PagingTotalItemsText'
+
+import { Inline } from '@island.is/island-ui/core'
 
 import { ApplicationDto, Paging } from '../../gen/fetch'
 import { ApplicationCard } from './ApplicationCard'
@@ -37,8 +43,20 @@ export const ApplicationList = ({
   }
 
   return (
-    <Stack space={[2, 3, 4]}>
-      <Text variant="h2">Mínar auglýsingar</Text>
+    <Stack space={[1, 2, 3]}>
+      <Inline justifyContent="spaceBetween" alignY="center">
+        <Box>
+          <PagingTotalItemsText
+            paging={paging}
+            totalItems={paging?.totalItems}
+          />
+        </Box>
+        <LinkV2 href="/auglysingar/eldri">
+          <Button size="small" variant="utility" colorScheme="white">
+            Eldri auglýsingar
+          </Button>
+        </LinkV2>
+      </Inline>
 
       {error && (
         <AlertMessage
@@ -53,7 +71,12 @@ export const ApplicationList = ({
           <ApplicationCard application={application} key={i} />
         ))
       ) : (
-        <Text>Engar auglýsingar fundust, kannski þarf að breyta síu</Text>
+        <Box background={'white'} borderRadius="large" padding={[4, 5]}>
+          <Stack space={1}>
+            <Text variant="h3">Engar auglýsingar fundust</Text>
+            <Text>Athugaðu hvort breyta þurfi síu</Text>
+          </Stack>
+        </Box>
       )}
 
       {paging && paging.totalPages > 1 && (

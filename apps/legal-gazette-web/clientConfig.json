@@ -5878,7 +5878,10 @@
           },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
-          "liquidatorRecallStatementLocation": { "type": "string" },
+          "liquidatorRecallStatementLocation": {
+            "type": "string",
+            "nullable": true
+          },
           "liquidatorRecallStatementType": {
             "allOf": [
               {
@@ -5889,9 +5892,9 @@
           "name": { "type": "string" },
           "nationalId": { "type": "string" },
           "address": { "type": "string" },
-          "declaredClaims": { "type": "number" },
           "deadline": { "type": "string", "nullable": true },
-          "dateOfDeath": { "type": "string", "nullable": true }
+          "dateOfDeath": { "type": "string", "nullable": true },
+          "declaredClaims": { "type": "number", "nullable": true }
         },
         "required": [
           "id",
@@ -5901,8 +5904,7 @@
           "liquidatorRecallStatementType",
           "name",
           "nationalId",
-          "address",
-          "deadline"
+          "address"
         ]
       },
       "CommunicationChannelDto": {
@@ -6877,7 +6879,10 @@
           },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
-          "liquidatorRecallStatementLocation": { "type": "string" },
+          "liquidatorRecallStatementLocation": {
+            "type": "string",
+            "nullable": true
+          },
           "liquidatorRecallStatementType": {
             "allOf": [
               {
@@ -6888,9 +6893,9 @@
           "name": { "type": "string" },
           "nationalId": { "type": "string" },
           "address": { "type": "string" },
-          "declaredClaims": { "type": "number" },
           "deadline": { "type": "string", "nullable": true },
-          "dateOfDeath": { "type": "string", "nullable": true }
+          "dateOfDeath": { "type": "string", "nullable": true },
+          "declaredClaims": { "type": "number", "nullable": true }
         }
       },
       "GetUsersResponse": {
