@@ -32,12 +32,12 @@ export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
 
   const recallDates = watch('publishingDates') || []
 
-  const twoMonthsAndOneWeekFromNow = addDays(
+  const twoMonthsAndOneWeek = addDays(
     addMonths(new Date(recallDates[0]), 2),
     ONE_WEEK,
   )
   const minDate = recallDates.length
-    ? getNextValidPublishingDate(twoMonthsAndOneWeekFromNow)
+    ? getNextValidPublishingDate(twoMonthsAndOneWeek)
     : getNextValidPublishingDate()
   const maxDate = getNextValidPublishingDate(addYears(minDate, 5))
   const excludeDates = getInvalidPublishingDatesInRange(minDate, maxDate)
