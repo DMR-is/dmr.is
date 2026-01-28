@@ -39,4 +39,10 @@ export type RegulationSearchResults = {
 
 // ---------------------------------------------------------------------------
 
+export type CurrentRegulationChange = {
+  date?: ISODate
+  currentTitle: string // textSource.title,
+  currentText: string // textSource.text as HTMLText,
+}
+
 export * from '@dmr.is/regulations-tools/types'

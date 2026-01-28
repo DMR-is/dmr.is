@@ -5,6 +5,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import fs from 'fs'
 import { parse } from 'path'
 
+import { DB_RegulationChange } from '../models'
 import { ISODate } from '../routes/types'
 
 import { HOUR } from '@hugsmidjan/qj/time'
@@ -148,4 +149,23 @@ export const loadData = <T>(path: string): T | false => {
     console.error(err)
   }
   return false
+}
+
+// ---------------------------------------------------------------------------
+
+export const removeHistoryAfterRegId = (
+  changeHistory: Array<DB_RegulationChange>,
+  /** id of the currently "active" affecting regulation */
+  regId: number,
+) => {
+  let found = false
+  return changeHistory
+    .filter(({ changingid }) => {
+      const relatedToCurrent = changingid === regId
+      if (relatedToCurrent) {
+        found = true
+      }
+      return !found || relatedToCurrent
+    })
+    .reverse()
 }
