@@ -1,4 +1,4 @@
-import { addDays, addYears } from 'date-fns'
+import { addDays, addMonths, addYears } from 'date-fns'
 import { useFormContext } from 'react-hook-form'
 
 import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
@@ -13,7 +13,7 @@ import {
 } from '@dmr.is/utils/date'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
-import { THREE_DAYS } from '../../../../lib/constants'
+import { ONE_WEEK } from '../../../../lib/constants'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
@@ -32,10 +32,12 @@ export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
 
   const recallDates = watch('publishingDates') || []
 
+  const twoMonthsAndOneWeekFromNow = addDays(
+    addMonths(new Date(recallDates[0]), 2),
+    ONE_WEEK,
+  )
   const minDate = recallDates.length
-    ? getNextValidPublishingDate(
-        addDays(new Date(recallDates[0]), THREE_DAYS * 9),
-      )
+    ? getNextValidPublishingDate(twoMonthsAndOneWeekFromNow)
     : getNextValidPublishingDate()
   const maxDate = getNextValidPublishingDate(addYears(minDate, 5))
   const excludeDates = getInvalidPublishingDatesInRange(minDate, maxDate)
