@@ -6,7 +6,6 @@ import {
   AlertMessage,
   GridColumn,
   GridRow,
-  Text,
 } from '@dmr.is/ui/components/island-is'
 import {
   getInvalidPublishingDatesInRange,
@@ -14,7 +13,7 @@ import {
 } from '@dmr.is/utils/date'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
-import { ONE_WEEK } from '../../../../lib/constants'
+import { THREE_DAYS } from '../../../../lib/constants'
 import { DatePickerController } from '../../controllers/DatePickerController'
 import { InputController } from '../../controllers/InputController'
 
@@ -35,7 +34,7 @@ export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
 
   const minDate = recallDates.length
     ? getNextValidPublishingDate(
-        addDays(new Date(recallDates[0]), ONE_WEEK * 9),
+        addDays(new Date(recallDates[0]), THREE_DAYS * 9),
       )
     : getNextValidPublishingDate()
   const maxDate = getNextValidPublishingDate(addYears(minDate, 5))
