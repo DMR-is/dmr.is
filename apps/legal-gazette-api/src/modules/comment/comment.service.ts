@@ -5,12 +5,14 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { SYSTEM_ACTOR } from '../../core/constants'
 import { AdvertModel } from '../../models/advert.model'
 import {
   CommentDto,
   CommentModel,
   CommentTypeEnum,
   CreateAssignCommentDto,
+  CreatePublishCommentDto,
   CreateStatusUpdateCommentDto,
   CreateSubmitCommentDto,
   CreateTextCommentDto,
@@ -34,6 +36,51 @@ export class CommentService implements ICommentService {
     @InjectModel(StatusModel) private statusModel: typeof StatusModel,
     @InjectModel(AdvertModel) private advertModel: typeof AdvertModel,
   ) {}
+  async createPublishComment(
+    advertId: string,
+    body: CreatePublishCommentDto,
+  ): Promise<void> {
+    const advert = await this.advertModel.findByPkOrThrow(advertId, {
+      attributes: ['id', 'statusId'],
+    })
+
+    let actor = null
+
+    try {
+      if (body.actorId) {
+        actor = await this.findActor(body.actorId)
+      }
+    } catch (e) {
+      this.logger.warn(
+        'Actor not found for publish comment, marking as system',
+        {
+          advertId,
+          context: LOGGING_CONTEXT,
+        },
+      )
+    }
+
+    if (!actor) {
+      actor = {
+        id: 'system',
+        name: 'Sjálfvirk útgáfa',
+      }
+    }
+
+    await this.commentModel.create({
+      type: CommentTypeEnum.PUBLISH,
+      advertId: advert.id,
+      statusId: advert.statusId,
+      actorId: actor.id,
+      actor: actor.name,
+    })
+
+    this.logger.info('Publish comment created successfully', {
+      advertId,
+      context: LOGGING_CONTEXT,
+    })
+  }
+
   async createSubmitCommentForExternalSystem(
     advertId: string,
     actorId: string,
@@ -54,47 +101,6 @@ export class CommentService implements ICommentService {
     })
 
     return advert.statusId
-  }
-
-  private async findActor(actorId: string): Promise<{
-    name: string
-    id: string
-  }> {
-    this.logger.debug(`Looking for actor with id: ${actorId}`, {
-      context: LOGGING_CONTEXT,
-    })
-    const isId = isUUID(actorId)
-
-    const where = isId ? { id: actorId } : { nationalId: actorId }
-
-    const existingUser = await this.userModel.findOne({ where })
-
-    if (existingUser) {
-      return {
-        name: existingUser.fullName,
-        id: isId ? existingUser.id : existingUser.nationalId,
-      }
-    }
-
-    const person =
-      await this.nationalRegistryService.getEntityByNationalId(actorId)
-
-    if (person.entity === null) {
-      this.logger.warn(
-        'Neither user or person in national registry found when looking for actor',
-        {
-          context: LOGGING_CONTEXT,
-        },
-      )
-      throw new NotFoundException('Actor not found')
-    }
-
-    this.logger.debug('Actor found', { context: LOGGING_CONTEXT })
-
-    return {
-      name: person.entity.nafn,
-      id: person.entity.kennitala,
-    }
   }
 
   async getCommentsByAdvertId(advertId: string): Promise<GetCommentsDto> {
@@ -228,5 +234,55 @@ export class CommentService implements ICommentService {
     })
 
     return mapped
+  }
+
+  private async findActor(actorId: string): Promise<{
+    name: string
+    id: string
+  }> {
+    this.logger.debug(`Looking for actor with id: ${actorId}`, {
+      context: LOGGING_CONTEXT,
+    })
+
+    if (actorId === SYSTEM_ACTOR.id) {
+      this.logger.info('Actor is system actor', { context: LOGGING_CONTEXT })
+      return SYSTEM_ACTOR
+    }
+
+    const isId = isUUID(actorId)
+
+    const where = isId ? { id: actorId } : { nationalId: actorId }
+
+    const existingUser = await this.userModel.findOne({ where })
+
+    if (existingUser) {
+      this.logger.debug('Actor found in users table', {
+        context: LOGGING_CONTEXT,
+      })
+      return {
+        name: existingUser.fullName,
+        id: isId ? existingUser.id : existingUser.nationalId,
+      }
+    }
+
+    const person =
+      await this.nationalRegistryService.getEntityByNationalId(actorId)
+
+    if (person.entity === null) {
+      this.logger.warn(
+        'Neither user or person in national registry found when looking for actor',
+        {
+          context: LOGGING_CONTEXT,
+        },
+      )
+      throw new NotFoundException('Actor not found')
+    }
+
+    this.logger.debug('Actor found', { context: LOGGING_CONTEXT })
+
+    return {
+      name: person.entity.nafn,
+      id: person.entity.kennitala,
+    }
   }
 }

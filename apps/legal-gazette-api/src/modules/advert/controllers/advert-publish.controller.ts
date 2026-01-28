@@ -8,6 +8,8 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
+import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
@@ -32,14 +34,23 @@ export class AdvertPublishController {
 
   @Post('publish')
   @LGResponse({ operationId: 'publishAdverts' })
-  async publishAdverts(@Body() body: PublishAdvertsBody) {
-    return await this.advertPublicationService.publishAdverts(body.advertIds)
+  async publishAdverts(
+    @Body() body: PublishAdvertsBody,
+    @CurrentUser() currentUser: DMRUser,
+  ) {
+    return await this.advertPublicationService.publishAdverts(
+      body.advertIds,
+      currentUser,
+    )
   }
 
   @Post(':id/publish')
   @ApiParam({ name: 'id', type: String })
   @LGResponse({ operationId: 'publishAdvert' })
-  async publishAdvert(@Param('id', new UUIDValidationPipe()) id: string) {
-    return await this.advertPublicationService.publishAdverts([id])
+  async publishAdvert(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @CurrentUser() currentUser: DMRUser,
+  ) {
+    return await this.advertPublicationService.publishAdverts([id], currentUser)
   }
 }

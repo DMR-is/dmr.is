@@ -90,4 +90,15 @@ export class CommentListener {
       receiverId: payload.receiverId,
     })
   }
+
+  @OnEvent(LegalGazetteEvents.CREATE_PUBLISH_COMMENT)
+  async addPublicationComment(payload: { advertId: string; actorId?: string }) {
+    this.logger.info('Creating publish comment', {
+      payload,
+      context: LOGGING_CONTEXT,
+    })
+    await this.commentService.createPublishComment(payload.advertId, {
+      actorId: payload.actorId,
+    })
+  }
 }
