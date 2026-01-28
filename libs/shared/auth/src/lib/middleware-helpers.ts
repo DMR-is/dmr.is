@@ -155,7 +155,20 @@ export async function tryToUpdateCookie(
       newSessionToken,
     }
   } catch (error) {
-    return { response: updateCookie(null, req, response) }
+    // Invalidate session token if error occurs during refresh
+    const invalidatedToken = {
+      ...token,
+      invalid: true,
+      error: 'RefreshAccessTokenError',
+    }
+    const newSessionToken = await encode({
+      secret: process.env.NEXTAUTH_SECRET as string,
+      token: invalidatedToken,
+      maxAge: SESSION_TIMEOUT,
+    })
+    return {
+      response: updateCookie(newSessionToken, req, response),
+    }
   }
 }
 
