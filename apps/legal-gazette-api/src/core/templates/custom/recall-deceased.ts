@@ -5,6 +5,7 @@ import { SettlementType } from '@dmr.is/legal-gazette/schemas'
 import { formatDate } from '@dmr.is/utils'
 
 import { AdvertModel } from '../../../models/advert.model'
+import { ApplicationRequirementStatementEnum } from '../../../models/application.model'
 import { getElement, getTableCell, getTableHeaderCell } from '../element'
 
 export function getRecallDeceasedTemplate(model: AdvertModel): string {
@@ -14,7 +15,7 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
   const dateOfDeath = model.settlement?.dateOfDeath
   const nationalId = model.settlement?.nationalId
   const address = model.settlement?.address
-  const liquidatorLocation = model.settlement?.liquidatorLocation
+  const settlement = model.settlement
 
   const intro = getElement(
     `Með úrskurði ${model.courtDistrict?.title || ''} uppkveðnum ${judgementDate ? formatDate(judgementDate, 'd. MMMM yyyy') : ''} var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:`,
@@ -70,7 +71,7 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
   }
 
   const outro = getElement(
-    `Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur framangreindu dánarbúi eða telja til eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu þessarar innköllunar. Kröfulýsingar skulu sendar skiptastjóra að ${liquidatorLocation || ''}.`,
+    `Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur framangreindu dánarbúi eða telja til eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu þessarar innköllunar. ${getElement(`Kröfulýsingar skulu sendar skiptastjóra ${settlement?.liquidatorRecallStatementType === ApplicationRequirementStatementEnum.CUSTOMLIQUIDATOREMAIL ? 'með rafrænum hætti á netfangið ' : 'að '} ${settlement?.liquidatorRecallStatementLocation || ''}`)}`,
   )
 
   return `
