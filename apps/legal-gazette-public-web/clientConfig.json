@@ -1465,9 +1465,10 @@
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": { "$ref": "#/components/schemas/StatusDto" },
-          "scheduledAt": { "type": "string" },
+          "scheduledAt": { "type": "string", "nullable": true },
           "assignedUser": { "$ref": "#/components/schemas/UserDto" },
-          "hasInternalComments": { "type": "boolean" }
+          "hasInternalComments": { "type": "boolean" },
+          "lastPublishedAt": { "type": "string", "nullable": true }
         },
         "required": [
           "id",
@@ -1480,7 +1481,8 @@
           "type",
           "status",
           "scheduledAt",
-          "hasInternalComments"
+          "hasInternalComments",
+          "lastPublishedAt"
         ]
       },
       "AdvertPublicationDetailedDto": {

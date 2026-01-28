@@ -67,6 +67,7 @@ export const NationalIdLookup = ({
       },
     }),
   )
+
   const [nationalId, setNationalId] = useState(defaultValue)
 
   const onChangeHandler = (val: string) => {
@@ -81,7 +82,7 @@ export const NationalIdLookup = ({
     formState.errors.fields?.settlementFields?.nationalId?.message
 
   useEffect(() => {
-    if (isValidId) {
+    if (isValidId && nationalId !== defaultValue) {
       mutate({ nationalId })
     }
   }, [isValidId, nationalId, mutate])

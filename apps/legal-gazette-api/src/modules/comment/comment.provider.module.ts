@@ -5,12 +5,14 @@ import { AdvertModel } from '../../models/advert.model'
 import { CommentModel } from '../../models/comment.model'
 import { StatusModel } from '../../models/status.model'
 import { UserModel } from '../../models/users.model'
+import { LGNationalRegistryProviderModule } from '../national-registry/national-registry.provider.module'
 import { CommentListener } from './listeners/comment.listener'
 import { CommentService } from './comment.service'
 import { ICommentService } from './comment.service.interface'
 
 @Module({
   imports: [
+    LGNationalRegistryProviderModule,
     SequelizeModule.forFeature([
       CommentModel,
       UserModel,

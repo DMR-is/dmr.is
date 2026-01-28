@@ -396,6 +396,49 @@ export class AdvertModel extends BaseModel<
   @ApiProperty({ type: String, required: false, nullable: true })
   externalId?: string | null
 
+  @Column({ type: DataType.VIRTUAL(DataType.DATE) })
+  get nextScheduledAt(): string | null {
+    if (!this.publications || this.publications.length === 0) {
+      return null
+    }
+
+    const futurePubs = this.publications.filter(
+      (pub) => pub.publishedAt === null,
+    )
+
+    if (futurePubs.length === 0) {
+      return null
+    }
+
+    const nextPub = futurePubs.reduce((prev, curr) => {
+      return prev.scheduledAt < curr.scheduledAt ? prev : curr
+    }, futurePubs[0])
+
+    return nextPub.scheduledAt.toISOString()
+  }
+
+  @Column({ type: DataType.VIRTUAL(DataType.DATE) })
+  get lastPublishedAt(): string | null {
+    if (!this.publications || this.publications.length === 0) {
+      return null
+    }
+
+    const pastPubs = this.publications.filter((pub) => pub.publishedAt !== null)
+
+    if (pastPubs.length === 0) {
+      return null
+    }
+
+    const latestPub = pastPubs.reduce((prev, curr) => {
+      if (!prev.publishedAt || !curr.publishedAt) return prev
+      return prev.publishedAt > curr.publishedAt ? prev : curr
+    }, pastPubs[0])
+
+    if (!latestPub.publishedAt) return null
+
+    return latestPub.publishedAt.toISOString()
+  }
+
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
   case!: CaseModel
 
@@ -524,14 +567,6 @@ export class AdvertModel extends BaseModel<
   }
 
   static fromModel(model: AdvertModel): AdvertDto {
-    const publishing = model.publications.find(
-      (pub) => pub.publishedAt === null,
-    )
-
-    const date = publishing
-      ? publishing.scheduledAt
-      : model.publications[model.publications.length - 1].scheduledAt
-
     try {
       return {
         id: model.id,
@@ -543,7 +578,8 @@ export class AdvertModel extends BaseModel<
         type: model.type.fromModel(),
         status: model.status.fromModel(),
         createdBy: model.createdBy,
-        scheduledAt: date.toISOString(),
+        scheduledAt: model.nextScheduledAt,
+        lastPublishedAt: model.lastPublishedAt,
         title: model.title,
         assignedUser: model.assignedUser?.fromModel(),
         publications: model.publications.map((p) => p.fromModel()),
@@ -600,14 +636,6 @@ export class AdvertModel extends BaseModel<
   }
 
   static fromModelToSimple(model: AdvertModel): AdvertDto {
-    const publishing = model.publications.find(
-      (pub) => pub.publishedAt === null,
-    )
-
-    const date = publishing
-      ? publishing.scheduledAt
-      : model.publications[model.publications.length - 1].scheduledAt
-
     try {
       return {
         id: model.id,
@@ -619,7 +647,8 @@ export class AdvertModel extends BaseModel<
         type: model.type.fromModel(),
         status: model.status.fromModel(),
         createdBy: model.createdBy,
-        scheduledAt: date.toISOString(),
+        scheduledAt: model.nextScheduledAt,
+        lastPublishedAt: model.lastPublishedAt,
         title: model.title,
         publications: model.publications.map((p) => p.fromModel()),
       }
@@ -639,14 +668,6 @@ export class AdvertModel extends BaseModel<
   }
 
   static fromModelToExternal(model: AdvertModel): ExternalAdvertDto {
-    const publishing = model.publications.find(
-      (pub) => pub.publishedAt === null,
-    )
-
-    const date = publishing
-      ? publishing.scheduledAt
-      : model.publications[model.publications.length - 1].scheduledAt
-
     try {
       return {
         id: model.id,
@@ -656,7 +677,9 @@ export class AdvertModel extends BaseModel<
         type: model.type.title,
         status: model.status.title,
         createdBy: model.createdBy,
-        scheduledAt: date.toISOString(),
+        scheduledAt: model.nextScheduledAt,
+        lastPublishedAt: model.lastPublishedAt,
+        externalId: model.externalId ?? undefined,
         title: model.title,
         caption: model.caption ?? undefined,
         content: model.content ?? undefined,
@@ -777,9 +800,15 @@ export class AdvertDetailedDto extends DetailedDto {
   @Type(() => StatusDto)
   status!: StatusDto
 
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: String, nullable: true })
+  @IsOptional()
   @IsDateString()
-  scheduledAt!: string
+  scheduledAt!: string | null
+
+  @ApiProperty({ type: String, nullable: true })
+  @IsOptional()
+  @IsDateString()
+  lastPublishedAt!: string | null
 
   @ApiProperty({ type: UserDto, required: false })
   @IsOptional()
@@ -829,7 +858,12 @@ export class AdvertDto extends PickType(AdvertDetailedDto, [
   'assignedUser',
   'publications',
   'publicationNumber',
-] as const) {}
+] as const) {
+  @ApiProperty({ type: String, nullable: true })
+  @IsOptional()
+  @IsDateString()
+  lastPublishedAt!: string | null
+}
 
 export class GetAdvertsDto {
   @ApiProperty({ type: [AdvertDto] })
@@ -848,6 +882,7 @@ export class ExternalAdvertDto extends PickType(AdvertDetailedDto, [
   'scheduledAt',
   'caption',
   'content',
+  'lastPublishedAt',
 ] as const) {
   @ApiProperty({ type: String, required: false })
   externalId?: string
