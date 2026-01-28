@@ -77,6 +77,18 @@ async function getRegulationByName(
   return regulation
 }
 
+export async function getRegulationById(
+  id: number,
+  attributes?: FindAttributeOptions,
+) {
+  const regulation =
+    (await DB_Regulation.findOne({
+      attributes,
+      where: { id },
+    })) ?? undefined
+  return regulation
+}
+
 async function getRegulationTask(regulationId: number) {
   const task = (await DB_Task.findOne({ where: { regulationId } })) ?? undefined
   return task
@@ -186,6 +198,29 @@ async function getLatestRegulationChange(
     type: QueryTypes.SELECT,
   })
   return regulationChange[0]
+}
+
+export async function getRegulationChanges(
+  regulationId: number,
+): Promise<Array<DB_RegulationChange>> {
+  const changeQuery = `
+      SELECT ch.*
+      FROM RegulationChange as ch
+      JOIN Regulation AS r ON ch.changingId = r.id
+      WHERE
+        regulationId = :regulationId
+      ORDER BY
+        ch.date DESC,
+        r.publishedDate DESC,
+        ch.id DESC
+      `
+
+  const regulationChanges = await db.query<DB_RegulationChange>(changeQuery, {
+    replacements: { regulationId },
+    type: QueryTypes.SELECT,
+  })
+
+  return regulationChanges
 }
 
 // ---------------------------------------------------------------------------

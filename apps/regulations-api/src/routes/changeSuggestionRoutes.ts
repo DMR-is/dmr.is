@@ -8,6 +8,7 @@ import {
   createChangeSuggestion,
   deleteChangeSuggestion,
   getAllChangeSuggestions,
+  getChangeHistoryCurrent,
   getChangeSuggestion,
   startChangeSuggestionProcess,
   updateChangeSuggestion,
@@ -180,6 +181,29 @@ export const changeSuggestionRoutes: FastifyPluginCallback = (
         const id = parseInt(req.params.id, 10)
         const result = await deleteChangeSuggestion(id)
         return reply.send(result)
+      } catch (error) {
+        return handleError(error, reply)
+      }
+    },
+  )
+
+  /**
+   * Get current change
+   * GET /change-suggestions/current-change
+   */
+  fastify.get<Pms<'baseId' | 'changingId'>>(
+    '/change-suggestions/changehistory/:baseId/:changingId',
+    { onRequest: authMiddleware },
+    async (req, reply) => {
+      try {
+        const baseRegId = parseInt(req.params.baseId, 10)
+        const changingRegId = parseInt(req.params.changingId, 10)
+
+        const currentChange = await getChangeHistoryCurrent(
+          baseRegId,
+          changingRegId,
+        )
+        return reply.send(currentChange)
       } catch (error) {
         return handleError(error, reply)
       }
