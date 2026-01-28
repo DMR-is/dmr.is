@@ -184,12 +184,12 @@ export class ApplicationService implements IApplicationService {
         ),
         liquidatorRecallStatementLocation: get(
           application.answers,
-          'fields.settlementFields.liquidatorRecallStatementLocation',
+          'fields.settlementFields.recallRequirementStatementLocation',
           undefined,
         ),
         liquidatorRecallStatementType: get(
           application.answers,
-          'fields.settlementFields.liquidatorRecallStatementType',
+          'fields.settlementFields.recallRequirementStatementType',
           undefined,
         ),
         deadline: get(
