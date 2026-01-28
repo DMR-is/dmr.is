@@ -35,6 +35,7 @@ export class TokenJwtAuthGuard implements CanActivate {
   ): UserFromIdToken | null {
     try {
       const payload = jwt.verify(idToken, publicKey, {
+        clockTolerance: 20, // 20 seconds clock tolerance
         algorithms: ['RS256'],
       }) as jwt.JwtPayload
       if (payload.sub !== accessTokenSub) {
