@@ -1,5 +1,6 @@
 export enum LegalGazetteEvents {
   CREATE_SUBMIT_COMMENT = 'advert.create.submit.comment',
+  CREATE_PUBLISH_COMMENT = 'advert.create.publish.comment',
   ADVERT_PUBLISHED = 'advert.published',
   ADVERT_PUBLISHED_SIDE_EFFECTS = 'advert.published.side.effects',
   STATUS_CHANGED = 'advert.status.changed',
@@ -87,3 +88,11 @@ export const TASK_JOB_IDS = {
 
 export const TASK_NAMESPACE = 1000
 export const USER_LOCK_NAMESPACE = 2000
+
+export const SYSTEM_ACTOR_ID = 'system'
+export const SYSTEM_ACTOR_NAME = 'Ritstjórnarkerfið'
+
+export const SYSTEM_ACTOR = {
+  id: SYSTEM_ACTOR_ID,
+  name: SYSTEM_ACTOR_NAME,
+}

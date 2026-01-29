@@ -12,6 +12,8 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
+import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { CurrentUser } from '@dmr.is/decorators'
 import {
   PublicOrApplicationWebScopes,
   PublicWebScopes,
@@ -90,10 +92,12 @@ export class AdvertPublicationController {
   async publishAdvertPublication(
     @Param('advertId', new UUIDValidationPipe()) advertId: string,
     @Param('publicationId', new UUIDValidationPipe()) publicationId: string,
+    @CurrentUser() currentUser: DMRUser,
   ): Promise<void> {
     await this.advertPublicationService.publishAdvertPublication(
       advertId,
       publicationId,
+      currentUser,
     )
   }
 
