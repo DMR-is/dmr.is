@@ -14,6 +14,7 @@ export type CommentProps = {
   icon?: React.ComponentProps<typeof Icon>['icon']
   receiver?: string
   message?: string
+  iconType: 'filled' | 'outline'
   actionFirst?: boolean
 }
 
@@ -22,6 +23,7 @@ export const Comment = ({
   createdAt,
   action,
   icon = 'arrowForward',
+  iconType,
   receiver,
   message,
   actionFirst = false,
@@ -34,7 +36,14 @@ export const Comment = ({
       columnGap={2}
       alignItems="center"
     >
-      <Button as="div" circle variant="ghost" icon={icon} colorScheme="light" />
+      <Button
+        as="div"
+        circle
+        variant="ghost"
+        icon={icon}
+        iconType={iconType}
+        colorScheme="light"
+      />
       <Box flexGrow={1}>
         <Stack space={1}>
           <Inline justifyContent="spaceBetween" alignY="center" space={2}>

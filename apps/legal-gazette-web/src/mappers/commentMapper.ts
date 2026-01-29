@@ -14,6 +14,7 @@ export const commentMapper = (comment: CommentDto): CommentProps => {
     receiver: comment.receiver,
     message: comment.comment,
     action: '',
+    iconType: 'filled',
   }
 
   const createdDaysAgo = getDaysAgo(comment.createdAt)
@@ -44,6 +45,12 @@ export const commentMapper = (comment: CommentDto): CommentProps => {
     case CommentTypeEnum.SUBMIT:
       cmt.actionFirst = true
       cmt.action = 'Innsent af: '
+      break
+    case CommentTypeEnum.PUBLISH:
+      cmt.action = `gaf út birtingu: `
+      cmt.receiver = `kl. ${formatDate(comment.createdAt, 'HH:mm')}`
+      cmt.icon = 'checkmarkCircle'
+      cmt.iconType = 'outline'
       break
   }
 
@@ -77,6 +84,11 @@ export const commentStepperMapper = (comment: CommentDto) => {
     case CommentTypeEnum.COMMENT:
       return {
         title: `${comment.actor} bætti við athugasemd`,
+        date: formatDate(comment.createdAt, 'dd. MMMM yyyy'),
+      }
+    case CommentTypeEnum.PUBLISH:
+      return {
+        title: `${comment.actor} gaf út birtingu`,
         date: formatDate(comment.createdAt, 'dd. MMMM yyyy'),
       }
     default:
