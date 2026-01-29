@@ -1,15 +1,23 @@
 'use client'
 
+import { useState } from 'react'
+
 import {
   DatePicker,
   GridColumn,
   GridRow,
   Input,
+  Select,
   Stack,
 } from '@dmr.is/ui/components/island-is'
 
-import { AdvertTemplateType, SettlementDto } from '../../gen/fetch'
+import {
+  AdvertTemplateType,
+  ApplicationRequirementStatementEnum,
+  SettlementDto,
+} from '../../gen/fetch'
 import { useUpdateSettlement } from '../../hooks/useUpdateSettlement'
+import { requirementsStatementOptions } from '../create-advert/CreateBankruptcySettlement'
 
 type SettlementFieldsProps = {
   advertId: string
@@ -33,34 +41,37 @@ export const SettlementFields = ({
     updateSettlementDeadline,
     updateSettlementName,
     updateSettlementNationalId,
+    updateRecallStatementType,
+    updateRecallStatementLocation,
   } = useUpdateSettlement(advertId, settlement.id)
+
+  const [recallStatementLocation, setRecallStatementLocation] = useState(
+    settlement.liquidatorRecallStatementLocation || '',
+  )
+
+  const defaultRecallStatementType =
+    requirementsStatementOptions?.find(
+      (option) => option.value === settlement.liquidatorRecallStatementType,
+    ) || null
+
+  const handleChangeRecallStatementType = (
+    opt: { label: string; value: ApplicationRequirementStatementEnum } | null,
+  ) => {
+    if (opt?.value) {
+      updateRecallStatementType(opt.value)
+
+      const newRecallStatementLocation =
+        opt.value === ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
+          ? settlement.liquidatorLocation
+          : ''
+
+      setRecallStatementLocation(newRecallStatementLocation)
+      updateRecallStatementLocation(newRecallStatementLocation)
+    }
+  }
 
   return (
     <Stack space={[1, 2]}>
-      <GridRow>
-        <GridColumn span={['12/12', '6/12']}>
-          <Input
-            disabled={!canEdit}
-            size="sm"
-            backgroundColor="blue"
-            name="settlement-liquidator-name"
-            label="Skiptastjóri"
-            defaultValue={settlement.liquidatorName}
-            onBlur={(evt) => updateLiquidatorName(evt.target.value)}
-          />
-        </GridColumn>
-        <GridColumn span={['12/12', '6/12']}>
-          <Input
-            disabled={!canEdit}
-            size="sm"
-            backgroundColor="blue"
-            name="settlement-liquidator-location"
-            label="Staðsetning skiptastjóra"
-            defaultValue={settlement.liquidatorLocation}
-            onBlur={(evt) => updateLiquidatorLocation(evt.target.value)}
-          />
-        </GridColumn>
-      </GridRow>
       <GridRow>
         <GridColumn span={['12/12', '6/12']}>
           <Input
@@ -141,6 +152,74 @@ export const SettlementFields = ({
             />
           </GridColumn>
         )}
+      </GridRow>
+      <GridRow>
+        <GridColumn span={['12/12', '6/12']}>
+          <Input
+            disabled={!canEdit}
+            size="sm"
+            backgroundColor="blue"
+            name="settlement-liquidator-name"
+            label="Skiptastjóri"
+            defaultValue={settlement.liquidatorName}
+            onBlur={(evt) => updateLiquidatorName(evt.target.value)}
+          />
+        </GridColumn>
+        <GridColumn span={['12/12', '6/12']}>
+          <Input
+            disabled={!canEdit}
+            size="sm"
+            backgroundColor="blue"
+            name="settlement-liquidator-location"
+            label="Staðsetning skiptastjóra"
+            defaultValue={settlement.liquidatorLocation}
+            onBlur={(evt) => updateLiquidatorLocation(evt.target.value)}
+          />
+        </GridColumn>
+      </GridRow>
+      <GridRow>
+        <GridColumn span={['12/12', '6/12']}>
+          <Select
+            isDisabled={!canEdit}
+            size="sm"
+            backgroundColor="blue"
+            label="Kröfulýsing"
+            value={defaultRecallStatementType}
+            options={requirementsStatementOptions}
+            onChange={(val) =>
+              handleChangeRecallStatementType(
+                val as {
+                  label: string
+                  value: ApplicationRequirementStatementEnum
+                },
+              )
+            }
+          />
+        </GridColumn>
+        <GridColumn span={['12/12', '6/12']}>
+          <Input
+            disabled={!canEdit}
+            size="sm"
+            backgroundColor="blue"
+            name="settlement-liquidator-location"
+            label={
+              defaultRecallStatementType?.value ===
+              ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
+                ? 'Staðsetning skiptastjóra'
+                : defaultRecallStatementType?.value ===
+                    ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORLOCATION
+                  ? 'Innslegin staðsetning'
+                  : 'Tölvupóstur'
+            }
+            value={recallStatementLocation}
+            onChange={(evt) => setRecallStatementLocation(evt.target.value)}
+            onBlur={(evt) => updateRecallStatementLocation(evt.target.value)}
+            readOnly={
+              defaultRecallStatementType?.value ===
+              ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
+            }
+          />
+        </GridColumn>
       </GridRow>
       {templateType === AdvertTemplateType.DIVISIONENDING && (
         <GridRow>

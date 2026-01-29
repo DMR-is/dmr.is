@@ -3,7 +3,11 @@ import { useCallback } from 'react'
 import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { toast } from '@dmr.is/ui/components/island-is'
 
-import { AdvertDetailedDto, SettlementDto } from '../gen/fetch'
+import {
+  AdvertDetailedDto,
+  ApplicationRequirementStatementEnum,
+  SettlementDto,
+} from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -24,7 +28,7 @@ const createOptimisticDataForSettlement = (
 export const useUpdateSettlement = (advertId: string, settlementId: string) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
-  const { data: advert } = useSuspenseQuery(
+  const { data: advert, refetch } = useSuspenseQuery(
     trpc.getAdvert.queryOptions({ id: advertId }),
   )
 
@@ -92,7 +96,12 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
         },
       )
     },
-    [advertId, settlementId, updateSettlementMutation],
+    [
+      advertId,
+      settlementId,
+      updateSettlementMutation,
+      advert?.settlement?.liquidatorName,
+    ],
   )
 
   const updateLiquidatorLocation = useCallback(
@@ -115,7 +124,77 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
         },
       )
     },
-    [advertId, settlementId, updateSettlementMutation],
+    [
+      advertId,
+      settlementId,
+      updateSettlementMutation,
+      advert?.settlement?.liquidatorLocation,
+    ],
+  )
+
+  const updateRecallStatementType = useCallback(
+    (liquidatorRecallStatementType: ApplicationRequirementStatementEnum) => {
+      if (
+        advert?.settlement?.liquidatorRecallStatementType ===
+        liquidatorRecallStatementType
+      ) {
+        return
+      }
+      updateSettlementMutation(
+        {
+          id: settlementId,
+          liquidatorRecallStatementType,
+        },
+        {
+          onSuccess: () => {
+            toast.success('Kröfulýsing vistuð')
+            refetch()
+          },
+          onError: () => {
+            toast.error('Ekki tókst að vista kröfulýsingu')
+          },
+        },
+      )
+    },
+    [
+      advertId,
+      settlementId,
+      updateSettlementMutation,
+      advert?.settlement?.liquidatorRecallStatementType,
+    ],
+  )
+
+  const updateRecallStatementLocation = useCallback(
+    (liquidatorRecallStatementLocation: string) => {
+      if (
+        advert?.settlement?.liquidatorRecallStatementLocation ===
+        liquidatorRecallStatementLocation
+      ) {
+        return
+      }
+      updateSettlementMutation(
+        {
+          id: settlementId,
+          liquidatorRecallStatementLocation,
+        },
+        {
+          onSuccess: () => {
+            toast.success('Staðsetning/tölvupóstur kröfulýsingar vistuð')
+          },
+          onError: () => {
+            toast.error(
+              'Ekki tókst að vista staðsetningu/tölvupóst kröfulýsingar',
+            )
+          },
+        },
+      )
+    },
+    [
+      advertId,
+      settlementId,
+      updateSettlementMutation,
+      advert?.settlement?.liquidatorRecallStatementLocation,
+    ],
   )
 
   const updateSettlementName = useCallback(
@@ -161,7 +240,12 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
         },
       )
     },
-    [advertId, settlementId, updateSettlementMutation],
+    [
+      advertId,
+      settlementId,
+      updateSettlementMutation,
+      advert?.settlement?.address,
+    ],
   )
 
   const updateSettlementNationalId = useCallback(
@@ -209,7 +293,12 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
         },
       )
     },
-    [advertId, settlementId, updateSettlementMutation],
+    [
+      advertId,
+      settlementId,
+      updateSettlementMutation,
+      advert?.settlement?.nationalId,
+    ],
   )
 
   const updateSettlementDateOfDeath = useCallback(
@@ -233,7 +322,12 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
         },
       )
     },
-    [advertId, settlementId, updateSettlementMutation],
+    [
+      advertId,
+      settlementId,
+      updateSettlementMutation,
+      advert?.settlement?.dateOfDeath,
+    ],
   )
 
   const updateDeclaredClaims = useCallback(
@@ -257,7 +351,12 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
         },
       )
     },
-    [advertId, settlementId, updateSettlementMutation],
+    [
+      advertId,
+      settlementId,
+      updateSettlementMutation,
+      advert?.settlement?.declaredClaims,
+    ],
   )
 
   return {
@@ -269,6 +368,8 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
     updateSettlementDeadline,
     updateSettlementDateOfDeath,
     updateDeclaredClaims,
+    updateRecallStatementType,
+    updateRecallStatementLocation,
     isUpdatingSettlement,
   }
 }
