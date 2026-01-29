@@ -134,7 +134,7 @@ describe('PublicationService - Publication Number Generation', () => {
       ;(advertModel.findOne as jest.Mock).mockResolvedValue(existingAdvert)
 
       // Action: Publish advert
-      await service.publishAdvertPublication('advert-1', 'pub-1')
+      await service.publishAdvertPublication('advert-1', 'pub-1', undefined)
 
       // Assert: With radix 11, "009" would be parsed as 9 in base 11 = 9 in base 10
       // Adding 1 gives 10, padded to "010"
@@ -197,7 +197,7 @@ describe('PublicationService - Publication Number Generation', () => {
       ;(advertModel.findOne as jest.Mock).mockResolvedValue(existingAdvert)
 
       // Action
-      await service.publishAdvertPublication('advert-2', 'pub-2')
+      await service.publishAdvertPublication('advert-2', 'pub-2', undefined)
 
       // Assert: Should be 011, not 012
       const updateCalls = mockAdvert.update.mock.calls
@@ -246,7 +246,7 @@ describe('PublicationService - Publication Number Generation', () => {
       ;(advertModel.findOne as jest.Mock).mockResolvedValue(null)
 
       // Action
-      await service.publishAdvertPublication('advert-3', 'pub-3')
+      await service.publishAdvertPublication('advert-3', 'pub-3', undefined)
 
       // Assert: Should be 001
       const updateCalls = mockAdvert.update.mock.calls
@@ -296,7 +296,7 @@ describe('PublicationService - Publication Number Generation', () => {
       ;(advertModel.findOne as jest.Mock).mockResolvedValue(null)
 
       // Action
-      await service.publishAdvertPublication('advert-4', 'pub-4')
+      await service.publishAdvertPublication('advert-4', 'pub-4', undefined)
 
       // Assert: findOne should be called WITH transaction parameter
       const findOneCalls = (advertModel.findOne as jest.Mock).mock.calls
@@ -341,10 +341,10 @@ describe('PublicationService - Publication Number Generation', () => {
 
       // Action & Assert
       await expect(
-        service.publishAdvertPublication('advert-6', 'pub-6'),
+        service.publishAdvertPublication('advert-6', 'pub-6', undefined),
       ).rejects.toThrow(BadRequestException)
       await expect(
-        service.publishAdvertPublication('advert-6', 'pub-6'),
+        service.publishAdvertPublication('advert-6', 'pub-6', undefined),
       ).rejects.toThrow('Publication already published')
     })
 
@@ -386,7 +386,7 @@ describe('PublicationService - Publication Number Generation', () => {
       )
 
       // Action
-      await service.publishAdvertPublication('advert-7', 'pub-7')
+      await service.publishAdvertPublication('advert-7', 'pub-7', undefined)
 
       // Assert: findOne should NOT be called (no need to query max publication)
       expect(advertModel.findOne).not.toHaveBeenCalled()
@@ -488,7 +488,7 @@ describe('PublicationService - Publication Number Generation', () => {
 
       // Action & Assert: Should throw the error from event emitter
       await expect(
-        testService.publishAdvertPublication('advert-8', 'pub-8'),
+        testService.publishAdvertPublication('advert-8', 'pub-8', undefined),
       ).rejects.toThrow('TBR transaction creation failed')
 
       // Assert: Transaction should have been rolled back
@@ -596,17 +596,48 @@ describe('PublicationService - Publication Number Generation', () => {
       const testService = module.get<IPublicationService>(PublicationService)
 
       // Action
-      await testService.publishAdvertPublication('advert-9', 'pub-9')
+      await testService.publishAdvertPublication('advert-9', 'pub-9', undefined)
 
       // Assert: Transaction should have been committed
       expect(mockTransaction.commit).toHaveBeenCalled()
       expect(mockTransaction.rollback).not.toHaveBeenCalled()
       expect(transactionCommitted).toBe(true)
 
-      // Assert: Event emitter should have been called with correct payload
-      expect(mockEventEmitter.emitAsync).toHaveBeenCalledTimes(1)
+      // Assert: All events should have been called (3 critical + 1 side effect)
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledTimes(4)
+
+      // Assert: ADVERT_PUBLISHED event (critical - inside transaction)
       expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
         'advert.published',
+        {
+          advert: { id: 'advert-9', title: 'Test Advert' },
+          publication: { id: 'pub-9', versionNumber: 1 },
+          html: '<html>Test HTML</html>',
+        },
+      )
+
+      // Assert: STATUS_CHANGED event (critical - inside transaction)
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+        'advert.status.changed',
+        {
+          advertId: 'advert-9',
+          actorId: expect.any(String),
+          statusId: expect.any(String),
+        },
+      )
+
+      // Assert: CREATE_PUBLISH_COMMENT event (critical - inside transaction)
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+        'advert.create.publish.comment',
+        {
+          advertId: 'advert-9',
+          actorId: expect.any(String),
+        },
+      )
+
+      // Assert: ADVERT_PUBLISHED_SIDE_EFFECTS event (fire-and-forget - outside transaction)
+      expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+        'advert.published.side.effects',
         {
           advert: { id: 'advert-9', title: 'Test Advert' },
           publication: { id: 'pub-9', versionNumber: 1 },

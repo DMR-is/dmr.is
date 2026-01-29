@@ -1,3 +1,5 @@
+import { DMRUser } from '@dmr.is/auth/dmrUser'
+
 import {
   AdvertPublicationDetailedDto,
   AdvertVersionEnum,
@@ -36,9 +38,10 @@ export interface IPublicationService {
   publishAdvertPublication(
     advertId: string,
     publicationId: string,
+    currentUser?: DMRUser,
   ): Promise<void>
 
-  publishAdverts(advertIds: string[]): Promise<void>
+  publishAdverts(advertIds: string[], currentUser?: DMRUser): Promise<void>
 }
 
 export const IPublicationService = Symbol('IPublicationService')

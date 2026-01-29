@@ -34,8 +34,13 @@ export const AdvertsCompleted = () => {
   )
 
   const rows = data?.adverts?.map((advert) => ({
-    birting: formatDate(advert.scheduledAt),
+    birting: advert.scheduledAt
+      ? formatDate(advert.scheduledAt)
+      : 'Engin útgáfudagsetning skráð',
     skraning: formatDate(advert.createdAt),
+    utgafa: advert.lastPublishedAt
+      ? formatDate(advert.lastPublishedAt)
+      : 'Ekki útgefin',
     status: <StatusTag status={advert.status} />,
     efni: advert.title,
     tegund: advert.type.title,
@@ -70,6 +75,14 @@ export const AdvertsCompleted = () => {
               size: 'tiny',
               sortable: true,
               onSort: handleSort,
+            },
+            {
+              field: 'utgafa',
+              children: formatMessage(
+                ritstjornTableMessages.columns.publishedAt,
+              ),
+              size: 'tiny',
+              sortable: false,
             },
             {
               field: 'status',

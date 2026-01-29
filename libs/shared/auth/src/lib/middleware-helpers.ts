@@ -135,7 +135,7 @@ export async function tryToUpdateCookie(
   token: JWT,
   response: NextResponse,
   redirectUri: string,
-): Promise<NextResponse> {
+): Promise<{ response: NextResponse; newSessionToken?: string }> {
   try {
     const newToken = await refreshAccessToken(
       token as JWT,
@@ -144,18 +144,31 @@ export async function tryToUpdateCookie(
       clientSecret,
     )
 
-    if (newToken.invalid) {
-      return updateCookie(null, req, response)
-    }
-
     const newSessionToken = await encode({
       secret: process.env.NEXTAUTH_SECRET as string,
       token: newToken,
       maxAge: SESSION_TIMEOUT,
     })
-    return updateCookie(newSessionToken, req, response)
+
+    return {
+      response: updateCookie(newSessionToken, req, response),
+      newSessionToken,
+    }
   } catch (error) {
-    return updateCookie(null, req, response)
+    // Invalidate session token if error occurs during refresh
+    const invalidatedToken = {
+      ...token,
+      invalid: true,
+      error: 'RefreshAccessTokenError',
+    }
+    const newSessionToken = await encode({
+      secret: process.env.NEXTAUTH_SECRET as string,
+      token: invalidatedToken,
+      maxAge: SESSION_TIMEOUT,
+    })
+    return {
+      response: updateCookie(newSessionToken, req, response),
+    }
   }
 }
 
@@ -185,13 +198,12 @@ export function createAuthMiddleware(config: CreateAuthMiddlewareConfig) {
   const middleware = withAuth(
     async function middleware(req: NextRequestWithAuth) {
       let response = NextResponse.next()
-
       const token = req.nextauth.token
 
       if (token && isExpired(token.accessToken as string, !!token.invalid)) {
         const redirectUri =
           process.env[redirectUriEnvVar] ?? fallbackRedirectUri
-        response = await tryToUpdateCookie(
+        const result = await tryToUpdateCookie(
           clientId,
           clientSecret,
           req,
@@ -199,6 +211,14 @@ export function createAuthMiddleware(config: CreateAuthMiddlewareConfig) {
           response,
           redirectUri,
         )
+        response = result.response
+
+        // If token was refreshed, create a new response with updated request context
+        // This ensures the cookie update propagates to route handlers
+        if (result.newSessionToken) {
+          // Re-apply cookie updates to the new response
+          return updateCookie(result.newSessionToken, req, response)
+        }
       }
       return response
     },

@@ -5,6 +5,7 @@ import { useFormContext } from 'react-hook-form'
 
 import {
   BaseApplicationWebSchema,
+  CommonApplicationWebSchema,
   RecallApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import {
@@ -21,20 +22,26 @@ import {
   getNextValidPublishingDate,
 } from '@dmr.is/utils/date'
 
-import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
-import { ONE_DAY, ONE_WEEK } from '../../../../lib/constants'
-import { DatePickerController } from '../../controllers/DatePickerController'
+import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
+import { ONE_DAY, THREE_DAYS } from '../../../lib/constants'
+import { DatePickerController } from '../controllers/DatePickerController'
 
-export const RecallPublishingFields = () => {
+type Props = {
+  applicationType: 'COMMON' | 'RECALL'
+}
+
+export const PublishingFields = ({ applicationType }: Props) => {
   const { getValues, watch, setValue, formState } = useFormContext<
-    BaseApplicationWebSchema | RecallApplicationWebSchema
+    | BaseApplicationWebSchema
+    | RecallApplicationWebSchema
+    | CommonApplicationWebSchema
   >()
 
   const { metadata } = getValues()
   const currentDates = watch('publishingDates') ?? []
-  const { updateApplication } = useUpdateApplication({
+  const { updateLocalOnly } = useUpdateApplication({
     id: metadata.applicationId,
-    type: 'RECALL',
+    type: applicationType,
   })
 
   const updatePublishingDates = useCallback(
@@ -43,21 +50,24 @@ export const RecallPublishingFields = () => {
 
       setValue('fields.divisionMeetingFields.meetingDate', null)
 
-      const payload = {
+      const payload: {
+        publishingDates: string[]
+        fields?: { divisionMeetingFields: { meetingDate: null } }
+      } = {
         publishingDates: newDates,
-        fields: {
+      }
+
+      if (applicationType === 'RECALL') {
+        payload.fields = {
           divisionMeetingFields: {
             meetingDate: null,
           },
-        },
+        }
       }
 
-      updateApplication(payload, {
-        successMessage: 'Birtingardagar vistaðir',
-        errorMessage: 'Ekki tókst að vista birtingardaga',
-      })
+      updateLocalOnly(payload)
     },
-    [setValue, updateApplication],
+    [setValue, updateLocalOnly],
   )
 
   const addDate = useCallback(() => {
@@ -68,7 +78,7 @@ export const RecallPublishingFields = () => {
         ? new Date(currentDates[currentDates.length - 1])
         : new Date()
 
-    const newDate = getNextValidPublishingDate(addDays(lastDate, ONE_WEEK))
+    const newDate = getNextValidPublishingDate(addDays(lastDate, THREE_DAYS))
     const newDates = [...currentDates, newDate.toISOString()]
     updatePublishingDates(newDates)
   }, [currentDates, updatePublishingDates])

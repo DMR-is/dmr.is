@@ -6,8 +6,8 @@ import { Text } from '@dmr.is/ui/components/island-is'
 
 import { AdvertContentField } from '../../../components/form/common/fields/AdvertContentFields'
 import { CommonAdvertFields } from '../../../components/form/common/fields/CommonAdvertFields'
-import { PublishingFields } from '../../../components/form/common/fields/PublishingFields'
 import { CommunicationChannelFields } from '../../../components/form/fields/CommunicationChannelFields'
+import { PublishingFields } from '../../../components/form/fields/PublishingFields'
 import { SignatureFields } from '../../../components/form/fields/SignatureFields'
 import { PrerequisitesSteps } from '../../../components/form/steps/PrequesitesSteps'
 import { PreviewStep } from '../../../components/form/steps/PreviewStep'
@@ -73,7 +73,7 @@ export const CommonFormSteps: LegalGazetteForm = {
               Að minnsta kosti einn birtingardagur er nauðsynlegur og mest þrír.
             </Text>
           ),
-          content: <PublishingFields />,
+          content: <PublishingFields applicationType="COMMON" />,
         },
         {
           title: 'Samskiptaleiðir',

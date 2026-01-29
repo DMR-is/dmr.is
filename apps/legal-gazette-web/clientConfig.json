@@ -6011,7 +6011,7 @@
       },
       "CommentTypeEnum": {
         "type": "string",
-        "enum": ["SUBMIT", "ASSIGN", "STATUS_UPDATE", "COMMENT"]
+        "enum": ["SUBMIT", "ASSIGN", "STATUS_UPDATE", "COMMENT", "PUBLISH"]
       },
       "CommentDto": {
         "type": "object",
@@ -6112,7 +6112,8 @@
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": { "$ref": "#/components/schemas/StatusDto" },
-          "scheduledAt": { "type": "string" },
+          "scheduledAt": { "type": "string", "nullable": true },
+          "lastPublishedAt": { "type": "string", "nullable": true },
           "assignedUser": { "$ref": "#/components/schemas/UserDto" },
           "hasInternalComments": { "type": "boolean" },
           "comments": {
@@ -6137,6 +6138,7 @@
           "type",
           "status",
           "scheduledAt",
+          "lastPublishedAt",
           "hasInternalComments",
           "comments"
         ]
@@ -6196,9 +6198,10 @@
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": { "$ref": "#/components/schemas/StatusDto" },
-          "scheduledAt": { "type": "string" },
+          "scheduledAt": { "type": "string", "nullable": true },
           "assignedUser": { "$ref": "#/components/schemas/UserDto" },
-          "hasInternalComments": { "type": "boolean" }
+          "hasInternalComments": { "type": "boolean" },
+          "lastPublishedAt": { "type": "string", "nullable": true }
         },
         "required": [
           "id",
@@ -6211,7 +6214,8 @@
           "type",
           "status",
           "scheduledAt",
-          "hasInternalComments"
+          "hasInternalComments",
+          "lastPublishedAt"
         ]
       },
       "Paging": {
@@ -6337,8 +6341,8 @@
           },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
-          "recallStatementLocation": { "type": "string" },
-          "recallStatementType": { "type": "string" },
+          "recallRequirementStatementLocation": { "type": "string" },
+          "recallRequirementStatementType": { "type": "string" },
           "name": { "type": "string" },
           "nationalId": { "type": "string" },
           "address": { "type": "string" },
@@ -6873,7 +6877,6 @@
       "UpdateSettlementDto": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
           "type": {
             "allOf": [{ "$ref": "#/components/schemas/SettlementType" }]
           },

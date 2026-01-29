@@ -44,7 +44,7 @@ export const ApplicationList = ({
 
   return (
     <Stack space={[1, 2, 3]}>
-      <Inline justifyContent="spaceBetween" alignY="center">
+      <Inline justifyContent="spaceBetween" alignY="center" space={2}>
         <Box>
           <PagingTotalItemsText
             paging={paging}

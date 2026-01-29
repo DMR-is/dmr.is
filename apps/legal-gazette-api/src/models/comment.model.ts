@@ -20,6 +20,7 @@ export enum CommentTypeEnum {
   ASSIGN = 'ASSIGN',
   STATUS_UPDATE = 'STATUS_UPDATE',
   COMMENT = 'COMMENT',
+  PUBLISH = 'PUBLISH',
 }
 
 type CommentAttributes = {
@@ -61,11 +62,16 @@ type CreateTextComment = CreateCommentBaseAttributes & {
   comment: string
 }
 
+type CreatePublishComment = CreateCommentBaseAttributes & {
+  type: CommentTypeEnum.PUBLISH
+}
+
 type CreateCommentAttributes =
   | CreateSubmitComment
   | CreateAssignComment
   | CreateStatusUpdateComment
   | CreateTextComment
+  | CreatePublishComment
 
 @DefaultScope(() => ({
   include: [{ model: StatusModel }],
@@ -184,6 +190,11 @@ class CreateCommentBaseDto {
 }
 
 export class CreateSubmitCommentDto extends CreateCommentBaseDto {}
+
+export class CreatePublishCommentDto {
+  @ApiProperty({ type: String, required: false })
+  actorId?: string
+}
 
 export class CreateAssignCommentDto extends CreateCommentBaseDto {
   @ApiProperty({ type: String })

@@ -14,11 +14,10 @@ export const RecallLiquidatorFields = () => {
 
   const metadata = getValues('metadata')
 
-  const { debouncedUpdateApplication, updateApplication } =
-    useUpdateApplication({
-      id: metadata.applicationId,
-      type: 'RECALL',
-    })
+  const { updateLocalOnly } = useUpdateApplication({
+    id: metadata.applicationId,
+    type: 'RECALL',
+  })
 
   const recallRequirementStateLocation = watch(
     'fields.settlementFields.recallRequirementStatementType',
@@ -31,19 +30,14 @@ export const RecallLiquidatorFields = () => {
           label="Nafn skiptastjóra"
           name={'fields.settlementFields.liquidatorName'}
           onChange={(val) =>
-            debouncedUpdateApplication(
-              {
-                fields: {
-                  settlementFields: {
-                    liquidatorName: val,
-                  },
+            // Save to localStorage only - server sync happens on navigation
+            updateLocalOnly({
+              fields: {
+                settlementFields: {
+                  liquidatorName: val,
                 },
               },
-              {
-                successMessage: 'Nafn skiptastjóra vistað',
-                errorMessage: 'Ekki tókst að vista nafn skiptastjóra',
-              },
-            )
+            })
           }
           required
         />
@@ -54,38 +48,28 @@ export const RecallLiquidatorFields = () => {
           label="Staðsetning skiptastjóra"
           name={'fields.settlementFields.liquidatorLocation'}
           onChange={(val) =>
-            debouncedUpdateApplication(
-              {
-                fields: {
-                  settlementFields: {
-                    liquidatorLocation: val,
-                  },
+            // Save to localStorage only - server sync happens on navigation
+            updateLocalOnly({
+              fields: {
+                settlementFields: {
+                  liquidatorLocation: val,
                 },
               },
-              {
-                successMessage: 'Staðsetning skiptastjóra vistuð',
-                errorMessage: 'Ekki tókst að vista staðsetningu skiptastjóra',
-              },
-            )
+            })
           }
           onBlur={(val) => {
             if (
               recallRequirementStateLocation ===
               ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
             ) {
-              updateApplication(
-                {
-                  fields: {
-                    settlementFields: {
-                      recallRequirementStatementLocation: val,
-                    },
+              // Also save the linked field to localStorage
+              updateLocalOnly({
+                fields: {
+                  settlementFields: {
+                    recallRequirementStatementLocation: val,
                   },
                 },
-                {
-                  successMessage: 'Staðsetning skiptastjóra ',
-                  errorMessage: 'Ekki tókst að vista staðsetningu skiptastjóra',
-                },
-              )
+              })
             }
           }}
         />

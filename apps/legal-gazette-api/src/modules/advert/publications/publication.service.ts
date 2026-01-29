@@ -13,11 +13,12 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { Cacheable, CacheEvictTopics } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
-import { LegalGazetteEvents } from '../../../core/constants'
+import { LegalGazetteEvents, SYSTEM_ACTOR } from '../../../core/constants'
 import { mapIndexToVersion, mapVersionToIndex } from '../../../core/utils'
 import { AdvertModel } from '../../../models/advert.model'
 import {
@@ -165,7 +166,10 @@ export class PublicationService implements IPublicationService {
     return { result: mapped, paging }
   }
 
-  async publishAdverts(advertIds: string[]): Promise<void> {
+  async publishAdverts(
+    advertIds: string[],
+    currentUser?: DMRUser,
+  ): Promise<void> {
     // maybe fail if length of advert results is not the same as advertIds length
     const adverts = await this.advertModel.findAll({
       attributes: ['id', 'publicationNumber', 'statusId'],
@@ -197,7 +201,11 @@ export class PublicationService implements IPublicationService {
         throw new BadRequestException('No publication found for advert')
       }
 
-      await this.publishAdvertPublication(advert.id, publication.id)
+      await this.publishAdvertPublication(
+        advert.id,
+        publication.id,
+        currentUser,
+      )
     }
   }
   async createAdvertPublication(advertId: string): Promise<void> {
@@ -311,7 +319,11 @@ export class PublicationService implements IPublicationService {
   async publishAdvertPublication(
     advertId: string,
     publicationId: string,
+    currentUser?: DMRUser,
   ): Promise<void> {
+    // Store payload to emit after transaction commits
+    let sideEffectsPayload: AdvertPublishedEvent | null = null
+
     await this.sequelize.transaction(async (t) => {
       const pubDate = new Date()
       this.logger.info(
@@ -388,23 +400,33 @@ export class PublicationService implements IPublicationService {
         html: advert.htmlMarkup(publication.versionLetter),
       }
 
-      // Emit event for TBR transaction creation and WAIT for it to complete
-      // This happens BEFORE transaction commits - if it fails, entire transaction rolls back
-      // emitAsync returns a Promise that resolves when all listeners complete
-      // If any listener throws, the error propagates and transaction is rolled back (requires suppressErrors: false on listener)
+      // Store payload for side effects to emit after transaction
+      sideEffectsPayload = payload
+
+      // Emit critical events that MUST complete within the transaction
+      // If these fail, the entire transaction rolls back
       try {
         await this.eventEmitter.emitAsync(
           LegalGazetteEvents.ADVERT_PUBLISHED,
           payload,
         )
 
-        this.eventEmitter.emit(
-          LegalGazetteEvents.ADVERT_PUBLISHED_SIDE_EFFECTS,
-          payload,
+        await this.eventEmitter.emitAsync(LegalGazetteEvents.STATUS_CHANGED, {
+          advertId,
+          actorId: currentUser ? currentUser.nationalId : SYSTEM_ACTOR.id,
+          statusId: StatusIdEnum.PUBLISHED,
+        })
+
+        await this.eventEmitter.emitAsync(
+          LegalGazetteEvents.CREATE_PUBLISH_COMMENT,
+          {
+            advertId,
+            actorId: currentUser ? currentUser.nationalId : SYSTEM_ACTOR.id,
+          },
         )
       } catch (error) {
         this.logger.error(
-          'Error occurred while emitting ADVERT_PUBLISHED event',
+          'Error occurred while emitting critical publication events',
           {
             context: LOGGING_CONTEXT,
             advertId: advert.id,
@@ -415,5 +437,21 @@ export class PublicationService implements IPublicationService {
         throw error
       }
     })
+
+    // Transaction has committed at this point
+    // Fire and forget side effects - runs outside CLS transaction context
+    if (sideEffectsPayload) {
+      this.logger.info('Emitting side effects after transaction commit', {
+        context: LOGGING_CONTEXT,
+        advertId,
+        publicationId,
+      })
+
+      // Fire and forget - don't await, errors are logged but don't affect response
+      this.eventEmitter.emitAsync(
+        LegalGazetteEvents.ADVERT_PUBLISHED_SIDE_EFFECTS,
+        sideEffectsPayload,
+      )
+    }
   }
 }

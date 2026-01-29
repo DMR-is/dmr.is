@@ -1,4 +1,4 @@
-import { addDays, addYears } from 'date-fns'
+import { addDays, addMonths, addYears } from 'date-fns'
 import { useFormContext } from 'react-hook-form'
 
 import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
@@ -6,7 +6,6 @@ import {
   AlertMessage,
   GridColumn,
   GridRow,
-  Text,
 } from '@dmr.is/ui/components/island-is'
 import {
   getInvalidPublishingDatesInRange,
@@ -26,17 +25,19 @@ export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
   const { getValues, watch } = useFormContext<RecallApplicationWebSchema>()
   const { applicationId } = getValues('metadata')
 
-  const { debouncedUpdateApplication } = useUpdateApplication({
+  const { updateLocalOnly } = useUpdateApplication({
     id: applicationId,
     type: 'RECALL',
   })
 
   const recallDates = watch('publishingDates') || []
 
+  const twoMonthsAndOneWeek = addDays(
+    addMonths(new Date(recallDates[0]), 2),
+    ONE_WEEK,
+  )
   const minDate = recallDates.length
-    ? getNextValidPublishingDate(
-        addDays(new Date(recallDates[0]), ONE_WEEK * 9),
-      )
+    ? getNextValidPublishingDate(twoMonthsAndOneWeek)
     : getNextValidPublishingDate()
   const maxDate = getNextValidPublishingDate(addYears(minDate, 5))
   const excludeDates = getInvalidPublishingDatesInRange(minDate, maxDate)
@@ -49,19 +50,14 @@ export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
           name="fields.divisionMeetingFields.meetingLocation"
           label="Staðsetning skiptafundar"
           onChange={(location) =>
-            debouncedUpdateApplication(
-              {
-                fields: {
-                  divisionMeetingFields: {
-                    meetingLocation: location,
-                  },
+            // Save to localStorage only - server sync happens on navigation
+            updateLocalOnly({
+              fields: {
+                divisionMeetingFields: {
+                  meetingLocation: location,
                 },
               },
-              {
-                successMessage: 'Staðsetning skiptafundar vistuð',
-                errorMessage: 'Ekki tókst að vista staðsetningu skiptafundar',
-              },
-            )
+            })
           }
         />
       </GridColumn>
@@ -78,19 +74,14 @@ export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
             maxDate={maxDate}
             excludeDates={excludeDates}
             onChange={(date) =>
-              debouncedUpdateApplication(
-                {
-                  fields: {
-                    divisionMeetingFields: {
-                      meetingDate: date.toISOString(),
-                    },
+              // Save to localStorage only - server sync happens on navigation
+              updateLocalOnly({
+                fields: {
+                  divisionMeetingFields: {
+                    meetingDate: date.toISOString(),
                   },
                 },
-                {
-                  successMessage: 'Dagsetning skiptafundar vistuð',
-                  errorMessage: 'Ekki tókst að vista dagsetningu skiptafundar',
-                },
-              )
+              })
             }
           />
         )}
