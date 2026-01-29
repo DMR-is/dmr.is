@@ -23,7 +23,7 @@ import {
 } from '@dmr.is/utils/date'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
-import { ONE_DAY, ONE_WEEK } from '../../../lib/constants'
+import { ONE_DAY, THREE_DAYS } from '../../../lib/constants'
 import { DatePickerController } from '../controllers/DatePickerController'
 
 type Props = {
@@ -78,7 +78,7 @@ export const PublishingFields = ({ applicationType }: Props) => {
         ? new Date(currentDates[currentDates.length - 1])
         : new Date()
 
-    const newDate = getNextValidPublishingDate(addDays(lastDate, ONE_WEEK))
+    const newDate = getNextValidPublishingDate(addDays(lastDate, THREE_DAYS))
     const newDates = [...currentDates, newDate.toISOString()]
     updatePublishingDates(newDates)
   }, [currentDates, updatePublishingDates])
