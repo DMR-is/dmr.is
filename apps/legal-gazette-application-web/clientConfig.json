@@ -4124,7 +4124,9 @@
           "address": { "type": "string" },
           "deadline": { "type": "string", "nullable": true },
           "dateOfDeath": { "type": "string", "nullable": true },
-          "declaredClaims": { "type": "number", "nullable": true }
+          "declaredClaims": { "type": "number", "nullable": true },
+          "partnerNationalId": { "type": "string", "nullable": true },
+          "partnerName": { "type": "string", "nullable": true }
         },
         "required": [
           "id",
@@ -4241,7 +4243,7 @@
       },
       "CommentTypeEnum": {
         "type": "string",
-        "enum": ["SUBMIT", "ASSIGN", "STATUS_UPDATE", "COMMENT"]
+        "enum": ["SUBMIT", "ASSIGN", "STATUS_UPDATE", "COMMENT", "PUBLISH"]
       },
       "CommentDto": {
         "type": "object",
@@ -4571,8 +4573,8 @@
           },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
-          "recallStatementLocation": { "type": "string" },
-          "recallStatementType": { "type": "string" },
+          "recallRequirementStatementLocation": { "type": "string" },
+          "recallRequirementStatementType": { "type": "string" },
           "name": { "type": "string" },
           "nationalId": { "type": "string" },
           "address": { "type": "string" },
@@ -4582,7 +4584,9 @@
           "companies": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/SettlementCompanyDto" }
-          }
+          },
+          "partnerNationalId": { "type": "string" },
+          "partnerName": { "type": "string" }
         },
         "required": [
           "liquidatorName",

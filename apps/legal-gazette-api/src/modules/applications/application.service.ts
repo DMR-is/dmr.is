@@ -19,7 +19,6 @@ import {
   updateApplicationInput,
 } from '@dmr.is/legal-gazette/schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { PagingQuery } from '@dmr.is/shared/dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import {
@@ -120,7 +119,7 @@ export class ApplicationService implements IApplicationService {
       [],
     ).map((company) => ({
       companyName: company.companyName,
-      companyId: company.companyNationalId,
+      companyNationalId: company.companyNationalId,
     }))
 
     const previewHTML = getAdvertHTMLMarkupPreview({
@@ -213,6 +212,16 @@ export class ApplicationService implements IApplicationService {
           undefined,
         ),
         companies: companies,
+        partnerNationalId: get(
+          application.answers,
+          'fields.settlementFields.partnerNationalId',
+          undefined,
+        ),
+        partnerName: get(
+          application.answers,
+          'fields.settlementFields.partnerName',
+          undefined,
+        ),
       },
     })
 

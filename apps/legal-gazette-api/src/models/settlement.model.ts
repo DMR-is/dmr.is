@@ -34,6 +34,8 @@ type SettlementAttributes = {
   liquidatorRecallStatementLocation?: string | null
   liquidatorRecallStatementType?: string | null
   companies?: CompanySchema[]
+  partnerNationalId?: string | null
+  partnerName?: string | null
 }
 
 export type SettlementCreateAttributes = Omit<
@@ -130,6 +132,20 @@ export class SettlementModel extends BaseModel<
   @Column({ type: DataType.JSONB })
   companies?: CompanySchema[]
 
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    defaultValue: null,
+  })
+  partnerNationalId!: string | null
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    defaultValue: null,
+  })
+  partnerName!: string | null
+
   @HasMany(() => AdvertModel)
   adverts!: AdvertModel[]
 
@@ -148,6 +164,8 @@ export class SettlementModel extends BaseModel<
       deadline: model.deadline ? model.deadline.toISOString() : null,
       dateOfDeath: model.dateOfDeath ? model.dateOfDeath.toISOString() : null,
       declaredClaims: model.declaredClaims,
+      partnerNationalId: model.partnerNationalId,
+      partnerName: model.partnerName,
     }
   }
 
@@ -234,6 +252,18 @@ export class SettlementDto {
   @IsOptional()
   @IsNumber()
   declaredClaims!: number | null
+
+  @ApiProperty({ type: String, required: false, nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(10)
+  partnerNationalId!: string | null
+
+  @ApiProperty({ type: String, required: false, nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  partnerName!: string | null
 }
 
 export class CreateSettlementDto {
@@ -297,6 +327,18 @@ export class CreateSettlementDto {
   @ApiProperty({ type: [SettlementCompanyDto], required: false })
   @IsOptional()
   companies?: SettlementCompanyDto[]
+
+  @ApiProperty({ type: String, required: false })
+  @IsString()
+  @MaxLength(10)
+  @IsOptional()
+  partnerNationalId?: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsString()
+  @MaxLength(255)
+  @IsOptional()
+  partnerName?: string
 }
 
 export class UpdateSettlementDto extends OmitType(PartialType(SettlementDto), [

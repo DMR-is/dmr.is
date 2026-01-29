@@ -214,12 +214,11 @@ export const CompanyLookup = () => {
             message={fieldError as string}
           />
         )}
-        <GridRow rowGap={[2, 3]}>
+
+        <GridRow rowGap={2}>
           <GridColumn span="12/12">
             <Text variant="h4">Samlagsfélög dánarbús</Text>
           </GridColumn>
-        </GridRow>
-        <GridRow rowGap={[2, 3]}>
           <GridColumn span={['12/12', '6/12']}>
             <Input
               errorMessage={inputError}
@@ -286,7 +285,9 @@ export const CompanyLookup = () => {
                   <Button
                     circle
                     icon="trash"
-                    colorScheme="destructive"
+                    size="small"
+                    iconType="outline"
+                    colorScheme="negative"
                     onClick={() => onRemoveCompany(c.companyNationalId)}
                   />
                 ),
