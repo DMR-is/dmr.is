@@ -1,4 +1,4 @@
-import { addDays, addYears } from 'date-fns'
+import { addDays, addMonths, addYears } from 'date-fns'
 import { useFormContext } from 'react-hook-form'
 
 import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
@@ -6,7 +6,6 @@ import {
   AlertMessage,
   GridColumn,
   GridRow,
-  Text,
 } from '@dmr.is/ui/components/island-is'
 import {
   getInvalidPublishingDatesInRange,
@@ -33,10 +32,12 @@ export const RecallDivisionFields = ({ isBankruptcy }: Props) => {
 
   const recallDates = watch('publishingDates') || []
 
+  const twoMonthsAndOneWeek = addDays(
+    addMonths(new Date(recallDates[0]), 2),
+    ONE_WEEK,
+  )
   const minDate = recallDates.length
-    ? getNextValidPublishingDate(
-        addDays(new Date(recallDates[0]), ONE_WEEK * 9),
-      )
+    ? getNextValidPublishingDate(twoMonthsAndOneWeek)
     : getNextValidPublishingDate()
   const maxDate = getNextValidPublishingDate(addYears(minDate, 5))
   const excludeDates = getInvalidPublishingDatesInRange(minDate, maxDate)
