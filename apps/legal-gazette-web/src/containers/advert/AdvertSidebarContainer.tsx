@@ -30,6 +30,7 @@ export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
     data: publicationData,
     error: publicationError,
     isLoading: isLoadingPublicationData,
+    refetch,
   } = useQuery(
     trpc.getPublication.queryOptions({
       advertId: id,
@@ -42,6 +43,11 @@ export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
       toast.error('Ekki tókst að sækja birtingu')
     }
   }, [publicationError, isLoadingPublicationData])
+
+  const onOpenPublicationModal = (modalVisible: boolean) => {
+    if (publicationData) refetch()
+    setModalVisible(modalVisible)
+  }
 
   return (
     <AdvertSidebar>
@@ -60,7 +66,7 @@ export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
         advertId={advert.id}
         currentStatus={advert.status}
         canEdit={advert.canEdit}
-        setModalVisible={setModalVisible}
+        setModalVisible={(modalVisible) => onOpenPublicationModal(modalVisible)}
       />
       <AdvertFormStepper id={id} />
       {publicationData?.html && modalVisible && (

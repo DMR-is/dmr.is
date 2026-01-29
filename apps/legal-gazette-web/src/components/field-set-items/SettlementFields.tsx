@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 import {
   DatePicker,
   GridColumn,
@@ -43,6 +45,10 @@ export const SettlementFields = ({
     updateRecallStatementLocation,
   } = useUpdateSettlement(advertId, settlement.id)
 
+  const [recallStatementLocation, setRecallStatementLocation] = useState(
+    settlement.liquidatorRecallStatementLocation || '',
+  )
+
   const defaultRecallStatementType =
     requirementsStatementOptions?.find(
       (option) => option.value === settlement.liquidatorRecallStatementType,
@@ -54,11 +60,13 @@ export const SettlementFields = ({
     if (opt?.value) {
       updateRecallStatementType(opt.value)
 
-      updateRecallStatementLocation(
+      const newRecallStatementLocation =
         opt.value === ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
           ? settlement.liquidatorLocation
-          : '',
-      )
+          : ''
+
+      setRecallStatementLocation(newRecallStatementLocation)
+      updateRecallStatementLocation(newRecallStatementLocation)
     }
   }
 
@@ -203,7 +211,8 @@ export const SettlementFields = ({
                   ? 'Innslegin staðsetning'
                   : 'Tölvupóstur'
             }
-            defaultValue={settlement.liquidatorRecallStatementLocation ?? ''}
+            value={recallStatementLocation}
+            onChange={(evt) => setRecallStatementLocation(evt.target.value)}
             onBlur={(evt) => updateRecallStatementLocation(evt.target.value)}
             readOnly={
               defaultRecallStatementType?.value ===
