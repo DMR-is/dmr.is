@@ -112,7 +112,7 @@ export class TBRService implements ITBRService {
           err = await response.json()
         } catch (parseError) {
           this.logger.error('Failed to parse error response', {
-            status: response.status,
+            statusCode: response.status,
             statusText: response.statusText,
             rawBody: rawBody,
             parseError:
@@ -124,7 +124,7 @@ export class TBRService implements ITBRService {
 
         if (response.status === 404) {
           this.logger.error('TBR claim not found', {
-            status: response.status,
+            statusCode: response.status,
             error: err,
             detail: err?.error?.detail,
             context: LOGGING_CONTEXT,
@@ -135,7 +135,7 @@ export class TBRService implements ITBRService {
 
         this.logger.error(`TBR request ${index !== undefined ? `#${index} ` : ''}failed`, {
           url: path,
-          status: response.status,
+          statusCode: response.status,
           context: LOGGING_CONTEXT,
           error: err,
           detail: err?.error?.detail,
@@ -156,7 +156,7 @@ export class TBRService implements ITBRService {
       this.logger.info(`TBR request ${index !== undefined ? `#${index} ` : ''}successful`, {
         path: path,
         method: options?.method || 'GET',
-        status: response.status,
+        statusCode: response.status,
         statusText: response.statusText,
         headers: Object.fromEntries(response.headers.entries()),
         responseBody: responseBody,

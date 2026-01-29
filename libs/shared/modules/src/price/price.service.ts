@@ -544,7 +544,7 @@ export class PriceService implements IPriceService {
       this.logger.error(
         `price.service.postExternalPayment, could not post payment<${body.chargeBase}>`,
         {
-          status: res.status,
+          statusCode: res.status,
           category: LOGGING_CATEGORY,
           statusText: res.statusText,
           error: jsonResponse?.error,
@@ -614,7 +614,7 @@ export class PriceService implements IPriceService {
       this.logger.warn(
         `price.service.getExternalPaymentStatus, payment not found for case: ${caseLookup.caseNumber}`,
         {
-          status: res.status,
+          statusCode: res.status,
           error: jsonResponse?.error,
           detail: errorStatus?.detail,
         },
@@ -633,7 +633,7 @@ export class PriceService implements IPriceService {
       this.logger.error(
         `price.service.getExternalPaymentStatus, could not get payment<${parameters.caseId}>`,
         {
-          status: res.status,
+          statusCode: res.status,
           category: LOGGING_CATEGORY,
           statusText: res?.statusText,
           error: jsonResponse?.error,

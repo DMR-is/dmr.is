@@ -147,7 +147,7 @@ export class NationalRegistryService implements INationalRegistryService {
       if (!response.ok) {
         this.logger.warn('Failed to authenticate with national registry', {
           context: LOGGING_CONTEXT,
-          status: response.status,
+          statusCode: response.status,
           statusText: response.statusText,
           responseBody: responseText.substring(0, 500), // Log first 500 chars
         })
@@ -242,7 +242,7 @@ export class NationalRegistryService implements INationalRegistryService {
 
       this.logger.debug('National registry entity lookup response', {
         context: LOGGING_CONTEXT,
-        status: response.status,
+        statusCode: response.status,
         statusText: response.statusText,
         contentType: response.headers.get('content-type'),
         bodyLength: responseText.length,
@@ -251,7 +251,7 @@ export class NationalRegistryService implements INationalRegistryService {
       if (!response.ok) {
         this.logger.warn('Failed to fetch entity from national registry', {
           context: LOGGING_CONTEXT,
-          status: response.status,
+          statusCode: response.status,
           statusText: response.statusText,
           responseBody: responseText.substring(0, 500),
         })
