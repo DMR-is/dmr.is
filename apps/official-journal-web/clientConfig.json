@@ -2000,6 +2000,59 @@
         "summary": ""
       }
     },
+    "/api/v1/cases/{caseId}/available-involved-parties": {
+      "get": {
+        "operationId": "getCaseAvailableInvolvedParties",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetInstitutionsFullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
+    "/api/v1/cases/{id}/involved-party-single": {
+      "put": {
+        "operationId": "updateSingleCaseInvolvedParty",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCaseInvolvedPartyBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
     "/api/v1/cases/{id}/pdf-preview": {
       "get": {
         "operationId": "getCasePdfPreview",
@@ -5534,6 +5587,27 @@
         "type": "object",
         "properties": { "key": { "type": "string" } },
         "required": ["key"]
+      },
+      "GetInstitutionsFullResponse": {
+        "type": "object",
+        "properties": {
+          "institutions": {
+            "description": "List of involved parties",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Institution" }
+          }
+        },
+        "required": ["institutions"]
+      },
+      "UpdateCaseInvolvedPartyBody": {
+        "type": "object",
+        "properties": {
+          "involvedPartyId": {
+            "type": "string",
+            "description": "Involved party id"
+          }
+        },
+        "required": ["involvedPartyId"]
       },
       "CreateAdvertTypeBody": {
         "type": "object",
