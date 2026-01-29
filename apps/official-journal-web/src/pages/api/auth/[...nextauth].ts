@@ -17,7 +17,9 @@ type ErrorWithPotentialReqRes = Error & {
 }
 
 const NODE_ENV = process.env.NODE_ENV
-const SESION_TIMEOUT = 60 * 60 // 1 hour
+// This session timeout will be used to set the maxAge of the session cookie
+// When refreshing the token, we will not update the maxAge, so the session will expire
+const SESSION_TIMEOUT = (60 * 60 * 8) + 30 // 8 hours and 30 seconds
 
 const secure = NODE_ENV === 'production' ? '__Secure-' : ''
 
@@ -68,7 +70,7 @@ export const authOptions: AuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: SESION_TIMEOUT,
+    maxAge: SESSION_TIMEOUT,
   },
   callbacks: {
     jwt: async ({ token, user, account }) => {
