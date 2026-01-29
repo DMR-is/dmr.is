@@ -396,12 +396,18 @@ export async function startChangeSuggestionProcess({
 }: {
   baseRegulationName: RegName
   amendingRegulationName: RegName
-}): Promise<any> {
+}): Promise<{ success: true }> {
   const externalUrl = process.env.REGULATION_CHANGE_SUGGESTION_URL
 
   if (!externalUrl) {
     throw new Error(
       'REGULATION_CHANGE_SUGGESTION_URL environment variable is not set',
+    )
+  }
+
+  if (!baseRegulationName || !amendingRegulationName) {
+    throw new Error(
+      `Invalid regulation names provided: has base ${!!baseRegulationName}, has amending ${!!amendingRegulationName}`,
     )
   }
 
@@ -417,10 +423,18 @@ export async function startChangeSuggestionProcess({
   })
 
   if (!response.ok) {
+    let errorDetails = ''
+    try {
+      const errorBody = await response.text()
+      errorDetails = errorBody ? `: ${errorBody}` : ''
+    } catch {
+      // If we can't read the body, just use status ...
+    }
+
     throw new Error(
-      `Failed to start change suggestion process: ${response.status} ${response.statusText}`,
+      `Failed to start change suggestion process: ${response.status} ${response.statusText}${errorDetails}`,
     )
   }
 
-  return await response.json()
+  return { success: true }
 }
