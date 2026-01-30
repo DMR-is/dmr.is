@@ -20,6 +20,7 @@ import {
   GetCasesWithStatusCount,
   GetCasesWithStatusCountQuery,
   GetCommunicationSatusesResponse,
+  GetInstitutionsResponse,
   GetNextPublicationNumberResponse,
   GetPaymentQuery,
   GetPaymentResponse,
@@ -32,6 +33,7 @@ import {
   UpdateAdvertHtmlCorrection,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
+  UpdateCaseInvolvedPartyBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
@@ -237,6 +239,17 @@ export interface ICaseService {
     publishedAt?: string | Date,
     serial?: number,
   ): Promise<Buffer | null>
+
+  updateCaseInvolvedParty(
+    caseId: string,
+    body: UpdateCaseInvolvedPartyBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  getCaseAvailableInvolvedParties(
+    nationalId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<Pick<GetInstitutionsResponse, 'institutions'>>>
 }
 
 export const ICaseService = Symbol('ICaseService')
