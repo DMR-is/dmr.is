@@ -15,6 +15,7 @@ export interface IPublicationService {
     advertId: string,
     publicationId: string,
     body: UpdateAdvertPublicationDto,
+    currentUser: DMRUser,
   ): Promise<void>
 
   deleteAdvertPublication(id: string, pubId: string): Promise<void>
@@ -35,6 +36,8 @@ export interface IPublicationService {
     publicationId: string,
     currentUser?: DMRUser,
   ): Promise<void>
+
+  publishNextPublication(advertId: string): Promise<void>
 
   publishAdverts(advertIds: string[], currentUser?: DMRUser): Promise<void>
 }

@@ -911,10 +911,12 @@ export class AdvertService implements IAdvertService {
       StatusIdEnum.IN_PROGRESS,
     ]
     const readyForPublicationTabStatuses = [StatusIdEnum.READY_FOR_PUBLICATION]
+    const inPublishingTabStatuses = [StatusIdEnum.IN_PUBLISHING]
     const finishedTabStatuses = [
       StatusIdEnum.SUBMITTED,
       StatusIdEnum.READY_FOR_PUBLICATION,
       StatusIdEnum.IN_PROGRESS,
+      StatusIdEnum.IN_PUBLISHING,
       StatusIdEnum.PUBLISHED,
       StatusIdEnum.REJECTED,
       StatusIdEnum.WITHDRAWN,
@@ -923,6 +925,7 @@ export class AdvertService implements IAdvertService {
     let countSubmittedTab = true
     let countReadyForPublicationTab = true
     let countFinishedTab = true
+    let countInPublishingTab = true
 
     // If statusId filter is provided, only count relevant tabs
     if (query.statusId && query.statusId.length > 0) {
@@ -935,10 +938,14 @@ export class AdvertService implements IAdvertService {
       const hasFinishedStatus = query.statusId.some((id) =>
         finishedTabStatuses.includes(id as StatusIdEnum),
       )
+      const hasInPublishingStatus = query.statusId.some((id) =>
+        inPublishingTabStatuses.includes(id as StatusIdEnum),
+      )
 
       countSubmittedTab = hasSubmittedStatus
       countReadyForPublicationTab = hasReadyStatus
       countFinishedTab = hasFinishedStatus
+      countInPublishingTab = hasInPublishingStatus
     }
 
     // Count for each tab
@@ -968,6 +975,17 @@ export class AdvertService implements IAdvertService {
         })
       : 0
 
+    const inPublishingTabCount = countInPublishingTab
+      ? await this.advertModel.unscoped().count({
+          where: {
+            ...whereOptions,
+            statusId: {
+              [Op.in]: inPublishingTabStatuses,
+            },
+          },
+        })
+      : 0
+
     const finishedTabCount = countFinishedTab
       ? await this.advertModel.unscoped().count({
           where: {
@@ -983,12 +1001,15 @@ export class AdvertService implements IAdvertService {
         })
       : 0
 
-    const dto = {
+    const dto: GetAdvertsStatusCounterDto = {
       submittedTab: {
         count: submittedTabCount,
       },
       readyForPublicationTab: {
         count: readyForPublicationTabCount,
+      },
+      inPublishingTab: {
+        count: inPublishingTabCount,
       },
       finishedTab: {
         count: finishedTabCount,

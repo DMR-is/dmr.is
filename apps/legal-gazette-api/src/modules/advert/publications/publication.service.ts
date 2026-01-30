@@ -47,6 +47,7 @@ export class PublicationService implements IPublicationService {
     private eventEmitter: EventEmitter2,
     private sequelize: Sequelize,
   ) {}
+
   async getPublishedPublicationsByAdvertId(
     advertId: string,
   ): Promise<AdvertPublicationDetailedDto[]> {
@@ -229,13 +230,52 @@ export class PublicationService implements IPublicationService {
     advertId: string,
     publicationId: string,
     body: UpdateAdvertPublicationDto,
+    currentUser: DMRUser,
   ): Promise<void> {
+    const advert = await this.advertModel.findOne({
+      rejectOnEmpty: true,
+      attributes: ['id', 'statusId', 'assignedUserId'],
+      where: {
+        id: advertId,
+        statusId: {
+          [Op.in]: [
+            StatusIdEnum.SUBMITTED,
+            StatusIdEnum.IN_PROGRESS,
+            StatusIdEnum.READY_FOR_PUBLICATION,
+            StatusIdEnum.IN_PUBLISHING,
+          ],
+        },
+      },
+    })
+
+    if (!advert) {
+      throw new BadRequestException(
+        'Advert status does not allow updating publication',
+      )
+    }
+
+    const canEdit = advert.canEdit(currentUser.nationalId)
+    const canPublish = advert.canPublish(currentUser.nationalId)
+
+    if (!canEdit && !canPublish) {
+      throw new BadRequestException(
+        'User does not have permission to update publication',
+      )
+    }
+
     const publication = await this.advertPublicationModel.findOneOrThrow({
       where: { id: publicationId, advertId },
     })
 
     await publication.update({
       scheduledAt: new Date(body.scheduledAt),
+    })
+
+    this.logger.info('Advert publication updated', {
+      context: LOGGING_CONTEXT,
+      advertId,
+      publicationId,
+      scheduledAt: body.scheduledAt,
     })
   }
 
@@ -326,8 +366,25 @@ export class PublicationService implements IPublicationService {
 
         await advert.update({
           publicationNumber,
-          statusId: StatusIdEnum.PUBLISHED,
+          statusId: StatusIdEnum.IN_PUBLISHING,
         })
+      }
+
+      // check if all pubs are published, if so set advert status to PUBLISHED
+      const allPublications = await this.advertPublicationModel.findAll({
+        where: { advertId },
+        transaction: t,
+      })
+
+      const allPublished = allPublications.every(
+        (pub) => pub.id === publicationId || pub.publishedAt !== null,
+      )
+
+      if (allPublished) {
+        await advert.update(
+          { statusId: StatusIdEnum.PUBLISHED },
+          { transaction: t },
+        )
       }
 
       await publication.update({ publishedAt: new Date() })
@@ -389,7 +446,7 @@ export class PublicationService implements IPublicationService {
     // Transaction has committed at this point
     // Fire and forget side effects - runs outside CLS transaction context
     if (sideEffectsPayload) {
-      this.logger.info('Emitting side effects after transaction commit', {
+      this.logger.info('Emitting side effects after publishing a publication', {
         context: LOGGING_CONTEXT,
         advertId,
         publicationId,
@@ -401,5 +458,21 @@ export class PublicationService implements IPublicationService {
         sideEffectsPayload,
       )
     }
+  }
+
+  async publishNextPublication(advertId: string): Promise<void> {
+    const nextPub = await this.advertPublicationModel.findOneOrThrow(
+      {
+        limit: 1,
+        where: {
+          publishedAt: null,
+          advertId,
+        },
+        order: [['scheduledAt', 'ASC']],
+      },
+      'No unpublished publication found for advert',
+    )
+
+    await this.publishAdvertPublication(advertId, nextPub.id)
   }
 }

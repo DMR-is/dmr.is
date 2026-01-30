@@ -24,6 +24,7 @@ import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
+import { CanPublishGuard } from '../../../core/guards/can-publish.guard'
 import {
   AdvertPublicationDetailedDto,
   AdvertVersionEnum,
@@ -108,11 +109,13 @@ export class AdvertPublicationController {
     @Param('advertId', new UUIDValidationPipe()) advertId: string,
     @Param('publicationId', new UUIDValidationPipe()) publicationId: string,
     @Body() body: UpdateAdvertPublicationDto,
+    @CurrentUser() currentUser: DMRUser,
   ): Promise<void> {
     await this.advertPublicationService.updateAdvertPublication(
       advertId,
       publicationId,
       body,
+      currentUser,
     )
   }
 
@@ -127,5 +130,15 @@ export class AdvertPublicationController {
       advertId,
       publicationId,
     )
+  }
+
+  @Post('/adverts/:advertId/next/publish')
+  @AdminAccess()
+  @UseGuards(CanPublishGuard)
+  @LGResponse({ operationId: 'publishNextPublication' })
+  async publishNextPublication(
+    @Param('advertId', new UUIDValidationPipe()) advertId: string,
+  ): Promise<void> {
+    return this.advertPublicationService.publishNextPublication(advertId)
   }
 }

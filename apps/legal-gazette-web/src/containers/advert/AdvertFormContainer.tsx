@@ -157,6 +157,8 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
             <PublicationsFields
               id={advert.id}
               canEdit={advert.canEdit}
+              canPublish={advert.canPublish}
+              isAssignedToMe={advert.isAssignedToMe}
               publications={advert.publications}
               advertStatus={advert.status}
             />

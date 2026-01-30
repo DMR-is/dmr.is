@@ -5983,6 +5983,8 @@
           "divisionMeetingDate": { "type": "string" },
           "divisionMeetingLocation": { "type": "string" },
           "canEdit": { "type": "boolean" },
+          "canPublish": { "type": "boolean" },
+          "isAssignedToMe": { "type": "boolean" },
           "courtDistrict": { "$ref": "#/components/schemas/CourtDistrictDto" },
           "settlement": { "$ref": "#/components/schemas/SettlementDto" },
           "communicationChannels": {
@@ -6016,6 +6018,8 @@
           "title",
           "createdBy",
           "canEdit",
+          "canPublish",
+          "isAssignedToMe",
           "communicationChannels",
           "publications",
           "category",
@@ -6042,11 +6046,19 @@
           "readyForPublicationTab": {
             "$ref": "#/components/schemas/AdvertTabCountItemDto"
           },
+          "inPublishingTab": {
+            "$ref": "#/components/schemas/AdvertTabCountItemDto"
+          },
           "finishedTab": {
             "$ref": "#/components/schemas/AdvertTabCountItemDto"
           }
         },
-        "required": ["submittedTab", "readyForPublicationTab", "finishedTab"]
+        "required": [
+          "submittedTab",
+          "readyForPublicationTab",
+          "inPublishingTab",
+          "finishedTab"
+        ]
       },
       "AdvertDto": {
         "type": "object",
