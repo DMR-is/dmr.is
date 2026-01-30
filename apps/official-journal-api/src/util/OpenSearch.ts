@@ -97,12 +97,10 @@ function buildSort(qp?: GetAdvertsQueryParams): any[] {
     { _id: 'desc' },
   ]
 
-  // If no sortBy is specified, use default
   if (!sortBy) {
     return defaultSort
   }
 
-  // Handle sortBy options
   if (sortBy === 'date' || sortBy === 'publicationdate') {
     return [
       { _score: 'desc' },
