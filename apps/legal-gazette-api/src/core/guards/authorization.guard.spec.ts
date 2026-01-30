@@ -458,6 +458,19 @@ describe('AuthorizationGuard', () => {
 
         expect(result).toBe(true)
       })
+
+      it('should NOT call checkAdminAccess when user has matching scope', async () => {
+        const context = createMockContext({
+          nationalId: '1234567890',
+          scope: '@logbirtingablad.is/lg-application-web',
+        })
+
+        const result = await guard.canActivate(context)
+
+        expect(result).toBe(true)
+        expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+      })
+
     })
 
     describe('when user is NOT admin and has NO valid scope', () => {
