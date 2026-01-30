@@ -3,6 +3,7 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import {
   AdvertPublicationDetailedDto,
   AdvertVersionEnum,
+  GetPublicationsDetailedDto,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,
@@ -25,6 +26,10 @@ export interface IPublicationService {
   ): Promise<AdvertPublicationDetailedDto>
 
   getPublications(query?: GetPublicationsQueryDto): Promise<GetPublicationsDto>
+
+  getPublicationsDetailed(
+    query?: GetPublicationsQueryDto,
+  ): Promise<GetPublicationsDetailedDto>
 
   getPublishedPublicationsByAdvertId(
     advertId: string,

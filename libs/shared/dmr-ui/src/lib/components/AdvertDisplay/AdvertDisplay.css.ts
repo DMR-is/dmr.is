@@ -85,3 +85,18 @@ globalStyle(`${legacyText} .advertType, ${bodyText} .advertType`, {
 globalStyle(`${legacyText} .advertType > td, ${bodyText} .advertType > td`, {
   paddingBottom: '4px',
 })
+
+// Print styles to ensure avert are rendered without boorder around
+
+globalStyle(`div:has(> ${bodyText}), div:has(> ${legacyText})`, {
+  '@media': {
+    print: {
+      border: 'none',
+      borderRadius: 0,
+      padding: 0,
+      paddingBottom: '16px',
+      wordBreak: 'break-word',
+      wordWrap: 'break-word',
+    },
+  },
+})

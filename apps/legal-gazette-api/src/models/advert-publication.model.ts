@@ -316,6 +316,14 @@ export class AdvertPublicationDetailedDto {
   html!: string
 }
 
+export class PublicationDetailedDto {
+  @ApiProperty({ type: () => AdvertPublicationDto })
+  publication!: AdvertPublicationDto
+
+  @ApiProperty({ type: String })
+  html!: string
+}
+
 export class PublishedPublicationDto extends OmitType(AdvertPublicationDto, [
   'scheduledAt',
   'publishedAt',
@@ -348,6 +356,14 @@ export class UpdateAdvertPublicationDto {
 export class GetPublicationsDto {
   @ApiProperty({ type: [PublishedPublicationDto] })
   publications!: PublishedPublicationDto[]
+
+  @ApiProperty({ type: Paging })
+  paging!: Paging
+}
+
+export class GetPublicationsDetailedDto {
+  @ApiProperty({ type: [AdvertPublicationDetailedDto] })
+  result!: PublicationDetailedDto[]
 
   @ApiProperty({ type: Paging })
   paging!: Paging

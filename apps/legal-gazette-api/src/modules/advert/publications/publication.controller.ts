@@ -27,6 +27,7 @@ import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import {
   AdvertPublicationDetailedDto,
   AdvertVersionEnum,
+  GetPublicationsDetailedDto,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,
@@ -55,6 +56,18 @@ export class AdvertPublicationController {
     @Query() query: GetPublicationsQueryDto,
   ): Promise<GetPublicationsDto> {
     return this.advertPublicationService.getPublications(query)
+  }
+
+  @PublicWebScopes()
+  @Get('/detailed')
+  @LGResponse({
+    operationId: 'getPublicationsDetailed',
+    type: GetPublicationsDetailedDto,
+  })
+  async getPublishedPublicationDetailed(
+    @Query() query: GetPublicationsQueryDto,
+  ): Promise<GetPublicationsDetailedDto> {
+    return this.advertPublicationService.getPublicationsDetailed(query)
   }
 
   @PublicOrApplicationWebScopes()

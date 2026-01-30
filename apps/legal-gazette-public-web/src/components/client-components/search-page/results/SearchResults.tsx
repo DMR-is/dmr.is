@@ -1,9 +1,13 @@
 'use client'
 
+import { useState } from 'react'
+
 import {
   AlertMessage,
   Box,
   Breadcrumbs,
+  Button,
+  Inline,
   Pagination,
   SkeletonLoader,
   Stack,
@@ -13,11 +17,14 @@ import {
 import { useFilters } from '../../../../hooks/useFilters'
 import { usePublications } from '../../../../hooks/usePublications'
 import { PublicationCard } from '../../cards/PublicationCard'
+import { ViewPublicationsOnPage } from './ViewSearchedPublications'
 
 export const SearchResults = () => {
   const { filters, setFilters } = useFilters()
-
   const { data, isLoading, error } = usePublications()
+
+  const [showSelectedPublications, setShowSelectedPublications] =
+    useState(false)
 
   if (error) {
     return (
@@ -44,11 +51,21 @@ export const SearchResults = () => {
       <Stack space={[2]}>
         <Stack space={[1]}>
           <Breadcrumbs items={breadcrumbs} />
-          <Box>
-            <Text marginBottom={[1]} variant="h2">
-              Leit í Lögbirtingablaði
-            </Text>
-          </Box>
+          <Inline space={2} alignY="center" justifyContent="spaceBetween">
+            <Text variant="h2">Leit í Lögbirtingablaði</Text>
+            <Button
+              colorScheme="light"
+              icon="documents"
+              iconType="outline"
+              variant="utility"
+              onClick={() =>
+                setShowSelectedPublications(!showSelectedPublications)
+              }
+              disabled={!data?.publications.length}
+            >
+              Skoða auglýsingar á síðu
+            </Button>
+          </Inline>
         </Stack>
         {isLoading ? (
           <SkeletonLoader
@@ -84,6 +101,12 @@ export const SearchResults = () => {
           />
         )}
       </Stack>
+      {showSelectedPublications && (
+        <ViewPublicationsOnPage
+          openModal={showSelectedPublications}
+          setOpenModal={setShowSelectedPublications}
+        />
+      )}
     </>
   )
 }
