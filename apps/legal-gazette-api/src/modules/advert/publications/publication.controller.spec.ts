@@ -203,11 +203,8 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       const context = createMockContext(createPublicWebUser(), 'getPublication')
       const result = await authorizationGuard.canActivate(context)
       expect(result).toBe(true)
-      // Admin check is performed first even for scoped users
-      expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
-        PUBLIC_WEB_NATIONAL_ID,
-        true,
-      )
+      // Admin check should not be done for scoped users
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
     })
 
     it('should ALLOW application-web users (via scope)', async () => {
@@ -217,11 +214,8 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       )
       const result = await authorizationGuard.canActivate(context)
       expect(result).toBe(true)
-      // Admin check is performed first even for scoped users
-      expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
-        APPLICATION_WEB_NATIONAL_ID,
-        true,
-      )
+      // Admin check should not be done for scoped users
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
     })
 
     it('should DENY users with random/invalid scope (not admin, not valid scope)', async () => {
