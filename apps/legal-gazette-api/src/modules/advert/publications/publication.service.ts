@@ -136,7 +136,7 @@ export class PublicationService implements IPublicationService {
       publications.rows.map(async (pub) => {
         try {
           const advert = await this.advertModel
-            .withScope('listview')
+            .withScope('detailed')
             .findByPkOrThrow(pub.advertId)
           return {
             html: advert.htmlMarkup(),

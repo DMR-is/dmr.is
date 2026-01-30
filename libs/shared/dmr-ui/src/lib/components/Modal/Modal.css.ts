@@ -1,26 +1,21 @@
 import { globalStyle, style } from '@vanilla-extract/css'
 
 export const modalBase = style({
-  position: 'absolute',
-  margin: 'auto',
-  top: 0,
-  bottom: 0,
-  left: 0,
-  right: 0,
-  height: 'fit-content',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
+  height: '100vh',
 
   '@media': {
     print: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
       width: '100%',
       justifyContent: 'flex-start',
-
-      height: 'auto',
+      height: '100%',
     },
   },
-  pointerEvents: 'none',
 })
 
 export const modalContent = style({
@@ -28,13 +23,24 @@ export const modalContent = style({
   maxHeight: '80vh',
   padding: '24px',
   borderRadius: '8px',
+  pointerEvents: 'auto',
   filter: 'drop-shadow(0 4px 70px rgba(0, 97, 255, .1))',
   '@media': {
     print: {
-      borderRadius: 0,
       filter: 'none',
-      padding: 0,
-      maxHeight: '100%',
+      maxHeight: 'none',
+    },
+  },
+})
+
+// Print styles to ensure modals are rendered correctly when printing
+export const modalBaseBackdrop = style({})
+
+globalStyle(`div:has(> ${modalBaseBackdrop})`, {
+  '@media': {
+    print: {
+      position: 'static',
+      overflow: 'visible',
     },
   },
 })
@@ -42,7 +48,15 @@ export const modalContent = style({
 globalStyle(`${modalBase} button`, {
   '@media': { print: { display: 'none' } },
 })
-globalStyle(`${modalBase} div`, {
-  '@media': { print: { border: 'none' } },
-  pointerEvents: 'auto',
+
+globalStyle(`${modalBase} > div`, {
+  '@media': { print: { padding: 0 } },
+})
+
+globalStyle(`body`, {
+  '@media': { print: { scrollbarWidth: 'none', msOverflowStyle: 'none' } },
+})
+
+globalStyle(`::-webkit-scrollbar`, {
+  '@media': { print: { display: 'none' } },
 })
