@@ -140,7 +140,7 @@ export class ApplicationService implements IApplicationService {
         `Appliction.service.getApplication, could not get application<${id}>`,
         {
           applicationId: id,
-          status: res.status,
+          statusCode: res.status,
           category: LOGGING_CATEGORY,
         },
       )
@@ -205,7 +205,7 @@ export class ApplicationService implements IApplicationService {
       this.logger.warn(`Could not update application<${id}>`, {
         category: LOGGING_CATEGORY,
         details: info,
-        status,
+        statusCode: status,
         statusText,
       })
 
