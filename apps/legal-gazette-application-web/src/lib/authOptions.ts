@@ -8,7 +8,7 @@ import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
 
 // This session timeout will be used to set the maxAge of the session cookie
-// When refreshing the token, we will not update the maxAge, so the session will expire
+// IDS has a max timeout on refresh tokens, so we set our session timeout to be slightly more
 const SESSION_TIMEOUT = 60 * 60 * 8 + 30 // 8 hours and 30 seconds
 
 export const localIdentityServerConfig = {
