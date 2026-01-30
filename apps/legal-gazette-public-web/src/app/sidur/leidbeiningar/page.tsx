@@ -31,28 +31,31 @@ export default function Page() {
               <AccordionItem
                 id={'i1'}
                 labelVariant="h4"
-                label="Hvað er auglýsingakerfi Lögbirtingablaðsins"
+                label="Hvað er auglýsendakerfi Lögbirtingablaðsins"
               >
-                <Box>
+                <Stack space={1}>
                   <Text>
-                    Hér má sjá rafrænt ferli fyrir alla sem senda inn auglýsingu
-                    í Lögbirtingablaðið, einstaklinga og fyrirtæki.
-                    <br />
+                    Í auglýsendakerfinu má sjá rafrænt ferli fyrir alla sem
+                    senda inn auglýsingu í Lögbirtingablaðið, einstaklinga og
+                    fyrirtæki.
+                  </Text>
+                  <Text>
                     Kerfið gerir ferlið skilvirkara og einfaldara í notkun og
                     býður notendum upp á að fylgjast með stöðu auglýsingar meðan
                     auglýsingin vinnst í ritstjórn.
-                    <br />
+                  </Text>
+                  <Text>
                     Einnig býður kerfið notendum að halda á skilvirkan hátt utan
                     um innkallanir svo sem þrotabús og dánarbús sem geta
                     innihaldið margar auglýsingar.
                   </Text>
-                </Box>
+                </Stack>
               </AccordionItem>
 
               <AccordionItem
                 id={'i2'}
                 labelVariant="h4"
-                label="Aðgangur að auglýsingakerfi Lögbirtingablaðsins"
+                label="Aðgangur að auglýsendakerfi"
                 startExpanded
               >
                 <Box>
@@ -61,6 +64,14 @@ export default function Page() {
                       Allir með rafræn skilríki geta sent inn auglýsingu inn í
                       Lögbirtingablaðið.
                     </Text>
+                    <LinkV2
+                      href="https://auglysendur.logbirtingablad.is"
+                      color="blue400"
+                      underline="normal"
+                      newTab
+                    >
+                      auglysendur.logbirtingablad.is.
+                    </LinkV2>
                     <Stack space={1}>
                       <Text variant="h4">
                         Umboð - hvernig skrái ég auglýsingu inn í nafni
@@ -277,7 +288,8 @@ export default function Page() {
 
             <Stack space={3}>
               <Text variant="h3">
-                Myndbönd með leiðbeiningum fyrir auglýsingakerfi
+                Myndbönd með leiðbeiningum fyrir auglýsendakerfi
+                Lögbirtingablaðsins
               </Text>
 
               <EmbeddedVideo
