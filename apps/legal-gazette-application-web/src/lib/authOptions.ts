@@ -1,5 +1,5 @@
-import { AuthOptions } from 'next-auth'
-import { JWT } from 'next-auth/jwt'
+import type { AuthOptions } from 'next-auth'
+import type { JWT } from 'next-auth/jwt'
 import IdentityServer4 from 'next-auth/providers/identity-server4'
 
 import { decode } from 'jsonwebtoken'
@@ -7,7 +7,9 @@ import { decode } from 'jsonwebtoken'
 import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
 
-const SESION_TIMEOUT = 60 * 60 // 1 hour
+// This session timeout will be used to set the maxAge of the session cookie
+// IDS has a max timeout on refresh tokens, so we set our session timeout to be slightly more
+const SESSION_TIMEOUT = 60 * 60 * 8 + 30 // 8 hours and 30 seconds
 
 export const localIdentityServerConfig = {
   id: identityServerId,
@@ -33,7 +35,7 @@ export const authOptions: AuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: SESION_TIMEOUT,
+    maxAge: SESSION_TIMEOUT,
   },
   callbacks: {
     jwt: async ({ token, user, account }) => {
