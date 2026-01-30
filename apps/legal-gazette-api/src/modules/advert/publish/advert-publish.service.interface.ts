@@ -1,7 +1,12 @@
-export interface IAdvertPublishService {
-  publishNextPublication(advertId: string): Promise<void>
+import { DMRUser } from '@dmr.is/auth/dmrUser'
 
-  publishNextPublications(advertIds: string[]): Promise<void>
+export interface IAdvertPublishService {
+  publishNextPublication(advertId: string, currentUser: DMRUser): Promise<void>
+
+  publishNextPublications(
+    advertIds: string[],
+    currentUser?: DMRUser,
+  ): Promise<void>
 }
 
 export const IAdvertPublishService = Symbol('IAdvertPublishService')
