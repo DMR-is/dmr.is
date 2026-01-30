@@ -28,11 +28,11 @@ const logger = getLogger('AuthorizationGuard')
  * | None                          | ❌ No        | Allow (auth only)      |
  * | `@Scopes()` only              | ❌ No        | Check scope            |
  * | `@AdminAccess()` only           | ✅ Yes       | Check admin            |
- * | `@AdminAccess()` + `@Scopes()`  | ✅ Yes       | Admin OR scope         |
+ * | `@AdminAccess()` + `@Scopes()`  | ⚡ Conditional | Admin OR scope         |
  *
  * ## Key Optimizations:
  * - **No unnecessary database lookups**: Only performs user lookup when `@AdminAccess()` is present
- * - **OR logic for mixed access**: When both decorators present, admin users bypass scope check
+ * - **OR logic for mixed access**: When both decorators present, scope check happens first (cheap), admin lookup only if scope check fails
  * - **Single guard in chain**: Simplifies controller guard configuration
  *
  * ## Usage:
@@ -56,7 +56,7 @@ const logger = getLogger('AuthorizationGuard')
  * @Controller('admin')
  * export class AdminController { ... }
  *
- * // Mixed access (admin OR scope) - admin users bypass scope check
+ * // Mixed access (admin OR scope) - scope users bypass admin check (optimization)
  * @UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
  * @AdminAccess()
  * @ApplicationWebScopes()
@@ -101,8 +101,24 @@ export class AuthorizationGuard implements CanActivate {
       return this.checkScopes(user, requiredScopes)
     }
 
-    // Case 3 & 4: @AdminAccess() present - need to check admin status
-    // First check if user has admin access (user exists in UserModel)
+    // Case 3 & 4: @AdminAccess() present
+    // Optimization: If scopes are also present, check scope first (cheap operation)
+    if (requiredScopes?.length) {
+      // Case 4: Both @AdminAccess() and @Scopes()
+      const hasValidScope = this.hasMatchingScope(user, requiredScopes)
+
+      if (hasValidScope) {
+        logger.debug('Access granted via scope (admin check skipped)', {
+          nationalId: user?.nationalId,
+          matchedScopes: this.getMatchingScopes(user, requiredScopes),
+        })
+        return true
+      }
+
+      // Scope check failed, fall through to admin check
+    }
+
+    // Check admin access (expensive database lookup)
     try {
       const adminUser = await this.checkAdminAccess(user)
 
@@ -117,33 +133,23 @@ export class AuthorizationGuard implements CanActivate {
 
       return true
     } catch (error) {
-      // Admin check failed, proceed to scope check if needed
+      // Admin check failed
     }
 
-    // Case 3: @AdminAccess() only - admin check failed, deny
-    if (!requiredScopes?.length) {
+    // Access denied - neither admin nor valid scope
+    if (requiredScopes?.length) {
+      // Case 4: Both decorators present, both checks failed
+      logger.warn('Access denied: User not admin and no valid scope', {
+        nationalId: user?.nationalId,
+        requiredScopes,
+      })
+    } else {
+      // Case 3: Admin only, admin check failed
       logger.warn('Admin access denied: User not in admin table', {
         nationalId: user?.nationalId,
       })
-      throw new ForbiddenException('Admin access required')
     }
 
-    // Case 4: @AdminAccess() + @Scopes() - not admin, check scopes (OR logic)
-    const hasValidScope = this.hasMatchingScope(user, requiredScopes)
-
-    if (hasValidScope) {
-      logger.debug('Access granted via scope (non-admin user)', {
-        nationalId: user?.nationalId,
-        matchedScopes: this.getMatchingScopes(user, requiredScopes),
-      })
-      return true
-    }
-
-    // Neither admin nor valid scope
-    logger.warn('Access denied: User not admin and no valid scope', {
-      nationalId: user?.nationalId,
-      requiredScopes,
-    })
     throw new ForbiddenException('Admin access required')
   }
 

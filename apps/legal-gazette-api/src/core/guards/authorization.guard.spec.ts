@@ -458,19 +458,6 @@ describe('AuthorizationGuard', () => {
 
         expect(result).toBe(true)
       })
-
-      it('should NOT call checkAdminAccess when user has matching scope', async () => {
-        const context = createMockContext({
-          nationalId: '1234567890',
-          scope: '@logbirtingablad.is/lg-application-web',
-        })
-
-        const result = await guard.canActivate(context)
-
-        expect(result).toBe(true)
-        expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
-      })
-
     })
 
     describe('when user is NOT admin and has NO valid scope', () => {
@@ -537,7 +524,7 @@ describe('AuthorizationGuard', () => {
     })
 
     describe('database lookup optimization', () => {
-      it('should only do lookup once even when checking OR logic', async () => {
+      it('should skip database lookup when scope matches (optimization)', async () => {
         const context = createMockContext({
           nationalId: '1234567890',
           scope: '@logbirtingablad.is/lg-application-web',
@@ -545,6 +532,22 @@ describe('AuthorizationGuard', () => {
         usersService.getUserByNationalId.mockRejectedValue(userNotFoundError)
 
         await guard.canActivate(context)
+
+        expect(usersService.getUserByNationalId).toHaveBeenCalledTimes(0)
+      })
+
+      it('should call database lookup exactly once when scope does not match', async () => {
+        const context = createMockContext({
+          nationalId: '1234567890',
+          scope: '@logbirtingablad.is/logbirtingabladid', // Wrong scope
+        })
+        usersService.getUserByNationalId.mockRejectedValue(userNotFoundError)
+
+        try {
+          await guard.canActivate(context)
+        } catch {
+          // Expected to throw
+        }
 
         expect(usersService.getUserByNationalId).toHaveBeenCalledTimes(1)
       })
