@@ -164,6 +164,7 @@ export class JournalService implements IJournalService {
         signatureDate: model.signatureDate,
         documentHtml: model.content,
         documentPdfUrl: model.pdfUrl,
+        hideSignatureDate: model.hideSignatureDate,
         isLegacy: false,
       },
       {

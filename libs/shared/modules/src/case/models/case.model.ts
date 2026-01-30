@@ -192,6 +192,11 @@ export class CaseModel extends Model {
   })
   publicationNumber!: string | null
 
+  @Column({
+    field: 'hide_signature_date',
+  })
+  hideSignatureDate?: boolean
+
   @BelongsTo(() => AdvertTypeModel, 'advert_type_id')
   advertType!: AdvertTypeModel
 

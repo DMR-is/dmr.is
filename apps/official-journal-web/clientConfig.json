@@ -4801,6 +4801,10 @@
             "description": "Corrections made to the advert.",
             "type": "array",
             "items": { "$ref": "#/components/schemas/AdvertCorrection" }
+          },
+          "hideSignatureDate": {
+            "type": "boolean",
+            "description": "Hide the display, signature date is not sensitive info."
           }
         },
         "required": [

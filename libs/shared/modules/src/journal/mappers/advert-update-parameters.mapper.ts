@@ -14,6 +14,7 @@ type UpdateParams = {
   signatureDate?: Date
   publicationDate?: Date
   isLegacy?: boolean
+  hideSignatureDate?: boolean
 }
 
 export const advertUpdateParametersMapper = (
@@ -64,8 +65,12 @@ export const advertUpdateParametersMapper = (
     updateParams.publicationDate = body.publicationDate
   }
 
-  if (body.isLegacy) {
+  if (body.isLegacy !== undefined) {
     updateParams.isLegacy = body.isLegacy
+  }
+
+  if (body.hideSignatureDate !== undefined) {
+    updateParams.hideSignatureDate = body.hideSignatureDate
   }
 
   return updateParams

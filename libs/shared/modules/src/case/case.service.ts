@@ -1220,6 +1220,7 @@ export class CaseService implements ICaseService {
         pdfUrl: `${process.env.ADVERTS_CDN_URL ?? 'https://adverts.stjornartidindi.is'}/${pdfFileName}`,
         advertId: caseToPublish.proposedAdvertId,
         publicationYear: signatureYear.toString(),
+        hideSignatureDate: caseToPublish.hideSignatureDate,
       },
       transaction,
     )

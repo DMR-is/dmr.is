@@ -53,6 +53,7 @@ export function advertMigrate(model: AdvertModel): Advert {
       pdfUrl: pdfUrl,
     },
     signature: null,
+    hideSignatureDate: model.hideSignatureDate,
     attachments: attachmentsmodel.map((item) => ({ ...item, type: '' })),
     corrections: model.corrections
       ? model.corrections.map((item) => advertCorrectionMigrate(item))
