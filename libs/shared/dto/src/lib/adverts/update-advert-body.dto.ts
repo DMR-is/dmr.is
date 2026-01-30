@@ -78,4 +78,10 @@ export class UpdateAdvertBody {
     required: false,
   })
   isLegacy?: boolean
+
+  @ApiProperty({
+    type: Boolean,
+    required: false,
+  })
+  hideSignatureDate?: boolean
 }

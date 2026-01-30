@@ -101,6 +101,11 @@ export class AdvertModel extends Model {
   @Column({ field: 'document_pdf_url' })
   documentPdfUrl!: string
 
+  @Column({
+    field: 'hide_signature_date',
+  })
+  hideSignatureDate?: boolean
+
   @Column
   created!: Date
 

@@ -1040,6 +1040,20 @@ export class CaseUpdateService implements ICaseUpdateService {
 
   @LogAndHandle()
   @Transactional()
+  async updateSignatureDateDisplay(
+    caseId: string,
+    hide: boolean,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    return this.utilityService.updateSignatureDateDisplay(
+      caseId,
+      hide,
+      transaction,
+    )
+  }
+
+  @LogAndHandle()
+  @Transactional()
   async updateAdvert(
     caseId: string,
     body: UpdateAdvertHtmlBody,

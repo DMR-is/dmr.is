@@ -99,6 +99,12 @@ export interface IUtilityService {
     nationalId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetInstitutionsFullResponse>>
+
+  updateSignatureDateDisplay(
+    caseId: string,
+    hide: boolean,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
 }
 
 export const IUtilityService = Symbol('IUtilityService')

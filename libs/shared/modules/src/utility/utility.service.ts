@@ -437,6 +437,35 @@ export class UtilityService implements IUtilityService {
 
   @LogAndHandle()
   @Transactional()
+  async updateSignatureDateDisplay(
+    caseId: string,
+    hide: boolean,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const caseRecord = await this.caseModel.findByPk(caseId, { transaction })
+
+    if (!caseRecord) {
+      throw new NotFoundException(`Case<${caseId}> not found`)
+    }
+
+    await caseRecord.update({ hideSignatureDate: hide }, { transaction })
+
+    // If an advert exists for this case, update that too
+    if (caseRecord.advertId) {
+      await this.advertModel.update(
+        { hideSignatureDate: hide },
+        {
+          where: { id: caseRecord.advertId },
+          transaction,
+        },
+      )
+    }
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
   async caseLookupByApplicationId(
     applicationId: string,
     transaction?: Transaction,
