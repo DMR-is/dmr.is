@@ -4,12 +4,7 @@ import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -19,12 +14,11 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
 import { LegalGazetteEvents, SYSTEM_ACTOR } from '../../../core/constants'
-import { mapIndexToVersion, mapVersionToIndex } from '../../../core/utils'
+import { mapIndexToVersion } from '../../../core/utils'
 import { AdvertModel } from '../../../models/advert.model'
 import {
   AdvertPublicationDetailedDto,
   AdvertPublicationModel,
-  AdvertVersionEnum,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,
@@ -40,7 +34,7 @@ export class PublicationService implements IPublicationService {
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
 
     @InjectModel(AdvertPublicationModel)
-    readonly advertPublicationModel: typeof AdvertPublicationModel,
+    readonly publicationModel: typeof AdvertPublicationModel,
     @InjectModel(AdvertModel)
     readonly advertModel: typeof AdvertModel,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
@@ -81,7 +75,7 @@ export class PublicationService implements IPublicationService {
       pageSize: query.pageSize,
     })
 
-    const publications = await this.advertPublicationModel
+    const publications = await this.publicationModel
       .scope({ method: ['published', query] })
       .findAndCountAll({
         limit,
@@ -115,50 +109,8 @@ export class PublicationService implements IPublicationService {
     }
   }
 
-  async publishAdverts(
-    advertIds: string[],
-    currentUser?: DMRUser,
-  ): Promise<void> {
-    // maybe fail if length of advert results is not the same as advertIds length
-    const adverts = await this.advertModel.findAll({
-      attributes: ['id', 'publicationNumber', 'statusId'],
-      include: [
-        {
-          model: AdvertPublicationModel,
-          required: true,
-          limit: 1,
-        },
-      ],
-      where: {
-        id: {
-          [Op.in]: advertIds,
-        },
-        statusId: {
-          [Op.eq]: StatusIdEnum.READY_FOR_PUBLICATION,
-        },
-      },
-    })
-
-    for (const advert of adverts) {
-      const publication = advert.publications?.[0]
-
-      if (!publication) {
-        this.logger.error(`No publication found for advert ${advert.id}`, {
-          advertId: advert.id,
-          context: LOGGING_CONTEXT,
-        })
-        throw new BadRequestException('No publication found for advert')
-      }
-
-      await this.publishAdvertPublication(
-        advert.id,
-        publication.id,
-        currentUser,
-      )
-    }
-  }
-  async createAdvertPublication(advertId: string): Promise<void> {
-    const currentPublications = await this.advertPublicationModel.findAll({
+  async createPublication(advertId: string): Promise<void> {
+    const currentPublications = await this.publicationModel.findAll({
       where: { advertId },
       order: [
         ['scheduledAt', 'ASC'],
@@ -166,7 +118,7 @@ export class PublicationService implements IPublicationService {
       ],
     })
 
-    if (currentPublications.length >= 3) {
+    if (currentPublications.length > 2) {
       throw new BadRequestException('Max 3 publications allowed')
     }
 
@@ -174,29 +126,28 @@ export class PublicationService implements IPublicationService {
       currentPublications[currentPublications.length - 1]
     const withTwoWeeks = addDays(lastestPublication.scheduledAt, 14)
 
-    await this.advertPublicationModel.create({
+    await this.publicationModel.create({
       advertId,
       scheduledAt: withTwoWeeks,
       versionNumber: currentPublications.length + 1,
     })
   }
 
-  async deleteAdvertPublication(id: string, pubId: string): Promise<void> {
-    const count = await this.advertPublicationModel.count({
-      where: { advertId: id },
+  async deletePublication(publicationId: string): Promise<void> {
+    const publication =
+      await this.publicationModel.findByPkOrThrow(publicationId)
+
+    const siblings = await this.publicationModel.findAll({
+      where: {
+        advertId: publication.advertId,
+        id: { [Op.ne]: publication.id },
+      },
     })
 
-    if (count <= 1) {
+    const pubCount = siblings.length + 1
+
+    if (pubCount <= 1) {
       throw new BadRequestException('At least one publication must remain')
-    }
-
-    // Check if publication exists
-    const publication = await this.advertPublicationModel.findOne({
-      where: { id: pubId, advertId: id },
-    })
-
-    if (!publication) {
-      throw new NotFoundException('Publication not found')
     }
 
     // Prevent deletion of published versions
@@ -204,16 +155,21 @@ export class PublicationService implements IPublicationService {
       throw new BadRequestException('Cannot delete published versions')
     }
 
-    await this.advertPublicationModel.destroy({
+    this.logger.info('Force deleting advert publication', {
+      context: LOGGING_CONTEXT,
+      publicationId: publication.id,
+      advertId: publication.advertId,
+    })
+
+    await this.publicationModel.destroy({
       where: {
-        id: pubId,
-        advertId: id,
+        id: publication.id,
       },
       force: true,
     })
 
-    const publications = await this.advertPublicationModel.findAll({
-      where: { advertId: id },
+    const publications = await this.publicationModel.findAll({
+      where: { advertId: publication.advertId },
       order: [
         ['scheduledAt', 'ASC'],
         ['publishedAt', 'ASC'],
@@ -222,84 +178,108 @@ export class PublicationService implements IPublicationService {
 
     // FIX M-2: Use for...of instead of forEach with async to properly await
     for (let index = 0; index < publications.length; index++) {
+      this.logger.info('Reassigning version number after deletion', {
+        context: LOGGING_CONTEXT,
+        advertId: publication.advertId,
+        publicationId: publications[index].id,
+        newVersionNumber: index + 1,
+      })
       await publications[index].update({ versionNumber: index + 1 })
     }
   }
 
-  async updateAdvertPublication(
-    advertId: string,
+  private validatePublicationSchedule(
+    publications: { versionNumber: number; scheduledAt: Date }[],
     publicationId: string,
-    body: UpdateAdvertPublicationDto,
-    currentUser: DMRUser,
-  ): Promise<void> {
-    const advert = await this.advertModel.findOne({
-      rejectOnEmpty: true,
-      attributes: ['id', 'statusId', 'assignedUserId'],
-      where: {
-        id: advertId,
-        statusId: {
-          [Op.in]: [
-            StatusIdEnum.SUBMITTED,
-            StatusIdEnum.IN_PROGRESS,
-            StatusIdEnum.READY_FOR_PUBLICATION,
-            StatusIdEnum.IN_PUBLISHING,
-          ],
-        },
-      },
-    })
+    advertId: string,
+  ) {
+    const sorted = publications.sort(
+      (a, b) => a.versionNumber - b.versionNumber,
+    )
 
-    if (!advert) {
-      throw new BadRequestException(
-        'Advert status does not allow updating publication',
-      )
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const current = sorted[i]
+      const next = sorted[i + 1]
+
+      // structural check: versions must be sequential
+      if (next.versionNumber !== current.versionNumber + 1) {
+        this.logger.error('Invalid publication version structure', {
+          context: LOGGING_CONTEXT,
+          publicationId,
+          advertId,
+          versions: sorted.map((p) => p.versionNumber),
+        })
+        throw new BadRequestException('Invalid publication version structure')
+      }
+
+      // date ordering check
+      if (current.scheduledAt >= next.scheduledAt) {
+        throw new BadRequestException(
+          `Version ${current.versionNumber} scheduled date must be before Version ${next.versionNumber} scheduled date`,
+        )
+      }
     }
-
-    const canEdit = advert.canEdit(currentUser.nationalId)
-    const canPublish = advert.canPublish(currentUser.nationalId)
-
-    if (!canEdit && !canPublish) {
-      throw new BadRequestException(
-        'User does not have permission to update publication',
-      )
-    }
-
-    const publication = await this.advertPublicationModel.findOneOrThrow({
-      where: { id: publicationId, advertId },
-    })
-
-    await publication.update({
-      scheduledAt: new Date(body.scheduledAt),
-    })
-
-    this.logger.info('Advert publication updated', {
-      context: LOGGING_CONTEXT,
-      advertId,
-      publicationId,
-      scheduledAt: body.scheduledAt,
-    })
   }
 
-  async getAdvertPublication(
-    id: string,
-    version: AdvertVersionEnum,
-  ): Promise<AdvertPublicationDetailedDto> {
-    const advert = await this.advertModel
-      .withScope('detailed')
-      .findByPkOrThrow(id)
+  async updatePublication(
+    publicationId: string,
+    body: UpdateAdvertPublicationDto,
+  ): Promise<void> {
+    const publication = await this.publicationModel.findOneOrThrow({
+      where: { id: publicationId },
+    })
 
-    const isLegacy = !!advert.legacyId
+    const prevDate = publication.scheduledAt.toISOString()
+    const incomingDate = new Date(body.scheduledAt)
 
-    const publication = await this.advertPublicationModel.findOneOrThrow({
+    const siblings = await this.publicationModel.findAll({
       where: {
-        advertId: id,
-        ...(isLegacy ? {} : { versionNumber: mapVersionToIndex(version) }),
+        advertId: publication.advertId,
+        id: { [Op.ne]: publication.id },
       },
+    })
+
+    const pubsToValidate = [
+      ...siblings.map((s) => ({
+        versionNumber: s.versionNumber,
+        scheduledAt: s.scheduledAt,
+      })),
+      { versionNumber: publication.versionNumber, scheduledAt: incomingDate },
+    ]
+
+    this.validatePublicationSchedule(
+      pubsToValidate,
+      publicationId,
+      publication.advertId,
+    )
+
+    await publication.update({
+      scheduledAt: incomingDate,
+    })
+
+    this.logger.info(
+      `Advert publication updated from ${prevDate} to ${incomingDate.toISOString()}`,
+      {
+        context: LOGGING_CONTEXT,
+        publicationId,
+        advertId: publication.advertId,
+        previousScheduledAt: prevDate,
+        nextScheduledAt: incomingDate.toISOString(),
+      },
+    )
+  }
+
+  async getPublicationById(
+    publicationId: string,
+  ): Promise<AdvertPublicationDetailedDto> {
+    const pub = await this.publicationModel.findByPkOrThrow(publicationId, {
+      include: [{ model: AdvertModel.scope('detailed'), as: 'advert' }],
     })
 
     return {
-      advert: advert.fromModel(),
-      html: advert.htmlMarkup(version),
-      publication: publication.fromModel(),
+      advert: pub.advert.fromModel(),
+      html: pub.advert.htmlMarkup(pub.versionLetter),
+      publication: pub.fromModel(),
     }
   }
 
@@ -328,7 +308,7 @@ export class PublicationService implements IPublicationService {
         .withScope('detailed')
         .findByPkOrThrow(advertId)
 
-      const publication = await this.advertPublicationModel.findOneOrThrow({
+      const publication = await this.publicationModel.findOneOrThrow({
         where: { id: publicationId, advertId },
       })
 
@@ -371,7 +351,7 @@ export class PublicationService implements IPublicationService {
       }
 
       // check if all pubs are published, if so set advert status to PUBLISHED
-      const allPublications = await this.advertPublicationModel.findAll({
+      const allPublications = await this.publicationModel.findAll({
         where: { advertId },
         transaction: t,
       })
@@ -461,7 +441,7 @@ export class PublicationService implements IPublicationService {
   }
 
   async publishNextPublication(advertId: string): Promise<void> {
-    const nextPub = await this.advertPublicationModel.findOneOrThrow(
+    const nextPub = await this.publicationModel.findOneOrThrow(
       {
         limit: 1,
         where: {

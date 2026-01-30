@@ -17,6 +17,7 @@ import {
 } from '@dmr.is/shared/filters'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
+import { AdvertGuardsModule } from '../core/guards/advert-guards'
 import { AuthorizationGuardModule } from '../core/guards/authorization-guard.module'
 import { AdvertModel } from '../models/advert.model'
 import { AdvertPublicationModel } from '../models/advert-publication.model'

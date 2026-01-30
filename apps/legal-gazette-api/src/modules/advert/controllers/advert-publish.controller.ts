@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Inject,
-  Param,
-  Post,
-  UseGuards,
-} from '@nestjs/common'
+import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
@@ -17,7 +10,6 @@ import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { PublishAdvertsBody } from '../../../models/advert.model'
-import { IPublicationService } from '../publications/publication.service.interface'
 
 @Controller({
   path: 'adverts',
@@ -27,21 +19,13 @@ import { IPublicationService } from '../publications/publication.service.interfa
 @UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
 @AdminAccess()
 export class AdvertPublishController {
-  constructor(
-    @Inject(IPublicationService)
-    private readonly advertPublicationService: IPublicationService,
-  ) {}
-
   @Post('publish')
   @LGResponse({ operationId: 'publishAdverts' })
   async publishAdverts(
     @Body() body: PublishAdvertsBody,
     @CurrentUser() currentUser: DMRUser,
   ) {
-    return await this.advertPublicationService.publishAdverts(
-      body.advertIds,
-      currentUser,
-    )
+    throw new Error('Method not implemented.')
   }
 
   @Post(':id/publish')
@@ -51,6 +35,6 @@ export class AdvertPublishController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @CurrentUser() currentUser: DMRUser,
   ) {
-    return await this.advertPublicationService.publishAdverts([id], currentUser)
+    throw new Error('Method not implemented.')
   }
 }
