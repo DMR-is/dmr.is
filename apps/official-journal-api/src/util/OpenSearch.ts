@@ -80,6 +80,67 @@ function buildTextQuery(search: string) {
   }
 }
 
+function buildSort(qp?: GetAdvertsQueryParams): any[] {
+  const sortBy = qp?.sortBy?.toLowerCase()
+  const direction = qp?.direction?.toUpperCase() === 'DESC' ? 'desc' : 'asc'
+
+  // Default sort (used when no sortBy is specified)
+  const defaultSort = [
+    { _score: 'desc' },
+    {
+      publicationDate: {
+        order: 'desc',
+        unmapped_type: 'date',
+        missing: '_last',
+      },
+    },
+    { _id: 'desc' },
+  ]
+
+  if (!sortBy) {
+    return defaultSort
+  }
+
+  if (sortBy === 'date' || sortBy === 'publicationdate') {
+    return [
+      { _score: 'desc' },
+      {
+        publicationDate: {
+          order: direction,
+          unmapped_type: 'date',
+          missing: '_last',
+        },
+      },
+      { _id: 'desc' },
+    ]
+  }
+
+  if (sortBy === 'number' || sortBy === 'publicationnumber') {
+    // Sort by year first, then by number within year
+    return [
+      { _score: 'desc' },
+      {
+        'publicationNumber.year': {
+          order: direction,
+          unmapped_type: 'keyword',
+          missing: '_last',
+        },
+      },
+      {
+        'publicationNumber.number': {
+          order: direction,
+          unmapped_type: 'long',
+          missing: '_last',
+        },
+      },
+      { _id: 'desc' },
+    ]
+  }
+
+  // If sortBy is not recognized, use default
+  return defaultSort
+}
+
 export const getOsBody = (
   qp?: GetAdvertsQueryParams,
 ): { body: any; alias: string; page: number; size: number } => {
@@ -150,17 +211,8 @@ export const getOsBody = (
     })
   }
 
-  const sort = [
-    { _score: 'desc' },
-    {
-      publicationDate: {
-        order: 'desc',
-        unmapped_type: 'date',
-        missing: '_last',
-      },
-    },
-    { _id: 'desc' },
-  ]
+  // Build sort configuration
+  const sort = buildSort(qp)
 
   const must: any[] = []
 
@@ -222,7 +274,7 @@ export const getOsBody = (
     },
     track_total_hits: hasTextQuery ? 200 : true, // Cap at 200 to avoid performance issues
     sort,
-    // Don’t send back these fields.
+    // Don't send back these fields.
     _source: { excludes: ['bodyText', 'caseNumber'] },
   }
 

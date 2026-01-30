@@ -112,6 +112,22 @@ export class GetAdvertsQueryParams {
   @IsOptional()
   @IsDateString()
   dateTo?: string
+
+  @ApiProperty({
+    required: false,
+    type: String,
+    example: 'sortBy',
+  })
+  @IsOptional()
+  sortBy?: string
+
+  @ApiProperty({
+    required: false,
+    type: String,
+    example: 'ASC',
+  })
+  @IsOptional()
+  direction?: string
 }
 
 export class GetAdvertsQuery extends IntersectionType(
