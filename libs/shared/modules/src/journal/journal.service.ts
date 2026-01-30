@@ -42,7 +42,6 @@ import {
   GetDepartmentsResponse,
   GetInstitutionResponse,
   GetInstitutionsResponse,
-  GetLeanAdvertsResponse,
   GetMainCategoriesResponse,
   GetMainCategoryResponse,
   Institution,
@@ -70,7 +69,6 @@ import {
   advertInvolvedPartyMigrate,
   advertMainCategoryMigrate,
   advertMigrate,
-  advertMigrateLean,
 } from './migrations'
 import {
   AdvertAttachmentsModel,
@@ -870,7 +868,6 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  @Cacheable({ tagBy: [0], ttlMs: 1 * 60_000 })
   async getAdvert(id: string): Promise<ResultWrapper<GetAdvertResponse>> {
     if (!id) {
       throw new BadRequestException()
@@ -1081,7 +1078,6 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  @Cacheable({ tagBy: [0], ttlMs: 10 * 60_000, topic: 'adverts:all' })
   async getAdverts(
     params?: GetAdvertsQueryParams,
   ): Promise<ResultWrapper<GetAdvertsResponse>> {
@@ -1288,284 +1284,6 @@ export class JournalService implements IJournalService {
       adverts: mapped,
       paging,
     })
-  }
-
-  @LogAndHandle()
-  @Cacheable({ tagBy: [0], topic: 'adverts:all' })
-  async getAdvertsLean(
-    params?: GetAdvertsQueryParams,
-  ): Promise<ResultWrapper<GetLeanAdvertsResponse>> {
-    const page = params?.page ?? DEFAULT_PAGE
-    const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE
-
-    // First attempt with 15-second timeout
-    try {
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Query timeout')), 15000) // 15 seconds
-      })
-
-      const queryPromise = this.executeGetAdvertsLean(params, page, pageSize)
-
-      const result = await Promise.race([queryPromise, timeoutPromise])
-      return result as ResultWrapper<GetLeanAdvertsResponse>
-    } catch (error) {
-      this.logger.warn('First query attempt failed, retrying...', {
-        category: LOGGING_CATEGORY,
-        error: error,
-        params: {
-          search: !!params?.search,
-          hasFilters: !!(
-            params?.type ||
-            params?.department ||
-            params?.category
-          ),
-        },
-      })
-
-      // Retry the exact same query - with warmed cache
-      try {
-        return await this.executeGetAdvertsLean(params, page, pageSize)
-      } catch (retryError) {
-        this.logger.error('Retry also failed', {
-          category: LOGGING_CATEGORY,
-          error: retryError,
-          params,
-        })
-        throw retryError
-      }
-    }
-  }
-
-  private async executeGetAdvertsLean(
-    params?: GetAdvertsQueryParams,
-    page: number = DEFAULT_PAGE,
-    pageSize: number = DEFAULT_PAGE_SIZE,
-  ): Promise<ResultWrapper<GetLeanAdvertsResponse>> {
-    // ----- Direct lookup by 11‑digit internal case number -----
-    try {
-      const isInternalCase = /^\d{11}$/.test(params?.search ?? '')
-      if (isInternalCase) {
-        const found = await this.caseModel.findOne({
-          include: [
-            {
-              model: AdvertModel,
-              attributes: [
-                'id',
-                'subject',
-                'serialNumber',
-                'publicationYear',
-                'publicationDate',
-              ],
-              include: [
-                {
-                  model: AdvertTypeModel,
-                  as: 'type',
-                  attributes: ['id', 'title', 'slug'],
-                },
-                {
-                  model: AdvertDepartmentModel,
-                  attributes: ['id', 'title', 'slug'],
-                },
-                {
-                  model: AdvertInvolvedPartyModel,
-                  attributes: ['id', 'title', 'slug', 'nationalId'],
-                },
-                {
-                  model: AdvertCategoryModel,
-                  attributes: ['id', 'title', 'slug'],
-                  through: { attributes: [] },
-                },
-              ],
-            },
-          ],
-          where: { caseNumber: params?.search },
-        })
-
-        if (!found?.advert) {
-          return ResultWrapper.ok({
-            adverts: [],
-            paging: generatePaging([], 1, pageSize, 0),
-          })
-        }
-
-        const migrated = advertMigrateLean(found.advert)
-        const paging = generatePaging([migrated], 1, pageSize, 1)
-        return ResultWrapper.ok({ adverts: [migrated], paging })
-      }
-    } catch {
-      // ignore and continue
-    }
-
-    // ----- Base WHERE on the advert table -----
-    const whereParams: WhereOptions = {}
-    if (params?.dateFrom && params?.dateTo) {
-      Object.assign(whereParams, {
-        publicationDate: {
-          [Op.between]: [
-            startOfDay(new Date(params.dateFrom)),
-            endOfDay(new Date(params.dateTo)),
-          ],
-        },
-      })
-    } else {
-      if (params?.dateFrom)
-        Object.assign(whereParams, {
-          publicationDate: { [Op.gte]: startOfDay(new Date(params.dateFrom)) },
-        })
-      if (params?.dateTo)
-        Object.assign(whereParams, {
-          publicationDate: { [Op.lte]: endOfDay(new Date(params.dateTo)) },
-        })
-    }
-    if (params?.year)
-      Object.assign(whereParams, { publicationYear: { [Op.eq]: params.year } })
-
-    // ----- Ranking / FTS on base table -----
-    let rankExpr: any = null
-    if (params?.search) {
-      const escapedSearch = this.sequelize.escape(params.search)
-      const tsQuery = `plainto_tsquery('simple', ${escapedSearch})`
-      const docIdExpr = `CONCAT(serial_number, '/', publication_year)`
-
-      rankExpr = this.sequelize.literal(`
-      CASE
-        WHEN ${docIdExpr} = ${escapedSearch} THEN 1000
-        ELSE ts_rank(tsv, ${tsQuery})
-      END
-    `)
-
-      const tsvCondition = Sequelize.where(this.sequelize.literal('tsv'), {
-        [Op.match]: this.sequelize.literal(tsQuery),
-      })
-
-      Object.assign(whereParams as any, {
-        [Op.or]: [
-          Sequelize.where(this.sequelize.literal(docIdExpr), params.search),
-          tsvCondition,
-        ],
-      })
-    }
-
-    // ----- Association filters (USED in IDs + COUNT) -----
-    const includeFilters = [
-      params?.type && {
-        model: AdvertTypeModel,
-        as: 'type',
-        attributes: [],
-        where: { slug: params.type },
-        required: true,
-      },
-      params?.department && {
-        model: AdvertDepartmentModel,
-        attributes: [],
-        where: { slug: params.department },
-        required: true,
-      },
-      params?.involvedParty && {
-        model: AdvertInvolvedPartyModel,
-        attributes: [],
-        where: { slug: params.involvedParty },
-        required: true,
-      },
-      params?.category && {
-        model: AdvertCategoryModel,
-        attributes: [],
-        where: { slug: params.category },
-        required: true,
-        through: { attributes: [] },
-      },
-    ].filter(Boolean) as any[]
-
-    // ----- First query: IDs only (with filters) -----
-    const order: any[] = rankExpr
-      ? [[rankExpr, 'DESC']]
-      : [
-          [Sequelize.col('publication_date'), 'DESC'],
-          [Sequelize.col('serial_number'), 'DESC'],
-        ]
-
-    const idRows = await this.advertModel.findAll({
-      attributes: [
-        'id',
-        // make order-by columns available to the outer query
-        [Sequelize.col('publication_date'), 'publication_date'],
-        [Sequelize.col('serial_number'), 'serial_number'],
-        ...(rankExpr ? [[rankExpr, 'rank'] as [any, string]] : []),
-      ],
-      where: whereParams,
-      include: includeFilters,
-      limit: pageSize,
-      offset: (page - 1) * pageSize,
-      order,
-      raw: true,
-    })
-
-    const ids: (string | number)[] = idRows.map((r: any) => r?.id)
-
-    // ----- Count with the SAME filters -----
-    const total = await this.advertModel.count({
-      where: whereParams,
-      include: includeFilters,
-      distinct: true, // ✅ valid on count
-      col: this.advertModel.primaryKeyAttribute || 'id',
-    })
-
-    if (ids.length === 0) {
-      return ResultWrapper.ok({
-        adverts: [],
-        paging: generatePaging([], page, pageSize, total),
-      })
-    }
-
-    // ----- Second query: skinny fetch by IDs (NO filter where; don't drop rows) -----
-    const pageRows = await this.advertModel.findAll({
-      where: { id: ids },
-      attributes: [
-        'id',
-        'subject',
-        'serialNumber',
-        'publicationYear',
-        'publicationDate',
-      ],
-      include: [
-        {
-          model: AdvertTypeModel,
-          as: 'type',
-          attributes: ['id', 'title', 'slug'],
-          required: false,
-        },
-        {
-          model: AdvertDepartmentModel,
-          attributes: ['id', 'title', 'slug'],
-          required: false,
-        },
-        {
-          model: AdvertInvolvedPartyModel,
-          attributes: ['id', 'title', 'nationalId', 'slug'],
-          required: false,
-        },
-        {
-          model: AdvertCategoryModel,
-          attributes: ['id', 'title', 'slug'],
-          required: false,
-          through: { attributes: [] },
-        },
-      ],
-    })
-
-    // Preserve first-query order in Node
-    const pos = new Map(ids.map((id, i) => [String(id), i]))
-    const sortedRows = pageRows
-      .filter((r: any) => r && r.id != null)
-      .sort(
-        (a: any, b: any) =>
-          (pos.get(String(a.id)) ?? 0) - (pos.get(String(b.id)) ?? 0),
-      )
-
-    const mapped = sortedRows.map(advertMigrateLean)
-    const paging = generatePaging(mapped, page, pageSize, total)
-
-    return ResultWrapper.ok({ adverts: mapped, paging })
   }
 
   @LogAndHandle()

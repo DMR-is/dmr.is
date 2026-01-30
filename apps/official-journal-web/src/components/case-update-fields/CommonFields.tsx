@@ -1,5 +1,5 @@
 import debounce from 'lodash/debounce'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { toast } from '@dmr.is/ui/utils/toast'
 
@@ -17,9 +17,12 @@ import {
   useUpdateTitle,
   useUpdateType,
 } from '../../hooks/api'
+import { useGetAvailableInvolvedParties } from '../../hooks/api/get/useGetAvailableInvolvedParties'
+import { useUpdateInvolvedParty } from '../../hooks/api/update/useUpdateInvolvedParty'
 import { useMainTypes } from '../../hooks/api/useMainTypes'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { createOptions } from '../../lib/utils'
 import { messages } from '../form-steps/messages'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
@@ -85,6 +88,30 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
         },
       },
     })
+
+  const { updateInvolvedParty, isMutating: isUpdatingInvolvedParty } =
+    useUpdateInvolvedParty({
+      caseId: currentCase.id,
+      options: {
+        onSuccess: () => {
+          toast.success(`Innsendandi uppfærður`)
+          refetch()
+        },
+        onError: () => {
+          toast.error(`Ekki tókst að uppfæra innsendanda`)
+        },
+      },
+    })
+
+  const { data: availableParties, isLoading: isLoadingParties } =
+    useGetAvailableInvolvedParties({
+      caseId: currentCase.id,
+    })
+
+  const institutionOptions = useMemo(
+    () => createOptions(availableParties?.institutions ?? []),
+    [availableParties?.institutions],
+  )
 
   const { trigger: updateType, isMutating: isUpdatingType } = useUpdateType({
     caseId: currentCase.id,
@@ -196,13 +223,50 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
               : undefined
           }
         />
-        <OJOIInput
-          disabled
-          width="half"
-          name="institution"
-          value={currentCase.involvedParty.title}
-          label={formatMessage(messages.grunnvinnsla.institution)}
-        />
+        {availableParties?.institutions &&
+        availableParties.institutions.length > 1 ? (
+          <OJOISelect
+            isDisabled={!canEdit}
+            width="half"
+            name="institution"
+            isLoading={isLoadingParties}
+            isValidating={isUpdatingInvolvedParty}
+            label={formatMessage(messages.grunnvinnsla.institution)}
+            options={institutionOptions}
+            value={institutionOptions.find(
+              (opt) => opt.value === currentCase.involvedParty.id,
+            )}
+            onChange={(opt) => {
+              if (!opt || !opt.value)
+                return toast.warning('Eitthvað fór úrskeiðis')
+              handleOptimisticUpdate(
+                {
+                  ...currentCase,
+                  involvedParty: {
+                    ...currentCase.involvedParty,
+                    id: opt.value,
+                    ...(availableParties?.institutions?.find(
+                      (p) => p.id === opt.value,
+                    ) || {}),
+                  },
+                },
+                () =>
+                  updateInvolvedParty({
+                    updateInvolvedPartyBody: { involvedPartyId: opt.value },
+                  }),
+              )
+            }}
+          />
+        ) : (
+          <OJOIInput
+            disabled
+            width="half"
+            name="institution"
+            loading={isLoadingParties}
+            value={currentCase.involvedParty.title}
+            label={formatMessage(messages.grunnvinnsla.institution)}
+          />
+        )}
         <OJOISelect
           isDisabled={!canEdit}
           width="half"
@@ -218,7 +282,13 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
               return toast.warning('Eitthvað fór úrskeiðis')
             }
             handleOptimisticUpdate(
-              { ...currentCase, advertDepartment: { ...currentCase.advertDepartment, id: opt.value } },
+              {
+                ...currentCase,
+                advertDepartment: {
+                  ...currentCase.advertDepartment,
+                  id: opt.value,
+                },
+              },
               () => updateDepartment({ departmentId: opt.value }),
             )
           }}
@@ -296,7 +366,7 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
               <OJOITag
                 disabled={!canEdit}
                 isValidating={isUpdatingCategory}
-                key={i}
+                key={category.id}
                 variant="blue"
                 outlined
                 closeable

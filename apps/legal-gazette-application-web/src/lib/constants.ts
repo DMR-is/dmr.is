@@ -13,8 +13,6 @@ export enum DateFormats {
 }
 
 export const ONE_DAY = 1
-
-export const THREE_DAYS = 3 * ONE_DAY
 export const ONE_WEEK = 7 * ONE_DAY
 export const TWO_WEEKS = 14 * ONE_DAY
 export const POSTPONE_LIMIT = 90

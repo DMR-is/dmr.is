@@ -399,7 +399,7 @@ describe('NationalRegistryService', () => {
         'National registry entity lookup response',
         expect.objectContaining({
           context: 'NationalRegistryClientService',
-          status: 200,
+          statusCode: 200,
           contentType: 'application/json',
         }),
       )

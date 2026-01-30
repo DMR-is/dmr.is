@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, OmitType } from '@nestjs/swagger'
 
 import { Paging } from '../paging/paging.dto'
 import { Institution } from './institution.dto'
@@ -18,3 +18,8 @@ export class GetInstitutionsResponse {
   })
   readonly paging!: Paging
 }
+
+export class GetInstitutionsFullResponse extends OmitType(
+  GetInstitutionsResponse,
+  ['paging'] as const,
+) {}

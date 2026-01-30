@@ -718,9 +718,9 @@ export class AdvertService implements IAdvertService {
     this.logger.info('Advert created successfully', {
       advertId: advert.id,
       applicationId: advert.applicationId,
-      type: advert.typeId,
-      category: advert.categoryId,
-      status: advert.statusId,
+      typeId: advert.typeId,
+      categoryId: advert.categoryId,
+      statusId: advert.statusId,
       context: 'AdvertService',
     })
     return advert.fromModelToDetailed()

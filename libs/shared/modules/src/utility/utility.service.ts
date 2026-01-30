@@ -8,7 +8,10 @@ import { ApplicationEvent } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
-import { GetApplicationResponse } from '@dmr.is/shared/dto'
+import {
+  GetApplicationResponse,
+  GetInstitutionsFullResponse,
+} from '@dmr.is/shared/dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import { AdvertTypeModel } from '../advert-type/models'
@@ -26,6 +29,7 @@ import {
 } from '../case/models'
 import { CaseCategoriesModel } from '../case/models/case-categories.model'
 import { casesDetailedIncludes } from '../case/relations'
+import { advertInvolvedPartyMigrate } from '../journal/migrations'
 import {
   AdvertCategoryModel,
   AdvertCorrectionModel,
@@ -74,15 +78,38 @@ export class UtilityService implements IUtilityService {
   }
   async institutionLookup(
     institutionId: string,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<AdvertInvolvedPartyModel>> {
-    const institution =
-      await this.advertInvolvedPartyModel.findByPk(institutionId)
+    const institution = await this.advertInvolvedPartyModel.findByPk(
+      institutionId,
+      {
+        transaction,
+      },
+    )
 
     if (!institution) {
       throw new NotFoundException(`Institution<${institutionId}> not found`)
     }
 
     return ResultWrapper.ok(institution)
+  }
+
+  @LogAndHandle()
+  async getInstitutionsByNationalId(
+    nationalId: string,
+  ): Promise<ResultWrapper<GetInstitutionsFullResponse>> {
+    const parties = await this.advertInvolvedPartyModel.findAndCountAll({
+      distinct: true,
+      order: [['title', 'ASC']],
+      where: {
+        nationalId: nationalId,
+      },
+    })
+
+    const mapped = parties.rows.map((item) => advertInvolvedPartyMigrate(item))
+    return ResultWrapper.ok({
+      institutions: mapped,
+    })
   }
 
   @LogAndHandle()
