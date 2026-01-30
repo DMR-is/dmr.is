@@ -15,10 +15,10 @@ type ErrorWithPotentialReqRes = Error & {
   request?: unknown
   response?: unknown
 }
-
 // This session timeout will be used to set the maxAge of the session cookie
-// When refreshing the token, we will not update the maxAge, so the session will expire
-const SESSION_TIMEOUT = (60 * 60 * 8) + 30 // 8 hours and 30 seconds
+// IDS has a max timeout on refresh tokens, so we set our session timeout to be slightly more
+const SESSION_TIMEOUT = 60 * 60 * 8 + 30 // 8 hours and 30 seconds
+
 const LOGGING_CATEGORY = 'next-auth'
 
 export const localIdentityServerConfig = {
