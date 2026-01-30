@@ -13,6 +13,7 @@ import {
 
 import { RecallSettlementDefault } from './RecallSettlementDefault'
 import { RecallSettlementOwner } from './RecallSettlementOwner'
+import { RecallSettlementUndivided } from './RecallSettlementUndivided'
 import { RecallSettlementSelect } from './RecallSettlmentSelect'
 
 export const RecallDeceasedSettlementFields = () => {
@@ -32,6 +33,8 @@ export const RecallDeceasedSettlementFields = () => {
     </GridRow>
   ) : selectedType === SettlementType.OWNER ? (
     <RecallSettlementOwner />
+  ) : selectedType === SettlementType.UNDIVIDED ? (
+    <RecallSettlementUndivided />
   ) : (
     <RecallSettlementDefault />
   )

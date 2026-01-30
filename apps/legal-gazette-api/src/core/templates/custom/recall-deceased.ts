@@ -39,9 +39,14 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
       case SettlementType.DEFAULT:
         settlementText = ''
         break
-      case SettlementType.UNDIVIDED:
-        settlementText = `${name || ''} sat í óskiptu búi eftir  sem lést þann .`
+      case SettlementType.UNDIVIDED: {
+        if (settlement?.partnerName || settlement?.partnerNationalId) {
+          settlementText = `${name || ''} sat í óskiptu búi eftir maka sinn ${settlement?.partnerName || ''}, kt. ${settlement?.partnerNationalId || ''}.`
+        } else {
+          settlementText = `${name || ''} sat í óskiptu búi.`
+        }
         break
+      }
       case SettlementType.OWNER: {
         const companies = model.settlement.companies
         if (isEmpty(companies) || companies?.length === 0) {
