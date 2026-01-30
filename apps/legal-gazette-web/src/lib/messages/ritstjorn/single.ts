@@ -146,7 +146,7 @@ export const ritstjornSingleMessages = {
     signature: defineMessages({
       name: {
         id: 'lg.web:ritstjorn.single.inputs.signature.name.label',
-        defaultMessage: 'Nafn undirritara',
+        defaultMessage: 'Undirritun',
         description:
           'Label for the signature name input in ritstjórn single page',
       },

@@ -75,7 +75,7 @@ export const LGFooter = ({ site = 'web' }: LGFooterProps) => {
     site === 'web'
       ? [
           {
-            title: 'Innri vefur auglýsanda',
+            title: 'Auglýsendakerfi Lögbirtingablaðsins',
             href: otherLogbirtingSite,
           },
           {
