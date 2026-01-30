@@ -868,7 +868,6 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  @Cacheable({ tagBy: [0], ttlMs: 1 * 60_000 })
   async getAdvert(id: string): Promise<ResultWrapper<GetAdvertResponse>> {
     if (!id) {
       throw new BadRequestException()
@@ -1079,7 +1078,6 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
-  @Cacheable({ tagBy: [0], ttlMs: 10 * 60_000, topic: 'adverts:all' })
   async getAdverts(
     params?: GetAdvertsQueryParams,
   ): Promise<ResultWrapper<GetAdvertsResponse>> {
