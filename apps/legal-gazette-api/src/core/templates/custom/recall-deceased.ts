@@ -24,7 +24,7 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
   const tableHeaderDateOfDeath = getTableHeaderCell('Dánardagur:')
 
   const tableCellName = getTableCell(`
-    ${name || ''}, <br />r
+    ${name || ''}, <br />
     kt. ${nationalId || ''}, <br />
     síðasta heimilisfang:<br />
     ${address || ''}
