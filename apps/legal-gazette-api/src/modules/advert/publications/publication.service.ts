@@ -106,7 +106,7 @@ export class PublicationService implements IPublicationService {
       ],
     })
 
-    if (currentPublications.length > 2) {
+    if (currentPublications.length >= 3) {
       throw new BadRequestException('Max 3 publications allowed')
     }
 
