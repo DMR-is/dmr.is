@@ -12,6 +12,8 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
+import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { CurrentUser } from '@dmr.is/decorators'
 import {
   PublicOrApplicationWebScopes,
   PublicWebScopes,

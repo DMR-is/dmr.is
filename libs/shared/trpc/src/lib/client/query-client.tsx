@@ -12,9 +12,10 @@ export const makeQueryClient = () => {
             return false
           } else if (error.message === 'No session found') {
             // Force login when no session is found
-            const pathname =
-              typeof window !== 'undefined' ? window.location.pathname : '/'
-            forceLogin(pathname)
+            if (typeof window !== 'undefined') {
+              forceLogin( window.location.pathname)
+            }
+
             return false
           }
           return failureCount < 3

@@ -82,6 +82,7 @@ import {
   GetComments,
   GetCommunicationSatusesResponse,
   GetDepartmentsResponse,
+  GetInstitutionsFullResponse,
   GetMainCategoriesQueryParams,
   GetMainCategoriesResponse,
   GetPaymentResponse,
@@ -98,6 +99,7 @@ import {
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
   UpdateCaseDepartmentBody,
+  UpdateCaseInvolvedPartyBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
@@ -928,6 +930,29 @@ export class CaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
   ) {
     ResultWrapper.unwrap(await this.caseService.publishSingleRegulation(id))
+  }
+
+  @Get(':caseId/available-involved-parties')
+  @ApiOperation({ operationId: 'getCaseAvailableInvolvedParties' })
+  @ApiResponse({ status: 200, type: GetInstitutionsFullResponse })
+  async getCaseAvailableInvolvedParties(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+  ): Promise<GetInstitutionsFullResponse> {
+    return ResultWrapper.unwrap(
+      await this.caseService.getCaseAvailableInvolvedParties(caseId),
+    )
+  }
+
+  @Put(':id/involved-party-single')
+  @ApiOperation({ operationId: 'updateSingleCaseInvolvedParty' })
+  @ApiNoContentResponse()
+  async updateInvolvedParty(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateCaseInvolvedPartyBody,
+  ) {
+    ResultWrapper.unwrap(
+      await this.caseService.updateCaseInvolvedParty(id, body),
+    )
   }
 
   @Get(':id/pdf-preview')

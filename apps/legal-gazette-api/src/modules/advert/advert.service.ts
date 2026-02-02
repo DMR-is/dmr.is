@@ -233,8 +233,9 @@ export class AdvertService implements IAdvertService {
         deadline: body.fields.settlementDate,
         liquidatorLocation: body.fields.liquidatorLocation,
         liquidatorName: body.fields.liquidatorName,
-        recallStatementLocation: body.fields.requirementStatementLocation,
-        recallStatementType: body.fields.requirementStatement,
+        recallRequirementStatementLocation:
+          body.fields.requirementStatementLocation,
+        recallRequirementStatementType: body.fields.requirementStatement,
       },
       scheduledAt: body.publishingDates,
       communicationChannels: body.communicationChannels,
@@ -343,8 +344,9 @@ export class AdvertService implements IAdvertService {
         companies: body.fields.companies,
         liquidatorLocation: body.fields.liquidatorLocation,
         liquidatorName: body.fields.liquidatorName,
-        recallStatementLocation: body.fields.requirementStatementLocation,
-        recallStatementType: body.fields.requirementStatement,
+        recallRequirementStatementLocation:
+          body.fields.requirementStatementLocation,
+        recallRequirementStatementType: body.fields.requirementStatement,
       },
       scheduledAt: body.publishingDates,
       communicationChannels: body.communicationChannels,
@@ -663,9 +665,9 @@ export class AdvertService implements IAdvertService {
               liquidatorLocation: body.settlement.liquidatorLocation,
               liquidatorName: body.settlement.liquidatorName,
               liquidatorRecallStatementType:
-                body.settlement.recallStatementType,
+                body.settlement.recallRequirementStatementType,
               liquidatorRecallStatementLocation:
-                body.settlement.recallStatementLocation,
+                body.settlement.recallRequirementStatementLocation,
               address: body.settlement.address,
               dateOfDeath: body.settlement.dateOfDeath
                 ? new Date(body.settlement.dateOfDeath)
@@ -716,9 +718,9 @@ export class AdvertService implements IAdvertService {
     this.logger.info('Advert created successfully', {
       advertId: advert.id,
       applicationId: advert.applicationId,
-      type: advert.typeId,
-      category: advert.categoryId,
-      status: advert.statusId,
+      typeId: advert.typeId,
+      categoryId: advert.categoryId,
+      statusId: advert.statusId,
       context: 'AdvertService',
     })
     return advert.fromModelToDetailed()

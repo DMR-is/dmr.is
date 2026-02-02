@@ -5,6 +5,7 @@ import {
   UpdateAdvertHtmlBody,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
+  UpdateCaseInvolvedPartyBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
@@ -37,7 +38,7 @@ export interface ICaseUpdateService {
     transaction?: Transaction,
   ): Promise<ResultWrapper>
   updateCaseStatus(
-    caseUd: string,
+    caseId: string,
     body: UpdateCaseStatusBody,
     currentUser: UserDto,
     transaction?: Transaction,
@@ -124,6 +125,18 @@ export interface ICaseUpdateService {
   updateAdvert(
     caseId: string,
     body: UpdateAdvertHtmlBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  updateCaseInvolvedParty(
+    caseId: string,
+    body: UpdateCaseInvolvedPartyBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  updateSignatureDateDisplay(
+    caseId: string,
+    hide: boolean,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
 }

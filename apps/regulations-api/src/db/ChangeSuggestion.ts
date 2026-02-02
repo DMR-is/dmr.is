@@ -2,8 +2,15 @@ import S3 from 'aws-sdk/clients/s3'
 import fetch from 'node-fetch'
 import { QueryTypes } from 'sequelize'
 
-import type { HTMLText, PlainText, RegName } from '../routes/types'
+import type {
+  CurrentRegulationChange,
+  HTMLText,
+  PlainText,
+  RegName,
+} from '../routes/types'
+import { removeHistoryAfterRegId } from '../utils/misc'
 import { db } from '../utils/sequelize'
+import { getRegulationById, getRegulationChanges } from './Regulation'
 
 const s3 = new S3({
   region: process.env.AWS_REGION_NAME || 'eu-west-1',
@@ -330,6 +337,57 @@ export async function deleteChangeSuggestion(
 }
 
 /**
+ * Get change history current change
+ */
+export async function getChangeHistoryCurrent(
+  baseRegId: number,
+  changingRegId: number,
+): Promise<CurrentRegulationChange> {
+  if (!baseRegId || !changingRegId) {
+    throw new Error('Invalid regulation ids provided')
+  }
+
+  const baseRegulation = await getRegulationById(baseRegId)
+  const taskBase = baseRegulation
+
+  if (!taskBase) {
+    throw new Error(`Base regulation not found: ${baseRegId}`)
+  }
+
+  const changeHistory = await getRegulationChanges(taskBase.id)
+  const changes =
+    changeHistory &&
+    changeHistory.filter(({ changingid }) => changingid === changingRegId)
+  const _changes = changes.slice(0)
+  const _lastChange = changes[_changes.length - 1]
+
+  const changeHistoryAfterRegId = removeHistoryAfterRegId(
+    changeHistory,
+    changingRegId,
+  )
+
+  if (changeHistoryAfterRegId.length < 1) {
+    throw new Error(
+      `Not enough change history for regulation id: ${changingRegId}`,
+    )
+  }
+  const baseSource =
+    changeHistoryAfterRegId[1] && changeHistoryAfterRegId[1].text
+      ? changeHistoryAfterRegId[1]
+      : taskBase
+  const textSource = changeHistoryAfterRegId[0]?.text
+    ? changeHistoryAfterRegId[0]
+    : baseSource
+
+  const currentChange: CurrentRegulationChange = {
+    date: _lastChange?.date ?? undefined,
+    currentTitle: textSource.title,
+    currentText: textSource.text,
+  }
+  return currentChange
+}
+
+/**
  * Start change suggestion process
  */
 export async function startChangeSuggestionProcess({
@@ -338,12 +396,18 @@ export async function startChangeSuggestionProcess({
 }: {
   baseRegulationName: RegName
   amendingRegulationName: RegName
-}): Promise<any> {
+}): Promise<{ success: true }> {
   const externalUrl = process.env.REGULATION_CHANGE_SUGGESTION_URL
 
   if (!externalUrl) {
     throw new Error(
       'REGULATION_CHANGE_SUGGESTION_URL environment variable is not set',
+    )
+  }
+
+  if (!baseRegulationName || !amendingRegulationName) {
+    throw new Error(
+      `Invalid regulation names provided: has base ${!!baseRegulationName}, has amending ${!!amendingRegulationName}`,
     )
   }
 
@@ -359,10 +423,18 @@ export async function startChangeSuggestionProcess({
   })
 
   if (!response.ok) {
+    let errorDetails = ''
+    try {
+      const errorBody = await response.text()
+      errorDetails = errorBody ? `: ${errorBody}` : ''
+    } catch {
+      // If we can't read the body, just use status ...
+    }
+
     throw new Error(
-      `Failed to start change suggestion process: ${response.status} ${response.statusText}`,
+      `Failed to start change suggestion process: ${response.status} ${response.statusText}${errorDetails}`,
     )
   }
 
-  return await response.json()
+  return { success: true }
 }

@@ -38,6 +38,7 @@ import {
   GetCasesWithStatusCount,
   GetCasesWithStatusCountQuery,
   GetCommunicationSatusesResponse,
+  GetInstitutionsFullResponse,
   GetNextPublicationNumberResponse,
   GetPaymentQuery,
   GetPaymentResponse,
@@ -50,6 +51,7 @@ import {
   UpdateAdvertHtmlCorrection,
   UpdateCaseBody,
   UpdateCaseDepartmentBody,
+  UpdateCaseInvolvedPartyBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
@@ -1218,6 +1220,7 @@ export class CaseService implements ICaseService {
         pdfUrl: `${process.env.ADVERTS_CDN_URL ?? 'https://adverts.stjornartidindi.is'}/${pdfFileName}`,
         advertId: caseToPublish.proposedAdvertId,
         publicationYear: signatureYear.toString(),
+        hideSignatureDate: caseToPublish.hideSignatureDate,
       },
       transaction,
     )
@@ -1371,6 +1374,61 @@ export class CaseService implements ICaseService {
     return ResultWrapper.ok({
       tags: migrated,
     })
+  }
+
+  @LogAndHandle()
+  async getCaseAvailableInvolvedParties(
+    caseId: string,
+  ): Promise<ResultWrapper<GetInstitutionsFullResponse>> {
+    // Get the case to find current involved party
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: ['id', 'involvedPartyId'],
+      include: [
+        {
+          model: AdvertInvolvedPartyModel,
+          attributes: ['id', 'nationalId'],
+        },
+      ],
+    })
+
+    if (!caseLookup) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case not found',
+      })
+    }
+
+    if (!caseLookup.involvedParty) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Case has no involved party assigned',
+      })
+    }
+
+    const currentNationalId = caseLookup.involvedParty.nationalId
+
+    // Find all involved parties with the same national ID
+    const parties =
+      await this.utilityService.getInstitutionsByNationalId(currentNationalId)
+    if (!parties.result.ok) {
+      return ResultWrapper.err({
+        code: 500,
+        message: 'Failed to get institutions',
+      })
+    }
+
+    return ResultWrapper.ok({
+      institutions: parties.result.value.institutions,
+    })
+  }
+
+  @LogAndHandle()
+  async updateCaseInvolvedParty(
+    caseId: string,
+    body: UpdateCaseInvolvedPartyBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    return this.updateService.updateCaseInvolvedParty(caseId, body, transaction)
   }
 
   @LogAndHandle()

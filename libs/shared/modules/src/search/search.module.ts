@@ -12,10 +12,20 @@ import { Client } from '@opensearch-project/opensearch'
     {
       provide: Client,
       useFactory: (cfg: ConfigService) => {
+        const endpoint =
+          cfg.get<string>('OPENSEARCH_CLUSTER_ENDPOINT') ??
+          process.env.OPENSEARCH_CLUSTER_ENDPOINT
+
+        if (!endpoint) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            'No OpenSearch endpoint found (OPENSEARCH_CLUSTER_ENDPOINT). Search functionality disabled.',
+          )
+          return null
+        }
+
         return new Client({
-          node:
-            cfg.get<string>('OPENSEARCH_CLUSTER_ENDPOINT') ??
-            process.env.OPENSEARCH_CLUSTER_ENDPOINT,
+          node: endpoint,
           ssl: { rejectUnauthorized: false },
           maxRetries: 5,
           requestTimeout: 120_000,

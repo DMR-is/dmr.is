@@ -1,6 +1,9 @@
 import { Transaction } from 'sequelize'
 
-import { GetApplicationResponse } from '@dmr.is/shared/dto'
+import {
+  GetApplicationResponse,
+  GetInstitutionsFullResponse,
+} from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { AdvertTypeModel } from '../advert-type/models'
@@ -89,7 +92,19 @@ export interface IUtilityService {
 
   institutionLookup(
     institutionId: string,
+    transaction?: Transaction,
   ): Promise<ResultWrapper<AdvertInvolvedPartyModel>>
+
+  getInstitutionsByNationalId(
+    nationalId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetInstitutionsFullResponse>>
+
+  updateSignatureDateDisplay(
+    caseId: string,
+    hide: boolean,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
 }
 
 export const IUtilityService = Symbol('IUtilityService')

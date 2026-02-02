@@ -15,6 +15,7 @@ import {
   UpdateCaseBody,
   UpdateCaseCommunicationBody,
   UpdateCaseDepartmentBody,
+  UpdateCaseInvolvedPartyBody,
   UpdateCasePriceBody,
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
@@ -226,6 +227,82 @@ export class CaseUpdateService implements ICaseUpdateService {
         },
         transaction,
       )
+    }
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateCaseInvolvedParty(
+    caseId: string,
+    body: UpdateCaseInvolvedPartyBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const caseLookup = await this.caseModel.findByPk(caseId, {
+      attributes: ['id', 'applicationId', 'involvedPartyId'],
+      transaction,
+    })
+
+    if (!caseLookup) {
+      throw new BadRequestException('Case not found')
+    }
+
+    // Get the current involved party
+    const currentInvolvedParty = ResultWrapper.unwrap(
+      await this.utilityService.institutionLookup(
+        caseLookup.involvedPartyId,
+        transaction,
+      ),
+    )
+
+    // Get the target involved party
+    const targetInvolvedParty = ResultWrapper.unwrap(
+      await this.utilityService.institutionLookup(
+        body.involvedPartyId,
+        transaction,
+      ),
+    )
+
+    // Verify that national IDs match
+    if (currentInvolvedParty.nationalId !== targetInvolvedParty.nationalId) {
+      return ResultWrapper.err({
+        code: 400,
+        message: `Cannot update involved party. National ID mismatch.`,
+        category: LOGGING_CATEGORY,
+      })
+    }
+
+    await caseLookup.update({
+      involvedPartyId: body.involvedPartyId,
+      transaction,
+    })
+
+    if (caseLookup.applicationId) {
+      try {
+        ResultWrapper.unwrap(
+          await this.applicationService.updateApplication(
+            caseLookup.applicationId,
+            {
+              answers: {
+                advert: {
+                  departmentId: body.involvedPartyId,
+                },
+              },
+            },
+          ),
+        )
+      } catch (error) {
+        this.logger.warn(
+          `Could not update application<${caseLookup.applicationId}> involved party`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            applicationId: caseLookup.applicationId,
+            error: error,
+          },
+        )
+      }
     }
 
     return ResultWrapper.ok()
@@ -959,6 +1036,20 @@ export class CaseUpdateService implements ICaseUpdateService {
         message: 'Failed to delete addition',
       })
     }
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateSignatureDateDisplay(
+    caseId: string,
+    hide: boolean,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    return this.utilityService.updateSignatureDateDisplay(
+      caseId,
+      hide,
+      transaction,
+    )
   }
 
   @LogAndHandle()

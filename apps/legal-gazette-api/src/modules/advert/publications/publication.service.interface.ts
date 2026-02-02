@@ -1,3 +1,5 @@
+import { DMRUser } from '@dmr.is/auth/dmrUser'
+
 import {
   AdvertPublicationDetailedDto,
   GetPublicationsDto,
