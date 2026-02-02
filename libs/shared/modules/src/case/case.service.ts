@@ -1992,6 +1992,20 @@ export class CaseService implements ICaseService {
 
   @LogAndHandle()
   @Transactional()
+  async updateSignatureDateDisplay(
+    caseId: string,
+    hide: boolean,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    return this.utilityService.updateSignatureDateDisplay(
+      caseId,
+      hide,
+      transaction,
+    )
+  }
+
+  @LogAndHandle()
+  @Transactional()
   async getCasePaymentStatus(
     params: GetPaymentQuery,
     transaction?: Transaction,

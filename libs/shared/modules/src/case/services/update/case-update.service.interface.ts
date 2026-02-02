@@ -133,12 +133,6 @@ export interface ICaseUpdateService {
     body: UpdateCaseInvolvedPartyBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
-
-  updateSignatureDateDisplay(
-    caseId: string,
-    hide: boolean,
-    transaction?: Transaction,
-  ): Promise<ResultWrapper>
 }
 
 export const ICaseUpdateService = Symbol('ICaseUpdateService')

@@ -250,6 +250,12 @@ export interface ICaseService {
     nationalId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<Pick<GetInstitutionsResponse, 'institutions'>>>
+
+  updateSignatureDateDisplay(
+    caseId: string,
+    hide: boolean,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
 }
 
 export const ICaseService = Symbol('ICaseService')

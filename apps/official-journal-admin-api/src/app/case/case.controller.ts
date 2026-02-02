@@ -101,6 +101,7 @@ import {
   UpdateCaseDepartmentBody,
   UpdateCaseInvolvedPartyBody,
   UpdateCasePriceBody,
+  UpdateCaseSignatureDateDisplayBody,
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
@@ -952,6 +953,18 @@ export class CaseController {
   ) {
     ResultWrapper.unwrap(
       await this.caseService.updateCaseInvolvedParty(id, body),
+    )
+  }
+
+  @Put(':id/update-signature-date-display')
+  @ApiOperation({ operationId: 'updateCaseSignatureDateDisplay' })
+  @ApiNoContentResponse()
+  async updateSignatureDateDisplay(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateCaseSignatureDateDisplayBody,
+  ) {
+    ResultWrapper.unwrap(
+      await this.caseService.updateSignatureDateDisplay(id, body.hide),
     )
   }
 

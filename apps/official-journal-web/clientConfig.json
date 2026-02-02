@@ -2065,6 +2065,32 @@
         "summary": ""
       }
     },
+    "/api/v1/cases/{id}/update-signature-date-display": {
+      "put": {
+        "operationId": "updateCaseSignatureDateDisplay",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCaseSignatureDateDisplayBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
     "/api/v1/cases/{id}/pdf-preview": {
       "get": {
         "operationId": "getCasePdfPreview",
@@ -5344,6 +5370,11 @@
             "example": false,
             "description": "Is legacy case."
           },
+          "hideSignatureDate": {
+            "type": "boolean",
+            "example": false,
+            "description": "Should hide display of signature date."
+          },
           "assignedTo": {
             "description": "User the case is assigned to.",
             "nullable": true,
@@ -5462,6 +5493,7 @@
           "createdAt",
           "modifiedAt",
           "isLegacy",
+          "hideSignatureDate",
           "assignedTo",
           "communicationStatus",
           "fastTrack",
@@ -5624,6 +5656,16 @@
           }
         },
         "required": ["involvedPartyId"]
+      },
+      "UpdateCaseSignatureDateDisplayBody": {
+        "type": "object",
+        "properties": {
+          "hide": {
+            "type": "boolean",
+            "description": "Hide signature date display"
+          }
+        },
+        "required": ["hide"]
       },
       "CreateAdvertTypeBody": {
         "type": "object",

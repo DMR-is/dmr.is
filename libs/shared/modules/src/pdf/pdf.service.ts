@@ -240,7 +240,7 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     if (!activeCase.publicationNumber && serial) {
       activeCase.publicationNumber = serial.toString()
     }
-    const markup = advertPdfTemplate({
+    let markup = advertPdfTemplate({
       title: activeCase.advertTitle,
       type: activeCase.advertType.title,
       content: simpleSanitize(activeCase.html as HTMLText),
@@ -267,9 +267,12 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
     const header =
       activeCase.publicationNumber && activeCase.signature.signatureDate
-        ? `<span style="font-family:'Times New Roman', serif;">Nr. ${activeCase.publicationNumber}</span><span style="font-family:'Times New Roman', serif;">${formatAnyDate(newest)}</span>`
+        ? `<span style="font-family:'Times New Roman', serif;">Nr. ${activeCase.publicationNumber}</span>${activeCase.hideSignatureDate ? '' : `<span style="font-family:'Times New Roman', serif;">${formatAnyDate(newest)}</span>`}`
         : ''
 
+    if (activeCase.hideSignatureDate) {
+      markup = markup + '<style>.signature__date { display: none; }</style>'
+    }
     const pdfResults = await this.generatePdfFromHtml(markup, header)
 
     if (!pdfResults.result.ok) {
