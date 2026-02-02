@@ -258,7 +258,7 @@ describe('CanPublishGuard', () => {
           NotFoundException,
         )
         await expect(guard.canActivate(context)).rejects.toThrow(
-          'Advert with id non-existent not found',
+          'Advert not found',
         )
       })
     })
@@ -303,6 +303,9 @@ describe('CanPublishGuard', () => {
         await expect(guard.canActivate(context)).rejects.toThrow(
           ForbiddenException,
         )
+        await expect(guard.canActivate(context)).rejects.toThrow(
+          'Advert cannot be published in its current state',
+        )
         expect(mockAdvert.canPublish).toHaveBeenCalled()
       })
 
@@ -317,6 +320,9 @@ describe('CanPublishGuard', () => {
         await expect(guard.canActivate(context)).rejects.toThrow(
           ForbiddenException,
         )
+        await expect(guard.canActivate(context)).rejects.toThrow(
+          'Advert cannot be published in its current state',
+        )
       })
 
       it('should throw ForbiddenException when advert is PUBLISHED', async () => {
@@ -329,6 +335,9 @@ describe('CanPublishGuard', () => {
 
         await expect(guard.canActivate(context)).rejects.toThrow(
           ForbiddenException,
+        )
+        await expect(guard.canActivate(context)).rejects.toThrow(
+          'Advert cannot be published in its current state',
         )
       })
 
@@ -343,6 +352,9 @@ describe('CanPublishGuard', () => {
         await expect(guard.canActivate(context)).rejects.toThrow(
           ForbiddenException,
         )
+        await expect(guard.canActivate(context)).rejects.toThrow(
+          'Advert cannot be published in its current state',
+        )
       })
 
       it('should throw ForbiddenException when advert is WITHDRAWN', async () => {
@@ -355,6 +367,9 @@ describe('CanPublishGuard', () => {
 
         await expect(guard.canActivate(context)).rejects.toThrow(
           ForbiddenException,
+        )
+        await expect(guard.canActivate(context)).rejects.toThrow(
+          'Advert cannot be published in its current state',
         )
       })
     })
