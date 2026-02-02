@@ -71,6 +71,7 @@ export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
         currentStatus={advert.status}
         canEdit={advert.canEdit}
         setModalVisible={setModalVisible}
+        canPublish={advert.canPublish}
       />
       <AdvertFormStepper id={id} />
       {publicationData?.html && modalVisible && (

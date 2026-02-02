@@ -12,7 +12,7 @@ import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useQuery } from '@tanstack/react-query'
 
-export const PublicationsToBePublished = () => {
+export const AdvertsInPublishing = () => {
   const { formatMessage } = useIntl()
   const { params, setParams } = useFilterContext()
   const trpc = useTRPC()
@@ -29,22 +29,54 @@ export const PublicationsToBePublished = () => {
     }),
   )
 
+  const columns = [
+    {
+      field: 'lastPublished',
+      children: 'Siðast birt',
+      size: 'small' as const,
+    },
+    {
+      field: 'scheduledAt',
+      children: 'Næsta birting',
+    },
+    {
+      field: 'tegund',
+      children: formatMessage(ritstjornTableMessages.columns.category),
+      size: 'tiny' as const,
+    },
+    {
+      field: 'efni',
+      children: formatMessage(ritstjornTableMessages.columns.content),
+    },
+    {
+      field: 'sender',
+      children: formatMessage(ritstjornTableMessages.columns.sender),
+      size: 'tiny' as const,
+    },
+
+    {
+      field: 'owner',
+      children: formatMessage(ritstjornTableMessages.columns.owner),
+      size: 'tiny' as const,
+    },
+  ]
+
   const rows = data?.adverts.map((advert) => ({
     lastPublished: advert.lastPublishedAt ? (
       <Text variant="medium" whiteSpace="nowrap">
-        {formatDate(advert.lastPublishedAt, 'd. MMMM yyyy')}
+        {formatDate(advert.lastPublishedAt, 'dd.MM.yyyy')}
       </Text>
     ) : (
       'Enginn fyrri birting'
     ),
     scheduledAt: advert.scheduledAt ? (
       <Text variant="medium" whiteSpace="nowrap">
-        {formatDate(advert.scheduledAt, 'd. MMMM yyyy')}
+        {formatDate(advert.scheduledAt, 'dd.MM.yyyy')}
       </Text>
     ) : (
       'Engin útgáfudagsetning skráð'
     ),
-    flokkur: advert.category.title,
+    tegund: advert.type.title,
     efni: advert.title,
     sender: advert.createdBy,
     owner: advert.assignedUser?.name,
@@ -54,39 +86,7 @@ export const PublicationsToBePublished = () => {
 
   return (
     <DataTable
-      columns={
-        [
-          {
-            field: 'lastPublished',
-            children: 'Siðast birt',
-            size: 'small',
-          },
-          {
-            field: 'scheduledAt',
-            children: 'Næsta birting',
-          },
-          {
-            field: 'flokkur',
-            children: formatMessage(ritstjornTableMessages.columns.category),
-            size: 'tiny',
-          },
-          {
-            field: 'efni',
-            children: formatMessage(ritstjornTableMessages.columns.content),
-          },
-          {
-            field: 'sender',
-            children: formatMessage(ritstjornTableMessages.columns.sender),
-            size: 'tiny',
-          },
-
-          {
-            field: 'owner',
-            children: formatMessage(ritstjornTableMessages.columns.owner),
-            size: 'tiny',
-          },
-        ] as const
-      }
+      columns={columns}
       rows={rows}
       paging={data?.paging}
       onPageChange={(page) => setParams({ page: page })}
