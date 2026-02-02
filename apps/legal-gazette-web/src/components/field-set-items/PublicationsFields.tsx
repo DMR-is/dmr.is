@@ -4,21 +4,21 @@ import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
 import {
+  Box,
   Button,
   DatePicker,
-  DropdownMenu,
   GridColumn,
   GridRow,
+  Icon,
   Input,
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
 
-import { Inline, toast } from '@island.is/island-ui/core'
+import { Inline } from '@island.is/island-ui/core'
 
-import { AdvertPublicationDto, StatusDto } from '../../gen/fetch'
+import { AdvertPublicationDto } from '../../gen/fetch'
 import { useUpdatePublications } from '../../hooks/useUpdatePublications'
-import { StatusIdEnum } from '../../lib/constants'
 
 type PublicationsFieldsProps = {
   id: string
@@ -26,7 +26,6 @@ type PublicationsFieldsProps = {
   canPublish: boolean
   isAssignedToMe: boolean
   publications: AdvertPublicationDto[]
-  advertStatus: StatusDto
 }
 
 export const PublicationsFields = ({
@@ -35,14 +34,9 @@ export const PublicationsFields = ({
   canPublish,
   isAssignedToMe,
   publications,
-  advertStatus,
 }: PublicationsFieldsProps) => {
-  const {
-    createPublication,
-    updatePublication,
-    deletePublication,
-    publishPublication,
-  } = useUpdatePublications(id)
+  const { createPublication, updatePublication, deletePublication } =
+    useUpdatePublications(id)
 
   const handleCreatePublication = () => {
     createPublication()
@@ -50,25 +44,6 @@ export const PublicationsFields = ({
 
   const handleDeletePublication = (publicationId: string) => {
     deletePublication(publicationId)
-  }
-
-  const handlePublishPublication = (pub: AdvertPublicationDto) => {
-    const allowedStatuses: string[] = [
-      StatusIdEnum.READY_FOR_PUBLICATION,
-      StatusIdEnum.IN_PUBLISHING,
-    ]
-
-    if (!allowedStatuses.includes(advertStatus.id)) {
-      toast.warning('Auglýsing er ekki í réttri stöðu til birtingar')
-      return
-    }
-
-    if (pub.publishedAt) {
-      toast.warning('Birting þegar gefin út')
-      return
-    }
-
-    publishPublication(pub.id)
   }
 
   return (
@@ -83,22 +58,8 @@ export const PublicationsFields = ({
           </GridColumn>
         </GridRow>
 
-        {publications.map((pub, i) => {
+        {publications.map((pub) => {
           const isPublished = Boolean(pub.publishedAt)
-
-          const menuItems = [
-            {
-              title: 'Gefa út birtingu',
-              onClick: () => handlePublishPublication(pub),
-            },
-          ]
-
-          if (i > 0) {
-            menuItems.push({
-              title: 'Fjarlægja birtingu',
-              onClick: () => handleDeletePublication(pub.id),
-            })
-          }
 
           return (
             <GridRow key={pub.id}>
@@ -147,12 +108,25 @@ export const PublicationsFields = ({
                     />
                   </GridColumn>
                   <GridColumn span={['2/12']}>
-                    <DropdownMenu
-                      disabled={!canPublish}
-                      icon="settings"
-                      iconType="outline"
-                      items={menuItems}
-                    />
+                    <Box
+                      height="full"
+                      display="flex"
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePublication(pub.id)}
+                        disabled={!canEdit}
+                      >
+                        <Icon
+                          size="medium"
+                          color="roseTinted400"
+                          type="outline"
+                          icon="trash"
+                        />
+                      </button>
+                    </Box>
                   </GridColumn>
                 </GridRow>
               </GridColumn>
@@ -164,10 +138,9 @@ export const PublicationsFields = ({
           <GridColumn span="12/12">
             <Inline align="right" alignY="center">
               <Button
-                disabled={publications.length >= 3 || !canPublish}
+                disabled={publications.length >= 3 || !canEdit}
                 icon="add"
                 iconType="outline"
-                // loading={isUpdatingAdvert}
                 onClick={handleCreatePublication}
               >
                 Bæta við birtingu

@@ -10,11 +10,25 @@ import { EmployeeSelect } from '../../components/employee-select/EmployeeSelect'
 import { AdvertFormStepper } from '../../components/Form/AdvertFormStepper'
 import { AdvertSidebar } from '../../components/Form/FormSidebar'
 import { AdvertPublicationModal } from '../../components/modals/AdvertPublicationModal'
-import { AdvertVersionEnum } from '../../gen/fetch'
+import { AdvertPublicationDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 type AdvertContainerProps = {
   id: string
+}
+
+const findOptimalPublicationId = (
+  publications: AdvertPublicationDto[],
+): string => {
+  // search for next publication which is not published
+  for (const pub of publications) {
+    if (!pub.publishedAt) {
+      return pub.id
+    }
+  }
+
+  // all are published, return the last one
+  return publications[publications.length - 1]?.id
 }
 
 export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
@@ -23,6 +37,7 @@ export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
     trpc.getEmployees.queryOptions(),
   )
   const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id }))
+  const pubId = findOptimalPublicationId(advert.publications)
 
   const [modalVisible, setModalVisible] = useState(false)
 
@@ -30,12 +45,7 @@ export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
     data: publicationData,
     error: publicationError,
     isLoading: isLoadingPublicationData,
-  } = useQuery(
-    trpc.getPublication.queryOptions({
-      advertId: id,
-      version: advert.publications[0]?.version as AdvertVersionEnum,
-    }),
-  )
+  } = useQuery(trpc.getPublication.queryOptions({ id: pubId }))
 
   useEffect(() => {
     if (publicationError && !isLoadingPublicationData) {

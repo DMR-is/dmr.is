@@ -160,7 +160,6 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
               canPublish={advert.canPublish}
               isAssignedToMe={advert.isAssignedToMe}
               publications={advert.publications}
-              advertStatus={advert.status}
             />
           ),
           hidden: false,

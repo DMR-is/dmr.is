@@ -58,7 +58,7 @@ export class CanEditOrPublishGuard implements CanActivate {
     }
 
     const advert = await this.advertModel.findOne({
-      attributes: ['id', 'statusId'],
+      attributes: ['id', 'statusId', 'assignedUserId'],
       where: {
         id: advertId,
       },

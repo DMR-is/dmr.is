@@ -13,7 +13,7 @@ import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
-import { AdminAccess } from '../../../core/decorators'
+import { AdminAccess, LGResponse } from '../../../core/decorators'
 import { AdvertPublishBulkDto } from '../../../core/dto/advert-publish.dto'
 import {
   AuthorizationGuard,
@@ -37,6 +37,7 @@ export class AdvertPublishController {
 
   @Post('/publish-next')
   @UseGuards(CanPublishBulkGuard)
+  @LGResponse({ operationId: 'publishNextBulk' })
   async publishNextBulk(
     @Body() body: AdvertPublishBulkDto,
     @CurrentUser() user: DMRUser,
@@ -49,6 +50,7 @@ export class AdvertPublishController {
 
   @Post('/publish-next/:advertId')
   @UseGuards(CanPublishGuard)
+  @LGResponse({ operationId: 'publishNext' })
   async publishNext(
     @Param('advertId', new UUIDValidationPipe()) advertId: string,
     @CurrentUser() user: DMRUser,
