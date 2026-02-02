@@ -24,7 +24,7 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
   const tableHeaderDateOfDeath = getTableHeaderCell('Dánardagur:')
 
   const tableCellName = getTableCell(`
-    ${name || ''}, <br />
+    ${name || ''}, <br />r
     kt. ${nationalId || ''}, <br />
     síðasta heimilisfang:<br />
     ${address || ''}
@@ -70,8 +70,26 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
     }
   }
 
+  // Determine the correct location based on the statement type
+  const getStatementLocation = () => {
+    if (
+      settlement?.liquidatorRecallStatementType ===
+      ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
+    ) {
+      return settlement?.liquidatorLocation || ''
+    }
+    // For CUSTOMLIQUIDATORLOCATION or CUSTOMLIQUIDATOREMAIL
+    return settlement?.liquidatorRecallStatementLocation || ''
+  }
+
+  const statementPrefix =
+    settlement?.liquidatorRecallStatementType ===
+    ApplicationRequirementStatementEnum.CUSTOMLIQUIDATOREMAIL
+      ? 'með rafrænum hætti á netfangið '
+      : 'að '
+
   const outro = getElement(
-    `Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur framangreindu dánarbúi eða telja til eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu þessarar innköllunar. ${getElement(`Kröfulýsingar skulu sendar skiptastjóra ${settlement?.liquidatorRecallStatementType === ApplicationRequirementStatementEnum.CUSTOMLIQUIDATOREMAIL ? 'með rafrænum hætti á netfangið ' : 'að '} ${settlement?.liquidatorRecallStatementLocation || ''}`)}`,
+    `Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur framangreindu dánarbúi eða telja til eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu þessarar innköllunar. ${getElement(`Kröfulýsingar skulu sendar skiptastjóra ${statementPrefix}${getStatementLocation()}`)}`,
   )
 
   return `
