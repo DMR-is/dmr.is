@@ -60,14 +60,14 @@ export const PublicationsFields = ({
 
         {publications.map((pub) => {
           const isPublished = Boolean(pub.publishedAt)
+          const canModifySchedule = isAssignedToMe && (canPublish || canEdit)
+          const isScheduleDisabled = isPublished || !canModifySchedule
 
           return (
             <GridRow key={pub.id}>
               <GridColumn span={['12/12', '6/12']}>
                 <DatePicker
-                  disabled={
-                    isPublished || !isAssignedToMe || (!canPublish && !canEdit)
-                  }
+                  disabled={isScheduleDisabled}
                   backgroundColor="blue"
                   name="scheduledAt"
                   label={`Birting ${pub.version}`}
