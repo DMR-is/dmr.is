@@ -64,22 +64,19 @@ export class CanPublishGuard implements CanActivate {
     })
 
     if (!advert) {
-      throw new NotFoundException(`Advert with id ${advertId} not found`)
+      throw new NotFoundException(`Advert not found`)
     }
 
     const canPublish = advert.canPublish()
 
     if (!canPublish) {
-      this.logger.warn(
-        `Advert with id ${advertId} is not in a publishable state. Status: ${advert.statusId}`,
-        {
-          context: 'CanPublishGuard',
-          advertId,
-          status: advert.statusId,
-        },
-      )
+      this.logger.warn(`Advert is not in a publishable state`, {
+        context: 'CanPublishGuard',
+        advertId,
+        status: advert.statusId,
+      })
       throw new ForbiddenException(
-        `Advert with id ${advertId} cannot be published (status: ${advert.statusId})`,
+        `Advert cannot be published in its current state`,
       )
     }
 
