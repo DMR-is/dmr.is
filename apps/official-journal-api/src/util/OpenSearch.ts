@@ -120,7 +120,7 @@ function buildSort(qp?: GetAdvertsQueryParams): any[] {
       {
         'publicationNumber.year': {
           order: direction,
-          unmapped_type: 'keyword',
+          unmapped_type: 'long',
           missing: '_last',
         },
       },
