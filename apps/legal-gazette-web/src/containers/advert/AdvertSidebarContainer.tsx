@@ -1,17 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-
 import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
-import { toast } from '@dmr.is/ui/components/island-is'
 
 import { ChangeStatusButtons } from '../../components/buttons/ChangeStatusButtons'
 import { EmployeeSelect } from '../../components/employee-select/EmployeeSelect'
 import { AdvertFormStepper } from '../../components/Form/AdvertFormStepper'
 import { AdvertSidebar } from '../../components/Form/FormSidebar'
-import { AdvertPublicationModal } from '../../components/modals/AdvertPublicationModal'
 import { AdvertPublicationDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { AdvertPublicationModalContainer } from './AdvertPublicationModalContainer'
 
 type AdvertContainerProps = {
   id: string
@@ -39,26 +36,6 @@ export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
   const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id }))
   const pubId = findOptimalPublicationId(advert.publications)
 
-  const [modalVisible, setModalVisible] = useState(false)
-
-  const {
-    data: publicationData,
-    error: publicationError,
-    isLoading: isLoadingPublicationData,
-    refetch,
-  } = useQuery(trpc.getPublication.queryOptions({ id: pubId }))
-
-  useEffect(() => {
-    if (publicationError && !isLoadingPublicationData) {
-      toast.error('Ekki tókst að sækja birtingu')
-    }
-  }, [publicationError, isLoadingPublicationData])
-
-  const onOpenPublicationModal = (modalVisible: boolean) => {
-    if (publicationData) refetch()
-    setModalVisible(modalVisible)
-  }
-
   return (
     <AdvertSidebar>
       <EmployeeSelect
@@ -76,20 +53,11 @@ export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
         advertId={advert.id}
         currentStatus={advert.status}
         canEdit={advert.canEdit}
-        setModalVisible={(modalVisible) => onOpenPublicationModal(modalVisible)}
         canPublish={advert.canPublish}
+        previewSlot={<AdvertPublicationModalContainer pubId={pubId} />}
       />
+
       <AdvertFormStepper id={id} />
-      {publicationData?.html && modalVisible && (
-        <AdvertPublicationModal
-          html={publicationData.html}
-          isVisible={modalVisible}
-          onVisibilityChange={(vis) => {
-            setModalVisible(vis)
-          }}
-          id="advert-publication-modal"
-        />
-      )}
     </AdvertSidebar>
   )
 }

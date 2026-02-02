@@ -28,7 +28,7 @@ type Props = {
   canEdit?: boolean
   canPublish?: boolean
   currentStatus: StatusDto
-  setModalVisible: (visible: boolean) => void
+  previewSlot?: React.ReactNode
 }
 
 export const ChangeStatusButtons = ({
@@ -36,7 +36,7 @@ export const ChangeStatusButtons = ({
   currentStatus,
   canEdit = false,
   canPublish = false,
-  setModalVisible,
+  previewSlot,
 }: Props) => {
   const {
     moveToNextStatus,
@@ -215,17 +215,7 @@ export const ChangeStatusButtons = ({
         </Box>
       )}
       <Inline space={0} flexWrap="wrap" justifyContent={'spaceBetween'}>
-        <Button
-          variant="ghost"
-          size="small"
-          onClick={() => {
-            setModalVisible(true)
-          }}
-        >
-          <Text color="blue400" fontWeight="semiBold" variant="small">
-            &nbsp;Skoða auglýsingu&nbsp;
-          </Text>
-        </Button>
+        {previewSlot}
         {currentStatus.id !== StatusIdEnum.REJECTED && (
           <Button
             disabled={!canEdit}
