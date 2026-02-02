@@ -341,6 +341,45 @@ describe('AdvertPublishService', () => {
       )
     })
 
+    it('should set status to PUBLISHED when publishing first and only publication', async () => {
+      // Arrange
+      const advertId = 'advert-123'
+      const publication = createMockPublication({
+        id: 'pub-only',
+        advertId,
+        publishedAt: null,
+      })
+      const advert = createMockAdvert({
+        id: advertId,
+        publicationNumber: null,
+        statusId: StatusIdEnum.READY_FOR_PUBLICATION,
+      })
+
+      publicationModel.findOneOrThrow.mockResolvedValue(publication)
+      advertModel.withScope.mockReturnThis()
+      advertModel.findByPkOrThrow.mockResolvedValue(advert)
+      advertModel.findOne.mockResolvedValue(null) // No existing publications today
+      publicationModel.findAll.mockResolvedValue([publication]) // Only one publication
+
+      // Act
+      await service.publishNextPublication(advertId)
+
+      // Assert
+      // First update: assign publication number and set to IN_PUBLISHING
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          publicationNumber: expect.stringMatching(/^\d{11}$/),
+          statusId: StatusIdEnum.IN_PUBLISHING,
+        }),
+      )
+      // Second update: set to PUBLISHED (all publications are published)
+      expect(advert.update).toHaveBeenCalledWith(
+        { statusId: StatusIdEnum.PUBLISHED },
+        expect.any(Object),
+      )
+      expect(advert.update).toHaveBeenCalledTimes(2)
+    })
+
     it('should increment publication number based on existing publications', async () => {
       // Arrange
       const advertId = 'advert-123'
