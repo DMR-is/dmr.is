@@ -1,7 +1,7 @@
 import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
-import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager'
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'

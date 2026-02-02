@@ -200,10 +200,8 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       )
       const result = await authorizationGuard.canActivate(context)
       expect(result).toBe(true)
-      expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
-        PUBLIC_WEB_NATIONAL_ID,
-        true,
-      )
+      // No getUserByNationalId call - scope check is sufficient (optimization)
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
     })
 
     it('should ALLOW application-web users (via scope)', async () => {
@@ -213,10 +211,8 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       )
       const result = await authorizationGuard.canActivate(context)
       expect(result).toBe(true)
-      expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
-        APPLICATION_WEB_NATIONAL_ID,
-        true,
-      )
+      // No getUserByNationalId call - scope check is sufficient (optimization)
+      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
     })
 
     it('should DENY users with random/invalid scope (not admin, not valid scope)', async () => {

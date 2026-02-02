@@ -164,7 +164,7 @@ describe('CanEditOrPublishGuard', () => {
           where: { id: 'publication-123' },
         })
         expect(advertModel.findOne).toHaveBeenCalledWith({
-          attributes: ['id', 'statusId'],
+          attributes: ['id', 'statusId', 'assignedUserId'],
           where: { id: 'resolved-advert-id' },
         })
       })
@@ -446,7 +446,7 @@ describe('CanEditOrPublishGuard', () => {
         await guard.canActivate(context)
 
         expect(advertModel.findOne).toHaveBeenCalledWith({
-          attributes: ['id', 'statusId'],
+          attributes: ['id', 'statusId', 'assignedUserId'],
           where: { id: 'advert-123' },
         })
       })
@@ -476,7 +476,7 @@ describe('CanEditOrPublishGuard', () => {
 
         expect(advertPublicationModel.findOne).not.toHaveBeenCalled()
         expect(advertModel.findOne).toHaveBeenCalledWith({
-          attributes: ['id', 'statusId'],
+          attributes: ['id', 'statusId', 'assignedUserId'],
           where: { id: 'direct-advert-id' },
         })
       })
