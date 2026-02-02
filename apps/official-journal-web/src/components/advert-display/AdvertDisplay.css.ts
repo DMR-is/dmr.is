@@ -39,6 +39,11 @@ globalStyle(
   },
 )
 
+export const advertSignature = style({})
+globalStyle(`${advertSignature} .signature__date`, {
+  display: 'none',
+})
+
 export const wrapper = style({
   position: 'relative',
   overflowY: 'auto',

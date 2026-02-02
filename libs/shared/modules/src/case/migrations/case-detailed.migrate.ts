@@ -35,6 +35,7 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
     ),
     fastTrack: model.fastTrack,
     isLegacy: model.isLegacy,
+    hideSignatureDate: model.hideSignatureDate,
     modifiedAt: model.updatedAt,
     publishedAt: model.publishedAt,
     requestedPublicationDate: model.requestedPublicationDate,
