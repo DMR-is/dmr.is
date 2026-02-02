@@ -103,7 +103,6 @@ function buildSort(qp?: GetAdvertsQueryParams): any[] {
 
   if (sortBy === 'date' || sortBy === 'publicationdate') {
     return [
-      { _score: 'desc' },
       {
         publicationDate: {
           order: direction,
@@ -118,7 +117,6 @@ function buildSort(qp?: GetAdvertsQueryParams): any[] {
   if (sortBy === 'number' || sortBy === 'publicationnumber') {
     // Sort by year first, then by number within year
     return [
-      { _score: 'desc' },
       {
         'publicationNumber.year': {
           order: direction,
