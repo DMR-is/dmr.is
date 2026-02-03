@@ -9,6 +9,7 @@ import { CanEditGuard } from './can-edit.guard'
 import { CanEditOrPublishGuard } from './can-edit-or-publish.guard'
 import { CanPublishGuard } from './can-publish.guard'
 import { CanPublishBulkGuard } from './can-publish-bulk.guard'
+import { AdvertGuardUtils } from './utils'
 
 /**
  * Module that provides advert-related guards for authorization.
@@ -39,6 +40,7 @@ import { CanPublishBulkGuard } from './can-publish-bulk.guard'
     LoggingModule,
   ],
   providers: [
+    AdvertGuardUtils,
     CanEditGuard,
     CanPublishGuard,
     CanPublishBulkGuard,
@@ -47,6 +49,7 @@ import { CanPublishBulkGuard } from './can-publish-bulk.guard'
   exports: [
     // Re-export SequelizeModule so model providers are available to consumers
     SequelizeModule,
+    AdvertGuardUtils,
     CanEditGuard,
     CanPublishGuard,
     CanPublishBulkGuard,

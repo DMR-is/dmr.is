@@ -12,7 +12,7 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { AdvertModel } from '../../../models/advert.model'
-import { AdvertPublicationModel } from '../../../models/advert-publication.model'
+import { AdvertGuardUtils } from './utils'
 
 /**
  * Guard that validates if an advert can be edited by the current user.
@@ -34,8 +34,7 @@ export class CanEditGuard implements CanActivate {
   constructor(
     @InjectModel(AdvertModel)
     private advertModel: typeof AdvertModel,
-    @InjectModel(AdvertPublicationModel)
-    private advertPublicationModel: typeof AdvertPublicationModel,
+    private advertGuardUtils: AdvertGuardUtils,
     @Inject(LOGGER_PROVIDER) private logger: Logger,
   ) {}
 
@@ -53,7 +52,10 @@ export class CanEditGuard implements CanActivate {
     }
 
     // Try to get advertId from different sources
-    const advertId = await this.resolveAdvertId(request.params)
+    const advertId = await this.advertGuardUtils.resolveAdvertId(
+      request.params,
+      'CanEditGuard',
+    )
 
     if (!advertId) {
       this.logger.warn(
@@ -104,74 +106,5 @@ export class CanEditGuard implements CanActivate {
     })
 
     return true
-  }
-
-  /**
-   * Resolves the advertId from request parameters.
-   * Handles three cases:
-   * 1. Direct advertId parameter
-   * 2. Generic id parameter (used in some routes)
-   * 3. publicationId parameter (nested resource - requires lookup)
-   */
-  private async resolveAdvertId(
-    params: Record<string, string>,
-  ): Promise<string | null> {
-    // Case 1: Direct advertId parameter
-    if (params.advertId) {
-      return params.advertId
-    }
-
-    // Case 2: Generic id parameter
-    if (params.id) {
-      return params.id
-    }
-
-    // Case 3: publicationId parameter - need to lookup advertId
-    if (params.publicationId) {
-      try {
-        const publication = await this.advertPublicationModel.findOne({
-          attributes: ['advertId'],
-          where: { id: params.publicationId },
-        })
-
-        if (!publication) {
-          this.logger.warn(
-            `Publication ${params.publicationId} not found during advertId resolution`,
-            {
-              context: 'CanEditGuard',
-              publicationId: params.publicationId,
-            },
-          )
-          throw new NotFoundException(
-            `Publication with id ${params.publicationId} not found`,
-          )
-        }
-
-        this.logger.debug(
-          `Resolved advertId ${publication.advertId} from publicationId ${params.publicationId}`,
-          {
-            context: 'CanEditGuard',
-            publicationId: params.publicationId,
-            advertId: publication.advertId,
-          },
-        )
-
-        return publication.advertId
-      } catch (error) {
-        if (error instanceof NotFoundException) {
-          throw error
-        }
-        this.logger.error(
-          `Error resolving advertId from publicationId ${params.publicationId}`,
-          {
-            context: 'CanEditGuard',
-            error: error instanceof Error ? error.message : 'Unknown error',
-          },
-        )
-        throw error
-      }
-    }
-
-    return null
   }
 }

@@ -13,6 +13,7 @@ import { AdvertModel } from '../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
 import { StatusIdEnum } from '../../../models/status.model'
 import { CanEditGuard } from './can-edit.guard'
+import { AdvertGuardUtils } from './utils'
 
 describe('CanEditGuard', () => {
   let guard: CanEditGuard
@@ -59,6 +60,7 @@ describe('CanEditGuard', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CanEditGuard,
+        AdvertGuardUtils,
         {
           provide: getModelToken(AdvertModel),
           useValue: mockAdvertModel,
@@ -170,26 +172,6 @@ describe('CanEditGuard', () => {
         expect(advertPublicationModel.findOne).not.toHaveBeenCalled()
       })
 
-      it('should use id parameter when advertId is not available', async () => {
-        const mockAdvert = createMockAdvert(
-          StatusIdEnum.IN_PROGRESS,
-          'admin-123',
-        )
-        jest
-          .spyOn(advertModel, 'findOne')
-          .mockResolvedValue(mockAdvert as AdvertModel)
-
-        const context = createMockContext(adminUser, { id: 'advert-456' })
-
-        await guard.canActivate(context)
-
-        expect(advertModel.findOne).toHaveBeenCalledWith({
-          attributes: ['id', 'statusId', 'assignedUserId'],
-          where: { id: 'advert-456' },
-        })
-        expect(advertPublicationModel.findOne).not.toHaveBeenCalled()
-      })
-
       it('should return false when no parameters are found', async () => {
         const context = createMockContext(adminUser, {})
 
@@ -237,7 +219,7 @@ describe('CanEditGuard', () => {
           where: { id: 'advert-789' },
         })
         expect(logger.debug).toHaveBeenCalledWith(
-          'Resolved advertId advert-789 from publicationId pub-123',
+          'Resolved advertId from publicationId',
           expect.objectContaining({
             context: 'CanEditGuard',
             publicationId: 'pub-123',
@@ -260,7 +242,7 @@ describe('CanEditGuard', () => {
           'Publication with id non-existent not found',
         )
         expect(logger.warn).toHaveBeenCalledWith(
-          'Publication non-existent not found during advertId resolution',
+          'Publication not found during advertId resolution',
           expect.objectContaining({
             context: 'CanEditGuard',
             publicationId: 'non-existent',
@@ -493,9 +475,10 @@ describe('CanEditGuard', () => {
           'Database error',
         )
         expect(logger.error).toHaveBeenCalledWith(
-          'Error resolving advertId from publicationId pub-123',
+          'Error resolving advertId from publicationId',
           expect.objectContaining({
             context: 'CanEditGuard',
+            publicationId: 'pub-123',
             error: 'Database error',
           }),
         )

@@ -12,7 +12,7 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { AdvertModel } from '../../../models/advert.model'
-import { AdvertPublicationModel } from '../../../models/advert-publication.model'
+import { AdvertGuardUtils } from './utils'
 
 /**
  * Guard that checks if user can either edit OR publish an advert.
@@ -33,8 +33,7 @@ export class CanEditOrPublishGuard implements CanActivate {
   constructor(
     @InjectModel(AdvertModel)
     private advertModel: typeof AdvertModel,
-    @InjectModel(AdvertPublicationModel)
-    private advertPublicationModel: typeof AdvertPublicationModel,
+    private advertGuardUtils: AdvertGuardUtils,
     @Inject(LOGGER_PROVIDER)
     private readonly logger: Logger,
   ) {}
@@ -44,7 +43,10 @@ export class CanEditOrPublishGuard implements CanActivate {
     const user = request.user as DMRUser | undefined
 
     // Try to get advertId from different sources
-    const advertId = await this.resolveAdvertId(request.params)
+    const advertId = await this.advertGuardUtils.resolveAdvertId(
+      request.params,
+      'CanEditOrPublishGuard',
+    )
 
     if (!advertId) {
       this.logger.warn(
@@ -102,62 +104,5 @@ export class CanEditOrPublishGuard implements CanActivate {
     throw new ForbiddenException(
       `Cannot perform this operation. User must be assigned to the advert or advert must be in publishable state`,
     )
-  }
-
-  /**
-   * Resolves advertId from request parameters with priority:
-   * 1. advertId (direct parameter)
-   * 2. id (alternative direct parameter)
-   * 3. publicationId (needs lookup via AdvertPublicationModel)
-   */
-  private async resolveAdvertId(
-    params: Record<string, string>,
-  ): Promise<string | null> {
-    // Priority 1: Direct advertId
-    if (params.advertId) {
-      this.logger.debug('Using advertId from params', {
-        context: 'CanEditOrPublishGuard',
-        advertId: params.advertId,
-      })
-      return params.advertId
-    }
-
-    // Priority 2: Alternative id parameter
-    if (params.id) {
-      this.logger.debug('Using id from params as advertId', {
-        context: 'CanEditOrPublishGuard',
-        advertId: params.id,
-      })
-      return params.id
-    }
-
-    // Priority 3: Resolve from publicationId
-    if (params.publicationId) {
-      this.logger.debug('Resolving advertId from publicationId', {
-        context: 'CanEditOrPublishGuard',
-        publicationId: params.publicationId,
-      })
-
-      const publication = await this.advertPublicationModel.findOne({
-        attributes: ['advertId'],
-        where: { id: params.publicationId },
-      })
-
-      if (!publication) {
-        throw new NotFoundException(
-          `Publication with id ${params.publicationId} not found`,
-        )
-      }
-
-      this.logger.debug('Resolved advertId from publication', {
-        context: 'CanEditOrPublishGuard',
-        publicationId: params.publicationId,
-        advertId: publication.advertId,
-      })
-
-      return publication.advertId
-    }
-
-    return null
   }
 }
