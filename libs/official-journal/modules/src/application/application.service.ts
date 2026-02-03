@@ -366,7 +366,7 @@ export class ApplicationService implements IApplicationService {
     if (mainTextAttachment) {
       mainTextAsHtml = await wordBufferToHtml(mainTextAttachment)
     } else {
-      this.logger.debug('No main text attachment found for application', {
+      this.logger.info('No main text attachment found for application', {
         category: LOGGING_CATEGORY,
         applicationId,
       })
