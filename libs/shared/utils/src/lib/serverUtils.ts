@@ -772,5 +772,7 @@ export const wordBufferToHtml = async (buffer: Buffer): Promise<string> => {
       }),
     },
   )
-  return result.value
+
+  const htmlText = simpleSanitize(result.value)
+  return htmlText
 }
