@@ -38,6 +38,7 @@ import { cleanLegalGazetteLegacyHtml } from '@dmr.is/utils'
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'
 import { QueryDto } from '../core/dto/query.dto'
+import { StatusIdEnum } from '../core/enums/status.enum'
 import { getAdvertHtmlMarkup } from '../core/templates/html'
 import {
   AdvertPublicationDto,
@@ -70,7 +71,7 @@ import {
   SignatureDto,
   SignatureModel,
 } from './signature.model'
-import { StatusDto, StatusIdEnum, StatusModel } from './status.model'
+import { StatusDto, StatusModel } from './status.model'
 import { TBRTransactionModel } from './tbr-transactions.model'
 import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
 import { UserDto, UserModel } from './users.model'
