@@ -9,6 +9,9 @@ import { StatusEnum, StatusIdEnum } from '../core/enums/status.enum'
 import { BaseEntityDto } from '../modules/base-entity/base-entity.dto'
 import { AdvertModel } from './advert.model'
 
+// Re-export enums for backwards compatibility - circular dependency issues
+export { StatusIdEnum, StatusEnum }
+
 type StatusAttributes = {
   id: StatusIdEnum
   title: StatusEnum
