@@ -7,7 +7,7 @@ import {
   HttpException,
 } from '@nestjs/common'
 
-import { AdvertTypeError } from '@dmr.is/modules'
+import { AdvertTypeError } from '@dmr.is/ojoi/modules'
 
 @Catch(HttpException)
 export class OJOIExceptionFilter implements ExceptionFilter {

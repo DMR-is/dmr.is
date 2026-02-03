@@ -11,11 +11,11 @@ import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { LogRequestMiddleware } from '@dmr.is/middleware'
 import {
   ApplicationModule,
-  HealthModule,
   SharedJournalModule,
   SignatureModule,
-} from '@dmr.is/modules'
+} from '@dmr.is/ojoi/modules'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
+import { HealthModule } from '@dmr.is/shared/modules'
 
 import { CaseModule } from './case/case.module'
 import { StatisticsModule } from './statistics/statistics.module'

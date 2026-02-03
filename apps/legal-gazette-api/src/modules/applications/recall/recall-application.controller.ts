@@ -11,14 +11,12 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import {
-  ApplicationWebScopes,
-  TokenJwtAuthGuard,
-} from '@dmr.is/modules/guards/auth'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { OwnershipGuard } from '../../../core/guards/ownership.guard'
+import { ApplicationWebScopes } from '../../../core/guards/scope-guards/scopes.decorator'
 import {
   CreateDivisionEndingDto,
   CreateDivisionMeetingDto,
