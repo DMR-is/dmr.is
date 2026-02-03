@@ -26,10 +26,10 @@ import {
   SubmitCommentBody,
   UpdateStatusCommentBody,
 } from '@dmr.is/shared/dto'
+import { IAWSService } from '@dmr.is/shared/modules'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { AdvertTypeModel } from '../../advert-type/models'
-import { IAWSService } from '../../aws/aws.service.interface'
 import { CaseChannelModel, CaseModel, CaseStatusModel } from '../../case/models'
 import { AdvertInvolvedPartyModel } from '../../journal/models'
 import { UserModel } from '../../user/models/user.model'

@@ -50,11 +50,11 @@ import {
   UpdateCategory,
   UpdateMainCategory,
 } from '@dmr.is/shared/dto'
+import { IAWSService } from '@dmr.is/shared/modules'
 import { ResultWrapper } from '@dmr.is/types'
 import { cleanLegacyHtml, generatePaging, toUtf8 } from '@dmr.is/utils'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
-import { IAWSService } from '../aws/aws.service.interface'
 import { caseAdditionMigrate } from '../case/migrations/case-addition.migrate'
 import { CaseCategoriesModel, CaseModel } from '../case/models'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'

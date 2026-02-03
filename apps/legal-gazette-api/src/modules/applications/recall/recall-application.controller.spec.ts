@@ -2,7 +2,7 @@ import { ForbiddenException } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { TokenJwtAuthGuard } from '@dmr.is/ojoi/modules/guards/auth'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
 
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { OwnershipGuard } from '../../../core/guards/ownership.guard'

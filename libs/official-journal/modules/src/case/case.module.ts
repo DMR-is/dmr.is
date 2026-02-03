@@ -2,11 +2,11 @@ import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { LoggingModule } from '@dmr.is/logging'
+import { AwsModule } from '@dmr.is/shared/modules'
 
 import { AdvertMainTypeModel } from '../advert-type/models'
 import { ApplicationModule } from '../application/application.module'
 import { AttachmentsModule } from '../attachments/attachments.module'
-import { AwsModule } from '../aws/aws'
 import { CommentModuleV2 } from '../comment/v2'
 import { ExternalModule } from '../external/external.module'
 import { SharedJournalModule } from '../journal/journal.module'

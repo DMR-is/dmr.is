@@ -9,13 +9,13 @@ import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { LoggingModule } from '@dmr.is/logging'
 import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/middleware'
-import { AuthModule, HealthModule } from '@dmr.is/ojoi/modules'
 import {
   GlobalExceptionFilter,
   HttpExceptionFilter,
   SequelizeExceptionFilter,
 } from '@dmr.is/shared/filters'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
+import { HealthModule } from '@dmr.is/shared/modules'
 
 import { AuthorizationGuardModule } from '../core/guards/authorization-guard.module'
 import { AdvertModel } from '../models/advert.model'
@@ -118,10 +118,6 @@ import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.mo
     IslandIsApplicationSwaggerModule,
     PublicWebSwaggerModule,
     PublicationListenerModule,
-    {
-      module: AuthModule,
-      global: true,
-    },
   ],
   controllers: [],
   providers: [

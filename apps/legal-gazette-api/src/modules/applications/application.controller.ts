@@ -17,17 +17,14 @@ import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
-import {
-  ApplicationWebScopes,
-  TokenJwtAuthGuard,
-} from '@dmr.is/ojoi/modules/guards/auth'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
-import { PagingQuery } from '@dmr.is/shared/dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
 
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { GetMyApplicationsQueryDto } from '../../core/dto/application.dto'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import { OwnershipGuard } from '../../core/guards/ownership.guard'
+import { ApplicationWebScopes } from '../../core/guards/scope-guards/scopes.decorator'
 import {
   ApplicationDetailedDto,
   ApplicationDto,

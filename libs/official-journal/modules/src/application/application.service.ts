@@ -37,6 +37,7 @@ import {
   UpdateApplicationBody,
   UserDto,
 } from '@dmr.is/shared/dto'
+import { IAWSService } from '@dmr.is/shared/modules'
 import { ResultWrapper } from '@dmr.is/types'
 import {
   generatePaging,
@@ -48,7 +49,6 @@ import {
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { IAuthService } from '../auth/auth.service.interface'
-import { IAWSService } from '../aws/aws.service.interface'
 import { ICaseService } from '../case/case.module'
 import { ICommentServiceV2 } from '../comment/v2'
 import {

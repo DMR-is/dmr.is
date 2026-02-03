@@ -12,19 +12,17 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { CurrentUser } from '@dmr.is/decorators'
-import {
-  PublicOrApplicationWebScopes,
-  PublicWebScopes,
-  TokenJwtAuthGuard,
-} from '@dmr.is/ojoi/modules/guards/auth'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/modules/guards/auth'
 
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { CanEditGuard, CanEditOrPublishGuard } from '../../../core/guards'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
+import {
+  PublicOrApplicationWebScopes,
+  PublicWebScopes,
+} from '../../../core/guards/scope-guards/scopes.decorator'
 import {
   AdvertPublicationDetailedDto,
   GetPublicationsDto,

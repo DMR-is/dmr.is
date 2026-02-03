@@ -63,6 +63,7 @@ import {
   UpdateTitleBody,
   UserDto,
 } from '@dmr.is/shared/dto'
+import { IAWSService } from '@dmr.is/shared/modules'
 import { ResultWrapper } from '@dmr.is/types'
 import {
   enumMapper,
@@ -78,7 +79,6 @@ import {
   ApplicationAttachmentModel,
   ApplicationAttachmentTypeModel,
 } from '../attachments/models'
-import { IAWSService } from '../aws/aws.service.interface'
 import { IExternalService } from '../external/external.service.interface'
 import { IJournalService } from '../journal'
 import {

@@ -2,18 +2,17 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { LoggingModule } from '@dmr.is/logging'
+import { AwsModule } from '@dmr.is/shared/modules'
+import { createRedisCacheOptions } from '@dmr.is/utils/cache'
 
+import caseModels from '../case/models'
 import { JournalService } from './journal.service'
 import { IJournalService } from './journal.service.interface'
 import { MockJournalService } from './journal.service.mock'
+import { models as advertModels } from './models'
 
 const MOCK_DATA = process.env.API_MOCK === 'true'
 
-import { createRedisCacheOptions } from '@dmr.is/utils/cache'
-
-import { AwsModule } from '../aws/aws'
-import caseModels from '../case/models'
-import { models as advertModels } from './models'
 
 @Module({
   imports: [

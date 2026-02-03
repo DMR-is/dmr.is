@@ -30,8 +30,9 @@ import {
   UpdateAdvertMainType,
   UpdateAdvertTypeBody,
 } from '@dmr.is/shared/dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
 
-import { RoleGuard, TokenJwtAuthGuard } from '../guards/auth'
+import { RoleGuard } from '../guards/auth'
 import { IAdvertTypeService } from './advert-type.service.interface'
 import { AdvertTypeError } from './advert-type-error'
 

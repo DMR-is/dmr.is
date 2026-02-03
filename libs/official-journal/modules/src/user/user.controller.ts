@@ -33,9 +33,10 @@ import {
   UpdateUserDto,
   UserDto,
 } from '@dmr.is/shared/dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
 import { ResultWrapper } from '@dmr.is/types'
 
-import { RoleGuard, TokenJwtAuthGuard } from '../guards/auth'
+import { RoleGuard } from '../guards/auth'
 import { IUserService } from './user.service.interface'
 
 @Controller({

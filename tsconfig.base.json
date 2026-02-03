@@ -38,11 +38,11 @@
       "@dmr.is/logging-next": ["libs/logging-next/src/index.ts"],
       "@dmr.is/middleware": ["libs/shared/middleware/src/index.ts"],
       "@dmr.is/mocks": ["libs/mocks/src/index.ts"],
-      "@dmr.is/modules/guards/auth": [
-        "libs/shared/modules/src/guards/auth/index.ts"
-      ],
       "@dmr.is/nx-open-next": ["libs/nx-open-next/src/index.ts"],
       "@dmr.is/ojoi/modules": ["libs/official-journal/modules/src/index.ts"],
+      "@dmr.is/ojoi/modules/guards/auth": [
+        "libs/official-journal/modules/src/guards/auth/index.ts"
+      ],
       "@dmr.is/pipelines": ["libs/shared/pipelines/src/index.ts"],
       "@dmr.is/shared/dto": ["libs/shared/dto/src/lib/index.ts"],
       "@dmr.is/shared/filters": ["libs/shared/filters/src/index.ts"],
@@ -100,7 +100,11 @@
       ],
       "@island.is/shared/utils": [
         "submodules/island.is/libs/shared/utils/src/index.ts"
-      ]
+      ],
+      "@dmr.is/shared/modules": ["libs/shared/modules/src/index.ts"],
+            "@dmr.is/shared/modules/guards/auth": [
+        "libs/shared/modules/src/lib/guards/auth/index.ts"
+      ],
     }
   },
   "exclude": ["node_modules", "tmp"]

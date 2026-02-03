@@ -8,11 +8,11 @@ import {
 import { Reflector } from '@nestjs/core'
 
 import { getLogger } from '@dmr.is/logging'
-import { SCOPES_KEY } from '@dmr.is/ojoi/modules/guards/auth'
 
 import { UserDto } from '../../models/users.model'
 import { IUsersService } from '../../modules/users/users.service.interface'
 import { ADMIN_KEY } from '../decorators/admin.decorator'
+import { SCOPES_KEY } from './scope-guards/scopes.decorator'
 
 const logger = getLogger('AuthorizationGuard')
 

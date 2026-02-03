@@ -3,14 +3,12 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import {
-  PublicWebScopes,
-  TokenJwtAuthGuard,
-} from '@dmr.is/ojoi/modules/guards/auth'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
 
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { MutationResponse } from '../../core/dto/mutation.do'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
+import { PublicWebScopes } from '../../core/guards/scope-guards/scopes.decorator'
 import { SubscriberDto } from '../../models/subscriber.model'
 import { ISubscriberService } from './subscriber.service.interface'
 

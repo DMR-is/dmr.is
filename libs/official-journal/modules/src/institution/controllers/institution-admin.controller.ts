@@ -24,8 +24,9 @@ import {
   GetInstitution,
   UpdateInstitution,
 } from '@dmr.is/shared/dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
 
-import { RoleGuard, TokenJwtAuthGuard } from '../../guards/auth'
+import { RoleGuard } from '../../guards/auth'
 import { IInstitutionService } from '../institution.service.interface'
 
 @Controller({

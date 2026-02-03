@@ -43,7 +43,7 @@ import {
   IJournalService,
   IPriceService,
 } from '@dmr.is/ojoi/modules'
-import { RoleGuard, TokenJwtAuthGuard } from '@dmr.is/ojoi/modules/guards/auth'
+import { RoleGuard } from '@dmr.is/ojoi/modules/guards/auth'
 import {
   EnumValidationPipe,
   FileTypeValidationPipe,
@@ -114,6 +114,7 @@ import {
   UpdateTitleBody,
   UserDto,
 } from '@dmr.is/shared/dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
 import { ResultWrapper } from '@dmr.is/types'
 
 const LOG_CATEGORY = 'case-controller'
