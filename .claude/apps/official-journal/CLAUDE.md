@@ -1,5 +1,5 @@
 ---
-applyTo: "apps/official-journal-*/**"
+applyTo: "apps/official-journal-*/**, libs/shared/modules/**/*"
 ---
 
 # Official Journal (Stjórnartíðindi) Applications

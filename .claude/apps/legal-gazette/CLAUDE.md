@@ -1,5 +1,5 @@
 ---
-applyTo: "apps/legal-gazette-*/**"
+applyTo: "apps/legal-gazette-*/**, libs/shared/modules/aws/**/*, libs/shared/dmr-ui**/**/*"
 ---
 
 # Legal Gazette (Lögbirtingablað) Applications
