@@ -14,6 +14,15 @@ export const getNextWednesday = (fromDate: Date = new Date()) => {
   return result
 }
 
+export const formatNationalId = (nationalId: string) => {
+  // Format: XXXXXX-XXXX or XXXXXXXXXX
+  const cleaned = nationalId.replace(/[^0-9]/g, '')
+  if (cleaned.length !== 10) {
+    return nationalId // Return as is if not 10 digits
+  }
+  return `${cleaned.slice(0, 6)}-${cleaned.slice(6)}`
+}
+
 export const formatParty = ({
   name,
   nationalId,
@@ -27,7 +36,40 @@ export const formatParty = ({
   role?: string
   jobTitle?: string
 }) => {
-  return `${role ? `${role}: ` : ''}${name}${nationalId ? `, kt. ${nationalId}` : ''}${address ? `, ${address}` : ''}${jobTitle ? `, ${jobTitle}` : ''}`.trim()
+  // Trim all optional values to handle whitespace-only strings
+  const trimmedRole = role?.trim()
+  const trimmedNationalId = nationalId?.trim()
+  const trimmedAddress = address?.trim()
+  const trimmedJobTitle = jobTitle?.trim()
+  const trimmedName = name.trim()
+
+  // Build the formatted string with only non-empty values
+  const parts: string[] = []
+
+  // Add role prefix if present
+  if (trimmedRole) {
+    parts.push(`${trimmedRole}:`)
+  }
+
+  // Add name (always present)
+  parts.push(trimmedName)
+
+  // Add national ID with "kt." prefix
+  if (trimmedNationalId) {
+    parts.push(`kt. ${formatNationalId(trimmedNationalId)}`)
+  }
+
+  // Add address
+  if (trimmedAddress) {
+    parts.push(trimmedAddress)
+  }
+
+  // Add job title
+  if (trimmedJobTitle) {
+    parts.push(trimmedJobTitle)
+  }
+
+  return parts.join(', ')
 }
 
 export const formatCompanyAnnouncement = ({
