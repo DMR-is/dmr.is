@@ -1,4 +1,11 @@
 {
+  // Tell Copilot to look for .instructions.md files in app folders
+  "chat.instructionsFilesLocations": {
+    ".github/instructions": true,
+    ".github/**/.instructions.md": true,
+    "apps/**/.instructions.md": true,
+    "libs/**/.instructions.md": true
+  },
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.tsserver.maxTsServerMemory": 8192,
   "typescript.disableAutomaticTypeAcquisition": true,

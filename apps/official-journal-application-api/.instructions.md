@@ -1,1 +1,0 @@
-../../.claude/apps/official-journal/CLAUDE.md

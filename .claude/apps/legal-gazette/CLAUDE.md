@@ -1,3 +1,7 @@
+---
+applyTo: "apps/legal-gazette-*/**"
+---
+
 # Legal Gazette (Lögbirtingablað) Applications
 
 This guide covers everything specific to the Legal Gazette product family.

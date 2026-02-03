@@ -1,3 +1,7 @@
+---
+applyTo: "apps/official-journal-*/**"
+---
+
 # Official Journal (Stjórnartíðindi) Applications
 
 This guide covers everything specific to the Official Journal product family.

@@ -1,3 +1,7 @@
+---
+applyTo: "apps/regulations-*/**"
+---
+
 # Regulations (Reglugerðir) API
 
 This guide covers the Regulations API, which manages Iceland's regulatory framework with temporal versioning.
