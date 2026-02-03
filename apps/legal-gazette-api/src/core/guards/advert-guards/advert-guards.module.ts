@@ -5,11 +5,11 @@ import { LoggingModule } from '@dmr.is/logging'
 
 import { AdvertModel } from '../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
+import { AdvertGuardUtils } from './advert-guard-utils.module'
 import { CanEditGuard } from './can-edit.guard'
 import { CanEditOrPublishGuard } from './can-edit-or-publish.guard'
 import { CanPublishGuard } from './can-publish.guard'
 import { CanPublishBulkGuard } from './can-publish-bulk.guard'
-import { AdvertGuardUtils } from './advert-guard-utils.module'
 
 /**
  * Module that provides advert-related guards for authorization.
