@@ -22,8 +22,8 @@ export const PublishingTab = () => {
   const queryClient = useQueryClient()
 
   const { mutate: publishAdverts } = useMutation(
-    trpc.publishAdverts.mutationOptions({
-      onSuccess: () => {
+    trpc.publishNextBulk.mutationOptions({
+      onSuccess: async () => {
         toast.success('Auglýsing birt', { toastId: 'publish-advert-success' })
         queryClient.invalidateQueries(
           trpc.getReadyForPublicationAdverts.queryFilter({
@@ -34,6 +34,14 @@ export const PublishingTab = () => {
             typeId: params.typeId,
             direction: params.direction ?? undefined,
             sortBy: params.sortBy ?? undefined,
+          }),
+        )
+        queryClient.invalidateQueries(
+          trpc.getAdvertsCount.queryFilter({
+            categoryId: params.categoryId,
+            typeId: params.typeId,
+            search: params.search,
+            statusId: params.statusId,
           }),
         )
         setSelectedAdvertIds([])
