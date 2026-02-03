@@ -3,6 +3,9 @@
 
 .cursor
 .claude
+.github/instructions
+.github/docs
+.github/copilot-instructions.md
 
 prompts/
 example/skills/
