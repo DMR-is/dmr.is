@@ -1,6 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 
 import { formatDate } from '@dmr.is/utils'
+import { numberFormat } from '@dmr.is/utils/client'
 
 import { IAdvertService } from '../../advert/advert.service.interface'
 import {
@@ -395,7 +396,7 @@ export class CompanyService implements ICompanyService {
           <tr>
             <td>
               <i>Hlutafé kr.: </i>
-              ${body.capital}
+              ${numberFormat(body.capital)}
             </td>
           </tr>
           <tr>
