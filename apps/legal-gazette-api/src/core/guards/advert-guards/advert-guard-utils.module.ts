@@ -19,10 +19,11 @@ export class AdvertGuardUtils {
 
   /**
    * Resolves the advertId from request parameters using descriptive parameter names.
-   * Handles three cases:
+   * Handles four cases:
    * 1. Direct advertId parameter
-   * 2. publicationId parameter (nested resource - requires lookup)
-   * 3. commentId parameter (requires lookup through publication)
+   * 2. Generic id parameter (fallback for routes using @Param('id'))
+   * 3. publicationId parameter (nested resource - requires lookup)
+   * 4. commentId parameter (requires lookup through publication)
    *
    * @param params - Request parameters object
    * @param context - Context string for logging (e.g., guard name)
@@ -32,6 +33,7 @@ export class AdvertGuardUtils {
   async resolveAdvertId(
     params: {
       advertId?: string
+      id?: string
       publicationId?: string
       commentId?: string
     },
@@ -46,12 +48,21 @@ export class AdvertGuardUtils {
       return params.advertId
     }
 
-    // Case 2: publicationId parameter - lookup advertId
+    // Case 2: Generic id parameter (used by most routes with @Param('id'))
+    if (params.id) {
+      this.logger.debug(`Resolved advertId from id parameter`, {
+        context,
+        advertId: params.id,
+      })
+      return params.id
+    }
+
+    // Case 3: publicationId parameter - lookup advertId
     if (params.publicationId) {
       return this.resolveAdvertIdFromPublication(params.publicationId, context)
     }
 
-    // Case 3: commentId parameter - lookup through publication (if needed in future)
+    // Case 4: commentId parameter - lookup through publication (if needed in future)
     if (params.commentId) {
       this.logger.warn(`commentId resolution not yet implemented`, {
         context,

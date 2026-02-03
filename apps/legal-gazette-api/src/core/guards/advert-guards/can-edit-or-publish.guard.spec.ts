@@ -12,6 +12,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AdvertModel } from '../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
 import { StatusIdEnum } from '../../../models/status.model'
+import { AdvertGuardUtils } from './advert-guard-utils.module'
 import { CanEditOrPublishGuard } from './can-edit-or-publish.guard'
 
 describe('CanEditOrPublishGuard', () => {
@@ -41,6 +42,7 @@ describe('CanEditOrPublishGuard', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CanEditOrPublishGuard,
+        AdvertGuardUtils,
         {
           provide: getModelToken(AdvertModel),
           useValue: mockAdvertModel,

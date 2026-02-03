@@ -12,7 +12,7 @@ import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { AdvertModel } from '../../../models/advert.model'
-import { AdvertGuardUtils } from './utils'
+import { AdvertGuardUtils } from './advert-guard-utils.module'
 
 /**
  * Guard that checks if user can either edit OR publish an advert.

@@ -9,7 +9,7 @@ import { CanEditGuard } from './can-edit.guard'
 import { CanEditOrPublishGuard } from './can-edit-or-publish.guard'
 import { CanPublishGuard } from './can-publish.guard'
 import { CanPublishBulkGuard } from './can-publish-bulk.guard'
-import { AdvertGuardUtils } from './utils'
+import { AdvertGuardUtils } from './advert-guard-utils.module'
 
 /**
  * Module that provides advert-related guards for authorization.

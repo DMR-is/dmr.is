@@ -11,7 +11,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { AdvertModel } from '../../../models/advert.model'
-import { AdvertGuardUtils } from './utils'
+import { AdvertGuardUtils } from './advert-guard-utils.module'
 
 /**
  * Guard that validates if an advert can be published.
