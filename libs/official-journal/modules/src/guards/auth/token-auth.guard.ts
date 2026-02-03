@@ -66,7 +66,6 @@ export class TokenJwtAuthGuard implements CanActivate {
       return token.replace('Bearer ', '').trim()
     })
 
-
     // Added support to have access and idtoken in the authorization header
     // This gives us the ability to get scopes from access token and user info from id token
     const token = tokens[0] // Use the first token for verification

@@ -2,7 +2,7 @@ import { ExecutionContext } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 
-import { SCOPES_KEY, ScopesGuard } from '@dmr.is/modules/guards/auth'
+import { SCOPES_KEY, ScopesGuard } from '@dmr.is/ojoi/modules/guards/auth'
 
 import { ADMIN_KEY } from '../../../core/decorators/admin.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'

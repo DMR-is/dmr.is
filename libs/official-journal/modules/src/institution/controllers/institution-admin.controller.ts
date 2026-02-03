@@ -48,9 +48,8 @@ export class InstitutionAdminController {
   async createInstitution(
     @Body() createInstitution: CreateInstitution,
   ): Promise<GetInstitution> {
-    const results = await this.institutionService.createInstitution(
-      createInstitution,
-    )
+    const results =
+      await this.institutionService.createInstitution(createInstitution)
 
     if (!results.result.ok) {
       throw new HttpException(

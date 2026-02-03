@@ -9,7 +9,7 @@ import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { LoggingModule } from '@dmr.is/logging'
 import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/middleware'
-import { AuthModule, HealthModule } from '@dmr.is/modules'
+import { AuthModule, HealthModule } from '@dmr.is/ojoi/modules'
 import {
   GlobalExceptionFilter,
   HttpExceptionFilter,

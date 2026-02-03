@@ -1,10 +1,10 @@
 export default {
-  displayName: 'modules',
+  displayName: 'ojoi-modules',
   preset: '../../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../../coverage/libs/shared/modules',
+  coverageDirectory: '../../../coverage/libs/official-journal/modules',
 }

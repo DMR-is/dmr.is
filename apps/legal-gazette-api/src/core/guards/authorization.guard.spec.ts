@@ -2,7 +2,7 @@ import { ExecutionContext, ForbiddenException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 
-import { SCOPES_KEY } from '@dmr.is/modules/guards/auth'
+import { SCOPES_KEY } from '@dmr.is/ojoi/modules/guards/auth'
 
 import { UserDto } from '../../models/users.model'
 import { IUsersService } from '../../modules/users/users.service.interface'

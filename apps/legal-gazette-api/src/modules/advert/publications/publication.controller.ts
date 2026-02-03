@@ -18,7 +18,7 @@ import {
   PublicOrApplicationWebScopes,
   PublicWebScopes,
   TokenJwtAuthGuard,
-} from '@dmr.is/modules/guards/auth'
+} from '@dmr.is/ojoi/modules/guards/auth'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 
 import { AdminAccess } from '../../../core/decorators/admin.decorator'

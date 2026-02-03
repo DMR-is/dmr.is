@@ -18,8 +18,8 @@ import {
   SignatureModule,
   UserModule,
   UtilityModule,
-} from '@dmr.is/modules'
-import { RoleGuard } from '@dmr.is/modules/guards/auth'
+} from '@dmr.is/ojoi/modules'
+import { RoleGuard } from '@dmr.is/ojoi/modules/guards/auth'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { ApplicationController } from './application/application.controller'

@@ -19,7 +19,10 @@ import {
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import { PublicWebScopes, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+import {
+  PublicWebScopes,
+  TokenJwtAuthGuard,
+} from '@dmr.is/ojoi/modules/guards/auth'
 
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'

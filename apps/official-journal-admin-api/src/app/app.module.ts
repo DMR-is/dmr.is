@@ -14,7 +14,7 @@ import {
   HealthModule,
   SharedJournalModule,
   SignatureModule,
-} from '@dmr.is/modules'
+} from '@dmr.is/ojoi/modules'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 
 import { CaseModule } from './case/case.module'

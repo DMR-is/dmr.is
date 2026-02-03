@@ -1,7 +1,7 @@
 import { Controller, Get, Inject, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+import { TokenJwtAuthGuard } from '@dmr.is/ojoi/modules/guards/auth'
 
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'

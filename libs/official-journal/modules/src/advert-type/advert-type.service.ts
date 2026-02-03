@@ -286,7 +286,6 @@ export class AdvertTypeService implements IAdvertTypeService {
         })
       }
 
-
       if (!mainType) {
         this.logger.warn(`Advert main type not found`, {
           category: LOGGING_CATEGORY,
@@ -466,7 +465,9 @@ export class AdvertTypeService implements IAdvertTypeService {
       const mainTypeSlug = type.mainType?.slug
       const departmentSlug = type.department.slug
       const slug = body.title
-        ? slugify(`${mainTypeSlug ?? departmentSlug}-${body.title}`, { lower: true })
+        ? slugify(`${mainTypeSlug ?? departmentSlug}-${body.title}`, {
+            lower: true,
+          })
         : type.slug
 
       const updateBody = {}

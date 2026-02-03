@@ -3,7 +3,10 @@ import { Op } from 'sequelize'
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { PublicOrApplicationWebScopes, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+import {
+  PublicOrApplicationWebScopes,
+  TokenJwtAuthGuard,
+} from '@dmr.is/ojoi/modules/guards/auth'
 
 import { UNASSIGNABLE_CATEGORY_IDS } from '../../../core/constants'
 import { AdminAccess } from '../../../core/decorators/admin.decorator'

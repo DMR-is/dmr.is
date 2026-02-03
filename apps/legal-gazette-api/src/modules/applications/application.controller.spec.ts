@@ -5,7 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
-import { SCOPES_KEY } from '@dmr.is/modules/guards/auth'
+import { SCOPES_KEY } from '@dmr.is/ojoi/modules/guards/auth'
 
 import { OwnershipGuard } from '../../core/guards/ownership.guard'
 import { AdvertModel } from '../../models/advert.model'

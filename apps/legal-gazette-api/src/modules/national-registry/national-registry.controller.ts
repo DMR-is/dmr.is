@@ -5,7 +5,7 @@ import { GetNationalRegistryEntityDto } from '@dmr.is/clients/national-registry'
 import {
   ApplicationWebScopes,
   TokenJwtAuthGuard,
-} from '@dmr.is/modules/guards/auth'
+} from '@dmr.is/ojoi/modules/guards/auth'
 import { NationalIdValidationPipe } from '@dmr.is/pipelines'
 
 import { AdminAccess } from '../../core/decorators'

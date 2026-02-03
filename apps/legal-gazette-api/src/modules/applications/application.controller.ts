@@ -20,7 +20,7 @@ import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
 import {
   ApplicationWebScopes,
   TokenJwtAuthGuard,
-} from '@dmr.is/modules/guards/auth'
+} from '@dmr.is/ojoi/modules/guards/auth'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { PagingQuery } from '@dmr.is/shared/dto'
 

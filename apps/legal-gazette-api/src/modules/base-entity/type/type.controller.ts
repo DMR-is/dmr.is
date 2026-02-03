@@ -6,7 +6,7 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 import {
   PublicOrApplicationWebScopes,
   TokenJwtAuthGuard,
-} from '@dmr.is/modules/guards/auth'
+} from '@dmr.is/ojoi/modules/guards/auth'
 
 import {
   COMMON_ADVERT_TYPES_IDS,

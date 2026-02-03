@@ -74,7 +74,7 @@ plan-*.prompt.md
 .DS_Store
 Thumbs.db
 .cache
-cache
+/cache
 
 # Extracted strings for localization
 libs/localization/messages.json

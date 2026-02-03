@@ -14,7 +14,7 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+import { TokenJwtAuthGuard } from '@dmr.is/ojoi/modules/guards/auth'
 import { PagingQuery } from '@dmr.is/shared/dto'
 
 import { AdminAccess } from '../../core/decorators/admin.decorator'

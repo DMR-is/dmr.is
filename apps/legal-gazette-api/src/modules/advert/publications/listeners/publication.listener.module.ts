@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { AwsModule } from '@dmr.is/modules'
+import { AwsModule } from '@dmr.is/ojoi/modules'
 
 import { AdvertModel } from '../../../../models/advert.model'
 import { TBRTransactionModel } from '../../../../models/tbr-transactions.model'

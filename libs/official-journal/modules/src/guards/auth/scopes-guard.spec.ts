@@ -17,7 +17,9 @@ describe('ScopesGuard', () => {
   let reflector: Reflector
 
   // Helper to create mock ExecutionContext
-  const createMockContext = (user: MockUser | null = null): ExecutionContext => {
+  const createMockContext = (
+    user: MockUser | null = null,
+  ): ExecutionContext => {
     const mockRequest = { user }
     return {
       switchToHttp: () => ({
@@ -95,7 +97,8 @@ describe('ScopesGuard', () => {
 
       it('should allow access when user has multiple scopes including required one', () => {
         const context = createMockContext({
-          scope: '@dmr.is/other-scope @logbirtingablad.is/logbirtingabladid @dmr.is/another',
+          scope:
+            '@dmr.is/other-scope @logbirtingablad.is/logbirtingabladid @dmr.is/another',
         })
 
         const result = guard.canActivate(context)
@@ -179,7 +182,8 @@ describe('ScopesGuard', () => {
 
     it('should allow access when user has both scopes', () => {
       const context = createMockContext({
-        scope: '@logbirtingablad.is/logbirtingabladid @logbirtingablad.is/lg-application-web',
+        scope:
+          '@logbirtingablad.is/logbirtingabladid @logbirtingablad.is/lg-application-web',
       })
 
       const result = guard.canActivate(context)
@@ -381,7 +385,8 @@ describe('ScopesGuard', () => {
     describe('@PublicWebScopes() - requires @logbirtingablad.is/logbirtingabladid', () => {
       beforeEach(() => {
         jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
-          if (key === SCOPES_KEY) return ['@logbirtingablad.is/logbirtingabladid']
+          if (key === SCOPES_KEY)
+            return ['@logbirtingablad.is/logbirtingabladid']
           return undefined
         })
       })
@@ -406,7 +411,8 @@ describe('ScopesGuard', () => {
     describe('@ApplicationWebScopes() - requires @logbirtingablad.is/lg-application-web', () => {
       beforeEach(() => {
         jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
-          if (key === SCOPES_KEY) return ['@logbirtingablad.is/lg-application-web']
+          if (key === SCOPES_KEY)
+            return ['@logbirtingablad.is/lg-application-web']
           return undefined
         })
       })
@@ -432,7 +438,10 @@ describe('ScopesGuard', () => {
       beforeEach(() => {
         jest.spyOn(reflector, 'getAllAndOverride').mockImplementation((key) => {
           if (key === SCOPES_KEY)
-            return ['@logbirtingablad.is/logbirtingabladid', '@logbirtingablad.is/lg-application-web']
+            return [
+              '@logbirtingablad.is/logbirtingabladid',
+              '@logbirtingablad.is/lg-application-web',
+            ]
           return undefined
         })
       })

@@ -8,7 +8,7 @@ import {
   IReindexRunnerService,
   MockJournalService,
   MockRunnerService,
-} from '@dmr.is/modules'
+} from '@dmr.is/ojoi/modules'
 
 import { JournalController } from './journal.controller'
 

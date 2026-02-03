@@ -14,7 +14,7 @@ import { CurrentUser } from '@dmr.is/decorators'
 import {
   ApplicationWebScopes,
   TokenJwtAuthGuard,
-} from '@dmr.is/modules/guards/auth'
+} from '@dmr.is/ojoi/modules/guards/auth'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
