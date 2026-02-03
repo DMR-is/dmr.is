@@ -1,8 +1,13 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 
+import { LOGGER_PROVIDER } from '@dmr.is/logging'
+import { Logger } from '@dmr.is/logging-next'
 import { formatDate } from '@dmr.is/utils'
 
+import { SYSTEM_ACTOR } from '../../../core/constants'
+import { StatusIdEnum } from '../../../models/status.model'
 import { IAdvertService } from '../../advert/advert.service.interface'
+import { ICommentService } from '../../comment/comment.service.interface'
 import {
   CreateAdditionalAnnouncementsDto,
   RegisterCompanyFirmaskraDto,
@@ -16,11 +21,15 @@ import {
   WeekdayEnum,
 } from './utils'
 
+const LOGGING_CONTEXT = 'CompanyService'
+
 @Injectable()
 export class CompanyService implements ICompanyService {
   constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IAdvertService)
     private readonly advertService: IAdvertService,
+    @Inject(ICommentService) private readonly commentService: ICommentService,
   ) {}
 
   async createAdditionalAnnouncements(
@@ -180,7 +189,8 @@ export class CompanyService implements ICompanyService {
       ${outro}
     `
 
-    await this.advertService.createAdvert({
+    const advert = await this.advertService.createAdvert({
+      statusId: StatusIdEnum.READY_FOR_PUBLICATION,
       title: `Aukatilkynningar hlutafélaga`,
       typeId: '8CF1CD80-4F20-497F-8992-B32424AB82D4',
       categoryId: 'c2430ac0-a18f-4363-be88-b6de46b857b9',
@@ -197,6 +207,22 @@ export class CompanyService implements ICompanyService {
       caption: `${formatDate(announcementDate, 'MMMM yyyy')}`,
       isFromExternalSystem: true,
     })
+
+    await this.commentService.createStatusUpdateComment(advert.id, {
+      actorId: SYSTEM_ACTOR.id,
+      receiverId: StatusIdEnum.READY_FOR_PUBLICATION,
+    })
+
+    const totalCompanies = body.announcements.length
+
+    this.logger.info(
+      `Successfully created advert for additional announcement for ${totalCompanies} companies`,
+      {
+        advertId: advert.id,
+        totalCompanies,
+        context: LOGGING_CONTEXT,
+      },
+    )
   }
 
   async registerCompanyFirmaskra(
@@ -288,7 +314,8 @@ export class CompanyService implements ICompanyService {
       </table>
     `
 
-    await this.advertService.createAdvert({
+    const advert = await this.advertService.createAdvert({
+      statusId: StatusIdEnum.READY_FOR_PUBLICATION,
       title: `Fyrirtækjaskrá - nýskráning`,
       typeId: 'B390117B-A39A-4292-AE59-91295190F57D',
       categoryId: '6FB035BF-028D-4BFA-937F-32A7AA592F16',
@@ -305,6 +332,20 @@ export class CompanyService implements ICompanyService {
       scheduledAt: [pubDate.toISOString()],
       isFromExternalSystem: true,
     })
+
+    await this.commentService.createStatusUpdateComment(advert.id, {
+      actorId: SYSTEM_ACTOR.id,
+      receiverId: StatusIdEnum.READY_FOR_PUBLICATION,
+    })
+
+    this.logger.info(
+      `Successfully created advert for new firmaskra ${body.name}`,
+      {
+        name: body.name,
+        advertId: advert.id,
+        context: LOGGING_CONTEXT,
+      },
+    )
   }
 
   async registerCompanyHlutafelag(
@@ -421,7 +462,8 @@ export class CompanyService implements ICompanyService {
       </table>
     `
 
-    await this.advertService.createAdvert({
+    const advert = await this.advertService.createAdvert({
+      statusId: StatusIdEnum.READY_FOR_PUBLICATION,
       title: `Hlutafélagaskrá - nýskráning`,
       typeId: '4E8DEC71-5270-49D8-BB67-B9A2CA5BEEAC',
       categoryId: 'C2430AC0-A18F-4363-BE88-B6DE46B857B9',
@@ -439,5 +481,19 @@ export class CompanyService implements ICompanyService {
       isFromExternalSystem: true,
       externalId: body.responsibleParty.externalId,
     })
+
+    await this.commentService.createStatusUpdateComment(advert.id, {
+      actorId: SYSTEM_ACTOR.id,
+      receiverId: StatusIdEnum.READY_FOR_PUBLICATION,
+    })
+
+    this.logger.info(
+      `Successfully created advert for new company ${body.name}`,
+      {
+        name: body.name,
+        advertId: advert.id,
+        context: LOGGING_CONTEXT,
+      },
+    )
   }
 }
