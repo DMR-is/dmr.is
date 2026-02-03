@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
+import { IAWSService } from '@dmr.is/shared/modules'
 
-import { IAWSService } from '../aws/aws.service.interface'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { PdfService } from './pdf.service'
 import { IPdfService } from './pdf.service.interface'
