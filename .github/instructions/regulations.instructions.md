@@ -1,1 +1,0 @@
-../../.claude/apps/regulations/CLAUDE.md

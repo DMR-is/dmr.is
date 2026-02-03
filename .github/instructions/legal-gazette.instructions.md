@@ -1,1 +1,0 @@
-../../.claude/apps/legal-gazette/CLAUDE.md
