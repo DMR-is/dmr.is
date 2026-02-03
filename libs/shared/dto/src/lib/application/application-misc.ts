@@ -7,4 +7,9 @@ export class ApplicationMisc {
     enum: SignatureType,
   })
   signatureType?: SignatureType
+
+  @ApiProperty({
+    type: Boolean,
+  })
+  mainTextAsFile?: boolean
 }

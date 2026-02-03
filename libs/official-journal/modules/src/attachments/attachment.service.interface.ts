@@ -36,6 +36,12 @@ export interface IAttachmentService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetApplicationAttachmentResponse>>
 
+  getApplicationAttachment(
+    applicationId: string,
+    typeId?: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<GetApplicationAttachmentResponse | null>>
+
   getCaseAttachment(
     caseId: string,
     attachmentId: string,
