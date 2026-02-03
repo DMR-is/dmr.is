@@ -1,5 +1,6 @@
 ---
-description: Create new Claude Code skills with proper structure and patterns. Use when adding reusable workflows to the project.
+name: skill-creator
+description: Create new agent skills with proper structure and patterns. Use when adding reusable workflows to the project.
 allowed-tools: Write, Read, Glob, Edit
 argument-hint: <skill-name>
 ---
@@ -33,14 +34,14 @@ Ask clarifying questions:
 
 ```text
 .claude/skills/{skill-name}/
-├── skill.md              # Main skill file (required)
+├── SKILL.md              # Main skill file (required)
 └── references/           # Reference files (if needed)
     ├── patterns.md       # Code patterns/templates
     ├── workflow.md       # Step-by-step processes
     └── examples.md       # Usage examples
 ```
 
-### 4. Write skill.md
+### 4. Write SKILL.md
 
 Follow template in `references/structure.md`:
 
@@ -70,5 +71,5 @@ Add skill to the Skills section:
 
 See detailed info:
 
-- **`references/structure.md`** - skill.md template and frontmatter options
+- **`references/structure.md`** - SKILL.md template and frontmatter options
 - **`references/examples.md`** - Real examples from this project

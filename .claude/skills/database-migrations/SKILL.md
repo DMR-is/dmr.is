@@ -1,3 +1,8 @@
+---
+name: database-migrations
+description: Create and manage Sequelize database migrations for Legal Gazette and Official Journal APIs. Use when creating tables, altering structures, adding indexes, or seeding data.
+---
+
 # Database Migrations
 
 Create and manage Sequelize database migrations for Legal Gazette and Official Journal APIs.

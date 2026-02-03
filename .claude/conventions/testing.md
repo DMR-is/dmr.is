@@ -413,7 +413,7 @@ yarn nx test <project> --no-cache
 ---
 
 **Related Documentation**:
-- [Unit Tests Skill](../skills/unit-tests/skill.md) - Auto-generate tests
+- [Unit Tests Skill](../skills/unit-tests/SKILL.md) - Auto-generate tests
 - [NestJS Conventions](./nestjs.md) - Service/controller patterns
 - [Legal Gazette Apps](../apps/legal-gazette/CLAUDE.md)
 - [Official Journal Apps](../apps/official-journal/CLAUDE.md)

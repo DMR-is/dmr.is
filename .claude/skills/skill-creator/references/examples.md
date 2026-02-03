@@ -10,7 +10,7 @@ Creates Next.js pages from patterns.
 
 ```text
 .claude/skills/new-page/
-├── skill.md
+├── SKILL.md
 └── references/
     ├── patterns.md    # Page patterns (dashboard, detail, form)
     └── styling.md     # UI components and Tailwind patterns
@@ -39,7 +39,7 @@ Creates Server Actions for mutations.
 
 ```text
 .claude/skills/new-action/
-├── skill.md
+├── SKILL.md
 └── references/
     └── patterns.md    # CRUD patterns, relationships
 ```
@@ -66,7 +66,7 @@ Runs validation commands.
 
 ```text
 .claude/skills/validate/
-└── skill.md           # No references needed - simple runner
+└── SKILL.md           # No references needed - simple runner
 ```
 
 **Frontmatter:**
@@ -91,7 +91,7 @@ Manages database migrations.
 
 ```text
 .claude/skills/db-migrate/
-├── skill.md
+├── SKILL.md
 └── references/
     └── workflow.md    # Full migration process, troubleshooting
 ```
@@ -118,7 +118,7 @@ Both runs existing seeds and creates new ones.
 
 ```text
 .claude/skills/db-seed/
-├── skill.md
+├── SKILL.md
 └── references/
     └── patterns.md    # Seed script templates
 ```

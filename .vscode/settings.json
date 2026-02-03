@@ -30,5 +30,9 @@
     "eslint-local-rules.js": true,
     "**/.next": true
   },
-  "eslint.workingDirectories": [{ "mode": "auto" }]
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
 }

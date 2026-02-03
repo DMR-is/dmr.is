@@ -4,12 +4,12 @@
 
 ```text
 .claude/skills/{skill-name}/
-├── skill.md              # Main skill definition
+├── SKILL.md              # Main skill definition
 └── references/           # Supporting documentation
     └── *.md
 ```
 
-## skill.md Template
+## SKILL.md Template
 
 ```markdown
 ---
@@ -110,7 +110,7 @@ Create file at: `app/$ARGUMENTS/page.tsx`
 |------|-------------|
 | `patterns.md` | Skill generates code with multiple patterns |
 | `workflow.md` | Skill has complex multi-step process |
-| `examples.md` | Usage isn't obvious from skill.md |
+| `examples.md` | Usage isn't obvious from SKILL.md |
 
 ### Reference File Template
 

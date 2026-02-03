@@ -317,7 +317,7 @@ yarn nx run legal-gazette-api:migrate/generate
 
 **Example**: `m-20260203-add-advert-signatures.js`
 
-**See**: [Database Migrations Skill](../../skills/database-migrations/skill.md)
+**See**: [Database Migrations Skill](../../skills/database-migrations/SKILL.md)
 
 ## Common Workflows
 
@@ -348,22 +348,29 @@ Use the `/nestjs-controller` skill:
 6. Document in Swagger with decorators
 ```
 
-**See**: [NestJS Controller Skill](../../skills/nestjs-controller/skill.md)
+**See**: [NestJS Controller Skill](../../skills/nestjs-controller/SKILL.md)
 
 ### Building a New Public Page
 
-Use the `/nextjs-trpc-page` skill:
+Use the `/nextjs-page` skill for frontend pages and `/trpc-router` for backend endpoints:
 
 ```bash
+# Create backend tRPC router first (if needed):
+/trpc-router
+
+# Then create the frontend page:
+/nextjs-page
+
 # Or manually:
-1. Create page.tsx in app/ directory
-2. Fetch data using tRPC server client
-3. Create Client Components for interactivity
-4. Add loading.tsx for loading states
-5. Add error.tsx for error handling
+1. Create tRPC router in src/lib/trpc/server/routers/
+2. Register router in _app.ts
+3. Create page.tsx in app/ directory
+4. Fetch data using tRPC server client
+5. Create Client Components for interactivity
+6. Add loading.tsx for loading states
 ```
 
-**See**: [Next.js tRPC Page Skill](../../skills/nextjs-trpc-page/skill.md)
+**See**: [Next.js Page Skill](../../skills/nextjs-page/SKILL.md) and [tRPC Router Skill](../../skills/trpc-router/SKILL.md)
 
 ## Testing
 
@@ -468,10 +475,11 @@ NEXTAUTH_SECRET=your-secret-here
 
 ## Related Skills
 
-- **[/nestjs-controller](../../skills/nestjs-controller/skill.md)** - Create NestJS endpoints
-- **[/database-migrations](../../skills/database-migrations/skill.md)** - Create migrations
-- **[/unit-tests](../../skills/unit-tests/skill.md)** - Generate tests
-- **[/nextjs-trpc-page](../../skills/nextjs-trpc-page/skill.md)** - Create Next.js pages with tRPC
+- **[/nestjs-controller](../../skills/nestjs-controller/SKILL.md)** - Create NestJS endpoints
+- **[/database-migrations](../../skills/database-migrations/SKILL.md)** - Create migrations
+- **[/unit-tests](../../skills/unit-tests/SKILL.md)** - Generate tests
+- **[/trpc-router](../../skills/trpc-router/SKILL.md)** - Create tRPC backend routers
+- **[/nextjs-page](../../skills/nextjs-page/SKILL.md)** - Create Next.js pages with tRPC
 
 ## Related Conventions
 

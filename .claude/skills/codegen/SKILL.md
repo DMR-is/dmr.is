@@ -1,4 +1,5 @@
 ---
+name: codegen
 description: Regenerate OpenAPI client code for frontend apps from running API
 allowed-tools: Bash, Read, Glob, Grep
 argument-hint: [app-name]

@@ -246,7 +246,7 @@ yarn nx run official-journal-api:migrate/generate
 
 **Example**: `m-20260203-add-journal-signatures.js`
 
-**See**: [Database Migrations Skill](../../skills/database-migrations/skill.md)
+**See**: [Database Migrations Skill](../../skills/database-migrations/SKILL.md)
 
 ## Common Workflows
 
@@ -273,7 +273,7 @@ Use the `/nestjs-controller` skill:
 6. Run codegen in web app
 ```
 
-**See**: [NestJS Controller Skill](../../skills/nestjs-controller/skill.md)
+**See**: [NestJS Controller Skill](../../skills/nestjs-controller/SKILL.md)
 
 ### Updating Journal Layout
 
@@ -515,10 +515,10 @@ NEXTAUTH_SECRET=your-secret-here
 
 ## Related Skills
 
-- **[/nestjs-controller](../../skills/nestjs-controller/skill.md)** - Create NestJS endpoints
-- **[/database-migrations](../../skills/database-migrations/skill.md)** - Create migrations
-- **[/unit-tests](../../skills/unit-tests/skill.md)** - Generate tests
-- **[/codegen](../../skills/codegen/skill.md)** - Regenerate API client
+- **[/nestjs-controller](../../skills/nestjs-controller/SKILL.md)** - Create NestJS endpoints
+- **[/database-migrations](../../skills/database-migrations/SKILL.md)** - Create migrations
+- **[/unit-tests](../../skills/unit-tests/SKILL.md)** - Generate tests
+- **[/codegen](../../skills/codegen/SKILL.md)** - Regenerate API client
 
 ## Related Conventions
 

@@ -28,11 +28,12 @@ Reference these guides for specific technical patterns:
 
 Use these skills to auto-generate code following established patterns:
 
-- `/nestjs-controller` - Create NestJS endpoints with DTOs, services, tests ([skill doc](.claude/skills/nestjs-controller/skill.md))
-- `/database-migrations` - Generate Sequelize migrations ([skill doc](.claude/skills/database-migrations/skill.md))
-- `/unit-tests` - Create Jest tests ([skill doc](.claude/skills/unit-tests/skill.md))
-- `/codegen` - Regenerate OpenAPI clients ([skill doc](.claude/skills/codegen/skill.md))
-- `/nextjs-trpc-page` - Create Next.js + tRPC pages ([skill doc](.claude/skills/nextjs-trpc-page/skill.md))
+- `/nestjs-controller` - Create NestJS endpoints with DTOs, services, tests ([skill doc](.claude/skills/nestjs-controller/SKILL.md))
+- `/database-migrations` - Generate Sequelize migrations ([skill doc](.claude/skills/database-migrations/SKILL.md))
+- `/unit-tests` - Create Jest tests ([skill doc](.claude/skills/unit-tests/SKILL.md))
+- `/codegen` - Regenerate OpenAPI clients ([skill doc](.claude/skills/codegen/SKILL.md))
+- `/trpc-router` - Create tRPC backend routers and procedures ([skill doc](.claude/skills/trpc-router/SKILL.md))
+- `/nextjs-page` - Create Next.js pages with tRPC integration ([skill doc](.claude/skills/nextjs-page/SKILL.md))
 
 ### Deep Dives
 
@@ -234,7 +235,7 @@ yarn nx run official-journal-web:update-schema
 
 **Legal Gazette apps use tRPC directly** (no codegen needed).
 
-**See**: [Codegen Skill](.claude/skills/codegen/skill.md)
+**See**: [Codegen Skill](.claude/skills/codegen/SKILL.md)
 
 ### Database Migrations
 
@@ -251,7 +252,7 @@ yarn nx run legal-gazette-api:migrate/generate
 
 **Naming**: `m-YYYYMMDD-description.js`
 
-**See**: [Database Migrations Skill](.claude/skills/database-migrations/skill.md)
+**See**: [Database Migrations Skill](.claude/skills/database-migrations/SKILL.md)
 
 ---
 

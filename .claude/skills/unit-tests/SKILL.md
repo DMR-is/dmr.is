@@ -1,4 +1,5 @@
 ---
+name: unit-tests
 description: Create Jest unit tests following established DMR.is patterns
 allowed-tools: Write, Read, Glob, Grep, Edit
 argument-hint: <file-path-to-test>

@@ -4,7 +4,7 @@ Complete guide for creating NestJS controllers with proper service, DTOs, valida
 
 ## Quick Start
 
-Start with [skill.md](skill.md) for the main implementation guide with step-by-step instructions and checklist.
+Start with [SKILL.md](SKILL.md) for the main implementation guide with step-by-step instructions and checklist.
 
 ## Reference Documentation
 
@@ -89,14 +89,14 @@ modules/{resource}/
 
 ## Usage Flow
 
-1. **Read [skill.md](skill.md)** - Main implementation guide
+1. **Read [SKILL.md](SKILL.md)** - Main implementation guide
 2. **Reference specific docs as needed:**
    - Creating DTOs? → [dto-examples.md](dto-examples.md)
    - Implementing service? → [service-examples.md](service-examples.md)
    - Building controller? → [controller-examples.md](controller-examples.md)
    - Need authorization? → [authorization-guide.md](authorization-guide.md)
    - Writing tests? → [testing-examples.md](testing-examples.md)
-3. **Follow the checklist** in skill.md to ensure completeness
+3. **Follow the checklist** in SKILL.md to ensure completeness
 
 ## Key Conventions
 
@@ -112,7 +112,7 @@ modules/{resource}/
 ## Common Tasks
 
 ### Adding a new CRUD endpoint
-1. Start with [skill.md](skill.md) step-by-step guide
+1. Start with [SKILL.md](SKILL.md) step-by-step guide
 2. Reference [dto-examples.md](dto-examples.md) for DTO patterns
 3. Reference [service-examples.md](service-examples.md) for service implementation
 4. Reference [controller-examples.md](controller-examples.md) for controller code

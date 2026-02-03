@@ -1,3 +1,8 @@
+---
+name: nestjs-controller
+description: Create NestJS controllers with services, DTOs, validation, tests, and documentation following DMR.is conventions. Use when creating new API endpoints or CRUD operations.
+---
+
 # Create NestJS Controller
 
 Create a new NestJS controller with proper service, DTOs, validation, tests, and documentation following DMR.is conventions.

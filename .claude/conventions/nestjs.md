@@ -477,7 +477,7 @@ describe('AdvertService', () => {
 ## Authorization
 
 For Legal Gazette API authorization patterns, see:
-- [NestJS Controller Skill](../skills/nestjs-controller/skill.md)
+- [NestJS Controller Skill](../skills/nestjs-controller/SKILL.md)
 - [Authorization Guide](../skills/nestjs-controller/authorization-guide.md)
 
 ## Common Patterns
@@ -559,7 +559,7 @@ export class AdvertService {
 **Related Documentation**:
 - [Testing Conventions](./testing.md)
 - [Logging Conventions](./logging.md)
-- [NestJS Controller Skill](../skills/nestjs-controller/skill.md)
-- [Database Migrations Skill](../skills/database-migrations/skill.md)
+- [NestJS Controller Skill](../skills/nestjs-controller/SKILL.md)
+- [Database Migrations Skill](../skills/database-migrations/SKILL.md)
 - [Legal Gazette API](../apps/legal-gazette/CLAUDE.md)
 - [Official Journal API](../apps/official-journal/CLAUDE.md)
