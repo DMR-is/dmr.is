@@ -12,7 +12,8 @@ import { ICompanyService } from './company.service.interface'
 import {
   formatCompanyAnnouncement as getCompanyAnnouncementMarkup,
   formatParty,
-  getNextWednesday,
+  getNextWeekdayWithLeadTime,
+  WeekdayEnum,
 } from './utils'
 
 @Injectable()
@@ -25,7 +26,7 @@ export class CompanyService implements ICompanyService {
   async createAdditionalAnnouncements(
     body: CreateAdditionalAnnouncementsDto,
   ): Promise<void> {
-    const nextWednesday = getNextWednesday()
+    const pubDate = getNextWeekdayWithLeadTime(new Date(), WeekdayEnum.Tuesday)
 
     const allowedAnnouncementItemsTypes = [
       'A',
@@ -192,7 +193,7 @@ export class CompanyService implements ICompanyService {
         location: body.responsibleParty.signature.location,
         onBehalfOf: body.responsibleParty.signature.onBehalfOf,
       },
-      scheduledAt: [nextWednesday.toISOString()],
+      scheduledAt: [pubDate.toISOString()],
       caption: `${formatDate(announcementDate, 'MMMM yyyy')}`,
       isFromExternalSystem: true,
     })
@@ -201,7 +202,7 @@ export class CompanyService implements ICompanyService {
   async registerCompanyFirmaskra(
     body: RegisterCompanyFirmaskraDto,
   ): Promise<void> {
-    const nextWednesday = getNextWednesday()
+    const pubDate = getNextWeekdayWithLeadTime(new Date(), WeekdayEnum.Tuesday)
 
     const creators = body.creators.map((c) => formatParty(c)).join(', ')
     const procurators = body.procurationHolders
@@ -301,7 +302,7 @@ export class CompanyService implements ICompanyService {
         location: body.responsibleParty.signature.location,
         onBehalfOf: body.responsibleParty.signature.onBehalfOf,
       },
-      scheduledAt: [nextWednesday.toISOString()],
+      scheduledAt: [pubDate.toISOString()],
       isFromExternalSystem: true,
     })
   }
@@ -309,7 +310,7 @@ export class CompanyService implements ICompanyService {
   async registerCompanyHlutafelag(
     body: RegisterCompanyHlutafelagDto,
   ): Promise<void> {
-    const nextWednesday = getNextWednesday()
+    const pubDate = getNextWeekdayWithLeadTime(new Date(), WeekdayEnum.Tuesday)
 
     const creators = body.creators.map((c) => formatParty(c)).join(', ')
     const boardMembers = body.board.members
@@ -434,7 +435,7 @@ export class CompanyService implements ICompanyService {
         location: body.responsibleParty.signature.location,
         onBehalfOf: body.responsibleParty.signature.onBehalfOf,
       },
-      scheduledAt: [nextWednesday.toISOString()],
+      scheduledAt: [pubDate.toISOString()],
       isFromExternalSystem: true,
       externalId: body.responsibleParty.externalId,
     })

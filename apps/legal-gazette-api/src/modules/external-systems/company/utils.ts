@@ -1,11 +1,36 @@
-export const getNextWednesday = (fromDate: Date = new Date()) => {
-  const weekday = fromDate.getDay() // Sunday=0, Monday=1, ..., Saturday=6
+export enum WeekdayEnum {
+  Sunday = 0,
+  Monday = 1,
+  Tuesday = 2,
+  Wednesday = 3,
+  Thursday = 4,
+  Friday = 5,
+  Saturday = 6,
+}
 
-  // Wednesday in JS is day 3
-  let daysToAdd = (3 - weekday + 7) % 7
+export const getNextWeekdayWithLeadTime = (
+  fromDate: Date = new Date(),
+  targetWeekday: WeekdayEnum = WeekdayEnum.Wednesday,
+  minLeadTimeDays = 4, // Minimum days before the target weekday
+) => {
+  // Validate targetWeekday is between 0-6
+  if (targetWeekday < 0 || targetWeekday > 6) {
+    throw new Error('targetWeekday must be between 0 (Sunday) and 6 (Saturday)')
+  }
 
-  // 4 day minimum leadtime, if the next Wednesday is less than 4 days away, push to the following week
-  if ([3, 2, 1, 0].includes(weekday)) {
+  const currentWeekday = fromDate.getDay()
+
+  // Calculate days until the next occurrence of targetWeekday
+  let daysToAdd = (targetWeekday - currentWeekday + 7) % 7
+
+  // If daysToAdd is 0, it means today is the target weekday
+  // In that case, we need to check if we meet the minimum lead time
+  if (daysToAdd === 0) {
+    daysToAdd = 7 // Move to next week
+  }
+
+  // If the next occurrence doesn't meet minimum lead time, push to following week
+  if (daysToAdd < minLeadTimeDays) {
     daysToAdd += 7
   }
 
