@@ -18,6 +18,7 @@ import { PagingTotalItemsText } from '@dmr.is/ui/components/PagingTotaItemsText/
 
 import { Option } from '@island.is/island-ui/core'
 
+import { AdvertVersionEnum } from '../../../../gen/fetch'
 import { useFilters } from '../../../../hooks/useFilters'
 import { usePublications } from '../../../../hooks/usePublications'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
@@ -27,9 +28,9 @@ import { useQuery } from '@tanstack/react-query'
 
 const VERSION_OPTIONS = [
   { label: 'Allar útgáfur', value: null },
-  { label: 'Útgáfa A', value: 'A' },
-  { label: 'Útgáfa B', value: 'B' },
-  { label: 'Útgáfa C', value: 'C' },
+  { label: 'Útgáfa A', value: AdvertVersionEnum.A },
+  { label: 'Útgáfa B', value: AdvertVersionEnum.B },
+  { label: 'Útgáfa C', value: AdvertVersionEnum.C },
 ]
 
 export const SearchSidebar = () => {
