@@ -82,6 +82,7 @@ import {
 import { IExternalService } from '../external/external.service.interface'
 import { IJournalService } from '../journal'
 import {
+  AdvertCategoriesModel,
   AdvertCategoryModel,
   AdvertCorrectionModel,
   AdvertDepartmentModel,
@@ -165,6 +166,8 @@ export class CaseService implements ICaseService {
     @InjectModel(CasePublishedAdvertsModel)
     private readonly casePublishedAdvertsModel: typeof CasePublishedAdvertsModel,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    @InjectModel(AdvertCategoriesModel)
+    private readonly advertCategoriesModel: typeof AdvertCategoriesModel,
     @InjectModel(CaseHistoryModel)
     private readonly caseHistoryModel: typeof CaseHistoryModel,
     @InjectModel(CaseChannelModel)
@@ -676,6 +679,7 @@ export class CaseService implements ICaseService {
   ): Promise<ResultWrapper> {
     return this.updateService.updateCaseType(caseId, body, transaction)
   }
+
   @LogAndHandle()
   @Transactional()
   updateCaseCategories(
@@ -685,6 +689,60 @@ export class CaseService implements ICaseService {
   ): Promise<ResultWrapper> {
     return this.updateService.updateCaseCategories(caseId, body, transaction)
   }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateCaseAndAdvertCategories(
+    caseId: string,
+    body: UpdateCategoriesBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    // First, update the case categories
+    const updateCaseResult = await this.updateService.updateCaseCategories(
+      caseId,
+      body,
+      transaction,
+    )
+
+    if (!updateCaseResult.result.ok) {
+      return updateCaseResult
+    }
+
+    // Get the case to find the associated advert
+    const caseRecord = await this.caseModel.findByPk(caseId, {
+      attributes: ['id', 'advertId'],
+      transaction,
+    })
+
+    if (!caseRecord || !caseRecord.advertId) {
+      // If no advert is associated with the case, just return success
+      return ResultWrapper.ok()
+    }
+
+    // Remove existing advert categories
+    await this.advertCategoriesModel.destroy({
+      where: {
+        advert_id: caseRecord.advertId,
+      },
+      transaction,
+    })
+
+    // Add new advert categories to match case categories
+    await Promise.all(
+      body.categoryIds.map((categoryId) =>
+        this.advertCategoriesModel.create(
+          {
+            advert_id: caseRecord.advertId,
+            category_id: categoryId,
+          },
+          { transaction },
+        ),
+      ),
+    )
+
+    return ResultWrapper.ok()
+  }
+
   @LogAndHandle()
   @Transactional()
   updateCaseRequestedPublishDate(

@@ -479,7 +479,9 @@ export class CaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCategoriesBody,
   ) {
-    ResultWrapper.unwrap(await this.caseService.updateCaseCategories(id, body))
+    ResultWrapper.unwrap(
+      await this.caseService.updateCaseAndAdvertCategories(id, body),
+    )
   }
 
   @Put(':id/status/next')
