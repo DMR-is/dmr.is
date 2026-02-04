@@ -129,6 +129,12 @@ export interface ICaseService {
     body: UpdateCategoriesBody,
   ): Promise<ResultWrapper>
 
+  updateCaseAndAdvertCategories(
+    caseId: string,
+    body: UpdateCategoriesBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
   updateCaseRequestedPublishDate(
     caseId: string,
     body: UpdatePublishDateBody,

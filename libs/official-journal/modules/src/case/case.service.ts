@@ -108,6 +108,7 @@ import { ICaseService } from './case.service.interface'
 import {
   CaseAdditionModel,
   CaseAdditionsModel,
+  CaseCategoriesModel,
   CaseChannelModel,
   CaseChannelsModel,
   CaseCommunicationStatusModel,
@@ -165,6 +166,8 @@ export class CaseService implements ICaseService {
     @InjectModel(CasePublishedAdvertsModel)
     private readonly casePublishedAdvertsModel: typeof CasePublishedAdvertsModel,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
+    @InjectModel(CaseCategoriesModel)
+    private readonly caseCategoriesModel: typeof CaseCategoriesModel,
     @InjectModel(CaseHistoryModel)
     private readonly caseHistoryModel: typeof CaseHistoryModel,
     @InjectModel(CaseChannelModel)
@@ -676,6 +679,7 @@ export class CaseService implements ICaseService {
   ): Promise<ResultWrapper> {
     return this.updateService.updateCaseType(caseId, body, transaction)
   }
+
   @LogAndHandle()
   @Transactional()
   updateCaseCategories(
@@ -685,6 +689,61 @@ export class CaseService implements ICaseService {
   ): Promise<ResultWrapper> {
     return this.updateService.updateCaseCategories(caseId, body, transaction)
   }
+
+  @LogAndHandle()
+  @Transactional()
+  async updateCaseAndAdvertCategories(
+    caseId: string,
+    body: UpdateCategoriesBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    // First, update the case categories
+    const updateCaseResult = await this.updateService.updateCaseCategories(
+      caseId,
+      body,
+      transaction,
+    )
+
+    if (!updateCaseResult.result.ok) {
+      return updateCaseResult
+    }
+
+    // Get the case to find the associated advert
+    const caseRecord = await this.caseModel.findByPk(caseId, {
+      attributes: ['id', 'advertId'],
+      transaction,
+    })
+
+    if (!caseRecord || !caseRecord.advertId) {
+      // If no advert is associated with the case, just return success
+      return ResultWrapper.ok()
+    }
+
+    // Fetch ALL current categories from the case.
+    const allCaseCategories = await this.caseCategoriesModel.findAll({
+      where: {
+        caseId: caseId,
+      },
+      attributes: ['categoryId'],
+      transaction,
+    })
+
+    const allCategoryIds = allCaseCategories.map((cc) => cc.categoryId)
+
+    // Update advert categories to match ALL case categories
+    const updateAdvertResult = await this.journalService.updateAdvertCategories(
+      caseRecord.advertId,
+      allCategoryIds,
+      transaction,
+    )
+
+    if (!updateAdvertResult.result.ok) {
+      return updateAdvertResult
+    }
+
+    return ResultWrapper.ok()
+  }
+
   @LogAndHandle()
   @Transactional()
   updateCaseRequestedPublishDate(
