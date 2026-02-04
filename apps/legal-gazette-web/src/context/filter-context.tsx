@@ -8,7 +8,7 @@ import {
 } from 'nuqs'
 import { createContext, useState } from 'react'
 
-import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
+import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 
 import { Tag } from '@island.is/island-ui/core'
 

@@ -1,7 +1,6 @@
 import * as z from 'zod'
 
 import { communicationChannelSchema } from '@dmr.is/legal-gazette/schemas'
-import { createTRPCError } from '@dmr.is/trpc/utils/errorHandler'
 
 import {
   RecallBankruptcyFieldsDtoRequirementStatementEnum,
@@ -69,14 +68,7 @@ export const advertsRouter = router({
   getAdvert: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      // return await ctx.api.getAdvertById({ id: input.id })
-      try {
-        const advert = await ctx.api.getAdvertById({ advertId: input.id })
-        return advert
-      } catch (error) {
-        const trpcError = await createTRPCError(error)
-        throw trpcError
-      }
+      return await ctx.api.getAdvertById({ advertId: input.id })
     }),
   getAdvertsCount: protectedProcedure
     .input(getAdvertsRequestSchema)

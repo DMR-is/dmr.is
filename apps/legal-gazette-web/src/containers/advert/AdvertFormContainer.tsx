@@ -34,7 +34,7 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
     trpc.getAllEntities.queryOptions(),
   )
 
-  const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id }))
+  const { data: advert } = useQuery(trpc.getAdvert.queryOptions({ id: 'fe1ffef5-d35a-4a4a-8c9b-0675a25351fe' }))
 
   const { data: categoriesForTypes } = useQuery(
     trpc.getCategories.queryOptions(
@@ -44,6 +44,10 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
       { enabled: !!advert?.type.id },
     ),
   )
+
+  if (!advert) {
+    return null
+  }
 
   const isRecallAdvertType = RecallAdvertTypes.includes(advert.templateType)
   const hasDivisionMeeting = DivisionMeetingAdvertTypes.includes(

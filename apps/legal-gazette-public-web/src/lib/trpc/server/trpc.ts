@@ -1,5 +1,7 @@
 import { cache } from 'react'
 
+import { apiErrorMiddleware } from '@dmr.is/trpc/utils/errorHandler'
+
 import { getPublicServerClient, getServerClient } from '../../api/serverClient'
 
 import { initTRPC, TRPCError } from '@trpc/server'
@@ -12,13 +14,18 @@ export const createTRPCContext = cache(async () => {
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   errorFormatter(opts) {
-    const { shape } = opts
+    const { shape, error } = opts
+    const cause = error.cause as
+      | { name?: string; details?: string[] }
+      | undefined
 
     return {
       ...shape,
       message: shape.message,
       data: {
         ...shape.data,
+        apiErrorName: cause?.name,
+        validationErrors: cause?.details,
       },
     }
   },
@@ -28,20 +35,22 @@ export const createCallerFactory = t.createCallerFactory
 export const router = t.router
 export const mergeRouters = t.mergeRouters
 
-export const publicProcedure = t.procedure.use(({ ctx, next }) => {
-  if (!ctx.publicApi) {
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'No public API client found',
+export const publicProcedure = t.procedure
+  .use(({ ctx, next }) => {
+    if (!ctx.publicApi) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'No public API client found',
+      })
+    }
+    return next({
+      ctx: {
+        ...ctx,
+        publicApi: ctx.publicApi,
+      },
     })
-  }
-  return next({
-    ctx: {
-      ...ctx,
-      publicApi: ctx.publicApi,
-    },
   })
-})
+  .use(apiErrorMiddleware)
 
 export const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
   try {
