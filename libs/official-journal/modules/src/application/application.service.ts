@@ -44,6 +44,7 @@ import {
   getLimitAndOffset,
   getTemplate,
   getTemplateDetails,
+  wordBufferToHtml,
 } from '@dmr.is/utils'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
@@ -256,34 +257,16 @@ export class ApplicationService implements IApplicationService {
         await this.getApplication(applicationId),
       )
 
-      // const { signatures } = ResultWrapper.unwrap(
-      //   await this.signatureService.getSignaturesByCaseId(
-      //     caseLookup.id,
-      //     undefined,
-      //     transaction,
-      //   ),
-      // )
-
-      // Promise.all(
-      //   signatures.map(async (signature) => {
-      //     this.signatureService.deleteSignature(signature.id, transaction)
-      //   }),
-      // )
-
-      // const signatureArray = signatureMapper(
-      //   application.answers.signatures,
-      //   application.answers.misc.signatureType,
-      //   caseLookup.id,
-      //   caseLookup.involvedPartyId,
-      // )
-      // Promise.all(
-      //   signatureArray.map(async (signature) => {
-      //     await this.signatureService.createCaseSignature(
-      //       signature,
-      //       transaction,
-      //     )
-      //   }),
-      // )
+      try {
+        if (application.answers.misc?.mainTextAsFile) {
+          const mainTextAsHtml = await this.getMainTextAttachment(applicationId)
+          if (mainTextAsHtml) {
+            application.answers.advert.html = mainTextAsHtml
+          }
+        }
+      } catch (e) {
+        // noop
+      }
 
       ResultWrapper.unwrap(
         await this.caseService.updateCase(
@@ -302,16 +285,6 @@ export class ApplicationService implements IApplicationService {
           transaction,
         ),
       )
-
-      // ResultWrapper.unwrap(
-      //   await this.caseService.updateAdvertByHtml(
-      //     caseLookup.id,
-      //     {
-      //       advertHtml: application.answers.advert.html,
-      //     },
-      //     transaction,
-      //   ),
-      // )
 
       const commStatus = ResultWrapper.unwrap(
         await this.utilityService.caseCommunicationStatusLookup(
@@ -357,6 +330,49 @@ export class ApplicationService implements IApplicationService {
       code: 500,
       message: 'Could not post application',
     })
+  }
+
+  private async getMainTextAttachment(
+    applicationId: string,
+  ): Promise<string | null> {
+    const applicationAttachment =
+      await this.attachmentService.getApplicationAttachment(
+        applicationId,
+        '2d60e8b3-b75a-45ae-bfed-817fe8e25fc2', // Type Meginmál
+      )
+
+    if (
+      !applicationAttachment.result.ok ||
+      !applicationAttachment.result.value
+    ) {
+      return null
+    }
+
+    const mainTextBasePath = `applications/${applicationId}/meginmal/`
+    const filename =
+      applicationAttachment.result.value.attachment.fileName ??
+      applicationAttachment.result.value.attachment.originalFileName
+
+    let mainTextAttachment: Buffer | null = null
+    let mainTextAsHtml: string | null = null
+    try {
+      mainTextAttachment = (
+        await this.s3Service.getObjectBuffer(`${mainTextBasePath}${filename}`)
+      ).unwrap()
+    } catch (e) {
+      // noop
+    }
+
+    if (mainTextAttachment) {
+      mainTextAsHtml = await wordBufferToHtml(mainTextAttachment)
+    } else {
+      this.logger.info('No main text attachment found for application', {
+        category: LOGGING_CATEGORY,
+        applicationId,
+      })
+    }
+
+    return mainTextAsHtml
   }
 
   /**

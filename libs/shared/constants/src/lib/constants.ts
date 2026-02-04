@@ -62,12 +62,14 @@ export enum AttachmentTypeParam {
   AdditonalDocument = 'fylgiskjol',
   SupportingDocument = 'fylgigogn',
   Assets = 'assets',
+  MainText = 'meginmal',
 }
 
 export enum AttachmentTypeEnum {
   OriginalDocument = 'Frumrit',
   AdditonalDocument = 'Fylgiskjöl',
   SupportingDocument = 'Fylgigögn',
+  MainText = 'Meginmál',
 }
 
 export enum ApplicationStates {
