@@ -1,8 +1,10 @@
 import {
   AdvertPublicationDetailedDto,
+  AdvertVersionEnum,
   GetCombinedHTMLDto,
   GetPublicationsDto,
   GetPublicationsQueryDto,
+  GetRelatedPublicationsDto,
   UpdateAdvertPublicationDto,
 } from '../../../models/advert-publication.model'
 
@@ -20,6 +22,11 @@ export interface IPublicationService {
     publicationId: string,
   ): Promise<AdvertPublicationDetailedDto>
 
+  getPublicationByNumberAndVersion(
+    publicationNumber: string,
+    version: string,
+  ): Promise<AdvertPublicationDetailedDto>
+
   getPublications(query?: GetPublicationsQueryDto): Promise<GetPublicationsDto>
 
   getPublicationsCombinedHTML(
@@ -29,6 +36,11 @@ export interface IPublicationService {
   getPublishedPublicationsByAdvertId(
     advertId: string,
   ): Promise<AdvertPublicationDetailedDto[]>
+
+  getRelatedPublications(
+    publicationNumber: string,
+    version: AdvertVersionEnum,
+  ): Promise<GetRelatedPublicationsDto>
 }
 
 export const IPublicationService = Symbol('IPublicationService')

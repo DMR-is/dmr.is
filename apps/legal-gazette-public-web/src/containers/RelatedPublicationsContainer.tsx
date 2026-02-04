@@ -1,4 +1,5 @@
-import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
+'use client'
+
 import {
   Box,
   GridColumn,
@@ -11,31 +12,17 @@ import {
 
 import { theme } from '@island.is/island-ui/theme'
 
-import { PublicationCard } from '../../../../../../components/client-components/cards/PublicationCard'
-import { trpc } from '../../../../../../lib/trpc/client/server'
+import { PublicationCard } from '../components/client-components/cards/PublicationCard'
+import { PublishedPublicationDto } from '../gen/fetch'
 
-export default async function RelatedPublications({
-  params,
-}: {
-  params: { id: string; version: string }
-}) {
+interface RelatedPublicationsContainerProps {
+  publications: PublishedPublicationDto[]
+}
 
-
-  const relatedPubs = await fetchQueryWithHandler(
-    trpc.getRelatedPublications.queryOptions({
-      advertId: params.id,
-    }),
-  )
-
-  const filtered = relatedPubs.publications.filter(
-    (pub) => !(pub.advertId === params.id && pub.version === params.version),
-  )
-
-  if (filtered.length === 0) {
-    return null
-  }
-
-  const items = filtered.map((pub) => (
+export function RelatedPublicationsContainer({
+  publications,
+}: RelatedPublicationsContainerProps) {
+  const items = publications.map((pub) => (
     <PublicationCard key={pub.id} publication={pub} />
   ))
 
@@ -46,8 +33,8 @@ export default async function RelatedPublications({
           <GridColumn span="12/12">
             <Stack space={[3, 4]}>
               <Text variant="h3">Tengdar auglýsingar</Text>
-              {filtered.length === 1 ? (
-                <PublicationCard publication={filtered[0]} />
+              {publications.length === 1 ? (
+                <PublicationCard publication={publications[0]} />
               ) : (
                 <SimpleSlider
                   carouselController

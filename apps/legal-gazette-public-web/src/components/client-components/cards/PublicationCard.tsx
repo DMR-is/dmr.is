@@ -67,7 +67,7 @@ export const PublicationCard = ({ publication }: Props) => {
               </Tag>
             </Inline>
             <ArrowLink
-              href={`/auglysingar/${publication.advertId}/${publication.version}`}
+              href={`/auglysingar/${publication.publicationNumber}/${publication.version}`}
             >
               Skoða
             </ArrowLink>

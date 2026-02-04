@@ -10,9 +10,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
-import { UUIDValidationPipe } from '@dmr.is/pipelines'
+import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import { TokenJwtAuthGuard } from '@dmr.is/shared/modules/guards/auth'
 
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
@@ -25,9 +25,11 @@ import {
 } from '../../../core/guards/scope-guards/scopes.decorator'
 import {
   AdvertPublicationDetailedDto,
+  AdvertVersionEnum,
   GetCombinedHTMLDto,
   GetPublicationsDto,
   GetPublicationsQueryDto,
+  GetRelatedPublicationsDto,
   UpdateAdvertPublicationDto,
 } from '../../../models/advert-publication.model'
 import { IPublicationService } from './publication.service.interface'
@@ -38,18 +40,19 @@ import { IPublicationService } from './publication.service.interface'
   path: '/publications',
   version: '1',
 })
+@AdminAccess()
 export class AdvertPublicationController {
   constructor(
     @Inject(IPublicationService)
     readonly advertPublicationService: IPublicationService,
   ) {}
 
-  @PublicWebScopes()
   @Get()
   @LGResponse({
     operationId: 'getPublications',
     type: GetPublicationsDto,
   })
+  @PublicWebScopes()
   async getPublishedPublications(
     @Query() query: GetPublicationsQueryDto,
   ): Promise<GetPublicationsDto> {
@@ -75,26 +78,73 @@ export class AdvertPublicationController {
     operationId: 'getAdvertPublication',
     type: AdvertPublicationDetailedDto,
   })
+  @PublicOrApplicationWebScopes()
+  @AdminAccess()
   async getPublicationById(
     @Param('publicationId', new UUIDValidationPipe()) publicationId: string,
   ) {
     return this.advertPublicationService.getPublicationById(publicationId)
   }
 
+  @Get('/:publicationNumber/:version')
+  @LGResponse({
+    operationId: 'getPublicationByNumberAndVersion',
+    type: AdvertPublicationDetailedDto,
+  })
+  @ApiParam({
+    name: 'version',
+    enum: AdvertVersionEnum,
+    enumName: 'AdvertVersionEnum',
+  })
+  @PublicWebScopes()
+  async getPublicationByNumberAndVersion(
+    @Param('publicationNumber') publicationNumber: string,
+    @Param('version', new EnumValidationPipe(AdvertVersionEnum))
+    version: AdvertVersionEnum,
+  ): Promise<AdvertPublicationDetailedDto> {
+    return this.advertPublicationService.getPublicationByNumberAndVersion(
+      publicationNumber,
+      version,
+    )
+  }
+
+  @Get('/related/:publicationNumber/:version')
+  @LGResponse({
+    operationId: 'getRelatedPublications',
+    type: GetRelatedPublicationsDto,
+  })
+  @PublicWebScopes()
   @AdminAccess()
+  @ApiParam({
+    name: 'version',
+    enum: AdvertVersionEnum,
+    enumName: 'AdvertVersionEnum',
+  })
+  async getRelatedPublications(
+    @Param('publicationNumber') publicationNumber: string,
+    @Param('version', new EnumValidationPipe(AdvertVersionEnum))
+    version: AdvertVersionEnum,
+  ): Promise<GetRelatedPublicationsDto> {
+    return this.advertPublicationService.getRelatedPublications(
+      publicationNumber,
+      version,
+    )
+  }
+
   @UseGuards(CanEditGuard)
   @Post('create/:advertId')
   @LGResponse({ operationId: 'createPublication' })
+  @AdminAccess()
   async createAdvertPublication(
     @Param('advertId', new UUIDValidationPipe()) advertId: string,
   ): Promise<void> {
     await this.advertPublicationService.createPublication(advertId)
   }
 
-  @AdminAccess()
-  @UseGuards(CanEditOrPublishGuard)
   @Patch('/:publicationId')
   @LGResponse({ operationId: 'updatePublication' })
+  @AdminAccess()
+  @UseGuards(CanEditOrPublishGuard)
   async updatePublication(
     @Param('publicationId', new UUIDValidationPipe()) publicationId: string,
     @Body() body: UpdateAdvertPublicationDto,
@@ -102,10 +152,10 @@ export class AdvertPublicationController {
     await this.advertPublicationService.updatePublication(publicationId, body)
   }
 
-  @AdminAccess()
-  @UseGuards(CanEditGuard)
   @Delete('/:publicationId')
   @LGResponse({ operationId: 'deletePublication' })
+  @AdminAccess()
+  @UseGuards(CanEditGuard)
   async deletePublication(
     @Param('publicationId', new UUIDValidationPipe()) publicationId: string,
   ): Promise<void> {

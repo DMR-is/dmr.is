@@ -36,7 +36,8 @@
     "ojoi-web": "nx run-many --target=serve --parallel --projects=official-journal-web,official-journal-admin-api,official-journal-api",
     "lg:init": "nx run legal-gazette-api:dev-init",
     "lg:seed": "nx run legal-gazette-api:seed",
-    "lg:migrate": "nx run legal-gazette-api:migrate"
+    "lg:migrate": "nx run legal-gazette-api:migrate",
+    "lg:update-clients": "nx run-many -t update-client -p legal-gazette-web,legal-gazette-public-web,legal-gazette-application-web --parallel"
   },
   "devDependencies": {
     "@babel/core": "^7.27.4",

@@ -8,7 +8,7 @@ import { trpc } from '../../../../../lib/trpc/client/server'
 export default async function AdvertPage({
   params,
 }: {
-  params: { id: string; version: AdvertVersionEnum }
+  params: { publicationNumber: string; version: AdvertVersionEnum }
 }) {
   const pub = await fetchQueryWithHandler(
     trpc.getPublication.queryOptions({
