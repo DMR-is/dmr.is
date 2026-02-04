@@ -27,10 +27,9 @@ import { isDate } from '../../../../lib/utils'
 import { useQuery } from '@tanstack/react-query'
 
 const VERSION_OPTIONS = [
-  { label: 'Allar útgáfur', value: null },
-  { label: 'Útgáfa A', value: AdvertVersionEnum.A },
-  { label: 'Útgáfa B', value: AdvertVersionEnum.B },
-  { label: 'Útgáfa C', value: AdvertVersionEnum.C },
+  { label: 'Birting A', value: AdvertVersionEnum.A },
+  { label: 'Birting B', value: AdvertVersionEnum.B },
+  { label: 'Birting C', value: AdvertVersionEnum.C },
 ]
 
 export const SearchSidebar = () => {
@@ -167,7 +166,20 @@ export const SearchSidebar = () => {
               })
             }}
           />
-
+          <Select
+            isClearable
+            label="Birtingar"
+            placeholder="Allar birtingar"
+            options={VERSION_OPTIONS}
+            size="xs"
+            defaultValue={VERSION_OPTIONS.find(
+              (o) => o.value === filters.version,
+            )}
+            onChange={(opt) => {
+              const valueToUse = opt ? opt.value : null
+              setFilters({ ...filters, version: valueToUse })
+            }}
+          />
           <DatePicker
             locale="is"
             label="Dagsetning frá"
@@ -192,18 +204,7 @@ export const SearchSidebar = () => {
             minYear={MIN_YEAR}
             maxYear={THIS_YEAR}
           />
-          <Select
-            label="Útgáfa"
-            options={VERSION_OPTIONS}
-            size="xs"
-            defaultValue={VERSION_OPTIONS.find(
-              (o) => o.value === filters.version,
-            )}
-            onChange={(opt) => {
-              const valueToUse = opt ? opt.value : null
-              setFilters({ ...filters, version: valueToUse })
-            }}
-          />
+
           <Select
             label="Fjöldi niðurstaða"
             options={totalResultsOptions}
