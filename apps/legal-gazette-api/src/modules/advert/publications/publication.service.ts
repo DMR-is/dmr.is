@@ -1,6 +1,7 @@
 import addDays from 'date-fns/addDays'
 import { Op } from 'sequelize'
 
+import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager'
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -23,6 +24,8 @@ const LOGGING_CONTEXT = 'PublicationService'
 @Injectable()
 export class PublicationService implements IPublicationService {
   constructor(
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(AdvertPublicationModel)
     readonly publicationModel: typeof AdvertPublicationModel,
