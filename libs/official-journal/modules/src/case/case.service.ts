@@ -82,7 +82,6 @@ import {
 import { IExternalService } from '../external/external.service.interface'
 import { IJournalService } from '../journal'
 import {
-  AdvertCategoriesModel,
   AdvertCategoryModel,
   AdvertCorrectionModel,
   AdvertDepartmentModel,
@@ -109,6 +108,7 @@ import { ICaseService } from './case.service.interface'
 import {
   CaseAdditionModel,
   CaseAdditionsModel,
+  CaseCategoriesModel,
   CaseChannelModel,
   CaseChannelsModel,
   CaseCommunicationStatusModel,
@@ -166,8 +166,8 @@ export class CaseService implements ICaseService {
     @InjectModel(CasePublishedAdvertsModel)
     private readonly casePublishedAdvertsModel: typeof CasePublishedAdvertsModel,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
-    @InjectModel(AdvertCategoriesModel)
-    private readonly advertCategoriesModel: typeof AdvertCategoriesModel,
+    @InjectModel(CaseCategoriesModel)
+    private readonly caseCategoriesModel: typeof CaseCategoriesModel,
     @InjectModel(CaseHistoryModel)
     private readonly caseHistoryModel: typeof CaseHistoryModel,
     @InjectModel(CaseChannelModel)
@@ -719,26 +719,27 @@ export class CaseService implements ICaseService {
       return ResultWrapper.ok()
     }
 
-    // Remove existing advert categories
-    await this.advertCategoriesModel.destroy({
+    // Fetch ALL current categories from the case.
+    const allCaseCategories = await this.caseCategoriesModel.findAll({
       where: {
-        advert_id: caseRecord.advertId,
+        caseId: caseId,
       },
+      attributes: ['categoryId'],
       transaction,
     })
 
-    // Add new advert categories to match case categories
-    await Promise.all(
-      body.categoryIds.map((categoryId) =>
-        this.advertCategoriesModel.create(
-          {
-            advert_id: caseRecord.advertId,
-            category_id: categoryId,
-          },
-          { transaction },
-        ),
-      ),
+    const allCategoryIds = allCaseCategories.map((cc) => cc.categoryId)
+
+    // Update advert categories to match ALL case categories
+    const updateAdvertResult = await this.journalService.updateAdvertCategories(
+      caseRecord.advertId,
+      allCategoryIds,
+      transaction,
     )
+
+    if (!updateAdvertResult.result.ok) {
+      return updateAdvertResult
+    }
 
     return ResultWrapper.ok()
   }

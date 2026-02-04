@@ -1313,6 +1313,44 @@ export class JournalService implements IJournalService {
   }
 
   @LogAndHandle()
+  @Transactional()
+  async updateAdvertCategories(
+    advertId: string,
+    categoryIds: string[],
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    if (!advertId) {
+      return ResultWrapper.err({
+        code: 400,
+        message: 'Advert ID is required',
+      })
+    }
+
+    // Remove existing advert categories
+    await this.advertCategoriesModel.destroy({
+      where: {
+        advert_id: advertId,
+      },
+      transaction,
+    })
+
+    // Add new advert categories
+    await Promise.all(
+      categoryIds.map((categoryId) =>
+        this.advertCategoriesModel.create(
+          {
+            advert_id: advertId,
+            category_id: categoryId,
+          },
+          { transaction },
+        ),
+      ),
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
   async handleLegacyPdfUrl(
     id?: string,
   ): Promise<ResultWrapper<{ url: string }>> {

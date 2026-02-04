@@ -113,6 +113,11 @@ export interface IJournalService {
     file: Express.Multer.File,
   ): Promise<ResultWrapper<S3UploadFileResponse>>
   handleLegacyPdfUrl(id?: string): Promise<ResultWrapper<{ url: string }>>
+  updateAdvertCategories(
+    advertId: string,
+    categoryIds: string[],
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
   // TODO Testing logging process only, remove later
   error(): void
 }
