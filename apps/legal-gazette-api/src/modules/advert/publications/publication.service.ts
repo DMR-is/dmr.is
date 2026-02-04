@@ -1,7 +1,7 @@
 import addDays from 'date-fns/addDays'
 import { Op } from 'sequelize'
 
-import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager'
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
