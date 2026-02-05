@@ -19,7 +19,7 @@ export default async function AdvertDetails({ params }: Props) {
 
   return (
     <HydrateClient>
-      <AdvertContainer id={id} />
+      <AdvertContainer advertId={id} />
     </HydrateClient>
   )
 }

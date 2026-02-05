@@ -1,6 +1,6 @@
 'use client'
 
-import { useQuery } from '@dmr.is/trpc/client/trpc'
+import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { Box, Breadcrumbs, Stack, Text } from '@dmr.is/ui/components/island-is'
 import { formatDate } from '@dmr.is/utils/client'
 
@@ -25,15 +25,14 @@ import {
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 type AdvertContainerProps = {
-  id: string
+  advertId: string
 }
 
-export function AdvertFormContainer({ id }: AdvertContainerProps) {
+export function AdvertFormContainer({ advertId }: AdvertContainerProps) {
   const trpc = useTRPC()
   const { data: entities } = useQuery(trpc.getAllEntities.queryOptions())
 
-  const { data: advert } = useQuery(trpc.getAdvert.queryOptions({ id }))
-
+  const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id: advertId }))
   const { data: categoriesForTypes } = useQuery(
     trpc.getCategories.queryOptions(
       {
@@ -42,10 +41,6 @@ export function AdvertFormContainer({ id }: AdvertContainerProps) {
       { enabled: !!advert?.type.id },
     ),
   )
-
-  if (!advert) {
-    return null
-  }
 
   const isRecallAdvertType = RecallAdvertTypes.includes(advert.templateType)
   const hasDivisionMeeting = DivisionMeetingAdvertTypes.includes(

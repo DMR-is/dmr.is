@@ -5,19 +5,19 @@ import { AdvertSidebar } from '../../components/Form/FormSidebar'
 import { AdvertPublicationModalContainer } from './AdvertPublicationModalContainer'
 
 type AdvertContainerProps = {
-  id: string
+  advertId: string
 }
 
-export function AdvertSidebarContainer({ id }: AdvertContainerProps) {
+export function AdvertSidebarContainer({ advertId }: AdvertContainerProps) {
   return (
     <AdvertSidebar>
-      <EmployeeSelect advertId={id} />
+      <EmployeeSelect advertId={advertId} />
       <ChangeStatusButtons
-        advertId={id}
-        previewSlot={<AdvertPublicationModalContainer advertId={id} />}
+        advertId={advertId}
+        previewSlot={<AdvertPublicationModalContainer advertId={advertId} />}
       />
 
-      <AdvertFormStepper id={id} />
+      <AdvertFormStepper id={advertId} />
     </AdvertSidebar>
   )
 }
