@@ -4,19 +4,20 @@ import {
   AlertMessage,
   Box,
   Breadcrumbs,
+  Inline,
   Pagination,
   SkeletonLoader,
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
 
+import { CombinedHTMLModalContainer } from '../../../../containers/CombinedHTMLModalContainer'
 import { useFilters } from '../../../../hooks/useFilters'
 import { usePublications } from '../../../../hooks/usePublications'
 import { PublicationCard } from '../../cards/PublicationCard'
 
 export const SearchResults = () => {
   const { filters, setFilters } = useFilters()
-
   const { data, isLoading, error } = usePublications()
 
   if (error) {
@@ -44,11 +45,21 @@ export const SearchResults = () => {
       <Stack space={[2]}>
         <Stack space={[1]}>
           <Breadcrumbs items={breadcrumbs} />
-          <Box>
-            <Text marginBottom={[1]} variant="h2">
-              Leit í Lögbirtingablaði
-            </Text>
-          </Box>
+          <Inline space={2} alignY="center" justifyContent="spaceBetween">
+            <Text variant="h2">Leit í Lögbirtingablaði</Text>
+
+            <CombinedHTMLModalContainer
+              disabled={!data?.publications.length}
+              pagingInfo={{
+                paging: {
+                  page: filters.page,
+                  pageSize: filters.pageSize,
+                },
+
+                totalItems: data?.paging.totalItems,
+              }}
+            />
+          </Inline>
         </Stack>
         {isLoading ? (
           <SkeletonLoader

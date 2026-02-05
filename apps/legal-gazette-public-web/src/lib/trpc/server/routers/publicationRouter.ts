@@ -4,7 +4,7 @@ import { AdvertVersionEnum } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
 const getAdvertPublicationSchema = z.object({
-  advertId: z.uuid(),
+  publicationId: z.uuid(),
   version: z.enum(AdvertVersionEnum),
 })
 
@@ -48,5 +48,20 @@ export const publicationRouter = router({
         advertId: input.advertId,
         pageSize: 5,
       })
+    }),
+  getCombinedHTML: protectedProcedure
+    .input(getPublicationsSchema)
+    .query(async ({ input, ctx }) => {
+      const filteredInput = Object.fromEntries(
+        Object.entries(input).filter(
+          ([, value]) =>
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            (!Array.isArray(value) || value.length > 0),
+        ),
+      )
+
+      return await ctx.api.getCombinedHTML(filteredInput)
     }),
 })

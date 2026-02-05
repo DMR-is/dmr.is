@@ -76,7 +76,7 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
                   onClick: () => {
                     getAdvertPublication(
                       {
-                        advertId: advert.id,
+                        publicationId: advert.id,
                         version: AdvertVersionEnum[pub.version],
                       },
                       {

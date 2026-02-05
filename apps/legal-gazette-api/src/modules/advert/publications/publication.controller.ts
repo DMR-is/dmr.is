@@ -25,6 +25,7 @@ import {
 } from '../../../core/guards/scope-guards/scopes.decorator'
 import {
   AdvertPublicationDetailedDto,
+  GetCombinedHTMLDto,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,
@@ -53,6 +54,18 @@ export class AdvertPublicationController {
     @Query() query: GetPublicationsQueryDto,
   ): Promise<GetPublicationsDto> {
     return this.advertPublicationService.getPublications(query)
+  }
+
+  @PublicWebScopes()
+  @Get('/get-combined-html')
+  @LGResponse({
+    operationId: 'getCombinedHTML',
+    type: GetCombinedHTMLDto,
+  })
+  async getCombinedHTML(
+    @Query() query: GetPublicationsQueryDto,
+  ): Promise<GetCombinedHTMLDto> {
+    return this.advertPublicationService.getPublicationsCombinedHTML(query)
   }
 
   @PublicOrApplicationWebScopes()

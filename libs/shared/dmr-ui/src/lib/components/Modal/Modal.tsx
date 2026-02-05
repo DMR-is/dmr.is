@@ -58,6 +58,7 @@ export const Modal = ({
       disclosure={disclosure}
       hideOnClickOutside={true}
       hideOnEsc={true}
+      className={styles.modalBaseBackdrop}
     >
       {({ closeModal }) => (
         <Box dataTestId="modal-debug" className={styles.modalBase}>

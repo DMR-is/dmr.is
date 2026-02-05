@@ -6496,6 +6496,19 @@
         },
         "required": ["publication", "advert", "html"]
       },
+      "GetPublicationsDetailedDto": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdvertPublicationDetailedDto"
+            }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["result", "paging"]
+      },
       "UpdateAdvertPublicationDto": {
         "type": "object",
         "properties": { "scheduledAt": { "type": "string" } },

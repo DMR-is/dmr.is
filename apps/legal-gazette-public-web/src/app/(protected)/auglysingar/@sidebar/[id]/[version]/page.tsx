@@ -11,7 +11,7 @@ export default async function AdvertPageSidebar({
 }) {
   const pub = await fetchQueryWithHandler(
     trpc.getPublication.queryOptions({
-      advertId: params.id,
+      publicationId: params.id,
       version: params.version as AdvertVersionEnum,
     }),
   )
