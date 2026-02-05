@@ -22,7 +22,7 @@ import { recallForm } from '../lib/forms/recall/form'
 import { RecallFormSteps } from '../lib/forms/recall/steps'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 
 const logger = getLogger('RecallFormContainer')
 
@@ -45,20 +45,9 @@ const mapApplicationType = (
   }
 }
 
-export const RecallFormContainer = ({
-  application: initalApplication,
-}: Props) => {
+export const RecallFormContainer = ({ application }: Props) => {
   const trpc = useTRPC()
-  const { data: baseEntities } = useSuspenseQuery(
-    trpc.getBaseEntities.queryOptions(),
-  )
-
-  const { data: application } = useQuery(
-    trpc.getApplicationById.queryOptions(
-      { id: initalApplication.id },
-      { initialData: initalApplication },
-    ),
-  )
+  const { data: baseEntities } = useQuery(trpc.getBaseEntities.queryOptions())
 
   const { loadFromStorage, clearStorage } = useLocalFormStorage(application.id)
   const { onValidSubmit, onInvalidSubmit } = useSubmitApplication(
@@ -77,10 +66,10 @@ export const RecallFormContainer = ({
     caseId: application.caseId,
     type: mappedType,
     isBankruptcy: isBankruptcy,
-    courtOptions: baseEntities.courtDistricts.map((court) => ({
+    courtOptions: baseEntities?.courtDistricts.map((court) => ({
       label: court.title,
       value: court.id,
-    })),
+    })) || [],
   }
 
   const methods = useForm<RecallApplicationWebSchema>(
@@ -160,10 +149,7 @@ export const RecallFormContainer = ({
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit, onInvalidSubmit)}>
-        <ApplicationShell
-          form={form}
-          title={stepToRender.title}
-        >
+        <ApplicationShell form={form} title={stepToRender.title}>
           <Box paddingY={[2, 3]}>
             <FormStep
               items={stepToRender.fields}

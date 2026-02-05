@@ -1,6 +1,12 @@
 import { Op } from 'sequelize'
 
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'

@@ -2,6 +2,8 @@ import { getServerSession } from 'next-auth'
 
 import { cache } from 'react'
 
+import { apiErrorMiddleware } from '@dmr.is/trpc/utils/errorHandler'
+
 import { getServerClient } from '../../api/serverClient'
 import { authOptions } from '../../auth/authOptions'
 
@@ -23,13 +25,18 @@ export const createTRPCContext = cache(async () => {
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   errorFormatter(opts) {
-    const { shape } = opts
+    const { shape, error } = opts
+    const cause = error.cause as
+      | { name?: string; details?: string[] }
+      | undefined
 
     return {
       ...shape,
       message: shape.message,
       data: {
         ...shape.data,
+        apiErrorName: cause?.name,
+        validationErrors: cause?.details,
       },
     }
   },
@@ -47,15 +54,17 @@ export const publicProcedure = t.procedure.use(({ ctx, next }) => {
   })
 })
 
-export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
-  if (!ctx.api) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' })
-  }
+export const protectedProcedure = publicProcedure
+  .use(({ ctx, next }) => {
+    if (!ctx.api) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' })
+    }
 
-  return next({
-    ctx: {
-      ...ctx,
-      api: ctx.api,
-    },
+    return next({
+      ctx: {
+        ...ctx,
+        api: ctx.api,
+      },
+    })
   })
-})
+  .use(apiErrorMiddleware)

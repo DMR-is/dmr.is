@@ -24,7 +24,12 @@ export const CategorySelect = ({
 }: Props) => {
   const trpc = useTRPC()
   const { data, isPending } = useQuery(
-    trpc.getCategories.queryOptions({ type: typeId }),
+    trpc.getCategories.queryOptions(
+      { type: typeId },
+      {
+        enabled: !!typeId,
+      },
+    ),
   )
 
   const options = data?.categories.map((category) => ({

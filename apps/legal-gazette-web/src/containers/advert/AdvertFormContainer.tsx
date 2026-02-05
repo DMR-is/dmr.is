@@ -25,17 +25,14 @@ import {
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 type AdvertContainerProps = {
-  id: string
+  advertId: string
 }
 
-export function AdvertFormContainer({ id }: AdvertContainerProps) {
+export function AdvertFormContainer({ advertId }: AdvertContainerProps) {
   const trpc = useTRPC()
-  const { data: entities } = useSuspenseQuery(
-    trpc.getAllEntities.queryOptions(),
-  )
+  const { data: entities } = useQuery(trpc.getAllEntities.queryOptions())
 
-  const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id }))
-
+  const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id: advertId }))
   const { data: categoriesForTypes } = useQuery(
     trpc.getCategories.queryOptions(
       {
