@@ -26,6 +26,7 @@ export const AdvertFormStepper = ({ id }: Props) => {
     { status: StatusEnum.SUBMITTED },
     { status: StatusEnum.IN_PROGRESS },
     { status: StatusEnum.READY_FOR_PUBLICATION },
+    { status: StatusEnum.IN_PUBLISHING },
   ]
 
   if (statusTitle === StatusEnum.REJECTED) {

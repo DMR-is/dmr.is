@@ -9,7 +9,8 @@
     {
       "files": ["*.ts", "*.tsx"],
       "rules": {
-        "local-rules/require-controller-auth-decorators": "error"
+        "local-rules/require-controller-auth-decorators": "error",
+        "local-rules/require-cache-manager-injection": "error"
       }
     },
     {

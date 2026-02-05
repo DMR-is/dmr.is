@@ -11,7 +11,7 @@ import {
   CaseCommunicationStatusModel,
   CaseModel,
   CaseStatusModel,
-} from '@dmr.is/modules'
+} from '@dmr.is/ojoi/modules'
 import {
   CaseCommunicationStatus,
   CaseStatusEnum,

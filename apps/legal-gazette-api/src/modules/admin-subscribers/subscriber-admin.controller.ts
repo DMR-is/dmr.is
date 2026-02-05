@@ -13,8 +13,8 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 import { PagingQuery } from '@dmr.is/shared/dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
 
 import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
@@ -61,7 +61,10 @@ export class SubscriberAdminController {
     @Body() createSubscriberDto: CreateSubscriberAdminDto,
     @CurrentUser() user: DMRUser,
   ): Promise<SubscriberDto> {
-    return this.subscriberAdminService.createSubscriber(createSubscriberDto, user)
+    return this.subscriberAdminService.createSubscriber(
+      createSubscriberDto,
+      user,
+    )
   }
 
   @Patch(':subscriberId/end-date')

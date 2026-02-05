@@ -37,7 +37,8 @@ export default function Login() {
             <Stack space={2}>
               <Text variant="h2">Innskráning</Text>
               <Text variant="intro">
-                Skráðu þig inn á innri vef auglýsanda með rafrænum skilríkjum.
+                Skráðu þig inn á auglýsendakerfi Lögbirtingablaðsins með
+                rafrænum skilríkjum.
               </Text>
 
               <Box marginTop={[1, 2]}>
@@ -59,23 +60,22 @@ export default function Login() {
                 </Button>
               </Box>
               <Box marginTop={[2, 4]}>
-                <Text variant="intro" marginTop={2}>
+                <Text variant="intro" as="span">
                   Hér má sjá{' '}
-                  <Text
-                    color="blue400"
-                    fontWeight="medium"
-                    as="span"
-                    variant="intro"
-                  >
-                    <LinkV2
-                      href="https://logbirtingablad.is/sidur/leidbeiningar"
-                      underlineVisibility="always"
-                      underline="normal"
-                      newTab
-                    >
-                      ítarlegri upplýsingar
-                    </LinkV2>
-                  </Text>{' '}
+                </Text>
+
+                <LinkV2
+                  href="https://logbirtingablad.is/sidur/leidbeiningar"
+                  color="blue400"
+                  newTab
+                  underline="normal"
+                >
+                  <Text variant="intro" as="span" fontWeight="medium">
+                    ítarlegri upplýsingar
+                  </Text>
+                </LinkV2>
+                <Text variant="intro" as="span">
+                  {' '}
                   um innskráningu ásamt umboðsvirkni ef notandi/innsendandi vill
                   senda auglýsingu í nafni fyrirtækis.
                 </Text>

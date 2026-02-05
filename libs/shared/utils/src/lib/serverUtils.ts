@@ -5,6 +5,7 @@ import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import startOfDay from 'date-fns/startOfDay'
 import { getHolidays } from 'fridagar'
+import mammoth from 'mammoth'
 import sanitizeHtml from 'sanitize-html'
 import {
   BaseError,
@@ -757,4 +758,21 @@ export const toUtf8 = (v: unknown) =>
 
 export function hashPdf(buffer: Buffer): string {
   return createHash('sha256').update(buffer).digest('hex') // 64-char hex string
+}
+
+export const wordBufferToHtml = async (buffer: Buffer): Promise<string> => {
+  const result = await mammoth.convertToHtml(
+    { buffer },
+    {
+      convertImage: mammoth.images.imgElement(async function (element) {
+        const imageBuffer = await element.read('base64')
+        return {
+          src: 'data:' + element.contentType + ';base64,' + imageBuffer,
+        }
+      }),
+    },
+  )
+
+  const htmlText = simpleSanitize(result.value)
+  return htmlText
 }

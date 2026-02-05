@@ -20,6 +20,7 @@ export const usePublications = () => {
       dateTo: filters.dateTo
         ? new Date(filters.dateTo).toISOString()
         : undefined,
+      version: filters.version ?? undefined,
     }),
   )
 

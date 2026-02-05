@@ -75,7 +75,7 @@ export const LGFooter = ({ site = 'web' }: LGFooterProps) => {
     site === 'web'
       ? [
           {
-            title: 'Innri vefur auglýsanda',
+            title: 'Auglýsendakerfi Lögbirtingablaðsins',
             href: otherLogbirtingSite,
           },
           {
@@ -97,7 +97,7 @@ export const LGFooter = ({ site = 'web' }: LGFooterProps) => {
         : []
 
   return (
-    <footer>
+    <footer className={styles.footerContainer}>
       <Box width="full" background="blue100" paddingY={6}>
         <GridContainer>
           <GridRow>

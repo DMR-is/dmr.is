@@ -42,8 +42,8 @@ import {
   ICommentServiceV2,
   IJournalService,
   IPriceService,
-} from '@dmr.is/modules'
-import { RoleGuard, TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+} from '@dmr.is/ojoi/modules'
+import { RoleGuard } from '@dmr.is/ojoi/modules/guards/auth'
 import {
   EnumValidationPipe,
   FileTypeValidationPipe,
@@ -101,6 +101,7 @@ import {
   UpdateCaseDepartmentBody,
   UpdateCaseInvolvedPartyBody,
   UpdateCasePriceBody,
+  UpdateCaseSignatureDateDisplayBody,
   UpdateCaseStatusBody,
   UpdateCaseTypeBody,
   UpdateCategoriesBody,
@@ -113,6 +114,7 @@ import {
   UpdateTitleBody,
   UserDto,
 } from '@dmr.is/shared/dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
 import { ResultWrapper } from '@dmr.is/types'
 
 const LOG_CATEGORY = 'case-controller'
@@ -477,7 +479,9 @@ export class CaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @Body() body: UpdateCategoriesBody,
   ) {
-    ResultWrapper.unwrap(await this.caseService.updateCaseCategories(id, body))
+    ResultWrapper.unwrap(
+      await this.caseService.updateCaseAndAdvertCategories(id, body),
+    )
   }
 
   @Put(':id/status/next')
@@ -952,6 +956,18 @@ export class CaseController {
   ) {
     ResultWrapper.unwrap(
       await this.caseService.updateCaseInvolvedParty(id, body),
+    )
+  }
+
+  @Put(':id/update-signature-date-display')
+  @ApiOperation({ operationId: 'updateCaseSignatureDateDisplay' })
+  @ApiNoContentResponse()
+  async updateSignatureDateDisplay(
+    @Param('id', new UUIDValidationPipe()) id: string,
+    @Body() body: UpdateCaseSignatureDateDisplayBody,
+  ) {
+    ResultWrapper.unwrap(
+      await this.caseService.updateSignatureDateDisplay(id, body.hide),
     )
   }
 

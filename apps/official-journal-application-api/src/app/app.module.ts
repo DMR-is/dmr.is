@@ -13,14 +13,14 @@ import {
   AdvertTypeController,
   AdvertTypeModule,
   ApplicationModule,
-  HealthModule,
   PdfModule,
   SignatureModule,
   UserModule,
   UtilityModule,
-} from '@dmr.is/modules'
-import { RoleGuard } from '@dmr.is/modules/guards/auth'
+} from '@dmr.is/ojoi/modules'
+import { RoleGuard } from '@dmr.is/ojoi/modules/guards/auth'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
+import { HealthModule } from '@dmr.is/shared/modules'
 
 import { ApplicationController } from './application/application.controller'
 import { ApplicationGuard } from './guards/application.guard'

@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 
-import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
 
 import { MachineClientGuard } from '../../core/guards/machine-client.guard'
 import { IAdvertService } from '../advert/advert.service.interface'
