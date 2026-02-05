@@ -4,7 +4,7 @@ import { AdvertVersionEnum } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
 const getAdvertPublicationSchema = z.object({
-  advertId: z.uuid(),
+  publicationId: z.uuid(),
   version: z.enum(AdvertVersionEnum),
 })
 
