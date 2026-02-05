@@ -3,10 +3,11 @@ import { Reflector } from '@nestjs/core'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
+import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
+import { SCOPES_KEY } from '@dmr.is/modules/guards/auth'
 
 import { OwnershipGuard } from '../../core/guards/ownership.guard'
-import { SCOPES_KEY } from '../../core/guards/scope-guards/scopes.decorator'
 import { AdvertModel } from '../../models/advert.model'
 import { ApplicationModel } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'

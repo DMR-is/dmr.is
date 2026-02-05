@@ -16,7 +16,7 @@ import {
   SignatureModule,
   UserController,
   UserModule,
-} from '@dmr.is/ojoi/modules'
+} from '@dmr.is/modules'
 
 import { CaseController } from './case.controller'
 

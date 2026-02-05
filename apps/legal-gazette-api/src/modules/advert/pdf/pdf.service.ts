@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { IAWSService } from '@dmr.is/shared/modules'
+import { IAWSService } from '@dmr.is/modules'
 
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
 import { getBrowser } from './lib/browser'

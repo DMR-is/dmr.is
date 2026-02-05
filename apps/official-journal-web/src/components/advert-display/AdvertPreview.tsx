@@ -1,5 +1,3 @@
-import cn from 'classnames'
-
 import {
   Box,
   Button,
@@ -28,11 +26,7 @@ export const AdvertPreview = ({ disclosure }: Props) => {
         <GridContainer>
           <GridRow>
             <GridColumn span="12/12">
-              <Box
-                className={cn(styles.modalBackground, {
-                  [styles.advertSignature]: currentCase.hideSignatureDate,
-                })}
-              >
+              <Box className={styles.modalBackground}>
                 <Inline justifyContent="flexEnd">
                   <Button
                     onClick={closeModal}
@@ -53,11 +47,9 @@ export const AdvertPreview = ({ disclosure }: Props) => {
                       <Text variant="eyebrow" color="purple400">
                         Nr. {currentCase.caseNumber}
                       </Text>
-                      {currentCase.hideSignatureDate ? null : (
-                        <Text variant="eyebrow" color="purple400">
-                          {getMostRecentSignature(currentCase.signature, true)}
-                        </Text>
-                      )}
+                      <Text variant="eyebrow" color="purple400">
+                        {getMostRecentSignature(currentCase.signature, true)}
+                      </Text>
                     </Box>
                     <Box textAlign="center" marginBottom={[2, 3, 4]}>
                       <Text variant="h3">{currentCase.advertType.title}</Text>

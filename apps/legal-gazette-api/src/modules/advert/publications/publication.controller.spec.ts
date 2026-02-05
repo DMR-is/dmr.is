@@ -2,9 +2,10 @@ import { ExecutionContext } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 
+import { SCOPES_KEY } from '@dmr.is/modules/guards/auth'
+
 import { ADMIN_KEY } from '../../../core/decorators/admin.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
-import { SCOPES_KEY } from '../../../core/guards/scope-guards/scopes.decorator'
 import { UserDto } from '../../../models/users.model'
 import { IUsersService } from '../../users/users.service.interface'
 import { AdvertPublicationController } from './publication.controller'
@@ -123,9 +124,9 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       expect(scopes).toEqual(['@logbirtingablad.is/logbirtingabladid'])
     })
 
-    it('getPublicationById should have @PublicOrApplicationWebScopes()', () => {
+    it('getPublication should have @PublicOrApplicationWebScopes()', () => {
       const scopes = reflector.getAllAndOverride<string[]>(SCOPES_KEY, [
-        AdvertPublicationController.prototype.getPublicationById,
+        AdvertPublicationController.prototype.getPublication,
         AdvertPublicationController,
       ])
       expect(scopes).toEqual([
@@ -134,9 +135,9 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       ])
     })
 
-    it('getPublicationById should have @AdminAccess()', () => {
+    it('getPublication should have @AdminAccess()', () => {
       const isAdminAccess = reflector.getAllAndOverride<boolean>(ADMIN_KEY, [
-        AdvertPublicationController.prototype.getPublicationById,
+        AdvertPublicationController.prototype.getPublication,
         AdvertPublicationController,
       ])
       expect(isAdminAccess).toBe(true)
@@ -158,19 +159,25 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       expect(scopes).toBeUndefined()
     })
 
-    // Removed: publishAdvertPublication (no longer exists)
-
-    it('updatePublication should have @AdminAccess()', () => {
+    it('publishAdvertPublication should have @AdminAccess()', () => {
       const isAdminAccess = reflector.getAllAndOverride<boolean>(ADMIN_KEY, [
-        AdvertPublicationController.prototype.updatePublication,
+        AdvertPublicationController.prototype.publishAdvertPublication,
         AdvertPublicationController,
       ])
       expect(isAdminAccess).toBe(true)
     })
 
-    it('deletePublication should have @AdminAccess()', () => {
+    it('updateAdvertPublication should have @AdminAccess()', () => {
       const isAdminAccess = reflector.getAllAndOverride<boolean>(ADMIN_KEY, [
-        AdvertPublicationController.prototype.deletePublication,
+        AdvertPublicationController.prototype.updateAdvertPublication,
+        AdvertPublicationController,
+      ])
+      expect(isAdminAccess).toBe(true)
+    })
+
+    it('deleteAdvertPublication should have @AdminAccess()', () => {
+      const isAdminAccess = reflector.getAllAndOverride<boolean>(ADMIN_KEY, [
+        AdvertPublicationController.prototype.deleteAdvertPublication,
         AdvertPublicationController,
       ])
       expect(isAdminAccess).toBe(true)
@@ -181,9 +188,9 @@ describe('AdvertPublicationController - Guard Authorization', () => {
   // getPublication - @PublicOrApplicationWebScopes() + @AdminAccess()
   // Expected: Admin OR (Public-web OR Application-web) users can access (OR logic)
   // =============================================================================
-  describe('getPublicationById - @PublicOrApplicationWebScopes() + @AdminAccess()', () => {
+  describe('getPublication - @PublicOrApplicationWebScopes() + @AdminAccess()', () => {
     it('should ALLOW admin users (via admin access)', async () => {
-      const context = createMockContext(createAdminUser(), 'getPublicationById')
+      const context = createMockContext(createAdminUser(), 'getPublication')
       const result = await authorizationGuard.canActivate(context)
       expect(result).toBe(true)
       expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
@@ -193,31 +200,34 @@ describe('AdvertPublicationController - Guard Authorization', () => {
     })
 
     it('should ALLOW public-web users (via scope)', async () => {
-      const context = createMockContext(
-        createPublicWebUser(),
-        'getPublicationById',
-      )
+      const context = createMockContext(createPublicWebUser(), 'getPublication')
       const result = await authorizationGuard.canActivate(context)
       expect(result).toBe(true)
-      // No getUserByNationalId call - scope check is sufficient (optimization)
-      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+      // Admin check is performed first even for scoped users
+      expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
+        PUBLIC_WEB_NATIONAL_ID,
+        true,
+      )
     })
 
     it('should ALLOW application-web users (via scope)', async () => {
       const context = createMockContext(
         createApplicationWebUser(),
-        'getPublicationById',
+        'getPublication',
       )
       const result = await authorizationGuard.canActivate(context)
       expect(result).toBe(true)
-      // No getUserByNationalId call - scope check is sufficient (optimization)
-      expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
+      // Admin check is performed first even for scoped users
+      expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
+        APPLICATION_WEB_NATIONAL_ID,
+        true,
+      )
     })
 
     it('should DENY users with random/invalid scope (not admin, not valid scope)', async () => {
       const context = createMockContext(
         createRandomScopeUser(),
-        'getPublicationById',
+        'getPublication',
       )
       await expect(authorizationGuard.canActivate(context)).rejects.toThrow()
       expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
@@ -227,7 +237,7 @@ describe('AdvertPublicationController - Guard Authorization', () => {
     })
 
     it('should DENY unauthenticated requests', async () => {
-      const context = createMockContext(null, 'getPublicationById')
+      const context = createMockContext(null, 'getPublication')
       await expect(authorizationGuard.canActivate(context)).rejects.toThrow()
     })
   })
@@ -357,11 +367,11 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       return { allowed: true }
     }
 
-    describe('getPublicationById (admin OR scope endpoint)', () => {
+    describe('getPublication (admin OR scope endpoint)', () => {
       it('public-web user should pass (via scope)', async () => {
         const result = await simulateGuardChain(
           createPublicWebUser(),
-          'getPublicationById',
+          'getPublication',
         )
         expect(result).toEqual({ allowed: true })
       })
@@ -369,7 +379,7 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       it('application-web user should pass (via scope)', async () => {
         const result = await simulateGuardChain(
           createApplicationWebUser(),
-          'getPublicationById',
+          'getPublication',
         )
         expect(result).toEqual({ allowed: true })
       })
@@ -377,14 +387,14 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       it('admin user should pass (via admin access)', async () => {
         const result = await simulateGuardChain(
           createAdminUser(),
-          'getPublicationById',
+          'getPublication',
         )
         expect(result).toEqual({ allowed: true })
       })
 
       it('user with invalid scope should be denied by AdminGuard', async () => {
         await expect(
-          simulateGuardChain(createRandomScopeUser(), 'getPublicationById'),
+          simulateGuardChain(createRandomScopeUser(), 'getPublication'),
         ).rejects.toThrow()
       })
     })

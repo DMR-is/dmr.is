@@ -10,11 +10,7 @@ const SESSION_SECURE = process.env.NODE_ENV === 'production'
 const SESSION_COOKIE = SESSION_SECURE
   ? '__Secure-next-auth.session-token'
   : 'next-auth.session-token'
-
-// This session timeout will be used to set the maxAge of the session cookie
-// IDS has a max timeout on refresh tokens, so we set our session timeout to be slightly more
-const SESSION_TIMEOUT = 60 * 60 * 8 + 30 // 8 hours and 30 seconds
-
+const SESSION_TIMEOUT = 60 * 60 // 1 hour
 
 /**
  * NextAuth's chunk size for cookies (4096 - overhead = 3933 bytes)

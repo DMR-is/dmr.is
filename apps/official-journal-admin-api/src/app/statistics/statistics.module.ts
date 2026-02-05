@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { LoggingModule } from '@dmr.is/logging'
-import { CaseModel, UserModule } from '@dmr.is/ojoi/modules'
+import { CaseModel, UserModule } from '@dmr.is/modules'
 
 import { StatisticsController } from './statistics.controller'
 import { StatisticsService } from './statistics.service'

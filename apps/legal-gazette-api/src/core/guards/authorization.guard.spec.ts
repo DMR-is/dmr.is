@@ -2,10 +2,11 @@ import { ExecutionContext, ForbiddenException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 
+import { SCOPES_KEY } from '@dmr.is/modules/guards/auth'
+
 import { UserDto } from '../../models/users.model'
 import { IUsersService } from '../../modules/users/users.service.interface'
 import { ADMIN_KEY } from '../decorators/admin.decorator'
-import { SCOPES_KEY } from './scope-guards/scopes.decorator'
 import { AuthorizationGuard } from './authorization.guard'
 
 interface MockUser {
@@ -523,7 +524,7 @@ describe('AuthorizationGuard', () => {
     })
 
     describe('database lookup optimization', () => {
-      it('should skip database lookup when scope matches (optimization)', async () => {
+      it('should only do lookup once even when checking OR logic', async () => {
         const context = createMockContext({
           nationalId: '1234567890',
           scope: '@logbirtingablad.is/lg-application-web',
@@ -531,22 +532,6 @@ describe('AuthorizationGuard', () => {
         usersService.getUserByNationalId.mockRejectedValue(userNotFoundError)
 
         await guard.canActivate(context)
-
-        expect(usersService.getUserByNationalId).toHaveBeenCalledTimes(0)
-      })
-
-      it('should call database lookup exactly once when scope does not match', async () => {
-        const context = createMockContext({
-          nationalId: '1234567890',
-          scope: '@logbirtingablad.is/logbirtingabladid', // Wrong scope
-        })
-        usersService.getUserByNationalId.mockRejectedValue(userNotFoundError)
-
-        try {
-          await guard.canActivate(context)
-        } catch {
-          // Expected to throw
-        }
 
         expect(usersService.getUserByNationalId).toHaveBeenCalledTimes(1)
       })

@@ -1,10 +1,4 @@
-import {
-  IsDateString,
-  IsEnum,
-  IsOptional,
-  IsString,
-  IsUUID,
-} from 'class-validator'
+import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator'
 import endOfDay from 'date-fns/endOfDay'
 import startOfDay from 'date-fns/startOfDay'
 import { BulkCreateOptions, Op, WhereOptions } from 'sequelize'
@@ -26,7 +20,6 @@ import { Paging, PagingQuery } from '@dmr.is/shared/dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'
-import { mapVersionToIndex } from '../core/utils'
 import { AdvertDto, AdvertModel } from './advert.model'
 import { CategoryDto, CategoryModel } from './category.model'
 import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
@@ -104,13 +97,6 @@ export type AdvertPublicationsCreateAttributes = {
     } else if (query.dateTo) {
       Object.assign(publicationWhereOptions, {
         publishedAt: { [Op.lte]: endOfDay(new Date(query.dateTo)) },
-      })
-    }
-
-    if (query.version) {
-      const index = mapVersionToIndex(query.version)
-      Object.assign(publicationWhereOptions, {
-        versionNumber: index,
       })
     }
 
@@ -422,13 +408,4 @@ export class GetPublicationsQueryDto extends PagingQuery {
   @IsOptional()
   @IsString()
   pdfUrl?: string
-
-  @ApiProperty({
-    enum: AdvertVersionEnum,
-    enumName: 'AdvertVersionEnum',
-    required: false,
-  })
-  @IsOptional()
-  @IsEnum(AdvertVersionEnum)
-  version?: AdvertVersionEnum
 }

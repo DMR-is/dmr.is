@@ -10,19 +10,20 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
-import { UUIDValidationPipe } from '@dmr.is/pipelines'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules/guards/auth'
-
-import { AdminAccess } from '../../../core/decorators/admin.decorator'
-import { LGResponse } from '../../../core/decorators/lg-response.decorator'
-import { CanEditGuard, CanEditOrPublishGuard } from '../../../core/guards'
-import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
+import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { CurrentUser } from '@dmr.is/decorators'
 import {
   PublicOrApplicationWebScopes,
   PublicWebScopes,
-} from '../../../core/guards/scope-guards/scopes.decorator'
+  TokenJwtAuthGuard,
+} from '@dmr.is/modules/guards/auth'
+import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
+
+import { AdminAccess } from '../../../core/decorators/admin.decorator'
+import { LGResponse } from '../../../core/decorators/lg-response.decorator'
+import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import {
   AdvertPublicationDetailedDto,
   AdvertVersionEnum,
@@ -71,45 +72,73 @@ export class AdvertPublicationController {
 
   @PublicOrApplicationWebScopes()
   @AdminAccess()
-  @Get('/:publicationId')
+  @Get('/adverts/:advertId/:version')
+  @ApiParam({
+    name: 'version',
+    enum: AdvertVersionEnum,
+    enumName: 'AdvertVersionEnum',
+  })
   @LGResponse({
     operationId: 'getAdvertPublication',
     type: AdvertPublicationDetailedDto,
   })
-  async getPublicationById(
-    @Param('publicationId', new UUIDValidationPipe()) publicationId: string,
+  async getPublication(
+    @Param('advertId', new UUIDValidationPipe()) advertId: string,
+    @Param('version', new EnumValidationPipe(AdvertVersionEnum))
+    version: AdvertVersionEnum,
   ) {
-    return this.advertPublicationService.getPublicationById(publicationId)
+    return this.advertPublicationService.getAdvertPublication(advertId, version)
   }
 
   @AdminAccess()
-  @UseGuards(CanEditGuard)
-  @Post('create/:advertId')
-  @LGResponse({ operationId: 'createPublication' })
+  @Post('/adverts/:advertId')
+  @LGResponse({ operationId: 'createAdvertPublication' })
   async createAdvertPublication(
     @Param('advertId', new UUIDValidationPipe()) advertId: string,
   ): Promise<void> {
-    await this.advertPublicationService.createPublication(advertId)
+    await this.advertPublicationService.createAdvertPublication(advertId)
   }
 
   @AdminAccess()
-  @UseGuards(CanEditOrPublishGuard)
-  @Patch('/:publicationId')
-  @LGResponse({ operationId: 'updatePublication' })
-  async updatePublication(
+  @Post(':publicationId/adverts/:advertId/publish')
+  @LGResponse({ operationId: 'publishAdvertPublication' })
+  async publishAdvertPublication(
+    @Param('advertId', new UUIDValidationPipe()) advertId: string,
+    @Param('publicationId', new UUIDValidationPipe()) publicationId: string,
+    @CurrentUser() currentUser: DMRUser,
+  ): Promise<void> {
+    await this.advertPublicationService.publishAdvertPublication(
+      advertId,
+      publicationId,
+      currentUser,
+    )
+  }
+
+  @AdminAccess()
+  @Patch('/:publicationId/adverts/:advertId')
+  @LGResponse({ operationId: 'updateAdvertPublication' })
+  async updateAdvertPublication(
+    @Param('advertId', new UUIDValidationPipe()) advertId: string,
     @Param('publicationId', new UUIDValidationPipe()) publicationId: string,
     @Body() body: UpdateAdvertPublicationDto,
   ): Promise<void> {
-    await this.advertPublicationService.updatePublication(publicationId, body)
+    await this.advertPublicationService.updateAdvertPublication(
+      advertId,
+      publicationId,
+      body,
+    )
   }
 
   @AdminAccess()
-  @UseGuards(CanEditGuard)
-  @Delete('/:publicationId')
-  @LGResponse({ operationId: 'deletePublication' })
-  async deletePublication(
+  @Delete('/:publicationId/adverts/:advertId')
+  @LGResponse({ operationId: 'deleteAdvertPublication' })
+  async deleteAdvertPublication(
+    @Param('advertId', new UUIDValidationPipe()) advertId: string,
     @Param('publicationId', new UUIDValidationPipe()) publicationId: string,
   ): Promise<void> {
-    await this.advertPublicationService.deletePublication(publicationId)
+    await this.advertPublicationService.deleteAdvertPublication(
+      advertId,
+      publicationId,
+    )
   }
 }

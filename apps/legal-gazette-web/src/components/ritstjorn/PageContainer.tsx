@@ -20,16 +20,10 @@ import CaseFilters from '../CaseFilters/CaseFilters'
 import { CretaeAdvertMenu } from '../create-advert/CreateAdvertMenu'
 import { RitstjornHero } from '../ritstjorn/Hero'
 import AdvertsCompleted from '../Tables/AdvertsCompleted'
-import { PublicationsToBePublishedTab } from '../tabs/PublicationsTab'
 import PublishingTab from '../tabs/PublishingTab'
 import { SubmittedTab } from '../tabs/SubmittedTab'
 
-const TabIds = [
-  'innsendar',
-  'utgafa-auglysinga',
-  'utgafa-i-birtinga',
-  'yfirlit',
-]
+const TabIds = ['innsendar', 'utgafa', 'yfirlit']
 
 export const PageContainer = () => {
   const [tab, setTab] = useQueryState('tab', parseAsStringEnum(TabIds))
@@ -97,8 +91,6 @@ export const PageContainer = () => {
     ? countData.readyForPublicationTab.count
     : '...'
 
-  const inPublishingCount = countData ? countData.inPublishingTab.count : '...'
-
   const finishedCount = countData ? countData.finishedTab.count : '...'
 
   return (
@@ -124,18 +116,13 @@ export const PageContainer = () => {
                     content: <SubmittedTab key="submitted-tab" />,
                   },
                   {
-                    id: 'utgafa-auglysinga',
+                    id: 'utgafa',
                     label: `Tilbúið til útgáfu (${readyForPublicationCount})`,
                     content: <PublishingTab key="publishing-tab" />,
                   },
                   {
-                    id: 'utgafa-i-birtinga',
-                    label: `Í útgáfu (${inPublishingCount})`,
-                    content: <PublicationsToBePublishedTab />,
-                  },
-                  {
                     id: 'yfirlit',
-                    label: `Allar auglýsingar (${finishedCount})`,
+                    label: `Öll mál (${finishedCount})`,
                     content: <AdvertsCompleted key="overview-tab" />,
                   },
                 ]}

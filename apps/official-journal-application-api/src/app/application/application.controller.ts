@@ -37,7 +37,8 @@ import {
   InvolvedPartyGuard,
   ISignatureService,
   IUserService,
-} from '@dmr.is/ojoi/modules'
+} from '@dmr.is/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 import {
   EnumValidationPipe,
   FileTypeValidationPipe,
@@ -65,7 +66,6 @@ import {
   S3UploadFilesResponse,
   UserDto,
 } from '@dmr.is/shared/dto'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { ApplicationGuard } from '../guards/application.guard'

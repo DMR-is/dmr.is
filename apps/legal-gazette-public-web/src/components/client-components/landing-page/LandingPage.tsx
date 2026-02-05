@@ -32,7 +32,7 @@ export const LandingPageContent = (props: { baseUrl: string }) => {
   const auglysendurUrl = createUrlFromHost(props.baseUrl, false, 'auglysendur')
   const quickLinks: QuickLink[] = [
     {
-      title: 'Auglýsendur - innskráning',
+      title: 'Senda inn auglýsingu',
       href: auglysendurUrl,
       variant: 'primary',
       icon: 'open',
@@ -90,6 +90,7 @@ export const LandingPageContent = (props: { baseUrl: string }) => {
                           underlineVisibility="always"
                           underline="normal"
                           color="blue400"
+                          newTab
                         >
                           leiðbeiningar
                         </LinkV2>
@@ -114,7 +115,7 @@ export const LandingPageContent = (props: { baseUrl: string }) => {
                               iconType="outline"
                               variant={link.variant}
                             >
-                              <LinkV2 key={i} href={link.href} newTab>
+                              <LinkV2 key={i} href={link.href}>
                                 {link.title}
                               </LinkV2>
                             </Button>

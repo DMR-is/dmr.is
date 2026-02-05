@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common'
 
-import { AdvertGuardsModule } from '../../../core/guards'
 import { AdvertPublicationController } from './publication.controller'
 import { PublicationProviderModule } from './publication.provider.module'
 
 @Module({
-  imports: [PublicationProviderModule, AdvertGuardsModule],
+  imports: [PublicationProviderModule],
   controllers: [AdvertPublicationController],
+  providers: [],
+  exports: [],
 })
 export class PublicationControllerModule {}

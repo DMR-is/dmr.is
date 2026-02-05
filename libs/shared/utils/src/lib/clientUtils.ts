@@ -35,7 +35,6 @@ export const deleteUndefined = <T>(
 const dateFormats = [
   'd.MM.yyyy',
   'dd.MM.yyyy',
-  'd. MMMM yyyy',
   'dd. MMMM yyyy',
   'HH:mm',
   'MMMM',

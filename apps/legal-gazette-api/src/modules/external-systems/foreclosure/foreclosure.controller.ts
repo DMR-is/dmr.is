@@ -11,7 +11,7 @@ import {
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 import { ThrottlerGuard } from '@nestjs/throttler'
 
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/modules/guards/auth'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { MachineClientGuard } from '../../../core/guards/machine-client.guard'

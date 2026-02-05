@@ -1,6 +1,7 @@
 'use client'
 
 import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay'
+
 import {
   Box,
   Button,
@@ -10,44 +11,29 @@ import {
   Inline,
   ModalBase,
   Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+} from '@island.is/island-ui/core'
 
-import { useTRPC } from '../../lib/trpc/client/trpc'
 import * as styles from './advert-publication-modal.css'
 
-import { useQuery } from '@tanstack/react-query'
-
 type Props = {
-  pubId: string
+  id: string
+  html: string
+  isVisible?: boolean
+  onVisibilityChange?: (visible: boolean) => void
 }
 
-export const AdvertPublicationModal = ({ pubId }: Props) => {
-  const trpc = useTRPC()
-
-  const { data } = useQuery(
-    trpc.getPublication.queryOptions(
-      { id: pubId },
-      {
-        gcTime: 0,
-      },
-    ),
-  )
-
+export const AdvertPublicationModal = ({
+  id,
+  html,
+  isVisible = false,
+  onVisibilityChange,
+}: Props) => {
   return (
     <ModalBase
-      disclosure={
-        <Button variant="ghost" size="small" disabled={!pubId}>
-          <Text
-            color={!pubId ? 'blue400' : 'currentColor'}
-            fontWeight="semiBold"
-            variant="small"
-          >
-            Skoða auglýsingu
-          </Text>
-        </Button>
-      }
-      baseId={`advert-publication-modal-${pubId}`}
+      initialVisibility={isVisible}
+      isVisible={isVisible}
+      baseId={id}
+      onVisibilityChange={(vis) => onVisibilityChange?.(vis)}
     >
       {({ closeModal }) => (
         <GridContainer>
@@ -65,7 +51,7 @@ export const AdvertPublicationModal = ({ pubId }: Props) => {
                         icon="close"
                       />
                     </Inline>
-                    <AdvertDisplay html={data?.html} />
+                    <AdvertDisplay html={html} />
                   </Stack>
                 </Box>
               </Box>

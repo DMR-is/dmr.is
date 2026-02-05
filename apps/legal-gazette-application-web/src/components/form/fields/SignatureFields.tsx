@@ -56,7 +56,7 @@ export const SignatureFields = () => {
             <GridColumn span={['12/12', '6/12']}>
               <InputController
                 name="signature.name"
-                label="Undirritun"
+                label="Nafn undirritara"
                 onChange={(val) => onChangeHandler('name', val)}
               />
             </GridColumn>

@@ -10,17 +10,19 @@ import {
 } from '../../../models/advert-publication.model'
 
 export interface IPublicationService {
-  createPublication(advertId: string): Promise<void>
+  createAdvertPublication(advertId: string): Promise<void>
 
-  updatePublication(
+  updateAdvertPublication(
+    advertId: string,
     publicationId: string,
     body: UpdateAdvertPublicationDto,
   ): Promise<void>
 
-  deletePublication(publicationId: string): Promise<void>
+  deleteAdvertPublication(id: string, pubId: string): Promise<void>
 
-  getPublicationById(
-    publicationId: string,
+  getAdvertPublication(
+    id: string,
+    version: AdvertVersionEnum,
   ): Promise<AdvertPublicationDetailedDto>
 
   getPublications(query?: GetPublicationsQueryDto): Promise<GetPublicationsDto>
@@ -32,6 +34,14 @@ export interface IPublicationService {
   getPublishedPublicationsByAdvertId(
     advertId: string,
   ): Promise<AdvertPublicationDetailedDto[]>
+
+  publishAdvertPublication(
+    advertId: string,
+    publicationId: string,
+    currentUser?: DMRUser,
+  ): Promise<void>
+
+  publishAdverts(advertIds: string[], currentUser?: DMRUser): Promise<void>
 }
 
 export const IPublicationService = Symbol('IPublicationService')

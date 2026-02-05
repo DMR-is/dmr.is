@@ -1,5 +1,4 @@
 import { mergeRouters } from '../trpc'
-import { advertPublishRouter } from './advertPublishRouter'
 import { advertsRouter } from './advertsRouter'
 import { baseEntityRouter } from './baseEntityRouter'
 import { channelsRouter } from './channelsRouter'
@@ -28,7 +27,6 @@ export const appRouter = mergeRouters(
   nationalRegistryRouter,
   paymentsRouter,
   subscribersRouter,
-  advertPublishRouter,
 )
 
 // export type definition of API

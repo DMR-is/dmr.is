@@ -6,11 +6,12 @@ export const useLogOut = () => {
   const { data: session } = useSession()
 
   const logOut = () => {
-    // Attempt to revoke the refresh token on the server side before signing out
-    fetch('/api/auth/revoke-refresh', { method: 'POST' }).then(() => {
-      signOut({
-        callbackUrl: signOutUrl(window, session?.idToken as string),
-      })
+    if (typeof window !== 'undefined') {
+      sessionStorage?.clear()
+    }
+
+    signOut({
+      callbackUrl: signOutUrl(window, session?.idToken as string),
     })
   }
   return logOut

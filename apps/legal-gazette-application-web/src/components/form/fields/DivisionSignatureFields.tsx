@@ -43,7 +43,7 @@ export const DivisionSignatureFields = ({
           name="signatureName"
           backgroundColor="blue"
           size="sm"
-          label="Undirritun"
+          label="Nafn undirritara"
           onChange={(e) =>
             setFormState({
               ...formState,

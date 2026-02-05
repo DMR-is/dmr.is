@@ -17,7 +17,6 @@ const getPublicationsSchema = z.object({
   typeId: z.string().optional(),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
-  version: z.enum(AdvertVersionEnum).optional(),
 })
 
 export const publicationRouter = router({

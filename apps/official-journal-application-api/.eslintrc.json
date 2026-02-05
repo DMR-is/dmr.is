@@ -8,9 +8,7 @@
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "rules": {
-        "local-rules/require-cache-manager-injection": "error"
-      }
+      "rules": {}
     },
     {
       "files": ["*.js", "*.jsx"],

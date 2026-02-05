@@ -42,7 +42,7 @@ export const SignatureFields = ({
             name="signatureName"
             backgroundColor="blue"
             size="sm"
-            label="Undirritun"
+            label="Nafn undirritara"
             defaultValue={signature.name}
             onBlur={(evt) => updateSignatureName(evt.target.value)}
           />

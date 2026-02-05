@@ -1,5 +1,5 @@
-import type { AuthOptions } from 'next-auth'
-import type { JWT } from 'next-auth/jwt'
+import { AuthOptions } from 'next-auth'
+import { JWT } from 'next-auth/jwt'
 import IdentityServer4 from 'next-auth/providers/identity-server4'
 
 import { decode } from 'jsonwebtoken'
@@ -11,9 +11,7 @@ import { getLogger } from '@dmr.is/logging-next'
 
 import { getLegalGazetteClient } from '../api/createClient'
 
-// This session timeout will be used to set the maxAge of the session cookie
-// When refreshing the token, we will not update the maxAge, so the session will expire
-const SESSION_TIMEOUT = (60 * 60 * 8) + 30 // 8 hours and 30 seconds
+const SESSION_TIMEOUT = 60 * 60 // 1 hour
 const LOGGING_CATEGORY = 'next-auth'
 
 type ErrorWithPotentialReqRes = Error & {
@@ -79,9 +77,6 @@ export const authOptions: AuthOptions = {
   pages: {
     signIn: '/innskraning',
     error: '/error',
-  },
-  jwt: {
-    maxAge: SESSION_TIMEOUT,
   },
   session: {
     strategy: 'jwt',

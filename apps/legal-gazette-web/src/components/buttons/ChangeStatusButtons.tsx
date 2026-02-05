@@ -10,7 +10,6 @@ import {
   Input,
   Stack,
   Text,
-  toast,
 } from '@dmr.is/ui/components/island-is'
 import { Route } from '@dmr.is/ui/hooks/constants'
 
@@ -26,17 +25,15 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 type Props = {
   advertId: string
   canEdit?: boolean
-  canPublish?: boolean
   currentStatus: StatusDto
-  previewSlot?: React.ReactNode
+  setModalVisible: (visible: boolean) => void
 }
 
 export const ChangeStatusButtons = ({
   advertId,
   currentStatus,
   canEdit = false,
-  canPublish = false,
-  previewSlot,
+  setModalVisible,
 }: Props) => {
   const {
     moveToNextStatus,
@@ -60,26 +57,11 @@ export const ChangeStatusButtons = ({
     }),
   )
 
-  const { mutate: publishNext, isPending: isPublishingNext } = useMutation(
-    trpc.publishNext.mutationOptions({
-      onSuccess: () => {
-        toast.success('Útgáfa birt')
-        queryClient.invalidateQueries(
-          trpc.getAdvert.queryFilter({ id: advertId }),
-        )
-      },
-      onError: () => {
-        toast.error('Ekki tókst að birta útgáfu')
-      },
-    }),
-  )
-
   const isLoading =
     isMovingToNextStatus ||
     isMovingToPreviousStatus ||
     isRejecting ||
-    isReactivating ||
-    isPublishingNext
+    isReactivating
 
   const prevMovableStatuses: string[] = [
     StatusIdEnum.READY_FOR_PUBLICATION,
@@ -99,10 +81,6 @@ export const ChangeStatusButtons = ({
     return nextMovableStatuses.includes(currentStatus.id)
   }, [currentStatus.id, nextMovableStatuses])
 
-  const isInPublishingStatus = useMemo(() => {
-    return currentStatus.id === StatusIdEnum.IN_PUBLISHING
-  }, [currentStatus.id])
-
   const prevText = useMemo(() => {
     switch (currentStatus.id) {
       case StatusIdEnum.READY_FOR_PUBLICATION:
@@ -120,8 +98,6 @@ export const ChangeStatusButtons = ({
         return 'Færa í vinnslu'
       case StatusIdEnum.IN_PROGRESS:
         return 'Færa í tilbúið til útgáfu'
-      case StatusIdEnum.IN_PUBLISHING:
-        return 'Birta auglýsingu'
       default:
         return 'Færa í næstu stöðu'
     }
@@ -179,19 +155,6 @@ export const ChangeStatusButtons = ({
             {nextText}
           </Text>
         </Button>
-      ) : isInPublishingStatus ? (
-        <Button
-          fluid
-          size="small"
-          disabled={isLoading || !canPublish}
-          loading={isPublishingNext}
-          icon="checkmark"
-          onClick={() => publishNext({ advertId: advertId })}
-        >
-          <Text color="white" variant="small" fontWeight="semiBold">
-            Birta næstu útgáfu
-          </Text>
-        </Button>
       ) : (
         <Box borderRadius="large" background="white">
           <Button
@@ -215,7 +178,17 @@ export const ChangeStatusButtons = ({
         </Box>
       )}
       <Inline space={0} flexWrap="wrap" justifyContent={'spaceBetween'}>
-        {previewSlot}
+        <Button
+          variant="ghost"
+          size="small"
+          onClick={() => {
+            setModalVisible(true)
+          }}
+        >
+          <Text color="blue400" fontWeight="semiBold" variant="small">
+            &nbsp;Skoða auglýsingu&nbsp;
+          </Text>
+        </Button>
         {currentStatus.id !== StatusIdEnum.REJECTED && (
           <Button
             disabled={!canEdit}

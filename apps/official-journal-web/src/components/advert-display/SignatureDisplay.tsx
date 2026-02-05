@@ -1,5 +1,3 @@
-import cn from 'classnames'
-
 import { Box } from '@island.is/island-ui/core'
 
 import { useCaseContext } from '../../hooks/useCaseContext'
@@ -13,9 +11,7 @@ export const SignatureDislay = () => {
       border="standard"
       borderRadius="large"
       padding={[2, 2, 3]}
-      className={cn(styles.bodyText, {
-        [styles.advertSignature]: currentCase.hideSignatureDate,
-      })}
+      className={styles.bodyText}
       dangerouslySetInnerHTML={{
         __html: currentCase.signature.html,
       }}

@@ -1,7 +1,5 @@
 import { FastifyPluginCallback, FastifyReply, FastifyRequest } from 'fastify'
 
-import { ensureNameSlug, slugToName } from '@dmr.is/regulations-tools/utils'
-
 import {
   ChangeSuggestionCreateInput,
   ChangeSuggestionFilters,
@@ -15,7 +13,6 @@ import {
   startChangeSuggestionProcess,
   updateChangeSuggestion,
 } from '../db/ChangeSuggestion'
-import { getCurrentRegulationSimple } from '../db/Regulation'
 import { RegName } from './types'
 
 // ---------------------------------------------------------------------------
@@ -184,31 +181,6 @@ export const changeSuggestionRoutes: FastifyPluginCallback = (
         const id = parseInt(req.params.id, 10)
         const result = await deleteChangeSuggestion(id)
         return reply.send(result)
-      } catch (error) {
-        return handleError(error, reply)
-      }
-    },
-  )
-
-  /**
-   * Get current regulation simple info
-   * GET /change-suggestions/regulation/:name
-   */
-  fastify.get<Pms<'name'>>(
-    '/change-suggestions/regulation/:name',
-    { onRequest: authMiddleware },
-    async (req, reply) => {
-      try {
-        const qName = ensureNameSlug(req.params.name)
-        if (!qName) {
-          return reply
-            .code(400)
-            .send({ error: 'Regulation name parameter is required' })
-        }
-        const regName = slugToName(qName)
-
-        const simpleReg = await getCurrentRegulationSimple(regName)
-        return reply.send(simpleReg)
       } catch (error) {
         return handleError(error, reply)
       }

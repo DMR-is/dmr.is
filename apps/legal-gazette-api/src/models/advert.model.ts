@@ -38,7 +38,6 @@ import { cleanLegalGazetteLegacyHtml } from '@dmr.is/utils'
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'
 import { QueryDto } from '../core/dto/query.dto'
-import { StatusIdEnum } from '../core/enums/status.enum'
 import { getAdvertHtmlMarkup } from '../core/templates/html'
 import {
   AdvertPublicationDto,
@@ -71,7 +70,7 @@ import {
   SignatureDto,
   SignatureModel,
 } from './signature.model'
-import { StatusDto, StatusModel } from './status.model'
+import { StatusDto, StatusIdEnum, StatusModel } from './status.model'
 import { TBRTransactionModel } from './tbr-transactions.model'
 import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
 import { UserDto, UserModel } from './users.model'
@@ -547,10 +546,14 @@ export class AdvertModel extends BaseModel<
         StatusIdEnum.SUBMITTED,
       ]
 
-      return (
+      if (
         editableStateIds.includes(model.statusId) &&
         model.assignedUserId === userId
-      )
+      ) {
+        return true
+      }
+
+      return false
     } catch (error) {
       this.logger.error('Error checking canEdit permission', {
         context: 'AdvertModel',
@@ -561,33 +564,6 @@ export class AdvertModel extends BaseModel<
 
   canEdit(userId?: string): boolean {
     return AdvertModel.canEdit(this, userId)
-  }
-
-  /**
-   * Checks if current advert is in a publishable state
-   * Admin users do NOT have to be assigned to the advert
-   *
-   * @param model
-   * @returns true | false based on the advert status
-   */
-  static canPublish(model: AdvertModel): boolean {
-    try {
-      const allowedStatuses = [
-        StatusIdEnum.READY_FOR_PUBLICATION,
-        StatusIdEnum.IN_PUBLISHING,
-      ]
-
-      return allowedStatuses.includes(model.statusId)
-    } catch (error) {
-      this.logger.error('Error checking canPublish permission', {
-        context: 'AdvertModel',
-      })
-      return false
-    }
-  }
-
-  canPublish(): boolean {
-    return AdvertModel.canPublish(this)
   }
 
   static fromModel(model: AdvertModel): AdvertDto {
@@ -628,7 +604,6 @@ export class AdvertModel extends BaseModel<
   ): AdvertDetailedDto {
     return {
       ...this.fromModel(model),
-      canPublish: this.canPublish(model),
       caseId: model.caseId ?? undefined,
       templateType: model.templateType,
       canEdit: this.canEdit(model, userId),
@@ -637,7 +612,6 @@ export class AdvertModel extends BaseModel<
       caption: model.caption ?? undefined,
       content: model.content ?? undefined,
       additionalText: model.additionalText ?? undefined,
-      isAssignedToMe: model.assignedUserId === userId,
       courtDistrict: model.courtDistrict?.fromModel()
         ? model.courtDistrict.fromModel()
         : undefined,
@@ -786,13 +760,6 @@ export class AdvertDetailedDto extends DetailedDto {
   @ApiProperty({ type: Boolean })
   @IsBoolean()
   canEdit!: boolean
-
-  @ApiProperty({ type: Boolean })
-  canPublish!: boolean
-
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
-  isAssignedToMe!: boolean
 
   @ApiProperty({ type: CourtDistrictDto, required: false })
   @IsOptional()
@@ -990,9 +957,6 @@ export class GetAdvertsStatusCounterDto {
 
   @ApiProperty({ type: AdvertTabCountItemDto })
   readyForPublicationTab!: AdvertTabCountItemDto
-
-  @ApiProperty({ type: AdvertTabCountItemDto })
-  inPublishingTab!: AdvertTabCountItemDto
 
   @ApiProperty({ type: AdvertTabCountItemDto })
   finishedTab!: AdvertTabCountItemDto

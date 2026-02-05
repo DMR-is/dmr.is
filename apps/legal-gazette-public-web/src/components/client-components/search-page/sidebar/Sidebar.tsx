@@ -18,19 +18,12 @@ import { PagingTotalItemsText } from '@dmr.is/ui/components/PagingTotaItemsText/
 
 import { Option } from '@island.is/island-ui/core'
 
-import { AdvertVersionEnum } from '../../../../gen/fetch'
 import { useFilters } from '../../../../hooks/useFilters'
 import { usePublications } from '../../../../hooks/usePublications'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { isDate } from '../../../../lib/utils'
 
 import { useQuery } from '@tanstack/react-query'
-
-const VERSION_OPTIONS = [
-  { label: 'Birting A', value: AdvertVersionEnum.A },
-  { label: 'Birting B', value: AdvertVersionEnum.B },
-  { label: 'Birting C', value: AdvertVersionEnum.C },
-]
 
 export const SearchSidebar = () => {
   const trpc = useTRPC()
@@ -166,20 +159,7 @@ export const SearchSidebar = () => {
               })
             }}
           />
-          <Select
-            isClearable
-            label="Birtingar"
-            placeholder="Allar birtingar"
-            options={VERSION_OPTIONS}
-            size="xs"
-            defaultValue={VERSION_OPTIONS.find(
-              (o) => o.value === filters.version,
-            )}
-            onChange={(opt) => {
-              const valueToUse = opt ? opt.value : null
-              setFilters({ ...filters, version: valueToUse })
-            }}
-          />
+
           <DatePicker
             locale="is"
             label="Dagsetning frá"
@@ -204,7 +184,6 @@ export const SearchSidebar = () => {
             minYear={MIN_YEAR}
             maxYear={THIS_YEAR}
           />
-
           <Select
             label="Fjöldi niðurstaða"
             options={totalResultsOptions}

@@ -12,7 +12,7 @@ import {
   IJournalService,
   IPriceService,
   IUserService,
-} from '@dmr.is/ojoi/modules'
+} from '@dmr.is/modules'
 import {
   Case,
   CaseCommentTypeTitleEnum,

@@ -139,14 +139,6 @@ export class CaseDetailed {
   isLegacy!: boolean
 
   @ApiProperty({
-    type: Boolean,
-    example: false,
-    description: 'Should hide display of signature date.',
-  })
-  @IsBoolean()
-  hideSignatureDate?: boolean
-
-  @ApiProperty({
     type: UserDto,
     description: 'User the case is assigned to.',
     nullable: true,

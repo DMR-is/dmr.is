@@ -16,9 +16,6 @@ type Props = {
 }
 
 export const PublicationSidebar = ({ publication }: Props) => {
-
-  const link = publication.publication.pdfUrl ?? `/api/adverts/${publication.advert.id}/pdf?version=${publication.publication.version}`
-
   return (
     <Stack space={[1, 2]}>
       <Box padding={3} background="blue100" borderRadius="large">
@@ -62,7 +59,7 @@ export const PublicationSidebar = ({ publication }: Props) => {
       </Box>
       <Box background="dark100" padding={3} borderRadius="large">
         <LinkV2
-          href={link}
+          href={`/api/adverts/${publication.advert.id}/pdf?version=${publication.publication.version}`}
           newTab
         >
           <Button

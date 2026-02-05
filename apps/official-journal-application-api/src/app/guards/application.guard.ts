@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 
 import { LogMethod } from '@dmr.is/decorators'
-import { RoleGuard } from '@dmr.is/ojoi/modules/guards/auth'
+import { RoleGuard } from '@dmr.is/modules/guards/auth'
 
 import { PartyGuard } from './party.guard'
 

@@ -17,10 +17,7 @@ type ErrorWithPotentialReqRes = Error & {
 }
 
 const NODE_ENV = process.env.NODE_ENV
-// This session timeout will be used to set the maxAge of the session cookie
-// IDS has a max timeout on refresh tokens, so we set our session timeout to be slightly more
-const SESSION_TIMEOUT = 60 * 60 * 8 + 30 // 8 hours and 30 seconds
-
+const SESION_TIMEOUT = 60 * 60 // 1 hour
 
 const secure = NODE_ENV === 'production' ? '__Secure-' : ''
 
@@ -71,7 +68,7 @@ export const authOptions: AuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: SESSION_TIMEOUT,
+    maxAge: SESION_TIMEOUT,
   },
   callbacks: {
     jwt: async ({ token, user, account }) => {

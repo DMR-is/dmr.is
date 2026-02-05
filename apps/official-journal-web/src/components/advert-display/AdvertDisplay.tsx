@@ -1,5 +1,3 @@
-import cn from 'classnames'
-
 import {
   Box,
   Button,
@@ -22,7 +20,7 @@ type Props = {
 export const AdvertDisplay = ({ disclosure }: Props) => {
   const { currentCase } = useCaseContext()
 
-  const { requestedPublicationDate } = currentCase
+  const { requestedPublicationDate} = currentCase
 
   return (
     <ModalBase baseId="myDialog" disclosure={disclosure}>
@@ -30,11 +28,7 @@ export const AdvertDisplay = ({ disclosure }: Props) => {
         <GridContainer>
           <GridRow>
             <GridColumn span="12/12">
-              <Box
-                className={cn(styles.modalBackground, {
-                  [styles.advertSignature]: currentCase.hideSignatureDate,
-                })}
-              >
+              <Box className={styles.modalBackground}>
                 <Inline justifyContent="flexEnd">
                   <Button
                     onClick={closeModal}
@@ -55,11 +49,9 @@ export const AdvertDisplay = ({ disclosure }: Props) => {
                       <Text variant="eyebrow" color="purple400">
                         Nr. 000/{new Date().getFullYear()}
                       </Text>
-                      {currentCase.hideSignatureDate ? null : (
-                        <Text variant="eyebrow" color="purple400">
-                          {formatDate(requestedPublicationDate, 'd. MMMM yyyy')}
-                        </Text>
-                      )}
+                      <Text variant="eyebrow" color="purple400">
+                        {formatDate(requestedPublicationDate, 'd. MMMM yyyy')}
+                      </Text>
                     </Box>
                     <Box textAlign="center" marginBottom={[2, 3, 4]}>
                       <Text variant="h3">{currentCase.advertType.title}</Text>

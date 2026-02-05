@@ -107,15 +107,6 @@ export const advertsRouter = router({
           statusId: [StatusIdEnum.READY_FOR_PUBLICATION],
         }),
     ),
-  getInPublishingAdverts: protectedProcedure
-    .input(getAdvertsRequestSchema)
-    .query(
-      async ({ ctx, input }) =>
-        await ctx.api.getAdverts({
-          ...input,
-          statusId: [StatusIdEnum.IN_PUBLISHING],
-        }),
-    ),
   getCompletedAdverts: protectedProcedure
     .input(getAdvertsRequestSchema)
     .query(async ({ ctx, input }) => await ctx.api.getAdverts(input)),

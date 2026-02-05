@@ -2,10 +2,10 @@ import { ExecutionContext } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 
+import { SCOPES_KEY, ScopesGuard } from '@dmr.is/modules/guards/auth'
+
 import { ADMIN_KEY } from '../../../core/decorators/admin.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
-import { SCOPES_KEY } from '../../../core/guards/scope-guards/scopes.decorator'
-import { ScopesGuard } from '../../../core/guards/scope-guards/scopes-guard'
 import { UserDto } from '../../../models/users.model'
 import { IUsersService } from '../../users/users.service.interface'
 import { AdvertController } from './advert.controller'

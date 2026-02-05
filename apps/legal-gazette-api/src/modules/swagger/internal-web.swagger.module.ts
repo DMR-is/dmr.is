@@ -4,7 +4,6 @@ import { SubscriberAdminControllerModule } from '../admin-subscribers/subscriber
 import { AdvertControllerModule } from '../advert/advert.controller.module'
 import { IssuesControllerModule } from '../advert/issues/issues.controller.module'
 import { PublicationControllerModule } from '../advert/publications/publication.controller.module'
-import { AdvertPublishControllerModule } from '../advert/publish/advert-publish.controller.module'
 import { SignatureControllerModule } from '../advert/signature/signature.controller.module'
 import { StatisticsControllerModule } from '../advert/statistics/statistics.controller.module'
 import { BaseEntityControllerModule } from '../base-entity/base-entity.controller.module'
@@ -44,7 +43,6 @@ import { UserControllerModule } from '../users/users.controller.module'
     TBRCompanySettingsControllerModule,
     LGNationalRegistryControllerModule,
     PaymentsControllerModule,
-    AdvertPublishControllerModule,
   ],
 })
 export class InternalWebSwaggerModule {}
