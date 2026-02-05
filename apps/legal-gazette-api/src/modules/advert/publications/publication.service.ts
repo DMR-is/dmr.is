@@ -15,6 +15,7 @@ import {
   AdvertPublicationDetailedDto,
   AdvertPublicationDto,
   AdvertPublicationModel,
+  GetCombinedHTMLDto,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,
@@ -72,6 +73,8 @@ export class PublicationService implements IPublicationService {
       .findAndCountAll({
         limit,
         offset,
+        distinct: true,
+        col: 'AdvertPublicationModel.id',
       })
 
     const erroredRows: string[] = []
@@ -99,6 +102,26 @@ export class PublicationService implements IPublicationService {
       publications: mapped,
       paging,
     }
+  }
+
+  async getPublicationsCombinedHTML(
+    query: GetPublicationsQueryDto,
+  ): Promise<GetCombinedHTMLDto> {
+    const { limit, offset } = getLimitAndOffset({
+      page: query.page,
+      pageSize: query.pageSize,
+    })
+
+    const publications = await this.publicationModel
+      .scope({ method: ['published', query] })
+      .findAll({
+        limit,
+        offset,
+      })
+
+    const publicationsHtml = publications.map((pub) => pub.advert.htmlMarkup())
+
+    return { publicationsHtml }
   }
 
   async createPublication(advertId: string): Promise<void> {

@@ -708,9 +708,9 @@
         "tags": ["Legal gazette - public API"]
       }
     },
-    "/api/v1/publications/detailed": {
+    "/api/v1/publications/get-combined-html": {
       "get": {
-        "operationId": "getPublicationsDetailed",
+        "operationId": "getCombinedHTML",
         "parameters": [
           {
             "name": "page",
@@ -765,6 +765,12 @@
             "required": false,
             "in": "query",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "version",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/AdvertVersionEnum" }
           }
         ],
         "responses": {
@@ -772,9 +778,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetPublicationsDetailedDto"
-                }
+                "schema": { "$ref": "#/components/schemas/GetCombinedHTMLDto" }
               }
             }
           },
@@ -824,21 +828,15 @@
         "tags": ["Legal gazette - public API"]
       }
     },
-    "/api/v1/publications/adverts/{advertId}/{version}": {
+    "/api/v1/publications/{publicationId}": {
       "get": {
         "operationId": "getAdvertPublication",
         "parameters": [
           {
-            "name": "advertId",
+            "name": "publicationId",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
-          },
-          {
-            "name": "version",
-            "required": true,
-            "in": "path",
-            "schema": { "$ref": "#/components/schemas/AdvertVersionEnum" }
           }
         ],
         "responses": {
@@ -896,142 +894,10 @@
         "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/publications/adverts/{advertId}": {
-      "post": {
-        "operationId": "createAdvertPublication",
-        "parameters": [
-          {
-            "name": "advertId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/publications/{publicationId}/adverts/{advertId}/publish": {
-      "post": {
-        "operationId": "publishAdvertPublication",
-        "parameters": [
-          {
-            "name": "advertId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "publicationId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Legal gazette - public API"]
-      }
-    },
-    "/api/v1/publications/{publicationId}/adverts/{advertId}": {
+      },
       "patch": {
-        "operationId": "updateAdvertPublication",
+        "operationId": "updatePublication",
         "parameters": [
-          {
-            "name": "advertId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          },
           {
             "name": "publicationId",
             "required": true,
@@ -1097,16 +963,69 @@
         "tags": ["Legal gazette - public API"]
       },
       "delete": {
-        "operationId": "deleteAdvertPublication",
+        "operationId": "deletePublication",
         "parameters": [
           {
-            "name": "advertId",
+            "name": "publicationId",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
           },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - public API"]
+      }
+    },
+    "/api/v1/publications/create/{advertId}": {
+      "post": {
+        "operationId": "createPublication",
+        "parameters": [
           {
-            "name": "publicationId",
+            "name": "advertId",
             "required": true,
             "in": "path",
             "schema": { "type": "string" }
@@ -1505,6 +1424,13 @@
         },
         "required": ["publications", "paging"]
       },
+      "GetCombinedHTMLDto": {
+        "type": "object",
+        "properties": {
+          "publicationsHtml": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["publicationsHtml"]
+      },
       "AdvertPublicationDto": {
         "type": "object",
         "properties": {
@@ -1617,19 +1543,6 @@
           "html": { "type": "string" }
         },
         "required": ["publication", "advert", "html"]
-      },
-      "GetPublicationsDetailedDto": {
-        "type": "object",
-        "properties": {
-          "result": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AdvertPublicationDetailedDto"
-            }
-          },
-          "paging": { "$ref": "#/components/schemas/Paging" }
-        },
-        "required": ["result", "paging"]
       },
       "UpdateAdvertPublicationDto": {
         "type": "object",

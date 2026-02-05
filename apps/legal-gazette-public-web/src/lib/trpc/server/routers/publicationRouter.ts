@@ -8,6 +8,10 @@ const getAdvertPublicationSchema = z.object({
   version: z.enum(AdvertVersionEnum),
 })
 
+const getPublicationInput = z.object({
+  publicationId: z.string(),
+})
+
 const getPublicationsSchema = z.object({
   page: z.number().optional(),
   pageSize: z.number().optional(),
@@ -22,7 +26,7 @@ const getPublicationsSchema = z.object({
 
 export const publicationRouter = router({
   getPublication: protectedProcedure
-    .input(getAdvertPublicationSchema)
+    .input(getPublicationInput)
     .query(async ({ input, ctx }) => {
       return await ctx.api.getAdvertPublication(input)
     }),
@@ -42,7 +46,7 @@ export const publicationRouter = router({
       return await ctx.api.getPublications(filteredInput)
     }),
 
-  getPublicationsDetailed: protectedProcedure
+  getCombinedHTML: protectedProcedure
     .input(getPublicationsSchema)
     .query(async ({ input, ctx }) => {
       const filteredInput = Object.fromEntries(
@@ -55,7 +59,7 @@ export const publicationRouter = router({
         ),
       )
 
-      return await ctx.api.getPublicationsDetailed(filteredInput)
+      return await ctx.api.getCombinedHTML(filteredInput)
     }),
   getRelatedPublications: protectedProcedure
     .input(z.object({ advertId: z.string() }))

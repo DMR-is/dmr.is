@@ -160,17 +160,8 @@ export type AdvertPublicationsCreateAttributes = {
       where: publicationWhereOptions,
       include: [
         {
-          model: AdvertModel,
+          model: AdvertModel.scope('detailed'),
           required: true,
-          attributes: [
-            'id',
-            'title',
-            'typeId',
-            'categoryId',
-            'publicationNumber',
-            'createdBy',
-          ],
-          include: [{ model: TypeModel }, { model: CategoryModel }],
           where: advertWhereOptions,
         },
       ],
@@ -375,12 +366,10 @@ export class GetPublicationsDto {
   paging!: Paging
 }
 
-export class GetPublicationsDetailedDto {
-  @ApiProperty({ type: [AdvertPublicationDetailedDto] })
-  result!: PublicationDetailedDto[]
-
-  @ApiProperty({ type: Paging })
-  paging!: Paging
+export class GetCombinedHTMLDto {
+  @ApiProperty({ type: [String] })
+  @IsString({ each: true })
+  publicationsHtml!: string[]
 }
 
 export class GetRelatedPublicationsDto extends PickType(GetPublicationsDto, [

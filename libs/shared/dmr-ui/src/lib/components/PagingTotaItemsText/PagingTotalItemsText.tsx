@@ -9,7 +9,8 @@ type Props = {
 }
 
 export const PagingTotalItemsText = ({ paging, totalItems }: Props) => {
-  return paging && totalItems ? (
+  if (!paging || !totalItems) return null
+  return (
     <Text>
       <strong>
         {paging?.page > 1 ? paging?.pageSize * (paging?.page - 1) + 1 : 1}
@@ -23,5 +24,5 @@ export const PagingTotalItemsText = ({ paging, totalItems }: Props) => {
       {' af '}
       <strong>{totalItems}</strong> niðurstöðum
     </Text>
-  ) : null
+  )
 }

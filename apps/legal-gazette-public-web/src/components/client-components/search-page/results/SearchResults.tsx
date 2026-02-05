@@ -6,7 +6,6 @@ import {
   AlertMessage,
   Box,
   Breadcrumbs,
-  Button,
   Inline,
   Pagination,
   SkeletonLoader,
@@ -14,17 +13,14 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 
+import { CombinedHTMLModalContainer } from '../../../../containers/CombinedHTMLModalContainer'
 import { useFilters } from '../../../../hooks/useFilters'
 import { usePublications } from '../../../../hooks/usePublications'
 import { PublicationCard } from '../../cards/PublicationCard'
-import { ViewPublicationsOnPage } from './ViewSearchedPublications'
 
 export const SearchResults = () => {
   const { filters, setFilters } = useFilters()
   const { data, isLoading, error } = usePublications()
-
-  const [showSelectedPublications, setShowSelectedPublications] =
-    useState(false)
 
   if (error) {
     return (
@@ -53,18 +49,18 @@ export const SearchResults = () => {
           <Breadcrumbs items={breadcrumbs} />
           <Inline space={2} alignY="center" justifyContent="spaceBetween">
             <Text variant="h2">Leit í Lögbirtingablaði</Text>
-            <Button
-              colorScheme="light"
-              icon="documents"
-              iconType="outline"
-              variant="utility"
-              onClick={() =>
-                setShowSelectedPublications(!showSelectedPublications)
-              }
+
+            <CombinedHTMLModalContainer
               disabled={!data?.publications.length}
-            >
-              Skoða auglýsingar á síðu
-            </Button>
+              pagingInfo={{
+                paging: {
+                  page: filters.page,
+                  pageSize: filters.pageSize,
+                },
+
+                totalItems: data?.paging.totalItems,
+              }}
+            />
           </Inline>
         </Stack>
         {isLoading ? (
@@ -101,12 +97,6 @@ export const SearchResults = () => {
           />
         )}
       </Stack>
-      {showSelectedPublications && (
-        <ViewPublicationsOnPage
-          openModal={showSelectedPublications}
-          setOpenModal={setShowSelectedPublications}
-        />
-      )}
     </>
   )
 }

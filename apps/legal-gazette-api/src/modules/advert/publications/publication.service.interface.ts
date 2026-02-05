@@ -1,7 +1,6 @@
-import { DMRUser } from '@dmr.is/auth/dmrUser'
-
 import {
   AdvertPublicationDetailedDto,
+  GetCombinedHTMLDto,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   UpdateAdvertPublicationDto,
@@ -23,9 +22,9 @@ export interface IPublicationService {
 
   getPublications(query?: GetPublicationsQueryDto): Promise<GetPublicationsDto>
 
-  getPublicationsDetailed(
+  getPublicationsCombinedHTML(
     query?: GetPublicationsQueryDto,
-  ): Promise<GetPublicationsDetailedDto>
+  ): Promise<GetCombinedHTMLDto>
 
   getPublishedPublicationsByAdvertId(
     advertId: string,
