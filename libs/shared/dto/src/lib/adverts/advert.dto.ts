@@ -166,6 +166,13 @@ export class Advert {
     required: false,
   })
   readonly corrections?: AdvertCorrection[]
+
+  @ApiProperty({
+    type: Boolean,
+    description: 'Hide the display, signature date is not sensitive info.',
+    required: false,
+  })
+  readonly hideSignatureDate?: boolean
 }
 
 export class AdvertLean extends PickType(Advert, [
@@ -266,4 +273,10 @@ export class CreateAdvert {
     required: false,
   })
   publicationYear?: string
+
+  @ApiProperty({
+    type: Boolean,
+    required: false,
+  })
+  hideSignatureDate?: boolean
 }

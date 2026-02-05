@@ -1,12 +1,20 @@
-import { Button, Inline, Stack, toast } from '@island.is/island-ui/core'
+import {
+  Button,
+  Checkbox,
+  Inline,
+  Stack,
+  toast,
+} from '@island.is/island-ui/core'
 
 import { useUpdateSignature } from '../../hooks/api'
+import { useUpdateSignatureDateDisplay } from '../../hooks/api/update/useUpdateSignatureDisplay'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { SignatureDislay } from '../advert-display/SignatureDisplay'
 import { SignatureRecord } from './Signature'
 
 export const Signatures = () => {
-  const { currentCase, canEdit, refetchSignature } = useCaseContext()
+  const { currentCase, canEdit, refetchSignature, handleOptimisticUpdate } =
+    useCaseContext()
 
   const { signature } = currentCase
 
@@ -19,6 +27,22 @@ export const Signatures = () => {
       },
       onError: () => {
         toast.error('Ekki tóskt að bæta við undirritun')
+      },
+    },
+  })
+
+  const {
+    updateSignatureDateDisplay,
+    isMutating: isUpdatingSignatureDateDisplay,
+  } = useUpdateSignatureDateDisplay({
+    caseId: currentCase.id,
+    options: {
+      onSuccess: () => {
+        toast.success('Sýning undirritunardags uppfærð')
+        refetchSignature()
+      },
+      onError: () => {
+        toast.error('Ekki tókst að uppfæra sýningu undirritunardags')
       },
     },
   })
@@ -42,6 +66,24 @@ export const Signatures = () => {
         </Button>
       </Inline>
       <SignatureDislay />
+      <Inline alignY="center" space={1}>
+        <Checkbox
+          disabled={!canEdit}
+          checked={currentCase.hideSignatureDate || false}
+          label="Fela undirritunardag í birtingu auglýsingar"
+          onChange={(e) => {
+            handleOptimisticUpdate(
+              { ...currentCase, hideSignatureDate: e.target.checked },
+              () =>
+                updateSignatureDateDisplay({
+                  updateCaseSignatureDateDisplayBody: {
+                    hide: e.target.checked,
+                  },
+                }),
+            )
+          }}
+        />
+      </Inline>
     </Stack>
   )
 }

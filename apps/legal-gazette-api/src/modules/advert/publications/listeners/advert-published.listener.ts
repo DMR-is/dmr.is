@@ -5,7 +5,7 @@ import { OnEvent } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { IAWSService } from '@dmr.is/modules'
+import { IAWSService } from '@dmr.is/shared/modules'
 import { withRetry } from '@dmr.is/utils'
 
 import { LegalGazetteEvents } from '../../../../core/constants'

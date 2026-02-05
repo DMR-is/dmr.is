@@ -3,8 +3,11 @@ import {
   parseAsInteger,
   parseAsIsoDate,
   parseAsString,
+  parseAsStringEnum,
   useQueryStates,
 } from 'nuqs'
+
+import { AdvertVersionEnum } from '../gen/fetch'
 
 export const useFilters = () => {
   const [filters, setFilters] = useQueryStates({
@@ -16,6 +19,7 @@ export const useFilters = () => {
     dateFrom: parseAsIsoDate,
     dateTo: parseAsIsoDate,
     year: parseAsString.withDefault(new Date().getFullYear().toString()),
+    version: parseAsStringEnum(Object.values(AdvertVersionEnum)),
   })
 
   const reset = () => {
@@ -26,6 +30,7 @@ export const useFilters = () => {
       dateFrom: null,
       dateTo: null,
       year: 'all',
+      version: null,
     })
   }
 

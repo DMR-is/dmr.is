@@ -45,8 +45,20 @@ export const SettlementFields = ({
     updateRecallStatementLocation,
   } = useUpdateSettlement(advertId, settlement.id)
 
+  // Determine initial value based on statement type
+  const getInitialRecallStatementLocation = () => {
+    if (
+      settlement.liquidatorRecallStatementType ===
+      ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
+    ) {
+      return settlement.liquidatorLocation || ''
+    }
+    // For CUSTOMLIQUIDATORLOCATION or CUSTOMLIQUIDATOREMAIL
+    return settlement.liquidatorRecallStatementLocation || ''
+  }
+
   const [recallStatementLocation, setRecallStatementLocation] = useState(
-    settlement.liquidatorRecallStatementLocation || '',
+    getInitialRecallStatementLocation(),
   )
 
   const defaultRecallStatementType =

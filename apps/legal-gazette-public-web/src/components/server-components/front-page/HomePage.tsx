@@ -2,9 +2,12 @@ import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 import {
   Box,
+  Button,
   GridColumn,
   GridContainer,
   GridRow,
+  Inline,
+  LinkV2,
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
@@ -92,9 +95,16 @@ export const HomePage = async () => {
         <GridContainer>
           <GridRow>
             <GridColumn span={['1/1', '1/1', '1/1', '12/12']}>
-              <Text variant="h3" paddingBottom={3}>
-                Nýjustu auglýsingar
-              </Text>
+              <Box marginBottom={3}>
+                <Inline space={2} alignY="center" justifyContent="spaceBetween">
+                  <Text variant="h3">Nýjustu auglýsingar</Text>
+                  <Button variant="text" size="small" icon="arrowForward">
+                    <LinkV2 href="/auglysingar" underline="normal">
+                      Sjá allar auglýsingar
+                    </LinkV2>
+                  </Button>
+                </Inline>
+              </Box>
               <Stack space={[2]}>
                 {latestPublications.publications.map((pub) => (
                   <PublicationCard publication={pub} key={pub.id} />

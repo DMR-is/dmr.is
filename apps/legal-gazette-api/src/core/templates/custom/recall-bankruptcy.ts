@@ -16,7 +16,25 @@ export function getRecallBankruptcyTemplate(model: AdvertModel): string {
     `Með úrskurði ${model.courtDistrict?.title || ''} uppkveðnum ${judgementDate ? formatDate(judgementDate, 'd. MMMM yyyy') : ''} var eftirtalið bú tekið til gjaldþrotaskipta. Sama dag var undirritaður skipaður skiptastjóri í búinu. Frestdagur við gjaldþrotaskiptin er tilgreindur við nafn viðkomandi bús.`,
   )
 
-  const outro = `${getElement('Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur búinu eða eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu innköllunar þessarar.')}${getElement(`Kröfulýsingar skulu sendar skiptastjóra ${settlement?.liquidatorRecallStatementType === ApplicationRequirementStatementEnum.CUSTOMLIQUIDATOREMAIL ? 'með rafrænum hætti á netfangið ' : 'að '} ${settlement?.liquidatorRecallStatementLocation || ''}`)}${getElement(`Skiptafundur til að fjalla um skrá um lýstar kröfur og ráðstöfun á eignum og réttindum búsins verður haldinn á skrifstofu skiptastjóra að ${divisionMeetingLocation || ''}, á ofangreindum tíma.`)}${getElement(`Komi ekkert fram um eignir í búinu mun skiptum lokið á þeim skiptafundi með vísan til 155. gr. laga nr. 21/1991 um gjaldþrotaskipti o.fl. Skrá um lýstar kröfur mun liggja frammi á skrifstofu skiptastjóra síðustu viku fyrir skiptafundinn.`)}`
+  // Determine the correct location based on the statement type
+  const getStatementLocation = () => {
+    if (
+      settlement?.liquidatorRecallStatementType ===
+      ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
+    ) {
+      return settlement?.liquidatorLocation || ''
+    }
+    // For CUSTOMLIQUIDATORLOCATION or CUSTOMLIQUIDATOREMAIL
+    return settlement?.liquidatorRecallStatementLocation || ''
+  }
+
+  const statementPrefix =
+    settlement?.liquidatorRecallStatementType ===
+    ApplicationRequirementStatementEnum.CUSTOMLIQUIDATOREMAIL
+      ? 'með rafrænum hætti á netfangið '
+      : 'að '
+
+  const outro = `${getElement('Hér með er skorað á alla þá, sem telja til skulda eða annarra réttinda á hendur búinu eða eigna í umráðum þess, að lýsa kröfum sínum fyrir undirrituðum skiptastjóra í búinu innan tveggja mánaða frá fyrri birtingu innköllunar þessarar.')}${getElement(`Kröfulýsingar skulu sendar skiptastjóra ${statementPrefix}${getStatementLocation()}`)}${getElement(`Skiptafundur til að fjalla um skrá um lýstar kröfur og ráðstöfun á eignum og réttindum búsins verður haldinn á skrifstofu skiptastjóra að ${divisionMeetingLocation || ''}, á ofangreindum tíma.`)}${getElement(`Komi ekkert fram um eignir í búinu mun skiptum lokið á þeim skiptafundi með vísan til 155. gr. laga nr. 21/1991 um gjaldþrotaskipti o.fl. Skrá um lýstar kröfur mun liggja frammi á skrifstofu skiptastjóra síðustu viku fyrir skiptafundinn.`)}`
 
   const tableHeaderName = getTableHeaderCell('Nafn bús:')
   const tableHeaderDeadline = getTableHeaderCell('Frestdagur:')

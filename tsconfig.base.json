@@ -21,11 +21,11 @@
       "@dmr.is/api-client/*": ["libs/shared/api-client/src/lib/*"],
       "@dmr.is/apm": ["libs/apm/src/index.ts"],
       "@dmr.is/auth/*": ["libs/shared/auth/src/lib/*"],
-      "@dmr.is/clients/national-registry": [
-        "libs/clients/national-registry/src/index.ts"
-      ],
       "@dmr.is/clients/company-registry": [
         "libs/clients/company-registry/index.ts"
+      ],
+      "@dmr.is/clients/national-registry": [
+        "libs/clients/national-registry/src/index.ts"
       ],
       "@dmr.is/constants": ["libs/shared/constants/src/index.ts"],
       "@dmr.is/db": ["libs/shared/sequelize/src/index.ts"],
@@ -38,11 +38,11 @@
       "@dmr.is/logging-next": ["libs/logging-next/src/index.ts"],
       "@dmr.is/middleware": ["libs/shared/middleware/src/index.ts"],
       "@dmr.is/mocks": ["libs/mocks/src/index.ts"],
-      "@dmr.is/modules": ["libs/shared/modules/src/index.ts"],
-      "@dmr.is/modules/guards/auth": [
-        "libs/shared/modules/src/guards/auth/index.ts"
-      ],
       "@dmr.is/nx-open-next": ["libs/nx-open-next/src/index.ts"],
+      "@dmr.is/ojoi/modules": ["libs/official-journal/modules/src/index.ts"],
+      "@dmr.is/ojoi/modules/guards/auth": [
+        "libs/official-journal/modules/src/guards/auth/index.ts"
+      ],
       "@dmr.is/pipelines": ["libs/shared/pipelines/src/index.ts"],
       "@dmr.is/shared/dto": ["libs/shared/dto/src/lib/index.ts"],
       "@dmr.is/shared/filters": ["libs/shared/filters/src/index.ts"],
@@ -65,12 +65,12 @@
       ],
       "@dmr.is/ui/utils/*": ["libs/shared/dmr-ui/src/lib/utils/*"],
       "@dmr.is/utils": ["libs/shared/utils/src/index.ts"],
-      "@dmr.is/utils/date": ["libs/shared/utils/src/lib/dateUtils.ts"],
       "@dmr.is/utils/cache": ["libs/shared/utils/src/lib/cacheUtils.ts"],
       "@dmr.is/utils/cache.provider": [
         "libs/shared/utils/src/lib/cache.provider.ts"
       ],
       "@dmr.is/utils/client": ["libs/shared/utils/src/client.ts"],
+      "@dmr.is/utils/date": ["libs/shared/utils/src/lib/dateUtils.ts"],
       "@island.is/auth-nest-tools": [
         "submodules/island.is/libs/auth-nest-tools/src/lib/auth.ts"
       ],
@@ -92,15 +92,19 @@
       "@island.is/shared/constants": [
         "submodules/island.is/libs/shared/constants/src/index.ts"
       ],
+      "@island.is/shared/pii": [
+        "submodules/island.is/libs/shared/pii/src/index.ts"
+      ],
       "@island.is/shared/types": [
         "submodules/island.is/libs/shared/types/src/index.ts"
       ],
       "@island.is/shared/utils": [
         "submodules/island.is/libs/shared/utils/src/index.ts"
       ],
-      "@island.is/shared/pii": [
-        "submodules/island.is/libs/shared/pii/src/index.ts"
-      ]
+      "@dmr.is/shared/modules": ["libs/shared/modules/src/index.ts"],
+            "@dmr.is/shared/modules/guards/auth": [
+        "libs/shared/modules/src/lib/guards/auth/index.ts"
+      ],
     }
   },
   "exclude": ["node_modules", "tmp"]

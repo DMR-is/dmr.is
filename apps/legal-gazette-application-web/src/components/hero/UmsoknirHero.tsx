@@ -10,26 +10,25 @@ export const UmsoknirHero = () => {
     <Box paddingY={[3, 4, 5, 6]}>
       <Hero
         variant="small"
-        title="Lögbirtingablaðið - auglýsingar"
+        title="Lögbirtingablaðið - auglýsendur"
         description={
           <Box style={{ maxWidth: '800px' }}>
-            <Text variant="intro">
+            <Text variant="intro" as="span">
               Velkomin á nýja síðu fyrir auglýsendur Lögbirtingablaðsins. Hér má
               sjá{' '}
-              <Text
-                color="blue400"
-                fontWeight="medium"
-                as="span"
-                variant="intro"
-              >
-                <LinkV2
-                  href="https://logbirtingablad.is/sidur/leidbeiningar"
-                  underlineVisibility="always"
-                  underline="normal"
-                >
-                  leiðbeiningar
-                </LinkV2>
-              </Text>{' '}
+            </Text>
+            <LinkV2
+              href="https://logbirtingablad.is/sidur/leidbeiningar"
+              underline="normal"
+              color="blue400"
+              newTab
+            >
+              <Text fontWeight="medium" as="span" variant="intro">
+                leiðbeiningar
+              </Text>
+            </LinkV2>
+            <Text variant="intro" as="span">
+              {' '}
               fyrir alla vefi Lögbirtingablaðsins.
             </Text>
           </Box>

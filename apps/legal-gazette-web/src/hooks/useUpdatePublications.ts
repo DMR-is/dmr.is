@@ -178,18 +178,6 @@ export const useUpdatePublications = (id: string) => {
     }),
   )
 
-  const { mutate: publishPublicationMutation } = useMutation(
-    trpc.publishPublication.mutationOptions({
-      onSuccess: async () => {
-        toast.success('Birting gefin út')
-        await queryClient.invalidateQueries(trpc.getAdvert.queryFilter({ id }))
-      },
-      onError: () => {
-        toast.error('Ekki tókst að gefa út birtingu')
-      },
-    }),
-  )
-
   const createPublication = useCallback(() => {
     return createPublicationMutation({ advertId: id })
   }, [id, createPublicationMutation])
@@ -215,20 +203,9 @@ export const useUpdatePublications = (id: string) => {
     [id, deletePublicationMutation],
   )
 
-  const publishPublication = useCallback(
-    (publicationId: string) => {
-      return publishPublicationMutation({
-        advertId: id,
-        publicationId,
-      })
-    },
-    [id, publishPublicationMutation],
-  )
-
   return {
     createPublication,
     updatePublication,
     deletePublication,
-    publishPublication,
   }
 }

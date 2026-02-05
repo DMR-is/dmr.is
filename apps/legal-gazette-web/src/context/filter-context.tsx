@@ -98,7 +98,7 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
     {
       [QueryParams.SEARCH]: parseAsString.withDefault(''),
       [QueryParams.PAGE]: parseAsInteger.withDefault(1),
-      [QueryParams.PAGE_SIZE]: parseAsInteger.withDefault(10),
+      [QueryParams.PAGE_SIZE]: parseAsInteger.withDefault(50),
       [QueryParams.CATEGORY]: parseAsArrayOf(parseAsString).withDefault([]),
       [QueryParams.TYPE]: parseAsArrayOf(parseAsString).withDefault([]),
       [QueryParams.STATUS]: parseAsArrayOf(parseAsString).withDefault([]),
@@ -121,7 +121,7 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
     setSearchParams({
       [QueryParams.SEARCH]: '',
       [QueryParams.PAGE]: 1,
-      [QueryParams.PAGE_SIZE]: 10,
+      [QueryParams.PAGE_SIZE]: 50,
       [QueryParams.CATEGORY]: [],
       [QueryParams.STATUS]: [],
       [QueryParams.TYPE]: [],

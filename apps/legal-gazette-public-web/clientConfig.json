@@ -645,6 +645,12 @@
             "required": false,
             "in": "query",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "version",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/AdvertVersionEnum" }
           }
         ],
         "responses": {
