@@ -134,12 +134,12 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       ])
     })
 
-    it('getPublicationById should have @AdminAccess()', () => {
+    it('getPublicationById should NOT have @AdminAccess()', () => {
       const isAdminAccess = reflector.getAllAndOverride<boolean>(ADMIN_KEY, [
         AdvertPublicationController.prototype.getPublicationById,
         AdvertPublicationController,
       ])
-      expect(isAdminAccess).toBe(true)
+      expect(isAdminAccess).toBeUndefined()
     })
 
     it('createAdvertPublication should have @AdminAccess()', () => {
@@ -178,18 +178,14 @@ describe('AdvertPublicationController - Guard Authorization', () => {
   })
 
   // =============================================================================
-  // getPublication - @PublicOrApplicationWebScopes() + @AdminAccess()
-  // Expected: Admin OR (Public-web OR Application-web) users can access (OR logic)
+  // getPublication - @PublicOrApplicationWebScopes() only
+  // Expected: Only (Public-web OR Application-web) users can access
   // =============================================================================
-  describe('getPublicationById - @PublicOrApplicationWebScopes() + @AdminAccess()', () => {
-    it('should ALLOW admin users (via admin access)', async () => {
+  describe('getPublicationById - @PublicOrApplicationWebScopes()', () => {
+    it('should DENY admin users (no admin access decorator)', async () => {
       const context = createMockContext(createAdminUser(), 'getPublicationById')
       const result = await authorizationGuard.canActivate(context)
-      expect(result).toBe(true)
-      expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
-        ADMIN_NATIONAL_ID,
-        true,
-      )
+      expect(result).toBe(false)
     })
 
     it('should ALLOW public-web users (via scope)', async () => {
@@ -214,21 +210,19 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       expect(usersService.getUserByNationalId).not.toHaveBeenCalled()
     })
 
-    it('should DENY users with random/invalid scope (not admin, not valid scope)', async () => {
+    it('should DENY users with random/invalid scope (not valid scope)', async () => {
       const context = createMockContext(
         createRandomScopeUser(),
         'getPublicationById',
       )
-      await expect(authorizationGuard.canActivate(context)).rejects.toThrow()
-      expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
-        RANDOM_NATIONAL_ID,
-        true,
-      )
+      const result = await authorizationGuard.canActivate(context)
+      expect(result).toBe(false)
     })
 
     it('should DENY unauthenticated requests', async () => {
       const context = createMockContext(null, 'getPublicationById')
-      await expect(authorizationGuard.canActivate(context)).rejects.toThrow()
+      const result = await authorizationGuard.canActivate(context)
+      expect(result).toBe(false)
     })
   })
 
@@ -357,7 +351,7 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       return { allowed: true }
     }
 
-    describe('getPublicationById (admin OR scope endpoint)', () => {
+    describe('getPublicationById (scope-only endpoint)', () => {
       it('public-web user should pass (via scope)', async () => {
         const result = await simulateGuardChain(
           createPublicWebUser(),
@@ -374,18 +368,20 @@ describe('AdvertPublicationController - Guard Authorization', () => {
         expect(result).toEqual({ allowed: true })
       })
 
-      it('admin user should pass (via admin access)', async () => {
+      it('admin user should be denied (no @AdminAccess decorator)', async () => {
         const result = await simulateGuardChain(
           createAdminUser(),
           'getPublicationById',
         )
-        expect(result).toEqual({ allowed: true })
+        expect(result).toEqual({ allowed: false, deniedBy: 'ScopesGuard' })
       })
 
-      it('user with invalid scope should be denied by AdminGuard', async () => {
-        await expect(
-          simulateGuardChain(createRandomScopeUser(), 'getPublicationById'),
-        ).rejects.toThrow()
+      it('user with invalid scope should be denied by ScopesGuard', async () => {
+        const result = await simulateGuardChain(
+          createRandomScopeUser(),
+          'getPublicationById',
+        )
+        expect(result).toEqual({ allowed: false, deniedBy: 'ScopesGuard' })
       })
     })
 
