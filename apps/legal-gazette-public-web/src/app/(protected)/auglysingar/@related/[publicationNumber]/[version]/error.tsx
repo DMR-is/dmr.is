@@ -10,7 +10,7 @@ import {
 
 
 export default function Error({
-  error,
+  error: _error,
 }: {
   error: Error & { digest?: string }
   reset: () => void

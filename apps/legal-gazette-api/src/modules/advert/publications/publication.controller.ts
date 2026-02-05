@@ -40,7 +40,6 @@ import { IPublicationService } from './publication.service.interface'
   path: '/publications',
   version: '1',
 })
-@AdminAccess()
 export class AdvertPublicationController {
   constructor(
     @Inject(IPublicationService)
@@ -79,7 +78,6 @@ export class AdvertPublicationController {
     type: AdvertPublicationDetailedDto,
   })
   @PublicOrApplicationWebScopes()
-  @AdminAccess()
   async getPublicationById(
     @Param('publicationId', new UUIDValidationPipe()) publicationId: string,
   ) {
@@ -114,7 +112,6 @@ export class AdvertPublicationController {
     type: GetRelatedPublicationsDto,
   })
   @PublicWebScopes()
-  @AdminAccess()
   @ApiParam({
     name: 'version',
     enum: AdvertVersionEnum,
@@ -131,10 +128,10 @@ export class AdvertPublicationController {
     )
   }
 
-  @UseGuards(CanEditGuard)
   @Post('create/:advertId')
   @LGResponse({ operationId: 'createPublication' })
   @AdminAccess()
+  @UseGuards(CanEditGuard)
   async createAdvertPublication(
     @Param('advertId', new UUIDValidationPipe()) advertId: string,
   ): Promise<void> {
