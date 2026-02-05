@@ -123,8 +123,9 @@ export type AdvertPublicationsCreateAttributes = {
     }
 
     if (query.search) {
-      if (query.search.length === 10 && !isNaN(Number(query.search))) {
-        // If the search term is exactly 10 characters long and is a number, we assume it's a publication number
+      // publication numbers are 11 digits long
+      if (query.search.length === 11 && !isNaN(Number(query.search))) {
+        // If the search term is exactly 11 characters long and is a number, we assume it's a publication number
         Object.assign(advertWhereOptions, {
           publicationNumber: query.search,
         })

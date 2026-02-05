@@ -22,6 +22,8 @@ interface RelatedPublicationsContainerProps {
 export function RelatedPublicationsContainer({
   publications,
 }: RelatedPublicationsContainerProps) {
+  if (publications.length === 0) return null
+
   const items = publications.map((pub) => (
     <PublicationCard key={pub.id} publication={pub} />
   ))
