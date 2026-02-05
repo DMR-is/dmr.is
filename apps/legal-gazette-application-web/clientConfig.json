@@ -3469,9 +3469,9 @@
         "tags": ["Legal gazette - application web API"]
       }
     },
-    "/api/v1/publications/detailed": {
+    "/api/v1/publications/get-combined-html": {
       "get": {
-        "operationId": "getPublicationsDetailed",
+        "operationId": "getCombinedHTML",
         "parameters": [
           {
             "name": "page",
@@ -3539,9 +3539,7 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetPublicationsDetailedDto"
-                }
+                "schema": { "$ref": "#/components/schemas/GetCombinedHTMLDto" }
               }
             }
           },
@@ -5073,6 +5071,13 @@
         },
         "required": ["publications", "paging"]
       },
+      "GetCombinedHTMLDto": {
+        "type": "object",
+        "properties": {
+          "publicationsHtml": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["publicationsHtml"]
+      },
       "AdvertPublicationDetailedDto": {
         "type": "object",
         "properties": {
@@ -5083,19 +5088,6 @@
           "html": { "type": "string" }
         },
         "required": ["publication", "advert", "html"]
-      },
-      "GetPublicationsDetailedDto": {
-        "type": "object",
-        "properties": {
-          "result": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AdvertPublicationDetailedDto"
-            }
-          },
-          "paging": { "$ref": "#/components/schemas/Paging" }
-        },
-        "required": ["result", "paging"]
       },
       "UpdateAdvertPublicationDto": {
         "type": "object",

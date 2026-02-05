@@ -22,9 +22,10 @@ export const CombinedHTMLModal = ({
   publicationsHtml,
   pagingInfo,
   disclosure,
+  onVisibilityChange,
 }: Props) => {
   return (
-    <Modal disclosure={disclosure}>
+    <Modal disclosure={disclosure} onVisibilityChange={onVisibilityChange}>
       <Box padding={2} paddingTop={0} paddingBottom={6}>
         <>
           <Box marginBottom={4}>
