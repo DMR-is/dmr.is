@@ -1,6 +1,7 @@
 import { forceLogin } from '@dmr.is/auth/useLogOut'
 
 import { defaultShouldDehydrateQuery, QueryClient } from '@tanstack/react-query'
+import { TRPCClientError } from '@trpc/react-query'
 
 export const makeQueryClient = () => {
   return new QueryClient({
@@ -8,12 +9,18 @@ export const makeQueryClient = () => {
       queries: {
         staleTime: 30 * 1000,
         retry(failureCount, error) {
+          if (error instanceof TRPCClientError) {
+            if (error.data.httpStatus === 404) {
+              return false
+            }
+          }
+
           if (error.message === 'UNAUTHORIZED') {
             return false
           } else if (error.message === 'No session found') {
             // Force login when no session is found
             if (typeof window !== 'undefined') {
-              forceLogin( window.location.pathname)
+              forceLogin(window.location.pathname)
             }
 
             return false

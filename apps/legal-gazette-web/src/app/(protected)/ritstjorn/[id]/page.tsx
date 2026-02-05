@@ -1,7 +1,6 @@
 import {
   fetchQueryWithHandler,
   HydrateClient,
-  prefetch,
 } from '@dmr.is/trpc/client/server'
 
 import { AdvertContainer } from '../../../../containers/advert/AdvertContainer'
@@ -16,7 +15,6 @@ type Props = {
 export default async function AdvertDetails({ params }: Props) {
   const { id } = params
 
-  prefetch(trpc.getAllEntities.queryOptions())
   await fetchQueryWithHandler(trpc.getAdvert.queryOptions({ id }))
 
   return (

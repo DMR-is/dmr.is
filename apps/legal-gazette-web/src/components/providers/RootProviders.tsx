@@ -12,6 +12,8 @@ import { allMessages } from '../../lib/messages'
 import { TRPCReactProvider } from '../../lib/trpc/client/Provider'
 import { flattenMessages } from '../../lib/utils'
 
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+
 export const RootProviders = ({
   session,
   children,
@@ -50,6 +52,7 @@ export const RootProviders = ({
         </SessionProvider>
       </NuqsAdapter>
       <ToastContainer closeButton={true} timeout={2000} />
+      <ReactQueryDevtools />
     </TRPCReactProvider>
   )
 }

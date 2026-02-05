@@ -14,7 +14,7 @@ import {
 import { StatusIdEnum } from '../lib/constants'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 type UpdateOptions = {
   successMessage?: string
@@ -58,7 +58,7 @@ export const useUpdateAdvert = (id: string) => {
   const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id }))
 
   // We fetch this to map type, category and courtDistrict to the optimistic data
-  const { data: entities } = useSuspenseQuery(
+  const { data: entities } = useQuery(
     trpc.getAllEntities.queryOptions(),
   )
   const types = entities?.types || []

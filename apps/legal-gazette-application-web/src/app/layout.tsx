@@ -5,6 +5,7 @@ import { authOptions } from '../lib/authOptions'
 import ProviderTRPC from '../lib/trpc/client/Provider'
 
 import '../styles/global.css'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 export default async function RootLayout({
   children,
@@ -18,6 +19,7 @@ export default async function RootLayout({
       <body>
         <ProviderTRPC>
           <Providers session={session}>{children}</Providers>
+          <ReactQueryDevtools />
         </ProviderTRPC>
       </body>
     </html>

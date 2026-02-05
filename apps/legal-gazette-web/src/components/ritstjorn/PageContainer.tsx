@@ -3,7 +3,7 @@
 import { parseAsStringEnum, useQueryState } from 'nuqs'
 import { useEffect } from 'react'
 
-import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
+import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { Inline, Stack } from '@dmr.is/ui/components/island-is'
 
 import {
@@ -39,7 +39,7 @@ export const PageContainer = () => {
   const trpc = useTRPC()
   const { data, isPending } = useSuspenseQuery(trpc.getStatuses.queryOptions())
 
-  const { data: countData } = useSuspenseQuery(
+  const { data: countData } = useQuery(
     trpc.getAdvertsCount.queryOptions({
       categoryId: params.categoryId,
       typeId: params.typeId,

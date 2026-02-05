@@ -12,9 +12,6 @@ import { initTRPC, TRPCError } from '@trpc/server'
 export const createTRPCContext = cache(async () => {
   const session = await getServerSession(authOptions)
   if (session?.invalid || !session?.idToken) {
-    console.log('----------')
-    console.log('Somehow, we are not getting session here', session)
-    console.log('----------')
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'No session found',

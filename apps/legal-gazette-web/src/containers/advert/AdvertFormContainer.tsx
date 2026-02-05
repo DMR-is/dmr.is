@@ -1,6 +1,6 @@
 'use client'
 
-import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box, Breadcrumbs, Stack, Text } from '@dmr.is/ui/components/island-is'
 import { formatDate } from '@dmr.is/utils/client'
 
@@ -30,11 +30,9 @@ type AdvertContainerProps = {
 
 export function AdvertFormContainer({ id }: AdvertContainerProps) {
   const trpc = useTRPC()
-  const { data: entities } = useSuspenseQuery(
-    trpc.getAllEntities.queryOptions(),
-  )
+  const { data: entities } = useQuery(trpc.getAllEntities.queryOptions())
 
-  const { data: advert } = useQuery(trpc.getAdvert.queryOptions({ id: 'fe1ffef5-d35a-4a4a-8c9b-0675a25351fe' }))
+  const { data: advert } = useQuery(trpc.getAdvert.queryOptions({ id }))
 
   const { data: categoriesForTypes } = useQuery(
     trpc.getCategories.queryOptions(

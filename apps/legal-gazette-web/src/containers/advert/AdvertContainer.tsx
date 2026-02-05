@@ -1,3 +1,5 @@
+import { ErrorBoundary } from 'react-error-boundary'
+
 import { HydrateClient } from '@dmr.is/trpc/client/server'
 import {
   Box,
@@ -22,7 +24,9 @@ export function AdvertContainer({ id }: AdvertContainerProps) {
               <AdvertFormContainer id={id} />
             </GridColumn>
             <GridColumn span={['12/12', '12/12', '3/12', '3/12']}>
+            <ErrorBoundary fallback={<div>Villa kom upp við að hlaða hliðarstiku</div>}>
               <AdvertSidebarContainer id={id} />
+              </ErrorBoundary>
             </GridColumn>
           </GridRow>
         </GridContainer>

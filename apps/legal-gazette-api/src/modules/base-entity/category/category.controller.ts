@@ -1,6 +1,12 @@
 import { Op } from 'sequelize'
 
-import { BadRequestException, Controller, Get, NotFoundException, Param, Query, UseGuards } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
@@ -66,8 +72,6 @@ export class CategoryController extends BaseEntityController<
         },
       ],
     })
-
-    throw new NotFoundException('Test exception handling')
 
     return {
       categories: categories,

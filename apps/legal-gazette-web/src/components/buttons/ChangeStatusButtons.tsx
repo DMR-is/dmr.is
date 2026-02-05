@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 
 import { useMemo } from 'react'
 
+import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import {
   Box,
   Button,
@@ -16,7 +17,6 @@ import { Route } from '@dmr.is/ui/hooks/constants'
 
 import { Inline } from '@island.is/island-ui/core'
 
-import { StatusDto } from '../../gen/fetch'
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 import { StatusIdEnum } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
@@ -25,19 +25,20 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   advertId: string
-  canEdit?: boolean
-  canPublish?: boolean
-  currentStatus: StatusDto
   previewSlot?: React.ReactNode
 }
 
-export const ChangeStatusButtons = ({
-  advertId,
-  currentStatus,
-  canEdit = false,
-  canPublish = false,
-  previewSlot,
-}: Props) => {
+export const ChangeStatusButtons = ({ advertId, previewSlot }: Props) => {
+  const trpc = useTRPC()
+
+  const { data: advert } = useSuspenseQuery(
+    trpc.getAdvert.queryOptions({ id: advertId }),
+  )
+
+  const currentStatus = advert.status
+  const canEdit = advert.canEdit
+  const canPublish = advert.canPublish
+
   const {
     moveToNextStatus,
     moveToPreviousStatus,
@@ -46,7 +47,6 @@ export const ChangeStatusButtons = ({
     isMovingToPreviousStatus,
     isReactivating,
   } = useUpdateAdvert(advertId)
-  const trpc = useTRPC()
   const queryClient = useQueryClient()
   const router = useRouter()
 

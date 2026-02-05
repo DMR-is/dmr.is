@@ -28,7 +28,7 @@ const createOptimisticDataForSettlement = (
 export const useUpdateSettlement = (advertId: string, settlementId: string) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
-  const { data: advert, refetch } = useSuspenseQuery(
+  const { data: advert } = useSuspenseQuery(
     trpc.getAdvert.queryOptions({ id: advertId }),
   )
 
@@ -54,18 +54,19 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
           )
 
           queryClient.setQueryData(
-            trpc.getAdvert.queryKey({ id: variables.id }),
+            trpc.getAdvert.queryKey({ id: advertId }),
             optimisticData,
           )
 
           return prevData
         },
-        onSuccess: () => {
+        onSettled: () => {
           queryClient.invalidateQueries(
             trpc.getAdvert.queryFilter({ id: advertId }),
           )
+          queryClient.invalidateQueries(trpc.getPublication.queryFilter())
         },
-        onError: (_error, _variables, mutateResults) => {
+        onError: (_err, _variables, mutateResults) => {
           if (mutateResults) {
             queryClient.setQueryData(
               trpc.getAdvert.queryKey({ id: advertId }),
@@ -148,7 +149,6 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
         {
           onSuccess: () => {
             toast.success('Kröfulýsing vistuð')
-            refetch()
           },
           onError: () => {
             toast.error('Ekki tókst að vista kröfulýsingu')

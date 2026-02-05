@@ -32,28 +32,29 @@ export class ApiTRPCError extends Error {
   }
 }
 
-export const HTTP_CODE_TO_TRPC_ERROR_CODE: Record<number, TRPC_ERROR_CODE_KEY> = {
-  400: 'BAD_REQUEST',
-  401: 'UNAUTHORIZED',
-  402: 'PAYMENT_REQUIRED',
-  403: 'FORBIDDEN',
-  404: 'NOT_FOUND',
-  405: 'METHOD_NOT_SUPPORTED',
-  408: 'TIMEOUT',
-  409: 'CONFLICT',
-  412: 'PRECONDITION_FAILED',
-  413: 'PAYLOAD_TOO_LARGE',
-  415: 'UNSUPPORTED_MEDIA_TYPE',
-  422: 'UNPROCESSABLE_CONTENT',
-  428: 'PRECONDITION_REQUIRED',
-  429: 'TOO_MANY_REQUESTS',
-  499: 'CLIENT_CLOSED_REQUEST',
-  500: 'INTERNAL_SERVER_ERROR',
-  501: 'NOT_IMPLEMENTED',
-  502: 'BAD_GATEWAY',
-  503: 'SERVICE_UNAVAILABLE',
-  504: 'GATEWAY_TIMEOUT',
-} as const
+export const HTTP_CODE_TO_TRPC_ERROR_CODE: Record<number, TRPC_ERROR_CODE_KEY> =
+  {
+    400: 'BAD_REQUEST',
+    401: 'UNAUTHORIZED',
+    402: 'PAYMENT_REQUIRED',
+    403: 'FORBIDDEN',
+    404: 'NOT_FOUND',
+    405: 'METHOD_NOT_SUPPORTED',
+    408: 'TIMEOUT',
+    409: 'CONFLICT',
+    412: 'PRECONDITION_FAILED',
+    413: 'PAYLOAD_TOO_LARGE',
+    415: 'UNSUPPORTED_MEDIA_TYPE',
+    422: 'UNPROCESSABLE_CONTENT',
+    428: 'PRECONDITION_REQUIRED',
+    429: 'TOO_MANY_REQUESTS',
+    499: 'CLIENT_CLOSED_REQUEST',
+    500: 'INTERNAL_SERVER_ERROR',
+    501: 'NOT_IMPLEMENTED',
+    502: 'BAD_GATEWAY',
+    503: 'SERVICE_UNAVAILABLE',
+    504: 'GATEWAY_TIMEOUT',
+  } as const
 
 // Valid tRPC error codes for validation
 const TRPC_ERROR_CODES = new Set([
@@ -113,10 +114,7 @@ function findTRPCErrorInChain(
 
   // Check cause chain
   if (error && typeof error === 'object' && 'cause' in error) {
-    return findTRPCErrorInChain(
-      (error as { cause: unknown }).cause,
-      depth + 1,
-    )
+    return findTRPCErrorInChain((error as { cause: unknown }).cause, depth + 1)
   }
 
   return null
@@ -135,7 +133,10 @@ function findStatusDeep(obj: unknown, depth = 0): number | null {
 
   // Check cause chain
   if ('cause' in obj) {
-    const causeStatus = findStatusDeep((obj as { cause: unknown }).cause, depth + 1)
+    const causeStatus = findStatusDeep(
+      (obj as { cause: unknown }).cause,
+      depth + 1,
+    )
     if (causeStatus !== null) return causeStatus
   }
 
@@ -183,8 +184,8 @@ function isResponseLike(error: unknown): error is Response {
 
   // Check for symbol-based internals (node-fetch specific)
   const symbols = Object.getOwnPropertySymbols(error)
-  const hasResponseInternals = symbols.some(
-    (s) => s.toString().includes('Response internals'),
+  const hasResponseInternals = symbols.some((s) =>
+    s.toString().includes('Response internals'),
   )
   if (hasResponseInternals) {
     return true
@@ -249,8 +250,7 @@ export async function createTRPCError(error: unknown): Promise<ApiTRPCError> {
 
     try {
       // Clone response if possible to avoid body consumption issues
-      const response =
-        typeof error.clone === 'function' ? error.clone() : error
+      const response = typeof error.clone === 'function' ? error.clone() : error
       const body = await response.json()
       cause = body
 
@@ -315,25 +315,15 @@ export async function trpcProcedureHandler<T>(
  * ```
  */
 export const apiErrorMiddleware = async <T>(opts: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   next: () => Promise<{ ok: boolean; error?: any; [key: string]: any }>
 }): Promise<T> => {
   const result = await opts.next()
 
   if (!result.ok && result.error?.cause) {
     // Extract status from Response internals in the cause
-    const status = getResponseStatus(result.error.cause)
 
-    if (status !== null) {
-      const trpcCode = HTTP_CODE_TO_TRPC_ERROR_CODE[status] ?? 'INTERNAL_SERVER_ERROR'
-
-      // Create new error with correct code
-      const newError = new Error(result.error.message || `API Error (${status})`) as any
-      newError.name = 'TRPCError'
-      newError.code = trpcCode
-      newError.cause = result.error.cause
-
-      return { ...result, error: newError } as T
-    }
+    return { ...result, error: await createTRPCError(result.error.cause) } as T
   }
 
   return result as T

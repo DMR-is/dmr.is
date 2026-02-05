@@ -8,7 +8,7 @@ import {
 } from 'nuqs'
 import { createContext, useState } from 'react'
 
-import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 
 import { Tag } from '@island.is/island-ui/core'
 
@@ -80,9 +80,7 @@ type FilterProviderProps = {
 
 export const FilterProvider = ({ children }: FilterProviderProps) => {
   const trpc = useTRPC()
-  const { data: entities } = useSuspenseQuery(
-    trpc.getAllEntities.queryOptions(),
-  )
+  const { data: entities } = useQuery(trpc.getAllEntities.queryOptions())
 
   const categories = {
     categories: entities?.categories || [],

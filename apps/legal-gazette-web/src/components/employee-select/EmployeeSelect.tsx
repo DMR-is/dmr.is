@@ -2,28 +2,39 @@
 
 import { useMemo } from 'react'
 
+import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { Select } from '@dmr.is/ui/components/island-is'
 
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 import { StatusIdEnum } from '../../lib/constants'
+import { useTRPC } from '../../lib/trpc/client/trpc'
+
 
 type Props = {
   advertId: string
-  currentStatusId?: string
-  assignedUserId?: string
-  options?: { label: string; value: string; disabled?: boolean }[]
-  isLoading?: boolean
 }
 
-export const EmployeeSelect = ({
-  advertId,
-  currentStatusId,
-  assignedUserId,
-  options,
-  isLoading,
-}: Props) => {
+export const EmployeeSelect = ({ advertId }: Props) => {
+    const trpc = useTRPC()
+
+  const { data: usersData, isLoading } = useQuery(
+    trpc.getEmployees.queryOptions(),
+  )
+  const { data: advert } = useSuspenseQuery(
+    trpc.getAdvert.queryOptions({ id: advertId }),
+  )
+
+  const assignedUserId = advert.assignedUser?.id
+  const currentStatusId = advert.status.id
+
   const { assignUser, isAssigningUser, assignAndUpdateStatus } =
     useUpdateAdvert(advertId)
+
+  const options = usersData?.users.map((user) => ({
+    label: user.name,
+    value: user.id,
+    disabled: !user.isActive,
+  }))
 
   const selected = options?.find((option) => option.value === assignedUserId)
 
