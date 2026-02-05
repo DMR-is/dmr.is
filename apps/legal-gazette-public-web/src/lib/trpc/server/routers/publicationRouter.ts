@@ -3,10 +3,6 @@ import * as z from 'zod'
 import { AdvertVersionEnum } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
-const getAdvertPublicationSchema = z.object({
-  publicationId: z.uuid(),
-  version: z.enum(AdvertVersionEnum),
-})
 const getAdvertPublicationSchema = z.object({ publicationId: z.string() })
 
 const getPublicationsSchema = z.object({
