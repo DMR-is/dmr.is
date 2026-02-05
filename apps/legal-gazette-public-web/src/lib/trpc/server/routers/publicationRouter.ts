@@ -4,12 +4,8 @@ import { AdvertVersionEnum } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
 const getAdvertPublicationSchema = z.object({
-  advertId: z.uuid(),
+  publicationId: z.uuid(),
   version: z.enum(AdvertVersionEnum),
-})
-
-const getPublicationInput = z.object({
-  publicationId: z.string(),
 })
 
 const getPublicationsSchema = z.object({
@@ -26,7 +22,7 @@ const getPublicationsSchema = z.object({
 
 export const publicationRouter = router({
   getPublication: protectedProcedure
-    .input(getPublicationInput)
+    .input(getAdvertPublicationSchema)
     .query(async ({ input, ctx }) => {
       return await ctx.api.getAdvertPublication(input)
     }),
@@ -45,7 +41,14 @@ export const publicationRouter = router({
 
       return await ctx.api.getPublications(filteredInput)
     }),
-
+  getRelatedPublications: protectedProcedure
+    .input(z.object({ advertId: z.string() }))
+    .query(async ({ input, ctx }) => {
+      return await ctx.api.getPublications({
+        advertId: input.advertId,
+        pageSize: 5,
+      })
+    }),
   getCombinedHTML: protectedProcedure
     .input(getPublicationsSchema)
     .query(async ({ input, ctx }) => {
@@ -60,13 +63,5 @@ export const publicationRouter = router({
       )
 
       return await ctx.api.getCombinedHTML(filteredInput)
-    }),
-  getRelatedPublications: protectedProcedure
-    .input(z.object({ advertId: z.string() }))
-    .query(async ({ input, ctx }) => {
-      return await ctx.api.getPublications({
-        advertId: input.advertId,
-        pageSize: 5,
-      })
     }),
 })

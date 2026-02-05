@@ -13,7 +13,6 @@ import { mapIndexToVersion } from '../../../core/utils'
 import { AdvertModel } from '../../../models/advert.model'
 import {
   AdvertPublicationDetailedDto,
-  AdvertPublicationDto,
   AdvertPublicationModel,
   GetCombinedHTMLDto,
   GetPublicationsDto,
