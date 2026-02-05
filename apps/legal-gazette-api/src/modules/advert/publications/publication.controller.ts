@@ -70,8 +70,6 @@ export class AdvertPublicationController {
     return this.advertPublicationService.getPublicationsCombinedHTML(query)
   }
 
-  @PublicOrApplicationWebScopes()
-  @AdminAccess()
   @Get('/:publicationId')
   @LGResponse({
     operationId: 'getAdvertPublication',
