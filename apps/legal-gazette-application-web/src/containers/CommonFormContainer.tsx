@@ -10,6 +10,7 @@ import {
   CommonApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import { getLogger } from '@dmr.is/logging-next'
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is'
 
 import { ApplicationShell } from '../components/application/ApplicationShell'
@@ -21,8 +22,6 @@ import { commonForm } from '../lib/forms/common/form'
 import { CommonFormSteps } from '../lib/forms/common/steps'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
-import { useSuspenseQuery } from '@tanstack/react-query'
-
 const logger = getLogger('CommonFormContainer')
 type Props = {
   application: ApplicationDetailedDto
@@ -30,7 +29,7 @@ type Props = {
 
 export const CommonFormContainer = ({ application }: Props) => {
   const trpc = useTRPC()
-  const { data: baseEntities } = useSuspenseQuery(
+  const { data: baseEntities } = useQuery(
     trpc.getBaseEntities.queryOptions(),
   )
 
@@ -50,10 +49,10 @@ export const CommonFormContainer = ({ application }: Props) => {
     caseId: application.caseId,
     type: ApplicationTypeEnum.COMMON,
     isBankruptcy: false,
-    typeOptions: baseEntities.types.map((type) => ({
+    typeOptions: baseEntities?.types.map((type) => ({
       label: type.title,
       value: type,
-    })),
+    })) || [],
   }
 
   const methods = useForm<CommonApplicationWebSchema>(
