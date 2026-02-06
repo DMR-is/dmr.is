@@ -628,6 +628,7 @@ export class AdvertModel extends BaseModel<
   ): AdvertDetailedDto {
     return {
       ...this.fromModel(model),
+      createdByNationalId: model.createdByNationalId,
       canPublish: this.canPublish(model),
       caseId: model.caseId ?? undefined,
       templateType: model.templateType,
@@ -747,6 +748,10 @@ export class AdvertDetailedDto extends DetailedDto {
   @ApiProperty({ type: String })
   @IsString()
   createdBy!: string
+
+  @ApiProperty({ type: String })
+  @IsString()
+  createdByNationalId!: string
 
   @ApiProperty({ type: String, required: false })
   @IsOptional()
