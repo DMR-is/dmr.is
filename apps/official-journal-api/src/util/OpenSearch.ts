@@ -162,6 +162,9 @@ export const getOsBody = (
   if (qp?.involvedParty) {
     filters.push(termFilter(qp.involvedParty, 'involvedParty.slug'))
   }
+  if (qp?.mainType) {
+    filters.push(termFilter(qp.mainType, 'mainType.slug'))
+  }
   if (qp?.year) {
     filters.push({ term: { 'publicationNumber.year': qp.year } })
   }

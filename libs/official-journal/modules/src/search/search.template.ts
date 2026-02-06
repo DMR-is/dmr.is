@@ -118,6 +118,21 @@ export const advertMappingTemplate = {
         },
       },
     },
+    mainType: {
+      type: 'object',
+      properties: {
+        id: { type: 'keyword' },
+        slug: { type: 'keyword' },
+        title: {
+          type: 'text',
+          fields: {
+            stemmed: { type: 'text', analyzer: 'baseIcelandic' },
+            compound: { type: 'text', analyzer: 'compoundIcelandic' },
+            keyword: { type: 'keyword' },
+          },
+        },
+      },
+    },
     subject: { type: 'text' },
     status: { type: 'keyword' },
     publicationNumber: {

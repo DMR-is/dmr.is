@@ -77,6 +77,14 @@ export function advertMigrateLean(model: AdvertModel): any {
           slug: model.type.slug ?? '',
         }
       : null,
+    mainType:
+      model.type && model.type.mainType
+        ? {
+            id: model.type.mainType.id,
+            title: model.type.mainType.title,
+            slug: model.type.mainType.slug ?? '',
+          }
+        : null,
     subject: model.subject ?? '',
     status: model.status ? advertStatusMigrate(model.status) : null,
     publicationNumber: {
