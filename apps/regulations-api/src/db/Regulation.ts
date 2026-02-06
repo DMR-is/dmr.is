@@ -15,6 +15,7 @@ import {
   DB_Task,
 } from '../models'
 import {
+  Appendix,
   HTMLText,
   ISODate,
   ISODateTime,
@@ -603,6 +604,8 @@ export async function getCurrentRegulationSimple(
             name: RegName
             title: string
             text: string
+            comments?: string
+            appendixes?: Appendix[]
           }
         | undefined
       error?: never
@@ -613,23 +616,24 @@ export async function getCurrentRegulationSimple(
     }
 > {
   try {
-    const regulation = await getRegulationByName(regulationName, [
-      'id',
-      'name',
-      'title',
-      'text',
-    ])
+    const regulation = await getRegulationByName(regulationName)
 
     if (!regulation) {
       return { regulation: undefined }
     }
+
+    const { text, appendixes, comments } = extractAppendixesAndComments(
+      regulation.text,
+    )
 
     return {
       regulation: {
         id: regulation.id,
         name: regulation.name,
         title: regulation.title,
-        text: regulation.text,
+        text,
+        appendixes,
+        comments,
       },
     }
   } catch (error) {
