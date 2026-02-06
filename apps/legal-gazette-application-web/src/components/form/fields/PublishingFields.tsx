@@ -78,7 +78,7 @@ export const PublishingFields = ({ applicationType }: Props) => {
         ? new Date(currentDates[currentDates.length - 1])
         : new Date()
 
-    const newDate = getNextValidPublishingDate(addDays(lastDate, ONE_WEEK))
+    const newDate = getNextValidPublishingDate(addDays(lastDate, ONE_DAY * 3))
     const newDates = [...currentDates, newDate.toISOString()]
     updatePublishingDates(newDates)
   }, [currentDates, updatePublishingDates])
