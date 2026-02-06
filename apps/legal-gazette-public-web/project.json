@@ -90,6 +90,15 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "dependsOn": ["codegen"],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/legal-gazette-public-web/jest.config.ts",
+        "passWithNoTests": true
+      }
     }
   }
 }

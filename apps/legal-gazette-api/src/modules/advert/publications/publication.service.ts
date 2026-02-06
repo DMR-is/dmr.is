@@ -9,14 +9,16 @@ import { Cacheable } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
 
-import { mapIndexToVersion } from '../../../core/utils'
+import { mapIndexToVersion, mapVersionToIndex } from '../../../core/utils'
 import { AdvertModel } from '../../../models/advert.model'
 import {
   AdvertPublicationDetailedDto,
   AdvertPublicationModel,
+  AdvertVersionEnum,
   GetCombinedHTMLDto,
   GetPublicationsDto,
   GetPublicationsQueryDto,
+  GetRelatedPublicationsDto,
   UpdateAdvertPublicationDto,
 } from '../../../models/advert-publication.model'
 import { IPublicationService } from './publication.service.interface'
@@ -33,6 +35,55 @@ export class PublicationService implements IPublicationService {
     @InjectModel(AdvertModel)
     readonly advertModel: typeof AdvertModel,
   ) {}
+
+  async getRelatedPublications(
+    publicationNumber: string,
+    version: AdvertVersionEnum,
+  ): Promise<GetRelatedPublicationsDto> {
+    const relatedPubs = await this.publicationModel.findAll({
+      include: [
+        {
+          model: AdvertModel.scope('detailed'),
+          as: 'advert',
+          where: { publicationNumber },
+        },
+      ],
+      where: {
+        publishedAt: { [Op.ne]: null },
+        versionNumber: { [Op.ne]: mapVersionToIndex(version) },
+      },
+    })
+
+    const pubs = relatedPubs.map((pub) => pub.fromModelToPublishedDto())
+
+    return {
+      publications: pubs,
+    }
+  }
+
+  async getPublicationByNumberAndVersion(
+    publicationNumber: string,
+    version: AdvertVersionEnum,
+  ): Promise<AdvertPublicationDetailedDto> {
+    const pub = await this.publicationModel.findOneOrThrow({
+      where: {
+        versionNumber: mapVersionToIndex(version),
+      },
+      include: [
+        {
+          model: AdvertModel.scope('detailed'),
+          as: 'advert',
+          where: { publicationNumber },
+        },
+      ],
+    })
+
+    return {
+      advert: pub.advert.fromModel(),
+      html: pub.advert.htmlMarkup(pub.versionLetter),
+      publication: pub.fromModel(),
+    }
+  }
 
   async getPublishedPublicationsByAdvertId(
     advertId: string,

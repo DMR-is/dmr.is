@@ -7,11 +7,7 @@ import { ActionCard, Box, Stack, toast } from '@dmr.is/ui/components/island-is'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import { formatDate } from '@dmr.is/utils/client'
 
-import {
-  AdvertDto,
-  AdvertPublicationDetailedDto,
-  AdvertVersionEnum,
-} from '../../gen/fetch'
+import { AdvertDto, AdvertPublicationDetailedDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import * as styles from './advert.css'
 
@@ -76,8 +72,7 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
                   onClick: () => {
                     getAdvertPublication(
                       {
-                        publicationId: advert.id,
-                        version: AdvertVersionEnum[pub.version],
+                        publicationId: pub.id,
                       },
                       {
                         onSuccess: (data: AdvertPublicationDetailedDto) => {

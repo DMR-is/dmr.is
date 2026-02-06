@@ -1,4 +1,5 @@
-import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
+'use client'
+
 import {
   Box,
   GridColumn,
@@ -11,31 +12,29 @@ import {
 
 import { theme } from '@island.is/island-ui/theme'
 
-import { PublicationCard } from '../../../../../../components/client-components/cards/PublicationCard'
-import { trpc } from '../../../../../../lib/trpc/client/server'
+import { PublicationCard } from '../components/client-components/cards/PublicationCard'
+import { AdvertVersionEnum } from '../gen/fetch'
+import { useTRPC } from '../lib/trpc/client/trpc'
 
-export default async function RelatedPublications({
-  params,
-}: {
-  params: { id: string; version: string }
-}) {
+import { useSuspenseQuery } from '@tanstack/react-query'
 
+type Props = {
+  publicationNumber: string
+  version: AdvertVersionEnum
+}
 
-  const relatedPubs = await fetchQueryWithHandler(
-    trpc.getRelatedPublications.queryOptions({
-      advertId: params.id,
-    }),
+export function RelatedPublicationsContainer({
+  publicationNumber,
+  version,
+}: Props) {
+  const trpc = useTRPC()
+  const { data } = useSuspenseQuery(
+    trpc.getRelatedPublications.queryOptions({ publicationNumber, version }),
   )
 
-  const filtered = relatedPubs.publications.filter(
-    (pub) => !(pub.advertId === params.id && pub.version === params.version),
-  )
+  if (data.publications.length === 0) return null
 
-  if (filtered.length === 0) {
-    return null
-  }
-
-  const items = filtered.map((pub) => (
+  const items = data.publications.map((pub) => (
     <PublicationCard key={pub.id} publication={pub} />
   ))
 
@@ -46,8 +45,8 @@ export default async function RelatedPublications({
           <GridColumn span="12/12">
             <Stack space={[3, 4]}>
               <Text variant="h3">Tengdar auglýsingar</Text>
-              {filtered.length === 1 ? (
-                <PublicationCard publication={filtered[0]} />
+              {data.publications.length === 1 ? (
+                <PublicationCard publication={data.publications[0]} />
               ) : (
                 <SimpleSlider
                   carouselController
