@@ -1,4 +1,5 @@
 import { formatDate } from '@dmr.is/utils'
+import { formatNationalId } from '@dmr.is/utils/client'
 
 import { AdvertModel } from '../../../models/advert.model'
 import { ApplicationRequirementStatementEnum } from '../../../models/application.model'
@@ -41,7 +42,7 @@ export function getRecallBankruptcyTemplate(model: AdvertModel): string {
   const tableHeaderDivisionMeeting = getTableHeaderCell('Skiptafundur:')
 
   const nameCell = getTableCell(
-    `${settlement?.name || ''},<br />kt. ${settlement?.nationalId || ''},<br />${settlement?.address || ''}`,
+    `${settlement?.name || ''},<br />kt. ${formatNationalId(settlement?.nationalId || '')},<br />${settlement?.address || ''}`,
   )
   const deadlineCell = getTableCell(
     deadline ? formatDate(deadline, 'd. MMMM yyyy') : '',

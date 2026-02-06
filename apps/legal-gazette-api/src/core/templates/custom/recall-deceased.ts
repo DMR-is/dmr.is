@@ -3,6 +3,7 @@ import { isEmpty } from 'class-validator'
 
 import { SettlementType } from '@dmr.is/legal-gazette/schemas'
 import { formatDate } from '@dmr.is/utils'
+import { formatNationalId } from '@dmr.is/utils/client'
 
 import { AdvertModel } from '../../../models/advert.model'
 import { ApplicationRequirementStatementEnum } from '../../../models/application.model'
@@ -13,7 +14,7 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
   const judgementDate = model.judgementDate
   const name = model.settlement?.name
   const dateOfDeath = model.settlement?.dateOfDeath
-  const nationalId = model.settlement?.nationalId
+  const nationalId = formatNationalId(model.settlement?.nationalId ?? '')
   const address = model.settlement?.address
   const settlement = model.settlement
 
@@ -25,7 +26,7 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
 
   const tableCellName = getTableCell(`
     ${name || ''}, <br />
-    kt. ${nationalId || ''}, <br />
+    kt. ${nationalId}, <br />
     síðasta heimilisfang:<br />
     ${address || ''}
     `)
@@ -51,7 +52,7 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
 
         if (companies && companies.length === 1) {
           const company = companies[0]
-          settlementText = `Athygli er vakin á því að dánarbúið ber ótakmarkaða ábyrgð á skuldbindingum félagsins ${company.companyName || ''} kt. ${company.companyNationalId || ''}.`
+          settlementText = `Athygli er vakin á því að dánarbúið ber ótakmarkaða ábyrgð á skuldbindingum félagsins ${company.companyName || ''} kt. ${formatNationalId(company.companyNationalId || '')}.`
           break
         }
 
@@ -60,7 +61,7 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
           const companyList = companies
             .map(
               (company) =>
-                ` ${company.companyName || ''} kt. ${company.companyNationalId || ''}`,
+                ` ${company.companyName || ''} kt. ${formatNationalId(company.companyNationalId || '')}`,
             )
             .join(', ')
           settlementText += `: ${companyList}.`

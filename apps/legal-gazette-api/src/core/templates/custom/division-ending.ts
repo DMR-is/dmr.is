@@ -1,59 +1,15 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { isDefined } from 'class-validator'
-
-import { getLogger } from '@dmr.is/logging'
 import { formatDate } from '@dmr.is/utils'
+import { formatNationalId } from '@dmr.is/utils/client'
 
 import { AdvertModel } from '../../../models/advert.model'
 import { getElement, getTableCell, getTableHeaderCell } from '../element'
-
-const LOGGING_CONTEXT = 'DivisionEndingTemplate'
-const logger = getLogger(LOGGING_CONTEXT)
-
-function validateDivisionEnding(model: AdvertModel): boolean {
-  if (!isDefined(!model.judgementDate)) {
-    logger.error('Judgement date is not provided', {
-      context: LOGGING_CONTEXT,
-    })
-    return false
-  }
-
-  if (!isDefined(!model.settlement)) {
-    logger.error('Settlement is not provided', {
-      context: LOGGING_CONTEXT,
-    })
-    return false
-  }
-
-  if (!isDefined(!model.settlement?.name)) {
-    logger.error('Settlement name is not provided', {
-      context: LOGGING_CONTEXT,
-    })
-    return false
-  }
-
-  if (!isDefined(!model.settlement?.nationalId)) {
-    logger.error('Settlement national ID is not provided', {
-      context: LOGGING_CONTEXT,
-    })
-    return false
-  }
-
-  if (!isDefined(!model.settlement?.declaredClaims)) {
-    logger.error('Settlement declared claims are not provided', {
-      context: LOGGING_CONTEXT,
-    })
-    return false
-  }
-
-  return true
-}
 
 export function getDivisionEndingTemplate(model: AdvertModel): string {
   // Render what we can, gracefully handle missing data
   const judgmentDate = model.judgementDate
   const name = model.settlement?.name
-  const nationalId = model.settlement?.nationalId
+
+  const nationalId = formatNationalId(model.settlement?.nationalId ?? '')
   const declaredClaims = model.settlement?.declaredClaims
 
   const intro = `
@@ -66,7 +22,7 @@ export function getDivisionEndingTemplate(model: AdvertModel): string {
 
   const settlementCell = getTableCell(`
       ${name || ''}, <br />
-      kt. ${nationalId || ''}
+      kt. ${nationalId}
     `)
 
   const declaredClaimsCell = getTableCell(`
