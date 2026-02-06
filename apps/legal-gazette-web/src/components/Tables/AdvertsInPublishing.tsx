@@ -47,13 +47,9 @@ export const AdvertsInPublishing = () => {
           toastId: 'publish-adverts-success',
         })
 
-        queryClient.invalidateQueries(
-          trpc.getAdvertsCount.queryFilter(),
-        )
+        queryClient.invalidateQueries(trpc.getAdvertsCount.queryFilter())
 
-        queryClient.invalidateQueries(
-          trpc.getInPublishingAdverts.queryFilter(),
-        )
+        queryClient.invalidateQueries(trpc.getInPublishingAdverts.queryFilter())
       },
       onError: () => {
         toast.error('Ekki tókst að birta auglýsingar', {
@@ -99,6 +95,7 @@ export const AdvertsInPublishing = () => {
       field: 'id',
       children: (
         <Checkbox
+          disabled={!data?.adverts.length}
           label=""
           onChange={() => toggleAllAdverts()}
           checked={selectedAdvertIds.length === data?.adverts.length}
@@ -123,7 +120,7 @@ export const AdvertsInPublishing = () => {
       children: 'Áætlun',
     },
     {
-      field:'count',
+      field: 'count',
       children: 'Fjöldi birtinga',
     },
     {
@@ -144,7 +141,9 @@ export const AdvertsInPublishing = () => {
         const days = getDaysSinceOrTo(advert.scheduledAt)
 
         const pubCount = advert.publications.length
-        const publishedCount = advert.publications.filter((pub) => pub.publishedAt).length
+        const publishedCount = advert.publications.filter(
+          (pub) => pub.publishedAt,
+        ).length
 
         let tagText = ''
         let tagVariant: React.ComponentProps<typeof Tag>['variant'] = 'blue'

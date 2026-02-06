@@ -144,6 +144,7 @@ export const AdvertsToBePublished = () => {
               field: 'checkbox',
               children: (
                 <Checkbox
+                  disabled={!data?.adverts.length}
                   onChange={() => toggleAllAdverts()}
                   checked={selectedAdvertIds.length === data?.adverts.length}
                 />
