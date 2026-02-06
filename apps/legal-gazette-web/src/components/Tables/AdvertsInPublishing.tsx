@@ -48,24 +48,11 @@ export const AdvertsInPublishing = () => {
         })
 
         queryClient.invalidateQueries(
-          trpc.getAdvertsCount.queryFilter({
-            categoryId: params.categoryId,
-            typeId: params.typeId,
-            search: params.search,
-            statusId: params.statusId,
-          }),
+          trpc.getAdvertsCount.queryFilter(),
         )
 
         queryClient.invalidateQueries(
-          trpc.getInPublishingAdverts.queryFilter({
-            categoryId: params.categoryId,
-            page: params.page,
-            pageSize: params.pageSize,
-            search: params.search,
-            typeId: params.typeId,
-            direction: params.direction ?? undefined,
-            sortBy: params.sortBy ?? undefined,
-          }),
+          trpc.getInPublishingAdverts.queryFilter(),
         )
       },
       onError: () => {
@@ -136,6 +123,10 @@ export const AdvertsInPublishing = () => {
       children: 'Áætlun',
     },
     {
+      field:'count',
+      children: 'Fjöldi birtinga',
+    },
+    {
       field: 'efni',
       children: formatMessage(ritstjornTableMessages.columns.content),
     },
@@ -151,6 +142,9 @@ export const AdvertsInPublishing = () => {
         if (!advert.scheduledAt) return null
 
         const days = getDaysSinceOrTo(advert.scheduledAt)
+
+        const pubCount = advert.publications.length
+        const publishedCount = advert.publications.filter((pub) => pub.publishedAt).length
 
         let tagText = ''
         let tagVariant: React.ComponentProps<typeof Tag>['variant'] = 'blue'
@@ -199,6 +193,7 @@ export const AdvertsInPublishing = () => {
               {tagText}
             </Tag>
           ),
+          count: `${publishedCount} / ${pubCount}`,
           tegund: advert.type.title,
           efni: advert.title,
           sender: advert.createdBy,

@@ -32,25 +32,11 @@ export const AdvertsToBePublished = () => {
       },
       onSuccess: async () => {
         toast.success('Auglýsing birt', { toastId: 'publish-advert-success' })
+
         queryClient.invalidateQueries(
-          trpc.getReadyForPublicationAdverts.queryFilter({
-            categoryId: params.categoryId,
-            page: params.page,
-            pageSize: params.pageSize,
-            search: params.search,
-            typeId: params.typeId,
-            direction: params.direction ?? undefined,
-            sortBy: params.sortBy ?? undefined,
-          }),
+          trpc.getReadyForPublicationAdverts.queryFilter(),
         )
-        queryClient.invalidateQueries(
-          trpc.getAdvertsCount.queryFilter({
-            categoryId: params.categoryId,
-            typeId: params.typeId,
-            search: params.search,
-            statusId: params.statusId,
-          }),
-        )
+        queryClient.invalidateQueries(trpc.getAdvertsCount.queryFilter())
         setSelectedAdvertIds([])
       },
       onError: (_err, variables) => {

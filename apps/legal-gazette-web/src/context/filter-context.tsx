@@ -6,7 +6,7 @@ import {
   parseAsStringEnum,
   useQueryStates,
 } from 'nuqs'
-import { createContext, useState } from 'react'
+import { createContext, useEffect, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 
@@ -81,6 +81,14 @@ type FilterProviderProps = {
 export const FilterProvider = ({ children }: FilterProviderProps) => {
   const trpc = useTRPC()
   const { data: entities } = useQuery(trpc.getAllEntities.queryOptions())
+
+  useEffect(() => {
+    if (entities) {
+      resetCategoryOptions()
+      resetTypeOptions()
+      resetStatusOptions()
+    }
+  }, [entities])
 
   const categories = {
     categories: entities?.categories || [],
