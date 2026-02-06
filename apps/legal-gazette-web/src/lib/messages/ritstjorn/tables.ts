@@ -17,7 +17,7 @@ export const ritstjornTableMessages = {
     },
     publish: {
       id: 'lg.web:ritstjorn-tables.publishing.publish',
-      defaultMessage: 'Gefa út mál',
+      defaultMessage: 'Gefa út auglýsingar',
       description: 'Button text for publishing adverts',
     },
   }),

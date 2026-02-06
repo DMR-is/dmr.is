@@ -88,6 +88,13 @@ export const getDaysAgo = (date: string | Date): number => {
   return Math.floor(diffTime / (1000 * 60 * 60 * 24))
 }
 
+export const getDaysSinceOrTo = (date: string | Date): number => {
+  const dateToUse = typeof date === 'string' ? new Date(date) : date
+  const now = new Date()
+  const diffTime = dateToUse.getTime() - now.getTime()
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24))
+}
+
 export function getIcelandicDative(days: number) {
   // Check if the number ends in 1 but is not 11
   if (days % 10 === 1 && days % 100 !== 11) {
