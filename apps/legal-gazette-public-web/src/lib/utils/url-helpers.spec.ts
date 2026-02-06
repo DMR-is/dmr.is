@@ -106,7 +106,8 @@ describe('url-helpers', () => {
       })
 
       it('should redirect when version is lowercase', async () => {
-        ;(redirect as jest.Mock).mockImplementation(() => {
+        const mockRedirect = redirect as unknown as jest.Mock
+        mockRedirect.mockImplementation(() => {
           throw new Error('NEXT_REDIRECT')
         })
 
@@ -122,12 +123,14 @@ describe('url-helpers', () => {
 
     describe('UUID redirects', () => {
       it('should redirect from UUID to publication number with normalized version', async () => {
-        ;(fetchQueryWithHandler as jest.Mock).mockResolvedValue({
+        const mockFetch = fetchQueryWithHandler as unknown as jest.Mock
+        mockFetch.mockResolvedValue({
           advert: {
             publicationNumber: mockPublicationNumber,
           },
         })
-        ;(redirect as jest.Mock).mockImplementation(() => {
+        const mockRedirect = redirect as unknown as jest.Mock
+        mockRedirect.mockImplementation(() => {
           throw new Error('NEXT_REDIRECT')
         })
 
@@ -141,12 +144,14 @@ describe('url-helpers', () => {
       })
 
       it('should call notFound when UUID publication has no publication number (unpublished)', async () => {
-        ;(fetchQueryWithHandler as jest.Mock).mockResolvedValue({
+        const mockFetch = fetchQueryWithHandler as unknown as jest.Mock
+        mockFetch.mockResolvedValue({
           advert: {
             publicationNumber: undefined,
           },
         })
-        ;(notFound as jest.Mock).mockImplementation(() => {
+        const mockNotFound = notFound as unknown as jest.Mock
+        mockNotFound.mockImplementation(() => {
           throw new Error('NEXT_NOT_FOUND')
         })
 
@@ -158,10 +163,12 @@ describe('url-helpers', () => {
       })
 
       it('should call notFound when UUID publication is not found', async () => {
-        ;(fetchQueryWithHandler as jest.Mock).mockRejectedValue(
+        const mockFetch = fetchQueryWithHandler as unknown as jest.Mock
+        mockFetch.mockRejectedValue(
           new Error('Not found'),
         )
-        ;(notFound as jest.Mock).mockImplementation(() => {
+        const mockNotFound = notFound as unknown as jest.Mock
+        mockNotFound.mockImplementation(() => {
           throw new Error('NEXT_NOT_FOUND')
         })
 
@@ -175,7 +182,8 @@ describe('url-helpers', () => {
 
     describe('invalid version', () => {
       it('should call notFound for invalid version enum', async () => {
-        ;(notFound as jest.Mock).mockImplementation(() => {
+        const mockNotFound = notFound as unknown as jest.Mock
+        mockNotFound.mockImplementation(() => {
           throw new Error('NEXT_NOT_FOUND')
         })
 
@@ -187,7 +195,8 @@ describe('url-helpers', () => {
       })
 
       it('should call notFound for invalid version string', async () => {
-        ;(notFound as jest.Mock).mockImplementation(() => {
+        const mockNotFound = notFound as unknown as jest.Mock
+        mockNotFound.mockImplementation(() => {
           throw new Error('NEXT_NOT_FOUND')
         })
 
@@ -199,7 +208,8 @@ describe('url-helpers', () => {
       })
 
       it('should call notFound for empty version', async () => {
-        ;(notFound as jest.Mock).mockImplementation(() => {
+        const mockNotFound = notFound as unknown as jest.Mock
+        mockNotFound.mockImplementation(() => {
           throw new Error('NEXT_NOT_FOUND')
         })
 
@@ -225,12 +235,14 @@ describe('url-helpers', () => {
       })
 
       it('should redirect when both UUID conversion and version normalization needed', async () => {
-        ;(fetchQueryWithHandler as jest.Mock).mockResolvedValue({
+        const mockFetch = fetchQueryWithHandler as unknown as jest.Mock
+        mockFetch.mockResolvedValue({
           advert: {
             publicationNumber: mockPublicationNumber,
           },
         })
-        ;(redirect as jest.Mock).mockImplementation(() => {
+        const mockRedirect = redirect as unknown as jest.Mock
+        mockRedirect.mockImplementation(() => {
           throw new Error('NEXT_REDIRECT')
         })
 
