@@ -49,6 +49,7 @@ export const AdvertsCompleted = () => {
     owner: advert.assignedUser?.name,
     href: `/ritstjorn/${advert.id}`,
     hasLink: true,
+    openLinkInNewTab: true,
   }))
 
   return (
