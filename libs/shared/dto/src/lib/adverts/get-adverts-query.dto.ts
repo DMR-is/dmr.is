@@ -72,6 +72,16 @@ export class GetAdvertsQueryParams {
   type?: string | string[]
 
   @ApiProperty({
+    name: 'mainType',
+    description: 'One or more main types (by `slug`) to filter on.',
+    type: [String],
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ each: true })
+  mainType?: string | string[]
+
+  @ApiProperty({
     name: 'category',
     description: 'One or more categories (by `slug`) to filter on.',
     type: [String],

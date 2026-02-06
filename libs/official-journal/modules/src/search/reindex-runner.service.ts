@@ -6,7 +6,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { AdvertTypeModel } from '../advert-type/models'
+import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { CaseModel } from '../case/models'
 import { advertMigrateLean } from '../journal/migrations'
 import {
@@ -102,6 +102,9 @@ export class ReindexRunnerService implements IReindexRunnerService {
         as: 'type',
         attributes: ['id', 'title', 'slug'],
         required: false,
+        include: [
+          { model: AdvertMainTypeModel, attributes: ['id', 'title', 'slug'] },
+        ],
       },
       {
         model: CaseModel,
