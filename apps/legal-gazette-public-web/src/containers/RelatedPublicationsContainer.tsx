@@ -13,18 +13,28 @@ import {
 import { theme } from '@island.is/island-ui/theme'
 
 import { PublicationCard } from '../components/client-components/cards/PublicationCard'
-import { PublishedPublicationDto } from '../gen/fetch'
+import { AdvertVersionEnum } from '../gen/fetch'
+import { useTRPC } from '../lib/trpc/client/trpc'
 
-interface RelatedPublicationsContainerProps {
-  publications: PublishedPublicationDto[]
+import { useSuspenseQuery } from '@tanstack/react-query'
+
+type Props = {
+  publicationNumber: string
+  version: AdvertVersionEnum
 }
 
 export function RelatedPublicationsContainer({
-  publications,
-}: RelatedPublicationsContainerProps) {
-  if (publications.length === 0) return null
+  publicationNumber,
+  version,
+}: Props) {
+  const trpc = useTRPC()
+  const { data } = useSuspenseQuery(
+    trpc.getRelatedPublications.queryOptions({ publicationNumber, version }),
+  )
 
-  const items = publications.map((pub) => (
+  if (data.publications.length === 0) return null
+
+  const items = data.publications.map((pub) => (
     <PublicationCard key={pub.id} publication={pub} />
   ))
 
@@ -35,8 +45,8 @@ export function RelatedPublicationsContainer({
           <GridColumn span="12/12">
             <Stack space={[3, 4]}>
               <Text variant="h3">Tengdar auglýsingar</Text>
-              {publications.length === 1 ? (
-                <PublicationCard publication={publications[0]} />
+              {data.publications.length === 1 ? (
+                <PublicationCard publication={data.publications[0]} />
               ) : (
                 <SimpleSlider
                   carouselController

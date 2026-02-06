@@ -134,12 +134,12 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       ])
     })
 
-    it('getPublicationById should NOT have @AdminAccess()', () => {
+    it('getPublicationById should have @AdminAccess()', () => {
       const isAdminAccess = reflector.getAllAndOverride<boolean>(ADMIN_KEY, [
         AdvertPublicationController.prototype.getPublicationById,
         AdvertPublicationController,
       ])
-      expect(isAdminAccess).toBeUndefined()
+      expect(isAdminAccess).toBe(true)
     })
 
     it('createAdvertPublication should have @AdminAccess()', () => {

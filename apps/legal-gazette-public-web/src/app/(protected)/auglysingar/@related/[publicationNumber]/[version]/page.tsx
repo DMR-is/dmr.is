@@ -1,4 +1,9 @@
-import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
+import { ErrorBoundary } from 'react-error-boundary'
+
+import {
+  fetchQueryWithHandler,
+  HydrateClient,
+} from '@dmr.is/trpc/client/server'
 
 import { RelatedPublicationsContainer } from '../../../../../../containers/RelatedPublicationsContainer'
 import { trpc } from '../../../../../../lib/trpc/client/server'
@@ -15,12 +20,21 @@ export default async function RelatedPublications({
     params.version,
   )
 
-  const { publications } = await fetchQueryWithHandler(
+  await fetchQueryWithHandler(
     trpc.getRelatedPublications.queryOptions({
       publicationNumber,
       version,
     }),
   )
 
-  return <RelatedPublicationsContainer publications={publications} />
+  return (
+    <HydrateClient>
+      <ErrorBoundary fallback={null}>
+        <RelatedPublicationsContainer
+          publicationNumber={publicationNumber}
+          version={version}
+        />
+      </ErrorBoundary>
+    </HydrateClient>
+  )
 }

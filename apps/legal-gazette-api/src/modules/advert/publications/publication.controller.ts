@@ -75,6 +75,7 @@ export class AdvertPublicationController {
     operationId: 'getAdvertPublication',
     type: AdvertPublicationDetailedDto,
   })
+  @AdminAccess()
   @PublicOrApplicationWebScopes()
   async getPublicationById(
     @Param('publicationId', new UUIDValidationPipe()) publicationId: string,
