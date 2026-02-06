@@ -164,9 +164,7 @@ describe('url-helpers', () => {
 
       it('should call notFound when UUID publication is not found', async () => {
         const mockFetch = fetchQueryWithHandler as unknown as jest.Mock
-        mockFetch.mockRejectedValue(
-          new Error('Not found'),
-        )
+        mockFetch.mockRejectedValue(new Error('Not found'))
         const mockNotFound = notFound as unknown as jest.Mock
         mockNotFound.mockImplementation(() => {
           throw new Error('NEXT_NOT_FOUND')
