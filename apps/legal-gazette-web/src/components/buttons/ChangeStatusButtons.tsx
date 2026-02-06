@@ -8,14 +8,13 @@ import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import {
   Box,
   Button,
+  Inline,
   Input,
   Stack,
   Text,
   toast,
 } from '@dmr.is/ui/components/island-is'
 import { Route } from '@dmr.is/ui/hooks/constants'
-
-import { Inline } from '@island.is/island-ui/core'
 
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 import { StatusIdEnum } from '../../lib/constants'
@@ -214,7 +213,7 @@ export const ChangeStatusButtons = ({ advertId, previewSlot }: Props) => {
           </Button>
         </Box>
       )}
-      <Inline space={0} flexWrap="wrap" justifyContent={'spaceBetween'}>
+      <Inline space={2} flexWrap="wrap" justifyContent={'spaceBetween'}>
         {previewSlot}
         {currentStatus.id !== StatusIdEnum.REJECTED && (
           <Button

@@ -8,7 +8,7 @@ import { CreateCommonAdvertModal } from './CreateCommonAdvertModal'
 import { CreateBankruptcyAdvertModal } from './CreateRecallBankruptcyAdvertModal'
 import { CreateDeceasedAdvertModal } from './CreateRecallDeceasedAdvertModal'
 
-export const CretaeAdvertMenu = () => {
+export const CreateAdvertMenu = () => {
   const [toggleCommonAdvert, setToggleCommonAdvert] = useState(false)
   const [toggleBankruptcyAdvert, setToggleBankruptcyAdvert] = useState(false)
   const [toggleDeceasedAdvert, setToggleDeceasedAdvert] = useState(false)

@@ -17,7 +17,7 @@ import { useFilterContext } from '../../hooks/useFilters'
 import { StatusIdEnum } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import CaseFilters from '../CaseFilters/CaseFilters'
-import { CretaeAdvertMenu } from '../create-advert/CreateAdvertMenu'
+import { CreateAdvertMenu } from '../create-advert/CreateAdvertMenu'
 import { RitstjornHero } from '../ritstjorn/Hero'
 import AdvertsCompleted from '../Tables/AdvertsCompleted'
 import { PublicationsToBePublishedTab } from '../tabs/PublicationsTab'
@@ -110,7 +110,7 @@ export const PageContainer = () => {
             <Stack space={[0]}>
               <Inline space={2} justifyContent={'spaceBetween'}>
                 <CaseFilters />
-                <CretaeAdvertMenu />
+                <CreateAdvertMenu />
               </Inline>
               <Tabs
                 label=""
