@@ -15,6 +15,7 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
   isExpandable,
   hasLink = false,
   startExpanded = false,
+  openLinkInNewTab = false,
   onExpandChange,
   ...row
 }: DataTableRowProps<T>) => {
@@ -49,7 +50,7 @@ export const DataTableRow = <T extends readonly DataTableColumnProps[]>({
         })}
         {hasLink && row.href && (
           <td align="center" className={styles.linkTableCell}>
-            <LinkV2 href={row.href} shallow={false}>
+            <LinkV2 href={row.href} shallow={false} newTab={openLinkInNewTab}>
               <Box
                 className={styles.seeMoreTableCellLink({
                   opacity: hovered,

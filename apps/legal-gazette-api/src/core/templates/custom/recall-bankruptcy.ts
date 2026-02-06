@@ -1,4 +1,5 @@
 import { formatDate } from '@dmr.is/utils'
+import { formatNationalId } from '@dmr.is/utils/client'
 
 import { AdvertModel } from '../../../models/advert.model'
 import { ApplicationRequirementStatementEnum } from '../../../models/application.model'
@@ -13,7 +14,7 @@ export function getRecallBankruptcyTemplate(model: AdvertModel): string {
   const divisionMeetingLocation = model.divisionMeetingLocation
 
   const intro = getElement(
-    `Með úrskurði ${model.courtDistrict?.title || ''} uppkveðnum ${judgementDate ? formatDate(judgementDate, 'd. MMMM yyyy') : ''} var eftirtalið bú tekið til gjaldþrotaskipta. Sama dag var undirritaður skipaður skiptastjóri í búinu. Frestdagur við gjaldþrotaskiptin er tilgreindur við nafn viðkomandi bús.`,
+    `Með úrskurði ${model.courtDistrict?.possessiveTitle || ''} uppkveðnum ${judgementDate ? formatDate(judgementDate, 'd. MMMM yyyy') : ''} var eftirtalið bú tekið til gjaldþrotaskipta. Sama dag var undirritaður skipaður skiptastjóri í búinu. Frestdagur við gjaldþrotaskiptin er tilgreindur við nafn viðkomandi bús.`,
   )
 
   // Determine the correct location based on the statement type
@@ -41,7 +42,7 @@ export function getRecallBankruptcyTemplate(model: AdvertModel): string {
   const tableHeaderDivisionMeeting = getTableHeaderCell('Skiptafundur:')
 
   const nameCell = getTableCell(
-    `${settlement?.name || ''},<br />kt. ${settlement?.nationalId || ''},<br />${settlement?.address || ''}`,
+    `${settlement?.name || ''},<br />kt. ${formatNationalId(settlement?.nationalId || '')},<br />${settlement?.address || ''}`,
   )
   const deadlineCell = getTableCell(
     deadline ? formatDate(deadline, 'd. MMMM yyyy') : '',

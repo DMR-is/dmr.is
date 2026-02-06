@@ -60,6 +60,7 @@ export function AdvertFormContainer({ advertId }: AdvertContainerProps) {
                 "dd. MMMM yyyy 'kl.' HH:mm",
               )}
               createdBy={advert.createdBy}
+              createdByNationalId={advert.createdByNationalId}
               paid={!!advert.paidAt}
               totalPrice={advert.totalPrice}
             />

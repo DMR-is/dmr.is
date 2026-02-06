@@ -1,4 +1,5 @@
 import { formatDate } from '@dmr.is/utils'
+import { formatNationalId } from '@dmr.is/utils/client'
 
 import { AdvertModel } from '../../../models/advert.model'
 import { getElement, getTableCell, getTableHeaderCell } from '../element'
@@ -9,7 +10,7 @@ export function getDivisionMeetingBankruptcyTemplate(
   // Render what we can, gracefully handle missing data
   const name = model.settlement?.name
   const address = model.settlement?.address
-  const nationalId = model.settlement?.nationalId
+  const nationalId = formatNationalId(model.settlement?.nationalId ?? '')
   const meetingDate = model.divisionMeetingDate
   const location = model.divisionMeetingLocation
 
@@ -22,7 +23,7 @@ export function getDivisionMeetingBankruptcyTemplate(
 
   const settlementCell = getTableCell(`
         ${name || ''},<br />
-        kt: ${nationalId || ''},<br />
+        kt: ${nationalId},<br />
         ${address || ''}
       `)
   const meetingCell = getTableCell(`

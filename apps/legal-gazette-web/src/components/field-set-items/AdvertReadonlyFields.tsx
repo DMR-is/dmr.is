@@ -13,6 +13,7 @@ type ReadOnlyAccordionItemProps = {
   publicationNumber?: string
   createdAt: string
   createdBy: string
+  createdByNationalId?: string
   paid?: boolean
   totalPrice?: number
 }
@@ -24,6 +25,7 @@ export const AdvertReadonlyFields = ({
   createdBy,
   paid,
   totalPrice,
+  createdByNationalId,
 }: ReadOnlyAccordionItemProps) => {
   return (
     <Stack space={[1, 2]}>
@@ -71,10 +73,10 @@ export const AdvertReadonlyFields = ({
         <GridColumn span={['12/12', '6/12']}>
           <Input
             readOnly
-            name="createdAt"
+            name="createdBy"
             size="sm"
-            label="Dagsetning innsendingar"
-            value={createdAt}
+            label="Innsendandi"
+            defaultValue={createdBy}
           />
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
@@ -82,8 +84,30 @@ export const AdvertReadonlyFields = ({
             readOnly
             name="createdBy"
             size="sm"
-            label="Innsendandi"
-            defaultValue={createdBy}
+            label="Kennitala"
+            defaultValue={createdByNationalId}
+            buttons={
+              createdByNationalId
+                ? [
+                    {
+                      name: 'copy',
+                      label: 'Afrita',
+                      type: 'outline',
+                      onClick: () =>
+                        navigator.clipboard.writeText(createdByNationalId),
+                    },
+                  ]
+                : undefined
+            }
+          />
+        </GridColumn>
+        <GridColumn span={['12/12', '6/12']}>
+          <Input
+            readOnly
+            name="createdAt"
+            size="sm"
+            label="Dagsetning innsendingar"
+            value={createdAt}
           />
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>

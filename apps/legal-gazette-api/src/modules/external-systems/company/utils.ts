@@ -1,3 +1,5 @@
+import { formatNationalId } from "@dmr.is/utils/client"
+
 export enum WeekdayEnum {
   Sunday = 0,
   Monday = 1,
@@ -37,15 +39,6 @@ export const getNextWeekdayWithLeadTime = (
   const result = new Date(fromDate)
   result.setDate(fromDate.getDate() + daysToAdd)
   return result
-}
-
-export const formatNationalId = (nationalId: string) => {
-  // Format: XXXXXX-XXXX or XXXXXXXXXX
-  const cleaned = nationalId.replace(/[^0-9]/g, '')
-  if (cleaned.length !== 10) {
-    return nationalId // Return as is if not 10 digits
-  }
-  return `${cleaned.slice(0, 6)}-${cleaned.slice(6)}`
 }
 
 export const formatParty = ({
