@@ -14,7 +14,7 @@ export function getRecallBankruptcyTemplate(model: AdvertModel): string {
   const divisionMeetingLocation = model.divisionMeetingLocation
 
   const intro = getElement(
-    `Með úrskurði ${model.courtDistrict?.title || ''} uppkveðnum ${judgementDate ? formatDate(judgementDate, 'd. MMMM yyyy') : ''} var eftirtalið bú tekið til gjaldþrotaskipta. Sama dag var undirritaður skipaður skiptastjóri í búinu. Frestdagur við gjaldþrotaskiptin er tilgreindur við nafn viðkomandi bús.`,
+    `Með úrskurði ${model.courtDistrict?.possessiveTitle || ''} uppkveðnum ${judgementDate ? formatDate(judgementDate, 'd. MMMM yyyy') : ''} var eftirtalið bú tekið til gjaldþrotaskipta. Sama dag var undirritaður skipaður skiptastjóri í búinu. Frestdagur við gjaldþrotaskiptin er tilgreindur við nafn viðkomandi bús.`,
   )
 
   // Determine the correct location based on the statement type

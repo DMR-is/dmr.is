@@ -19,7 +19,7 @@ export function getRecallDeceasedTemplate(model: AdvertModel): string {
   const settlement = model.settlement
 
   const intro = getElement(
-    `Með úrskurði ${model.courtDistrict?.title || ''} uppkveðnum ${judgementDate ? formatDate(judgementDate, 'd. MMMM yyyy') : ''} var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:`,
+    `Með úrskurði ${model.courtDistrict?.possessiveTitle || ''} uppkveðnum ${judgementDate ? formatDate(judgementDate, 'd. MMMM yyyy') : ''} var neðangreint bú tekið til opinberra skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri dánarbúsins:`,
   )
   const tableHeaderName = getTableHeaderCell('Dánarbú, nafn:')
   const tableHeaderDateOfDeath = getTableHeaderCell('Dánardagur:')
