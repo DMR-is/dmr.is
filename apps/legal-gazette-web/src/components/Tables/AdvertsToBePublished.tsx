@@ -1,14 +1,13 @@
 'use client'
 
-import { useCallback, useState } from 'react'
 import { useIntl } from 'react-intl'
 
-import { Button, Inline, Stack, toast } from '@dmr.is/ui/components/island-is'
+import { Button, Checkbox, Inline, Stack, toast } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { formatDate } from '@dmr.is/utils/client'
 
-import { Checkbox } from '@island.is/island-ui/core'
-
+import { useAdvertSelection } from '../../hooks/useAdvertSelection'
+import { useBulkPublish } from '../../hooks/useBulkPublish'
 import { useFilterContext } from '../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
 import { useTRPC } from '../../lib/trpc/client/trpc'
@@ -20,70 +19,6 @@ export const AdvertsToBePublished = () => {
   const { params, setParams, handleSort } = useFilterContext()
   const trpc = useTRPC()
   const queryClient = useQueryClient()
-  const [selectedAdvertIds, setSelectedAdvertIds] = useState<string[]>([])
-
-  const { mutate: publishAdverts, isPending: isPublishing } = useMutation(
-    trpc.publishNextBulk.mutationOptions({
-      onMutate: async ({ advertIds }) => {
-        toast.info(
-          `Birti ${advertIds.length} ${advertIds.length === 1 ? 'birtingu' : 'birtingar'}...`,
-          { toastId: 'publishing-adverts' },
-        )
-      },
-      onSuccess: async () => {
-        toast.success('Auglýsing birt', { toastId: 'publish-advert-success' })
-
-        queryClient.invalidateQueries(
-          trpc.getReadyForPublicationAdverts.queryFilter(),
-        )
-        queryClient.invalidateQueries(trpc.getAdvertsCount.queryFilter())
-        setSelectedAdvertIds([])
-      },
-      onError: (_err, variables) => {
-        toast.error(
-          `Ekki tókst að birta ${variables.advertIds.length} ${variables.advertIds.length === 1 ? 'birtingu' : 'birtingar'}`,
-          {
-            toastId: 'publish-advert-error',
-          },
-        )
-      },
-    }),
-  )
-
-  const { mutate: moveToPreviousStatus } = useMutation(
-    trpc.moveToPreviousStatus.mutationOptions({
-      onSuccess: () => {
-        toast.success('Auglýsing færð í stöðuna í vinnslu', {
-          toastId: 'update-advert-status-success',
-        })
-        queryClient.invalidateQueries(
-          trpc.getReadyForPublicationAdverts.queryFilter({
-            categoryId: params.categoryId,
-            page: params.page,
-            pageSize: params.pageSize,
-            search: params.search,
-            typeId: params.typeId,
-            direction: params.direction ?? undefined,
-            sortBy: params.sortBy ?? undefined,
-          }),
-        )
-
-        queryClient.invalidateQueries(
-          trpc.getAdvertsCount.queryFilter({
-            categoryId: params.categoryId,
-            typeId: params.typeId,
-            search: params.search,
-            statusId: params.statusId,
-          }),
-        )
-
-        setSelectedAdvertIds([])
-      },
-      onError: () => {
-        toast.error('Ekki tókst að uppfæra stöðu auglýsingar')
-      },
-    }),
-  )
 
   const { data } = useQuery(
     trpc.getReadyForPublicationAdverts.queryOptions({
@@ -97,16 +32,70 @@ export const AdvertsToBePublished = () => {
     }),
   )
 
+  const {
+    selectedAdvertIds,
+    toggleAllAdverts,
+    handleAdvertSelect,
+    clearSelection,
+  } = useAdvertSelection(data?.adverts.length)
+
+  const { publishNextBulk, isPending: isPublishing } = useBulkPublish({
+    onSuccess: clearSelection,
+  })
+
+  const { mutate: moveToPreviousStatusBulk, isPending: isMoving } = useMutation(
+    trpc.moveToPreviousStatus.mutationOptions({
+      onSuccess: () => {
+        toast.success('Auglýsing færð í stöðuna í vinnslu', {
+          toastId: 'update-advert-status-success',
+        })
+
+        // Use parameterless invalidation for all related queries
+        queryClient.invalidateQueries(
+          trpc.getReadyForPublicationAdverts.queryFilter(),
+        )
+        queryClient.invalidateQueries(trpc.getAdvertsCount.queryFilter())
+
+        clearSelection()
+      },
+      onError: () => {
+        toast.error('Ekki tókst að uppfæra stöðu auglýsingar')
+      },
+    }),
+  )
+
+  const handleMoveToInProgress = async () => {
+    // Process all selected adverts with Promise.all for proper error handling
+    try {
+      await Promise.all(
+        selectedAdvertIds.map((id) =>
+          new Promise((resolve, reject) => {
+            moveToPreviousStatusBulk(
+              { id },
+              {
+                onSuccess: resolve,
+                onError: reject,
+              },
+            )
+          }),
+        ),
+      )
+    } catch (error) {
+      // Error toast already shown by mutation onError
+    }
+  }
+
   const rows = data?.adverts.map((advert) => ({
     checkbox: (
       <Checkbox
+        label=""
         checked={selectedAdvertIds.includes(advert.id)}
         onChange={(evt) => handleAdvertSelect(advert.id, evt.target.checked)}
       />
     ),
     utgafudagur: advert.scheduledAt
       ? formatDate(advert.scheduledAt)
-      : 'Engin útgáfudagsetning skráð',
+      : formatMessage(ritstjornTableMessages.publishing.noScheduledDate),
     flokkur: advert.category.title,
     efni: advert.title,
     sender: advert.createdBy,
@@ -115,25 +104,6 @@ export const AdvertsToBePublished = () => {
     hasLink: true,
     openLinkInNewTab: true,
   }))
-
-  const toggleAllAdverts = useCallback(() => {
-    if (selectedAdvertIds.length === data?.adverts.length) {
-      setSelectedAdvertIds([])
-    } else {
-      setSelectedAdvertIds(data?.adverts.map((ad) => ad.id) || [])
-    }
-  }, [data, selectedAdvertIds])
-
-  const handleAdvertSelect = useCallback(
-    (advertId: string, checked: boolean) => {
-      if (checked) {
-        setSelectedAdvertIds((prev) => [...prev, advertId])
-      } else {
-        setSelectedAdvertIds((prev) => prev.filter((id) => id !== advertId))
-      }
-    },
-    [setSelectedAdvertIds],
-  )
 
   return (
     <Stack space={[2, 3]}>
@@ -144,8 +114,9 @@ export const AdvertsToBePublished = () => {
               field: 'checkbox',
               children: (
                 <Checkbox
+                  label=""
                   disabled={!data?.adverts.length}
-                  onChange={() => toggleAllAdverts()}
+                  onChange={() => toggleAllAdverts(data?.adverts)}
                   checked={selectedAdvertIds.length === data?.adverts.length}
                 />
               ),
@@ -187,17 +158,12 @@ export const AdvertsToBePublished = () => {
       />
       <Inline space={2} align="right" flexWrap="wrap">
         <Button
-          disabled={selectedAdvertIds.length === 0}
+          disabled={selectedAdvertIds.length === 0 || isMoving}
+          loading={isMoving}
           colorScheme="destructive"
           icon="removeCircle"
           iconType="outline"
-          onClick={() =>
-            selectedAdvertIds.forEach((id) => {
-              moveToPreviousStatus({
-                id: id,
-              })
-            })
-          }
+          onClick={handleMoveToInProgress}
         >
           {formatMessage(
             ritstjornTableMessages.publishing.removeFromPublishingQueue,
@@ -205,7 +171,7 @@ export const AdvertsToBePublished = () => {
         </Button>
         <Button
           loading={isPublishing}
-          onClick={() => publishAdverts({ advertIds: selectedAdvertIds })}
+          onClick={() => publishNextBulk({ advertIds: selectedAdvertIds })}
           disabled={selectedAdvertIds.length === 0}
           icon="arrowForward"
         >

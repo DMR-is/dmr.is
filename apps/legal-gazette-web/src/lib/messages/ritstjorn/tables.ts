@@ -20,6 +20,66 @@ export const ritstjornTableMessages = {
       defaultMessage: 'Gefa út auglýsingar',
       description: 'Button text for publishing adverts',
     },
+    publishCount: {
+      id: 'lg.web:ritstjorn-tables.publishing.publishCount',
+      defaultMessage: 'Gefa út {count} {noun}',
+      description: 'Button text showing the count of adverts to publish',
+    },
+    lastPublished: {
+      id: 'lg.web:ritstjorn-tables.publishing.lastPublished',
+      defaultMessage: 'Siðast birt',
+      description: 'Column header for the last published date',
+    },
+    nextPublishing: {
+      id: 'lg.web:ritstjorn-tables.publishing.nextPublishing',
+      defaultMessage: 'Næsta birting',
+      description: 'Column header for the next publishing date',
+    },
+    schedule: {
+      id: 'lg.web:ritstjorn-tables.publishing.schedule',
+      defaultMessage: 'Áætlun',
+      description: 'Column header for the publishing schedule',
+    },
+    publishingCount: {
+      id: 'lg.web:ritstjorn-tables.publishing.publishingCount',
+      defaultMessage: 'Fjöldi birtinga',
+      description: 'Column header for the count of publications',
+    },
+    noScheduledDate: {
+      id: 'lg.web:ritstjorn-tables.publishing.noScheduledDate',
+      defaultMessage: 'Engin útgáfudagsetning skráð',
+      description: 'Message when no scheduled date is set',
+    },
+    noPreviousPublishing: {
+      id: 'lg.web:ritstjorn-tables.publishing.noPreviousPublishing',
+      defaultMessage: 'Enginn fyrri birting',
+      description: 'Message when advert has not been published before',
+    },
+    yesterday: {
+      id: 'lg.web:ritstjorn-tables.publishing.yesterday',
+      defaultMessage: 'Í gær',
+      description: 'Tag text for yesterday',
+    },
+    today: {
+      id: 'lg.web:ritstjorn-tables.publishing.today',
+      defaultMessage: 'Í dag',
+      description: 'Tag text for today',
+    },
+    tomorrow: {
+      id: 'lg.web:ritstjorn-tables.publishing.tomorrow',
+      defaultMessage: 'Á morgun',
+      description: 'Tag text for tomorrow',
+    },
+    daysAgo: {
+      id: 'lg.web:ritstjorn-tables.publishing.daysAgo',
+      defaultMessage: 'Fyrir {days} {dative} síðan',
+      description: 'Tag text for days ago',
+    },
+    daysFromNow: {
+      id: 'lg.web:ritstjorn-tables.publishing.daysFromNow',
+      defaultMessage: 'Eftir {days} daga',
+      description: 'Tag text for days in the future',
+    },
   }),
   columns: defineMessages({
     scheduledAt: {

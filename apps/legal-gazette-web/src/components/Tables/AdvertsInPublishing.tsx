@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useState } from 'react'
+import React from 'react'
 import { useIntl } from 'react-intl'
 
 import {
@@ -10,54 +10,22 @@ import {
   Stack,
   Tag,
   Text,
-  toast,
 } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
-import {
-  formatDate,
-  getDaysSinceOrTo,
-  getIcelandicDative,
-} from '@dmr.is/utils/client'
+import { formatDate, getDaysDelta, getIcelandicDative } from '@dmr.is/utils/client'
 
+import { useAdvertSelection } from '../../hooks/useAdvertSelection'
+import { useBulkPublish } from '../../hooks/useBulkPublish'
 import { useFilterContext } from '../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 
 export const AdvertsInPublishing = () => {
   const { formatMessage } = useIntl()
   const { params, setParams } = useFilterContext()
   const trpc = useTRPC()
-  const queryClient = useQueryClient()
-
-  const [selectedAdvertIds, setSelectedAdvertIds] = useState<string[]>([])
-
-  const { mutate: bulkPublish, isPending: isBulkPublishing } = useMutation(
-    trpc.publishNextBulk.mutationOptions({
-      onMutate: async ({ advertIds }) => {
-        toast.info(
-          `Birti ${advertIds.length} ${advertIds.length === 1 ? 'birtingu' : 'birtingar'}...`,
-          { toastId: 'publishing-adverts' },
-        )
-      },
-      onSuccess: (_data, { advertIds }) => {
-        setSelectedAdvertIds([])
-        toast.success(`Birting fyrir ${advertIds.length} tókst`, {
-          toastId: 'publish-adverts-success',
-        })
-
-        queryClient.invalidateQueries(trpc.getAdvertsCount.queryFilter())
-
-        queryClient.invalidateQueries(trpc.getInPublishingAdverts.queryFilter())
-      },
-      onError: () => {
-        toast.error('Ekki tókst að birta auglýsingar', {
-          toastId: 'publish-adverts-error',
-        })
-      },
-    }),
-  )
 
   const { data } = useQuery(
     trpc.getInPublishingAdverts.queryOptions({
@@ -71,24 +39,16 @@ export const AdvertsInPublishing = () => {
     }),
   )
 
-  const toggleAllAdverts = useCallback(() => {
-    if (selectedAdvertIds.length === data?.adverts.length) {
-      setSelectedAdvertIds([])
-    } else {
-      setSelectedAdvertIds(data?.adverts.map((ad) => ad.id) || [])
-    }
-  }, [data, selectedAdvertIds])
+  const {
+    selectedAdvertIds,
+    toggleAllAdverts,
+    handleAdvertSelect,
+    clearSelection,
+  } = useAdvertSelection(data?.adverts.length)
 
-  const handleAdvertSelect = useCallback(
-    (advertId: string, checked: boolean) => {
-      if (checked) {
-        setSelectedAdvertIds((prev) => [...prev, advertId])
-      } else {
-        setSelectedAdvertIds((prev) => prev.filter((id) => id !== advertId))
-      }
-    },
-    [setSelectedAdvertIds],
-  )
+  const { publishNextBulk, isPending: isBulkPublishing } = useBulkPublish({
+    onSuccess: clearSelection,
+  })
 
   const columns = [
     {
@@ -97,7 +57,7 @@ export const AdvertsInPublishing = () => {
         <Checkbox
           disabled={!data?.adverts.length}
           label=""
-          onChange={() => toggleAllAdverts()}
+          onChange={() => toggleAllAdverts(data?.adverts)}
           checked={selectedAdvertIds.length === data?.adverts.length}
         />
       ),
@@ -105,23 +65,23 @@ export const AdvertsInPublishing = () => {
     },
     {
       field: 'lastPublished',
-      children: 'Siðast birt',
+      children: formatMessage(ritstjornTableMessages.publishing.lastPublished),
     },
     {
       field: 'scheduledAt',
       children: (
         <Text variant="medium" fontWeight="semiBold" whiteSpace="nowrap">
-          Næsta birting
+          {formatMessage(ritstjornTableMessages.publishing.nextPublishing)}
         </Text>
       ),
     },
     {
       field: 'schedule',
-      children: 'Áætlun',
+      children: formatMessage(ritstjornTableMessages.publishing.schedule),
     },
     {
       field: 'count',
-      children: 'Fjöldi birtinga',
+      children: formatMessage(ritstjornTableMessages.publishing.publishingCount),
     },
     {
       field: 'efni',
@@ -138,7 +98,7 @@ export const AdvertsInPublishing = () => {
       .map((advert) => {
         if (!advert.scheduledAt) return null
 
-        const days = getDaysSinceOrTo(advert.scheduledAt)
+        const days = getDaysDelta(advert.scheduledAt)
 
         const pubCount = advert.publications.length
         const publishedCount = advert.publications.filter(
@@ -148,25 +108,31 @@ export const AdvertsInPublishing = () => {
         let tagText = ''
         let tagVariant: React.ComponentProps<typeof Tag>['variant'] = 'blue'
         if (days === -1) {
-          tagText = 'Í gær'
+          tagText = formatMessage(ritstjornTableMessages.publishing.yesterday)
           tagVariant = 'rose'
         } else if (days < -1) {
-          tagText = `Fyrir ${Math.abs(days)} ${getIcelandicDative(Math.abs(days))} síðan`
+          tagText = formatMessage(ritstjornTableMessages.publishing.daysAgo, {
+            days: Math.abs(days),
+            dative: getIcelandicDative(Math.abs(days)),
+          })
           tagVariant = 'red'
         } else if (days === 0) {
-          tagText = 'Í dag'
+          tagText = formatMessage(ritstjornTableMessages.publishing.today)
           tagVariant = 'mint'
         } else if (days === 1) {
-          tagText = 'Á morgun'
+          tagText = formatMessage(ritstjornTableMessages.publishing.tomorrow)
           tagVariant = 'blue'
         } else {
-          tagText = `Eftir ${days} daga`
+          tagText = formatMessage(ritstjornTableMessages.publishing.daysFromNow, {
+            days,
+          })
           tagVariant = 'blue'
         }
 
         return {
           id: (
             <Checkbox
+              label=""
               checked={selectedAdvertIds.includes(advert.id)}
               onChange={(evt) =>
                 handleAdvertSelect(advert.id, evt.target.checked)
@@ -178,14 +144,14 @@ export const AdvertsInPublishing = () => {
               {formatDate(advert.lastPublishedAt, 'dd.MM.yyyy')}
             </Text>
           ) : (
-            'Enginn fyrri birting'
+            formatMessage(ritstjornTableMessages.publishing.noPreviousPublishing)
           ),
           scheduledAt: advert.scheduledAt ? (
             <Text variant="medium" whiteSpace="nowrap">
               {formatDate(advert.scheduledAt, 'dd.MM.yyyy')}
             </Text>
           ) : (
-            'Engin útgáfudagsetning skráð'
+            formatMessage(ritstjornTableMessages.publishing.noScheduledDate)
           ),
           schedule: (
             <Tag variant={tagVariant} disabled>
@@ -214,12 +180,15 @@ export const AdvertsInPublishing = () => {
       />
       <Inline align="right">
         <Button
-          onClick={() => bulkPublish({ advertIds: selectedAdvertIds })}
+          onClick={() => publishNextBulk({ advertIds: selectedAdvertIds })}
           loading={isBulkPublishing}
           icon="arrowForward"
           disabled={!selectedAdvertIds.length}
         >
-          {`Gefa út ${selectedAdvertIds.length} ${selectedAdvertIds.length === 1 ? 'birtingu' : 'birtingar'}`}
+          {formatMessage(ritstjornTableMessages.publishing.publishCount, {
+            count: selectedAdvertIds.length,
+            noun: selectedAdvertIds.length === 1 ? 'birtingu' : 'birtingar',
+          })}
         </Button>
       </Inline>
     </Stack>

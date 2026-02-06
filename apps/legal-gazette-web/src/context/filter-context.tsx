@@ -82,13 +82,25 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
   const trpc = useTRPC()
   const { data: entities } = useQuery(trpc.getAllEntities.queryOptions())
 
+    const resetStatusOptions = () => {
+    resetOptions(statuses.statuses, setInternalStatusOptions)
+  }
+
+  const resetCategoryOptions = () => {
+    resetOptions(categories.categories, setInternalCategoryOptions)
+  }
+
+  const resetTypeOptions = () => {
+    resetOptions(types.types, setInternalTypeOptions)
+  }
+
   useEffect(() => {
     if (entities) {
       resetCategoryOptions()
       resetTypeOptions()
       resetStatusOptions()
     }
-  }, [entities])
+  }, [entities, resetCategoryOptions, resetTypeOptions, resetStatusOptions])
 
   const categories = {
     categories: entities?.categories || [],
@@ -258,17 +270,7 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
     )
   }
 
-  const resetStatusOptions = () => {
-    resetOptions(statuses.statuses, setInternalStatusOptions)
-  }
 
-  const resetCategoryOptions = () => {
-    resetOptions(categories.categories, setInternalCategoryOptions)
-  }
-
-  const resetTypeOptions = () => {
-    resetOptions(types.types, setInternalTypeOptions)
-  }
 
   const setParams = (params: Partial<Params>) => {
     const updatedParams = {

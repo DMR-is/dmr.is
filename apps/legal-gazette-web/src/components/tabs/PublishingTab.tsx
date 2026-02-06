@@ -1,15 +1,10 @@
 'use client'
 
-
-import { Box } from '@dmr.is/ui/components/island-is'
-
-import { Stack } from '@island.is/island-ui/core'
+import { Box, Stack } from '@dmr.is/ui/components/island-is'
 
 import AdvertsToBePublished from '../Tables/AdvertsToBePublished'
 
-
 export const PublishingTab = () => {
-
   return (
     <Box background="white" paddingTop={4}>
       <Stack space={[3, 4, 5]}>
@@ -18,4 +13,5 @@ export const PublishingTab = () => {
     </Box>
   )
 }
+
 export default PublishingTab
