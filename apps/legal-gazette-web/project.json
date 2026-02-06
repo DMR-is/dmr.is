@@ -84,11 +84,14 @@
     },
     "update-client": {
       "executor": "nx:run-commands",
-      "dependsOn": ["update-openapi-schema", "codegen"],
+      "dependsOn": ["update-openapi-schema"],
       "options": {
-        "commands": [],
-        "cwd": "apps/legal-gazette-web"
-      }
+        "commands": [
+          "rm -rf apps/legal-gazette-web/src/gen/fetch",
+          "yarn openapi-generator -o apps/legal-gazette-web/src/gen/fetch -i apps/legal-gazette-web/clientConfig.json"
+        ]
+      },
+      "outputs": ["{projectRoot}/gen/fetch"]
     },
     "codegen": {
       "executor": "nx:run-commands",
