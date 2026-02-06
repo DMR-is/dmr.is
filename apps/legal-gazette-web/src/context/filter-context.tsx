@@ -6,7 +6,7 @@ import {
   parseAsStringEnum,
   useQueryStates,
 } from 'nuqs'
-import { createContext, useState } from 'react'
+import { createContext, useEffect, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 
@@ -81,6 +81,26 @@ type FilterProviderProps = {
 export const FilterProvider = ({ children }: FilterProviderProps) => {
   const trpc = useTRPC()
   const { data: entities } = useQuery(trpc.getAllEntities.queryOptions())
+
+    const resetStatusOptions = () => {
+    resetOptions(statuses.statuses, setInternalStatusOptions)
+  }
+
+  const resetCategoryOptions = () => {
+    resetOptions(categories.categories, setInternalCategoryOptions)
+  }
+
+  const resetTypeOptions = () => {
+    resetOptions(types.types, setInternalTypeOptions)
+  }
+
+  useEffect(() => {
+    if (entities) {
+      resetCategoryOptions()
+      resetTypeOptions()
+      resetStatusOptions()
+    }
+  }, [entities, resetCategoryOptions, resetTypeOptions, resetStatusOptions])
 
   const categories = {
     categories: entities?.categories || [],
@@ -250,17 +270,7 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
     )
   }
 
-  const resetStatusOptions = () => {
-    resetOptions(statuses.statuses, setInternalStatusOptions)
-  }
 
-  const resetCategoryOptions = () => {
-    resetOptions(categories.categories, setInternalCategoryOptions)
-  }
-
-  const resetTypeOptions = () => {
-    resetOptions(types.types, setInternalTypeOptions)
-  }
 
   const setParams = (params: Partial<Params>) => {
     const updatedParams = {
