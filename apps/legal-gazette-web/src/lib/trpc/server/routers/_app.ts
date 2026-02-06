@@ -6,6 +6,7 @@ import { channelsRouter } from './channelsRouter'
 import { commentRouter } from './commentRouter'
 import { nationalRegistryRouter } from './nationalRegistryRouter'
 import { paymentsRouter } from './paymentsRouter'
+import { pdfAdminRouter } from './pdfAdminRouter'
 import { publicationsRouter } from './publicationsRouter'
 import { settlementRouter } from './settlementRouter'
 import { signatureRouter } from './signatureRouter'
@@ -29,6 +30,7 @@ export const appRouter = mergeRouters(
   paymentsRouter,
   subscribersRouter,
   advertPublishRouter,
+  pdfAdminRouter,
 )
 
 // export type definition of API

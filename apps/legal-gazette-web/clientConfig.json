@@ -1,6 +1,89 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/pdf-admin/{advertId}/publications/{publicationId}/regenerate": {
+      "post": {
+        "description": "Regenerates the PDF for a specific publication",
+        "operationId": "regeneratePublicationPdf",
+        "parameters": [
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the advert",
+            "schema": {
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          },
+          {
+            "name": "publicationId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the publication",
+            "schema": {
+              "example": "123e4567-e89b-12d3-a456-426614174001",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegeneratePdfResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
     "/api/v1/adverts/{id}/assign/{userId}": {
       "post": {
         "operationId": "assignAdvertToEmployee",
@@ -5843,6 +5926,22 @@
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
+      "RegeneratePdfResponseDto": {
+        "type": "object",
+        "properties": {
+          "pdfUrl": {
+            "type": "string",
+            "description": "The URL of the regenerated PDF",
+            "example": "https://files.legal-gazette.dev.dmr-dev.cloud/adverts/123/456/advert.pdf"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success message",
+            "example": "PDF regenerated successfully"
+          }
+        },
+        "required": ["pdfUrl", "message"]
+      },
       "ApiErrorDto": {
         "type": "object",
         "properties": {

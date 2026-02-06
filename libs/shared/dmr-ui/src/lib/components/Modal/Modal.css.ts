@@ -45,7 +45,22 @@ globalStyle(`div:has(> ${modalBaseBackdrop})`, {
   },
 })
 
+globalStyle(`body *`, {
+  '@media': { print: { display: 'none' } },
+})
+
+globalStyle(
+  `body, .__reakit-portal, ${modalBaseBackdrop} ,${modalBaseBackdrop} *`,
+  {
+    '@media': { print: { display: 'block' } },
+  },
+)
+
 globalStyle(`${modalBase} button`, {
+  '@media': { print: { display: 'none' } },
+})
+
+globalStyle(`.print-hidden`, {
   '@media': { print: { display: 'none' } },
 })
 

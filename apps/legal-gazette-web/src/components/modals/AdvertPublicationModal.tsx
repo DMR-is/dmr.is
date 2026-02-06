@@ -1,78 +1,140 @@
 'use client'
 
+import { useState } from 'react'
+
 import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay'
 import {
   Box,
   Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
   Inline,
-  ModalBase,
-  Stack,
+  Select,
   Text,
+  toast,
 } from '@dmr.is/ui/components/island-is'
+import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
+import { AdvertPublicationDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
-import * as styles from './advert-publication-modal.css'
 
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
-  pubId: string
+  advertId: string
+  publications: AdvertPublicationDto[]
 }
 
-export const AdvertPublicationModal = ({ pubId }: Props) => {
+const getPublicationLabel = (pub: AdvertPublicationDto): string => {
+  const label = `Útgáfa ${pub.version}`
+  return pub.publishedAt ? `${label} (birt)` : label
+}
+
+export const AdvertPublicationModal = ({ advertId, publications }: Props) => {
+  const [selectedPubId, setSelectedPubId] = useState<string>(publications[0].id)
+
+  const selectedPub = publications.find((p) => p.id === selectedPubId)
+  const isPublished = !!selectedPub?.publishedAt
+
   const trpc = useTRPC()
+  const queryClient = useQueryClient()
 
   const { data } = useQuery(
     trpc.getPublication.queryOptions(
-      { id: pubId },
+      { id: selectedPubId },
       {
         gcTime: 0,
       },
     ),
   )
 
+  const { mutate: regeneratePdf, isPending: isRegenerating } = useMutation(
+    trpc.regeneratePdf.mutationOptions({
+      onSuccess: () => {
+        toast.success('PDF búið til')
+        queryClient.invalidateQueries(
+          trpc.getAdvert.queryFilter({ id: advertId }),
+        )
+      },
+      onError: () => {
+        toast.error('Ekki tókst að búa til PDF')
+      },
+    }),
+  )
+
   return (
-    <ModalBase
+    <Modal
       disclosure={
-        <Button variant="ghost" size="small" disabled={!pubId}>
-          <Text
-            color={!pubId ? 'blue400' : 'currentColor'}
-            fontWeight="semiBold"
-            variant="small"
-          >
+        <Button variant="ghost" size="small" fluid truncate>
+          <Text color="currentColor" fontWeight="semiBold" variant="small">
             Skoða auglýsingu
           </Text>
         </Button>
       }
-      baseId={`advert-publication-modal-${pubId}`}
+      baseId={`advert-publication-modal-${selectedPubId}`}
     >
-      {({ closeModal }) => (
-        <GridContainer>
-          <GridRow>
-            <GridColumn span={['10/12', '8/12']} offset={['1/12', '2/12']}>
-              <Box className={styles.advertModalWrapperStyle}>
-                <Box className={styles.advertModalStyle} padding={[2, 3, 4]}>
-                  <Stack space={2}>
-                    <Inline align="right" alignY="center">
-                      <Button
-                        variant="ghost"
-                        onClick={closeModal}
-                        circle={true}
-                        size="small"
-                        icon="close"
-                      />
-                    </Inline>
-                    <AdvertDisplay html={data?.html} />
-                  </Stack>
-                </Box>
-              </Box>
-            </GridColumn>
-          </GridRow>
-        </GridContainer>
-      )}
-    </ModalBase>
+      <div className="print-hidden">
+        <Inline space={0} flexWrap="wrap" justifyContent="spaceBetween" alignY={'center'}>
+          <Box borderRadius="large" background="white" marginBottom={"containerGutter"}>
+            <Inline
+              space={0}
+              flexWrap="wrap"
+              justifyContent={'spaceBetween'}
+              alignY={'center'}
+            >
+              <Select
+                size="sm"
+                backgroundColor="blue"
+                label="Útgáfa"
+                value={
+                  selectedPub
+                    ? {
+                        label: getPublicationLabel(selectedPub),
+                        value: selectedPub.id,
+                      }
+                    : null
+                }
+                options={publications.map((pub) => ({
+                  label: getPublicationLabel(pub),
+                  value: pub.id,
+                }))}
+                onChange={(opt) => {
+                  if (opt?.value) {
+                    setSelectedPubId(opt.value)
+                  }
+                }}
+              />
+              <Button
+                circle
+                icon="print"
+                iconType="outline"
+                colorScheme="negative"
+                onClick={() => window.print()}
+                title="Prenta"
+              />
+            </Inline>
+          </Box>
+
+          <Box borderRadius="large" background="white" marginBottom={"containerGutter"}>
+            {isPublished && (
+              <Button
+                circle
+                icon="reload"
+                iconType="outline"
+                colorScheme="negative"
+                loading={isRegenerating}
+                title="Endurgera PDF"
+                onClick={() =>
+                  regeneratePdf({
+                    advertId,
+                    publicationId: selectedPubId,
+                  })
+                }
+              />
+            )}
+          </Box>
+        </Inline>
+      </div>
+
+      <AdvertDisplay html={data?.html} withStyles />
+    </Modal>
   )
 }

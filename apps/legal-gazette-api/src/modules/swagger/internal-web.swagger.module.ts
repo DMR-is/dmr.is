@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 
+import { PdfAdminControllerModule } from '../admin-pdf/pdf-admin.controller.module'
 import { SubscriberAdminControllerModule } from '../admin-subscribers/subscriber-admin.controller.module'
 import { AdvertControllerModule } from '../advert/advert.controller.module'
 import { IssuesControllerModule } from '../advert/issues/issues.controller.module'
@@ -24,6 +25,7 @@ import { UserControllerModule } from '../users/users.controller.module'
 
 @Module({
   imports: [
+    PdfAdminControllerModule,
     AdvertControllerModule,
     IssuesControllerModule,
     PublicationControllerModule,
