@@ -6,7 +6,7 @@ import { getElement } from './element'
 
 function formatDateAndLocation(location?: string | null, date?: Date | null) {
   if (!isEmpty(location) && isDefined(date)) {
-    return `${location}, ${formatDate(date, 'dd. MMMM yyyy')}`
+    return `${location}, ${formatDate(date, 'd. MMMM yyyy')}`
   }
 
   if (!isEmpty(location)) {
@@ -14,7 +14,7 @@ function formatDateAndLocation(location?: string | null, date?: Date | null) {
   }
 
   if (isDefined(date)) {
-    return `${formatDate(date, 'dd. MMMM yyyy')}`
+    return `${formatDate(date, 'd. MMMM yyyy')}`
   }
 
   return ''
