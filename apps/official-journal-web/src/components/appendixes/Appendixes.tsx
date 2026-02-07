@@ -1,8 +1,9 @@
 import React, { memo } from 'react'
 
 import { CaseAddition } from '@dmr.is/shared/dto'
-
-import { Accordion, AccordionItem, Box } from '@island.is/island-ui/core'
+import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
+import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 
 import * as s from '../advert-display/AdvertDisplay.css'
 

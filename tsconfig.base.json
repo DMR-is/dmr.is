@@ -53,8 +53,11 @@
       "@dmr.is/trpc/utils/*": ["libs/shared/trpc/src/lib/utils/*"],
       "@dmr.is/types": ["libs/shared/types/types/src/index.ts"],
       "@dmr.is/ui/components/*": ["libs/shared/dmr-ui/src/lib/components/*"],
-      "@dmr.is/ui/components/island-is": [
-        "libs/shared/dmr-ui/src/lib/island-is/index.ts"
+       "@dmr.is/ui/components/island-is": [
+        "libs/shared/dmr-ui/src/lib/island-is/index.ts",
+      ],
+      "@dmr.is/ui/components/island-is/*": [
+        "libs/shared/dmr-ui/src/lib/island-is/lib/*"
       ],
       "@dmr.is/ui/hooks/*": ["libs/shared/dmr-ui/src/lib/hooks/*"],
       "@dmr.is/ui/island-is/theme": [
@@ -76,6 +79,12 @@
       ],
       "@island.is/island-ui/core": [
         "submodules/island.is/libs/island-ui/core/src/index.ts"
+      ],
+      "@island.is/island-ui/core/hooks/*": [
+        "submodules/island.is/libs/island-ui/core/src/hooks/*"
+      ],
+      "@island.is/island-ui/core/*": [
+        "submodules/island.is/libs/island-ui/core/src/lib/*"
       ],
       "@island.is/island-ui/theme": [
         "submodules/island.is/libs/island-ui/theme/src/index.ts"

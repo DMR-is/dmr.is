@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 'use client'
 
-import { DropdownMenu as IslandDropdownMenu } from '@island.is/island-ui/core'
+import { DropdownMenu as IslandDropdownMenu } from '@island.is/island-ui/core/DropdownMenu/DropdownMenu'
 
 export const DropdownMenu = (
   props: React.ComponentProps<typeof IslandDropdownMenu>,

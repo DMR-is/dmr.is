@@ -5,12 +5,11 @@ import { divisionMeetingSchemaRefined } from '@dmr.is/legal-gazette/schemas'
 import {
   DatePicker,
   GridColumn,
+  GridContainer,
   GridRow,
   Input,
   Text,
 } from '@dmr.is/ui/components/island-is'
-
-import { GridContainer } from '@island.is/island-ui/core'
 
 type DivisonMeeting = z.infer<typeof divisionMeetingSchemaRefined>
 

@@ -6,7 +6,7 @@ import React from 'react'
 import {
   toast as islandisToast,
   ToastContainer as IslandToastContainer,
-} from '@island.is/island-ui/core'
+} from '@island.is/island-ui/core/Toast/Toast'
 
 export const ToastContainer = (
   props: React.ComponentProps<typeof IslandToastContainer>,

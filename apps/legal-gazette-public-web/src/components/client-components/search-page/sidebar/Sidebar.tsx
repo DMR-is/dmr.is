@@ -16,7 +16,7 @@ import {
 } from '@dmr.is/ui/components/island-is'
 import { PagingTotalItemsText } from '@dmr.is/ui/components/PagingTotaItemsText/PagingTotalItemsText'
 
-import { Option } from '@island.is/island-ui/core'
+import type { Option } from '@island.is/island-ui/core/Select/Select.types'
 
 import { AdvertVersionEnum } from '../../../../gen/fetch'
 import { useFilters } from '../../../../hooks/useFilters'

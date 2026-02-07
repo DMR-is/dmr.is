@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 
-import { Button, Inline, LinkV2, Text } from '@island.is/island-ui/core'
+import { Button, Inline, LinkV2, Text } from '@dmr.is/ui/components/island-is'
 
 type Tab = {
   id: string

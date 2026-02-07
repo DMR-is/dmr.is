@@ -1,16 +1,15 @@
 'use client'
 
-import { PieChart } from '@dmr.is/ui/components/PieChart/PieChart'
-import { Section } from '@dmr.is/ui/components/Section/Section'
-import { TrackerTable } from '@dmr.is/ui/components/Tables/TrackerTable'
-import { Wrapper } from '@dmr.is/ui/components/Wrapper/Wrapper'
-
 import {
   GridColumn,
   GridContainer,
   GridRow,
   Stack,
-} from '@island.is/island-ui/core'
+} from '@dmr.is/ui/components/island-is'
+import { PieChart } from '@dmr.is/ui/components/PieChart/PieChart'
+import { Section } from '@dmr.is/ui/components/Section/Section'
+import { TrackerTable } from '@dmr.is/ui/components/Tables/TrackerTable'
+import { Wrapper } from '@dmr.is/ui/components/Wrapper/Wrapper'
 
 import {
   GetAdvertsInProgressStatsDto,

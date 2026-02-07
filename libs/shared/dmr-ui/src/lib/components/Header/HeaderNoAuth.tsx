@@ -1,15 +1,12 @@
 'use client'
 
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Hidden,
-  Inline,
-  Text,
-} from '@island.is/island-ui/core'
-
+import { Box } from '../../island-is/lib/Box'
+import { GridColumn } from '../../island-is/lib/GridColumn'
+import { GridContainer } from '../../island-is/lib/GridContainer'
+import { GridRow } from '../../island-is/lib/GridRow'
+import { Hidden } from '../../island-is/lib/Hidden'
+import { Inline } from '../../island-is/lib/Inline'
+import { Text } from '../../island-is/lib/Text'
 import * as styles from './Header.css'
 import { HeaderLogo } from './HeaderLogo'
 

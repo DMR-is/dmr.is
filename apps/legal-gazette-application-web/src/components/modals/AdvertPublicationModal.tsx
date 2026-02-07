@@ -1,7 +1,6 @@
 'use client'
 
 import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay'
-
 import {
   Box,
   Button,
@@ -11,7 +10,7 @@ import {
   Inline,
   ModalBase,
   Stack,
-} from '@island.is/island-ui/core'
+} from '@dmr.is/ui/components/island-is'
 
 import * as styles from './advert-publication-modal.css'
 

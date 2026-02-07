@@ -1,16 +1,13 @@
 'use client'
 
 import { ImageProps } from '@dmr.is/ui/components/Image/Image'
-
-import {
-  Box,
-  Breadcrumbs,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Stack,
-  Text,
-} from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Breadcrumbs } from '@dmr.is/ui/components/island-is/Breadcrumbs'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 export type HeroProps = {
   title?: string

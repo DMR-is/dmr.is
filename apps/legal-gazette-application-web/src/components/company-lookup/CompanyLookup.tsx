@@ -10,16 +10,14 @@ import {
   companySchema,
   RecallApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
-import {
-  AlertMessage,
-  Button,
-  GridColumn,
-  GridRow,
-  Input,
-  Stack,
-  Text,
-  toast,
-} from '@dmr.is/ui/components/island-is'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { useUpdateApplication } from '../../hooks/useUpdateApplication'

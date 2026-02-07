@@ -2,9 +2,12 @@
 
 import { isBase64 } from 'class-validator'
 
-import { GridColumn, Input, Stack } from '@dmr.is/ui/components/island-is'
-
-import { GridRow } from '@island.is/island-ui/core'
+import {
+  GridColumn,
+  GridRow,
+  Input,
+  Stack,
+} from '@dmr.is/ui/components/island-is'
 
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 import { Editor } from '../editor/HTMLEditor'

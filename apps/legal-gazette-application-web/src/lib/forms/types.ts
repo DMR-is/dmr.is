@@ -1,6 +1,6 @@
 import * as z from 'zod'
 
-import { ResponsiveSpace } from '@island.is/island-ui/core'
+import type { ResponsiveSpace } from '@island.is/island-ui/core/Box/useBoxStyles'
 
 /**
  * Form field is render inside a form step

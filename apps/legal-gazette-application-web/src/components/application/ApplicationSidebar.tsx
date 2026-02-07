@@ -3,9 +3,10 @@ import { useFormContext } from 'react-hook-form'
 
 import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
-import { Box, FormStepper, Section } from '@dmr.is/ui/components/island-is'
-
-import { SkeletonLoader } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { FormStepper } from '@dmr.is/ui/components/island-is/FormStepper'
+import { Section } from '@dmr.is/ui/components/island-is/Section'
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 
 import { LegalGazetteForm } from '../../lib/forms/types'
 import { useTRPC } from '../../lib/trpc/client/trpc'

@@ -1,19 +1,17 @@
 import { useEffect, useState } from 'react'
 import slugify from 'slugify'
 
-import {
-  AlertMessage,
-  Box,
-  Button,
-  Icon,
-  Inline,
-  Input,
-  Select,
-  Stack,
-  Tag,
-  Text,
-  toast,
-} from '@island.is/island-ui/core'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Select } from '@dmr.is/ui/components/island-is/Select'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Tag } from '@dmr.is/ui/components/island-is/Tag'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { AdvertMainType } from '../../gen/fetch'
 import { useAdvertTypes } from '../../hooks/api'

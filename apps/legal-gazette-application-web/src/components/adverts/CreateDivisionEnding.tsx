@@ -1,26 +1,24 @@
 'use client'
 
-import addYears  from 'date-fns/addYears'
+import addYears from 'date-fns/addYears'
 import get from 'lodash/get'
 import { useEffect, useState } from 'react'
 
 import { createDivisionEndingInput } from '@dmr.is/legal-gazette/schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
-import {
-  Box,
-  Button,
-  DatePicker,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Icon,
-  Inline,
-  Input,
-  ModalBase,
-  Stack,
-  Text,
-  toast,
-} from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { ModalBase } from '@dmr.is/ui/components/island-is/ModalBase'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import {
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,

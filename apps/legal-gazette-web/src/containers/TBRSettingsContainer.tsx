@@ -11,10 +11,8 @@ import {
   GridContainer,
   GridRow,
   Pagination,
-  Text,
-} from '@dmr.is/ui/components/island-is'
-
-import { Stack } from '@island.is/island-ui/core'
+  Stack,
+  Text} from '@dmr.is/ui/components/island-is'
 
 import { TBRSettingsFilters } from '../components/tbr-settings/TBRSettingsFilters'
 import { TBRSettingsList } from '../components/tbr-settings/TBRSettingsList'

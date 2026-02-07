@@ -4,9 +4,8 @@ import { IntlProvider } from 'react-intl'
 import { Provider } from 'reakit'
 
 import { Header } from '@dmr.is/ui/components/Header/Header'
+import { Footer, Page, ToastContainer } from '@dmr.is/ui/components/island-is'
 import { PageLoader } from '@dmr.is/ui/components/PageLoader/PageLoader'
-
-import { Footer, Page, ToastContainer } from '@island.is/island-ui/core'
 
 import { Routes } from '../lib/constants'
 import { allMessages } from '../lib/messages'

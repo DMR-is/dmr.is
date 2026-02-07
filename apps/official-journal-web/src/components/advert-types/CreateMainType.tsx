@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import slugify from 'slugify'
 
-import {
-  AlertMessage,
-  Button,
-  Inline,
-  Input,
-  Stack,
-} from '@island.is/island-ui/core'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { Department, GetAdvertMainType } from '../../gen/fetch'
 import { useDepartments } from '../../hooks/api'

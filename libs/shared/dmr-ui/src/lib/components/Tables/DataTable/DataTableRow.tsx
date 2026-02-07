@@ -3,9 +3,12 @@
 import { useState } from 'react'
 import AnimateHeight from 'react-animate-height'
 
-import { Box, Button, Icon, LinkV2, Text } from '@island.is/island-ui/core'
-
 import useBreakpoints from '../../../hooks/useBreakpoints'
+import { Box } from '../../../island-is/lib/Box'
+import { Button } from '../../../island-is/lib/Button'
+import { Icon } from '../../../island-is/lib/Icon'
+import { LinkV2 } from '../../../island-is/lib/LinkV2'
+import { Text } from '../../../island-is/lib/Text'
 import * as styles from './DataTable.css'
 import { DataTableCell } from './DataTableCell'
 import { DataTableColumnProps, DataTableRowProps } from './types'

@@ -1,18 +1,16 @@
 'use client'
 import { justifyContent } from 'submodules/island.is/libs/island-ui/core/src/lib/Box/useBoxStyles.css'
 
-import {
-  Box,
-  Breadcrumbs,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  ResponsiveProp,
-  Stack,
-  Text,
-} from '@island.is/island-ui/core'
+import type { ResponsiveProp } from '@island.is/island-ui/core'
 
+import { Box } from '../../island-is/lib/Box'
+import { Breadcrumbs } from '../../island-is/lib/Breadcrumbs'
+import { GridColumn } from '../../island-is/lib/GridColumn'
+import { GridContainer } from '../../island-is/lib/GridContainer'
+import { GridRow } from '../../island-is/lib/GridRow'
+import { Inline } from '../../island-is/lib/Inline'
+import { Stack } from '../../island-is/lib/Stack'
+import { Text } from '../../island-is/lib/Text'
 import { ImageProps } from '../Image/Image'
 type SpanType = React.ComponentProps<typeof GridColumn>['span']
 

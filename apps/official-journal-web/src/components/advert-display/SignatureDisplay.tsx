@@ -1,6 +1,6 @@
 import cn from 'classnames'
 
-import { Box } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 
 import { useCaseContext } from '../../hooks/useCaseContext'
 import * as styles from './AdvertDisplay.css'

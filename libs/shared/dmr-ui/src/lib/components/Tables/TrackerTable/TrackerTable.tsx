@@ -1,5 +1,5 @@
 'use client'
-import { Table as T, Text } from '@island.is/island-ui/core'
+import { Table as T } from '../../../island-is/lib/Table'
 
 export type TrackerTableItem = {
   text: string

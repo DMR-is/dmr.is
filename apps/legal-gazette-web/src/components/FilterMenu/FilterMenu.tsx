@@ -11,7 +11,7 @@ import {
   Checkbox,
   Inline,
   Stack,
-} from '@island.is/island-ui/core'
+} from '@dmr.is/ui/components/island-is'
 
 import { useFilterContext } from '../../hooks/useFilters'
 import { QueryParams } from '../../lib/constants'

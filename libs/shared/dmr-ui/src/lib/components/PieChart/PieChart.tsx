@@ -2,15 +2,14 @@
 
 import * as Recharts from 'recharts'
 
-import {
-  Box,
-  Inline,
-  ResponsiveSpace,
-  Stack,
-  Table as T,
-  Text,
-} from '@island.is/island-ui/core'
+import type { ResponsiveSpace } from '@island.is/island-ui/core/Box/useBoxStyles'
 import { theme } from '@island.is/island-ui/theme'
+
+import { Box } from '../../island-is/lib/Box'
+import { Inline } from '../../island-is/lib/Inline'
+import { Stack } from '../../island-is/lib/Stack'
+import { Table as T } from '../../island-is/lib/Table'
+import { Text } from '../../island-is/lib/Text'
 
 export type PieChartItem = {
   color: keyof typeof theme.color

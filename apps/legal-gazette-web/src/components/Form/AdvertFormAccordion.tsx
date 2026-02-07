@@ -7,9 +7,7 @@ import {
   AccordionItem,
   Inline,
 } from '@dmr.is/ui/components/island-is'
-import { Stack } from '@dmr.is/ui/components/island-is'
-
-import { Box } from '@island.is/island-ui/core'
+import { Box,Stack } from '@dmr.is/ui/components/island-is'
 
 import { useToggle } from '../../hooks/useToggle'
 import { OpenCloseButton } from '../buttons/OpenCloseButton'

@@ -1,4 +1,4 @@
-import { toast as toaster } from '@island.is/island-ui/core'
+import {toast as toaster} from '../island-is/lib/ToastContainer'
 
 export const toast = {
   success: (message: string) => {

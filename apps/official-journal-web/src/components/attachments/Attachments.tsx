@@ -1,12 +1,10 @@
 import React from 'react'
 
-import {
-  AlertMessage,
-  Box,
-  Button,
-  Icon,
-  Stack,
-} from '@island.is/island-ui/core'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { ApplicationAttachmentTypeTitleEnum } from '../../gen/fetch'
 import { useAttachments } from '../../hooks/useAttachments'

@@ -1,7 +1,10 @@
-import { Box, Icon, Inline, Table as T, Text } from '@island.is/island-ui/core'
-
 import { DEFAULT_SORT_DIRECTION, SortDirection } from '../../../hooks/constants'
 import { useFilters } from '../../../hooks/useFilters'
+import { Box } from '../../../island-is/lib/Box'
+import { Icon } from '../../../island-is/lib/Icon'
+import { Inline } from '../../../island-is/lib/Inline'
+import { Table as T } from '../../../island-is/lib/Table'
+import { Text } from '../../../island-is/lib/Text'
 import * as styles from './DataTable.css'
 import { DataTableColumnProps } from './types'
 

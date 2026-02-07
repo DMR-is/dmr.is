@@ -1,17 +1,15 @@
 'use client'
 
-import {
-  AlertMessage,
-  Box,
-  Button,
-  LinkV2,
-  Pagination,
-  SkeletonLoader,
-} from '@dmr.is/ui/components/island-is'
-import { Stack, Text } from '@dmr.is/ui/components/island-is'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { Pagination } from '@dmr.is/ui/components/island-is/Pagination'
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { PagingTotalItemsText } from '@dmr.is/ui/components/PagingTotaItemsText/PagingTotalItemsText'
-
-import { Inline } from '@island.is/island-ui/core'
 
 import { ApplicationDto, Paging } from '../../gen/fetch'
 import { ApplicationCard } from './ApplicationCard'

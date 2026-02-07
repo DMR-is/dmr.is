@@ -5,13 +5,12 @@ import { useEffect } from 'react'
 
 import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { Inline, Stack } from '@dmr.is/ui/components/island-is'
-
 import {
   GridColumn,
   GridContainer,
   GridRow,
   Tabs,
-} from '@island.is/island-ui/core'
+} from '@dmr.is/ui/components/island-is'
 
 import { useFilterContext } from '../../hooks/useFilters'
 import { StatusIdEnum } from '../../lib/constants'

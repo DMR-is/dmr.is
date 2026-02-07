@@ -1,7 +1,8 @@
 'use client'
 
 import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
-import { Box, Text } from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 type Props = {
   onChange?: (value: string) => void

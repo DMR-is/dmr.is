@@ -5,8 +5,7 @@ import { useCallback, useState } from 'react'
 import { useIntl } from 'react-intl'
 
 import { ActiveFilters } from '@dmr.is/ui/components/ActiveFilters/ActiveFilters'
-
-import { Inline, Input, Stack } from '@island.is/island-ui/core'
+import { Inline, Input, Stack } from '@dmr.is/ui/components/island-is'
 
 import { useFilterContext } from '../../hooks/useFilters'
 import { messages } from '../../lib/messages/messages'

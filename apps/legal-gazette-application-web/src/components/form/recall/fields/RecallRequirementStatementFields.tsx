@@ -4,8 +4,8 @@ import { useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 
 import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
-
-import { GridColumn, GridRow } from '@island.is/island-ui/core'
+import { GridColumn} from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 
 import { ApplicationRequirementStatementEnum } from '../../../../gen/fetch'
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'

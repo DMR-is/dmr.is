@@ -8,7 +8,7 @@ import {
   GridContainer,
   GridRow,
   SkeletonLoader,
-} from '@island.is/island-ui/core'
+} from '@dmr.is/ui/components/island-is'
 
 import { Meta } from '../../components/meta/Meta'
 import { Section } from '../../components/section/Section'

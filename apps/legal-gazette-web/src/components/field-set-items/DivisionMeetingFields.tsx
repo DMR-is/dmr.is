@@ -1,13 +1,12 @@
 'use client'
 
 import {
+  DatePicker,
   GridColumn,
   GridRow,
   Input,
   Stack,
 } from '@dmr.is/ui/components/island-is'
-
-import { DatePicker } from '@island.is/island-ui/core'
 
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 

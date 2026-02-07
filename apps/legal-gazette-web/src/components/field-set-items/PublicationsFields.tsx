@@ -10,12 +10,11 @@ import {
   GridColumn,
   GridRow,
   Icon,
+  Inline,
   Input,
   Stack,
   Text,
 } from '@dmr.is/ui/components/island-is'
-
-import { Inline } from '@island.is/island-ui/core'
 
 import { AdvertPublicationDto } from '../../gen/fetch'
 import { useUpdatePublications } from '../../hooks/useUpdatePublications'
