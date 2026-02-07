@@ -1,12 +1,10 @@
 import { ErrorBoundary } from 'react-error-boundary'
 
 import { HydrateClient } from '@dmr.is/trpc/client/server'
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-} from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 
 import { AdvertFormContainer } from './AdvertFormContainer'
 import { AdvertSidebarContainer } from './AdvertSidebarContainer'

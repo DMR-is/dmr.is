@@ -1,4 +1,8 @@
-import { ArrowLink, Box, Stack, Text } from '@island.is/island-ui/core'
+import { ArrowLink } from '../../island-is/lib/ArrowLink'
+import { Box } from '../../island-is/lib/Box'
+import { Stack } from '../../island-is/lib/Stack'
+import { Text } from '../../island-is/lib/Text'
+
 
 type WrapperProps = {
   background?: 'white' | 'blue'

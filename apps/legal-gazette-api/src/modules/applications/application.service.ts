@@ -1,7 +1,6 @@
 import endOfDay from 'date-fns/endOfDay'
 import startOfDay from 'date-fns/startOfDay'
 import deepmerge from 'deepmerge'
-import get from 'lodash/get'
 import { Op, Sequelize, WhereOptions } from 'sequelize'
 
 import {
@@ -19,8 +18,8 @@ import {
   updateApplicationInput,
 } from '@dmr.is/legal-gazette/schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { PagingQuery } from '@dmr.is/shared/dto'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'
+import { get } from '@dmr.is/utils/shared/lodash/get'
 
 import {
   RECALL_BANKRUPTCY_ADVERT_TYPE_ID,

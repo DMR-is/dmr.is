@@ -3,7 +3,7 @@ import { useSession } from 'next-auth/react'
 import { useState } from 'react'
 import * as z from 'zod'
 
-import { toast } from '@island.is/island-ui/core'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { AddApplicationAttachmentTypeEnum } from '../gen/fetch'
 import { getDmrClient } from '../lib/api/createClient'

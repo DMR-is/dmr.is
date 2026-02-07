@@ -1,6 +1,6 @@
 'use client'
 
-import { toast } from '@dmr.is/ui/components/island-is'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { useTRPC } from '../lib/trpc/client/trpc'
 

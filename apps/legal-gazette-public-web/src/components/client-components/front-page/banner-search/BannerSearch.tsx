@@ -2,16 +2,14 @@
 
 import { useRouter } from 'next/navigation'
 
-import {
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  Input,
-  Stack,
-  Tag,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Tag } from '@dmr.is/ui/components/island-is/Tag'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import * as styles from './BannerSearch.css'
 

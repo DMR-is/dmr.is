@@ -2,16 +2,14 @@ import { GetServerSideProps } from 'next'
 import { useRouter } from 'next/router'
 import { getServerSession } from 'next-auth'
 
-import {
-  AlertMessage,
-  Box,
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  LinkV2,
-  Stack,
-} from '@island.is/island-ui/core'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { CasePublishingList } from '../../components/case-publishing-list/CasePublishingList'
 import { Section } from '../../components/section/Section'

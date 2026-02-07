@@ -1,6 +1,10 @@
 import { useState } from 'react'
 
-import { Button, Inline, Input, Stack, toast } from '@island.is/island-ui/core'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { useAdvertTypes, useDepartments } from '../../hooks/api'
 import { useMainTypes } from '../../hooks/api/useMainTypes'

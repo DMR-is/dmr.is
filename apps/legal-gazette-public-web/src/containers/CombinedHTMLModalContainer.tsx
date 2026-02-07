@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { Button } from '@dmr.is/ui/components/island-is'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { PagingTotalItemsText } from '@dmr.is/ui/components/PagingTotaItemsText/PagingTotalItemsText'
 
 import { CombinedHTMLModal } from '../components/client-components/search-page/results/CombinedHTMLModal'

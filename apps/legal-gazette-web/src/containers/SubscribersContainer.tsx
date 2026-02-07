@@ -5,15 +5,13 @@ import { useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import Hero from '@dmr.is/ui/components/Hero/Hero'
-import {
-  Checkbox,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Stack,
-  Text,
-  toast,
-} from '@dmr.is/ui/components/island-is'
+import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { CreateSubscriberModal } from '../components/subscribers/CreateSubscriberModal'
 import { SubscribersTable } from '../components/subscribers/SubscribersTable'

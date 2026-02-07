@@ -1,15 +1,13 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
-import {
-  ArrowLink,
-  Box,
-  Icon,
-  Inline,
-  Stack,
-  Tag,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { ArrowLink } from '@dmr.is/ui/components/island-is/ArrowLink'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Tag } from '@dmr.is/ui/components/island-is/Tag'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { PublishedPublicationDto } from '../../../gen/fetch'
 

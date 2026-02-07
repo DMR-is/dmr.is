@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
-import { Button, Input } from '@dmr.is/ui/components/island-is'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 type Company = {

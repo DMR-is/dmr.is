@@ -1,6 +1,7 @@
 import { MessageDescriptor } from 'react-intl'
 
-import { GridColumn, GridRow } from '@island.is/island-ui/core'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { BannerCard } from './BannerCard'

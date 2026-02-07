@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 
 import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
-import { toast } from '@dmr.is/ui/components/island-is'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import {
   AdvertDetailedDto,

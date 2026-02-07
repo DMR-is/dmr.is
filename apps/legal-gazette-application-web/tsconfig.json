@@ -30,7 +30,6 @@
     "**/*.tsx",
     "next-env.d.ts",
     ".next/types/**/*.ts",
-    "../../dist/apps/legal-gazette-application-web/.next/types/**/*.ts",
     "../../apps/legal-gazette-application-web/dist/.next/types/**/*.ts"
   ],
   "exclude": ["node_modules"]

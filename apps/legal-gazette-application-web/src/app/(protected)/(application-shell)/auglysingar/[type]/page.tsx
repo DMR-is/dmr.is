@@ -1,14 +1,12 @@
 'use client'
 
-import {
-  Box,
-  Bullet,
-  BulletList,
-  Button,
-  LinkV2,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Bullet } from '@dmr.is/ui/components/island-is/Bullet'
+import { BulletList } from '@dmr.is/ui/components/island-is/BulletList'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import {
   ALLOWED_FORM_TYPES,

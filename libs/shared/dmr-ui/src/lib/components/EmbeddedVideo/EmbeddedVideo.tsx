@@ -3,19 +3,17 @@
 import { FC, useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 
-import {
-  Box,
-  Button,
-  Checkbox,
-  FocusableBox,
-  Icon,
-  LinkContext,
-  Stack,
-  Text,
-} from '@island.is/island-ui/core'
+import { LinkContext } from '@island.is/island-ui/core/context/LinkContext/LinkContext'
 import { theme } from '@island.is/island-ui/theme'
 import { getVideoEmbedProperties } from '@island.is/shared/utils'
 
+import { Box } from '../../island-is/lib/Box'
+import { Button } from '../../island-is/lib/Button'
+import { Checkbox } from '../../island-is/lib/Checkbox'
+import { FocusableBox } from '../../island-is/lib/FocusableBox'
+import { Icon } from '../../island-is/lib/Icon'
+import { Stack } from '../../island-is/lib/Stack'
+import { Text } from '../../island-is/lib/Text'
 import * as styles from './EmbeddedVideo.css'
 
 export interface EmbeddedVideoProps {

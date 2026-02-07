@@ -1,9 +1,8 @@
 'use client'
 
 import { ImagePanel } from '@dmr.is/ui/components/ImagePanel/ImagePanel'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Section } from '@dmr.is/ui/components/Section/Section'
-
-import { Stack } from '@island.is/island-ui/core'
 
 export const ApplicationContainer = () => {
   return (

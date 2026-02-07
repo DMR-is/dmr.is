@@ -1,5 +1,5 @@
 import { Header } from '@dmr.is/ui/components/Header/Header'
-import { Box } from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 
 import { MenuButton } from '../../components/buttons/MenuButton'
 import { Providers } from '../../components/providers/Providers'

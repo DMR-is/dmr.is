@@ -1,11 +1,9 @@
 import cn from 'classnames'
 
-import {
-  Icon,
-  Inline,
-  Text,
-  useBoxStyles,
-} from '@dmr.is/ui/components/island-is'
+import { useBoxStyles } from '@dmr.is/ui/components/island-is/Box'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import * as styles from './OpenCloseButton.css'
 

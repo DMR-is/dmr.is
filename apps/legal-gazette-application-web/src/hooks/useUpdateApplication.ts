@@ -1,5 +1,4 @@
 import deepmerge from 'deepmerge'
-import debounce from 'lodash/debounce'
 import { useCallback } from 'react'
 
 import {
@@ -7,7 +6,8 @@ import {
   RecallApplicationAnswers,
   updateApplicationWithIdInput,
 } from '@dmr.is/legal-gazette/schemas'
-import { toast } from '@dmr.is/ui/components/island-is'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+import { debounce } from '@dmr.is/utils/shared/lodash/debounce'
 
 import { ApplicationDetailedDto } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'

@@ -1,4 +1,4 @@
-import { Stack } from '@dmr.is/ui/components/island-is'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { CompanyLookup } from '../../../../company-lookup/CompanyLookup'
 import { RecallSettlementDefault } from './RecallSettlementDefault'

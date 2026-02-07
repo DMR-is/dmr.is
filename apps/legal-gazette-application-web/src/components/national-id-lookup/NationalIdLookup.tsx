@@ -5,7 +5,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
 import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
-import { Input, toast } from '@dmr.is/ui/components/island-is'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
 

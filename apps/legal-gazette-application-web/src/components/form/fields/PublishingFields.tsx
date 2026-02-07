@@ -8,19 +8,17 @@ import {
   CommonApplicationWebSchema,
   RecallApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
-import {
-  AlertMessage,
-  Box,
-  Button,
-  GridColumn,
-  GridRow,
-  Inline,
-  Stack,
-} from '@dmr.is/ui/components/island-is'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import {
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,
-} from '@dmr.is/utils/date'
+} from '@dmr.is/utils/client/dateUtils'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 import { ONE_DAY, ONE_WEEK } from '../../../lib/constants'

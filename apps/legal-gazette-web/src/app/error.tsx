@@ -1,19 +1,16 @@
 'use client'
 
-import { usePathname } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
-import { useEffect } from 'react';
+import { useEffect } from 'react'
 
-import { forceLogin } from '@dmr.is/auth/useLogOut';
-import {
-  Button,
-  GridContainer,
-  GridRow,
-  Text,
-} from '@dmr.is/ui/components/island-is'
-
-import { GridColumn } from '@island.is/island-ui/core'
+import { forceLogin } from '@dmr.is/auth/useLogOut'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 export default function Error({ reset }: { error: Error; reset: () => void }) {
   const pathName = usePathname()

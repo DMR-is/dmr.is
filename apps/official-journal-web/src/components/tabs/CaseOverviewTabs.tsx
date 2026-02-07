@@ -1,6 +1,5 @@
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
-
-import { SkeletonLoader } from '@island.is/island-ui/core'
 
 import { CaseStatusEnum } from '../../gen/fetch'
 import { useCasesWithStatusCount } from '../../hooks/api'

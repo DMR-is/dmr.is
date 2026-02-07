@@ -1,6 +1,6 @@
 'use client'
 
-import { Box } from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 
 import * as styles from './form.css'
 

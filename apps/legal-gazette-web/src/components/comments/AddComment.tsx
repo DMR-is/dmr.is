@@ -3,13 +3,11 @@ import { useSession } from 'next-auth/react'
 
 import { useState } from 'react'
 
-import {
-  Button,
-  Inline,
-  Input,
-  Stack,
-  toast,
-} from '@dmr.is/ui/components/island-is'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { AdvertDetailedDto, CommentDto, CommentTypeEnum } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'

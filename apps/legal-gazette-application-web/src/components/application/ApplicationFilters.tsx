@@ -1,18 +1,16 @@
 import { useEffect, useState } from 'react'
 
-import {
-  Box,
-  Button,
-  DatePicker,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  Input,
-  Select,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Select } from '@dmr.is/ui/components/island-is/Select'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { ApplicationStatusEnum, ApplicationTypeEnum } from '../../gen/fetch'
 import { useApplicationFilters } from '../../hooks/useApplicationFilters'

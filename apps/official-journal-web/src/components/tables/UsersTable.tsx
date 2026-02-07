@@ -3,18 +3,15 @@ import { parseAsInteger, useQueryState } from 'next-usequerystate'
 import debounce from 'lodash/debounce'
 import { useCallback, useState } from 'react'
 
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Drawer } from '@dmr.is/ui/components/island-is/Drawer'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
-
-import {
-  Button,
-  Drawer,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  Stack,
-  Tag,
-} from '@island.is/island-ui/core'
 
 import { UserRoleDto } from '../../gen/fetch'
 import { useToggle } from '../../hooks/useToggle'

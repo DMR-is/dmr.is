@@ -3,7 +3,7 @@ import { useSession } from 'next-auth/react'
 
 import { useState } from 'react'
 
-import { toast } from '@island.is/island-ui/core'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { getDmrClient } from '../../../lib/api/createClient'
 import { Routes } from '../../../lib/constants'

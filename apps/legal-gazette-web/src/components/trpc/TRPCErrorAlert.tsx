@@ -1,4 +1,4 @@
-import { AlertMessage } from '@dmr.is/ui/components/island-is'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 
 import { TRPCClientErrorLike } from '@trpc/client'
 import { TRPC_ERROR_CODE_KEY, TRPC_ERROR_CODE_NUMBER } from '@trpc/server'

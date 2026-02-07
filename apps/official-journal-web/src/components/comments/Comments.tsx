@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
-import { Box, Stack } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { Tabs } from '../tabs/Tabs'

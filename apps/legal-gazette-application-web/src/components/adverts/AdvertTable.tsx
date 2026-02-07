@@ -3,12 +3,13 @@
 import { useRouter } from 'next/navigation'
 
 import { useState } from 'react'
-import { Inline } from 'submodules/island.is/libs/island-ui/core/src/lib/Inline/Inline'
 
-import { Icon, Tag } from '@dmr.is/ui/components/island-is'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
-import { formatDate } from '@dmr.is/utils/client'
+import { formatDate } from '@dmr.is/utils/shared/format/date'
 
 import { AdvertDto } from '../../gen/fetch'
 import { ApplicationTypeEnum } from '../../gen/fetch'

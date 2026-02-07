@@ -1,13 +1,11 @@
 'use client'
 
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Pagination,
-  Stack,
-} from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Pagination } from '@dmr.is/ui/components/island-is/Pagination'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { PagingTotalItemsText } from '@dmr.is/ui/components/PagingTotaItemsText/PagingTotalItemsText'
 
 import { Paging } from '../../gen/fetch'

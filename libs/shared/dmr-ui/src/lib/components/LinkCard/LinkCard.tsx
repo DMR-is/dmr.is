@@ -1,13 +1,10 @@
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  LinkV2,
-  Stack,
-  Text,
-} from '@island.is/island-ui/core'
-
+import { Box } from '../../island-is/lib/Box'
+import { GridColumn } from '../../island-is/lib/GridColumn'
+import { GridContainer } from '../../island-is/lib/GridContainer'
+import { GridRow } from '../../island-is/lib/GridRow'
+import { LinkV2 } from '../../island-is/lib/LinkV2'
+import { Stack } from '../../island-is/lib/Stack'
+import { Text } from '../../island-is/lib/Text'
 import { Image, ImageProps } from '../Image/Image'
 export type LinkCardProps = {
   href: string

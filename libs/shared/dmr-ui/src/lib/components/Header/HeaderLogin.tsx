@@ -6,18 +6,16 @@ import { useState } from 'react'
 
 import { identityServerId } from '@dmr.is/auth/identityProvider'
 
-import {
-  Box,
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Hidden,
-  Inline,
-  Text,
-  useBreakpoint,
-} from '@island.is/island-ui/core'
+import { useBreakpoint } from '@island.is/island-ui/core/hooks/useBreakpoint'
 
+import { Box } from '../../island-is/lib/Box'
+import { Button } from '../../island-is/lib/Button'
+import { GridColumn } from '../../island-is/lib/GridColumn'
+import { GridContainer } from '../../island-is/lib/GridContainer'
+import { GridRow } from '../../island-is/lib/GridRow'
+import { Hidden } from '../../island-is/lib/Hidden'
+import { Inline } from '../../island-is/lib/Inline'
+import { Text } from '../../island-is/lib/Text'
 import * as styles from './Header.css'
 import { HeaderLogo } from './HeaderLogo'
 

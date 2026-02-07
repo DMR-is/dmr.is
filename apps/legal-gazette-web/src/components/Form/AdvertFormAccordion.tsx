@@ -2,14 +2,11 @@
 
 import React from 'react'
 
-import {
-  Accordion,
-  AccordionItem,
-  Inline,
-} from '@dmr.is/ui/components/island-is'
-import { Stack } from '@dmr.is/ui/components/island-is'
-
-import { Box } from '@island.is/island-ui/core'
+import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
+import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { useToggle } from '../../hooks/useToggle'
 import { OpenCloseButton } from '../buttons/OpenCloseButton'

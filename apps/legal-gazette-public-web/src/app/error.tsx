@@ -4,7 +4,8 @@ import { useSession } from 'next-auth/react'
 
 import { Header } from '@dmr.is/ui/components/Header/Header'
 import { HeaderLogin } from '@dmr.is/ui/components/Header/HeaderLogin'
-import { GridColumn, GridContainer } from '@dmr.is/ui/components/island-is'
+import { GridColumn} from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { ProblemFromError } from '@dmr.is/ui/components/Problem/ProblemFromError'
 
 export default function Error({

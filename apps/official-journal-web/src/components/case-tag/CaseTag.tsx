@@ -1,4 +1,4 @@
-import { Tag } from '@island.is/island-ui/core'
+import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 
 import { CaseStatusEnum, CaseTagTitleEnum } from '../../gen/fetch'
 

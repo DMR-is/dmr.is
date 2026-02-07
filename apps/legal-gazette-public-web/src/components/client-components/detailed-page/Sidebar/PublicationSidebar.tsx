@@ -1,13 +1,11 @@
 'use client'
 
-import {
-  Box,
-  Button,
-  LinkV2,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
-import { formatDate } from '@dmr.is/utils/client'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { formatDate } from '@dmr.is/utils/shared/format/date'
 
 import { AdvertPublicationDetailedDto } from '../../../../gen/fetch'
 

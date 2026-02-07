@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Tag } from '@dmr.is/ui/components/island-is'
+import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 
 import { StatusDto } from '../../gen/fetch'
 import { StatusEnum } from '../../lib/constants'

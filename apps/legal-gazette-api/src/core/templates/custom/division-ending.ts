@@ -1,5 +1,5 @@
-import { formatDate } from '@dmr.is/utils'
-import { formatNationalId } from '@dmr.is/utils/client'
+import { formatNationalId } from '@dmr.is/utils/server/formatting'
+import { formatDate } from '@dmr.is/utils/server/serverUtils'
 
 import { AdvertModel } from '../../../models/advert.model'
 import { getElement, getTableCell, getTableHeaderCell } from '../element'

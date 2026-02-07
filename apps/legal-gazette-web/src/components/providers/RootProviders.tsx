@@ -6,7 +6,7 @@ import { SessionProvider } from 'next-auth/react'
 import { NuqsAdapter } from 'nuqs/adapters/next'
 import { IntlProvider } from 'react-intl'
 
-import { ToastContainer } from '@dmr.is/ui/components/island-is'
+import { ToastContainer } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { allMessages } from '../../lib/messages'
 import { TRPCReactProvider } from '../../lib/trpc/client/Provider'

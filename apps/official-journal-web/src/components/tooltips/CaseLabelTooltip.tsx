@@ -1,4 +1,5 @@
-import { Box, Icon } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from './messages'

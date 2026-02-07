@@ -16,7 +16,7 @@ import {
   UpdateInstitution,
 } from '@dmr.is/shared/dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging } from '@dmr.is/utils'
+import { generatePaging } from '@dmr.is/utils/server/serverUtils'
 
 import { institutionMigrate } from './migrations/institution.migrate'
 import { InstitutionModel } from './models/institution.model'

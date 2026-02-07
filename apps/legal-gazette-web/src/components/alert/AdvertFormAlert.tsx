@@ -1,4 +1,4 @@
-import { AlertMessage } from '@dmr.is/ui/components/island-is'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 
 import { StatusDto } from '../../gen/fetch'
 import { StatusIdEnum } from '../../lib/constants'

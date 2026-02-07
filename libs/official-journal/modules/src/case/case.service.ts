@@ -71,7 +71,7 @@ import {
   getLimitAndOffset,
   getPublicationTemplate,
   getS3Bucket,
-} from '@dmr.is/utils'
+} from '@dmr.is/utils/server/serverUtils'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'

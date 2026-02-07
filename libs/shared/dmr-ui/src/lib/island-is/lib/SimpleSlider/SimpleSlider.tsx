@@ -11,15 +11,12 @@ import React, {
 } from 'react'
 import { useWindowSize } from 'react-use'
 
-import {
-  Box,
-  Button,
-  Hidden,
-  Inline,
-  Logo,
-  Text,
-} from '@island.is/island-ui/core'
-
+import { Box } from '../Box'
+import { Button } from '../Button'
+import { Hidden } from '../Hidden'
+import { Inline } from '../Inline'
+import { Logo } from '../Logo'
+import {Text} from '../Text'
 import * as styles from './SimpleSlider.css'
 
 type BreakpointOption = Partial<

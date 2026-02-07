@@ -2,7 +2,7 @@ import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { useSession } from 'next-auth/react'
 
-import { isResponse } from '@dmr.is/utils/client'
+import { isResponse } from '@dmr.is/utils/client/clientUtils'
 
 import { CaseFields } from '../../components/case-update-fields/CaseFields'
 import { FormShell } from '../../components/form/FormShell'

@@ -1,4 +1,6 @@
-import { GridColumn, GridContainer, GridRow } from '@island.is/island-ui/core'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 
 import { Section } from '../section/Section'
 

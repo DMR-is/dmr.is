@@ -5,15 +5,12 @@ import {
   useQueryState,
 } from 'next-usequerystate'
 
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Tabs } from '@dmr.is/ui/components/island-is/Tabs'
 import { Section } from '@dmr.is/ui/components/Section/Section'
-
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Tabs,
-} from '@island.is/island-ui/core'
 
 import { UserProvider } from '../../context/userContext'
 import { UserRoleDto } from '../../gen/fetch'

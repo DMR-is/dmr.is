@@ -1,4 +1,4 @@
-import { formatNationalId } from "@dmr.is/utils/client"
+import { formatNationalId } from '@dmr.is/utils/server/formatting'
 
 export enum WeekdayEnum {
   Sunday = 0,

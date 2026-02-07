@@ -1,16 +1,14 @@
 'use client'
 
-import { PieChart } from '@dmr.is/ui/components/PieChart/PieChart'
+import dynamic from 'next/dynamic'
+
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Section } from '@dmr.is/ui/components/Section/Section'
 import { TrackerTable } from '@dmr.is/ui/components/Tables/TrackerTable'
 import { Wrapper } from '@dmr.is/ui/components/Wrapper/Wrapper'
-
-import {
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Stack,
-} from '@island.is/island-ui/core'
 
 import {
   GetAdvertsInProgressStatsDto,
@@ -18,6 +16,16 @@ import {
   GetCountByStatusesDto,
 } from '../../gen/fetch'
 import { Route } from '../../lib/constants'
+
+const PieChart = dynamic(
+  () =>
+    import('@dmr.is/ui/lazy/components/PieChart/PieChart').then(
+      (mod) => mod.PieChart,
+    ),
+  {
+    ssr: false,
+  },
+)
 
 type Props = {
   statusStats: GetCountByStatusesDto

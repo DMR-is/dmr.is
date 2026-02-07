@@ -1,15 +1,13 @@
 'use client'
 
-import {
-  Box,
-  Button,
-  LinkV2,
-  SkeletonLoader,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
-import { formatDate } from '@dmr.is/utils/client'
+import { formatDate } from '@dmr.is/utils/shared/format/date'
 
 import { useFilters } from '../../../../hooks/useFilters'
 import { useIssues } from '../../../../hooks/useIssues'

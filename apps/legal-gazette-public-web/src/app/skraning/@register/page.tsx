@@ -4,20 +4,18 @@ import { useSession } from 'next-auth/react'
 
 import { useState } from 'react'
 
-import {
-  AlertMessage,
-  Box,
-  Button,
-  Checkbox,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  Input,
-  LinkV2,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { RegistrationButton } from '../../../components/client-components/registration/RegistrationButton'
 import * as styles from '../skraning.css'

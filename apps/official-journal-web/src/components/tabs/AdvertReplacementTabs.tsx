@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 
-import { Stack, Text } from '@island.is/island-ui/core'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { useAdverts } from '../../hooks/api/get/useAdverts'
 import { useSearchParams } from '../../hooks/useSearchParams'

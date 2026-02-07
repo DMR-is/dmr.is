@@ -1,5 +1,6 @@
-import { FocusableBox, useBreakpoint } from '@island.is/island-ui/core'
+import {  useBreakpoint } from '@island.is/island-ui/core/hooks/useBreakpoint'
 
+import { FocusableBox } from '../../island-is/lib/FocusableBox'
 import skjaldarmerki from './images/skjaldarmerki.svg'
 
 export const HeaderLogo = () => {

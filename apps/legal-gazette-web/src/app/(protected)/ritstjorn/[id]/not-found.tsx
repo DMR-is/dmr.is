@@ -1,8 +1,9 @@
 'use client'
 
-import { Box, Button, Text } from '@dmr.is/ui/components/island-is'
-
-import { LinkV2 } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { Route } from '../../../../lib/constants'
 

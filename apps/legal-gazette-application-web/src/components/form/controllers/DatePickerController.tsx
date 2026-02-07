@@ -1,6 +1,6 @@
 import { useController, UseControllerProps } from 'react-hook-form'
 
-import { DatePicker } from '@dmr.is/ui/components/island-is'
+import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 
 import {
   MAX_SELECTABLE_YEAR,

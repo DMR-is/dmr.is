@@ -2,17 +2,15 @@ import dynamic from 'next/dynamic'
 
 import { MessageDescriptor } from 'react-intl'
 
-import {
-  Box,
-  Breadcrumbs,
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  Input,
-  Text,
-} from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Breadcrumbs } from '@dmr.is/ui/components/island-is/Breadcrumbs'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { CaseStatusEnum } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'

@@ -4,17 +4,16 @@ import { useSession } from 'next-auth/react'
 import cn from 'classnames'
 import { useEffect } from 'react'
 
-import {
-  Box,
-  DropdownMenu,
-  FocusableBox,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Hidden,
-  Inline,
-  Logo,
-} from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { DropdownMenu } from '@dmr.is/ui/components/island-is/DropdownMenu'
+import { FocusableBox } from '@dmr.is/ui/components/island-is/FocusableBox'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+
+import { Hidden } from '@island.is/island-ui/core/Hidden/Hidden'
+import { Logo } from '@island.is/island-ui/core/Logo/Logo'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { forceLogin, useLogOut } from '../../hooks/useLogOut'

@@ -2,7 +2,11 @@ import { parseAsStringEnum, useQueryState } from 'next-usequerystate'
 
 import { useState } from 'react'
 
-import { Button, Inline, LinkV2, Stack, Text } from '@island.is/island-ui/core'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { Case, CaseStatusEnum, DepartmentEnum } from '../../gen/fetch'
 import {

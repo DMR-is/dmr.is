@@ -1,6 +1,7 @@
 import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
 import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay'
-import { Breadcrumbs, Stack } from '@dmr.is/ui/components/island-is'
+import { Breadcrumbs } from '@dmr.is/ui/components/island-is/Breadcrumbs'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { trpc } from '../../../../../lib/trpc/client/server'
 import { handlePublicationRedirects } from '../../../../../lib/utils/url-helpers'
