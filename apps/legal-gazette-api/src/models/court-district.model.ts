@@ -1,5 +1,3 @@
-import { applyCase } from 'beygla'
-
 import { ApiProperty } from '@nestjs/swagger'
 
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared/models/base'
@@ -10,7 +8,9 @@ import { BaseEntityDto } from '../modules/base-entity/base-entity.dto'
 export class CourtDistrictModel extends BaseEntityModel<CourtDistrictDto> {
   // returns the title in "eignarfall"
   get possessiveTitle(): string {
-    return this.title ? applyCase('ef', this.title) : ''
+    const possesive = this.title.replace('Héraðsdómur', 'Héraðsdóms')
+
+    return possesive
   }
 }
 
