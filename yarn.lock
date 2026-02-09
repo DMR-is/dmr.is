@@ -12537,10 +12537,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"beygla@npm:1.5.2":
-  version: 1.5.2
-  resolution: "beygla@npm:1.5.2"
-  checksum: 10c0/6f825118efe60a344b2ae1da83fbd15bfee154c47dd4bc6d550ff39055e4d5a2f31bdcf3f4691cec04b8bee4c80ec7399c59cc94eab5dcefb96c9527e4efc4d1
+"beygla@npm:1.5.5":
+  version: 1.5.5
+  resolution: "beygla@npm:1.5.5"
+  checksum: 10c0/75184aa73aaf5d25aaddfc5219cf72ce61d9947c2a9b661c711e73cbc50042abf67ccd6ef10fd8ce5d867b42a188af22b3ad246eb76fee6995e37d415c030219
   languageName: node
   linkType: hard
 
@@ -14939,7 +14939,7 @@ __metadata:
     agentkeepalive: "npm:^4.2.1"
     axios: "npm:^1.11.0"
     babel-jest: "npm:30.0.5"
-    beygla: "npm:1.5.2"
+    beygla: "npm:1.5.5"
     cache-manager: "npm:7.2.4"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.14.1"
