@@ -30,7 +30,7 @@ export const HeroContainer = () => {
         </GridColumn>
         <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
           <LinkCard
-            href={Route.RITSTJORN + '?tab=utgafa'}
+            href={Route.RITSTJORN + '?tab=utgafa-auglysinga'}
             title="Útgáfa"
             description="Mál sem eru tilbúin til útgáfu."
             image={{
