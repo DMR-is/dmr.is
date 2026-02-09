@@ -1,5 +1,7 @@
+'use client'
+
 import { useState } from 'react'
-import z from 'zod'
+import * as z from 'zod'
 
 import { parseZodError } from '@dmr.is/legal-gazette/schemas'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
@@ -8,19 +10,18 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
-import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
-import { createAdvertAndCommonApplicationInput } from '../../lib/inputs'
-import { useTRPC } from '../../lib/trpc/client/trpc'
-import { Editor } from '../editor/HTMLEditor'
-import { CategorySelect } from '../selects/CategorySelect'
-import { TypeSelect } from '../selects/TypeSelect'
-import { CreateAdvertApplicant } from './CreateAdvertApplicant'
-import { CreateAdvertCommunicationChannel } from './CreateAdvertCommunicationChannel'
-import { CreateAdvertErrors } from './CreateAdvertErrors'
-import { CreateAdvertPublications } from './CreateAdvertPublications'
-import { CreateAdvertSignature } from './CreateAdvertSignature'
-import { SubmitCreateAdvert } from './SubmitCreateAdvert'
+import { createAdvertAndCommonApplicationInput } from '../../../lib/inputs'
+import { useTRPC } from '../../../lib/trpc/client/trpc'
+import { Editor } from '../../editor/HTMLEditor'
+import { CategorySelect } from '../../selects/CategorySelect'
+import { TypeSelect } from '../../selects/TypeSelect'
+import { CreateAdvertApplicant } from '../CreateAdvertApplicant'
+import { CreateAdvertCommunicationChannel } from '../CreateAdvertCommunicationChannel'
+import { CreateAdvertErrors } from '../CreateAdvertErrors'
+import { CreateAdvertPublications } from '../CreateAdvertPublications'
+import { CreateAdvertSignature } from '../CreateAdvertSignature'
+import { SubmitCreateAdvert } from '../SubmitCreateAdvert'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -51,13 +52,11 @@ const initalState: CreateAdvertAndCommonApplicationBody = {
   },
 }
 
-export const CreateCommonAdvertModal = ({
-  isVisible,
-  setIsVisible,
-}: {
-  isVisible: boolean
-  setIsVisible: (isVisible: boolean) => void
-}) => {
+type Props = {
+  handleSubmit?: () => void
+}
+
+export const CreateCommonAdvertModal = ({ handleSubmit }: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
@@ -67,7 +66,7 @@ export const CreateCommonAdvertModal = ({
         toast.success('Auglýsing búin til')
         queryClient.invalidateQueries(trpc.getAdvertsInProgress.queryFilter())
         setState(initalState)
-        setIsVisible(false)
+        handleSubmit?.()
       },
       onError: () => {
         toast.error('Ekki tókst að búa til auglýsingu')
@@ -95,12 +94,7 @@ export const CreateCommonAdvertModal = ({
   }
 
   return (
-    <Modal
-      baseId="create-advert-and-common-application-modal"
-      onVisibilityChange={setIsVisible}
-      isVisible={isVisible}
-      title="Almenn auglýsing"
-    >
+    <>
       <GridContainer>
         <GridRow rowGap={[2, 3]}>
           <GridColumn span="12/12">
@@ -206,6 +200,6 @@ export const CreateCommonAdvertModal = ({
       />
       <CreateAdvertErrors errors={errors} onResetErrors={() => setErrors([])} />
       <SubmitCreateAdvert onSubmit={onSubmit} isPending={isPending} />
-    </Modal>
+    </>
   )
 }

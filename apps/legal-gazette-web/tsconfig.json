@@ -21,8 +21,15 @@
         "name": "next"
       }
     ],
-    "types": ["jest", "node"],
-    "lib": ["dom", "dom.iterable", "es2019"],
+    "types": [
+      "jest",
+      "node"
+    ],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "es2019"
+    ],
     "moduleResolution": "node"
   },
   "include": [
@@ -30,7 +37,10 @@
     "**/*.ts",
     "**/*.tsx",
     "next-env.d.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "../../apps/legal-gazette-web/dist/.next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

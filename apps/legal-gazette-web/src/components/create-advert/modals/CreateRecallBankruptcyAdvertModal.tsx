@@ -1,25 +1,26 @@
+'use client'
+
 import { useState } from 'react'
-import z from 'zod'
+import * as z from 'zod'
 
 import {
   ApplicationRequirementStatementEnum,
   parseZodError,
 } from '@dmr.is/legal-gazette/schemas'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
-import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
-import { createAdvertAndRecallBankruptcyApplicationInput } from '../../lib/inputs'
-import { useTRPC } from '../../lib/trpc/client/trpc'
-import { CreateAdvertAdditionalText } from './CreateAdvertAdditionalText'
-import { CreateAdvertApplicant } from './CreateAdvertApplicant'
-import { CreateAdvertCommunicationChannel } from './CreateAdvertCommunicationChannel'
-import { CreateAdvertCourtDistrict } from './CreateAdvertCourtDistrict'
-import { CreateAdvertDivisionMeeting } from './CreateAdvertDivisionMeeting'
-import { CreateAdvertErrors } from './CreateAdvertErrors'
-import { CreateAdvertPublications } from './CreateAdvertPublications'
-import { CreateAdvertSignature } from './CreateAdvertSignature'
-import { CreateBankruptcySettlement } from './CreateBankruptcySettlement'
-import { SubmitCreateAdvert } from './SubmitCreateAdvert'
+import { createAdvertAndRecallBankruptcyApplicationInput } from '../../../lib/inputs'
+import { useTRPC } from '../../../lib/trpc/client/trpc'
+import { CreateAdvertAdditionalText } from '../CreateAdvertAdditionalText'
+import { CreateAdvertApplicant } from '../CreateAdvertApplicant'
+import { CreateAdvertCommunicationChannel } from '../CreateAdvertCommunicationChannel'
+import { CreateAdvertCourtDistrict } from '../CreateAdvertCourtDistrict'
+import { CreateAdvertDivisionMeeting } from '../CreateAdvertDivisionMeeting'
+import { CreateAdvertErrors } from '../CreateAdvertErrors'
+import { CreateAdvertPublications } from '../CreateAdvertPublications'
+import { CreateAdvertSignature } from '../CreateAdvertSignature'
+import { CreateBankruptcySettlement } from '../CreateBankruptcySettlement'
+import { SubmitCreateAdvert } from '../SubmitCreateAdvert'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -61,13 +62,10 @@ const initalState: CreateAdvertAndRecallBankruptcyApplicationBody = {
   },
 }
 
-export const CreateBankruptcyAdvertModal = ({
-  isVisible,
-  setIsVisible,
-}: {
-  isVisible: boolean
-  setIsVisible: (isVisible: boolean) => void
-}) => {
+type Props = {
+  handleSubmit?: () => void
+}
+export const CreateBankruptcyAdvertModal = ({ handleSubmit }: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
@@ -79,7 +77,7 @@ export const CreateBankruptcyAdvertModal = ({
         toast.success('Auglýsing búin til')
         queryClient.invalidateQueries(trpc.getAdvertsInProgress.queryFilter())
         setState(initalState)
-        setIsVisible(false)
+        handleSubmit?.()
       },
       onError: () => {
         toast.error('Ekki tókst að búa til auglýsingu')
@@ -107,12 +105,7 @@ export const CreateBankruptcyAdvertModal = ({
   }
 
   return (
-    <Modal
-      title="Innköllun þrotabús"
-      baseId="create-recall-bankruptcy-advert-modal"
-      isVisible={isVisible}
-      onVisibilityChange={setIsVisible}
-    >
+    <>
       <CreateAdvertApplicant
         onChange={(nationalId) =>
           setState((prev) => ({ ...prev, applicantNationalId: nationalId }))
@@ -180,6 +173,6 @@ export const CreateBankruptcyAdvertModal = ({
       />
       <CreateAdvertErrors errors={errors} onResetErrors={() => setErrors([])} />
       <SubmitCreateAdvert onSubmit={onSubmit} isPending={isPending} />
-    </Modal>
+    </>
   )
 }

@@ -1,53 +1,32 @@
 'use client'
 
-import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 import { DropdownMenu } from '@dmr.is/ui/components/island-is/DropdownMenu'
 
-import { CreateCommonAdvertModal } from './CreateCommonAdvertModal'
-import { CreateBankruptcyAdvertModal } from './CreateRecallBankruptcyAdvertModal'
-import { CreateDeceasedAdvertModal } from './CreateRecallDeceasedAdvertModal'
-
 export const CreateAdvertMenu = () => {
-  const [toggleCommonAdvert, setToggleCommonAdvert] = useState(false)
-  const [toggleBankruptcyAdvert, setToggleBankruptcyAdvert] = useState(false)
-  const [toggleDeceasedAdvert, setToggleDeceasedAdvert] = useState(false)
+  const router = useRouter()
 
   return (
-    <>
-      <DropdownMenu
-        title="Stofna"
-        icon="add"
-        iconType="outline"
-        openOnHover={false}
-        items={[
-          {
-            title: 'Almenn auglýsing',
-            onClick: () => setToggleCommonAdvert((prev) => !prev),
-          },
-          {
-            title: 'Innköllun þrotabús',
-            onClick: () => setToggleBankruptcyAdvert((prev) => !prev),
-          },
-          {
-            title: 'Innköllun dánarbús',
-            onClick: () => setToggleDeceasedAdvert((prev) => !prev),
-          },
-        ]}
-      />
-
-      <CreateCommonAdvertModal
-        isVisible={toggleCommonAdvert}
-        setIsVisible={setToggleCommonAdvert}
-      />
-      <CreateBankruptcyAdvertModal
-        isVisible={toggleBankruptcyAdvert}
-        setIsVisible={setToggleBankruptcyAdvert}
-      />
-      <CreateDeceasedAdvertModal
-        isVisible={toggleDeceasedAdvert}
-        setIsVisible={setToggleDeceasedAdvert}
-      />
-    </>
+    <DropdownMenu
+      title="Stofna"
+      icon="add"
+      iconType="outline"
+      openOnHover={false}
+      items={[
+        {
+          title: 'Almenn auglýsing',
+          onClick: () => router.push('/ritstjorn/create/almenn'),
+        },
+        {
+          title: 'Innköllun þrotabús',
+          onClick: () => router.push('/ritstjorn/create/throtabu'),
+        },
+        {
+          title: 'Innköllun dánarbús',
+          onClick: () => router.push('/ritstjorn/create/danarbu'),
+        },
+      ]}
+    />
   )
 }

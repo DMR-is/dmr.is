@@ -1,5 +1,6 @@
 export default async function RitstjornLayout({
   children,
+  createModal,
 }: {
   children: React.ReactNode
   createModal: React.ReactNode
@@ -8,6 +9,7 @@ export default async function RitstjornLayout({
     <>
       {children}
       {createModal}
+      <div id="modal-root" />
     </>
   )
 }
