@@ -1,3 +1,4 @@
+import differenceInCalendarDays from 'date-fns/differenceInCalendarDays'
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
@@ -86,6 +87,19 @@ export const getDaysAgo = (date: string | Date): number => {
   const now = new Date()
   const diffTime = Math.abs(now.getTime() - dateToUse.getTime())
   return Math.floor(diffTime / (1000 * 60 * 60 * 24))
+}
+
+/**
+ * Calculate the difference in calendar days between a date and now.
+ * Uses date-fns differenceInCalendarDays to correctly handle same-day times.
+ * Positive values mean the date is in the future, negative means past.
+ * @param date - The date to compare
+ * @returns Number of calendar days (positive for future, negative for past)
+ */
+export const getDaysDelta = (date: string | Date): number => {
+  const dateToUse = typeof date === 'string' ? new Date(date) : date
+  const now = new Date()
+  return differenceInCalendarDays(dateToUse, now)
 }
 
 export function getIcelandicDative(days: number) {

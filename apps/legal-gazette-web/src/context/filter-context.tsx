@@ -6,7 +6,7 @@ import {
   parseAsStringEnum,
   useQueryStates,
 } from 'nuqs'
-import { createContext, useState } from 'react'
+import { createContext, useEffect, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 
@@ -81,6 +81,14 @@ type FilterProviderProps = {
 export const FilterProvider = ({ children }: FilterProviderProps) => {
   const trpc = useTRPC()
   const { data: entities } = useQuery(trpc.getAllEntities.queryOptions())
+
+  useEffect(() => {
+    if (entities) {
+      resetOptions(entities.categories || [], setInternalCategoryOptions)
+      resetOptions(entities.types || [], setInternalTypeOptions)
+      resetOptions(entities.statuses || [], setInternalStatusOptions)
+    }
+  }, [entities])
 
   const categories = {
     categories: entities?.categories || [],
@@ -238,18 +246,6 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
     })),
   )
 
-  const resetOptions = <T extends BaseEntityDto>(
-    source: T[],
-    setter: (options: Option[]) => void,
-  ) => {
-    setter(
-      source.map((item) => ({
-        label: item.title,
-        value: item.id,
-      })),
-    )
-  }
-
   const resetStatusOptions = () => {
     resetOptions(statuses.statuses, setInternalStatusOptions)
   }
@@ -260,6 +256,18 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
 
   const resetTypeOptions = () => {
     resetOptions(types.types, setInternalTypeOptions)
+  }
+
+  const resetOptions = <T extends BaseEntityDto>(
+    source: T[],
+    setter: (options: Option[]) => void,
+  ) => {
+    setter(
+      source.map((item) => ({
+        label: item.title,
+        value: item.id,
+      })),
+    )
   }
 
   const setParams = (params: Partial<Params>) => {
