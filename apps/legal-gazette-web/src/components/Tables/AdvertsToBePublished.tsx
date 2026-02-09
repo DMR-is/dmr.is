@@ -2,7 +2,13 @@
 
 import { useIntl } from 'react-intl'
 
-import { Button, Checkbox, Inline, Stack, toast } from '@dmr.is/ui/components/island-is'
+import {
+  Button,
+  Checkbox,
+  Inline,
+  Stack,
+  toast,
+} from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { formatDate } from '@dmr.is/utils/client'
 
@@ -44,7 +50,7 @@ export const AdvertsToBePublished = () => {
   })
 
   const { mutate: moveToPreviousStatusBulk, isPending: isMoving } = useMutation(
-    trpc.moveToPreviousStatus.mutationOptions({
+    trpc.moveToPreviousStatusBulk.mutationOptions({
       onSuccess: () => {
         toast.success('Auglýsing færð í stöðuna í vinnslu', {
           toastId: 'update-advert-status-success',
@@ -64,32 +70,28 @@ export const AdvertsToBePublished = () => {
     }),
   )
 
-  const handleMoveToInProgress = async () => {
-    // Process all selected adverts with Promise.all for proper error handling
-    try {
-      await Promise.all(
-        selectedAdvertIds.map((id) =>
-          new Promise((resolve, reject) => {
-            moveToPreviousStatusBulk(
-              { id },
-              {
-                onSuccess: resolve,
-                onError: reject,
-              },
-            )
-          }),
-        ),
-      )
-    } catch (error) {
-      // Error toast already shown by mutation onError
-    }
+  try {
+    moveToPreviousStatusBulk({ advertIds: selectedAdvertIds })
+    toast.success('Auglýsingar færðar í vinnslu', {
+      toastId: 'update-advert-status-success',
+    })
+    queryClient.invalidateQueries(
+      trpc.getReadyForPublicationAdverts.queryFilter(),
+    )
+    queryClient.invalidateQueries(trpc.getAdvertsCount.queryFilter())
+    clearSelection()
+  } catch {
+    toast.error('Ekki tókst að uppfæra stöðu auglýsinga')
   }
 
   const rows = data?.adverts.map((advert) => ({
     checkbox: (
       <Checkbox
         label=""
-        checked={selectedAdvertIds.includes(advert.id)}
+        checked={
+          selectedAdvertIds.length > 0 &&
+          selectedAdvertIds.length === data?.adverts.length
+        }
         onChange={(evt) => handleAdvertSelect(advert.id, evt.target.checked)}
       />
     ),
@@ -163,7 +165,7 @@ export const AdvertsToBePublished = () => {
           colorScheme="destructive"
           icon="removeCircle"
           iconType="outline"
-          onClick={handleMoveToInProgress}
+          onClick={() => moveToPreviousStatusBulk({ advertIds: selectedAdvertIds })}
         >
           {formatMessage(
             ritstjornTableMessages.publishing.removeFromPublishingQueue,

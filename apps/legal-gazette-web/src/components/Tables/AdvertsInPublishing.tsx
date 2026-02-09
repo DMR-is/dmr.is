@@ -12,7 +12,11 @@ import {
   Text,
 } from '@dmr.is/ui/components/island-is'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
-import { formatDate, getDaysDelta, getIcelandicDative } from '@dmr.is/utils/client'
+import {
+  formatDate,
+  getDaysDelta,
+  getIcelandicDative,
+} from '@dmr.is/utils/client'
 
 import { useAdvertSelection } from '../../hooks/useAdvertSelection'
 import { useBulkPublish } from '../../hooks/useBulkPublish'
@@ -58,7 +62,10 @@ export const AdvertsInPublishing = () => {
           disabled={!data?.adverts.length}
           label=""
           onChange={() => toggleAllAdverts(data?.adverts)}
-          checked={selectedAdvertIds.length === data?.adverts.length}
+          checked={
+            selectedAdvertIds.length > 0 &&
+            selectedAdvertIds.length === data?.adverts.length
+          }
         />
       ),
       size: 'tiny' as const,
@@ -81,7 +88,9 @@ export const AdvertsInPublishing = () => {
     },
     {
       field: 'count',
-      children: formatMessage(ritstjornTableMessages.publishing.publishingCount),
+      children: formatMessage(
+        ritstjornTableMessages.publishing.publishingCount,
+      ),
     },
     {
       field: 'efni',
@@ -123,9 +132,12 @@ export const AdvertsInPublishing = () => {
           tagText = formatMessage(ritstjornTableMessages.publishing.tomorrow)
           tagVariant = 'blue'
         } else {
-          tagText = formatMessage(ritstjornTableMessages.publishing.daysFromNow, {
-            days,
-          })
+          tagText = formatMessage(
+            ritstjornTableMessages.publishing.daysFromNow,
+            {
+              days,
+            },
+          )
           tagVariant = 'blue'
         }
 
@@ -144,7 +156,9 @@ export const AdvertsInPublishing = () => {
               {formatDate(advert.lastPublishedAt, 'dd.MM.yyyy')}
             </Text>
           ) : (
-            formatMessage(ritstjornTableMessages.publishing.noPreviousPublishing)
+            formatMessage(
+              ritstjornTableMessages.publishing.noPreviousPublishing,
+            )
           ),
           scheduledAt: advert.scheduledAt ? (
             <Text variant="medium" whiteSpace="nowrap">

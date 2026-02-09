@@ -160,6 +160,17 @@ export const advertsRouter = router({
         id: input.id,
       })
     }),
+  moveToPreviousStatusBulk: protectedProcedure
+    .input(z.object({ advertIds: z.array(z.string()) }))
+    .mutation(async ({ ctx, input }) => {
+      return await Promise.all(
+        input.advertIds.map((id) =>
+          ctx.api.moveAdvertToPreviousStatus({
+            id,
+          }),
+        ),
+      )
+    }),
   rejectAdvert: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
