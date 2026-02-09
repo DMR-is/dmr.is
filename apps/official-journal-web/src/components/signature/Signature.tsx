@@ -1,16 +1,14 @@
 import debounce from 'lodash/debounce'
 import { useCallback } from 'react'
 
-import {
-  Button,
-  Column,
-  Columns,
-  DatePicker,
-  Inline,
-  Stack,
-  Text,
-  toast,
-} from '@island.is/island-ui/core'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+// TODO: Change import
+import { Column, Columns } from '@island.is/island-ui/core'
 
 import {
   CreateSignatureMemberMemberTypeEnum,

@@ -1,4 +1,6 @@
-import { Box, GridContainer, Stack } from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { NavigateBack } from '../../../components/client-components/navigate-back/NavigateBack'
 import * as styles from './grid-layout.css'

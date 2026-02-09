@@ -4,17 +4,15 @@ import { useQueryStates } from 'nuqs'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import Hero from '@dmr.is/ui/components/Hero/Hero'
-import {
-  Box,
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  Select,
-  Text,
-  toast,
-} from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Select } from '@dmr.is/ui/components/island-is/Select'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { PaymentsTable } from '../components/payments/PaymentsTable'
 import { TRPCErrorAlert } from '../components/trpc/TRPCErrorAlert'

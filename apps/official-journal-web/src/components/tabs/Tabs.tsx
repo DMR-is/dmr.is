@@ -2,13 +2,11 @@ import { isDefined } from 'class-validator'
 import { useEffect } from 'react'
 import { Tab, TabList, TabPanel, useTabState } from 'reakit'
 
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Text,
-} from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import * as styles from './Tabs.css'
 

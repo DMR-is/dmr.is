@@ -2,14 +2,12 @@ import { useState } from 'react'
 import z from 'zod'
 
 import { parseZodError } from '@dmr.is/legal-gazette/schemas'
-import {
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Input,
-  Text,
-  toast,
-} from '@dmr.is/ui/components/island-is'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
 import { createAdvertAndCommonApplicationInput } from '../../lib/inputs'

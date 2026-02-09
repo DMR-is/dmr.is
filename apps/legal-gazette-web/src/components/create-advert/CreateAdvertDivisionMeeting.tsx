@@ -2,14 +2,12 @@ import { useState } from 'react'
 import z from 'zod'
 
 import { divisionMeetingSchemaRefined } from '@dmr.is/legal-gazette/schemas'
-import {
-  DatePicker,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Input,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 type DivisonMeeting = z.infer<typeof divisionMeetingSchemaRefined>
 

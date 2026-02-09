@@ -1,5 +1,6 @@
 import { DEFAULT_SORT_DIRECTION, SortDirection } from '../../../hooks/constants'
 import { useFilters } from '../../../hooks/useFilters'
+import { Button } from '../../../island-is'
 import { Box } from '../../../island-is/lib/Box'
 import { Icon } from '../../../island-is/lib/Icon'
 import { Inline } from '../../../island-is/lib/Inline'
@@ -38,7 +39,7 @@ export const DataTableColumn = ({
     })
   }
 
-  const Wrapper = sortable ? 'button' : 'div'
+  const Wrapper = sortable ? Button : 'div'
 
   const order = params.sortBy === field ? params.direction : undefined
 
@@ -77,6 +78,8 @@ export const DataTableColumn = ({
       }}
     >
       <Wrapper
+        variant="text"
+        size='small'
         onClick={() => {
           if (!sortable) return
           onSort ? onSort(field) : handleSort(field)
@@ -84,7 +87,7 @@ export const DataTableColumn = ({
       >
         <Inline align={align} space={1} flexWrap="nowrap" alignY="center">
           {typeof children === 'string' ? (
-            <Text variant="medium" fontWeight="semiBold">
+            <Text variant="medium" fontWeight="semiBold" color="black">
               {children}
             </Text>
           ) : (

@@ -9,14 +9,12 @@ import {
 } from 'nuqs'
 import { useCallback } from 'react'
 
-import {
-  Checkbox,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Input,
-  Select,
-} from '@dmr.is/ui/components/island-is'
+import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Select } from '@dmr.is/ui/components/island-is/Select'
 
 import * as styles from './TBRSettingsFilters.css'
 

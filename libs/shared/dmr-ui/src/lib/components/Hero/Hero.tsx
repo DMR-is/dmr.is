@@ -1,7 +1,8 @@
 'use client'
 import { justifyContent } from 'submodules/island.is/libs/island-ui/core/src/lib/Box/useBoxStyles.css'
 
-import type { ResponsiveProp } from '@island.is/island-ui/core'
+// TODO: Change import
+import type { ResponsiveProp } from '@island.is/island-ui/core/utils/responsiveProp'
 
 import { Box } from '../../island-is/lib/Box'
 import { Breadcrumbs } from '../../island-is/lib/Breadcrumbs'

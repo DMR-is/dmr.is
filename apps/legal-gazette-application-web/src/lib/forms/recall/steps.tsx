@@ -8,7 +8,7 @@ import {
   recallBankruptcySchemaRefined,
   recallDeceasedSchemaRefined,
 } from '@dmr.is/legal-gazette/schemas'
-import { Text } from '@dmr.is/ui/components/island-is'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { CommunicationChannelFields } from '../../../components/form/fields/CommunicationChannelFields'
 import { PublishingFields } from '../../../components/form/fields/PublishingFields'

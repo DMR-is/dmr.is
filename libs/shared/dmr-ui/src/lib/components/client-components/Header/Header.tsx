@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 
 import { forceLogin, useLogOut } from '@dmr.is/auth/useLogOut'
 
-import { useBreakpoint } from '@island.is/island-ui/core'
+import { useBreakpoint } from '@island.is/island-ui/core/hooks/useBreakpoint'
 
 import { Box } from '../../../island-is/lib/Box'
 import { DropdownMenu } from '../../../island-is/lib/DropdownMenu'

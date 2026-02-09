@@ -1,7 +1,10 @@
 'use client'
 
 import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
-import { Box, Breadcrumbs, Stack, Text } from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Breadcrumbs } from '@dmr.is/ui/components/island-is/Breadcrumbs'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { formatDate } from '@dmr.is/utils/client'
 
 import { AdvertFormAlert } from '../../components/alert/AdvertFormAlert'

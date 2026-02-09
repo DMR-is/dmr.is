@@ -1,12 +1,10 @@
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Icon,
-  LinkV2,
-  Text,
-} from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import * as styles from './ImageWithText.css'
 

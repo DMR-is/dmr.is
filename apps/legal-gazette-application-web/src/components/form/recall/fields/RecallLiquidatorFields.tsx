@@ -4,7 +4,8 @@ import {
   ApplicationRequirementStatementEnum,
   RecallApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
-import { GridColumn, GridRow } from '@dmr.is/ui/components/island-is'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { InputController } from '../../controllers/InputController'

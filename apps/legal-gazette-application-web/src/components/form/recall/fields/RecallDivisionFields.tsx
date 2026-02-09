@@ -2,11 +2,9 @@ import { addDays, addMonths, addYears } from 'date-fns'
 import { useFormContext } from 'react-hook-form'
 
 import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
-import {
-  AlertMessage,
-  GridColumn,
-  GridRow,
-} from '@dmr.is/ui/components/island-is'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import {
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,

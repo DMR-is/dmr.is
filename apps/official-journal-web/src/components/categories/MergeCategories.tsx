@@ -2,7 +2,10 @@ import { useState } from 'react'
 
 import { Category } from '@dmr.is/shared/dto'
 
-import { Icon, Inline, Stack, toast } from '@island.is/island-ui/core'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { useUpdateMainCategories } from '../../hooks/api'
 import { useCategoryContext } from '../../hooks/useCategoryContext'

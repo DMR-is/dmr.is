@@ -6,14 +6,12 @@ import { useCallback, useState } from 'react'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
-import {
-  Button,
-  Drawer,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Stack,
-} from '@island.is/island-ui/core'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Drawer } from '@dmr.is/ui/components/island-is/Drawer'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { useInstitutions } from '../../hooks/api'
 import { useToggle } from '../../hooks/useToggle'

@@ -1,6 +1,10 @@
 import debounce from 'lodash/debounce'
 
-import { Box, Button, Column, Columns, Stack } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+// TODO: Change import
+import { Column, Columns } from '@island.is/island-ui/core'
 
 import { SignatureMember as SignatureMemberDto } from '../../gen/fetch'
 import { useCaseContext } from '../../hooks/useCaseContext'

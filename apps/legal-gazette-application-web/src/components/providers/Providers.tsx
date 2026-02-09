@@ -3,7 +3,7 @@ import { SessionProvider } from 'next-auth/react'
 
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
-import { ToastContainer } from '@dmr.is/ui/components/island-is'
+import { ToastContainer } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 type Props = React.ComponentProps<typeof SessionProvider>
 

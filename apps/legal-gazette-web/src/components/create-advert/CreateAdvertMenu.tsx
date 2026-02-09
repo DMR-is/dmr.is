@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { DropdownMenu } from '@dmr.is/ui/components/island-is'
+import { DropdownMenu } from '@dmr.is/ui/components/island-is/DropdownMenu'
 
 import { CreateCommonAdvertModal } from './CreateCommonAdvertModal'
 import { CreateBankruptcyAdvertModal } from './CreateRecallBankruptcyAdvertModal'

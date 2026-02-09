@@ -1,14 +1,12 @@
 import Kennitala from 'kennitala'
 import { useState } from 'react'
 
-import {
-  AlertMessage,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Input,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
 

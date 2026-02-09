@@ -2,14 +2,12 @@ import { useState } from 'react'
 import z from 'zod'
 
 import { communicationChannelSchemaRefined } from '@dmr.is/legal-gazette/schemas'
-import {
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Input,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 type CommunicationChannelItems = z.infer<

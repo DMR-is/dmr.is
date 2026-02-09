@@ -1,4 +1,6 @@
-import { Box, Icon, Text } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 export const PriceCalculatorStatusBox = ({
   success,

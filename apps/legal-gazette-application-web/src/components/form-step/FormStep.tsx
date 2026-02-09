@@ -1,4 +1,6 @@
-import { SkeletonLoader, Stack, Text } from '@dmr.is/ui/components/island-is'
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { FormField } from '../../lib/forms/types'
 

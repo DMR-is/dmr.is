@@ -11,7 +11,7 @@ import {
   BaseApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
-import { SkeletonLoader } from '@dmr.is/ui/components/island-is'
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { formatDate, numberFormat } from '@dmr.is/utils/client'
 
 import { useTRPC } from '../../../lib/trpc/client/trpc'

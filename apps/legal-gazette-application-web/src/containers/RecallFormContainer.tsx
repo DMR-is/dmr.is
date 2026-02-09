@@ -11,7 +11,7 @@ import {
   recallDeceasedAnswersRefined,
 } from '@dmr.is/legal-gazette/schemas'
 import { getLogger } from '@dmr.is/logging-next'
-import { Box } from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 
 import { ApplicationShell } from '../components/application/ApplicationShell'
 import { FormStep } from '../components/form-step/FormStep'

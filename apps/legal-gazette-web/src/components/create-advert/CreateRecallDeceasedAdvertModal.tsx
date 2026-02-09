@@ -5,7 +5,7 @@ import {
   ApplicationRequirementStatementEnum,
   parseZodError,
 } from '@dmr.is/legal-gazette/schemas'
-import { toast } from '@dmr.is/ui/components/island-is'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
 import { createAdvertAndDeceasedApplicationInput } from '../../lib/inputs'

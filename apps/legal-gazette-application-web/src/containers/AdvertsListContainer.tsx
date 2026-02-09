@@ -3,16 +3,14 @@
 import { parseAsInteger, useQueryState } from 'nuqs'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
-import {
-  AlertMessage,
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  SkeletonLoader,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { OldAdvertsList } from '../components/adverts/OldAdvertsList'
 import { useTRPC } from '../lib/trpc/client/trpc'

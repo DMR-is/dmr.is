@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
-import { Select } from '@dmr.is/ui/components/island-is'
+import { Select } from '@dmr.is/ui/components/island-is/Select'
 
 import { TypeDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'

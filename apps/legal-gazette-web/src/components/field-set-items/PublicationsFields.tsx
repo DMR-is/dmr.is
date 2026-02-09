@@ -3,18 +3,16 @@
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
-import {
-  Box,
-  Button,
-  DatePicker,
-  GridColumn,
-  GridRow,
-  Icon,
-  Inline,
-  Input,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { AdvertPublicationDto } from '../../gen/fetch'
 import { useUpdatePublications } from '../../hooks/useUpdatePublications'

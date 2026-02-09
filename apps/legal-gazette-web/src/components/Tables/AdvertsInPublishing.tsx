@@ -3,14 +3,12 @@
 import React from 'react'
 import { useIntl } from 'react-intl'
 
-import {
-  Button,
-  Checkbox,
-  Inline,
-  Stack,
-  Tag,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Tag } from '@dmr.is/ui/components/island-is/Tag'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import {
   formatDate,

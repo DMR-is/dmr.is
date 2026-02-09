@@ -1,13 +1,11 @@
-import {
-  Accordion,
-  AlertMessage,
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  Stack,
-} from '@island.is/island-ui/core'
+import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useToggle } from '../../hooks/useToggle'

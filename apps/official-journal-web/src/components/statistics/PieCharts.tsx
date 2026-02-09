@@ -2,14 +2,12 @@ import dynamic from 'next/dynamic'
 
 import { Pie } from 'recharts'
 
-import {
-  Box,
-  Inline,
-  SkeletonLoader,
-  Stack,
-  Table as T,
-  Text,
-} from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Table as T } from '@dmr.is/ui/components/island-is/Table'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { theme } from '@island.is/island-ui/theme'
 
 import {

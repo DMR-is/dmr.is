@@ -1,12 +1,10 @@
 'use client'
 
-import {
-  DatePicker,
-  GridColumn,
-  GridRow,
-  Select,
-  Stack,
-} from '@dmr.is/ui/components/island-is'
+import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Select } from '@dmr.is/ui/components/island-is/Select'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { CourtDistrictDto } from '../../gen/fetch'
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'

@@ -2,18 +2,16 @@ import { useState } from 'react'
 
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
-import {
-  AccordionItem,
-  Box,
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  Stack,
-  Text,
-  toast,
-} from '@island.is/island-ui/core'
+import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { CreateCaseChannelBody } from '../../gen/fetch'
 import { useCommunicationChannels } from '../../hooks/api/get/useCommunicationChannels'

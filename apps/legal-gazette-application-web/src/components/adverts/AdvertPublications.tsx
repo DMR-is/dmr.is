@@ -3,7 +3,10 @@
 import { Fragment, useState } from 'react'
 
 import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay'
-import { ActionCard, Box, Stack, toast } from '@dmr.is/ui/components/island-is'
+import { ActionCard } from '@dmr.is/ui/components/island-is/ActionCard'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import { formatDate } from '@dmr.is/utils/client'
 

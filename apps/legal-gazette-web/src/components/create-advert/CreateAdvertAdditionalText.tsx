@@ -1,9 +1,7 @@
-import {
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Input,
-} from '@dmr.is/ui/components/island-is'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
 
 type Props = {
   onChange?: (value: string) => void

@@ -6,13 +6,12 @@ import { parseAsBoolean, parseAsString, useQueryStates } from 'nuqs'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import Hero from '@dmr.is/ui/components/Hero/Hero'
-import {
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Pagination,
-  Stack,
-  Text} from '@dmr.is/ui/components/island-is'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Pagination } from '@dmr.is/ui/components/island-is/Pagination'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { TBRSettingsFilters } from '../components/tbr-settings/TBRSettingsFilters'
 import { TBRSettingsList } from '../components/tbr-settings/TBRSettingsList'

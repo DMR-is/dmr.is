@@ -1,4 +1,5 @@
-import { Table as T, Text } from '@island.is/island-ui/core'
+import { Table as T } from '@dmr.is/ui/components/island-is/Table'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import * as styles from './CaseTable.css'

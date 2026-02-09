@@ -1,13 +1,12 @@
 import { Reorder, useDragControls } from 'framer-motion'
 import { RefObject, useRef, useState } from 'react'
 
-import {
-  Icon,
-  Inline,
-  LoadingDots,
-  Table as T,
-  Text,
-} from '@island.is/island-ui/core'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Table as T } from '@dmr.is/ui/components/island-is/Table'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+// TODO: Change import
+import { LoadingDots } from '@island.is/island-ui/core'
 
 import { Case } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'

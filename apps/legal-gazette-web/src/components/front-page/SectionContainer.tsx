@@ -1,11 +1,9 @@
 'use client'
 
-import {
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Stack,
-} from '@dmr.is/ui/components/island-is'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { PieChart } from '@dmr.is/ui/components/PieChart/PieChart'
 import { Section } from '@dmr.is/ui/components/Section/Section'
 import { TrackerTable } from '@dmr.is/ui/components/Tables/TrackerTable'

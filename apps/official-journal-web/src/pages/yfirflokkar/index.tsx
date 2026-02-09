@@ -1,13 +1,11 @@
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 
-import {
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Stack,
-  Text,
-} from '@island.is/island-ui/core'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { Categories } from '../../components/categories/Categories'
 import { CreateCategory } from '../../components/categories/CreateCategory'

@@ -6,7 +6,8 @@ import * as z from 'zod'
 import { EditorFileUploader } from '@dmr.is/regulations-tools/EditorFrame'
 import { BaseEntity } from '@dmr.is/shared/dto'
 
-import { Stack, Text } from '@island.is/island-ui/core'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import {
   CaseActionEnum,

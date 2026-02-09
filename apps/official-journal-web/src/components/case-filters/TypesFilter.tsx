@@ -5,7 +5,7 @@ import useSWR from 'swr'
 
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
-import { AlertMessage } from '@island.is/island-ui/core'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 
 import { GetAdvertTypes } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'

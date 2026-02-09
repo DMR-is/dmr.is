@@ -1,7 +1,8 @@
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable/DataTable'
 import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
 
-import { Tag, Text } from '@island.is/island-ui/core'
+import { Tag } from '@dmr.is/ui/components/island-is/Tag'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { Routes } from '../../lib/constants'

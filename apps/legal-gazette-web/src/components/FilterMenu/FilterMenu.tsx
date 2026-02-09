@@ -3,15 +3,13 @@
 import { useIntl } from 'react-intl'
 import { Popover, PopoverDisclosure, usePopoverState } from 'reakit'
 
-import {
-  Accordion,
-  AccordionItem,
-  Box,
-  Button,
-  Checkbox,
-  Inline,
-  Stack,
-} from '@dmr.is/ui/components/island-is'
+import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
+import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { useFilterContext } from '../../hooks/useFilters'
 import { QueryParams } from '../../lib/constants'

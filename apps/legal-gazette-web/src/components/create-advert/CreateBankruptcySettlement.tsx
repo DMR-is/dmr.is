@@ -6,16 +6,14 @@ import {
   ApplicationRequirementStatementEnum,
   settlementSchemaRefined,
 } from '@dmr.is/legal-gazette/schemas'
-import {
-  DatePicker,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Input,
-  Select,
-  Text,
-  toast,
-} from '@dmr.is/ui/components/island-is'
+import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Select } from '@dmr.is/ui/components/island-is/Select'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
 

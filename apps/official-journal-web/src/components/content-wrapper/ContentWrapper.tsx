@@ -1,6 +1,10 @@
 import { MessageDescriptor } from 'react-intl'
 
-import { ArrowLink, Box, Text, TextProps } from '@island.is/island-ui/core'
+import { ArrowLink } from '@dmr.is/ui/components/island-is/ArrowLink'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+// TODO: Change import
+import { TextProps } from '@island.is/island-ui/core'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import * as styles from './ContentWrapper.css'

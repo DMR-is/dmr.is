@@ -1,4 +1,5 @@
-import { Box, Text } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { GetStatisticsOverviewResponse } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'

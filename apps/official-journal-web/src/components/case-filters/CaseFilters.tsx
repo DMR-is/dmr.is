@@ -3,14 +3,12 @@ import { ChangeEvent, useCallback } from 'react'
 
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
-import {
-  Box,
-  Button,
-  Inline,
-  Input,
-  Stack,
-  Text,
-} from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { CaseStatusEnum } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'

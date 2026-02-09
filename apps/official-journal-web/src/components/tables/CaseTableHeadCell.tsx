@@ -3,7 +3,10 @@ import { useSearchParams } from 'next/navigation'
 import cn from 'classnames'
 import { useEffect, useState } from 'react'
 
-import { Box, Icon, Table as T, Text } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
+import { Table as T } from '@dmr.is/ui/components/island-is/Table'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import * as styles from './CaseTable.css'
 

@@ -2,7 +2,8 @@
 
 import React from 'react'
 
-import { Button, DropdownMenu } from '@dmr.is/ui/components/island-is'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { DropdownMenu } from '@dmr.is/ui/components/island-is/DropdownMenu'
 
 type MenuItems = React.ComponentProps<typeof DropdownMenu>['items']
 

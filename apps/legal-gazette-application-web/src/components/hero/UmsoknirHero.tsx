@@ -1,7 +1,9 @@
 'use client'
 
 import Hero from '@dmr.is/ui/components/Hero/Hero'
-import { Box, LinkV2, Text } from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { CreateApplication } from '../application/CreateApplication'
 

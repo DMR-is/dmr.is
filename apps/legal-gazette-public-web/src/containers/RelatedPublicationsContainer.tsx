@@ -1,14 +1,12 @@
 'use client'
 
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  SimpleSlider,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { SimpleSlider } from '@dmr.is/ui/components/island-is/SimpleSlider/SimpleSlider'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { theme } from '@island.is/island-ui/theme'
 

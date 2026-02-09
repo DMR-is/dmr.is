@@ -1,5 +1,5 @@
 'use client'
 
-import { Table as IslandTable } from '@island.is/island-ui/core/Table'
+import * as TableExports from '@island.is/island-ui/core/Table/Table'
 
-export const Table = IslandTable
+export const Table = { ...TableExports }

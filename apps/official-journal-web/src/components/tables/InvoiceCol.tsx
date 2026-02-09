@@ -1,4 +1,6 @@
-import { Box, Text, Tooltip } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { Tooltip } from '@dmr.is/ui/components/island-is/Tooltip'
 
 import * as styles from './CaseTable.css'
 

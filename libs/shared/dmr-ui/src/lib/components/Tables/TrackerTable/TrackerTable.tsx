@@ -1,5 +1,6 @@
 'use client'
 import { Table as T } from '../../../island-is/lib/Table'
+import { Text } from '../../../island-is/lib/Text'
 
 export type TrackerTableItem = {
   text: string

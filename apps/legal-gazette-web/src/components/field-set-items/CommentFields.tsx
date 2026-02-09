@@ -3,7 +3,10 @@
 import { useMemo, useState } from 'react'
 
 import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
-import { Box, Button, Inline, Stack } from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import {  useTRPC } from '../../lib/trpc/client/trpc'
 import { commentMapper } from '../../mappers/commentMapper'

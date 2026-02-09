@@ -1,15 +1,13 @@
 import { useState } from 'react'
 
-import {
-  Button,
-  DatePicker,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 type Props = {
   onChange: (publications: string[]) => void

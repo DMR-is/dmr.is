@@ -1,6 +1,7 @@
 import { getSession } from 'next-auth/react'
 
-import { AlertMessageType, StringOption } from '@island.is/island-ui/core'
+import type { AlertMessageType } from '@island.is/island-ui/core/AlertMessage/AlertMessage'
+import type {  StringOption } from '@island.is/island-ui/core/Select/Select.types'
 
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104

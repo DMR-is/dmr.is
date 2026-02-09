@@ -7,7 +7,7 @@ import {
   RecallApplicationAnswers,
   updateApplicationWithIdInput,
 } from '@dmr.is/legal-gazette/schemas'
-import { toast } from '@dmr.is/ui/components/island-is'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { ApplicationDetailedDto } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'

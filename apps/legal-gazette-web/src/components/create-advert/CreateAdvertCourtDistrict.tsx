@@ -1,14 +1,12 @@
 import { useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
-import {
-  DatePicker,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Select,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Select } from '@dmr.is/ui/components/island-is/Select'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
 

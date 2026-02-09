@@ -1,10 +1,9 @@
-import {
-  Box,
-  BoxProps,
-  Input,
-  SkeletonLoader,
-  toast,
-} from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+// TODO: Change import
+import { BoxProps } from '@island.is/island-ui/core'
 
 type Props = React.ComponentProps<typeof Input> & {
   width?: BoxProps['width']

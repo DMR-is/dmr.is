@@ -1,4 +1,4 @@
-import { Button } from '@dmr.is/ui/components/island-is'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
 
 type Props = {
   onDelete?: () => void

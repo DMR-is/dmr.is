@@ -2,7 +2,8 @@
 
 import { useIntl } from 'react-intl'
 
-import { AlertMessage, Tooltip } from '@dmr.is/ui/components/island-is'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Tooltip } from '@dmr.is/ui/components/island-is/Tooltip'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { formatDate } from '@dmr.is/utils/client'
 
