@@ -59,7 +59,7 @@ export enum Route {
   STJORNBORD = '/',
   RITSTJORN = '/ritstjorn',
   RITSTJORN_ID = '/ritstjorn/[id]',
-  UTGAFA = '/ritstjorn?tab=utgafa',
+  UTGAFA = '/ritstjorn?tab=utgafa-auglysinga',
   HEILDARYFIRLIT = '/heildaryfirlit',
   LOGIN = '/innskraning',
 }

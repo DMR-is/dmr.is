@@ -52,7 +52,7 @@ export const AdvertsToBePublished = () => {
   const { mutate: moveToPreviousStatusBulk, isPending: isMoving } = useMutation(
     trpc.moveToPreviousStatusBulk.mutationOptions({
       onSuccess: () => {
-        toast.success('Auglýsing færð í stöðuna í vinnslu', {
+        toast.success('Auglýsingar færðar í vinnslu', {
           toastId: 'update-advert-status-success',
         })
 
@@ -65,24 +65,10 @@ export const AdvertsToBePublished = () => {
         clearSelection()
       },
       onError: () => {
-        toast.error('Ekki tókst að uppfæra stöðu auglýsingar')
+        toast.error('Ekki tókst að uppfæra stöðu auglýsinga')
       },
     }),
   )
-
-  try {
-    moveToPreviousStatusBulk({ advertIds: selectedAdvertIds })
-    toast.success('Auglýsingar færðar í vinnslu', {
-      toastId: 'update-advert-status-success',
-    })
-    queryClient.invalidateQueries(
-      trpc.getReadyForPublicationAdverts.queryFilter(),
-    )
-    queryClient.invalidateQueries(trpc.getAdvertsCount.queryFilter())
-    clearSelection()
-  } catch {
-    toast.error('Ekki tókst að uppfæra stöðu auglýsinga')
-  }
 
   const rows = data?.adverts.map((advert) => ({
     checkbox: (
