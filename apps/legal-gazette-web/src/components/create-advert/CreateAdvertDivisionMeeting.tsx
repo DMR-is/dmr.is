@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import z from 'zod'
+import * as z from 'zod'
 
 import { divisionMeetingSchemaRefined } from '@dmr.is/legal-gazette/schemas'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'

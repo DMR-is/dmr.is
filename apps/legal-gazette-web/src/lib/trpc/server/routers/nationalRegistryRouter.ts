@@ -1,5 +1,5 @@
 import Kennitala from 'kennitala'
-import z from 'zod'
+import * as z from 'zod'
 
 import { protectedProcedure, router } from '../trpc'
 

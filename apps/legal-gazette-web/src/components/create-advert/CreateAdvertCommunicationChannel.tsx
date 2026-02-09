@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import z from 'zod'
+import * as z from 'zod'
 
 import { communicationChannelSchemaRefined } from '@dmr.is/legal-gazette/schemas'
 import { Button } from '@dmr.is/ui/components/island-is/Button'

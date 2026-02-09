@@ -100,9 +100,6 @@
         "libs/shared/dmr-ui/src/styles/global.css.ts"
       ],
       "@dmr.is/ui/components/*": ["libs/shared/dmr-ui/src/lib/components/*"],
-      "@dmr.is/ui/components/island-is": [
-        "libs/shared/dmr-ui/src/lib/island-is/index.ts",
-      ],
       "@dmr.is/ui/components/island-is/*": [
         "libs/shared/dmr-ui/src/lib/island-is/lib/*"
       ],

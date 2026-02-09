@@ -8,19 +8,22 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
  **/
 const nextConfig = {
   output: 'standalone',
+  experimental: { fallbackNodePolyfills: false,
+    optimizePackageImports: ["@island.is/island-ui/theme"]
+   },
   webpack: (config, { isServer }) => {
     config.resolve.alias.canvas = false
 
-    if (process.env.ANALYZE === 'true' && !isServer) {
-      config.plugins.push(
-        new BundleAnalyzerPlugin({
-          analyzerMode: 'static',
-          reportFilename: isServer
-            ? '../analyze/server.html'
-            : './analyze/client.html',
-        }),
-      )
-    }
+    // if (process.env.ANALYZE === 'true' && !isServer) {
+    //   config.plugins.push(
+    //     new BundleAnalyzerPlugin({
+    //       analyzerMode: 'static',
+    //       reportFilename: isServer
+    //         ? '../analyze/server.html'
+    //         : './analyze/client.html',
+    //     }),
+    //   )
+    // }
 
     return config
   },
@@ -38,5 +41,11 @@ const plugins = [
   withNx,
   withVanillaExtract,
 ]
+
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+})
+plugins.push(withBundleAnalyzer)
+
 
 module.exports = composePlugins(...plugins)(nextConfig)

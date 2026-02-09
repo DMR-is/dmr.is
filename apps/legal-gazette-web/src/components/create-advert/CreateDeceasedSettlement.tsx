@@ -1,7 +1,7 @@
 import { isDateString } from 'class-validator'
 import Kennitala from 'kennitala'
 import { useEffect, useState } from 'react'
-import z from 'zod'
+import * as z from 'zod'
 
 import {
   ApplicationRequirementStatementEnum,

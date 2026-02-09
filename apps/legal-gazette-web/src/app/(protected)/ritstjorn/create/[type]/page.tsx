@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
-import { GridContainer } from '@dmr.is/ui/components/island-is'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 
 import { CreateCommonAdvertModal } from '../../../../../components/create-advert/modals/CreateCommonAdvertModal'
 import { CreateBankruptcyAdvertModal } from '../../../../../components/create-advert/modals/CreateRecallBankruptcyAdvertModal'

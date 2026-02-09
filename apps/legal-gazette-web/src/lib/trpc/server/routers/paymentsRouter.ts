@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import * as z from 'zod'
 
 import { TBRTransactionStatus, TBRTransactionType } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
@@ -6,8 +6,8 @@ import { protectedProcedure, router } from '../trpc'
 const getPaymentsInput = z.object({
   page: z.number().optional().default(1),
   pageSize: z.number().optional().default(10),
-  type: z.nativeEnum(TBRTransactionType).optional(),
-  status: z.nativeEnum(TBRTransactionStatus).optional(),
+  type: z.enum(TBRTransactionType).optional(),
+  status: z.enum(TBRTransactionStatus).optional(),
   paid: z.boolean().optional(),
 })
 
