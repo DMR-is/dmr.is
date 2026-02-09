@@ -1,3 +1,4 @@
+/* eslint-disable local-rules/disallow-kennitalas */
 import { Sequelize } from 'sequelize-typescript'
 
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager'

@@ -1,7 +1,7 @@
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Table as T } from '@dmr.is/ui/components/island-is/Table'
-// TODO: Change import
-import { UseBoxStylesProps } from '@island.is/island-ui/core'
+
+import { type UseBoxStylesProps } from '@island.is/island-ui/core/Box/useBoxStyles'
 
 import * as styles from './CaseTable.css'
 type Props = {

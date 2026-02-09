@@ -4,8 +4,8 @@ import { useBoxStyles } from '@dmr.is/ui/components/island-is/Box'
 import { Icon } from '@dmr.is/ui/components/island-is/Icon'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
-// TODO: Change import
-import { BoxProps } from '@island.is/island-ui/core'
+
+import { type BoxProps } from '@island.is/island-ui/core/Box/types'
 
 type IconProps = ComponentProps<typeof Icon>
 

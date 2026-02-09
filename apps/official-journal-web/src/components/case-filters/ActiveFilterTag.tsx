@@ -1,8 +1,8 @@
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Icon } from '@dmr.is/ui/components/island-is/Icon'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
-// TODO: Change import
-import { TagProps } from '@island.is/island-ui/core'
+
+import { type TagProps } from '@island.is/island-ui/core/Tag/types'
 
 type Props = {
   label: string

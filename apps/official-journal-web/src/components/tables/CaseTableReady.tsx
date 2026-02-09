@@ -1,8 +1,7 @@
-import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
-import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
-
 import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
+import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
 
 import { Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'

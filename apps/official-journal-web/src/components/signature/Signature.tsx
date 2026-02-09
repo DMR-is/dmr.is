@@ -7,8 +7,9 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
-// TODO: Change import
-import { Column, Columns } from '@island.is/island-ui/core'
+
+import { Column} from '@island.is/island-ui/core/Column/Column'
+import { Columns } from '@island.is/island-ui/core/Columns/Columns'
 
 import {
   CreateSignatureMemberMemberTypeEnum,

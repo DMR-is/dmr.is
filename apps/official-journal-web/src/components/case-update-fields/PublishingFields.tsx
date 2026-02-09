@@ -7,8 +7,8 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
-// TODO: Change import
-import { useBreakpoint } from '@island.is/island-ui/core'
+
+import { useBreakpoint } from '@island.is/island-ui/core/hooks/useBreakpoint'
 
 import { useUpdatePublishDate } from '../../hooks/api'
 import { useUpdateFastTrack } from '../../hooks/api/update/useUpdateFasttrack'

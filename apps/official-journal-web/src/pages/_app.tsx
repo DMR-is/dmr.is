@@ -3,8 +3,7 @@ import { AppProps as NextAppProps } from 'next/app'
 import { Session } from 'next-auth'
 import { SessionProvider } from 'next-auth/react'
 
-// TODO: Change import
-import { globalStyles } from '@island.is/island-ui/core'
+import { globalStyles } from '@dmr.is/ui/globalStyles'
 
 import { Layout, LayoutProps } from '../layout/Layout'
 

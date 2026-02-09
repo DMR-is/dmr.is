@@ -7,8 +7,8 @@ import { Icon } from '@dmr.is/ui/components/island-is/Icon'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
-// TODO: Change import
-import { LoadingDots } from '@island.is/island-ui/core'
+
+import { LoadingDots } from '@island.is/island-ui/core/LoadingDots/LoadingDots'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import * as styles from '../filter-popover/FilterPopover.css'

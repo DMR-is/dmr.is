@@ -1,8 +1,7 @@
 import { useState } from 'react'
 
-import { useFilters } from '@dmr.is/ui/hooks/useFilters'
-
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
 import { useCategories } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'

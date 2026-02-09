@@ -11,8 +11,9 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
-// TODO: Change import
-import { Hidden, Logo } from '@island.is/island-ui/core'
+
+import { Hidden } from '@island.is/island-ui/core/Hidden/Hidden'
+import { Logo } from '@island.is/island-ui/core/Logo/Logo'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { forceLogin, useLogOut } from '../../hooks/useLogOut'
