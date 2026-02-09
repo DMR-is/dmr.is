@@ -20,7 +20,7 @@ import {
 } from '@dmr.is/legal-gazette/schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared/dto'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/serverUtils'
 
 import {
   RECALL_BANKRUPTCY_ADVERT_TYPE_ID,

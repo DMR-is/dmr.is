@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { handleException } from '@dmr.is/utils'
+import { handleException } from '@dmr.is/utils/serverUtils'
 
 export function HandleException() {
   return function (

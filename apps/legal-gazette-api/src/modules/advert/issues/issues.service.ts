@@ -5,7 +5,7 @@ import { Op, WhereOptions } from 'sequelize'
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/serverUtils'
 
 import {
   GetIssuesDto,

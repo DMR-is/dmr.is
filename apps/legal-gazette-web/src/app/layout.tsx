@@ -1,7 +1,11 @@
 import { getServerSession } from 'next-auth'
 
+import { globalStyles } from '@dmr.is/ui/globalStyles'
+
 import { RootProviders } from '../components/providers/RootProviders'
 import { authOptions } from '../lib/auth/authOptions'
+
+globalStyles()
 
 import '../styles/global.css'
 export default async function RootLayout({
@@ -13,9 +17,7 @@ export default async function RootLayout({
   return (
     <html lang="is">
       <body>
-        <RootProviders session={session}>
-          {children}
-        </RootProviders>
+        <RootProviders session={session}>{children}</RootProviders>
       </body>
     </html>
   )
