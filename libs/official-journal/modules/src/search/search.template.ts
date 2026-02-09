@@ -124,8 +124,8 @@ export const advertMappingTemplate = {
       type: 'object',
       properties: {
         full: { type: 'keyword' },
-        number: { type: 'keyword' },
-        year: { type: 'keyword' },
+        number: { type: 'integer' },
+        year: { type: 'integer' },
       },
     },
     publicationDate: { type: 'date' },
