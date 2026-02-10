@@ -73,6 +73,7 @@ export const COMMON_ADVERT_TYPES_IDS = [
 
 export const UNASSIGNABLE_CATEGORY_IDS = [
   '52112993-EDCE-46A1-B7E6-8E3E5CD296F6', // Allar auglýsingar
+  'b2b798e2-e8a3-4928-94eb-0021a5f13409', // Greiðsluaðlögun
 ]
 
 export const UNASSIGNABLE_TYPE_IDS = [
