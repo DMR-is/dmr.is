@@ -4,8 +4,6 @@ import * as z from 'zod'
 import { signatureSchemaRefined } from '@dmr.is/legal-gazette/schemas'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
-import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
-import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 

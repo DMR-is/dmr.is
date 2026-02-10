@@ -6,10 +6,9 @@ import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { formatDate } from '@dmr.is/utils/client'
-
-import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { useAdvertSelection } from '../../hooks/useAdvertSelection'
 import { useBulkPublish } from '../../hooks/useBulkPublish'
