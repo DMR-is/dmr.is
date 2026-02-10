@@ -74,10 +74,7 @@ export const AdvertsToBePublished = () => {
     checkbox: (
       <Checkbox
         label=""
-        checked={
-          selectedAdvertIds.length > 0 &&
-          selectedAdvertIds.length === data?.adverts.length
-        }
+        checked={selectedAdvertIds.includes(advert.id)}
         onChange={(evt) => handleAdvertSelect(advert.id, evt.target.checked)}
       />
     ),
@@ -105,7 +102,10 @@ export const AdvertsToBePublished = () => {
                   label=""
                   disabled={!data?.adverts.length}
                   onChange={() => toggleAllAdverts(data?.adverts)}
-                  checked={selectedAdvertIds.length === data?.adverts.length}
+                  checked={
+                    selectedAdvertIds.length === data?.adverts.length &&
+                    data?.adverts.length > 0
+                  }
                 />
               ),
               size: 'tiny',
@@ -151,19 +151,30 @@ export const AdvertsToBePublished = () => {
           colorScheme="destructive"
           icon="removeCircle"
           iconType="outline"
-          onClick={() => moveToPreviousStatusBulk({ advertIds: selectedAdvertIds })}
+          onClick={() =>
+            moveToPreviousStatusBulk({ advertIds: selectedAdvertIds })
+          }
         >
           {formatMessage(
-            ritstjornTableMessages.publishing.removeFromPublishingQueue,
+            ritstjornTableMessages.publishing.removeFromPublishingQueue, {
+              count: selectedAdvertIds.length,
+              noun:
+                selectedAdvertIds.length === 1
+                  ? 'auglýsingu'
+                  : 'auglýsingar',
+            }
           )}
         </Button>
         <Button
-          loading={isPublishing}
           onClick={() => publishNextBulk({ advertIds: selectedAdvertIds })}
-          disabled={selectedAdvertIds.length === 0}
+          loading={isPublishing}
           icon="arrowForward"
+          disabled={!selectedAdvertIds.length}
         >
-          {formatMessage(ritstjornTableMessages.publishing.publish)}
+          {formatMessage(ritstjornTableMessages.publishing.publishCount, {
+            count: selectedAdvertIds.length,
+            noun: selectedAdvertIds.length === 1 ? 'auglýsingu' : 'auglýsingar',
+          })}
         </Button>
       </Inline>
     </Stack>
