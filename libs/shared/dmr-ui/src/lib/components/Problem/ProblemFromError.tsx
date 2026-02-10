@@ -1,3 +1,4 @@
+import { problemMessages } from './messages'
 import { Problem, ProblemType, ProblemVariant } from './Problem'
 
 type ProblemFromErrorProps = {
@@ -45,8 +46,7 @@ function extractErrorInfo(error: unknown): ErrorInfo {
   if (!error) {
     return {
       type: 'server-error',
-      title: 'Eitthvað fór úrskeiðis',
-      message: 'Óþekkt villa kom upp',
+      ...problemMessages.errors.unknown,
     }
   }
 
@@ -68,8 +68,7 @@ function extractErrorInfo(error: unknown): ErrorInfo {
   // Fallback for unknown error types
   return {
     type: 'server-error',
-    title: 'Eitthvað fór úrskeiðis',
-    message: typeof error === 'string' ? error : 'Óþekkt villa kom upp',
+    ...problemMessages.errors.unknown,
   }
 }
 
@@ -105,6 +104,7 @@ function mapTRPCError(error: {
     case 'NOT_FOUND':
       return {
         type: 'not-found',
+        ...problemMessages.errors.trpc.notFound,
         statusCode: statusCode || 404,
       }
 
@@ -112,6 +112,7 @@ function mapTRPCError(error: {
     case 'PARSE_ERROR':
       return {
         type: 'bad-request',
+        ...problemMessages.errors.trpc.badRequest,
         statusCode: statusCode || 400,
       }
 
@@ -119,6 +120,7 @@ function mapTRPCError(error: {
     case 'FORBIDDEN':
       return {
         type: 'server-error',
+        ...problemMessages.errors.trpc.unauthorized,
         statusCode: statusCode || 403,
       }
 
@@ -126,11 +128,14 @@ function mapTRPCError(error: {
     case 'TIMEOUT':
       return {
         type: 'server-error',
+        ...problemMessages.errors.trpc.internalError,
         statusCode: statusCode || 500,
       }
+
     default:
       return {
         type: 'server-error',
+        ...problemMessages.errors.trpc.default,
         statusCode: statusCode || 500,
       }
   }
@@ -173,6 +178,7 @@ function mapHTTPError(error: {
   if (statusCode === 404) {
     return {
       type: 'not-found',
+      ...problemMessages.errors.http.notFound,
       statusCode,
     }
   }
@@ -180,6 +186,7 @@ function mapHTTPError(error: {
   if (statusCode >= 400 && statusCode < 500) {
     return {
       type: 'bad-request',
+      ...problemMessages.errors.http.badRequest,
       statusCode,
     }
   }
@@ -187,12 +194,14 @@ function mapHTTPError(error: {
   if (statusCode >= 500) {
     return {
       type: 'server-error',
+      ...problemMessages.errors.http.serverError,
       statusCode,
     }
   }
 
   return {
     type: 'server-error',
+    ...problemMessages.errors.http.default,
     statusCode,
   }
 }
@@ -211,6 +220,7 @@ function mapStandardError(error: Error): ErrorInfo {
   ) {
     return {
       type: 'server-error',
+      ...problemMessages.errors.patterns.network,
     }
   }
 
@@ -218,6 +228,7 @@ function mapStandardError(error: Error): ErrorInfo {
   if (message.includes('not found') || message.includes('404')) {
     return {
       type: 'not-found',
+      ...problemMessages.errors.patterns.notFound,
       statusCode: 404,
     }
   }
@@ -230,6 +241,7 @@ function mapStandardError(error: Error): ErrorInfo {
   ) {
     return {
       type: 'bad-request',
+      ...problemMessages.errors.patterns.validation,
       statusCode: 400,
     }
   }
@@ -237,5 +249,6 @@ function mapStandardError(error: Error): ErrorInfo {
   // Default to server error
   return {
     type: 'server-error',
+    ...problemMessages.errors.patterns.default,
   }
 }

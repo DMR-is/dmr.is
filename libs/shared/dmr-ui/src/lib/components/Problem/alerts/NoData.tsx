@@ -1,4 +1,5 @@
 import { AlertMessage } from '../../../island-is/lib/AlertMessage'
+import { problemMessages } from '../messages'
 import { mapProblemTypeToAlertMessageType } from '../utils'
 
 type NoDataProps = {
@@ -7,8 +8,8 @@ type NoDataProps = {
 }
 
 export const NoData = ({
-  title = 'Engin gögn fundust',
-  message = 'Kanski þarf að síu eða reyna aftur',
+  title = problemMessages.alerts.noData.title,
+  message = problemMessages.alerts.noData.message,
 }: NoDataProps) => {
   return <AlertMessage type={mapProblemTypeToAlertMessageType('no-data')} title={title} message={message} />
 }

@@ -1,4 +1,5 @@
 import { AlertMessage } from '../../../island-is/lib/AlertMessage'
+import { problemMessages } from '../messages'
 import { mapProblemTypeToAlertMessageType } from '../utils'
 
 type NotFoundProps = {
@@ -7,8 +8,8 @@ type NotFoundProps = {
 }
 
 export const NotFound = ({
-  title = 'Eitthvað fór úrskeiðis',
-  message = 'Síða eða gögn fundust ekki,',
+  title = problemMessages.alerts.notFound.title,
+  message = problemMessages.alerts.notFound.message,
 }: NotFoundProps) => {
   const type = mapProblemTypeToAlertMessageType('not-found')
 

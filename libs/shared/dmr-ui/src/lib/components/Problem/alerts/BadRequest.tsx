@@ -1,4 +1,5 @@
 import { AlertMessage } from '../../../island-is/lib/AlertMessage'
+import { problemMessages } from '../messages'
 import { mapProblemTypeToAlertMessageType } from '../utils'
 
 type BadRequestProps = {
@@ -7,8 +8,8 @@ type BadRequestProps = {
 }
 
 export const BadRequest = ({
-  title = 'Beiðni er ógild',
-  message = 'Ekki er hægt að vinna úr beiðni',
+  title = problemMessages.alerts.badRequest.title,
+  message = problemMessages.alerts.badRequest.message,
 }: BadRequestProps) => {
   return <AlertMessage type={mapProblemTypeToAlertMessageType('bad-request')} title={title} message={message} />
 }
