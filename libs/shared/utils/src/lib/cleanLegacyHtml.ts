@@ -233,6 +233,7 @@ const baseOptions: sanitizeHtml.IOptions = {
     'h5',
     'h6',
     'a',
+    'img',
     'table',
     'thead',
     'tbody',
@@ -244,6 +245,7 @@ const baseOptions: sanitizeHtml.IOptions = {
   disallowedTagsMode: 'discard',
   allowedAttributes: {
     a: ['href', 'name', 'target', 'rel'],
+    img: ['src', 'alt', 'width', 'height', 'id', 'class', 'title'],
     p: ['style', 'align', 'id', 'class', 'title'],
     div: ['style', 'align', 'id', 'class', 'title'],
     table: ['style', 'align', 'id', 'class', 'title'],
@@ -254,7 +256,7 @@ const baseOptions: sanitizeHtml.IOptions = {
     ol: ['start', 'type', 'style', 'id', 'class', 'title'],
     '*': ['id', 'class', 'title'],
   },
-  allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+  allowedSchemes: ['http', 'https', 'mailto', 'tel', 'data'],
   allowedStyles: {
     p: { 'text-align': [/^(left|right|center|justify)$/i] },
     div: { 'text-align': [/^(left|right|center|justify)$/i] },
