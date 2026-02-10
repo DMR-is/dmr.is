@@ -80,10 +80,9 @@ export const CreateCommonAdvertModal = () => {
   const onSubmit = () => {
     const check = createAdvertAndCommonApplicationInput.safeParse(state)
 
-    const parsedErrors = parseZodError(check.error)
-    setErrors(parsedErrors.filter((err) => err.path !== undefined))
-
     if (!check.success) {
+      const parsedErrors = parseZodError(check.error)
+      setErrors(parsedErrors.filter((err) => err.path !== undefined))
       toast.error('Vinsamlegast fylltu út öll nauðsynleg svæði')
 
       return
