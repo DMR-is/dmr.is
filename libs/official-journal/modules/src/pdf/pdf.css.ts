@@ -532,7 +532,7 @@ export const pdfCss = `
     margin-bottom: 2em;
   }
 
-  .regulation__text > p:not([align]) {
+  .regulation__text > p:not([align]), .regulation__text > p:not(.indented) {
     text-indent: 2em;
     text-align: justify;
   }
