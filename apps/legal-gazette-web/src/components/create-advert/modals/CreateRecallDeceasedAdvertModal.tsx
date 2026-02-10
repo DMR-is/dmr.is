@@ -1,5 +1,7 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
 import { useState } from 'react'
 import * as z from 'zod'
 
@@ -64,11 +66,9 @@ const initalState: CreateAdvertAndDeceasedBankruptcyApplicationBody = {
     },
   },
 }
-type Props = {
-  handleSubmit?: () => void
-}
 
-export const CreateDeceasedAdvertModal = ({ handleSubmit }: Props) => {
+export const CreateDeceasedAdvertModal = () => {
+  const router = useRouter()
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
@@ -80,7 +80,7 @@ export const CreateDeceasedAdvertModal = ({ handleSubmit }: Props) => {
         toast.success('Auglýsing búin til')
         queryClient.invalidateQueries(trpc.getAdvertsInProgress.queryFilter())
         setState(initalState)
-        handleSubmit?.()
+        router.back()
       },
       onError: () => {
         toast.error('Ekki tókst að búa til auglýsingu')

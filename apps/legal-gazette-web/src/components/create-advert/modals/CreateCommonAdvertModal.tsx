@@ -1,5 +1,7 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
 import { useState } from 'react'
 import * as z from 'zod'
 
@@ -52,11 +54,8 @@ const initalState: CreateAdvertAndCommonApplicationBody = {
   },
 }
 
-type Props = {
-  handleSubmit?: () => void
-}
-
-export const CreateCommonAdvertModal = ({ handleSubmit }: Props) => {
+export const CreateCommonAdvertModal = () => {
+  const router = useRouter()
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
@@ -66,7 +65,7 @@ export const CreateCommonAdvertModal = ({ handleSubmit }: Props) => {
         toast.success('Auglýsing búin til')
         queryClient.invalidateQueries(trpc.getAdvertsInProgress.queryFilter())
         setState(initalState)
-        handleSubmit?.()
+        router.back()
       },
       onError: () => {
         toast.error('Ekki tókst að búa til auglýsingu')

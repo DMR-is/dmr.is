@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation'
-
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 
 import { CreateCommonAdvertModal } from '../../../../../components/create-advert/modals/CreateCommonAdvertModal'
@@ -17,27 +15,17 @@ export function generateStaticParams() {
 export default async function CreatePage({
   params,
 }: {
-  params: Promise<{ type: string }>
+  params: { type: string }
 }) {
-  const { type } = await params
-  const handleSubmit = async  () => {
-    'use server'
-    redirect('/ritstjorn')
-  }
+  const { type } = params
   return (
     <>
       <RitstjornHero />
       <GridContainer>
-        {type === 'almenn' && (
-          <CreateCommonAdvertModal handleSubmit={handleSubmit} />
-        )}
+        {type === 'almenn' && <CreateCommonAdvertModal />}
 
-        {type === 'throtabu' && (
-          <CreateBankruptcyAdvertModal handleSubmit={handleSubmit} />
-        )}
-        {type === 'danarbu' && (
-          <CreateDeceasedAdvertModal handleSubmit={handleSubmit} />
-        )}
+        {type === 'throtabu' && <CreateBankruptcyAdvertModal />}
+        {type === 'danarbu' && <CreateDeceasedAdvertModal />}
       </GridContainer>
     </>
   )

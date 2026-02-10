@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 
 import { ParallelModal } from '@dmr.is/ui/components/Modal/ParallelModal'
 
@@ -18,10 +18,7 @@ export default async function CreateModalPage({ params }: Props) {
   if (!['almenn', 'throtabu', 'danarbu'].includes(type)) {
     notFound()
   }
-  const handleSubmit = async () => {
-    'use server'
-    redirect('/ritstjorn')
-  }
+
   const title = (() => {
     switch (type) {
       case 'almenn':
@@ -37,9 +34,9 @@ export default async function CreateModalPage({ params }: Props) {
 
   return (
     <ParallelModal title={title}>
-      {type === 'almenn' && <CreateCommonAdvertModal handleSubmit={handleSubmit} />}
-      {type === 'throtabu' && <CreateBankruptcyAdvertModal handleSubmit={handleSubmit} />}
-      {type === 'danarbu' && <CreateDeceasedAdvertModal handleSubmit={handleSubmit} />}
+      {type === 'almenn' && <CreateCommonAdvertModal />}
+      {type === 'throtabu' && <CreateBankruptcyAdvertModal />}
+      {type === 'danarbu' && <CreateDeceasedAdvertModal />}
     </ParallelModal>
   )
 }
