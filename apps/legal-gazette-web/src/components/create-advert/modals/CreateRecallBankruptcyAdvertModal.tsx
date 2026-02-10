@@ -9,6 +9,8 @@ import {
   ApplicationRequirementStatementEnum,
   parseZodError,
 } from '@dmr.is/legal-gazette/schemas'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { createAdvertAndRecallBankruptcyApplicationInput } from '../../../lib/inputs'
@@ -104,74 +106,87 @@ export const CreateBankruptcyAdvertModal = () => {
   }
 
   return (
-    <>
-      <CreateAdvertApplicant
-        onChange={(nationalId) =>
-          setState((prev) => ({ ...prev, applicantNationalId: nationalId }))
-        }
-      />
-      <CreateAdvertCourtDistrict
-        onChange={(courtDistrict) =>
-          setState((prev) => ({
-            ...prev,
-            fields: { ...prev.fields, courtAndJudgmentFields: courtDistrict },
-          }))
-        }
-      />
-      <CreateAdvertAdditionalText
-        onChange={(val) =>
-          setState((prev) => ({
-            ...prev,
-            additionalText: val,
-          }))
-        }
-      />
-      <CreateAdvertSignature
-        onChange={(signature) =>
-          setState((prev) => ({ ...prev, signature: signature }))
-        }
-      />
-      <CreateBankruptcySettlement
-        onChange={(settlement) =>
-          setState((prev) => ({
-            ...prev,
-            fields: {
-              ...prev.fields,
-              settlementFields: settlement,
-            },
-          }))
-        }
-      />
-      <CreateAdvertDivisionMeeting
-        required={true}
-        onChange={(divisionMeeting) =>
-          setState((prev) => ({
-            ...prev,
-            fields: {
-              ...prev.fields,
-              divisionMeetingFields: divisionMeeting,
-            },
-          }))
-        }
-      />
-      <CreateAdvertPublications
-        onChange={(pubDates) =>
-          setState((prev) => ({
-            ...prev,
-            publishingDates: pubDates,
-          }))
-        }
-      />
-      <CreateAdvertCommunicationChannel
-        onChange={(channels) =>
-          setState((prev) => ({
-            ...prev,
-            communicationChannels: channels,
-          }))
-        }
-      />
-      <CreateAdvertErrors errors={errors} onResetErrors={() => setErrors([])} />
-      <SubmitCreateAdvert onSubmit={onSubmit} isPending={isPending} />
-    </>
+    <GridContainer>
+      <GridRow rowGap={[2, 3]}>
+        <CreateAdvertApplicant
+          onChange={(nationalId) =>
+            setState((prev) => ({
+              ...prev,
+              applicantNationalId: nationalId,
+            }))
+          }
+        />
+        <CreateAdvertCourtDistrict
+          onChange={(courtDistrict) =>
+            setState((prev) => ({
+              ...prev,
+              fields: {
+                ...prev.fields,
+                courtAndJudgmentFields: courtDistrict,
+              },
+            }))
+          }
+        />
+        <CreateAdvertAdditionalText
+          onChange={(val) =>
+            setState((prev) => ({
+              ...prev,
+              additionalText: val,
+            }))
+          }
+        />
+
+        <CreateAdvertSignature
+          onChange={(signature) =>
+            setState((prev) => ({ ...prev, signature: signature }))
+          }
+        />
+
+        <CreateBankruptcySettlement
+          onChange={(settlement) =>
+            setState((prev) => ({
+              ...prev,
+              fields: {
+                ...prev.fields,
+                settlementFields: settlement,
+              },
+            }))
+          }
+        />
+        <CreateAdvertDivisionMeeting
+          required={true}
+          onChange={(divisionMeeting) =>
+            setState((prev) => ({
+              ...prev,
+              fields: {
+                ...prev.fields,
+                divisionMeetingFields: divisionMeeting,
+              },
+            }))
+          }
+        />
+        <CreateAdvertPublications
+          onChange={(pubDates) =>
+            setState((prev) => ({
+              ...prev,
+              publishingDates: pubDates,
+            }))
+          }
+        />
+        <CreateAdvertCommunicationChannel
+          onChange={(channels) =>
+            setState((prev) => ({
+              ...prev,
+              communicationChannels: channels,
+            }))
+          }
+        />
+        <CreateAdvertErrors
+          errors={errors}
+          onResetErrors={() => setErrors([])}
+        />
+        <SubmitCreateAdvert onSubmit={onSubmit} isPending={isPending} />
+      </GridRow>
+    </GridContainer>
   )
 }

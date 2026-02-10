@@ -4,8 +4,6 @@ import * as z from 'zod'
 import { communicationChannelSchemaRefined } from '@dmr.is/legal-gazette/schemas'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
-import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
-import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
@@ -122,19 +120,17 @@ export const CreateAdvertCommunicationChannel = ({ onChange }: Props) => {
   }))
 
   return (
-    <GridContainer>
-      <GridRow rowGap={[2, 3]}>
-        <GridColumn span="12/12">
-          <Text variant="h4">Samskiptaleiðir</Text>
-        </GridColumn>
-        <GridColumn span="12/12">
-          <DataTable
-            noDataMessage="Engar samskiptaleiðir valdar"
-            columns={columns}
-            rows={rows}
-          />
-        </GridColumn>
-      </GridRow>
-    </GridContainer>
+    <>
+      <GridColumn span="12/12">
+        <Text variant="h4">Samskiptaleiðir</Text>
+      </GridColumn>
+      <GridColumn span="12/12">
+        <DataTable
+          noDataMessage="Engar samskiptaleiðir valdar"
+          columns={columns}
+          rows={rows}
+        />
+      </GridColumn>
+    </>
   )
 }

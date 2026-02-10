@@ -3,8 +3,6 @@ import { useState } from 'react'
 
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
-import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
-import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
@@ -50,43 +48,41 @@ export const CreateAdvertApplicant = ({ onChange }: Props) => {
   }
 
   return (
-    <GridContainer>
-      <GridRow rowGap={[2, 3]}>
-        {error && (
-          <GridColumn span="12/12">
-            <AlertMessage
-              type="error"
-              title="Aðili fannst ekki"
-              message="Ekki tókst að finna aðila með þessa kennitölu"
-            />
-          </GridColumn>
-        )}
+    <>
+      {error && (
         <GridColumn span="12/12">
-          <Text variant="h4">Upplýsingar um innsendanda</Text>
-        </GridColumn>
-        <GridColumn span={['12/12', '6/12']}>
-          <Input
-            loading={isPending}
-            size="sm"
-            backgroundColor="blue"
-            name="applicant-national-id"
-            label="Kennitala fyrir hönd innsendanda"
-            required
-            maxLength={10}
-            value={val}
-            onChange={(e) => handleChange(e.target.value)}
+          <AlertMessage
+            type="error"
+            title="Aðili fannst ekki"
+            message="Ekki tókst að finna aðila með þessa kennitölu"
           />
         </GridColumn>
-        <GridColumn span={['12/12', '6/12']}>
-          <Input
-            readOnly
-            size="sm"
-            name="person.name"
-            value={name}
-            label="Nafn aðila"
-          />
-        </GridColumn>
-      </GridRow>
-    </GridContainer>
+      )}
+      <GridColumn span="12/12">
+        <Text variant="h4">Upplýsingar um innsendanda</Text>
+      </GridColumn>
+      <GridColumn span={['12/12', '6/12']}>
+        <Input
+          loading={isPending}
+          size="sm"
+          backgroundColor="blue"
+          name="applicant-national-id"
+          label="Kennitala fyrir hönd innsendanda"
+          required
+          maxLength={10}
+          value={val}
+          onChange={(e) => handleChange(e.target.value)}
+        />
+      </GridColumn>
+      <GridColumn span={['12/12', '6/12']}>
+        <Input
+          readOnly
+          size="sm"
+          name="person.name"
+          value={name}
+          label="Nafn aðila"
+        />
+      </GridColumn>
+    </>
   )
 }

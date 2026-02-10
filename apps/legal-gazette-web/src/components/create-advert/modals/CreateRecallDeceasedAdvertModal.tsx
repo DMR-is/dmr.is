@@ -9,6 +9,7 @@ import {
   ApplicationRequirementStatementEnum,
   parseZodError,
 } from '@dmr.is/legal-gazette/schemas'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
@@ -106,7 +107,7 @@ export const CreateDeceasedAdvertModal = () => {
   }
 
   return (
-    <>
+    <GridContainer>
       <GridRow rowGap={[2, 3]}>
         <CreateAdvertApplicant
           onChange={(nationalId) =>
@@ -179,6 +180,6 @@ export const CreateDeceasedAdvertModal = () => {
         />
         <SubmitCreateAdvert onSubmit={onSubmit} isPending={isPending} />
       </GridRow>
-    </>
+    </GridContainer>
   )
 }

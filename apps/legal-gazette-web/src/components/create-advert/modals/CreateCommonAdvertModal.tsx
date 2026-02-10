@@ -95,16 +95,15 @@ export const CreateCommonAdvertModal = () => {
     <>
       <GridContainer>
         <GridRow rowGap={[2, 3]}>
-          <GridColumn span="12/12">
-            <CreateAdvertApplicant
-              onChange={(nationalId) =>
-                setState((prev) => ({
-                  ...prev,
-                  applicantNationalId: nationalId,
-                }))
-              }
-            />
-          </GridColumn>
+          <CreateAdvertApplicant
+            onChange={(nationalId) =>
+              setState((prev) => ({
+                ...prev,
+                applicantNationalId: nationalId,
+              }))
+            }
+          />
+
           <GridColumn span="12/12">
             <Text variant="h4">Grunnupplýsingar</Text>
           </GridColumn>
@@ -173,31 +172,38 @@ export const CreateCommonAdvertModal = () => {
               }
             />
           </GridColumn>
+
+          <CreateAdvertSignature
+            onChange={(signature) =>
+              setState((prev) => ({ ...prev, signature: signature }))
+            }
+          />
+
+          <CreateAdvertPublications
+            onChange={(pubDates) =>
+              setState((prev) => ({
+                ...prev,
+                publishingDates: pubDates,
+              }))
+            }
+          />
+
+          <CreateAdvertCommunicationChannel
+            onChange={(channels) =>
+              setState((prev) => ({
+                ...prev,
+                communicationChannels: channels,
+              }))
+            }
+          />
+
+          <CreateAdvertErrors
+            errors={errors}
+            onResetErrors={() => setErrors([])}
+          />
+          <SubmitCreateAdvert onSubmit={onSubmit} isPending={isPending} />
         </GridRow>
       </GridContainer>
-      <CreateAdvertSignature
-        onChange={(signature) =>
-          setState((prev) => ({ ...prev, signature: signature }))
-        }
-      />
-      <CreateAdvertPublications
-        onChange={(pubDates) =>
-          setState((prev) => ({
-            ...prev,
-            publishingDates: pubDates,
-          }))
-        }
-      />
-      <CreateAdvertCommunicationChannel
-        onChange={(channels) =>
-          setState((prev) => ({
-            ...prev,
-            communicationChannels: channels,
-          }))
-        }
-      />
-      <CreateAdvertErrors errors={errors} onResetErrors={() => setErrors([])} />
-      <SubmitCreateAdvert onSubmit={onSubmit} isPending={isPending} />
     </>
   )
 }
