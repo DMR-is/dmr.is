@@ -138,7 +138,7 @@
     "@aws-sdk/credential-providers": "^3.750.0",
     "@aws-sdk/s3-presigned-post": "^3.744.0",
     "@aws-sdk/s3-request-presigner": "^3.744.0",
-    "@dmr.is/regulations-tools": "0.10.0",
+    "@dmr.is/regulations-tools": "0.10.1",
     "@elastic/elasticsearch": "^7.15.0",
     "@fastify/autoload": "6.0.3",
     "@fastify/basic-auth": "5.1.1",

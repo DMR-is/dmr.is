@@ -34,6 +34,7 @@ export const HTMLEditor = ({
       classes={classes}
       key={readonly ? 'readonly' : 'editable'}
       config={readonly ? { toolbar: `` } : {}}
+      disabledWarnings={['nonEmTitleContent']}
       /**
        * Delayed onChange to prevent the editor from reading the value before it has been updated
        */
