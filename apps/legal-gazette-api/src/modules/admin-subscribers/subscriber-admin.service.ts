@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared/dto'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/serverUtils'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'
 
 import {
   CreateSubscriberAdminDto,

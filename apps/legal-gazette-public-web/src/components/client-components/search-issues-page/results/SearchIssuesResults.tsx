@@ -7,7 +7,7 @@ import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
-import { formatDate } from '@dmr.is/utils/client'
+import { formatDate } from '@dmr.is/utils/shared/format/date'
 
 import { useFilters } from '../../../../hooks/useFilters'
 import { useIssues } from '../../../../hooks/useIssues'

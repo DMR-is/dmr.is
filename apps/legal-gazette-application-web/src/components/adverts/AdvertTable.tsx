@@ -9,7 +9,7 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
-import { formatDate } from '@dmr.is/utils/client'
+import { formatDate } from '@dmr.is/utils/shared/format/date'
 
 import { AdvertDto } from '../../gen/fetch'
 import { ApplicationTypeEnum } from '../../gen/fetch'

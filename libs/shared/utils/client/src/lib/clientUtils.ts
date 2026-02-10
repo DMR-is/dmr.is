@@ -1,6 +1,4 @@
 import differenceInCalendarDays from 'date-fns/differenceInCalendarDays'
-import format from 'date-fns/format'
-import is from 'date-fns/locale/is'
 
 export const isSingular = (n: number | string): boolean => {
   const c = '' + Number(n)
@@ -31,55 +29,6 @@ export const deleteUndefined = <T>(
     })
   }
   return obj as T
-}
-
-export const formatNationalId = (nationalId: string) => {
-  // Format: XXXXXX-XXXX or XXXXXXXXXX
-  const cleaned = nationalId.replace(/[^0-9]/g, '')
-  if (cleaned.length !== 10) {
-    return nationalId // Return as is if not 10 digits
-  }
-  return `${cleaned.slice(0, 6)}-${cleaned.slice(6)}`
-}
-
-const dateFormats = [
-  'd.MM.yyyy',
-  'dd.MM.yyyy',
-  'd. MMMM yyyy',
-  'dd. MMMM yyyy',
-  'HH:mm',
-  'MMMM',
-  'EEEE',
-  "dd. MMMM yyyy 'kl.' HH:mm",
-  "d.MM.yy 'kl.' HH:mm",
-] as const
-
-export const formatDate = (
-  date: Date | string,
-  dateFormat: (typeof dateFormats)[number] = 'dd.MM.yyyy',
-  locale = is,
-) => {
-  const dateToFormat = typeof date === 'string' ? new Date(date) : date
-
-  if (dateToFormat instanceof Date && !isNaN(dateToFormat.getTime())) {
-    return format(dateToFormat, dateFormat, { locale })
-  }
-
-  throw new Error(`Invalid date: ${date}`)
-}
-
-export const numberFormat = (value: number): string =>
-  value
-    .toString()
-    .split('.')[0]
-    .replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-
-export const amountFormat = (value?: number | string | null): string => {
-  const inputValue = typeof value === 'string' ? parseInt(value) : value
-  if (inputValue === undefined || inputValue === null || isNaN(inputValue)) {
-    return ''
-  }
-  return typeof inputValue === 'number' ? numberFormat(inputValue) + ' kr.' : ''
 }
 
 export const getDaysAgo = (date: string | Date): number => {

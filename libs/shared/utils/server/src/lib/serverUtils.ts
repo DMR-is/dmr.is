@@ -5,7 +5,6 @@ import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 import startOfDay from 'date-fns/startOfDay'
 import { getHolidays } from 'fridagar'
-import mammoth from 'mammoth'
 import sanitizeHtml from 'sanitize-html'
 import {
   BaseError,
@@ -101,6 +100,10 @@ export function generatePaging(
     hasNextPage: nextPage <= totalPages,
     hasPreviousPage: previousPage > 0,
   }
+}
+
+export const isResponse = (error: unknown): error is Response => {
+  return typeof error === 'object' && error !== null && 'json' in error
 }
 
 export function slicePagedData<T>(
@@ -501,6 +504,24 @@ export const formatAnyDate = (date: unknown): string => {
 
   return format(parsedDate, 'd. MMMM yyyy', { locale: is })
 }
+export const DateFormats = [
+  'dd.MM.yyyy',
+  'dd. MMMM yyyy',
+  'd. MMMM yyyy',
+  'HH:mm',
+  'MMMM yyyy',
+  'MMMM',
+  'EEEE',
+] as const
+
+export const formatDate = (
+  date: string | Date,
+  df: (typeof DateFormats)[number] = 'dd.MM.yyyy',
+) => {
+  const dateToFormat = typeof date === 'string' ? new Date(date) : date
+
+  return format(dateToFormat, df, { locale: is })
+}
 
 export const formatDateToRFC822 = (date: string | Date): string => {
   const dateToUse = typeof date === 'string' ? new Date(date) : date
@@ -708,25 +729,6 @@ export const getPublicationTemplate = (
   return `<p align="center" style="margin-top: 1.5em;"><strong>${department} — Útgáfudagur: ${formatted}</strong></p>`
 }
 
-export const DateFormats = [
-  'dd.MM.yyyy',
-  'dd. MMMM yyyy',
-  'd. MMMM yyyy',
-  'HH:mm',
-  'MMMM yyyy',
-  'MMMM',
-  'EEEE',
-] as const
-
-export const formatDate = (
-  date: string | Date,
-  df: (typeof DateFormats)[number] = 'dd.MM.yyyy',
-) => {
-  const dateToFormat = typeof date === 'string' ? new Date(date) : date
-
-  return format(dateToFormat, df, { locale: is })
-}
-
 export const getNextWeekDay = (date: Date | string) => {
   const dateToUse = typeof date === 'string' ? new Date(date) : date
   const day = dateToUse.getDay()
@@ -758,21 +760,4 @@ export const toUtf8 = (v: unknown) =>
 
 export function hashPdf(buffer: Buffer): string {
   return createHash('sha256').update(buffer).digest('hex') // 64-char hex string
-}
-
-export const wordBufferToHtml = async (buffer: Buffer): Promise<string> => {
-  const result = await mammoth.convertToHtml(
-    { buffer },
-    {
-      convertImage: mammoth.images.imgElement(async function (element) {
-        const imageBuffer = await element.read('base64')
-        return {
-          src: 'data:' + element.contentType + ';base64,' + imageBuffer,
-        }
-      }),
-    },
-  )
-
-  const htmlText = simpleSanitize(result.value)
-  return htmlText
 }

@@ -50,8 +50,7 @@
       "application": {
         "style": "scss",
         "linter": "eslint",
-        "pascalCaseFiles": true,
-        "babel": true
+        "pascalCaseFiles": true
       },
       "component": {
         "style": "scss"
@@ -170,8 +169,7 @@
     "sharedGlobals": [
       "{workspaceRoot}/eslint-local-rules.js",
       "{workspaceRoot}/nx.json",
-      "{workspaceRoot}/tsconfig.base.json",
-      "{workspaceRoot}/babel.config.json"
+      "{workspaceRoot}/tsconfig.base.json"
     ],
     "production": [
       "default",

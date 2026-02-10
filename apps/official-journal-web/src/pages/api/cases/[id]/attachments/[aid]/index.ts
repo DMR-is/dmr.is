@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import * as z from 'zod'
 
 import { HandleApiException, LogMethod } from '@dmr.is/decorators'
-import { isResponse } from '@dmr.is/utils/client'
+import { isResponse } from '@dmr.is/utils/client/clientUtils'
 
 import {
   handlerWrapper,

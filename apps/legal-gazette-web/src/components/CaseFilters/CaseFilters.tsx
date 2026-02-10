@@ -1,6 +1,5 @@
 'use client'
 
-import debounce from 'lodash/debounce'
 import { useCallback, useState } from 'react'
 import { useIntl } from 'react-intl'
 
@@ -8,6 +7,7 @@ import { ActiveFilters } from '@dmr.is/ui/components/ActiveFilters/ActiveFilters
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { debounce } from '@dmr.is/utils/shared/lodash/debounce'
 
 import { useFilterContext } from '../../hooks/useFilters'
 import { messages } from '../../lib/messages/messages'

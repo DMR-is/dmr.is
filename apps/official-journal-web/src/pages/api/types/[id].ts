@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { isUUID } from 'class-validator'
 
 import { LogMethod } from '@dmr.is/decorators'
-import { isResponse } from '@dmr.is/utils/client'
+import { isResponse } from '@dmr.is/utils/client/clientUtils'
 
 import { handlerWrapper, RouteHandler } from '../../../lib/api/routeHandler'
 import { OJOIWebException } from '../../../lib/constants'

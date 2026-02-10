@@ -5,7 +5,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { Logger } from '@dmr.is/logging-next'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'
 
 import {
   CreateTBRCompanySettingsDto,

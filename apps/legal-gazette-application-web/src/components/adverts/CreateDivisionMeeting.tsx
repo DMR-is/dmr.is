@@ -1,7 +1,6 @@
 'use client'
 
 import { addYears } from 'date-fns'
-import get from 'lodash/get'
 import { useEffect, useState } from 'react'
 
 import { createDivisionMeetingInput } from '@dmr.is/legal-gazette/schemas'
@@ -22,7 +21,8 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import {
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,
-} from '@dmr.is/utils/date'
+} from '@dmr.is/utils/client/dateUtils'
+import { get } from '@dmr.is/utils/shared/lodash/get'
 
 import { CreateDivisionMeetingDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'

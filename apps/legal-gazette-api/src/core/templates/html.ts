@@ -1,6 +1,6 @@
 import { InternalServerErrorException } from '@nestjs/common'
 
-import { formatDate } from '@dmr.is/utils/serverUtils'
+import { formatDate } from '@dmr.is/utils/server/serverUtils'
 
 import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
 import { AdvertVersionEnum } from '../../models/advert-publication.model'

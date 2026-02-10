@@ -1,6 +1,5 @@
 'use client'
 
-import debounce from 'lodash/debounce'
 import { useCallback, useEffect, useState } from 'react'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
@@ -13,6 +12,7 @@ import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { PagingTotalItemsText } from '@dmr.is/ui/components/PagingTotaItemsText/PagingTotalItemsText'
+import { debounce } from '@dmr.is/utils/shared/lodash/debounce'
 
 import type { Option } from '@island.is/island-ui/core/Select/Select.types'
 

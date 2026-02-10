@@ -8,7 +8,7 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import {
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,
-} from '@dmr.is/utils/date'
+} from '@dmr.is/utils/client/dateUtils'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { ONE_WEEK } from '../../../../lib/constants'

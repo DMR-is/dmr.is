@@ -8,9 +8,9 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
  **/
 const nextConfig = {
   output: 'standalone',
-  experimental: { fallbackNodePolyfills: false,
-    optimizePackageImports: ["@island.is/island-ui/theme"]
-   },
+  experimental: {
+    fallbackNodePolyfills: false,
+  },
   webpack: (config, { isServer }) => {
     config.resolve.alias.canvas = false
 
@@ -41,6 +41,5 @@ const plugins = [
   withNx,
   withVanillaExtract,
 ]
-
 
 module.exports = composePlugins(...plugins)(nextConfig)

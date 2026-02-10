@@ -13,7 +13,7 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
-import { formatDate } from '@dmr.is/utils/client'
+import { formatDate } from '@dmr.is/utils/shared/format/date'
 
 import {
   Paging,

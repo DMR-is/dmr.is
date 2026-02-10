@@ -1,10 +1,10 @@
 export default {
-  displayName: 'utils',
-  preset: '../../../jest.preset.js',
+  displayName: 'shared-utils',
+  preset: '../../../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
     '^.+\\.[tj]s$': ['@swc/jest'],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../../coverage/libs/shared/utils',
+  coverageDirectory: '../../../../coverage/libs/shared/utils/shared',
 }

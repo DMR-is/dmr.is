@@ -1,5 +1,5 @@
-import { formatNationalId } from '@dmr.is/utils/client'
-import { formatDate } from '@dmr.is/utils/serverUtils'
+import { formatNationalId } from '@dmr.is/utils/server/formatting'
+import { formatDate } from '@dmr.is/utils/server/serverUtils'
 
 import { AdvertModel } from '../../../models/advert.model'
 import { ApplicationRequirementStatementEnum } from '../../../models/application.model'

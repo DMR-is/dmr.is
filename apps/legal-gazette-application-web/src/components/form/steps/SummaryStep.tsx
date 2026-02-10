@@ -2,7 +2,6 @@
 
 import { useSession } from 'next-auth/react'
 
-import get from 'lodash/get'
 import { useEffect, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
@@ -12,7 +11,9 @@ import {
 } from '@dmr.is/legal-gazette/schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
-import { formatDate, numberFormat } from '@dmr.is/utils/client'
+import { formatDate } from '@dmr.is/utils/shared/format/date'
+import { numberFormat } from '@dmr.is/utils/shared/format/number'
+import { get } from '@dmr.is/utils/shared/lodash/get'
 
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 import { FormStep } from '../../form-step/FormStep'

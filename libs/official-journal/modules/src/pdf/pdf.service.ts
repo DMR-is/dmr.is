@@ -13,13 +13,13 @@ import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { HTMLText } from '@dmr.is/regulations-tools/types'
 import { ResultWrapper } from '@dmr.is/types'
-import { simpleSanitize } from '@dmr.is/utils/cleanLegacyHtml'
+import { simpleSanitize } from '@dmr.is/utils/server/cleanLegacyHtml'
 import {
   applicationSignatureTemplate,
   formatAnyDate,
   handlePdfAdditions,
   retryAsync,
-} from '@dmr.is/utils/serverUtils'
+} from '@dmr.is/utils/server/serverUtils'
 
 import { caseDetailedMigrate } from '../case/migrations/case-detailed.migrate'
 import { IUtilityService } from '../utility/utility.module'

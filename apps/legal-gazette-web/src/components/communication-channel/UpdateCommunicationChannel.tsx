@@ -1,5 +1,4 @@
 import { isEmail } from 'class-validator'
-import debounce from 'lodash/debounce'
 import { useCallback } from 'react'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
@@ -7,6 +6,7 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { debounce } from '@dmr.is/utils/shared/lodash/debounce'
 
 import { AdvertDetailedDto, CommunicationChannelDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'

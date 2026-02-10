@@ -5,9 +5,10 @@ import { globalStyles } from '@dmr.is/ui/globalStyles'
 import { RootProviders } from '../components/providers/RootProviders'
 import { authOptions } from '../lib/auth/authOptions'
 
+import '../styles/global.css'
+
 globalStyles()
 
-import '../styles/global.css'
 export default async function RootLayout({
   children,
 }: {

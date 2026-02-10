@@ -111,14 +111,10 @@
         "libs/shared/dmr-ui-lazy/src/lib/components/*"
       ],
       "@dmr.is/ui/utils/*": ["libs/shared/dmr-ui/src/lib/utils/*"],
-      "@dmr.is/utils": ["libs/shared/utils/src/index.ts"],
-      "@dmr.is/utils/*": ["libs/shared/utils/src/lib/*"],
-      "@dmr.is/utils/cache": ["libs/shared/utils/src/lib/cacheUtils.ts"],
-      "@dmr.is/utils/cache.provider": [
-        "libs/shared/utils/src/lib/cache.provider.ts"
-      ],
-      "@dmr.is/utils/client": ["libs/shared/utils/src/client.ts"],
-      "@dmr.is/utils/date": ["libs/shared/utils/src/lib/dateUtils.ts"],
+      // DMR UTILS
+      "@dmr.is/utils/shared/*": ["libs/shared/utils/shared/src/lib/*"],
+      "@dmr.is/utils/server/*": ["libs/shared/utils/server/src/lib/*"],
+      "@dmr.is/utils/client/*": ["libs/shared/utils/client/src/lib/*"],
       "@island.is/auth-nest-tools": [
         "submodules/island.is/libs/auth-nest-tools/src/lib/auth.ts"
       ],

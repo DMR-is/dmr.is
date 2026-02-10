@@ -1,5 +1,5 @@
 // Based on libs/island-ui/core/src/lib/Input/Input.treat.ts
-import omit from 'lodash/omit'
+import { omit } from '@dmr.is/utils/shared/lodash/omit'
 
 import { helperStyles, theme } from '@island.is/island-ui/theme'
 

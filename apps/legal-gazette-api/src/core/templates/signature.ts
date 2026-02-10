@@ -1,6 +1,6 @@
 import { isDefined, isEmpty } from 'class-validator'
 
-import { formatDate } from '@dmr.is/utils/serverUtils'
+import { formatDate } from '@dmr.is/utils/server/serverUtils'
 
 import { getElement } from './element'
 
