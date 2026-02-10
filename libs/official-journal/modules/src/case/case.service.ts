@@ -1487,7 +1487,41 @@ export class CaseService implements ICaseService {
     body: UpdateCaseInvolvedPartyBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    return this.updateService.updateCaseInvolvedParty(caseId, body, transaction)
+    const updateCase = await this.updateService.updateCaseInvolvedParty(
+      caseId,
+      body,
+      transaction,
+    )
+
+    try {
+      if (!updateCase.result.ok) {
+        this.logger.warn('Failed to update case involved party', {
+          error: updateCase.result.error,
+          caseId,
+          newInvolvedPartyId: body.involvedPartyId,
+          category: LOGGING_CATEGORY,
+        })
+        return ResultWrapper.err({
+          code: 500,
+          message: 'Failed to update case involved party',
+        })
+      }
+      const advertId = updateCase.result.value?.advertId
+      if (advertId) {
+        // Only update advert if advertId exists. That means the case is published.
+        await this.journalService.updateAdvert(advertId, {
+          involvedPartyId: body.involvedPartyId,
+        })
+      }
+    } catch (error) {
+      this.logger.warn('Failed to update advert involved party', {
+        error,
+        caseId,
+        newInvolvedPartyId: body.involvedPartyId,
+        category: LOGGING_CATEGORY,
+      })
+    }
+    return ResultWrapper.ok()
   }
 
   @LogAndHandle()
