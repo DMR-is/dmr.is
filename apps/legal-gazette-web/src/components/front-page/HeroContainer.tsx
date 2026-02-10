@@ -1,7 +1,7 @@
 'use client'
 
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
-import { GridColumn} from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { LinkCard } from '@dmr.is/ui/components/LinkCard/LinkCard'
 
