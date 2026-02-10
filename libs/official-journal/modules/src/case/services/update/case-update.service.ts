@@ -238,9 +238,9 @@ export class CaseUpdateService implements ICaseUpdateService {
     caseId: string,
     body: UpdateCaseInvolvedPartyBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper> {
+  ): Promise<ResultWrapper<{ advertId?: string; caseId?: string }>> {
     const caseLookup = await this.caseModel.findByPk(caseId, {
-      attributes: ['id', 'applicationId', 'involvedPartyId'],
+      attributes: ['id', 'applicationId', 'involvedPartyId', 'advertId'],
       transaction,
     })
 
@@ -305,7 +305,10 @@ export class CaseUpdateService implements ICaseUpdateService {
       }
     }
 
-    return ResultWrapper.ok()
+    return ResultWrapper.ok({
+      advertId: caseLookup.advertId,
+      caseId: caseLookup.id,
+    })
   }
 
   @LogAndHandle()

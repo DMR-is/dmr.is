@@ -132,7 +132,7 @@ export interface ICaseUpdateService {
     caseId: string,
     body: UpdateCaseInvolvedPartyBody,
     transaction?: Transaction,
-  ): Promise<ResultWrapper>
+  ): Promise<ResultWrapper<{ advertId?: string; caseId?: string }>>
 }
 
 export const ICaseUpdateService = Symbol('ICaseUpdateService')
