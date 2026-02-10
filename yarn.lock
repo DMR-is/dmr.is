@@ -3973,9 +3973,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dmr.is/regulations-tools@npm:0.10.0":
-  version: 0.10.0
-  resolution: "@dmr.is/regulations-tools@npm:0.10.0"
+"@dmr.is/regulations-tools@npm:0.10.1":
+  version: 0.10.1
+  resolution: "@dmr.is/regulations-tools@npm:0.10.1"
   dependencies:
     "@hugsmidjan/htmldiff-js": "npm:^1.3.0"
     "@hugsmidjan/qj": "npm:^4.10.2"
@@ -3990,7 +3990,7 @@ __metadata:
   peerDependencies:
     react: ">=16.8 <20"
     react-dom: ">=16.8 <20"
-  checksum: 10c0/e89cd6c44de7c75f84add941ee3d09028f6ad118c3fadfd28cf9e428c4425c230713efaeee090ace3d7e64a5a4b67543732613bc98ff0747f50ea89baa0c5397
+  checksum: 10c0/2b8ecd7070337050174d04ecc99135e51b6ee2d094d1955573fd5bbddcd53c33c60c9421e18cfbf59bbc04fb34fd0bd1ecbe9b5750a6296714d9509ca4584af0
   languageName: node
   linkType: hard
 
@@ -14845,7 +14845,7 @@ __metadata:
     "@aws-sdk/s3-request-presigner": "npm:^3.744.0"
     "@babel/core": "npm:^7.27.4"
     "@babel/preset-react": "npm:^7.27.1"
-    "@dmr.is/regulations-tools": "npm:0.10.0"
+    "@dmr.is/regulations-tools": "npm:0.10.1"
     "@elastic/elasticsearch": "npm:^7.15.0"
     "@fastify/autoload": "npm:6.0.3"
     "@fastify/basic-auth": "npm:5.1.1"
