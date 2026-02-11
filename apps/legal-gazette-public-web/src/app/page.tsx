@@ -12,9 +12,6 @@ import '../styles/global.css'
 export default async function RootPage() {
   const session = await getServerSession(authOptions)
 
-
-  throw new Error('Internal server error')
-
   return (
     <>
     {/* TODO: Make user aware that he needs to sign up as a subscriber if session and not active */}
