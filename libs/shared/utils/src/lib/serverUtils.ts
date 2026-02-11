@@ -306,7 +306,7 @@ export const handleException = <T>({
   }
 
   if (error instanceof BaseError) {
-    logger.debug(`Sequelize error ${error.name} in ${service}.${method}`, {
+    logger.warn(`Sequelize error ${error.name} in ${service}.${method}`, {
       method,
       category: service,
     })
@@ -324,8 +324,15 @@ export const handleException = <T>({
 
     if (error instanceof ValidationError) {
       error.errors.forEach((err) => {
-        logger.debug(
-          `Validation failed for ${err.path}: received ${err.value}. Reason: ${err.message}`,
+        logger.warn(
+          `Validation failed for ${err.path}: received ${err.value}. Reason: ${err.message}. In ${service}.${method}`,
+          {
+            method,
+            category: service,
+            error: err,
+            errorSpread: { ...err },
+            context: 'HandleException',
+          },
         )
       })
 
