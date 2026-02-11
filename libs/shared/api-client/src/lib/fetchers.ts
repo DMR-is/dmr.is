@@ -1,4 +1,4 @@
-import { ApiErrorDto } from '@dmr.is/legal-gazette/dto'
+import { ApiErrorDto } from '@dmr.is/shared/dto'
 
 type SafeReturnType<T> =
   | {

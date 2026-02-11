@@ -60,7 +60,7 @@ export class ResultWrapper<
       return this.result.value
     }
 
-    logger.debug(`Error unwrapping result, ${this.result.error.message}`)
+    logger.warn(`Error unwrapping result, ${this.result.error.message}`)
     throw new HttpException(this.result.error.message, this.result.error.code)
   }
 }

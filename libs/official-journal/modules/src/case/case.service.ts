@@ -1212,6 +1212,11 @@ export class CaseService implements ICaseService {
     })
 
     if (!caseToPublish) {
+      this.logger.warn(`Tried to publish case, but case is not found`, {
+        caseId,
+        category: LOGGING_CATEGORY,
+        context: 'CaseService',
+      })
       return ResultWrapper.err({
         code: 404,
         message: 'Case not found',
@@ -2020,8 +2025,9 @@ export class CaseService implements ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
     for (const id of ids) {
-      this.logger.debug(`Publishing case<${id}>`, {
+      this.logger.info(`Publishing case<${id}>`, {
         id: id,
+        context: 'CaseService',
         category: LOGGING_CATEGORY,
       })
       await this.publishCase(id, transaction)
