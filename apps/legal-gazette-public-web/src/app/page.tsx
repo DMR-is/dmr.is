@@ -18,7 +18,7 @@ export default async function RootPage() {
   return (
     <>
     {/* TODO: Make user aware that he needs to sign up as a subscriber if session and not active */}
-      {isSessionValid ? <Header /> : <HeaderLogin variant="white" />}
+      {session ? <Header /> : <HeaderLogin variant="white" />}
       {isSessionValid ? <HomePage /> : <LandingPage />}
     </>
   )
