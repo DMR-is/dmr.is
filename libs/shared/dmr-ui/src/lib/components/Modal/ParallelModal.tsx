@@ -14,7 +14,8 @@ import { GridRow } from '../../island-is/lib/GridRow'
 import { Inline } from '../../island-is/lib/Inline'
 import { Stack } from '../../island-is/lib/Stack'
 import { Text } from '../../island-is/lib/Text'
-import * as styles from './Modal.css'
+import { modalBase, modalBaseBackdrop, modalContent } from './Modal.css'
+import * as styles from './ParallelModal.css'
 
 type SpanType = React.ComponentProps<typeof GridColumn>['span']
 
@@ -59,15 +60,15 @@ export const ParallelModal = ({
       <dialog
         ref={dialogRef}
         onClose={onDismiss}
-        className={cn(styles.parallelModal, styles.modalBaseBackdrop)}
+        className={cn(styles.parallelModal, modalBaseBackdrop)}
         style={{ border: 'none', borderRadius: '12px' }}
       >
-        <Box className={styles.modalBase}>
+        <Box className={modalBase}>
           <GridContainer>
             <GridRow>
               <GridColumn span={columnSpan} offset={columnOffset}>
                 <Box
-                  className={styles.modalContent}
+                  className={modalContent}
                   style={{ overflowY: allowOverflow ? 'visible' : 'auto' }}
                 >
                   <Stack space={2}>

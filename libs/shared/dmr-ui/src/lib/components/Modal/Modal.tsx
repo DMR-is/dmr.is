@@ -50,11 +50,24 @@ export const Modal = ({
     width === 'small'
       ? ['1/12', '1/12', '1/12', '3/12']
       : ['0', '0', '0', '1/12', '2/12']
+
+  const handleVisibilityChange = (visible: boolean) => {
+    if (onVisibilityChange) {
+      onVisibilityChange(visible)
+    }
+    // Add or remove class to body to set custom print styles when modal is open
+    if (visible) {
+      document.body.classList.add('modal-open')
+    } else {
+      document.body.classList.remove('modal-open')
+    }
+  }
+
   return (
     <ModalBase
       baseId={baseId}
       isVisible={isVisible}
-      onVisibilityChange={onVisibilityChange}
+      onVisibilityChange={handleVisibilityChange}
       disclosure={disclosure}
       hideOnClickOutside={true}
       hideOnEsc={true}

@@ -86,7 +86,7 @@ globalStyle(`${legacyText} .advertType > td, ${bodyText} .advertType > td`, {
   paddingBottom: '4px',
 })
 
-// Print styles to ensure avert are rendered without boorder around
+// Print styles to ensure advert is rendered without border around
 
 globalStyle(`div:has(> ${bodyText}), div:has(> ${legacyText})`, {
   '@media': {

@@ -14,10 +14,9 @@ export default async function Layout({
   sidebar: React.ReactNode
   related: React.ReactNode
 }) {
-
   return (
     <>
-      <GridContainer>
+      <GridContainer className="print-hidden">
         <Box paddingY={8} className={styles.gridLayout}>
           <Box className={styles.sidebarStyle}>
             <Stack space={[1, 2]}>
