@@ -5,6 +5,7 @@ import { Browser as CoreBrowser } from 'puppeteer-core'
 import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common'
 
 import {
+  CHROME_USER_AGENT,
   PDF_RETRY_ATTEMPTS,
   PDF_RETRY_DELAY,
   SignatureType,
@@ -140,11 +141,28 @@ export class PdfService implements OnModuleDestroy, IPdfService {
         // Safer timeouts to avoid mid-command drops
         page.setDefaultTimeout(60000)
         page.setDefaultNavigationTimeout(60000)
+        await page.setUserAgent(CHROME_USER_AGENT)
 
         // Load content and wait for quiet network so PDF has stable layout
         await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
 
         await page.addStyleTag({ content: pdfCss })
+
+        // Wait for all images to load before generating PDF
+        await page.evaluate(async () => {
+          const images = Array.from(document.querySelectorAll('img'))
+          await Promise.all(
+            images.map((img) => {
+              if (img.complete) return Promise.resolve()
+              return new Promise<void>((resolve) => {
+                img.addEventListener('load', () => resolve())
+                img.addEventListener('error', () => {
+                  resolve() // Resolve anyway to not block PDF generation
+                })
+              })
+            }),
+          )
+        })
 
         if (header) {
           const pdf = await page.pdf({
