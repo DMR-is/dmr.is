@@ -385,7 +385,13 @@ export class AWSService implements IAWSService {
   }
 
   @LogAndHandle()
-  async sendMail(message: Mail.Options): Promise<SentMessageInfo> {
+  async sendMail(message: Mail.Options, context = 'S3Service'): Promise<SentMessageInfo> {
+    this.logger.info('Sending email with SES', {
+      category: LOGGING_CATEGORY,
+      context: context,
+      to: message.to,
+      subject: message.subject,
+    })
     const transporter = nodemailer.createTransport({
       SES: { ses: this.ses, aws: { SendRawEmailCommand } },
     })
