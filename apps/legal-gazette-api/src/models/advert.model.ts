@@ -605,6 +605,7 @@ export class AdvertModel extends BaseModel<
         scheduledAt: model.nextScheduledAt,
         lastPublishedAt: model.lastPublishedAt,
         title: model.title,
+        publicationNumber: model.publicationNumber ?? undefined,
         assignedUser: model.assignedUser?.fromModel(),
         publications: model.publications.map((p) => p.fromModel()),
       }

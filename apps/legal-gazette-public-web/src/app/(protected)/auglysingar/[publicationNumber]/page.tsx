@@ -16,21 +16,27 @@ export default async function RedirectToFirstPublication({
 
   // If it's a UUID, look up the publication and redirect to publication number URL
   if (isUUID(publicationNumber)) {
+    let publication
     try {
-      const publication = await fetchQueryWithHandler(
+      publication = await fetchQueryWithHandler(
         trpc.getPublicationById.queryOptions({
           publicationId: publicationNumber,
         }),
-      )
-
-      // Redirect to the publication number URL
-      redirect(
-        `/auglysingar/${publication.advert.publicationNumber}/${publication.publication.version}`,
       )
     } catch (error) {
       // UUID format but publication not found
       return notFound()
     }
+
+    // Check if publication has a publication number (not published yet if undefined)
+    console.log('Publication found for UUID:', publication)
+
+    console.log('publication.advert.publicationNumber:', publication.advert.publicationNumber)
+
+    // Redirect to the publication number URL (outside try-catch)
+    redirect(
+      `/auglysingar/${publication.advert.publicationNumber}/${publication.publication.version}`,
+    )
   }
 
   // Normal flow: redirect to version A
