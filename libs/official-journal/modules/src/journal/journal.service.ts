@@ -185,10 +185,10 @@ export class JournalService implements IJournalService {
       },
     )
 
-    await this.advertCategoryCategoriesModel.bulkCreate(
-      body.categories.map((id) => ({
-        advert_id: id,
-        category_id: id,
+    await this.advertCategoriesModel.bulkCreate(
+      body.categories.map((catId) => ({
+        advert_id: ad.id,
+        category_id: catId,
       })),
       { transaction },
     )
