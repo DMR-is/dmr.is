@@ -1,5 +1,6 @@
 'use client'
 
-import { AlertMessage as IslandAlertMessage } from '@island.is/island-ui/core'
+import { AlertMessage as IslandAlertMessage, AlertMessageType as IslandIsAlertMessageType } from '@island.is/island-ui/core'
 
 export const AlertMessage = IslandAlertMessage
+export type AlertMessageType = IslandIsAlertMessageType

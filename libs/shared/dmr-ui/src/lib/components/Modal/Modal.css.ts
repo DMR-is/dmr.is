@@ -14,6 +14,7 @@ export const modalBase = style({
       width: '100%',
       justifyContent: 'flex-start',
       height: '100%',
+      background: 'white',
     },
   },
 })
@@ -49,12 +50,9 @@ globalStyle(`body *`, {
   '@media': { print: { display: 'none' } },
 })
 
-globalStyle(
-  `body, .__reakit-portal, ${modalBaseBackdrop} ,${modalBaseBackdrop} *`,
-  {
-    '@media': { print: { display: 'block' } },
-  },
-)
+globalStyle(`body, div, ${modalBaseBackdrop} ,${modalBaseBackdrop} *`, {
+  '@media': { print: { display: 'block' } },
+})
 
 globalStyle(`${modalBase} button`, {
   '@media': { print: { display: 'none' } },

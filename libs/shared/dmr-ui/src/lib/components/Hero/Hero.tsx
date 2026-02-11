@@ -76,7 +76,7 @@ export const Hero = ({
                       <Text variant={isDefault ? 'h1' : 'h2'}>{title}</Text>
                     )}
 
-                    {description && <Text variant="intro">{description}</Text>}
+                    {description && <Text variant="intro" as="span">{description}</Text>}
                     {button && <Inline space={2}>{button}</Inline>}
                   </Stack>
 
