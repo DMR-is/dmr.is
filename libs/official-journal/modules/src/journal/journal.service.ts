@@ -57,8 +57,12 @@ import { cleanLegacyHtml, generatePaging, toUtf8 } from '@dmr.is/utils'
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { caseAdditionMigrate } from '../case/migrations/case-addition.migrate'
 import { CaseCategoriesModel, CaseModel } from '../case/models'
-import { IJournalService } from './journal.service.interface'
 import { advertUpdateParametersMapper } from './mappers/advert-update-parameters.mapper'
+import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
+import { removeAllHtmlComments } from './util/removeAllHtmlComments'
+import { removeSubjectFromHtml } from './util/removeSubjectFromHtml'
+import { scoreBuckets, sortByScoreAndSlice } from './util/similaritySorting'
+import { IJournalService } from './journal.service.interface'
 import {
   advertCategoryMigrate,
   advertDepartmentMigrate,
@@ -66,7 +70,6 @@ import {
   advertMainCategoryMigrate,
   advertMigrate,
 } from './migrations'
-import { advertSimilarMigrate } from './migrations/advert-similar.migrate'
 import {
   AdvertAttachmentsModel,
   AdvertCategoriesModel,
@@ -79,9 +82,6 @@ import {
   AdvertModel,
   AdvertStatusModel,
 } from './models'
-import { removeAllHtmlComments } from './util/removeAllHtmlComments'
-import { removeSubjectFromHtml } from './util/removeSubjectFromHtml'
-import { scoreBuckets, sortByScoreAndSlice } from './util/similaritySorting'
 const DEFAULT_PAGE = 1
 const DEFAULT_PAGE_SIZE = 20
 const LOGGING_CATEGORY = 'journal-service'
