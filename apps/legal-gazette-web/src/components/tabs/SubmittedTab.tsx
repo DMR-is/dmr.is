@@ -1,4 +1,4 @@
-import { Box } from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 
 import AdvertsInProgress from '../Tables/AdvertsInProgress'
 

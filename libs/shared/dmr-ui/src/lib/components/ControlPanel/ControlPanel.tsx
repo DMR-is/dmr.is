@@ -3,15 +3,12 @@ import { useRouter } from 'next/router'
 import { useEffect, useMemo, useState } from 'react'
 import { Popover, PopoverDisclosure, usePopoverState } from 'reakit'
 
-import {
-  Box,
-  Icon,
-  Inline,
-  LinkV2,
-  Stack,
-  Text,
-} from '@island.is/island-ui/core'
-
+import { Box } from '../../island-is/lib/Box'
+import { Icon } from '../../island-is/lib/Icon'
+import { Inline } from '../../island-is/lib/Inline'
+import { LinkV2 } from '../../island-is/lib/LinkV2'
+import { Stack } from '../../island-is/lib/Stack'
+import { Text } from '../../island-is/lib/Text'
 import * as styles from './ControlPanel.css'
 import { findPath, flattenPaths } from './utils'
 export type ControlPanelRoute = {

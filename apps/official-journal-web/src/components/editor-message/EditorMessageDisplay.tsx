@@ -1,4 +1,4 @@
-import { Input } from '@island.is/island-ui/core'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from './messages'

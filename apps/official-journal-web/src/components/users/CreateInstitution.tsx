@@ -1,14 +1,12 @@
 import { useState } from 'react'
 import slugify from 'slugify'
 
-import {
-  Button,
-  Inline,
-  Input,
-  Stack,
-  Text,
-  toast,
-} from '@island.is/island-ui/core'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import {
   CreateInstitution as CreateInstitutionDto,

@@ -4,8 +4,8 @@ import { useMemo, useState } from 'react'
 import dirtyClean from '@dmr.is/regulations-tools/dirtyClean-browser'
 import { getDiff, HTMLDump } from '@dmr.is/regulations-tools/html'
 import { HTMLText } from '@dmr.is/regulations-tools/types'
-
-import { Button, Drawer } from '@island.is/island-ui/core'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Drawer } from '@dmr.is/ui/components/island-is/Drawer'
 
 import { useCaseContext } from '../../hooks/useCaseContext'
 import * as s from './OriginalCompare.css'

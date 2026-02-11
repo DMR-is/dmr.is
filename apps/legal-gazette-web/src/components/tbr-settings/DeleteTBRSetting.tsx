@@ -1,6 +1,7 @@
 'use client'
 
-import { Button, toast } from '@dmr.is/ui/components/island-is'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { TBRCompanySettingsListDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'

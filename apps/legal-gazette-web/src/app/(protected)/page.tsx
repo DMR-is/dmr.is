@@ -1,5 +1,5 @@
 import { fetchQuery } from '@dmr.is/trpc/client/server'
-import { Box } from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 
 import { ApplicationContainer } from '../../components/front-page/ApplicationContainer'
 import { HeroContainer } from '../../components/front-page/HeroContainer'

@@ -6,21 +6,18 @@ import {
   BaseApplicationWebSchema,
   CommunicationChannelSchema,
 } from '@dmr.is/legal-gazette/schemas'
-import {
-  AlertMessage,
-  Box,
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Icon,
-  Inline,
-  Input,
-  Stack,
-  Table as T,
-  Text,
-} from '@dmr.is/ui/components/island-is'
-import {} from '@dmr.is/ui/components/island-is'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Table as T } from '@dmr.is/ui/components/island-is/Table'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 

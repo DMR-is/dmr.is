@@ -1,15 +1,13 @@
 'use client'
 import { useEffect, useState } from 'react'
 
-import {
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Input,
-  Text,
-  toast,
-} from '@dmr.is/ui/components/island-is'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
 import { TBRCompanySettingsListDto } from '../../gen/fetch'

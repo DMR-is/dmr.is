@@ -1,4 +1,4 @@
-import { Stack } from '@dmr.is/ui/components/island-is'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { CommunicationChannelDto } from '../../gen/fetch'
 import { CommunicationChannelTable } from '../communication-channel/CommunicationChannelTable'

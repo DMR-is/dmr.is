@@ -1,7 +1,6 @@
 'use client'
 import { isNotEmpty } from 'class-validator'
 import Kennitala from 'kennitala'
-import get from 'lodash/get'
 import { useCallback, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import * as z from 'zod'
@@ -10,17 +9,16 @@ import {
   companySchema,
   RecallApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
-import {
-  AlertMessage,
-  Button,
-  GridColumn,
-  GridRow,
-  Input,
-  Stack,
-  Text,
-  toast,
-} from '@dmr.is/ui/components/island-is'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
+import { get } from '@dmr.is/utils/shared/lodash/get'
 
 import { useUpdateApplication } from '../../hooks/useUpdateApplication'
 import { useTRPC } from '../../lib/trpc/client/trpc'

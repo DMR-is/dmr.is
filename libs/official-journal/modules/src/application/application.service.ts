@@ -44,8 +44,7 @@ import {
   getLimitAndOffset,
   getTemplate,
   getTemplateDetails,
-  wordBufferToHtml,
-} from '@dmr.is/utils'
+} from '@dmr.is/utils/server/serverUtils'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
@@ -63,6 +62,7 @@ import { IUtilityService } from '../utility/utility.service.interface'
 import { applicationAdvertMigrate } from './migrations/application-advert.migrate'
 import { IApplicationService } from './application.service.interface'
 import { applicationCaseMigrate } from './migrations'
+import { wordBufferToHtml } from './utils'
 
 const LOGGING_CATEGORY = 'application-service'
 

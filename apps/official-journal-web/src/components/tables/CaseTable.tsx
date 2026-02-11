@@ -6,17 +6,15 @@ import {
 
 import { useState } from 'react'
 
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { Pagination } from '@dmr.is/ui/components/island-is/Pagination'
+import { Table as T } from '@dmr.is/ui/components/island-is/Table'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { useBreakpoints } from '@dmr.is/ui/hooks/useBreakpoints'
 
-import {
-  Box,
-  Icon,
-  LinkV2,
-  LoadingDots,
-  Pagination,
-  Table as T,
-  Text,
-} from '@island.is/island-ui/core'
+import { LoadingDots } from '@island.is/island-ui/core/LoadingDots/LoadingDots'
 
 import { Advert, Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'

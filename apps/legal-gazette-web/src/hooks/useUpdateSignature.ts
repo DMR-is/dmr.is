@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 
-import { toast } from '@dmr.is/ui/components/island-is'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { AdvertDetailedDto } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'

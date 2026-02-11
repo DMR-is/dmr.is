@@ -1,4 +1,4 @@
-import { GridColumn } from '@dmr.is/ui/components/island-is'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 
 import { CategoryDto, TypeDto } from '../../gen/fetch/models'
 import { CategorySelect } from './CategorySelect'

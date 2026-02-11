@@ -1,16 +1,14 @@
 'use client'
-import debounce from 'lodash/debounce'
 import { useCallback } from 'react'
 
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Input,
-  toast,
-} from '@dmr.is/ui/components/island-is'
-import { formatDate } from '@dmr.is/utils/client'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+import { formatDate } from '@dmr.is/utils/shared/format/date'
+import { debounce } from '@dmr.is/utils/shared/lodash/debounce'
 
 import {
   TBRCompanySettingsItemDto,

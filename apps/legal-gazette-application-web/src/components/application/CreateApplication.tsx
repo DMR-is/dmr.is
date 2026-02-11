@@ -2,9 +2,11 @@
 
 import { useRouter } from 'next/navigation'
 
-import { Box, Inline, Text, toast } from '@dmr.is/ui/components/island-is'
-
-import { Button } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import {
   ApplicationTypeEnum,

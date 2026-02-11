@@ -1,14 +1,11 @@
 import debounce from 'lodash/debounce'
 import { useMemo, useState } from 'react'
 
+import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/utils/toast'
-
-import {
-  AccordionItem,
-  AlertMessage,
-  Inline,
-  Stack,
-} from '@island.is/island-ui/core'
 
 import {
   useAdvertTypes,

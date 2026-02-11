@@ -1,6 +1,10 @@
 import { useState } from 'react'
 
-import { Box, Button, Inline, Input, Stack } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { UpdateAvertAndCorrectionTriggerArgs } from '../../hooks/api/update'
 import { useFormatMessage } from '../../hooks/useFormatMessage'

@@ -5,13 +5,11 @@ import { useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import Hero from '@dmr.is/ui/components/Hero/Hero'
-import {
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Text,
-  toast,
-} from '@dmr.is/ui/components/island-is'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { TRPCErrorAlert } from '../components/trpc/TRPCErrorAlert'
 import { CreateUserModal } from '../components/users/CreateUserModal'

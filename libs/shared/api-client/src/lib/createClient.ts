@@ -1,4 +1,4 @@
-import { createUrlFromHost } from '@dmr.is/utils/client'
+import { createUrlFromHost } from '@dmr.is/utils/client/clientUtils'
 
 import { createEnhancedFetch } from './createEnhancedFetch'
 

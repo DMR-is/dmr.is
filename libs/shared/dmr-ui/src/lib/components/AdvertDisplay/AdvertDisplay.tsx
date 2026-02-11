@@ -1,7 +1,7 @@
 'use client'
 
-import { Box, Text } from '@island.is/island-ui/core'
-
+import { Box } from '../../island-is/lib/Box'
+import { Text } from '../../island-is/lib/Text'
 import * as styles from './AdvertDisplay.css'
 
 export type AdvertDisplayProps = {

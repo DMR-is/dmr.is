@@ -1,15 +1,14 @@
 import { useId, useState } from 'react'
 
-import {
-  Box,
-  Button,
-  Checkbox,
-  Icon,
-  Inline,
-  Input,
-  LoadingDots,
-  Text,
-} from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+
+import { LoadingDots } from '@island.is/island-ui/core/LoadingDots/LoadingDots'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import * as styles from '../filter-popover/FilterPopover.css'

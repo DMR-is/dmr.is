@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import React, { useEffect, useRef } from 'react'
 import { LoadingBarRef } from 'react-top-loading-bar'
 
-import { PageLoader as PageLoaderUI } from '@island.is/island-ui/core'
+import { PageLoader as PageLoaderUI } from '@island.is/island-ui/core/PageLoader'
 
 type RouteChangeFunction = (url: string, props: { shallow: boolean }) => void
 

@@ -8,7 +8,9 @@ import {
   CommonApplicationWebSchema,
   RecallApplicationWebSchema,
 } from '@dmr.is/legal-gazette/schemas'
-import { Box, Button, Inline } from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 
 import { useLocalFormStorage } from '../../../hooks/useLocalFormStorage'
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'

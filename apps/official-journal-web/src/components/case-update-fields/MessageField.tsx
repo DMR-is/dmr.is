@@ -1,4 +1,4 @@
-import { AccordionItem } from '@island.is/island-ui/core'
+import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
 
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'

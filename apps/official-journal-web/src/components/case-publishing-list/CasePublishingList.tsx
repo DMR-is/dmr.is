@@ -1,4 +1,6 @@
-import { AlertMessage, Stack, Text } from '@island.is/island-ui/core'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { Case, CaseStatusEnum } from '../../gen/fetch'
 import { formatDate, generateCaseLink } from '../../lib/utils'

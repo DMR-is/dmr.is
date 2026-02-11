@@ -9,8 +9,7 @@ import {
 import { createContext, useEffect, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
-
-import { Tag } from '@island.is/island-ui/core'
+import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 
 import { BaseEntityDto, SortDirectionEnum } from '../gen/fetch'
 import { QueryParams } from '../lib/constants'

@@ -1,8 +1,9 @@
 import { PAGE_SIZE_OPTIONS } from '@dmr.is/constants'
 
-import { Box, Pagination, Select } from '@island.is/island-ui/core'
-
 import { useFilters } from '../../../hooks/useFilters'
+import { Box } from '../../../island-is/lib/Box'
+import { Pagination } from '../../../island-is/lib/Pagination'
+import { Select } from '../../../island-is/lib/Select'
 import * as styles from './DataTablePagination.css'
 import { DataTablePaginationProps } from './types'
 

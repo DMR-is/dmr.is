@@ -1,8 +1,8 @@
 'use client'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
-import { AlertMessage } from '@dmr.is/ui/components/island-is'
-import { SkeletonLoader } from '@dmr.is/ui/components/island-is'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 
 import { ApplicationSubmitted } from '../components/application/ApplicationSubmitted'
 import { ApplicationDetailedDto } from '../gen/fetch'

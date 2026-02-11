@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { escapeHtml } from '@dmr.is/utils'
+import { escapeHtml } from '@dmr.is/utils/server/escapeHtml'
 
 import { assertAdvertEditable } from '../../../core/utils/advert-status.util'
 import { AdvertModel } from '../../../models/advert.model'

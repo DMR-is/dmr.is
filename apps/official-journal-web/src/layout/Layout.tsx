@@ -5,7 +5,9 @@ import { IntlProvider } from 'react-intl'
 import { Provider } from 'reakit'
 import { SWRConfig } from 'swr'
 
-import { Footer, Page, ToastContainer } from '@island.is/island-ui/core'
+import { Footer } from '@dmr.is/ui/components/island-is/Footer'
+import { Page } from '@dmr.is/ui/components/island-is/Page'
+import { ToastContainer } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import Banner from '../components/banner/Banner'
 import { Header } from '../components/header/Header'

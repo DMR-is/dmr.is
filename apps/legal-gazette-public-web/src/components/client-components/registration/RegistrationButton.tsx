@@ -2,7 +2,8 @@
 
 import { useSession } from 'next-auth/react'
 
-import { Button, toast } from '@dmr.is/ui/components/island-is'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 

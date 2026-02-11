@@ -8,6 +8,9 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
  **/
 const nextConfig = {
   output: 'standalone',
+    experimental: {
+    fallbackNodePolyfills: false,
+  },
   webpack: (config, { isServer }) => {
     config.resolve.alias.canvas = false
     if (process.env.ANALYZE === 'true' && !isServer) {

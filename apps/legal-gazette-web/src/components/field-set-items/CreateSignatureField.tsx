@@ -1,6 +1,9 @@
 'use client'
 
-import { Button, Stack, Text, toast } from '@dmr.is/ui/components/island-is'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
 

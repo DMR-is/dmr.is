@@ -3,15 +3,13 @@
 import { isEmail } from 'class-validator'
 import { useMemo, useState } from 'react'
 
-import {
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  Input,
-  toast,
-} from '@dmr.is/ui/components/island-is'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
 import {

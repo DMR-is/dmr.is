@@ -1,13 +1,11 @@
 import { useFormContext } from 'react-hook-form'
 
 import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
-import {
-  Box,
-  GridColumn,
-  GridRow,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 import { DatePickerController } from '../controllers/DatePickerController'

@@ -1,15 +1,13 @@
 'use client'
 
-import {
-  AlertMessage,
-  Box,
-  Breadcrumbs,
-  Inline,
-  Pagination,
-  SkeletonLoader,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Breadcrumbs } from '@dmr.is/ui/components/island-is/Breadcrumbs'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Pagination } from '@dmr.is/ui/components/island-is/Pagination'
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { CombinedHTMLModalContainer } from '../../../../containers/CombinedHTMLModalContainer'
 import { useFilters } from '../../../../hooks/useFilters'

@@ -4,7 +4,7 @@ import {
   useTooltipState,
 } from 'reakit'
 
-import { Text } from '@island.is/island-ui/core'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { useIsMounted } from '../../hooks/useIsMounted'
 import * as styles from './Tooltip.css'

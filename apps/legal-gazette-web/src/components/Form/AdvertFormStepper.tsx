@@ -1,12 +1,10 @@
 'use client'
 
 import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
-import {
-  FormStepper,
-  Section,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { FormStepper } from '@dmr.is/ui/components/island-is/FormStepper'
+import { Section } from '@dmr.is/ui/components/island-is/Section'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { StatusEnum } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'

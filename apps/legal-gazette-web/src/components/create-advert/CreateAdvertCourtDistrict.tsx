@@ -1,14 +1,10 @@
 import { useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
-import {
-  DatePicker,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Select,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { Select } from '@dmr.is/ui/components/island-is/Select'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
@@ -57,40 +53,38 @@ export const CreateAdvertCourtDistrict = ({ onChange }: Props) => {
   }
 
   return (
-    <GridContainer>
-      <GridRow rowGap={[2, 3]}>
-        <GridColumn span="12/12">
-          <Text variant="h4">Grunnupplýsingar</Text>
-        </GridColumn>
-        <GridColumn span={['12/12', '6/12']}>
-          <Select
-            backgroundColor="blue"
-            size="sm"
-            label="Dómstóll"
-            options={options}
-            onChange={(opt) => handleSelect(opt?.value)}
-          />
-        </GridColumn>
-        <GridColumn span={['12/12', '6/12']}>
-          <DatePicker
-            locale="is"
-            size="sm"
-            backgroundColor="blue"
-            label="Úrskurðadagur"
-            placeholderText={undefined}
-            handleChange={(date) => {
-              setState((prev) => ({
-                ...prev,
-                judgmentDate: date.toISOString(),
-              }))
-              onChange({
-                ...state,
-                judgmentDate: date.toISOString(),
-              })
-            }}
-          />
-        </GridColumn>
-      </GridRow>
-    </GridContainer>
+    <>
+      <GridColumn span="12/12">
+        <Text variant="h4">Grunnupplýsingar</Text>
+      </GridColumn>
+      <GridColumn span={['12/12', '6/12']}>
+        <Select
+          backgroundColor="blue"
+          size="sm"
+          label="Dómstóll"
+          options={options}
+          onChange={(opt) => handleSelect(opt?.value)}
+        />
+      </GridColumn>
+      <GridColumn span={['12/12', '6/12']}>
+        <DatePicker
+          locale="is"
+          size="sm"
+          backgroundColor="blue"
+          label="Úrskurðadagur"
+          placeholderText={undefined}
+          handleChange={(date) => {
+            setState((prev) => ({
+              ...prev,
+              judgmentDate: date.toISOString(),
+            }))
+            onChange({
+              ...state,
+              judgmentDate: date.toISOString(),
+            })
+          }}
+        />
+      </GridColumn>
+    </>
   )
 }

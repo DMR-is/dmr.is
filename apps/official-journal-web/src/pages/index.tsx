@@ -3,15 +3,14 @@ import { getServerSession } from 'next-auth'
 
 import { useState } from 'react'
 
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Tabs,
-  TabType,
-  Text,
-} from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Tabs } from '@dmr.is/ui/components/island-is/Tabs'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+
+import type { TabType } from '@island.is/island-ui/core/Tabs/Tabs'
 
 import { CasesOverviewList } from '../components/cases-overview-list/CasesOverviewList'
 import { ContentWrapper } from '../components/content-wrapper/ContentWrapper'

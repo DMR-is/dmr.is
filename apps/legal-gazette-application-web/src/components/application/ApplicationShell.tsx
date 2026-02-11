@@ -1,15 +1,13 @@
 'use client'
 
-import {
-  Box,
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  LinkV2,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { PageRoutes } from '../../lib/constants'
 import { LegalGazetteForm } from '../../lib/forms/types'

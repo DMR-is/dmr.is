@@ -3,7 +3,7 @@ import { useSession } from 'next-auth/react'
 import { createContext, useState } from 'react'
 import useSWR from 'swr'
 
-import { StringOption } from '@island.is/island-ui/core'
+import { type StringOption } from '@island.is/island-ui/core/Select/Select.types'
 
 import {
   AdvertCorrection,

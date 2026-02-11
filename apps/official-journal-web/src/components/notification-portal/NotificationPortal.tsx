@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom'
 
-import { Box } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 
 import { NOTIFICATION_PORTAL_ID } from '../../lib/constants'
 

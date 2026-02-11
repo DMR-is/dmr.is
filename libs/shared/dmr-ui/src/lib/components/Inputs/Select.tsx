@@ -1,7 +1,5 @@
-import {
-  Select as IslandSelect,
-  SkeletonLoader,
-} from '@island.is/island-ui/core'
+import {Select as IslandSelect} from "../../island-is/lib/Select"
+import { SkeletonLoader } from "../../island-is/lib/SkeletonLoader"
 
 type Props<T> = Omit<
   React.ComponentProps<typeof IslandSelect<T>> & {

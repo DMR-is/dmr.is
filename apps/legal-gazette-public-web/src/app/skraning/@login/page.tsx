@@ -5,15 +5,13 @@ import { signIn } from 'next-auth/react'
 import { useState } from 'react'
 
 import { identityServerId } from '@dmr.is/auth/identityProvider'
-import {
-  Box,
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import * as styles from '../skraning.css'
 

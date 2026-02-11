@@ -1,15 +1,14 @@
 
-import {
-  AccordionItem,
-  Checkbox,
-  DatePicker,
-  Divider,
-  Inline,
-  SkeletonLoader,
-  Stack,
-  toast,
-  useBreakpoint,
-} from '@island.is/island-ui/core'
+import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
+import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
+import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
+import { Divider } from '@dmr.is/ui/components/island-is/Divider'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+
+import { useBreakpoint } from '@island.is/island-ui/core/hooks/useBreakpoint'
 
 import { useUpdatePublishDate } from '../../hooks/api'
 import { useUpdateFastTrack } from '../../hooks/api/update/useUpdateFasttrack'

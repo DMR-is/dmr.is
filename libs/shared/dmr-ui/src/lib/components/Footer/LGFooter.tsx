@@ -1,16 +1,13 @@
 'use client'
 
-import {
-  Box,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  LinkV2,
-  Stack,
-  Text,
-} from '@island.is/island-ui/core'
-
+import { Box } from '../../island-is/lib/Box'
+import { GridColumn } from '../../island-is/lib/GridColumn'
+import { GridContainer } from '../../island-is/lib/GridContainer'
+import { GridRow } from '../../island-is/lib/GridRow'
+import { Inline } from '../../island-is/lib/Inline'
+import { LinkV2 } from '../../island-is/lib/LinkV2'
+import { Stack } from '../../island-is/lib/Stack'
+import { Text } from '../../island-is/lib/Text'
 import { HeaderLogo } from '../Header/HeaderLogo'
 import * as styles from './footer.css'
 type LGFooterProps = {

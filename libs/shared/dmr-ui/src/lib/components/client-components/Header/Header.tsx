@@ -6,18 +6,16 @@ import { useEffect } from 'react'
 
 import { forceLogin, useLogOut } from '@dmr.is/auth/useLogOut'
 
-import {
-  Box,
-  DropdownMenu,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Hidden,
-  Inline,
-  Logo,
-  useBreakpoint,
-} from '@island.is/island-ui/core'
+import { useBreakpoint } from '@island.is/island-ui/core/hooks/useBreakpoint'
 
+import { Box } from '../../../island-is/lib/Box'
+import { DropdownMenu } from '../../../island-is/lib/DropdownMenu'
+import { GridColumn } from '../../../island-is/lib/GridColumn'
+import { GridContainer } from '../../../island-is/lib/GridContainer'
+import { GridRow } from '../../../island-is/lib/GridRow'
+import { Hidden } from '../../../island-is/lib/Hidden'
+import { Inline } from '../../../island-is/lib/Inline'
+import { Logo } from '../../../island-is/lib/Logo'
 import {
   ControlPanel,
   ControlPanelProps,

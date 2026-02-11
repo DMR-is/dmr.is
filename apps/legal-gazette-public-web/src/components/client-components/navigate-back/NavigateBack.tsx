@@ -2,7 +2,8 @@
 
 import { useParams } from 'next/navigation'
 
-import { Button, LinkV2 } from '@dmr.is/ui/components/island-is'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
 
 export const NavigateBack = () => {
   const params = useParams()

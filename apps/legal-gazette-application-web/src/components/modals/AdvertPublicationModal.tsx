@@ -1,17 +1,14 @@
 'use client'
 
 import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay'
-
-import {
-  Box,
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  ModalBase,
-  Stack,
-} from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { ModalBase } from '@dmr.is/ui/components/island-is/ModalBase'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import * as styles from './advert-publication-modal.css'
 

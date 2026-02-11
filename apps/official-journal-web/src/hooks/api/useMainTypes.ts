@@ -3,7 +3,7 @@ import { useSession } from 'next-auth/react'
 import useSWR, { Key } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
-import { toast } from '@island.is/island-ui/core'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import {
   GetAdvertMainType,

@@ -2,7 +2,11 @@ import { useRouter } from 'next/router'
 
 import { useState } from 'react'
 
-import { Button, Drawer, Stack, Text, toast } from '@island.is/island-ui/core'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Drawer } from '@dmr.is/ui/components/island-is/Drawer'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { CreateCaseDto } from '../../gen/fetch'
 import { useCase, useDepartments, useInstitutions } from '../../hooks/api'

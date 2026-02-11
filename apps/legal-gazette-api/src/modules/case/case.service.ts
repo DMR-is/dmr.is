@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'
 
 import {
   CaseDto,

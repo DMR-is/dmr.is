@@ -3,12 +3,10 @@ import { getServerSession } from 'next-auth/next'
 
 import { useState } from 'react'
 
-import {
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Stack,
-} from '@island.is/island-ui/core'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { CreateMainType } from '../../components/advert-types/CreateMainType'
 import { CreateType } from '../../components/advert-types/CreateType'

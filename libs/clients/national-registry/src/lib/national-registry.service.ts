@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { fetchWithTimeout } from '@dmr.is/utils'
+import { fetchWithTimeout } from '@dmr.is/utils/server/httpUtils'
 
 import {
   GetNationalRegistryEntityDto,

@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 
-import { Button, DropdownMenu } from '@dmr.is/ui/components/island-is'
-
-import { Inline } from '@island.is/island-ui/core'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { DropdownMenu } from '@dmr.is/ui/components/island-is/DropdownMenu'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 
 import { CreateDivisionEnding } from './CreateDivisionEnding'
 import { CreateDivisionMeeting } from './CreateDivisionMeeting'

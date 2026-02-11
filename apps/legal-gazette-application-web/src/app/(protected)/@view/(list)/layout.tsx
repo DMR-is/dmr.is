@@ -1,5 +1,5 @@
 import { LGFooter } from '@dmr.is/ui/components/Footer/LGFooter'
-import { Stack } from '@dmr.is/ui/components/island-is'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { UmsoknirHero } from '../../../../components/hero/UmsoknirHero'
 

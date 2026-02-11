@@ -1,16 +1,14 @@
 import debounce from 'lodash/debounce'
 import { useCallback } from 'react'
 
-import {
-  Box,
-  Button,
-  GridColumn,
-  GridContainer,
-  GridRow,
-  Inline,
-  Stack,
-  toast,
-} from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { Institution, UpdateInstitution } from '../../gen/fetch'
 import { useInstitutions } from '../../hooks/api'

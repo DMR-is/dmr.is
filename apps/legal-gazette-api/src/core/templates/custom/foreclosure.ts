@@ -1,7 +1,7 @@
 import { InternalServerErrorException } from '@nestjs/common'
 
 import { getLogger } from '@dmr.is/logging'
-import { formatDate } from '@dmr.is/utils'
+import { formatDate } from '@dmr.is/utils/server/serverUtils'
 
 import { ForeclosureModel } from '../../../models/foreclosure.model'
 import { getElement, getTableCell } from '../element'

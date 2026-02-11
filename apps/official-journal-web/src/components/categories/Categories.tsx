@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { Stack } from '@island.is/island-ui/core'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { MainCategory } from '../../gen/fetch'
 import { useCategoryContext } from '../../hooks/useCategoryContext'

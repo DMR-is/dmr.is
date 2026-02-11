@@ -3,9 +3,8 @@ import { useSession } from 'next-auth/react'
 import { useState } from 'react'
 import useSWR from 'swr'
 
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
-
-import { AlertMessage } from '@island.is/island-ui/core'
 
 import { GetAdvertTypes } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'

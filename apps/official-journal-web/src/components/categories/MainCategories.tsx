@@ -1,12 +1,10 @@
 import { useMemo } from 'react'
 
-import {
-  AlertMessage,
-  Inline,
-  Stack,
-  Tag,
-  Text,
-} from '@island.is/island-ui/core'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Tag } from '@dmr.is/ui/components/island-is/Tag'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { useCategoryContext } from '../../hooks/useCategoryContext'
 import { ContentWrapper } from '../content-wrapper/ContentWrapper'

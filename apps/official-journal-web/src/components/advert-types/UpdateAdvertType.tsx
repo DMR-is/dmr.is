@@ -2,15 +2,12 @@ import { useEffect, useState } from 'react'
 import slugify from 'slugify'
 
 import { AdvertMainType } from '@dmr.is/shared/dto'
-
-import {
-  AlertMessage,
-  Button,
-  Inline,
-  Input,
-  Stack,
-  toast,
-} from '@island.is/island-ui/core'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { AdvertType } from '../../gen/fetch'
 import { useAdvertTypes } from '../../hooks/api'
@@ -100,11 +97,15 @@ export const UpdateAdvertType = ({
         name="update-type-slug"
         size="sm"
         backgroundColor="blue"
-        label={!hasEditedTitle ? "Slóð yfirheitis" : "Uppfært slóð yfirheitis"}
+        label={!hasEditedTitle ? 'Slóð yfirheitis' : 'Uppfært slóð yfirheitis'}
         readOnly
-        value={hasEditedTitle ? slugify(`${mainType.slug}-${state.title}`, {
-          lower: true,
-        }): type.slug}
+        value={
+          hasEditedTitle
+            ? slugify(`${mainType.slug}-${state.title}`, {
+                lower: true,
+              })
+            : type.slug
+        }
         onChange={(e) => setState({ title: e.target.value })}
       />
       <Inline space={[2, 2, 3]} justifyContent="spaceBetween" flexWrap="wrap">

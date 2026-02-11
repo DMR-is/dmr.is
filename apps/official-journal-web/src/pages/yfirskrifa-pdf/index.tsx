@@ -2,12 +2,10 @@ import { GetServerSideProps } from 'next'
 import dynamic from 'next/dynamic'
 import { getServerSession } from 'next-auth'
 
-import {
-  GridColumn,
-  GridContainer,
-  GridRow,
-  SkeletonLoader,
-} from '@island.is/island-ui/core'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 
 import { Meta } from '../../components/meta/Meta'
 import { Section } from '../../components/section/Section'

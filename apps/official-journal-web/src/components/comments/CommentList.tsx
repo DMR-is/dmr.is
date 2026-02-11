@@ -1,12 +1,10 @@
 import { useMemo } from 'react'
 
-import {
-  AlertMessage,
-  Box,
-  Button,
-  Inline,
-  Stack,
-} from '@island.is/island-ui/core'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useToggle } from '../../hooks/useToggle'

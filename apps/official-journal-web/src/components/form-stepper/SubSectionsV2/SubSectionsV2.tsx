@@ -1,7 +1,7 @@
 import cn from 'classnames'
 import { FC } from 'react'
 
-import { Box } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 
 import { SectionNumberColumn } from '../SectionNumberColumn/SectionNumberColumn'
 import * as styles from './SubSectionsV2.css'

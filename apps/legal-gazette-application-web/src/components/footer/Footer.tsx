@@ -1,6 +1,7 @@
 'use client'
 
-import { Box, Footer as IslandIsFooter } from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Footer as IslandIsFooter } from '@dmr.is/ui/components/island-is/Footer'
 
 type Props = React.ComponentProps<typeof IslandIsFooter>
 export const Footer = (props: Props) => {

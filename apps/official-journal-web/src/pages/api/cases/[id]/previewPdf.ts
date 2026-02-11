@@ -3,7 +3,7 @@ import { getToken } from 'next-auth/jwt'
 
 import { UserRoleEnum } from '@dmr.is/constants'
 import { getLogger } from '@dmr.is/logging'
-import { isResponse } from '@dmr.is/utils/client'
+import { isResponse } from '@dmr.is/utils/client/clientUtils'
 
 import { getDmrClient } from '../../../../lib/api/createClient'
 

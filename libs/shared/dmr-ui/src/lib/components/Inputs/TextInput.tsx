@@ -1,4 +1,5 @@
-import { Input, SkeletonLoader } from '@island.is/island-ui/core'
+import { Input } from "../../island-is/lib/Input"
+import { SkeletonLoader } from "../../island-is/lib/SkeletonLoader"
 
 type Props = Omit<
   React.ComponentProps<typeof Input> & {

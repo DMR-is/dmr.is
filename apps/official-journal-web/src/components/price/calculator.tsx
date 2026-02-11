@@ -2,21 +2,21 @@ import { useSession } from 'next-auth/react'
 
 import { useEffect, useMemo, useState } from 'react'
 
-import {
-  Box,
-  Button,
-  Checkbox,
-  Inline,
-  Stack,
-  Text,
-  toast,
-  useBreakpoint,
-} from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+import { amountFormat } from '@dmr.is/utils/shared/format/number'
+
+import { useBreakpoint } from '@island.is/island-ui/core/hooks/useBreakpoint'
 
 import { useGetPaymentStatus, useUpdatePrice } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { getDmrClient } from '../../lib/api/createClient'
-import { amountFormat, imageTiers } from '../../lib/utils'
+import { imageTiers } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
 import * as styles from './Calculator.css'

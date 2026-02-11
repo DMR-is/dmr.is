@@ -1,6 +1,7 @@
 'use client'
 
-import { toast, Tooltip } from '@dmr.is/ui/components/island-is'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+import { Tooltip } from '@dmr.is/ui/components/island-is/Tooltip'
 import { DMRTag } from '@dmr.is/ui/components/Tag/Tag'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'

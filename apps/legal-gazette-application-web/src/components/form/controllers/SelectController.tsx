@@ -2,7 +2,7 @@
 
 import { useController, UseControllerProps } from 'react-hook-form'
 
-import { Select } from '@dmr.is/ui/components/island-is'
+import { Select } from '@dmr.is/ui/components/island-is/Select'
 
 export const SelectController = (
   props: UseControllerProps & {

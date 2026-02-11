@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { Box, Button, Icon } from '@island.is/island-ui/core'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
 
 type Props = {
   onDelete: () => void

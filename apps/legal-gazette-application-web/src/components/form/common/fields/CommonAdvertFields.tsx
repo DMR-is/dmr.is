@@ -5,7 +5,9 @@ import { useFormContext, useFormState } from 'react-hook-form'
 
 import { CommonApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
-import { GridColumn, GridRow, Stack } from '@dmr.is/ui/components/island-is'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import {
   UpdateApplicationAnswers,

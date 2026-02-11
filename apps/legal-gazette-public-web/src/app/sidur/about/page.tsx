@@ -1,11 +1,9 @@
-import {
-  GridColumn,
-  GridContainer,
-  GridRow,
-  LinkV2,
-  Stack,
-  Text,
-} from '@dmr.is/ui/components/island-is'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 export default function Page() {
   return (

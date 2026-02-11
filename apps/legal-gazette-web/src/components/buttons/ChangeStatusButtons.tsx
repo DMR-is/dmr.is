@@ -5,15 +5,13 @@ import { useRouter } from 'next/navigation'
 import { useMemo } from 'react'
 
 import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
-import {
-  Box,
-  Button,
-  Inline,
-  Input,
-  Stack,
-  Text,
-  toast,
-} from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Route } from '@dmr.is/ui/hooks/constants'
 
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'

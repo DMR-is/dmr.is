@@ -1,6 +1,8 @@
 import React from 'react'
 
-import { Box, Inline, Tag } from '@dmr.is/ui/components/island-is'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
 

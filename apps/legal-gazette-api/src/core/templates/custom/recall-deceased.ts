@@ -2,8 +2,8 @@
 import { isEmpty } from 'class-validator'
 
 import { SettlementType } from '@dmr.is/legal-gazette/schemas'
-import { formatDate } from '@dmr.is/utils'
-import { formatNationalId } from '@dmr.is/utils/client'
+import { formatNationalId } from '@dmr.is/utils/server/formatting'
+import { formatDate } from '@dmr.is/utils/server/serverUtils'
 
 import { AdvertModel } from '../../../models/advert.model'
 import { ApplicationRequirementStatementEnum } from '../../../models/application.model'
