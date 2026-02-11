@@ -28,7 +28,7 @@ export const CombinedHTMLModal = ({
     <Modal disclosure={disclosure} onVisibilityChange={onVisibilityChange}>
       <Box padding={2} paddingTop={0} paddingBottom={6}>
         <>
-          <Box marginBottom={4}>
+          <Box className="print-hidden" marginBottom={4}>
             <Inline justifyContent="spaceBetween" alignY="bottom">
               <Inline alignY="bottom" space={2}>
                 <Text variant="h2">Auglýsingar á síðu</Text>
