@@ -149,8 +149,9 @@ export const LandingPageContent = (props: { baseUrl: string }) => {
                 Útgefin tölublöð
               </Text>
               <Text>
-                Hér er hægt að finna nýjustu tölublöð Lögbirtingablaðsins á PDF
-                sniði.
+                Lögformleg birting auglýsinga fer fram rafrænt á áskriftarvef
+                Lögbirtingablaðsins en afrit birtast að jafnaði næsta virka dag
+                í PDF-tölublöðum.
               </Text>
             </Box>
             <SearchIssuesPage />
