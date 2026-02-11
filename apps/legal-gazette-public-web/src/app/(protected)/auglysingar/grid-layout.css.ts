@@ -18,6 +18,7 @@ export const gridLayout = style({
 
 export const sidebarStyle = style({
   top: '0px',
+  zIndex: 1,
   position: 'sticky',
   alignSelf: 'start',
   maxWidth: '320px',

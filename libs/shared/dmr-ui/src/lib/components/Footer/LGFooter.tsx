@@ -97,7 +97,7 @@ export const LGFooter = ({ site = 'web' }: LGFooterProps) => {
         : []
 
   return (
-    <footer className={styles.footerContainer}>
+    <footer>
       <Box width="full" background="blue100" paddingY={6}>
         <GridContainer>
           <GridRow>
