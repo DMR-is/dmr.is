@@ -1,5 +1,5 @@
 {
-  "name": "shared-utils",
+  "name": "dmr-shared-utils",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/shared/utils/shared/src",
   "projectType": "library",
