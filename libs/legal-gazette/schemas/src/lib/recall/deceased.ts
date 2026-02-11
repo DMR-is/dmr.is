@@ -26,6 +26,8 @@ export const recallDeceasedSchema = z.object({
       dateOfDeath: z.string().optional().nullable(),
       type: z.enum(['DEFAULT', 'UNDIVIDED', 'OWNER']).optional(),
       companies: z.array(companySchema).optional(),
+      partnerNationalId: z.string().optional().nullable(),
+      partnerName: z.string().optional().nullable(),
     })
     .optional(),
 })

@@ -128,6 +128,8 @@ export type AdvertPreviewData = {
     dateOfDeath?: Date | string | null
     declaredClaims?: number | null
     companies?: any[]
+    partnerNationalId?: string | null
+    partnerName?: string | null
   } | null
   // Template-specific properties
   foreclosure?: any // For foreclosure template

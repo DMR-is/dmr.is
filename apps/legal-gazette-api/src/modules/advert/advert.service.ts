@@ -679,6 +679,8 @@ export class AdvertService implements IAdvertService {
               nationalId: body.settlement.nationalId,
               declaredClaims: body.settlement.declaredClaims ?? null,
               companies: body.settlement.companies,
+              partnerNationalId: body.settlement.partnerNationalId,
+              partnerName: body.settlement.partnerName,
             }
           : undefined,
       },
