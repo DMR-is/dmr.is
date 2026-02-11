@@ -10,8 +10,9 @@ export const problemBase = recipe({
     variant: {
       alert: {},
       bordered: {
-        border: theme.border.width.standard,
-        borderRight: theme.border.radius.lg,
+        borderStyle: theme.border.style.solid,
+        borderWidth: theme.border.width.standard,
+        borderRadius: theme.border.radius.lg,
       },
     },
     type: {

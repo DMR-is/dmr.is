@@ -51,7 +51,7 @@ export const Problem = ({
   const statusToUse = mapStatusToProblemStatus(statusCode)
   return (
     <div className={styles.problemBase({ variant, type })}>
-      <Text variant="eyebrow" color='purple400' textAlign="center">
+      <Text marginBottom={[1,2]} variant="eyebrow" color='purple400' textAlign="center">
         {statusToUse}
       </Text>
       <Text marginBottom={[1,2]} variant={titleSize} as="h1" textAlign="center">
