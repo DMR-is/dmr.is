@@ -183,28 +183,24 @@ export class UtilityService implements IUtilityService {
     signatureYear?: number,
     transaction?: Transaction,
   ): Promise<ResultWrapper<number>> {
-    const now = new Date()
+    const year = signatureYear ?? new Date().getFullYear()
 
-    const year = signatureYear ?? now.getFullYear()
-    const janFirst = new Date(year, 0, 1)
-
-    const nextPublicationNumber = await this.advertModel.count({
-      distinct: true,
-      where: {
-        departmentId: {
-          [Op.eq]: departmentId,
+    const maxSerial: number | null = await this.advertModel.max(
+      'serialNumber',
+      {
+        where: {
+          departmentId: {
+            [Op.eq]: departmentId,
+          },
+          publicationYear: {
+            [Op.eq]: year,
+          },
         },
-        publicationDate: {
-          [Op.gte]: janFirst,
-        },
-        publicationYear: {
-          [Op.eq]: year,
-        },
+        transaction,
       },
-      transaction,
-    })
+    )
 
-    return ResultWrapper.ok(nextPublicationNumber + 1)
+    return ResultWrapper.ok((maxSerial ?? 0) + 1)
   }
 
   @LogAndHandle()
