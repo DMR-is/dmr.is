@@ -28,11 +28,6 @@ export default async function RedirectToFirstPublication({
       return notFound()
     }
 
-    // Check if publication has a publication number (not published yet if undefined)
-    console.log('Publication found for UUID:', publication)
-
-    console.log('publication.advert.publicationNumber:', publication.advert.publicationNumber)
-
     // Redirect to the publication number URL (outside try-catch)
     redirect(
       `/auglysingar/${publication.advert.publicationNumber}/${publication.publication.version}`,
