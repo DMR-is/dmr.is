@@ -1,5 +1,5 @@
 export default {
-  displayName: 'shared-utils',
+  displayName: 'dmr-shared-utils',
   preset: '../../../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
