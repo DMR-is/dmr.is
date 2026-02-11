@@ -14,8 +14,6 @@ export default async function RootPage() {
 
   const isActiveAndValid = session?.user.isActive && !session.invalid
 
-  console.log ('Session:', session)
-
   return (
     <>
     {/* TODO: Make user aware that he needs to sign up as a subscriber if session and not active */}
