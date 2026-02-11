@@ -43,7 +43,7 @@ export interface IAWSService {
     hash?: string,
   ): Promise<ResultWrapper<string>>
 
-  sendMail(message: Mail.Options): Promise<SentMessageInfo>
+  sendMail(message: Mail.Options, context?: string): Promise<SentMessageInfo>
   replaceAdvertPdf(
     key: string,
     file: Express.Multer.File,

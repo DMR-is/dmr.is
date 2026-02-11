@@ -125,15 +125,27 @@ export class JournalService implements IJournalService {
   @LogAndHandle({ logArgs: false })
   @CacheEvictTopics('adverts:all')
   async create(
-    model: CreateAdvert,
+    body: CreateAdvert,
     transaction?: Transaction,
   ): Promise<ResultWrapper<GetAdvertResponse>> {
+    const now = new Date()
+
     let id
-    if (model.advertId) {
-      id = model.advertId
+    if (body.advertId) {
+      id = body.advertId
     } else {
       id = uuid()
     }
+
+    this.logger.info(
+      `Creating new advert with id <${id}> at: ${now.toISOString()}`,
+      {
+        category: LOGGING_CATEGORY,
+        id: id,
+        context: 'JournalContext',
+        timestamp: now.toISOString(),
+      },
+    )
 
     const status = await this.advertStatusModel.findOne({
       where: { title: { [Op.eq]: AdvertStatus.Published } },
@@ -148,23 +160,23 @@ export class JournalService implements IJournalService {
     }
 
     const publicationYear =
-      model.publicationYear ?? new Date(model.publicationDate).getFullYear()
+      body.publicationYear ?? new Date(body.publicationDate).getFullYear()
 
     const ad = await this.advertModel.create(
       {
         id: id,
-        departmentId: model.departmentId,
-        typeId: model.typeId,
+        departmentId: body.departmentId,
+        typeId: body.typeId,
         statusId: status.id,
-        involvedPartyId: model.involvedPartyId,
-        subject: model.subject,
-        serialNumber: model.serial,
+        involvedPartyId: body.involvedPartyId,
+        subject: body.subject,
+        serialNumber: body.serial,
         publicationYear: publicationYear,
-        publicationDate: model.publicationDate,
-        signatureDate: model.signatureDate,
-        documentHtml: model.content,
-        documentPdfUrl: model.pdfUrl,
-        hideSignatureDate: model.hideSignatureDate,
+        publicationDate: body.publicationDate,
+        signatureDate: body.signatureDate,
+        documentHtml: body.content,
+        documentPdfUrl: body.pdfUrl,
+        hideSignatureDate: body.hideSignatureDate,
         isLegacy: false,
       },
       {
@@ -173,16 +185,12 @@ export class JournalService implements IJournalService {
       },
     )
 
-    await Promise.all(
-      model.categories.map((id) => {
-        this.advertCategoriesModel.create(
-          {
-            advert_id: ad.id,
-            category_id: id,
-          },
-          { transaction },
-        )
-      }),
+    await this.advertCategoryCategoriesModel.bulkCreate(
+      body.categories.map((id) => ({
+        advert_id: id,
+        category_id: id,
+      })),
+      { transaction },
     )
 
     const advert = await this.advertModel.findByPk(ad.id, {
@@ -198,10 +206,36 @@ export class JournalService implements IJournalService {
     })
 
     if (!advert) {
-      throw new InternalServerErrorException(`Advert<${ad.id}> not found`)
+      this.logger.error('Failed to find advert <${id}> after creation', {
+        id: ad.id,
+        category: LOGGING_CATEGORY,
+        context: 'JournalService',
+      })
+      throw new InternalServerErrorException(
+        `Failed to retrieve advert after creation`,
+      )
     }
 
-    return ResultWrapper.ok({ advert: advertMigrate(advert) })
+    // keeping this as info log while we debug publishing issue
+    this.logger.info(`Successfully created advert <${ad.id}>`, {
+      category: LOGGING_CATEGORY,
+      context: 'JournalService',
+    })
+
+    try {
+      const migrated = advertMigrate(advert)
+      return ResultWrapper.ok({ advert: migrated })
+    } catch (e) {
+      this.logger.error('Failed to migrate advert after creation', {
+        category: LOGGING_CATEGORY,
+        context: 'JournalService',
+        id: ad.id,
+      })
+
+      throw new InternalServerErrorException(
+        'Failed to migrate advert after creation',
+      )
+    }
   }
 
   @LogAndHandle()

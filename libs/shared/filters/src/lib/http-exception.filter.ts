@@ -10,8 +10,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 
-import { ApiErrorDto, ApiErrorName } from '@dmr.is/legal-gazette/dto'
 import { logger } from '@dmr.is/logging'
+import { ApiErrorDto, ApiErrorName } from '@dmr.is/shared/dto'
 
 const LOGGING_CONTEXT = 'HttpExceptionFilter'
 

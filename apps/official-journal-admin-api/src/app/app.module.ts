@@ -4,7 +4,7 @@ import {
   NestModule,
   RequestMethod,
 } from '@nestjs/common'
-import { APP_INTERCEPTOR, RouterModule } from '@nestjs/core'
+import { APP_FILTER, APP_INTERCEPTOR, RouterModule } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
@@ -14,6 +14,11 @@ import {
   SharedJournalModule,
   SignatureModule,
 } from '@dmr.is/ojoi/modules'
+import {
+  GlobalExceptionFilter,
+  HttpExceptionFilter,
+  SequelizeExceptionFilter,
+} from '@dmr.is/shared/filters'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
 import { HealthModule } from '@dmr.is/shared/modules'
 
@@ -61,6 +66,22 @@ import { StatisticsModule } from './statistics/statistics.module'
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: SequelizeExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
     },
   ],
 })

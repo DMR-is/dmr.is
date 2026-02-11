@@ -1212,6 +1212,11 @@ export class CaseService implements ICaseService {
     })
 
     if (!caseToPublish) {
+      this.logger.warn(`Tried to publish case, but case is not found`, {
+        caseId,
+        category: LOGGING_CATEGORY,
+        context: 'CaseService',
+      })
       return ResultWrapper.err({
         code: 404,
         message: 'Case not found',
@@ -1248,7 +1253,24 @@ export class CaseService implements ICaseService {
       .toUpperCase()
     const pdfFileName = `${departmentPrefix}_nr_${serial}_${signatureYear}.pdf`
 
-    await this.createPdfAndUpload(caseId, pdfFileName, now, serial)
+    const createPdfAndUploadResults = await this.createPdfAndUpload(
+      caseId,
+      pdfFileName,
+      now,
+      serial,
+    )
+
+    if (!createPdfAndUploadResults.result.ok) {
+      this.logger.error(
+        `Failed to create and upload pdf for case <${caseId}>`,
+        {
+          error: createPdfAndUploadResults.result.error,
+          caseId: caseId,
+          fileName: pdfFileName,
+          category: LOGGING_CATEGORY,
+        },
+      )
+    }
 
     const publicationHtml = getPublicationTemplate(
       caseToPublish.department.title,
@@ -1287,11 +1309,12 @@ export class CaseService implements ICaseService {
     if (!advertCreateResult.result.ok) {
       this.logger.error('Failed to create advert', {
         error: advertCreateResult.result.error,
+        errorSpread: { ...advertCreateResult.result.error },
         category: LOGGING_CATEGORY,
       })
       return ResultWrapper.err({
         code: 500,
-        message: 'Failed to create advert',
+        message: advertCreateResult.result.error.message,
       })
     }
 
@@ -1311,6 +1334,14 @@ export class CaseService implements ICaseService {
         transaction: transaction,
       },
     )
+
+    this.logger.info(`Marking case <${caseId}> as published`, {
+      caseId: caseId,
+      advertId: advertCreateResult.result.value.advert.id,
+      publicationNumber: serial,
+      publicationYear: signatureYear,
+      category: LOGGING_CATEGORY,
+    })
 
     const emails = caseToPublish?.channels?.flatMap((item) => {
       if (!item.email) {
@@ -1335,7 +1366,7 @@ export class CaseService implements ICaseService {
       await this.utilityService.approveApplication(caseToPublish.applicationId)
     }
     try {
-      await this.s3.sendMail(message)
+      await this.s3.sendMail(message, 'CaseService')
     } catch (error) {
       this.logger.error('Failed to send publish email', {
         error,
@@ -2020,8 +2051,9 @@ export class CaseService implements ICaseService {
     transaction?: Transaction,
   ): Promise<ResultWrapper<undefined>> {
     for (const id of ids) {
-      this.logger.debug(`Publishing case<${id}>`, {
+      this.logger.info(`Publishing case<${id}>`, {
         id: id,
+        context: 'CaseService',
         category: LOGGING_CATEGORY,
       })
       await this.publishCase(id, transaction)
