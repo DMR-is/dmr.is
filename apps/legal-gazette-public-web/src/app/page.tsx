@@ -12,11 +12,15 @@ import '../styles/global.css'
 export default async function RootPage() {
   const session = await getServerSession(authOptions)
 
+  const isActiveAndValid = session?.user.isActive && !session.invalid
+
+  console.log ('Session:', session)
+
   return (
     <>
     {/* TODO: Make user aware that he needs to sign up as a subscriber if session and not active */}
       {session ? <Header /> : <HeaderLogin variant="white" />}
-      {session?.user.isActive ? <HomePage /> : <LandingPage />}
+      {isActiveAndValid ? <HomePage /> : <LandingPage />}
     </>
   )
 }
