@@ -514,6 +514,24 @@ export class CaseCreateService implements ICaseCreateService {
       })
     }
 
+    const missingFields: string[] = []
+    if (!body.involvedParty?.id) {
+      missingFields.push('involvedPartyId')
+    }
+    if (!body.department?.id) {
+      missingFields.push('departmentId')
+    }
+    if (!body.type?.id) {
+      missingFields.push('advertTypeId')
+    }
+
+    if (!body.involvedParty?.id || !body.department?.id || !body.type?.id) {
+      return ResultWrapper.err({
+        code: 400,
+        message: `Cannot create case from advert. Missing required fields: ${missingFields.join(', ')}`,
+      })
+    }
+
     const promises = await Promise.all([
       this.utilityService.caseStatusLookup(
         CaseStatusEnum.Published,
@@ -557,9 +575,9 @@ export class CaseCreateService implements ICaseCreateService {
         statusId: caseStatusResult.unwrap().id,
         tagId: caseTagResult.unwrap().id,
         communicationStatusId: caseCommunicationStatusResult.unwrap().id,
-        involvedPartyId: body.involvedParty?.id ?? '',
-        departmentId: body.department?.id ?? '',
-        advertTypeId: body.type?.id ?? '',
+        involvedPartyId: body.involvedParty.id,
+        departmentId: body.department.id,
+        advertTypeId: body.type.id,
         year: body.signatureDate
           ? new Date(body.signatureDate).getFullYear()
           : new Date().getFullYear(),
@@ -589,7 +607,7 @@ export class CaseCreateService implements ICaseCreateService {
     await this.signatureService.createSignature(
       caseId,
       {
-        involvedPartyId: body.involvedParty?.id,
+        involvedPartyId: body.involvedParty.id,
         records: [],
       },
       transaction,
