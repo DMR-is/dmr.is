@@ -13,8 +13,8 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
-import { createUrlFromHost } from '@dmr.is/utils/client/clientUtils'
 
+import { AUGLYSENDUR_URL } from '../../../lib/constants'
 import { SearchIssuesPage } from '../search-issues-page/SearchIssuesPage'
 
 type QuickLink = {
@@ -27,11 +27,10 @@ type QuickLink = {
 export const LandingPageContent = (props: { baseUrl: string }) => {
   const { data: session } = useSession()
 
-  const auglysendurUrl = createUrlFromHost(props.baseUrl, false, 'auglysendur')
   const quickLinks: QuickLink[] = [
     {
       title: 'Auglýsendur - innskráning',
-      href: auglysendurUrl,
+      href: AUGLYSENDUR_URL,
       variant: 'primary',
       icon: 'open',
     },

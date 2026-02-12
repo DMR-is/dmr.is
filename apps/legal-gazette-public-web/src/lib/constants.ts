@@ -4,3 +4,5 @@ export enum PageRoutes {
   AUGLYSINGAR = '/auglysingar',
   AUGLYSING = '/auglysingar/[id]',
 }
+
+export const AUGLYSENDUR_URL = 'https://auglysendur.logbirtingablad.is'
