@@ -1,0 +1,24 @@
+services:
+  legal-gazette-web:
+    build:
+      context: ../..
+      dockerfile: apps/legal-gazette-web/Dockerfile
+    ports:
+      - "${LG_WEB_PORT:-4200}:3000"
+    environment:
+      # Authentication — production uses ISLAND_IS_DMR_WEB_* (shared config)
+      ISLAND_IS_DMR_WEB_CLIENT_ID: ${LG_WEB_CLIENT_ID}
+      ISLAND_IS_DMR_WEB_CLIENT_SECRET: ${LG_WEB_CLIENT_SECRET}
+      IDENTITY_SERVER_DOMAIN: ${IDENTITY_SERVER_DOMAIN}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_COOKIE_SECURE: "false"
+
+      # URLs — production env var names, set to development values
+      NEXTAUTH_URL: ${LG_WEB_URL}/api/auth
+      BASE_URL: ${LG_WEB_URL}
+      LG_WEB_URL: ${LG_WEB_URL}
+      IDENTITY_SERVER_LOGOUT_URL: ${LG_WEB_URL}
+
+      # API — host.docker.internal resolves to the Docker host (macOS/Windows)
+      # On Linux, use --add-host=host.docker.internal:host-gateway or the host IP
+      DMR_ADMIN_API_BASE_PATH: http://host.docker.internal:4100
