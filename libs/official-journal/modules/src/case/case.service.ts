@@ -545,6 +545,36 @@ export class CaseService implements ICaseService {
   ): Promise<ResultWrapper> {
     return this.updateService.updateCase(caseId, body, transaction)
   }
+
+  @LogAndHandle()
+  @Transactional()
+  async createCaseFromAdvert(
+    advertId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const advertLookup = await this.journalService.getAdvert(advertId)
+
+    if (!advertLookup.result.ok) {
+      this.logger.error('Failed to get updated advert', {
+        category: 'JournalService',
+        metadata: { advertId },
+      })
+
+      return ResultWrapper.err({
+        message: 'Failed to get updated advert',
+        code: 500,
+      })
+    }
+
+    const advertData = advertLookup.result.value.advert
+
+    ResultWrapper.unwrap(
+      await this.createService.createCaseByAdvert(advertData, transaction),
+    )
+
+    return ResultWrapper.ok()
+  }
+
   @LogAndHandle()
   @Transactional()
   async updateCaseStatus(

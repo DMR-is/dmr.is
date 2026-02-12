@@ -29,10 +29,7 @@ export const Signatures = () => {
     },
   })
 
-  const {
-    updateSignatureDateDisplay,
-    isMutating: isUpdatingSignatureDateDisplay,
-  } = useUpdateSignatureDateDisplay({
+  const { updateSignatureDateDisplay } = useUpdateSignatureDateDisplay({
     caseId: currentCase.id,
     options: {
       onSuccess: () => {
@@ -47,23 +44,27 @@ export const Signatures = () => {
 
   return (
     <Stack space={4}>
-      <Stack space={4} dividers>
-        {signature.records.map((record) => (
-          <SignatureRecord key={record.id} record={record} />
-        ))}
-      </Stack>
-      <Inline justifyContent="flexEnd">
-        <Button
-          disabled={!canEdit}
-          loading={isAddingSignatureRecord}
-          variant="utility"
-          icon="add"
-          onClick={() => addSignatureRecord()}
-        >
-          Bæta við undirritunar kafla
-        </Button>
-      </Inline>
-      <SignatureDislay />
+      {!currentCase.isLegacy && (
+        <>
+          <Stack space={4} dividers>
+            {signature.records.map((record) => (
+              <SignatureRecord key={record.id} record={record} />
+            ))}
+          </Stack>
+          <Inline justifyContent="flexEnd">
+            <Button
+              disabled={!canEdit}
+              loading={isAddingSignatureRecord}
+              variant="utility"
+              icon="add"
+              onClick={() => addSignatureRecord()}
+            >
+              Bæta við undirritunar kafla
+            </Button>
+          </Inline>
+          <SignatureDislay />
+        </>
+      )}
       <Inline alignY="center" space={1}>
         <Checkbox
           disabled={!canEdit}

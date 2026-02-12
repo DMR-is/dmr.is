@@ -9,6 +9,7 @@ import { SignatureType } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  Advert,
   BaseEntity,
   CaseChannel,
   CreateCaseDto,
@@ -491,6 +492,113 @@ export class CaseCreateService implements ICaseCreateService {
     const migrated = caseChannelMigrate(newChannel)
 
     return ResultWrapper.ok(migrated)
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async createCaseByAdvert(
+    body: Advert,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<{ id: string }>> {
+    const caseId = uuid()
+
+    const existingCase = await this.caseModel.findOne({
+      where: { advertId: body.id },
+      transaction,
+    })
+
+    if (existingCase) {
+      return ResultWrapper.err({
+        code: 409,
+        message: 'Case already exists for this advert',
+      })
+    }
+
+    const promises = await Promise.all([
+      this.utilityService.caseStatusLookup(
+        CaseStatusEnum.Published,
+        transaction,
+      ),
+      this.utilityService.caseTagLookup(
+        CaseTagEnum.MultipleReviewers,
+        transaction,
+      ),
+      this.utilityService.caseCommunicationStatusLookup(
+        CaseCommunicationStatus.Done,
+        transaction,
+      ),
+      this.utilityService.generateInternalCaseNumber(transaction),
+    ])
+
+    const advertCategories = await this.utilityService.getAdvertCategoryIds(
+      body.id,
+      transaction,
+    )
+
+    const categoriesResult = advertCategories ?? []
+
+    await Promise.all(
+      categoriesResult.map((cat) => this.createCaseCategory(caseId, cat)),
+    )
+
+    const [
+      caseStatusResult,
+      caseTagResult,
+      caseCommunicationStatusResult,
+      internalCaseNumberResult,
+    ] = promises
+
+    const valuesResult = {
+      caseBody: {
+        id: caseId,
+        applicationId: body.id,
+        advertId: body.id,
+        statusId: caseStatusResult.unwrap().id,
+        tagId: caseTagResult.unwrap().id,
+        communicationStatusId: caseCommunicationStatusResult.unwrap().id,
+        involvedPartyId: body.involvedParty?.id ?? '',
+        departmentId: body.department?.id ?? '',
+        advertTypeId: body.type?.id ?? '',
+        year: body.signatureDate
+          ? new Date(body.signatureDate).getFullYear()
+          : new Date().getFullYear(),
+        caseNumber: internalCaseNumberResult.unwrap().internalCaseNumber,
+        advertTitle: body.title ?? '',
+        html: body.document.html ?? '',
+        requestedPublicationDate: body.publicationDate ?? '',
+        assignedUserId: null,
+        publishedAt: body.publicationDate ?? '',
+        price: 0,
+        paid: true,
+        fastTrack: false,
+        message: null,
+        isLegacy: true,
+        createdAt: body.createdDate ?? '',
+        updatedAt: body.updatedDate ?? '',
+        proposedAdvertId: body.id,
+        publicationNumber: body.publicationNumber?.number ?? '',
+      },
+    }
+
+    const createCaseResult = await this.create(
+      valuesResult.caseBody,
+      transaction,
+    )
+
+    await this.signatureService.createSignature(
+      caseId,
+      {
+        involvedPartyId: body.involvedParty?.id,
+        records: [],
+      },
+      transaction,
+    )
+
+    if (!createCaseResult.result.ok) {
+      return createCaseResult
+    }
+
+    return ResultWrapper.ok({ id: caseId })
   }
 
   @LogAndHandle()

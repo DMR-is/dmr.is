@@ -103,6 +103,11 @@ export interface ICaseService {
   ): Promise<ResultWrapper>
   updateCaseNextStatus(id: string, currentUser: UserDto): Promise<ResultWrapper>
 
+  createCaseFromAdvert(
+    id: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
   updateCasePreviousStatus(
     id: string,
     currentUser: UserDto,

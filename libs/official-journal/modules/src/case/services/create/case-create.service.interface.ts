@@ -1,6 +1,7 @@
 import { Transaction } from 'sequelize'
 
 import {
+  Advert,
   CaseChannel,
   CreateCaseChannelBody,
   CreateCaseDto,
@@ -13,6 +14,10 @@ import { ResultWrapper } from '@dmr.is/types'
 export interface ICaseCreateService {
   createCaseByApplication(
     body: PostApplicationBody,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<{ id: string }>>
+  createCaseByAdvert(
+    body: Advert,
     transaction?: Transaction,
   ): Promise<ResultWrapper<{ id: string }>>
 

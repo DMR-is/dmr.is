@@ -1,4 +1,3 @@
-
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
 import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
@@ -16,7 +15,6 @@ import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../form-steps/messages'
 import { PriceCalculator } from '../price/calculator'
-
 
 type Props = {
   toggle: boolean
@@ -127,7 +125,7 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
           </Inline>
         </Inline>
         <Divider weight="faded" />
-        <PriceCalculator />
+        {!currentCase?.isLegacy && <PriceCalculator />}
       </Stack>
     </AccordionItem>
   )

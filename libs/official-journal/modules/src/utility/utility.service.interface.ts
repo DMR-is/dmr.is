@@ -105,6 +105,11 @@ export interface IUtilityService {
     hide: boolean,
     transaction?: Transaction,
   ): Promise<ResultWrapper>
+
+  getAdvertCategoryIds(
+    advertId: string,
+    transaction?: Transaction,
+  ): Promise<string[]>
 }
 
 export const IUtilityService = Symbol('IUtilityService')
