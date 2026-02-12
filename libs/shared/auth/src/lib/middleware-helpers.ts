@@ -6,7 +6,9 @@ import { withAuth } from 'next-auth/middleware'
 import { refreshAccessToken } from './token-service'
 import { isExpired } from './token-service'
 
-const SESSION_SECURE = process.env.NODE_ENV === 'production'
+const SESSION_SECURE =
+  process.env.NODE_ENV === 'production' &&
+  process.env.NEXTAUTH_COOKIE_SECURE !== 'false'
 const SESSION_COOKIE = SESSION_SECURE
   ? '__Secure-next-auth.session-token'
   : 'next-auth.session-token'
@@ -14,7 +16,6 @@ const SESSION_COOKIE = SESSION_SECURE
 // This session timeout will be used to set the maxAge of the session cookie
 // IDS has a max timeout on refresh tokens, so we set our session timeout to be slightly more
 const SESSION_TIMEOUT = 60 * 60 * 8 + 30 // 8 hours and 30 seconds
-
 
 /**
  * NextAuth's chunk size for cookies (4096 - overhead = 3933 bytes)

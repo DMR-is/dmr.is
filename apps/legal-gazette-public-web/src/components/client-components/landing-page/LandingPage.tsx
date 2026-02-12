@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 
+import { useEffect, useMemo, useState } from 'react'
 import { Icon } from 'submodules/island.is/libs/island-ui/core/src/lib/IconRC/iconMap'
 
 import Hero from '@dmr.is/ui/components/Hero/Hero'
@@ -26,25 +27,33 @@ type QuickLink = {
 
 export const LandingPageContent = (props: { baseUrl: string }) => {
   const { data: session } = useSession()
+  const [auglysendurUrl, setAuglysendurUrl] = useState('')
 
-  const auglysendurUrl = createUrlFromHost(props.baseUrl, false, 'auglysendur')
-  const quickLinks: QuickLink[] = [
-    {
-      title: 'Auglýsendur - innskráning',
-      href: auglysendurUrl,
-      variant: 'primary',
-      icon: 'open',
-    },
-  ]
+  useEffect(() => {
+    setAuglysendurUrl(createUrlFromHost(props.baseUrl, false, 'auglysendur'))
+  }, [props.baseUrl])
 
-  if (session) {
-    quickLinks.push({
-      title: 'Gerast áskrifandi',
-      href: '/skraning',
-      variant: 'ghost',
-      icon: 'pencil',
-    })
-  }
+  const quickLinks: QuickLink[] = useMemo(() => {
+    const links: QuickLink[] = [
+      {
+        title: 'Auglýsendur - innskráning',
+        href: auglysendurUrl,
+        variant: 'primary',
+        icon: 'open',
+      },
+    ]
+
+    if (session) {
+      links.push({
+        title: 'Gerast áskrifandi',
+        href: '/skraning',
+        variant: 'ghost',
+        icon: 'pencil',
+      })
+    }
+
+    return links
+  }, [auglysendurUrl, session])
 
   return (
     <>
