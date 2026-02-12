@@ -1,4 +1,3 @@
-// apps/official-journal-web/src/components/tabs/AdvertMigrationTabs.tsx
 import { useEffect } from 'react'
 
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'

@@ -1,4 +1,3 @@
-// apps/official-journal-web/src/components/tables/AdvertMigrationTable.tsx
 import { useState } from 'react'
 
 import { Button } from '@dmr.is/ui/components/island-is/Button'
