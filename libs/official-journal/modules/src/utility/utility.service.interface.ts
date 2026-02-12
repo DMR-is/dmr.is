@@ -109,7 +109,7 @@ export interface IUtilityService {
   getAdvertCategoryIds(
     advertId: string,
     transaction?: Transaction,
-  ): Promise<string[]>
+  ): Promise<ResultWrapper<string[]>>
 }
 
 export const IUtilityService = Symbol('IUtilityService')

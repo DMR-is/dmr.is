@@ -5,6 +5,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpException,
   Inject,
   MaxFileSizeValidator,
@@ -714,6 +715,7 @@ export class CaseController {
   @Post('/case-from-advert/:advertId')
   @ApiOperation({ operationId: 'createCaseFromAdvert' })
   @ApiNoContentResponse()
+  @HttpCode(204)
   async createCaseFromAdvert(
     @Param('advertId', new UUIDValidationPipe()) advertId: string,
   ) {

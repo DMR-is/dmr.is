@@ -530,15 +530,16 @@ export class CaseCreateService implements ICaseCreateService {
       this.utilityService.generateInternalCaseNumber(transaction),
     ])
 
-    const advertCategories = await this.utilityService.getAdvertCategoryIds(
-      body.id,
-      transaction,
+    const advertCategories = ResultWrapper.unwrap(
+      await this.utilityService.getAdvertCategoryIds(body.id, transaction),
     )
 
     const categoriesResult = advertCategories ?? []
 
     await Promise.all(
-      categoriesResult.map((cat) => this.createCaseCategory(caseId, cat)),
+      categoriesResult.map((cat) =>
+        this.createCaseCategory(caseId, cat, transaction),
+      ),
     )
 
     const [

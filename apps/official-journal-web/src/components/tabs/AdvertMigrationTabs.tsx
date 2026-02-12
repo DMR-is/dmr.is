@@ -9,13 +9,9 @@ import AdvertMigrationTable from '../tables/AdvertMigrationTable'
 
 export const AdvertMigrationTabs = () => {
   const [searchParams] = useSearchParams()
-  const { status: _status, search, page, pageSize } = searchParams
+  const { search, page, pageSize } = searchParams
 
-  const {
-    data,
-    isLoading: isLoading,
-    mutate,
-  } = useAdverts({
+  const { data, isLoading, mutate } = useAdverts({
     params: {
       page: page ?? 1,
       pageSize: pageSize ?? 20,
@@ -28,7 +24,7 @@ export const AdvertMigrationTabs = () => {
       await mutate()
     }
     refetch()
-  }, [search, page])
+  }, [search, page, mutate])
 
   return (
     <Stack space={[2, 2, 3]}>

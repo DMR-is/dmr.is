@@ -107,7 +107,7 @@ export const AdvertMigrationTable = ({ adverts, isLoading, paging }: Props) => {
       columns={columns}
       renderLink={false}
       rows={advertTableColumns}
-      defaultSort={{ direction: 'asc', key: 'casePublishDate' }}
+      defaultSort={{ direction: 'asc', key: 'advertPublicationNumber' }}
       paging={paging}
     />
   )

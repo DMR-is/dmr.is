@@ -19,26 +19,18 @@ export const useMigrateAdvertToCase = () => {
     setLoading(true)
 
     try {
-      await dmrClient
-        .createCaseFromAdvert({
-          advertId,
-        })
-        .then(() => {
-          toast.success('Mál hefur verið stofnað út frá auglýsingu', {
-            toastId: 'migrateAdvertToCase',
-          })
-          setLoading(false)
-        })
-        .catch((error) => {
-          setLoading(false)
-          toast.error('Ekki tókst að stofna mál út frá auglýsingu', {
-            toastId: 'migrateAdvertToCase',
-          })
-        })
+      await dmrClient.createCaseFromAdvert({
+        advertId,
+      })
+
+      toast.success('Mál hefur verið stofnað út frá auglýsingu', {
+        toastId: 'migrateAdvertToCase',
+      })
     } catch (error) {
       toast.error('Ekki tókst að stofna mál út frá auglýsingu', {
         toastId: 'migrateAdvertToCase',
       })
+    } finally {
       setLoading(false)
     }
   }

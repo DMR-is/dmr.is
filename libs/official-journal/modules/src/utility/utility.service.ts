@@ -570,7 +570,7 @@ export class UtilityService implements IUtilityService {
   async getAdvertCategoryIds(
     advertId: string,
     transaction?: Transaction,
-  ): Promise<string[]> {
+  ): Promise<ResultWrapper<string[]>> {
     const advert = await this.advertModel.findOne({
       include: [
         {
@@ -584,11 +584,11 @@ export class UtilityService implements IUtilityService {
     })
 
     if (!advert || !advert.categories) {
-      return []
+      return ResultWrapper.ok([])
     }
 
     const found = advert.categories.map((cat) => cat.id)
 
-    return found
+    return ResultWrapper.ok(found)
   }
 }
