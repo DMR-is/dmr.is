@@ -70,18 +70,17 @@ export const AdvertPublicationModal = ({ advertId, publications }: Props) => {
       baseId={`advert-publication-modal-${selectedPubId}`}
     >
       <div className="print-hidden">
-        <Inline space={0} flexWrap="wrap" justifyContent="spaceBetween" alignY={'center'}>
-          <Box borderRadius="large" background="white" marginBottom={"containerGutter"}>
-            <Inline
-              space={0}
-              flexWrap="wrap"
-              justifyContent={'spaceBetween'}
-              alignY={'center'}
-            >
+        <Inline
+          space={1}
+          flexWrap="wrap"
+          justifyContent="spaceBetween"
+          alignY={'center'}
+        >
+          <Box>
+            <Inline space={1} justifyContent={'spaceBetween'} alignY={'center'}>
               <Select
                 size="sm"
                 backgroundColor="blue"
-                label="Útgáfa"
                 value={
                   selectedPub
                     ? {
@@ -111,7 +110,7 @@ export const AdvertPublicationModal = ({ advertId, publications }: Props) => {
             </Inline>
           </Box>
 
-          <Box borderRadius="large" background="white" marginBottom={"containerGutter"}>
+          <Box>
             {isPublished && (
               <Button
                 circle

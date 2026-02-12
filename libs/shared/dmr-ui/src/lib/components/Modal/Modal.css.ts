@@ -1,46 +1,4 @@
-import { theme } from '@island.is/island-ui/theme'
-import { hexToRgba } from '@island.is/island-ui/utils'
-
-import { globalStyle, style, styleVariants } from '@vanilla-extract/css'
-
-export const backdrop = style({
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  width: '100%',
-  height: '100%',
-  overflowX: 'hidden',
-  overflowY: 'auto',
-  transition: `opacity 250ms ease-in-out`,
-  opacity: 0,
-  zIndex: 10000,
-  selectors: {
-    '&[data-enter]': {
-      opacity: 1,
-    },
-  },
-})
-
-export const backdropColor = styleVariants({
-  default: {
-    backgroundColor: hexToRgba(theme.color.blue100, 0.7),
-  },
-  white: {
-    backgroundColor: theme.color.white,
-  },
-})
-
-export const parallelModal = style({
-  all: 'unset',
-  width: '100%',
-  outline: 0,
-  transition: 'opacity 250ms ease-in-out',
-  selectors: {
-    '&[data-enter]': {
-      opacity: 1,
-    },
-  },
-})
+import { globalStyle, style } from '@vanilla-extract/css'
 
 export const modalBase = style({
   display: 'flex',
@@ -57,6 +15,7 @@ export const modalBase = style({
       justifyContent: 'flex-start',
       height: '100%',
       background: 'white',
+      zIndex: 9999,
     },
   },
 })
@@ -79,7 +38,7 @@ export const modalContent = style({
 // Print styles to ensure modals are rendered correctly when printing
 export const modalBaseBackdrop = style({})
 
-globalStyle(`div:has(> ${modalBaseBackdrop})`, {
+globalStyle(`div:has(${modalBaseBackdrop})`, {
   '@media': {
     print: {
       position: 'static',
@@ -88,30 +47,14 @@ globalStyle(`div:has(> ${modalBaseBackdrop})`, {
   },
 })
 
-globalStyle(`body *`, {
-  '@media': { print: { display: 'none' } },
-})
-
-globalStyle(`body, div, ${modalBaseBackdrop} ,${modalBaseBackdrop} *`, {
-  '@media': { print: { display: 'block' } },
+globalStyle(`${modalBase} > div`, {
+  '@media': { print: { padding: 0 } },
 })
 
 globalStyle(`${modalBase} button`, {
   '@media': { print: { display: 'none' } },
 })
 
-globalStyle(`.print-hidden`, {
-  '@media': { print: { display: 'none' } },
-})
-
-globalStyle(`${modalBase} > div`, {
-  '@media': { print: { padding: 0 } },
-})
-
-globalStyle(`body`, {
-  '@media': { print: { scrollbarWidth: 'none', msOverflowStyle: 'none' } },
-})
-
-globalStyle(`::-webkit-scrollbar`, {
+globalStyle(`body.modal-open .print-hidden, body.modal-open footer`, {
   '@media': { print: { display: 'none' } },
 })

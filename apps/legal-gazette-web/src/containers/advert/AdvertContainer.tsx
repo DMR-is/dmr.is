@@ -16,14 +16,16 @@ export function AdvertContainer({ advertId }: AdvertContainerProps) {
   return (
     <HydrateClient>
       <Box paddingY={[4, 5, 6]} background="purple100">
-        <GridContainer>
+        <GridContainer className="print-hidden">
           <GridRow>
             <GridColumn span={['12/12', '12/12', '9/12', '9/12']}>
               <AdvertFormContainer advertId={advertId} />
             </GridColumn>
             <GridColumn span={['12/12', '12/12', '3/12', '3/12']}>
-            <ErrorBoundary fallback={<div>Villa kom upp við að hlaða hliðarstiku</div>}>
-              <AdvertSidebarContainer advertId={advertId} />
+              <ErrorBoundary
+                fallback={<div>Villa kom upp við að hlaða hliðarstiku</div>}
+              >
+                <AdvertSidebarContainer advertId={advertId} />
               </ErrorBoundary>
             </GridColumn>
           </GridRow>
