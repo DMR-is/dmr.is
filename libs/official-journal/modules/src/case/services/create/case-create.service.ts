@@ -554,12 +554,6 @@ export class CaseCreateService implements ICaseCreateService {
 
     const categoriesResult = advertCategories ?? []
 
-    await Promise.all(
-      categoriesResult.map((cat) =>
-        this.createCaseCategory(caseId, cat, transaction),
-      ),
-    )
-
     const [
       caseStatusResult,
       caseTagResult,
@@ -604,6 +598,16 @@ export class CaseCreateService implements ICaseCreateService {
       transaction,
     )
 
+    if (!createCaseResult.result.ok) {
+      return createCaseResult
+    }
+
+    await Promise.all(
+      categoriesResult.map((cat) =>
+        this.createCaseCategory(caseId, cat, transaction),
+      ),
+    )
+
     await this.signatureService.createSignature(
       caseId,
       {
@@ -612,10 +616,6 @@ export class CaseCreateService implements ICaseCreateService {
       },
       transaction,
     )
-
-    if (!createCaseResult.result.ok) {
-      return createCaseResult
-    }
 
     return ResultWrapper.ok({ id: caseId })
   }
