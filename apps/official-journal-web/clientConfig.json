@@ -1400,6 +1400,22 @@
         "summary": ""
       }
     },
+    "/api/v1/cases/case-from-advert/{advertId}": {
+      "post": {
+        "operationId": "createCaseFromAdvert",
+        "parameters": [
+          {
+            "name": "advertId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
     "/api/v1/cases/{id}": {
       "get": {
         "operationId": "getCase",

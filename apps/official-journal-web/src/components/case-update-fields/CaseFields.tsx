@@ -23,7 +23,7 @@ import { PublishingFields } from './PublishingFields'
 import { SignatureFields } from './SignatureFields'
 
 export const CaseFields = () => {
-  const { canEdit, isPublishedOrRejected } = useCaseContext()
+  const { canEdit, isPublishedOrRejected, currentCase } = useCaseContext()
 
   const commonToggle = useToggle(true)
   const publishingToggle = useToggle(false)
@@ -114,22 +114,26 @@ export const CaseFields = () => {
                 toggle={signatureToggle.toggle}
                 onToggle={signatureToggle.onToggle}
               />
-              <AppendixFields
-                toggle={appendixToggle.toggle}
-                onToggle={appendixToggle.onToggle}
-              />
-              <AttachmentFields
-                toggle={attachmentToggle.toggle}
-                onToggle={attachmentToggle.onToggle}
-              />
-              <CommunicationChannelsField
-                toggle={communicationChannelsToggle.toggle}
-                onToggle={communicationChannelsToggle.onToggle}
-              />
-              <MessageField
-                toggle={messageToggle.toggle}
-                onToggle={messageToggle.onToggle}
-              />
+              {!currentCase?.isLegacy && (
+                <>
+                  <AppendixFields
+                    toggle={appendixToggle.toggle}
+                    onToggle={appendixToggle.onToggle}
+                  />
+                  <AttachmentFields
+                    toggle={attachmentToggle.toggle}
+                    onToggle={attachmentToggle.onToggle}
+                  />
+                  <CommunicationChannelsField
+                    toggle={communicationChannelsToggle.toggle}
+                    onToggle={communicationChannelsToggle.onToggle}
+                  />
+                  <MessageField
+                    toggle={messageToggle.toggle}
+                    onToggle={messageToggle.onToggle}
+                  />
+                </>
+              )}
               <CommentFields
                 toggle={commentToggle.toggle}
                 onToggle={commentToggle.onToggle}

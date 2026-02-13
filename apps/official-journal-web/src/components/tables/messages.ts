@@ -236,6 +236,11 @@ export const messages = {
           defaultMessage: 'Yfirskrifa PDF',
           description: 'Title column',
         },
+        migrate: {
+          id: 'web.components.tables:advert.columns.migrate',
+          defaultMessage: 'Flytja í ritstjórn',
+          description: 'Migrate to admin case button',
+        },
       }),
     },
   },

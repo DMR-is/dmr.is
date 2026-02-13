@@ -42,6 +42,7 @@ export enum Routes {
   UserManagement = '/notendur',
   ReplacePdf = '/yfirskrifa-pdf',
   ReplacePdfAdvert = '/yfirskrifa-pdf/:advertId',
+  AdvertMigration = '/auglysing-til-ritstjornar',
 }
 
 export enum PageTitles {
@@ -81,6 +82,11 @@ export const PagePaths: Array<Path> = [
   },
   { pathname: Routes.UserManagement, title: 'Notendur', order: 7 },
   { pathname: Routes.ReplacePdf, title: 'Yfirskrifa PDF', order: 8 },
+  {
+    pathname: Routes.AdvertMigration,
+    title: 'Auglýsing til ritstjórnar',
+    order: 9,
+  },
 ]
 
 export const DEPARTMENT_A = 'A deild'

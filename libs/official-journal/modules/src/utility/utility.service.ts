@@ -564,4 +564,31 @@ export class UtilityService implements IUtilityService {
       value: found,
     })
   }
+
+  @LogAndHandle()
+  @Transactional()
+  async getAdvertCategoryIds(
+    advertId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<string[]>> {
+    const advert = await this.advertModel.findOne({
+      include: [
+        {
+          model: AdvertCategoryModel,
+        },
+      ],
+      where: {
+        id: advertId,
+      },
+      transaction,
+    })
+
+    if (!advert || !advert.categories) {
+      return ResultWrapper.ok([])
+    }
+
+    const found = advert.categories.map((cat) => cat.id)
+
+    return ResultWrapper.ok(found)
+  }
 }

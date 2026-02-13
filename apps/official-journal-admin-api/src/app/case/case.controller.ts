@@ -5,6 +5,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpException,
   Inject,
   MaxFileSizeValidator,
@@ -709,6 +710,16 @@ export class CaseController {
         body.content,
       ),
     )
+  }
+
+  @Post('/case-from-advert/:advertId')
+  @ApiOperation({ operationId: 'createCaseFromAdvert' })
+  @ApiNoContentResponse()
+  @HttpCode(204)
+  async createCaseFromAdvert(
+    @Param('advertId', new UUIDValidationPipe()) advertId: string,
+  ) {
+    ResultWrapper.unwrap(await this.caseService.createCaseFromAdvert(advertId))
   }
 
   @Put(':id/html/appendix')
