@@ -1,5 +1,7 @@
 'use client'
 
+import dynamic from 'next/dynamic'
+
 import { parseAsStringEnum, useQueryState } from 'nuqs'
 import { useEffect } from 'react'
 
@@ -15,7 +17,6 @@ import { useFilterContext } from '../../hooks/useFilters'
 import { StatusIdEnum } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import CaseFilters from '../CaseFilters/CaseFilters'
-import { CreateAdvertMenu } from '../create-advert/CreateAdvertMenu'
 import { RitstjornHero } from '../ritstjorn/Hero'
 import AdvertsCompleted from '../Tables/AdvertsCompleted'
 import { PublicationsToBePublishedTab } from '../tabs/PublicationsTab'
@@ -28,6 +29,17 @@ const TabIds = [
   'utgafa-i-birtinga',
   'yfirlit',
 ]
+
+const DynamicCreateAdvertMenu = dynamic(
+  () =>
+    import('../create-advert/CreateAdvertMenu').then(
+      (mod) => mod.CreateAdvertMenu,
+    ),
+  {
+    ssr: false,
+  },
+)
+
 
 export const PageContainer = () => {
   const [tab, setTab] = useQueryState('tab', parseAsStringEnum(TabIds))
@@ -108,7 +120,7 @@ export const PageContainer = () => {
             <Stack space={[0]}>
               <Inline space={2} justifyContent={'spaceBetween'}>
                 <CaseFilters />
-                <CreateAdvertMenu />
+                <DynamicCreateAdvertMenu />
               </Inline>
               <Tabs
                 label=""
@@ -129,7 +141,9 @@ export const PageContainer = () => {
                   {
                     id: 'utgafa-i-birtinga',
                     label: `Í útgáfu (${inPublishingCount})`,
-                    content: <PublicationsToBePublishedTab />,
+                    content: (
+                      <PublicationsToBePublishedTab key="publications-to-be-published-tab" />
+                    ),
                   },
                   {
                     id: 'yfirlit',

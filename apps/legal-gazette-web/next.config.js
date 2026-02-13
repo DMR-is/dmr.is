@@ -1,15 +1,37 @@
 const { composePlugins, withNx } = require('@nx/next')
 const { createVanillaExtractPlugin } = require('@vanilla-extract/next-plugin')
-const withVanillaExtract = createVanillaExtractPlugin()
+const withVanillaExtract = createVanillaExtractPlugin({
+  turbopackMode: 'on',
+})
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 
 /**
- * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
+ * @type {import('next').NextConfig}
  **/
 const nextConfig = {
   output: 'standalone',
-  experimental: {
-    fallbackNodePolyfills: false,
+  transpilePackages: [
+    '@@island.is/island-ui/core/*',
+    '@@island.is/island-ui/core',
+    '@island.is/island-ui/core/hooks',
+    '@island.is/island-ui/core/utils',
+    '@island.is/island-ui/core/globalCss',
+    '@island.is/island-ui/core/globalStyles',
+    '@island.is/island-ui/theme',
+    '@island.is/island-ui/utils',
+    '@island.is/shared/utils',
+    '@island.is/island-ui/vanilla-extract-utils',
+    '@dmr.is/ui/components/island-is',
+    '@dmr.is/ui/components',
+    '@island.is/island-ui/core/Box/useBoxStyles',
+  ],
+  outputFileTracing: true,
+
+  turbopack: {
+    resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+    resolveAlias: {
+      '@island.is/island-ui/core/Link/Link': '@island.is/island-ui/core/Link/LinkV2',
+    },
   },
   webpack: (config, { isServer }) => {
     config.resolve.alias.canvas = false

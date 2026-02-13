@@ -1,5 +1,12 @@
 'use client'
 
-import { Select as IslandSelect } from '@island.is/island-ui/core/Select/Select'
+import dynamic from 'next/dynamic'
 
-export const Select = IslandSelect
+const DynamicSelect = dynamic(
+  () => import('@island.is/island-ui/core/Select/Select').then((mod) => mod.Select),
+  {
+    ssr: false,
+  },
+)
+
+export const Select = DynamicSelect

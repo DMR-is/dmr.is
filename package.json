@@ -43,7 +43,9 @@
     "lg:init": "nx run legal-gazette-api:dev-init",
     "lg:seed": "nx run legal-gazette-api:seed",
     "lg:migrate": "nx run legal-gazette-api:migrate",
-    "lg:update-clients": "nx run-many -t update-client -p legal-gazette-web,legal-gazette-public-web,legal-gazette-application-web --parallel"
+    "lg:update-clients": "nx run-many -t update-client -p legal-gazette-web,legal-gazette-public-web,legal-gazette-application-web --parallel",
+    "patch:submodules": "bash scripts/patch-submodules.sh",
+    "postinstall": "git submodule update --init --recursive && bash scripts/patch-submodules.sh"
   },
   "devDependencies": {
     "@formatjs/cli": "^6.2.9",
@@ -185,6 +187,7 @@
     "class-validator": "^0.14.1",
     "classnames": "^2.5.1",
     "cls-hooked": "^4.2.2",
+    "crypto-browserify": "3.12.1",
     "date-fns": "^2.29.3",
     "dd-trace": "^5.56.0",
     "deepmerge": "4.3.1",
@@ -199,6 +202,7 @@
     "framer-motion": "^11.0.26",
     "fridagar": "^4.2.2",
     "hypher": "^0.2.5",
+    "jose": "6.1.3",
     "js-base64": "2.5.2",
     "jsonwebtoken": "^9.0.2",
     "jwks-rsa": "^3.1.0",
@@ -210,7 +214,7 @@
     "mssql": "^11.0.1",
     "multer-s3-transform": "^2.10.3",
     "nest-winston": "^1.9.4",
-    "next": "14.2.35",
+    "next": "16",
     "next-auth": "4.24.11",
     "next-usequerystate": "1.20.0",
     "node-fetch": "2.6.7",
@@ -221,10 +225,10 @@
     "pg": "^8.13.3",
     "puppeteer": "^22.8.1",
     "puppeteer-core": "^22.8.0",
-    "react": "^18.3.1",
+    "react": "^19",
     "react-animate-height": "^3.1.2",
     "react-datepicker": "^4.10.0",
-    "react-dom": "^18.3.1",
+    "react-dom": "^19",
     "react-dropzone": "^11.7.1",
     "react-error-boundary": "6.1.0",
     "react-hook-form": "7.62.0",
@@ -260,6 +264,12 @@
     "tar-fs": "3.0.9",
     "koa": "2.16.2",
     "puppeteer": "^22.8.1",
-    "puppeteer-core": "^22.8.0"
+    "puppeteer-core": "^22.8.0",
+    "@vanilla-extract/compiler": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/compiler@edaedbb",
+    "@vanilla-extract/css": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/css@edaedbb",
+    "@vanilla-extract/integration": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/integration@edaedbb",
+    "@vanilla-extract/next-plugin": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/next-plugin@edaedbb",
+    "@vanilla-extract/turbopack-plugin": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/turbopack-plugin@edaedbb",
+    "@vanilla-extract/webpack-plugin": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/webpack-plugin@edaedbb"
   }
 }
