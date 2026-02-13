@@ -527,6 +527,8 @@ export class UserService implements IUserService {
       where: {
         nationalId: { [Op.eq]: nationalId },
       },
+      // Prefer primary involved party.
+      order: [['isPrimary', 'DESC NULLS LAST']],
     })
 
     if (!involvedParty) {

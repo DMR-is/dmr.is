@@ -26,6 +26,14 @@ export class AdvertInvolvedPartyModel extends Model {
   @Column({ allowNull: false })
   slug!: string
 
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: true,
+    defaultValue: null,
+    field: 'is_primary',
+  })
+  isPrimary?: boolean | null
+
   @CreatedAt
   created!: Date
 
