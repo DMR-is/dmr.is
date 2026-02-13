@@ -1,7 +1,15 @@
 const { composePlugins, withNx } = require('@nx/next')
 const { createVanillaExtractPlugin } = require('@vanilla-extract/next-plugin')
 const withVanillaExtract = createVanillaExtractPlugin({
-  turbopackMode: 'on',
+  identifiers: 'short',
+  env: {
+      API_MOCKS: process.env.API_MOCKS || '',
+    NEXTAUTH_URL:
+      process.env.NODE_ENV !== 'production'
+        ? `${process.env.LG_WEB_URL}/api/auth`
+        : process.env.NEXTAUTH_URL,
+  },
+  turbopackMode: 'on'
 })
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 
@@ -25,30 +33,38 @@ const nextConfig = {
     '@dmr.is/ui/components',
     '@island.is/island-ui/core/Box/useBoxStyles',
   ],
-  outputFileTracing: true,
-
   turbopack: {
     resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
-    resolveAlias: {
-      '@island.is/island-ui/core/Link/Link': '@island.is/island-ui/core/Link/LinkV2',
-    },
+    // rules: {
+    //   '*.svg': {
+    //     loaders: [
+    //       {
+    //         loader: '@svgr/webpack',
+    //         options: {
+    //           icon: true,
+    //         },
+    //       },
+    //     ],
+    //     as: '*.js',
+    //   },
+    // },
   },
-  webpack: (config, { isServer }) => {
-    config.resolve.alias.canvas = false
+  // webpack: (config, { isServer }) => {
+  //   config.resolve.alias.canvas = false
 
-    if (process.env.ANALYZE === 'true' && !isServer) {
-      config.plugins.push(
-        new BundleAnalyzerPlugin({
-          analyzerMode: 'static',
-          reportFilename: isServer
-            ? '../analyze/server.html'
-            : './analyze/client.html',
-        }),
-      )
-    }
+  //   if (process.env.ANALYZE === 'true' && !isServer) {
+  //     config.plugins.push(
+  //       new BundleAnalyzerPlugin({
+  //         analyzerMode: 'static',
+  //         reportFilename: isServer
+  //           ? '../analyze/server.html'
+  //           : './analyze/client.html',
+  //       }),
+  //     )
+  //   }
 
-    return config
-  },
+  //   return config
+  // },
   env: {
     API_MOCKS: process.env.API_MOCKS || '',
     NEXTAUTH_URL:

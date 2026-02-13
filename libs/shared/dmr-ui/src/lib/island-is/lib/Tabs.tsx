@@ -8,7 +8,4 @@ const DynamicTabs = dynamic(
   },
 )
 
-export const Tabs = (props: React.ComponentProps<typeof DynamicTabs>) => {
-  const { children, ...rest } = props
-  return <DynamicTabs {...rest}>{children}</DynamicTabs>
-}
+export const Tabs = DynamicTabs

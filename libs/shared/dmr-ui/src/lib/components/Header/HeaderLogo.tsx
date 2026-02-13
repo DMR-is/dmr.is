@@ -1,4 +1,6 @@
-import {  useBreakpoint } from '@island.is/island-ui/core/hooks/useBreakpoint'
+import Image from 'next/image'
+
+import { useBreakpoint } from '@island.is/island-ui/core/hooks/useBreakpoint'
 
 import { FocusableBox } from '../../island-is/lib/FocusableBox'
 import skjaldarmerki from './images/skjaldarmerki.svg'
@@ -8,7 +10,7 @@ export const HeaderLogo = () => {
 
   return (
     <FocusableBox href={'/'} data-testid="link-back-home">
-      <img
+      <Image
         src={skjaldarmerki}
         alt="Skjaldarmerki"
         width={lg ? 64 : 50}
