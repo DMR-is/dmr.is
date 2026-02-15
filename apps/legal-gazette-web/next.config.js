@@ -2,14 +2,7 @@ const { composePlugins, withNx } = require('@nx/next')
 const { createVanillaExtractPlugin } = require('@vanilla-extract/next-plugin')
 const withVanillaExtract = createVanillaExtractPlugin({
   identifiers: 'short',
-  env: {
-      API_MOCKS: process.env.API_MOCKS || '',
-    NEXTAUTH_URL:
-      process.env.NODE_ENV !== 'production'
-        ? `${process.env.LG_WEB_URL}/api/auth`
-        : process.env.NEXTAUTH_URL,
-  },
-  turbopackMode: 'on'
+  turbopackMode: process.env.NODE_ENV === 'production' ? 'on' : 'off',
 })
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 
@@ -35,42 +28,32 @@ const nextConfig = {
   ],
   turbopack: {
     resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
-    // rules: {
-    //   '*.svg': {
-    //     loaders: [
-    //       {
-    //         loader: '@svgr/webpack',
-    //         options: {
-    //           icon: true,
-    //         },
-    //       },
-    //     ],
-    //     as: '*.js',
-    //   },
-    // },
   },
-  // webpack: (config, { isServer }) => {
-  //   config.resolve.alias.canvas = false
+  webpack: (config, { isServer }) => {
+    config.resolve.alias.canvas = false
 
-  //   if (process.env.ANALYZE === 'true' && !isServer) {
-  //     config.plugins.push(
-  //       new BundleAnalyzerPlugin({
-  //         analyzerMode: 'static',
-  //         reportFilename: isServer
-  //           ? '../analyze/server.html'
-  //           : './analyze/client.html',
-  //       }),
-  //     )
-  //   }
+    if (process.env.ANALYZE === 'true' && !isServer) {
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'static',
+          reportFilename: isServer
+            ? '../analyze/server.html'
+            : './analyze/client.html',
+        }),
+      )
+    }
 
-  //   return config
-  // },
+    return config
+  },
+  typescript: {
+    // ignoreBuildErrors: true,
+  },
   env: {
-    API_MOCKS: process.env.API_MOCKS || '',
+    API_MOCKS: process.env.API_MOCKS || null,
     NEXTAUTH_URL:
       process.env.NODE_ENV !== 'production'
         ? `${process.env.LG_WEB_URL}/api/auth`
-        : process.env.NEXTAUTH_URL,
+        : (process.env.NEXTAUTH_URL || null),
   },
 }
 

@@ -19,14 +19,18 @@
       "outputs": ["{options.outputPath}"],
       "dependsOn": ["codegen"],
       "defaultConfiguration": "production",
+      "webpack": true,
       "options": {
         "outputPath": "apps/legal-gazette-web/dist"
       },
       "configurations": {
         "development": {
-          "outputPath": "apps/legal-gazette-web"
+          "outputPath": "apps/legal-gazette-web",
+          "webpack": true
         },
-        "production": {}
+        "production": {
+          "webpack": true
+        }
       }
     },
     "serve": {

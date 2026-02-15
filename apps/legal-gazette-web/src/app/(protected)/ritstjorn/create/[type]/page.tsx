@@ -15,9 +15,9 @@ export function generateStaticParams() {
 export default async function CreatePage({
   params,
 }: {
-  params: { type: string }
+  params: Promise<{ type: string }>
 }) {
-  const { type } = params
+  const { type } = await params
   return (
     <>
       <RitstjornHero />

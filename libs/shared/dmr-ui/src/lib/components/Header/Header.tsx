@@ -122,14 +122,14 @@ export const Header = ({
                   width="full"
                 >
                   {settings}
-                  {/* {session?.user ? (
+                  {session?.user ? (
                     <DropdownMenu
                       title={md ? (session.user.name ?? '') : ''}
                       icon={md ? 'chevronDown' : 'person'}
                       menuLabel={'Notandi'}
                       items={dropdownOptions}
                     />
-                  ) : null} */}
+                  ) : null}
                 </Box>
               </Inline>
             </GridColumn>
