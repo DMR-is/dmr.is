@@ -1,4 +1,5 @@
 import lodashOmit from 'lodash/omit'
+
 import { omit } from './omit'
 describe('omit', () => {
   describe('basic usage (parity with lodash)', () => {

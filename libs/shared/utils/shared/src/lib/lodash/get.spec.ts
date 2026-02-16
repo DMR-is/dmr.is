@@ -1,4 +1,5 @@
 import lodashGet from 'lodash/get'
+
 import { get } from './get'
 const testObj = {
   a: {

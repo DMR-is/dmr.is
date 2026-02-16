@@ -1,5 +1,6 @@
 import { TransformableInfo } from 'logform'
 import { MESSAGE } from 'triple-beam'
+
 import { maskNationalIdFormatter } from './formatters'
 describe('maskNationalIdFormatter', () => {
   const messageSymbol = MESSAGE as unknown as string

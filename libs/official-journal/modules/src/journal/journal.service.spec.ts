@@ -1,6 +1,8 @@
 import { Test } from '@nestjs/testing'
+
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { ResultWrapper } from '@dmr.is/types'
+
 import { IJournalService } from './journal.service.interface'
 import { MockJournalService } from './journal.service.mock'
 describe('JournalService', () => {

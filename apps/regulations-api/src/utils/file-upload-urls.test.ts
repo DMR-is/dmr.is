@@ -1,4 +1,5 @@
 import { RegName } from '@dmr.is/regulations-tools/types'
+
 import { DRAFTS_FOLDER, FILE_SERVER, MEDIA_BUCKET_FOLDER } from '../constants'
 import { _fileUrlsMapper } from './file-upload-urls'
 const defaultRegName = '0123/2004' as RegName

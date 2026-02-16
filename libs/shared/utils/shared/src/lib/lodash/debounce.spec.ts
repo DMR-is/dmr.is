@@ -1,4 +1,5 @@
 import lodashDebounce from 'lodash/debounce'
+
 import { debounce } from './debounce'
 beforeEach(() => {
   jest.useFakeTimers()

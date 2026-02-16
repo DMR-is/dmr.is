@@ -3,8 +3,10 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
+
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { fetchWithTimeout } from '@dmr.is/utils/server/httpUtils'
+
 import { NationalRegistryService } from './national-registry.service'
 jest.mock('@dmr.is/utils/server/httpUtils', () => ({
   fetchWithTimeout: jest.fn(),

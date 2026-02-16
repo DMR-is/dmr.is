@@ -1,5 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
+
 import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
+
 import { AdvertVersionEnum } from '../../gen/fetch'
 import {
   handlePublicationRedirects,

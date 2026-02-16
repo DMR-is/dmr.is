@@ -128,7 +128,6 @@ describe('maskPiiInObject', () => {
     expect(result?.nationalId).toBe('9999999999')
   })
   it('should not mask company kennitalas', () => {
-    // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
     const result = maskPiiInObject({
       kennitala: '4208694809', // Company kennitala (day > 31)
     })

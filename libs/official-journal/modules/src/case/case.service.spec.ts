@@ -1,11 +1,15 @@
+/* eslint-disable unused-imports/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Sequelize } from 'sequelize-typescript'
+
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
+
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { PostApplicationBody } from '@dmr.is/shared/dto'
 import { IAWSService } from '@dmr.is/shared/modules'
+
 import { AdvertMainTypeModel } from '../advert-type/models'
 import { IApplicationService } from '../application/application.service.interface'
 import { IAttachmentService } from '../attachments/attachment.service.interface'

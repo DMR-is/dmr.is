@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Logger } from 'winston'
 
 import { Inject } from '@nestjs/common'
