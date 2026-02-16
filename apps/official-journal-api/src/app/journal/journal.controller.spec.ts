@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
+
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CaseServiceMock,
@@ -8,7 +9,9 @@ import {
   MockJournalService,
   MockRunnerService,
 } from '@dmr.is/ojoi/modules'
+
 import { JournalController } from './journal.controller'
+
 import { Client } from '@opensearch-project/opensearch'
 describe('JournalController', () => {
   let journal: TestingModule

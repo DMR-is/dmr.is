@@ -1,8 +1,10 @@
 import { exec } from 'child_process'
 import * as fs from 'fs'
+
 import { NestApplication } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { Test } from '@nestjs/testing'
+
 import { HealthModule } from '@dmr.is/shared/modules'
 const TMP_DIR = 'tmp/swagger'
 const genereteFromSchema = () => {
