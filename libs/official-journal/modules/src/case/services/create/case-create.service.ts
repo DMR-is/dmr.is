@@ -572,11 +572,13 @@ export class CaseCreateService implements ICaseCreateService {
         involvedPartyId: body.involvedParty.id,
         departmentId: body.department.id,
         advertTypeId: body.type.id,
-        year: body.signatureDate
-          ? new Date(body.signatureDate).getFullYear()
-          : new Date().getFullYear(),
+        year: body.publicationNumber?.year
+          ? body.publicationNumber.year
+          : body.signatureDate
+            ? new Date(body.signatureDate).getFullYear()
+            : new Date().getFullYear(),
         caseNumber: internalCaseNumberResult.unwrap().internalCaseNumber,
-        advertTitle: body.title ?? '',
+        advertTitle: body.subject ?? '',
         html: body.document.html ?? '',
         requestedPublicationDate: body.publicationDate ?? '',
         assignedUserId: null,
