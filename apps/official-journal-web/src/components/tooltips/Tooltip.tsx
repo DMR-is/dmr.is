@@ -1,12 +1,5 @@
-import {
-  Tooltip as ReakitTooltip,
-  TooltipReference,
-  useTooltipState,
-} from 'reakit'
-
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { useIsMounted } from '../../hooks/useIsMounted'
 import * as styles from './Tooltip.css'
 
 type Props = {
@@ -15,23 +8,16 @@ type Props = {
 }
 
 export const Tooltip = ({ text, children }: Props) => {
-  const isMounted = useIsMounted()
-
-  const tooltip = useTooltipState({ placement: 'bottom' })
-
-  if (!isMounted) return null
   if (!text) return null
 
   return (
-    <>
-      <TooltipReference {...tooltip}>{children}</TooltipReference>
-      <ReakitTooltip {...tooltip}>
-        <div className={styles.tooltipStyle}>
-          <Text color="white" variant="small">
-            {text}
-          </Text>
-        </div>
-      </ReakitTooltip>
-    </>
+    <span className={styles.container} tabIndex={0}>
+      {children}
+      <div className={styles.tooltipStyle} role="tooltip">
+        <Text color="white" variant="small">
+          {text}
+        </Text>
+      </div>
+    </span>
   )
 }

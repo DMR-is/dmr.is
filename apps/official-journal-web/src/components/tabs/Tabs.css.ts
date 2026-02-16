@@ -20,6 +20,10 @@ export const tabsTab = recipe({
     paddingBlock: theme.spacing[1],
     paddingInline: theme.spacing[5],
     textWrap: 'nowrap',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
   },
   variants: {
     active: {

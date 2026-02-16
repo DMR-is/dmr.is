@@ -11,6 +11,8 @@ After upgrading, `yarn nx run legal-gazette-web:tsc` produced **14 TypeScript er
 3. **React 19 `ReactElement<unknown>`** — default generic changed from `any` to `unknown`, breaking `React.cloneElement` patterns
 4. **Implicit `any` types** in Select.tsx from react-select
 
+---
+
 ## What Was Done (legal-gazette-web)
 
 ### Phase 1: Submodule Patches (minimal, unavoidable)
@@ -60,7 +62,7 @@ Rewrote the dmr-ui wrapper layer (`libs/shared/dmr-ui/src/lib/island-is/lib/`) t
   - Body scroll lock managed manually via `document.body.style.overflow`
 - **Used by:** `Modal.tsx` → 8+ components in legal-gazette-web
 
-### Phase 3: Removed Direct Reakit Imports
+### Phase 3: Removed Direct Reakit Imports (legal-gazette-web)
 
 | File | Change |
 |------|--------|
@@ -69,41 +71,90 @@ Rewrote the dmr-ui wrapper layer (`libs/shared/dmr-ui/src/lib/island-is/lib/`) t
 | `ControlPanel.tsx` | Replaced reakit `Popover`/`PopoverDisclosure`/`usePopoverState` with `useState` + click-outside. Uses native `<button>` instead of `<PopoverDisclosure>`. |
 | `Header.tsx` | Changed `import type { DropdownMenuProps }` from submodule to local wrapper (`../../island-is/lib/DropdownMenu`) |
 
+---
+
+## What Was Done (official-journal-web)
+
+### Phase 1: Additional Submodule Patches
+
+`official-journal-web:tsc` produced **7 TypeScript errors** across 4 submodule files not previously patched (different components from legal-gazette-web).
+
+| File | Change | Why |
+|------|--------|-----|
+| `ProfileCard/ProfileCard.tsx` | `JSX.Element` → `React.JSX.Element` (2 occurrences) | React 19 moved JSX namespace |
+| `ToggleSwitch/_ToggleSwitch.utils.tsx` | `JSX.IntrinsicElements` → `React.JSX.IntrinsicElements`, `JSX.Element` → `React.JSX.Element` | React 19 moved JSX namespace |
+| `DropdownMenu/DropdownMenu.tsx` | `@ts-expect-error` on reakit MenuButton line | Reakit types incompatible with React 19 |
+| `PhoneInput/PhoneInput.tsx` | `@ts-expect-error` on CountryCodeSelect usage | react-select prop types changed under React 19 |
+
+### Phase 2: Removed All Direct Reakit Imports
+
+All 5 files that imported reakit directly were rewritten. Zero reakit imports remain in official-journal-web.
+
+| File | Original | Replacement |
+|------|----------|-------------|
+| `layout/Layout.tsx` | `import { Provider } from 'reakit'` + `<Provider>` wrapper | Removed Provider wrapper entirely (not needed) |
+| `components/tooltips/Tooltip.tsx` | reakit `Tooltip`/`TooltipReference`/`useTooltipState` | CSS-based tooltip using `:hover`/`:focus-within` on a `<span>` container. Dark background (dark400) preserved to match original styling |
+| `components/popover/Popover.tsx` | reakit `Popover`/`PopoverDisclosure`/`usePopoverState` | `useState` + `useRef` click-outside + Escape key listener. `cloneElement` with `disclosure` typed as `ReactElement<any>` for React 19 compat. Uses `position: absolute` (not portal) |
+| `components/header/ControlPanel.tsx` | reakit `Popover`/`PopoverDisclosure`/`usePopoverState` | `useState` + `useRef` click-outside + Escape key. Native `<button>` instead of `<PopoverDisclosure>`. Dropdown positioned with `position: absolute` |
+| `components/tabs/Tabs.tsx` | reakit `Tab`/`TabList`/`TabPanel`/`useTabState` | Native `<button role="tab">` + `<div role="tabpanel">` with proper ARIA attributes (`aria-selected`, `aria-controls`, `aria-labelledby`). Fully controlled via `selectedTab`/`onTabChange` props (no internal reakit state) |
+
+#### CSS changes
+
+- **Tooltip.css.ts** — Rewritten: added `container` style with `position: relative`, `tooltipStyle` uses CSS selectors for hover/focus show/hide. Kept `caseLabelTooltipIcon` for `CaseLabelTooltip.tsx`.
+- **Popover.css.ts** — Updated: `position: absolute`, `top: 100%`, `right: 0`, `marginTop: 8px`.
+- **ControlPanel.css.ts** — Updated `dropdownMenu`: changed from `position: relative` to `position: absolute` with `top: 100%`, `left: 0`, `zIndex: 1`.
+- **Tabs.css.ts** — Updated `tabsTab` base: added `background: 'none'`, `border: 'none'`, `cursor: 'pointer'`, `fontFamily: 'inherit'` for native button reset.
+
+### Verification
+
+```bash
+yarn nx run official-journal-web:tsc  # ✅ 0 errors
+grep -r "from 'reakit" apps/official-journal-web/  # ✅ 0 matches
+```
+
+---
+
 ## Known Differences from Original
 
-1. **FilterMenu positioning:** Original reakit Popover used portal rendering with fixed viewport positioning (stayed pinned while scrolling). Current implementation uses `position: absolute` relative to the button — scrolls with the page. Functionally equivalent, minor visual difference when scrolling with menu open.
+1. **FilterMenu positioning (legal-gazette-web):** Original reakit Popover used portal rendering with fixed viewport positioning (stayed pinned while scrolling). Current implementation uses `position: absolute` relative to the button — scrolls with the page. Functionally equivalent, minor visual difference when scrolling with menu open.
 
-2. **Tooltip animation:** Original had a 250ms fade-in/out animation via reakit's `animated` state + CSS transitions. New version shows/hides instantly on hover. Could add CSS transitions if needed.
+2. **Popover positioning (official-journal-web):** Same as FilterMenu — `position: absolute` instead of reakit's portal. Used by CaseFilters component.
 
-3. **ModalBase animation:** Original had 250ms opacity fade transitions. Native `<dialog>` doesn't animate by default. The `::backdrop` also doesn't transition. CSS animations could be added to the dialog if needed.
+3. **Tooltip animation:** Original had a 250ms fade-in/out animation via reakit's `animated` state + CSS transitions. New version shows/hides instantly on hover. Could add CSS transitions if needed.
+
+4. **ModalBase animation:** Original had 250ms opacity fade transitions. Native `<dialog>` doesn't animate by default. The `::backdrop` also doesn't transition. CSS animations could be added to the dialog if needed.
+
+5. **Tabs state management (official-journal-web):** Original reakit `useTabState` managed internal state with `currentId` and synced via `useEffect`. New version is fully controlled — `selectedTab` and `onTabChange` drive everything directly. No internal state drift.
+
+---
 
 ## What Still Uses Reakit
 
 **Do NOT remove reakit from `package.json` yet.** These still depend on it:
 
-### In submodule (compiled but not our code):
+### In submodule (compiled but not our code)
 
 - `Button.tsx` — uses `reakit/Button` (no type errors, works fine)
 - `ModalBase.tsx` — still uses reakit internally (patched with `@ts-expect-error`)
 - `Tooltip.tsx` — still uses reakit internally (patched with `@ts-expect-error`)
 - `Drawer.tsx` — imports ModalBase which uses reakit
 - `Checkbox.tsx`, `Input.tsx`, `RadioButton.tsx`, `ActionCard.tsx`, `PhoneInput.tsx` — import Tooltip which uses reakit
+- `DropdownMenu.tsx` — uses reakit Menu (patched with `@ts-expect-error`)
 
-### In official-journal-web (5 files, separate effort):
+### In other apps (not yet migrated)
 
-These files still import reakit directly and need the same treatment:
+- `legal-gazette-application-web` — check for direct reakit imports
+- `legal-gazette-public-web` — check for direct reakit imports
 
-```bash
-grep -r "from 'reakit" apps/official-journal-web/
-```
+---
 
 ## Applying to Other Applications
 
-When migrating another app (e.g., `official-journal-web`, `legal-gazette-application-web`):
+When migrating another app (e.g., `legal-gazette-application-web`, `legal-gazette-public-web`):
 
 ### 1. Submodule patches are already applied
 
-The submodule patches (Phase 1) are shared across all apps. No additional work needed.
+The submodule patches (Phase 1 from both legal-gazette-web and official-journal-web) are shared across all apps. No additional work needed.
 
 ### 2. Check if the app uses dmr-ui wrappers or imports directly
 
@@ -120,10 +171,11 @@ grep -r "from '@island.is/island-ui/core/ModalBase" apps/<app-name>/
 ### 3. For each direct reakit import, apply the same pattern
 
 - **`reakit` Provider** → Just remove the wrapper
-- **`reakit` Popover** → `useState` + click-outside + Escape key (see FilterMenu.tsx or ControlPanel.tsx)
-- **`reakit` Menu/MenuButton/MenuItem** → Already handled by DropdownMenu wrapper
-- **`reakit` Dialog** → Already handled by ModalBase wrapper
-- **`reakit` Tooltip** → Already handled by Tooltip wrapper
+- **`reakit` Popover** → `useState` + click-outside + Escape key (see official-journal-web `Popover.tsx` or `ControlPanel.tsx`)
+- **`reakit` Menu/MenuButton/MenuItem** → Already handled by DropdownMenu wrapper in dmr-ui
+- **`reakit` Dialog** → Already handled by ModalBase wrapper in dmr-ui
+- **`reakit` Tooltip** → Already handled by Tooltip wrapper in dmr-ui, or rewrite inline (see official-journal-web `Tooltip.tsx`)
+- **`reakit` Tab/TabList/TabPanel** → Rewrite with native `<button role="tab">` + `<div role="tabpanel">` (see official-journal-web `Tabs.tsx`)
 
 ### 4. Run tsc to verify
 
@@ -131,7 +183,11 @@ grep -r "from '@island.is/island-ui/core/ModalBase" apps/<app-name>/
 yarn nx run <app-name>:tsc
 ```
 
+---
+
 ## File Reference
+
+### dmr-ui shared wrappers (used by all apps)
 
 | File | Purpose |
 |------|---------|
@@ -141,8 +197,27 @@ yarn nx run <app-name>:tsc
 | `libs/shared/dmr-ui/src/lib/island-is/lib/DropdownMenu.css.ts` | Dropdown styles |
 | `libs/shared/dmr-ui/src/lib/island-is/lib/ModalBase.tsx` | Custom native dialog modal |
 | `libs/shared/dmr-ui/src/lib/island-is/lib/ModalBase.css.ts` | Modal backdrop styles |
+
+### legal-gazette-web changes
+
+| File | Purpose |
+|------|---------|
 | `libs/shared/dmr-ui/src/lib/components/ControlPanel/ControlPanel.tsx` | Popover → useState |
 | `apps/legal-gazette-web/src/layout/Layout.tsx` | Removed reakit Provider |
 | `apps/legal-gazette-web/src/components/FilterMenu/FilterMenu.tsx` | Popover → useState |
 | `apps/legal-gazette-web/src/components/FilterMenu/FilterMenu.css.ts` | Added dropdown wrapper style |
 | `libs/shared/dmr-ui/src/lib/components/Header/Header.tsx` | Type import fix |
+
+### official-journal-web changes
+
+| File | Purpose |
+|------|---------|
+| `apps/official-journal-web/src/layout/Layout.tsx` | Removed reakit Provider |
+| `apps/official-journal-web/src/components/tooltips/Tooltip.tsx` | reakit → CSS tooltip |
+| `apps/official-journal-web/src/components/tooltips/Tooltip.css.ts` | Tooltip styles (hover/focus) |
+| `apps/official-journal-web/src/components/popover/Popover.tsx` | reakit → useState + click-outside |
+| `apps/official-journal-web/src/components/popover/Popover.css.ts` | Popover positioning styles |
+| `apps/official-journal-web/src/components/header/ControlPanel.tsx` | reakit → useState + click-outside |
+| `apps/official-journal-web/src/components/header/ControlPanel.css.ts` | Dropdown positioning fix |
+| `apps/official-journal-web/src/components/tabs/Tabs.tsx` | reakit → native ARIA tabs |
+| `apps/official-journal-web/src/components/tabs/Tabs.css.ts` | Button reset styles |

@@ -1,9 +1,6 @@
-// import { usePathname } from 'next/navigation'
-
 import { useSession } from 'next-auth/react'
 
-import { useState } from 'react'
-import { Popover, PopoverDisclosure, usePopoverState } from 'reakit'
+import { useEffect, useRef, useState } from 'react'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Icon } from '@dmr.is/ui/components/island-is/Icon'
@@ -15,15 +12,12 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { PagePaths } from '../../lib/constants'
 import * as styles from './ControlPanel.css'
+
 export const ControlPanel = () => {
   const { data } = useSession()
   const { formatMessage } = useFormatMessage()
   const [toggle, setToggle] = useState(false)
-  const popover = usePopoverState({
-    placement: 'bottom-start',
-    visible: toggle,
-    gutter: 0,
-  })
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const isAdmin = data?.user.role.slug === 'ritstjori'
 
@@ -36,12 +30,38 @@ export const ControlPanel = () => {
       })
     : []
 
+  useEffect(() => {
+    if (!toggle) return
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setToggle(false)
+      }
+    }
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setToggle(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [toggle])
+
   return (
-    <>
-      <PopoverDisclosure
-        {...popover}
+    <div ref={containerRef} style={{ position: 'relative' }}>
+      <button
         className={styles.controlPanel}
         onClick={() => setToggle((prev) => !prev)}
+        aria-expanded={toggle}
       >
         <Box width="full">
           <Inline justifyContent="spaceBetween">
@@ -74,8 +94,8 @@ export const ControlPanel = () => {
             )}
           </Inline>
         </Box>
-      </PopoverDisclosure>
-      <Popover {...popover}>
+      </button>
+      {toggle && (
         <Box
           className={styles.dropdownMenu}
           background="white"
@@ -93,7 +113,6 @@ export const ControlPanel = () => {
                   padding={2}
                   onClick={() => {
                     setToggle(false)
-                    popover.hide()
                   }}
                 >
                   <Inline justifyContent="spaceBetween">
@@ -118,7 +137,7 @@ export const ControlPanel = () => {
             ))}
           </Stack>
         </Box>
-      </Popover>
-    </>
+      )}
+    </div>
   )
 }

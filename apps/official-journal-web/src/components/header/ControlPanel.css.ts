@@ -54,9 +54,12 @@ export const controlPanelChevron = recipe({
 })
 
 export const dropdownMenu = style({
-  position: 'relative',
+  position: 'absolute',
+  top: '100%',
+  left: 0,
   overflow: 'hidden',
   width: 300,
   borderBottomLeftRadius: theme.border.radius.large,
   borderBottomRightRadius: theme.border.radius.large,
+  zIndex: 1,
 })

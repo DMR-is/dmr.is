@@ -2,7 +2,6 @@ import Head from 'next/head'
 
 import { ComponentProps } from 'react'
 import { IntlProvider } from 'react-intl'
-import { Provider } from 'reakit'
 import { SWRConfig } from 'swr'
 
 import { Footer } from '@dmr.is/ui/components/island-is/Footer'
@@ -73,7 +72,6 @@ export const Layout = ({
           suspense: false,
         }}
       >
-        <Provider>
           <PageLoader />
           <Page component="div">
             <Head>
@@ -175,7 +173,6 @@ export const Layout = ({
               }
             `}</style>
           </Page>
-        </Provider>
       </SWRConfig>
     </IntlProvider>
   )
