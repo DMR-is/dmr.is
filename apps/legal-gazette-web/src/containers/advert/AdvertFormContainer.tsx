@@ -76,10 +76,8 @@ export function AdvertFormContainer({ advertId }: AdvertContainerProps) {
             <AdvertBaseFields
               id={advert.id}
               canEdit={advert.canEdit}
-              types={entities?.types ?? []}
-              categories={categoriesForTypes?.categories ?? []}
-              typeId={advert.type.id}
-              categoryId={advert.category.id}
+              selectedTypeId={advert.type.id}
+              selectedCategoryId={advert.category.id}
               title={advert.title ?? ''}
               additionalText={advert.additionalText ?? ''}
             />
