@@ -48,6 +48,14 @@
         }
       }
     },
+    "bundle-analyze": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["yarn next experimental-analyze"],
+        "parallel": true,
+        "cwd": "apps/official-journal-web"
+      }
+    },
     "update-openapi-schema": {
       "executor": "nx:run-commands",
       "options": {
