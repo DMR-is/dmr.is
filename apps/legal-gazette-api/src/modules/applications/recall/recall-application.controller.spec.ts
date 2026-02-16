@@ -8,16 +8,13 @@ import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { OwnershipGuard } from '../../../core/guards/ownership.guard'
 import { RecallApplicationController } from './recall-application.controller'
 import { IRecallApplicationService } from './recall-application.service.interface'
-
 describe('RecallApplicationController - Ownership Validation (H-2)', () => {
   let controller: RecallApplicationController
   let service: jest.Mocked<IRecallApplicationService>
-
   // Test data
   const OWNER_NATIONAL_ID = '1234567890'
   const OTHER_USER_NATIONAL_ID = '0987654321'
   const APPLICATION_ID = 'test-app-id-123'
-
   const mockOwnerUser: DMRUser = {
     nationalId: OWNER_NATIONAL_ID,
     name: 'Owner User',
@@ -31,7 +28,6 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       scope: ['@logbirtingablad.is/lg-application-web'],
     },
   }
-
   const mockOtherUser: DMRUser = {
     nationalId: OTHER_USER_NATIONAL_ID,
     name: 'Other User',
@@ -45,11 +41,9 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       scope: ['@logbirtingablad.is/lg-application-web'],
     },
   }
-
   const mockMinDateResponse = {
     minDate: '2026-01-15T00:00:00.000Z',
   }
-
   beforeEach(async () => {
     const mockService: Partial<IRecallApplicationService> = {
       getMinDateForDivisionMeeting: jest
@@ -61,7 +55,6 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       addDivisionMeeting: jest.fn().mockResolvedValue(undefined),
       addDivisionEnding: jest.fn().mockResolvedValue(undefined),
     }
-
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RecallApplicationController],
       providers: [
@@ -78,7 +71,6 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       .overrideGuard(OwnershipGuard)
       .useValue({ canActivate: () => true })
       .compile()
-
     controller = module.get<RecallApplicationController>(
       RecallApplicationController,
     )
@@ -86,18 +78,15 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       IRecallApplicationService,
     ) as jest.Mocked<IRecallApplicationService>
   })
-
   describe('getMinDateForDivisionMeeting', () => {
     it('should call service method when OwnershipGuard passes', async () => {
       // Arrange
       service.getMinDateForDivisionMeeting.mockResolvedValue(
         mockMinDateResponse,
       )
-
       // Act
       const result =
         await controller.getMinDateForDivisionMeeting(APPLICATION_ID)
-
       // Assert
       expect(result).toEqual(mockMinDateResponse)
       expect(service.getMinDateForDivisionMeeting).toHaveBeenCalledWith(
@@ -105,7 +94,6 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       )
       expect(service.getMinDateForDivisionMeeting).toHaveBeenCalledTimes(1)
     })
-
     describe('OwnershipGuard behavior', () => {
       it('should have OwnershipGuard configured on method', () => {
         // Verify the guard decorator is applied by checking the guards metadata
@@ -119,16 +107,13 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       })
     })
   })
-
   describe('getMinDateForDivisionEnding', () => {
     it('should call service method when OwnershipGuard passes', async () => {
       // Arrange
       service.getMinDateForDivisionEnding.mockResolvedValue(mockMinDateResponse)
-
       // Act
       const result =
         await controller.getMinDateForDivisionEnding(APPLICATION_ID)
-
       // Assert
       expect(result).toEqual(mockMinDateResponse)
       expect(service.getMinDateForDivisionEnding).toHaveBeenCalledWith(
@@ -136,7 +121,6 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       )
       expect(service.getMinDateForDivisionEnding).toHaveBeenCalledTimes(1)
     })
-
     describe('OwnershipGuard behavior', () => {
       it('should have OwnershipGuard configured on method', () => {
         // Verify the guard decorator is applied by checking the guards metadata
@@ -150,7 +134,6 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       })
     })
   })
-
   describe('addDivisionMeeting', () => {
     const createMeetingDto = {
       meetingDate: '2026-01-15',
@@ -168,18 +151,15 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
         },
       ],
     }
-
     it('should allow owner to add division meeting for their own application', async () => {
       // Arrange
       service.addDivisionMeeting.mockResolvedValue(undefined)
-
       // Act
       await controller.addDivisionMeeting(
         APPLICATION_ID,
         createMeetingDto,
         mockOwnerUser,
       )
-
       // Assert
       expect(service.addDivisionMeeting).toHaveBeenCalledWith(
         APPLICATION_ID,
@@ -187,7 +167,6 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
         mockOwnerUser,
       )
     })
-
     it('should throw ForbiddenException when non-owner tries to add division meeting', async () => {
       // Arrange
       service.addDivisionMeeting.mockRejectedValue(
@@ -195,7 +174,6 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
           'You do not have permission to access this application',
         ),
       )
-
       // Act & Assert
       await expect(
         controller.addDivisionMeeting(
@@ -206,7 +184,6 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
       ).rejects.toThrow(ForbiddenException)
     })
   })
-
   describe('addDivisionEnding', () => {
     const createEndingDto = {
       declaredClaims: 123456,
@@ -224,18 +201,15 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
         },
       ],
     }
-
     it('should allow owner to add division ending for their own application', async () => {
       // Arrange
       service.addDivisionEnding.mockResolvedValue(undefined)
-
       // Act
       await controller.addDivisionEnding(
         APPLICATION_ID,
         createEndingDto,
         mockOwnerUser,
       )
-
       // Assert
       expect(service.addDivisionEnding).toHaveBeenCalledWith(
         APPLICATION_ID,
@@ -243,7 +217,6 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
         mockOwnerUser,
       )
     })
-
     it('should throw ForbiddenException when non-owner tries to add division ending', async () => {
       // Arrange
       service.addDivisionEnding.mockRejectedValue(
@@ -251,7 +224,6 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
           'You do not have permission to access this application',
         ),
       )
-
       // Act & Assert
       await expect(
         controller.addDivisionEnding(

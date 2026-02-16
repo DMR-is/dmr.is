@@ -10,18 +10,15 @@ import { LegalGazetteEvents } from '../../core/constants'
 import { SubscriberModel } from '../../models/subscriber.model'
 import { PgAdvisoryLockService } from '../advert/tasks/lock.service'
 import { SubscriberService } from './subscriber.service'
-
 // ==========================================
 // Mock Factories
 // ==========================================
-
 const createMockLogger = () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
   debug: jest.fn(),
 })
-
 const createMockUser = (overrides: Partial<DMRUser> = {}): DMRUser => ({
   nationalId: '0101801234',
   name: 'Test User',
@@ -31,7 +28,6 @@ const createMockUser = (overrides: Partial<DMRUser> = {}): DMRUser => ({
   authorization: 'Bearer test-token',
   ...overrides,
 })
-
 interface MockSubscriber {
   id: string
   nationalId: string
@@ -42,7 +38,6 @@ interface MockSubscriber {
   subscribedTo: Date | null
   fromModel: () => MockSubscriber
 }
-
 const createMockSubscriber = (
   overrides: Partial<MockSubscriber> = {},
 ): MockSubscriber => {
@@ -68,7 +63,6 @@ const createMockSubscriber = (
   })
   return subscriber
 }
-
 /**
  * Creates a mock lock service that executes the callback immediately.
  * Can be configured to simulate lock being held by another process.
@@ -76,19 +70,18 @@ const createMockSubscriber = (
 const createMockLockService = (lockHeld = false) => ({
   runWithUserLock: jest
     .fn()
-    .mockImplementation(async <T>(_userKey: string, fn: () => Promise<T>) => {
-      if (lockHeld) {
-        return { success: false, reason: 'lock_held' }
-      }
-      const result = await fn()
-      return { success: true, result }
-    }),
+    .mockImplementation(async<T>(_userKey, string, fn, () => Promise<T>)),
 })
-
+{
+  if (lockHeld) {
+    return { success: false, reason: 'lock_held' }
+  }
+  const result = await fn()
+  return { success: true, result }
+}
 // ==========================================
 // Test Suite
 // ==========================================
-
 describe('SubscriberService', () => {
   let service: SubscriberService
   let subscriberModel: {
@@ -99,24 +92,19 @@ describe('SubscriberService', () => {
   }
   let eventEmitter: jest.Mocked<EventEmitter2>
   let lockService: ReturnType<typeof createMockLockService>
-
   beforeEach(async () => {
     jest.clearAllMocks()
-
     const mockSubscriberModel = {
       findOne: jest.fn(),
       findOrCreate: jest.fn(),
       findOneOrThrow: jest.fn(),
       update: jest.fn(),
     }
-
     const mockEventEmitter = {
       emit: jest.fn(),
       emitAsync: jest.fn().mockResolvedValue([]),
     }
-
     lockService = createMockLockService()
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SubscriberService,
@@ -138,12 +126,10 @@ describe('SubscriberService', () => {
         },
       ],
     }).compile()
-
     service = module.get<SubscriberService>(SubscriberService)
     subscriberModel = module.get(getModelToken(SubscriberModel))
     eventEmitter = module.get(EventEmitter2)
   })
-
   // ==========================================
   // C-3: Race Condition - Duplicate Payment Prevention
   // ==========================================
@@ -158,17 +144,13 @@ describe('SubscriberService', () => {
           subscribedTo: futureDate,
         })
         subscriberModel.findOneOrThrow.mockResolvedValue(activeSubscriber)
-
         const user = createMockUser()
-
         // Act
         const result = await service.createSubscriptionForUser(user)
-
         // Assert: Should return success but NOT emit payment event
         expect(result).toEqual({ success: true })
         expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
       })
-
       it('should log that subscription is already active', async () => {
         // Arrange
         const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
@@ -177,7 +159,6 @@ describe('SubscriberService', () => {
           subscribedTo: futureDate,
         })
         subscriberModel.findOneOrThrow.mockResolvedValue(activeSubscriber)
-
         const logger = {
           info: jest.fn(),
           warn: jest.fn(),
@@ -199,13 +180,10 @@ describe('SubscriberService', () => {
             },
           ],
         }).compile()
-
         const serviceWithLogger =
           module.get<SubscriberService>(SubscriberService)
-
         // Act
         await serviceWithLogger.createSubscriptionForUser(createMockUser())
-
         // Assert: Should log that subscription is already active
         expect(logger.info).toHaveBeenCalledWith(
           expect.stringContaining('already active'),
@@ -213,7 +191,6 @@ describe('SubscriberService', () => {
         )
       })
     })
-
     describe('when subscription is expired', () => {
       it('should allow renewal and emit payment event', async () => {
         // Arrange: Subscriber with expired subscription
@@ -224,12 +201,9 @@ describe('SubscriberService', () => {
           subscribedTo: pastDate,
         })
         subscriberModel.findOneOrThrow.mockResolvedValue(expiredSubscriber)
-
         const user = createMockUser()
-
         // Act
         const result = await service.createSubscriptionForUser(user)
-
         // Assert: Should emit payment event for renewal
         expect(result).toEqual({ success: true })
         expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
@@ -241,7 +215,6 @@ describe('SubscriberService', () => {
         )
       })
     })
-
     describe('when subscriber is inactive', () => {
       it('should emit payment event for new subscription', async () => {
         // Arrange: Inactive subscriber
@@ -251,12 +224,9 @@ describe('SubscriberService', () => {
           subscribedTo: null,
         })
         subscriberModel.findOneOrThrow.mockResolvedValue(inactiveSubscriber)
-
         const user = createMockUser()
-
         // Act
         const result = await service.createSubscriptionForUser(user)
-
         // Assert: Should emit payment event
         expect(result).toEqual({ success: true })
         expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
@@ -267,7 +237,6 @@ describe('SubscriberService', () => {
         )
       })
     })
-
     describe('when subscriber does not exist', () => {
       it('should throw NotFoundException', async () => {
         // Arrange
@@ -276,9 +245,7 @@ describe('SubscriberService', () => {
             'Subscriber not found when creating subscription',
           ),
         )
-
         const user = createMockUser()
-
         // Act & Assert
         await expect(service.createSubscriptionForUser(user)).rejects.toThrow(
           NotFoundException,
@@ -286,7 +253,6 @@ describe('SubscriberService', () => {
         expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
       })
     })
-
     describe('idempotency for rapid duplicate requests', () => {
       it('should be idempotent when called twice with same user and active subscription', async () => {
         // Arrange: Active subscriber
@@ -296,20 +262,16 @@ describe('SubscriberService', () => {
           subscribedTo: futureDate,
         })
         subscriberModel.findOneOrThrow.mockResolvedValue(activeSubscriber)
-
         const user = createMockUser()
-
         // Act: Call twice (simulating double-click)
         const result1 = await service.createSubscriptionForUser(user)
         const result2 = await service.createSubscriptionForUser(user)
-
         // Assert: Both should succeed, but no payment events emitted
         expect(result1).toEqual({ success: true })
         expect(result2).toEqual({ success: true })
         expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
       })
     })
-
     describe('edge cases', () => {
       it('should treat subscription expiring today as expired', async () => {
         // Arrange: Subscription expires exactly now
@@ -319,16 +281,12 @@ describe('SubscriberService', () => {
           subscribedTo: new Date(now.getTime() - 1000), // 1 second ago
         })
         subscriberModel.findOneOrThrow.mockResolvedValue(subscriber)
-
         const user = createMockUser()
-
         // Act
         await service.createSubscriptionForUser(user)
-
         // Assert: Should emit payment event since subscription just expired
         expect(eventEmitter.emitAsync).toHaveBeenCalled()
       })
-
       it('should handle subscriber with isActive=false but future subscribedTo date', async () => {
         // Arrange: Edge case - marked inactive but has future date (data inconsistency)
         const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
@@ -337,31 +295,24 @@ describe('SubscriberService', () => {
           subscribedTo: futureDate,
         })
         subscriberModel.findOneOrThrow.mockResolvedValue(subscriber)
-
         const user = createMockUser()
-
         // Act
         await service.createSubscriptionForUser(user)
-
         // Assert: Should treat as needing subscription since isActive=false
         expect(eventEmitter.emitAsync).toHaveBeenCalled()
       })
     })
-
     describe('delegation support', () => {
       it('should use actor nationalId when present (delegation)', async () => {
         // Arrange
         const inactiveSubscriber = createMockSubscriber({ isActive: false })
         subscriberModel.findOneOrThrow.mockResolvedValue(inactiveSubscriber)
-
         const user = createMockUser({
           nationalId: '0101801234',
           actor: { nationalId: '9999999999', name: 'Actor Name', scope: [] },
         })
-
         // Act
         await service.createSubscriptionForUser(user)
-
         // Assert: Should use actor's nationalId
         expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
           LegalGazetteEvents.SUBSCRIBER_CREATED,
@@ -371,46 +322,36 @@ describe('SubscriberService', () => {
         )
       })
     })
-
     describe('distributed locking', () => {
       it('should acquire lock with user nationalId', async () => {
         // Arrange
         const inactiveSubscriber = createMockSubscriber({ isActive: false })
         subscriberModel.findOneOrThrow.mockResolvedValue(inactiveSubscriber)
-
         const user = createMockUser({ nationalId: '1234567890' })
-
         // Act
         await service.createSubscriptionForUser(user)
-
         // Assert: Lock should be acquired with the user's nationalId
         expect(lockService.runWithUserLock).toHaveBeenCalledWith(
           '1234567890',
           expect.any(Function),
         )
       })
-
       it('should return success when lock is held by another request', async () => {
         // Arrange: Configure lock service to simulate lock being held
         lockService.runWithUserLock.mockResolvedValue({
           success: false,
           reason: 'lock_held',
         })
-
         const user = createMockUser()
-
         // Act
         const result = await service.createSubscriptionForUser(user)
-
         // Assert: Should return success (idempotent) without emitting event
         expect(result).toEqual({ success: true })
         expect(eventEmitter.emitAsync).not.toHaveBeenCalled()
       })
-
       it('should not emit payment event when concurrent request is blocked', async () => {
         // Arrange: First call succeeds, second is blocked
         const inactiveSubscriber = createMockSubscriber({ isActive: false })
-
         // First call - lock acquired, emits event
         lockService.runWithUserLock
           .mockImplementationOnce(async (_key, fn) => {
@@ -420,13 +361,10 @@ describe('SubscriberService', () => {
           })
           // Second call - lock held
           .mockResolvedValueOnce({ success: false, reason: 'lock_held' })
-
         const user = createMockUser()
-
         // Act
         const result1 = await service.createSubscriptionForUser(user)
         const result2 = await service.createSubscriptionForUser(user)
-
         // Assert: Both return success, but only one event emitted
         expect(result1).toEqual({ success: true })
         expect(result2).toEqual({ success: true })

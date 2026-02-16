@@ -2,7 +2,7 @@ const { composePlugins, withNx } = require('@nx/next')
 const { createVanillaExtractPlugin } = require('@vanilla-extract/next-plugin')
 const withVanillaExtract = createVanillaExtractPlugin({
   identifiers: 'short',
-  turbopackMode: process.env.NODE_ENV === 'production' ? 'on' : 'off',
+  turbopackMode: 'on',
 })
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 
@@ -12,8 +12,8 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 const nextConfig = {
   output: 'standalone',
   transpilePackages: [
-    '@@island.is/island-ui/core/*',
-    '@@island.is/island-ui/core',
+    // '@@island.is/island-ui/core/*',
+    // '@@island.is/island-ui/core',
     '@island.is/island-ui/core/hooks',
     '@island.is/island-ui/core/utils',
     '@island.is/island-ui/core/globalCss',
@@ -23,7 +23,6 @@ const nextConfig = {
     '@island.is/shared/utils',
     '@island.is/island-ui/vanilla-extract-utils',
     '@dmr.is/ui/components/island-is',
-    '@dmr.is/ui/components',
     '@island.is/island-ui/core/Box/useBoxStyles',
   ],
   turbopack: {
@@ -53,7 +52,7 @@ const nextConfig = {
     NEXTAUTH_URL:
       process.env.NODE_ENV !== 'production'
         ? `${process.env.LG_WEB_URL}/api/auth`
-        : (process.env.NEXTAUTH_URL || null),
+        : process.env.NEXTAUTH_URL || null,
   },
 }
 

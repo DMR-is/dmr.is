@@ -11,7 +11,6 @@ import { CompanyController } from './company/company.controller'
 import { ICompanyService } from './company/company.service.interface'
 import { ForeclosureController } from './foreclosure/foreclosure.controller'
 import { IForeclosureService } from './foreclosure/foreclosure.service.interface'
-
 /**
  * Unit tests for Rate Limiting Configuration (H-3)
  *
@@ -40,11 +39,9 @@ describe('Rate Limiting Configuration (H-3)', () => {
           ]),
         ],
       }).compile()
-
       // Assert: Module compiles successfully
       expect(module).toBeDefined()
     })
-
     it('should successfully import ThrottlerModule with long-term rate limit (100/hour)', async () => {
       const module: TestingModule = await Test.createTestingModule({
         imports: [
@@ -57,10 +54,8 @@ describe('Rate Limiting Configuration (H-3)', () => {
           ]),
         ],
       }).compile()
-
       expect(module).toBeDefined()
     })
-
     it('should support multiple throttle windows simultaneously', async () => {
       const module: TestingModule = await Test.createTestingModule({
         imports: [
@@ -78,21 +73,17 @@ describe('Rate Limiting Configuration (H-3)', () => {
           ]),
         ],
       }).compile()
-
       // Assert: Module with multiple windows compiles successfully
       expect(module).toBeDefined()
     })
   })
-
   describe('Foreclosure Controller', () => {
     let controller: ForeclosureController
-
     const mockForeclosureService: Partial<IForeclosureService> = {
       getForeclosureById: jest.fn().mockResolvedValue({}),
       createForeclosureSale: jest.fn().mockResolvedValue({}),
       deleteForclosureSale: jest.fn().mockResolvedValue(undefined),
     }
-
     beforeEach(async () => {
       const module: TestingModule = await Test.createTestingModule({
         controllers: [ForeclosureController],
@@ -108,58 +99,51 @@ describe('Rate Limiting Configuration (H-3)', () => {
         .overrideGuard(ThrottlerGuard)
         .useValue({ canActivate: () => true })
         .compile()
-
       controller = module.get<ForeclosureController>(ForeclosureController)
     })
-
     it('should exist', () => {
       expect(controller).toBeDefined()
     })
-
     it('should have @UseGuards(ThrottlerGuard) decorator on controller class', () => {
       // This test will FAIL initially because ThrottlerGuard is not applied
       // We check for the guard metadata that NestJS sets
       const guards =
         Reflect.getMetadata('__guards__', ForeclosureController) || []
-
       // Assert: Should include ThrottlerGuard (currently fails)
       const hasThrottlerGuard = guards.some(
-        (guard: { name?: string; constructor?: { name?: string } }) =>
+        (guard: {
+          name?: string
+          constructor?: {
+            name?: string
+          }
+        }) =>
           guard.name === 'ThrottlerGuard' ||
           guard.constructor?.name === 'ThrottlerGuard',
       )
-
       expect(hasThrottlerGuard).toBe(true)
     })
-
     it('should have throttle configuration specified', () => {
       // Check if @Throttle decorator is applied
       // The @Throttle decorator stores metadata that ThrottlerGuard reads
       // We verify that the guard is present (which we already checked above)
       // and that the controller is properly decorated
-
       // Since we verified ThrottlerGuard is applied, and the controller compiles,
       // the rate limiting is properly configured
       expect(controller).toBeDefined()
-
       // The actual throttle behavior would be tested in integration tests
       // where we make actual HTTP requests and verify 429 responses
     })
   })
-
   describe('Company Controller', () => {
     let controller: CompanyController
-
     const mockCompanyService: Partial<ICompanyService> = {
       registerCompanyHlutafelag: jest.fn().mockResolvedValue({}),
       registerCompanyFirmaskra: jest.fn().mockResolvedValue({}),
       createAdditionalAnnouncements: jest.fn().mockResolvedValue({}),
     }
-
     const mockAdvertService: Partial<IAdvertService> = {
       getAdvertsByExternalId: jest.fn().mockResolvedValue([]),
     }
-
     beforeEach(async () => {
       const module: TestingModule = await Test.createTestingModule({
         controllers: [CompanyController],
@@ -176,47 +160,42 @@ describe('Rate Limiting Configuration (H-3)', () => {
         .overrideGuard(ThrottlerGuard)
         .useValue({ canActivate: () => true })
         .compile()
-
       controller = module.get<CompanyController>(CompanyController)
     })
-
     it('should exist', () => {
       expect(controller).toBeDefined()
     })
-
     it('should have @UseGuards(ThrottlerGuard) decorator on controller class', () => {
       // This test will FAIL initially because ThrottlerGuard is not applied
       const guards = Reflect.getMetadata('__guards__', CompanyController) || []
-
       const hasThrottlerGuard = guards.some(
-        (guard: { name?: string; constructor?: { name?: string } }) =>
+        (guard: {
+          name?: string
+          constructor?: {
+            name?: string
+          }
+        }) =>
           guard.name === 'ThrottlerGuard' ||
           guard.constructor?.name === 'ThrottlerGuard',
       )
-
       expect(hasThrottlerGuard).toBe(true)
     })
-
     it('should have throttle configuration specified', () => {
       // Check if @Throttle decorator is applied
       // The @Throttle decorator stores metadata that ThrottlerGuard reads
       // We verify that the guard is present (which we already checked above)
       // and that the controller is properly decorated
-
       // Since we verified ThrottlerGuard is applied, and the controller compiles,
       // the rate limiting is properly configured
       expect(controller).toBeDefined()
-
       // The actual throttle behavior would be tested in integration tests
       // where we make actual HTTP requests and verify 429 responses
     })
   })
-
   describe('Rate limiting behavior', () => {
     let app: INestApplication
     let foreclosureController: ForeclosureController
     let companyController: CompanyController
-
     beforeEach(async () => {
       // Create a test module with real ThrottlerModule and controllers
       const moduleRef = await Test.createTestingModule({
@@ -267,29 +246,23 @@ describe('Rate Limiting Configuration (H-3)', () => {
         .overrideGuard(MachineClientGuard)
         .useValue({ canActivate: () => true })
         .compile()
-
       app = moduleRef.createNestApplication()
       await app.init()
-
       foreclosureController = moduleRef.get<ForeclosureController>(
         ForeclosureController,
       )
       companyController = moduleRef.get<CompanyController>(CompanyController)
     })
-
     afterEach(async () => {
       await app?.close()
     })
-
     it('should reject requests when rate limit exceeded', async () => {
       // ThrottlerGuard uses client IP to track rate limits
       // In tests, we can verify the guard is configured correctly
       // and rely on @nestjs/throttler's tested behavior
-
       // Verify controllers are properly initialized with throttling
       expect(foreclosureController).toBeDefined()
       expect(companyController).toBeDefined()
-
       // Expected integration test behavior (documented):
       // 1. Make 10 requests within 1 minute → all succeed (200)
       // 2. Make 11th request within same minute → returns 429
@@ -304,22 +277,18 @@ describe('Rate Limiting Configuration (H-3)', () => {
       //   else expect(response.status).toBe(429)
       // }
     })
-
     it('should include rate limit headers in responses', () => {
       // @nestjs/throttler automatically adds these headers:
       // - X-RateLimit-Limit: Maximum requests allowed
       // - X-RateLimit-Remaining: Requests remaining in current window
       // - X-RateLimit-Reset: Time when limit resets (Unix timestamp)
       // - Retry-After: Seconds to wait before retrying (on 429 responses)
-
       // These headers are added by the ThrottlerGuard
       // In integration tests, we would verify headers are present
       // by making actual HTTP requests and inspecting response headers
-
       expect(foreclosureController).toBeDefined()
       expect(companyController).toBeDefined()
     })
-
     it('should track rate limits per client IP or API key', () => {
       // ThrottlerGuard tracks rate limits using a storage mechanism
       // Default is in-memory, but can use Redis for distributed systems
@@ -333,22 +302,18 @@ describe('Rate Limiting Configuration (H-3)', () => {
       //
       // In our case, we use default IP-based tracking
       // Machine clients are identified by their IP address
-
       expect(foreclosureController).toBeDefined()
       expect(companyController).toBeDefined()
     })
   })
-
   describe('Documentation and Open Questions', () => {
     it('should document rate limit values in API documentation', () => {
       // Rate limits should be clearly documented in:
       // - OpenAPI/Swagger docs
       // - README or API usage guide
       // - Error messages when limit is exceeded
-
       expect(true).toBe(true) // Placeholder
     })
-
     it('should answer: What rate limits are appropriate?', () => {
       // OPEN QUESTION from plan:
       // "What rate limits are appropriate? 10/min? 100/hour?"
@@ -361,7 +326,6 @@ describe('Rate Limiting Configuration (H-3)', () => {
       // - Normal usage patterns from machine clients
       // - Server capacity and performance
       // - Business requirements
-
       expect(true).toBe(true) // Placeholder
     })
   })

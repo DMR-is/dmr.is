@@ -8,35 +8,29 @@ import { ForeclosurePropertyModel } from '../../../models/foreclosure-property.m
 import { StatusIdEnum } from '../../../models/status.model'
 import { IAdvertService } from '../../advert/advert.service.interface'
 import { ForeclosureService } from './foreclosure.service'
-
 describe('ForeclosureService - HTML Escaping', () => {
   let service: ForeclosureService
   let advertService: jest.Mocked<IAdvertService>
   let foreclosureModel: typeof ForeclosureModel
   let foreclosurePropertyModel: typeof ForeclosurePropertyModel
-
   const mockLogger = {
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
     debug: jest.fn(),
   }
-
   const mockAdvertService = {
     createAdvert: jest.fn(),
     markAdvertAsWithdrawn: jest.fn(),
   }
-
   const mockForeclosureModel = {
     create: jest.fn(),
     findByPkOrThrow: jest.fn(),
   }
-
   const mockForeclosurePropertyModel = {
     create: jest.fn(),
     destroy: jest.fn(),
   }
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -59,20 +53,18 @@ describe('ForeclosureService - HTML Escaping', () => {
         },
       ],
     }).compile()
-
     service = module.get<ForeclosureService>(ForeclosureService)
     advertService = module.get(IAdvertService)
     foreclosureModel = module.get(getModelToken(ForeclosureModel))
-    foreclosurePropertyModel = module.get(getModelToken(ForeclosurePropertyModel))
-
+    foreclosurePropertyModel = module.get(
+      getModelToken(ForeclosurePropertyModel),
+    )
     // Reset mocks
     jest.clearAllMocks()
   })
-
   describe('createForeclosureSale - HTML Escaping', () => {
     const mockAdvertId = 'advert-123'
     const mockForeclosureId = 'foreclosure-456'
-
     beforeEach(() => {
       advertService.createAdvert.mockResolvedValue({ id: mockAdvertId } as any)
       mockForeclosureModel.create.mockResolvedValue({
@@ -86,7 +78,6 @@ describe('ForeclosureService - HTML Escaping', () => {
         }),
       } as any)
     })
-
     it('should escape HTML in foreclosureRegion field', async () => {
       // Arrange
       const maliciousRegion = '<script>alert("XSS")</script>'
@@ -107,10 +98,8 @@ describe('ForeclosureService - HTML Escaping', () => {
         },
         properties: [],
       }
-
       // Act
       await service.createForeclosureSale(input as any)
-
       // Assert - title should have escaped HTML
       expect(advertService.createAdvert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -123,7 +112,6 @@ describe('ForeclosureService - HTML Escaping', () => {
         }),
       )
     })
-
     it('should escape HTML in foreclosureAddress field', async () => {
       // Arrange
       const maliciousAddress = 'Main St <img src=x onerror=alert("XSS")>'
@@ -144,10 +132,8 @@ describe('ForeclosureService - HTML Escaping', () => {
         },
         properties: [],
       }
-
       // Act
       await service.createForeclosureSale(input as any)
-
       // Assert - foreclosureAddress should be escaped when stored
       expect(mockForeclosureModel.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -156,7 +142,6 @@ describe('ForeclosureService - HTML Escaping', () => {
         expect.any(Object),
       )
     })
-
     it('should escape HTML in responsibleParty.name field', async () => {
       // Arrange
       const maliciousName = 'Evil Corp <script>document.cookie</script>'
@@ -177,10 +162,8 @@ describe('ForeclosureService - HTML Escaping', () => {
         },
         properties: [],
       }
-
       // Act
       await service.createForeclosureSale(input as any)
-
       // Assert - createdBy should have escaped HTML
       expect(advertService.createAdvert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -188,7 +171,6 @@ describe('ForeclosureService - HTML Escaping', () => {
         }),
       )
     })
-
     it('should escape HTML in signature.name field', async () => {
       // Arrange
       const maliciousSignatureName = 'John Doe <b>CEO</b>'
@@ -209,10 +191,8 @@ describe('ForeclosureService - HTML Escaping', () => {
         },
         properties: [],
       }
-
       // Act
       await service.createForeclosureSale(input as any)
-
       // Assert - signature.name should have escaped HTML
       expect(advertService.createAdvert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -222,7 +202,6 @@ describe('ForeclosureService - HTML Escaping', () => {
         }),
       )
     })
-
     it('should escape HTML in signature.onBehalfOf field', async () => {
       // Arrange
       const maliciousOnBehalfOf = 'Company & Sons <i>Ltd.</i>'
@@ -243,10 +222,8 @@ describe('ForeclosureService - HTML Escaping', () => {
         },
         properties: [],
       }
-
       // Act
       await service.createForeclosureSale(input as any)
-
       // Assert - signature.onBehalfOf should have escaped HTML and ampersand
       expect(advertService.createAdvert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -263,7 +240,6 @@ describe('ForeclosureService - HTML Escaping', () => {
         }),
       )
     })
-
     it('should escape HTML in property fields (propertyName, claimant, respondent)', async () => {
       // Arrange
       const input = {
@@ -291,10 +267,8 @@ describe('ForeclosureService - HTML Escaping', () => {
           },
         ],
       }
-
       // Act
       await service.createForeclosureSale(input as any)
-
       // Assert - property fields should have escaped HTML
       expect(mockForeclosureModel.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -309,7 +283,6 @@ describe('ForeclosureService - HTML Escaping', () => {
         expect.any(Object),
       )
     })
-
     it('should preserve legitimate text content while escaping HTML', async () => {
       // Arrange - legitimate data that contains special characters
       const input = {
@@ -329,10 +302,8 @@ describe('ForeclosureService - HTML Escaping', () => {
         },
         properties: [],
       }
-
       // Act
       await service.createForeclosureSale(input as any)
-
       // Assert - special characters should be escaped but text preserved
       expect(advertService.createAdvert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -345,11 +316,9 @@ describe('ForeclosureService - HTML Escaping', () => {
       )
     })
   })
-
   describe('createForeclosureProperty - HTML Escaping', () => {
     const mockPropertyId = 'property-789'
     const mockForeclosureId = 'foreclosure-456'
-
     beforeEach(() => {
       // Mock foreclosure with editable advert status
       mockForeclosureModel.findByPkOrThrow = jest.fn().mockResolvedValue({
@@ -359,7 +328,6 @@ describe('ForeclosureService - HTML Escaping', () => {
           statusId: StatusIdEnum.SUBMITTED,
         },
       } as any)
-
       mockForeclosurePropertyModel.create = jest.fn().mockResolvedValue({
         id: mockPropertyId,
         reload: jest.fn().mockResolvedValue(undefined),
@@ -368,7 +336,6 @@ describe('ForeclosureService - HTML Escaping', () => {
         }),
       } as any)
     })
-
     it('should escape HTML in all property fields when creating a new property', async () => {
       // Arrange
       const input = {
@@ -378,10 +345,8 @@ describe('ForeclosureService - HTML Escaping', () => {
         claimant: 'Bank & Trust <b>Corporation</b>',
         respondent: 'Debtor <img src=x onerror=alert("XSS")>',
       }
-
       // Act
       await service.createForeclosureProperty(mockForeclosureId, input)
-
       // Assert
       expect(mockForeclosurePropertyModel.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -394,35 +359,29 @@ describe('ForeclosureService - HTML Escaping', () => {
     })
   })
 })
-
 describe('ForeclosureService - Status Protection', () => {
   let service: ForeclosureService
   let foreclosureModel: jest.Mocked<typeof ForeclosureModel>
   let foreclosurePropertyModel: jest.Mocked<typeof ForeclosurePropertyModel>
-
   const mockLogger = {
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
     debug: jest.fn(),
   }
-
   const mockAdvertService = {
     createAdvert: jest.fn(),
     markAdvertAsWithdrawn: jest.fn(),
   }
-
   beforeEach(async () => {
     const mockForeclosureModel = {
       findByPkOrThrow: jest.fn(),
     }
-
     const mockForeclosurePropertyModel = {
       create: jest.fn(),
       findOneOrThrow: jest.fn(),
       destroy: jest.fn(),
     }
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ForeclosureService,
@@ -444,14 +403,12 @@ describe('ForeclosureService - Status Protection', () => {
         },
       ],
     }).compile()
-
     service = module.get<ForeclosureService>(ForeclosureService)
     foreclosureModel = module.get(getModelToken(ForeclosureModel))
     foreclosurePropertyModel = module.get(
       getModelToken(ForeclosurePropertyModel),
     )
   })
-
   describe('createForeclosureProperty', () => {
     const createDto = {
       propertyName: 'Test Property',
@@ -460,13 +417,11 @@ describe('ForeclosureService - Status Protection', () => {
       claimant: 'Test Claimant',
       respondent: 'Test Respondent',
     }
-
     const createMockForeclosure = (statusId: string) => ({
       id: 'foreclosure-123',
       advertId: 'advert-123',
       advert: { id: 'advert-123', statusId },
     })
-
     const createMockProperty = () => ({
       id: 'property-123',
       foreclosureId: 'foreclosure-123',
@@ -477,102 +432,67 @@ describe('ForeclosureService - Status Protection', () => {
         propertyName: 'Test Property',
       }),
     })
-
     it('should allow property creation when advert is SUBMITTED', async () => {
       const foreclosure = createMockForeclosure(
         'cd3bf301-52a1-493e-8c80-a391c310c840',
       )
       const property = createMockProperty()
-
-      foreclosureModel.findByPkOrThrow.mockResolvedValue(
-        foreclosure as any,
-      )
+      foreclosureModel.findByPkOrThrow.mockResolvedValue(foreclosure as any)
       foreclosurePropertyModel.create.mockResolvedValue(property as any)
-
       await expect(
         service.createForeclosureProperty('foreclosure-123', createDto),
       ).resolves.not.toThrow()
-
       expect(foreclosurePropertyModel.create).toHaveBeenCalled()
     })
-
     it('should allow property creation when advert is IN_PROGRESS', async () => {
       const foreclosure = createMockForeclosure(
         '7ef679c4-4f66-4892-b6ad-ee05e0be4359',
       )
       const property = createMockProperty()
-
-      foreclosureModel.findByPkOrThrow.mockResolvedValue(
-        foreclosure as any,
-      )
+      foreclosureModel.findByPkOrThrow.mockResolvedValue(foreclosure as any)
       foreclosurePropertyModel.create.mockResolvedValue(property as any)
-
       await expect(
         service.createForeclosureProperty('foreclosure-123', createDto),
       ).resolves.not.toThrow()
     })
-
     it('should throw BadRequestException when advert is PUBLISHED', async () => {
       const foreclosure = createMockForeclosure(
         'bd835a1d-0ecb-4aa4-9910-b5e60c30dced',
       )
-
-      foreclosureModel.findByPkOrThrow.mockResolvedValue(
-        foreclosure as any,
-      )
-
+      foreclosureModel.findByPkOrThrow.mockResolvedValue(foreclosure as any)
       await expect(
         service.createForeclosureProperty('foreclosure-123', createDto),
       ).rejects.toThrow('Cannot modify foreclosure property')
-
       expect(foreclosurePropertyModel.create).not.toHaveBeenCalled()
     })
-
     it('should throw BadRequestException when advert is REJECTED', async () => {
       const foreclosure = createMockForeclosure(
         'f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
       )
-
-      foreclosureModel.findByPkOrThrow.mockResolvedValue(
-        foreclosure as any,
-      )
-
+      foreclosureModel.findByPkOrThrow.mockResolvedValue(foreclosure as any)
       await expect(
         service.createForeclosureProperty('foreclosure-123', createDto),
       ).rejects.toThrow('Cannot modify foreclosure property')
-
       expect(foreclosurePropertyModel.create).not.toHaveBeenCalled()
     })
-
     it('should throw BadRequestException when advert is WITHDRAWN', async () => {
       const foreclosure = createMockForeclosure(
         'e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
       )
-
-      foreclosureModel.findByPkOrThrow.mockResolvedValue(
-        foreclosure as any,
-      )
-
+      foreclosureModel.findByPkOrThrow.mockResolvedValue(foreclosure as any)
       await expect(
         service.createForeclosureProperty('foreclosure-123', createDto),
       ).rejects.toThrow('Cannot modify foreclosure property')
-
       expect(foreclosurePropertyModel.create).not.toHaveBeenCalled()
     })
-
     it('should fetch foreclosure with advert and statusId before creation', async () => {
       const foreclosure = createMockForeclosure(
         'cd3bf301-52a1-493e-8c80-a391c310c840',
       )
       const property = createMockProperty()
-
-      foreclosureModel.findByPkOrThrow.mockResolvedValue(
-        foreclosure as any,
-      )
+      foreclosureModel.findByPkOrThrow.mockResolvedValue(foreclosure as any)
       foreclosurePropertyModel.create.mockResolvedValue(property as any)
-
       await service.createForeclosureProperty('foreclosure-123', createDto)
-
       expect(foreclosureModel.findByPkOrThrow).toHaveBeenCalledWith(
         'foreclosure-123',
         expect.objectContaining({
@@ -585,124 +505,80 @@ describe('ForeclosureService - Status Protection', () => {
       )
     })
   })
-
   describe('deletePropertyFromForeclosure', () => {
     const createMockForeclosure = (statusId: string) => ({
       id: 'foreclosure-123',
       advertId: 'advert-123',
       advert: { id: 'advert-123', statusId },
     })
-
     const createMockProperty = () => ({
       id: 'property-123',
       foreclosureId: 'foreclosure-123',
       propertyNumber: '123',
       destroy: jest.fn(),
     })
-
     it('should allow property deletion when advert is SUBMITTED', async () => {
       const foreclosure = createMockForeclosure(
         'cd3bf301-52a1-493e-8c80-a391c310c840',
       )
       const property = createMockProperty()
-
-      foreclosureModel.findByPkOrThrow.mockResolvedValue(
-        foreclosure as any,
-      )
-      foreclosurePropertyModel.findOneOrThrow.mockResolvedValue(
-        property as any,
-      )
-
+      foreclosureModel.findByPkOrThrow.mockResolvedValue(foreclosure as any)
+      foreclosurePropertyModel.findOneOrThrow.mockResolvedValue(property as any)
       await expect(
         service.deletePropertyFromForeclosure('foreclosure-123', '123'),
       ).resolves.not.toThrow()
-
       expect(property.destroy).toHaveBeenCalledWith({ force: true })
     })
-
     it('should allow property deletion when advert is IN_PROGRESS', async () => {
       const foreclosure = createMockForeclosure(
         '7ef679c4-4f66-4892-b6ad-ee05e0be4359',
       )
       const property = createMockProperty()
-
-      foreclosureModel.findByPkOrThrow.mockResolvedValue(
-        foreclosure as any,
-      )
-      foreclosurePropertyModel.findOneOrThrow.mockResolvedValue(
-        property as any,
-      )
-
+      foreclosureModel.findByPkOrThrow.mockResolvedValue(foreclosure as any)
+      foreclosurePropertyModel.findOneOrThrow.mockResolvedValue(property as any)
       await expect(
         service.deletePropertyFromForeclosure('foreclosure-123', '123'),
       ).resolves.not.toThrow()
-
       expect(property.destroy).toHaveBeenCalled()
     })
-
     it('should throw BadRequestException when advert is PUBLISHED', async () => {
       const foreclosure = createMockForeclosure(
         'bd835a1d-0ecb-4aa4-9910-b5e60c30dced',
       )
-
-      foreclosureModel.findByPkOrThrow.mockResolvedValue(
-        foreclosure as any,
-      )
-
+      foreclosureModel.findByPkOrThrow.mockResolvedValue(foreclosure as any)
       await expect(
         service.deletePropertyFromForeclosure('foreclosure-123', '123'),
       ).rejects.toThrow('Cannot modify foreclosure property')
-
       expect(foreclosurePropertyModel.findOneOrThrow).not.toHaveBeenCalled()
     })
-
     it('should throw BadRequestException when advert is REJECTED', async () => {
       const foreclosure = createMockForeclosure(
         'f3a0b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
       )
-
-      foreclosureModel.findByPkOrThrow.mockResolvedValue(
-        foreclosure as any,
-      )
-
+      foreclosureModel.findByPkOrThrow.mockResolvedValue(foreclosure as any)
       await expect(
         service.deletePropertyFromForeclosure('foreclosure-123', '123'),
       ).rejects.toThrow('Cannot modify foreclosure property')
-
       expect(foreclosurePropertyModel.findOneOrThrow).not.toHaveBeenCalled()
     })
-
     it('should throw BadRequestException when advert is WITHDRAWN', async () => {
       const foreclosure = createMockForeclosure(
         'e2f3b1c4-2d5e-4a7b-8c6f-9d1e0f3a2b8c',
       )
-
-      foreclosureModel.findByPkOrThrow.mockResolvedValue(
-        foreclosure as any,
-      )
-
+      foreclosureModel.findByPkOrThrow.mockResolvedValue(foreclosure as any)
       await expect(
         service.deletePropertyFromForeclosure('foreclosure-123', '123'),
       ).rejects.toThrow('Cannot modify foreclosure property')
-
       expect(foreclosurePropertyModel.findOneOrThrow).not.toHaveBeenCalled()
     })
-
     it('should fetch foreclosure with advert and statusId before deletion', async () => {
       const foreclosure = createMockForeclosure(
         'cd3bf301-52a1-493e-8c80-a391c310c840',
       )
       const property = createMockProperty()
-
-      foreclosureModel.findByPkOrThrow.mockResolvedValue(
-        foreclosure as any,
-      )
-      foreclosurePropertyModel.findOneOrThrow.mockResolvedValue(
-        property as any,
-      )
-
+      foreclosureModel.findByPkOrThrow.mockResolvedValue(foreclosure as any)
+      foreclosurePropertyModel.findOneOrThrow.mockResolvedValue(property as any)
       await service.deletePropertyFromForeclosure('foreclosure-123', '123')
-
       expect(foreclosureModel.findByPkOrThrow).toHaveBeenCalledWith(
         'foreclosure-123',
         expect.objectContaining({

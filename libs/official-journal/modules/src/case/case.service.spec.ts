@@ -1,14 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Sequelize } from 'sequelize-typescript'
-
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
-
 import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { PostApplicationBody } from '@dmr.is/shared/dto'
 import { IAWSService } from '@dmr.is/shared/modules'
-
 import { AdvertMainTypeModel } from '../advert-type/models'
 import { IApplicationService } from '../application/application.service.interface'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
@@ -42,7 +39,6 @@ import {
   CaseStatusModel,
   CaseTagModel,
 } from './models'
-
 describe('CaseService', () => {
   let caseService: ICaseService
   let commentService: ICommentServiceV2
@@ -66,7 +62,6 @@ describe('CaseService', () => {
   let priceService: IPriceService
   let pdfService: IPdfService
   let sequelize: Sequelize
-
   beforeAll(async () => {
     const app = await Test.createTestingModule({
       imports: [LoggingModule],
@@ -128,7 +123,6 @@ describe('CaseService', () => {
           provide: IPriceService,
           useClass: jest.fn(() => ({})),
         },
-
         {
           provide: getModelToken(CaseModel),
           useClass: jest.fn(() => ({
@@ -240,7 +234,6 @@ describe('CaseService', () => {
         },
       ],
     }).compile()
-
     caseService = app.get<ICaseService>(ICaseService)
     commentService = app.get<ICommentServiceV2>(ICommentServiceV2)
     applicationService = app.get<IApplicationService>(IApplicationService)
@@ -270,10 +263,8 @@ describe('CaseService', () => {
     )
     sequelize = app.get<Sequelize>(Sequelize)
   })
-
   describe('create', () => {
     const body = { applicationId: '123' } as PostApplicationBody
-
     // TODO: this needs fixing
     it('should create a case', async () => {
       // method should fail and a transaction rollback should happen

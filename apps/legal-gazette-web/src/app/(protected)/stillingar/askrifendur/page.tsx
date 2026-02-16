@@ -5,11 +5,11 @@ import { pagingParamsCache } from '../../../../lib/nuqs/paging-params'
 import { trpc } from '../../../../lib/trpc/client/server'
 
 type Props = {
-  searchParams: Record<string, string>
+  searchParams: Promise<Record<string, string>>
 }
 
 export default async function SubscribersSettingsPage({ searchParams }: Props) {
-  const { page, pageSize } = pagingParamsCache.parse(searchParams)
+  const { page, pageSize } = pagingParamsCache.parse(await searchParams)
 
   prefetch(
     trpc.getSubscribers.queryOptions({

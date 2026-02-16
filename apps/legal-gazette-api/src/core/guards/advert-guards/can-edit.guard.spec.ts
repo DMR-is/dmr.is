@@ -14,13 +14,11 @@ import { AdvertPublicationModel } from '../../../models/advert-publication.model
 import { StatusIdEnum } from '../../../models/status.model'
 import { AdvertGuardUtils } from './advert-guard-utils.module'
 import { CanEditGuard } from './can-edit.guard'
-
 describe('CanEditGuard', () => {
   let guard: CanEditGuard
   let advertModel: typeof AdvertModel
   let advertPublicationModel: typeof AdvertPublicationModel
   let logger: Logger
-
   const adminUser: DMRUser = {
     adminUserId: 'admin-123',
     nationalId: '1234567890',
@@ -31,7 +29,6 @@ describe('CanEditGuard', () => {
     client: '',
     authorization: '',
   }
-
   const nonAdminUser: DMRUser = {
     nationalId: '0987654321',
     name: 'Non-Admin User',
@@ -41,22 +38,18 @@ describe('CanEditGuard', () => {
     client: '',
     authorization: '',
   }
-
   beforeEach(async () => {
     const mockAdvertModel = {
       findOne: jest.fn(),
     }
-
     const mockAdvertPublicationModel = {
       findOne: jest.fn(),
     }
-
     const mockLogger = {
       warn: jest.fn(),
       debug: jest.fn(),
       error: jest.fn(),
     }
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CanEditGuard,
@@ -75,17 +68,14 @@ describe('CanEditGuard', () => {
         },
       ],
     }).compile()
-
     guard = module.get<CanEditGuard>(CanEditGuard)
     advertModel = module.get(getModelToken(AdvertModel))
     advertPublicationModel = module.get(getModelToken(AdvertPublicationModel))
     logger = module.get(LOGGER_PROVIDER)
   })
-
   afterEach(() => {
     jest.clearAllMocks()
   })
-
   const createMockContext = (
     user: DMRUser | null,
     params: Record<string, string>,
@@ -99,7 +89,6 @@ describe('CanEditGuard', () => {
       }),
     } as ExecutionContext
   }
-
   const createMockAdvert = (
     statusId: StatusIdEnum,
     assignedUserId: string,
@@ -118,16 +107,13 @@ describe('CanEditGuard', () => {
       }),
     }
   }
-
   describe('canActivate', () => {
     describe('admin validation', () => {
       it('should return false when user does not have admin privileges', async () => {
         const context = createMockContext(nonAdminUser, {
           advertId: 'advert-123',
         })
-
         const result = await guard.canActivate(context)
-
         expect(result).toBe(false)
         expect(logger.warn).toHaveBeenCalledWith(
           'Admin user id not found on authenticated user',
@@ -135,12 +121,9 @@ describe('CanEditGuard', () => {
         )
         expect(advertModel.findOne).not.toHaveBeenCalled()
       })
-
       it('should return false when user is null', async () => {
         const context = createMockContext(null, { advertId: 'advert-123' })
-
         const result = await guard.canActivate(context)
-
         expect(result).toBe(false)
         expect(logger.warn).toHaveBeenCalledWith(
           'Admin user id not found on authenticated user',
@@ -148,7 +131,6 @@ describe('CanEditGuard', () => {
         )
       })
     })
-
     describe('parameter resolution - direct advertId', () => {
       it('should use advertId parameter when available', async () => {
         const mockAdvert = createMockAdvert(
@@ -158,25 +140,19 @@ describe('CanEditGuard', () => {
         jest
           .spyOn(advertModel, 'findOne')
           .mockResolvedValue(mockAdvert as AdvertModel)
-
         const context = createMockContext(adminUser, {
           advertId: 'advert-123',
         })
-
         await guard.canActivate(context)
-
         expect(advertModel.findOne).toHaveBeenCalledWith({
           attributes: ['id', 'statusId', 'assignedUserId'],
           where: { id: 'advert-123' },
         })
         expect(advertPublicationModel.findOne).not.toHaveBeenCalled()
       })
-
       it('should return false when no parameters are found', async () => {
         const context = createMockContext(adminUser, {})
-
         const result = await guard.canActivate(context)
-
         expect(result).toBe(false)
         expect(logger.warn).toHaveBeenCalledWith(
           'No advertId, id, or publicationId found in request parameters',
@@ -188,14 +164,12 @@ describe('CanEditGuard', () => {
         expect(advertModel.findOne).not.toHaveBeenCalled()
       })
     })
-
     describe('parameter resolution - nested publicationId', () => {
       it('should resolve advertId from publicationId', async () => {
         const mockPublication = { advertId: 'advert-789' }
         jest
           .spyOn(advertPublicationModel, 'findOne')
           .mockResolvedValue(mockPublication as AdvertPublicationModel)
-
         const mockAdvert = createMockAdvert(
           StatusIdEnum.IN_PROGRESS,
           'admin-123',
@@ -203,13 +177,10 @@ describe('CanEditGuard', () => {
         jest
           .spyOn(advertModel, 'findOne')
           .mockResolvedValue(mockAdvert as AdvertModel)
-
         const context = createMockContext(adminUser, {
           publicationId: 'pub-123',
         })
-
         await guard.canActivate(context)
-
         expect(advertPublicationModel.findOne).toHaveBeenCalledWith({
           attributes: ['advertId'],
           where: { id: 'pub-123' },
@@ -227,14 +198,11 @@ describe('CanEditGuard', () => {
           }),
         )
       })
-
       it('should throw NotFoundException when publication does not exist', async () => {
         jest.spyOn(advertPublicationModel, 'findOne').mockResolvedValue(null)
-
         const context = createMockContext(adminUser, {
           publicationId: 'non-existent',
         })
-
         await expect(guard.canActivate(context)).rejects.toThrow(
           NotFoundException,
         )
@@ -249,7 +217,6 @@ describe('CanEditGuard', () => {
           }),
         )
       })
-
       it('should prioritize advertId over publicationId', async () => {
         const mockAdvert = createMockAdvert(
           StatusIdEnum.IN_PROGRESS,
@@ -258,14 +225,11 @@ describe('CanEditGuard', () => {
         jest
           .spyOn(advertModel, 'findOne')
           .mockResolvedValue(mockAdvert as AdvertModel)
-
         const context = createMockContext(adminUser, {
           advertId: 'advert-123',
           publicationId: 'pub-456',
         })
-
         await guard.canActivate(context)
-
         expect(advertModel.findOne).toHaveBeenCalledWith({
           attributes: ['id', 'statusId', 'assignedUserId'],
           where: { id: 'advert-123' },
@@ -273,15 +237,12 @@ describe('CanEditGuard', () => {
         expect(advertPublicationModel.findOne).not.toHaveBeenCalled()
       })
     })
-
     describe('advert existence validation', () => {
       it('should throw NotFoundException when advert does not exist', async () => {
         jest.spyOn(advertModel, 'findOne').mockResolvedValue(null)
-
         const context = createMockContext(adminUser, {
           advertId: 'non-existent',
         })
-
         await expect(guard.canActivate(context)).rejects.toThrow(
           NotFoundException,
         )
@@ -290,7 +251,6 @@ describe('CanEditGuard', () => {
         )
       })
     })
-
     describe('edit permission validation', () => {
       it('should return true when advert is IN_PROGRESS and assigned to admin', async () => {
         const mockAdvert = createMockAdvert(
@@ -300,13 +260,10 @@ describe('CanEditGuard', () => {
         jest
           .spyOn(advertModel, 'findOne')
           .mockResolvedValue(mockAdvert as AdvertModel)
-
         const context = createMockContext(adminUser, {
           advertId: 'advert-123',
         })
-
         const result = await guard.canActivate(context)
-
         expect(result).toBe(true)
         expect(mockAdvert.canEdit).toHaveBeenCalledWith('admin-123')
         expect(logger.debug).toHaveBeenCalledWith(
@@ -318,7 +275,6 @@ describe('CanEditGuard', () => {
           }),
         )
       })
-
       it('should return true when advert is READY_FOR_PUBLICATION and assigned to admin', async () => {
         const mockAdvert = createMockAdvert(
           StatusIdEnum.READY_FOR_PUBLICATION,
@@ -327,41 +283,31 @@ describe('CanEditGuard', () => {
         jest
           .spyOn(advertModel, 'findOne')
           .mockResolvedValue(mockAdvert as AdvertModel)
-
         const context = createMockContext(adminUser, {
           advertId: 'advert-123',
         })
-
         const result = await guard.canActivate(context)
-
         expect(result).toBe(true)
       })
-
       it('should return true when advert is SUBMITTED and assigned to admin', async () => {
         const mockAdvert = createMockAdvert(StatusIdEnum.SUBMITTED, 'admin-123')
         jest
           .spyOn(advertModel, 'findOne')
           .mockResolvedValue(mockAdvert as AdvertModel)
-
         const context = createMockContext(adminUser, {
           advertId: 'advert-123',
         })
-
         const result = await guard.canActivate(context)
-
         expect(result).toBe(true)
       })
-
       it('should throw ForbiddenException when advert is not in editable state', async () => {
         const mockAdvert = createMockAdvert(StatusIdEnum.PUBLISHED, 'admin-123')
         jest
           .spyOn(advertModel, 'findOne')
           .mockResolvedValue(mockAdvert as AdvertModel)
-
         const context = createMockContext(adminUser, {
           advertId: 'advert-123',
         })
-
         await expect(guard.canActivate(context)).rejects.toThrow(
           ForbiddenException,
         )
@@ -378,7 +324,6 @@ describe('CanEditGuard', () => {
           }),
         )
       })
-
       it('should throw ForbiddenException when advert is assigned to different admin', async () => {
         const mockAdvert = createMockAdvert(
           StatusIdEnum.IN_PROGRESS,
@@ -387,17 +332,14 @@ describe('CanEditGuard', () => {
         jest
           .spyOn(advertModel, 'findOne')
           .mockResolvedValue(mockAdvert as AdvertModel)
-
         const context = createMockContext(adminUser, {
           advertId: 'advert-123',
         })
-
         await expect(guard.canActivate(context)).rejects.toThrow(
           ForbiddenException,
         )
         expect(mockAdvert.canEdit).toHaveBeenCalledWith('admin-123')
       })
-
       it('should throw ForbiddenException for IN_PUBLISHING status', async () => {
         const mockAdvert = createMockAdvert(
           StatusIdEnum.IN_PUBLISHING,
@@ -406,71 +348,57 @@ describe('CanEditGuard', () => {
         jest
           .spyOn(advertModel, 'findOne')
           .mockResolvedValue(mockAdvert as AdvertModel)
-
         const context = createMockContext(adminUser, {
           advertId: 'advert-123',
         })
-
         await expect(guard.canActivate(context)).rejects.toThrow(
           ForbiddenException,
         )
       })
-
       it('should throw ForbiddenException for REJECTED status', async () => {
         const mockAdvert = createMockAdvert(StatusIdEnum.REJECTED, 'admin-123')
         jest
           .spyOn(advertModel, 'findOne')
           .mockResolvedValue(mockAdvert as AdvertModel)
-
         const context = createMockContext(adminUser, {
           advertId: 'advert-123',
         })
-
         await expect(guard.canActivate(context)).rejects.toThrow(
           ForbiddenException,
         )
       })
-
       it('should throw ForbiddenException for WITHDRAWN status', async () => {
         const mockAdvert = createMockAdvert(StatusIdEnum.WITHDRAWN, 'admin-123')
         jest
           .spyOn(advertModel, 'findOne')
           .mockResolvedValue(mockAdvert as AdvertModel)
-
         const context = createMockContext(adminUser, {
           advertId: 'advert-123',
         })
-
         await expect(guard.canActivate(context)).rejects.toThrow(
           ForbiddenException,
         )
       })
     })
-
     describe('edge cases', () => {
       it('should handle database errors gracefully', async () => {
         jest
           .spyOn(advertModel, 'findOne')
           .mockRejectedValue(new Error('Database connection failed'))
-
         const context = createMockContext(adminUser, {
           advertId: 'advert-123',
         })
-
         await expect(guard.canActivate(context)).rejects.toThrow(
           'Database connection failed',
         )
       })
-
       it('should handle errors during publicationId resolution', async () => {
         jest
           .spyOn(advertPublicationModel, 'findOne')
           .mockRejectedValue(new Error('Database error'))
-
         const context = createMockContext(adminUser, {
           publicationId: 'pub-123',
         })
-
         await expect(guard.canActivate(context)).rejects.toThrow(
           'Database error',
         )
