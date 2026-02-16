@@ -3,7 +3,6 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
-import { CategoryDto, TypeDto } from '../../gen/fetch'
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 import { CategorySelect } from '../selects/CategorySelect'
 import { TypeSelect } from '../selects/TypeSelect'
@@ -11,10 +10,8 @@ import { TypeSelect } from '../selects/TypeSelect'
 type Props = {
   id: string
   canEdit?: boolean
-  types: TypeDto[]
-  categories: CategoryDto[]
-  typeId: string
-  categoryId: string
+  selectedTypeId: string
+  selectedCategoryId: string
   title: string
   additionalText?: string
 }
@@ -22,8 +19,8 @@ type Props = {
 export const AdvertBaseFields = ({
   id,
   canEdit = false,
-  typeId,
-  categoryId,
+  selectedTypeId,
+  selectedCategoryId,
   title,
   additionalText,
 }: Props) => {
@@ -41,14 +38,15 @@ export const AdvertBaseFields = ({
         <GridColumn span={['12/12', '6/12']}>
           <TypeSelect
             disabled={!canEdit}
-            selectedId={typeId}
+            selectedId={selectedTypeId}
             onSelect={(type) => updateType(type?.id ?? '')}
           />
         </GridColumn>
         <GridColumn span={['12/12', '6/12']}>
           <CategorySelect
             disabled={!canEdit}
-            selectedId={categoryId}
+            selectedId={selectedCategoryId}
+            typeId={selectedTypeId}
             onSelect={(category) => updateCategory(category?.id ?? '')}
             isLoading={isUpdatingAdvert}
           />
