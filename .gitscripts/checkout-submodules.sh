@@ -38,3 +38,6 @@ jq -c '.submodules[]' <"${CONFIG_FILE}" | while read -r submodule; do
     echo "No sparse-checkout paths configured for ${NAME}."
   fi
 done
+
+# --- Apply submodule patches ---
+bash "${GIT_ROOT}/scripts/patch-submodules.sh"

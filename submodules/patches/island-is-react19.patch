@@ -1,0 +1,154 @@
+diff --git a/libs/island-ui/core/src/lib/DropdownMenu/DropdownMenu.tsx b/libs/island-ui/core/src/lib/DropdownMenu/DropdownMenu.tsx
+index e166a76d10..3aa3dd1892 100644
+--- a/libs/island-ui/core/src/lib/DropdownMenu/DropdownMenu.tsx
++++ b/libs/island-ui/core/src/lib/DropdownMenu/DropdownMenu.tsx
+@@ -95,6 +95,7 @@ export const DropdownMenu = ({
+   return (
+     <>
+       {disclosure ? (
++        // @ts-expect-error — reakit MenuButton types incompatible with React 19
+         <MenuButton {...menu} {...disclosure.props} {...hoverProps}>
+           {(disclosureProps: any) =>
+             React.cloneElement(disclosure, disclosureProps)
+diff --git a/libs/island-ui/core/src/lib/FormStepper/SubSectionsV2/SubSectionsV2.tsx b/libs/island-ui/core/src/lib/FormStepper/SubSectionsV2/SubSectionsV2.tsx
+index c407054d22..1bf4aa8275 100644
+--- a/libs/island-ui/core/src/lib/FormStepper/SubSectionsV2/SubSectionsV2.tsx
++++ b/libs/island-ui/core/src/lib/FormStepper/SubSectionsV2/SubSectionsV2.tsx
+@@ -9,7 +9,7 @@ import * as styles from './SubSectionsV2.css'
+ export const SubSections: FC<
+   React.PropsWithChildren<{
+     isActive?: boolean
+-    subSections?: React.ReactNodeArray
++    subSections?: React.ReactNode[]
+   }>
+ > = ({ isActive = false, subSections }) => {
+   const containerRef = useRef<HTMLDivElement>(null)
+diff --git a/libs/island-ui/core/src/lib/ModalBase/ModalBase.tsx b/libs/island-ui/core/src/lib/ModalBase/ModalBase.tsx
+index f73944efed..f4445d4d2c 100644
+--- a/libs/island-ui/core/src/lib/ModalBase/ModalBase.tsx
++++ b/libs/island-ui/core/src/lib/ModalBase/ModalBase.tsx
+@@ -155,14 +155,18 @@ export const ModalBase: FC<ModalBaseProps> = ({
+   return (
+     <>
+       {disclosure && (
+-        <DialogDisclosure {...modal} {...disclosure.props}>
+-          {(disclosureProps: DisclosureProps) =>
++        <DialogDisclosure
++          {...modal}
++          // @ts-expect-error reakit types incompatible with React 19
++          {...disclosure.props}
++          // @ts-expect-error reakit types incompatible with React 19
++          children={(disclosureProps: DisclosureProps) =>
+             renderDisclosure(
+               React.cloneElement(disclosure, disclosureProps),
+               disclosureProps,
+             )
+           }
+-        </DialogDisclosure>
++        />
+       )}
+ 
+       {renderModal && (
+diff --git a/libs/island-ui/core/src/lib/PhoneInput/PhoneInput.tsx b/libs/island-ui/core/src/lib/PhoneInput/PhoneInput.tsx
+index 35821bf8c8..d24a2df9bb 100644
+--- a/libs/island-ui/core/src/lib/PhoneInput/PhoneInput.tsx
++++ b/libs/island-ui/core/src/lib/PhoneInput/PhoneInput.tsx
+@@ -280,6 +280,7 @@ export const PhoneInput = forwardRef(
+                 </label>
+               )}
+               <Box display="flex">
++                {/* @ts-expect-error — react-select prop types changed in React 19 */}
+                 <CountryCodeSelect
+                   id={selectId}
+                   name={selectId}
+diff --git a/libs/island-ui/core/src/lib/ProfileCard/ProfileCard.tsx b/libs/island-ui/core/src/lib/ProfileCard/ProfileCard.tsx
+index d40af6b168..86245c5c6a 100644
+--- a/libs/island-ui/core/src/lib/ProfileCard/ProfileCard.tsx
++++ b/libs/island-ui/core/src/lib/ProfileCard/ProfileCard.tsx
+@@ -21,7 +21,7 @@ export interface ProfileCardProps {
+   /**
+    * Usually job description
+    */
+-  description?: string | (string | JSX.Element)[] | JSX.Element
++  description?: string | (string | React.JSX.Element)[] | React.JSX.Element
+   /**
+    * 100% height
+    */
+diff --git a/libs/island-ui/core/src/lib/Select/Select.tsx b/libs/island-ui/core/src/lib/Select/Select.tsx
+index 291a13d7cf..07141eab3a 100644
+--- a/libs/island-ui/core/src/lib/Select/Select.tsx
++++ b/libs/island-ui/core/src/lib/Select/Select.tsx
+@@ -95,7 +95,7 @@ export const Select = <
+         dataTestId={dataTestId}
+         placeholder={placeholder}
+         defaultValue={defaultValue}
+-        isOptionDisabled={(option) => !!option.disabled}
++        isOptionDisabled={(option: OptionType<Value>) => !!option.disabled}
+         hasError={hasError}
+         isSearchable={isSearchable}
+         isMulti={isMulti}
+@@ -105,7 +105,7 @@ export const Select = <
+         formatGroupLabel={formatGroupLabel}
+         formatCreateLabel={() => currentValue}
+         createOptionPosition="first"
+-        onInputChange={(inputValue) => setCurrentValue(inputValue)}
++        onInputChange={(inputValue: any) => setCurrentValue(inputValue)}
+         filterOption={createFilter(filterConfig)}
+         components={{
+           Control,
+@@ -163,7 +163,7 @@ export const Select = <
+         isMulti={isMulti}
+         closeMenuOnSelect={closeMenuOnSelect}
+         defaultValue={defaultValue}
+-        isOptionDisabled={(option) => !!option.disabled}
++        isOptionDisabled={(option: OptionType<Value>) => !!option.disabled}
+         hasError={hasError}
+         isSearchable={isSearchable}
+         size={size}
+diff --git a/libs/island-ui/core/src/lib/ToggleSwitch/_ToggleSwitch.utils.tsx b/libs/island-ui/core/src/lib/ToggleSwitch/_ToggleSwitch.utils.tsx
+index 518b1abeb8..8c2b72767f 100644
+--- a/libs/island-ui/core/src/lib/ToggleSwitch/_ToggleSwitch.utils.tsx
++++ b/libs/island-ui/core/src/lib/ToggleSwitch/_ToggleSwitch.utils.tsx
+@@ -6,7 +6,7 @@ import cn from 'classnames'
+ type TogglerElms = HTMLAnchorElement | HTMLButtonElement | HTMLInputElement
+ 
+ type InteractiveProps<Elm extends TogglerElms = TogglerElms> = Pick<
+-  JSX.IntrinsicElements[Elm extends HTMLAnchorElement
++  React.JSX.IntrinsicElements[Elm extends HTMLAnchorElement
+     ? 'a'
+     : Elm extends HTMLButtonElement
+     ? 'button'
+@@ -16,7 +16,7 @@ type InteractiveProps<Elm extends TogglerElms = TogglerElms> = Pick<
+ 
+ export type ToggleSwitchBaseProps<Elm extends TogglerElms = TogglerElms> = {
+   /** The visible label text */
+-  label: string | JSX.Element
++  label: string | React.JSX.Element
+   /** The current checked state of the component */
+   checked: boolean
+   /** When disabled, onClick does not trigger. */
+diff --git a/libs/island-ui/core/src/lib/Tooltip/Tooltip.tsx b/libs/island-ui/core/src/lib/Tooltip/Tooltip.tsx
+index 32d0a8e2c7..62b4cb8c3e 100644
+--- a/libs/island-ui/core/src/lib/Tooltip/Tooltip.tsx
++++ b/libs/island-ui/core/src/lib/Tooltip/Tooltip.tsx
+@@ -85,6 +85,7 @@ export const Tooltip: FC<React.PropsWithChildren<TooltipProps>> = ({
+   return (
+     <>
+       {children ? (
++        // @ts-expect-error reakit types incompatible with React 19
+         <TooltipReference {...tooltip} {...children.props}>
+           {(referenceProps: any) =>
+             React.cloneElement(children, referenceProps)
+diff --git a/libs/island-ui/core/src/lib/context/LinkContext/LinkContext.tsx b/libs/island-ui/core/src/lib/context/LinkContext/LinkContext.tsx
+index 96df126e56..494e515afd 100644
+--- a/libs/island-ui/core/src/lib/context/LinkContext/LinkContext.tsx
++++ b/libs/island-ui/core/src/lib/context/LinkContext/LinkContext.tsx
+@@ -1,7 +1,7 @@
+ import React, { createContext } from 'react'
+ 
+ export interface LinkContextInterface {
+-  linkRenderer?: (href: string, children: React.ReactNode) => JSX.Element
++  linkRenderer?: (href: string, children: React.ReactNode) => React.JSX.Element
+ }
+ 
+ export const LinkContext = createContext<LinkContextInterface>({
