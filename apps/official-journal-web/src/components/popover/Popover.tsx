@@ -24,7 +24,11 @@ export const Popover = ({
   const popover = usePopoverState({ placement: placement })
   return (
     <>
-      <PopoverDisclosure {...popover} {...disclosure.props}>
+      <PopoverDisclosure
+        {...popover}
+        {...(disclosure.props ? disclosure.props : {})}
+        as={disclosure.type as any}
+      >
         {(referenceProps: any) => cloneElement(disclosure, referenceProps)}
       </PopoverDisclosure>
       <ReaPopover className={styles.popover} {...popover} aria-label={label}>

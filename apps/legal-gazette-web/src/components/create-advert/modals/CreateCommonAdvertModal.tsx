@@ -127,6 +127,7 @@ export const CreateCommonAdvertModal = () => {
           <GridColumn span={['12/12', '6/12']}>
             <CategorySelect
               required
+              disabled={!state.fields.type.id}
               typeId={state.fields.type.id}
               selectedId={state.fields.category.id}
               onSelect={(cat) => {

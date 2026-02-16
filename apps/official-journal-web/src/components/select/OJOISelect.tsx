@@ -6,18 +6,18 @@ import { type BoxProps } from '@island.is/island-ui/core/Box/types'
 
 import { OJOIInput } from './OJOIInput'
 
-type Props<T> = React.ComponentProps<typeof Select<T>> & {
+type Props = React.ComponentProps<typeof Select> & {
   width?: BoxProps['width']
   isValidating?: boolean
 }
 
-export const OJOISelect = <T,>({
+export const OJOISelect = ({
   filterConfig,
   isLoading,
   isValidating,
   width,
   ...rest
-}: Props<T>) => {
+}: Props) => {
   let valueString = ''
   if (typeof rest.value === 'string') {
     valueString = rest.value

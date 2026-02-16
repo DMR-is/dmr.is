@@ -19,7 +19,7 @@ import { messages } from './messages'
 
 type RowProps = {
   row: Case
-  container: RefObject<HTMLElement>
+  container: RefObject<HTMLTableSectionElement | null>
   number: number
   onReorder?: () => void
 }
@@ -90,7 +90,7 @@ type Props = {
 export const CasePublishingTable = ({ cases, isLoading, onReorder }: Props) => {
   const { formatMessage } = useFormatMessage()
 
-  const dragContainerRef = useRef<HTMLElement>(null)
+  const dragContainerRef = useRef<HTMLTableSectionElement>(null)
 
   const columns: CaseTableHeadCellProps[] = [
     {

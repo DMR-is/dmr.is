@@ -1,7 +1,6 @@
 import Head from 'next/head'
 
 import { IntlProvider } from 'react-intl'
-import { Provider } from 'reakit'
 
 import { Header } from '@dmr.is/ui/components/Header/Header'
 import { Footer } from '@dmr.is/ui/components/island-is/Footer'
@@ -50,8 +49,7 @@ export const Layout = ({
         console.error('Error in IntlProvider', { exception: err })
       }}
     >
-      <Provider>
-        <PageLoader />
+      <PageLoader />
         <Page component="div">
           <Head>
             {preloadedFonts.map((href, index) => {
@@ -139,7 +137,6 @@ export const Layout = ({
             }
           `}</style>
         </Page>
-      </Provider>
     </IntlProvider>
   )
 }
