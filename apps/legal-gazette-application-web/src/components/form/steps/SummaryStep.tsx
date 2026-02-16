@@ -57,29 +57,13 @@ export const SummaryStep = () => {
       },
       {
         onSuccess: (data) => {
-          const submitteeNationalId = session.data?.user?.nationalId
-
-          if (data?.entity?.kennitala === submitteeNationalId) {
-            setItems((prev) => [
-              {
-                title: 'Eigandi auglýsingar',
-                value: data?.entity?.nafn,
-              },
-              ...prev,
-            ])
-          } else {
-            setItems((prev) => [
-              {
-                title: 'Eigandi auglýsingar',
-                value: data?.entity?.nafn,
-              },
-              {
-                title: 'Innsendandi',
-                value: session.data?.user.name,
-              },
-              ...prev,
-            ])
-          }
+          setItems((prev) => [
+            {
+              title: 'Viðtakandi reiknings',
+              value: data?.entity?.nafn,
+            },
+            ...prev,
+          ])
         },
       },
     )
