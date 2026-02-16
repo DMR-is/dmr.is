@@ -1,6 +1,9 @@
 const { composePlugins, withNx } = require('@nx/next')
 const { createVanillaExtractPlugin } = require('@vanilla-extract/next-plugin')
-const withVanillaExtract = createVanillaExtractPlugin()
+const withVanillaExtract = createVanillaExtractPlugin({
+  identifiers: 'short',
+  turbopackMode: 'on',
+})
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 
 /**
@@ -8,8 +11,11 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
  **/
 const nextConfig = {
   output: 'standalone',
-    experimental: {
+  experimental: {
     fallbackNodePolyfills: false,
+  },
+  turbopack: {
+    resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
   },
   webpack: (config, { isServer }) => {
     config.resolve.alias.canvas = false
@@ -27,11 +33,11 @@ const nextConfig = {
     return config
   },
   env: {
-    API_MOCKS: process.env.API_MOCKS || '',
+    API_MOCKS: process.env.API_MOCKS || null,
     NEXTAUTH_URL:
       process.env.NODE_ENV !== 'production'
         ? `${process.env.LG_PUBLIC_WEB_URL}/api/auth`
-        : process.env.NEXTAUTH_URL,
+        : process.env.NEXTAUTH_URL || null,
   },
 }
 

@@ -63,6 +63,7 @@ const createMockSubscriber = (
   })
   return subscriber
 }
+
 /**
  * Creates a mock lock service that executes the callback immediately.
  * Can be configured to simulate lock being held by another process.
@@ -70,18 +71,19 @@ const createMockSubscriber = (
 const createMockLockService = (lockHeld = false) => ({
   runWithUserLock: jest
     .fn()
-    .mockImplementation(async<T>(_userKey, string, fn, () => Promise<T>)),
+    .mockImplementation(async <T>(_userKey: string, fn: () => Promise<T>) => {
+      if (lockHeld) {
+        return { success: false, reason: 'lock_held' }
+      }
+      const result = await fn()
+      return { success: true, result }
+    }),
 })
-{
-  if (lockHeld) {
-    return { success: false, reason: 'lock_held' }
-  }
-  const result = await fn()
-  return { success: true, result }
-}
+
 // ==========================================
 // Test Suite
 // ==========================================
+
 describe('SubscriberService', () => {
   let service: SubscriberService
   let subscriberModel: {

@@ -6,13 +6,14 @@ import { TRPCError } from '@trpc/server'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const awaitedParams = await params
   try {
     const client = await getServerClient()
     // get id from param and version from query
     const { searchParams } = new URL(request.url)
-    const id = params.id
+    const id = awaitedParams.id
     const version = searchParams.get('version')
 
     const pdfBuffer = await client.getAdvertPdf({

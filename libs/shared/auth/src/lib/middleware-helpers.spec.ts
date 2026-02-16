@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { updateCookie } from './middleware-helpers'
 // Mock next-auth/jwt
 jest.mock('next-auth/jwt', () => ({

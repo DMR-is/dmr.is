@@ -11,20 +11,6 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
  **/
 const nextConfig = {
   output: 'standalone',
-  transpilePackages: [
-    // '@@island.is/island-ui/core/*',
-    // '@@island.is/island-ui/core',
-    // '@island.is/island-ui/core/hooks',
-    // '@island.is/island-ui/core/utils',
-    // '@island.is/island-ui/core/globalCss',
-    // '@island.is/island-ui/core/globalStyles',
-    // '@island.is/island-ui/theme',
-    // '@island.is/island-ui/utils',
-    // '@island.is/shared/utils',
-    // '@island.is/island-ui/vanilla-extract-utils',
-    // '@dmr.is/ui/components/island-is',
-    // '@island.is/island-ui/core/Box/useBoxStyles',
-  ],
   turbopack: {
     resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
   },
@@ -43,9 +29,6 @@ const nextConfig = {
     }
 
     return config
-  },
-  typescript: {
-    // ignoreBuildErrors: true,
   },
   env: {
     API_MOCKS: process.env.API_MOCKS || null,

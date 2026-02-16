@@ -14,12 +14,14 @@ export const dynamic = 'force-dynamic'
 export default async function RelatedPublications({
   params,
 }: {
-  params: { publicationNumber: string; version: string }
+  params: Promise<{ publicationNumber: string; version: string }>
 }) {
+
+  const awaitedParams = await params
   // Handle redirects for UUIDs and lowercase versions
   const { publicationNumber, version } = await handlePublicationRedirects(
-    params.publicationNumber,
-    params.version,
+    awaitedParams.publicationNumber,
+    awaitedParams.version,
   )
 
   await fetchQueryWithHandler(
