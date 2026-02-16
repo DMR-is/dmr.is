@@ -24,6 +24,7 @@ interface AuthResponse {
 interface ErrorResponse {
   title?: string
   detail?: string
+  skilabod?: string
 }
 
 function isAuthResponse(data: unknown): data is AuthResponse {
@@ -40,7 +41,7 @@ function isAuthResponse(data: unknown): data is AuthResponse {
 function getErrorMessage(error: unknown): string {
   if (typeof error === 'object' && error !== null) {
     const err = error as ErrorResponse
-    return err.title || err.detail || 'Unknown error'
+    return err.skilabod || err.title || err.detail || 'Unknown error'
   }
   return 'Unknown error'
 }
