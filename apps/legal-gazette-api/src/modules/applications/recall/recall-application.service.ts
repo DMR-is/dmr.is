@@ -293,6 +293,7 @@ export class RecallApplicationService implements IRecallApplicationService {
         ...body.signature,
         date: body.signature?.date ? new Date(body.signature.date) : undefined,
       },
+      content: body.content,
       title: `Skiptalok - ${application.settlement?.name}`,
       additionalText: body.additionalText,
       settlementId: application.settlement?.id,

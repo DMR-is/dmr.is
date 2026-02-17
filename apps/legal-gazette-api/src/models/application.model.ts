@@ -362,6 +362,22 @@ export class CreateDivisionEndingDto extends OmitType(
   @ApiProperty({ type: Number })
   @IsNumber()
   declaredClaims!: number
+
+  @ApiProperty({ type: String })
+  @IsDateString()
+  endingDate!: string
+
+  @ApiProperty({ type: String, required: false })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => {
+    if (!value) return value
+    if (isBase64(value)) {
+      return Buffer.from(value, 'base64').toString('utf-8')
+    }
+    return value
+  })
+  content?: string
 }
 
 export class IslandIsSubmitApplicationDto extends PickType(
