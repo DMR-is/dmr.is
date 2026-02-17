@@ -23,7 +23,7 @@ export function ApplicationFormContainer({ applicationId, type }: Props) {
   )
 
   if (data.status !== ApplicationStatusEnum.DRAFT) {
-    return <ApplicationSubmittedContainer application={data} />
+    return <ApplicationSubmittedContainer applicationId={applicationId} />
   }
 
   let Component = (

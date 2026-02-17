@@ -36,14 +36,6 @@ export function AdvertFormContainer({ advertId }: AdvertContainerProps) {
   const { data: entities } = useQuery(trpc.getAllEntities.queryOptions())
 
   const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id: advertId }))
-  const { data: categoriesForTypes } = useQuery(
-    trpc.getCategories.queryOptions(
-      {
-        type: advert?.type.id as string,
-      },
-      { enabled: !!advert?.type.id },
-    ),
-  )
 
   const isRecallAdvertType = RecallAdvertTypes.includes(advert.templateType)
   const hasDivisionMeeting = DivisionMeetingAdvertTypes.includes(
