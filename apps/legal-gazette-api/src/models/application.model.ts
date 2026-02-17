@@ -346,22 +346,16 @@ export class CreateDivisionMeetingDto {
   @Type(() => CreateSignatureDto)
   @ValidateNested()
   signature!: CreateSignatureDto
-
-  @ApiProperty({ type: [CreateCommunicationChannelDto] })
-  @IsOptional()
-  @Type(() => CreateCommunicationChannelDto)
-  @ValidateNested({ each: true })
-  @ArrayMinSize(1)
-  communicationChannels!: CreateCommunicationChannelDto[]
 }
 
 export class CreateDivisionEndingDto extends OmitType(
   CreateDivisionMeetingDto,
   ['meetingLocation'],
 ) {
-  @ApiProperty({ type: Number })
+  @ApiProperty({ type: Number, required: false })
+  @IsOptional()
   @IsNumber()
-  declaredClaims!: number
+  declaredClaims?: number
 
   @ApiProperty({ type: String })
   @IsDateString()
@@ -382,7 +376,7 @@ export class CreateDivisionEndingDto extends OmitType(
 
 export class IslandIsSubmitApplicationDto extends PickType(
   CreateDivisionMeetingDto,
-  ['signature', 'communicationChannels', 'additionalText'] as const,
+  ['signature', 'additionalText'] as const,
 ) {
   @ApiProperty({ type: String })
   @IsUUID()

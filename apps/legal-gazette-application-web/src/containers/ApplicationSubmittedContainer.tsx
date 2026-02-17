@@ -37,6 +37,8 @@ export const ApplicationSubmittedContainer = ({ applicationId }: Props) => {
 
   const description = mapApplicationDescription(application.type)
 
+  console.log('application', application)
+
   return (
     <GridContainer>
       <GridRow>

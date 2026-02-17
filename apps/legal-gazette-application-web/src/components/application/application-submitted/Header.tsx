@@ -33,10 +33,7 @@ export const ApplicationSubmittedHeader = ({
       <Inline space={2} justifyContent="spaceBetween" alignY="center">
         <Text>{description}</Text>
         {showAddAdvertsButton && (
-          <AddAdvertsToApplicationMenu
-            asButtons={true}
-            applicationId={applicationId}
-          />
+          <AddAdvertsToApplicationMenu applicationId={applicationId} />
         )}
       </Inline>
     </Stack>

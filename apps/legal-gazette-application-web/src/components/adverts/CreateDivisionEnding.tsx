@@ -3,6 +3,9 @@
 import addYears from 'date-fns/addYears'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import {
   getInvalidPublishingDatesInRange,
@@ -10,22 +13,15 @@ import {
 } from '@dmr.is/utils/client/dateUtils'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { FormElement } from '../form-element/FormElement'
+import { FormGroup } from '../form-group/FormGroup'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   applicationId: string
-  title?: string
-  isVisible: boolean
-  onVisibilityChange(isVisible: boolean): void
 }
-
-export const CreateDivisionEnding = ({
-  applicationId,
-  title,
-  isVisible,
-  onVisibilityChange,
-}: Props) => {
+export const CreateDivisionEnding = ({ applicationId }: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const { mutate: addDivisionEnding, isPending } = useMutation(
@@ -47,5 +43,73 @@ export const CreateDivisionEnding = ({
     maxDate,
   )
 
-  return <Modal>hello</Modal>
+  const disclosure = (
+    <Button variant="utility" icon="add" size="small">
+      Bæta við skiptalokum
+    </Button>
+  )
+
+  return (
+    <Modal
+      baseId="create-division-ending"
+      disclosure={disclosure}
+      title="Bæta við skiptalokum"
+    >
+      <Stack space={1}>
+        <FormGroup>
+          <FormElement width="full" type="text" label="Frjáls texti" />
+        </FormGroup>
+        <FormGroup title="Mikilvægar dagsetningar">
+          <FormElement
+            required={true}
+            type="date"
+            label="Dagsetning skiptaloka"
+          />
+          <FormElement
+            required={true}
+            type="date"
+            label="Dagsetning birtingar"
+          />
+        </FormGroup>
+        <FormGroup title="Efni auglýsingar">
+          <FormElement width="full" type="editor" />
+        </FormGroup>
+        <FormGroup title="Lýstar kröfur búsins">
+          <FormElement
+            type="text"
+            label="Lýstar kröfur"
+            placeholder="Sláðu inn upphæð ef á við"
+          />
+        </FormGroup>
+        <FormGroup
+          title="Undirritun"
+          subTitle={
+            <Text variant="small">
+              Fylla þarf út nafn, staðsetningu eða dagsetningu undirritunar{' '}
+              <Text fontWeight="regular" color="red600" as="span">
+                *
+              </Text>
+            </Text>
+          }
+        >
+          <FormElement
+            type="text"
+            label="Nafn undirritara"
+          />
+          <FormElement
+            type="text"
+            label="Staðsetning undirritunar"
+          />
+          <FormElement
+            type="date"
+            label="Dagsetning undirritunar"
+          />
+          <FormElement
+            type="text"
+            label="f.h. undirritara"
+          />
+        </FormGroup>
+      </Stack>
+    </Modal>
+  )
 }
