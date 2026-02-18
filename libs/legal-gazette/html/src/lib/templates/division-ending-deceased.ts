@@ -16,8 +16,8 @@ export function getDivisionEndingDeceasedTemplate({
   settlementNationalId,
   settlementDeclaredClaims,
 }: DivisionEndingTemplateProps): string {
-  const formattedJudgementDate = parseAndFormatDate(judgementDate)
-  const formattedEndingDate = parseAndFormatDate(endingDate)
+  const [formattedJudgementDate] = parseAndFormatDate(judgementDate)
+  const [formattedEndingDate] = parseAndFormatDate(endingDate)
 
   const intro = getElement({
     text: `Með úrskurði ${courtDistrict}, uppkveðnum ${formattedJudgementDate}, var neðangreint bú tekið til opinbera skipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri í dánarbúinu. Skiptum var lokið þann ${formattedEndingDate}.`,

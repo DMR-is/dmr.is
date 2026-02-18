@@ -13,7 +13,8 @@ export const getSignatureMarkup = ({
     return ''
   }
 
-  const dateAndLocation = [location, parseAndFormatDate(date)]
+  const [formattedDate] = parseAndFormatDate(date)
+  const dateAndLocation = [location, formattedDate]
     .filter(Boolean)
     .join(', ')
 

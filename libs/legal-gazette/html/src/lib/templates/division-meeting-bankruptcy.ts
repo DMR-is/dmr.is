@@ -1,10 +1,8 @@
 import { isNotEmpty } from 'class-validator'
 
-import { formatNationalId } from '@dmr.is/utils/server/formatting'
-import { formatDate } from '@dmr.is/utils/server/serverUtils'
-
 import { DivisionMeetingBankruptcyTemplateProps } from './types'
 import {
+  formatNationalId,
   getElement,
   getTableCell,
   getTableHeaderCell,
@@ -36,13 +34,13 @@ export function getDivisionMeetingBankruptcyTemplate({
     ? getTableCell({ text: nameArr.join(',<br />') })
     : ''
 
-  const formattedMeetingDate = parseAndFormatDate(meetingDate)
+  const [formattedMeetingDate, _eeee, formattedMeetingTime] = parseAndFormatDate(meetingDate)
 
   const meetingCell = formattedMeetingDate
     ? getTableCell({
         text: [
           formattedMeetingDate,
-          `kl. ${formatDate(formattedMeetingDate, 'HH:mm')}`,
+          formattedMeetingTime,
         ].join('<br />'),
       })
     : ''

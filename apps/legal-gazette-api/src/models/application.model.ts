@@ -2,6 +2,7 @@ import { Transform, Type } from 'class-transformer'
 import {
   ArrayMaxSize,
   ArrayMinSize,
+  IsDate,
   IsDateString,
   IsDefined,
   IsNumber,
@@ -358,8 +359,9 @@ export class CreateDivisionEndingDto extends OmitType(
   declaredClaims?: number
 
   @ApiProperty({ type: String })
-  @IsDateString()
-  endingDate!: string
+  @Type(() => Date)
+  @IsDate()
+  endingDate!: Date
 
   @ApiProperty({ type: String, required: false })
   @IsOptional()

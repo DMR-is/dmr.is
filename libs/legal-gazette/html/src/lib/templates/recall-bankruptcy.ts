@@ -1,10 +1,8 @@
 import { isNotEmpty } from 'class-validator'
 
-import { formatNationalId } from '@dmr.is/utils/server/formatting'
-import { formatDate } from '@dmr.is/utils/server/serverUtils'
-
 import { RecallBankruptcySettlement } from './types'
 import {
+  formatNationalId,
   getElement,
   getStatementLocation,
   getStatementPrefix,
@@ -25,7 +23,7 @@ const getIntro = ({
   courtDistrict?: string | null
   judgementDate?: Date | string | null
 }) => {
-  const formattedJudgementDate = parseAndFormatDate(judgementDate)
+  const [formattedJudgementDate] = parseAndFormatDate(judgementDate)
   const formattedCourtDistrict = isNotEmpty(courtDistrict) ? courtDistrict : ''
 
   const intro = `
@@ -105,7 +103,7 @@ export const getRecallBankruptcyTemplate = ({
     statementType: 'location',
   },
 }: RecallBankruptcyTemplateProps) => {
-  const formattedDeadlineDate = parseAndFormatDate(settlement?.deadlineDate)
+  const [formattedDeadlineDate] = parseAndFormatDate(settlement?.deadlineDate)
 
   const intro = getIntro({ courtDistrict, judgementDate })
   const outro = getOutro({ settlement })
@@ -128,20 +126,16 @@ export const getRecallBankruptcyTemplate = ({
     ? getTableCell({ text: formattedDeadlineDate })
     : ''
 
-  const meetingDate = settlement.meetingDate
-    ? new Date(settlement.meetingDate)
-    : null
+  const [parsedMeetingDate, formattedWeekday, formattedMeetingTime] =
+    parseAndFormatDate(settlement?.meetingDate)
 
-  const divisionMeetingCell =
-    meetingDate instanceof Date && !isNaN(meetingDate.getTime())
-      ? getTableCell({
-          text: [
-            formatDate(meetingDate, 'EEEE'),
-            formatDate(meetingDate, 'd. MMMM yyyy'),
-            `kl. ${formatDate(meetingDate, 'HH:mm')}`,
-          ].join('<br />'),
-        })
-      : ''
+  const divisionMeetingCell = parsedMeetingDate
+    ? getTableCell({
+        text: [parsedMeetingDate, formattedWeekday, formattedMeetingTime].join(
+          '<br />',
+        ),
+      })
+    : ''
 
   const markupArr = [nameCell, deadlineCell, divisionMeetingCell].filter(
     isNotEmpty,

@@ -1,6 +1,6 @@
 import { isDefined, isNotEmpty, isString } from 'class-validator'
-
-import { formatDate } from '@dmr.is/utils/server/serverUtils'
+import format from 'date-fns/format'
+import is from 'date-fns/locale/is'
 
 import { BaseSettlement } from './types'
 
@@ -51,22 +51,24 @@ export function getTableCell({
   return getElement({ text: inner, options: { as: 'td' } })
 }
 
-export const parseAndFormatDate = (date?: unknown): string => {
-  if (!isDefined(date)) return ''
+export const parseAndFormatDate = (
+  date?: unknown,
+): [string, string, string] => {
+  if (!isDefined(date)) return ['', '', '']
   if (date instanceof Date) {
     if (isNaN(date.getTime())) {
-      return ''
+      return ['', '', '']
     }
-    return formatDate(date, 'd. MMMM yyyy')
+    return formatDate(date)
   }
   if (typeof date === 'string') {
     const parsedDate = new Date(date)
     if (!isNaN(parsedDate.getTime())) {
-      return formatDate(parsedDate, 'd. MMMM yyyy')
+      return formatDate(parsedDate)
     }
   }
 
-  return ''
+  return ['', '', '']
 }
 
 export const getStatementLocation = (settlement?: BaseSettlement) => {
@@ -86,4 +88,43 @@ export const getStatementPrefix = (settlement?: BaseSettlement) => {
     return 'með rafrænum hætti á netfangið '
   }
   return 'að '
+}
+
+export const formatNationalId = (nationalId = '') => {
+  // Format: XXXXXX-XXXX or XXXXXXXXXX or XXXXXX XXXX
+  const cleaned = nationalId.replace(/[^0-9]/g, '')
+  if (cleaned.length !== 10) {
+    return nationalId // Return as is if not 10 digits
+  }
+  return `${cleaned.slice(0, 6)}-${cleaned.slice(6)}`
+}
+
+/**
+ *
+ * @param date
+ * @returns [fully formatted date, weekday, time]
+ */
+export const formatDate = (date: unknown): [string, string, string] => {
+  if (date instanceof Date) {
+    if (isNaN(date.getTime())) {
+      return ['', '', '']
+    }
+    return [
+      format(date, 'd. MMMM yyyy', { locale: is }),
+      format(date, 'EEEE', { locale: is }),
+      format(date, "'kl.' HH:mm", { locale: is }),
+    ]
+  }
+  if (typeof date === 'string') {
+    const parsedDate = new Date(date)
+    if (!isNaN(parsedDate.getTime())) {
+      return [
+        format(parsedDate, 'd. MMMM yyyy', { locale: is }),
+        format(parsedDate, 'EEEE', { locale: is }),
+        format(parsedDate, "'kl.' HH:mm", { locale: is }),
+      ]
+    }
+  }
+
+  return ['', '', '']
 }

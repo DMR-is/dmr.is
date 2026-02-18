@@ -17,8 +17,8 @@ export function getDivisionEndingBankruptcyTemplate({
   settlementDeclaredClaims = '',
   content = '',
 }: DivisionEndingTemplateProps): string {
-  const formattedJudgementDate = parseAndFormatDate(judgementDate)
-  const formattedEndingDate = parseAndFormatDate(endingDate)
+  const [formattedJudgementDate] = parseAndFormatDate(judgementDate)
+  const [formattedEndingDate] = parseAndFormatDate(endingDate)
 
   const intro = getElement({
     text: `Með úrskurði ${courtDistrict}, uppkveðnum ${formattedJudgementDate}, var neðangreint bú tekið til gjaldþrotaskipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri í þrotabúinu. Skiptum var lokið þann ${formattedEndingDate}.`,

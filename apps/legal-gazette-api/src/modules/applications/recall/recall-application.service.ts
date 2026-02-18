@@ -304,6 +304,7 @@ export class RecallApplicationService implements IRecallApplicationService {
 
     await application.settlement?.update({
       declaredClaims: body.declaredClaims,
+      endingDate: body.endingDate,
     })
 
     await application.update({ status: ApplicationStatusEnum.FINISHED })

@@ -82,9 +82,11 @@ export const FormElement = <T,>({ width = 'half', ...props }: Props<T>) => {
         const { type: _type, placeholder, ...dateProps } = props
         elementToRender = (
           <DatePicker
+            locale="is"
             size="sm"
             backgroundColor="blue"
             placeholderText={placeholder}
+            handleChange={props.onChange}
             {...dateProps}
           />
         )

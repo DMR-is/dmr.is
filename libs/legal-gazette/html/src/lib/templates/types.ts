@@ -1,4 +1,4 @@
-import { AdvertTemplateType } from '../constants'
+import { LegalGazetteHTMLTemplates } from '../constants'
 
 export type SignatureMarkupProps = {
   name?: string | null
@@ -19,7 +19,7 @@ export type BaseTemplateProps = {
 
 export type CommonTemplateProps = {
   content?: string
-  templateType: AdvertTemplateType.COMMON
+  templateType: LegalGazetteHTMLTemplates.COMMON
 }
 
 export type BaseSettlement = {
@@ -61,7 +61,7 @@ export type RecallDeceasedTemplateProps = Omit<
   RecallTemplateProps,
   'settlement'
 > & {
-  templateType: AdvertTemplateType.RECALL_DECEASED
+  templateType: LegalGazetteHTMLTemplates.RECALL_DECEASED
   settlement?: RecallDeceasedSettlement
 }
 
@@ -69,7 +69,7 @@ export type RecallBankruptcyTemplateProps = Omit<
   RecallTemplateProps,
   'settlement'
 > & {
-  templateType: AdvertTemplateType.RECALL_BANKRUPTCY
+  templateType: LegalGazetteHTMLTemplates.RECALL_BANKRUPTCY
   settlement?: RecallBankruptcySettlement
 }
 
@@ -91,12 +91,12 @@ export type ForeclosureTemplateProps = Omit<
   BaseTemplateProps,
   'templateType' | 'content'
 > & {
-  templateType: AdvertTemplateType.FORECLOSURE
+  templateType: LegalGazetteHTMLTemplates.FORECLOSURE
   foreclosure?: ForeclosureTemplate
 }
 
 export type DivisionMeetingBankruptcyTemplateProps = {
-  templateType: AdvertTemplateType.DIVISION_MEETING_BANKRUPTCY
+  templateType: LegalGazetteHTMLTemplates.DIVISION_MEETING_BANKRUPTCY
   address?: string
   meetingDate?: string
   name?: string
@@ -106,7 +106,7 @@ export type DivisionMeetingBankruptcyTemplateProps = {
 }
 
 export type DivisionMeetingDeceasedTemplateProps = {
-  templateType: AdvertTemplateType.DIVISION_MEETING_DECEASED
+  templateType: LegalGazetteHTMLTemplates.DIVISION_MEETING_DECEASED
   name?: string
   nationalId?: string
   meetingLocation?: string
@@ -116,8 +116,8 @@ export type DivisionMeetingDeceasedTemplateProps = {
 
 export type DivisionEndingTemplateProps = {
   templateType:
-    | AdvertTemplateType.DIVISION_ENDING_BANKRUPTCY
-    | AdvertTemplateType.DIVISION_ENDING_DECEASED
+    | LegalGazetteHTMLTemplates.DIVISION_ENDING_BANKRUPTCY
+    | LegalGazetteHTMLTemplates.DIVISION_ENDING_DECEASED
   courtDistrict?: string
   judgementDate?: string
   endingDate?: Date | string

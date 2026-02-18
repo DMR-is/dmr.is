@@ -1,9 +1,8 @@
 import { isEmpty, isNotEmpty } from 'class-validator'
 
-import { formatNationalId } from '@dmr.is/utils/server/formatting'
-
 import { RecallDeceasedSettlement, RecallDeceasedTemplateProps } from './types'
 import {
+  formatNationalId,
   getElement,
   getStatementLocation,
   getStatementPrefix,
@@ -19,7 +18,7 @@ const getIntro = ({
   courtDistrict?: string | null
   judgementDate?: Date | string | null
 }) => {
-  const formattedJudgementDate = parseAndFormatDate(judgementDate)
+  const [formattedJudgementDate] = parseAndFormatDate(judgementDate)
   const formattedCourtDistrict = isEmpty(courtDistrict) ? '' : courtDistrict
 
   return getElement({
@@ -113,14 +112,16 @@ export function getRecallDeceasedTemplate({
     settlement.nationalId
       ? `kt. ${formatNationalId(settlement.nationalId)}`
       : '',
-    settlement.address ? `síðasta heimilisfang:<br />${settlement.address}` : '',
+    settlement.address
+      ? `síðasta heimilisfang:<br />${settlement.address}`
+      : '',
   ].filter(isNotEmpty)
 
   const nameCell = nameArr.length
     ? getTableCell({ text: nameArr.join(',<br />') })
     : ''
 
-  const formattedDateOfDeath = parseAndFormatDate(settlement.dateOfDeath)
+  const [formattedDateOfDeath] = parseAndFormatDate(settlement.dateOfDeath)
   const dateOfDeathCell = formattedDateOfDeath
     ? getTableCell({ text: formattedDateOfDeath })
     : ''

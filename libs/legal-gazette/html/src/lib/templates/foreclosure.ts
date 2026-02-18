@@ -1,17 +1,16 @@
-import { formatDate } from '@dmr.is/utils/server/serverUtils'
+import { isNotEmpty } from 'class-validator'
 
 import { ForeclosureTemplateProps } from './types'
 import { getElement, getTableCell, parseAndFormatDate } from './utils'
-import { isNotEmpty } from 'class-validator'
 
 export function getForeclosureTemplate({
   foreclosure,
   publicationNumber,
 }: ForeclosureTemplateProps): string {
-  const formattedForeclosureDate = parseAndFormatDate(
+  const [formattedForeclosureDate, _eeee, formattedForeclosureTime] = parseAndFormatDate(
     foreclosure?.foreclosureDate,
   )
-  const formattedForeclosureTime = formatDate(formattedForeclosureDate, 'HH:mm')
+
   const intro = getElement({
     text: `Eftirtalin beiðni um nauðungarsölu til fullnustu kröfu um peningagreiðslu verður tekin fyrir á skrifstofu embættisins ${foreclosure?.foreclosureAddress},
     ${formattedForeclosureDate} kl. ${formattedForeclosureTime}  hafi hún ekki áður verið felld niður:`,

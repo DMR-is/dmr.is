@@ -1,6 +1,6 @@
 import { isEmpty, isNotEmpty } from 'class-validator'
 
-import { AdvertTemplateType } from '../constants'
+import { LegalGazetteHTMLTemplates } from '../constants'
 import { getDivisionEndingBankruptcyTemplate } from './division-ending-bankruptcy'
 import { getDivisionEndingDeceasedTemplate } from './division-ending-deceased'
 import { getDivisionMeetingBankruptcyTemplate } from './division-meeting-bankruptcy'
@@ -61,9 +61,11 @@ export const getAdvertHTMLMarkup = (props: HTMLMarkupProps) => {
     },
   })
 
+  const [parsedPublishDate] = parseAndFormatDate(publishDate)
+
   const publishingText = isPublished
-    ? `Útgáfud.: ${parseAndFormatDate(publishDate)}`
-    : `Áætlaður útgáfud.: ${parseAndFormatDate(publishDate)}`
+    ? `Útgáfud.: ${parsedPublishDate}`
+    : `Áætlaður útgáfud.: ${parsedPublishDate}`
 
   const publishingDateMarkup = !isEmpty(publishDate)
     ? getElement({
@@ -76,35 +78,35 @@ export const getAdvertHTMLMarkup = (props: HTMLMarkupProps) => {
 
   let htmlContent = ''
   switch (props.templateType) {
-    case AdvertTemplateType.COMMON: {
+    case LegalGazetteHTMLTemplates.COMMON: {
       htmlContent = props.content || ''
       break
     }
-    case AdvertTemplateType.RECALL_BANKRUPTCY: {
+    case LegalGazetteHTMLTemplates.RECALL_BANKRUPTCY: {
       htmlContent = getRecallBankruptcyTemplate(props)
       break
     }
-    case AdvertTemplateType.RECALL_DECEASED: {
+    case LegalGazetteHTMLTemplates.RECALL_DECEASED: {
       htmlContent = getRecallDeceasedTemplate(props)
       break
     }
-    case AdvertTemplateType.FORECLOSURE: {
+    case LegalGazetteHTMLTemplates.FORECLOSURE: {
       htmlContent = getForeclosureTemplate(props)
       break
     }
-    case AdvertTemplateType.DIVISION_MEETING_BANKRUPTCY: {
+    case LegalGazetteHTMLTemplates.DIVISION_MEETING_BANKRUPTCY: {
       htmlContent = getDivisionMeetingBankruptcyTemplate(props)
       break
     }
-    case AdvertTemplateType.DIVISION_MEETING_DECEASED: {
+    case LegalGazetteHTMLTemplates.DIVISION_MEETING_DECEASED: {
       htmlContent = getDivisionMeetingDeceasedTemplate(props)
       break
     }
-    case AdvertTemplateType.DIVISION_ENDING_BANKRUPTCY: {
+    case LegalGazetteHTMLTemplates.DIVISION_ENDING_BANKRUPTCY: {
       htmlContent = getDivisionEndingBankruptcyTemplate(props)
       break
     }
-    case AdvertTemplateType.DIVISION_ENDING_DECEASED: {
+    case LegalGazetteHTMLTemplates.DIVISION_ENDING_DECEASED: {
       htmlContent = getDivisionEndingDeceasedTemplate(props)
       break
     }

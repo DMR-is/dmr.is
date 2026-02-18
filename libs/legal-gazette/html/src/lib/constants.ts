@@ -1,4 +1,4 @@
-export enum AdvertTemplateType {
+export enum LegalGazetteHTMLTemplates {
   COMMON = 'COMMON',
   RECALL_BANKRUPTCY = 'RECALL_BANKRUPTCY',
   RECALL_DECEASED = 'RECALL_DECEASED',
