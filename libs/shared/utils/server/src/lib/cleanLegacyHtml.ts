@@ -273,7 +273,7 @@ const baseOptions: sanitizeHtml.IOptions = {
     '*': (tagName, attribs) => {
       const cls = attribs.class || ''
 
-      const allowStyleOn = new Set(['table', 'tr', 'td', 'th', 'ol', 'ul'])
+      const allowStyleOn = new Set(['p', 'table', 'tr', 'td', 'th', 'ol', 'ul'])
       if (!allowStyleOn.has(tagName)) delete attribs.style
 
       if (attribs.style) {
