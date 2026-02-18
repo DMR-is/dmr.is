@@ -8,25 +8,20 @@ import { UserDto } from '../../models/users.model'
 import { IUsersService } from '../users/users.service.interface'
 import { PdfAdminController } from './pdf-admin.controller'
 import { IPdfAdminService } from './pdf-admin.service.interface'
-
 const ADMIN_NATIONAL_ID = '1234567890'
 const NON_ADMIN_NATIONAL_ID = '0987654321'
-
 interface MockUser {
   nationalId?: string
   scope?: string
 }
-
 const createAdminUser = (): MockUser => ({
   nationalId: ADMIN_NATIONAL_ID,
   scope: '',
 })
-
 const createNonAdminUser = (): MockUser => ({
   nationalId: NON_ADMIN_NATIONAL_ID,
   scope: '',
 })
-
 const createMockUserDto = (nationalId: string): UserDto => ({
   id: 'user-123',
   nationalId,
@@ -35,12 +30,10 @@ const createMockUserDto = (nationalId: string): UserDto => ({
   phone: '1234567',
   isActive: true,
 })
-
 describe('PdfAdminController - Guard Authorization', () => {
   let authorizationGuard: AuthorizationGuard
   let reflector: Reflector
   let usersService: jest.Mocked<IUsersService>
-
   const createMockContext = (
     user: MockUser | null,
     methodName: keyof PdfAdminController,
@@ -51,13 +44,10 @@ describe('PdfAdminController - Guard Authorization', () => {
         getRequest: () => mockRequest,
       }),
       getHandler: () =>
-        PdfAdminController.prototype[
-          methodName
-        ] as unknown as () => void,
+        PdfAdminController.prototype[methodName] as unknown as () => void,
       getClass: () => PdfAdminController,
     } as unknown as ExecutionContext
   }
-
   beforeEach(async () => {
     const mockUsersService = {
       getUserByNationalId: jest
@@ -70,7 +60,6 @@ describe('PdfAdminController - Guard Authorization', () => {
         }),
       getEmployees: jest.fn(),
     }
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthorizationGuard,
@@ -81,16 +70,13 @@ describe('PdfAdminController - Guard Authorization', () => {
         },
       ],
     }).compile()
-
     authorizationGuard = module.get<AuthorizationGuard>(AuthorizationGuard)
     reflector = module.get<Reflector>(Reflector)
     usersService = module.get(IUsersService)
   })
-
   afterEach(() => {
     jest.clearAllMocks()
   })
-
   describe('Decorator configuration verification', () => {
     it('controller class should have @AdminAccess()', () => {
       const isAdminAccess = reflector.getAllAndOverride<boolean>(ADMIN_KEY, [
@@ -99,12 +85,10 @@ describe('PdfAdminController - Guard Authorization', () => {
       ])
       expect(isAdminAccess).toBe(true)
     })
-
     it('regeneratePdf method should exist on controller', () => {
       expect(PdfAdminController.prototype.regeneratePdf).toBeDefined()
     })
   })
-
   describe('regeneratePdf - @AdminAccess() (class-level)', () => {
     it('should ALLOW admin users', async () => {
       const context = createMockContext(createAdminUser(), 'regeneratePdf')
@@ -115,26 +99,19 @@ describe('PdfAdminController - Guard Authorization', () => {
         true,
       )
     })
-
     it('should DENY non-admin users', async () => {
       const context = createMockContext(createNonAdminUser(), 'regeneratePdf')
-      await expect(
-        authorizationGuard.canActivate(context),
-      ).rejects.toThrow()
+      await expect(authorizationGuard.canActivate(context)).rejects.toThrow()
       expect(usersService.getUserByNationalId).toHaveBeenCalledWith(
         NON_ADMIN_NATIONAL_ID,
         true,
       )
     })
-
     it('should DENY unauthenticated requests', async () => {
       const context = createMockContext(null, 'regeneratePdf')
-      await expect(
-        authorizationGuard.canActivate(context),
-      ).rejects.toThrow()
+      await expect(authorizationGuard.canActivate(context)).rejects.toThrow()
     })
   })
-
   describe('Service delegation', () => {
     it('should delegate to pdfAdminService.regeneratePdf', () => {
       const mockService = {
@@ -143,12 +120,9 @@ describe('PdfAdminController - Guard Authorization', () => {
           message: 'PDF regenerated successfully',
         }),
       }
-
       const controller = new PdfAdminController(mockService as any)
       const user = { adminUserId: 'admin-1', nationalId: '1234567890' }
-
       controller.regeneratePdf('advert-id', 'pub-id', user as any)
-
       expect(mockService.regeneratePdf).toHaveBeenCalledWith(
         'advert-id',
         'pub-id',

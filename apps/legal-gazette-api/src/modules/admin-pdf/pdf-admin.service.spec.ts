@@ -8,25 +8,22 @@ import { AdvertModel } from '../../models/advert.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import { PdfService } from '../advert/pdf/pdf.service'
 import { PdfAdminService } from './pdf-admin.service'
-
 const mockLogger = {
   info: jest.fn(),
   debug: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
 }
-
 const ADVERT_ID = '123e4567-e89b-12d3-a456-426614174000'
 const PUBLICATION_ID = '123e4567-e89b-12d3-a456-426614174001'
 const MOCK_USER = {
   adminUserId: 'admin-user-1',
   nationalId: '1234567890',
 }
-
 const MOCK_HTML = '<html><body>Test advert</body></html>'
 const MOCK_TITLE = 'Test Advert Title'
-const MOCK_S3_URL = 'https://files.legal-gazette.dev.dmr-dev.cloud/adverts/123/456/advert.pdf'
-
+const MOCK_S3_URL =
+  'https://files.legal-gazette.dev.dmr-dev.cloud/adverts/123/456/advert.pdf'
 const createMockPublication = (overrides: Record<string, unknown> = {}) => ({
   id: PUBLICATION_ID,
   advertId: ADVERT_ID,
@@ -37,26 +34,25 @@ const createMockPublication = (overrides: Record<string, unknown> = {}) => ({
   },
   ...overrides,
 })
-
 describe('PdfAdminService', () => {
   let service: PdfAdminService
-  let publicationModel: { findByPk: jest.Mock }
-  let pdfService: { generatePdfAndSaveToS3: jest.Mock }
-
+  let publicationModel: {
+    findByPk: jest.Mock
+  }
+  let pdfService: {
+    generatePdfAndSaveToS3: jest.Mock
+  }
   beforeEach(async () => {
     // Mock AdvertModel.scope() static method used in service
     jest
       .spyOn(AdvertModel, 'scope')
       .mockReturnValue(AdvertModel as typeof AdvertModel)
-
     const mockPublicationModel = {
       findByPk: jest.fn(),
     }
-
     const mockPdfService = {
       generatePdfAndSaveToS3: jest.fn(),
     }
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PdfAdminService,
@@ -74,14 +70,11 @@ describe('PdfAdminService', () => {
         },
       ],
     }).compile()
-
     service = module.get<PdfAdminService>(PdfAdminService)
     publicationModel = mockPublicationModel
     pdfService = mockPdfService
-
     jest.clearAllMocks()
   })
-
   describe('regeneratePdf', () => {
     it('should regenerate PDF successfully and return pdfUrl', async () => {
       const mockPublication = createMockPublication()
@@ -91,49 +84,40 @@ describe('PdfAdminService', () => {
         key: 'some-key',
         pdfBuffer: Buffer.from('pdf'),
       })
-
       const result = await service.regeneratePdf(
         ADVERT_ID,
         PUBLICATION_ID,
         MOCK_USER as any,
       )
-
       expect(result).toEqual({
         pdfUrl: MOCK_S3_URL,
         message: 'PDF regenerated successfully',
       })
     })
-
     it('should throw NotFoundException when publication is not found', async () => {
       publicationModel.findByPk.mockResolvedValue(null)
-
       await expect(
         service.regeneratePdf(ADVERT_ID, PUBLICATION_ID, MOCK_USER as any),
       ).rejects.toThrow(NotFoundException)
-
       await expect(
         service.regeneratePdf(ADVERT_ID, PUBLICATION_ID, MOCK_USER as any),
       ).rejects.toThrow(`Publication with id ${PUBLICATION_ID} not found`)
     })
-
     it('should throw NotFoundException when publication does not belong to advert', async () => {
       const wrongAdvertId = 'wrong-advert-id'
       const mockPublication = createMockPublication({
         advertId: wrongAdvertId,
       })
       publicationModel.findByPk.mockResolvedValue(mockPublication)
-
       await expect(
         service.regeneratePdf(ADVERT_ID, PUBLICATION_ID, MOCK_USER as any),
       ).rejects.toThrow(NotFoundException)
-
       await expect(
         service.regeneratePdf(ADVERT_ID, PUBLICATION_ID, MOCK_USER as any),
       ).rejects.toThrow(
         `Publication ${PUBLICATION_ID} does not belong to advert ${ADVERT_ID}`,
       )
     })
-
     it('should call PdfService.generatePdfAndSaveToS3 with correct parameters', async () => {
       const mockPublication = createMockPublication()
       publicationModel.findByPk.mockResolvedValue(mockPublication)
@@ -142,13 +126,7 @@ describe('PdfAdminService', () => {
         key: 'some-key',
         pdfBuffer: Buffer.from('pdf'),
       })
-
-      await service.regeneratePdf(
-        ADVERT_ID,
-        PUBLICATION_ID,
-        MOCK_USER as any,
-      )
-
+      await service.regeneratePdf(ADVERT_ID, PUBLICATION_ID, MOCK_USER as any)
       expect(mockPublication.advert.htmlMarkup).toHaveBeenCalledWith('A')
       expect(pdfService.generatePdfAndSaveToS3).toHaveBeenCalledWith(
         MOCK_HTML,
@@ -157,7 +135,6 @@ describe('PdfAdminService', () => {
         MOCK_TITLE,
       )
     })
-
     it('should log at start and on success', async () => {
       const mockPublication = createMockPublication()
       publicationModel.findByPk.mockResolvedValue(mockPublication)
@@ -166,13 +143,7 @@ describe('PdfAdminService', () => {
         key: 'some-key',
         pdfBuffer: Buffer.from('pdf'),
       })
-
-      await service.regeneratePdf(
-        ADVERT_ID,
-        PUBLICATION_ID,
-        MOCK_USER as any,
-      )
-
+      await service.regeneratePdf(ADVERT_ID, PUBLICATION_ID, MOCK_USER as any)
       expect(mockLogger.info).toHaveBeenCalledTimes(2)
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Regenerating PDF for publication',
@@ -194,7 +165,6 @@ describe('PdfAdminService', () => {
         }),
       )
     })
-
     it('should call findByPk with publicationId and include advert', async () => {
       const mockPublication = createMockPublication()
       publicationModel.findByPk.mockResolvedValue(mockPublication)
@@ -203,13 +173,7 @@ describe('PdfAdminService', () => {
         key: 'some-key',
         pdfBuffer: Buffer.from('pdf'),
       })
-
-      await service.regeneratePdf(
-        ADVERT_ID,
-        PUBLICATION_ID,
-        MOCK_USER as any,
-      )
-
+      await service.regeneratePdf(ADVERT_ID, PUBLICATION_ID, MOCK_USER as any)
       expect(publicationModel.findByPk).toHaveBeenCalledWith(
         PUBLICATION_ID,
         expect.objectContaining({

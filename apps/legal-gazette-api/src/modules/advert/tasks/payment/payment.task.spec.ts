@@ -17,11 +17,9 @@ import { ITBRService } from '../../../tbr/tbr.service.interface'
 import { IPriceCalculatorService } from '../../calculator/price-calculator.service.interface'
 import { PgAdvisoryLockService } from '../lock.service'
 import { PaymentTaskService } from './payment.task'
-
 // Test constants
 const MOCK_TBR_PERSON_CATEGORY = 'LR1'
 const MOCK_CONTAINER_ID = 'container-1'
-
 // Mock factory functions
 const createMockTransaction = (
   overrides?: Partial<TBRTransactionModel>,
@@ -41,7 +39,6 @@ const createMockTransaction = (
   save: jest.fn().mockResolvedValue(undefined),
   ...overrides,
 })
-
 const createMockPaymentResponse = (
   overrides?: Partial<TBRGetPaymentResponseDto>,
 ): TBRGetPaymentResponseDto => ({
@@ -51,7 +48,6 @@ const createMockPaymentResponse = (
   paid: true,
   ...overrides,
 })
-
 describe('PaymentTaskService - Payment Status Polling', () => {
   let service: PaymentTaskService
   let tbrService: jest.Mocked<ITBRService>
@@ -59,38 +55,30 @@ describe('PaymentTaskService - Payment Status Polling', () => {
   let priceCalculatorService: any
   let lockService: jest.Mocked<PgAdvisoryLockService>
   let logger: jest.Mocked<Logger>
-
   beforeEach(async () => {
     // Setup environment variables
     process.env.LG_TBR_CHARGE_CATEGORY_PERSON = MOCK_TBR_PERSON_CATEGORY
     process.env.TBR_CHUNK_SIZE = '25'
     process.env.TBR_CHUNK_DELAY_MS = '0' // Disable delay in tests
     process.env.HOSTNAME = MOCK_CONTAINER_ID
-
     const mockTBRService = {
       getPaymentStatus: jest.fn(),
       postPayment: jest.fn(),
     }
-
     const mockTBRTransactionModel = {
       findAll: jest.fn(),
     }
-
     const mockAdvertModel = {}
-
     const mockLockService = {
       runWithDistributedLock: jest.fn(),
     }
-
     const mockPriceCalculatorService = {}
-
     const mockLogger = {
       info: jest.fn(),
       error: jest.fn(),
       warn: jest.fn(),
       debug: jest.fn(),
     }
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentTaskService,
@@ -120,7 +108,6 @@ describe('PaymentTaskService - Payment Status Polling', () => {
         },
       ],
     }).compile()
-
     service = module.get<PaymentTaskService>(PaymentTaskService)
     tbrService = module.get(ITBRService)
     priceCalculatorService = module.get(IPriceCalculatorService)
@@ -128,19 +115,15 @@ describe('PaymentTaskService - Payment Status Polling', () => {
     lockService = module.get(PgAdvisoryLockService)
     logger = module.get(LOGGER_PROVIDER)
   })
-
   afterEach(() => {
     jest.clearAllMocks()
   })
-
   describe('updateTBRPayments - Core Functionality', () => {
     it('should skip job when no pending transactions exist', async () => {
       // Arrange
       tbrTransactionModel.findAll.mockResolvedValue([])
-
       // Act
       await service.updateTBRPayments()
-
       // Assert
       expect(tbrTransactionModel.findAll).toHaveBeenCalledWith({
         where: {
@@ -155,7 +138,6 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       )
       expect(tbrService.getPaymentStatus).not.toHaveBeenCalled()
     })
-
     it('should update transaction when payment is completed', async () => {
       // Arrange
       const mockTransaction = createMockTransaction()
@@ -163,10 +145,8 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       tbrService.getPaymentStatus.mockResolvedValue(
         createMockPaymentResponse({ paid: true }),
       )
-
       // Act
       await service.updateTBRPayments()
-
       // Assert
       expect(tbrService.getPaymentStatus).toHaveBeenCalledWith(
         {
@@ -187,7 +167,6 @@ describe('PaymentTaskService - Payment Status Polling', () => {
         }),
       )
     })
-
     it('should not update transaction when payment is still pending', async () => {
       // Arrange
       const mockTransaction = createMockTransaction()
@@ -198,17 +177,14 @@ describe('PaymentTaskService - Payment Status Polling', () => {
           capital: 1000, // Still has outstanding balance
         }),
       )
-
       // Act
       await service.updateTBRPayments()
-
       // Assert
       expect(tbrService.getPaymentStatus).toHaveBeenCalled()
       expect(mockTransaction.save).not.toHaveBeenCalled()
       expect(mockTransaction.status).toBe(TBRTransactionStatus.CREATED)
       expect(mockTransaction.paidAt).toBeNull()
     })
-
     it('should process multiple transactions in a single chunk', async () => {
       // Arrange
       const mockTransactions = [
@@ -220,10 +196,8 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       tbrService.getPaymentStatus.mockResolvedValue(
         createMockPaymentResponse({ paid: true }),
       )
-
       // Act
       await service.updateTBRPayments()
-
       // Assert
       expect(tbrService.getPaymentStatus).toHaveBeenCalledTimes(3)
       expect(mockTransactions[0].save).toHaveBeenCalled()
@@ -231,7 +205,6 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       expect(mockTransactions[2].save).toHaveBeenCalled()
     })
   })
-
   describe('Error Handling', () => {
     it('should log error and continue when TBR service fails for a transaction', async () => {
       // Arrange
@@ -240,15 +213,12 @@ describe('PaymentTaskService - Payment Status Polling', () => {
         createMockTransaction({ id: 'tx-2' }),
       ]
       tbrTransactionModel.findAll.mockResolvedValue(mockTransactions)
-
       // First transaction fails, second succeeds
       tbrService.getPaymentStatus
         .mockRejectedValueOnce(new Error('TBR service timeout'))
         .mockResolvedValueOnce(createMockPaymentResponse({ paid: true }))
-
       // Act
       await service.updateTBRPayments()
-
       // Assert
       expect(logger.error).toHaveBeenCalledWith(
         'Error fetching TBR payment status',
@@ -263,7 +233,6 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       // Second transaction should still be processed and updated
       expect(mockTransactions[1].save).toHaveBeenCalled()
     })
-
     it('should handle TBR service returning payment canceled status', async () => {
       // Arrange
       const mockTransaction = createMockTransaction()
@@ -275,24 +244,19 @@ describe('PaymentTaskService - Payment Status Polling', () => {
           canceled: true, // Payment was canceled
         }),
       )
-
       // Act
       await service.updateTBRPayments()
-
       // Assert
       expect(mockTransaction.save).toHaveBeenCalled()
       expect(mockTransaction.status).toBe(TBRTransactionStatus.CANCELED)
     })
-
     it('should continue processing even if one chunk encounters errors', async () => {
       // Arrange
       const mockTransaction = createMockTransaction()
       tbrTransactionModel.findAll.mockResolvedValue([mockTransaction])
       tbrService.getPaymentStatus.mockRejectedValue(new Error('Network error'))
-
       // Act
       await service.updateTBRPayments()
-
       // Assert
       expect(logger.error).toHaveBeenCalledWith(
         'Error fetching TBR payment status',
@@ -301,7 +265,6 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       // Should complete without throwing
     })
   })
-
   describe('Chunking Behavior', () => {
     it('should process transactions in chunks of configured size', async () => {
       // Arrange - Create 30 transactions (should be 2 chunks with size 25)
@@ -312,10 +275,8 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       tbrService.getPaymentStatus.mockResolvedValue(
         createMockPaymentResponse({ paid: false }),
       )
-
       // Act
       await service.updateTBRPayments()
-
       // Assert
       expect(logger.info).toHaveBeenCalledWith(
         'Found 30 pending TBR payments',
@@ -333,7 +294,6 @@ describe('PaymentTaskService - Payment Status Polling', () => {
         expect.objectContaining({ chunkSize: 5 }),
       )
     })
-
     it('should respect custom chunk size from environment variable', async () => {
       // This test verifies that TBR_CHUNK_SIZE env var is respected
       // The chunk size is set in beforeEach to 25
@@ -344,10 +304,8 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       tbrService.getPaymentStatus.mockResolvedValue(
         createMockPaymentResponse({ paid: false }),
       )
-
       // Act
       await service.updateTBRPayments()
-
       // Assert - Should be 1 chunk since 10 < 25
       expect(logger.info).toHaveBeenCalledWith(
         'Found 10 pending TBR payments',
@@ -358,7 +316,6 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       )
     })
   })
-
   describe('Distributed Lock Integration', () => {
     it('should execute job when lock is acquired', async () => {
       // Arrange
@@ -367,10 +324,8 @@ describe('PaymentTaskService - Payment Status Polling', () => {
         return { ran: true, reason: 'lock acquired' }
       })
       tbrTransactionModel.findAll.mockResolvedValue([])
-
       // Act
       await service.run()
-
       // Assert
       expect(lockService.runWithDistributedLock).toHaveBeenCalledWith(
         TASK_JOB_IDS.payment,
@@ -381,17 +336,14 @@ describe('PaymentTaskService - Payment Status Polling', () => {
         }),
       )
     })
-
     it('should skip job when lock cannot be acquired', async () => {
       // Arrange
       lockService.runWithDistributedLock.mockResolvedValue({
         ran: false,
         reason: 'already running',
       })
-
       // Act
       await service.run()
-
       // Assert
       expect(logger.debug).toHaveBeenCalledWith(
         'TBRPayments skipped (already running)',
@@ -400,15 +352,12 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       expect(tbrTransactionModel.findAll).not.toHaveBeenCalled()
     })
   })
-
   describe('Query Filtering', () => {
     it('should only query created that have no payment', async () => {
       // Arrange
       tbrTransactionModel.findAll.mockResolvedValue([])
-
       // Act
       await service.updateTBRPayments()
-
       // Assert
       expect(tbrTransactionModel.findAll).toHaveBeenCalledWith({
         where: {
@@ -418,14 +367,11 @@ describe('PaymentTaskService - Payment Status Polling', () => {
         },
       })
     })
-
     it('should filter by person charge category from environment', async () => {
       // Arrange
       tbrTransactionModel.findAll.mockResolvedValue([])
-
       // Act
       await service.updateTBRPayments()
-
       // Assert
       expect(tbrTransactionModel.findAll).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -436,7 +382,6 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       )
     })
   })
-
   describe('Logging and Observability', () => {
     it('should log job start and finish with duration', async () => {
       // Arrange
@@ -445,10 +390,8 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       tbrService.getPaymentStatus.mockResolvedValue(
         createMockPaymentResponse({ paid: false }),
       )
-
       // Act
       await service.updateTBRPayments()
-
       // Assert
       expect(logger.info).toHaveBeenCalledWith(
         'Starting TBR payment status update job for created payments',
@@ -464,7 +407,6 @@ describe('PaymentTaskService - Payment Status Polling', () => {
         }),
       )
     })
-
     it('should log each chunk being processed', async () => {
       // Arrange
       const mockTransactions = Array.from({ length: 30 }, (_, i) =>
@@ -474,10 +416,8 @@ describe('PaymentTaskService - Payment Status Polling', () => {
       tbrService.getPaymentStatus.mockResolvedValue(
         createMockPaymentResponse({ paid: false }),
       )
-
       // Act
       await service.updateTBRPayments()
-
       // Assert
       expect(logger.info).toHaveBeenCalledWith(
         'Processing TBR transaction chunk 1/2',

@@ -1,5 +1,7 @@
 'use client'
 
+import dynamic from 'next/dynamic'
+
 import { useCallback, useState } from 'react'
 import { useIntl } from 'react-intl'
 
@@ -11,7 +13,10 @@ import { debounce } from '@dmr.is/utils/shared/lodash/debounce'
 
 import { useFilterContext } from '../../hooks/useFilters'
 import { messages } from '../../lib/messages/messages'
-import FilterMenu from '../FilterMenu/FilterMenu'
+
+const FilterMenu = dynamic(() => import('../FilterMenu/FilterMenu'), {
+  ssr: false,
+})
 
 export const CaseFilters = () => {
   const { params, setParams, resetParams } = useFilterContext()

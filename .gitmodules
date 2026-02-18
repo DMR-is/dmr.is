@@ -1,3 +1,4 @@
 [submodule "island.is"]
 	path = submodules/island.is
 	url = https://github.com/island-is/island.is
+	ignore = dirty

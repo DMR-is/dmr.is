@@ -103,6 +103,9 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
 
+      - name: patch submodules
+        run: yarn run postinstall
+
       - name: tsc
         run: yarn run nx affected -t tsc
 

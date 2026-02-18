@@ -1,4 +1,4 @@
-import { decode, JwtPayload } from 'jsonwebtoken'
+import { decodeJwt } from 'jose'
 import { JWT } from 'next-auth/jwt'
 import { getLogger } from '@dmr.is/logging-next'
 
@@ -12,7 +12,7 @@ export const isExpired = (
   accessToken: string,
   isRefreshTokenExpired: boolean,
 ) => {
-  const decoded = decode(accessToken)
+  const decoded = decodeJwt(accessToken)
 
   if (decoded && !(typeof decoded === 'string') && decoded['exp']) {
     const expires = new Date(decoded.exp * 1000)
@@ -70,7 +70,7 @@ export const refreshAccessToken = async (
     }
 
     const expiresIn = Math.floor(Date.now() + newTokens.expires_in * 1000)
-    const decodedOldAccessToken = decode(token.accessToken) as JwtPayload
+    const decodedOldAccessToken = decodeJwt(token.accessToken)
 
     logger.info('Token refreshed', {
       metadata: {

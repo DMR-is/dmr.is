@@ -2,29 +2,29 @@ import { RegName } from '@dmr.is/regulations-tools/types'
 
 import { DRAFTS_FOLDER, FILE_SERVER, MEDIA_BUCKET_FOLDER } from '../constants'
 import { _fileUrlsMapper } from './file-upload-urls'
-
 const defaultRegName = '0123/2004' as RegName
 const regulationDraftId = '0cb3a68b-f368-4d01-a594-ba73e0dc396d'
-
 // ---------------------------------------------------------------------------
-
 const devPrefix = MEDIA_BUCKET_FOLDER ? MEDIA_BUCKET_FOLDER + '/' : ''
-
 type TestProps = Array<{
   url: string
   key: string | undefined
 }>
-
 const testMapping = (tests: TestProps, regName: RegName = defaultRegName) => {
   const urls = tests.map((t) => t.url)
-
   const expected = tests
-    .filter((t): t is { url: string; key: string } => !!t.key)
+    .filter(
+      (
+        t,
+      ): t is {
+        url: string
+        key: string
+      } => !!t.key,
+    )
     .map((t) => ({
       old: t.url,
       new: FILE_SERVER + '/' + devPrefix + 'files/' + regName + '/' + t.key,
     }))
-
   // run the test
   expect(
     _fileUrlsMapper(urls, regName, true).map((m) => ({
@@ -33,9 +33,7 @@ const testMapping = (tests: TestProps, regName: RegName = defaultRegName) => {
     })),
   ).toEqual(expected)
 }
-
 // ---------------------------------------------------------------------------
-
 // ALL TESTS WILL BE SKIPPED FOR NOW
 describe.skip('_makeFileKey', () => {
   it('ignores empty strings', () => {
@@ -46,7 +44,6 @@ describe.skip('_makeFileKey', () => {
       },
     ])
   })
-
   it('ignores URLs already published on the file-server', () => {
     // Ignored/unchanged URLs are not returned as they've already been uploaded
     // and there's no need to replace/update/rewrite them in a HTML text.
@@ -73,7 +70,6 @@ describe.skip('_makeFileKey', () => {
       },
     ])
   })
-
   it('maps URLs to a folder named after the domain name', () => {
     testMapping([
       {
@@ -107,7 +103,6 @@ describe.skip('_makeFileKey', () => {
       },
     ])
   })
-
   it('special-case treats URLs starting with "/" as www.reglugerd.is URLs', () => {
     testMapping([
       {
@@ -120,11 +115,9 @@ describe.skip('_makeFileKey', () => {
       },
     ])
   })
-
   it('detects draft-documents on the file-server and moves them to a public folder', () => {
     const fileServerDraft =
       FILE_SERVER + '/' + DRAFTS_FOLDER + '/' + regulationDraftId + '/'
-
     // Ignored/unchanged URLs are not returned as they've already been uploaded
     // and there's no need to replace/update/rewrite them in a HTML text.
     testMapping([
@@ -150,10 +143,8 @@ describe.skip('_makeFileKey', () => {
       },
     ])
   })
-
   it('grudgingly accepts draft-documents that do not have a draftId scope folder by accident', () => {
     const fileServerDraftNoUUIDScope = FILE_SERVER + '/' + DRAFTS_FOLDER + '/'
-
     testMapping([
       {
         url: fileServerDraftNoUUIDScope + 'my-uploaded-barchart.png',

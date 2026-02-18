@@ -12,12 +12,13 @@ export const dynamic = 'force-dynamic'
 export default async function AdvertPage({
   params,
 }: {
-  params: { publicationNumber: string; version: string }
+  params: Promise<{ publicationNumber: string; version: string }>
 }) {
   // Handle redirects for UUIDs and lowercase versions
+  const awaitedParams = await params
   const { publicationNumber, version } = await handlePublicationRedirects(
-    params.publicationNumber,
-    params.version,
+    awaitedParams.publicationNumber,
+    awaitedParams.version,
   )
 
   // Fetch publication by publication number and version

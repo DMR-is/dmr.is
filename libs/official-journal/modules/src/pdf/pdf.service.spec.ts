@@ -6,10 +6,8 @@ import { IAWSService } from '@dmr.is/shared/modules'
 import { IUtilityService } from '../utility/utility.service.interface'
 import { PdfService } from './pdf.service'
 import { IPdfService } from './pdf.service.interface'
-
 describe('PdfService', () => {
   let service: IPdfService
-
   beforeAll(async () => {
     const app = await Test.createTestingModule({
       imports: [LoggingModule],
@@ -36,10 +34,8 @@ describe('PdfService', () => {
         },
       ],
     }).compile()
-
     service = app.get<IPdfService>(IPdfService)
   })
-
   describe('Should exists', () => {
     it('should be defined', () => {
       expect(service).toBeDefined()

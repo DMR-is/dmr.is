@@ -1,10 +1,19 @@
+'use client'
+import dynamic from 'next/dynamic'
+
 import { Header } from '@dmr.is/ui/components/Header/Header'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 
-import { MenuButton } from '../../components/buttons/MenuButton'
 import { Providers } from '../../components/providers/Providers'
 
-export default async function RootLayout({
+const DynamicMenuButton = dynamic(
+  () => import('../../components/buttons/MenuButton'),
+  {
+    ssr: false,
+  },
+)
+
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
@@ -15,7 +24,7 @@ export default async function RootLayout({
         variant="blue"
         settings={
           <Box marginRight={2}>
-            <MenuButton />
+            <DynamicMenuButton />
           </Box>
         }
       />

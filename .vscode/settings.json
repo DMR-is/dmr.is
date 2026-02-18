@@ -24,6 +24,7 @@
       "**/submodules"
     ]
   },
+  "git.detectSubmodules": false,
   "search.exclude": {
     ".githooks": true,
     ".yarn": true,

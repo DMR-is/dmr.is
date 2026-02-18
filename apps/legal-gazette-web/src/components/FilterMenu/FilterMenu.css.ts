@@ -9,6 +9,13 @@ export const filterMenu = style({
   zIndex: 10,
 })
 
+export const filterMenuDropdown = style({
+  position: 'absolute',
+  top: '100%',
+  left: 0,
+  width: FILTER_MENU_WIDTH,
+})
+
 export const filterMenuPopover = style({
   maxHeight: FILTER_MENU_MAX_HEIGHT,
   width: FILTER_MENU_WIDTH,

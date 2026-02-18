@@ -2,12 +2,12 @@ import Head from 'next/head'
 
 import { ComponentProps } from 'react'
 import { IntlProvider } from 'react-intl'
-import { Provider } from 'reakit'
 import { SWRConfig } from 'swr'
 
 import { Footer } from '@dmr.is/ui/components/island-is/Footer'
 import { Page } from '@dmr.is/ui/components/island-is/Page'
 import { ToastContainer } from '@dmr.is/ui/components/island-is/ToastContainer'
+import { globalStyles } from '@dmr.is/ui/globalStyles'
 
 import Banner from '../components/banner/Banner'
 import { Header } from '../components/header/Header'
@@ -15,6 +15,9 @@ import { Main } from '../components/main/Main'
 import { PageLoader } from '../components/page-loader/page-loader'
 import icelandic from '../i18n/strings/is-compiled.json'
 import { defaultFetcher } from '../lib/constants'
+
+globalStyles()
+
 
 type BannerProps = ComponentProps<typeof Banner> & {
   showBanner?: boolean
@@ -73,7 +76,6 @@ export const Layout = ({
           suspense: false,
         }}
       >
-        <Provider>
           <PageLoader />
           <Page component="div">
             <Head>
@@ -175,7 +177,6 @@ export const Layout = ({
               }
             `}</style>
           </Page>
-        </Provider>
       </SWRConfig>
     </IntlProvider>
   )

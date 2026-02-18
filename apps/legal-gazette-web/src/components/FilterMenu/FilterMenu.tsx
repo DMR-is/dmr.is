@@ -1,7 +1,7 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import { useIntl } from 'react-intl'
-import { Popover, PopoverDisclosure, usePopoverState } from 'reakit'
 
 import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
@@ -50,9 +50,33 @@ export const FilterMenu = () => {
     statusOptions,
     resetParams,
   } = useFilterContext()
-  const popover = usePopoverState({
-    placement: 'right-end',
-  })
+
+  const [isOpen, setIsOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleClickOutside = (e: Event) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false)
+      }
+    }
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false)
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isOpen])
 
   const filters: FilterMenuItem[] = [
     {
@@ -73,89 +97,91 @@ export const FilterMenu = () => {
   ]
 
   return (
-    <Box className={styles.filterMenu}>
+    <Box className={styles.filterMenu} ref={containerRef}>
       {filters.length > 0 && (
-        <PopoverDisclosure as="div" role="button" {...popover}>
+        <div role="button" onClick={() => setIsOpen((prev) => !prev)}>
           <Button variant="utility" icon="filter" iconType="outline">
             {formatMessage(messages.openFilterMenu)}
           </Button>
-        </PopoverDisclosure>
+        </div>
       )}
-      <Popover {...popover}>
-        <Box className={styles.filterMenuPopover} boxShadow="subtle">
-          <Accordion
-            dividers={true}
-            dividerOnBottom={true}
-            dividerOnTop={false}
-            singleExpand={true}
-          >
-            {filters.map((filter, i) => (
-              <Box padding={2} key={i}>
-                <AccordionItem
-                  labelVariant="h5"
-                  iconVariant="small"
-                  id={`accordion-filter-${i}`}
-                  label={filter.title}
-                  startExpanded={false}
-                >
-                  <Stack space={2}>
-                    {filter.options?.map((option, j) => {
-                      const isChecked = isArrayOptionSelected(
-                        params[filter.queryParam as keyof typeof params] ??
-                          null,
-                        option.value,
-                      )
-                      return (
-                        <Checkbox
-                          id={`checkbox-filter-${filter.queryParam}-${j}`}
-                          checked={isChecked}
-                          key={j}
-                          label={option.label}
-                          onChange={(e) => {
+      {isOpen && (
+        <div className={styles.filterMenuDropdown}>
+          <Box className={styles.filterMenuPopover} boxShadow="subtle">
+            <Accordion
+              dividers={true}
+              dividerOnBottom={true}
+              dividerOnTop={false}
+              singleExpand={true}
+            >
+              {filters.map((filter, i) => (
+                <Box padding={2} key={i}>
+                  <AccordionItem
+                    labelVariant="h5"
+                    iconVariant="small"
+                    id={`accordion-filter-${i}`}
+                    label={filter.title}
+                    startExpanded={false}
+                  >
+                    <Stack space={2}>
+                      {filter.options?.map((option, j) => {
+                        const isChecked = isArrayOptionSelected(
+                          params[filter.queryParam as keyof typeof params] ??
+                            null,
+                          option.value,
+                        )
+                        return (
+                          <Checkbox
+                            id={`checkbox-filter-${filter.queryParam}-${j}`}
+                            checked={isChecked}
+                            key={j}
+                            label={option.label}
+                            onChange={(e) => {
+                              setParams({
+                                [filter.queryParam]: toggleArrayOption(
+                                  params[
+                                    filter.queryParam as keyof typeof params
+                                  ] ?? null,
+                                  option.value,
+                                  e.target.checked,
+                                ),
+                              })
+                            }}
+                          />
+                        )
+                      })}
+                      <Inline justifyContent="flexEnd">
+                        <Button
+                          icon="reload"
+                          variant="text"
+                          size="small"
+                          onClick={() =>
                             setParams({
-                              [filter.queryParam]: toggleArrayOption(
-                                params[
-                                  filter.queryParam as keyof typeof params
-                                ] ?? null,
-                                option.value,
-                                e.target.checked,
-                              ),
+                              [filter.queryParam]: null,
                             })
-                          }}
-                        />
-                      )
-                    })}
-                    <Inline justifyContent="flexEnd">
-                      <Button
-                        icon="reload"
-                        variant="text"
-                        size="small"
-                        onClick={() =>
-                          setParams({
-                            [filter.queryParam]: null,
-                          })
-                        }
-                      >
-                        {formatMessage(messages.clearFilter)}
-                      </Button>
-                    </Inline>
-                  </Stack>
-                </AccordionItem>
-              </Box>
-            ))}
-          </Accordion>
-        </Box>
-        <Box className={styles.filterMenuClearButton}>
-          <Button
-            onClick={() => resetParams()}
-            size="small"
-            variant="text"
-            icon="reload"
-          >
-            {formatMessage(messages.clearFilters)}
-          </Button>
-        </Box>
-      </Popover>
+                          }
+                        >
+                          {formatMessage(messages.clearFilter)}
+                        </Button>
+                      </Inline>
+                    </Stack>
+                  </AccordionItem>
+                </Box>
+              ))}
+            </Accordion>
+          </Box>
+          <Box className={styles.filterMenuClearButton}>
+            <Button
+              onClick={() => resetParams()}
+              size="small"
+              variant="text"
+              icon="reload"
+            >
+              {formatMessage(messages.clearFilters)}
+            </Button>
+          </Box>
+        </div>
+      )}
     </Box>
   )
 }

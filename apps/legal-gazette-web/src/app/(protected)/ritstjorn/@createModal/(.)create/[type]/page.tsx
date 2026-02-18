@@ -7,13 +7,13 @@ import { CreateBankruptcyAdvertModal } from '../../../../../../components/create
 import { CreateDeceasedAdvertModal } from '../../../../../../components/create-advert/modals/CreateRecallDeceasedAdvertModal'
 
 type Props = {
-  params: {
+  params: Promise<{
     type: string
-  }
+  }>
 }
 
 export default async function CreateModalPage({ params }: Props) {
-  const { type } = params
+  const { type } = await params
 
   if (!['almenn', 'throtabu', 'danarbu'].includes(type)) {
     notFound()

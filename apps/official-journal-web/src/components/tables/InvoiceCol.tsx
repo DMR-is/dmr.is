@@ -16,7 +16,7 @@ type PaymentStatusProps = {
 export const PaymentStatus = ({
   isSent,
   isPaid,
-}: PaymentStatusProps): JSX.Element => {
+}: PaymentStatusProps): React.JSX.Element => {
   if (!isSent) {
     return (
       <Tooltip

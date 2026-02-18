@@ -7,10 +7,10 @@ import { useEffect, useMemo } from 'react'
 
 import { forceLogin, useLogOut } from '@dmr.is/auth/useLogOut'
 
-import type { DropdownMenuProps } from '@island.is/island-ui/core/DropdownMenu/DropdownMenu'
 import { useBreakpoint } from '@island.is/island-ui/core/hooks/useBreakpoint'
 
 import { Box } from '../../island-is/lib/Box'
+import type { DropdownMenuProps } from '../../island-is/lib/DropdownMenu'
 import { DropdownMenu } from '../../island-is/lib/DropdownMenu'
 import { GridColumn } from '../../island-is/lib/GridColumn'
 import { GridContainer } from '../../island-is/lib/GridContainer'
