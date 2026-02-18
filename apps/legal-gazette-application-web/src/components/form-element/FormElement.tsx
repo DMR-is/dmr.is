@@ -4,7 +4,7 @@ import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 
 import { Editor } from '../editor/Editor'
-
+import { SubmitButton } from '../submit-button/SubmitButton'
 
 type BaseProps = {
   width?: 'half' | 'full'
@@ -13,9 +13,10 @@ type BaseProps = {
 
 type InputOptions = Omit<
   React.ComponentProps<typeof Input>,
-  'size' | 'backgroundColor' | 'name'
+  'size' | 'backgroundColor' | 'name' | 'type'
 > & {
   name?: string
+  inputType?: React.ComponentProps<typeof Input>['type']
 }
 type SelectOptions<TOptions> = Omit<
   React.ComponentProps<typeof Select<TOptions>>,
@@ -31,11 +32,17 @@ type DateOptions = Omit<
 
 type EditorProps = React.ComponentProps<typeof Editor>
 
+type SubmitProps = {
+  buttonText?: string
+  onClick?: () => void
+}
+
 type FormElementProps<T> =
   | ({ type: 'text' } & InputOptions)
   | ({ type: 'select' } & SelectOptions<T>)
   | ({ type: 'date' } & DateOptions)
   | ({ type: 'editor' } & EditorProps)
+  | ({ type: 'submit' } & SubmitProps)
 
 type Props<T> = BaseProps & FormElementProps<T>
 
@@ -49,16 +56,22 @@ export const FormElement = <T,>({ width = 'half', ...props }: Props<T>) => {
   switch (props.type) {
     case 'text':
       {
-        const { type, ...inputProps } = props
-        const name = inputProps.name || 'text-input'
+        const { type: _type, name, inputType, ...inputProps } = props
+        const inputName = name || 'text-input'
         elementToRender = (
-          <Input size="sm" backgroundColor="blue" name={name} {...inputProps} />
+          <Input
+            size="sm"
+            backgroundColor="blue"
+            name={inputName}
+            type={inputType}
+            {...inputProps}
+          />
         )
       }
       break
     case 'select':
       {
-        const { type, ...selectProps } = props
+        const { type: _type, ...selectProps } = props
         elementToRender = (
           <Select size="sm" backgroundColor="blue" {...selectProps} />
         )
@@ -66,7 +79,7 @@ export const FormElement = <T,>({ width = 'half', ...props }: Props<T>) => {
       break
     case 'date':
       {
-        const { type, placeholder, ...dateProps } = props
+        const { type: _type, placeholder, ...dateProps } = props
         elementToRender = (
           <DatePicker
             size="sm"
@@ -78,10 +91,21 @@ export const FormElement = <T,>({ width = 'half', ...props }: Props<T>) => {
       }
       break
     case 'editor': {
-      const { type, ...editorProps } = props
+      const { type: _type, ...editorProps } = props
       elementToRender = <Editor {...editorProps} />
+      break
+    }
+    case 'submit': {
+      const { type: _type, buttonText = 'Staðfesta', onClick } = props
+      elementToRender = (
+        <SubmitButton onClick={onClick} buttonText={buttonText} />
+      )
     }
   }
 
-  return <GridColumn paddingBottom={props.paddingBottom} span={span}>{elementToRender}</GridColumn>
+  return (
+    <GridColumn paddingBottom={props.paddingBottom} span={span}>
+      {elementToRender}
+    </GridColumn>
+  )
 }

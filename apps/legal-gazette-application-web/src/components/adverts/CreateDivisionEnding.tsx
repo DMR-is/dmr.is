@@ -92,21 +92,18 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
             </Text>
           }
         >
+          <FormElement type="text" label="Nafn undirritara" />
+          <FormElement type="text" label="Staðsetning undirritunar" />
+          <FormElement type="date" label="Dagsetning undirritunar" />
+          <FormElement type="text" label="Fyrir hönd undirritara" />
+        </FormGroup>
+        <FormGroup title="Forskoðun"></FormGroup>
+        <FormGroup>
           <FormElement
-            type="text"
-            label="Nafn undirritara"
-          />
-          <FormElement
-            type="text"
-            label="Staðsetning undirritunar"
-          />
-          <FormElement
-            type="date"
-            label="Dagsetning undirritunar"
-          />
-          <FormElement
-            type="text"
-            label="f.h. undirritara"
+            width="full"
+            type="submit"
+            buttonText="Staðfesta og senda inn til birtingar"
+            onClick={() => console.log('wow')}
           />
         </FormGroup>
       </Stack>

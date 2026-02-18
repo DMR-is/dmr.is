@@ -1,5 +1,5 @@
-export const formatNationalId = (nationalId: string) => {
-  // Format: XXXXXX-XXXX or XXXXXXXXXX
+export const formatNationalId = (nationalId = '') => {
+  // Format: XXXXXX-XXXX or XXXXXXXXXX or XXXXXX XXXX
   const cleaned = nationalId.replace(/[^0-9]/g, '')
   if (cleaned.length !== 10) {
     return nationalId // Return as is if not 10 digits
