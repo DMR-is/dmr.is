@@ -9,6 +9,14 @@ const withVanillaExtract = createVanillaExtractPlugin({
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
+  turbopack: {
+    resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+  },
+  webpack: (config) => {
+    config.resolve.alias.canvas = false
+
+    return config
+  },
   output: 'standalone',
   env: {
     API_MOCKS: process.env.API_MOCKS || null,
