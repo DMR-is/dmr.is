@@ -47,7 +47,7 @@ index f73944efed..f4445d4d2c 100644
 -        </DialogDisclosure>
 +        />
        )}
- 
+
        {renderModal && (
 diff --git a/libs/island-ui/core/src/lib/PhoneInput/PhoneInput.tsx b/libs/island-ui/core/src/lib/PhoneInput/PhoneInput.tsx
 index 35821bf8c8..d24a2df9bb 100644
@@ -105,13 +105,27 @@ index 291a13d7cf..07141eab3a 100644
          hasError={hasError}
          isSearchable={isSearchable}
          size={size}
+diff --git a/libs/island-ui/core/src/lib/Stack/Stack.tsx b/libs/island-ui/core/src/lib/Stack/Stack.tsx
+index a9a0d66a24..2b081dc79d 100644
+--- a/libs/island-ui/core/src/lib/Stack/Stack.tsx
++++ b/libs/island-ui/core/src/lib/Stack/Stack.tsx
+@@ -116,7 +116,9 @@ export const Stack = ({
+         if (
+           process.env.NODE_ENV !== 'production' &&
+           typeof child === 'object' &&
++          // @ts-expect-error
+           child.type === Hidden &&
++          // @ts-expect-error
+           (child.props as HiddenProps).inline !== undefined
+         ) {
+           throw new Error(
 diff --git a/libs/island-ui/core/src/lib/ToggleSwitch/_ToggleSwitch.utils.tsx b/libs/island-ui/core/src/lib/ToggleSwitch/_ToggleSwitch.utils.tsx
 index 518b1abeb8..8c2b72767f 100644
 --- a/libs/island-ui/core/src/lib/ToggleSwitch/_ToggleSwitch.utils.tsx
 +++ b/libs/island-ui/core/src/lib/ToggleSwitch/_ToggleSwitch.utils.tsx
 @@ -6,7 +6,7 @@ import cn from 'classnames'
  type TogglerElms = HTMLAnchorElement | HTMLButtonElement | HTMLInputElement
- 
+
  type InteractiveProps<Elm extends TogglerElms = TogglerElms> = Pick<
 -  JSX.IntrinsicElements[Elm extends HTMLAnchorElement
 +  React.JSX.IntrinsicElements[Elm extends HTMLAnchorElement
@@ -119,7 +133,7 @@ index 518b1abeb8..8c2b72767f 100644
      : Elm extends HTMLButtonElement
      ? 'button'
 @@ -16,7 +16,7 @@ type InteractiveProps<Elm extends TogglerElms = TogglerElms> = Pick<
- 
+
  export type ToggleSwitchBaseProps<Elm extends TogglerElms = TogglerElms> = {
    /** The visible label text */
 -  label: string | JSX.Element
@@ -145,10 +159,10 @@ index 96df126e56..494e515afd 100644
 +++ b/libs/island-ui/core/src/lib/context/LinkContext/LinkContext.tsx
 @@ -1,7 +1,7 @@
  import React, { createContext } from 'react'
- 
+
  export interface LinkContextInterface {
 -  linkRenderer?: (href: string, children: React.ReactNode) => JSX.Element
 +  linkRenderer?: (href: string, children: React.ReactNode) => React.JSX.Element
  }
- 
+
  export const LinkContext = createContext<LinkContextInterface>({
