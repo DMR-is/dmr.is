@@ -2,7 +2,6 @@ import { Transform, Type } from 'class-transformer'
 import {
   ArrayMaxSize,
   ArrayMinSize,
-  IsDate,
   IsDateString,
   IsDefined,
   IsNumber,
@@ -23,8 +22,15 @@ import {
 } from 'sequelize-typescript'
 import { isBase64 } from 'validator'
 
-import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
+import { ApiProperty, PickType } from '@nestjs/swagger'
 
+import {
+  ApiDateTime,
+  ApiDto,
+  ApiHTML,
+  ApiOptionalNumber,
+  ApiOptionalString,
+} from '@dmr.is/decorators'
 import {
   ApplicationTypeEnum,
   CommonApplicationAnswers,
@@ -40,7 +46,6 @@ import { DetailedDto } from '../core/dto/detailed.dto'
 import { AdvertDto, AdvertModel } from './advert.model'
 import { AdvertPublicationModel } from './advert-publication.model'
 import { CaseModel } from './case.model'
-import { CreateCommunicationChannelDto } from './communication-channel.model'
 import { SettlementModel } from './settlement.model'
 import { CreateSignatureDto } from './signature.model'
 
@@ -349,31 +354,25 @@ export class CreateDivisionMeetingDto {
   signature!: CreateSignatureDto
 }
 
-export class CreateDivisionEndingDto extends OmitType(
-  CreateDivisionMeetingDto,
-  ['meetingLocation'],
-) {
-  @ApiProperty({ type: Number, required: false })
-  @IsOptional()
-  @IsNumber()
-  declaredClaims?: number
+export class CreateDivisionEndingDto {
+  @ApiOptionalString()
+  additionalText?: string
 
-  @ApiProperty({ type: String })
-  @Type(() => Date)
-  @IsDate()
+  @ApiHTML({ required: false })
+  @IsOptional()
+  content?: string
+
+  @ApiDateTime()
+  scheduledAt!: Date
+
+  @ApiDateTime()
   endingDate!: Date
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
-  @Transform(({ value }) => {
-    if (!value) return value
-    if (isBase64(value)) {
-      return Buffer.from(value, 'base64').toString('utf-8')
-    }
-    return value
-  })
-  content?: string
+  @ApiOptionalNumber()
+  declaredClaims?: number
+
+  @ApiDto(CreateSignatureDto)
+  signature!: CreateSignatureDto
 }
 
 export class IslandIsSubmitApplicationDto extends PickType(
