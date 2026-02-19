@@ -58,9 +58,9 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
           queryClient.invalidateQueries(
             trpc.getApplicationById.queryFilter({ id: applicationId }),
           )
-          toast.success('Skiptalok bætt við og sent í birtingu')
           setState({})
           setErrors(null)
+          toast.success('Skiptalok bætt við og sent í birtingu')
           setIsVisible(false)
         },
         onError: () => {

@@ -192,7 +192,6 @@ export const ApplicationCard = ({ application }: Props) => {
               <div className={cardExtraButtonStyle}>
                 <AddAdvertsToApplicationMenu
                   applicationId={application.id}
-                  title={application.title + ' - ' + application.subtitle}
                 />
               </div>
             ) : (

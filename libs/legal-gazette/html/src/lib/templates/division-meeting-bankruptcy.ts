@@ -52,7 +52,7 @@ export function getDivisionMeetingBankruptcyTemplate({
         <tr>${tableHeaderName}${tableHeaderMeeting}</tr>
         <tr>${nameCell}${meetingCell}</tr>
       </tbody>
-    </table>.
+    </table>
   `
     : ''
 
