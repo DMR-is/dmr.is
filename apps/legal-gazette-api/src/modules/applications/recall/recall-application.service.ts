@@ -299,7 +299,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       settlementId: application.settlement?.id,
       judgementDate: judgementDate.toISOString(),
       communicationChannels: [],
-      scheduledAt: [body.meetingDate],
+      scheduledAt: [body.scheduledAt.toISOString()],
     })
 
     await application.settlement?.update({

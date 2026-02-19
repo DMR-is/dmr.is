@@ -18,11 +18,15 @@ export const getElement = ({
   text = '',
   options = { as: 'p', className: '' },
 }: GetElementProps): string =>
-  `<${options.as}${isString(options.className) ? ` class="${options.className}"` : ''}>${text}</${options.as}>`
+  {
+    // must use this fallback, if options are passed wihout as, it should default to 'p'
+    const tag = options.as || 'p'
+    return `<${tag}${isString(options.className) ? ` class="${options.className}"` : ''}>${text}</${tag}>`
+  }
 
 export function getTableHeaderCell(text: string): string {
   const strongElement = getElement({ text, options: { as: 'strong' } })
-  const tableHeader = getElement({ text: strongElement, options: { as: 'th' } })
+  const tableHeader = getElement({ text: strongElement, options: { as: 'td' } })
 
   return tableHeader
 }

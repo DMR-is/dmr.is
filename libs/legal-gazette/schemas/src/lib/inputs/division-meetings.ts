@@ -14,9 +14,13 @@ export const createDivisionMeetingInput = z.object({
   }),
 })
 
-export const createDivisionEndingInput = createDivisionMeetingInput.extend({
+export const createDivisionEndingInput = z.object({
   declaredClaims: z.number().optional(),
-  endingDate: z.iso.datetime()
+  endingDate: z.date('Dagsetning lokaskráningar er nauðsynleg'),
+  scheduledAt: z.date('Dagsetning birtingar er nauðsynleg'),
+  content: z.string().optional(),
+  additionalText: z.string().optional(),
+  signature: signatureSchemaRefined,
 })
 
 export const createDivisionMeetingWithIdInput =

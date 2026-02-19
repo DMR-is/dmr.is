@@ -5007,13 +5007,24 @@
         "type": "object",
         "properties": {
           "additionalText": { "type": "string" },
-          "meetingDate": { "type": "string" },
-          "signature": { "$ref": "#/components/schemas/CreateSignatureDto" },
+          "content": {
+            "type": "string",
+            "description": "HTML content encoded as base64"
+          },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "endingDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "declaredClaims": { "type": "number" },
-          "endingDate": { "type": "string" },
-          "content": { "type": "string" }
+          "signature": { "$ref": "#/components/schemas/CreateSignatureDto" }
         },
-        "required": ["meetingDate", "signature", "endingDate"]
+        "required": ["scheduledAt", "endingDate", "signature"]
       },
       "GetMinDateResponseDto": {
         "type": "object",

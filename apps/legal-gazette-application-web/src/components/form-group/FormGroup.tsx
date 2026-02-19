@@ -6,12 +6,14 @@ type Props = {
   title?: string
   subTitle?: string | React.ReactNode
   children?: React.ReactNode
+  error?: string
 }
 
 export const FormGroup = ({
   title = '',
   subTitle,
   children,
+  error,
 }: React.PropsWithChildren<Props>) => {
   const hasSubTitle = !!subTitle
 
@@ -28,6 +30,13 @@ export const FormGroup = ({
             </Text>
           )}
           {hasSubTitle && typeof subTitle !== 'string' && subTitle}
+        </GridColumn>
+      )}
+      {error && (
+        <GridColumn span="12/12">
+          <Text variant="small" fontWeight='semiBold' color="red600">
+            {error}
+          </Text>
         </GridColumn>
       )}
       {children}

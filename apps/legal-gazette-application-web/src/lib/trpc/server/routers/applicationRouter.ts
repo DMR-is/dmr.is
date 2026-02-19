@@ -53,7 +53,7 @@ export const applicationRouter = router({
       ctx.api.getTypes({
         excludeUnassignable: true,
       }),
-      ctx.api.getCategories({}),
+      ctx.api.getCategories({ excludeUnassignable: true }),
       ctx.api.getCourtDistricts(),
     ])
 
@@ -130,7 +130,7 @@ export const applicationRouter = router({
       const { applicationId, ...rest } = input
       return await ctx.api.addDivisionEnding({
         applicationId: input.applicationId,
-        createDivisionEndingDto: rest
+        createDivisionEndingDto: rest,
       })
     }),
   getMyAdverts: protectedProcedure

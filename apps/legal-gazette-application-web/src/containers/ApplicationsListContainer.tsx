@@ -37,6 +37,11 @@ export function ApplicationsListContainer() {
     }),
   )
 
+
+  console.log('data', data)
+  console.log('isLoading', isLoading)
+  console.log('error', error)
+
   return (
     <Box background={'blue100'} paddingTop={[3, 5]} paddingBottom={[6, 8]}>
       <GridContainer>
