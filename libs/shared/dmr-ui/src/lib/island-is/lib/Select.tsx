@@ -10,7 +10,7 @@ import type { ComponentType } from 'react'
  * so we type onChange here to prevent noImplicitAny errors.
  * The index signature allows all other island-ui Select props through.
  */
-type SelectProps = {
+export type SelectProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onChange?: (option: { label: string; value: any } | null) => void
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -26,5 +26,3 @@ const DynamicSelect = dynamic(
     ssr: false,
   },
 )
-
-export const Select = DynamicSelect as unknown as ComponentType<SelectProps>
