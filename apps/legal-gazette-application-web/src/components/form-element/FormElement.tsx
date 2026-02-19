@@ -2,7 +2,6 @@ import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import type {
-  Option as SelectOption,
   SelectProps,
 } from '@dmr.is/ui/components/island-is/Select'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
@@ -22,8 +21,8 @@ type InputOptions = Omit<
   name?: string
   inputType?: React.ComponentProps<typeof Input>['type']
 }
-type SelectOptions<TOptions> = Omit<
-  SelectProps<SelectOption<TOptions>>,
+type SelectOptions = Omit<
+  SelectProps,
   'size' | 'backgroundColor'
 >
 type DateOptions = Omit<
@@ -38,18 +37,18 @@ type EditorProps = React.ComponentProps<typeof Editor>
 
 type SubmitProps = React.ComponentProps<typeof SubmitButton>
 
-type FormElementProps<T> =
+type FormElementProps =
   | ({ type: 'text' } & InputOptions)
-  | ({ type: 'select' } & SelectOptions<T>)
+  | ({ type: 'select' } & SelectOptions)
   | ({ type: 'date' } & DateOptions)
   | ({ type: 'editor' } & EditorProps)
   | ({ type: 'submit' } & SubmitProps)
 
-type Props<T> = BaseProps & FormElementProps<T>
+type Props = BaseProps & FormElementProps
 
 type ColumnSpan = React.ComponentProps<typeof GridColumn>['span']
 
-export const FormElement = <T,>({ width = 'half', ...props }: Props<T>) => {
+export const FormElement = ({ width = 'half', ...props }: Props) => {
   const span: ColumnSpan = width === 'half' ? ['12/12', '6/12'] : '12/12'
 
   let elementToRender

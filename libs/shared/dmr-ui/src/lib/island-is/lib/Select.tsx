@@ -26,3 +26,5 @@ const DynamicSelect = dynamic(
     ssr: false,
   },
 )
+
+export const Select = DynamicSelect as unknown as ComponentType<SelectProps>
