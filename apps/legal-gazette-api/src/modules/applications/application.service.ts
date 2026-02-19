@@ -528,7 +528,7 @@ export class ApplicationService implements IApplicationService {
       caption: body.caption,
       additionalText: body.additionalText,
       content: body.html,
-      communicationChannels: body.communicationChannels,
+      communicationChannels: [],
       scheduledAt: body.publishingDates,
     })
   }

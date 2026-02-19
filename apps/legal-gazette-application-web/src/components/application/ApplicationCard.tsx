@@ -191,9 +191,7 @@ export const ApplicationCard = ({ application }: Props) => {
             {recallInProgress ? (
               <div className={cardExtraButtonStyle}>
                 <AddAdvertsToApplicationMenu
-                  asButtons
                   applicationId={application.id}
-                  title={application.title + ' - ' + application.subtitle}
                 />
               </div>
             ) : (

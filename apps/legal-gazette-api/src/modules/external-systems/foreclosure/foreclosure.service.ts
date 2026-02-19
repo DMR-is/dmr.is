@@ -5,7 +5,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { escapeHtml } from '@dmr.is/utils/server/escapeHtml'
 
 import { assertAdvertEditable } from '../../../core/utils/advert-status.util'
-import { AdvertModel } from '../../../models/advert.model'
+import { AdvertModel, AdvertTemplateType } from '../../../models/advert.model'
 import { CategoryDefaultIdEnum } from '../../../models/category.model'
 import {
   CreateForeclosureSaleDto,
@@ -78,6 +78,7 @@ export class ForeclosureService implements IForeclosureService {
     const { id: advertId } = await this.advertService.createAdvert({
       typeId: TypeIdEnum.FORECLOSURE,
       categoryId: CategoryDefaultIdEnum.FORECLOSURES,
+      templateType: AdvertTemplateType.FORECLOSURE,
       title: `Nauðungarsölur - ${escapedRegion}`,
       createdBy: escapedCreatedBy,
       createdByNationalId: body.responsibleParty.nationalId,

@@ -8,8 +8,11 @@ export const signatureSchema = zod.object({
   onBehalfOf: zod.string().optional().nullable(),
 })
 
-export const signatureSchemaRefined = signatureSchema.refine((schema) => {
-  const check = (val: unknown) => isString(val) && val.length > 0
+export const signatureSchemaRefined = zod.preprocess(
+  (val) => val ?? {},
+  signatureSchema.refine((schema) => {
+    const check = (val: unknown) => isString(val) && val.length > 0
 
-  return check(schema.name) || check(schema.location) || check(schema.date)
-}, 'Nafn, staðsetning eða dagsetning undirritunar verður að vera til staðar')
+    return check(schema.name) || check(schema.location) || check(schema.date)
+  }, 'Nafn, staðsetning eða dagsetning undirritunar verður að vera til staðar'),
+)

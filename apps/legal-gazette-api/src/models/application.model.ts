@@ -22,8 +22,15 @@ import {
 } from 'sequelize-typescript'
 import { isBase64 } from 'validator'
 
-import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
+import { ApiProperty, PickType } from '@nestjs/swagger'
 
+import {
+  ApiDateTime,
+  ApiDto,
+  ApiHTML,
+  ApiOptionalNumber,
+  ApiOptionalString,
+} from '@dmr.is/decorators'
 import {
   ApplicationTypeEnum,
   CommonApplicationAnswers,
@@ -39,7 +46,6 @@ import { DetailedDto } from '../core/dto/detailed.dto'
 import { AdvertDto, AdvertModel } from './advert.model'
 import { AdvertPublicationModel } from './advert-publication.model'
 import { CaseModel } from './case.model'
-import { CreateCommunicationChannelDto } from './communication-channel.model'
 import { SettlementModel } from './settlement.model'
 import { CreateSignatureDto } from './signature.model'
 
@@ -346,27 +352,32 @@ export class CreateDivisionMeetingDto {
   @Type(() => CreateSignatureDto)
   @ValidateNested()
   signature!: CreateSignatureDto
-
-  @ApiProperty({ type: [CreateCommunicationChannelDto] })
-  @IsOptional()
-  @Type(() => CreateCommunicationChannelDto)
-  @ValidateNested({ each: true })
-  @ArrayMinSize(1)
-  communicationChannels!: CreateCommunicationChannelDto[]
 }
 
-export class CreateDivisionEndingDto extends OmitType(
-  CreateDivisionMeetingDto,
-  ['meetingLocation'],
-) {
-  @ApiProperty({ type: Number })
-  @IsNumber()
-  declaredClaims!: number
+export class CreateDivisionEndingDto {
+  @ApiOptionalString()
+  additionalText?: string
+
+  @ApiHTML({ required: false })
+  @IsOptional()
+  content?: string
+
+  @ApiDateTime()
+  scheduledAt!: Date
+
+  @ApiDateTime()
+  endingDate!: Date
+
+  @ApiOptionalNumber()
+  declaredClaims?: number
+
+  @ApiDto(CreateSignatureDto)
+  signature!: CreateSignatureDto
 }
 
 export class IslandIsSubmitApplicationDto extends PickType(
   CreateDivisionMeetingDto,
-  ['signature', 'communicationChannels', 'additionalText'] as const,
+  ['signature', 'additionalText'] as const,
 ) {
   @ApiProperty({ type: String })
   @IsUUID()

@@ -34,6 +34,7 @@ type SettlementAttributes = {
   liquidatorRecallStatementLocation?: string | null
   liquidatorRecallStatementType?: string | null
   companies?: CompanySchema[]
+  endingDate?: Date | null
 }
 
 export type SettlementCreateAttributes = Omit<
@@ -119,6 +120,13 @@ export class SettlementModel extends BaseModel<
     field: 'date_of_death',
   })
   dateOfDeath!: Date | null
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    defaultValue: null,
+  })
+  endingDate!: Date | null
 
   @Column({
     type: DataType.INTEGER,

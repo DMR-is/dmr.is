@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 
 import { useState } from 'react'
 
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Icon } from '@dmr.is/ui/components/island-is/Icon'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
@@ -11,8 +12,7 @@ import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
 import { formatDate } from '@dmr.is/utils/shared/format/date'
 
-import { AdvertDto } from '../../gen/fetch'
-import { ApplicationTypeEnum } from '../../gen/fetch'
+import { AdvertDto, ApplicationTypeEnum } from '../../gen/fetch'
 import { DateFormats } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { cardTagButtonStyle } from '../application/application.css'
@@ -125,19 +125,17 @@ export const AdvertTable = ({
                   onClick={(e) => {
                     e.stopPropagation()
                     e.preventDefault()
+                    openRemoveAdvertModal(ad.id)
                   }}
                 >
-                  <Tag
-                    variant="red"
-                    onClick={() => openRemoveAdvertModal(ad.id)}
-                  >
+                  <Box padding={1} borderRadius="standard" background="red100">
                     <Icon
                       icon="trash"
                       type="outline"
                       size="small"
                       color="red600"
                     />
-                  </Tag>
+                  </Box>
                 </button>
               ) : isAllPublished(ad) ? (
                 <Tag variant="mint" disabled>

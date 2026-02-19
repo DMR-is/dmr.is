@@ -7,6 +7,7 @@ import { getElement, getTableCell, getTableHeaderCell } from '../element'
 export function getDivisionEndingTemplate(model: AdvertModel): string {
   // Render what we can, gracefully handle missing data
   const judgmentDate = model.judgementDate
+  const endingdate = model.settlement?.endingDate
   const name = model.settlement?.name
 
   const nationalId = formatNationalId(model.settlement?.nationalId ?? '')
@@ -14,7 +15,7 @@ export function getDivisionEndingTemplate(model: AdvertModel): string {
 
   const intro = `
     ${getElement(`Með úrskurði héraðsdóms Reykjavíkur uppkveðnum ${judgmentDate ? formatDate(judgmentDate, 'd. MMMM yyyy') : ''} var neðangreint bú tekið til gjaldþrotaskipta. Sama dag var undirritaður lögmaður skipaður skiptastjóri í þrotabúinu.`)}
-    ${getElement(`Engar eignir fundust í búinu og var skiptum í því lokið 17. janúar 2025 samkvæmt 155. gr. laga nr. 21/1991 án þess að greiðsla fengist upp í lýstar kröfur, auk áfallinna vaxta og kostnaðar eftir úrskurðardag gjaldþrotaskipta.`)}
+    ${getElement(`Engar eignir fundust í búinu og var skiptum í því lokið ${endingdate ? formatDate(endingdate, 'd. MMMM yyyy') : ''} samkvæmt 155. gr. laga nr. 21/1991 án þess að greiðsla fengist upp í lýstar kröfur, auk áfallinna vaxta og kostnaðar eftir úrskurðardag gjaldþrotaskipta.`)}
   `
 
   const tableHeaderName = getTableHeaderCell('Nafn bús:')

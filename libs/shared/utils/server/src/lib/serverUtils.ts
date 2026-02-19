@@ -527,6 +527,10 @@ export const formatDate = (
 ) => {
   const dateToFormat = typeof date === 'string' ? new Date(date) : date
 
+  if (isNaN(dateToFormat.getTime())) {
+    return '' // or 'Invalid date' or a fallback message
+  }
+
   return format(dateToFormat, df, { locale: is })
 }
 

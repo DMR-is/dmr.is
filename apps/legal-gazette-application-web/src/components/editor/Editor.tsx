@@ -9,16 +9,17 @@ type Props = {
   onBlur?: (value: string) => void
   defaultValue?: string
   error?: string
+  withZIndex?: boolean
 }
 
-export const Editor = ({ onChange, onBlur, defaultValue, error }: Props) => {
+export const Editor = ({ onChange, onBlur, defaultValue, error, withZIndex = true }: Props) => {
   return (
     <>
       <Box
         border="standard"
         borderColor={error ? 'red600' : 'standard'}
-        position="relative"
-        zIndex={10}
+        position={withZIndex ? 'relative' : undefined}
+        zIndex={withZIndex ? 10 : undefined}
         borderRadius="large"
       >
         <HTMLEditor
