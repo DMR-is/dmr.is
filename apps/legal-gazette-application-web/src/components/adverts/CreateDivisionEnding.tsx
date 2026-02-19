@@ -16,6 +16,7 @@ import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import {
   getInvalidPublishingDatesInRange,
@@ -26,23 +27,47 @@ import { ApplicationTypeEnum } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { FormElement } from '../form-element/FormElement'
 import { FormGroup } from '../form-group/FormGroup'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 const partialSchema = createDivisionEndingInput.partial()
 
 type Props = {
   applicationId: string
 }
-type FormErrors = z.core.$ZodErrorTree<z.infer<typeof createDivisionEndingInput>>
+type FormErrors = z.core.$ZodErrorTree<
+  z.infer<typeof createDivisionEndingInput>
+>
 
 export const CreateDivisionEnding = ({ applicationId }: Props) => {
   const trpc = useTRPC()
+  const queryClient = useQueryClient()
   const [state, setState] = useState<z.infer<typeof partialSchema>>({})
   const [errors, setErrors] = useState<FormErrors | null>(null)
+  const [isVisible, setIsVisible] = useState(false)
 
   const { data: dateData } = useQuery(
     trpc.getMininumDateForDivisionMeeting.queryOptions({
       applicationId: applicationId,
     }),
   )
+
+  const { mutate: addDivisionEnding, isPending: isAddingDivisionEnding } =
+    useMutation(
+      trpc.addDivisionEnding.mutationOptions({
+        onSuccess: () => {
+          queryClient.invalidateQueries(
+            trpc.getApplicationById.queryFilter({ id: applicationId }),
+          )
+          toast.success('Skiptalok bætt við og sent í birtingu')
+          setState({})
+          setErrors(null)
+          setIsVisible(false)
+        },
+        onError: () => {
+          toast.error('Ekki tókst að bæta skiptaloki við, reyndu aftur síðar')
+        },
+      }),
+    )
 
   const { data: application } = useQuery(
     trpc.getApplicationById.queryOptions({ id: applicationId }),
@@ -96,9 +121,16 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
   const handleSubmit = () => {
     const check = createDivisionEndingInput.safeParse(state)
     if (!check.success) {
-      setErrors(z.treeifyError(check.error))
+      const errorTree = z.treeifyError(check.error)
+      setErrors(errorTree)
       return
     }
+
+    addDivisionEnding({
+      applicationId: applicationId,
+      ...check.data,
+    })
+
     setErrors(null)
   }
 
@@ -113,6 +145,8 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
       baseId="create-division-ending"
       disclosure={disclosure}
       title="Bæta við skiptalokum"
+      isVisible={isVisible}
+      onVisibilityChange={setIsVisible}
     >
       <Stack space={1}>
         <FormGroup>
@@ -133,7 +167,14 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
             errorMessage={errors?.properties?.endingDate?.errors[0]}
             onChange={(date) => {
               handleSetState('endingDate', date)
-              setErrors((prev) => prev?.properties ? { ...prev, properties: { ...prev.properties, endingDate: undefined } } : prev)
+              setErrors((prev) =>
+                prev?.properties
+                  ? {
+                      ...prev,
+                      properties: { ...prev.properties, endingDate: undefined },
+                    }
+                  : prev,
+              )
             }}
           />
           <FormElement
@@ -147,7 +188,17 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
             errorMessage={errors?.properties?.scheduledAt?.errors[0]}
             onChange={(date) => {
               handleSetState('scheduledAt', date)
-              setErrors((prev) => prev?.properties ? { ...prev, properties: { ...prev.properties, scheduledAt: undefined } } : prev)
+              setErrors((prev) =>
+                prev?.properties
+                  ? {
+                      ...prev,
+                      properties: {
+                        ...prev.properties,
+                        scheduledAt: undefined,
+                      },
+                    }
+                  : prev,
+              )
             }}
           />
         </FormGroup>
@@ -165,7 +216,13 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
             inputType="number"
             label="Lýstar kröfur"
             placeholder="Sláðu inn upphæð ef á við"
-            onChange={(e) => handleSetState('declaredClaims', e.target.value)}
+            onChange={(e) => {
+              const parsed = parseInt(e.target.value)
+              if (isNaN(parsed)) {
+                return handleSetState('declaredClaims', undefined)
+              }
+              return handleSetState('declaredClaims', parsed)
+            }}
           />
         </FormGroup>
         <FormGroup
@@ -188,7 +245,14 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
                 ...state.signature,
                 name: e.target.value,
               })
-              setErrors((prev) => prev?.properties ? { ...prev, properties: { ...prev.properties, signature: undefined } } : prev)
+              setErrors((prev) =>
+                prev?.properties
+                  ? {
+                      ...prev,
+                      properties: { ...prev.properties, signature: undefined },
+                    }
+                  : prev,
+              )
             }}
           />
           <FormElement
@@ -199,7 +263,14 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
                 ...state.signature,
                 location: e.target.value,
               })
-              setErrors((prev) => prev?.properties ? { ...prev, properties: { ...prev.properties, signature: undefined } } : prev)
+              setErrors((prev) =>
+                prev?.properties
+                  ? {
+                      ...prev,
+                      properties: { ...prev.properties, signature: undefined },
+                    }
+                  : prev,
+              )
             }}
           />
           <FormElement
@@ -210,7 +281,14 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
                 ...state.signature,
                 date: date.toISOString(),
               })
-              setErrors((prev) => prev?.properties ? { ...prev, properties: { ...prev.properties, signature: undefined } } : prev)
+              setErrors((prev) =>
+                prev?.properties
+                  ? {
+                      ...prev,
+                      properties: { ...prev.properties, signature: undefined },
+                    }
+                  : prev,
+              )
             }}
           />
           <FormElement
@@ -231,6 +309,7 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
         </FormGroup>
         <FormGroup>
           <FormElement
+            isLoading={isAddingDivisionEnding}
             width="full"
             type="submit"
             buttonText="Staðfesta og senda inn til birtingar"

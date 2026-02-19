@@ -32,10 +32,7 @@ type DateOptions = Omit<
 
 type EditorProps = React.ComponentProps<typeof Editor>
 
-type SubmitProps = {
-  buttonText?: string
-  onClick?: () => void
-}
+type SubmitProps = React.ComponentProps<typeof SubmitButton>
 
 type FormElementProps<T> =
   | ({ type: 'text' } & InputOptions)
