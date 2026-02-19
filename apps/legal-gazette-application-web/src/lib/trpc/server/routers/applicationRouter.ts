@@ -129,8 +129,6 @@ export const applicationRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { applicationId, ...rest } = input
 
-      console.log('Adding division ending with input', input)
-
       return await ctx.api.addDivisionEnding({
         applicationId: input.applicationId,
         createDivisionEndingDto: rest,
