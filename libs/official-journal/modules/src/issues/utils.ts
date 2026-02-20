@@ -4,17 +4,19 @@ import is from 'date-fns/locale/is'
 import startOfDay from 'date-fns/startOfDay'
 
 import { DEPARTMENT_IDS } from './constants'
-export const getStartOfLastMonth = (date: Date): Date => {
-  return startOfDay(new Date(date.getFullYear(), date.getMonth() - 1, 1))
+
+export const getStartOfCurrentMonth = (date: Date): Date => {
+  return startOfDay(new Date(date.getFullYear(), date.getMonth(), 1))
 }
 
-export const getEndOfLastMonth = (date: Date): Date => {
-  return endOfDay(new Date(date.getFullYear(), date.getMonth(), 0))
+export const getEndOfCurrentMonth = (date: Date): Date => {
+  return endOfDay(new Date(date.getFullYear(), date.getMonth() + 1, 0))
 }
 
-export const getDateRange = (date: Date): [Date, Date] => {
-  return [getStartOfLastMonth(date), getEndOfLastMonth(date)]
+export const getCurrentMonthDateRange = (date: Date): [Date, Date] => {
+  return [getStartOfCurrentMonth(date), getEndOfCurrentMonth(date)]
 }
+
 
 export const getMonthName = (date: Date): string => {
   return format(date, 'LLLL', { locale: is })
@@ -29,7 +31,7 @@ export const mapDepartmentIdToTitle = (departmentId: string): string => {
     case DEPARTMENT_IDS[2]:
       return 'C deild'
     default:
-      return 'Óþekkt deild'
+      throw new Error(`Unknown department ID: ${departmentId}`)
   }
 }
 

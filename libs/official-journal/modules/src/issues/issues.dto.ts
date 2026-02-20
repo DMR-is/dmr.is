@@ -1,6 +1,9 @@
+import { Type } from 'class-transformer'
+import { IsDate, IsUUID } from 'class-validator'
+
 import { ApiProperty } from '@nestjs/swagger'
 
-import { Department } from '@dmr.is/shared/dto'
+import { Department, Paging, PagingQuery } from '@dmr.is/shared/dto'
 export class IssueDto {
   @ApiProperty({ type: String })
   id!: string
@@ -19,4 +22,34 @@ export class IssueDto {
 
   @ApiProperty({ type: String })
   url!: string
+}
+
+export class GetMonthlyIssuesQueryDto extends PagingQuery {
+  @ApiProperty({ type: String, required: false })
+  departmentId?: string
+
+  @ApiProperty({ type: Date, required: false })
+  fromDate?: Date
+
+  @ApiProperty({ type: Date, required: false })
+  toDate?: Date
+}
+
+export class GetMonthlyIssuesResponseDto {
+  @ApiProperty({ type: [IssueDto] })
+  issues!: IssueDto[]
+
+  @ApiProperty({ type: Paging })
+  paging!: Paging
+}
+
+export class GenerateMonthlyIssuesQueryDto {
+  @ApiProperty({ type: String })
+  @IsUUID()
+  departmentId!: string
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  @Type(() => Date)
+  @IsDate()
+  date!: Date
 }
