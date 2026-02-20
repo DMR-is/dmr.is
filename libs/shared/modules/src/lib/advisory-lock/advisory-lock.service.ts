@@ -16,7 +16,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 const LOGGING_CONTEXT = 'PgAdvisoryLockService'
 @Injectable()
-export class PgAdvisoryLockService {
+export class AdvisoryLockService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     private readonly sequelize: Sequelize,

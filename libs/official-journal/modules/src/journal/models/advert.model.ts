@@ -32,6 +32,26 @@ import { AdvertStatusModel } from './advert-status.model'
       },
     ],
   },
+  detailed: {
+    include: [
+      {
+        model: CaseModel,
+        required: false,
+        attributes: ['id'],
+        include: [{ model: CaseAdditionModel, required: false }],
+      },
+      {
+        model: AdvertTypeModel,
+        include: [AdvertDepartmentModel],
+      },
+      AdvertDepartmentModel,
+      AdvertStatusModel,
+      AdvertInvolvedPartyModel,
+      AdvertAttachmentsModel,
+      AdvertCategoryModel,
+      AdvertCorrectionModel,
+    ],
+  },
 }))
 export class AdvertModel extends Model {
   @Column({
