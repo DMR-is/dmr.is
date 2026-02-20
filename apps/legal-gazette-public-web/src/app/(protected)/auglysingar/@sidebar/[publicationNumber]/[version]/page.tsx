@@ -1,5 +1,7 @@
 import { fetchQueryWithHandler } from '@dmr.is/trpc/client/server'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
+import { NavigateBack } from '../../../../../../components/client-components/navigate-back/NavigateBack'
 import { PublicationSidebarContainer } from '../../../../../../containers/PublicationSidebarContainer'
 import { trpc } from '../../../../../../lib/trpc/client/server'
 import { handlePublicationRedirects } from '../../../../../../lib/utils/url-helpers'
@@ -23,5 +25,10 @@ export default async function AdvertPageSidebar({
     }),
   )
 
-  return <PublicationSidebarContainer publication={pub} />
+  return (
+    <Stack space={[1, 2]}>
+      <NavigateBack />
+      <PublicationSidebarContainer publication={pub} />
+    </Stack>
+  )
 }

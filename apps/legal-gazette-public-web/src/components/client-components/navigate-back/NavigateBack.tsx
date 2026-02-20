@@ -1,26 +1,33 @@
 'use client'
 
-import { useParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 import { Button } from '@dmr.is/ui/components/island-is/Button'
-import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
 
-export const NavigateBack = () => {
-  const params = useParams()
+type Props = {
+  url?: string
+}
 
-  const href = params?.publicationNumber !== undefined ? '/auglysingar' : '/'
+export const NavigateBack = ({ url }: Props) => {
+  const router = useRouter()
+
+  const handleClick = () => {
+    if (url) {
+      router.push(url)
+    } else {
+      router.back()
+    }
+  }
 
   return (
-    <LinkV2 href={href}>
-      <Button
-        as="div"
-        size="small"
-        variant="text"
-        preTextIcon="arrowBack"
-        preTextIconType="outline"
-      >
-        Til baka
-      </Button>
-    </LinkV2>
+    <Button
+      onClick={handleClick}
+      size="small"
+      variant="text"
+      preTextIcon="arrowBack"
+      preTextIconType="outline"
+    >
+      Til baka
+    </Button>
   )
 }
