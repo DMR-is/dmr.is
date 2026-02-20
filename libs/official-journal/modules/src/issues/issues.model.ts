@@ -1,10 +1,17 @@
-import { BeforeCreate, BelongsTo, Column, DataType, DefaultScope } from 'sequelize-typescript'
+import {
+  BeforeCreate,
+  BelongsTo,
+  Column,
+  DataType,
+  DefaultScope,
+} from 'sequelize-typescript'
 
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
+import { advertDepartmentMigrate } from '../journal/migrations'
 import { AdvertDepartmentModel } from '../journal/models'
+import { IssueDto } from './issues.dto'
 import { getMonthName, mapDepartmentIdToTitle } from './utils'
-
 
 type IssuesAttributes = {
   id: string
@@ -33,22 +40,28 @@ export type IssuesCreationAttributes = Omit<
   order: [['createdAt', 'DESC']],
 }))
 @BaseTable({ tableName: 'monthly_issues' })
-export class IssuesModel extends BaseModel<IssuesAttributes, IssuesCreationAttributes> {
+export class IssuesModel extends BaseModel<
+  IssuesAttributes,
+  IssuesCreationAttributes
+> {
   @Column({
     type: DataType.UUID,
     field: 'department_id',
+    unique: 'department_date_range_constraint',
   })
   departmentId!: string
 
   @Column({
     type: DataType.DATE,
     field: 'start_date',
+    unique: 'department_date_range_constraint',
   })
   startDate!: Date
 
   @Column({
     type: DataType.DATE,
     field: 'end_date',
+    unique: 'department_date_range_constraint',
   })
   endDate!: Date
 
@@ -75,4 +88,21 @@ export class IssuesModel extends BaseModel<IssuesAttributes, IssuesCreationAttri
 
   @BelongsTo(() => AdvertDepartmentModel, 'departmentId')
   department!: AdvertDepartmentModel
+
+  static fromModel(model: IssuesModel): IssueDto {
+
+
+    return {
+      id: model.id,
+      department: advertDepartmentMigrate(model.department),
+      startDate: model.startDate,
+      endDate: model.endDate,
+      title: model.title,
+      url: model.url,
+    }
+  }
+
+  fromModel() {
+    return IssuesModel.fromModel(this)
+  }
 }
