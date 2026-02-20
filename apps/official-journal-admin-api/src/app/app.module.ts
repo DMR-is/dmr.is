@@ -11,6 +11,7 @@ import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { LogRequestMiddleware } from '@dmr.is/middleware'
 import {
   ApplicationModule,
+  IssuesModule,
   SharedJournalModule,
   SignatureModule,
 } from '@dmr.is/ojoi/modules'
@@ -47,6 +48,7 @@ import { StatisticsModule } from './statistics/statistics.module'
     SharedJournalModule,
     SignatureModule,
     HealthModule,
+    IssuesModule,
     RouterModule.register([
       {
         path: '/',

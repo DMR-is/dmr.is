@@ -5,6 +5,7 @@ import { AdvisoryLockModule, AwsModule } from '@dmr.is/shared/modules'
 
 import { AdvertModel } from '../journal/models'
 import { PdfModule } from '../pdf/pdf.module'
+import { IssuesModel } from './issues.model'
 import { IssusesService } from './issues.service'
 import { IIssuesService } from './issues.service.interface'
 
@@ -13,7 +14,7 @@ import { IIssuesService } from './issues.service.interface'
     AdvisoryLockModule,
     PdfModule,
     AwsModule,
-    SequelizeModule.forFeature([AdvertModel]),
+    SequelizeModule.forFeature([AdvertModel, IssuesModel]),
   ],
   providers: [
     {

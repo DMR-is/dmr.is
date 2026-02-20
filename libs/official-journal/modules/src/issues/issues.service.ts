@@ -12,7 +12,10 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { Logger } from '@dmr.is/logging-next'
-import { AdvisoryLockService, AWSService } from '@dmr.is/shared/modules'
+import {
+  AdvisoryLockService,
+  IAWSService,
+} from '@dmr.is/shared/modules'
 import {
   generatePaging,
   getLimitAndOffset,
@@ -20,8 +23,12 @@ import {
 
 import { advertMigrate } from '../journal/migrations'
 import { AdvertModel } from '../journal/models'
-import { PdfService } from '../pdf/pdf.service'
-import { DEPARTMENT_IDS, LOGGING_CONTEXT, TASK_NAMESPACE } from './constants'
+import { IPdfService } from '../pdf/pdf.service.interface'
+import {
+  ISSUES_ALLOWED_DEPARTMENT_IDS,
+  ISSUES_LOGGING_CONTEXT,
+  ISSUES_TASK_NAMESPACE,
+} from './constants'
 import {
   GetMonthlyIssuesQueryDto,
   GetMonthlyIssuesResponseDto,
@@ -38,8 +45,8 @@ import {
 export class IssusesService implements IIssuesService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
-    @Inject(AWSService) private readonly awsService: AWSService,
-    @Inject(PdfService) private readonly pdfService: PdfService,
+    @Inject(IAWSService) private readonly awsService: IAWSService,
+    @Inject(IPdfService) private readonly pdfService: IPdfService,
     @Inject(AdvisoryLockService)
     private readonly advisoryLockService: AdvisoryLockService,
     @InjectModel(AdvertModel)
@@ -105,18 +112,18 @@ export class IssusesService implements IIssuesService {
 
     if (!process.env.ADVERTS_BUCKET) {
       this.logger.error('ADVERTS_BUCKET environment variable is not set', {
-        context: LOGGING_CONTEXT,
+        context: ISSUES_LOGGING_CONTEXT,
         category: 'issues-service',
         timestamp: now.toISOString(),
       })
       throw new InternalServerErrorException()
     }
 
-    if (!DEPARTMENT_IDS.includes(departmentId)) {
+    if (!ISSUES_ALLOWED_DEPARTMENT_IDS.includes(departmentId)) {
       this.logger.warn(
         `Attempted to generate issues for invalid department ID: ${departmentId}`,
         {
-          context: LOGGING_CONTEXT,
+          context: ISSUES_LOGGING_CONTEXT,
           category: 'issues-service',
           departmentId,
           timestamp: now.toISOString(),
@@ -126,7 +133,7 @@ export class IssusesService implements IIssuesService {
     }
 
     this.logger.info('Starting monthly issues generation', {
-      context: LOGGING_CONTEXT,
+      context: ISSUES_LOGGING_CONTEXT,
       category: 'generateMonthlyIssues',
       timestamp: now.toISOString(),
     })
@@ -137,7 +144,7 @@ export class IssusesService implements IIssuesService {
     this.logger.info(
       `Fetching cases between ${startDate.toISOString()} and ${endDate.toISOString()}`,
       {
-        context: LOGGING_CONTEXT,
+        context: ISSUES_LOGGING_CONTEXT,
         category: 'generateMonthlyIssues',
         fromDate: startDate.toISOString(),
         toDate: endDate.toISOString(),
@@ -158,7 +165,7 @@ export class IssusesService implements IIssuesService {
         this.logger.info(
           `No cases found for department ${departmentId} in the given date range, skipping issue generation.`,
           {
-            context: LOGGING_CONTEXT,
+            context: ISSUES_LOGGING_CONTEXT,
             category: 'generateMonthlyIssues',
             departmentId,
             fromDate: startDate.toISOString(),
@@ -172,7 +179,7 @@ export class IssusesService implements IIssuesService {
       this.logger.info(
         `Fetched ${advertsResults.count} cases for department ${departmentId}`,
         {
-          context: LOGGING_CONTEXT,
+          context: ISSUES_LOGGING_CONTEXT,
           category: 'generateMonthlyIssues',
           departmentId: departmentId,
           caseCount: advertsResults.count,
@@ -196,7 +203,7 @@ export class IssusesService implements IIssuesService {
       this.logger.info(
         `Generated PDF for department ${departmentId}, uploading to S3 with key ${key}`,
         {
-          context: LOGGING_CONTEXT,
+          context: ISSUES_LOGGING_CONTEXT,
           category: 'generateMonthlyIssues',
           departmentId: departmentId,
           s3Key: key,
@@ -214,7 +221,7 @@ export class IssusesService implements IIssuesService {
         this.logger.error(
           `Failed to upload issue PDF to S3 for department ${departmentId}`,
           {
-            context: LOGGING_CONTEXT,
+            context: ISSUES_LOGGING_CONTEXT,
             category: 'generateMonthlyIssues',
             departmentId,
             s3Key: key,
@@ -231,11 +238,10 @@ export class IssusesService implements IIssuesService {
         url: uploadResults.result.value,
       })
 
-
       this.logger.info(
         `Successfully generated and uploaded issue for department ${departmentId}`,
         {
-          context: LOGGING_CONTEXT,
+          context: ISSUES_LOGGING_CONTEXT,
           category: 'generateMonthlyIssues',
           departmentId,
           issueId: issue.id,
@@ -244,7 +250,7 @@ export class IssusesService implements IIssuesService {
       )
     } catch (error) {
       this.logger.error('Error generating monthly issues', {
-        context: LOGGING_CONTEXT,
+        context: ISSUES_LOGGING_CONTEXT,
         category: 'generateMonthlyIssues',
         error: error,
       })
@@ -261,10 +267,13 @@ export class IssusesService implements IIssuesService {
     },
   )
   private async monthlyIssuesTask() {
-    for (const [index, departmentId] of DEPARTMENT_IDS.entries()) {
+    for (const [
+      index,
+      departmentId,
+    ] of ISSUES_ALLOWED_DEPARTMENT_IDS.entries()) {
       const { ran, reason } =
         await this.advisoryLockService.runWithDistributedLock(
-          TASK_NAMESPACE, // Namespace for issues generation
+          ISSUES_TASK_NAMESPACE, // Namespace for issues generation
           index + 1, // Unique lock key per department (1, 2, 3)
           async () => {
             const now = new Date()
@@ -272,7 +281,7 @@ export class IssusesService implements IIssuesService {
             this.logger.info(
               `Running monthly issues generation for department ${departmentId}`,
               {
-                context: LOGGING_CONTEXT,
+                context: ISSUES_LOGGING_CONTEXT,
                 category: 'monthly-issues-task',
                 departmentId,
                 timestamp: now.toISOString(),
@@ -290,7 +299,7 @@ export class IssusesService implements IIssuesService {
             this.logger.info(
               `Finished monthly issues generation for department ${departmentId} in ${duration.toFixed(2)} seconds`,
               {
-                context: LOGGING_CONTEXT,
+                context: ISSUES_LOGGING_CONTEXT,
                 category: 'monthly-issues-task',
                 departmentId,
                 startTime: now.toISOString(),
@@ -309,7 +318,7 @@ export class IssusesService implements IIssuesService {
         this.logger.warn(
           `Skipped monthly issues generation for department ${departmentId}: ${reason}`,
           {
-            context: LOGGING_CONTEXT,
+            context: ISSUES_LOGGING_CONTEXT,
             category: 'issues-service',
             departmentId,
             timestamp: new Date().toISOString(),

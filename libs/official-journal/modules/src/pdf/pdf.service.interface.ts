@@ -12,6 +12,8 @@ export interface IPdfService {
     applicationId: string,
     showDate?: boolean,
   ): Promise<ResultWrapper<Buffer>>
+
+  generateIssuePdf(html: string): Promise<Buffer>
 }
 
 export const IPdfService = Symbol('IPdfService')
