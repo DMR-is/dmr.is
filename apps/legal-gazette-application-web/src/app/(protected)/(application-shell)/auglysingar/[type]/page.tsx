@@ -1,5 +1,3 @@
-'use client'
-
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Bullet } from '@dmr.is/ui/components/island-is/Bullet'
 import { BulletList } from '@dmr.is/ui/components/island-is/BulletList'
@@ -14,12 +12,14 @@ import {
   PageRoutes,
 } from '../../../../../lib/constants'
 
-export default function ApplicationTypePage({
+export default async function ApplicationTypePage({
   params,
 }: {
-  params: { type: FormTypes }
+  params: Promise<{ type: FormTypes }>
 }) {
-  const title = ALLOWED_FORM_TYPES.includes(params.type)
+  const { type } = await params
+
+  const title = ALLOWED_FORM_TYPES.includes(type)
     ? 'Auðkenni auglýsingar vantar í slóðina'
     : 'Auglýsingar tegund er ekki til.'
 
