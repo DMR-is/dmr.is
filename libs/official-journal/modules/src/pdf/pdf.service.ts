@@ -306,4 +306,18 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
     return ResultWrapper.ok(pdfResults.result.value)
   }
+
+  async generateIssuePdf(html: string): Promise<Buffer> {
+    const pdfHtml = (await this.generatePdfFromHtml(html))
+
+    if (!pdfHtml.result.ok) {
+      this.logger.error(`Failed to generate issue PDF`, {
+        category: LOGGING_CATEGORY,
+        error: pdfHtml.result.error,
+      })
+      throw new Error('Failed to generate issue PDF')
+    }
+
+    return pdfHtml.result.value
+  }
 }
