@@ -4,7 +4,7 @@ import {
   GetCasesWithDepartmentCount,
   GetCasesWithDepartmentCountRequest,
 } from '../../../gen/fetch'
-import { APIRoutes, fetcher } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants-legacy'
 import { NullableExcept } from '../../../lib/types'
 import { generateParams } from '../../../lib/utils'
 

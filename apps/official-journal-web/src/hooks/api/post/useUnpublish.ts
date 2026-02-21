@@ -1,7 +1,7 @@
 import { Key } from 'swr'
 import swrMutation, { SWRMutationConfiguration } from 'swr/mutation'
 
-import { APIRoutes, fetcher } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants-legacy'
 
 type UnpublishParams = {
   options?: SWRUnpublishCaseOptions

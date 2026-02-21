@@ -4,7 +4,7 @@ import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetSignature } from '../../../gen/fetch'
 import { getDmrClient } from '../../../lib/api/createClient'
-import { swrFetcher } from '../../../lib/constants'
+import { swrFetcher } from '../../../lib/constants-legacy'
 
 type UseSignatureParams = {
   signatureId: string

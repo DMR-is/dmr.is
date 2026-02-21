@@ -1,4 +1,4 @@
-import router from 'next/router'
+import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 
 import { useState } from 'react'
@@ -14,6 +14,7 @@ type UploadAdvertPDFParams = {
 }
 
 export const useUpdateAdvertPDF = () => {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

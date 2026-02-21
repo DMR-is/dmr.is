@@ -7,7 +7,7 @@ import {
   GetCasesWithStatusCountRequest,
 } from '../../../gen/fetch'
 import { getDmrClient } from '../../../lib/api/createClient'
-import { swrFetcher } from '../../../lib/constants'
+import { swrFetcher } from '../../../lib/constants-legacy'
 import { NullableExcept } from '../../../lib/types'
 import { getParamsWithoutNullOrEmpty } from '../../../lib/utils'
 

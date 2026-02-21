@@ -1,7 +1,7 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetMainCategoriesResponse } from '../../../gen/fetch'
-import { APIRoutes, fetcher } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants-legacy'
 import { SearchParams } from '../../../lib/types'
 import { generateParams } from '../../../lib/utils'
 

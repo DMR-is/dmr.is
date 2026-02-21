@@ -21,7 +21,8 @@ import {
 } from '../gen/fetch'
 import { getDmrClient } from '../lib/api/createClient'
 import { DOCUMENT_ASSETS } from '../lib/constants'
-import { OJOIWebException, Routes } from './constants'
+import { Routes } from './constants'
+import { OJOIWebException } from './constants-legacy'
 
 export const toFixed = (num: number, fixed: number) => {
   return num % 1 === 0 ? num : num.toFixed(fixed)

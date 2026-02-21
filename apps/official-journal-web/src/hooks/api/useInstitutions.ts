@@ -8,7 +8,7 @@ import {
   GetInstitutions,
   GetInstitutionsRequest,
 } from '../../gen/fetch'
-import { APIRoutes, fetcher } from '../../lib/constants'
+import { APIRoutes, fetcher } from '../../lib/constants-legacy'
 import { generateParams } from '../../lib/utils'
 
 type SearchParams = Record<

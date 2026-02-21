@@ -11,7 +11,7 @@ import {
   GetMainTypesRequest,
 } from '../../gen/fetch'
 import { getDmrClient } from '../../lib/api/createClient'
-import { OJOIWebException, swrFetcher } from '../../lib/constants'
+import { OJOIWebException, swrFetcher } from '../../lib/constants-legacy'
 
 type MainTypeIdParam = {
   id: string

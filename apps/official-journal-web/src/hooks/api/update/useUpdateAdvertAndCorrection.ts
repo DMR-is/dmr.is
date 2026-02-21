@@ -7,7 +7,7 @@ export type UpdateAvertAndCorrectionTriggerArgs = {
   advertHtml: string
 }
 
-import { APIRoutes, fetcher } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants-legacy'
 
 type SWRAddCorrectionOptions = SWRMutationConfiguration<
   Response,

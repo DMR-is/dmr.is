@@ -4,7 +4,7 @@ export type AddCommentTriggerArgs = {
   comment: string
 }
 
-import { APIRoutes, fetcher } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants-legacy'
 
 type SWRAddCommentOptions = SWRMutationConfiguration<
   Response,

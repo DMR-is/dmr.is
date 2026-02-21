@@ -4,7 +4,7 @@ import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetDepartmentsResponse } from '../../../gen/fetch'
 import { getDmrClient } from '../../../lib/api/createClient'
-import { swrFetcher } from '../../../lib/constants'
+import { swrFetcher } from '../../../lib/constants-legacy'
 import { SearchParams } from '../../../lib/types'
 
 type SWRDepartmentsOptions = SWRConfiguration<GetDepartmentsResponse, Error>

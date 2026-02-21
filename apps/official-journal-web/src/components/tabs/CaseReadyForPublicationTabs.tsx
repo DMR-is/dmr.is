@@ -1,5 +1,4 @@
-import { parseAsStringEnum, useQueryState } from 'next-usequerystate'
-
+import { parseAsStringEnum, useQueryState } from 'nuqs'
 import { useState } from 'react'
 
 import { Button } from '@dmr.is/ui/components/island-is/Button'

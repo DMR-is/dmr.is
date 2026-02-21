@@ -1,7 +1,7 @@
 import useSWR, { SWRConfiguration } from 'swr'
 
 import { GetTagsResponse } from '../../../gen/fetch'
-import { APIRoutes, fetcher } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants-legacy'
 
 type SWRTagsOptions = SWRConfiguration<GetTagsResponse, Error>
 

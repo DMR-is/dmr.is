@@ -6,7 +6,7 @@ import {
   UpdateSignatureMember,
   UpdateSignatureRecord,
 } from '../../../gen/fetch'
-import { APIRoutes, fetcher } from '../../../lib/constants'
+import { APIRoutes, fetcher } from '../../../lib/constants-legacy'
 
 type UpdateSignatureRecordTriggerArgs = UpdateSignatureRecord & {
   recordId: string

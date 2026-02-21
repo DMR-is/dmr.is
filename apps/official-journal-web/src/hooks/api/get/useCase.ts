@@ -9,7 +9,7 @@ import {
   GetCaseResponse,
 } from '../../../gen/fetch'
 import { getDmrClient } from '../../../lib/api/createClient'
-import { swrFetcher } from '../../../lib/constants'
+import { swrFetcher } from '../../../lib/constants-legacy'
 
 type UseCaseParams = {
   caseId?: string

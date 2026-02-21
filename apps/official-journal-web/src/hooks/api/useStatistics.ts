@@ -9,7 +9,7 @@ import {
   GetStatisticsOverviewRequest,
 } from '../../gen/fetch'
 import { getDmrClient } from '../../lib/api/createClient'
-import { APIRoutes, fetcher, swrFetcher } from '../../lib/constants'
+import { APIRoutes, fetcher, swrFetcher } from '../../lib/constants-legacy'
 import { generateParams } from '../../lib/utils'
 
 type UseStatisticsParams = {

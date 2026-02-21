@@ -4,7 +4,7 @@ import useSWRMutation from 'swr/mutation'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { GetAdvertType, GetAdvertTypes, GetTypesRequest } from '../../gen/fetch'
-import { APIRoutes, fetcher, OJOIWebException } from '../../lib/constants'
+import { APIRoutes, fetcher, OJOIWebException } from '../../lib/constants-legacy'
 import { generateParams } from '../../lib/utils'
 
 type AdvertTypeIdParam = {
