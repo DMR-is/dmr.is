@@ -20,4 +20,39 @@ export const institutionsRouter = router({
     .query(async ({ ctx, input }) => {
       return ctx.api.getInstitution({ id: input.id })
     }),
+
+  createInstitution: protectedProcedure
+    .input(
+      z.object({
+        title: z.string(),
+        nationalId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.api.createInstitution({
+        createInstitution: input,
+      })
+    }),
+
+  updateInstitution: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        title: z.string().optional(),
+        nationalId: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...updateData } = input
+      return ctx.api.updateInstitution({
+        id,
+        updateInstitution: updateData,
+      })
+    }),
+
+  deleteInstitution: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.api.deleteInstitution({ id: input.id })
+    }),
 })

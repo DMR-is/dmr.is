@@ -4,6 +4,28 @@ import { CaseStatusEnum } from '../../../../gen/fetch'
 import { protectedProcedure, router } from '../trpc'
 
 export const casesRouter = router({
+  createCase: protectedProcedure
+    .input(
+      z.object({
+        createCaseDto: z.object({
+          applicationId: z.string().optional(),
+          involvedPartyId: z.string(),
+          departmentId: z.string(),
+          typeId: z.string(),
+          subject: z.string().default(''),
+        }),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.api.createCase(input)
+    }),
+
+  getPaymentStatus: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.api.getCasePaymentStatus({ id: input.id })
+    }),
+
   getCase: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -180,6 +202,8 @@ export const casesRouter = router({
         customBaseDocumentCount: z.number().optional(),
         customAdditionalDocCount: z.number().optional(),
         customBodyLengthCount: z.number().optional(),
+        extraWorkCount: z.number().optional(),
+        subject: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -309,5 +333,26 @@ export const casesRouter = router({
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       return ctx.api.getAdvert({ id: input.id })
+    }),
+
+  getAdverts: protectedProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+        page: z.number().optional(),
+        pageSize: z.number().optional(),
+        department: z.array(z.string()).optional(),
+        year: z.string().optional(),
+        type: z.array(z.string()).optional(),
+        category: z.array(z.string()).optional(),
+        involvedParty: z.array(z.string()).optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+        sortBy: z.string().optional(),
+        direction: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return ctx.api.getAdverts(input)
     }),
 })

@@ -1,7 +1,10 @@
+'use client'
+
 import { useSession } from 'next-auth/react'
 
 import { useEffect, useMemo, useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
@@ -13,15 +16,17 @@ import { amountFormat } from '@dmr.is/utils/shared/format/number'
 
 import { useBreakpoint } from '@island.is/island-ui/core/hooks/useBreakpoint'
 
-import { useGetPaymentStatus, useUpdatePrice } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { getDmrClient } from '../../lib/api/createClient'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { imageTiers } from '../../lib/utils'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
 import * as styles from './Calculator.css'
 import { usePriceCalculatorState } from './calculatorContext'
 import { PriceCalculatorStatusBox } from './StatusBox'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 export const PriceCalculator = () => {
   const {
@@ -31,19 +36,28 @@ export const PriceCalculator = () => {
     feeCodeOptions,
     isPublishedOrRejected,
   } = useCaseContext()
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
   const { md } = useBreakpoint()
   const { data: session } = useSession()
-  const { data: paymentData, mutate } = useGetPaymentStatus({
-    caseId: currentCase.id,
-  })
+
+  const { data: paymentData } = useQuery(
+    trpc.getPaymentStatus.queryOptions({ id: currentCase.id }),
+  )
+
+  const invalidatePayment = () => {
+    queryClient.invalidateQueries(
+      trpc.getPaymentStatus.queryFilter({ id: currentCase.id }),
+    )
+  }
+
   const { state, dispatch } = usePriceCalculatorState(currentCase)
   const [prevPrice, setPrevPrice] = useState(currentCase.transaction?.price)
   const [isLocalPaymentLoading, setLocalPaymentLoading] = useState(false)
   const dmrClient = getDmrClient(session?.idToken as string)
 
-  const { trigger: updatePrice, isMutating: isPriceLoading } = useUpdatePrice({
-    caseId: currentCase.id,
-    options: {
+  const updatePriceMutation = useMutation(
+    trpc.updatePrice.mutationOptions({
       onSuccess: () => {
         refetch()
         const newPrice = currentCase.transaction?.price
@@ -58,13 +72,14 @@ export const PriceCalculator = () => {
         toast.error('Ekki tókst að uppfæra verð auglýsingar', {
           toastId: 'price-update-error',
         }),
-    },
-  })
+    }),
+  )
 
   const updateAllPrices = () => {
     setPrevPrice(currentCase.transaction?.price)
     if ('selectedItem' in state) {
-      updatePrice({
+      updatePriceMutation.mutate({
+        id: currentCase.id,
         imageTier: state.selectedItem?.value,
         customBaseDocumentCount: state.customBaseDocumentCount,
         customBodyLengthCount: state.useCustomInputBase
@@ -90,7 +105,8 @@ export const PriceCalculator = () => {
 
   useEffect(() => {
     if (!currentCase.transaction?.price) {
-      updatePrice({
+      updatePriceMutation.mutate({
+        id: currentCase.id,
         imageTier: state.selectedItem?.value,
         customBaseDocumentCount: state.customBaseDocumentCount,
         customBodyLengthCount: state.useCustomInputBase
@@ -236,7 +252,8 @@ export const PriceCalculator = () => {
                     payload: opt || undefined,
                   })
                   setPrevPrice(currentCase.transaction?.price)
-                  updatePrice({
+                  updatePriceMutation.mutate({
+                    id: currentCase.id,
                     imageTier: opt?.value,
                     customBaseDocumentCount: state.customBaseDocumentCount,
                     customBodyLengthCount: state.useCustomInputBase
@@ -293,7 +310,7 @@ export const PriceCalculator = () => {
             value={amountFormat(currentCase.transaction?.price)}
             label="Samtals"
             type="text"
-            loading={isPriceLoading}
+            loading={updatePriceMutation.isPending}
             onBlur={updateAllPrices}
           />
         </Box>
@@ -340,7 +357,7 @@ export const PriceCalculator = () => {
                         })
                         .finally(() => {
                           setTimeout(() => {
-                            mutate()
+                            invalidatePayment()
                             setLocalPaymentLoading(false)
                           }, 1000)
                         })
