@@ -1,3 +1,4 @@
+import type { AlertMessageType } from '@island.is/island-ui/core/AlertMessage/AlertMessage'
 import type { StringOption } from '@island.is/island-ui/core/Select/Select.types'
 
 export const HEADER_HEIGHT = 112
@@ -96,3 +97,36 @@ export const CaseDepartmentTabs: Array<StringOption & { key: string }> = [
   { label: 'B deild', value: 'b-deild', key: 'department' },
   { label: 'C deild', value: 'c-deild', key: 'department' },
 ]
+
+export class OJOIWebException extends Error {
+  public status!: number
+  public name!: string
+  public type!: Extract<AlertMessageType, 'error' | 'info' | 'warning'>
+
+  constructor(message: string) {
+    super(message)
+  }
+
+  static serverError(
+    message = 'Ekki tókst að vinna beiðni',
+  ): OJOIWebException {
+    const error = new OJOIWebException(message)
+    error.status = 500
+    error.name = 'Villa kom upp í vefþjón'
+    error.type = 'error'
+
+    return error
+  }
+
+  static badRequest(
+    message = 'Fyrirspurn er ekki á réttu formi',
+  ): OJOIWebException {
+    const error = new OJOIWebException(message)
+
+    error.status = 400
+    error.name = 'Ógild beiðni'
+    error.type = 'warning'
+
+    return error
+  }
+}
