@@ -1,12 +1,15 @@
+'use client'
+
 import { useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
-import { useCategories } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import { messages as generalMessages } from '../../lib/messages/general'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { FilterGroup } from '../filter-group/FilterGroup'
 
 export const CategoriesFilter = () => {
@@ -14,13 +17,14 @@ export const CategoriesFilter = () => {
   const { params, setParams } = useFilters()
   const [search, setSearch] = useState('')
 
-  const { data, error, isLoading } = useCategories({
-    params: { page: 1, pageSize: 1000, search: params.search },
-    options: {
-      keepPreviousData: true,
-      refreshInterval: 0,
-    },
-  })
+  const trpc = useTRPC()
+  const { data, error, isLoading } = useQuery(
+    trpc.getCategories.queryOptions({
+      page: 1,
+      pageSize: 1000,
+      search: params.search ?? undefined,
+    }),
+  )
 
   if (error) {
     return (

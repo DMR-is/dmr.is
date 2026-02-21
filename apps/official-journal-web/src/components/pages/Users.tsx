@@ -1,9 +1,10 @@
 import dynamic from 'next/dynamic'
+
 import {
   parseAsInteger,
   parseAsString,
   useQueryState,
-} from 'next-usequerystate'
+} from 'nuqs'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'

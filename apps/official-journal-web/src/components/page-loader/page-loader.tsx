@@ -1,47 +1,31 @@
-import { useRouter } from 'next/router'
+'use client'
+
+import { usePathname, useSearchParams } from 'next/navigation'
 
 import React, { useEffect, useRef } from 'react'
 import { LoadingBarRef } from 'react-top-loading-bar'
 
 import { PageLoader as PageLoaderUI } from '@island.is/island-ui/core/PageLoader'
 
-type RouteChangeFunction = (url: string, props: { shallow: boolean }) => void
-
 export const PageLoader = () => {
-  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const ref = useRef<LoadingBarRef>(null)
-  const state = useRef<'idle' | 'loading'>('idle')
+  const isFirstRender = useRef(true)
 
   useEffect(() => {
-    const onStart: RouteChangeFunction = (_, { shallow }) => {
-      if (!shallow) {
-        state.current = 'loading'
-        ref.current?.continuousStart()
-      }
-    }
-    const onComplete: RouteChangeFunction = (_, { shallow }) => {
-      if (!shallow) {
-        state.current = 'idle'
-        ref.current?.complete()
-      }
-    }
-    const onError = () => {
-      if (state.current === 'loading') {
-        ref.current?.complete()
-        state.current = 'idle'
-      }
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
     }
 
-    router.events.on('routeChangeStart', onStart)
-    router.events.on('routeChangeComplete', onComplete)
-    router.events.on('routeChangeError', onError)
+    ref.current?.continuousStart()
+    const timer = setTimeout(() => {
+      ref.current?.complete()
+    }, 200)
 
-    return () => {
-      router.events.off('routeChangeStart', onStart)
-      router.events.off('routeChangeComplete', onComplete)
-      router.events.off('routeChangeError', onError)
-    }
-  }, [router.events])
+    return () => clearTimeout(timer)
+  }, [pathname, searchParams])
 
   return <PageLoaderUI ref={ref} />
 }

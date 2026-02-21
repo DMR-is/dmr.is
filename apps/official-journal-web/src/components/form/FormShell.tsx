@@ -1,3 +1,5 @@
+'use client'
+
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Breadcrumbs } from '@dmr.is/ui/components/island-is/Breadcrumbs'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -10,18 +12,11 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import {
-  useRejectCase,
-  useUpdateAdvertAndCorrection,
-  useUpdateEmployee,
-  useUpdateNextCaseStatus,
-  useUpdatePreviousCaseStatus,
-  useUpdateTag,
-} from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { Routes } from '../../lib/constants'
 import { messages } from '../../lib/messages/caseSingle'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import {
   generateSteps,
   getNextStatus,
@@ -34,12 +29,16 @@ import { messages as statusMessages } from '../form-steps/messages'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
 import * as styles from './FormShell.css'
+
+import { useMutation } from '@tanstack/react-query'
+
 type FormShellType = {
   children?: React.ReactNode
 }
 
 export const FormShell = ({ children }: FormShellType) => {
   const { formatMessage } = useFormatMessage()
+  const trpc = useTRPC()
 
   const {
     currentCase,
@@ -54,9 +53,8 @@ export const FormShell = ({ children }: FormShellType) => {
 
   const steps = generateSteps(currentCase)
 
-  const { trigger: updateTag } = useUpdateTag({
-    caseId: currentCase.id,
-    options: {
+  const updateTagMutation = useMutation(
+    trpc.updateTag.mutationOptions({
       onSuccess: () => {
         refetch()
         toast.success('Merking máls uppfært')
@@ -64,29 +62,23 @@ export const FormShell = ({ children }: FormShellType) => {
       onError: () => {
         toast.error('Ekki tókst að uppfæra merkingu málsins')
       },
-    },
-  })
+    }),
+  )
 
-  const { trigger: assignEmployee, isMutating: isAssigning } =
-    useUpdateEmployee({
-      caseId: currentCase.id,
-      options: {
-        onSuccess: () => {
-          refetch()
-          toast.success('Máli úthlutað á starfsmann')
-        },
-        onError: () => {
-          toast.error('Ekki tókst að úthluta máli á starfsmann')
-        },
+  const assignEmployeeMutation = useMutation(
+    trpc.updateEmployee.mutationOptions({
+      onSuccess: () => {
+        refetch()
+        toast.success('Máli úthlutað á starfsmann')
       },
-    })
+      onError: () => {
+        toast.error('Ekki tókst að úthluta máli á starfsmann')
+      },
+    }),
+  )
 
-  const {
-    trigger: updateCaseNextStatus,
-    isMutating: isUpdatingNextCaseStatus,
-  } = useUpdateNextCaseStatus({
-    caseId: currentCase.id,
-    options: {
+  const updateNextStatusMutation = useMutation(
+    trpc.updateNextStatus.mutationOptions({
       onSuccess: () => {
         refetch()
         toast.success('Staða máls uppfærð')
@@ -94,25 +86,23 @@ export const FormShell = ({ children }: FormShellType) => {
       onError: () => {
         toast.error('Ekki tókst að færa máli í næsta stig')
       },
-    },
-  })
+    }),
+  )
 
-  const { trigger: updatePrevStatus, isMutating: isUpdatingPrevCaseStatus } =
-    useUpdatePreviousCaseStatus({
-      caseId: currentCase.id,
-      options: {
-        onSuccess: () => {
-          refetch()
-          toast.success('Staða máls uppfærð')
-        },
-        onError: () => {
-          toast.error('Ekki tókst að færa máli í fyrri stig')
-        },
+  const updatePrevStatusMutation = useMutation(
+    trpc.updatePreviousStatus.mutationOptions({
+      onSuccess: () => {
+        refetch()
+        toast.success('Staða máls uppfærð')
       },
-    })
+      onError: () => {
+        toast.error('Ekki tókst að færa máli í fyrri stig')
+      },
+    }),
+  )
 
-  const { trigger: rejectCase } = useRejectCase({
-    options: {
+  const rejectCaseMutation = useMutation(
+    trpc.rejectCase.mutationOptions({
       onSuccess: () => {
         refetch()
         toast.success('Máli hafnað')
@@ -120,21 +110,20 @@ export const FormShell = ({ children }: FormShellType) => {
       onError: () => {
         toast.error('Ekki tókst að hafna máli')
       },
-    },
-  })
+    }),
+  )
 
-  const { trigger: correctAdvert, isMutating: isCorrecting } =
-    useUpdateAdvertAndCorrection({
-      options: {
-        onSuccess: () => {
-          refetch()
-          toast.success('Leiðrétting birt')
-        },
-        onError: () => {
-          toast.error('Ekki tókst að birta leiðréttingu')
-        },
+  const correctAdvertMutation = useMutation(
+    trpc.updateAdvertWithCorrection.mutationOptions({
+      onSuccess: () => {
+        refetch()
+        toast.success('Leiðrétting birt')
       },
-    })
+      onError: () => {
+        toast.error('Ekki tókst að birta leiðréttingu')
+      },
+    }),
+  )
 
   const breadcrumbs = [
     {
@@ -155,7 +144,7 @@ export const FormShell = ({ children }: FormShellType) => {
       'Ertu viss um að þú viljir hafna máli?',
     )
     if (confirmReject) {
-      rejectCase({ caseId: currentCase.id })
+      rejectCaseMutation.mutate({ id: currentCase.id })
     }
   }
 
@@ -219,7 +208,7 @@ export const FormShell = ({ children }: FormShellType) => {
                   <OJOISelect
                     backgroundColor="white"
                     name="employee"
-                    isValidating={isAssigning}
+                    isValidating={assignEmployeeMutation.isPending}
                     label="Starfsmaður"
                     options={employeeOptions}
                     placeholder="Úthluta máli á starfsmann"
@@ -229,7 +218,10 @@ export const FormShell = ({ children }: FormShellType) => {
                     )}
                     onChange={(opt) => {
                       if (!opt) return
-                      assignEmployee({ userId: opt.value })
+                      assignEmployeeMutation.mutate({
+                        id: currentCase.id,
+                        userId: opt.value,
+                      })
                     }}
                   />
                   <OJOIInput
@@ -260,7 +252,10 @@ export const FormShell = ({ children }: FormShellType) => {
                     options={tagOptions}
                     onChange={(opt) => {
                       if (!opt) return
-                      updateTag({ tagId: opt.value })
+                      updateTagMutation.mutate({
+                        id: currentCase.id,
+                        tagId: opt.value,
+                      })
                     }}
                   />
                   <Box
@@ -270,15 +265,19 @@ export const FormShell = ({ children }: FormShellType) => {
                     <Button
                       disabled={
                         prevStatus === null ||
-                        isUpdatingPrevCaseStatus ||
+                        updatePrevStatusMutation.isPending ||
                         !canEdit
                       }
                       fluid
                       variant="ghost"
                       size="small"
                       preTextIcon={prevStatus ? 'arrowBack' : undefined}
-                      loading={isUpdatingPrevCaseStatus}
-                      onClick={() => updatePrevStatus()}
+                      loading={updatePrevStatusMutation.isPending}
+                      onClick={() =>
+                        updatePrevStatusMutation.mutate({
+                          id: currentCase.id,
+                        })
+                      }
                     >
                       <Text
                         color="blue400"
@@ -295,14 +294,18 @@ export const FormShell = ({ children }: FormShellType) => {
                     <Button
                       disabled={
                         nextStatus === null ||
-                        isUpdatingNextCaseStatus ||
+                        updateNextStatusMutation.isPending ||
                         !canEdit
                       }
                       fluid
-                      loading={isUpdatingNextCaseStatus}
+                      loading={updateNextStatusMutation.isPending}
                       size="small"
                       icon={nextStatus ? 'arrowForward' : undefined}
-                      onClick={() => updateCaseNextStatus()}
+                      onClick={() =>
+                        updateNextStatusMutation.mutate({
+                          id: currentCase.id,
+                        })
+                      }
                     >
                       <Text color="white" variant="small" fontWeight="semiBold">
                         {nextStatus
@@ -346,10 +349,10 @@ export const FormShell = ({ children }: FormShellType) => {
                       size="small"
                       icon="pencil"
                       iconType="outline"
-                      loading={isCorrecting}
+                      loading={correctAdvertMutation.isPending}
                       onClick={() => {
                         if (!localCorrection) return
-                        correctAdvert({
+                        correctAdvertMutation.mutate({
                           advertHtml: currentCase.html,
                           caseId: currentCase.id,
                           description: localCorrection.description,

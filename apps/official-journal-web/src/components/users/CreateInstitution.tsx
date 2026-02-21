@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from 'react'
 import slugify from 'slugify'
 
@@ -12,33 +14,41 @@ import {
   CreateInstitution as CreateInstitutionDto,
   Institution,
 } from '../../gen/fetch'
-import { useInstitutions } from '../../hooks/api'
+import { useTRPC } from '../../lib/trpc/client/trpc'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   onSuccess?: (institution?: Institution) => void
 }
 
 export const CreateInstitution = ({ onSuccess }: Props) => {
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+
   const [createState, setCreateState] = useState<CreateInstitutionDto>({
     title: '',
     nationalId: '',
   })
 
-  const { createInstitution, isCreatingInstitution } = useInstitutions({
-    onCreateSuccess: () => {
-      toast.success(`Stofnun ${createState.title} hefur verið stofnuð`)
-      onSuccess?.({
-        id: 'new-institution',
-        title: createState.title,
-        slug: slugify(createState.title, { lower: true }),
-        nationalId: createState.nationalId,
-      })
-      setCreateState({
-        title: '',
-        nationalId: '',
-      })
-    },
-  })
+  const createInstitutionMutation = useMutation(
+    trpc.createInstitution.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries(trpc.getInstitutions.queryFilter())
+        toast.success(`Stofnun ${createState.title} hefur verið stofnuð`)
+        onSuccess?.({
+          id: 'new-institution',
+          title: createState.title,
+          slug: slugify(createState.title, { lower: true }),
+          nationalId: createState.nationalId,
+        })
+        setCreateState({
+          title: '',
+          nationalId: '',
+        })
+      },
+    }),
+  )
 
   return (
     <Stack space={[2, 2, 3]}>
@@ -86,11 +96,11 @@ export const CreateInstitution = ({ onSuccess }: Props) => {
         <Button
           icon="business"
           iconType="outline"
-          loading={isCreatingInstitution}
+          loading={createInstitutionMutation.isPending}
           disabled={!createState.title}
           size="small"
           variant="primary"
-          onClick={() => createInstitution(createState)}
+          onClick={() => createInstitutionMutation.mutate(createState)}
         >
           Stofna stofnun
         </Button>

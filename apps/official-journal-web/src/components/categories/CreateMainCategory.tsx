@@ -7,12 +7,14 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { Category } from '../../gen/fetch'
-import { useUpdateMainCategories } from '../../hooks/api'
 import { useCategoryContext } from '../../hooks/useCategoryContext'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { ContentWrapper } from '../content-wrapper/ContentWrapper'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
 import { OJOITag } from '../tags/OJOITag'
+
+import { useMutation } from '@tanstack/react-query'
 
 type CreateMainCategory = {
   departmentId: string
@@ -35,27 +37,28 @@ export const CreateMainCategory = () => {
   const { categoryOptions, departmentOptions, refetchMainCategories } =
     useCategoryContext()
 
-  const { createMainCategoryTrigger, isCreatingMainCategory } =
-    useUpdateMainCategories({
-      createMainCategoryOptions: {
-        onSuccess: () => {
-          toast.success(`Yfirflokkur ${newMainCategory.title} var stofnaður`)
-          setNewMainCategory({
-            departmentId: '',
-            title: '',
-            slug: '',
-            description: '',
-            categories: [],
-          })
+  const trpc = useTRPC()
 
-          setTimestamp(new Date().toISOString())
-          refetchMainCategories()
-        },
-        onError: () => {
-          toast.error('Villa kom upp við að stofna yfirflokk')
-        },
+  const createMainCategoryMutation = useMutation(
+    trpc.createMainCategory.mutationOptions({
+      onSuccess: () => {
+        toast.success(`Yfirflokkur ${newMainCategory.title} var stofnaður`)
+        setNewMainCategory({
+          departmentId: '',
+          title: '',
+          slug: '',
+          description: '',
+          categories: [],
+        })
+
+        setTimestamp(new Date().toISOString())
+        refetchMainCategories()
       },
-    })
+      onError: () => {
+        toast.error('Villa kom upp við að stofna yfirflokk')
+      },
+    }),
+  )
 
   const filteredCategoryOptions = useMemo(() => {
     return categoryOptions.filter(
@@ -149,11 +152,11 @@ export const CreateMainCategory = () => {
         )}
         <Inline justifyContent="flexEnd">
           <Button
-            loading={isCreatingMainCategory}
+            loading={createMainCategoryMutation.isPending}
             variant="utility"
             icon="add"
             onClick={() =>
-              createMainCategoryTrigger({
+              createMainCategoryMutation.mutate({
                 departmentId: newMainCategory.departmentId,
                 title: newMainCategory.title,
                 description: newMainCategory.description,

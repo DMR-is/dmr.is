@@ -1,6 +1,5 @@
-import { parseAsInteger, useQueryState } from 'next-usequerystate'
-
 import debounce from 'lodash/debounce'
+import { parseAsInteger, useQueryState } from 'nuqs'
 import { useCallback, useState } from 'react'
 
 import { Button } from '@dmr.is/ui/components/island-is/Button'

@@ -11,16 +11,14 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import {
-  useCreateAppendix,
-  useDeleteAppendix,
-  useUpdateAppendix,
-} from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { useFileUploader } from '../../lib/utils'
 import { HTMLEditor } from '../editor/Editor'
 import { OJOIInput } from '../select/OJOIInput'
 import * as styles from './AdvertFields.css'
+
+import { useMutation } from '@tanstack/react-query'
 
 type Props = {
   toggle: boolean
@@ -29,11 +27,12 @@ type Props = {
 
 export const AppendixFields = ({ toggle, onToggle }: Props) => {
   const { data: session } = useSession()
+  const trpc = useTRPC()
 
   const { currentCase, refetch, canEdit } = useCaseContext()
-  const { createAppendix } = useCreateAppendix({
-    caseId: currentCase.id,
-    options: {
+
+  const createAppendixMutation = useMutation(
+    trpc.createAttachment.mutationOptions({
       onSuccess: () => {
         refetch()
         toast.success('Viðauka bætt við', {
@@ -45,12 +44,11 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
           toastId: 'updateAppendix',
         })
       },
-    },
-  })
+    }),
+  )
 
-  const { updateAdAppendix } = useUpdateAppendix({
-    caseId: currentCase.id,
-    options: {
+  const updateAppendixMutation = useMutation(
+    trpc.updateAppendix.mutationOptions({
       onSuccess: () => {
         refetch()
         toast.success('Viðauki uppfærður', {
@@ -62,12 +60,11 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
           toastId: 'updateAppendix',
         })
       },
-    },
-  })
+    }),
+  )
 
-  const { deleteAppendix } = useDeleteAppendix({
-    caseId: currentCase.id,
-    options: {
+  const deleteAppendixMutation = useMutation(
+    trpc.deleteAttachment.mutationOptions({
       onSuccess: () => {
         refetch()
         toast.success('Viðauki fjarlægður', {
@@ -79,14 +76,15 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
           toastId: 'updateAppendix',
         })
       },
-    },
-  })
+    }),
+  )
 
   const updateAppendix = async (
     id: string,
     body: { content?: string; title?: string; order?: number },
   ) => {
-    await updateAdAppendix({
+    await updateAppendixMutation.mutateAsync({
+      id: currentCase.id,
       updateAdvertAppendixBody: {
         content: body.content ?? null,
         title: body.title ?? null,
@@ -162,10 +160,9 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
                     size="small"
                     disabled={!canEdit}
                     onClick={() =>
-                      deleteAppendix({
-                        deleteAdvertAppendixBody: {
-                          additionId: addition.id,
-                        },
+                      deleteAppendixMutation.mutate({
+                        id: currentCase.id,
+                        additionId: addition.id,
                       })
                     }
                   >
@@ -214,7 +211,8 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
             icon="add"
             size="small"
             onClick={() =>
-              createAppendix({
+              createAppendixMutation.mutate({
+                id: currentCase.id,
                 createAdvertAppendixBody: {
                   content: '',
                   title: `Viðauki ${currentCase.additions ? currentCase.additions.length + 1 : ''}`,

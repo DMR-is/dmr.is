@@ -17,11 +17,13 @@ import {
   SignatureRecord as SignatureRecordDto,
   UpdateSignatureRecord,
 } from '../../gen/fetch'
-import { useUpdateSignature } from '../../hooks/api'
 import { useCaseContext } from '../../hooks/useCaseContext'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { ContentWrapper } from '../content-wrapper/ContentWrapper'
 import { OJOIInput } from '../select/OJOIInput'
 import { SignatureMember } from './SignatureMember'
+
+import { useMutation } from '@tanstack/react-query'
 
 type Props = {
   record: SignatureRecordDto
@@ -31,29 +33,11 @@ type SignatureRecordKey = keyof UpdateSignatureRecord
 
 export const SignatureRecord = ({ record }: Props) => {
   const { refetchSignature, currentCase, canEdit } = useCaseContext()
-  const {
-    updateSignatureRecord,
-    isUpdatingSignatureRecord,
-    addSignatureMember,
-    isAddingSignatureMember,
-    removeSignatureMember,
-    isRemovingSignatureMember,
-    updateSignatureMember,
-    isUpdatingSignatureMember,
-    removeSignatureRecord,
-    isRemovingSignatureRecord,
-  } = useUpdateSignature({
-    signatureId: currentCase.signature.id,
-    addSignatureRecordOptions: {
-      onSuccess: () => {
-        toast.success('Auka undirritun bætt við')
-        refetchSignature()
-      },
-      onError: () => {
-        toast.error('Ekki tóskt að bæta við undirritun')
-      },
-    },
-    updateSignatureRecordOptions: {
+  const trpc = useTRPC()
+  const signatureId = currentCase.signature.id
+
+  const updateSignatureRecordMutation = useMutation(
+    trpc.updateSignatureRecord.mutationOptions({
       onSuccess: () => {
         toast.success('Undirritun uppfærð')
         refetchSignature()
@@ -61,8 +45,11 @@ export const SignatureRecord = ({ record }: Props) => {
       onError: () => {
         toast.error('Ekki tókst að vista undirritun')
       },
-    },
-    addSignatureMemberOptions: {
+    }),
+  )
+
+  const addSignatureMemberMutation = useMutation(
+    trpc.addSignatureMember.mutationOptions({
       onSuccess: () => {
         toast.success('Undirritara bætt við')
         refetchSignature()
@@ -70,8 +57,11 @@ export const SignatureRecord = ({ record }: Props) => {
       onError: () => {
         toast.error('Ekki tókst að bæta við undirritanda')
       },
-    },
-    deleteSignatureMemberOptions: {
+    }),
+  )
+
+  const removeSignatureMemberMutation = useMutation(
+    trpc.deleteSignatureMember.mutationOptions({
       onSuccess: () => {
         toast.success('Undirritara eytt')
         refetchSignature()
@@ -79,8 +69,11 @@ export const SignatureRecord = ({ record }: Props) => {
       onError: () => {
         toast.error('Ekki tókst að eyða undirritanda')
       },
-    },
-    updateSignatureMemberOptions: {
+    }),
+  )
+
+  const updateSignatureMemberMutation = useMutation(
+    trpc.updateSignatureMember.mutationOptions({
       onSuccess: () => {
         toast.success('Undirritari uppfærður')
         refetchSignature()
@@ -88,8 +81,11 @@ export const SignatureRecord = ({ record }: Props) => {
       onError: () => {
         toast.error('Ekki tókst að uppfæra undirritara')
       },
-    },
-    deleteSignatureRecordOptions: {
+    }),
+  )
+
+  const removeSignatureRecordMutation = useMutation(
+    trpc.deleteSignatureRecord.mutationOptions({
       onSuccess: () => {
         toast.success('Undirritunar kafla eytt')
         refetchSignature()
@@ -97,11 +93,12 @@ export const SignatureRecord = ({ record }: Props) => {
       onError: () => {
         toast.error('Ekki tókst að eyða undirritunar kafla')
       },
-    },
-  })
+    }),
+  )
 
   const updateRecord = (key: SignatureRecordKey, value: string) => {
-    updateSignatureRecord({
+    updateSignatureRecordMutation.mutate({
+      signatureId,
       recordId: record.id,
       [key]: value,
     })
@@ -114,7 +111,8 @@ export const SignatureRecord = ({ record }: Props) => {
     key: keyof SignatureMemberDto,
     value: string,
   ) => {
-    updateSignatureMember({
+    updateSignatureMemberMutation.mutate({
+      signatureId,
       recordId: record.id,
       memberId,
       [key]: value,
@@ -124,7 +122,8 @@ export const SignatureRecord = ({ record }: Props) => {
   const handleMemberchange = useCallback(debounce(updateMember, 500), [])
 
   const updateAdditional = (value: string) => {
-    updateSignatureRecord({
+    updateSignatureRecordMutation.mutate({
+      signatureId,
       recordId: record.id,
       additional: value,
     })
@@ -145,7 +144,7 @@ export const SignatureRecord = ({ record }: Props) => {
           <Column>
             <OJOIInput
               disabled={!canEdit}
-              isValidating={isUpdatingSignatureRecord}
+              isValidating={updateSignatureRecordMutation.isPending}
               defaultValue={record.institution}
               label="Staður eða stofnun (þgf.)"
               name="institution"
@@ -172,8 +171,13 @@ export const SignatureRecord = ({ record }: Props) => {
               <Inline justifyContent="flexEnd">
                 <Button
                   disabled={!canEdit}
-                  loading={isRemovingSignatureRecord}
-                  onClick={() => removeSignatureRecord({ recordId: record.id })}
+                  loading={removeSignatureRecordMutation.isPending}
+                  onClick={() =>
+                    removeSignatureRecordMutation.mutate({
+                      signatureId,
+                      recordId: record.id,
+                    })
+                  }
                   variant="utility"
                   size="small"
                   colorScheme="destructive"
@@ -198,7 +202,8 @@ export const SignatureRecord = ({ record }: Props) => {
                 size="small"
                 icon="add"
                 onClick={() =>
-                  addSignatureMember({
+                  addSignatureMemberMutation.mutate({
+                    signatureId,
                     recordId: record.id,
                     memberType: CreateSignatureMemberMemberTypeEnum.CHAIRMAN,
                   })
@@ -211,13 +216,14 @@ export const SignatureRecord = ({ record }: Props) => {
           {chairman !== null && (
             <SignatureMember
               {...chairman}
-              isDeleting={isRemovingSignatureMember}
-              isUpdating={isUpdatingSignatureMember}
+              isDeleting={removeSignatureMemberMutation.isPending}
+              isUpdating={updateSignatureMemberMutation.isPending}
               onChange={(key, value) =>
                 handleMemberchange(chairman.id, key, value)
               }
               onDelete={() =>
-                removeSignatureMember({
+                removeSignatureMemberMutation.mutate({
+                  signatureId,
                   recordId: record.id,
                   memberId: chairman.id,
                 })
@@ -233,11 +239,15 @@ export const SignatureRecord = ({ record }: Props) => {
               <SignatureMember
                 {...m}
                 key={m.id}
-                isDeleting={isRemovingSignatureMember}
-                isUpdating={isUpdatingSignatureMember}
+                isDeleting={removeSignatureMemberMutation.isPending}
+                isUpdating={updateSignatureMemberMutation.isPending}
                 onChange={(key, value) => handleMemberchange(m.id, key, value)}
                 onDelete={() =>
-                  removeSignatureMember({ recordId: record.id, memberId: m.id })
+                  removeSignatureMemberMutation.mutate({
+                    signatureId,
+                    recordId: record.id,
+                    memberId: m.id,
+                  })
                 }
               />
             ))}
@@ -246,12 +256,13 @@ export const SignatureRecord = ({ record }: Props) => {
             <Button
               variant="utility"
               disabled={!canEdit}
-              loading={isAddingSignatureMember}
+              loading={addSignatureMemberMutation.isPending}
               icon="add"
               iconType="outline"
               size="small"
               onClick={() =>
-                addSignatureMember({
+                addSignatureMemberMutation.mutate({
+                  signatureId,
                   recordId: record.id,
                   memberType: CreateSignatureMemberMemberTypeEnum.MEMBER,
                 })

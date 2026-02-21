@@ -6,27 +6,29 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { useUpdateMainCategories } from '../../hooks/api'
 import { useCategoryContext } from '../../hooks/useCategoryContext'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { ContentWrapper } from '../content-wrapper/ContentWrapper'
 import { OJOIInput } from '../select/OJOIInput'
+
+import { useMutation } from '@tanstack/react-query'
 
 export const CreateCategory = () => {
   const [newCategory, setNewCategory] = useState<string>('')
   const { refetchCategories } = useCategoryContext()
-  const { createCategoryTrigger, isCreatingCategory } = useUpdateMainCategories(
-    {
-      createCategoryOptions: {
-        onSuccess: () => {
-          toast.success(`Málaflokkur ${newCategory} hefur verið stofnaður`)
-          refetchCategories()
-          setNewCategory('')
-        },
-        onError: () => {
-          toast.error('Ekki tókst að stofna málaflokk')
-        },
+  const trpc = useTRPC()
+
+  const createCategory = useMutation(
+    trpc.createCategory.mutationOptions({
+      onSuccess: () => {
+        toast.success(`Málaflokkur ${newCategory} hefur verið stofnaður`)
+        refetchCategories()
+        setNewCategory('')
       },
-    },
+      onError: () => {
+        toast.error('Ekki tókst að stofna málaflokk')
+      },
+    }),
   )
 
   return (
@@ -50,8 +52,13 @@ export const CreateCategory = () => {
             variant="utility"
             icon="add"
             iconType="outline"
-            loading={isCreatingCategory}
-            onClick={() => createCategoryTrigger({ title: newCategory })}
+            loading={createCategory.isPending}
+            onClick={() =>
+              createCategory.mutate({
+                title: newCategory,
+                slug: slugify(newCategory, { lower: true }),
+              })
+            }
           >
             Stofna málaflokk
           </Button>

@@ -13,9 +13,11 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
 import { CreateCaseChannelBody } from '../../gen/fetch'
-import { useCommunicationChannels } from '../../hooks/api/get/useCommunicationChannels'
 import { useCaseContext } from '../../hooks/useCaseContext'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { OJOIInput } from '../select/OJOIInput'
+
+import { useMutation } from '@tanstack/react-query'
 
 type Props = {
   toggle: boolean
@@ -24,9 +26,16 @@ type Props = {
 
 export const CommunicationChannelsField = ({ toggle, onToggle }: Props) => {
   const { currentCase, refetch } = useCaseContext()
+  const trpc = useTRPC()
 
-  const { createChannel, deleteChannel } = useCommunicationChannels({
-    createChannelOptions: {
+  const [createState, setCreateState] = useState<CreateCaseChannelBody>({
+    name: '',
+    email: '',
+    phone: '',
+  })
+
+  const createChannel = useMutation(
+    trpc.createCommunicationChannel.mutationOptions({
       onSuccess: () => {
         refetch()
         toast.success('Samskiptaleið hefur verið bætt við', {
@@ -39,8 +48,11 @@ export const CommunicationChannelsField = ({ toggle, onToggle }: Props) => {
           toastId: 'createChannelFailure',
         })
       },
-    },
-    deleteChannelOptions: {
+    }),
+  )
+
+  const deleteChannel = useMutation(
+    trpc.deleteCommunicationChannel.mutationOptions({
       onSuccess: () => {
         refetch()
         toast.success('Samskiptaleið hefur verið eytt', {
@@ -52,14 +64,8 @@ export const CommunicationChannelsField = ({ toggle, onToggle }: Props) => {
           toastId: 'deleteChannelFailure',
         })
       },
-    },
-  })
-
-  const [createState, setCreateState] = useState<CreateCaseChannelBody>({
-    name: '',
-    email: '',
-    phone: '',
-  })
+    }),
+  )
 
   const handleChange = (key: keyof CreateCaseChannelBody, value: string) => {
     setCreateState((state) => ({ ...state, [key]: value }))
@@ -109,7 +115,10 @@ export const CommunicationChannelsField = ({ toggle, onToggle }: Props) => {
                 icon="trash"
                 iconType="outline"
                 onClick={() =>
-                  deleteChannel({ caseId: currentCase.id, channelId: ch.id })
+                  deleteChannel.mutate({
+                    caseId: currentCase.id,
+                    channelId: ch.id,
+                  })
                 }
               />
             ),
@@ -159,9 +168,11 @@ export const CommunicationChannelsField = ({ toggle, onToggle }: Props) => {
                 iconType="outline"
                 icon="call"
                 onClick={() =>
-                  createChannel({
+                  createChannel.mutate({
                     caseId: currentCase.id,
-                    createCaseChannelBody: createState,
+                    name: createState.name,
+                    email: createState.email,
+                    phone: createState.phone,
                   })
                 }
               >

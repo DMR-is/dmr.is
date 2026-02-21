@@ -8,10 +8,13 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { useUpdateMainCategories } from '../../hooks/api'
 import { useCategoryContext } from '../../hooks/useCategoryContext'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { ContentWrapper } from '../content-wrapper/ContentWrapper'
 import { OJOIInput } from '../select/OJOIInput'
+
+import { useMutation } from '@tanstack/react-query'
+
 export const UpdateCategory = () => {
   const {
     selectedCategory,
@@ -20,13 +23,10 @@ export const UpdateCategory = () => {
     setSelectedCategory,
   } = useCategoryContext()
 
-  const {
-    updateCategoryTrigger,
-    isUpdatingCategory,
-    deleteCategoryTrigger,
-    isDeletingCategory,
-  } = useUpdateMainCategories({
-    updateCategoryOptions: {
+  const trpc = useTRPC()
+
+  const updateCategoryMutation = useMutation(
+    trpc.updateCategory.mutationOptions({
       onSuccess: () => {
         toast.success(
           `Málaflokkur ${selectedCategory?.title} hefur verið uppfærður`,
@@ -38,8 +38,11 @@ export const UpdateCategory = () => {
       onError: () => {
         toast.error('Ekki tókst að uppfæra málaflokk')
       },
-    },
-    deleteCategoryOptions: {
+    }),
+  )
+
+  const deleteCategoryMutation = useMutation(
+    trpc.deleteCategory.mutationOptions({
       onSuccess: () => {
         toast.success(`Málaflokkur ${selectedCategory?.title} hefur verið eytt`)
         setSelectedCategory(null)
@@ -48,19 +51,19 @@ export const UpdateCategory = () => {
       onError: () => {
         toast.error('Ekki tókst að eyða málaflokk')
       },
-    },
-  })
+    }),
+  )
 
   const updateTitle = useCallback(
     debounce((title: string) => {
       if (!selectedCategory) return
 
-      updateCategoryTrigger({
+      updateCategoryMutation.mutate({
         id: selectedCategory.id,
         title,
       })
     }, 500),
-    [selectedCategory, updateCategoryTrigger],
+    [selectedCategory, updateCategoryMutation],
   )
 
   const title = selectedCategory
@@ -72,7 +75,7 @@ export const UpdateCategory = () => {
       {selectedCategory ? (
         <Stack space={2}>
           <OJOIInput
-            isValidating={isUpdatingCategory}
+            isValidating={updateCategoryMutation.isPending}
             key={`selected-category-${selectedCategory.id}`}
             name="update-category-title"
             label="Heiti málaflokks"
@@ -95,10 +98,10 @@ export const UpdateCategory = () => {
               icon="trash"
               colorScheme="destructive"
               iconType="outline"
-              loading={isDeletingCategory}
+              loading={deleteCategoryMutation.isPending}
               onClick={() => {
                 if (!selectedCategory) return
-                deleteCategoryTrigger({
+                deleteCategoryMutation.mutate({
                   id: selectedCategory.id,
                 })
               }}

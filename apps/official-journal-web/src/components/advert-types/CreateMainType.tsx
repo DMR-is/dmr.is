@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import slugify from 'slugify'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
@@ -8,9 +9,10 @@ import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { Department, GetAdvertMainType } from '../../gen/fetch'
-import { useDepartments } from '../../hooks/api'
-import { useMainTypes } from '../../hooks/api/useMainTypes'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { OJOISelect } from '../select/OJOISelect'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type CreateMainTypeState = {
   department: Department | null
@@ -23,11 +25,21 @@ type Props = {
 }
 
 export const CreateMainType = ({ onSuccess }: Props) => {
-  const { departments } = useDepartments()
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
 
-  const { createMainType, createMainTypeError, isCreatingMainType } =
-    useMainTypes({
-      onCreateMainTypeSuccess: (data) => {
+  const { data: departmentsData } = useQuery(
+    trpc.getDepartments.queryOptions({
+      pageSize: 100,
+    }),
+  )
+
+  const departments = departmentsData?.departments
+
+  const createMainTypeMutation = useMutation(
+    trpc.createMainType.mutationOptions({
+      onSuccess: (data) => {
+        queryClient.invalidateQueries(trpc.getMainTypes.queryFilter())
         onSuccess && onSuccess(data)
 
         setState({
@@ -36,7 +48,8 @@ export const CreateMainType = ({ onSuccess }: Props) => {
           slug: '',
         })
       },
-    })
+    }),
+  )
 
   const departmentOptions = departments?.map((dep) => ({
     label: dep.title,
@@ -53,11 +66,11 @@ export const CreateMainType = ({ onSuccess }: Props) => {
 
   return (
     <Stack space={[2, 2, 3]}>
-      {createMainTypeError && (
+      {createMainTypeMutation.error && (
         <AlertMessage
-          title={createMainTypeError.name}
-          type={createMainTypeError.type}
-          message={createMainTypeError.message}
+          title="Villa"
+          type="error"
+          message={createMainTypeMutation.error.message}
         />
       )}
       <OJOISelect
@@ -121,12 +134,12 @@ export const CreateMainType = ({ onSuccess }: Props) => {
       />
       <Inline space={[2, 2, 3]} justifyContent="flexEnd">
         <Button
-          loading={isCreatingMainType}
+          loading={createMainTypeMutation.isPending}
           onClick={() => {
             if (!state.department) {
               return
             }
-            createMainType({
+            createMainTypeMutation.mutate({
               departmentId: state.department.id,
               title: state.title,
             })

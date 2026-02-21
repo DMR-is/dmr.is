@@ -6,14 +6,17 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { useUpdateMainCategories } from '../../hooks/api'
 import { useCategoryContext } from '../../hooks/useCategoryContext'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { ContentWrapper } from '../content-wrapper/ContentWrapper'
 import { DeleteCorrections } from '../corrections/DeleteButton'
 import { OJOISelect } from '../select/OJOISelect'
 
+import { useMutation } from '@tanstack/react-query'
+
 export const MergeCategories = () => {
   const { categoryOptions, refetchCategories } = useCategoryContext()
+  const trpc = useTRPC()
 
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
     null,
@@ -21,8 +24,8 @@ export const MergeCategories = () => {
 
   const [categoryToMerge, setCategoryToMerge] = useState<Category | null>(null)
 
-  const { mergeCategoryTrigger } = useUpdateMainCategories({
-    mergeCategoriesOptions: {
+  const mergeCategoriesMutation = useMutation(
+    trpc.mergeCategories.mutationOptions({
       onSuccess: () => {
         refetchCategories()
         setCategoryToDelete(null)
@@ -31,8 +34,8 @@ export const MergeCategories = () => {
       onError: () => {
         toast.error('Ekki tókst að sameina málaflokk')
       },
-    },
-  })
+    }),
+  )
 
   return (
     <ContentWrapper title="Sameina málaflokka">
@@ -82,7 +85,7 @@ export const MergeCategories = () => {
             categoryToDelete !== categoryToMerge && (
               <DeleteCorrections
                 onDelete={() => {
-                  mergeCategoryTrigger({
+                  mergeCategoriesMutation.mutate({
                     from: categoryToDelete.id,
                     to: categoryToMerge.id,
                   })

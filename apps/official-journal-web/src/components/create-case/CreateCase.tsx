@@ -1,7 +1,10 @@
-import { useRouter } from 'next/router'
+'use client'
+
+import { useRouter } from 'next/navigation'
 
 import { useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Drawer } from '@dmr.is/ui/components/island-is/Drawer'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
@@ -9,14 +12,17 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { CreateCaseDto } from '../../gen/fetch'
-import { useCase, useDepartments, useInstitutions } from '../../hooks/api'
-import { useMainTypes } from '../../hooks/api/useMainTypes'
 import { Routes } from '../../lib/constants'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
 
+import { useMutation } from '@tanstack/react-query'
+
 export const CreateCase = () => {
   const router = useRouter()
+  const trpc = useTRPC()
+
   const [createState, setCreateState] = useState<CreateCaseDto>({
     applicationId: undefined,
     involvedPartyId: '',
@@ -32,8 +38,8 @@ export const CreateCase = () => {
     createState.departmentId &&
     createState.typeId
 
-  const { createCase, isCreatingCase } = useCase({
-    createCaseOptions: {
+  const createCaseMutation = useMutation(
+    trpc.createCase.mutationOptions({
       onSuccess: ({ id }) => {
         toast.success(`Mál hefur verið stofnað`)
         router.push(Routes.ProccessingDetail.replace(':caseId', id))
@@ -41,26 +47,32 @@ export const CreateCase = () => {
       onError: () => {
         toast.error(`Ekki tókst að stofna mál`)
       },
-    },
-  })
+    }),
+  )
 
-  const { institutions, isLoadingInstitutions } = useInstitutions({
-    searchParams: {
+  const { data: institutionsData, isLoading: isLoadingInstitutions } = useQuery(
+    trpc.getInstitutions.queryOptions({
       page: 1,
       pageSize: 500,
       search: '',
-    },
-  })
+    }),
+  )
 
-  const { departments, isLoading: isLoadingDepartments } = useDepartments()
+  const { data: departmentsData, isLoading: isLoadingDepartments } = useQuery(
+    trpc.getDepartments.queryOptions({}),
+  )
 
-  const { mainTypes, isLoadingMainTypes } = useMainTypes({
-    mainTypesParams: {
+  const { data: mainTypesData, isLoading: isLoadingMainTypes } = useQuery(
+    trpc.getMainTypes.queryOptions({
       page: 1,
       pageSize: 500,
-      department: createState.departmentId,
-    },
-  })
+      department: createState.departmentId || undefined,
+    }),
+  )
+
+  const institutions = institutionsData
+  const departments = departmentsData?.departments
+  const mainTypes = mainTypesData?.mainTypes
 
   const institutionOptions = institutions?.institutions?.map((institution) => ({
     label: institution.title,
@@ -172,8 +184,10 @@ export const CreateCase = () => {
           disabled={!canCreate}
           size="small"
           variant="ghost"
-          loading={isCreatingCase}
-          onClick={() => createCase({ createCaseDto: createState })}
+          loading={createCaseMutation.isPending}
+          onClick={() =>
+            createCaseMutation.mutate({ createCaseDto: createState })
+          }
           icon="document"
           iconType="outline"
         >

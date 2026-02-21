@@ -1,8 +1,14 @@
+'use client'
+
 import { useMemo, useState } from 'react'
 import { createContext } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
+
 import { Category, Department, MainCategory } from '../gen/fetch'
-import { useCategories, useMainCategories } from '../hooks/api'
+import { useTRPC } from '../lib/trpc/client/trpc'
+
+import { useQueryClient } from '@tanstack/react-query'
 
 type MainCategoryOption = {
   label: string
@@ -61,90 +67,64 @@ export const CategoryContext = createContext<CategoryState>({
   refetchCategories: () => undefined,
 })
 
-type MainCategoryProviderProps = {
-  initalMainCategories?: MainCategory[]
-  initalCategories?: Category[]
-  initalDepartments?: Department[]
+type CategoryProviderProps = {
   children: React.ReactNode
 }
 
-export const CategoryProvider = ({
-  initalMainCategories = [],
-  initalCategories = [],
-  initalDepartments = [],
-  children,
-}: MainCategoryProviderProps) => {
-  const [mainCategories, setMainCategories] =
-    useState<MainCategory[]>(initalMainCategories)
+export const CategoryProvider = ({ children }: CategoryProviderProps) => {
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
 
-  const [categories, setCategories] = useState<Category[]>(initalCategories)
-
-  const [departments, setDepartments] =
-    useState<Department[]>(initalDepartments)
-
-  const [selectedMainCategory, setSelectedMainCategory] =
-    useState<MainCategory | null>(null)
-
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+  const [selectedMainCategoryId, setSelectedMainCategoryId] = useState<
+    string | null
+  >(null)
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
   )
-
   const [selectedDepartment, setSelectedDepartment] =
     useState<Department | null>(null)
 
   const {
-    mutate: refetchMainCategories,
-    isValidating: isValidatingMainCategories,
+    data: mainCategoriesData,
     error: mainCategoryError,
-  } = useMainCategories({
-    params: {
+    isFetching: isValidatingMainCategories,
+  } = useQuery(
+    trpc.getMainCategories.queryOptions({
       pageSize: 1000,
-    },
-    options: {
-      refreshInterval: 0,
-      revalidateOnFocus: false,
-      onSuccess: (data) => {
-        setMainCategories(data.mainCategories)
-
-        if (selectedMainCategory) {
-          const updatedMainCategory = data.mainCategories.find(
-            (mainCategory) => mainCategory.id === selectedMainCategory.id,
-          )
-
-          if (updatedMainCategory) {
-            setSelectedMainCategory(updatedMainCategory)
-          }
-        }
-      },
-    },
-  })
+    }),
+  )
 
   const {
-    mutate: refetchCategories,
+    data: categoriesData,
     error: categoryError,
-    isValidating: isValidatingCategories,
-  } = useCategories({
-    params: {
+    isFetching: isValidatingCategories,
+  } = useQuery(
+    trpc.getCategories.queryOptions({
       pageSize: 1000,
-    },
-    options: {
-      refreshInterval: 0,
-      revalidateOnFocus: false,
-      onSuccess: (data) => {
-        setCategories(data.categories)
+    }),
+  )
 
-        if (selectedCategory) {
-          const updatedCategory = data.categories.find(
-            (category) => category.id === selectedCategory.id,
-          )
+  const { data: departmentsData } = useQuery(
+    trpc.getDepartments.queryOptions({
+      pageSize: 10,
+    }),
+  )
 
-          if (updatedCategory) {
-            setSelectedCategory(updatedCategory)
-          }
-        }
-      },
-    },
-  })
+  const mainCategories = mainCategoriesData?.mainCategories ?? []
+  const categories = categoriesData?.categories ?? []
+  const departments = departmentsData?.departments ?? []
+
+  const selectedMainCategory = useMemo(() => {
+    if (!selectedMainCategoryId) return null
+    return (
+      mainCategories.find((mc) => mc.id === selectedMainCategoryId) ?? null
+    )
+  }, [mainCategories, selectedMainCategoryId])
+
+  const selectedCategory = useMemo(() => {
+    if (!selectedCategoryId) return null
+    return categories.find((c) => c.id === selectedCategoryId) ?? null
+  }, [categories, selectedCategoryId])
 
   const mainCategoryOptions = useMemo(() => {
     return mainCategories.map((cat) => ({
@@ -161,22 +141,39 @@ export const CategoryProvider = ({
   }, [categories])
 
   const departmentOptions = useMemo(() => {
-    return departments?.map((dept) => ({
+    return departments.map((dept) => ({
       label: dept.title,
       value: dept,
     }))
   }, [departments])
+
+  const setSelectedMainCategory = (mainCategory: MainCategory | null) => {
+    setSelectedMainCategoryId(mainCategory?.id ?? null)
+  }
+
+  const setSelectedCategory = (category: Category | null) => {
+    setSelectedCategoryId(category?.id ?? null)
+  }
+
+  const refetchMainCategories = () => {
+    queryClient.invalidateQueries(trpc.getMainCategories.queryFilter())
+  }
+
+  const refetchCategories = () => {
+    queryClient.invalidateQueries(trpc.getCategories.queryFilter())
+  }
 
   return (
     <CategoryContext.Provider
       value={{
         mainCategories,
         mainCategoryOptions,
-        mainCategoryError,
+        mainCategoryError:
+          (mainCategoryError as unknown as Error) ?? undefined,
         isValidatingMainCategories,
         categories,
         categoryOptions,
-        categoryError,
+        categoryError: (categoryError as unknown as Error) ?? undefined,
         isValidatingCategories,
         departments,
         departmentOptions,
@@ -186,8 +183,8 @@ export const CategoryProvider = ({
         setSelectedMainCategory,
         setSelectedCategory,
         setSelectedDepartment,
-        refetchMainCategories: refetchMainCategories,
-        refetchCategories: refetchCategories,
+        refetchMainCategories,
+        refetchCategories,
       }}
     >
       {children}

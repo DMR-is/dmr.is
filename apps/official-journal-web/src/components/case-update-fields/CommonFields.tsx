@@ -1,29 +1,23 @@
 import debounce from 'lodash/debounce'
 import { useMemo, useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/utils/toast'
 
-import {
-  useAdvertTypes,
-  useUpdateCategories,
-  useUpdateDepartment,
-  useUpdateTitle,
-  useUpdateType,
-} from '../../hooks/api'
-import { useGetAvailableInvolvedParties } from '../../hooks/api/get/useGetAvailableInvolvedParties'
-import { useUpdateInvolvedParty } from '../../hooks/api/update/useUpdateInvolvedParty'
-import { useMainTypes } from '../../hooks/api/useMainTypes'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { createOptions } from '../../lib/utils'
 import { messages } from '../form-steps/messages'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
 import { OJOITag } from '../tags/OJOITag'
+
+import { useMutation } from '@tanstack/react-query'
 
 type Props = {
   toggle: boolean
@@ -32,6 +26,7 @@ type Props = {
 
 export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
+  const trpc = useTRPC()
 
   const {
     currentCase,
@@ -46,73 +41,72 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
     currentCase.advertType?.mainType?.id,
   )
 
-  const { mainTypes, isLoadingMainTypes } = useMainTypes({
-    mainTypesParams: {
+  const { data: mainTypesData, isLoading: isLoadingMainTypes } = useQuery({
+    ...trpc.getMainTypes.queryOptions({
       page: 1,
       pageSize: 500,
       department: currentCase.advertDepartment.id,
-    },
+    }),
+    refetchOnWindowFocus: false,
   })
 
-  const { types, isLoadingTypes } = useAdvertTypes({
-    typesParams: {
+  const { data: typesData, isLoading: isLoadingTypes } = useQuery({
+    ...trpc.getTypes.queryOptions({
       page: 1,
       pageSize: 500,
       department: currentCase.advertDepartment.id,
       mainType: mainTypeId,
-    },
+    }),
+    refetchOnWindowFocus: false,
   })
-  const mainTypeOptions = mainTypes?.map((type) => ({
+
+  const mainTypeOptions = mainTypesData?.mainTypes?.map((type) => ({
     label: type.title,
     value: type.id,
   }))
 
-  const typeOptions = types?.map((type) => ({
+  const typeOptions = typesData?.types?.map((type) => ({
     label: type.title,
     value: type.id,
   }))
 
-  const { trigger: updateDepartment, isMutating: isUpdatingDepartment } =
-    useUpdateDepartment({
-      caseId: currentCase.id,
-      options: {
-        onSuccess: () => {
-          toast.success(`Deild auglýsingar uppfærð`)
-          refetch()
-        },
-        onError: () => {
-          toast.error(`Ekki tókst að uppfæra deild auglýsingar`)
-        },
+  const updateDepartmentMutation = useMutation(
+    trpc.updateDepartment.mutationOptions({
+      onSuccess: () => {
+        toast.success(`Deild auglýsingar uppfærð`)
+        refetch()
       },
-    })
-
-  const { updateInvolvedParty, isMutating: isUpdatingInvolvedParty } =
-    useUpdateInvolvedParty({
-      caseId: currentCase.id,
-      options: {
-        onSuccess: () => {
-          toast.success(`Innsendandi uppfærður`)
-          refetch()
-        },
-        onError: () => {
-          toast.error(`Ekki tókst að uppfæra innsendanda`)
-        },
+      onError: () => {
+        toast.error(`Ekki tókst að uppfæra deild auglýsingar`)
       },
-    })
+    }),
+  )
 
-  const { data: availableParties, isLoading: isLoadingParties } =
-    useGetAvailableInvolvedParties({
+  const updateInvolvedPartyMutation = useMutation(
+    trpc.updateInvolvedParty.mutationOptions({
+      onSuccess: () => {
+        toast.success(`Innsendandi uppfærður`)
+        refetch()
+      },
+      onError: () => {
+        toast.error(`Ekki tókst að uppfæra innsendanda`)
+      },
+    }),
+  )
+
+  const { data: availableParties, isLoading: isLoadingParties } = useQuery(
+    trpc.getAvailableInvolvedParties.queryOptions({
       caseId: currentCase.id,
-    })
+    }),
+  )
 
   const institutionOptions = useMemo(
     () => createOptions(availableParties?.institutions ?? []),
     [availableParties?.institutions],
   )
 
-  const { trigger: updateType, isMutating: isUpdatingType } = useUpdateType({
-    caseId: currentCase.id,
-    options: {
+  const updateTypeMutation = useMutation(
+    trpc.updateCaseType.mutationOptions({
       onError: () => {
         toast.error(`Ekki tókst að uppfæra tegund auglýsingar`)
       },
@@ -120,26 +114,23 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
         toast.success(`Tegund auglýsingar uppfærð`)
         refetch()
       },
-    },
-  })
+    }),
+  )
 
-  const { trigger: updateCategories, isMutating: isUpdatingCategory } =
-    useUpdateCategories({
-      caseId: currentCase.id,
-      options: {
-        onError: () => {
-          toast.error(`Ekki tókst að uppfæra efnisflokka auglýsingar`)
-        },
-        onSuccess: () => {
-          toast.success(`Efnisflokkar auglýsingar uppfærðir`)
-          refetch()
-        },
+  const updateCategoriesMutation = useMutation(
+    trpc.updateCategories.mutationOptions({
+      onError: () => {
+        toast.error(`Ekki tókst að uppfæra efnisflokka auglýsingar`)
       },
-    })
+      onSuccess: () => {
+        toast.success(`Efnisflokkar auglýsingar uppfærðir`)
+        refetch()
+      },
+    }),
+  )
 
-  const { trigger: updateTitle, isMutating: isUpdatingTitle } = useUpdateTitle({
-    caseId: currentCase.id,
-    options: {
+  const updateTitleMutation = useMutation(
+    trpc.updateTitle.mutationOptions({
       onError: () => {
         toast.error(`Ekki tókst að uppfæra heiti auglýsingar`)
       },
@@ -147,15 +138,15 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
         toast.success(`Heiti auglýsingar uppfært`)
         refetch()
       },
-    },
-  })
+    }),
+  )
 
-  const debounceUpdateTitle = debounce(updateTitle, 500)
+  const debounceUpdateTitle = debounce((args: { title: string }) => {
+    updateTitleMutation.mutate({ id: currentCase.id, ...args })
+  }, 500)
   const updateTitleHandler = (val: string) => {
     debounceUpdateTitle.cancel()
-    debounceUpdateTitle({
-      title: val,
-    })
+    debounceUpdateTitle({ title: val })
   }
 
   const latestSelectedCategory =
@@ -227,7 +218,7 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
             width="half"
             name="institution"
             isLoading={isLoadingParties}
-            isValidating={isUpdatingInvolvedParty}
+            isValidating={updateInvolvedPartyMutation.isPending}
             label={formatMessage(messages.grunnvinnsla.institution)}
             options={institutionOptions}
             value={institutionOptions.find(
@@ -248,8 +239,9 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
                   },
                 },
                 () =>
-                  updateInvolvedParty({
-                    updateInvolvedPartyBody: { involvedPartyId: opt.value },
+                  updateInvolvedPartyMutation.mutateAsync({
+                    id: currentCase.id,
+                    involvedPartyId: opt.value,
                   }),
               )
             }}
@@ -268,7 +260,7 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
           isDisabled={!canEdit}
           width="half"
           name="department"
-          isValidating={isUpdatingDepartment}
+          isValidating={updateDepartmentMutation.isPending}
           label={formatMessage(messages.grunnvinnsla.department)}
           value={departmentOptions.find(
             (dep) => dep.value === currentCase.advertDepartment.id,
@@ -286,7 +278,11 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
                   id: opt.value,
                 },
               },
-              () => updateDepartment({ departmentId: opt.value }),
+              () =>
+                updateDepartmentMutation.mutateAsync({
+                  id: currentCase.id,
+                  departmentId: opt.value,
+                }),
             )
           }}
         />
@@ -305,7 +301,7 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
           isDisabled={!canEdit || !mainTypeId}
           width="half"
           isLoading={isLoadingTypes}
-          isValidating={isUpdatingType}
+          isValidating={updateTypeMutation.isPending}
           label={formatMessage(messages.grunnvinnsla.type)}
           options={typeOptions}
           value={typeOptions?.find(
@@ -320,7 +316,11 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
                 ...currentCase,
                 advertType: { ...currentCase.advertType, id: opt.value },
               },
-              () => updateType({ typeId: opt.value }),
+              () =>
+                updateTypeMutation.mutateAsync({
+                  id: currentCase.id,
+                  typeId: opt.value,
+                }),
             )
           }}
         />
@@ -328,7 +328,7 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
           disabled={!canEdit}
           textarea
           name="advertTitle"
-          isValidating={isUpdatingTitle}
+          isValidating={updateTitleMutation.isPending}
           rows={4}
           defaultValue={currentCase.advertTitle}
           label={formatMessage(messages.grunnvinnsla.subject)}
@@ -347,27 +347,33 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
             width="half"
             label={formatMessage(messages.grunnvinnsla.categories)}
             options={categoryOptions}
-            isValidating={isUpdatingCategory}
+            isValidating={updateCategoriesMutation.isPending}
             value={latestSelectedCategory}
             onChange={(opt) => {
               if (!opt) {
                 return toast.warning('Eitthvað fór úrskeiðis')
               }
-              updateCategories({
+              updateCategoriesMutation.mutate({
+                id: currentCase.id,
                 categoryIds: [opt.value],
               })
             }}
           />
           <Inline space={1} flexWrap="wrap">
-            {currentCase.advertCategories?.map((category, i) => (
+            {currentCase.advertCategories?.map((category) => (
               <OJOITag
                 disabled={!canEdit}
-                isValidating={isUpdatingCategory}
+                isValidating={updateCategoriesMutation.isPending}
                 key={category.id}
                 variant="blue"
                 outlined
                 closeable
-                onClick={() => updateCategories({ categoryIds: [category.id] })}
+                onClick={() =>
+                  updateCategoriesMutation.mutate({
+                    id: currentCase.id,
+                    categoryIds: [category.id],
+                  })
+                }
               >
                 {category.title}
               </OJOITag>

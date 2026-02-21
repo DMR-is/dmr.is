@@ -9,12 +9,13 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { useBreakpoint } from '@island.is/island-ui/core/hooks/useBreakpoint'
 
-import { useUpdatePublishDate } from '../../hooks/api'
-import { useUpdateFastTrack } from '../../hooks/api/update/useUpdateFasttrack'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { messages } from '../form-steps/messages'
 import { PriceCalculator } from '../price/calculator'
+
+import { useMutation } from '@tanstack/react-query'
 
 type Props = {
   toggle: boolean
@@ -23,6 +24,7 @@ type Props = {
 
 export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
+  const trpc = useTRPC()
 
   const { currentCase, refetch, canEdit, handleOptimisticUpdate } =
     useCaseContext()
@@ -31,9 +33,8 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
 
   const { md } = useBreakpoint()
 
-  const { trigger: updateFasttrack } = useUpdateFastTrack({
-    caseId: currentCase.id,
-    options: {
+  const updateFasttrackMutation = useMutation(
+    trpc.updateFasttrack.mutationOptions({
       onSuccess: () => {
         toast.success('Hraðbirtingarstaða auglýsingar hefur verið uppfærð', {
           toastId: 'fasttrack',
@@ -45,15 +46,11 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
           toastId: 'fasttrack',
         })
       },
-    },
-  })
+    }),
+  )
 
-  const {
-    trigger: updatePublishingDate,
-    isMutating: isUpdatingPublishingDate,
-  } = useUpdatePublishDate({
-    caseId: currentCase.id,
-    options: {
+  const updatePublishDateMutation = useMutation(
+    trpc.updatePublishDate.mutationOptions({
       onSuccess: () => {
         toast.success('Dagsetning auglýsingar hefur verið uppfærð', {
           toastId: 'dateUpdatePublishing',
@@ -63,8 +60,8 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
       onError: () => {
         toast.error('Ekki tókst að uppfæra dagsetningu auglýsingar')
       },
-    },
-  })
+    }),
+  )
 
   return (
     <AccordionItem
@@ -88,7 +85,7 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
           />
         </Inline>
         <Inline alignY="center" space={[2, 4]}>
-          {isUpdatingPublishingDate ? (
+          {updatePublishDateMutation.isPending ? (
             <SkeletonLoader height={64} borderRadius="large" />
           ) : (
             <DatePicker
@@ -105,7 +102,11 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
                 const publishingDate = date.toISOString()
                 handleOptimisticUpdate(
                   { ...currentCase, requestedPublicationDate: publishingDate },
-                  () => updatePublishingDate({ date: publishingDate }),
+                  () =>
+                    updatePublishDateMutation.mutateAsync({
+                      id: currentCase.id,
+                      date: publishingDate,
+                    }),
                 )
               }}
             />
@@ -118,7 +119,11 @@ export const PublishingFields = ({ toggle: expanded, onToggle }: Props) => {
               onChange={(e) => {
                 handleOptimisticUpdate(
                   { ...currentCase, fastTrack: e.target.checked },
-                  () => updateFasttrack({ fastTrack: e.target.checked }),
+                  () =>
+                    updateFasttrackMutation.mutateAsync({
+                      id: currentCase.id,
+                      fastTrack: e.target.checked,
+                    }),
                 )
               }}
             />

@@ -1,14 +1,16 @@
 import { useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { useAdvertTypes, useDepartments } from '../../hooks/api'
-import { useMainTypes } from '../../hooks/api/useMainTypes'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { OJOISelect } from '../select/OJOISelect'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   refetch?: () => void
@@ -21,25 +23,38 @@ export const CreateType = ({ refetch }: Props) => {
     title: '',
   })
 
-  const { departments } = useDepartments()
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
 
-  const { mainTypes } = useMainTypes({
-    mainTypesParams: {
-      department: state.departmentId,
-    },
-  })
+  const { data: departmentsData } = useQuery(
+    trpc.getDepartments.queryOptions({
+      pageSize: 100,
+    }),
+  )
 
-  const { createType, isCreatingType } = useAdvertTypes({
-    onCreateTypeSuccess: ({ type }) => {
-      toast.success(`Yfirheiti ${type.title} stofnað`)
-      refetch && refetch()
-      setState({
-        mainTypeId: '',
-        departmentId: '',
-        title: '',
-      })
-    },
-  })
+  const { data: mainTypesData } = useQuery(
+    trpc.getMainTypes.queryOptions({
+      department: state.departmentId || undefined,
+    }),
+  )
+
+  const createTypeMutation = useMutation(
+    trpc.createType.mutationOptions({
+      onSuccess: (data) => {
+        toast.success(`Yfirheiti ${data.type.title} stofnað`)
+        queryClient.invalidateQueries(trpc.getTypes.queryFilter())
+        refetch && refetch()
+        setState({
+          mainTypeId: '',
+          departmentId: '',
+          title: '',
+        })
+      },
+    }),
+  )
+
+  const departments = departmentsData?.departments
+  const mainTypes = mainTypesData?.mainTypes
 
   const departmentOptions = departments?.map((dep) => ({
     label: dep.title,
@@ -114,8 +129,8 @@ export const CreateType = ({ refetch }: Props) => {
       />
       <Inline space={[2, 2, 3]} justifyContent="flexEnd">
         <Button
-          loading={isCreatingType}
-          onClick={() => createType(state)}
+          loading={createTypeMutation.isPending}
+          onClick={() => createTypeMutation.mutate(state)}
           disabled={isDisabled}
           size="small"
           variant="ghost"

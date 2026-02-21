@@ -1,7 +1,10 @@
+'use client'
+
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
 import { CaseStatusEnum, DepartmentEnum } from '../../gen/fetch'
-import { useCasesWithDepartmentCount } from '../../hooks/api'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { CaseTableOverview } from '../tables/CaseTableOverview'
 import { Tabs } from './Tabs'
 
@@ -21,13 +24,14 @@ export const CasePublishedTabs = () => {
     params.status?.includes(status),
   )
 
-  const { caseOverview } = useCasesWithDepartmentCount({
-    params: {
+  const trpc = useTRPC()
+  const { data: caseOverview } = useQuery(
+    trpc.getCasesWithDepartmentCount.queryOptions({
       department: department[0] as DepartmentEnum,
       ...params,
       status: statuses.length > 0 ? statuses : allowedStatuses,
-    },
-  })
+    }),
+  )
 
   const tabs = caseOverview?.departments.map((counter) => ({
     id: counter.department,
