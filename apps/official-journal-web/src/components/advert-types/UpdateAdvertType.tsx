@@ -138,7 +138,6 @@ export const UpdateAdvertType = ({
               id: type.id,
               mainTypeId: mainType.id,
               title: state.title,
-              typeId: type.id,
             })
           }
         >

@@ -207,7 +207,6 @@ export const UpdateAdvertMainType = ({
                   updateTypeMutation.mutate({
                     id: type.id,
                     mainTypeId: mainType.id,
-                    typeId: type.id,
                   })
                 }
                 variant="blueberry"
@@ -234,7 +233,6 @@ export const UpdateAdvertMainType = ({
             updateTypeMutation.mutate({
               mainTypeId: mainType.id,
               id: opt.value.id,
-              typeId: opt.value.id,
             })
           }
         }}
