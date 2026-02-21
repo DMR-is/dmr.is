@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { CaseStatusEnum } from '../../../../gen/fetch'
+import { getParamsWithoutNullOrEmpty } from '../../../utils'
 import { protectedProcedure, router } from '../trpc'
 
 export const casesRouter = router({
@@ -56,7 +57,8 @@ export const casesRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      return ctx.api.getCases(input)
+      const castedInput = getParamsWithoutNullOrEmpty(input)
+      return ctx.api.getCases(castedInput)
     }),
 
   rejectCase: protectedProcedure
