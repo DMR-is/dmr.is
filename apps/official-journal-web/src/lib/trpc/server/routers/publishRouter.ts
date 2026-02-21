@@ -4,6 +4,7 @@ import {
   CaseStatusEnum,
   DepartmentEnum,
 } from '../../../../gen/fetch'
+import { getParamsWithoutNullOrEmpty } from '../../../utils'
 import { protectedProcedure, router } from '../trpc'
 
 export const publishRouter = router({
@@ -57,7 +58,8 @@ export const publishRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      return ctx.api.getCasesWithStatusCount(input)
+      const castedInput = getParamsWithoutNullOrEmpty(input)
+      return ctx.api.getCasesWithStatusCount(castedInput)
     }),
 
   getCasesWithDepartmentCount: protectedProcedure
