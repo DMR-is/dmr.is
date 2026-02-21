@@ -10,7 +10,9 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { AdvertType } from '../../gen/fetch'
-import { useAdvertTypes } from '../../hooks/api'
+import { useTRPC } from '../../lib/trpc/client/trpc'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   mainType: AdvertMainType
@@ -39,25 +41,30 @@ export const UpdateAdvertType = ({
 
   const hasEditedTitle = state.title !== type?.title
 
-  const {
-    updateType,
-    isUpdatingType,
-    updateTypeError,
-    deleteType,
-    isDeletingType,
-    deleteTypeError,
-  } = useAdvertTypes({
-    onUpdateTypeSuccess: ({ type }) => {
-      toast.success(`Yfirheiti ${type.title} uppfærð`)
-      refetch && refetch()
-    },
-    onDeleteTypeSuccess: () => {
-      toast.success(`Yfirheiti ${type?.title} eytt`)
-      setState({ title: '' })
-      refetch && refetch()
-      onDeleteSuccess && onDeleteSuccess()
-    },
-  })
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+
+  const updateTypeMutation = useMutation(
+    trpc.updateType.mutationOptions({
+      onSuccess: (data) => {
+        toast.success(`Yfirheiti ${data.type.title} uppfærð`)
+        queryClient.invalidateQueries(trpc.getTypes.queryFilter())
+        refetch && refetch()
+      },
+    }),
+  )
+
+  const deleteTypeMutation = useMutation(
+    trpc.deleteType.mutationOptions({
+      onSuccess: () => {
+        toast.success(`Yfirheiti ${type?.title} eytt`)
+        queryClient.invalidateQueries(trpc.getTypes.queryFilter())
+        setState({ title: '' })
+        refetch && refetch()
+        onDeleteSuccess && onDeleteSuccess()
+      },
+    }),
+  )
 
   if (!type) {
     return (
@@ -71,18 +78,18 @@ export const UpdateAdvertType = ({
 
   return (
     <Stack space={[2, 2, 3]}>
-      {updateTypeError && (
+      {updateTypeMutation.error && (
         <AlertMessage
-          type={updateTypeError.type}
-          title={updateTypeError.name}
-          message={updateTypeError.message}
+          type="error"
+          title="Villa"
+          message={updateTypeMutation.error.message}
         />
       )}
-      {deleteTypeError && (
+      {deleteTypeMutation.error && (
         <AlertMessage
-          type={deleteTypeError.type}
-          title={deleteTypeError.name}
-          message={deleteTypeError.message}
+          type="error"
+          title="Villa"
+          message={deleteTypeMutation.error.message}
         />
       )}
       <Input
@@ -110,26 +117,28 @@ export const UpdateAdvertType = ({
       />
       <Inline space={[2, 2, 3]} justifyContent="spaceBetween" flexWrap="wrap">
         <Button
-          loading={isDeletingType}
+          loading={deleteTypeMutation.isPending}
           colorScheme="destructive"
           size="small"
           variant="ghost"
           icon="trash"
           iconType="outline"
-          onClick={() => deleteType({ id: type.id })}
+          onClick={() => deleteTypeMutation.mutate({ id: type.id })}
         >
           Eyða yfirheiti
         </Button>
         <Button
-          loading={isUpdatingType}
+          loading={updateTypeMutation.isPending}
           size="small"
           variant="ghost"
           icon="pencil"
           iconType="outline"
           onClick={() =>
-            updateType({
+            updateTypeMutation.mutate({
               id: type.id,
+              mainTypeId: mainType.id,
               title: state.title,
+              typeId: type.id,
             })
           }
         >
