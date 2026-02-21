@@ -262,7 +262,7 @@ export const casesRouter = router({
       })
     }),
 
-  updateType: protectedProcedure
+  updateCaseType: protectedProcedure
     .input(
       z.object({
         id: z.string(),

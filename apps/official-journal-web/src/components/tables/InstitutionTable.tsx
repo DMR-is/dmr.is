@@ -1,7 +1,10 @@
+'use client'
+
 import debounce from 'lodash/debounce'
 import { useQueryState } from 'nuqs'
 import { useCallback, useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Drawer } from '@dmr.is/ui/components/island-is/Drawer'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
@@ -11,9 +14,9 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
-import { useInstitutions } from '../../hooks/api'
 import { useToggle } from '../../hooks/useToggle'
 import { useUserContext } from '../../hooks/useUserContext'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { OJOIInput } from '../select/OJOIInput'
 import { CreateInstitution } from '../users/CreateInstitution'
 import { InstitutionDetailed } from '../users/InstitutionDetailed'
@@ -23,16 +26,19 @@ export const InstitutionTable = () => {
   const [localSearch, setLocalSearch] = useState(search ?? '')
   const { params } = useFilters()
 
-  const { institutions, getInstitutions } = useInstitutions({
-    searchParams: {
+  const trpc = useTRPC()
+  const { data: institutionsData, refetch: getInstitutions } = useQuery(
+    trpc.getInstitutions.queryOptions({
       search: search ?? undefined,
       page: params.page,
       pageSize: params.pageSize,
-    },
-    config: {
-      keepPreviousData: true,
-    },
-  })
+    }),
+  )
+
+  const institutions = {
+    institutions: institutionsData?.institutions,
+    paging: institutionsData?.paging,
+  }
 
   const { getUserInvoledParties } = useUserContext()
 

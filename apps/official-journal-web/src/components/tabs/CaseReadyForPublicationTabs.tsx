@@ -1,6 +1,9 @@
+'use client'
+
 import { parseAsStringEnum, useQueryState } from 'nuqs'
 import { useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
@@ -8,12 +11,9 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { Case, CaseStatusEnum, DepartmentEnum } from '../../gen/fetch'
-import {
-  useCasesWithDepartmentCount,
-  useCasesWithPublicationNumber,
-} from '../../hooks/api'
 import { useSearchParams } from '../../hooks/useSearchParams'
 import { Routes } from '../../lib/constants'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { CasePublishingTable } from '../tables/CasePublishingTable'
 import CaseTableReady from '../tables/CaseTableReady'
 import { Tabs } from './Tabs'
@@ -29,23 +29,33 @@ export const ReadyForPublicationTabs = () => {
     ).withDefault(DepartmentEnum.ADeild),
   )
 
-  const { caseOverview, isLoading, paging } = useCasesWithDepartmentCount({
-    params: {
+  const trpc = useTRPC()
+
+  const { data: caseOverview, isLoading } = useQuery(
+    trpc.getCasesWithDepartmentCount.queryOptions({
       department: department,
       status: [CaseStatusEnum.Tilbúið],
-      ...rest,
-    },
-  })
+      search: rest.search ?? undefined,
+      category: rest.category ?? undefined,
+      type: rest.type ?? undefined,
+      published: rest.published ?? undefined,
+      page: rest.page,
+      pageSize: rest.pageSize,
+      sortBy: rest.sortBy || undefined,
+      direction: rest.direction || undefined,
+    }),
+  )
 
   const [selectedCases, setSelectedCases] = useState<Case[]>([])
 
-  const { cases: casesWithPublicationNumber, isLoading: isLoadingCWPN } =
-    useCasesWithPublicationNumber({
-      params: {
-        department: department,
-        id: selectedCases.map((c) => c.id),
-      },
-    })
+  const { data: casesWithPubData, isLoading: isLoadingCWPN } = useQuery({
+    ...trpc.getCasesWithPublicationNumber.queryOptions({
+      department: department,
+      id: selectedCases.map((c) => c.id),
+    }),
+    enabled: selectedCases.length > 0,
+  })
+  const casesWithPublicationNumber = casesWithPubData?.cases
 
   const allSelected = selectedCases.length === caseOverview?.cases.length
 
@@ -64,7 +74,7 @@ export const ReadyForPublicationTabs = () => {
         <CaseTableReady
           cases={caseOverview.cases}
           selectedCaseIds={selectedCases.map((c) => c.id)}
-          paging={paging}
+          paging={caseOverview.paging}
           toggleAll={() =>
             allSelected
               ? setSelectedCases([])

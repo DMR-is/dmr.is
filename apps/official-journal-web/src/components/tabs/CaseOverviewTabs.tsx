@@ -1,10 +1,13 @@
+'use client'
+
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
 import { CaseStatusEnum } from '../../gen/fetch'
-import { useCasesWithStatusCount } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from '../../lib/messages/caseProcessingOverview'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { CaseTableInProgress } from '../tables/CaseTableInProgress'
 import { CaseTableInReview } from '../tables/CaseTableInReview'
 import { CaseTableSubmitted } from '../tables/CaseTableSubmitted'
@@ -16,8 +19,9 @@ export const CaseOverviewTabs = () => {
     initialPageSize: 50,
   })
 
-  const { cases, statuses, paging } = useCasesWithStatusCount({
-    params: {
+  const trpc = useTRPC()
+  const { data } = useQuery(
+    trpc.getCasesWithStatusCount.queryOptions({
       statuses: [
         CaseStatusEnum.Innsent,
         CaseStatusEnum.Grunnvinnsla,
@@ -26,8 +30,12 @@ export const CaseOverviewTabs = () => {
       ],
       ...params,
       status: params.status[0] as CaseStatusEnum,
-    },
-  })
+    }),
+  )
+
+  const cases = data?.cases
+  const statuses = data?.statuses
+  const paging = data?.paging
 
   const loadingTabs = [
     {

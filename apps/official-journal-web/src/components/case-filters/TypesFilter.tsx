@@ -1,17 +1,15 @@
-import { useSession } from 'next-auth/react'
+'use client'
 
 import { useState } from 'react'
-import useSWR from 'swr'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
-import { GetAdvertTypes } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
-import { getDmrClient } from '../../lib/api/createClient'
-import { OJOIWebException, swrFetcher } from '../../lib/constants-legacy'
 import { messages as errorMessages } from '../../lib/messages/errors'
 import { messages as generalMessages } from '../../lib/messages/general'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { FilterGroup } from '../filter-group/FilterGroup'
 
 export const TypesFilter = () => {
@@ -20,29 +18,12 @@ export const TypesFilter = () => {
 
   const { params, setParams } = useFilters()
 
-  const { data: session } = useSession()
-  const dmrClient = getDmrClient(session?.idToken as string)
-
+  const trpc = useTRPC()
   const {
     data,
     isLoading: isLoadingTypes,
     error: typesError,
-  } = useSWR<GetAdvertTypes, OJOIWebException>(
-    session ? ['getAdvertTypes', search] : null,
-    ([_key, search]: [string, string]) =>
-      swrFetcher({
-        func: () =>
-          dmrClient.getTypes({
-            search: search,
-          }),
-      }),
-
-    {
-      revalidateOnFocus: false,
-      revalidateIfStale: false,
-      refreshInterval: 0,
-    },
-  )
+  } = useQuery(trpc.getTypes.queryOptions({ search }))
 
   if (typesError) {
     return (
