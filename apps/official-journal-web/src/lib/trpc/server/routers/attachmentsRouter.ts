@@ -55,6 +55,22 @@ export const attachmentsRouter = router({
       })
     }),
 
+  updateAppendix: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        updateAdvertAppendixBody: z.object({
+          content: z.string().nullable(),
+          title: z.string().nullable(),
+          additionId: z.string(),
+          order: z.string().nullable(),
+        }),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.api.updateAdvertAppendix(input)
+    }),
+
   uploadAssets: protectedProcedure
     .input(
       z.object({

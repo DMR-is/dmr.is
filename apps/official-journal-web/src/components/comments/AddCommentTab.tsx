@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
@@ -7,11 +8,12 @@ import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
-import { useAddComment, useCommunicationStatuses } from '../../hooks/api'
-import { useUpdateCommunicationStatus } from '../../hooks/api/update/useUpdateCommunicationStatus'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { messages } from './messages'
+
+import { useMutation } from '@tanstack/react-query'
 
 type Props = {
   placeholder: string
@@ -20,37 +22,42 @@ type Props = {
 export const AddCommentTab = ({ internal, placeholder }: Props) => {
   const { formatMessage } = useFormatMessage()
   const { currentCase, refetch } = useCaseContext()
+  const trpc = useTRPC()
 
   const [commentValue, setCommentValue] = useState('')
-  const { data: statuses, isLoading } = useCommunicationStatuses({
-    options: {},
-  })
 
-  const {
-    createExternalComment,
-    createInternalComment,
-    isCreatingExternalComment,
-    isCreatingInternalComment,
-  } = useAddComment({
-    caseId: currentCase.id,
-    options: {
+  const { data: statuses, isLoading } = useQuery(
+    trpc.getCommunicationStatuses.queryOptions(),
+  )
+
+  const createExternalComment = useMutation(
+    trpc.createExternalComment.mutationOptions({
       onSuccess: () => {
         setCommentValue('')
         refetch()
       },
-    },
-  })
+    }),
+  )
 
-  const { trigger: updateCommunicationStatus } = useUpdateCommunicationStatus({
-    caseId: currentCase.id,
-    options: {
+  const createInternalComment = useMutation(
+    trpc.createInternalComment.mutationOptions({
+      onSuccess: () => {
+        setCommentValue('')
+        refetch()
+      },
+    }),
+  )
+
+  const updateCommunicationStatus = useMutation(
+    trpc.updateCommunicationStatus.mutationOptions({
       onSuccess: () => {
         refetch()
       },
-    },
-  })
+    }),
+  )
 
-  const isMutating = isCreatingExternalComment || isCreatingInternalComment
+  const isMutating =
+    createExternalComment.isPending || createInternalComment.isPending
 
   return (
     <Box>
@@ -62,7 +69,8 @@ export const AddCommentTab = ({ internal, placeholder }: Props) => {
               name="communication-status"
               onChange={(e) => {
                 if (!e) return
-                updateCommunicationStatus({
+                updateCommunicationStatus.mutate({
+                  id: currentCase.id,
                   statusId: e.value,
                 })
               }}
@@ -94,9 +102,15 @@ export const AddCommentTab = ({ internal, placeholder }: Props) => {
             disabled={!commentValue}
             onClick={() => {
               if (internal) {
-                createInternalComment({ comment: commentValue })
+                createInternalComment.mutate({
+                  id: currentCase.id,
+                  comment: commentValue,
+                })
               } else {
-                createExternalComment({ comment: commentValue })
+                createExternalComment.mutate({
+                  id: currentCase.id,
+                  comment: commentValue,
+                })
               }
             }}
           >

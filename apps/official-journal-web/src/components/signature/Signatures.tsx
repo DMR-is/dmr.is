@@ -4,21 +4,22 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { useUpdateSignature } from '../../hooks/api'
-import { useUpdateSignatureDateDisplay } from '../../hooks/api/update/useUpdateSignatureDisplay'
 import { useCaseContext } from '../../hooks/useCaseContext'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { SignatureDislay } from '../advert-display/SignatureDisplay'
 import { SignatureRecord } from './Signature'
+
+import { useMutation } from '@tanstack/react-query'
 
 export const Signatures = () => {
   const { currentCase, canEdit, refetchSignature, handleOptimisticUpdate } =
     useCaseContext()
+  const trpc = useTRPC()
 
   const { signature } = currentCase
 
-  const { addSignatureRecord, isAddingSignatureRecord } = useUpdateSignature({
-    signatureId: currentCase.signature.id,
-    addSignatureRecordOptions: {
+  const addSignatureRecordMutation = useMutation(
+    trpc.createSignatureRecord.mutationOptions({
       onSuccess: () => {
         toast.success('Auka undirritun bætt við')
         refetchSignature()
@@ -26,12 +27,11 @@ export const Signatures = () => {
       onError: () => {
         toast.error('Ekki tóskt að bæta við undirritun')
       },
-    },
-  })
+    }),
+  )
 
-  const { updateSignatureDateDisplay } = useUpdateSignatureDateDisplay({
-    caseId: currentCase.id,
-    options: {
+  const updateSignatureDisplayMutation = useMutation(
+    trpc.updateSignatureDisplay.mutationOptions({
       onSuccess: () => {
         toast.success('Sýning undirritunardags uppfærð')
         refetchSignature()
@@ -39,8 +39,8 @@ export const Signatures = () => {
       onError: () => {
         toast.error('Ekki tókst að uppfæra sýningu undirritunardags')
       },
-    },
-  })
+    }),
+  )
 
   return (
     <Stack space={4}>
@@ -54,10 +54,14 @@ export const Signatures = () => {
           <Inline justifyContent="flexEnd">
             <Button
               disabled={!canEdit}
-              loading={isAddingSignatureRecord}
+              loading={addSignatureRecordMutation.isPending}
               variant="utility"
               icon="add"
-              onClick={() => addSignatureRecord()}
+              onClick={() =>
+                addSignatureRecordMutation.mutate({
+                  signatureId: currentCase.signature.id,
+                })
+              }
             >
               Bæta við undirritunar kafla
             </Button>
@@ -74,10 +78,9 @@ export const Signatures = () => {
             handleOptimisticUpdate(
               { ...currentCase, hideSignatureDate: e.target.checked },
               () =>
-                updateSignatureDateDisplay({
-                  updateCaseSignatureDateDisplayBody: {
-                    hide: e.target.checked,
-                  },
+                updateSignatureDisplayMutation.mutateAsync({
+                  id: currentCase.id,
+                  hide: e.target.checked,
                 }),
             )
           }}
