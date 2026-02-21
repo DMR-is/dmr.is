@@ -304,4 +304,10 @@ export const casesRouter = router({
   getFeeCodes: protectedProcedure.query(async ({ ctx }) => {
     return ctx.api.getFeeCodes()
   }),
+
+  getAdvert: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.api.getAdvert({ id: input.id })
+    }),
 })

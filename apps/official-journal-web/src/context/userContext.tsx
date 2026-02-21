@@ -1,19 +1,22 @@
-import { parseAsInteger, useQueryState } from 'next-usequerystate'
+'use client'
 
-import { createContext, useState } from 'react'
+import { parseAsInteger, useQueryState } from 'nuqs'
+import { createContext } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import {
   CreateUserRequest,
-  DeleteUserRequest,
   GetUserResponse,
   Institution,
   Paging,
   UpdateUserRequest,
   UserDto,
 } from '../gen/fetch'
-import { useUsers } from '../hooks/users/useUsers'
+import { useTRPC } from '../lib/trpc/client/trpc'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type UserState = {
   users: UserDto[]
@@ -29,15 +32,26 @@ type UserState = {
     onSuccess?: (data: GetUserResponse) => void,
   ) => void
   updateUser: (req: UpdateUserRequest) => void
-  deleteUser: (req: DeleteUserRequest) => void
+  deleteUser: (req: { id: string }) => void
   setSearch: (search: string | null) => void
   setRole: (role: string | null) => void
   setInstitution: (institution: string | null) => void
 }
 
+const defaultPaging: Paging = {
+  page: 1,
+  pageSize: 10,
+  hasNextPage: false,
+  hasPreviousPage: false,
+  nextPage: 1,
+  previousPage: 1,
+  totalItems: 0,
+  totalPages: 0,
+}
+
 export const UserContext = createContext<UserState>({
   users: [],
-  paging: {} as Paging,
+  paging: defaultPaging,
   userInvolvedPartiesOptions: [],
   getUserInvoledParties: () => undefined,
   search: '',
@@ -57,49 +71,36 @@ type UserProviderProps = {
 }
 
 export const UserProvider = ({ children }: UserProviderProps) => {
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+
   const [page] = useQueryState('page', parseAsInteger.withDefault(1))
   const [pageSize] = useQueryState('pageSize', parseAsInteger.withDefault(10))
-  const [users, setUsers] = useState<UserDto[]>([])
-  const [paging, setPaging] = useState<Paging>({
-    page: page,
-    pageSize: pageSize,
-    hasNextPage: false,
-    hasPreviousPage: false,
-    nextPage: 1,
-    previousPage: 1,
-    totalItems: 0,
-    totalPages: 0,
-  })
 
   const [institution, setInstitution] = useQueryState('stofnun')
   const [role, setRole] = useQueryState('hlutverk')
   const [search, setSearch] = useQueryState('leit')
 
-  const {
-    involedParties,
-    getUserInvoledParties,
-    mutate,
-    updateUser,
-    deleteUser,
-    createUser,
-  } = useUsers({
-    params: {
+  const { data: usersData } = useQuery(
+    trpc.getUsers.queryOptions({
       page: page,
       pageSize: pageSize,
       role: role ?? undefined,
       involvedParty: institution ?? undefined,
       search: search ?? undefined,
-    },
-    options: {
-      revalidateOnFocus: true,
-      onSuccess: ({ users, paging }) => {
-        setUsers(users)
-        setPaging(paging)
-      },
-    },
-    createUserOptions: {
+    }),
+  )
+
+  const { data: involvedPartiesData, refetch: getUserInvoledParties } =
+    useQuery(trpc.getInvolvedPartiesByUser.queryOptions())
+
+  const users = usersData?.users ?? []
+  const paging = usersData?.paging ?? defaultPaging
+
+  const createUserMutation = useMutation(
+    trpc.createUser.mutationOptions({
       onSuccess: ({ user }) => {
-        setUsers((prev) => [...prev, user])
+        queryClient.invalidateQueries(trpc.getUsers.queryFilter())
         toast.success(`Notandi ${user.displayName} hefur verið stofnaður`, {
           closeButton: true,
           toastId: 'create-user',
@@ -111,10 +112,13 @@ export const UserProvider = ({ children }: UserProviderProps) => {
           toastId: 'create-user',
         })
       },
-    },
-    updateUserOptions: {
+    }),
+  )
+
+  const updateUserMutation = useMutation(
+    trpc.updateUser.mutationOptions({
       onSuccess: ({ user }) => {
-        setUsers((prev) => prev.map((u) => (u.id === user.id ? user : u)))
+        queryClient.invalidateQueries(trpc.getUsers.queryFilter())
         toast.success(`Notandi ${user.displayName} uppfærður`, {
           closeButton: true,
           toastId: 'update-user',
@@ -126,17 +130,13 @@ export const UserProvider = ({ children }: UserProviderProps) => {
           toastId: 'update-user',
         })
       },
-    },
-    deleteUserOptions: {
-      onSuccess: ({ id }) => {
-        const userToDelete = users.find((u) => u.id === id)
-        if (!userToDelete) return
-        const filteredUsers = users.filter((u) => u.id !== id)
-        setUsers(filteredUsers)
-        toast.success(`Notandi ${userToDelete.displayName} hefur verið eytt`, {
-          closeButton: true,
-          toastId: 'delete-user',
-        })
+    }),
+  )
+
+  const deleteUserMutation = useMutation(
+    trpc.deleteUser.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries(trpc.getUsers.queryFilter())
       },
       onError: () => {
         toast.error('Ekki tókst að eyða notanda', {
@@ -144,47 +144,61 @@ export const UserProvider = ({ children }: UserProviderProps) => {
           toastId: 'delete-user',
         })
       },
-    },
-  })
+    }),
+  )
 
   const handleCreateUser = (
     req: CreateUserRequest,
     onSuccess?: (res: GetUserResponse) => void,
   ) => {
-    createUser(req, {
+    createUserMutation.mutate(req, {
       onSuccess: (data) => {
-        if (!data) return
-        const user = data.user
-        setUsers((prev) => [user, ...prev])
-        toast.success(`Notandi ${user.displayName} hefur verið stofnaður`, {
-          closeButton: true,
-          toastId: 'create-user',
-        })
         if (onSuccess) onSuccess(data)
       },
     })
   }
 
-  const userInvolvedPartiesOptions = involedParties?.involvedParties.map(
-    (party) => ({
+  const handleUpdateUser = (req: UpdateUserRequest) => {
+    updateUserMutation.mutate(req)
+  }
+
+  const handleDeleteUser = (req: { id: string }) => {
+    const userToDelete = users.find((u) => u.id === req.id)
+    deleteUserMutation.mutate(req, {
+      onSuccess: () => {
+        if (userToDelete) {
+          toast.success(
+            `Notandi ${userToDelete.displayName} hefur verið eytt`,
+            {
+              closeButton: true,
+              toastId: 'delete-user',
+            },
+          )
+        }
+      },
+    })
+  }
+
+  const userInvolvedPartiesOptions =
+    involvedPartiesData?.involvedParties?.map((party) => ({
       label: party.title,
       value: party,
-    }),
-  )
+    })) ?? []
 
   return (
     <UserContext.Provider
       value={{
         users,
         paging,
-        userInvolvedPartiesOptions: userInvolvedPartiesOptions ?? [],
+        userInvolvedPartiesOptions,
         getUserInvoledParties,
-        refetchUsers: mutate,
+        refetchUsers: () =>
+          queryClient.invalidateQueries(trpc.getUsers.queryFilter()),
         search: search ?? undefined,
         role: role ?? undefined,
         institution: institution ?? undefined,
-        updateUser,
-        deleteUser,
+        updateUser: handleUpdateUser,
+        deleteUser: handleDeleteUser,
         createUser: handleCreateUser,
         setSearch,
         setRole,

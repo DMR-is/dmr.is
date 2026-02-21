@@ -16,30 +16,14 @@ import { UpdateCategory } from '../../components/categories/UpdateCategory'
 import { UpdateMainCategory } from '../../components/categories/UpdateMainCategory'
 import { Section } from '../../components/section/Section'
 import { CategoryProvider } from '../../context/categoryContext'
-import { Category, Department, MainCategory } from '../../gen/fetch'
 import { LayoutProps } from '../../layout/Layout'
-import { getDmrClient } from '../../lib/api/createClient'
 import { Routes } from '../../lib/constants'
 import { deleteUndefined, loginRedirect } from '../../lib/utils'
 import { authOptions } from '../api/auth/[...nextauth]'
 
-type Props = {
-  mainCategories: MainCategory[]
-  categories: Category[]
-  departments: Department[]
-}
-
-export default function CasePublishingOverview({
-  mainCategories,
-  categories,
-  departments,
-}: Props) {
+export default function CasePublishingOverview() {
   return (
-    <CategoryProvider
-      initalMainCategories={mainCategories}
-      initalCategories={categories}
-      initalDepartments={departments}
-    >
+    <CategoryProvider>
       <Section>
         <GridContainer>
           <Stack space={4}>
@@ -97,31 +81,10 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     return loginRedirect(Routes.MainCategories)
   }
 
-  const client = getDmrClient(session.idToken)
-
-  const mainCategoriesPromise = client.getMainCategories({
-    pageSize: 1000,
-  })
-
-  const categoriesPromise = client.getCategories({
-    pageSize: 1000,
-  })
-
-  const departmentsPromise = client.getDepartments({ pageSize: 10 })
-
-  const [mainCategories, categories, departments] = await Promise.all([
-    mainCategoriesPromise,
-    categoriesPromise,
-    departmentsPromise,
-  ])
-
   return {
     props: deleteUndefined({
       session,
       layout,
-      mainCategories: mainCategories.mainCategories,
-      categories: categories.categories,
-      departments: departments.departments,
     }),
   }
 }
