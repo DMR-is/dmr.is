@@ -4,7 +4,6 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 
 import { decodeJwt } from 'jose'
 
-import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
 import { getLogger } from '@dmr.is/logging-next'
 
