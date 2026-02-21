@@ -21,14 +21,7 @@ type ErrorWithPotentialReqRes = Error & {
   response?: unknown
 }
 
-export const localIdentityServerConfig = {
-  id: identityServerId,
-  name: 'Iceland authentication service',
-  scope: `openid offline_access profile`,
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  clientId: process.env.OJOI_WEB_CLIENT_ID!,
-  clientSecret: process.env.OJOI_WEB_CLIENT_SECRET ?? '',
-}
+export const localIdentityServerConfig = sharedIdentityServerConfig
 
 export const identityServerConfig =
   process.env.NODE_ENV !== 'production'

@@ -27,9 +27,26 @@
 ### Why Phase 4 was split:
 The original plan said "keep `src/components/` — all UI components stay, update imports as needed." This underestimated the scope: **28+ component files** directly import from `hooks/api/` (the SWR data layer). Simply deleting `hooks/api/` breaks the build immediately. Each component must be migrated from SWR hooks to `useTRPC()` calls before the old hooks can be deleted.
 
-### Migration: COMPLETE
+### Migration: COMPLETE ✅
 
-All phases finished. swr dependency removed from package.json (commit 6ec798b2). No legacy imports remain (SWR, hooks/api, next/router, next-usequerystate). pages/ directory deleted. tsc passes cleanly.
+All phases finished. No legacy imports remain (SWR, hooks/api, next/router, next-usequerystate). pages/ directory deleted. tsc passes cleanly.
+
+**Final commit log on `feat/ojoi-web-app-router`:**
+| Commit | Description |
+|--------|-------------|
+| c02b73b4 | Phase 1 — infrastructure |
+| 220fad59 | Phase 2 — tRPC routers |
+| 857a489e | Phase 3 — page migrations + context rewrites |
+| 5ab0e42d | Phase 4A — delete pages/, legacy files |
+| 8654e2fe | Phase 4B-2 — categories + advert-types |
+| afee632f | Phase 4B-4 — users + create-case + price + form |
+| 3fe0e833 | Phase 4B-3 — case-filters + tabs + tables |
+| 4bd9aef9 | Phase 4B-1 — case-update-fields + signature + comments |
+| 15da0784 | fix — remove excess typeId from updateType calls |
+| ab8a53f1 | Phase 4C — delete hooks/api/, SWR removal |
+| 6ec798b2 | chore — remove swr from package.json |
+| 4545aee2 | docs — plan marked complete |
+| 91de13a8 | fix — App Router PDF preview route handler |
 
 ### Active agents:
 - All agents: terminated
