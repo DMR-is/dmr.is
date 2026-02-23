@@ -280,15 +280,6 @@ export const casesRouter = router({
       })
     }),
 
-  previewPdf: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const pdfBlob = await ctx.api.getCasePdfPreview({ id: input.id })
-      const buffer = await pdfBlob.arrayBuffer()
-      const base64 = Buffer.from(buffer).toString('base64')
-      return { pdf: base64 }
-    }),
-
   updateCommunicationStatus: protectedProcedure
     .input(
       z.object({
