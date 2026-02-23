@@ -45,6 +45,12 @@ async function authorize(nationalId?: string, idToken?: string) {
     if (!member) {
       throw new Error('Member not found')
     }
+    const role = member?.role
+    const isAdmin = role?.slug === 'ritstjori'
+
+    if (!isAdmin) {
+      throw new Error('User is not an admin')
+    }
 
     return member as UserDto
   } catch (e) {
