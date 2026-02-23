@@ -5,7 +5,7 @@ import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { Route } from '../../../../lib/constants'
+import { Routes } from '../../../../lib/constants'
 
 export default function Error({ error }: { error: Error }) {
   return (
@@ -37,14 +37,14 @@ export default function Error({ error }: { error: Error }) {
             <Text color="blue600">{error.message}</Text>
           </Box>
         )}
-        <LinkV2 href={Route.RITSTJORN}>
+        <LinkV2 href={Routes.PublishingOverview}>
           <Button
             size="small"
             preTextIcon="arrowBack"
             preTextIconType="outline"
             variant="primary"
           >
-            Til baka í auglýsingar
+            Til baka í útgáfu
           </Button>
         </LinkV2>
       </Box>
