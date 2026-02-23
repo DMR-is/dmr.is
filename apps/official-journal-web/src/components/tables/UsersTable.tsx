@@ -1,5 +1,4 @@
 import debounce from 'lodash/debounce'
-import { parseAsInteger, useQueryState } from 'nuqs'
 import { useCallback, useState } from 'react'
 
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -30,12 +29,6 @@ export const UsersTable = ({
   isAdmin = false,
   roleOptions,
 }: UsersTableProps) => {
-  const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
-  const [pageSize, setPageSize] = useQueryState(
-    'pageSize',
-    parseAsInteger.withDefault(10),
-  )
-
   const newUserToggle = useToggle()
 
   const {
@@ -220,8 +213,8 @@ export const UsersTable = ({
                 }
               })}
               paging={{
-                page,
-                pageSize,
+                page: paging.page || 0,
+                pageSize: paging.pageSize || 10,
                 totalItems: paging?.totalItems || 0,
                 totalPages: paging?.totalPages || 0,
               }}

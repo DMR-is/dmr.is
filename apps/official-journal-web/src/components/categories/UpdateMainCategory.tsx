@@ -141,6 +141,7 @@ export const UpdateMainCategory = () => {
 
               updateMainCategoryMutation.mutate({
                 id: selectedMainCategory.id,
+                departmentId: opt.value.id,
               })
             }}
           />

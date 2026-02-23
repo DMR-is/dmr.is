@@ -206,7 +206,7 @@ export const UpdateAdvertMainType = ({
                 onClick={() =>
                   updateTypeMutation.mutate({
                     id: type.id,
-                    mainTypeId: mainType.id,
+                    mainTypeId: null
                   })
                 }
                 variant="blueberry"

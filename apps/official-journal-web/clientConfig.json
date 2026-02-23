@@ -1212,6 +1212,13 @@
             "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
+            "name": "mainType",
+            "required": false,
+            "in": "query",
+            "description": "One or more main types (by `slug`) to filter on.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
             "name": "category",
             "required": false,
             "in": "query",
@@ -1944,7 +1951,13 @@
             "required": true,
             "in": "path",
             "schema": {
-              "enum": ["frumrit", "fylgiskjol", "fylgigogn", "assets"],
+              "enum": [
+                "frumrit",
+                "fylgiskjol",
+                "fylgigogn",
+                "assets",
+                "meginmal"
+              ],
               "type": "string"
             }
           }
@@ -5126,7 +5139,7 @@
           },
           "title": {
             "type": "string",
-            "enum": ["Frumrit", "Fylgiskjöl", "Fylgigögn"],
+            "enum": ["Frumrit", "Fylgiskjöl", "Fylgigögn", "Meginmál"],
             "description": "Title of the attachment type"
           },
           "slug": {
@@ -5731,9 +5744,8 @@
             "type": "string",
             "description": "New title of the advert type"
           },
-          "mainTypeId": { "type": "string" }
-        },
-        "required": ["mainTypeId"]
+          "mainTypeId": { "type": "string", "nullable": true }
+        }
       },
       "CreateAdvertMainTypeBody": {
         "type": "object",

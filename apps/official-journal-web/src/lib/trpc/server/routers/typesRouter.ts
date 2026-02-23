@@ -44,7 +44,7 @@ export const typesRouter = router({
     .input(
       z.object({
         id: z.string(),
-        mainTypeId: z.string(),
+        mainTypeId: z.string().nullable(),
         title: z.string().optional(),
       }),
     )

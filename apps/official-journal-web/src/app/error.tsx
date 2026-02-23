@@ -1,59 +1,41 @@
 'use client'
 
-import { Fragment, ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
-import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { useEffect } from 'react'
+
+import { forceLogin } from '@dmr.is/auth/useLogOut'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-const nlToBr = (text: string): ReactNode =>
-  text.split(/\r\n|\r|\n/g).map((s, i) => (
-    <Fragment key={i}>
-      {i > 0 && <br />}
-      {s}
-    </Fragment>
-  ))
+export default function Error({ reset }: { error: Error; reset: () => void }) {
+  const pathName = usePathname()
+  const { data: session, status } = useSession()
 
-export default function ErrorPage({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string }
-  reset: () => void
-}) {
+  useEffect(() => {
+    if (session?.invalid === true && status === 'authenticated') {
+      // Make sure to log out if the session is invalid
+      // This is just a front-end logout for the user's convenience
+      // The session is invalidated on the server side
+      forceLogin(pathName ?? '/innskraning')
+    }
+  }, [session?.invalid, status, pathName])
   return (
     <GridContainer>
       <GridRow>
-        <GridColumn span={'12/12'} paddingBottom={10} paddingTop={8}>
-          <Box
-            display="flex"
-            flexDirection="column"
-            width="full"
-            alignItems="center"
-          >
-            <Text
-              variant="eyebrow"
-              as="div"
-              paddingBottom={2}
-              color="purple400"
-            >
-              500
-            </Text>
-            <Text variant="h1" as="h1" paddingBottom={3}>
-              Afsakið hlé.
-            </Text>
-            <Text variant="intro" as="div" paddingBottom={4}>
-              {nlToBr(
-                'Eitthvað fór úrskeiðis.\nVillan hefur verið skráð og unnið verður að viðgerð eins fljótt og auðið er.',
-              )}
-            </Text>
-            <Button variant="ghost" onClick={reset}>
-              Reyna aftur
-            </Button>
-          </Box>
+        <GridColumn
+          span={['12/12', '10/12']}
+          offset={['0', '1/12']}
+          paddingBottom={3}
+        >
+          <Text variant="h2">Eitthvað fór úrskeiðis!</Text>
+          <Button variant="utility" onClick={() => reset()}>
+            Reyna aftur
+          </Button>
         </GridColumn>
       </GridRow>
     </GridContainer>

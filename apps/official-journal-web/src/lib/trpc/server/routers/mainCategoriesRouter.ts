@@ -36,6 +36,7 @@ export const mainCategoriesRouter = router({
         id: z.string(),
         title: z.string().optional(),
         description: z.string().optional(),
+        departmentId: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

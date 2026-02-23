@@ -1,5 +1,4 @@
-import debounce from 'lodash/debounce'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
@@ -7,6 +6,7 @@ import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/utils/toast'
+import { debounce } from '@dmr.is/utils/shared/lodash/debounce'
 
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
@@ -141,9 +141,13 @@ export const CommonFields = ({ toggle: expanded, onToggle }: Props) => {
     }),
   )
 
-  const debounceUpdateTitle = debounce((args: { title: string }) => {
-    updateTitleMutation.mutate({ id: currentCase.id, ...args })
-  }, 500)
+  const debounceUpdateTitle = useCallback(
+    debounce((args: { title: string }) => {
+      updateTitleMutation.mutate({ id: currentCase.id, ...args })
+    }, 500),
+    [currentCase.id],
+  )
+
   const updateTitleHandler = (val: string) => {
     debounceUpdateTitle.cancel()
     debounceUpdateTitle({ title: val })

@@ -55,7 +55,7 @@ export const AdvertFields = ({ toggle, onToggle }: Props) => {
     debounce((args: { advertHtml: string }) => {
       updateAdvertHtml.mutate({ id: currentCase.id, ...args })
     }, 500),
-    [],
+    [currentCase.id],
   )
 
   const fileUploader = useFileUploader(

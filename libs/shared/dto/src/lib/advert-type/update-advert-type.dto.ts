@@ -14,6 +14,8 @@ export class UpdateAdvertTypeBody {
 
   @ApiProperty({
     type: String,
+    required: false,
+    nullable: true,
   })
   @IsOptional()
   @IsUUID()
