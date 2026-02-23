@@ -476,7 +476,7 @@ export class AdvertTypeService implements IAdvertTypeService {
         Object.assign(updateBody, { title: body.title })
       }
 
-      if (body.mainTypeId) {
+      if (body.mainTypeId !== undefined) {
         Object.assign(updateBody, { mainTypeId: body.mainTypeId })
       }
 

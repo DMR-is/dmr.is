@@ -5,7 +5,7 @@ import {
   parseAsString,
   parseAsStringEnum,
   useQueryStates,
-} from 'next-usequerystate'
+} from 'nuqs'
 
 import { CaseStatusEnum, DepartmentEnum } from '../gen/fetch'
 

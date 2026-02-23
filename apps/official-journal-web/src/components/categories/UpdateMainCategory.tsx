@@ -7,12 +7,14 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { useUpdateMainCategories } from '../../hooks/api'
 import { useCategoryContext } from '../../hooks/useCategoryContext'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { ContentWrapper } from '../content-wrapper/ContentWrapper'
 import { OJOIInput } from '../select/OJOIInput'
 import { OJOISelect } from '../select/OJOISelect'
 import { OJOITag } from '../tags/OJOITag'
+
+import { useMutation } from '@tanstack/react-query'
 
 export const UpdateMainCategory = () => {
   const {
@@ -23,16 +25,10 @@ export const UpdateMainCategory = () => {
     categoryOptions,
   } = useCategoryContext()
 
-  const {
-    updateMainCategoryTrigger,
-    deleteMainCategoryTrigger,
-    isDeletingMainCategory,
-    deleteMainCategoryCategoryTrigger,
-    isDeletingMainCategoryCategory,
-    createMainCategoryCategoriesTrigger,
-    isCreatingMainCategoryCategories,
-  } = useUpdateMainCategories({
-    updateMainCategoryOptions: {
+  const trpc = useTRPC()
+
+  const updateMainCategoryMutation = useMutation(
+    trpc.updateMainCategory.mutationOptions({
       onSuccess: () => {
         toast.success(
           `Yfirflokkur ${selectedMainCategory?.title} hefur verið uppfærður`,
@@ -42,8 +38,11 @@ export const UpdateMainCategory = () => {
       onError: () => {
         toast.error('Ekki tókst að uppfæra yfirflokk')
       },
-    },
-    deleteMainCategoryOptions: {
+    }),
+  )
+
+  const deleteMainCategoryMutation = useMutation(
+    trpc.deleteMainCategory.mutationOptions({
       onSuccess: () => {
         toast.success(
           `Yfirflokkur ${selectedMainCategory?.title} hefur verið eytt`,
@@ -55,8 +54,11 @@ export const UpdateMainCategory = () => {
       onError: () => {
         toast.error('Ekki tókst að eyða yfirflokk')
       },
-    },
-    createMainCategoryCategoriesOptions: {
+    }),
+  )
+
+  const createMainCategoryCategoriesMutation = useMutation(
+    trpc.createCategoryInMainCategory.mutationOptions({
       onSuccess: () => {
         toast.success('Málaflokkur hefur verið bætt við yfirflokk')
         refetchMainCategories()
@@ -64,8 +66,11 @@ export const UpdateMainCategory = () => {
       onError: () => {
         toast.error('Ekki tókst að bæta við málaflokki')
       },
-    },
-    deleteMainCategoryCategoryOptions: {
+    }),
+  )
+
+  const deleteMainCategoryCategoryMutation = useMutation(
+    trpc.deleteCategoryFromMainCategory.mutationOptions({
       onSuccess: () => {
         toast.success('Málaflokkur hefur verið fjarlægður')
         refetchMainCategories()
@@ -73,8 +78,8 @@ export const UpdateMainCategory = () => {
       onError: () => {
         toast.error('Ekki tókst að fjarlægja málaflokk')
       },
-    },
-  })
+    }),
+  )
 
   const filteredCategoryOptions = useMemo(() => {
     if (!selectedMainCategory?.categories) {
@@ -92,8 +97,8 @@ export const UpdateMainCategory = () => {
     debounce((title: string) => {
       if (!selectedMainCategory) return
 
-      updateMainCategoryTrigger({
-        mainCategoryId: selectedMainCategory.id,
+      updateMainCategoryMutation.mutate({
+        id: selectedMainCategory.id,
         title,
       })
     }, 500),
@@ -104,8 +109,8 @@ export const UpdateMainCategory = () => {
     debounce((description: string) => {
       if (!selectedMainCategory) return
 
-      updateMainCategoryTrigger({
-        mainCategoryId: selectedMainCategory.id,
+      updateMainCategoryMutation.mutate({
+        id: selectedMainCategory.id,
         description,
       })
     }, 500),
@@ -117,7 +122,8 @@ export const UpdateMainCategory = () => {
     : 'Engin yfirflokki'
 
   const isLoadingSubCategories =
-    isDeletingMainCategoryCategory || isCreatingMainCategoryCategories
+    deleteMainCategoryCategoryMutation.isPending ||
+    createMainCategoryCategoriesMutation.isPending
 
   return (
     <ContentWrapper title={title}>
@@ -133,8 +139,8 @@ export const UpdateMainCategory = () => {
             onChange={(opt) => {
               if (!opt) return
 
-              updateMainCategoryTrigger({
-                mainCategoryId: selectedMainCategory.id,
+              updateMainCategoryMutation.mutate({
+                id: selectedMainCategory.id,
                 departmentId: opt.value.id,
               })
             }}
@@ -174,7 +180,7 @@ export const UpdateMainCategory = () => {
             onChange={(opt) => {
               if (!opt) return
 
-              createMainCategoryCategoriesTrigger({
+              createMainCategoryCategoriesMutation.mutate({
                 mainCategoryId: selectedMainCategory.id,
                 categories: [opt.value.id],
               })
@@ -186,7 +192,7 @@ export const UpdateMainCategory = () => {
                 <OJOITag
                   key={category.id}
                   onClick={() =>
-                    deleteMainCategoryCategoryTrigger({
+                    deleteMainCategoryCategoryMutation.mutate({
                       mainCategoryId: selectedMainCategory.id,
                       categoryId: category.id,
                     })
@@ -199,14 +205,14 @@ export const UpdateMainCategory = () => {
           )}
           <Inline justifyContent="flexEnd">
             <Button
-              loading={isDeletingMainCategory}
+              loading={deleteMainCategoryMutation.isPending}
               colorScheme="destructive"
               variant="utility"
               icon="trash"
               iconType="outline"
               onClick={() =>
-                deleteMainCategoryTrigger({
-                  mainCategoryId: selectedMainCategory.id,
+                deleteMainCategoryMutation.mutate({
+                  id: selectedMainCategory.id,
                 })
               }
             >

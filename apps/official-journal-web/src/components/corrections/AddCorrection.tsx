@@ -6,13 +6,19 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
-import { UpdateAvertAndCorrectionTriggerArgs } from '../../hooks/api/update'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages } from './messages'
 
+type UpdateAdvertAndCorrectionArgs = {
+  caseId: string
+  title: string
+  description: string
+  advertHtml: string
+}
+
 type Props = {
   caseId: string
-  onAddSuccess: (correction: UpdateAvertAndCorrectionTriggerArgs) => void
+  onAddSuccess: (correction: UpdateAdvertAndCorrectionArgs) => void
 }
 
 type InputValueTypes = {

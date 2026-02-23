@@ -332,12 +332,12 @@ export const deleteUndefined = <T,>(
   return obj as T
 }
 
-export const getParamsWithoutNullOrEmpty = (
-  params: Record<string, unknown>,
-): Record<string, unknown> => {
-  return Object.keys(params).reduce<{
-    [key: string]: unknown
-  }>((acc, key) => {
+export const getParamsWithoutNullOrEmpty = <
+  T extends Record<string, unknown>,
+>(
+  params: T,
+): T => {
+  return Object.keys(params).reduce<Record<string, unknown>>((acc, key) => {
     if (
       params[key] !== null &&
       params[key] !== undefined &&
@@ -346,7 +346,7 @@ export const getParamsWithoutNullOrEmpty = (
       acc[key] = params[key]
     }
     return acc
-  }, {})
+  }, {}) as T
 }
 
 export const getOverviewStatusColor = (status: string) => {

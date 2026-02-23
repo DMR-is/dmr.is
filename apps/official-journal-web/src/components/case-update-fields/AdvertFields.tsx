@@ -12,14 +12,16 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { useUpdateAdvertHtml } from '../../hooks/api/update/useUpdateAdvertHtml'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { useFileUploader } from '../../lib/utils'
 import { AdvertDisplay } from '../advert-display/AdvertDisplay'
 import { HTMLEditor } from '../editor/Editor'
 import { messages } from '../form-steps/messages'
 import * as styles from './AdvertFields.css'
+
+import { useMutation } from '@tanstack/react-query'
 
 const OriginalCompare = dynamic(
   () => import('../original-compare/OriginalCompare'),
@@ -34,22 +36,27 @@ type Props = {
 export const AdvertFields = ({ toggle, onToggle }: Props) => {
   const { formatMessage } = useFormatMessage()
   const { data: session } = useSession()
+  const trpc = useTRPC()
 
   const { currentCase, refetch, canEdit } = useCaseContext()
 
-  const { trigger } = useUpdateAdvertHtml({
-    caseId: currentCase.id,
-    options: {
+  const updateAdvertHtml = useMutation(
+    trpc.updateAdvertHtml.mutationOptions({
       onSuccess: () => {
         toast.success('Meginmál auglýsingar uppfært', {
           toastId: 'updateAdvertFieldsHtml',
         })
         refetch()
       },
-    },
-  })
+    }),
+  )
 
-  const onChangeHandler = useCallback(debounce(trigger, 500), [])
+  const onChangeHandler = useCallback(
+    debounce((args: { advertHtml: string }) => {
+      updateAdvertHtml.mutate({ id: currentCase.id, ...args })
+    }, 500),
+    [currentCase.id],
+  )
 
   const fileUploader = useFileUploader(
     currentCase.applicationId ?? 'no-application-id',

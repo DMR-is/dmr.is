@@ -1,21 +1,23 @@
+'use client'
+
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { useFilters } from '@dmr.is/ui/hooks/useFilters'
 
-import { useDepartments } from '../../hooks/api'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { messages as errorMessages } from '../../lib/messages/errors'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { FilterGroup } from '../filter-group/FilterGroup'
 
 export const DepartmentsFilter = () => {
-    const { params, setParams } = useFilters()
+  const { params, setParams } = useFilters()
 
   const { formatMessage } = useFormatMessage()
-  const { departments, error, isLoading } = useDepartments({
-    options: {
-      keepPreviousData: true,
-      refreshInterval: 0,
-    },
-  })
+
+  const trpc = useTRPC()
+  const { data, error, isLoading } = useQuery(
+    trpc.getDepartments.queryOptions({}),
+  )
 
   if (error) {
     return (
@@ -32,7 +34,7 @@ export const DepartmentsFilter = () => {
       label="Deild"
       filters={params.department}
       setFilters={(p) => setParams({ department: p })}
-      options={departments ?? []}
+      options={data?.departments ?? []}
       loading={isLoading}
     />
   )

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import slugify from 'slugify'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -14,8 +15,9 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { AdvertMainType } from '../../gen/fetch'
-import { useAdvertTypes } from '../../hooks/api'
-import { useMainTypes } from '../../hooks/api/useMainTypes'
+import { useTRPC } from '../../lib/trpc/client/trpc'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   mainType?: AdvertMainType | null
@@ -36,47 +38,62 @@ export const UpdateAdvertMainType = ({
     }
   }, [mainType])
 
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
 
-  const {
-    updateMainType,
-    deleteMainType,
-    mainType: currentMainType,
-    refetchMainType,
-  } = useMainTypes({
-    mainTypesParams: {
+  const { data: mainTypeData } = useQuery(
+    trpc.getMainType.queryOptions(
+      { id: mainType?.id ?? '' },
+      { enabled: !!mainType?.id },
+    ),
+  )
+
+  const { data: typesData } = useQuery(
+    trpc.getTypes.queryOptions({
       department: mainType?.department.id,
       pageSize: 1000,
-    },
-    mainTypeId: mainType?.id,
-    onUpdateMainTypeSuccess: ({ mainType }) => {
-      toast.success(`Tegund ${mainType.title} uppfærður`)
-      refetchMainType()
-      refetchTypes()
-      refetch && refetch()
-    },
-    onDeleteMainTypeSuccess: () => {
-      toast.success(`Tegund ${mainType?.title} eytt`)
-      refetchMainType()
-      refetchTypes()
-      onDeleteSuccess && onDeleteSuccess()
-      refetch && refetch()
-    },
-  })
+      unassigned: true,
+    }),
+  )
 
-  const { types, refetchTypes, updateType, updateTypeError, deleteTypeError } =
-    useAdvertTypes({
-      typesParams: {
-        department: mainType?.department.id,
-        pageSize: 1000,
-        unassigned: true,
-      },
-      onUpdateTypeSuccess: ({ type }) => {
-        toast.success(`Yfirheiti ${type.title} uppfært`)
-        refetchMainType()
-        refetchTypes()
+  const invalidateAll = () => {
+    queryClient.invalidateQueries(trpc.getMainType.queryFilter())
+    queryClient.invalidateQueries(trpc.getTypes.queryFilter())
+  }
+
+  const updateMainTypeMutation = useMutation(
+    trpc.updateMainType.mutationOptions({
+      onSuccess: (data) => {
+        toast.success(`Tegund ${data.mainType.title} uppfærður`)
+        invalidateAll()
         refetch && refetch()
       },
-    })
+    }),
+  )
+
+  const deleteMainTypeMutation = useMutation(
+    trpc.deleteMainType.mutationOptions({
+      onSuccess: () => {
+        toast.success(`Tegund ${mainType?.title} eytt`)
+        invalidateAll()
+        onDeleteSuccess && onDeleteSuccess()
+        refetch && refetch()
+      },
+    }),
+  )
+
+  const updateTypeMutation = useMutation(
+    trpc.updateType.mutationOptions({
+      onSuccess: (data) => {
+        toast.success(`Yfirheiti ${data.type.title} uppfært`)
+        invalidateAll()
+        refetch && refetch()
+      },
+    }),
+  )
+
+  const currentMainType = mainTypeData?.mainType
+  const types = typesData?.types
 
   const mainTypeTypes = currentMainType
     ? currentMainType?.types.map((type) => type)
@@ -93,7 +110,6 @@ export const UpdateAdvertMainType = ({
 
   const hasEditedTitle = mainType?.title !== updateState.title
 
-
   if (!mainType) {
     return (
       <AlertMessage
@@ -106,18 +122,18 @@ export const UpdateAdvertMainType = ({
 
   return (
     <Stack space={[2, 2, 3]}>
-      {updateTypeError && (
+      {updateTypeMutation.error && (
         <AlertMessage
-          type={updateTypeError.type}
-          title={updateTypeError.name}
-          message={updateTypeError.message}
+          type="error"
+          title="Villa"
+          message={updateTypeMutation.error.message}
         />
       )}
-      {deleteTypeError && (
+      {deleteMainTypeMutation.error && (
         <AlertMessage
-          type={deleteTypeError.type}
-          title={deleteTypeError.name}
-          message={deleteTypeError.message}
+          type="error"
+          title="Villa"
+          message={deleteMainTypeMutation.error.message}
         />
       )}
       <Input
@@ -135,11 +151,20 @@ export const UpdateAdvertMainType = ({
       <Input
         readOnly
         name="update-main-type-slug"
-        value={hasEditedTitle ? slugify(`${mainType.department.title}-${updateState.title}`, {
-          lower: true,
-        }) : mainType.slug}
+        value={
+          hasEditedTitle
+            ? slugify(
+                `${mainType.department.title}-${updateState.title}`,
+                {
+                  lower: true,
+                },
+              )
+            : mainType.slug
+        }
         size="sm"
-        label={!hasEditedTitle ? "Slóð tegundar": "Uppfærð slóð tegundar"}
+        label={
+          !hasEditedTitle ? 'Slóð tegundar' : 'Uppfærð slóð tegundar'
+        }
         backgroundColor="blue"
       />
       <Inline space={[2, 2, 3]} justifyContent="spaceBetween" flexWrap="wrap">
@@ -149,7 +174,7 @@ export const UpdateAdvertMainType = ({
           variant="ghost"
           icon="trash"
           iconType="outline"
-          onClick={() => deleteMainType({ id: mainType.id })}
+          onClick={() => deleteMainTypeMutation.mutate({ id: mainType.id })}
         >
           Eyða tegund
         </Button>
@@ -159,7 +184,10 @@ export const UpdateAdvertMainType = ({
           icon="pencil"
           iconType="outline"
           onClick={() =>
-            updateMainType({ id: mainType.id, title: updateState.title })
+            updateMainTypeMutation.mutate({
+              id: mainType.id,
+              title: updateState.title,
+            })
           }
         >
           Uppfæra heiti
@@ -176,9 +204,9 @@ export const UpdateAdvertMainType = ({
             {mainTypeTypes.map((type) => (
               <Tag
                 onClick={() =>
-                  updateType({
+                  updateTypeMutation.mutate({
                     id: type.id,
-                    mainTypeId: null,
+                    mainTypeId: null
                   })
                 }
                 variant="blueberry"
@@ -202,7 +230,7 @@ export const UpdateAdvertMainType = ({
         noOptionsMessage={`Ekkert yfirheiti í ${mainType.department.title}`}
         onChange={(opt) => {
           if (opt) {
-            updateType({
+            updateTypeMutation.mutate({
               mainTypeId: mainType.id,
               id: opt.value.id,
             })

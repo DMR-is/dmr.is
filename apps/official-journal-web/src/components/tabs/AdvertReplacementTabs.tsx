@@ -1,34 +1,25 @@
-import { useEffect } from 'react'
+'use client'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { useAdverts } from '../../hooks/api/get/useAdverts'
 import { useSearchParams } from '../../hooks/useSearchParams'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import AdvertPDFTable from '../tables/AdvertPDFTable'
 
 export const AdvertReplacementTabs = () => {
   const [searchParams] = useSearchParams()
-  const { status: _status, search, page, pageSize, ...rest } = searchParams
+  const { search, page, pageSize } = searchParams
 
-  const {
-    data,
-    isLoading: isLoading,
-    mutate,
-  } = useAdverts({
-    params: {
+  const trpc = useTRPC()
+  const { data, isLoading } = useQuery(
+    trpc.getAdverts.queryOptions({
       page: page ?? 1,
       pageSize: pageSize ?? 20,
       search: search ?? '',
-    },
-  })
-
-  useEffect(() => {
-    async function refetch() {
-      await mutate()
-    }
-    refetch()
-  }, [search, page])
+    }),
+  )
 
   return (
     <Stack space={[2, 2, 3]}>

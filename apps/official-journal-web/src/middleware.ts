@@ -1,43 +1,20 @@
-import type { NextRequest } from 'next/server'
-import { NextResponse } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+import { createAuthMiddleware } from '@dmr.is/auth/middleware-helpers'
 
-const protectedRoutes = [
-  '/',
-  '/yfirflokkar',
-  '/tegundir',
-  '/ritstjorn',
-  '/utgafa',
-  '/heildaryfirlit',
-]
+import { identityServerConfig } from './lib/auth/authOptions'
 
-export default async function middleware(req: NextRequest) {
-  const token = await getToken({ req })
-
-  if (req.nextUrl.pathname === '/innskraning' && !token) {
-    return NextResponse.next()
-  }
-
-  const isProtectedRoute = protectedRoutes.includes(req.nextUrl.pathname)
-  if (!isProtectedRoute) {
-    return NextResponse.next()
-  }
-
-  const isAdmin = token?.role?.slug === 'ritstjori'
-
-  if (!isAdmin && req.nextUrl.pathname === '/notendur') {
-    return NextResponse.next()
-  }
-
-  if (!isAdmin) {
-    return NextResponse.redirect(new URL('/notendur', req.url))
-  }
-
-  return NextResponse.next()
-}
+export default createAuthMiddleware({
+  clientId: identityServerConfig.clientId,
+  clientSecret: identityServerConfig.clientSecret,
+  redirectUriEnvVar: 'OFFICIAL_JOURNAL_WEB_URL',
+  fallbackRedirectUri: process.env.IDENTITY_SERVER_LOGOUT_URL as string,
+  signInPath: '/innskraning',
+  checkIsActive: false,
+  skipDefaultUrlCheck: true,
+})
 
 export const config = {
   matcher: [
-    `/((?!api|_next/static|_next/image|images|fonts|.well-known|assets|favicon.ico).*)`,
+    `/((?!api|innskraning|_next/static|_next/image|images|fonts|.well-known|assets|favicon.ico).*)`,
+    '/api/trpc/(.*)',
   ],
 }
