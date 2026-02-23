@@ -6,7 +6,7 @@ module.exports = {
     return queryInterface.sequelize.query(`
       BEGIN;
 
-      CREATE TABLE MONTLY_ISSUES (
+      CREATE TABLE MONTHLY_ISSUES (
         ID SERIAL PRIMARY KEY,
         DEPARTMENT_ID INTEGER NOT NULL,
         START_DATE DATE NOT NULL,
@@ -19,7 +19,7 @@ module.exports = {
         UNIQUE (DEPARTMENT_ID, START_DATE, END_DATE)
       );
 
-      CREATE INDEX idx_monthly_issues_department_id ON MONTLY_ISSUES (DEPARTMENT_ID);
+      CREATE INDEX idx_monthly_issues_department_id ON MONTHLY_ISSUES (DEPARTMENT_ID);
 
       COMMIT;
     `)
@@ -31,7 +31,7 @@ module.exports = {
 
       DROP INDEX IF EXISTS idx_monthly_issues_department_id;
 
-      DROP TABLE MONTLY_ISSUES;
+      DROP TABLE MONTHLY_ISSUES;
 
       COMMIT;
     `)
