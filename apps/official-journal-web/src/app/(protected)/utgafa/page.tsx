@@ -11,9 +11,11 @@ import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 
+import { Banner } from '../../../components/banner/Banner'
 import { Meta } from '../../../components/meta/Meta'
 import { Section } from '../../../components/section/Section'
 import { useFormatMessage } from '../../../hooks/useFormatMessage'
+import { Routes } from '../../../lib/constants'
 import { messages } from '../../../lib/messages/casePublishOverview'
 
 const ReadyForPublicationTabs = dynamic(
@@ -49,6 +51,21 @@ function PublishingOverviewContent() {
         title={`${formatMessage(
           messages.breadcrumbs.casePublishing,
         )} - ${formatMessage(messages.breadcrumbs.dashboard)}`}
+      />
+      <Banner
+        title={messages.banner.title}
+        description={messages.banner.description}
+        imgSrc="/assets/banner-publish-image.svg"
+        variant="small"
+        enableCategories={true}
+        enableDepartments={false}
+        enableTypes={true}
+        contentColumnSpan={['12/12', '12/12', '7/12']}
+        imageColumnSpan={['12/12', '12/12', '3/12']}
+        breadcrumbs={[
+          { title: messages.breadcrumbs.dashboard, href: Routes.Dashboard },
+          { title: messages.breadcrumbs.casePublishing },
+        ]}
       />
       <Section paddingTop="content">
         <GridContainer>

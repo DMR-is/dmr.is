@@ -8,6 +8,7 @@ import { Suspense, useState } from 'react'
 import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Footer } from '@dmr.is/ui/components/island-is/Footer'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
@@ -20,6 +21,7 @@ function LoginContent() {
   const [loading, setLoading] = useState(false)
 
   return (
+    <>
     <GridContainer>
       <GridRow marginTop={[2, 2, 3]}>
         <GridColumn
@@ -66,6 +68,8 @@ function LoginContent() {
         </GridColumn>
       </GridRow>
     </GridContainer>
+    <Footer />
+    </>
   )
 }
 

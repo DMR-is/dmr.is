@@ -9,10 +9,12 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
+import { Banner } from '../../../components/banner/Banner'
 import { CreateCase } from '../../../components/create-case/CreateCase'
 import { Meta } from '../../../components/meta/Meta'
 import { Section } from '../../../components/section/Section'
 import { useFormatMessage } from '../../../hooks/useFormatMessage'
+import { Routes } from '../../../lib/constants'
 import { messages as caseProccessingMessages } from '../../../lib/messages/caseProcessingOverview'
 
 const CaseOverviewTabs = dynamic(
@@ -47,6 +49,19 @@ export function CaseProcessingOverviewClient() {
         title={`${formatMessage(
           caseProccessingMessages.breadcrumbs.cases,
         )} - ${formatMessage(caseProccessingMessages.breadcrumbs.home)}`}
+      />
+      <Banner
+        title={caseProccessingMessages.banner.title}
+        description={caseProccessingMessages.banner.description}
+        imgSrc="/assets/banner-small-image.svg"
+        variant="small"
+        enableCategories={true}
+        enableDepartments={true}
+        enableTypes={true}
+        breadcrumbs={[
+          { title: caseProccessingMessages.breadcrumbs.home, href: Routes.Dashboard },
+          { title: caseProccessingMessages.breadcrumbs.cases },
+        ]}
       />
       <Section paddingTop="content">
         <GridContainer>
