@@ -3,8 +3,10 @@
 import { FC, useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 
-import { LinkContext } from '@island.is/island-ui/core/context/LinkContext/LinkContext'
 import { theme } from '@dmr.is/island-ui-theme'
+
+import { LinkContext } from '@island.is/island-ui/core/context/LinkContext/LinkContext'
+
 import { Box } from '../../island-is/lib/Box'
 import { Button } from '../../island-is/lib/Button'
 import { Checkbox } from '../../island-is/lib/Checkbox'

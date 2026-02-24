@@ -1,10 +1,10 @@
  
 
-import { spacing, theme } from '@dmr.is/island-ui-theme'
 import {
   diffStyling,
   regulationContentStyling,
 } from '@dmr.is/island-regulations/styling'
+import { spacing, theme } from '@dmr.is/island-ui-theme'
 
 import { style, StyleRule } from '@vanilla-extract/css'
 const { color, typography, border } = theme

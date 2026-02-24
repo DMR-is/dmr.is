@@ -1,8 +1,8 @@
-import { theme } from '@dmr.is/island-ui-theme'
 import {
   regulationContentStyling,
   regulationTitleStyling,
 } from '@dmr.is/island-regulations/styling'
+import { theme } from '@dmr.is/island-ui-theme'
 
 import { globalStyle, style } from '@vanilla-extract/css'
 

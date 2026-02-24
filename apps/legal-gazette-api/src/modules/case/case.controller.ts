@@ -12,9 +12,8 @@ import {
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
-
 import { Auth } from '@dmr.is/island-auth-nest'
+import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
 
 import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
