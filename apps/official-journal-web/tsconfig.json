@@ -30,7 +30,7 @@
       "dom.iterable",
       "es2019"
     ],
-    "moduleResolution": "node"
+    "moduleResolution": "bundler"
   },
   "include": [
     "**/*.js",
