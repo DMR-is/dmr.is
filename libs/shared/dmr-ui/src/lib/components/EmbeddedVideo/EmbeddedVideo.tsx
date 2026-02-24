@@ -4,9 +4,7 @@ import { FC, useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 
 import { LinkContext } from '@island.is/island-ui/core/context/LinkContext/LinkContext'
-import { theme } from '@island.is/island-ui/theme'
-import { getVideoEmbedProperties } from '@island.is/shared/utils'
-
+import { theme } from '@dmr.is/island-ui-theme'
 import { Box } from '../../island-is/lib/Box'
 import { Button } from '../../island-is/lib/Button'
 import { Checkbox } from '../../island-is/lib/Checkbox'
@@ -15,6 +13,66 @@ import { Icon } from '../../island-is/lib/Icon'
 import { Stack } from '../../island-is/lib/Stack'
 import { Text } from '../../island-is/lib/Text'
 import * as styles from './EmbeddedVideo.css'
+
+// Inlined from @island.is/shared/utils
+type VideoEmbedType = 'VIMEO' | 'YOUTUBE'
+
+const getVideoEmbedProperties = (
+  url: string,
+): {
+  id: string
+  embedUrl: string
+  termsUrl: string
+  type: VideoEmbedType
+} | null => {
+  const item = new URL(url)
+
+  if (item.hostname.match(/(vimeo.com)/g)) {
+    const match = /vimeo.*\/(\d+)/i.exec(item.href)
+
+    if (match) {
+      const vimeoId = match[1]
+      return {
+        id: vimeoId,
+        embedUrl: `https://player.vimeo.com/video/${vimeoId}?autoplay=1`,
+        termsUrl: 'https://vimeo.com/terms',
+        type: 'VIMEO',
+      }
+    }
+  }
+
+  if (item.hostname.match(/(youtube.com|youtu.be)/g)) {
+    const regExp =
+      /^.*((youtu.be|youtube.com\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/
+    const match = item.href.match(regExp)
+
+    let youtubeId: string | undefined = undefined
+
+    if (match) {
+      let id = match[7]
+      if (id.startsWith('/')) id = id.slice(1)
+      if (id.length === 11) {
+        youtubeId = id
+      } else {
+        const v = item.searchParams.get('v')
+        if (v && v.length === 11) {
+          youtubeId = v
+        }
+      }
+    }
+
+    if (youtubeId) {
+      return {
+        id: youtubeId,
+        embedUrl: `https://www.youtube.com/embed/${youtubeId}?autoplay=1`,
+        termsUrl: 'https://www.youtube.com/t/terms',
+        type: 'YOUTUBE',
+      }
+    }
+  }
+
+  return null
+}
 
 export interface EmbeddedVideoProps {
   title?: string

@@ -1,4 +1,4 @@
-import { Auth } from '@island.is/auth-nest-tools'
+import { Auth } from '@dmr.is/island-auth-nest'
 
 export interface DMRUser extends Auth {
   adminUserId?: string

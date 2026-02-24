@@ -1,4 +1,4 @@
-import { regulationContentStyling } from '@island.is/regulations/styling'
+import { regulationContentStyling } from '@dmr.is/island-regulations/styling'
 
 import { globalStyle, style } from '@vanilla-extract/css'
 
