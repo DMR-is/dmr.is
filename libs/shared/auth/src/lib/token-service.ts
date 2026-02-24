@@ -1,3 +1,4 @@
+import { decodeJwt } from 'jose'
 import { JWT } from 'next-auth/jwt'
 import { getLogger } from '@dmr.is/logging-next'
 
@@ -7,39 +8,13 @@ const LOGGING_CATEGORY = 'refreshAccessToken'
 
 const renewalSeconds = 20 // seconds
 
-type JwtPayload = Record<string, unknown> & { exp?: number }
-
-function decodeJwtPayload(token: string): JwtPayload | null {
-  try {
-    const [, payload] = token.split('.')
-
-    if (!payload) {
-      return null
-    }
-
-    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
-    const padded = normalized.padEnd(
-      normalized.length + ((4 - (normalized.length % 4)) % 4),
-      '=',
-    )
-    const decoded =
-      typeof atob === 'function'
-        ? atob(padded)
-        : Buffer.from(padded, 'base64').toString('utf8')
-
-    return JSON.parse(decoded) as JwtPayload
-  } catch {
-    return null
-  }
-}
-
 export const isExpired = (
   accessToken: string,
   isRefreshTokenExpired: boolean,
 ) => {
-  const decoded = decodeJwtPayload(accessToken)
+  const decoded = decodeJwt(accessToken)
 
-  if (decoded?.exp) {
+  if (decoded && !(typeof decoded === 'string') && decoded['exp']) {
     const expires = new Date(decoded.exp * 1000)
     const renewalTime = new Date(expires.getTime() - renewalSeconds * 1000)
     return new Date() > renewalTime && !isRefreshTokenExpired
@@ -95,14 +70,14 @@ export const refreshAccessToken = async (
     }
 
     const expiresIn = Math.floor(Date.now() + newTokens.expires_in * 1000)
-    const decodedOldAccessToken = decodeJwtPayload(token.accessToken)
+    const decodedOldAccessToken = decodeJwt(token.accessToken)
 
     logger.info('Token refreshed', {
       metadata: {
         timeNow: new Date().toISOString(),
-        prevExpires: decodedOldAccessToken?.exp
-          ? new Date(decodedOldAccessToken.exp * 1000).toISOString()
-          : null,
+        prevExpires: new Date(
+          (decodedOldAccessToken.exp as number) * 1000,
+        ).toISOString(),
         newExpires: new Date(expiresIn).toISOString(),
       },
       category: LOGGING_CATEGORY,
