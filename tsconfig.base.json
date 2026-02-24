@@ -21,16 +21,9 @@
       "@dmr.is/clients/company-registry": [
         "libs/clients/company-registry/index.ts"
       ],
-      "@dmr.is/clients/national-registry": [
-        "libs/clients/national-registry/src/index.ts"
-      ],
       "@dmr.is/middleware": [
         "libs/shared/middleware/src/index.ts"
       ],
-      "@dmr.is/shared/filters": [
-        "libs/shared/filters/src/index.ts"
-      ],
-      "@dmr.is/shared/interceptors": ["libs/shared/interceptors/src/index.ts"],
       "@dmr.is/shared/middleware": ["libs/shared/middleware/src/index.ts"],
       "@dmr.is/trpc/client/*": ["libs/shared/trpc/src/lib/client/*"],
       "@dmr.is/trpc/utils/*": [

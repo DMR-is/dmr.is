@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 
-import { NationalRegistryEntityDto } from '@dmr.is/clients/national-registry'
+import { NationalRegistryEntityDto } from '@dmr.is/clients-national-registry'
 import { logger } from '@dmr.is/logging'
 
 /**

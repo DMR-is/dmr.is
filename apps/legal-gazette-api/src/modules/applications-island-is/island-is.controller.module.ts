@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common'
 
-import { NationalRegistryModule } from '@dmr.is/clients/national-registry'
+import { NationalRegistryModule } from '@dmr.is/clients-national-registry'
 
 import { CurrentNationalRegistryPersonGuard } from '../../core/guards/current-submitte.guard'
 import { ApplicationProviderModule } from '../applications/application.provider.module'

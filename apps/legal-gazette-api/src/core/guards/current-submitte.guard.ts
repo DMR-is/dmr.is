@@ -5,7 +5,7 @@ import {
   Injectable,
 } from '@nestjs/common'
 
-import { INationalRegistryService } from '@dmr.is/clients/national-registry'
+import { INationalRegistryService } from '@dmr.is/clients-national-registry'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 @Injectable()

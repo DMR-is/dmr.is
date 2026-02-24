@@ -3,7 +3,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import {
   GetNationalRegistryEntityDto,
   INationalRegistryService,
-} from '@dmr.is/clients/national-registry'
+} from '@dmr.is/clients-national-registry'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ILGNationalRegistryService } from './national-registry.service.interface'

@@ -13,8 +13,8 @@ import {
   GlobalExceptionFilter,
   HttpExceptionFilter,
   SequelizeExceptionFilter,
-} from '@dmr.is/shared/filters'
-import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
+} from '@dmr.is/shared-filters'
+import { LoggingInterceptor } from '@dmr.is/shared-interceptors'
 import { HealthModule } from '@dmr.is/shared-modules'
 
 import { AuthorizationGuardModule } from '../core/guards/authorization-guard.module'
