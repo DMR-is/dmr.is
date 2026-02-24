@@ -16,7 +16,7 @@ import {
   IssuesTaskModule,
   SharedJournalModule,
   SignatureModule,
-} from '@dmr.is/ojoi/modules'
+} from '@dmr.is/ojoi-modules'
 import {
   GlobalExceptionFilter,
   HttpExceptionFilter,

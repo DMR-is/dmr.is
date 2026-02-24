@@ -6,6 +6,7 @@
     "@dmr.is/api-client": "workspace:*",
     "@dmr.is/auth": "workspace:*",
     "@dmr.is/island-ui-theme": "workspace:*",
+    "@dmr.is/legal-gazette-html": "workspace:*",
     "@dmr.is/legal-gazette-schemas": "workspace:*",
     "@dmr.is/logging-next": "workspace:*",
     "@dmr.is/trpc": "workspace:*",

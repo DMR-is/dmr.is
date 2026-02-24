@@ -1,6 +1,6 @@
 'use client'
 
-import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
+import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 
 import { ApplicationStatusEnum } from '../gen/fetch'

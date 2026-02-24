@@ -37,7 +37,7 @@ import {
   InvolvedPartyGuard,
   ISignatureService,
   IUserService,
-} from '@dmr.is/ojoi/modules'
+} from '@dmr.is/ojoi-modules'
 import {
   EnumValidationPipe,
   FileTypeValidationPipe,

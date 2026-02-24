@@ -4,7 +4,7 @@ import { isBase64 } from 'class-validator'
 import { useEffect, useRef, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import { CommonApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
+import { CommonApplicationWebSchema } from '@dmr.is/legal-gazette-schemas'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 

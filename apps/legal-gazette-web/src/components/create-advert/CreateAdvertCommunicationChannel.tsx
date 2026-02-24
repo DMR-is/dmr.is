@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import * as z from 'zod'
 
-import { communicationChannelSchemaRefined } from '@dmr.is/legal-gazette/schemas'
+import { communicationChannelSchemaRefined } from '@dmr.is/legal-gazette-schemas'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { Input } from '@dmr.is/ui/components/island-is/Input'

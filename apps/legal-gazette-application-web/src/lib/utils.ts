@@ -2,7 +2,7 @@ import addYears from 'date-fns/addYears'
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
-import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
+import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 
 import { DateFormats, FormTypes } from './constants'
 

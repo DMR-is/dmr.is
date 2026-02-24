@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import * as z from 'zod'
 
-import { signatureSchemaRefined } from '@dmr.is/legal-gazette/schemas'
+import { signatureSchemaRefined } from '@dmr.is/legal-gazette-schemas'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { Input } from '@dmr.is/ui/components/island-is/Input'

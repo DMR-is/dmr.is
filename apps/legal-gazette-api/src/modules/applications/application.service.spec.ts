@@ -3,7 +3,7 @@ import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
+import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import {

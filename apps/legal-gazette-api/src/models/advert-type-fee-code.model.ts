@@ -8,7 +8,7 @@ import {
   PrimaryKey,
 } from 'sequelize-typescript'
 
-import { BaseTable } from '@dmr.is/shared/models/base'
+import { BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { FeeCodeModel } from './fee-code.model'

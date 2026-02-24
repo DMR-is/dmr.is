@@ -8,7 +8,7 @@ import {
   ApplicationTypeEnum,
   commonApplicationAnswersRefined,
   CommonApplicationWebSchema,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 import { getLogger } from '@dmr.is/logging-next'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'

@@ -4,7 +4,7 @@ import {
   RecallApplicationSchema,
   RecallApplicationWebSchema,
   recallApplicationWebSchema,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 

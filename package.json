@@ -12,6 +12,7 @@
       "libs/nx-open-next",
       "libs/clients/national-registry",
       "libs/legal-gazette/dto",
+      "libs/legal-gazette/html",
       "libs/legal-gazette/schemas",
       "libs/official-journal/modules",
       "libs/shared/api-client",

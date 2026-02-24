@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { isEmpty } from 'class-validator'
 
-import { SettlementType } from '@dmr.is/legal-gazette/schemas'
+import { SettlementType } from '@dmr.is/legal-gazette-schemas'
 import { formatNationalId } from '@dmr.is/utils/server/formatting'
 import { formatDate } from '@dmr.is/utils/server/serverUtils'
 

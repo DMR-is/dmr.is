@@ -6,7 +6,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
+import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PagingQuery } from '@dmr.is/shared-dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'

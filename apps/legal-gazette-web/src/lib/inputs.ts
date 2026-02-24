@@ -5,7 +5,7 @@ import {
   commonApplicationAnswersRefined,
   recallBankruptcyAnswersRefined,
   recallDeceasedAnswersRefined,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 
 export const createUserInput = z.object({
   email: z.email(),

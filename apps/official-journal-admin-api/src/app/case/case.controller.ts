@@ -43,8 +43,8 @@ import {
   ICommentServiceV2,
   IJournalService,
   IPriceService,
-} from '@dmr.is/ojoi/modules'
-import { RoleGuard } from '@dmr.is/ojoi/modules/guards/auth'
+} from '@dmr.is/ojoi-modules'
+import { RoleGuard } from '@dmr.is/ojoi-modules/guards/auth'
 import {
   EnumValidationPipe,
   FileTypeValidationPipe,

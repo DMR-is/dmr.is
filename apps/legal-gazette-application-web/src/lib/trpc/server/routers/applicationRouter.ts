@@ -4,7 +4,7 @@ import {
   createDivisionEndingWithIdInput,
   createDivisionMeetingWithIdInput,
   updateApplicationWithIdInput,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 
 import {
   ApplicationStatusEnum,

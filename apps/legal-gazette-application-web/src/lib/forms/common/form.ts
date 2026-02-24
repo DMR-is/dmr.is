@@ -4,7 +4,7 @@ import {
   CommonApplicationSchema,
   CommonApplicationWebSchema,
   commonApplicationWebSchema,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 

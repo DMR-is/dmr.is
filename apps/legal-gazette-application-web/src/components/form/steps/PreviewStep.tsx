@@ -1,7 +1,7 @@
 'use client'
 import { useFormContext } from 'react-hook-form'
 
-import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
+import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette-schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'

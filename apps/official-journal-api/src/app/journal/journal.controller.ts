@@ -27,7 +27,7 @@ import {
   ICaseService,
   IJournalService,
   IReindexRunnerService,
-} from '@dmr.is/ojoi/modules'
+} from '@dmr.is/ojoi-modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   CaseStatusEnum,

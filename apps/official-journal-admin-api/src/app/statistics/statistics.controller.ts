@@ -9,7 +9,7 @@ import {
 import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { RoleGuard } from '@dmr.is/ojoi/modules/guards/auth'
+import { RoleGuard } from '@dmr.is/ojoi-modules/guards/auth'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import {
   DepartmentSlugEnum,

@@ -24,27 +24,14 @@
       "@dmr.is/clients/national-registry": [
         "libs/clients/national-registry/src/index.ts"
       ],
-      "@dmr.is/legal-gazette/dto": [
-        "libs/legal-gazette/dto/src/index.ts"
-      ],
-      "@dmr.is/legal-gazette/schemas": [
-        "libs/legal-gazette/schemas/src/index.ts"
-      ],
       "@dmr.is/middleware": [
         "libs/shared/middleware/src/index.ts"
-      ],
-      "@dmr.is/ojoi/modules": [
-        "libs/official-journal/modules/src/index.ts"
-      ],
-      "@dmr.is/ojoi/modules/guards/auth": [
-        "libs/official-journal/modules/src/guards/auth/index.ts"
       ],
       "@dmr.is/shared/filters": [
         "libs/shared/filters/src/index.ts"
       ],
       "@dmr.is/shared/interceptors": ["libs/shared/interceptors/src/index.ts"],
       "@dmr.is/shared/middleware": ["libs/shared/middleware/src/index.ts"],
-      "@dmr.is/shared/models/base": ["libs/shared/models/base/src/index.ts"],
       "@dmr.is/trpc/client/*": ["libs/shared/trpc/src/lib/client/*"],
       "@dmr.is/trpc/utils/*": [
         "libs/shared/trpc/src/lib/utils/*"

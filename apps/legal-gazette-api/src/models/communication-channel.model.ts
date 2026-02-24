@@ -23,7 +23,7 @@ import {
   PickType,
 } from '@nestjs/swagger'
 
-import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
+import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'

@@ -4,7 +4,7 @@ import { FindOptions } from 'sequelize'
 
 import { Controller, NotFoundException, Param } from '@nestjs/common'
 
-import { BaseEntityModel } from '@dmr.is/shared/models/base'
+import { BaseEntityModel } from '@dmr.is/shared-models-base'
 
 @Controller()
 export class BaseEntityController<Model extends typeof BaseEntityModel<T>, T> {

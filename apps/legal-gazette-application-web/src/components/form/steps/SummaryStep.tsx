@@ -8,7 +8,7 @@ import { useFormContext } from 'react-hook-form'
 import {
   ApplicationTypeEnum,
   BaseApplicationWebSchema,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { formatDate } from '@dmr.is/utils/shared/format/date'

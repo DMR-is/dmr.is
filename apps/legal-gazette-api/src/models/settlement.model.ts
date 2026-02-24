@@ -15,8 +15,8 @@ import {
   ApplicationRequirementStatementEnum,
   CompanySchema,
   SettlementType,
-} from '@dmr.is/legal-gazette/schemas'
-import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
+} from '@dmr.is/legal-gazette-schemas'
+import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { AdvertModel } from './advert.model'

@@ -10,7 +10,7 @@ import {
   ApplicationTypeEnum,
   recallBankruptcyAnswersRefined,
   recallDeceasedAnswersRefined,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { addBusinessDays, getNextValidPublishingDate } from '@dmr.is/utils/server/dateUtils'
 

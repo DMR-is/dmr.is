@@ -4,7 +4,7 @@ import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import { Paging } from '@dmr.is/shared-dto'
-import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
+import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 export type UserAttributes = {

@@ -16,7 +16,7 @@ import {
   ApplicationTypeEnum,
   commonApplicationAnswersRefined,
   updateApplicationInput,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'
 import { get } from '@dmr.is/utils/shared/lodash/get'

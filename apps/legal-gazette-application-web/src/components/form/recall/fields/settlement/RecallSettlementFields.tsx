@@ -3,7 +3,7 @@ import { useFormContext } from 'react-hook-form'
 import {
   ApplicationTypeEnum,
   RecallApplicationWebSchema,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 
 import { RecallBankruptcySettlementFields } from './RecallBankruptcySettlementFields'
 import { RecallDeceasedSettlementFields } from './RecallDeceasedSettlementFields'
