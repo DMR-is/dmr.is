@@ -8,7 +8,6 @@ import { APP_INTERCEPTOR } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
-import { LogRequestMiddleware } from '@dmr.is/shared-middleware'
 import {
   AdvertTypeController,
   AdvertTypeModule,
@@ -20,6 +19,7 @@ import {
 } from '@dmr.is/ojoi-modules'
 import { RoleGuard } from '@dmr.is/ojoi-modules/guards/auth'
 import { LoggingInterceptor } from '@dmr.is/shared-interceptors'
+import { LogRequestMiddleware } from '@dmr.is/shared-middleware'
 import { HealthModule } from '@dmr.is/shared-modules'
 
 import { ApplicationController } from './application/application.controller'

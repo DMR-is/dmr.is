@@ -8,13 +8,13 @@ import { ThrottlerModule } from '@nestjs/throttler'
 import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { LoggingModule } from '@dmr.is/logging'
-import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 import {
   GlobalExceptionFilter,
   HttpExceptionFilter,
   SequelizeExceptionFilter,
 } from '@dmr.is/shared-filters'
 import { LoggingInterceptor } from '@dmr.is/shared-interceptors'
+import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 import { HealthModule } from '@dmr.is/shared-modules'
 
 import { AuthorizationGuardModule } from '../core/guards/authorization-guard.module'
