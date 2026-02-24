@@ -17,23 +17,72 @@ permissions:
   contents: read
 
 jobs:
-  build-and-push:
+  detect-affected:
+    name: Detect affected containers
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    outputs:
+      affected: ${{ steps.set-affected.outputs.affected }}
+      unaffected: ${{ steps.set-affected.outputs.unaffected }}
+      has_affected: ${{ steps.set-affected.outputs.has_affected }}
+      has_unaffected: ${{ steps.set-affected.outputs.has_unaffected }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Monorepo install
+        uses: ./.github/actions/yarn-install
+
+      - name: Set NX SHAs
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Determine affected containers
+        id: set-affected
+        run: |
+          ALL_CONTAINERS='["official-journal-api","official-journal-admin-api","official-journal-application-api","official-journal-web","regulations-api","legal-gazette-api","legal-gazette-web","legal-gazette-application-web","legal-gazette-public-web"]'
+
+          AFFECTED_PROJECTS=$(yarn nx show projects --affected --type=app 2>/dev/null || echo "")
+
+          AFFECTED_CONTAINERS="[]"
+          UNAFFECTED_CONTAINERS="[]"
+
+          for container in $(echo $ALL_CONTAINERS | jq -r '.[]'); do
+            if echo "$AFFECTED_PROJECTS" | grep -q "^${container}$"; then
+              AFFECTED_CONTAINERS=$(echo $AFFECTED_CONTAINERS | jq --arg c "$container" '. + [$c]')
+            else
+              UNAFFECTED_CONTAINERS=$(echo $UNAFFECTED_CONTAINERS | jq --arg c "$container" '. + [$c]')
+            fi
+          done
+
+          echo "affected=$AFFECTED_CONTAINERS" >> $GITHUB_OUTPUT
+          echo "unaffected=$UNAFFECTED_CONTAINERS" >> $GITHUB_OUTPUT
+
+          HAS_AFFECTED=$([ "$(echo $AFFECTED_CONTAINERS | jq length)" -gt 0 ] && echo "true" || echo "false")
+          HAS_UNAFFECTED=$([ "$(echo $UNAFFECTED_CONTAINERS | jq length)" -gt 0 ] && echo "true" || echo "false")
+
+          echo "has_affected=$HAS_AFFECTED" >> $GITHUB_OUTPUT
+          echo "has_unaffected=$HAS_UNAFFECTED" >> $GITHUB_OUTPUT
+
+          echo "### Affected Containers" >> $GITHUB_STEP_SUMMARY
+          echo "$AFFECTED_CONTAINERS" | jq -r '.[]' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Unaffected Containers (will re-tag)" >> $GITHUB_STEP_SUMMARY
+          echo "$UNAFFECTED_CONTAINERS" | jq -r '.[]' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+
+  build-affected:
+    needs: detect-affected
+    if: ${{ needs.detect-affected.outputs.has_affected == 'true' }}
     strategy:
       matrix:
-        container:
-          [
-            official-journal-api,
-            official-journal-admin-api,
-            official-journal-application-api,
-            official-journal-web,
-            regulations-api,
-            legal-gazette-web,
-            legal-gazette-public-web,
-            legal-gazette-application-web,
-            legal-gazette-api,
-          ]
-    name: 'Build and push images: ${{ matrix.container }}'
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        container: ${{ fromJson(needs.detect-affected.outputs.affected) }}
+      fail-fast: false
+    name: 'Build: ${{ matrix.container }}'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,12 +90,12 @@ jobs:
           fetch-depth: 0
           submodules: 'true'
 
-      - name: ♻️ Use Node.js 20.x
+      - name: Use Node.js 20.x
         uses: actions/setup-node@v4
         with:
           node-version: 20.x
 
-      - name: 📥 Monorepo install
+      - name: Monorepo install
         uses: ./.github/actions/yarn-install
 
       - name: Configure AWS credentials
@@ -82,9 +131,71 @@ jobs:
           INPUT_TAGS: ${{ steps.meta.outputs.tags }}
           INPUT_PUSH: true
 
+  retag-unaffected:
+    needs: detect-affected
+    if: ${{ needs.detect-affected.outputs.has_unaffected == 'true' }}
+    strategy:
+      matrix:
+        container: ${{ fromJson(needs.detect-affected.outputs.unaffected) }}
+      fail-fast: false
+    name: 'Re-tag: ${{ matrix.container }}'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_SHARED_ACCOUNT_ID }}:role/shared-github-ci-role
+          role-session-name: GitHub-Action-Role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Copy latest tag to sha-${{ github.sha }}
+        run: |
+          SHA="${{ github.sha }}"
+          REPO="${{ matrix.container }}"
+
+          echo "Re-tagging ${REPO}:latest as sha-${SHA}"
+
+          MANIFEST=$(aws ecr batch-get-image \
+            --repository-name "$REPO" \
+            --image-ids imageTag=latest \
+            --query 'images[].imageManifest' \
+            --output text)
+
+          if [ -z "$MANIFEST" ] || [ "$MANIFEST" = "None" ]; then
+            echo "::error::No 'latest' image found for ${REPO}. Cannot re-tag."
+            exit 1
+          fi
+
+          aws ecr put-image \
+            --repository-name "$REPO" \
+            --image-tag "sha-${SHA}" \
+            --image-manifest "$MANIFEST" 2>/dev/null || {
+              echo "::warning::Tag sha-${SHA} may already exist for ${REPO}, verifying..."
+              EXISTING=$(aws ecr batch-get-image \
+                --repository-name "$REPO" \
+                --image-ids imageTag="sha-${SHA}" \
+                --query 'images[].imageManifest' \
+                --output text)
+              if [ -n "$EXISTING" ] && [ "$EXISTING" != "None" ]; then
+                echo "Tag already exists, continuing."
+              else
+                echo "::error::Failed to re-tag ${REPO}"
+                exit 1
+              fi
+            }
+
   deploy-to-dev:
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [build-affected, retag-unaffected]
+    if: |
+      always() &&
+      (needs.build-affected.result == 'success' || needs.build-affected.result == 'skipped') &&
+      (needs.retag-unaffected.result == 'success' || needs.retag-unaffected.result == 'skipped') &&
+      !(needs.build-affected.result == 'skipped' && needs.retag-unaffected.result == 'skipped')
     environment: development
     strategy:
       matrix:
