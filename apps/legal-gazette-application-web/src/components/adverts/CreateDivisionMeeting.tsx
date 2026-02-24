@@ -1,7 +1,6 @@
 'use client'
 
 import { addYears } from 'date-fns'
-import get from 'lodash/get'
 import { useState } from 'react'
 import * as z from 'zod'
 
@@ -21,7 +20,8 @@ import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import {
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,
-} from '@dmr.is/utils/client/dateUtils'
+} from '@dmr.is/utils-client/dateUtils'
+import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import { ApplicationTypeEnum } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'

@@ -5,7 +5,7 @@ import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
-import { formatDate } from '@dmr.is/utils/shared/format/date'
+import { formatDate } from '@dmr.is/utils-shared/format/date'
 
 import { AdvertPublicationDetailedDto } from '../../../../gen/fetch'
 

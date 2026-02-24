@@ -6,7 +6,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
 
 import {
   GetPaymentsDto,

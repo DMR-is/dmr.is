@@ -8,7 +8,7 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
-import { formatDate } from '@dmr.is/utils/shared/format/date'
+import { formatDate } from '@dmr.is/utils-shared/format/date'
 
 import { AdvertPublicationModal } from '../modals/AdvertPublicationModal'
 

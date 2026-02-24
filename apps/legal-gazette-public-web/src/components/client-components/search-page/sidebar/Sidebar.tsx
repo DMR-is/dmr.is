@@ -12,7 +12,7 @@ import { type Option,Select } from '@dmr.is/ui/components/island-is/Select'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { PagingTotalItemsText } from '@dmr.is/ui/components/PagingTotaItemsText/PagingTotalItemsText'
-import { debounce } from '@dmr.is/utils/shared/lodash/debounce'
+import { debounce } from '@dmr.is/utils-shared/lodash/debounce'
 
 import { AdvertVersionEnum } from '../../../../gen/fetch'
 import { useFilters } from '../../../../hooks/useFilters'

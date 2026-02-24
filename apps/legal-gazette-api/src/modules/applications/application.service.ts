@@ -18,8 +18,8 @@ import {
   updateApplicationInput,
 } from '@dmr.is/legal-gazette-schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'
-import { get } from '@dmr.is/utils/shared/lodash/get'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
+import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import {
   RECALL_BANKRUPTCY_ADVERT_TYPE_ID,

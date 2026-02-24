@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { logger } from '@dmr.is/logging'
-import { isResponse } from '@dmr.is/utils/server/serverUtils'
+import { isResponse } from '@dmr.is/utils-server/serverUtils'
 
 export function HandleApiException(
   message: string | undefined = 'Internal server error',

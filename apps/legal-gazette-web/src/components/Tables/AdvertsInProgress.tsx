@@ -5,7 +5,7 @@ import { useIntl } from 'react-intl'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Tooltip } from '@dmr.is/ui/components/island-is/Tooltip'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
-import { formatDate } from '@dmr.is/utils/shared/format/date'
+import { formatDate } from '@dmr.is/utils-shared/format/date'
 
 import { useFilterContext } from '../../hooks/useFilters'
 import { ritstjornTableMessages } from '../../lib/messages/ritstjorn/tables'

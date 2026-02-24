@@ -18,7 +18,7 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
-import { get } from '@dmr.is/utils/shared/lodash/get'
+import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import { useUpdateApplication } from '../../hooks/useUpdateApplication'
 import { useTRPC } from '../../lib/trpc/client/trpc'

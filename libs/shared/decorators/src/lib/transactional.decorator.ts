@@ -3,7 +3,7 @@ import { Sequelize } from 'sequelize-typescript'
 import { v4 as uuid } from 'uuid'
 
 import { logger } from '@dmr.is/logging'
-import { get } from '@dmr.is/utils/shared/lodash/get'
+import { get } from '@dmr.is/utils-shared/lodash/get'
 
 const LOGGING_CONTEXT = 'Transactional'
 

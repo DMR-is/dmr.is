@@ -52,8 +52,8 @@ import {
 } from '@dmr.is/shared-dto'
 import { IAWSService } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
-import { cleanLegacyHtml } from '@dmr.is/utils/server/cleanLegacyHtml'
-import { generatePaging, toUtf8 } from '@dmr.is/utils/server/serverUtils'
+import { cleanLegacyHtml } from '@dmr.is/utils-server/cleanLegacyHtml'
+import { generatePaging, toUtf8 } from '@dmr.is/utils-server/serverUtils'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { caseAdditionMigrate } from '../case/migrations/case-addition.migrate'

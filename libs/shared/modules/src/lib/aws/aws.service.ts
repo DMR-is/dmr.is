@@ -12,7 +12,7 @@ import { LogAndHandle } from '@dmr.is/decorators'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { PresignedUrlResponse, S3UploadFileResponse } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { getS3Bucket } from '@dmr.is/utils/server/serverUtils'
+import { getS3Bucket } from '@dmr.is/utils-server/serverUtils'
 
 import { IAWSService } from './aws.service.interface'
 

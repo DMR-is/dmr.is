@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { createRedisCacheOptions } from '@dmr.is/utils/server/cacheUtils'
+import { createRedisCacheOptions } from '@dmr.is/utils-server/cacheUtils'
 
 import { AdvertModel } from '../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'

@@ -8,7 +8,7 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
-import { formatDate } from '@dmr.is/utils/shared/format/date'
+import { formatDate } from '@dmr.is/utils-shared/format/date'
 
 import { AdvertDto, AdvertPublicationDetailedDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'

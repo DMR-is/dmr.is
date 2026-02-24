@@ -26,7 +26,7 @@ import {
   UpdateAdvertTypeBody,
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
 
 import { IAdvertTypeService } from './advert-type.service.interface'
 import { advertMainTypeMigrate, advertTypeMigrate } from './migrations'

@@ -5,7 +5,7 @@ import { Cron, CronExpression } from '@nestjs/schedule'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { formatDate, hashPdf } from '@dmr.is/utils/server/serverUtils'
+import { formatDate, hashPdf } from '@dmr.is/utils-server/serverUtils'
 
 import { TASK_JOB_IDS } from '../../../../core/constants'
 import { AdvertModel } from '../../../../models/advert.model'

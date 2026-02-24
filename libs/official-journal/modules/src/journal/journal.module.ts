@@ -3,7 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { LoggingModule } from '@dmr.is/logging'
 import { AwsModule } from '@dmr.is/shared-modules'
-import { createRedisCacheOptions } from '@dmr.is/utils/server/cacheUtils'
+import { createRedisCacheOptions } from '@dmr.is/utils-server/cacheUtils'
 
 import caseModels from '../case/models'
 import { JournalService } from './journal.service'

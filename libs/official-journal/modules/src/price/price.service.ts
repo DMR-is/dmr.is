@@ -24,7 +24,7 @@ import {
   getFastTrack,
   getHtmlTextLength,
   MAX_CHARACTER_HTML,
-} from '@dmr.is/utils/server/serverUtils'
+} from '@dmr.is/utils-server/serverUtils'
 
 import { IApplicationService } from '../application/application.service.interface'
 import { IAuthService } from '../auth/auth.service.interface'

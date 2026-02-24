@@ -27,7 +27,7 @@ import {
   PostApplicationBody,
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { getFastTrack } from '@dmr.is/utils/server/serverUtils'
+import { getFastTrack } from '@dmr.is/utils-server/serverUtils'
 
 import { IApplicationService } from '../../../application/application.service.interface'
 import { IAttachmentService } from '../../../attachments/attachment.service.interface'

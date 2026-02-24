@@ -8,7 +8,7 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
-import { debounce } from '@dmr.is/utils/shared/lodash/debounce'
+import { debounce } from '@dmr.is/utils-shared/lodash/debounce'
 
 import {
   CreateSignatureMemberMemberTypeEnum,

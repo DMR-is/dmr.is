@@ -43,7 +43,7 @@ import {
   UpdateMainCategory,
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging, slicePagedData } from '@dmr.is/utils/server/serverUtils'
+import { generatePaging, slicePagedData } from '@dmr.is/utils-server/serverUtils'
 
 import { IJournalService } from './journal.service.interface'
 

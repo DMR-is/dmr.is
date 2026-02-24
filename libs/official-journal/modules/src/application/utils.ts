@@ -1,6 +1,6 @@
 import mammoth from 'mammoth'
 
-import { simpleSanitize } from '@dmr.is/utils/server/cleanLegacyHtml'
+import { simpleSanitize } from '@dmr.is/utils-server/cleanLegacyHtml'
 export const wordBufferToHtml = async (buffer: Buffer): Promise<string> => {
   const result = await mammoth.convertToHtml(
     { buffer },

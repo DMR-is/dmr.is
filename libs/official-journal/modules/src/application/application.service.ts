@@ -44,7 +44,7 @@ import {
   getLimitAndOffset,
   getTemplate,
   getTemplateDetails,
-} from '@dmr.is/utils/server/serverUtils'
+} from '@dmr.is/utils-server/serverUtils'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'

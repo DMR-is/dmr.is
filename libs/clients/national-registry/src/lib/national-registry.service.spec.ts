@@ -5,10 +5,10 @@ import {
 import { Test, TestingModule } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
-import { fetchWithTimeout } from '@dmr.is/utils/server/httpUtils'
+import { fetchWithTimeout } from '@dmr.is/utils-server/httpUtils'
 
 import { NationalRegistryService } from './national-registry.service'
-jest.mock('@dmr.is/utils/server/httpUtils', () => ({
+jest.mock('@dmr.is/utils-server/httpUtils', () => ({
   fetchWithTimeout: jest.fn(),
 }))
 const mockFetchWithTimeout = fetchWithTimeout as jest.MockedFunction<

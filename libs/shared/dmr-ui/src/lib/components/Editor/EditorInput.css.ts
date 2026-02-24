@@ -1,6 +1,6 @@
 // Based on libs/island-ui/core/src/lib/Input/Input.treat.ts
 import { helperStyles, theme } from '@dmr.is/island-ui-theme'
-import { omit } from '@dmr.is/utils/shared/lodash/omit'
+import { omit } from '@dmr.is/utils-shared/lodash/omit'
 
 import * as mixins from './EditorInput.mixins'
 
