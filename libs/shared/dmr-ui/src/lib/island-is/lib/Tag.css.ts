@@ -1,4 +1,4 @@
-import { theme } from '@island.is/island-ui/theme'
+import { theme } from '@dmr.is/island-ui-theme'
 
 import { style,styleVariants } from '@vanilla-extract/css'
 

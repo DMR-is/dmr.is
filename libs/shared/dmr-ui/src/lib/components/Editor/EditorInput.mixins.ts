@@ -1,5 +1,5 @@
 // Based on libs/island-ui/core/src/lib/Input/Input.mixins.ts
-import { theme, themeUtils } from '@island.is/island-ui/theme'
+import { theme, themeUtils } from '@dmr.is/island-ui-theme'
 
 const labelFontSize = 14
 const mobileLabelFontSize = 12

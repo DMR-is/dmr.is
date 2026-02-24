@@ -1,5 +1,5 @@
-import { theme } from '@island.is/island-ui/theme'
-import { hexToRgba } from '@island.is/island-ui/utils'
+import { theme } from '@dmr.is/island-ui-theme'
+import { hexToRgba } from '@dmr.is/island-ui-theme/utils'
 
 import { style, styleVariants } from '@vanilla-extract/css'
 

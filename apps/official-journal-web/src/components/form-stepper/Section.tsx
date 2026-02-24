@@ -5,7 +5,7 @@ import { useWindowSize } from 'react-use'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { theme as islandUITheme } from '@island.is/island-ui/theme'
+import { theme as islandUITheme } from '@dmr.is/island-ui-theme'
 
 import { SectionNumber } from './SectionNumber/SectionNumber'
 import { SubSections } from './SubSectionsV2/SubSectionsV2'

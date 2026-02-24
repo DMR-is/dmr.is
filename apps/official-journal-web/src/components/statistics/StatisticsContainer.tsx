@@ -10,7 +10,7 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Tabs, type TabType } from '@dmr.is/ui/components/island-is/Tabs'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { theme } from '@island.is/island-ui/theme'
+import { theme } from '@dmr.is/island-ui-theme'
 
 import {
   CaseStatusEnum,
