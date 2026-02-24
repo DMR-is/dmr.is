@@ -10,5 +10,13 @@
     "./island-is/theme": "./src/lib/island-is/theme/index.ts",
     "./globalStyles": "./src/utils/globalStyles.ts",
     "./globalCss": "./src/styles/global.css.ts"
+  },
+  "dependencies": {
+    "@dmr.is/auth": "workspace:*",
+    "@dmr.is/constants": "workspace:*",
+    "@dmr.is/island-regulations": "workspace:*",
+    "@dmr.is/island-ui-theme": "workspace:*",
+    "@dmr.is/shared-dto": "workspace:*",
+    "@dmr.is/utils-shared": "workspace:*"
   }
 }

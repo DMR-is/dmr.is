@@ -1,0 +1,16 @@
+{
+  "name": "@dmr.is/legal-gazette-application-web",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@dmr.is/api-client": "workspace:*",
+    "@dmr.is/auth": "workspace:*",
+    "@dmr.is/island-ui-theme": "workspace:*",
+    "@dmr.is/legal-gazette-schemas": "workspace:*",
+    "@dmr.is/logging-next": "workspace:*",
+    "@dmr.is/trpc": "workspace:*",
+    "@dmr.is/ui": "workspace:*",
+    "@dmr.is/utils-client": "workspace:*",
+    "@dmr.is/utils-shared": "workspace:*"
+  }
+}

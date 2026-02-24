@@ -5,5 +5,8 @@
   "exports": {
     "./client/*": "./src/lib/client/*",
     "./utils/*": "./src/lib/utils/*"
+  },
+  "dependencies": {
+    "@dmr.is/auth": "workspace:*"
   }
 }

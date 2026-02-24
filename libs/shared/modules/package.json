@@ -5,5 +5,13 @@
   "exports": {
     ".": "./src/index.ts",
     "./guards/auth": "./src/lib/guards/auth/index.ts"
+  },
+  "dependencies": {
+    "@dmr.is/constants": "workspace:*",
+    "@dmr.is/decorators": "workspace:*",
+    "@dmr.is/logging": "workspace:*",
+    "@dmr.is/shared-dto": "workspace:*",
+    "@dmr.is/types": "workspace:*",
+    "@dmr.is/utils-server": "workspace:*"
   }
 }

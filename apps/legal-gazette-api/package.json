@@ -1,0 +1,26 @@
+{
+  "name": "@dmr.is/legal-gazette-api",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@dmr.is/apm": "workspace:*",
+    "@dmr.is/auth": "workspace:*",
+    "@dmr.is/clients-national-registry": "workspace:*",
+    "@dmr.is/constants": "workspace:*",
+    "@dmr.is/db": "workspace:*",
+    "@dmr.is/decorators": "workspace:*",
+    "@dmr.is/island-auth-nest": "workspace:*",
+    "@dmr.is/legal-gazette-schemas": "workspace:*",
+    "@dmr.is/logging": "workspace:*",
+    "@dmr.is/logging-next": "workspace:*",
+    "@dmr.is/pipelines": "workspace:*",
+    "@dmr.is/shared-dto": "workspace:*",
+    "@dmr.is/shared-filters": "workspace:*",
+    "@dmr.is/shared-interceptors": "workspace:*",
+    "@dmr.is/shared-middleware": "workspace:*",
+    "@dmr.is/shared-models-base": "workspace:*",
+    "@dmr.is/shared-modules": "workspace:*",
+    "@dmr.is/utils-server": "workspace:*",
+    "@dmr.is/utils-shared": "workspace:*"
+  }
+}

@@ -4,5 +4,9 @@
   "private": true,
   "exports": {
     "./*": "./src/lib/*"
+  },
+  "dependencies": {
+    "@dmr.is/shared-dto": "workspace:*",
+    "@dmr.is/utils-client": "workspace:*"
   }
 }

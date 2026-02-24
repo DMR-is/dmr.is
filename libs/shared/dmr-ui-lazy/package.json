@@ -4,5 +4,9 @@
   "private": true,
   "exports": {
     "./components/*": "./src/lib/components/*"
+  },
+  "dependencies": {
+    "@dmr.is/island-ui-theme": "workspace:*",
+    "@dmr.is/ui": "workspace:*"
   }
 }

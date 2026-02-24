@@ -4,5 +4,10 @@
   "private": true,
   "exports": {
     "./*": "./src/lib/*"
+  },
+  "dependencies": {
+    "@dmr.is/island-auth-nest": "workspace:*",
+    "@dmr.is/logging-next": "workspace:*",
+    "@dmr.is/shared-dto": "workspace:*"
   }
 }

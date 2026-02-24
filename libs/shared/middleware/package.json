@@ -4,5 +4,9 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@dmr.is/constants": "workspace:*",
+    "@dmr.is/logging": "workspace:*"
   }
 }
