@@ -35,3 +35,16 @@ export const mapDepartmentIdToTitle = (departmentId: string): string => {
   }
 }
 
+export const mapDepartmentIdToLetter = (departmentId: string): string => {
+  switch (departmentId) {
+    case ISSUES_ALLOWED_DEPARTMENT_IDS[0]:
+      return 'A'
+    case ISSUES_ALLOWED_DEPARTMENT_IDS[1]:
+      return 'B'
+    case ISSUES_ALLOWED_DEPARTMENT_IDS[2]:
+      return 'C'
+    default:
+      throw new Error(`Unknown department ID: ${departmentId}`)
+  }
+}
+

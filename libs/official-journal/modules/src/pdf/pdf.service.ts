@@ -1,8 +1,7 @@
-import type { Page } from 'puppeteer'
-import { Browser } from 'puppeteer'
-import { Browser as CoreBrowser } from 'puppeteer-core'
+import { dirname, join } from 'node:path'
+import { PDFDocument, PDFFont, PDFPage, rgb, StandardFonts } from 'pdf-lib'
 
-import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 
 import {
   CHROME_USER_AGENT,
@@ -25,28 +24,360 @@ import {
 import { caseDetailedMigrate } from '../case/migrations/case-detailed.migrate'
 import { IUtilityService } from '../utility/utility.module'
 import { pdfCss } from './pdf.css'
-import { IPdfService } from './pdf.service.interface'
+import { IPdfService, IssuePdfAdvertInput } from './pdf.service.interface'
 import { advertPdfTemplate } from './pdf-advert-template'
 import { getBrowser } from './puppetBrowser'
 
 const LOGGING_CATEGORY = 'pdf-service'
 
-type PdfBrowser = Browser | CoreBrowser
-
 @Injectable()
-export class PdfService implements OnModuleDestroy, IPdfService {
-  private browser: PdfBrowser | null = null
+export class PdfService implements IPdfService {
+  private cachedPdfJs: any | null = null
+
   constructor(
     @Inject(IUtilityService)
     private readonly utilityService: IUtilityService,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  async onModuleDestroy() {
-    if (this.browser) {
-      await this.browser.close()
-      this.browser = null
+  private getPdfJsLegacy(): any {
+    if (this.cachedPdfJs) {
+      return this.cachedPdfJs
     }
+
+    const errors: string[] = []
+
+    try {
+      const reactPdfEntry = require.resolve('react-pdf')
+      const reactPdfRoot = join(dirname(reactPdfEntry), '..', '..')
+      const nestedPdfJsPath = join(
+        reactPdfRoot,
+        'node_modules',
+        'pdfjs-dist',
+        'legacy',
+        'build',
+        'pdf.js',
+      )
+      this.cachedPdfJs = require(nestedPdfJsPath)
+      return this.cachedPdfJs
+    } catch (error: any) {
+      errors.push(
+        `react-pdf nested pdfjs failed: ${String(error?.message ?? error)}`,
+      )
+    }
+
+    try {
+      this.cachedPdfJs = require('pdfjs-dist/legacy/build/pdf.js')
+      return this.cachedPdfJs
+    } catch (error: any) {
+      errors.push(`top-level pdfjs failed: ${String(error?.message ?? error)}`)
+    }
+
+    throw new Error(`Unable to load pdfjs legacy build. ${errors.join(' | ')}`)
+  }
+
+  private async mergePdfBuffers(buffers: Buffer[]): Promise<Buffer> {
+    const mergedPdf = await PDFDocument.create()
+
+    for (const buffer of buffers) {
+      const sourcePdf = await PDFDocument.load(buffer)
+      const pages = await mergedPdf.copyPages(
+        sourcePdf,
+        sourcePdf.getPageIndices(),
+      )
+
+      for (const page of pages) {
+        mergedPdf.addPage(page)
+      }
+    }
+
+    const mergedBytes = await mergedPdf.save()
+    return Buffer.from(mergedBytes)
+  }
+
+  private getIssueAdvertMarker(index: number): string {
+    return `DMRADVSTART${index}END`
+  }
+
+  private buildIssueHtml(
+    frontpage: string,
+    tableOfContents: string,
+    adverts: IssuePdfAdvertInput[],
+  ): string {
+    const divider = '<div class="advert-divider-line"></div>'
+    const advertMarkup = adverts
+      .map((advert, index) => {
+        const marker = this.getIssueAdvertMarker(index)
+        return `<div style="font-size:1px;line-height:1;color:#fff;margin:0;padding:0;">${marker}</div>${advert.html}`
+      })
+      .join(divider)
+
+    if (!advertMarkup) {
+      return [frontpage, tableOfContents].join(divider)
+    }
+
+    return [frontpage, tableOfContents, advertMarkup].join(divider)
+  }
+
+  private async extractAdvertStartPages(
+    pdfBuffer: Buffer,
+    advertCount: number,
+  ): Promise<number[]> {
+    const pdfjs = this.getPdfJsLegacy()
+
+    this.logger.debug(`Extracting advert start pages from PDF buffer`, {
+      category: LOGGING_CATEGORY,
+      advertCount,
+    })
+
+    const loadingTask = pdfjs.getDocument({
+      data: new Uint8Array(pdfBuffer),
+      disableWorker: true,
+    })
+    const pdf = await loadingTask.promise
+    const markers = Array.from({ length: advertCount }, (_, index) =>
+      this.getIssueAdvertMarker(index),
+    )
+    const startPages = new Array<number>(advertCount).fill(-1)
+
+    try {
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+        const page = await pdf.getPage(pageNumber)
+        const textContent = await page.getTextContent()
+        const pageText = (textContent.items as Array<{ str?: string }>)
+          .map((item) => item.str ?? '')
+          .join('')
+
+        for (let markerIndex = 0; markerIndex < markers.length; markerIndex++) {
+          if (startPages[markerIndex] !== -1) {
+            continue
+          }
+
+          if (pageText.includes(markers[markerIndex])) {
+            startPages[markerIndex] = pageNumber
+          }
+        }
+
+        if (startPages.every((value) => value !== -1)) {
+          break
+        }
+      }
+    } finally {
+      await Promise.resolve(loadingTask.destroy?.())
+    }
+
+    const missingIndex = startPages.findIndex((value) => value === -1)
+    if (missingIndex !== -1) {
+      throw new Error(
+        `Failed to resolve start page for advert index ${missingIndex}`,
+      )
+    }
+
+    for (let i = 1; i < startPages.length; i++) {
+      if (startPages[i] <= startPages[i - 1]) {
+        throw new Error('Invalid advert marker order in generated issue PDF')
+      }
+    }
+
+    return startPages
+  }
+
+  private measureSpacedTextWidth(
+    font: PDFFont,
+    text: string,
+    fontSize: number,
+    letterSpacing: number,
+  ): number {
+    const characters = text.toLocaleUpperCase('is-IS').split('')
+    if (characters.length === 0) {
+      return 0
+    }
+
+    const textWidth = characters.reduce(
+      (width, character) => width + font.widthOfTextAtSize(character, fontSize),
+      0,
+    )
+
+    return textWidth + letterSpacing * (characters.length - 1)
+  }
+
+  private drawSpacedUppercaseText(
+    page: PDFPage,
+    font: PDFFont,
+    text: string,
+    x: number,
+    y: number,
+    fontSize: number,
+    letterSpacing: number,
+  ): void {
+    let cursorX = x
+
+    for (const character of text.toLocaleUpperCase('is-IS').split('')) {
+      page.drawText(character, {
+        x: cursorX,
+        y,
+        size: fontSize,
+        font,
+        color: rgb(0, 0, 0),
+      })
+      cursorX += font.widthOfTextAtSize(character, fontSize) + letterSpacing
+    }
+  }
+
+  private async stampIssueHeaders(
+    pdfBuffer: Buffer,
+    adverts: IssuePdfAdvertInput[],
+    startPages: number[],
+  ): Promise<Buffer> {
+    this.logger.debug(`Stamping issue headers on PDF`, {
+      category: LOGGING_CATEGORY,
+      advertCount: adverts.length,
+      startPages,
+    })
+
+    const pdfDocument = await PDFDocument.load(pdfBuffer)
+    const font = await pdfDocument.embedFont(StandardFonts.TimesRoman)
+    const pages = pdfDocument.getPages()
+    const totalPages = pages.length
+    const firstAdvertPage = startPages[0]
+
+    for (let advertIndex = 0; advertIndex < adverts.length; advertIndex++) {
+      const advert = adverts[advertIndex]
+      const startPage = startPages[advertIndex]
+      const endPage =
+        advertIndex + 1 < startPages.length
+          ? startPages[advertIndex + 1] - 1
+          : totalPages
+
+      for (
+        let absolutePage = startPage;
+        absolutePage <= endPage;
+        absolutePage++
+      ) {
+        const page = pages[absolutePage - 1]
+        const { width, height } = page.getSize()
+        const headerWidthPx = 600
+        const pxToPt = 72 / 96
+        const targetHeaderWidth = headerWidthPx * pxToPt
+        const minSideInset = 56
+        const maxHeaderWidth = width - minSideInset * 2
+        const headerWidth = Math.min(targetHeaderWidth, maxHeaderWidth)
+        const headerLeftX = (width - headerWidth) / 2
+        const headerRightX = headerLeftX + headerWidth
+        const showTopBanner =
+          advertIndex === 0 &&
+          absolutePage === startPage &&
+          Boolean(advert.issueTopMeta)
+        let rowY = height - 74
+
+        if (showTopBanner) {
+          const leftBannerText = 'Stjórnartíðindi'
+          const rightBannerText = String(advert.issueTopMeta ?? '')
+          const letterSpacing = 2
+          const availableWidth = headerWidth
+          let bannerFontSize = 44
+
+          while (bannerFontSize > 18) {
+            const leftWidth = this.measureSpacedTextWidth(
+              font,
+              leftBannerText,
+              bannerFontSize,
+              letterSpacing,
+            )
+            const rightWidth = this.measureSpacedTextWidth(
+              font,
+              rightBannerText,
+              bannerFontSize,
+              letterSpacing,
+            )
+
+            if (leftWidth + rightWidth + 32 <= availableWidth) {
+              break
+            }
+
+            bannerFontSize -= 2
+          }
+
+          const rightWidth = this.measureSpacedTextWidth(
+            font,
+            rightBannerText,
+            bannerFontSize,
+            letterSpacing,
+          )
+          const bannerY = height - 56
+          const borderTopY = bannerY - 12
+          const borderBottomY = borderTopY - 3
+
+          this.drawSpacedUppercaseText(
+            page,
+            font,
+            leftBannerText,
+            headerLeftX,
+            bannerY,
+            bannerFontSize,
+            letterSpacing,
+          )
+          this.drawSpacedUppercaseText(
+            page,
+            font,
+            rightBannerText,
+            headerRightX - rightWidth,
+            bannerY,
+            bannerFontSize,
+            letterSpacing,
+          )
+
+          page.drawLine({
+            start: { x: headerLeftX, y: borderTopY },
+            end: { x: headerRightX, y: borderTopY },
+            thickness: 0.8,
+            color: rgb(0, 0, 0),
+          })
+          page.drawLine({
+            start: { x: headerLeftX, y: borderBottomY },
+            end: { x: headerRightX, y: borderBottomY },
+            thickness: 0.8,
+            color: rgb(0, 0, 0),
+          })
+
+          rowY = borderBottomY - 18
+        }
+
+        const dateText = formatAnyDate(advert.publicationDate)
+        const pageNumberText = `${absolutePage - firstAdvertPage + 1}`
+        const serialText = `Nr. ${advert.serial}`
+        const rowFontSize = 10
+        const leftX = headerLeftX
+        const rightX = headerRightX - font.widthOfTextAtSize(serialText, rowFontSize)
+        const centerX =
+          headerLeftX +
+          (headerWidth - font.widthOfTextAtSize(pageNumberText, rowFontSize)) / 2
+
+        page.drawText(dateText, {
+          x: leftX,
+          y: rowY,
+          size: rowFontSize,
+          font,
+          color: rgb(0, 0, 0),
+        })
+        page.drawText(pageNumberText, {
+          x: centerX,
+          y: rowY,
+          size: rowFontSize,
+          font,
+          color: rgb(0, 0, 0),
+        })
+        page.drawText(serialText, {
+          x: rightX,
+          y: rowY,
+          size: rowFontSize,
+          font,
+          color: rgb(0, 0, 0),
+        })
+      }
+    }
+
+    return Buffer.from(await pdfDocument.save())
   }
 
   async getPdfByApplicationId(
@@ -124,49 +455,36 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     htmlContent: string,
     header?: string,
   ): Promise<ResultWrapper<Buffer>> {
-    const attempt = async (): Promise<Buffer> => {
-      // (Re)create browser if missing or disconnected
-      if (!this.browser || !this.browser.isConnected()) {
-        this.logger.debug('Creating new browser instance', {
-          category: LOGGING_CATEGORY,
-        })
-        this.browser = await getBrowser()
-      }
-
-      let page: import('puppeteer').Page | null = null
-
+    const attempt = async () => {
       try {
-        page = (await this.browser!.newPage()) as Page
+        const browser = await getBrowser()
+        try {
+          const page = await browser.newPage()
+          page.setDefaultTimeout(60000)
+          page.setDefaultNavigationTimeout(60000)
+          await page.setUserAgent(CHROME_USER_AGENT)
 
-        // Safer timeouts to avoid mid-command drops
-        page.setDefaultTimeout(60000)
-        page.setDefaultNavigationTimeout(60000)
-        await page.setUserAgent(CHROME_USER_AGENT)
+          await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
+          await page.addStyleTag({ content: pdfCss })
 
-        // Load content and wait for quiet network so PDF has stable layout
-        await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
-
-        await page.addStyleTag({ content: pdfCss })
-
-        // Wait for all images to load before generating PDF
-        await page.evaluate(async () => {
-          const images = Array.from(document.querySelectorAll('img'))
-          await Promise.all(
-            images.map((img) => {
-              if (img.complete) return Promise.resolve()
-              return new Promise<void>((resolve) => {
-                img.addEventListener('load', () => resolve())
-                img.addEventListener('error', () => {
-                  resolve() // Resolve anyway to not block PDF generation
+          await page.evaluate(async () => {
+            const images = Array.from(document.querySelectorAll('img'))
+            await Promise.all(
+              images.map((img) => {
+                if (img.complete) return Promise.resolve()
+                return new Promise<void>((resolve) => {
+                  img.addEventListener('load', () => resolve())
+                  img.addEventListener('error', () => {
+                    resolve() // Resolve anyway to not block PDF generation
+                  })
                 })
-              })
-            }),
-          )
-        })
+              }),
+            )
+          })
 
-        if (header) {
-          const pdf = await page.pdf({
-            headerTemplate: `
+          if (header) {
+            const pdf = await page.pdf({
+              headerTemplate: `
               <div style="font-size:14px;
                           width:100%;
                           padding:35px 100px;
@@ -177,21 +495,32 @@ export class PdfService implements OnModuleDestroy, IPdfService {
                 ${header}
               </div>
             `,
-            footerTemplate: '<div></div>',
-            displayHeaderFooter: true,
+              footerTemplate: '<div></div>',
+              displayHeaderFooter: true,
+            })
+
+            return pdf
+          } else {
+            const pdf = await page.pdf()
+            return pdf
+          }
+        } catch (error) {
+          this.logger.error(`Failed to generate PDF`, {
+            category: LOGGING_CATEGORY,
+            error,
           })
 
-          return pdf
-        } else {
-          const pdf = await page.pdf()
-          return pdf
+          throw error
+        } finally {
+          await browser.close()
         }
-      } finally {
-        try {
-          await page?.close({ runBeforeUnload: true })
-        } catch {
-          /* ignore */
-        }
+      } catch (error) {
+        this.logger.error(`Failed to launch browser for PDF generation`, {
+          category: LOGGING_CATEGORY,
+          error,
+        })
+
+        throw error
       }
     }
 
@@ -215,12 +544,6 @@ export class PdfService implements OnModuleDestroy, IPdfService {
                   error: msg,
                 },
               )
-              try {
-                await this.browser?.close()
-              } catch {
-                /* ignore */
-              }
-              this.browser = null
             }
             throw err // let retryAsync back off and retry
           }
@@ -307,17 +630,42 @@ export class PdfService implements OnModuleDestroy, IPdfService {
     return ResultWrapper.ok(pdfResults.result.value)
   }
 
-  async generateIssuePdf(html: string): Promise<Buffer> {
-    const pdfHtml = (await this.generatePdfFromHtml(html))
+  async generateIssuePdf(
+    frontpage: string,
+    tableOfContents: string,
+    adverts: IssuePdfAdvertInput[],
+  ): Promise<Buffer> {
+    try {
+      const combinedHtml = this.buildIssueHtml(
+        frontpage,
+        tableOfContents,
+        adverts,
+      )
+      const combinedResult = await this.generatePdfFromHtml(combinedHtml)
+      if (!combinedResult.result.ok) {
+        throw combinedResult.result.error
+      }
 
-    if (!pdfHtml.result.ok) {
+      if (adverts.length === 0) {
+        return combinedResult.result.value
+      }
+
+      const startPages = await this.extractAdvertStartPages(
+        combinedResult.result.value,
+        adverts.length,
+      )
+
+      return await this.stampIssueHeaders(
+        combinedResult.result.value,
+        adverts,
+        startPages,
+      )
+    } catch (error) {
       this.logger.error(`Failed to generate issue PDF`, {
         category: LOGGING_CATEGORY,
-        error: pdfHtml.result.error,
+        error,
       })
       throw new Error('Failed to generate issue PDF')
     }
-
-    return pdfHtml.result.value
   }
 }

@@ -1,32 +1,22 @@
-import puppeteer, { Browser } from 'puppeteer'
-import puppeteerCore, { Browser as CoreBrowser } from 'puppeteer-core'
+import puppeteer from 'puppeteer'
 
-export async function getBrowser(): Promise<Browser | CoreBrowser> {
-  const defaultLocalChromiumPath =
-    '/Applications/Chromium.app/Contents/MacOS/Chromium'
-  if (process.env.NODE_ENV === 'production') {
-    return await puppeteerCore.launch({
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--font-render-hinting=none',
-        '--disable-gpu', // https://github.com/puppeteer/puppeteer/issues/12637#issuecomment-2301815579
-      ],
-      protocolTimeout: 300_000,
-      executablePath: '/usr/bin/chromium-browser',
-      headless: true,
-    })
-  } else {
-    return await puppeteer.launch({
-      executablePath:
-        process.env.LOCAL_CHROMIUM_PATH ?? defaultLocalChromiumPath,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--font-render-hinting=none',
-        '--disable-gpu',
-      ],
-      headless: true,
-    })
-  }
+export const getBrowser = async () => {
+  const browers = await puppeteer.launch({
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--font-render-hinting=none',
+      '--disable-gpu',
+      '--no-zygote',
+    ],
+    headless: true,
+    protocolTimeout: 300_000,
+    executablePath:
+      process.env.NODE_ENV === 'production'
+        ? '/usr/bin/chromium-browser'
+        : (process.env.LOCAL_CHROMIUM_PATH ??
+          '/Applications/Chromium.app/Contents/MacOS/Chromium'),
+  })
+  return browers
 }

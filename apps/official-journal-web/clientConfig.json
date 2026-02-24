@@ -6213,9 +6213,18 @@
           "startDate": { "format": "date-time", "type": "string" },
           "endDate": { "format": "date-time", "type": "string" },
           "title": { "type": "string" },
+          "formattedTitle": { "type": "string" },
           "url": { "type": "string" }
         },
-        "required": ["id", "department", "startDate", "endDate", "title", "url"]
+        "required": [
+          "id",
+          "department",
+          "startDate",
+          "endDate",
+          "title",
+          "formattedTitle",
+          "url"
+        ]
       },
       "GetMonthlyIssuesResponseDto": {
         "type": "object",

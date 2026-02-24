@@ -536,7 +536,7 @@ export const pdfCss = `
     text-indent: 2em;
     text-align: justify;
   }
-    
+
   .regulation__text > ul,
   .regulation__text > ol {
     padding-left: 1em;
@@ -572,7 +572,7 @@ export const pdfCss = `
   .regulation__signature p, .regulation__signature span {
     text-indent: 0em !important; /* Avoid puppeteer indent manipulation */
   }
-  
+
   .indented {
     position: relative;
     margin-left: 2em;
@@ -599,5 +599,78 @@ export const pdfCss = `
     margin-bottom: var(--paragraph-space);
   }
   .disclaimer__text {
+  }
+
+  .issues-frontpage {
+    text-align: center;
+    font-family: sans-serif;
+    font-style: italic;
+  }
+
+  .issues-frontpage h1 {
+    font-size: 64px;
+  }
+
+  .issues-frontpage h2 {
+    font-size: 42px;
+  }
+
+  .issues-frontpage h4 {
+    font-size: 32px;
+  }
+
+  .issues-frontpage h6 {
+    font-size: 18px;
+  }
+
+  .issues-table-of-contents-header {
+    margin-bottom: 24px;
+  }
+
+  .issues-table-of-contents-header th {
+    font-weight: 400;
+  }
+
+  .issues-table-of-contents-header th.issues-table-of-contents-heading {
+    font-weight: 600;
+    font-size: 18px;
+  }
+
+  .issues-table-of-contents-table thead tr {
+    padding-bottom: 24px;
+  }
+
+  .issues-table-of-contents-table thead tr td {
+    border-top: var(--table-border);
+    border-bottom: var(--table-border);
+    padding-block: var(--table-padding--h);
+    margin-bottom: var(--table-padding--h);
+  }
+
+  th.with-border, td.with-border {
+    border-top: var(--table-border);
+    border-bottom: var(--table-border);
+  }
+
+  .issues-table-of-contents-table tbody tr td {
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
+
+  .issues-table-of-contents table, .issues-table-of-contents th, .issues-table-of-contents td {
+    border: none;
+  }
+
+  .fake-space {
+    height: 12px;
+  }
+
+  .issues-table-of-contents-table td.fake-space {
+    border-top: none;
+    border-bottom: none;
+  }
+
+  .advert-divider-line {
+    page-break-after: always;
   }
 `

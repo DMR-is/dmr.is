@@ -27,7 +27,7 @@ type IssuesAttributes = {
 
 export type IssuesCreationAttributes = Omit<
   IssuesAttributes,
-  'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'title'
+  'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
 >
 
 @DefaultScope(() => ({
@@ -55,6 +55,10 @@ export class IssuesModel extends BaseModel<
     type: DataType.DATE,
     field: 'start_date',
     unique: 'department_date_range_constraint',
+    get() {
+      const rawValue = this.getDataValue('startDate')
+      return rawValue ? new Date(rawValue) : null
+    },
   })
   startDate!: Date
 
@@ -62,6 +66,10 @@ export class IssuesModel extends BaseModel<
     type: DataType.DATE,
     field: 'end_date',
     unique: 'department_date_range_constraint',
+    get() {
+      const rawValue = this.getDataValue('endDate')
+      return rawValue ? new Date(rawValue) : null
+    },
   })
   endDate!: Date
 
@@ -77,25 +85,24 @@ export class IssuesModel extends BaseModel<
   })
   url!: string
 
-  @BeforeCreate
-  static setTitle(instance: IssuesModel) {
-    const monthName = getMonthName(instance.startDate)
-    const year = instance.startDate.getFullYear()
-    const departmentTitle = mapDepartmentIdToTitle(instance.departmentId)
-
-    instance.title = `Stjórnartíðindi ${departmentTitle} - ${monthName} ${year}`
-  }
-
   @BelongsTo(() => AdvertDepartmentModel, 'departmentId')
   department!: AdvertDepartmentModel
 
+  formatTitle() {
+    const monthNumber = this.startDate.getMonth() + 1
+    const monthName = getMonthName(this.startDate)
+    const year = this.startDate.getFullYear()
+    const departmentTitle = mapDepartmentIdToTitle(this.departmentId)
+
+    return `Hefti ${monthNumber} - ${departmentTitle} - ${monthName} ${year}`
+  }
+
   static fromModel(model: IssuesModel): IssueDto {
-
-
     return {
       id: model.id,
       department: advertDepartmentMigrate(model.department),
       startDate: model.startDate,
+      formattedTitle: model.formatTitle(),
       endDate: model.endDate,
       title: model.title,
       url: model.url,

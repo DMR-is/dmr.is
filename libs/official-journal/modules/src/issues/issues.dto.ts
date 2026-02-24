@@ -21,6 +21,9 @@ export class IssueDto {
   title!: string
 
   @ApiProperty({ type: String })
+  formattedTitle!: string
+
+  @ApiProperty({ type: String })
   url!: string
 }
 

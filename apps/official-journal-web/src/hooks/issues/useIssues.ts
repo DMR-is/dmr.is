@@ -1,11 +1,14 @@
 import { useSession } from 'next-auth/react'
 
-import useSWR from 'swr'
+import useSWR, { Key } from 'swr'
 import useSWRMutation from 'swr/mutation'
 
 import { toast } from '@island.is/island-ui/core'
 
-import { GetMonthlyIssuesRequest } from '../../gen/fetch'
+import {
+  GenerateMonthlyIssuesRequest,
+  GetMonthlyIssuesRequest,
+} from '../../gen/fetch'
 import { getDmrClient } from '../../lib/api/createClient'
 import { swrFetcher } from '../../lib/constants'
 
@@ -23,16 +26,26 @@ export const useIssues = ({ params = {} }: UseIssuesProps = {}) => {
       swrFetcher({
         func: () => dmrClient.getMonthlyIssues(params),
       }),
+    {
+      refreshInterval: 0,
+      revalidateOnFocus: false,
+    },
   )
 
-  const { trigger: generateIssues } = useSWRMutation(
+  const { trigger: generateIssues, isMutating } = useSWRMutation<
+    void,
+    Error,
+    Key,
+    GenerateMonthlyIssuesRequest
+  >(
     session ? ['generateIssues', session.user] : null,
-    ([_key, _user], { arg }) =>
+    (_key: string, { arg }: { arg: GenerateMonthlyIssuesRequest }) =>
       swrFetcher({
         func: () => dmrClient.generateMonthlyIssues(arg),
       }),
     {
       onSuccess: () => {
+        toast.success('Hefti búið til')
         mutate()
       },
       onError: (_error) => {
@@ -46,5 +59,6 @@ export const useIssues = ({ params = {} }: UseIssuesProps = {}) => {
     error,
     isLoading,
     generateIssues,
+    isGenerating: isMutating,
   }
 }
