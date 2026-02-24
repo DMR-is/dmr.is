@@ -9,7 +9,7 @@ import { ScheduleModule } from '@nestjs/schedule'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
-import { LogRequestMiddleware } from '@dmr.is/middleware'
+import { LogRequestMiddleware } from '@dmr.is/shared-middleware'
 import {
   ApplicationModule,
   IssuesModule,

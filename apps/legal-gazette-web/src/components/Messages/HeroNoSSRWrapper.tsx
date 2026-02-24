@@ -9,7 +9,7 @@ import { ritstjornSingleMessages } from '../../lib/messages/ritstjorn/single'
 import { routesToBreadcrumbs } from '../../lib/utils'
 
 export const HeroNoSRR = dynamic(
-  () => import('@dmr.is/ui/lazy/components/Hero/Hero'),
+  () => import('@dmr.is/ui-lazy/components/Hero/Hero'),
   {
     ssr: false,
   },

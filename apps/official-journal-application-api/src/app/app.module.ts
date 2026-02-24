@@ -8,7 +8,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
-import { LogRequestMiddleware } from '@dmr.is/middleware'
+import { LogRequestMiddleware } from '@dmr.is/shared-middleware'
 import {
   AdvertTypeController,
   AdvertTypeModule,

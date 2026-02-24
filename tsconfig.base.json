@@ -18,38 +18,6 @@
     "types": ["node", "multer"],
     "typeRoots": ["node_modules/@types"],
     "paths": {
-      "@dmr.is/clients/company-registry": [
-        "libs/clients/company-registry/index.ts"
-      ],
-      "@dmr.is/middleware": [
-        "libs/shared/middleware/src/index.ts"
-      ],
-      "@dmr.is/shared/middleware": ["libs/shared/middleware/src/index.ts"],
-      "@dmr.is/trpc/client/*": ["libs/shared/trpc/src/lib/client/*"],
-      "@dmr.is/trpc/utils/*": [
-        "libs/shared/trpc/src/lib/utils/*"
-      ],
-      "@dmr.is/ui/globalStyles": [
-        "libs/shared/dmr-ui/src/utils/globalStyles.ts"
-      ],
-      "@dmr.is/ui/globalCss": [
-        "libs/shared/dmr-ui/src/styles/global.css.ts"
-      ],
-      "@dmr.is/ui/components/*": ["libs/shared/dmr-ui/src/lib/components/*"],
-      "@dmr.is/ui/components/island-is/*": [
-        "libs/shared/dmr-ui/src/lib/island-is/lib/*"
-      ],
-      "@dmr.is/ui/hooks/*": ["libs/shared/dmr-ui/src/lib/hooks/*"],
-      "@dmr.is/ui/island-is/theme": [
-        "libs/shared/dmr-ui/src/lib/island-is/theme/index.ts"
-      ],
-      "@dmr.is/ui/lazy/components/*": [
-        "libs/shared/dmr-ui-lazy/src/lib/components/*"
-      ],
-      "@dmr.is/ui/utils/*": ["libs/shared/dmr-ui/src/lib/utils/*"],
-      "@dmr.is/utils/shared/*": ["libs/shared/utils/shared/src/lib/*"],
-      "@dmr.is/utils/server/*": ["libs/shared/utils/server/src/lib/*"],
-      "@dmr.is/utils/client/*": ["libs/shared/utils/client/src/lib/*"],
       "@island.is/auth-nest-tools": [
         "submodules/island.is/libs/auth-nest-tools/src/lib/auth.ts"
       ],

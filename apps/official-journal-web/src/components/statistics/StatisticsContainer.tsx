@@ -25,7 +25,7 @@ import * as styles from './Statistics.css'
 
 const PieChart = dynamic(
   () =>
-    import('@dmr.is/ui/lazy/components/PieChart/PieChart').then(
+    import('@dmr.is/ui-lazy/components/PieChart/PieChart').then(
       (piechart) => piechart.PieChart,
     ),
   { ssr: false },

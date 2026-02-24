@@ -19,7 +19,7 @@ import { Route } from '../../lib/constants'
 
 const PieChart = dynamic(
   () =>
-    import('@dmr.is/ui/lazy/components/PieChart/PieChart').then(
+    import('@dmr.is/ui-lazy/components/PieChart/PieChart').then(
       (mod) => mod.PieChart,
     ),
   {

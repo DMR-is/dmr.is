@@ -3,10 +3,13 @@
   "version": "0.0.1",
   "private": true,
   "exports": {
-    "./components/*": "./src/lib/components/*",
-    "./components/island-is/*": "./src/lib/island-is/lib/*",
-    "./hooks/*": "./src/lib/hooks/*",
-    "./utils/*": "./src/lib/utils/*",
+    "./components/Tables/DataTable": "./src/lib/components/Tables/DataTable/index.ts",
+    "./components/Tables/DataTable/types": "./src/lib/components/Tables/DataTable/types.ts",
+    "./components/Tables/TrackerTable": "./src/lib/components/Tables/TrackerTable/index.ts",
+    "./components/island-is/*": "./src/lib/island-is/lib/*.tsx",
+    "./components/*": "./src/lib/components/*.tsx",
+    "./hooks/*": "./src/lib/hooks/*.ts",
+    "./utils/*": "./src/lib/utils/*.ts",
     "./island-is/theme": "./src/lib/island-is/theme/index.ts",
     "./globalStyles": "./src/utils/globalStyles.ts",
     "./globalCss": "./src/styles/global.css.ts"

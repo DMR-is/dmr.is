@@ -4,7 +4,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { LoggingInterceptor } from '@dmr.is/shared-interceptors'
-import { LogRequestMiddleware } from '@dmr.is/shared/middleware'
+import { LogRequestMiddleware } from '@dmr.is/shared-middleware'
 import { HealthModule } from '@dmr.is/shared-modules'
 
 import { JournalModule } from './journal/journal.module'
