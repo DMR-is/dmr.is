@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { LoggingModule } from '@dmr.is/logging'
-import { AwsModule } from '@dmr.is/shared/modules'
+import { AwsModule } from '@dmr.is/shared-modules'
 
 import { CaseModel } from '../../case/models/case.model'
 import { CaseActionModel } from './models/case-action.model'

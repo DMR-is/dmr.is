@@ -114,8 +114,8 @@ import {
   UpdateTagBody,
   UpdateTitleBody,
   UserDto,
-} from '@dmr.is/shared/dto'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+} from '@dmr.is/shared-dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
 const LOG_CATEGORY = 'case-controller'

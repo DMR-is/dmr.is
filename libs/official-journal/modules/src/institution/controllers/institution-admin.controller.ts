@@ -23,8 +23,8 @@ import {
   CreateInstitution,
   GetInstitution,
   UpdateInstitution,
-} from '@dmr.is/shared/dto'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+} from '@dmr.is/shared-dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { RoleGuard } from '../../guards/auth'
 import { IInstitutionService } from '../institution.service.interface'

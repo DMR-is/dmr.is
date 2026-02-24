@@ -5,7 +5,7 @@ import {
   GetSignature,
   UpdateSignatureMember,
   UpdateSignatureRecord,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { MemberTypeEnum } from './lib/types'

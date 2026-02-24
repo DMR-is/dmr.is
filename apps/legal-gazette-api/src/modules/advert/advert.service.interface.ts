@@ -1,5 +1,5 @@
 import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { PagingQuery } from '@dmr.is/shared/dto'
+import { PagingQuery } from '@dmr.is/shared-dto'
 
 import {
   CreateCommonAdvertAndApplicationDto,

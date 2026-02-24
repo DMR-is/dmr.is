@@ -20,7 +20,7 @@ import {
 } from '@dmr.is/ojoi/modules'
 import { RoleGuard } from '@dmr.is/ojoi/modules/guards/auth'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
-import { HealthModule } from '@dmr.is/shared/modules'
+import { HealthModule } from '@dmr.is/shared-modules'
 
 import { ApplicationController } from './application/application.controller'
 import { ApplicationGuard } from './guards/application.guard'

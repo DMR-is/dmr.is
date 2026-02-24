@@ -37,7 +37,7 @@ import {
   RecallBankruptcyApplicationAnswers,
   RecallDeceasedApplicationAnswers,
 } from '@dmr.is/legal-gazette/schemas'
-import { Paging } from '@dmr.is/shared/dto'
+import { Paging } from '@dmr.is/shared-dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 import { get } from '@dmr.is/utils/shared/lodash/get'
 

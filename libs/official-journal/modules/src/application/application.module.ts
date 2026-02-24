@@ -2,7 +2,7 @@ import { forwardRef, Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { LoggingModule } from '@dmr.is/logging'
-import { AwsModule } from '@dmr.is/shared/modules'
+import { AwsModule } from '@dmr.is/shared-modules'
 
 import { AttachmentsModule } from '../attachments/attachments.module'
 import { AuthModule } from '../auth/auth.module'

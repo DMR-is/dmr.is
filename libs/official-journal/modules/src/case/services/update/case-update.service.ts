@@ -26,7 +26,7 @@ import {
   UpdateTagBody,
   UpdateTitleBody,
   UserDto,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { getFastTrack, getNextStatus, getPreviousStatus } from '@dmr.is/utils/server/serverUtils'
 

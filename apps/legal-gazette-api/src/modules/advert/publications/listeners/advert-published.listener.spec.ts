@@ -4,7 +4,7 @@ import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
-import { IAWSService } from '@dmr.is/shared/modules'
+import { IAWSService } from '@dmr.is/shared-modules'
 
 import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertVersionEnum } from '../../../../models/advert-publication.model'

@@ -1,4 +1,4 @@
-import { Advert, AdvertAttachment } from '@dmr.is/shared/dto'
+import { Advert, AdvertAttachment } from '@dmr.is/shared-dto'
 import { toUtf8 } from '@dmr.is/utils/server/serverUtils'
 
 import { advertTypeMigrate } from '../../advert-type/migrations'

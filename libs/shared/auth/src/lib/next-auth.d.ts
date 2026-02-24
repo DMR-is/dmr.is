@@ -1,4 +1,4 @@
-import { UserDto, UserRoleDto } from '@dmr.is/shared/dto'
+import { UserDto, UserRoleDto } from '@dmr.is/shared-dto'
 
 declare module 'next-auth' {
   interface User extends DefaultUser, UserDto {

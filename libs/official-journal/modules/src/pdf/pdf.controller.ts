@@ -6,7 +6,7 @@ import {
   GetPdfBody,
   GetPdfRespone,
   GetPdfUrlResponse,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { IUtilityService } from '../utility/utility.service.interface'

@@ -1,4 +1,4 @@
-import { SignatureMember } from '@dmr.is/shared/dto'
+import { SignatureMember } from '@dmr.is/shared-dto'
 
 import { SignatureMemberModel } from '../models/signature-member.model'
 

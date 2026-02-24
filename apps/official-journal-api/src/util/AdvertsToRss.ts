@@ -1,4 +1,4 @@
-import { AdvertLean } from '@dmr.is/shared/dto'
+import { AdvertLean } from '@dmr.is/shared-dto'
 import { formatDateToRFC822 } from '@dmr.is/utils/server/serverUtils'
 
 export const AdvertsToRss = (

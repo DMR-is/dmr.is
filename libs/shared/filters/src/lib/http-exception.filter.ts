@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common'
 
 import { logger } from '@dmr.is/logging'
-import { ApiErrorDto, ApiErrorName } from '@dmr.is/shared/dto'
+import { ApiErrorDto, ApiErrorName } from '@dmr.is/shared-dto'
 
 const LOGGING_CONTEXT = 'HttpExceptionFilter'
 

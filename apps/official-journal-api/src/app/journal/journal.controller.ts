@@ -46,7 +46,7 @@ import {
   GetLeanAdvertsResponse,
   GetMainCategoriesResponse,
   GetSimilarAdvertsResponse,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { AdvertsToRss, getOsBody, getOsPaging } from '../../util'

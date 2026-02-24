@@ -41,7 +41,7 @@ import {
   S3UploadFileResponse,
   UpdateAdvertBody,
   UpdateMainCategory,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging, slicePagedData } from '@dmr.is/utils/server/serverUtils'
 

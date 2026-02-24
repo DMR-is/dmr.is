@@ -8,7 +8,7 @@ import {
   DepartmentSlugEnum,
   StatisticsOverviewQueryType,
   UserDto,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 
 import { StatisticsController } from './statistics.controller'
 import { IStatisticsService } from './statistics.service.interface'

@@ -3,7 +3,7 @@ import * as z from 'zod'
 import { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 
 import { logger } from '@dmr.is/logging'
-import { ApiErrorDto, ApiErrorName } from '@dmr.is/shared/dto'
+import { ApiErrorDto, ApiErrorName } from '@dmr.is/shared-dto'
 
 const LOGGING_CONTEXT = 'GlobalExceptionFilter'
 

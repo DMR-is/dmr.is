@@ -15,7 +15,7 @@ import {
   CreateCaseDto,
   CreateCaseResponseDto,
   UserDto,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import {
   AdditionType,
   Application,
@@ -25,7 +25,7 @@ import {
   CreateCaseBody,
   CreateCaseChannelBody,
   PostApplicationBody,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { getFastTrack } from '@dmr.is/utils/server/serverUtils'
 

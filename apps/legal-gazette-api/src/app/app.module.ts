@@ -15,7 +15,7 @@ import {
   SequelizeExceptionFilter,
 } from '@dmr.is/shared/filters'
 import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
-import { HealthModule } from '@dmr.is/shared/modules'
+import { HealthModule } from '@dmr.is/shared-modules'
 
 import { AuthorizationGuardModule } from '../core/guards/authorization-guard.module'
 import { AdvertModel } from '../models/advert.model'

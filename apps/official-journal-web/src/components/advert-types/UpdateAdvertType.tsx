@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import slugify from 'slugify'
 
-import { AdvertMainType } from '@dmr.is/shared/dto'
+import { AdvertMainType } from '@dmr.is/shared-dto'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'

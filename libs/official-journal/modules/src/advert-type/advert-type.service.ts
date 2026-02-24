@@ -24,7 +24,7 @@ import {
   GetAdvertTypes,
   UpdateAdvertMainType,
   UpdateAdvertTypeBody,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'
 

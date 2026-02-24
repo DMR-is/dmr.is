@@ -1,4 +1,4 @@
-import { AdvertType } from '@dmr.is/shared/dto'
+import { AdvertType } from '@dmr.is/shared-dto'
 
 import { advertDepartmentMigrate } from '../../journal/migrations'
 import { AdvertTypeModel } from '../models'

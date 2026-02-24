@@ -6,7 +6,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { CaseTagEnum } from '@dmr.is/shared/dto'
+import { CaseTagEnum } from '@dmr.is/shared-dto'
 
 @Table({ tableName: 'case_tag', timestamps: false })
 @DefaultScope(() => ({

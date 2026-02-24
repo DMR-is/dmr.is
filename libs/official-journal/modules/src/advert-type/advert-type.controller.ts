@@ -8,7 +8,7 @@ import {
   GetAdvertMainTypes,
   GetAdvertType,
   GetAdvertTypes,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 
 import { IAdvertTypeService } from './advert-type.service.interface'
 import { AdvertTypeError } from './advert-type-error'

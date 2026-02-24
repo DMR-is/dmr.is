@@ -1,4 +1,4 @@
-import { UpdateCaseBody } from '@dmr.is/shared/dto'
+import { UpdateCaseBody } from '@dmr.is/shared-dto'
 import { getFastTrack } from '@dmr.is/utils/server/serverUtils'
 
 import { CaseModel } from '../models'

@@ -1,5 +1,5 @@
 import { AttachmentTypeEnum } from '@dmr.is/constants'
-import { ApplicationAttachment } from '@dmr.is/shared/dto'
+import { ApplicationAttachment } from '@dmr.is/shared-dto'
 import { enumMapper, withTryCatch } from '@dmr.is/utils/server/serverUtils'
 
 import { ApplicationAttachmentModel } from '../models/application-attachment.model'

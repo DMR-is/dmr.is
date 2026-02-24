@@ -13,7 +13,7 @@ import {
   GetInstitution,
   GetInstitutions,
   InstitutionQuery,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 
 import { IInstitutionService } from '../institution.service.interface'
 

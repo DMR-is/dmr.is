@@ -5,7 +5,7 @@ import {
   GetApplicationAttachmentResponse,
   GetApplicationAttachmentsResponse,
   PostApplicationAttachmentBody,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { ApplicationAttachmentTypeModel } from './models'

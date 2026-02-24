@@ -64,8 +64,8 @@ import {
   PresignedUrlResponse,
   S3UploadFilesResponse,
   UserDto,
-} from '@dmr.is/shared/dto'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+} from '@dmr.is/shared-dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { ApplicationGuard } from '../guards/application.guard'

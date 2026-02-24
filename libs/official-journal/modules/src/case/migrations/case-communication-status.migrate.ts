@@ -1,7 +1,7 @@
 import {
   CaseCommunicationStatus,
   CommunicationStatus,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { enumMapper } from '@dmr.is/utils/server/serverUtils'
 
 import { CaseCommunicationStatusModel } from '../models'

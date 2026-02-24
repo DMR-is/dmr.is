@@ -14,7 +14,7 @@ import {
 import { ApiProperty, IntersectionType, PickType } from '@nestjs/swagger'
 
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
-import { Paging, PagingQuery } from '@dmr.is/shared/dto'
+import { Paging, PagingQuery } from '@dmr.is/shared-dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
 
 import { LegalGazetteModels } from '../core/constants'

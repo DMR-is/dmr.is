@@ -1,4 +1,4 @@
-import { GetMyUserInfoResponse, UserDto, UserRoleDto } from '@dmr.is/shared/dto'
+import { GetMyUserInfoResponse, UserDto, UserRoleDto } from '@dmr.is/shared-dto'
 
 import { advertInvolvedPartyMigrate } from '../../journal/migrations'
 import { UserModel } from '../models/user.model'

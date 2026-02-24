@@ -1,6 +1,6 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript'
 
-import { AdvertFeeType } from '@dmr.is/shared/dto'
+import { AdvertFeeType } from '@dmr.is/shared-dto'
 
 @Table({ tableName: 'application_fee_codes', timestamps: false })
 export class TransactionFeeCodesModel extends Model {

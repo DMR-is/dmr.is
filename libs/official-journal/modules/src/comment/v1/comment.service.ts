@@ -16,7 +16,7 @@ import {
   GetCaseCommentResponse,
   GetCaseCommentsResponse,
   PostCaseCommentBody,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { IApplicationService } from '../../application/application.service.interface'

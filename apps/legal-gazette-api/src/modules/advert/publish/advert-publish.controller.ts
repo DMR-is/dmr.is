@@ -11,7 +11,7 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AdminAccess, LGResponse } from '../../../core/decorators'
 import { AdvertPublishBulkDto } from '../../../core/dto/advert-publish.dto'

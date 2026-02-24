@@ -1,4 +1,4 @@
-import { CaseAddition } from '@dmr.is/shared/dto'
+import { CaseAddition } from '@dmr.is/shared-dto'
 
 import { CaseAdditionModel } from '../models'
 

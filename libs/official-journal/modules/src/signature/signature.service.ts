@@ -13,7 +13,7 @@ import {
   GetSignature,
   UpdateSignatureMember,
   UpdateSignatureRecord,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { CaseModel } from '../case/models'

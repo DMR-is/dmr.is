@@ -11,7 +11,7 @@ import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   GetApplicationResponse,
   GetInstitutionsFullResponse,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 import { AdvertTypeModel } from '../advert-type/models'

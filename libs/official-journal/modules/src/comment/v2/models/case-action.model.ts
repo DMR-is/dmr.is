@@ -6,7 +6,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { CaseActionEnum } from '@dmr.is/shared/dto'
+import { CaseActionEnum } from '@dmr.is/shared-dto'
 
 @Table({ tableName: 'case_action', timestamps: false })
 export class CaseActionModel extends Model {

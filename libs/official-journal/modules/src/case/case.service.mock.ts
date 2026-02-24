@@ -44,7 +44,7 @@ import {
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 // export class CaseServiceMock implements ICaseService {

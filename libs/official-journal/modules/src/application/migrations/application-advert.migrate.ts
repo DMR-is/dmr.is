@@ -1,4 +1,4 @@
-import { ApplicationAdvertItem } from '@dmr.is/shared/dto'
+import { ApplicationAdvertItem } from '@dmr.is/shared-dto'
 
 import { AdvertModel } from '../../journal/models'
 

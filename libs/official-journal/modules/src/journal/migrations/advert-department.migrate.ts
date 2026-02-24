@@ -1,4 +1,4 @@
-import { Department } from '@dmr.is/shared/dto'
+import { Department } from '@dmr.is/shared-dto'
 
 import { AdvertDepartmentModel } from '../models/advert-department.model'
 

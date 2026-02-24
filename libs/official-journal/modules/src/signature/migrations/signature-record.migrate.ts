@@ -1,4 +1,4 @@
-import { SignatureRecord } from '@dmr.is/shared/dto'
+import { SignatureRecord } from '@dmr.is/shared-dto'
 
 import { SignatureRecordModel } from '../models/signature-record.model'
 import { signatureMemberMigrate } from './signature-member.migrate'

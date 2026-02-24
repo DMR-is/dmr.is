@@ -49,8 +49,8 @@ import {
   UpdateAdvertBody,
   UpdateCategory,
   UpdateMainCategory,
-} from '@dmr.is/shared/dto'
-import { IAWSService } from '@dmr.is/shared/modules'
+} from '@dmr.is/shared-dto'
+import { IAWSService } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 import { cleanLegacyHtml } from '@dmr.is/utils/server/cleanLegacyHtml'
 import { generatePaging, toUtf8 } from '@dmr.is/utils/server/serverUtils'

@@ -1,4 +1,4 @@
-import { CaseStatusEnum } from '@dmr.is/shared/dto'
+import { CaseStatusEnum } from '@dmr.is/shared-dto'
 
 type StatusResMapper = {
   [key: string]: string

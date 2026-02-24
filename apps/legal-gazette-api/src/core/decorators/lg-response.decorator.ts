@@ -5,7 +5,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 
-import { ApiErrorDto } from '@dmr.is/shared/dto'
+import { ApiErrorDto } from '@dmr.is/shared-dto'
 
 type LGResponseParams = {
   operationId: string

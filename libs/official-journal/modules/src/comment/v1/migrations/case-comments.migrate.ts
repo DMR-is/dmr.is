@@ -1,4 +1,4 @@
-import { CaseComments, CaseCommentSourceEnum } from '@dmr.is/shared/dto'
+import { CaseComments, CaseCommentSourceEnum } from '@dmr.is/shared-dto'
 
 import { CaseCommentsModel } from '../comment.module'
 import { caseCommentMigrate } from './case-comment.migrate'

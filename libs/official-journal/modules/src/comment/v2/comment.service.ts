@@ -25,8 +25,8 @@ import {
   InternalCommentBody,
   SubmitCommentBody,
   UpdateStatusCommentBody,
-} from '@dmr.is/shared/dto'
-import { IAWSService } from '@dmr.is/shared/modules'
+} from '@dmr.is/shared-dto'
+import { IAWSService } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { AdvertTypeModel } from '../../advert-type/models'

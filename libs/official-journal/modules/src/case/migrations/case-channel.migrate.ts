@@ -1,4 +1,4 @@
-import { CaseChannel } from '@dmr.is/shared/dto'
+import { CaseChannel } from '@dmr.is/shared-dto'
 
 import { CaseChannelModel } from '../models'
 

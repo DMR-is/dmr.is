@@ -10,7 +10,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   GetApplicationAttachmentResponse,
   GetApplicationAttachmentsResponse,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { attachmentMigrate } from './migrations/attachment.migration'

@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { UNASSIGNABLE_CATEGORY_IDS } from '../../../core/constants'
 import { AdminAccess } from '../../../core/decorators/admin.decorator'

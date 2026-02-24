@@ -3,7 +3,7 @@ import { IsBoolean, IsEnum, IsOptional } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { Paging } from '@dmr.is/shared/dto'
+import { Paging } from '@dmr.is/shared-dto'
 
 import {
   TBRTransactionStatus,

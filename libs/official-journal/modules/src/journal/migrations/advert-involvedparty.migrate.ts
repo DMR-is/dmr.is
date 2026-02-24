@@ -1,4 +1,4 @@
-import { Institution } from '@dmr.is/shared/dto'
+import { Institution } from '@dmr.is/shared-dto'
 
 import { AdvertInvolvedPartyModel } from '../models/advert-involved-party.model'
 

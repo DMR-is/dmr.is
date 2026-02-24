@@ -4,7 +4,7 @@ import { NestApplication } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { Test } from '@nestjs/testing'
 
-import { HealthModule } from '@dmr.is/shared/modules'
+import { HealthModule } from '@dmr.is/shared-modules'
 const FILE_NAME = 'client-config.json'
 const TMP_DIR = 'tmp/swagger'
 describe('Swagger documentation', () => {

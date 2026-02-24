@@ -1,4 +1,4 @@
-import { TransactionFeeCode } from '@dmr.is/shared/dto'
+import { TransactionFeeCode } from '@dmr.is/shared-dto'
 
 import { TransactionFeeCodesModel } from '../models'
 

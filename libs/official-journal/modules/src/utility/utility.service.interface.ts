@@ -3,7 +3,7 @@ import { Transaction } from 'sequelize'
 import {
   GetApplicationResponse,
   GetInstitutionsFullResponse,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { AdvertTypeModel } from '../advert-type/models'
