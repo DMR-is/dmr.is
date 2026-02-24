@@ -1,9 +1,9 @@
 {
-  "name": "@dmr.is/shared-modules",
+  "name": "@dmr.is/ojoi-modules",
   "version": "0.0.1",
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./guards/auth": "./src/lib/guards/auth/index.ts"
+    "./guards/auth": "./src/guards/auth/index.ts"
   }
 }

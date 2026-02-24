@@ -1,0 +1,14 @@
+{
+  "name": "@dmr.is/ui",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    "./components/*": "./src/lib/components/*",
+    "./components/island-is/*": "./src/lib/island-is/lib/*",
+    "./hooks/*": "./src/lib/hooks/*",
+    "./utils/*": "./src/lib/utils/*",
+    "./island-is/theme": "./src/lib/island-is/theme/index.ts",
+    "./globalStyles": "./src/utils/globalStyles.ts",
+    "./globalCss": "./src/styles/global.css.ts"
+  }
+}

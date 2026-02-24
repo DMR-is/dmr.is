@@ -3973,6 +3973,100 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@dmr.is/api-client@workspace:libs/shared/api-client":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/api-client@workspace:libs/shared/api-client"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/apm@workspace:libs/apm":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/apm@workspace:libs/apm"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/auth@workspace:libs/shared/auth":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/auth@workspace:libs/shared/auth"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/clients-national-registry@workspace:libs/clients/national-registry":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/clients-national-registry@workspace:libs/clients/national-registry"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/constants@workspace:libs/shared/constants":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/constants@workspace:libs/shared/constants"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/db@workspace:libs/shared/sequelize":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/db@workspace:libs/shared/sequelize"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/decorators@workspace:libs/shared/decorators":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/decorators@workspace:libs/shared/decorators"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/legal-gazette-dto@workspace:libs/legal-gazette/dto":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/legal-gazette-dto@workspace:libs/legal-gazette/dto"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/legal-gazette-schemas@workspace:libs/legal-gazette/schemas":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/legal-gazette-schemas@workspace:libs/legal-gazette/schemas"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/logging-next@workspace:libs/logging-next":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/logging-next@workspace:libs/logging-next"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/logging@workspace:libs/logging":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/logging@workspace:libs/logging"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/mocks@workspace:libs/mocks":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/mocks@workspace:libs/mocks"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/nx-open-next@workspace:libs/nx-open-next":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/nx-open-next@workspace:libs/nx-open-next"
+  dependencies:
+    "@nx/devkit": "npm:22.5.1"
+    "@nx/next": "npm:22.5.1"
+    tslib: "npm:^2.6.3"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/ojoi-modules@workspace:libs/official-journal/modules":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/ojoi-modules@workspace:libs/official-journal/modules"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/pipelines@workspace:libs/shared/pipelines":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/pipelines@workspace:libs/shared/pipelines"
+  languageName: unknown
+  linkType: soft
+
 "@dmr.is/regulations-tools@npm:0.10.2":
   version: 0.10.2
   resolution: "@dmr.is/regulations-tools@npm:0.10.2"
@@ -3993,6 +4087,84 @@ __metadata:
   checksum: 10c0/4f111ed9c880f3db9d3c5ef46192e79f730810bb4b3508d8dfaea5db79d7b6978b6b13a14b175e3888ee0f1aeb672afcad684d3eb6de5d573614cdbfcacc1493
   languageName: node
   linkType: hard
+
+"@dmr.is/shared-dto@workspace:libs/shared/dto":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/shared-dto@workspace:libs/shared/dto"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/shared-filters@workspace:libs/shared/filters":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/shared-filters@workspace:libs/shared/filters"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/shared-interceptors@workspace:libs/shared/interceptors":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/shared-interceptors@workspace:libs/shared/interceptors"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/shared-middleware@workspace:libs/shared/middleware":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/shared-middleware@workspace:libs/shared/middleware"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/shared-models-base@workspace:libs/shared/models/base":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/shared-models-base@workspace:libs/shared/models/base"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/shared-modules@workspace:libs/shared/modules":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/shared-modules@workspace:libs/shared/modules"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/trpc@workspace:libs/shared/trpc":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/trpc@workspace:libs/shared/trpc"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/types@workspace:libs/shared/types/types":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/types@workspace:libs/shared/types/types"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/ui-lazy@workspace:libs/shared/dmr-ui-lazy":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/ui-lazy@workspace:libs/shared/dmr-ui-lazy"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/ui@workspace:libs/shared/dmr-ui":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/ui@workspace:libs/shared/dmr-ui"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/utils-client@workspace:libs/shared/utils/client":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/utils-client@workspace:libs/shared/utils/client"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/utils-server@workspace:libs/shared/utils/server":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/utils-server@workspace:libs/shared/utils/server"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/utils-shared@workspace:libs/shared/utils/shared":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/utils-shared@workspace:libs/shared/utils/shared"
+  languageName: unknown
+  linkType: soft
 
 "@elastic/elasticsearch@npm:^7.1.0, @elastic/elasticsearch@npm:^7.15.0":
   version: 7.17.14

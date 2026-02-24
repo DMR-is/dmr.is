@@ -1,0 +1,9 @@
+{
+  "name": "@dmr.is/trpc",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    "./client/*": "./src/lib/client/*",
+    "./utils/*": "./src/lib/utils/*"
+  }
+}

@@ -4,7 +4,35 @@
   "license": "MIT",
   "workspaces": {
     "packages": [
-      "apps/regulations-api"
+      "apps/*",
+      "libs/apm",
+      "libs/logging",
+      "libs/logging-next",
+      "libs/mocks",
+      "libs/nx-open-next",
+      "libs/clients/national-registry",
+      "libs/legal-gazette/dto",
+      "libs/legal-gazette/schemas",
+      "libs/official-journal/modules",
+      "libs/shared/api-client",
+      "libs/shared/auth",
+      "libs/shared/constants",
+      "libs/shared/decorators",
+      "libs/shared/dmr-ui",
+      "libs/shared/dmr-ui-lazy",
+      "libs/shared/dto",
+      "libs/shared/filters",
+      "libs/shared/interceptors",
+      "libs/shared/middleware",
+      "libs/shared/models/base",
+      "libs/shared/modules",
+      "libs/shared/pipelines",
+      "libs/shared/sequelize",
+      "libs/shared/trpc",
+      "libs/shared/types/types",
+      "libs/shared/utils/shared",
+      "libs/shared/utils/server",
+      "libs/shared/utils/client"
     ]
   },
   "engines": {
