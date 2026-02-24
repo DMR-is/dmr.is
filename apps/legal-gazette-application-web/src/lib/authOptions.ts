@@ -2,7 +2,7 @@ import type { AuthOptions } from 'next-auth'
 import type { JWT } from 'next-auth/jwt'
 import IdentityServer4 from 'next-auth/providers/identity-server4'
 
-import { decode } from 'jsonwebtoken'
+import { decodeJwt } from 'jose'
 
 import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
@@ -84,7 +84,7 @@ export const authOptions: AuthOptions = {
         if (!account?.id_token) {
           return false
         }
-        const decodedAccessToken = decode(account?.id_token) as JWT
+        const decodedAccessToken = decodeJwt(account?.id_token) as JWT
 
         user.nationalId = decodedAccessToken.nationalId as string
         user.name = decodedAccessToken.name as string

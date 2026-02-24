@@ -54,9 +54,9 @@ jobs:
 
           for container in $(echo $ALL_CONTAINERS | jq -r '.[]'); do
             if echo "$AFFECTED_PROJECTS" | grep -q "^${container}$"; then
-              AFFECTED_CONTAINERS=$(echo $AFFECTED_CONTAINERS | jq --arg c "$container" '. + [$c]')
+              AFFECTED_CONTAINERS=$(echo $AFFECTED_CONTAINERS | jq -c --arg c "$container" '. + [$c]')
             else
-              UNAFFECTED_CONTAINERS=$(echo $UNAFFECTED_CONTAINERS | jq --arg c "$container" '. + [$c]')
+              UNAFFECTED_CONTAINERS=$(echo $UNAFFECTED_CONTAINERS | jq -c --arg c "$container" '. + [$c]')
             fi
           done
 

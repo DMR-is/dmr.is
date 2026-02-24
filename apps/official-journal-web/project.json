@@ -36,7 +36,8 @@
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "official-journal-web:build",
-        "dev": true
+        "dev": true,
+        "port": 4200
       },
       "configurations": {
         "development": {

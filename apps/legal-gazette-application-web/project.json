@@ -53,7 +53,7 @@
       "options": {
         "commands": ["yarn next experimental-analyze"],
         "parallel": true,
-        "cwd": "apps/official-journal-web"
+        "cwd": "apps/legal-gazette-application-web"
       }
     },
     "update-openapi-schema": {

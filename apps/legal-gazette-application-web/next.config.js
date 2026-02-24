@@ -11,7 +11,10 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
  **/
 const nextConfig = {
   output: 'standalone',
-    experimental: {
+  turbopack: {
+    resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+  },
+  experimental: {
     fallbackNodePolyfills: false,
   },
   async redirects() {
