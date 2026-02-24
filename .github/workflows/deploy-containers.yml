@@ -36,9 +36,6 @@ jobs:
         with:
           node-version: 20.x
 
-      - name: Monorepo install
-        uses: ./.github/actions/yarn-install
-
       - name: Set NX SHAs
         uses: nrwl/nx-set-shas@v4
 
@@ -47,7 +44,7 @@ jobs:
         run: |
           ALL_CONTAINERS='["official-journal-api","official-journal-admin-api","official-journal-application-api","official-journal-web","regulations-api","legal-gazette-api","legal-gazette-web","legal-gazette-application-web","legal-gazette-public-web"]'
 
-          AFFECTED_PROJECTS=$(yarn nx show projects --affected --type=app 2>/dev/null || echo "")
+          AFFECTED_PROJECTS=$(npx nx@22.5.1 show projects --affected --type=app 2>/dev/null || echo "")
 
           AFFECTED_CONTAINERS="[]"
           UNAFFECTED_CONTAINERS="[]"

@@ -95,6 +95,7 @@
     },
     "codegen": {
       "executor": "nx:run-commands",
+      "inputs": ["{projectRoot}/clientConfig.json"],
       "options": {
         "command": "yarn openapi-generator -o apps/official-journal-web/src/gen/fetch -i apps/official-journal-web/clientConfig.json"
       },

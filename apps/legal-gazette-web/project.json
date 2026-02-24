@@ -103,6 +103,7 @@
     },
     "codegen": {
       "executor": "nx:run-commands",
+      "inputs": ["{projectRoot}/clientConfig.json"],
       "options": {
         "commands": [
           "rm -rf apps/legal-gazette-web/src/gen/fetch",
