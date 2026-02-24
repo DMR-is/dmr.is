@@ -30,6 +30,9 @@
       "libs/shared/sequelize",
       "libs/shared/trpc",
       "libs/shared/types/types",
+      "libs/shared/island-ui-theme",
+      "libs/shared/island-auth-nest",
+      "libs/shared/island-regulations",
       "libs/shared/utils/shared",
       "libs/shared/utils/server",
       "libs/shared/utils/client"

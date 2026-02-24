@@ -28,3 +28,5 @@ const DynamicSelect = dynamic(
 )
 
 export const Select = DynamicSelect as unknown as ComponentType<SelectProps>
+
+export type { StringOption, Option } from '@island.is/island-ui/core/Select/Select.types'

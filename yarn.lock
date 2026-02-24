@@ -4015,6 +4015,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dmr.is/island-auth-nest@workspace:libs/shared/island-auth-nest":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/island-auth-nest@workspace:libs/shared/island-auth-nest"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/island-regulations@workspace:libs/shared/island-regulations":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/island-regulations@workspace:libs/shared/island-regulations"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/island-ui-theme@workspace:libs/shared/island-ui-theme":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/island-ui-theme@workspace:libs/shared/island-ui-theme"
+  languageName: unknown
+  linkType: soft
+
 "@dmr.is/legal-gazette-dto@workspace:libs/legal-gazette/dto":
   version: 0.0.0-use.local
   resolution: "@dmr.is/legal-gazette-dto@workspace:libs/legal-gazette/dto"

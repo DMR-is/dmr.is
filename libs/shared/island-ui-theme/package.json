@@ -1,0 +1,10 @@
+{
+  "name": "@dmr.is/island-ui-theme",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./utils": "./src/utils.ts",
+    "./vanilla-extract": "./src/vanilla-extract.ts"
+  }
+}

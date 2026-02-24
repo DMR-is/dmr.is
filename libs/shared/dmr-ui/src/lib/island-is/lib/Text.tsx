@@ -3,3 +3,5 @@
 import { Text as IslandText } from '@island.is/island-ui/core/Text/Text'
 
 export const Text = IslandText
+
+export type { TextProps } from '@island.is/island-ui/core/Text/Text'

@@ -74,8 +74,12 @@
       ],
       "@dmr.is/ui/utils/*": ["libs/shared/dmr-ui/src/lib/utils/*"],
       "@dmr.is/utils/client/*": ["libs/shared/utils/client/src/lib/*"],
-      "@dmr.is/utils/server/*": ["libs/shared/utils/server/src/lib/*"],
-      "@dmr.is/utils/shared/*": ["libs/shared/utils/shared/src/lib/*"],
+      "@dmr.is/island-ui-theme": ["libs/shared/island-ui-theme/src/index.ts"],
+      "@dmr.is/island-ui-theme/utils": ["libs/shared/island-ui-theme/src/utils.ts"],
+      "@dmr.is/island-ui-theme/vanilla-extract": ["libs/shared/island-ui-theme/src/vanilla-extract.ts"],
+      "@dmr.is/island-auth-nest": ["libs/shared/island-auth-nest/src/index.ts"],
+      "@dmr.is/island-regulations": ["libs/shared/island-regulations/src/index.ts"],
+      "@dmr.is/island-regulations/styling": ["libs/shared/island-regulations/src/styling.ts"],
       "@island.is/auth-nest-tools": [
         "submodules/island.is/libs/auth-nest-tools/src/lib/auth.ts"
       ],
