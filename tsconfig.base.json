@@ -9,7 +9,7 @@
     "sourceMap": true,
     "importHelpers": true,
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -50,10 +50,6 @@
       "@dmr.is/shared/interceptors": ["libs/shared/interceptors/src/index.ts"],
       "@dmr.is/shared/middleware": ["libs/shared/middleware/src/index.ts"],
       "@dmr.is/shared/models/base": ["libs/shared/models/base/src/index.ts"],
-      "@dmr.is/shared/modules": ["libs/shared/modules/src/index.ts"],
-      "@dmr.is/shared/modules/guards/auth": [
-        "libs/shared/modules/src/lib/guards/auth/index.ts"
-      ],
       "@dmr.is/trpc/client/*": ["libs/shared/trpc/src/lib/client/*"],
       "@dmr.is/trpc/utils/*": ["libs/shared/trpc/src/lib/utils/*"],
       "@dmr.is/types": ["libs/shared/types/types/src/index.ts"],
@@ -124,6 +120,28 @@
       ],
       "@island.is/shared/utils": [
         "submodules/island.is/libs/shared/utils/src/index.ts"
+      ],
+      "@dmr.is/shared/modules": [
+        "libs/shared/modules/src/index.ts"
+      ],
+      "@dmr.is/shared/modules/guards/auth": [
+        "libs/shared/modules/src/lib/guards/auth/index.ts"
+      ],
+      // Bundler moduleResolution: redirect packages missing "types" in their exports
+      "oidc-client-ts": [
+        "node_modules/oidc-client-ts/dist/types/oidc-client-ts.d.ts"
+      ],
+      "react-pdf": [
+        "node_modules/react-pdf/dist/cjs/index.d.ts"
+      ],
+      "react-select": [
+        "node_modules/react-select/dist/react-select.cjs.d.ts"
+      ],
+      "react-select/base": [
+        "node_modules/react-select/base/dist/react-select-base.cjs.d.ts"
+      ],
+      "react-select/dist/declarations/src/Select": [
+        "node_modules/react-select/dist/declarations/src/Select.d.ts"
       ]
     }
   },
