@@ -94,6 +94,11 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
+    "container": {
+      "dependsOn": ["build"],
+      "inputs": ["production", "^production"],
+      "cache": false
+    },
     "e2e": {
       "inputs": ["default", "^production"]
     },
