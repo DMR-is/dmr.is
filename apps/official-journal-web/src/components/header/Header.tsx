@@ -10,10 +10,9 @@ import { FocusableBox } from '@dmr.is/ui/components/island-is/FocusableBox'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Hidden } from '@dmr.is/ui/components/island-is/Hidden'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
-
-import { Hidden } from '@island.is/island-ui/core/Hidden/Hidden'
-import { Logo } from '@island.is/island-ui/core/Logo/Logo'
+import { Logo } from '@dmr.is/ui/components/island-is/Logo'
 
 import { useFormatMessage } from '../../hooks/useFormatMessage'
 import { forceLogin, useLogOut } from '../../hooks/useLogOut'

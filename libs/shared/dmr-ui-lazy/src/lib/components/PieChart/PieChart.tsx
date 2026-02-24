@@ -2,13 +2,12 @@
 
 import * as Recharts from 'recharts'
 
-import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Box, type ResponsiveSpace } from '@dmr.is/ui/components/island-is/Box'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Table as T } from '@dmr.is/ui/components/island-is/Table'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import type { ResponsiveSpace } from '@island.is/island-ui/core/Box/useBoxStyles'
 import { theme } from '@island.is/island-ui/theme'
 
 export type PieChartItem = {

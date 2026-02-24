@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import React, { useEffect, useRef } from 'react'
 import { LoadingBarRef } from 'react-top-loading-bar'
 
-import { PageLoader as PageLoaderUI } from '@island.is/island-ui/core/PageLoader'
+import { PageLoader as PageLoaderUI } from '@dmr.is/ui/components/island-is/PageLoader'
 
 export const PageLoader = () => {
   const pathname = usePathname()

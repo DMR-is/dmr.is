@@ -1,8 +1,6 @@
 import { useRef } from 'react'
 
-import { Box } from '@dmr.is/ui/components/island-is/Box'
-
-import { type BoxProps } from '@island.is/island-ui/core/Box/types'
+import { Box, type BoxProps } from '@dmr.is/ui/components/island-is/Box'
 
 export const Main: React.FC<React.PropsWithChildren<unknown>> = ({
   children,

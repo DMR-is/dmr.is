@@ -8,12 +8,11 @@ import { useState } from 'react'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Icon } from '@dmr.is/ui/components/island-is/Icon'
 import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { LoadingDots } from '@dmr.is/ui/components/island-is/LoadingDots'
 import { Pagination } from '@dmr.is/ui/components/island-is/Pagination'
 import { Table as T } from '@dmr.is/ui/components/island-is/Table'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { useBreakpoints } from '@dmr.is/ui/hooks/useBreakpoints'
-
-import { LoadingDots } from '@island.is/island-ui/core/LoadingDots/LoadingDots'
 
 import { Advert, Case, Paging } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'

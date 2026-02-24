@@ -4,8 +4,7 @@
 import { createContext, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
-
-import { type StringOption } from '@island.is/island-ui/core/Select/Select.types'
+import { type StringOption } from '@dmr.is/ui/components/island-is/Select'
 
 import {
   AdvertCorrection,

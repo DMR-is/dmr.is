@@ -12,9 +12,8 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+import { useBreakpoint } from '@dmr.is/ui/hooks/useBreakpoint'
 import { amountFormat } from '@dmr.is/utils/shared/format/number'
-
-import { useBreakpoint } from '@island.is/island-ui/core/hooks/useBreakpoint'
 
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { getDmrClient } from '../../lib/api/createClient'
