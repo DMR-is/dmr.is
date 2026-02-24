@@ -4,6 +4,7 @@ const withVanillaExtract = createVanillaExtractPlugin({
   identifiers: 'short',
   turbopackMode: 'on',
 })
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 
 /**
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
@@ -12,8 +13,19 @@ const nextConfig = {
   turbopack: {
     resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
   },
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.resolve.alias.canvas = false
+
+    if (process.env.ANALYZE === 'true' && !isServer) {
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'static',
+          reportFilename: isServer
+            ? '../analyze/server.html'
+            : './analyze/client.html',
+        }),
+      )
+    }
 
     return config
   },
