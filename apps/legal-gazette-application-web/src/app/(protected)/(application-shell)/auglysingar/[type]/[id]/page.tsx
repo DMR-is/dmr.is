@@ -12,24 +12,25 @@ import { mapFormTypeToApplicationType } from '../../../../../../lib/utils'
 export default async function ApplicationPage({
   params,
 }: {
-  params: { id: string; type: FormTypes }
+  params: Promise<{ id: string; type: FormTypes }>
 }) {
-  if (!ALLOWED_FORM_TYPES.includes(params.type)) {
+  const { id, type } = await params
+  if (!ALLOWED_FORM_TYPES.includes(type)) {
     throw new Error('Tegund auglýsingar er ekki til')
   }
 
-  const mappedType = mapFormTypeToApplicationType(params.type)
+  const mappedType = mapFormTypeToApplicationType(type)
 
   void prefetch(trpc.getBaseEntities.queryOptions())
   await fetchQueryWithHandler(
     trpc.getApplicationById.queryOptions({
-      id: params.id,
+      id,
     }),
   )
 
   return (
     <HydrateClient>
-      <ApplicationFormContainer applicationId={params.id} type={mappedType} />
+      <ApplicationFormContainer applicationId={id} type={mappedType} />
     </HydrateClient>
   )
 }
