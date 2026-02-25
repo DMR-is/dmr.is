@@ -3992,7 +3992,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dmr.is/auth@workspace:libs/shared/auth"
   dependencies:
-    "@dmr.is/island-auth-nest": "workspace:*"
     "@dmr.is/logging-next": "workspace:*"
     "@dmr.is/shared-dto": "workspace:*"
   languageName: unknown
@@ -4025,8 +4024,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dmr.is/decorators@workspace:libs/shared/decorators"
   dependencies:
-    "@dmr.is/auth": "workspace:*"
     "@dmr.is/constants": "workspace:*"
+    "@dmr.is/island-auth-nest": "workspace:*"
     "@dmr.is/logging": "workspace:*"
     "@dmr.is/types": "workspace:*"
     "@dmr.is/utils-server": "workspace:*"
@@ -4057,7 +4056,6 @@ __metadata:
   resolution: "@dmr.is/legal-gazette-api@workspace:apps/legal-gazette-api"
   dependencies:
     "@dmr.is/apm": "workspace:*"
-    "@dmr.is/auth": "workspace:*"
     "@dmr.is/clients-national-registry": "workspace:*"
     "@dmr.is/constants": "workspace:*"
     "@dmr.is/db": "workspace:*"
@@ -4065,7 +4063,6 @@ __metadata:
     "@dmr.is/island-auth-nest": "workspace:*"
     "@dmr.is/legal-gazette-schemas": "workspace:*"
     "@dmr.is/logging": "workspace:*"
-    "@dmr.is/logging-next": "workspace:*"
     "@dmr.is/pipelines": "workspace:*"
     "@dmr.is/shared-dto": "workspace:*"
     "@dmr.is/shared-filters": "workspace:*"
