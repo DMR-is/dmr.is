@@ -136,7 +136,7 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
   })
   describe('addDivisionMeeting', () => {
     const createMeetingDto = {
-      meetingDate: '2026-01-15',
+      meetingDate: '2026-01-15T00:00:00.000Z',
       meetingLocation: 'Test Location',
       signature: {
         date: new Date('2026-01-15'),
@@ -144,12 +144,6 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
         location: 'Test Location',
         onBehalfOf: null,
       },
-      communicationChannels: [
-        {
-          email: 'test@example.com',
-          phone: '1234567',
-        },
-      ],
     }
     it('should allow owner to add division meeting for their own application', async () => {
       // Arrange
@@ -187,19 +181,14 @@ describe('RecallApplicationController - Ownership Validation (H-2)', () => {
   describe('addDivisionEnding', () => {
     const createEndingDto = {
       declaredClaims: 123456,
-      meetingDate: '2026-01-15',
+      scheduledAt: new Date('2026-02-01'),
+      endingDate: new Date('2026-03-01'),
       signature: {
         date: new Date('2026-01-15'),
         name: 'Test Name',
         location: null,
         onBehalfOf: null,
       },
-      communicationChannels: [
-        {
-          email: 'test@example.com',
-          phone: '1234567',
-        },
-      ],
     }
     it('should allow owner to add division ending for their own application', async () => {
       // Arrange

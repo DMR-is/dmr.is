@@ -1,25 +1,30 @@
 import * as z from 'zod'
 
-import { communicationChannelSchema } from '../base/communication-channels'
 import { signatureSchemaRefined } from '../base/signature'
 
 export const createDivisionMeetingInput = z.object({
   meetingDate: z.iso.datetime({
     error: 'Dagsetning skiptafundar er nauðsynleg',
   }),
+  content: z.string().optional(),
   additionalText: z.string().optional(),
-  communicationChannels: z.array(communicationChannelSchema),
   signature: signatureSchemaRefined,
   meetingLocation: z.string().refine((location) => location.length > 0, {
     message: 'Staðsetning skiptafundar er nauðsynleg',
   }),
 })
 
-export const createDivisionEndingInput = createDivisionMeetingInput.extend({
-  declaredClaims: z.number().min(0, {
-    message: 'Lýstar kröfur þurfa vera 0 eða hærri',
+export const createDivisionEndingInput = z.object({
+  declaredClaims: z.number().optional(),
+  endingDate: z.coerce.date({
+    error: 'Dagsetning skiptaloka er nauðsynleg',
   }),
-  meetingLocation: z.string().optional(),
+  scheduledAt: z.coerce.date({
+    error: 'Dagsetning birtingar er nauðsynleg',
+  }),
+  content: z.string().optional(),
+  additionalText: z.string().optional(),
+  signature: signatureSchemaRefined,
 })
 
 export const createDivisionMeetingWithIdInput =

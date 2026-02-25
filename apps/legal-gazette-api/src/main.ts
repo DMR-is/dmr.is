@@ -25,6 +25,9 @@ async function bootstrap() {
       transform: true,
       whitelist: true,
       enableDebugMessages: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
     }),
   )
   app.setGlobalPrefix(globalPrefix)

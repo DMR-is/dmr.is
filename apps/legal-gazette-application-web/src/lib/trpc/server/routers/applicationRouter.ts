@@ -53,7 +53,7 @@ export const applicationRouter = router({
       ctx.api.getTypes({
         excludeUnassignable: true,
       }),
-      ctx.api.getCategories({}),
+      ctx.api.getCategories({ excludeUnassignable: true }),
       ctx.api.getCourtDistricts(),
     ])
 
@@ -128,6 +128,7 @@ export const applicationRouter = router({
     .input(createDivisionEndingWithIdInput)
     .mutation(async ({ ctx, input }) => {
       const { applicationId, ...rest } = input
+
       return await ctx.api.addDivisionEnding({
         applicationId: input.applicationId,
         createDivisionEndingDto: rest,

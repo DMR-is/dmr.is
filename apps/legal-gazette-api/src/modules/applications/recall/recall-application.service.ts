@@ -218,7 +218,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       title: `Skiptafundur - ${application.settlement?.name}`,
       additionalText: body.additionalText,
       settlementId: application.settlement?.id,
-      communicationChannels: body.communicationChannels,
+      communicationChannels: application.answers.communicationChannels,
       scheduledAt: [body.meetingDate],
     })
   }
@@ -293,16 +293,18 @@ export class RecallApplicationService implements IRecallApplicationService {
         ...body.signature,
         date: body.signature?.date ? new Date(body.signature.date) : undefined,
       },
+      content: body.content,
       title: `Skiptalok - ${application.settlement?.name}`,
       additionalText: body.additionalText,
       settlementId: application.settlement?.id,
       judgementDate: judgementDate.toISOString(),
-      communicationChannels: body.communicationChannels,
-      scheduledAt: [body.meetingDate],
+      communicationChannels: application.answers.communicationChannels,
+      scheduledAt: [body.scheduledAt.toISOString()],
     })
 
     await application.settlement?.update({
       declaredClaims: body.declaredClaims,
+      endingDate: body.endingDate,
     })
 
     await application.update({ status: ApplicationStatusEnum.FINISHED })

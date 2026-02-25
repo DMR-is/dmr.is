@@ -15,93 +15,55 @@
     "strict": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "types": [
-      "node",
-      "multer"
-    ],
-    "typeRoots": [
-      "node_modules/@types"
-    ],
+    "types": ["node", "multer"],
+    "typeRoots": ["node_modules/@types"],
     "paths": {
-      "@dmr.is/api-client/*": [
-        "libs/shared/api-client/src/lib/*"
-      ],
-      "@dmr.is/apm": [
-        "libs/apm/src/index.ts"
-      ],
-      "@dmr.is/auth/*": [
-        "libs/shared/auth/src/lib/*"
-      ],
+      "@dmr.is/api-client/*": ["libs/shared/api-client/src/lib/*"],
+      "@dmr.is/apm": ["libs/apm/src/index.ts"],
+      "@dmr.is/auth/*": ["libs/shared/auth/src/lib/*"],
       "@dmr.is/clients/company-registry": [
         "libs/clients/company-registry/index.ts"
       ],
       "@dmr.is/clients/national-registry": [
         "libs/clients/national-registry/src/index.ts"
       ],
-      "@dmr.is/constants": [
-        "libs/shared/constants/src/index.ts"
-      ],
-      "@dmr.is/db": [
-        "libs/shared/sequelize/src/index.ts"
-      ],
-      "@dmr.is/decorators": [
-        "libs/shared/decorators/src/index.ts"
-      ],
-      "@dmr.is/legal-gazette/dto": [
-        "libs/legal-gazette/dto/src/index.ts"
-      ],
+      "@dmr.is/constants": ["libs/shared/constants/src/index.ts"],
+      "@dmr.is/db": ["libs/shared/sequelize/src/index.ts"],
+      "@dmr.is/decorators": ["libs/shared/decorators/src/index.ts"],
+      "@dmr.is/legal-gazette/dto": ["libs/legal-gazette/dto/src/index.ts"],
+      "@dmr.is/legal-gazette/html": ["libs/legal-gazette/html/src/index.ts"],
       "@dmr.is/legal-gazette/schemas": [
         "libs/legal-gazette/schemas/src/index.ts"
       ],
-      "@dmr.is/logging": [
-        "libs/logging/src/index.ts"
-      ],
-      "@dmr.is/logging-next": [
-        "libs/logging-next/src/index.ts"
-      ],
-      "@dmr.is/middleware": [
-        "libs/shared/middleware/src/index.ts"
-      ],
-      "@dmr.is/mocks": [
-        "libs/mocks/src/index.ts"
-      ],
-      "@dmr.is/nx-open-next": [
-        "libs/nx-open-next/src/index.ts"
-      ],
-      "@dmr.is/ojoi/modules": [
-        "libs/official-journal/modules/src/index.ts"
-      ],
+      "@dmr.is/logging": ["libs/logging/src/index.ts"],
+      "@dmr.is/logging-next": ["libs/logging-next/src/index.ts"],
+      "@dmr.is/middleware": ["libs/shared/middleware/src/index.ts"],
+      "@dmr.is/mocks": ["libs/mocks/src/index.ts"],
+      "@dmr.is/nx-open-next": ["libs/nx-open-next/src/index.ts"],
+      "@dmr.is/ojoi/modules": ["libs/official-journal/modules/src/index.ts"],
       "@dmr.is/ojoi/modules/guards/auth": [
         "libs/official-journal/modules/src/guards/auth/index.ts"
       ],
-      "@dmr.is/pipelines": [
-        "libs/shared/pipelines/src/index.ts"
-      ],
-      "@dmr.is/shared/dto": [
-        "libs/shared/dto/src/lib/index.ts"
-      ],
-      "@dmr.is/shared/filters": [
-        "libs/shared/filters/src/index.ts"
-      ],
+      "@dmr.is/pipelines": ["libs/shared/pipelines/src/index.ts"],
+      "@dmr.is/shared/dto": ["libs/shared/dto/src/lib/index.ts"],
+      "@dmr.is/shared/filters": ["libs/shared/filters/src/index.ts"],
       "@dmr.is/shared/interceptors": ["libs/shared/interceptors/src/index.ts"],
       "@dmr.is/shared/middleware": ["libs/shared/middleware/src/index.ts"],
       "@dmr.is/shared/models/base": ["libs/shared/models/base/src/index.ts"],
+      "@dmr.is/shared/modules": ["libs/shared/modules/src/index.ts"],
+      "@dmr.is/shared/modules/guards/auth": [
+        "libs/shared/modules/src/lib/guards/auth/index.ts"
+      ],
       "@dmr.is/trpc/client/*": ["libs/shared/trpc/src/lib/client/*"],
-      "@dmr.is/trpc/utils/*": [
-        "libs/shared/trpc/src/lib/utils/*"
-      ],
-      "@dmr.is/types": [
-        "libs/shared/types/types/src/index.ts"
-      ],
-      "@dmr.is/ui/globalStyles": [
-        "libs/shared/dmr-ui/src/utils/globalStyles.ts"
-      ],
-      "@dmr.is/ui/globalCss": [
-        "libs/shared/dmr-ui/src/styles/global.css.ts"
-      ],
+      "@dmr.is/trpc/utils/*": ["libs/shared/trpc/src/lib/utils/*"],
+      "@dmr.is/types": ["libs/shared/types/types/src/index.ts"],
       "@dmr.is/ui/components/*": ["libs/shared/dmr-ui/src/lib/components/*"],
       "@dmr.is/ui/components/island-is/*": [
         "libs/shared/dmr-ui/src/lib/island-is/lib/*"
+      ],
+      "@dmr.is/ui/globalCss": ["libs/shared/dmr-ui/src/styles/global.css.ts"],
+      "@dmr.is/ui/globalStyles": [
+        "libs/shared/dmr-ui/src/utils/globalStyles.ts"
       ],
       "@dmr.is/ui/hooks/*": ["libs/shared/dmr-ui/src/lib/hooks/*"],
       "@dmr.is/ui/island-is/theme": [
@@ -111,21 +73,14 @@
         "libs/shared/dmr-ui-lazy/src/lib/components/*"
       ],
       "@dmr.is/ui/utils/*": ["libs/shared/dmr-ui/src/lib/utils/*"],
-      // DMR UTILS
-      "@dmr.is/utils/shared/*": ["libs/shared/utils/shared/src/lib/*"],
-      "@dmr.is/utils/server/*": ["libs/shared/utils/server/src/lib/*"],
       "@dmr.is/utils/client/*": ["libs/shared/utils/client/src/lib/*"],
+      "@dmr.is/utils/server/*": ["libs/shared/utils/server/src/lib/*"],
+      "@dmr.is/utils/shared/*": ["libs/shared/utils/shared/src/lib/*"],
       "@island.is/auth-nest-tools": [
         "submodules/island.is/libs/auth-nest-tools/src/lib/auth.ts"
       ],
       "@island.is/island-ui/core": [
         "submodules/island.is/libs/island-ui/core/src/index.ts"
-      ],
-      "@island.is/island-ui/core/hooks/*": [
-        "submodules/island.is/libs/island-ui/core/src/hooks/*"
-      ],
-      "@island.is/island-ui/core/utils/*": [
-        "submodules/island.is/libs/island-ui/core/src/utils/*"
       ],
       "@island.is/island-ui/core/*": [
         "submodules/island.is/libs/island-ui/core/src/lib/*"
@@ -135,6 +90,12 @@
       ],
       "@island.is/island-ui/core/globalStyles": [
         "submodules/island.is/libs/island-ui/core/src/utils/globalStyles.ts"
+      ],
+      "@island.is/island-ui/core/hooks/*": [
+        "submodules/island.is/libs/island-ui/core/src/hooks/*"
+      ],
+      "@island.is/island-ui/core/utils/*": [
+        "submodules/island.is/libs/island-ui/core/src/utils/*"
       ],
       "@island.is/island-ui/theme": [
         "submodules/island.is/libs/island-ui/theme/src/index.ts"
@@ -159,17 +120,8 @@
       ],
       "@island.is/shared/utils": [
         "submodules/island.is/libs/shared/utils/src/index.ts"
-      ],
-      "@dmr.is/shared/modules": [
-        "libs/shared/modules/src/index.ts"
-      ],
-      "@dmr.is/shared/modules/guards/auth": [
-        "libs/shared/modules/src/lib/guards/auth/index.ts"
-      ],
+      ]
     }
   },
-  "exclude": [
-    "node_modules",
-    "tmp"
-  ]
+  "exclude": ["node_modules", "tmp"]
 }

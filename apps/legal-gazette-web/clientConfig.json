@@ -6005,7 +6005,8 @@
           "RECALL_DECEASED",
           "DIVISION_MEETING_BANKRUPTCY",
           "DIVISION_MEETING_DECEASED",
-          "DIVISION_ENDING"
+          "DIVISION_ENDING",
+          "FORECLOSURE"
         ]
       },
       "CourtDistrictDto": {

@@ -1,300 +1,277 @@
 'use client'
 
 import { addYears } from 'date-fns'
-import { useEffect, useState } from 'react'
+import get from 'lodash/get'
+import { useState } from 'react'
+import * as z from 'zod'
 
+import {
+  getAdvertHTMLMarkup,
+  LegalGazetteHTMLTemplates,
+} from '@dmr.is/legal-gazette/html'
 import { createDivisionMeetingInput } from '@dmr.is/legal-gazette/schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
-import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
-import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
-import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
-import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
-import { Icon } from '@dmr.is/ui/components/island-is/Icon'
-import { Inline } from '@dmr.is/ui/components/island-is/Inline'
-import { Input } from '@dmr.is/ui/components/island-is/Input'
-import { ModalBase } from '@dmr.is/ui/components/island-is/ModalBase'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import {
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,
 } from '@dmr.is/utils/client/dateUtils'
-import { get } from '@dmr.is/utils/shared/lodash/get'
 
-import { CreateDivisionMeetingDto } from '../../gen/fetch'
+import { ApplicationTypeEnum } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
-import { Center } from '../center/Center'
-import { DivisionSignatureFields } from '../form/fields/DivisionSignatureFields'
+import { FormElement } from '../form-element/FormElement'
+import { FormGroup } from '../form-group/FormGroup'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
+const partialSchema = createDivisionMeetingInput.partial()
+
 type Props = {
   applicationId: string
-  title?: string
-  isVisible: boolean
-  onVisibilityChange: (isVisible: boolean) => void
 }
 
-const initFormState: CreateDivisionMeetingDto = {
-  additionalText: '',
-  communicationChannels: [],
-  meetingDate: '',
-  meetingLocation: '',
-  signature: {
-    date: undefined,
-    location: '',
-    name: '',
-    onBehalfOf: '',
-  },
-}
+type FormErrors = z.core.$ZodErrorTree<
+  z.infer<typeof createDivisionMeetingInput>
+>
 
-export const CreateDivisionMeeting = ({
-  applicationId,
-  title,
-  isVisible,
-  onVisibilityChange,
-}: Props) => {
+export const CreateDivisionMeeting = ({ applicationId }: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const [state, setState] = useState<z.infer<typeof partialSchema>>({})
+  const [errors, setErrors] = useState<FormErrors | null>(null)
+  const [isVisible, setIsVisible] = useState(false)
 
-  const { mutate: addDivisionMeeting, isPending } = useMutation(
-    trpc.addDivisionMeeting.mutationOptions(),
-  )
-
-  const { data } = useQuery(
+  const { data: dateData } = useQuery(
     trpc.getMininumDateForDivisionMeeting.queryOptions({
       applicationId: applicationId,
     }),
   )
 
-  const [submitClicked, setSubmitClicked] = useState(false)
-
   const { data: application } = useQuery(
     trpc.getApplicationById.queryOptions({ id: applicationId }),
   )
+  const settlementInfo = get(
+    application?.answers,
+    'fields.settlementFields',
+  ) as unknown as { name?: string; nationalId?: string }
 
-  useEffect(() => {
-    const communicationChannels = get(
-      application?.answers,
-      'communicationChannels',
-      [],
+  const { mutate: addDivisionMeeting, isPending: isAddingDivisionMeeting } =
+    useMutation(
+      trpc.addDivisionMeeting.mutationOptions({
+        onSuccess: () => {
+          queryClient.invalidateQueries(trpc.getApplicationById.queryFilter({ id: applicationId }))
+          toast.success('Skiptafundur stofnaður', {
+            toastId: 'create-division-meeting',
+          })
+          setState({})
+          setErrors(null)
+          setIsVisible(false)
+        },
+        onError: () => {
+          toast.error('Ekki tókst að stofna skiptafund, reyndu aftur síðar', {
+            toastId: 'create-division-meeting',
+          })
+        },
+      }),
     )
 
-    setFormState((prev) => ({
-      ...prev,
-      communicationChannels: communicationChannels,
-    }))
-  }, [application?.answers])
-
-  const [formState, setFormState] =
-    useState<CreateDivisionMeetingDto>(initFormState)
-
-  const [fieldErrors, setFieldErrors] = useState<
-    { [key: string]: string[] } | undefined
-  >(undefined)
-
-  useEffect(() => {
-    if (submitClicked) {
-      setAndGetFormValidation()
-    }
-  }, [formState])
-
-  const setAndGetFormValidation = async () => {
-    const formValidation = createDivisionMeetingInput.safeParse(formState)
-    const formErrors = formValidation.error?.flatten().fieldErrors
-
-    setFieldErrors(formErrors)
-
-    return formValidation
-  }
-
-  const validateAndSubmit = async () => {
-    setSubmitClicked(true)
-    const formValidation = await setAndGetFormValidation()
-
-    if (formValidation.success) {
-      addDivisionMeeting(
-        {
-          applicationId: applicationId,
-          ...formState,
-        },
-        {
-          onSuccess: () => {
-            queryClient.invalidateQueries(trpc.getAdvertByCaseId.queryFilter())
-            setSubmitClicked(false)
-            setFormState({
-              ...initFormState,
-              communicationChannels: formState.communicationChannels,
-            })
-
-            toast.success('Skiptafundur stofnaður', {
-              toastId: 'create-division-meeting',
-            })
-            onVisibilityChange(false)
-          },
-          onError: () => {
-            toast.error('Ekki tókst að stofna skiptafund, reyndu aftur síðar', {
-              toastId: 'create-division-meeting',
-            })
-          },
-        },
-      )
-    }
-  }
-
   const minDate = getNextValidPublishingDate(
-    data?.minDate ? new Date(data.minDate) : new Date(),
+    dateData?.minDate ? new Date(dateData.minDate) : new Date(),
   )
-
   const maxDate = getNextValidPublishingDate(addYears(new Date(), 3))
-
   const invalidPublishingDates = getInvalidPublishingDatesInRange(
     minDate,
     maxDate,
   )
 
+  const handleSetState = (
+    key: keyof typeof state,
+    val: (typeof state)[typeof key],
+  ) => {
+    setState((prev) => ({ ...prev, [key]: val }))
+  }
+
+  const clearFieldError = (
+    field: keyof z.infer<typeof createDivisionMeetingInput>,
+  ) => {
+    setErrors((prev) =>
+      prev?.properties
+        ? { ...prev, properties: { ...prev.properties, [field]: undefined } }
+        : prev,
+    )
+  }
+
+  const handleSubmit = () => {
+    const check = createDivisionMeetingInput.safeParse(state)
+    if (!check.success) {
+      setErrors(z.treeifyError(check.error))
+      return
+    }
+    addDivisionMeeting({ applicationId, ...check.data })
+    setErrors(null)
+  }
+
+  const disclosure = (
+    <Button variant="utility" icon="add" size="small">
+      Bæta við skiptafundi
+    </Button>
+  )
+
+  const sharedMeetingProps = {
+    meetingDate: state.meetingDate,
+    meetingLocation: state.meetingLocation,
+    content: state.content,
+    additionalText: state.additionalText,
+    signature: state.signature,
+    title: `Skiptafundur - ${settlementInfo?.name}`,
+    name: settlementInfo?.name,
+    nationalId: settlementInfo?.nationalId,
+  }
+
+  const preview = getAdvertHTMLMarkup(
+    ApplicationTypeEnum.RECALLBANKRUPTCY
+      ? {
+          templateType: LegalGazetteHTMLTemplates.DIVISION_MEETING_BANKRUPTCY,
+
+          ...sharedMeetingProps,
+        }
+      : {
+          templateType: LegalGazetteHTMLTemplates.DIVISION_MEETING_DECEASED,
+          ...sharedMeetingProps,
+        },
+  )
+
   return (
-    <ModalBase
+    <Modal
       baseId="create-division-meeting"
+      disclosure={disclosure}
+      title="Bæta við skiptafundi"
       isVisible={isVisible}
-      onVisibilityChange={onVisibilityChange}
-      initialVisibility={isVisible}
-      hideOnEsc={true}
+      onVisibilityChange={setIsVisible}
     >
-      {({ closeModal }) => (
-        <Center fullHeight={true}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              validateAndSubmit()
+      <Stack space={1}>
+        <FormGroup>
+          <FormElement
+            width="full"
+            type="text"
+            label="Frjáls texti"
+            onChange={(e) => handleSetState('additionalText', e.target.value)}
+          />
+        </FormGroup>
+        <FormGroup title="Skiptafundur">
+          <FormElement
+            required
+            type="text"
+            label="Staðsetning skiptafundar"
+            hasError={!!errors?.properties?.meetingLocation?.errors.length}
+            errorMessage={errors?.properties?.meetingLocation?.errors[0]}
+            onChange={(e) => {
+              handleSetState('meetingLocation', e.target.value)
+              clearFieldError('meetingLocation')
             }}
-          >
-            <GridContainer>
-              <GridRow rowGap={[2, 3, 4]}>
-                <GridColumn span={['12/12', '8/12']} offset={['0', '2/12']}>
-                  <Box padding={[2, 3, 4]} width="full" background="white">
-                    <Stack space={[3, 4]}>
-                      <Stack space={0}>
-                        <Inline
-                          align="right"
-                          alignY="center"
-                          justifyContent="spaceBetween"
-                          space={[1, 2]}
-                        >
-                          <Text variant="h3">Bæta við skiptafundi</Text>
-
-                          <button onClick={closeModal} type="button">
-                            <Icon icon="close" />
-                          </button>
-                        </Inline>
-                        {title && (
-                          <Text variant="h4" fontWeight="medium">
-                            {title}
-                          </Text>
-                        )}
-                      </Stack>
-                      <Stack space={[1, 2]}>
-                        <GridRow>
-                          <GridColumn span="12/12">
-                            <Input
-                              name="additionalText"
-                              label="Frjáls texti"
-                              textarea
-                              backgroundColor="blue"
-                              rows={4}
-                              size="sm"
-                              onChange={(e) =>
-                                setFormState({
-                                  ...formState,
-                                  additionalText: e.target.value,
-                                })
-                              }
-                            />
-                          </GridColumn>
-                        </GridRow>
-                        <GridRow rowGap={[1, 2]}>
-                          <GridColumn span="12/12">
-                            <Text variant="h4">Skiptafundur</Text>
-                          </GridColumn>
-                          <GridColumn span={['12/12', '6/12']}>
-                            <Input
-                              required
-                              name="meetingLocation"
-                              backgroundColor="blue"
-                              label="Staðsetning skiptafundar"
-                              size="sm"
-                              errorMessage={fieldErrors?.meetingLocation?.[0]}
-                              onChange={(e) =>
-                                setFormState({
-                                  ...formState,
-                                  meetingLocation: e.target.value,
-                                })
-                              }
-                            />
-                          </GridColumn>
-                          <GridColumn span={['12/12', '6/12']}>
-                            <DatePicker
-                              locale="is"
-                              required
-                              excludeDates={invalidPublishingDates}
-                              minDate={minDate}
-                              maxDate={maxDate}
-                              maxYear={addYears(new Date(), 3).getFullYear()}
-                              minYear={new Date().getFullYear()}
-                              name="meetingDate"
-                              backgroundColor="blue"
-                              label="Dagsetning og tími skiptafundar"
-                              size="sm"
-                              timeInputLabel="Klukkan"
-                              showTimeInput={true}
-                              placeholderText=""
-                              selected={
-                                formState.meetingDate
-                                  ? new Date(formState.meetingDate)
-                                  : null
-                              }
-                              errorMessage={fieldErrors?.meetingDate?.[0]}
-                              handleChange={(date) =>
-                                setFormState({
-                                  ...formState,
-                                  meetingDate: date.toISOString(),
-                                })
-                              }
-                            />
-                          </GridColumn>
-                        </GridRow>
-                        <DivisionSignatureFields
-                          formState={formState}
-                          setFormState={setFormState}
-                          fieldErrors={fieldErrors}
-                        />
-
-                        <GridRow>
-                          <GridColumn span="12/12">
-                            <Inline alignY="center" align="right" space={2}>
-                              <Button
-                                type="submit"
-                                loading={isPending}
-                                icon="add"
-                                iconType="outline"
-                              >
-                                Stofna skiptafund
-                              </Button>
-                            </Inline>
-                          </GridColumn>
-                        </GridRow>
-                      </Stack>
-                    </Stack>
-                  </Box>
-                </GridColumn>
-              </GridRow>
-            </GridContainer>
-          </form>
-        </Center>
-      )}
-    </ModalBase>
+          />
+          <FormElement
+            required
+            type="date"
+            minDate={minDate}
+            maxDate={maxDate}
+            excludeDates={invalidPublishingDates}
+            label="Dagsetning og tími skiptafundar"
+            showTimeInput
+            timeInputLabel="Klukkan"
+            hasError={!!errors?.properties?.meetingDate?.errors.length}
+            errorMessage={errors?.properties?.meetingDate?.errors[0]}
+            onChange={(date) => {
+              handleSetState('meetingDate', date.toISOString())
+              clearFieldError('meetingDate')
+            }}
+          />
+        </FormGroup>
+        <FormGroup title="Efni auglýsingar">
+          <FormElement
+            width="full"
+            type="editor"
+            withZIndex={false}
+            onChange={(val) => handleSetState('content', val || undefined)}
+          />
+        </FormGroup>
+        <FormGroup
+          title="Undirritun"
+          error={errors?.properties?.signature?.errors[0]}
+          subTitle={
+            <Text variant="small">
+              Fylla þarf út nafn, staðsetningu eða dagsetningu undirritunar{' '}
+              <Text fontWeight="regular" color="red600" as="span">
+                *
+              </Text>
+            </Text>
+          }
+        >
+          <FormElement
+            type="text"
+            label="Nafn undirritara"
+            onChange={(e) => {
+              handleSetState('signature', {
+                ...state.signature,
+                name: e.target.value,
+              })
+              clearFieldError('signature')
+            }}
+          />
+          <FormElement
+            type="text"
+            label="Staðsetning undirritunar"
+            onChange={(e) => {
+              handleSetState('signature', {
+                ...state.signature,
+                location: e.target.value,
+              })
+              clearFieldError('signature')
+            }}
+          />
+          <FormElement
+            type="date"
+            label="Dagsetning undirritunar"
+            onChange={(date) => {
+              handleSetState('signature', {
+                ...state.signature,
+                date: date.toISOString(),
+              })
+              clearFieldError('signature')
+            }}
+          />
+          <FormElement
+            type="text"
+            label="Fyrir hönd undirritara"
+            onChange={(e) =>
+              handleSetState('signature', {
+                ...state.signature,
+                onBehalfOf: e.target.value,
+              })
+            }
+          />
+        </FormGroup>
+        <FormGroup title="Forskoðun">
+          <GridColumn span="12/12">
+            <AdvertDisplay html={preview} />
+          </GridColumn>
+        </FormGroup>
+        <FormGroup>
+          <FormElement
+            isLoading={isAddingDivisionMeeting}
+            width="full"
+            type="submit"
+            buttonText="Stofna skiptafund"
+            onClick={handleSubmit}
+          />
+        </FormGroup>
+      </Stack>
+    </Modal>
   )
 }
