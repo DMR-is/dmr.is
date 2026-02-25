@@ -11,7 +11,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { getHtmlTextLength } from '@dmr.is/utils-server/serverUtils'
 
 import {

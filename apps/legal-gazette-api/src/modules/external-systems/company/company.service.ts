@@ -1,7 +1,6 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 
-import { LOGGER_PROVIDER } from '@dmr.is/logging'
-import { Logger } from '@dmr.is/logging-next'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { formatDate } from '@dmr.is/utils-server/serverUtils'
 import { numberFormat } from '@dmr.is/utils-shared/format/number'
 

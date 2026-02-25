@@ -1,8 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { LOGGER_PROVIDER } from '@dmr.is/logging'
-import { Logger } from '@dmr.is/logging-next'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { assertAdvertsEditable } from '../../core/utils/advert-status.util'
 import { AdvertModel } from '../../models/advert.model'

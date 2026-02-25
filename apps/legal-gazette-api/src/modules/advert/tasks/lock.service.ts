@@ -4,7 +4,7 @@ import { Sequelize } from 'sequelize-typescript'
 
 import { Inject, Injectable } from '@nestjs/common'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { TASK_NAMESPACE } from '../../../core/constants'
 

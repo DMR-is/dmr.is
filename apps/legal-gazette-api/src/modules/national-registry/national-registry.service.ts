@@ -4,7 +4,7 @@ import {
   GetNationalRegistryEntityDto,
   INationalRegistryService,
 } from '@dmr.is/clients-national-registry'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ILGNationalRegistryService } from './national-registry.service.interface'
 

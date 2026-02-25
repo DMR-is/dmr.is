@@ -10,7 +10,7 @@ import { Cron, CronExpression } from '@nestjs/schedule'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { evictByTopics } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { LegalGazetteEvents, TASK_JOB_IDS } from '../../../../core/constants'
 import { AdvertModel } from '../../../../models/advert.model'

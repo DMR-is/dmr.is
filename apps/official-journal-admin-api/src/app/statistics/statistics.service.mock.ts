@@ -5,7 +5,7 @@ import {
   NotImplementedException,
 } from '@nestjs/common'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
 import {
   AdvertStatus,

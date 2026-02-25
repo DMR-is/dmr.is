@@ -6,7 +6,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { ApplicationEvent } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_USERS } from '@dmr.is/mocks'
 import {
   GetApplicationResponse,

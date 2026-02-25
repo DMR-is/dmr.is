@@ -4,7 +4,7 @@ import { Transaction } from 'sequelize'
 
 import { Inject } from '@nestjs/common'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AddCaseAdvertCorrection,
   CaseComment,

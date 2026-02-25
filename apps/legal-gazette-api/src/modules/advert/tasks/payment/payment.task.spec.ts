@@ -3,7 +3,7 @@ import { Op } from 'sequelize'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { TASK_JOB_IDS } from '../../../../core/constants'
 import { AdvertModel } from '../../../../models/advert.model'

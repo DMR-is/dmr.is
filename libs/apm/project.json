@@ -1,5 +1,5 @@
 {
-  "name": "apm",
+  "name": "@dmr.is/apm",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/apm/src",
   "projectType": "library",

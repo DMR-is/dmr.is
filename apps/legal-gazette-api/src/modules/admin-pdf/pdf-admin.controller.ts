@@ -1,7 +1,7 @@
 import { Controller, Inject, Param, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
-import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { type DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 

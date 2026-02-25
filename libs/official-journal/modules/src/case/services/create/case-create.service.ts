@@ -7,7 +7,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { SignatureType } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   Advert,
   BaseEntity,

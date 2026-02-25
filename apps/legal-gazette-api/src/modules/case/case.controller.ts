@@ -12,7 +12,7 @@ import {
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
-import { Auth } from '@dmr.is/island-auth-nest'
+import { type Auth } from '@dmr.is/island-auth-nest'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AdminAccess } from '../../core/decorators/admin.decorator'

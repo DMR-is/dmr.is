@@ -11,13 +11,13 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { type DMRUser } from '@dmr.is/auth/dmrUser'
 import {
   ApplicationTypeEnum,
   commonApplicationAnswersRefined,
   updateApplicationInput,
 } from '@dmr.is/legal-gazette-schemas'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
 import { get } from '@dmr.is/utils-shared/lodash/get'
 

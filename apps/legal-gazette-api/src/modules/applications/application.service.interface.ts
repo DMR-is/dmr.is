@@ -1,4 +1,4 @@
-import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { type DMRUser } from '@dmr.is/auth/dmrUser'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 
 import { GetMyApplicationsQueryDto } from '../../core/dto/application.dto'

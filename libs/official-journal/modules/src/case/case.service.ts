@@ -15,7 +15,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { AttachmentTypeParam, REGULATION_TYPES } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AddCaseAdvertCorrection,
   AdvertStatus,

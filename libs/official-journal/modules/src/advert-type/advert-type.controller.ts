@@ -1,7 +1,7 @@
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertTypeQuery,
   GetAdvertMainType,

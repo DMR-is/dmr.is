@@ -6,10 +6,9 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { type DMRUser } from '@dmr.is/auth/dmrUser'
 import { CacheEvictTopics } from '@dmr.is/decorators'
-import { LOGGER_PROVIDER } from '@dmr.is/logging'
-import { Logger } from '@dmr.is/logging-next'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { LegalGazetteEvents, SYSTEM_ACTOR } from '../../../core/constants'
 import { AdvertModel } from '../../../models/advert.model'

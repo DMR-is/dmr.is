@@ -10,7 +10,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CaseCommentSourceEnum,
   GetCaseCommentResponse,

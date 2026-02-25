@@ -2,8 +2,8 @@ import { ExecutionContext, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
-import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type DMRUser } from '@dmr.is/auth/dmrUser'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { AdvertModel } from '../../models/advert.model'
 import { ApplicationModel } from '../../models/application.model'

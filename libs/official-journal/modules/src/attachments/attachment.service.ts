@@ -6,7 +6,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { AttachmentTypeParam } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   GetApplicationAttachmentResponse,
   GetApplicationAttachmentsResponse,
@@ -15,7 +15,7 @@ import { ResultWrapper } from '@dmr.is/types'
 
 import { attachmentMigrate } from './migrations/attachment.migration'
 import {
-  CreateAttachmentParams,
+  type CreateAttachmentParams,
   IAttachmentService,
 } from './attachment.service.interface'
 import {

@@ -6,7 +6,7 @@ import { v4 } from 'uuid'
 import { Inject, Injectable, NestMiddleware } from '@nestjs/common'
 
 import { CLS_NAMESPACE } from '@dmr.is/constants'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 @Injectable()
 export class CLSMiddleware implements NestMiddleware {

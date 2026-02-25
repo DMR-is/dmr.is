@@ -1,4 +1,4 @@
-import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { type DMRUser } from '@dmr.is/auth/dmrUser'
 
 import { MutationResponse } from '../../core/dto/mutation.do'
 import { SubscriberDto } from '../../models/subscriber.model'

@@ -5,13 +5,13 @@ import * as z from 'zod'
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { type DMRUser } from '@dmr.is/auth/dmrUser'
 import {
   ApplicationTypeEnum,
   recallBankruptcyAnswersRefined,
   recallDeceasedAnswersRefined,
 } from '@dmr.is/legal-gazette-schemas'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { addBusinessDays, getNextValidPublishingDate } from '@dmr.is/utils-server/dateUtils'
 
 import {

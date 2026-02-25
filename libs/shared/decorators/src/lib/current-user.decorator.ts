@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 
-import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { type DMRUser } from '@dmr.is/auth/dmrUser'
 import { getLogger } from '@dmr.is/logging'
 
 /**
