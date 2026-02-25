@@ -13,11 +13,12 @@ import { BaseTable } from '@dmr.is/shared-models-base'
 import { LegalGazetteModels } from '../core/constants'
 import { FeeCodeModel } from './fee-code.model'
 import { TypeModel } from './type.model'
+import { type TypeModel as TypeModelType } from './type.model'
 
 type AdvertTypeFeeCodeAttributes = {
   advertTypeId: number
   feeCodeId: number
-  type: TypeModel
+  type: TypeModelType
   feeCode: FeeCodeModel
 }
 
