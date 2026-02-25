@@ -18,24 +18,19 @@ import {
   updateApplicationInput,
 } from '@dmr.is/legal-gazette/schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'
-import { get } from '@dmr.is/utils/shared/lodash/get'
-
 import {
-  RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
-  RECALL_DECEASED_ADVERT_TYPE_ID,
-} from '../../core/constants'
+  generatePaging,
+  getLimitAndOffset,
+} from '@dmr.is/utils/server/serverUtils'
+
 import { GetMyApplicationsQueryDto } from '../../core/dto/application.dto'
-import { getAdvertHTMLMarkupPreview } from '../../core/templates/html'
-import { mapIndexToVersion } from '../../core/utils'
-import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
+import { AdvertModel} from '../../models/advert.model'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
   ApplicationModel,
   ApplicationStatusEnum,
   GetApplicationsDto,
-  GetHTMLPreview,
   IslandIsSubmitApplicationDto,
   UpdateApplicationDto,
 } from '../../models/application.model'
@@ -79,143 +74,6 @@ export class ApplicationService implements IApplicationService {
 
     await Promise.all(deletePromises || [])
     await application.destroy()
-  }
-
-  async previewApplication(applicationId: string): Promise<GetHTMLPreview> {
-    const application =
-      await this.applicationModel.findByPkOrThrow(applicationId)
-
-    let typeId: string | undefined
-    let templateType: AdvertTemplateType | undefined
-    switch (application.applicationType) {
-      case ApplicationTypeEnum.RECALL_BANKRUPTCY:
-        typeId = RECALL_BANKRUPTCY_ADVERT_TYPE_ID
-        templateType = AdvertTemplateType.RECALL_BANKRUPTCY
-        // typeId is already set correctly
-        break
-      case ApplicationTypeEnum.RECALL_DECEASED:
-        typeId = RECALL_DECEASED_ADVERT_TYPE_ID
-        templateType = AdvertTemplateType.RECALL_DECEASED
-        break
-      case ApplicationTypeEnum.COMMON: {
-        typeId = get(application.answers, 'fields.type.id')
-        templateType = AdvertTemplateType.COMMON
-        break
-      }
-    }
-
-    const publications = get(application.answers, 'publishingDates', []).map(
-      (date, i) => ({
-        scheduledAt: date,
-        versionLetter: mapIndexToVersion(i),
-      }),
-    )
-
-    const signatureDate = get(application.answers, 'signature.date')
-
-    const companies = get(
-      application.answers,
-      'fields.settlementFields.companies',
-      [],
-    ).map((company) => ({
-      companyName: company.companyName,
-      companyId: company.companyNationalId,
-    }))
-
-    const previewHTML = getAdvertHTMLMarkupPreview({
-      title: application.previewTitle,
-      templateType: templateType,
-      typeId: typeId,
-      additionalText: get(application.answers, 'additionalText'),
-      content: get(application.answers, 'fields.html', undefined),
-      publications: publications,
-      publicationNumber: null,
-      divisionMeetingDate: get(
-        application.answers,
-        'fields.divisionMeetingFields.meetingDate',
-      ),
-      divisionMeetingLocation: get(
-        application.answers,
-        'fields.divisionMeetingFields.meetingLocation',
-      ),
-      signature: {
-        name: get(application.answers, 'signature.name', null),
-        date: signatureDate ? new Date(signatureDate) : null,
-        location: get(application.answers, 'signature.location', null),
-        onBehalfOf: get(application.answers, 'signature.onBehalfOf', null),
-      },
-      judgementDate: get(
-        application.answers,
-        'fields.courtAndJudgmentFields.judgmentDate',
-      ),
-      courtDistrict: {
-        title: get(
-          application.answers,
-          'fields.courtAndJudgmentFields.courtDistrict.title',
-          undefined,
-        ),
-      },
-      settlement: {
-        name: get(
-          application.answers,
-          'fields.settlementFields.name',
-          undefined,
-        ),
-        nationalId: get(
-          application.answers,
-          'fields.settlementFields.nationalId',
-          undefined,
-        ),
-        type: get(
-          application.answers,
-          'fields.settlementFields.type',
-          undefined,
-        ),
-        liquidatorName: get(
-          application.answers,
-          'fields.settlementFields.liquidatorName',
-          undefined,
-        ),
-        liquidatorLocation: get(
-          application.answers,
-          'fields.settlementFields.liquidatorLocation',
-          undefined,
-        ),
-        liquidatorRecallStatementLocation: get(
-          application.answers,
-          'fields.settlementFields.recallRequirementStatementLocation',
-          undefined,
-        ),
-        liquidatorRecallStatementType: get(
-          application.answers,
-          'fields.settlementFields.recallRequirementStatementType',
-          undefined,
-        ),
-        deadline: get(
-          application.answers,
-          'fields.settlementFields.deadlineDate',
-          undefined,
-        ),
-        dateOfDeath: get(
-          application.answers,
-          'fields.settlementFields.dateOfDeath',
-          undefined,
-        ),
-        address: get(
-          application.answers,
-          'fields.settlementFields.address',
-          undefined,
-        ),
-        declaredClaims: get(
-          application.answers,
-          'fields.settlementFields.declaredClaims',
-          undefined,
-        ),
-        companies: companies,
-      },
-    })
-
-    return { preview: previewHTML }
   }
 
   private async submitCommonApplication(

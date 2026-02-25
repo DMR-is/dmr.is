@@ -304,42 +304,6 @@ describe('ApplicationController - Guard Authorization', () => {
       )
     })
   })
-  describe('previewApplication - OwnershipGuard', () => {
-    it('should ALLOW applicant (owner) to preview their application', async () => {
-      const user = createApplicantUser()
-      const context = createMockContext(user, 'previewApplication', {
-        applicationId: 'app-123',
-      })
-      applicationModel.findOne.mockResolvedValue(
-        createMockApplication(APPLICANT_NATIONAL_ID),
-      )
-      const result = await ownershipGuard.canActivate(context)
-      expect(result).toBe(true)
-    })
-    it('should ALLOW admin to preview any application', async () => {
-      const user = createAdminUser()
-      const context = createMockContext(user, 'previewApplication', {
-        applicationId: 'app-123',
-      })
-      applicationModel.findOne.mockResolvedValue(
-        createMockApplication(APPLICANT_NATIONAL_ID),
-      )
-      const result = await ownershipGuard.canActivate(context)
-      expect(result).toBe(true)
-    })
-    it('should DENY non-owner to preview application', async () => {
-      const user = createOtherUser()
-      const context = createMockContext(user, 'previewApplication', {
-        applicationId: 'app-123',
-      })
-      applicationModel.findOne.mockResolvedValue(
-        createMockApplication(APPLICANT_NATIONAL_ID),
-      )
-      await expect(ownershipGuard.canActivate(context)).rejects.toThrow(
-        NotFoundException,
-      )
-    })
-  })
   describe('getApplicationPrice - OwnershipGuard', () => {
     it('should ALLOW applicant (owner) to get price for their application', async () => {
       const user = createApplicantUser()

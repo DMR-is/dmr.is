@@ -2,13 +2,14 @@ import { Header } from '@dmr.is/ui/components/Header/Header'
 
 import { FormTypes } from '../../../../../../lib/constants'
 
-export default function ApplicationHeader({
+export default async function ApplicationHeader({
   params,
 }: {
-  params: { type: FormTypes }
+  params: Promise<{ type: FormTypes }>
 }) {
+  const { type } = await params
   let description = undefined
-  switch (params.type) {
+  switch (type) {
     case FormTypes.COMMON:
       description = 'Almenn auglýsing'
       break

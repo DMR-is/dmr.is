@@ -6,7 +6,6 @@ import {
   ApplicationDetailedDto,
   ApplicationDto,
   GetApplicationsDto,
-  GetHTMLPreview,
   IslandIsSubmitApplicationDto,
   UpdateApplicationDto,
 } from '../../models/application.model'
@@ -37,8 +36,6 @@ export interface IApplicationService {
     applicationId: string,
     body: UpdateApplicationDto,
   ): Promise<ApplicationDetailedDto>
-
-  previewApplication(applicationId: string): Promise<GetHTMLPreview>
 
   deleteApplication(applicationId: string): Promise<void>
 }

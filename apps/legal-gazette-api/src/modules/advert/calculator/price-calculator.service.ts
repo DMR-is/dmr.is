@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { getApplicationPreview } from '@dmr.is/legal-gazette/html'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { getHtmlTextLength } from '@dmr.is/utils/server/serverUtils'
@@ -80,10 +81,13 @@ export class PriceCalculatorService implements IPriceCalculatorService {
     }
 
     // Company not found or not active, use person charge category
-    this.logger.info('TBR company not found or inactive, using person charge category', {
-      nationalId,
-      context: LOGGING_CONTEXT,
-    })
+    this.logger.info(
+      'TBR company not found or inactive, using person charge category',
+      {
+        nationalId,
+        context: LOGGING_CONTEXT,
+      },
+    )
     const personCategory = process.env.LG_TBR_CHARGE_CATEGORY_PERSON
     if (!personCategory) {
       throw new InternalServerErrorException(
@@ -96,10 +100,23 @@ export class PriceCalculatorService implements IPriceCalculatorService {
   async getEstimatedPriceForApplication(
     applicationId: string,
   ): Promise<number> {
-    const [application, preview] = await Promise.all([
-      this.applicationService.getApplicationById(applicationId),
-      this.applicationService.previewApplication(applicationId),
-    ])
+    const application =
+      await this.applicationService.getApplicationById(applicationId)
+
+    const preview = getApplicationPreview(application.type, application.answers)
+
+    if (preview.error !== null) {
+      this.logger.error(
+        `Error generating application preview for price calculation: ${preview.error}`,
+        {
+          applicationId,
+          context: LOGGING_CONTEXT,
+        },
+      )
+      throw new InternalServerErrorException(
+        'Error generating application preview for price calculation',
+      )
+    }
 
     let typeId = null
     switch (application.type) {
@@ -146,7 +163,7 @@ export class PriceCalculatorService implements IPriceCalculatorService {
     }
 
     if (feeCode.isMultiplied) {
-      const htmlLength = getHtmlTextLength(preview.preview)
+      const htmlLength = getHtmlTextLength(preview.html)
       return feeCode.value * htmlLength
     }
 
