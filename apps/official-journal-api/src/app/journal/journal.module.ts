@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common'
 import {
   AdvertTypeController,
   AdvertTypeModule,
+  IssuesModule,
   OpenSearchModule,
   OpsModule,
   SharedCaseModule,
@@ -17,6 +18,7 @@ import { JournalController } from './journal.controller'
     AdvertTypeModule,
     OpenSearchModule,
     OpsModule,
+    IssuesModule,
   ],
   controllers: [JournalController, AdvertTypeController],
 })

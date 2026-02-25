@@ -130,3 +130,36 @@ export class OJOIWebException extends Error {
     return error
   }
 }
+
+
+export const MONTH_OPTIONS_ZERO_BASED = [
+  { label: 'Janúar', value: 0 },
+  { label: 'Febrúar', value: 1 },
+  { label: 'Mars', value: 2 },
+  { label: 'Apríl', value: 3 },
+  { label: 'Maí', value: 4 },
+  { label: 'Júní', value: 5 },
+  { label: 'Júlí', value: 6 },
+  { label: 'Ágúst', value: 7 },
+  { label: 'September', value: 8 },
+  { label: 'Október', value: 9 },
+  { label: 'Nóvember', value: 10 },
+  { label: 'Desember', value: 11 },
+]
+
+export const MONTH_OPTIONS = MONTH_OPTIONS_ZERO_BASED.map((option) => ({
+  label: option.label,
+  value: option.value + 1,
+}))
+
+const getYearOptions = (from = 1999) => {
+  const currentYear = new Date().getFullYear()
+  const yearOptions = []
+  for (let year = from; year <= currentYear; year++) {
+    yearOptions.push({ label: year.toString(), value: year })
+  }
+
+  return yearOptions
+}
+
+export const YEAR_OPTIONS = getYearOptions()

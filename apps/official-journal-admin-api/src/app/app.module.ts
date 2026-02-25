@@ -5,6 +5,7 @@ import {
   RequestMethod,
 } from '@nestjs/common'
 import { APP_FILTER, APP_INTERCEPTOR, RouterModule } from '@nestjs/core'
+import { ScheduleModule } from '@nestjs/schedule'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
@@ -12,6 +13,7 @@ import { LogRequestMiddleware } from '@dmr.is/middleware'
 import {
   ApplicationModule,
   IssuesModule,
+  IssuesTaskModule,
   SharedJournalModule,
   SignatureModule,
 } from '@dmr.is/ojoi/modules'
@@ -42,6 +44,7 @@ import { StatisticsModule } from './statistics/statistics.module'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
+    ScheduleModule.forRoot(),
     ApplicationModule,
     CaseModule,
     StatisticsModule,
@@ -49,6 +52,7 @@ import { StatisticsModule } from './statistics/statistics.module'
     SignatureModule,
     HealthModule,
     IssuesModule,
+    IssuesTaskModule,
     RouterModule.register([
       {
         path: '/',

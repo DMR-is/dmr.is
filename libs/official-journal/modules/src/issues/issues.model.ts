@@ -1,5 +1,4 @@
 import {
-  BeforeCreate,
   BelongsTo,
   Column,
   DataType,
@@ -37,7 +36,7 @@ export type IssuesCreationAttributes = Omit<
       as: 'department',
     },
   ],
-  order: [['createdAt', 'DESC']],
+  order: [['startDate', 'DESC']],
 }))
 @BaseTable({ tableName: 'monthly_issues' })
 export class IssuesModel extends BaseModel<

@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer'
-import { IsDate, IsUUID } from 'class-validator'
+import { IsDate, IsNumber, IsOptional, IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -31,11 +31,17 @@ export class GetMonthlyIssuesQueryDto extends PagingQuery {
   @ApiProperty({ type: String, required: false })
   departmentId?: string
 
-  @ApiProperty({ type: Date, required: false })
-  fromDate?: Date
+  @ApiProperty({ type: Number, required: false })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  month?: number
 
-  @ApiProperty({ type: Date, required: false })
-  toDate?: Date
+  @ApiProperty({ type: Number, required: false })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  year?: number
 }
 
 export class GetMonthlyIssuesResponseDto {

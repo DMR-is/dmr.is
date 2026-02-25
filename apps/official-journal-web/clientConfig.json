@@ -3561,16 +3561,16 @@
             "schema": { "type": "string" }
           },
           {
-            "name": "fromDate",
+            "name": "month",
             "required": false,
             "in": "query",
-            "schema": { "format": "date-time", "type": "string" }
+            "schema": { "type": "number" }
           },
           {
-            "name": "toDate",
+            "name": "year",
             "required": false,
             "in": "query",
-            "schema": { "format": "date-time", "type": "string" }
+            "schema": { "type": "number" }
           }
         ],
         "responses": {
