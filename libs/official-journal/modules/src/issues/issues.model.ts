@@ -5,7 +5,7 @@ import {
   DefaultScope,
 } from 'sequelize-typescript'
 
-import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
+import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { advertDepartmentMigrate } from '../journal/migrations'
 import { AdvertDepartmentModel } from '../journal/models'

@@ -3,7 +3,7 @@ import { IsDate, IsNumber, IsOptional, IsUUID } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { Department, Paging, PagingQuery } from '@dmr.is/shared/dto'
+import { Department, Paging, PagingQuery } from '@dmr.is/shared-dto'
 export class IssueDto {
   @ApiProperty({ type: String })
   id!: string
