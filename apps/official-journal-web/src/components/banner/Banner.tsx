@@ -1,3 +1,5 @@
+'use client'
+
 import dynamic from 'next/dynamic'
 
 import { MessageDescriptor } from 'react-intl'
@@ -42,7 +44,6 @@ type Props = {
 }
 
 const CaseFilters = dynamic(() => import('../case-filters/CaseFilters'), {
-  ssr: false,
   loading: () => (
     <Inline space={2}>
       <Input

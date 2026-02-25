@@ -10,14 +10,14 @@ type AdvertTemplateProps = {
 }
 
 export const advertPdfTemplate = ({
-  type,
-  title,
-  content,
-  additions,
-  signature,
-  hiddenSignature,
-  subSignature,
-  correction,
+  type = '',
+  title = '',
+  content = '',
+  additions = '',
+  signature = '',
+  hiddenSignature = false,
+  subSignature = '',
+  correction = '',
 }: AdvertTemplateProps) => {
   const publishSignature = subSignature ?? ''
   return `

@@ -3537,6 +3537,80 @@
         "parameters": [],
         "responses": { "200": { "description": "Health check endpoint." } }
       }
+    },
+    "/api/v1/issues": {
+      "get": {
+        "operationId": "getMonthlyIssues",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 1, "example": 1, "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 10, "example": 10, "type": "number" }
+          },
+          {
+            "name": "departmentId",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "year",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "number" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of monthly issues",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMonthlyIssuesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": ""
+      }
+    },
+    "/api/v1/issues/generate": {
+      "post": {
+        "operationId": "generateMonthlyIssues",
+        "parameters": [
+          {
+            "name": "departmentId",
+            "required": true,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "date",
+            "required": true,
+            "in": "query",
+            "schema": { "format": "date-time", "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Monthly issues generation started" }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
     }
   },
   "info": {
@@ -6130,6 +6204,38 @@
       "StatisticsOverviewQueryType": {
         "type": "string",
         "enum": ["general", "personal", "inactive", "publishing"]
+      },
+      "IssueDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "department": { "$ref": "#/components/schemas/Department" },
+          "startDate": { "format": "date-time", "type": "string" },
+          "endDate": { "format": "date-time", "type": "string" },
+          "title": { "type": "string" },
+          "formattedTitle": { "type": "string" },
+          "url": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "department",
+          "startDate",
+          "endDate",
+          "title",
+          "formattedTitle",
+          "url"
+        ]
+      },
+      "GetMonthlyIssuesResponseDto": {
+        "type": "object",
+        "properties": {
+          "issues": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/IssueDto" }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["issues", "paging"]
       }
     }
   }

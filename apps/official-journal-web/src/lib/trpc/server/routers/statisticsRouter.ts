@@ -10,7 +10,7 @@ export const statisticsRouter = router({
   getStatisticsForDepartment: protectedProcedure
     .input(
       z.object({
-        slug: z.nativeEnum(DepartmentSlugEnum),
+        slug: z.enum(DepartmentSlugEnum),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -20,7 +20,7 @@ export const statisticsRouter = router({
   getStatisticsOverview: protectedProcedure
     .input(
       z.object({
-        type: z.nativeEnum(StatisticsOverviewQueryType),
+        type: z.enum(StatisticsOverviewQueryType),
       }),
     )
     .query(async ({ ctx, input }) => {
