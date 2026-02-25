@@ -6,7 +6,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@dmr.is/auth": "workspace:*",
+    "@dmr.is/island-auth-nest": "workspace:*",
     "@dmr.is/constants": "workspace:*",
     "@dmr.is/logging": "workspace:*",
     "@dmr.is/types": "workspace:*",

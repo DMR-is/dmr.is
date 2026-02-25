@@ -17,8 +17,8 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 
-import { type DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AdminAccess } from '../../../core/decorators/admin.decorator'

@@ -6,8 +6,8 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { type DMRUser } from '@dmr.is/auth/dmrUser'
 import { CacheEvictTopics } from '@dmr.is/decorators'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { LegalGazetteEvents, SYSTEM_ACTOR } from '../../../core/constants'

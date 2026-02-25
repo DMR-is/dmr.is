@@ -8,8 +8,8 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { type DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 

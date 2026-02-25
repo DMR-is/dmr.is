@@ -14,8 +14,8 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
-import { type DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'

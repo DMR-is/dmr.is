@@ -1,4 +1,4 @@
-import { type DMRUser } from '@dmr.is/auth/dmrUser'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 
 import { RegeneratePdfResponseDto } from './pdf-admin.dto'
 

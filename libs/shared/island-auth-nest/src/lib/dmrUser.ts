@@ -1,16 +1,16 @@
-import { Auth } from '@dmr.is/island-auth-nest'
+import { Auth } from '@island.is/auth-nest-tools'
 
 export interface DMRUser extends Auth {
   adminUserId?: string
   nationalId: string
   name: string
   fullName: string
-  scope: string[]
+  scope: Array<string>
   client: string
   authorization: string
   actor?: {
     nationalId: string
     name: string
-    scope: string[]
+    scope: Array<string>
   }
 }
