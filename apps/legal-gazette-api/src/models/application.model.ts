@@ -413,11 +413,6 @@ export class IslandIsSubmitApplicationDto extends PickType(
   publishingDates!: string[]
 }
 
-export class GetHTMLPreview {
-  @ApiProperty({ type: String })
-  preview!: string
-}
-
 export class GetMinDateResponseDto {
   @ApiProperty({ type: String })
   @IsDateString()

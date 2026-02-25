@@ -150,14 +150,6 @@ export const applicationRouter = router({
         pageSize: input?.pageSize,
       })
     }),
-  getPreviewHTML: protectedProcedure
-    .input(z.object({ applicationId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const previewHTML = await ctx.api.previewApplication({
-        applicationId: input.applicationId,
-      })
-      return previewHTML
-    }),
   getEstimatedPrice: protectedProcedure
     .input(z.object({ applicationId: z.string() }))
     .query(async ({ ctx, input }) => {
