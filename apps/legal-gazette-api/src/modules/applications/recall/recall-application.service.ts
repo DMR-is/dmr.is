@@ -218,7 +218,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       title: `Skiptafundur - ${application.settlement?.name}`,
       additionalText: body.additionalText,
       settlementId: application.settlement?.id,
-      communicationChannels: [],
+      communicationChannels: application.answers.communicationChannels,
       scheduledAt: [body.meetingDate],
     })
   }
@@ -298,7 +298,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       additionalText: body.additionalText,
       settlementId: application.settlement?.id,
       judgementDate: judgementDate.toISOString(),
-      communicationChannels: [],
+      communicationChannels: application.answers.communicationChannels,
       scheduledAt: [body.scheduledAt.toISOString()],
     })
 
