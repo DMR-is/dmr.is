@@ -1,18 +1,7 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.preset-nestjs.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "allowSyntheticDefaultImports": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "forceConsistentCasingInFileNames": false,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "noFallthroughCasesInSwitch": false,
-    "noImplicitAny": false,
-    "removeComments": true,
-    "sourceMap": true,
-    "strictBindCallApply": false
   },
   "exclude": [
     "jest.config.ts",

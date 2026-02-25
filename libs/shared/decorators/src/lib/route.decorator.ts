@@ -50,7 +50,7 @@ export function Route({
   query = [],
   exclude = false,
 }: BaseRouteOptions) {
-  const decorators = []
+  const decorators: Array<MethodDecorator | ClassDecorator> = []
 
   decorators.push(LogMethod())
 

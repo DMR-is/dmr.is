@@ -44,7 +44,7 @@ export class CommentService implements ICommentService {
       attributes: ['id', 'statusId'],
     })
 
-    let actor = null
+    let actor: { id: string; name: string } | null = null
 
     try {
       if (body.actorId) {
