@@ -18,11 +18,11 @@ export const baseEntityRouter = router({
   getTypes: protectedProcedure
     .input(getTypesSchema)
     .query(async ({ ctx, input = {} }) => {
-      return await ctx.api.getTypes({ excludeUnassignable: true, ...input })
+      return await ctx.api.getTypes({  ...input, excludeUnassignable: true })
     }),
   getCategories: protectedProcedure
     .input(getCategoriesSchema)
     .query(async ({ ctx, input = {} }) => {
-      return await ctx.api.getCategories({ excludeUnassignable: true, ...input })
+      return await ctx.api.getCategories({  ...input, excludeUnassignable: true })
     }),
 })
