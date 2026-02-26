@@ -3,14 +3,14 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@dmr.is/api-client": "workspace:*",
-    "@dmr.is/auth": "workspace:*",
-    "@dmr.is/island-ui-theme": "workspace:*",
-    "@dmr.is/legal-gazette-schemas": "workspace:*",
-    "@dmr.is/logging-next": "workspace:*",
-    "@dmr.is/trpc": "workspace:*",
-    "@dmr.is/ui": "workspace:*",
-    "@dmr.is/utils-client": "workspace:*",
-    "@dmr.is/utils-shared": "workspace:*"
+    "@dmr.is/api-client": "*",
+    "@dmr.is/auth": "*",
+    "@dmr.is/island-ui-theme": "*",
+    "@dmr.is/legal-gazette-schemas": "*",
+    "@dmr.is/logging-next": "*",
+    "@dmr.is/trpc": "*",
+    "@dmr.is/ui": "*",
+    "@dmr.is/utils-client": "*",
+    "@dmr.is/utils-shared": "*"
   }
 }

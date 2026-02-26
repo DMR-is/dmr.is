@@ -9,6 +9,6 @@
     "./utils/*": "./src/lib/utils/*.ts"
   },
   "dependencies": {
-    "@dmr.is/auth": "workspace:*"
+    "@dmr.is/auth": "*"
   }
 }

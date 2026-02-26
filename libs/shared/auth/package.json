@@ -6,7 +6,7 @@
     "./*": "./src/lib/*.ts"
   },
   "dependencies": {
-    "@dmr.is/logging-next": "workspace:*",
-    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/logging-next": "*",
+    "@dmr.is/shared-dto": "*"
   }
 }

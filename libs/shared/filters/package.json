@@ -6,7 +6,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@dmr.is/logging": "workspace:*",
-    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/logging": "*",
+    "@dmr.is/shared-dto": "*"
   }
 }

@@ -6,9 +6,9 @@
     "./*": "./src/lib/*.ts"
   },
   "dependencies": {
-    "@dmr.is/constants": "workspace:*",
-    "@dmr.is/logging": "workspace:*",
-    "@dmr.is/shared-dto": "workspace:*",
-    "@dmr.is/types": "workspace:*"
+    "@dmr.is/constants": "*",
+    "@dmr.is/logging": "*",
+    "@dmr.is/shared-dto": "*",
+    "@dmr.is/types": "*"
   }
 }

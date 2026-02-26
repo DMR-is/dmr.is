@@ -7,11 +7,11 @@
     "./guards/auth": "./src/lib/guards/auth/index.ts"
   },
   "dependencies": {
-    "@dmr.is/constants": "workspace:*",
-    "@dmr.is/decorators": "workspace:*",
-    "@dmr.is/logging": "workspace:*",
-    "@dmr.is/shared-dto": "workspace:*",
-    "@dmr.is/types": "workspace:*",
-    "@dmr.is/utils-server": "workspace:*"
+    "@dmr.is/constants": "*",
+    "@dmr.is/decorators": "*",
+    "@dmr.is/logging": "*",
+    "@dmr.is/shared-dto": "*",
+    "@dmr.is/types": "*",
+    "@dmr.is/utils-server": "*"
   }
 }

@@ -7,14 +7,14 @@
     "./guards/auth": "./src/guards/auth/index.ts"
   },
   "dependencies": {
-    "@dmr.is/constants": "workspace:*",
-    "@dmr.is/decorators": "workspace:*",
-    "@dmr.is/logging": "workspace:*",
-    "@dmr.is/mocks": "workspace:*",
-    "@dmr.is/pipelines": "workspace:*",
-    "@dmr.is/shared-dto": "workspace:*",
-    "@dmr.is/shared-modules": "workspace:*",
-    "@dmr.is/types": "workspace:*",
-    "@dmr.is/utils-server": "workspace:*"
+    "@dmr.is/constants": "*",
+    "@dmr.is/decorators": "*",
+    "@dmr.is/logging": "*",
+    "@dmr.is/mocks": "*",
+    "@dmr.is/pipelines": "*",
+    "@dmr.is/shared-dto": "*",
+    "@dmr.is/shared-modules": "*",
+    "@dmr.is/types": "*",
+    "@dmr.is/utils-server": "*"
   }
 }

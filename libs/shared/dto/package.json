@@ -6,6 +6,6 @@
     ".": "./src/lib/index.ts"
   },
   "dependencies": {
-    "@dmr.is/constants": "workspace:*"
+    "@dmr.is/constants": "*"
   }
 }

@@ -6,7 +6,7 @@
     "./components/*": "./src/lib/components/*.tsx"
   },
   "dependencies": {
-    "@dmr.is/island-ui-theme": "workspace:*",
-    "@dmr.is/ui": "workspace:*"
+    "@dmr.is/island-ui-theme": "*",
+    "@dmr.is/ui": "*"
   }
 }

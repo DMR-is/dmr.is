@@ -6,7 +6,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@dmr.is/logging": "workspace:*",
-    "@dmr.is/utils-server": "workspace:*"
+    "@dmr.is/logging": "*",
+    "@dmr.is/utils-server": "*"
   }
 }

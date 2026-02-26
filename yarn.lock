@@ -3973,79 +3973,79 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dmr.is/api-client@workspace:*, @dmr.is/api-client@workspace:libs/shared/api-client":
+"@dmr.is/api-client@npm:*, @dmr.is/api-client@workspace:libs/shared/api-client":
   version: 0.0.0-use.local
   resolution: "@dmr.is/api-client@workspace:libs/shared/api-client"
   dependencies:
-    "@dmr.is/shared-dto": "workspace:*"
-    "@dmr.is/utils-client": "workspace:*"
+    "@dmr.is/shared-dto": "npm:*"
+    "@dmr.is/utils-client": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/apm@workspace:*, @dmr.is/apm@workspace:libs/apm":
+"@dmr.is/apm@npm:*, @dmr.is/apm@workspace:libs/apm":
   version: 0.0.0-use.local
   resolution: "@dmr.is/apm@workspace:libs/apm"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/auth@workspace:*, @dmr.is/auth@workspace:libs/shared/auth":
+"@dmr.is/auth@npm:*, @dmr.is/auth@workspace:libs/shared/auth":
   version: 0.0.0-use.local
   resolution: "@dmr.is/auth@workspace:libs/shared/auth"
   dependencies:
-    "@dmr.is/logging-next": "workspace:*"
-    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/logging-next": "npm:*"
+    "@dmr.is/shared-dto": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/clients-national-registry@workspace:*, @dmr.is/clients-national-registry@workspace:libs/clients/national-registry":
+"@dmr.is/clients-national-registry@npm:*, @dmr.is/clients-national-registry@workspace:libs/clients/national-registry":
   version: 0.0.0-use.local
   resolution: "@dmr.is/clients-national-registry@workspace:libs/clients/national-registry"
   dependencies:
-    "@dmr.is/logging": "workspace:*"
-    "@dmr.is/utils-server": "workspace:*"
+    "@dmr.is/logging": "npm:*"
+    "@dmr.is/utils-server": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/constants@workspace:*, @dmr.is/constants@workspace:libs/shared/constants":
+"@dmr.is/constants@npm:*, @dmr.is/constants@workspace:libs/shared/constants":
   version: 0.0.0-use.local
   resolution: "@dmr.is/constants@workspace:libs/shared/constants"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/db@workspace:*, @dmr.is/db@workspace:libs/shared/sequelize":
+"@dmr.is/db@npm:*, @dmr.is/db@workspace:libs/shared/sequelize":
   version: 0.0.0-use.local
   resolution: "@dmr.is/db@workspace:libs/shared/sequelize"
   dependencies:
-    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/logging": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/decorators@workspace:*, @dmr.is/decorators@workspace:libs/shared/decorators":
+"@dmr.is/decorators@npm:*, @dmr.is/decorators@workspace:libs/shared/decorators":
   version: 0.0.0-use.local
   resolution: "@dmr.is/decorators@workspace:libs/shared/decorators"
   dependencies:
-    "@dmr.is/constants": "workspace:*"
-    "@dmr.is/island-auth-nest": "workspace:*"
-    "@dmr.is/logging": "workspace:*"
-    "@dmr.is/types": "workspace:*"
-    "@dmr.is/utils-server": "workspace:*"
-    "@dmr.is/utils-shared": "workspace:*"
+    "@dmr.is/constants": "npm:*"
+    "@dmr.is/island-auth-nest": "npm:*"
+    "@dmr.is/logging": "npm:*"
+    "@dmr.is/types": "npm:*"
+    "@dmr.is/utils-server": "npm:*"
+    "@dmr.is/utils-shared": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/island-auth-nest@workspace:*, @dmr.is/island-auth-nest@workspace:libs/shared/island-auth-nest":
+"@dmr.is/island-auth-nest@npm:*, @dmr.is/island-auth-nest@workspace:libs/shared/island-auth-nest":
   version: 0.0.0-use.local
   resolution: "@dmr.is/island-auth-nest@workspace:libs/shared/island-auth-nest"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/island-regulations@workspace:*, @dmr.is/island-regulations@workspace:libs/shared/island-regulations":
+"@dmr.is/island-regulations@npm:*, @dmr.is/island-regulations@workspace:libs/shared/island-regulations":
   version: 0.0.0-use.local
   resolution: "@dmr.is/island-regulations@workspace:libs/shared/island-regulations"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/island-ui-theme@workspace:*, @dmr.is/island-ui-theme@workspace:libs/shared/island-ui-theme":
+"@dmr.is/island-ui-theme@npm:*, @dmr.is/island-ui-theme@workspace:libs/shared/island-ui-theme":
   version: 0.0.0-use.local
   resolution: "@dmr.is/island-ui-theme@workspace:libs/shared/island-ui-theme"
   languageName: unknown
@@ -4055,23 +4055,23 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dmr.is/legal-gazette-api@workspace:apps/legal-gazette-api"
   dependencies:
-    "@dmr.is/apm": "workspace:*"
-    "@dmr.is/clients-national-registry": "workspace:*"
-    "@dmr.is/constants": "workspace:*"
-    "@dmr.is/db": "workspace:*"
-    "@dmr.is/decorators": "workspace:*"
-    "@dmr.is/island-auth-nest": "workspace:*"
-    "@dmr.is/legal-gazette-schemas": "workspace:*"
-    "@dmr.is/logging": "workspace:*"
-    "@dmr.is/pipelines": "workspace:*"
-    "@dmr.is/shared-dto": "workspace:*"
-    "@dmr.is/shared-filters": "workspace:*"
-    "@dmr.is/shared-interceptors": "workspace:*"
-    "@dmr.is/shared-middleware": "workspace:*"
-    "@dmr.is/shared-models-base": "workspace:*"
-    "@dmr.is/shared-modules": "workspace:*"
-    "@dmr.is/utils-server": "workspace:*"
-    "@dmr.is/utils-shared": "workspace:*"
+    "@dmr.is/apm": "npm:*"
+    "@dmr.is/clients-national-registry": "npm:*"
+    "@dmr.is/constants": "npm:*"
+    "@dmr.is/db": "npm:*"
+    "@dmr.is/decorators": "npm:*"
+    "@dmr.is/island-auth-nest": "npm:*"
+    "@dmr.is/legal-gazette-schemas": "npm:*"
+    "@dmr.is/logging": "npm:*"
+    "@dmr.is/pipelines": "npm:*"
+    "@dmr.is/shared-dto": "npm:*"
+    "@dmr.is/shared-filters": "npm:*"
+    "@dmr.is/shared-interceptors": "npm:*"
+    "@dmr.is/shared-middleware": "npm:*"
+    "@dmr.is/shared-models-base": "npm:*"
+    "@dmr.is/shared-modules": "npm:*"
+    "@dmr.is/utils-server": "npm:*"
+    "@dmr.is/utils-shared": "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -4079,16 +4079,16 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dmr.is/legal-gazette-application-web@workspace:apps/legal-gazette-application-web"
   dependencies:
-    "@dmr.is/api-client": "workspace:*"
-    "@dmr.is/auth": "workspace:*"
-    "@dmr.is/island-ui-theme": "workspace:*"
-    "@dmr.is/legal-gazette-html": "workspace:*"
-    "@dmr.is/legal-gazette-schemas": "workspace:*"
-    "@dmr.is/logging-next": "workspace:*"
-    "@dmr.is/trpc": "workspace:*"
-    "@dmr.is/ui": "workspace:*"
-    "@dmr.is/utils-client": "workspace:*"
-    "@dmr.is/utils-shared": "workspace:*"
+    "@dmr.is/api-client": "npm:*"
+    "@dmr.is/auth": "npm:*"
+    "@dmr.is/island-ui-theme": "npm:*"
+    "@dmr.is/legal-gazette-html": "npm:*"
+    "@dmr.is/legal-gazette-schemas": "npm:*"
+    "@dmr.is/logging-next": "npm:*"
+    "@dmr.is/trpc": "npm:*"
+    "@dmr.is/ui": "npm:*"
+    "@dmr.is/utils-client": "npm:*"
+    "@dmr.is/utils-shared": "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -4098,7 +4098,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@dmr.is/legal-gazette-html@workspace:*, @dmr.is/legal-gazette-html@workspace:libs/legal-gazette/html":
+"@dmr.is/legal-gazette-html@npm:*, @dmr.is/legal-gazette-html@workspace:libs/legal-gazette/html":
   version: 0.0.0-use.local
   resolution: "@dmr.is/legal-gazette-html@workspace:libs/legal-gazette/html"
   languageName: unknown
@@ -4108,18 +4108,18 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dmr.is/legal-gazette-public-web@workspace:apps/legal-gazette-public-web"
   dependencies:
-    "@dmr.is/api-client": "workspace:*"
-    "@dmr.is/auth": "workspace:*"
-    "@dmr.is/island-ui-theme": "workspace:*"
-    "@dmr.is/logging-next": "workspace:*"
-    "@dmr.is/trpc": "workspace:*"
-    "@dmr.is/ui": "workspace:*"
-    "@dmr.is/utils-client": "workspace:*"
-    "@dmr.is/utils-shared": "workspace:*"
+    "@dmr.is/api-client": "npm:*"
+    "@dmr.is/auth": "npm:*"
+    "@dmr.is/island-ui-theme": "npm:*"
+    "@dmr.is/logging-next": "npm:*"
+    "@dmr.is/trpc": "npm:*"
+    "@dmr.is/ui": "npm:*"
+    "@dmr.is/utils-client": "npm:*"
+    "@dmr.is/utils-shared": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/legal-gazette-schemas@workspace:*, @dmr.is/legal-gazette-schemas@workspace:libs/legal-gazette/schemas":
+"@dmr.is/legal-gazette-schemas@npm:*, @dmr.is/legal-gazette-schemas@workspace:libs/legal-gazette/schemas":
   version: 0.0.0-use.local
   resolution: "@dmr.is/legal-gazette-schemas@workspace:libs/legal-gazette/schemas"
   languageName: unknown
@@ -4129,35 +4129,35 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dmr.is/legal-gazette-web@workspace:apps/legal-gazette-web"
   dependencies:
-    "@dmr.is/api-client": "workspace:*"
-    "@dmr.is/auth": "workspace:*"
-    "@dmr.is/island-ui-theme": "workspace:*"
-    "@dmr.is/legal-gazette-schemas": "workspace:*"
-    "@dmr.is/logging-next": "workspace:*"
-    "@dmr.is/trpc": "workspace:*"
-    "@dmr.is/ui": "workspace:*"
-    "@dmr.is/utils-client": "workspace:*"
-    "@dmr.is/utils-shared": "workspace:*"
+    "@dmr.is/api-client": "npm:*"
+    "@dmr.is/auth": "npm:*"
+    "@dmr.is/island-ui-theme": "npm:*"
+    "@dmr.is/legal-gazette-schemas": "npm:*"
+    "@dmr.is/logging-next": "npm:*"
+    "@dmr.is/trpc": "npm:*"
+    "@dmr.is/ui": "npm:*"
+    "@dmr.is/utils-client": "npm:*"
+    "@dmr.is/utils-shared": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/logging-next@workspace:*, @dmr.is/logging-next@workspace:libs/logging-next":
+"@dmr.is/logging-next@npm:*, @dmr.is/logging-next@workspace:libs/logging-next":
   version: 0.0.0-use.local
   resolution: "@dmr.is/logging-next@workspace:libs/logging-next"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/logging@workspace:*, @dmr.is/logging@workspace:libs/logging":
+"@dmr.is/logging@npm:*, @dmr.is/logging@workspace:libs/logging":
   version: 0.0.0-use.local
   resolution: "@dmr.is/logging@workspace:libs/logging"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/mocks@workspace:*, @dmr.is/mocks@workspace:libs/mocks":
+"@dmr.is/mocks@npm:*, @dmr.is/mocks@workspace:libs/mocks":
   version: 0.0.0-use.local
   resolution: "@dmr.is/mocks@workspace:libs/mocks"
   dependencies:
-    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/shared-dto": "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -4175,20 +4175,20 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dmr.is/official-journal-admin-api@workspace:apps/official-journal-admin-api"
   dependencies:
-    "@dmr.is/apm": "workspace:*"
-    "@dmr.is/constants": "workspace:*"
-    "@dmr.is/db": "workspace:*"
-    "@dmr.is/decorators": "workspace:*"
-    "@dmr.is/logging": "workspace:*"
-    "@dmr.is/mocks": "workspace:*"
-    "@dmr.is/ojoi-modules": "workspace:*"
-    "@dmr.is/pipelines": "workspace:*"
-    "@dmr.is/shared-dto": "workspace:*"
-    "@dmr.is/shared-filters": "workspace:*"
-    "@dmr.is/shared-interceptors": "workspace:*"
-    "@dmr.is/shared-middleware": "workspace:*"
-    "@dmr.is/shared-modules": "workspace:*"
-    "@dmr.is/types": "workspace:*"
+    "@dmr.is/apm": "npm:*"
+    "@dmr.is/constants": "npm:*"
+    "@dmr.is/db": "npm:*"
+    "@dmr.is/decorators": "npm:*"
+    "@dmr.is/logging": "npm:*"
+    "@dmr.is/mocks": "npm:*"
+    "@dmr.is/ojoi-modules": "npm:*"
+    "@dmr.is/pipelines": "npm:*"
+    "@dmr.is/shared-dto": "npm:*"
+    "@dmr.is/shared-filters": "npm:*"
+    "@dmr.is/shared-interceptors": "npm:*"
+    "@dmr.is/shared-middleware": "npm:*"
+    "@dmr.is/shared-modules": "npm:*"
+    "@dmr.is/types": "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -4208,18 +4208,18 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dmr.is/official-journal-api@workspace:apps/official-journal-api"
   dependencies:
-    "@dmr.is/apm": "workspace:*"
-    "@dmr.is/constants": "workspace:*"
-    "@dmr.is/db": "workspace:*"
-    "@dmr.is/logging": "workspace:*"
-    "@dmr.is/ojoi-modules": "workspace:*"
-    "@dmr.is/pipelines": "workspace:*"
-    "@dmr.is/shared-dto": "workspace:*"
-    "@dmr.is/shared-interceptors": "workspace:*"
-    "@dmr.is/shared-middleware": "workspace:*"
-    "@dmr.is/shared-modules": "workspace:*"
-    "@dmr.is/types": "workspace:*"
-    "@dmr.is/utils-server": "workspace:*"
+    "@dmr.is/apm": "npm:*"
+    "@dmr.is/constants": "npm:*"
+    "@dmr.is/db": "npm:*"
+    "@dmr.is/logging": "npm:*"
+    "@dmr.is/ojoi-modules": "npm:*"
+    "@dmr.is/pipelines": "npm:*"
+    "@dmr.is/shared-dto": "npm:*"
+    "@dmr.is/shared-interceptors": "npm:*"
+    "@dmr.is/shared-middleware": "npm:*"
+    "@dmr.is/shared-modules": "npm:*"
+    "@dmr.is/types": "npm:*"
+    "@dmr.is/utils-server": "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -4227,18 +4227,18 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dmr.is/official-journal-application-api@workspace:apps/official-journal-application-api"
   dependencies:
-    "@dmr.is/apm": "workspace:*"
-    "@dmr.is/constants": "workspace:*"
-    "@dmr.is/db": "workspace:*"
-    "@dmr.is/decorators": "workspace:*"
-    "@dmr.is/logging": "workspace:*"
-    "@dmr.is/ojoi-modules": "workspace:*"
-    "@dmr.is/pipelines": "workspace:*"
-    "@dmr.is/shared-dto": "workspace:*"
-    "@dmr.is/shared-interceptors": "workspace:*"
-    "@dmr.is/shared-middleware": "workspace:*"
-    "@dmr.is/shared-modules": "workspace:*"
-    "@dmr.is/types": "workspace:*"
+    "@dmr.is/apm": "npm:*"
+    "@dmr.is/constants": "npm:*"
+    "@dmr.is/db": "npm:*"
+    "@dmr.is/decorators": "npm:*"
+    "@dmr.is/logging": "npm:*"
+    "@dmr.is/ojoi-modules": "npm:*"
+    "@dmr.is/pipelines": "npm:*"
+    "@dmr.is/shared-dto": "npm:*"
+    "@dmr.is/shared-interceptors": "npm:*"
+    "@dmr.is/shared-middleware": "npm:*"
+    "@dmr.is/shared-modules": "npm:*"
+    "@dmr.is/types": "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -4246,40 +4246,40 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dmr.is/official-journal-web@workspace:apps/official-journal-web"
   dependencies:
-    "@dmr.is/api-client": "workspace:*"
-    "@dmr.is/auth": "workspace:*"
-    "@dmr.is/island-regulations": "workspace:*"
-    "@dmr.is/island-ui-theme": "workspace:*"
-    "@dmr.is/logging-next": "workspace:*"
-    "@dmr.is/shared-dto": "workspace:*"
-    "@dmr.is/trpc": "workspace:*"
-    "@dmr.is/ui": "workspace:*"
-    "@dmr.is/utils-shared": "workspace:*"
+    "@dmr.is/api-client": "npm:*"
+    "@dmr.is/auth": "npm:*"
+    "@dmr.is/island-regulations": "npm:*"
+    "@dmr.is/island-ui-theme": "npm:*"
+    "@dmr.is/logging-next": "npm:*"
+    "@dmr.is/shared-dto": "npm:*"
+    "@dmr.is/trpc": "npm:*"
+    "@dmr.is/ui": "npm:*"
+    "@dmr.is/utils-shared": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/ojoi-modules@workspace:*, @dmr.is/ojoi-modules@workspace:libs/official-journal/modules":
+"@dmr.is/ojoi-modules@npm:*, @dmr.is/ojoi-modules@workspace:libs/official-journal/modules":
   version: 0.0.0-use.local
   resolution: "@dmr.is/ojoi-modules@workspace:libs/official-journal/modules"
   dependencies:
-    "@dmr.is/constants": "workspace:*"
-    "@dmr.is/decorators": "workspace:*"
-    "@dmr.is/logging": "workspace:*"
-    "@dmr.is/mocks": "workspace:*"
-    "@dmr.is/pipelines": "workspace:*"
-    "@dmr.is/shared-dto": "workspace:*"
-    "@dmr.is/shared-modules": "workspace:*"
-    "@dmr.is/types": "workspace:*"
-    "@dmr.is/utils-server": "workspace:*"
+    "@dmr.is/constants": "npm:*"
+    "@dmr.is/decorators": "npm:*"
+    "@dmr.is/logging": "npm:*"
+    "@dmr.is/mocks": "npm:*"
+    "@dmr.is/pipelines": "npm:*"
+    "@dmr.is/shared-dto": "npm:*"
+    "@dmr.is/shared-modules": "npm:*"
+    "@dmr.is/types": "npm:*"
+    "@dmr.is/utils-server": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/pipelines@workspace:*, @dmr.is/pipelines@workspace:libs/shared/pipelines":
+"@dmr.is/pipelines@npm:*, @dmr.is/pipelines@workspace:libs/shared/pipelines":
   version: 0.0.0-use.local
   resolution: "@dmr.is/pipelines@workspace:libs/shared/pipelines"
   dependencies:
-    "@dmr.is/constants": "workspace:*"
-    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/constants": "npm:*"
+    "@dmr.is/logging": "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -4310,74 +4310,74 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dmr.is/shared-dto@workspace:*, @dmr.is/shared-dto@workspace:libs/shared/dto":
+"@dmr.is/shared-dto@npm:*, @dmr.is/shared-dto@workspace:libs/shared/dto":
   version: 0.0.0-use.local
   resolution: "@dmr.is/shared-dto@workspace:libs/shared/dto"
   dependencies:
-    "@dmr.is/constants": "workspace:*"
+    "@dmr.is/constants": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/shared-filters@workspace:*, @dmr.is/shared-filters@workspace:libs/shared/filters":
+"@dmr.is/shared-filters@npm:*, @dmr.is/shared-filters@workspace:libs/shared/filters":
   version: 0.0.0-use.local
   resolution: "@dmr.is/shared-filters@workspace:libs/shared/filters"
   dependencies:
-    "@dmr.is/logging": "workspace:*"
-    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/logging": "npm:*"
+    "@dmr.is/shared-dto": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/shared-interceptors@workspace:*, @dmr.is/shared-interceptors@workspace:libs/shared/interceptors":
+"@dmr.is/shared-interceptors@npm:*, @dmr.is/shared-interceptors@workspace:libs/shared/interceptors":
   version: 0.0.0-use.local
   resolution: "@dmr.is/shared-interceptors@workspace:libs/shared/interceptors"
   dependencies:
-    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/logging": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/shared-middleware@workspace:*, @dmr.is/shared-middleware@workspace:libs/shared/middleware":
+"@dmr.is/shared-middleware@npm:*, @dmr.is/shared-middleware@workspace:libs/shared/middleware":
   version: 0.0.0-use.local
   resolution: "@dmr.is/shared-middleware@workspace:libs/shared/middleware"
   dependencies:
-    "@dmr.is/constants": "workspace:*"
-    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/constants": "npm:*"
+    "@dmr.is/logging": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/shared-models-base@workspace:*, @dmr.is/shared-models-base@workspace:libs/shared/models/base":
+"@dmr.is/shared-models-base@npm:*, @dmr.is/shared-models-base@workspace:libs/shared/models/base":
   version: 0.0.0-use.local
   resolution: "@dmr.is/shared-models-base@workspace:libs/shared/models/base"
   dependencies:
-    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/logging": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/shared-modules@workspace:*, @dmr.is/shared-modules@workspace:libs/shared/modules":
+"@dmr.is/shared-modules@npm:*, @dmr.is/shared-modules@workspace:libs/shared/modules":
   version: 0.0.0-use.local
   resolution: "@dmr.is/shared-modules@workspace:libs/shared/modules"
   dependencies:
-    "@dmr.is/constants": "workspace:*"
-    "@dmr.is/decorators": "workspace:*"
-    "@dmr.is/logging": "workspace:*"
-    "@dmr.is/shared-dto": "workspace:*"
-    "@dmr.is/types": "workspace:*"
-    "@dmr.is/utils-server": "workspace:*"
+    "@dmr.is/constants": "npm:*"
+    "@dmr.is/decorators": "npm:*"
+    "@dmr.is/logging": "npm:*"
+    "@dmr.is/shared-dto": "npm:*"
+    "@dmr.is/types": "npm:*"
+    "@dmr.is/utils-server": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/trpc@workspace:*, @dmr.is/trpc@workspace:libs/shared/trpc":
+"@dmr.is/trpc@npm:*, @dmr.is/trpc@workspace:libs/shared/trpc":
   version: 0.0.0-use.local
   resolution: "@dmr.is/trpc@workspace:libs/shared/trpc"
   dependencies:
-    "@dmr.is/auth": "workspace:*"
+    "@dmr.is/auth": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/types@workspace:*, @dmr.is/types@workspace:libs/shared/types/types":
+"@dmr.is/types@npm:*, @dmr.is/types@workspace:libs/shared/types/types":
   version: 0.0.0-use.local
   resolution: "@dmr.is/types@workspace:libs/shared/types/types"
   dependencies:
-    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/logging": "npm:*"
   languageName: unknown
   linkType: soft
 
@@ -4385,42 +4385,42 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dmr.is/ui-lazy@workspace:libs/shared/dmr-ui-lazy"
   dependencies:
-    "@dmr.is/island-ui-theme": "workspace:*"
-    "@dmr.is/ui": "workspace:*"
+    "@dmr.is/island-ui-theme": "npm:*"
+    "@dmr.is/ui": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/ui@workspace:*, @dmr.is/ui@workspace:libs/shared/dmr-ui":
+"@dmr.is/ui@npm:*, @dmr.is/ui@workspace:libs/shared/dmr-ui":
   version: 0.0.0-use.local
   resolution: "@dmr.is/ui@workspace:libs/shared/dmr-ui"
   dependencies:
-    "@dmr.is/auth": "workspace:*"
-    "@dmr.is/constants": "workspace:*"
-    "@dmr.is/island-regulations": "workspace:*"
-    "@dmr.is/island-ui-theme": "workspace:*"
-    "@dmr.is/shared-dto": "workspace:*"
-    "@dmr.is/utils-shared": "workspace:*"
+    "@dmr.is/auth": "npm:*"
+    "@dmr.is/constants": "npm:*"
+    "@dmr.is/island-regulations": "npm:*"
+    "@dmr.is/island-ui-theme": "npm:*"
+    "@dmr.is/shared-dto": "npm:*"
+    "@dmr.is/utils-shared": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/utils-client@workspace:*, @dmr.is/utils-client@workspace:libs/shared/utils/client":
+"@dmr.is/utils-client@npm:*, @dmr.is/utils-client@workspace:libs/shared/utils/client":
   version: 0.0.0-use.local
   resolution: "@dmr.is/utils-client@workspace:libs/shared/utils/client"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/utils-server@workspace:*, @dmr.is/utils-server@workspace:libs/shared/utils/server":
+"@dmr.is/utils-server@npm:*, @dmr.is/utils-server@workspace:libs/shared/utils/server":
   version: 0.0.0-use.local
   resolution: "@dmr.is/utils-server@workspace:libs/shared/utils/server"
   dependencies:
-    "@dmr.is/constants": "workspace:*"
-    "@dmr.is/logging": "workspace:*"
-    "@dmr.is/shared-dto": "workspace:*"
-    "@dmr.is/types": "workspace:*"
+    "@dmr.is/constants": "npm:*"
+    "@dmr.is/logging": "npm:*"
+    "@dmr.is/shared-dto": "npm:*"
+    "@dmr.is/types": "npm:*"
   languageName: unknown
   linkType: soft
 
-"@dmr.is/utils-shared@workspace:*, @dmr.is/utils-shared@workspace:libs/shared/utils/shared":
+"@dmr.is/utils-shared@npm:*, @dmr.is/utils-shared@workspace:libs/shared/utils/shared":
   version: 0.0.0-use.local
   resolution: "@dmr.is/utils-shared@workspace:libs/shared/utils/shared"
   languageName: unknown
