@@ -16,11 +16,11 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
+import { CommentDto } from '../../models/comment.model'
 import {
-  CommentDto,
   CreateTextCommentBodyDto,
   GetCommentsDto,
-} from '../../models/comment.model'
+} from './dto/comment.dto'
 import { ICommentService } from './comment.service.interface'
 
 @Controller({

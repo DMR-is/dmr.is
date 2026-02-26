@@ -2,11 +2,13 @@ import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
 import {
+  SubscriberDto,
+} from '../../models/subscriber.model'
+import {
   CreateSubscriberAdminDto,
   GetSubscribersWithPagingResponse,
-  SubscriberDto,
   UpdateSubscriberEndDateDto,
-} from '../../models/subscriber.model'
+} from '../subscribers/dto/subscriber.dto'
 
 export interface ISubscriberAdminService {
   getSubscribers(

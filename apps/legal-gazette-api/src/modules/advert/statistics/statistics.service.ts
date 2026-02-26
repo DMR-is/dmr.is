@@ -11,7 +11,7 @@ import {
   GetAdvertsInProgressStatsDto,
   GetAdvertsToBePublishedStatsDto,
   GetCountByStatusesDto,
-} from './statistics.dto'
+} from './dto/statistics.dto'
 import { IStatisticsService } from './statistics.service.interface'
 
 @Injectable()

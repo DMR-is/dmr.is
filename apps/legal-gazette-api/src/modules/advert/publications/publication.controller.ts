@@ -24,14 +24,16 @@ import {
   PublicWebScopes,
 } from '../../../core/guards/scope-guards/scopes.decorator'
 import {
-  AdvertPublicationDetailedDto,
   AdvertVersionEnum,
+} from '../../../models/advert-publication.model'
+import {
+  AdvertPublicationDetailedDto,
   GetCombinedHTMLDto,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   GetRelatedPublicationsDto,
   UpdateAdvertPublicationDto,
-} from '../../../models/advert-publication.model'
+} from './dto/publication.dto'
 import { IPublicationService } from './publication.service.interface'
 
 @ApiBearerAuth()

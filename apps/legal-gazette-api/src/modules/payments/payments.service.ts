@@ -9,15 +9,15 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
 
 import {
-  GetPaymentsDto,
-  GetPaymentsQuery,
-  SyncPaymentsResponseDto,
-} from '../../core/dto/payments.dto'
-import {
   TBRTransactionModel,
   TBRTransactionStatus,
 } from '../../models/tbr-transactions.model'
-import { TBRGetPaymentResponseDto } from '../tbr/tbr.dto'
+import {
+  GetPaymentsDto,
+  GetPaymentsQuery,
+  SyncPaymentsResponseDto,
+} from '../../modules/payments/dto/payments.dto'
+import { TBRGetPaymentResponseDto } from '../tbr/dto/tbr.dto'
 import { TBRService } from '../tbr/tbr.service'
 import { ITBRService } from '../tbr/tbr.service.interface'
 import { IPaymentsService } from './payments.service.interface'
@@ -157,15 +157,12 @@ export class PaymentsService implements IPaymentsService {
 
     if (query.dateFrom && query.dateTo) {
       where.createdAt = {
-        [Op.between]: [
-          startOfDay(new Date(query.dateFrom)),
-          endOfDay(new Date(query.dateTo)),
-        ],
+        [Op.between]: [startOfDay(query.dateFrom), endOfDay(query.dateTo)],
       }
     } else if (query.dateFrom) {
-      where.createdAt = { [Op.gte]: startOfDay(new Date(query.dateFrom)) }
+      where.createdAt = { [Op.gte]: startOfDay(query.dateFrom) }
     } else if (query.dateTo) {
-      where.createdAt = { [Op.lte]: endOfDay(new Date(query.dateTo)) }
+      where.createdAt = { [Op.lte]: endOfDay(query.dateTo) }
     }
 
     if (query.type) {

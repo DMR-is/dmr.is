@@ -7,13 +7,15 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
 
 import {
+  TBRCompanySettingsItemDto,
+  TBRCompanySettingsModel,
+} from '../../../models/tbr-company-settings.model'
+import {
   CreateTBRCompanySettingsDto,
   GetTBRCompanySettingsQueryDto,
-  TBRCompanySettingsItemDto,
   TBRCompanySettingsListDto,
-  TBRCompanySettingsModel,
   UpdateTbrCompanySettingsDto,
-} from '../../../models/tbr-company-settings.model'
+} from './dto/tbr-company-settings.dto'
 import { ITBRCompanySettingsService } from './tbr-company-settings.service.interface'
 
 const LOGGING_CONTEXT = 'TBRCompanySettingsService'

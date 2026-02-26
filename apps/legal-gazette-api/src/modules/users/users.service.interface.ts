@@ -1,13 +1,13 @@
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
+import { UserDto } from '../../models/users.model'
 import {
   CreateUserDto,
   GetUsersResponse,
   GetUsersWithPagingResponse,
   UpdateUserDto,
-  UserDto,
-} from '../../models/users.model'
+} from './dto/users.dto'
 
 export interface IUsersService {
   getUserByNationalId(nationalId: string, paranoid?: boolean): Promise<UserDto>

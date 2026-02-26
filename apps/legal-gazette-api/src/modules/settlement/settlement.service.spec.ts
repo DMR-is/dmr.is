@@ -7,9 +7,9 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AdvertModel } from '../../models/advert.model'
 import {
   SettlementModel,
-  UpdateSettlementDto,
 } from '../../models/settlement.model'
 import { StatusIdEnum } from '../../models/status.model'
+import { UpdateSettlementDto } from './dto/settlement.dto'
 import { SettlementService } from './settlement.service'
 // ==========================================
 // Mock Factories
@@ -270,14 +270,14 @@ describe('SettlementService - Status Protection', () => {
           dateOfDeath: null,
         })
       })
-      it('should convert date strings to Date objects', async () => {
+      it('should keep Date fields as Date objects', async () => {
         const settlement = createMockSettlement({ adverts: [] })
         settlementModel.findByPkOrThrow.mockResolvedValue(
           settlement as unknown as SettlementModel,
         )
         const updateWithDates: UpdateSettlementDto = {
-          deadline: '2024-12-31T23:59:59.000Z',
-          dateOfDeath: '2023-06-15T00:00:00.000Z',
+          deadline: new Date('2024-12-31T23:59:59.000Z'),
+          dateOfDeath: new Date('2023-06-15T00:00:00.000Z'),
         }
         await service.updateSettlement('settlement-123', updateWithDates)
         const updateCall = settlement.update.mock.calls[0][0]
@@ -303,8 +303,8 @@ describe('SettlementService - Status Protection', () => {
           name: 'New Name',
           nationalId: '9876543210',
           address: 'New Address',
-          deadline: '2024-12-31T23:59:59.000Z',
-          dateOfDeath: '2023-06-15T00:00:00.000Z',
+          deadline: new Date('2024-12-31T23:59:59.000Z'),
+          dateOfDeath: new Date('2023-06-15T00:00:00.000Z'),
           declaredClaims: 5,
           type: 'ESTATE' as any,
         }

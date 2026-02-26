@@ -2,7 +2,6 @@ import { Type } from 'class-transformer'
 import {
   IsArray,
   IsBoolean,
-  IsDateString,
   IsDefined,
   IsNumber,
   IsOptional,
@@ -12,7 +11,9 @@ import {
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
-import { CreateSignatureDto } from '../../models/signature.model'
+import { ApiDateTime } from '@dmr.is/decorators'
+
+import { CreateSignatureDto } from '../../advert/signature/dto/signature.dto'
 
 export enum AnnouncementItem {
   A = 'A',
@@ -140,14 +141,11 @@ export class AdditionalPropertiesDto {
 }
 
 export class CompanyBoardDto {
-  @ApiProperty({
-    type: String,
-    format: 'date-time',
+  @ApiDateTime({
     description: 'The date when the board was appointed',
     example: '2023-10-01T12:00:00Z (ISO 8601 format)',
   })
-  @IsDateString()
-  appointedDate!: string
+  appointedDate!: Date
 
   @ApiProperty({
     type: [PartyEntityDto],
@@ -216,13 +214,11 @@ export class RegisterCompanyHlutafelagDto {
   @ValidateNested({ each: true })
   creators!: PartyEntityDto[]
 
-  @ApiProperty({
-    type: String,
+  @ApiDateTime({
     description: 'Date when the company was accepted (Dagsetning samþykkta er)',
     example: '2023-10-01T12:00:00Z (ISO 8601 format)',
   })
-  @IsDateString()
-  approvedDate!: string
+  approvedDate!: Date
 
   @ApiProperty({
     type: CompanyBoardDto,
@@ -340,9 +336,8 @@ export class CreateAdditionalAnnouncementsDto {
   @ValidateNested()
   responsibleParty!: ObjectIssuer
 
-  @ApiProperty({ type: String, required: true })
-  @IsDateString()
-  announcementDate!: string
+  @ApiDateTime()
+  announcementDate!: Date
 
   @ApiProperty({
     type: [AdditionalAnnouncementsDto],

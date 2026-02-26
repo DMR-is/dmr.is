@@ -9,15 +9,17 @@ import { PagingQuery } from '@dmr.is/shared-dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
 
 import {
-  CreateUserDto,
-  GetUsersResponse,
-  GetUsersWithPagingResponse,
-  UpdateUserDto,
   UserDto,
   UserModel,
 } from '../../models/users.model'
 import { LGNationalRegistryService } from '../national-registry/national-registry.service'
 import { ILGNationalRegistryService } from '../national-registry/national-registry.service.interface'
+import {
+  CreateUserDto,
+  GetUsersResponse,
+  GetUsersWithPagingResponse,
+  UpdateUserDto,
+} from './dto/users.dto'
 import { IUsersService } from './users.service.interface'
 
 const LOGGING_CONTEXT = 'UsersService'

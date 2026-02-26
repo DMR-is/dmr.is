@@ -1,9 +1,5 @@
-import {
-  CaseDto,
-  CaseQueryDto,
-  CreateCaseDto,
-  GetCasesDto,
-} from '../../models/case.model'
+import { CaseDto } from '../../models/case.model'
+import { CaseQueryDto, CreateCaseDto, GetCasesDto } from './dto/case.dto'
 
 export interface ICaseService {
   getCases(query: CaseQueryDto): Promise<GetCasesDto>

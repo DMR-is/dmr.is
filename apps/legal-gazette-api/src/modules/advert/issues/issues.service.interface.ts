@@ -1,4 +1,4 @@
-import { GetIssuesDto, GetIssuesQuery } from '../../../models/issues.model'
+import { GetIssuesDto, GetIssuesQuery } from './dto/issues.dto'
 
 export interface IIssuesService {
   getAllPublishedIssues(q: GetIssuesQuery): Promise<GetIssuesDto>

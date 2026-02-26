@@ -1,8 +1,8 @@
-import { IsString, IsUUID } from 'class-validator'
 import { Column, DataType } from 'sequelize-typescript'
 
 import { ApiProperty } from '@nestjs/swagger'
 
+import { ApiString, ApiUUId } from '@dmr.is/decorators'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
@@ -34,18 +34,9 @@ export class IssueSettingsModel extends BaseModel<
 }
 
 export class IssueSettingsDto {
-  @ApiProperty({ type: String })
-  @IsUUID()
+  @ApiUUId()
   id!: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   districtCommissioner!: string
-}
-
-export class GetIssueSettingsDto {
-  @ApiProperty({
-    type: IssueSettingsDto,
-  })
-  issueSettings!: IssueSettingsDto
 }
