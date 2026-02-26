@@ -49,7 +49,7 @@ jobs:
           cp -r /tmp/nx-tmp/node_modules/. node_modules/
 
           echo "Log out what show projects returns"
-          npx nx show projects --affected --base=419b69e6065e1c88f1df355e5d5c3aaбcd16a55b --head=7f7117054ce6d3553bc586f941f88698c2286fcd --type=app
+          npx nx show projects --affected --type=app
 
           echo "Determining affected projects with nx"
           AFFECTED_PROJECTS=$(npx nx show projects --affected --type=app 2>/dev/null || echo "")
