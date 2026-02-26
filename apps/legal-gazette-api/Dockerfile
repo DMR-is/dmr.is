@@ -4,6 +4,7 @@ FROM docker.io/node:20-alpine as deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /usr/src/app
 COPY ./apps/legal-gazette-api/dist/package.json ./
+RUN node -e "const f='package.json',p=JSON.parse(require('fs').readFileSync(f));for(const k of Object.keys(p.dependencies||{}))if(k.startsWith('@dmr.is/')&&p.dependencies[k]==='*')delete p.dependencies[k];require('fs').writeFileSync(f,JSON.stringify(p,null,2))"
 COPY ./apps/legal-gazette-api/db/migrations ./db/migrations
 COPY ./apps/legal-gazette-api/.sequelizerc ./
 COPY ./libs/shared/sequelize/src/lib/sequelize.config.js ./

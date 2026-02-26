@@ -10,7 +10,7 @@ import { Table as T } from '@dmr.is/ui/components/island-is/Table'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 export type PieChartItem = {
-  color: string
+  color: keyof typeof theme.color
   title: string
   count?: number
   percentage?: number
@@ -46,7 +46,7 @@ export const PieChart = ({
             data={items.map((item) => ({
               name: item.title,
               count: item.count ?? 0,
-              fill: item.color,
+              fill: theme.color[item.color],
               value: item.percentage,
             }))}
             dataKey="count"
@@ -64,7 +64,7 @@ export const PieChart = ({
                       style={{
                         width: 12,
                         height: 12,
-                        backgroundColor: item.color,
+                        backgroundColor: theme.color[item.color],
                       }}
                     />
                     <Text variant="small" fontWeight="medium">
