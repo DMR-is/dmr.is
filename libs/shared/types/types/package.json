@@ -5,7 +5,10 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "peerDependencies": {
+    "@nestjs/common": "^10.4.19"
+  },
   "dependencies": {
-    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/logging": "*"
   }
 }

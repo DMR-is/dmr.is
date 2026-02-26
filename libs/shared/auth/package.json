@@ -5,8 +5,13 @@
   "exports": {
     "./*": "./src/lib/*.ts"
   },
+  "peerDependencies": {
+    "next": "16.1.6",
+    "next-auth": "4.24.13"
+  },
   "dependencies": {
-    "@dmr.is/logging-next": "workspace:*",
-    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/logging-next": "*",
+    "@dmr.is/shared-dto": "*",
+    "jose": "6.1.3"
   }
 }

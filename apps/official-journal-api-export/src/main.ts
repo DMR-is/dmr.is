@@ -44,6 +44,7 @@ import {
 } from './lib/inserts.js'
 
 const ROOT_SQL_DIR = './apps/official-journal-api-export/sql'
+// Added comment to trigger redeploy
 
 function log(message: string) {
   // eslint-disable-next-line no-console

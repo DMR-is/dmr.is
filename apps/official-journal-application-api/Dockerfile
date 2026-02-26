@@ -4,6 +4,7 @@ FROM docker.io/node:20-alpine as deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /usr/src/app
 COPY ./apps/official-journal-application-api/dist/package.json ./
+RUN node -e "const f='package.json',p=JSON.parse(require('fs').readFileSync(f));for(const k of Object.keys(p.dependencies||{}))if(k.startsWith('@dmr.is/')&&p.dependencies[k]==='*')delete p.dependencies[k];require('fs').writeFileSync(f,JSON.stringify(p,null,2))"
 RUN npm install pg --legacy-peer-deps
 RUN npm install --omit=dev --legacy-peer-deps
 # Production image, copy all the files and run nest

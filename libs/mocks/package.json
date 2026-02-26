@@ -6,6 +6,6 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/shared-dto": "*"
   }
 }

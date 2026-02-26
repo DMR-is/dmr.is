@@ -15,7 +15,6 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 export default function Error({ reset }: { error: Error; reset: () => void }) {
   const pathName = usePathname()
   const { data: session, status } = useSession()
-
   useEffect(() => {
     if (session?.invalid === true && status === 'authenticated') {
       // Make sure to log out if the session is invalid

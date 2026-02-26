@@ -5,8 +5,20 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "peerDependencies": {
+    "@nestjs/common": "^10.4.19",
+    "sequelize-typescript": "^2.1.6"
+  },
   "dependencies": {
-    "@dmr.is/constants": "workspace:*",
-    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/constants": "*",
+    "@dmr.is/logging": "*",
+    "cls-hooked": "^4.2.2",
+    "express": "^4.21.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/cls-hooked": "^4",
+    "@types/express": "4.17.22",
+    "@types/uuid": "^9.0.8"
   }
 }

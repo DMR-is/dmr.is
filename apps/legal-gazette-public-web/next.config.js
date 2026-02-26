@@ -16,6 +16,17 @@ const nextConfig = {
   },
   turbopack: {
     resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+    resolveAlias: {
+      'react-select': 'react-select/dist/react-select.esm.js',
+      'react-select/creatable':
+        'react-select/creatable/dist/react-select-creatable.esm.js',
+      'react-select/async':
+        'react-select/async/dist/react-select-async.esm.js',
+      'react-select/animated':
+        'react-select/animated/dist/react-select-animated.esm.js',
+      'react-select/async-creatable':
+        'react-select/async-creatable/dist/react-select-async-creatable.esm.js',
+    },
   },
   webpack: (config, { isServer }) => {
     config.resolve.alias.canvas = false

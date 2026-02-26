@@ -50,6 +50,7 @@ import { InternalWebSwaggerModule } from '../modules/swagger/internal-web.swagge
 import { IslandIsApplicationSwaggerModule } from '../modules/swagger/island-is-application.swagger.module'
 import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.module'
 
+// Added comment to trigger redeploy
 @Module({
   imports: [
     LoggingModule,

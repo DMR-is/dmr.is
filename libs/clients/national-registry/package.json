@@ -5,8 +5,12 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "peerDependencies": {
+    "@nestjs/common": "^10.4.19",
+    "@nestjs/swagger": "^8.1.1"
+  },
   "dependencies": {
-    "@dmr.is/logging": "workspace:*",
-    "@dmr.is/utils-server": "workspace:*"
+    "@dmr.is/logging": "*",
+    "@dmr.is/utils-server": "*"
   }
 }

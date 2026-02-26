@@ -5,8 +5,13 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "peerDependencies": {
+    "@nestjs/common": "^10.4.19",
+    "sequelize": "^6.37.3"
+  },
   "dependencies": {
-    "@dmr.is/logging": "workspace:*",
-    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/logging": "*",
+    "@dmr.is/shared-dto": "*",
+    "zod": "4.1.11"
   }
 }

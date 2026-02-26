@@ -5,12 +5,25 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "peerDependencies": {
+    "@nestjs/common": "^10.4.19",
+    "@nestjs/swagger": "^8.1.1",
+    "sequelize": "^6.37.3",
+    "sequelize-typescript": "^2.1.6"
+  },
   "dependencies": {
-    "@dmr.is/constants": "workspace:*",
-    "@dmr.is/island-auth-nest": "workspace:*",
-    "@dmr.is/logging": "workspace:*",
-    "@dmr.is/types": "workspace:*",
-    "@dmr.is/utils-server": "workspace:*",
-    "@dmr.is/utils-shared": "workspace:*"
+    "@dmr.is/constants": "*",
+    "@dmr.is/island-auth-nest": "*",
+    "@dmr.is/logging": "*",
+    "@dmr.is/types": "*",
+    "@dmr.is/utils-server": "*",
+    "@dmr.is/utils-shared": "*",
+    "cache-manager": "7.2.4",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/uuid": "^9.0.8"
   }
 }

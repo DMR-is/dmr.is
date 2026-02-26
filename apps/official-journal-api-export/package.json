@@ -1,5 +1,17 @@
 {
   "name": "@dmr.is/official-journal-api-export",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "csv-parse": "^5.5.5",
+    "date-fns": "^2.29.3",
+    "jsdom": "^26.0.0",
+    "mssql": "^11.0.1",
+    "slugify": "^1.6.6",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/mssql": "^9.1.7",
+    "@types/uuid": "^9.0.8"
+  }
 }

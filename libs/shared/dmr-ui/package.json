@@ -14,12 +14,26 @@
     "./globalStyles": "./src/utils/globalStyles.ts",
     "./globalCss": "./src/styles/global.css.ts"
   },
+  "peerDependencies": {
+    "@vanilla-extract/css": "^1.7.0",
+    "@vanilla-extract/recipes": "^0.5.7",
+    "next": "16.1.6",
+    "next-auth": "4.24.13",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
   "dependencies": {
-    "@dmr.is/auth": "workspace:*",
-    "@dmr.is/constants": "workspace:*",
-    "@dmr.is/island-regulations": "workspace:*",
-    "@dmr.is/island-ui-theme": "workspace:*",
-    "@dmr.is/shared-dto": "workspace:*",
-    "@dmr.is/utils-shared": "workspace:*"
+    "@dmr.is/auth": "*",
+    "@dmr.is/constants": "*",
+    "@dmr.is/island-regulations": "*",
+    "@dmr.is/island-ui-theme": "*",
+    "@dmr.is/shared-dto": "*",
+    "@dmr.is/utils-shared": "*",
+    "classnames": "^2.5.1",
+    "next-usequerystate": "1.20.0",
+    "react-animate-height": "^3.1.2",
+    "react-hook-form": "7.62.0",
+    "react-top-loading-bar": "^2.3.1",
+    "react-use": "^15.3.3"
   }
 }
