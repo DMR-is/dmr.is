@@ -18,7 +18,7 @@ import {
   TypesWithCategoriesResponseDto,
   TypeWithCategoriesQueryDto,
   TypeWithCategoriesResponseDto,
-} from '../../models/type-categories.model'
+} from './dto/type-categories.dto'
 import { ITypeCategoriesService } from './type-categories.service.interface'
 
 // TODO: Determine usage - currently no tRPC routers call this controller

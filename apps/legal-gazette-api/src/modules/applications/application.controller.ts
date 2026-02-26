@@ -21,18 +21,20 @@ import { EnumValidationPipe } from '@dmr.is/pipelines'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
-import { GetMyApplicationsQueryDto } from '../../core/dto/application.dto'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import { OwnershipGuard } from '../../core/guards/ownership.guard'
 import { ApplicationWebScopes } from '../../core/guards/scope-guards/scopes.decorator'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
+} from '../../models/application.model'
+import { GetMyApplicationsQueryDto } from '../../modules/applications/dto/application.dto'
+import {
   GetApplicationEstimatedPriceDto,
   GetApplicationsDto,
   GetHTMLPreview,
   UpdateApplicationDto,
-} from '../../models/application.model'
+} from '../../modules/applications/dto/application-extra.dto'
 import { IAdvertService } from '../advert/advert.service.interface'
 import { IPriceCalculatorService } from '../advert/calculator/price-calculator.service.interface'
 import { IApplicationService } from './application.service.interface'

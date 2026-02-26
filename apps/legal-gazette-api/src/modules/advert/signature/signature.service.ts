@@ -4,11 +4,13 @@ import { InjectModel } from '@nestjs/sequelize'
 import { assertAdvertEditable } from '../../../core/utils/advert-status.util'
 import { AdvertModel } from '../../../models/advert.model'
 import {
-  CreateSignatureDto,
   SignatureDto,
   SignatureModel,
-  UpdateSignatureDto,
 } from '../../../models/signature.model'
+import {
+  CreateSignatureDto,
+  UpdateSignatureDto,
+} from './dto/signature.dto'
 import { ISignatureService } from './signature.service.interface'
 
 @Injectable()

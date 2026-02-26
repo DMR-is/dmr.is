@@ -1,6 +1,4 @@
 import {
-  IsDateString,
-  IsEnum,
   IsOptional,
   IsString,
   IsUUID,
@@ -22,11 +20,19 @@ import {
 import { BadRequestException } from '@nestjs/common'
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
 
+import {
+  ApiDateTime,
+  ApiOptionalDateTime,
+  ApiOptionalEnum,
+  ApiOptionalString,
+  ApiOptionalUuid,
+} from '@dmr.is/decorators'
 import { Paging, PagingQuery } from '@dmr.is/shared-dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { mapVersionToIndex } from '../core/utils'
+import type { GetPublicationsQueryDto } from '../modules/advert/publications/dto/publication.dto'
 import { AdvertDto, AdvertModel } from './advert.model'
 import { CategoryDto, CategoryModel } from './category.model'
 import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
@@ -91,19 +97,16 @@ export type AdvertPublicationsCreateAttributes = {
     if (query.dateFrom && query.dateTo) {
       Object.assign(publicationWhereOptions, {
         publishedAt: {
-          [Op.between]: [
-            startOfDay(new Date(query.dateFrom)),
-            endOfDay(new Date(query.dateTo)),
-          ],
+          [Op.between]: [startOfDay(query.dateFrom), endOfDay(query.dateTo)],
         },
       })
     } else if (query.dateFrom) {
       Object.assign(publicationWhereOptions, {
-        publishedAt: { [Op.gte]: startOfDay(new Date(query.dateFrom)) },
+        publishedAt: { [Op.gte]: startOfDay(query.dateFrom) },
       })
     } else if (query.dateTo) {
       Object.assign(publicationWhereOptions, {
-        publishedAt: { [Op.lte]: endOfDay(new Date(query.dateTo)) },
+        publishedAt: { [Op.lte]: endOfDay(query.dateTo) },
       })
     }
 
@@ -254,8 +257,8 @@ export class AdvertPublicationModel extends BaseModel<
     return {
       id: model.id,
       advertId: model.advertId,
-      scheduledAt: model.scheduledAt.toISOString(),
-      publishedAt: model.publishedAt?.toISOString(),
+      scheduledAt: model.scheduledAt,
+      publishedAt: model.publishedAt ?? undefined,
       version: model.versionLetter,
       isLegacy: model.advert?.legacyId ? true : false,
       pdfUrl: model?.pdfUrl,
@@ -282,7 +285,7 @@ export class AdvertPublicationModel extends BaseModel<
       category: model.advert.category.fromModel(),
       type: model.advert.type.fromModel(),
       title: model.advert.title,
-      publishedAt: model.publishedAt.toISOString(),
+      publishedAt: model.publishedAt,
       publicationNumber: model.advert.publicationNumber,
       createdBy: model.advert.createdBy,
     }
@@ -298,11 +301,11 @@ export class AdvertPublicationDto extends PickType(AdvertPublicationModel, [
   'advertId',
   'pdfUrl',
 ] as const) {
-  @ApiProperty({ type: String })
-  scheduledAt!: string
+  @ApiDateTime()
+  scheduledAt!: Date
 
-  @ApiProperty({ type: String, required: false })
-  publishedAt?: string
+  @ApiOptionalDateTime()
+  publishedAt?: Date
 
   @ApiProperty({ type: Boolean })
   isLegacy!: boolean
@@ -311,23 +314,12 @@ export class AdvertPublicationDto extends PickType(AdvertPublicationModel, [
   version!: AdvertVersionEnum
 }
 
-export class AdvertPublicationDetailedDto {
-  @ApiProperty({ type: () => AdvertPublicationDto })
-  publication!: AdvertPublicationDto
-
-  @ApiProperty({ type: () => AdvertDto })
-  advert!: AdvertDto
-
-  @ApiProperty({ type: String })
-  html!: string
-}
-
 export class PublishedPublicationDto extends OmitType(AdvertPublicationDto, [
   'scheduledAt',
   'publishedAt',
 ] as const) {
-  @ApiProperty({ type: String })
-  publishedAt!: string
+  @ApiDateTime()
+  publishedAt!: Date
 
   @ApiProperty({ type: TypeDto })
   type!: TypeDto
@@ -343,74 +335,4 @@ export class PublishedPublicationDto extends OmitType(AdvertPublicationDto, [
 
   @ApiProperty({ type: String })
   createdBy!: string
-}
-
-export class UpdateAdvertPublicationDto {
-  @ApiProperty({ type: String })
-  @IsDateString()
-  scheduledAt!: string
-}
-
-export class GetPublicationsDto {
-  @ApiProperty({ type: [PublishedPublicationDto] })
-  publications!: PublishedPublicationDto[]
-
-  @ApiProperty({ type: Paging })
-  paging!: Paging
-}
-
-export class GetCombinedHTMLDto {
-  @ApiProperty({ type: [String] })
-  @IsString({ each: true })
-  publicationsHtml!: string[]
-}
-
-export class GetRelatedPublicationsDto extends PickType(GetPublicationsDto, [
-  'publications',
-] as const) {}
-
-export class GetPublicationsQueryDto extends PagingQuery {
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsUUID()
-  advertId?: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
-  search?: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsDateString()
-  dateFrom?: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsDateString()
-  dateTo?: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
-  typeId?: string
-
-  @ApiProperty({ type: [String], required: false })
-  @IsOptional()
-  @IsUUID('4', { each: true })
-  categoryId?: string[]
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
-  pdfUrl?: string
-
-  @ApiProperty({
-    enum: AdvertVersionEnum,
-    enumName: 'AdvertVersionEnum',
-    required: false,
-  })
-  @IsOptional()
-  @IsEnum(AdvertVersionEnum)
-  version?: AdvertVersionEnum
 }

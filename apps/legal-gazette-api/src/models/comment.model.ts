@@ -1,4 +1,3 @@
-import { IsString } from 'class-validator'
 import {
   BelongsTo,
   Column,
@@ -9,6 +8,7 @@ import {
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
+import { ApiDateTime, ApiString } from '@dmr.is/decorators'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
@@ -149,7 +149,7 @@ export class CommentModel extends BaseModel<
   static fromModel(model: CommentModel): CommentDto {
     return {
       id: model.id,
-      createdAt: model.createdAt.toISOString(),
+      createdAt: model.createdAt,
       type: model.type,
       status: model.status.fromModel(),
       advertId: model.advertId,
@@ -175,44 +175,6 @@ export class CommentDto extends PickType(CommentModel, [
   @ApiProperty({ type: StatusDto })
   status!: StatusDto
 
-  @ApiProperty({ type: String })
-  createdAt!: string
-}
-
-export class GetCommentsDto {
-  @ApiProperty({ type: [CommentDto] })
-  comments!: CommentDto[]
-}
-
-class CreateCommentBaseDto {
-  @ApiProperty({ type: String })
-  actorId!: string
-}
-
-export class CreateSubmitCommentDto extends CreateCommentBaseDto {}
-
-export class CreatePublishCommentDto {
-  @ApiProperty({ type: String, required: false })
-  actorId?: string
-}
-
-export class CreateAssignCommentDto extends CreateCommentBaseDto {
-  @ApiProperty({ type: String })
-  receiverId!: string
-}
-
-export class CreateStatusUpdateCommentDto extends CreateCommentBaseDto {
-  @ApiProperty({ type: String })
-  receiverId!: string
-}
-
-export class CreateTextCommentDto extends CreateCommentBaseDto {
-  @ApiProperty({ type: String })
-  comment!: string
-}
-
-export class CreateTextCommentBodyDto {
-  @ApiProperty({ type: String })
-  @IsString()
-  comment!: string
+  @ApiDateTime()
+  createdAt!: Date
 }

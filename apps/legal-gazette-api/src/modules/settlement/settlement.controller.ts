@@ -14,7 +14,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
-import { UpdateSettlementDto } from '../../models/settlement.model'
+import { UpdateSettlementDto } from './dto/settlement.dto'
 import { ISettlementService } from './settlement.service.interface'
 
 @Controller({

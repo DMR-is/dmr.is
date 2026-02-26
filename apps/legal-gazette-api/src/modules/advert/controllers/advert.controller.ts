@@ -21,12 +21,14 @@ import { OwnershipGuard } from '../../../core/guards/ownership.guard'
 import { ApplicationWebScopes } from '../../../core/guards/scope-guards/scopes.decorator'
 import {
   AdvertDetailedDto,
+} from '../../../models/advert.model'
+import { IAdvertService } from '../../../modules/advert/advert.service.interface'
+import {
   GetAdvertsDto,
   GetAdvertsQueryDto,
   GetAdvertsStatusCounterDto,
   GetMyAdvertsDto,
-} from '../../../models/advert.model'
-import { IAdvertService } from '../../../modules/advert/advert.service.interface'
+} from '../../../modules/advert/dto/advert.dto'
 
 @Controller({
   path: 'adverts',

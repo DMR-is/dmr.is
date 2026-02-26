@@ -13,25 +13,13 @@ import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUt
 
 import { LegalGazetteEvents } from '../../core/constants'
 import {
-  CreateCommonAdvertAndApplicationDto,
-  CreateRecallBankruptcyAdvertAndApplicationDto,
-  CreateRecallDeceasedAdvertAndApplicationDto,
-} from '../../core/dto/advert-application.dto'
-import {
   AdvertDetailedDto,
   AdvertModel,
   AdvertTemplateType,
-  CreateAdvertInternalDto,
-  GetAdvertsDto,
-  GetAdvertsQueryDto,
-  GetAdvertsStatusCounterDto,
-  GetExternalAdvertsDto,
-  GetMyAdvertsDto,
-  MyAdvertListItemDto,
-  UpdateAdvertDto,
 } from '../../models/advert.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import {
+  type ApplicationAnswers,
   ApplicationModel,
   ApplicationStatusEnum,
 } from '../../models/application.model'
@@ -46,6 +34,21 @@ import { SignatureModel } from '../../models/signature.model'
 import { StatusIdEnum, StatusModel } from '../../models/status.model'
 import { TypeIdEnum, TypeModel } from '../../models/type.model'
 import { UserModel } from '../../models/users.model'
+import {
+  CreateAdvertInternalDto,
+  GetAdvertsDto,
+  GetAdvertsQueryDto,
+  GetAdvertsStatusCounterDto,
+  GetExternalAdvertsDto,
+  GetMyAdvertsDto,
+  MyAdvertListItemDto,
+  UpdateAdvertDto,
+} from '../../modules/advert/dto/advert.dto'
+import {
+  CreateCommonAdvertAndApplicationDto,
+  CreateRecallBankruptcyAdvertAndApplicationDto,
+  CreateRecallDeceasedAdvertAndApplicationDto,
+} from '../../modules/advert/dto/advert-application.dto'
 import { ILGNationalRegistryService } from '../national-registry/national-registry.service.interface'
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
 import { IAdvertService } from './advert.service.interface'
@@ -102,16 +105,18 @@ export class AdvertService implements IAdvertService {
         answers: {
           additionalText: body.additionalText,
           communicationChannels: body.communicationChannels,
-          fields: body.fields,
+          fields: body.fields as any,
           prequisitesAccepted: true,
-          publishingDates: body.publishingDates,
+          publishingDates: body.publishingDates.map((date) =>
+            date.toISOString(),
+          ),
           signature: {
             ...body.signature,
             date: body.signature.date
               ? body.signature.date.toISOString()
               : null,
           },
-        },
+        } as ApplicationAnswers,
       },
       {
         returning: ['id'],
@@ -173,7 +178,9 @@ export class AdvertService implements IAdvertService {
           additionalText: body.additionalText,
           communicationChannels: body.communicationChannels,
           prequisitesAccepted: true,
-          publishingDates: body.publishingDates,
+          publishingDates: body.publishingDates.map((date) =>
+            date.toISOString(),
+          ),
           signature: {
             ...body.signature,
             date: body.signature.date
@@ -187,17 +194,17 @@ export class AdvertService implements IAdvertService {
                 slug: '',
                 title: '',
               },
-              judgmentDate: body.fields.judgmentDate,
+              judgmentDate: body.fields.judgmentDate.toISOString(),
             },
             divisionMeetingFields: {
-              meetingDate: body.fields.meetingDate,
+              meetingDate: body.fields.meetingDate.toISOString(),
               meetingLocation: body.fields.meetingLocation,
             },
             settlementFields: {
               nationalId: body.fields.settlementNationalId,
               name: body.fields.settlementName,
               address: body.fields.settlementAddress,
-              deadlineDate: body.fields.settlementDate,
+              deadlineDate: body.fields.settlementDate.toISOString(),
               liquidatorLocation: body.fields.liquidatorLocation,
               liquidatorName: body.fields.liquidatorName,
               recallRequirementStatementLocation:
@@ -205,7 +212,7 @@ export class AdvertService implements IAdvertService {
               recallRequirementStatementType: body.fields.requirementStatement,
             },
           },
-        },
+        } as ApplicationAnswers,
       },
       {
         returning: ['id'],
@@ -282,7 +289,9 @@ export class AdvertService implements IAdvertService {
           additionalText: body.additionalText,
           communicationChannels: body.communicationChannels,
           prequisitesAccepted: true,
-          publishingDates: body.publishingDates,
+          publishingDates: body.publishingDates.map((date) =>
+            date.toISOString(),
+          ),
           signature: {
             ...body.signature,
             date: body.signature.date
@@ -296,17 +305,17 @@ export class AdvertService implements IAdvertService {
                 slug: '',
                 title: '',
               },
-              judgmentDate: body.fields.judgmentDate,
+              judgmentDate: body.fields.judgmentDate.toISOString(),
             },
             divisionMeetingFields: {
-              meetingDate: body.fields.meetingDate,
+              meetingDate: body.fields.meetingDate?.toISOString(),
               meetingLocation: body.fields.meetingLocation,
             },
             settlementFields: {
               nationalId: body.fields.settlementNationalId,
               name: body.fields.settlementName,
               address: body.fields.settlementAddress,
-              deadlineDate: body.fields.settlementDate,
+              deadlineDate: body.fields.settlementDate.toISOString(),
               liquidatorLocation: body.fields.liquidatorLocation,
               liquidatorName: body.fields.liquidatorName,
               recallRequirementStatementLocation:
@@ -314,7 +323,7 @@ export class AdvertService implements IAdvertService {
               recallRequirementStatementType: body.fields.requirementStatement,
             },
           },
-        },
+        } as ApplicationAnswers,
       },
       {
         returning: ['id'],
@@ -646,16 +655,10 @@ export class AdvertService implements IAdvertService {
         legacyHtml: body.legacyHtml,
         islandIsApplicationId: body.islandIsApplicationId,
         externalId: body.externalId,
-        judgementDate:
-          typeof body.judgementDate === 'string'
-            ? new Date(body.judgementDate)
-            : body.judgementDate,
+        judgementDate: body.judgementDate,
         signature: body?.signature,
         additionalText: body.additionalText,
-        divisionMeetingDate:
-          typeof body.divisionMeetingDate === 'string'
-            ? new Date(body.divisionMeetingDate)
-            : body.divisionMeetingDate,
+        divisionMeetingDate: body.divisionMeetingDate,
         divisionMeetingLocation: body.divisionMeetingLocation,
         communicationChannels: body.communicationChannels,
         settlementId: body.settlementId,
@@ -669,12 +672,8 @@ export class AdvertService implements IAdvertService {
               liquidatorRecallStatementLocation:
                 body.settlement.recallRequirementStatementLocation,
               address: body.settlement.address,
-              dateOfDeath: body.settlement.dateOfDeath
-                ? new Date(body.settlement.dateOfDeath)
-                : null,
-              deadline: body.settlement.deadline
-                ? new Date(body.settlement.deadline)
-                : null,
+              dateOfDeath: body.settlement.dateOfDeath ?? null,
+              deadline: body.settlement.deadline ?? null,
               name: body.settlement.name,
               nationalId: body.settlement.nationalId,
               declaredClaims: body.settlement.declaredClaims ?? null,
@@ -691,7 +690,7 @@ export class AdvertService implements IAdvertService {
     await this.advertPublicationModel.bulkCreate(
       body.scheduledAt.map((scheduledAt, i) => ({
         advertId: advert.id,
-        scheduledAt: new Date(scheduledAt),
+        scheduledAt: scheduledAt,
         versionNumber: i + 1,
       })),
     )
@@ -810,17 +809,11 @@ export class AdvertService implements IAdvertService {
       title: body.title,
       content: body.content,
       additionalText: body.additionalText,
-      divisionMeetingDate:
-        typeof body.divisionMeetingDate === 'string'
-          ? new Date(body.divisionMeetingDate)
-          : body.divisionMeetingDate,
+      divisionMeetingDate: body.divisionMeetingDate,
       divisionMeetingLocation: body.divisionMeetingLocation,
       caption: body.caption,
       courtDistrictId: body.courtDistrictId,
-      judgementDate:
-        typeof body.judgementDate === 'string'
-          ? new Date(body.judgementDate)
-          : body.judgementDate,
+      judgementDate: body.judgementDate,
     })
 
     return updated.fromModelToDetailed()

@@ -1,4 +1,4 @@
-import { GetPaymentDataResponseDto } from '../../tbr/tbr.dto'
+import { GetPaymentDataResponseDto } from '../../tbr/dto/tbr.dto'
 
 export interface IPriceCalculatorService {
   getPaymentData(advertId: string): Promise<GetPaymentDataResponseDto>

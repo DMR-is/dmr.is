@@ -6,7 +6,8 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
-import { FeeCodeDto, GetFeeCodesResponse } from '../../models/fee-code.model'
+import { FeeCodeDto } from '../../models/fee-code.model'
+import { GetFeeCodesResponse } from './dto/fee-code.dto'
 import { IFeeCodeService } from './fee-code.service.interface'
 
 // TODO: Determine usage - currently no tRPC routers call this controller

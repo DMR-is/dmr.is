@@ -1,15 +1,17 @@
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 
-import { GetMyApplicationsQueryDto } from '../../core/dto/application.dto'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
+} from '../../models/application.model'
+import { GetMyApplicationsQueryDto } from '../../modules/applications/dto/application.dto'
+import {
   GetApplicationsDto,
   GetHTMLPreview,
   IslandIsSubmitApplicationDto,
   UpdateApplicationDto,
-} from '../../models/application.model'
+} from '../../modules/applications/dto/application-extra.dto'
 
 export interface IApplicationService {
   getMyApplications(

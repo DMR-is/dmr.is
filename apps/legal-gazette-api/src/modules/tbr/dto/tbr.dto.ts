@@ -1,6 +1,8 @@
-import { IsNumber, IsString } from 'class-validator'
+import { IsNumber } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
+
+import { ApiString } from '@dmr.is/decorators'
 
 export class TBRGetPaymentResponseDto {
   @ApiProperty({ type: Boolean })
@@ -28,12 +30,10 @@ export class TBRGetPaymentQueryDto {
 }
 
 export class TBRPaymentExpensesDto {
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   feeCode!: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   reference!: string
 
   @ApiProperty({ type: Number })

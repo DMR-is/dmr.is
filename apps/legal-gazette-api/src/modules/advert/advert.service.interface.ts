@@ -2,12 +2,9 @@ import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
 import {
-  CreateCommonAdvertAndApplicationDto,
-  CreateRecallBankruptcyAdvertAndApplicationDto,
-  CreateRecallDeceasedAdvertAndApplicationDto,
-} from '../../core/dto/advert-application.dto'
-import {
   AdvertDetailedDto,
+} from '../../models/advert.model'
+import {
   CreateAdvertInternalDto,
   GetAdvertsDto,
   GetAdvertsQueryDto,
@@ -15,7 +12,12 @@ import {
   GetExternalAdvertsDto,
   GetMyAdvertsDto,
   UpdateAdvertDto,
-} from '../../models/advert.model'
+} from '../../modules/advert/dto/advert.dto'
+import {
+  CreateCommonAdvertAndApplicationDto,
+  CreateRecallBankruptcyAdvertAndApplicationDto,
+  CreateRecallDeceasedAdvertAndApplicationDto,
+} from '../../modules/advert/dto/advert-application.dto'
 
 export interface IAdvertService {
   getAdverts(query: GetAdvertsQueryDto): Promise<GetAdvertsDto>

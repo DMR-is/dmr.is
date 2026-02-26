@@ -1,14 +1,15 @@
+import { Type } from 'class-transformer'
 import {
   IsBoolean,
-  IsDateString,
+  IsDate,
   IsEmail,
   IsOptional,
-  IsString,
 } from 'class-validator'
 import { Column, DataType, DefaultScope, HasMany } from 'sequelize-typescript'
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
+import { ApiDateTime, ApiString } from '@dmr.is/decorators'
 import { Paging } from '@dmr.is/shared-dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
@@ -133,41 +134,3 @@ export class SubscriberDto extends PickType(SubscriberModel, [
   'subscribedFrom',
   'subscribedTo',
 ]) {}
-
-export class GetSubscribersWithPagingResponse {
-  @ApiProperty({
-    type: [SubscriberDto],
-  })
-  subscribers!: SubscriberDto[]
-
-  @ApiProperty({ type: Paging })
-  paging!: Paging
-}
-
-export class CreateSubscriberAdminDto {
-  @ApiProperty({ type: String })
-  @IsString()
-  nationalId!: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsEmail()
-  email?: string
-
-  @ApiProperty({ type: String })
-  @IsDateString()
-  subscribedTo!: string
-}
-
-export class UpdateSubscriberEndDateDto {
-  @ApiProperty({ type: String })
-  @IsDateString()
-  subscribedTo!: string
-}
-
-export class GetSubscribersQueryDto {
-  @ApiProperty({ type: Boolean, required: false, default: false })
-  @IsOptional()
-  @IsBoolean()
-  includeInactive?: boolean
-}

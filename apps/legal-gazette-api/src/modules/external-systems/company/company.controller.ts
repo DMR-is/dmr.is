@@ -14,13 +14,13 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { MachineClientGuard } from '../../../core/guards/machine-client.guard'
-import { GetExternalAdvertsDto } from '../../../models/advert.model'
 import { IAdvertService } from '../../advert/advert.service.interface'
+import { GetExternalAdvertsDto } from '../../advert/dto/advert.dto'
 import {
   CreateAdditionalAnnouncementsDto,
   RegisterCompanyFirmaskraDto,
   RegisterCompanyHlutafelagDto,
-} from '../external-systems.dto'
+} from '../dto/external-systems.dto'
 import { ICompanyService } from './company.service.interface'
 
 @Controller({

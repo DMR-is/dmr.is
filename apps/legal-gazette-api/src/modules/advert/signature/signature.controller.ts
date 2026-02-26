@@ -14,11 +14,11 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AdminAccess, LGResponse } from '../../../core/decorators'
 import { AuthorizationGuard } from '../../../core/guards'
+import { SignatureDto } from '../../../models/signature.model'
 import {
   CreateSignatureDto,
-  SignatureDto,
   UpdateSignatureDto,
-} from '../../../models/signature.model'
+} from './dto/signature.dto'
 import { ISignatureService } from './signature.service.interface'
 
 @Controller({

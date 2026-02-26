@@ -24,7 +24,7 @@ import { FeeCodeModel } from '../../../models/fee-code.model'
 import { TBRCompanySettingsModel } from '../../../models/tbr-company-settings.model'
 import { TypeModel } from '../../../models/type.model'
 import { IApplicationService } from '../../applications/application.service.interface'
-import { GetPaymentDataResponseDto } from '../../tbr/tbr.dto'
+import { GetPaymentDataResponseDto } from '../../tbr/dto/tbr.dto'
 import { IPriceCalculatorService } from './price-calculator.service.interface'
 
 const LOGGING_CONTEXT = 'PriceCalculatorService'

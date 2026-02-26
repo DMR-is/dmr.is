@@ -21,12 +21,14 @@ import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import {
+  UserDto,
+} from '../../models/users.model'
+import {
   CreateUserDto,
   GetUsersResponse,
   GetUsersWithPagingResponse,
   UpdateUserDto,
-  UserDto,
-} from '../../models/users.model'
+} from './dto/users.dto'
 import { IUsersService } from './users.service.interface'
 
 @ApiBearerAuth()

@@ -3,30 +3,33 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
-  IsDateString,
-  IsEnum,
   IsOptional,
-  IsString,
-  IsUUID,
   ValidateNested,
 } from 'class-validator'
 
 import { ApiProperty, IntersectionType } from '@nestjs/swagger'
 
+import {
+  ApiDateTime,
+  ApiDateTimeArray,
+  ApiEnum,
+  ApiOptionalDateTime,
+  ApiOptionalEnum,
+  ApiOptionalString,
+  ApiString,
+  ApiUUId,
+} from '@dmr.is/decorators'
 import { SettlementType } from '@dmr.is/legal-gazette-schemas'
 
-import { ApplicationRequirementStatementEnum } from '../../models/application.model'
-import { CreateCommunicationChannelDto } from '../../models/communication-channel.model'
-import { CreateSignatureDto } from '../../models/signature.model'
+import { ApplicationRequirementStatementEnum } from '../../../models/application.model'
+import { CreateCommunicationChannelDto } from '../../communication-channel/dto/communication-channel.dto'
+import { CreateSignatureDto } from '../signature/dto/signature.dto'
 
 export class SharedApplicationFieldsDto {
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   applicantNationalId!: string
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
+  @ApiOptionalString()
   additionalText?: string
 
   @ApiProperty({ type: CreateSignatureDto })
@@ -40,86 +43,66 @@ export class SharedApplicationFieldsDto {
   @Type(() => CreateCommunicationChannelDto)
   communicationChannels!: CreateCommunicationChannelDto[]
 
-  @ApiProperty({ type: [String] })
-  @IsArray()
-  @IsDateString(undefined, { each: true })
+  @ApiDateTimeArray()
   @ArrayMinSize(1)
   @ArrayMaxSize(3)
-  publishingDates!: string[]
+  publishingDates!: Date[]
 }
 
 export class CommonAdvertFieldsDto {
-  @ApiProperty({ type: String })
-  @IsUUID()
+  @ApiUUId()
   typeId!: string
 
-  @ApiProperty({ type: String })
-  @IsUUID()
+  @ApiUUId()
   categoryId!: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   caption!: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   content!: string
 }
 
 export class RecallDeceasedCompanyDto {
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   companyName!: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   companyNationalId!: string
 }
 
 export class RecallAdvertFieldsDto {
-  @ApiProperty({ type: String })
-  @IsUUID()
+  @ApiUUId()
   courtDistrictId!: string
 
-  @ApiProperty({ type: String })
-  @IsDateString()
-  judgmentDate!: string
+  @ApiDateTime()
+  judgmentDate!: Date
 
-  @ApiProperty({ enum: SettlementType, required: false })
-  @IsOptional()
-  @IsEnum(SettlementType)
+  @ApiOptionalEnum(SettlementType)
   settlementType?: SettlementType
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   settlementNationalId!: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   settlementName!: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   settlementAddress!: string
 
-  @ApiProperty({ type: String })
-  @IsDateString()
-  settlementDate!: string
+  @ApiDateTime()
+  settlementDate!: Date
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   liquidatorName!: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   liquidatorLocation!: string
 
-  @ApiProperty({ enum: ApplicationRequirementStatementEnum })
-  @IsEnum(ApplicationRequirementStatementEnum)
+  @ApiEnum(ApplicationRequirementStatementEnum)
   requirementStatement!: ApplicationRequirementStatementEnum
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   requirementStatementLocation!: string
 
   @ApiProperty({ type: [RecallDeceasedCompanyDto], required: false })
@@ -131,24 +114,18 @@ export class RecallAdvertFieldsDto {
 }
 
 export class RecallDivisionMeetingFieldsDto {
-  @ApiProperty({ type: String })
-  @IsDateString()
-  meetingDate!: string
+  @ApiDateTime()
+  meetingDate!: Date
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   meetingLocation!: string
 }
 
 export class RecallDivisionMeetingOptionalFieldsDto {
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsDateString()
-  meetingDate?: string
+  @ApiOptionalDateTime()
+  meetingDate?: Date
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
+  @ApiOptionalString()
   meetingLocation?: string
 }
 

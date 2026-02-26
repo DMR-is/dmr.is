@@ -2,7 +2,7 @@ import {
   GetAdvertsInProgressStatsDto,
   GetAdvertsToBePublishedStatsDto,
   GetCountByStatusesDto,
-} from './statistics.dto'
+} from './dto/statistics.dto'
 
 export interface IStatisticsService {
   getCountByStatuses(): Promise<GetCountByStatusesDto>

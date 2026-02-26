@@ -12,13 +12,13 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AdminAccess, LGResponse } from '../../core/decorators'
+import { AuthorizationGuard } from '../../core/guards'
 import {
   GetPaymentsDto,
   GetPaymentsQuery,
   SyncPaymentsResponseDto,
-} from '../../core/dto/payments.dto'
-import { AuthorizationGuard } from '../../core/guards'
-import { TBRGetPaymentResponseDto } from '../tbr/tbr.dto'
+} from '../../modules/payments/dto/payments.dto'
+import { TBRGetPaymentResponseDto } from '../tbr/dto/tbr.dto'
 import { IPaymentsService } from './payments.service.interface'
 
 @Controller({

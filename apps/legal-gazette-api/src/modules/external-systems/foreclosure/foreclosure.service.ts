@@ -8,17 +8,19 @@ import { assertAdvertEditable } from '../../../core/utils/advert-status.util'
 import { AdvertModel, AdvertTemplateType } from '../../../models/advert.model'
 import { CategoryDefaultIdEnum } from '../../../models/category.model'
 import {
-  CreateForeclosureSaleDto,
   ForeclosureDto,
   ForeclosureModel,
 } from '../../../models/foreclosure.model'
 import {
-  CreateForeclosurePropertyDto,
   ForeclosurePropertyDto,
   ForeclosurePropertyModel,
 } from '../../../models/foreclosure-property.model'
 import { TypeIdEnum } from '../../../models/type.model'
 import { IAdvertService } from '../../advert/advert.service.interface'
+import {
+  CreateForeclosurePropertyDto,
+  CreateForeclosureSaleDto,
+} from './dto/foreclosure.dto'
 import { IForeclosureService } from './foreclosure.service.interface'
 
 const LOGGING_CONTEXT = 'ForeclosureService'
@@ -97,7 +99,7 @@ export class ForeclosureService implements IForeclosureService {
         advertId: advertId,
         caseNumberIdentifier: body.caseNumberIdentifier,
         foreclosureAddress: escapedAddress,
-        foreclosureDate: new Date(body.foreclosureDate),
+        foreclosureDate: body.foreclosureDate,
         foreclosureRegion: escapedRegion,
         properties: escapedProperties,
       },

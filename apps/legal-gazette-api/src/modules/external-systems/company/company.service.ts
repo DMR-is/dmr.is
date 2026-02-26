@@ -12,7 +12,7 @@ import {
   CreateAdditionalAnnouncementsDto,
   RegisterCompanyFirmaskraDto,
   RegisterCompanyHlutafelagDto,
-} from '../external-systems.dto'
+} from '../dto/external-systems.dto'
 import { ICompanyService } from './company.service.interface'
 import {
   formatCompanyAnnouncement as getCompanyAnnouncementMarkup,
@@ -203,7 +203,7 @@ export class CompanyService implements ICompanyService {
         location: body.responsibleParty.signature.location,
         onBehalfOf: body.responsibleParty.signature.onBehalfOf,
       },
-      scheduledAt: [pubDate.toISOString()],
+      scheduledAt: [pubDate],
       caption: `${formatDate(announcementDate, 'MMMM yyyy')}`,
       isFromExternalSystem: true,
     })
@@ -329,7 +329,7 @@ export class CompanyService implements ICompanyService {
         location: body.responsibleParty.signature.location,
         onBehalfOf: body.responsibleParty.signature.onBehalfOf,
       },
-      scheduledAt: [pubDate.toISOString()],
+      scheduledAt: [pubDate],
       isFromExternalSystem: true,
     })
 
@@ -477,7 +477,7 @@ export class CompanyService implements ICompanyService {
         location: body.responsibleParty.signature.location,
         onBehalfOf: body.responsibleParty.signature.onBehalfOf,
       },
-      scheduledAt: [pubDate.toISOString()],
+      scheduledAt: [pubDate],
       isFromExternalSystem: true,
       externalId: body.responsibleParty.externalId,
     })

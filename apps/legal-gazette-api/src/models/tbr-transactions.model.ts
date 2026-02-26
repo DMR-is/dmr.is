@@ -8,7 +8,7 @@ import {
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
-import { PaymentDto } from '../core/dto/payments.dto'
+import { PaymentDto } from '../modules/payments/dto/payments.dto'
 import { FeeCodeModel } from './fee-code.model'
 
 /**
@@ -131,8 +131,8 @@ export class TBRTransactionModel extends BaseModel<
       status: model.status,
       totalPrice: model.totalPrice,
       debtorNationalId: model.debtorNationalId,
-      paidAt: model.paidAt ? model.paidAt.toISOString() : null,
-      createdAt: model.createdAt.toISOString(),
+      paidAt: model.paidAt,
+      createdAt: model.createdAt,
       chargeBase: model.chargeBase,
       chargeCategory: model.chargeCategory,
       tbrReference: model.tbrReference,
