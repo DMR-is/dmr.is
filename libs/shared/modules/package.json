@@ -1,11 +1,17 @@
 {
-  "name": "modules",
+  "name": "@dmr.is/shared-modules",
   "version": "0.0.1",
   "private": true,
-  "type": "commonjs",
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./guards/auth": "./src/lib/guards/auth/index.ts"
+  },
   "dependencies": {
-    "tslib": "^2.3.0"
+    "@dmr.is/constants": "workspace:*",
+    "@dmr.is/decorators": "workspace:*",
+    "@dmr.is/logging": "workspace:*",
+    "@dmr.is/shared-dto": "workspace:*",
+    "@dmr.is/types": "workspace:*",
+    "@dmr.is/utils-server": "workspace:*"
   }
 }

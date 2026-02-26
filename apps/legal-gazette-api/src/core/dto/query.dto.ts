@@ -2,7 +2,7 @@ import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { PagingQuery } from '@dmr.is/shared/dto'
+import { PagingQuery } from '@dmr.is/shared-dto'
 
 export class QueryDto extends PagingQuery {
   @ApiProperty({ type: String, required: false })

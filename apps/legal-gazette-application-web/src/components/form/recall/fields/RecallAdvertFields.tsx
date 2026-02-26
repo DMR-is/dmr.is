@@ -2,7 +2,7 @@
 
 import { useFormContext } from 'react-hook-form'
 
-import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
+import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette-schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'

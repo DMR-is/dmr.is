@@ -5,7 +5,7 @@ import {
   NotImplementedException,
 } from '@nestjs/common'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
 import {
   AdvertStatus,
@@ -15,7 +15,7 @@ import {
   GetStatisticsOverviewResponse,
   StatisticsOverviewCategory,
   StatisticsOverviewQueryType,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { IStatisticsService } from './statistics.service.interface'

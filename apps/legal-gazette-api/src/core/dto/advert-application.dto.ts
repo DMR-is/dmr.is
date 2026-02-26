@@ -13,7 +13,7 @@ import {
 
 import { ApiProperty, IntersectionType } from '@nestjs/swagger'
 
-import { SettlementType } from '@dmr.is/legal-gazette/schemas'
+import { SettlementType } from '@dmr.is/legal-gazette-schemas'
 
 import { ApplicationRequirementStatementEnum } from '../../models/application.model'
 import { CreateCommunicationChannelDto } from '../../models/communication-channel.model'

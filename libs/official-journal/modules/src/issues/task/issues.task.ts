@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { AdvisoryLockService } from '@dmr.is/shared/modules'
+import { AdvisoryLockService } from '@dmr.is/shared-modules'
 
 import {
   ISSUES_ALLOWED_DEPARTMENT_IDS,

@@ -6,7 +6,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { ApplicationStates } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdditionType,
   CaseCommunicationStatus,
@@ -26,9 +26,9 @@ import {
   UpdateTagBody,
   UpdateTitleBody,
   UserDto,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { getFastTrack, getNextStatus, getPreviousStatus } from '@dmr.is/utils/server/serverUtils'
+import { getFastTrack, getNextStatus, getPreviousStatus } from '@dmr.is/utils-server/serverUtils'
 
 import { IApplicationService } from '../../../application/application.service.interface'
 import { ICommentServiceV2 } from '../../../comment/v2'

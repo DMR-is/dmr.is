@@ -1,0 +1,12 @@
+{
+  "name": "@dmr.is/clients-national-registry",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@dmr.is/logging": "workspace:*",
+    "@dmr.is/utils-server": "workspace:*"
+  }
+}

@@ -5,7 +5,7 @@ import { useFormContext } from 'react-hook-form'
 import {
   BaseApplicationWebSchema,
   CommunicationChannelSchema,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'

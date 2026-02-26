@@ -1,7 +1,7 @@
 import {
   baseApplicationSchemaRefined,
   commonApplicationAnswersRefined,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { AdvertContentField } from '../../../components/form/common/fields/AdvertContentFields'

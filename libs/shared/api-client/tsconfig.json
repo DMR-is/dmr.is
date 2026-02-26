@@ -1,9 +1,6 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {
-    "target": "es2015",
-    "module": "esnext",
-  },
+  "compilerOptions": {},
   "files": [],
   "include": [],
   "references": [

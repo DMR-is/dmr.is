@@ -26,9 +26,7 @@
         "development": {
           "outputPath": "apps/official-journal-web"
         },
-        "production": {
-          "webpack": true
-        }
+        "production": {}
       }
     },
     "serve": {

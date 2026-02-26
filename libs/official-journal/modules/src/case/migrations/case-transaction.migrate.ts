@@ -1,4 +1,4 @@
-import { CaseTransaction } from '@dmr.is/shared/dto'
+import { CaseTransaction } from '@dmr.is/shared-dto'
 
 import { CaseTransactionModel } from '../models'
 

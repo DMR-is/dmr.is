@@ -24,7 +24,7 @@ import {
   LogAndHandle,
   Transactional,
 } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertStatus,
   CreateAdvert,
@@ -49,11 +49,11 @@ import {
   UpdateAdvertBody,
   UpdateCategory,
   UpdateMainCategory,
-} from '@dmr.is/shared/dto'
-import { IAWSService } from '@dmr.is/shared/modules'
+} from '@dmr.is/shared-dto'
+import { IAWSService } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
-import { cleanLegacyHtml } from '@dmr.is/utils/server/cleanLegacyHtml'
-import { generatePaging, toUtf8 } from '@dmr.is/utils/server/serverUtils'
+import { cleanLegacyHtml } from '@dmr.is/utils-server/cleanLegacyHtml'
+import { generatePaging, toUtf8 } from '@dmr.is/utils-server/serverUtils'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { caseAdditionMigrate } from '../case/migrations/case-addition.migrate'

@@ -9,7 +9,7 @@ import {
   RecallApplicationWebSchema,
   recallBankruptcyAnswersRefined,
   recallDeceasedAnswersRefined,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 import { getLogger } from '@dmr.is/logging-next'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 

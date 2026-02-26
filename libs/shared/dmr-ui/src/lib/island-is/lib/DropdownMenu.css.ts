@@ -1,4 +1,4 @@
-import { theme, zIndex } from '@island.is/island-ui/theme'
+import { theme, zIndex } from '@dmr.is/island-ui-theme'
 
 import { style } from '@vanilla-extract/css'
 

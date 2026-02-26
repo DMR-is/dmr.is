@@ -15,7 +15,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { AttachmentTypeParam, REGULATION_TYPES } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AddCaseAdvertCorrection,
   AdvertStatus,
@@ -62,8 +62,8 @@ import {
   UpdateTagBody,
   UpdateTitleBody,
   UserDto,
-} from '@dmr.is/shared/dto'
-import { IAWSService } from '@dmr.is/shared/modules'
+} from '@dmr.is/shared-dto'
+import { IAWSService } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 import {
   enumMapper,
@@ -71,7 +71,7 @@ import {
   getLimitAndOffset,
   getPublicationTemplate,
   getS3Bucket,
-} from '@dmr.is/utils/server/serverUtils'
+} from '@dmr.is/utils-server/serverUtils'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'

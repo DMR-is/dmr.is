@@ -1,0 +1,11 @@
+{
+  "name": "@dmr.is/mocks",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@dmr.is/shared-dto": "workspace:*"
+  }
+}

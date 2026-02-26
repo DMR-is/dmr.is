@@ -1,6 +1,6 @@
 import * as z from 'zod'
 
-import { communicationChannelSchema } from '@dmr.is/legal-gazette/schemas'
+import { communicationChannelSchema } from '@dmr.is/legal-gazette-schemas'
 
 import {
   RecallBankruptcyFieldsDtoRequirementStatementEnum,

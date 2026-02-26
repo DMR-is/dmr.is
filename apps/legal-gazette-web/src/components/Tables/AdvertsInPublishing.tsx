@@ -13,8 +13,8 @@ import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import {
   getDaysDelta,
   getIcelandicDative,
-} from '@dmr.is/utils/client/clientUtils'
-import { formatDate } from '@dmr.is/utils/shared/format/date'
+} from '@dmr.is/utils-client/clientUtils'
+import { formatDate } from '@dmr.is/utils-shared/format/date'
 
 import { useAdvertSelection } from '../../hooks/useAdvertSelection'
 import { useBulkPublish } from '../../hooks/useBulkPublish'

@@ -1,5 +1,5 @@
-import { CaseComment, CaseCommentSourceEnum } from '@dmr.is/shared/dto'
-import { mapSourceToDirection } from '@dmr.is/utils/server/serverUtils'
+import { CaseComment, CaseCommentSourceEnum } from '@dmr.is/shared-dto'
+import { mapSourceToDirection } from '@dmr.is/utils-server/serverUtils'
 
 import { caseStatusMigrate } from '../../../case/migrations/case-status.migrate'
 import { CaseCommentModel } from '../models'

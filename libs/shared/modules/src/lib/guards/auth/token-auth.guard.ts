@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common'
 
 import { LogMethod } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 type UserFromIdToken = {
   name: string

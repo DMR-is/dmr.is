@@ -5,7 +5,7 @@
 //   CaseCommentTitleEnum,
 //   CaseCommunicationStatus,
 //   CaseTagEnum,
-// } from '@dmr.is/shared/dto'
+// } from '@dmr.is/shared-dto'
 // import { ARMANN, PALINA } from './users.mock'
 // import {
 //   DEPT_A_AUGLYSING,

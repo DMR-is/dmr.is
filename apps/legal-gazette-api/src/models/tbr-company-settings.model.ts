@@ -4,8 +4,8 @@ import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
 import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
 
-import { Paging, PagingQuery } from '@dmr.is/shared/dto'
-import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
+import { Paging, PagingQuery } from '@dmr.is/shared-dto'
+import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'

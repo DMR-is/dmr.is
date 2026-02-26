@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common'
 
 import { LogMethod } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { IAuthService, IdsToken } from './auth.service.interface'
 const LOGGING_CONTEXT = 'AuthService'

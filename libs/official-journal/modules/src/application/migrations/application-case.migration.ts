@@ -1,4 +1,4 @@
-import { ApplicationCase } from '@dmr.is/shared/dto'
+import { ApplicationCase } from '@dmr.is/shared-dto'
 
 import { caseCommunicationStatusMigrate } from '../../case/migrations/case-communication-status.migrate'
 import { CaseModel } from '../../case/models'

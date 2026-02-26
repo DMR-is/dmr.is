@@ -1,5 +1,5 @@
-import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { PagingQuery } from '@dmr.is/shared/dto'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
+import { PagingQuery } from '@dmr.is/shared-dto'
 
 import {
   CreateCommonAdvertAndApplicationDto,

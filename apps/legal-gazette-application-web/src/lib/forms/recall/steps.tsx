@@ -7,7 +7,7 @@ import {
   publishingDatesRecallSchemaRefined,
   recallBankruptcySchemaRefined,
   recallDeceasedSchemaRefined,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { CommunicationChannelFields } from '../../../components/form/fields/CommunicationChannelFields'

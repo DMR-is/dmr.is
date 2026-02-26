@@ -1,4 +1,4 @@
-import { GetNationalRegistryEntityDto } from '@dmr.is/clients/national-registry'
+import { GetNationalRegistryEntityDto } from '@dmr.is/clients-national-registry'
 
 export interface ILGNationalRegistryService {
   getEntityByNationalId(

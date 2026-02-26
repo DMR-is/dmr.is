@@ -2,7 +2,7 @@ import { IsEnum, IsOptional } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
+import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 
 import { ApplicationStatusEnum } from '../../models/application.model'
 import { QueryDto } from './query.dto'

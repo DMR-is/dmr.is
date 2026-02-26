@@ -8,7 +8,7 @@ import * as z from 'zod'
 import {
   ApplicationRequirementStatementEnum,
   parseZodError,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'

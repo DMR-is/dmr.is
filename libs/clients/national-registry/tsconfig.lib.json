@@ -5,7 +5,7 @@
   "files": [],
   "references": [],
   "compilerOptions": {
-    "esModuleInterop": true,
-    "emitDecoratorMetadata": true
+    "declaration": true,
+    "types": ["node"]
   }
 }

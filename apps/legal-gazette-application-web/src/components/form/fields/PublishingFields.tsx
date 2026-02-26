@@ -7,7 +7,7 @@ import {
   BaseApplicationWebSchema,
   CommonApplicationWebSchema,
   RecallApplicationWebSchema,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -18,7 +18,7 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import {
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,
-} from '@dmr.is/utils/client/dateUtils'
+} from '@dmr.is/utils-client/dateUtils'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 import { ONE_DAY, ONE_WEEK } from '../../../lib/constants'

@@ -2,6 +2,7 @@ import dynamic from 'next/dynamic'
 
 import { useState } from 'react'
 
+import { theme } from '@dmr.is/island-ui-theme'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
@@ -9,8 +10,6 @@ import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Tabs, type TabType } from '@dmr.is/ui/components/island-is/Tabs'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
-
-import { theme } from '@island.is/island-ui/theme'
 
 import {
   CaseStatusEnum,
@@ -26,7 +25,7 @@ import * as styles from './Statistics.css'
 
 const PieChart = dynamic(
   () =>
-    import('@dmr.is/ui/lazy/components/PieChart/PieChart').then(
+    import('@dmr.is/ui-lazy/components/PieChart/PieChart').then(
       (piechart) => piechart.PieChart,
     ),
   { ssr: false },

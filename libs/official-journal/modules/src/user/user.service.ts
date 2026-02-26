@@ -6,7 +6,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { UserRoleEnum } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CreateUserDto,
   GetInvoledPartiesByUserResponse,
@@ -17,9 +17,9 @@ import {
   GetUsersResponse,
   UpdateUserDto,
   UserDto,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
 
 import { advertInvolvedPartyMigrate } from '../journal/migrations'
 import { AdvertInvolvedPartyModel } from '../journal/models'

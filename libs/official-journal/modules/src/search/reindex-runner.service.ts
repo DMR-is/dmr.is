@@ -4,7 +4,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { SchedulerRegistry } from '@nestjs/schedule'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { CaseModel } from '../case/models'

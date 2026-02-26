@@ -2,8 +2,6 @@
 import cn from 'classnames'
 import { FC, forwardRef, ReactNode } from 'react'
 
-import { shouldLinkOpenInNewWindow } from '@island.is/shared/utils'
-
 import * as styles from './Tag.css'
 import { Text } from './Text'
 
@@ -37,6 +35,18 @@ export interface TagProps {
   textLeft?: boolean
   CustomLink?: FC<React.PropsWithChildren<unknown>>
   whiteBackground?: boolean
+}
+
+// Inlined from @island.is/shared/utils
+const hosts = '(island\\.is|devland\\.is|localhost:\\d{4,5})'
+const template = `^https{0,1}:\\/\\/([^\\/]{1,2048}\\.){0,1}${hosts}(\\/|$)`
+const islandisRe = new RegExp(template)
+
+const shouldLinkOpenInNewWindow = (href: string): boolean => {
+  const externalCandidate =
+    typeof href === 'string' && href.indexOf('://') !== -1
+
+  return externalCandidate && !href.match(islandisRe)
 }
 
 export const Tag = forwardRef<HTMLButtonElement & HTMLAnchorElement, TagProps>(

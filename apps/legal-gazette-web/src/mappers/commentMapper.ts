@@ -1,8 +1,8 @@
 import {
   getDaysAgo,
   getIcelandicDative,
-} from '@dmr.is/utils/client/clientUtils'
-import { formatDate } from '@dmr.is/utils/shared/format/date'
+} from '@dmr.is/utils-client/clientUtils'
+import { formatDate } from '@dmr.is/utils-shared/format/date'
 
 import { CommentProps } from '../components/comments/Comment'
 import { CommentDto, CommentTypeEnum } from '../gen/fetch'

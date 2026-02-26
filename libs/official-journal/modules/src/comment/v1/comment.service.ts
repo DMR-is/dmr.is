@@ -10,13 +10,13 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CaseCommentSourceEnum,
   GetCaseCommentResponse,
   GetCaseCommentsResponse,
   PostCaseCommentBody,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { IApplicationService } from '../../application/application.service.interface'

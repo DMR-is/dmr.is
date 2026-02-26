@@ -2,8 +2,8 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { LegalGazetteEvents } from '../../core/constants'
 import { MutationResponse } from '../../core/dto/mutation.do'
@@ -110,7 +110,7 @@ export class SubscriberService implements ISubscriberService {
     )
 
     // Handle lock acquisition failure (concurrent request for same user)
-    if (!lockResult.success) {
+    if (lockResult.success === false) {
       this.logger.info('Subscription request blocked by concurrent request', {
         category: 'subscriber-service',
         context: LOGGING_CONTEXT,

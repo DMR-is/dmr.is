@@ -1,7 +1,6 @@
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
-
-import { ProblemTemplate } from '@island.is/island-ui/core/ProblemTemplate/ProblemTemplate'
+import { ProblemTemplate } from '@dmr.is/ui/components/island-is/ProblemTemplate'
 
 import { useLogOut } from '../../hooks/useLogOut'
 

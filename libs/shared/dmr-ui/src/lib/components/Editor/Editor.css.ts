@@ -1,10 +1,9 @@
-import type { EditorClasses } from '@dmr.is/regulations-tools/Editor'
-
-import { spacing, theme } from '@island.is/island-ui/theme'
 import {
   diffStyling,
   regulationContentStyling,
-} from '@island.is/regulations/styling'
+} from '@dmr.is/island-regulations/styling'
+import { spacing, theme } from '@dmr.is/island-ui-theme'
+import type { EditorClasses } from '@dmr.is/regulations-tools/Editor'
 
 import {
   containerDisabled,

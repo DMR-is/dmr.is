@@ -1,4 +1,4 @@
-import { MainCategory } from '@dmr.is/shared/dto'
+import { MainCategory } from '@dmr.is/shared-dto'
 
 import { AdvertCategoryCategoriesModel } from '../models'
 

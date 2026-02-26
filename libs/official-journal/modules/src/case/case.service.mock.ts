@@ -4,7 +4,7 @@ import { Transaction } from 'sequelize'
 
 import { Inject } from '@nestjs/common'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AddCaseAdvertCorrection,
   CaseComment,
@@ -44,7 +44,7 @@ import {
   UpdatePublishDateBody,
   UpdateTagBody,
   UpdateTitleBody,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { GenericError, ResultWrapper } from '@dmr.is/types'
 
 // export class CaseServiceMock implements ICaseService {

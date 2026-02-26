@@ -7,8 +7,8 @@ import {
 
 import { UserRoleEnum } from '@dmr.is/constants'
 import { LogMethod } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { IUserService } from '@dmr.is/ojoi/modules'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { IUserService } from '@dmr.is/ojoi-modules'
 
 const LOGGING_CATEGORY = 'party-guard'
 const LOGGING_CONTEXT = 'PartyGuard'

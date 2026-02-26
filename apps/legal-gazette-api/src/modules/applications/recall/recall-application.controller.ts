@@ -9,9 +9,9 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'

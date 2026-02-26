@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@dmr.is/logging'
-import { filterArgs, handleException } from '@dmr.is/utils/server/serverUtils'
+import { filterArgs, handleException } from '@dmr.is/utils-server/serverUtils'
 
 type LogAndHandleOptions = {
   logArgs?: boolean

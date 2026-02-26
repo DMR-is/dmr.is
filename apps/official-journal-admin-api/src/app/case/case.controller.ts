@@ -37,14 +37,14 @@ import {
   UserRoleEnum,
 } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ICaseService,
   ICommentServiceV2,
   IJournalService,
   IPriceService,
-} from '@dmr.is/ojoi/modules'
-import { RoleGuard } from '@dmr.is/ojoi/modules/guards/auth'
+} from '@dmr.is/ojoi-modules'
+import { RoleGuard } from '@dmr.is/ojoi-modules/guards/auth'
 import {
   EnumValidationPipe,
   FileTypeValidationPipe,
@@ -114,8 +114,8 @@ import {
   UpdateTagBody,
   UpdateTitleBody,
   UserDto,
-} from '@dmr.is/shared/dto'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+} from '@dmr.is/shared-dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
 const LOG_CATEGORY = 'case-controller'

@@ -1,11 +1,11 @@
 import { InternalServerErrorException } from '@nestjs/common'
 
-import { CaseActionEnum } from '@dmr.is/shared/dto'
+import { CaseActionEnum } from '@dmr.is/shared-dto'
 import {
   CommentCreatorDto,
   CommentDto,
   CommentReceiverDto,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 
 import { CommentModel } from '../models/comment.model'
 

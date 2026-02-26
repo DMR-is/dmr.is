@@ -3,12 +3,12 @@ import { Test, TestingModule } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
-import { IUserService } from '@dmr.is/ojoi/modules'
+import { IUserService } from '@dmr.is/ojoi-modules'
 import {
   DepartmentSlugEnum,
   StatisticsOverviewQueryType,
   UserDto,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 
 import { StatisticsController } from './statistics.controller'
 import { IStatisticsService } from './statistics.service.interface'

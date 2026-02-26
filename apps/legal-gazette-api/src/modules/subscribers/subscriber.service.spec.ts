@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
-import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { LegalGazetteEvents } from '../../core/constants'

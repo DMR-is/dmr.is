@@ -5,24 +5,24 @@ import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { LogAndHandle } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertDepartmentModel,
   CaseCommunicationStatusModel,
   CaseModel,
   CaseStatusModel,
-} from '@dmr.is/ojoi/modules'
+} from '@dmr.is/ojoi-modules'
 import {
   CaseCommunicationStatus,
   CaseStatusEnum,
   DepartmentSlugEnum,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import {
   GetStatisticOverviewDashboardResponse,
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
   StatisticsOverviewQueryType,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { IStatisticsService } from './statistics.service.interface'

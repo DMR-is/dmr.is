@@ -6,14 +6,14 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CreateSignature,
   CreateSignatureMember,
   GetSignature,
   UpdateSignatureMember,
   UpdateSignatureRecord,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { CaseModel } from '../case/models'

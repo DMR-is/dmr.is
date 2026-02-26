@@ -1,10 +1,10 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { PagingQuery } from '@dmr.is/shared/dto'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { PagingQuery } from '@dmr.is/shared-dto'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
 
 import {
   CreateSubscriberAdminDto,

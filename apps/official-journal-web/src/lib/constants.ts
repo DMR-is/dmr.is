@@ -1,5 +1,5 @@
-import type { AlertMessageType } from '@island.is/island-ui/core/AlertMessage/AlertMessage'
-import type { StringOption } from '@island.is/island-ui/core/Select/Select.types'
+import type { AlertMessageType } from '@dmr.is/ui/components/island-is/AlertMessage'
+import type { StringOption } from '@dmr.is/ui/components/island-is/Select'
 
 export const HEADER_HEIGHT = 112
 export const MOBILE_HEADER_HEIGHT = 104

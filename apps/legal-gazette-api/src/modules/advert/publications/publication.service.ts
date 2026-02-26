@@ -6,8 +6,8 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Cacheable } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
 
 import { mapIndexToVersion, mapVersionToIndex } from '../../../core/utils'
 import { AdvertModel } from '../../../models/advert.model'

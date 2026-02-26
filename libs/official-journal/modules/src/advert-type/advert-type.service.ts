@@ -13,7 +13,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@dmr.is/constants'
 import { LogAndHandle, LogMethod, Transactional } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertTypeQuery,
   CreateAdvertMainTypeBody,
@@ -24,9 +24,9 @@ import {
   GetAdvertTypes,
   UpdateAdvertMainType,
   UpdateAdvertTypeBody,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
 
 import { IAdvertTypeService } from './advert-type.service.interface'
 import { advertMainTypeMigrate, advertTypeMigrate } from './migrations'

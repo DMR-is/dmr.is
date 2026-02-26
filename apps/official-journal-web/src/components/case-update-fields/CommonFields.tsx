@@ -6,7 +6,7 @@ import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/utils/toast'
-import { debounce } from '@dmr.is/utils/shared/lodash/debounce'
+import { debounce } from '@dmr.is/utils-shared/lodash/debounce'
 
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'

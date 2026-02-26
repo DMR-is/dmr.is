@@ -3,7 +3,7 @@
 import cn from 'classnames'
 import { FC, ReactNode } from 'react'
 
-import { Colors } from '@island.is/island-ui/theme'
+import { Colors } from '@dmr.is/island-ui-theme'
 
 import { Box } from './Box'
 import * as styles from './Breadcrumbs.css'

@@ -14,7 +14,7 @@ import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
-import { debounce } from '@dmr.is/utils/shared/lodash/debounce'
+import { debounce } from '@dmr.is/utils-shared/lodash/debounce'
 
 import * as styles from './TBRSettingsFilters.css'
 

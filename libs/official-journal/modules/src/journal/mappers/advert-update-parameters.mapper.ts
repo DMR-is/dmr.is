@@ -1,4 +1,4 @@
-import { UpdateAdvertBody } from '@dmr.is/shared/dto'
+import { UpdateAdvertBody } from '@dmr.is/shared-dto'
 
 type UpdateParams = {
   departmentId?: string

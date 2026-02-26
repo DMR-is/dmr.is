@@ -6,7 +6,7 @@ import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
 import {
   DepartmentSlugEnum,
   StatisticsOverviewQueryType,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 
 import { IStatisticsService } from './statistics.service.interface'
 import { MockStatisticsService } from './statistics.service.mock'

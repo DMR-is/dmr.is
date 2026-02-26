@@ -31,9 +31,9 @@ import { InternalServerErrorException } from '@nestjs/common'
 import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
 
 import { getLogger } from '@dmr.is/logging'
-import { Paging } from '@dmr.is/shared/dto'
-import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
-import { cleanLegalGazetteLegacyHtml } from '@dmr.is/utils/server/cleanLegacyHtml'
+import { Paging } from '@dmr.is/shared-dto'
+import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { cleanLegalGazetteLegacyHtml } from '@dmr.is/utils-server/cleanLegacyHtml'
 
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'

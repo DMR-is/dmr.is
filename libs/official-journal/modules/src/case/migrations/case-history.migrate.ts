@@ -1,4 +1,4 @@
-import { CaseHistory } from '@dmr.is/shared/dto'
+import { CaseHistory } from '@dmr.is/shared-dto'
 
 import { CaseHistoryModel } from '../models/case-history.model'
 

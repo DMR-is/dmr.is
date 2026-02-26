@@ -1,12 +1,9 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.preset-nestjs.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "module": "commonjs",
-    "types": ["node"],
-    "emitDecoratorMetadata": true,
-    "target": "es2021"
+    "outDir": "../../dist/out-tsc"
   },
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
+  // TODO: extract filters.ts to shared lib
   "include": ["src/**/*.ts", "../official-journal-admin-api/src/filters.ts"]
 }

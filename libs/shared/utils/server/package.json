@@ -1,0 +1,14 @@
+{
+  "name": "@dmr.is/utils-server",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    "./*": "./src/lib/*.ts"
+  },
+  "dependencies": {
+    "@dmr.is/constants": "workspace:*",
+    "@dmr.is/logging": "workspace:*",
+    "@dmr.is/shared-dto": "workspace:*",
+    "@dmr.is/types": "workspace:*"
+  }
+}

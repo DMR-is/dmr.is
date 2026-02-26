@@ -4,9 +4,9 @@ import { Inject, Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { IAWSService } from '@dmr.is/shared/modules'
-import { withRetry } from '@dmr.is/utils/server/withRetry'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { IAWSService } from '@dmr.is/shared-modules'
+import { withRetry } from '@dmr.is/utils-server/withRetry'
 
 import { LegalGazetteEvents } from '../../../../core/constants'
 import { AdvertModel } from '../../../../models/advert.model'

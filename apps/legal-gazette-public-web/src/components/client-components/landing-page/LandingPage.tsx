@@ -14,7 +14,7 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
-import { createUrlFromHost } from '@dmr.is/utils/client/clientUtils'
+import { createUrlFromHost } from '@dmr.is/utils-client/clientUtils'
 
 import { SearchIssuesPage } from '../search-issues-page/SearchIssuesPage'
 

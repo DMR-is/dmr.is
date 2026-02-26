@@ -20,7 +20,7 @@ import {
 
 import { UserRoleEnum } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CreateAdvertMainTypeBody,
   CreateAdvertMainTypeBulk,
@@ -29,8 +29,8 @@ import {
   GetAdvertType,
   UpdateAdvertMainType,
   UpdateAdvertTypeBody,
-} from '@dmr.is/shared/dto'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+} from '@dmr.is/shared-dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { RoleGuard } from '../guards/auth'
 import { IAdvertTypeService } from './advert-type.service.interface'

@@ -14,11 +14,11 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
-import { DMRUser } from '@dmr.is/auth/dmrUser'
 import { CurrentUser } from '@dmr.is/decorators'
-import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
+import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { GetMyApplicationsQueryDto } from '../../core/dto/application.dto'

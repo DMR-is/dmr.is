@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { AwsModule } from '@dmr.is/shared/modules'
+import { AwsModule } from '@dmr.is/shared-modules'
 
 import { AdvertModel } from '../journal/models'
 import { PdfModule } from '../pdf/pdf.module'

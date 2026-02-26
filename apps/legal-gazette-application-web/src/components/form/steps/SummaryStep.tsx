@@ -8,12 +8,12 @@ import { useFormContext } from 'react-hook-form'
 import {
   ApplicationTypeEnum,
   BaseApplicationWebSchema,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
-import { formatDate } from '@dmr.is/utils/shared/format/date'
-import { numberFormat } from '@dmr.is/utils/shared/format/number'
-import { get } from '@dmr.is/utils/shared/lodash/get'
+import { formatDate } from '@dmr.is/utils-shared/format/date'
+import { numberFormat } from '@dmr.is/utils-shared/format/number'
+import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 import { FormStep } from '../../form-step/FormStep'

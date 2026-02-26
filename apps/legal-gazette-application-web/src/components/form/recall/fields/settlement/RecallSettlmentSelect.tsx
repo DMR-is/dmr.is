@@ -3,7 +3,7 @@ import { useFormContext } from 'react-hook-form'
 import {
   RecallApplicationWebSchema,
   SettlementType,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 
 import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'

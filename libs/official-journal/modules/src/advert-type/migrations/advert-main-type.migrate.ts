@@ -1,4 +1,4 @@
-import { AdvertMainType } from '@dmr.is/shared/dto'
+import { AdvertMainType } from '@dmr.is/shared-dto'
 
 import { AdvertMainTypeModel } from '../models/advert-main-type.model'
 import { advertTypeMigrate } from './advert-type.migrate'

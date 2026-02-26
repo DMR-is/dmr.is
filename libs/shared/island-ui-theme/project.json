@@ -1,0 +1,20 @@
+{
+  "name": "shared-island-ui-theme",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/island-ui-theme/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "tsc": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc -p tsconfig.lib.json --noEmit"],
+        "cwd": "libs/shared/island-ui-theme",
+        "forwardAllArgs": false
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

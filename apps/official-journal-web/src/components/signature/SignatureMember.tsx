@@ -2,10 +2,9 @@ import debounce from 'lodash/debounce'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Column } from '@dmr.is/ui/components/island-is/Column'
+import { Columns } from '@dmr.is/ui/components/island-is/Columns'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
-
-import { Column } from '@island.is/island-ui/core/Column/Column'
-import { Columns } from '@island.is/island-ui/core/Columns/Columns'
 
 import { SignatureMember as SignatureMemberDto } from '../../gen/fetch'
 import { useCaseContext } from '../../hooks/useCaseContext'

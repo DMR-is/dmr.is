@@ -1,14 +1,17 @@
 {
-  "name": "nx-open-next",
+  "name": "@dmr.is/nx-open-next",
   "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "executors": "./executors.json",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "dependencies": {
     "@nx/devkit": "22.5.1",
     "@nx/next": "22.5.1",
     "tslib": "^2.6.3"
-  },
-  "devDependencies": {},
-  "type": "module",
-  "main": "./src/index.js",
-  "typings": "./src/index.d.ts",
-  "executors": "./executors.json"
+  }
 }

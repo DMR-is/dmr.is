@@ -1,5 +1,5 @@
-import { CaseTag, CaseTagEnum } from '@dmr.is/shared/dto'
-import { enumMapper, withTryCatch } from '@dmr.is/utils/server/serverUtils'
+import { CaseTag, CaseTagEnum } from '@dmr.is/shared-dto'
+import { enumMapper, withTryCatch } from '@dmr.is/utils-server/serverUtils'
 
 import { CaseTagModel } from '../models'
 

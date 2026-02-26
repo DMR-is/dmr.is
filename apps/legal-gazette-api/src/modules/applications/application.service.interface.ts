@@ -1,5 +1,5 @@
-import { DMRUser } from '@dmr.is/auth/dmrUser'
-import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
+import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 
 import { GetMyApplicationsQueryDto } from '../../core/dto/application.dto'
 import {

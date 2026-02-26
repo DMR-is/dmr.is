@@ -10,7 +10,7 @@ import {
 import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common'
 
 import { getLogger } from '@dmr.is/logging'
-import { ApiErrorDto, ApiErrorName } from '@dmr.is/shared/dto'
+import { ApiErrorDto, ApiErrorName } from '@dmr.is/shared-dto'
 
 export const LOGGING_CONTEXT = 'SequelizeExceptionFilter'
 

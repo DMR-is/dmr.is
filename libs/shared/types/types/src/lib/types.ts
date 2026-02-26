@@ -56,11 +56,12 @@ export class ResultWrapper<
   }
 
   unwrap(): OkType {
-    if (this.result.ok) {
-      return this.result.value
+    const result = this.result
+    if (result.ok === true) {
+      return result.value
     }
 
-    logger.warn(`Error unwrapping result, ${this.result.error.message}`)
-    throw new HttpException(this.result.error.message, this.result.error.code)
+    logger.warn(`Error unwrapping result, ${result.error.message}`)
+    throw new HttpException(result.error.message, result.error.code)
   }
 }

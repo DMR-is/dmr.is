@@ -1,4 +1,4 @@
-import { Signature } from '@dmr.is/shared/dto'
+import { Signature } from '@dmr.is/shared-dto'
 
 import { advertInvolvedPartyMigrate } from '../../journal/migrations'
 import { SignatureModel } from '../models/signature.model'

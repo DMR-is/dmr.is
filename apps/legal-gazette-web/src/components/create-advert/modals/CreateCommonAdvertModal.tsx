@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import * as z from 'zod'
 
-import { parseZodError } from '@dmr.is/legal-gazette/schemas'
+import { parseZodError } from '@dmr.is/legal-gazette-schemas'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'

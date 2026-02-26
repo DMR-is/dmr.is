@@ -6,8 +6,7 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
-
-import { useBreakpoint } from '@island.is/island-ui/core/hooks/useBreakpoint'
+import { useBreakpoint } from '@dmr.is/ui/hooks/useBreakpoint'
 
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useFormatMessage } from '../../hooks/useFormatMessage'

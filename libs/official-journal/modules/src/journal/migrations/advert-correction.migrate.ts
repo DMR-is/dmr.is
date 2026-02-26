@@ -1,4 +1,4 @@
-import { AdvertCorrection } from '@dmr.is/shared/dto'
+import { AdvertCorrection } from '@dmr.is/shared-dto'
 
 import { AdvertCorrectionModel } from '../models'
 

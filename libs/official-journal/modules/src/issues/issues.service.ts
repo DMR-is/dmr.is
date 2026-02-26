@@ -6,14 +6,14 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { Logger } from '@dmr.is/logging-next'
-import { IAWSService } from '@dmr.is/shared/modules'
-import { cleanLegacyHtml } from '@dmr.is/utils/server/cleanLegacyHtml'
+import { IAWSService } from '@dmr.is/shared-modules'
+import { cleanLegacyHtml } from '@dmr.is/utils-server/cleanLegacyHtml'
 import {
   generatePaging,
   getLimitAndOffset,
   getS3Bucket,
   handlePdfAdditions,
-} from '@dmr.is/utils/server/serverUtils'
+} from '@dmr.is/utils-server/serverUtils'
 
 import { caseAdditionMigrate } from '../case/migrations/case-addition.migrate'
 import { AdvertModel } from '../journal/models'

@@ -1,5 +1,5 @@
-import { CaseStatus, CaseStatusEnum } from '@dmr.is/shared/dto'
-import { enumMapper, withTryCatch } from '@dmr.is/utils/server/serverUtils'
+import { CaseStatus, CaseStatusEnum } from '@dmr.is/shared-dto'
+import { enumMapper, withTryCatch } from '@dmr.is/utils-server/serverUtils'
 
 import { CaseStatusModel } from '../models'
 

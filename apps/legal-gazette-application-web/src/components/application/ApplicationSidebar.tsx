@@ -1,7 +1,7 @@
 'use client'
 import { useFormContext } from 'react-hook-form'
 
-import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
+import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette-schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { FormStepper } from '@dmr.is/ui/components/island-is/FormStepper'

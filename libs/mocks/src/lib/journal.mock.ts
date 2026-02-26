@@ -6,7 +6,7 @@ import {
   Department,
   Institution,
   MainCategory,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 
 import { ALL_MOCK_SIGNATURES } from './signatures.mock'
 

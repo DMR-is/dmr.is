@@ -2,7 +2,7 @@ import { isUUID } from 'class-validator'
 import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
-import { GetCasesQuery } from '@dmr.is/shared/dto'
+import { GetCasesQuery } from '@dmr.is/shared-dto'
 type WhereClause = {
   id?: {
     [Op.in]: string[]

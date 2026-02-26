@@ -3973,6 +3973,322 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@dmr.is/api-client@workspace:*, @dmr.is/api-client@workspace:libs/shared/api-client":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/api-client@workspace:libs/shared/api-client"
+  dependencies:
+    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/utils-client": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/apm@workspace:*, @dmr.is/apm@workspace:libs/apm":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/apm@workspace:libs/apm"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/auth@workspace:*, @dmr.is/auth@workspace:libs/shared/auth":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/auth@workspace:libs/shared/auth"
+  dependencies:
+    "@dmr.is/logging-next": "workspace:*"
+    "@dmr.is/shared-dto": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/clients-national-registry@workspace:*, @dmr.is/clients-national-registry@workspace:libs/clients/national-registry":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/clients-national-registry@workspace:libs/clients/national-registry"
+  dependencies:
+    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/utils-server": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/constants@workspace:*, @dmr.is/constants@workspace:libs/shared/constants":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/constants@workspace:libs/shared/constants"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/db@workspace:*, @dmr.is/db@workspace:libs/shared/sequelize":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/db@workspace:libs/shared/sequelize"
+  dependencies:
+    "@dmr.is/logging": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/decorators@workspace:*, @dmr.is/decorators@workspace:libs/shared/decorators":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/decorators@workspace:libs/shared/decorators"
+  dependencies:
+    "@dmr.is/constants": "workspace:*"
+    "@dmr.is/island-auth-nest": "workspace:*"
+    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/types": "workspace:*"
+    "@dmr.is/utils-server": "workspace:*"
+    "@dmr.is/utils-shared": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/island-auth-nest@workspace:*, @dmr.is/island-auth-nest@workspace:libs/shared/island-auth-nest":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/island-auth-nest@workspace:libs/shared/island-auth-nest"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/island-regulations@workspace:*, @dmr.is/island-regulations@workspace:libs/shared/island-regulations":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/island-regulations@workspace:libs/shared/island-regulations"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/island-ui-theme@workspace:*, @dmr.is/island-ui-theme@workspace:libs/shared/island-ui-theme":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/island-ui-theme@workspace:libs/shared/island-ui-theme"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/legal-gazette-api@workspace:apps/legal-gazette-api":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/legal-gazette-api@workspace:apps/legal-gazette-api"
+  dependencies:
+    "@dmr.is/apm": "workspace:*"
+    "@dmr.is/clients-national-registry": "workspace:*"
+    "@dmr.is/constants": "workspace:*"
+    "@dmr.is/db": "workspace:*"
+    "@dmr.is/decorators": "workspace:*"
+    "@dmr.is/island-auth-nest": "workspace:*"
+    "@dmr.is/legal-gazette-schemas": "workspace:*"
+    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/pipelines": "workspace:*"
+    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/shared-filters": "workspace:*"
+    "@dmr.is/shared-interceptors": "workspace:*"
+    "@dmr.is/shared-middleware": "workspace:*"
+    "@dmr.is/shared-models-base": "workspace:*"
+    "@dmr.is/shared-modules": "workspace:*"
+    "@dmr.is/utils-server": "workspace:*"
+    "@dmr.is/utils-shared": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/legal-gazette-application-web@workspace:apps/legal-gazette-application-web":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/legal-gazette-application-web@workspace:apps/legal-gazette-application-web"
+  dependencies:
+    "@dmr.is/api-client": "workspace:*"
+    "@dmr.is/auth": "workspace:*"
+    "@dmr.is/island-ui-theme": "workspace:*"
+    "@dmr.is/legal-gazette-html": "workspace:*"
+    "@dmr.is/legal-gazette-schemas": "workspace:*"
+    "@dmr.is/logging-next": "workspace:*"
+    "@dmr.is/trpc": "workspace:*"
+    "@dmr.is/ui": "workspace:*"
+    "@dmr.is/utils-client": "workspace:*"
+    "@dmr.is/utils-shared": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/legal-gazette-dto@workspace:libs/legal-gazette/dto":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/legal-gazette-dto@workspace:libs/legal-gazette/dto"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/legal-gazette-html@workspace:*, @dmr.is/legal-gazette-html@workspace:libs/legal-gazette/html":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/legal-gazette-html@workspace:libs/legal-gazette/html"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/legal-gazette-public-web@workspace:apps/legal-gazette-public-web":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/legal-gazette-public-web@workspace:apps/legal-gazette-public-web"
+  dependencies:
+    "@dmr.is/api-client": "workspace:*"
+    "@dmr.is/auth": "workspace:*"
+    "@dmr.is/island-ui-theme": "workspace:*"
+    "@dmr.is/logging-next": "workspace:*"
+    "@dmr.is/trpc": "workspace:*"
+    "@dmr.is/ui": "workspace:*"
+    "@dmr.is/utils-client": "workspace:*"
+    "@dmr.is/utils-shared": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/legal-gazette-schemas@workspace:*, @dmr.is/legal-gazette-schemas@workspace:libs/legal-gazette/schemas":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/legal-gazette-schemas@workspace:libs/legal-gazette/schemas"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/legal-gazette-web@workspace:apps/legal-gazette-web":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/legal-gazette-web@workspace:apps/legal-gazette-web"
+  dependencies:
+    "@dmr.is/api-client": "workspace:*"
+    "@dmr.is/auth": "workspace:*"
+    "@dmr.is/island-ui-theme": "workspace:*"
+    "@dmr.is/legal-gazette-schemas": "workspace:*"
+    "@dmr.is/logging-next": "workspace:*"
+    "@dmr.is/trpc": "workspace:*"
+    "@dmr.is/ui": "workspace:*"
+    "@dmr.is/utils-client": "workspace:*"
+    "@dmr.is/utils-shared": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/logging-next@workspace:*, @dmr.is/logging-next@workspace:libs/logging-next":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/logging-next@workspace:libs/logging-next"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/logging@workspace:*, @dmr.is/logging@workspace:libs/logging":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/logging@workspace:libs/logging"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/mocks@workspace:*, @dmr.is/mocks@workspace:libs/mocks":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/mocks@workspace:libs/mocks"
+  dependencies:
+    "@dmr.is/shared-dto": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/nx-open-next@workspace:libs/nx-open-next":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/nx-open-next@workspace:libs/nx-open-next"
+  dependencies:
+    "@nx/devkit": "npm:22.5.1"
+    "@nx/next": "npm:22.5.1"
+    tslib: "npm:^2.6.3"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/official-journal-admin-api@workspace:apps/official-journal-admin-api":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/official-journal-admin-api@workspace:apps/official-journal-admin-api"
+  dependencies:
+    "@dmr.is/apm": "workspace:*"
+    "@dmr.is/constants": "workspace:*"
+    "@dmr.is/db": "workspace:*"
+    "@dmr.is/decorators": "workspace:*"
+    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/mocks": "workspace:*"
+    "@dmr.is/ojoi-modules": "workspace:*"
+    "@dmr.is/pipelines": "workspace:*"
+    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/shared-filters": "workspace:*"
+    "@dmr.is/shared-interceptors": "workspace:*"
+    "@dmr.is/shared-middleware": "workspace:*"
+    "@dmr.is/shared-modules": "workspace:*"
+    "@dmr.is/types": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/official-journal-api-export-e2e@workspace:apps/official-journal-api-export-e2e":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/official-journal-api-export-e2e@workspace:apps/official-journal-api-export-e2e"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/official-journal-api-export@workspace:apps/official-journal-api-export":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/official-journal-api-export@workspace:apps/official-journal-api-export"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/official-journal-api@workspace:apps/official-journal-api":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/official-journal-api@workspace:apps/official-journal-api"
+  dependencies:
+    "@dmr.is/apm": "workspace:*"
+    "@dmr.is/constants": "workspace:*"
+    "@dmr.is/db": "workspace:*"
+    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/ojoi-modules": "workspace:*"
+    "@dmr.is/pipelines": "workspace:*"
+    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/shared-interceptors": "workspace:*"
+    "@dmr.is/shared-middleware": "workspace:*"
+    "@dmr.is/shared-modules": "workspace:*"
+    "@dmr.is/types": "workspace:*"
+    "@dmr.is/utils-server": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/official-journal-application-api@workspace:apps/official-journal-application-api":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/official-journal-application-api@workspace:apps/official-journal-application-api"
+  dependencies:
+    "@dmr.is/apm": "workspace:*"
+    "@dmr.is/constants": "workspace:*"
+    "@dmr.is/db": "workspace:*"
+    "@dmr.is/decorators": "workspace:*"
+    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/ojoi-modules": "workspace:*"
+    "@dmr.is/pipelines": "workspace:*"
+    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/shared-interceptors": "workspace:*"
+    "@dmr.is/shared-middleware": "workspace:*"
+    "@dmr.is/shared-modules": "workspace:*"
+    "@dmr.is/types": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/official-journal-web@workspace:apps/official-journal-web":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/official-journal-web@workspace:apps/official-journal-web"
+  dependencies:
+    "@dmr.is/api-client": "workspace:*"
+    "@dmr.is/auth": "workspace:*"
+    "@dmr.is/island-regulations": "workspace:*"
+    "@dmr.is/island-ui-theme": "workspace:*"
+    "@dmr.is/logging-next": "workspace:*"
+    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/trpc": "workspace:*"
+    "@dmr.is/ui": "workspace:*"
+    "@dmr.is/utils-shared": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/ojoi-modules@workspace:*, @dmr.is/ojoi-modules@workspace:libs/official-journal/modules":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/ojoi-modules@workspace:libs/official-journal/modules"
+  dependencies:
+    "@dmr.is/constants": "workspace:*"
+    "@dmr.is/decorators": "workspace:*"
+    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/mocks": "workspace:*"
+    "@dmr.is/pipelines": "workspace:*"
+    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/shared-modules": "workspace:*"
+    "@dmr.is/types": "workspace:*"
+    "@dmr.is/utils-server": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/pipelines@workspace:*, @dmr.is/pipelines@workspace:libs/shared/pipelines":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/pipelines@workspace:libs/shared/pipelines"
+  dependencies:
+    "@dmr.is/constants": "workspace:*"
+    "@dmr.is/logging": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/regulations-api@workspace:apps/regulations-api":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/regulations-api@workspace:apps/regulations-api"
+  languageName: unknown
+  linkType: soft
+
 "@dmr.is/regulations-tools@npm:0.10.2":
   version: 0.10.2
   resolution: "@dmr.is/regulations-tools@npm:0.10.2"
@@ -3993,6 +4309,122 @@ __metadata:
   checksum: 10c0/4f111ed9c880f3db9d3c5ef46192e79f730810bb4b3508d8dfaea5db79d7b6978b6b13a14b175e3888ee0f1aeb672afcad684d3eb6de5d573614cdbfcacc1493
   languageName: node
   linkType: hard
+
+"@dmr.is/shared-dto@workspace:*, @dmr.is/shared-dto@workspace:libs/shared/dto":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/shared-dto@workspace:libs/shared/dto"
+  dependencies:
+    "@dmr.is/constants": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/shared-filters@workspace:*, @dmr.is/shared-filters@workspace:libs/shared/filters":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/shared-filters@workspace:libs/shared/filters"
+  dependencies:
+    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/shared-dto": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/shared-interceptors@workspace:*, @dmr.is/shared-interceptors@workspace:libs/shared/interceptors":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/shared-interceptors@workspace:libs/shared/interceptors"
+  dependencies:
+    "@dmr.is/logging": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/shared-middleware@workspace:*, @dmr.is/shared-middleware@workspace:libs/shared/middleware":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/shared-middleware@workspace:libs/shared/middleware"
+  dependencies:
+    "@dmr.is/constants": "workspace:*"
+    "@dmr.is/logging": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/shared-models-base@workspace:*, @dmr.is/shared-models-base@workspace:libs/shared/models/base":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/shared-models-base@workspace:libs/shared/models/base"
+  dependencies:
+    "@dmr.is/logging": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/shared-modules@workspace:*, @dmr.is/shared-modules@workspace:libs/shared/modules":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/shared-modules@workspace:libs/shared/modules"
+  dependencies:
+    "@dmr.is/constants": "workspace:*"
+    "@dmr.is/decorators": "workspace:*"
+    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/types": "workspace:*"
+    "@dmr.is/utils-server": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/trpc@workspace:*, @dmr.is/trpc@workspace:libs/shared/trpc":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/trpc@workspace:libs/shared/trpc"
+  dependencies:
+    "@dmr.is/auth": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/types@workspace:*, @dmr.is/types@workspace:libs/shared/types/types":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/types@workspace:libs/shared/types/types"
+  dependencies:
+    "@dmr.is/logging": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/ui-lazy@workspace:libs/shared/dmr-ui-lazy":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/ui-lazy@workspace:libs/shared/dmr-ui-lazy"
+  dependencies:
+    "@dmr.is/island-ui-theme": "workspace:*"
+    "@dmr.is/ui": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/ui@workspace:*, @dmr.is/ui@workspace:libs/shared/dmr-ui":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/ui@workspace:libs/shared/dmr-ui"
+  dependencies:
+    "@dmr.is/auth": "workspace:*"
+    "@dmr.is/constants": "workspace:*"
+    "@dmr.is/island-regulations": "workspace:*"
+    "@dmr.is/island-ui-theme": "workspace:*"
+    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/utils-shared": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/utils-client@workspace:*, @dmr.is/utils-client@workspace:libs/shared/utils/client":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/utils-client@workspace:libs/shared/utils/client"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/utils-server@workspace:*, @dmr.is/utils-server@workspace:libs/shared/utils/server":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/utils-server@workspace:libs/shared/utils/server"
+  dependencies:
+    "@dmr.is/constants": "workspace:*"
+    "@dmr.is/logging": "workspace:*"
+    "@dmr.is/shared-dto": "workspace:*"
+    "@dmr.is/types": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/utils-shared@workspace:*, @dmr.is/utils-shared@workspace:libs/shared/utils/shared":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/utils-shared@workspace:libs/shared/utils/shared"
+  languageName: unknown
+  linkType: soft
 
 "@elastic/elasticsearch@npm:^7.1.0, @elastic/elasticsearch@npm:^7.15.0":
   version: 7.17.14
@@ -9922,9 +10354,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-darwin-arm64@npm:1.15.8":
-  version: 1.15.8
-  resolution: "@swc/core-darwin-arm64@npm:1.15.8"
+"@swc/core-darwin-arm64@npm:1.15.13":
+  version: 1.15.13
+  resolution: "@swc/core-darwin-arm64@npm:1.15.13"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
@@ -9936,9 +10368,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-darwin-x64@npm:1.15.8":
-  version: 1.15.8
-  resolution: "@swc/core-darwin-x64@npm:1.15.8"
+"@swc/core-darwin-x64@npm:1.15.13":
+  version: 1.15.13
+  resolution: "@swc/core-darwin-x64@npm:1.15.13"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
@@ -9950,9 +10382,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm-gnueabihf@npm:1.15.8":
-  version: 1.15.8
-  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.15.8"
+"@swc/core-linux-arm-gnueabihf@npm:1.15.13":
+  version: 1.15.13
+  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.15.13"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
@@ -9964,9 +10396,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm64-gnu@npm:1.15.8":
-  version: 1.15.8
-  resolution: "@swc/core-linux-arm64-gnu@npm:1.15.8"
+"@swc/core-linux-arm64-gnu@npm:1.15.13":
+  version: 1.15.13
+  resolution: "@swc/core-linux-arm64-gnu@npm:1.15.13"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
@@ -9978,9 +10410,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm64-musl@npm:1.15.8":
-  version: 1.15.8
-  resolution: "@swc/core-linux-arm64-musl@npm:1.15.8"
+"@swc/core-linux-arm64-musl@npm:1.15.13":
+  version: 1.15.13
+  resolution: "@swc/core-linux-arm64-musl@npm:1.15.13"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
@@ -9992,9 +10424,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-linux-x64-gnu@npm:1.15.8":
-  version: 1.15.8
-  resolution: "@swc/core-linux-x64-gnu@npm:1.15.8"
+"@swc/core-linux-x64-gnu@npm:1.15.13":
+  version: 1.15.13
+  resolution: "@swc/core-linux-x64-gnu@npm:1.15.13"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
@@ -10006,9 +10438,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-linux-x64-musl@npm:1.15.8":
-  version: 1.15.8
-  resolution: "@swc/core-linux-x64-musl@npm:1.15.8"
+"@swc/core-linux-x64-musl@npm:1.15.13":
+  version: 1.15.13
+  resolution: "@swc/core-linux-x64-musl@npm:1.15.13"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
@@ -10020,9 +10452,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-win32-arm64-msvc@npm:1.15.8":
-  version: 1.15.8
-  resolution: "@swc/core-win32-arm64-msvc@npm:1.15.8"
+"@swc/core-win32-arm64-msvc@npm:1.15.13":
+  version: 1.15.13
+  resolution: "@swc/core-win32-arm64-msvc@npm:1.15.13"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
@@ -10034,9 +10466,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-win32-ia32-msvc@npm:1.15.8":
-  version: 1.15.8
-  resolution: "@swc/core-win32-ia32-msvc@npm:1.15.8"
+"@swc/core-win32-ia32-msvc@npm:1.15.13":
+  version: 1.15.13
+  resolution: "@swc/core-win32-ia32-msvc@npm:1.15.13"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
@@ -10048,27 +10480,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-win32-x64-msvc@npm:1.15.8":
-  version: 1.15.8
-  resolution: "@swc/core-win32-x64-msvc@npm:1.15.8"
+"@swc/core-win32-x64-msvc@npm:1.15.13":
+  version: 1.15.13
+  resolution: "@swc/core-win32-x64-msvc@npm:1.15.13"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@swc/core@npm:1.15.8":
-  version: 1.15.8
-  resolution: "@swc/core@npm:1.15.8"
+"@swc/core@npm:1.15.13":
+  version: 1.15.13
+  resolution: "@swc/core@npm:1.15.13"
   dependencies:
-    "@swc/core-darwin-arm64": "npm:1.15.8"
-    "@swc/core-darwin-x64": "npm:1.15.8"
-    "@swc/core-linux-arm-gnueabihf": "npm:1.15.8"
-    "@swc/core-linux-arm64-gnu": "npm:1.15.8"
-    "@swc/core-linux-arm64-musl": "npm:1.15.8"
-    "@swc/core-linux-x64-gnu": "npm:1.15.8"
-    "@swc/core-linux-x64-musl": "npm:1.15.8"
-    "@swc/core-win32-arm64-msvc": "npm:1.15.8"
-    "@swc/core-win32-ia32-msvc": "npm:1.15.8"
-    "@swc/core-win32-x64-msvc": "npm:1.15.8"
+    "@swc/core-darwin-arm64": "npm:1.15.13"
+    "@swc/core-darwin-x64": "npm:1.15.13"
+    "@swc/core-linux-arm-gnueabihf": "npm:1.15.13"
+    "@swc/core-linux-arm64-gnu": "npm:1.15.13"
+    "@swc/core-linux-arm64-musl": "npm:1.15.13"
+    "@swc/core-linux-x64-gnu": "npm:1.15.13"
+    "@swc/core-linux-x64-musl": "npm:1.15.13"
+    "@swc/core-win32-arm64-msvc": "npm:1.15.13"
+    "@swc/core-win32-ia32-msvc": "npm:1.15.13"
+    "@swc/core-win32-x64-msvc": "npm:1.15.13"
     "@swc/counter": "npm:^0.1.3"
     "@swc/types": "npm:^0.1.25"
   peerDependencies:
@@ -10097,7 +10529,7 @@ __metadata:
   peerDependenciesMeta:
     "@swc/helpers":
       optional: true
-  checksum: 10c0/929f334a224776fdb3c4a8aaba68f07666ff56fae7502a9459bc9666cb73d94e65f042ce8c4ef4e6746a8bb3f8255cbe8599bef6e3181269caf761c8e55513cf
+  checksum: 10c0/739b8f01bc905ce776455b92ab1288b3783b99e3fe5b413dc68fce753584b5601b4b445723ee367ce762905b85ca63c87a6bb26c3b4ca1871f78ec2bd5bf2740
   languageName: node
   linkType: hard
 
@@ -15307,7 +15739,7 @@ __metadata:
     "@rehooks/component-size": "npm:^1.0.3"
     "@svgr/webpack": "npm:^8.0.1"
     "@swc-node/register": "npm:1.11.1"
-    "@swc/core": "npm:1.15.8"
+    "@swc/core": "npm:1.15.13"
     "@swc/helpers": "npm:0.5.18"
     "@swc/jest": "npm:0.2.39"
     "@tanstack/react-query": "npm:5.90.2"
@@ -15451,6 +15883,7 @@ __metadata:
     sequelize-typescript: "npm:^2.1.6"
     sharp: "npm:^0.32.4"
     slugify: "npm:^1.6.6"
+    swc-loader: "npm:0.2.7"
     ts-jest: "npm:29.4.1"
     ts-node: "npm:10.9.1"
     tslib: "npm:^2.6.3"
@@ -27296,6 +27729,18 @@ __metadata:
   dependencies:
     "@scarf/scarf": "npm:=1.4.0"
   checksum: 10c0/254f0d0b14766d505e69c36ea656afe838c32eefe1317aa4a8a2ffae06f1e53c55333130c6cea2f57bb47825b0cc465436f3f7af41254bd24b0601e56f914dba
+  languageName: node
+  linkType: hard
+
+"swc-loader@npm:0.2.7":
+  version: 0.2.7
+  resolution: "swc-loader@npm:0.2.7"
+  dependencies:
+    "@swc/counter": "npm:^0.1.3"
+  peerDependencies:
+    "@swc/core": ^1.2.147
+    webpack: ">=2"
+  checksum: 10c0/9c1b275adf9b83d7245e0e30a1dd41b0f6dbb0164267f772f855adc325a615c30a9d343e7362b585834350e2d9632ecd2239e03fa8f15a2d2e699a99e438d363
   languageName: node
   linkType: hard
 

@@ -1,4 +1,4 @@
-import { Advert } from '@dmr.is/shared/dto'
+import { Advert } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 export interface IExternalService {

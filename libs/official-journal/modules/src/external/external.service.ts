@@ -6,7 +6,7 @@ import { Inject, Injectable } from '@nestjs/common'
 
 import { LogAndHandle } from '@dmr.is/decorators'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
-import { Advert } from '@dmr.is/shared/dto'
+import { Advert } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { IExternalService } from './external.service.interface'

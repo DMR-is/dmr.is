@@ -12,14 +12,14 @@ import {
   IJournalService,
   IPriceService,
   IUserService,
-} from '@dmr.is/ojoi/modules'
+} from '@dmr.is/ojoi-modules'
 import {
   Case,
   CaseCommentTypeTitleEnum,
   CaseCommunicationStatus,
   CaseStatusEnum,
   UserDto,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { CaseController } from './case.controller'

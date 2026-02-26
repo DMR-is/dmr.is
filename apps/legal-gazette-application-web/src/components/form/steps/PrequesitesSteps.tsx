@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette/schemas'
+import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette-schemas'
 import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'

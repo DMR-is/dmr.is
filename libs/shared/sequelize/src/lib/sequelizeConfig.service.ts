@@ -7,10 +7,10 @@ import {
   SequelizeOptionsFactory,
 } from '@nestjs/sequelize'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { getOptions } from './sequelize'
-import { DMRSequelizeConfig, IDMRSequelizeConfig } from './sequelize.config'
+import { type DMRSequelizeConfig, IDMRSequelizeConfig } from './sequelize.config'
 
 const LOGGING_CONTEXT = 'SequelizeService'
 

@@ -1,15 +1,14 @@
 'use client'
 
 import addYears from 'date-fns/addYears'
-import get from 'lodash/get'
 import { useState } from 'react'
 import * as z from 'zod'
 
 import {
   getAdvertHTMLMarkup,
   LegalGazetteHTMLTemplates,
-} from '@dmr.is/legal-gazette/html'
-import { createDivisionEndingInput } from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-html'
+import { createDivisionEndingInput } from '@dmr.is/legal-gazette-schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -21,7 +20,8 @@ import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import {
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,
-} from '@dmr.is/utils/client/dateUtils'
+} from '@dmr.is/utils-client/dateUtils'
+import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import { ApplicationTypeEnum } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'

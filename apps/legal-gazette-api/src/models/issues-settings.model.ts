@@ -3,7 +3,7 @@ import { Column, DataType } from 'sequelize-typescript'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
+import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 

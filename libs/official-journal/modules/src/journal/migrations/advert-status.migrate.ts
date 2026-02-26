@@ -1,5 +1,5 @@
-import { AdvertStatus } from '@dmr.is/shared/dto'
-import { safeEnumMapper } from '@dmr.is/utils/server/serverUtils'
+import { AdvertStatus } from '@dmr.is/shared-dto'
+import { safeEnumMapper } from '@dmr.is/utils-server/serverUtils'
 
 import { AdvertStatusModel } from '../models/advert-status.model'
 

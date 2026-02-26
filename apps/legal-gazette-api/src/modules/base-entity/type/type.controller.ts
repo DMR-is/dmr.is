@@ -3,7 +3,7 @@ import { Op } from 'sequelize'
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
 
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import {
   COMMON_ADVERT_TYPES_IDS,

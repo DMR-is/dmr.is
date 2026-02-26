@@ -1,15 +1,14 @@
 import { useCallback } from 'react'
 
 import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Column } from '@dmr.is/ui/components/island-is/Column'
+import { Columns } from '@dmr.is/ui/components/island-is/Columns'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
-import { debounce } from '@dmr.is/utils/shared/lodash/debounce'
-
-import { Column } from '@island.is/island-ui/core/Column/Column'
-import { Columns } from '@island.is/island-ui/core/Columns/Columns'
+import { debounce } from '@dmr.is/utils-shared/lodash/debounce'
 
 import {
   CreateSignatureMemberMemberTypeEnum,

@@ -15,7 +15,7 @@ import {
 
 import { UserRoleEnum } from '@dmr.is/constants'
 import { Roles } from '@dmr.is/decorators'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { RoleGuard } from '../guards/auth'
 import {

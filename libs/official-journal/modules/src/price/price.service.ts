@@ -5,7 +5,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdvertFeeType,
   CaseFeeCalculationBody,
@@ -17,14 +17,14 @@ import {
   TransactionFeeCodesResponse,
   UpdateCasePaymentBody,
   UpdateCasePriceBody,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 import {
   getBodyHTMLlength,
   getFastTrack,
   getHtmlTextLength,
   MAX_CHARACTER_HTML,
-} from '@dmr.is/utils/server/serverUtils'
+} from '@dmr.is/utils-server/serverUtils'
 
 import { IApplicationService } from '../application/application.service.interface'
 import { IAuthService } from '../auth/auth.service.interface'

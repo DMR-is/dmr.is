@@ -8,7 +8,7 @@ import {
   OpsModule,
   SharedCaseModule,
   SharedJournalModule,
-} from '@dmr.is/ojoi/modules'
+} from '@dmr.is/ojoi-modules'
 
 import { JournalController } from './journal.controller'
 @Module({

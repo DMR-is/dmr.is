@@ -1,4 +1,4 @@
-import { Category } from '@dmr.is/shared/dto'
+import { Category } from '@dmr.is/shared-dto'
 
 import { AdvertCategoryModel } from '../models/advert-category.model'
 

@@ -5,7 +5,7 @@ import {
   GetCaseCommentResponse,
   GetCaseCommentsResponse,
   PostCaseCommentBody,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 export interface ICommentService {

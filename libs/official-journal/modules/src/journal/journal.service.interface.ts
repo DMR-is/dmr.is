@@ -24,7 +24,7 @@ import {
   UpdateAdvertBody,
   UpdateCategory,
   UpdateMainCategory,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import 'multer'

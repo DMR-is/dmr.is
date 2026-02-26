@@ -6,8 +6,19 @@ module.exports = composePlugins(
     target: 'node',
   }),
   (config) => {
-    // Update the webpack config as needed here.
-    // e.g. `config.plugins.push(new MyPlugin())`
+    // @dmr.is/* workspace packages export TypeScript source and must be
+    // bundled, not externalized. Wrap the externals to allow them through.
+    if (Array.isArray(config.externals)) {
+      config.externals = config.externals.map((ext) => {
+        if (typeof ext !== 'function') return ext
+        return (ctx, callback) => {
+          if (ctx.request?.startsWith('@dmr.is/')) {
+            return callback()
+          }
+          return ext(ctx, callback)
+        }
+      })
+    }
     return config
   },
 )

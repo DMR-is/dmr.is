@@ -9,7 +9,7 @@ import {
 import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'

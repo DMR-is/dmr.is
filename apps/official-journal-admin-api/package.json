@@ -1,0 +1,21 @@
+{
+  "name": "@dmr.is/official-journal-admin-api",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@dmr.is/apm": "workspace:*",
+    "@dmr.is/constants": "workspace:*",
+    "@dmr.is/db": "workspace:*",
+    "@dmr.is/decorators": "workspace:*",
+    "@dmr.is/logging": "workspace:*",
+    "@dmr.is/mocks": "workspace:*",
+    "@dmr.is/ojoi-modules": "workspace:*",
+    "@dmr.is/pipelines": "workspace:*",
+    "@dmr.is/shared-dto": "workspace:*",
+    "@dmr.is/shared-filters": "workspace:*",
+    "@dmr.is/shared-interceptors": "workspace:*",
+    "@dmr.is/shared-middleware": "workspace:*",
+    "@dmr.is/shared-modules": "workspace:*",
+    "@dmr.is/types": "workspace:*"
+  }
+}

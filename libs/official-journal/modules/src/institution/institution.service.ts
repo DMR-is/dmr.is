@@ -7,16 +7,16 @@ import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { LogMethod } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CreateInstitution,
   GetInstitution,
   GetInstitutions,
   InstitutionQuery,
   UpdateInstitution,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging } from '@dmr.is/utils/server/serverUtils'
+import { generatePaging } from '@dmr.is/utils-server/serverUtils'
 
 import { institutionMigrate } from './migrations/institution.migrate'
 import { InstitutionModel } from './models/institution.model'

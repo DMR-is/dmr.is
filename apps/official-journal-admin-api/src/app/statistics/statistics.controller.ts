@@ -8,8 +8,8 @@ import {
 
 import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { RoleGuard } from '@dmr.is/ojoi/modules/guards/auth'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { RoleGuard } from '@dmr.is/ojoi-modules/guards/auth'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import {
   DepartmentSlugEnum,
@@ -18,8 +18,8 @@ import {
   GetStatisticsOverviewResponse,
   StatisticsOverviewQueryType,
   UserDto,
-} from '@dmr.is/shared/dto'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+} from '@dmr.is/shared-dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { IStatisticsService } from './statistics.service.interface'

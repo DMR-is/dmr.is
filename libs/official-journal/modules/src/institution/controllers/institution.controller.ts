@@ -8,12 +8,12 @@ import {
 } from '@nestjs/common'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   GetInstitution,
   GetInstitutions,
   InstitutionQuery,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 
 import { IInstitutionService } from '../institution.service.interface'
 

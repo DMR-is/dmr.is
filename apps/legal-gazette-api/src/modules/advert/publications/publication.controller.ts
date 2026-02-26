@@ -13,7 +13,7 @@ import {
 import { ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules/guards/auth'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules/guards/auth'
 
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'

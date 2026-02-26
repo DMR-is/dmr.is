@@ -1,7 +1,7 @@
 import endOfDay from 'date-fns/endOfDay'
 import startOfDay from 'date-fns/startOfDay'
 
-import { GetAdvertsQueryParams, Paging } from '@dmr.is/shared/dto'
+import { GetAdvertsQueryParams, Paging } from '@dmr.is/shared-dto'
 
 function normalizeToArray(value: string | string[]): string[] {
   if (Array.isArray(value)) return value

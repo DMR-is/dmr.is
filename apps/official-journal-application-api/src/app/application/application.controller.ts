@@ -31,13 +31,13 @@ import {
   UserRoleEnum,
 } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   IApplicationService,
   InvolvedPartyGuard,
   ISignatureService,
   IUserService,
-} from '@dmr.is/ojoi/modules'
+} from '@dmr.is/ojoi-modules'
 import {
   EnumValidationPipe,
   FileTypeValidationPipe,
@@ -64,8 +64,8 @@ import {
   PresignedUrlResponse,
   S3UploadFilesResponse,
   UserDto,
-} from '@dmr.is/shared/dto'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+} from '@dmr.is/shared-dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { ApplicationGuard } from '../guards/application.guard'

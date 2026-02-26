@@ -9,21 +9,21 @@ import { ScheduleModule } from '@nestjs/schedule'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
-import { LogRequestMiddleware } from '@dmr.is/middleware'
 import {
   ApplicationModule,
   IssuesModule,
   IssuesTaskModule,
   SharedJournalModule,
   SignatureModule,
-} from '@dmr.is/ojoi/modules'
+} from '@dmr.is/ojoi-modules'
 import {
   GlobalExceptionFilter,
   HttpExceptionFilter,
   SequelizeExceptionFilter,
-} from '@dmr.is/shared/filters'
-import { LoggingInterceptor } from '@dmr.is/shared/interceptors'
-import { HealthModule } from '@dmr.is/shared/modules'
+} from '@dmr.is/shared-filters'
+import { LoggingInterceptor } from '@dmr.is/shared-interceptors'
+import { LogRequestMiddleware } from '@dmr.is/shared-middleware'
+import { HealthModule } from '@dmr.is/shared-modules'
 
 import { CaseModule } from './case/case.module'
 import { StatisticsModule } from './statistics/statistics.module'

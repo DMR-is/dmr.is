@@ -22,7 +22,7 @@ import {
 
 import { UserRoleEnum } from '@dmr.is/constants'
 import { CurrentUser, Roles } from '@dmr.is/decorators'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   CreateUserDto,
   GetInvoledPartiesByUserResponse,
@@ -32,8 +32,8 @@ import {
   GetUsersResponse,
   UpdateUserDto,
   UserDto,
-} from '@dmr.is/shared/dto'
-import { TokenJwtAuthGuard } from '@dmr.is/shared/modules'
+} from '@dmr.is/shared-dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { RoleGuard } from '../guards/auth'

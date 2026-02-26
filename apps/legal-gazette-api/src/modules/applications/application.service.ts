@@ -11,15 +11,15 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { DMRUser } from '@dmr.is/auth/dmrUser'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import {
   ApplicationTypeEnum,
   commonApplicationAnswersRefined,
   updateApplicationInput,
-} from '@dmr.is/legal-gazette/schemas'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils/server/serverUtils'
-import { get } from '@dmr.is/utils/shared/lodash/get'
+} from '@dmr.is/legal-gazette-schemas'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
+import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import {
   RECALL_BANKRUPTCY_ADVERT_TYPE_ID,

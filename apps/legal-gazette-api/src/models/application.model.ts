@@ -36,10 +36,10 @@ import {
   CommonApplicationAnswers,
   RecallBankruptcyApplicationAnswers,
   RecallDeceasedApplicationAnswers,
-} from '@dmr.is/legal-gazette/schemas'
-import { Paging } from '@dmr.is/shared/dto'
-import { BaseModel, BaseTable } from '@dmr.is/shared/models/base'
-import { get } from '@dmr.is/utils/shared/lodash/get'
+} from '@dmr.is/legal-gazette-schemas'
+import { Paging } from '@dmr.is/shared-dto'
+import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../core/dto/detailed.dto'

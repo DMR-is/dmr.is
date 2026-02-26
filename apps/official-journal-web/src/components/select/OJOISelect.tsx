@@ -1,8 +1,6 @@
-import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Box, type BoxProps } from '@dmr.is/ui/components/island-is/Box'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
-
-import { type BoxProps } from '@island.is/island-ui/core/Box/types'
 
 import { OJOIInput } from './OJOIInput'
 

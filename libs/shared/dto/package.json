@@ -1,0 +1,11 @@
+{
+  "name": "@dmr.is/shared-dto",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    ".": "./src/lib/index.ts"
+  },
+  "dependencies": {
+    "@dmr.is/constants": "workspace:*"
+  }
+}

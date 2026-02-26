@@ -21,13 +21,13 @@ import {
   DEFAULT_PAGE_NUMBER,
   DEFAULT_PAGE_SIZE,
 } from '@dmr.is/constants'
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   AdminGuard,
   ICaseService,
   IJournalService,
   IReindexRunnerService,
-} from '@dmr.is/ojoi/modules'
+} from '@dmr.is/ojoi-modules'
 import { UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   CaseStatusEnum,
@@ -46,7 +46,7 @@ import {
   GetLeanAdvertsResponse,
   GetMainCategoriesResponse,
   GetSimilarAdvertsResponse,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { AdvertsToRss, getOsBody, getOsPaging } from '../../util'

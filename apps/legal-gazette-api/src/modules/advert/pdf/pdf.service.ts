@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { IAWSService } from '@dmr.is/shared/modules'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { IAWSService } from '@dmr.is/shared-modules'
 
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
 import { getBrowser } from './lib/browser'
@@ -74,7 +74,7 @@ export class PdfService {
       hash,
     )
 
-    if (!upload.result.ok) {
+    if (upload.result.ok === false) {
       this.logger.warn('Failed to upload pdf to s3', {
         error: upload.result.error,
         context: LOGGING_CONTEXT,
@@ -130,7 +130,7 @@ export class PdfService {
 
     const download = await this.s3.getObjectBuffer(key, bucket)
 
-    if (!download.result.ok) {
+    if (download.result.ok === false) {
       this.logger.warn('Failed to download pdf from s3', {
         error: download.result.error,
         context: LOGGING_CONTEXT,

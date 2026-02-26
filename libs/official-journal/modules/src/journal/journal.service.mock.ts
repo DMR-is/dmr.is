@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ADVERT_B_866_2006,
   ADVERT_B_1278_2023,
@@ -41,9 +41,9 @@ import {
   S3UploadFileResponse,
   UpdateAdvertBody,
   UpdateMainCategory,
-} from '@dmr.is/shared/dto'
+} from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { generatePaging, slicePagedData } from '@dmr.is/utils/server/serverUtils'
+import { generatePaging, slicePagedData } from '@dmr.is/utils-server/serverUtils'
 
 import { IJournalService } from './journal.service.interface'
 

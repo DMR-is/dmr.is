@@ -8,7 +8,7 @@ import * as z from 'zod'
 import {
   companySchema,
   RecallApplicationWebSchema,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
@@ -18,7 +18,7 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
-import { get } from '@dmr.is/utils/shared/lodash/get'
+import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import { useUpdateApplication } from '../../hooks/useUpdateApplication'
 import { useTRPC } from '../../lib/trpc/client/trpc'

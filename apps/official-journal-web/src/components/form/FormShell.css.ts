@@ -1,5 +1,5 @@
-import { theme } from '@island.is/island-ui/theme'
-import { escapeGrid } from '@island.is/island-ui/utils'
+import { theme } from '@dmr.is/island-ui-theme'
+import { escapeGrid } from '@dmr.is/island-ui-theme/utils'
 
 import { style } from '@vanilla-extract/css'
 

@@ -3,7 +3,7 @@ import { isUUID } from 'class-validator'
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { SYSTEM_ACTOR } from '../../core/constants'
 import { AdvertModel } from '../../models/advert.model'
@@ -44,7 +44,7 @@ export class CommentService implements ICommentService {
       attributes: ['id', 'statusId'],
     })
 
-    let actor = null
+    let actor: { id: string; name: string } | null = null
 
     try {
       if (body.actorId) {

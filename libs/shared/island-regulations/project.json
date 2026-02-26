@@ -1,0 +1,20 @@
+{
+  "name": "shared-island-regulations",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/island-regulations/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "tsc": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc -p tsconfig.lib.json --noEmit"],
+        "cwd": "libs/shared/island-regulations",
+        "forwardAllArgs": false
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

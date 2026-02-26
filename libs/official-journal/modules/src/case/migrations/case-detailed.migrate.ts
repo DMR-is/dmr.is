@@ -1,4 +1,4 @@
-import { CaseDetailed } from '@dmr.is/shared/dto'
+import { CaseDetailed } from '@dmr.is/shared-dto'
 
 import { attachmentMigrate } from '../../attachments/migrations/attachment.migration'
 import { commentMigrate } from '../../comment/v2/migrations/comment.migrate'

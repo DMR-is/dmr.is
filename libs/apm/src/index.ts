@@ -1,1 +1,1 @@
-export * from './lib/apm'
+export { apmInit } from './lib/apm'

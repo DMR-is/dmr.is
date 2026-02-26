@@ -1,0 +1,14 @@
+{
+  "name": "@dmr.is/trpc",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    "./client/query-client": "./src/lib/client/query-client.tsx",
+    "./client/server": "./src/lib/client/server.tsx",
+    "./client/trpc": "./src/lib/client/trpc.ts",
+    "./utils/*": "./src/lib/utils/*.ts"
+  },
+  "dependencies": {
+    "@dmr.is/auth": "workspace:*"
+  }
+}

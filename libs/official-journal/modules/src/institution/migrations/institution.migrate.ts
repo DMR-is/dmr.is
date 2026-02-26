@@ -1,4 +1,4 @@
-import { InstitutionDto } from '@dmr.is/shared/dto'
+import { InstitutionDto } from '@dmr.is/shared-dto'
 
 import { InstitutionModel } from '../models/institution.model'
 

@@ -1,4 +1,4 @@
-import { AdvertSimilar } from '@dmr.is/shared/dto'
+import { AdvertSimilar } from '@dmr.is/shared-dto'
 
 import { AdvertModel } from '../models'
 import { advertCategoryMigrate } from './advert-category.migrate'

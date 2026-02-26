@@ -3,9 +3,10 @@
 import cn from 'classnames'
 import React, { ElementType, FC, ReactElement } from 'react'
 
+import type { Colors } from '@dmr.is/island-ui-theme'
+
 import { Icon } from '@island.is/island-ui/core/IconRC/Icon'
 import type { Size } from '@island.is/island-ui/core/IconRC/types'
-import type { Colors } from '@island.is/island-ui/theme'
 
 import * as styles from './Tooltip.css'
 

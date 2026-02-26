@@ -5,9 +5,9 @@ import {
   CommonApplicationAnswers,
   RecallApplicationAnswers,
   updateApplicationWithIdInput,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
-import { debounce } from '@dmr.is/utils/shared/lodash/debounce'
+import { debounce } from '@dmr.is/utils-shared/lodash/debounce'
 
 import { ApplicationDetailedDto } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'

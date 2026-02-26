@@ -1,6 +1,6 @@
 import format from 'date-fns/format'
 
-import { Advert } from '@dmr.is/shared/dto'
+import { Advert } from '@dmr.is/shared-dto'
 
 type Regulation = {
   number: string

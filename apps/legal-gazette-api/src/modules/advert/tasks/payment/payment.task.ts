@@ -4,7 +4,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { TASK_JOB_IDS } from '../../../../core/constants'
 import { AdvertModel } from '../../../../models/advert.model'
@@ -105,7 +105,7 @@ export class PaymentTaskService implements IPaymentTaskService {
     }
 
     // create chunks of transactions to process
-    const chunks = []
+    const chunks: TBRTransactionModel[][] = []
     for (let i = 0; i < pendingTransactions.length; i += this.chunkSize) {
       chunks.push(pendingTransactions.slice(i, i + this.chunkSize))
     }
