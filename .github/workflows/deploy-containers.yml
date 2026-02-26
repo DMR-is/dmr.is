@@ -1,6 +1,7 @@
 name: Deploy Containers to AWS Dev
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: ['Monorepo pipeline - quality']
     branches: ['main']
@@ -45,7 +46,7 @@ jobs:
           ALL_CONTAINERS='["official-journal-api","official-journal-admin-api","official-journal-application-api","official-journal-web","regulations-api","legal-gazette-api","legal-gazette-web","legal-gazette-application-web","legal-gazette-public-web"]'
 
           mkdir -p /tmp/nx-tmp && npm install --prefix /tmp/nx-tmp --no-save --ignore-scripts --legacy-peer-deps --no-audit --no-fund nx@22.5.1
-          mkdir -p node_modules && cp -r /tmp/nx-tmp/node_modules/* node_modules/
+          cp -r /tmp/nx-tmp/node_modules/. node_modules/
 
           echo "Log out what show projects returns"
           npx nx show projects --affected --type=app
