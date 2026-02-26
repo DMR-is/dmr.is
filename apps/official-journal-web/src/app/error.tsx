@@ -12,9 +12,10 @@ import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-export default function Error({ reset }: { error: Error; reset: () => void }) {
+export default function Error({ reset, error }: { error: Error; reset: () => void }) {
   const pathName = usePathname()
   const { data: session, status } = useSession()
+  console.log('error', error)
 
   useEffect(() => {
     if (session?.invalid === true && status === 'authenticated') {
