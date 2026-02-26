@@ -6,6 +6,18 @@
     ".": "./src/index.ts",
     "./guards/auth": "./src/guards/auth/index.ts"
   },
+  "peerDependencies": {
+    "@nestjs/cache-manager": "3.0.1",
+    "@nestjs/common": "^10.4.19",
+    "@nestjs/config": "4.0.2",
+    "@nestjs/core": "^10.4.19",
+    "@nestjs/schedule": "6.0.0",
+    "@nestjs/sequelize": "^10.0.1",
+    "@nestjs/swagger": "^8.1.1",
+    "sequelize": "^6.37.3",
+    "sequelize-typescript": "^2.1.6",
+    "winston": "^3.11.0"
+  },
   "dependencies": {
     "@dmr.is/constants": "*",
     "@dmr.is/decorators": "*",
@@ -15,6 +27,17 @@
     "@dmr.is/shared-dto": "*",
     "@dmr.is/shared-modules": "*",
     "@dmr.is/types": "*",
-    "@dmr.is/utils-server": "*"
+    "@dmr.is/utils-server": "*",
+    "@opensearch-project/opensearch": "2.13.0",
+    "cache-manager": "7.2.4",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "date-fns": "^2.29.3",
+    "mammoth": "^1.8.0",
+    "nodemailer": "^6.10.0",
+    "pdf-lib": "1.17.1",
+    "puppeteer": "^22.8.1",
+    "slugify": "^1.6.6",
+    "uuid": "^9.0.1"
   }
 }
