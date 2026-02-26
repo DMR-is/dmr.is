@@ -15910,7 +15910,7 @@ __metadata:
     nx: "npm:22.5.1"
     open-next: "npm:^2.3.7"
     prettier: "npm:^3.5.3"
-    react-select: "npm:^5.7.3"
+    react-select: "npm:5.8.0"
     sass: "npm:1.62.1"
     swc-loader: "npm:0.2.7"
     ts-jest: "npm:29.4.1"
@@ -25023,7 +25023,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-select@npm:^5.7.3":
+"react-select@npm:5.8.0":
   version: 5.8.0
   resolution: "react-select@npm:5.8.0"
   dependencies:
