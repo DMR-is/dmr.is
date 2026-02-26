@@ -8,6 +8,13 @@
     "./client/trpc": "./src/lib/client/trpc.ts",
     "./utils/*": "./src/lib/utils/*.ts"
   },
+  "peerDependencies": {
+    "@tanstack/react-query": "5.90.2",
+    "@trpc/react-query": "11.10.0",
+    "@trpc/server": "11.10.0",
+    "next": "16.1.6",
+    "react": "19.2.4"
+  },
   "dependencies": {
     "@dmr.is/auth": "*"
   }

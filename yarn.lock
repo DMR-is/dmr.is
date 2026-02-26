@@ -3979,12 +3979,15 @@ __metadata:
   dependencies:
     "@dmr.is/shared-dto": "npm:*"
     "@dmr.is/utils-client": "npm:*"
+    node-fetch: "npm:2.6.7"
   languageName: unknown
   linkType: soft
 
 "@dmr.is/apm@npm:*, @dmr.is/apm@workspace:libs/apm":
   version: 0.0.0-use.local
   resolution: "@dmr.is/apm@workspace:libs/apm"
+  dependencies:
+    dd-trace: "npm:^5.56.0"
   languageName: unknown
   linkType: soft
 
@@ -3994,6 +3997,10 @@ __metadata:
   dependencies:
     "@dmr.is/logging-next": "npm:*"
     "@dmr.is/shared-dto": "npm:*"
+    jose: "npm:6.1.3"
+  peerDependencies:
+    next: 16.1.6
+    next-auth: 4.24.13
   languageName: unknown
   linkType: soft
 
@@ -4003,6 +4010,9 @@ __metadata:
   dependencies:
     "@dmr.is/logging": "npm:*"
     "@dmr.is/utils-server": "npm:*"
+  peerDependencies:
+    "@nestjs/common": ^10.4.19
+    "@nestjs/swagger": ^8.1.1
   languageName: unknown
   linkType: soft
 
@@ -4017,6 +4027,13 @@ __metadata:
   resolution: "@dmr.is/db@workspace:libs/shared/sequelize"
   dependencies:
     "@dmr.is/logging": "npm:*"
+    cls-hooked: "npm:^4.2.2"
+    date-fns: "npm:^2.29.3"
+    zod: "npm:4.1.11"
+  peerDependencies:
+    "@nestjs/common": ^10.4.19
+    "@nestjs/sequelize": ^10.0.1
+    sequelize-typescript: ^2.1.6
   languageName: unknown
   linkType: soft
 
@@ -4030,6 +4047,15 @@ __metadata:
     "@dmr.is/types": "npm:*"
     "@dmr.is/utils-server": "npm:*"
     "@dmr.is/utils-shared": "npm:*"
+    cache-manager: "npm:7.2.4"
+    class-transformer: "npm:^0.5.1"
+    class-validator: "npm:^0.14.1"
+    uuid: "npm:^9.0.1"
+  peerDependencies:
+    "@nestjs/common": ^10.4.19
+    "@nestjs/swagger": ^8.1.1
+    sequelize: ^6.37.3
+    sequelize-typescript: ^2.1.6
   languageName: unknown
   linkType: soft
 
@@ -4101,6 +4127,9 @@ __metadata:
 "@dmr.is/legal-gazette-html@npm:*, @dmr.is/legal-gazette-html@workspace:libs/legal-gazette/html":
   version: 0.0.0-use.local
   resolution: "@dmr.is/legal-gazette-html@workspace:libs/legal-gazette/html"
+  dependencies:
+    class-validator: "npm:^0.14.1"
+    date-fns: "npm:^2.29.3"
   languageName: unknown
   linkType: soft
 
@@ -4122,6 +4151,10 @@ __metadata:
 "@dmr.is/legal-gazette-schemas@npm:*, @dmr.is/legal-gazette-schemas@workspace:libs/legal-gazette/schemas":
   version: 0.0.0-use.local
   resolution: "@dmr.is/legal-gazette-schemas@workspace:libs/legal-gazette/schemas"
+  dependencies:
+    class-validator: "npm:^0.14.1"
+    kennitala: "npm:^2.0.0-beta.3"
+    zod: "npm:4.1.11"
   languageName: unknown
   linkType: soft
 
@@ -4150,6 +4183,13 @@ __metadata:
 "@dmr.is/logging@npm:*, @dmr.is/logging@workspace:libs/logging":
   version: 0.0.0-use.local
   resolution: "@dmr.is/logging@workspace:libs/logging"
+  dependencies:
+    logform: "npm:^2.6.0"
+    triple-beam: "npm:^1.3.0"
+  peerDependencies:
+    "@nestjs/common": ^10.4.19
+    nest-winston: ^1.9.4
+    winston: ^3.11.0
   languageName: unknown
   linkType: soft
 
@@ -4271,6 +4311,28 @@ __metadata:
     "@dmr.is/shared-modules": "npm:*"
     "@dmr.is/types": "npm:*"
     "@dmr.is/utils-server": "npm:*"
+    "@opensearch-project/opensearch": "npm:2.13.0"
+    cache-manager: "npm:7.2.4"
+    class-transformer: "npm:^0.5.1"
+    class-validator: "npm:^0.14.1"
+    date-fns: "npm:^2.29.3"
+    mammoth: "npm:^1.8.0"
+    nodemailer: "npm:^6.10.0"
+    pdf-lib: "npm:1.17.1"
+    puppeteer: "npm:^22.8.1"
+    slugify: "npm:^1.6.6"
+    uuid: "npm:^9.0.1"
+  peerDependencies:
+    "@nestjs/cache-manager": 3.0.1
+    "@nestjs/common": ^10.4.19
+    "@nestjs/config": 4.0.2
+    "@nestjs/core": ^10.4.19
+    "@nestjs/schedule": 6.0.0
+    "@nestjs/sequelize": ^10.0.1
+    "@nestjs/swagger": ^8.1.1
+    sequelize: ^6.37.3
+    sequelize-typescript: ^2.1.6
+    winston: ^3.11.0
   languageName: unknown
   linkType: soft
 
@@ -4280,6 +4342,11 @@ __metadata:
   dependencies:
     "@dmr.is/constants": "npm:*"
     "@dmr.is/logging": "npm:*"
+    class-validator: "npm:^0.14.1"
+    kennitala: "npm:^2.0.0-beta.3"
+    mime-types: "npm:^2.1.35"
+  peerDependencies:
+    "@nestjs/common": ^10.4.19
   languageName: unknown
   linkType: soft
 
@@ -4315,6 +4382,12 @@ __metadata:
   resolution: "@dmr.is/shared-dto@workspace:libs/shared/dto"
   dependencies:
     "@dmr.is/constants": "npm:*"
+    class-transformer: "npm:^0.5.1"
+    class-validator: "npm:^0.14.1"
+    zod: "npm:4.1.11"
+  peerDependencies:
+    "@nestjs/common": ^10.4.19
+    "@nestjs/swagger": ^8.1.1
   languageName: unknown
   linkType: soft
 
@@ -4324,6 +4397,10 @@ __metadata:
   dependencies:
     "@dmr.is/logging": "npm:*"
     "@dmr.is/shared-dto": "npm:*"
+    zod: "npm:4.1.11"
+  peerDependencies:
+    "@nestjs/common": ^10.4.19
+    sequelize: ^6.37.3
   languageName: unknown
   linkType: soft
 
@@ -4332,6 +4409,10 @@ __metadata:
   resolution: "@dmr.is/shared-interceptors@workspace:libs/shared/interceptors"
   dependencies:
     "@dmr.is/logging": "npm:*"
+  peerDependencies:
+    "@nestjs/common": ^10.4.19
+    "@nestjs/core": ^10.4.19
+    rxjs: ^7.8.0
   languageName: unknown
   linkType: soft
 
@@ -4341,6 +4422,12 @@ __metadata:
   dependencies:
     "@dmr.is/constants": "npm:*"
     "@dmr.is/logging": "npm:*"
+    cls-hooked: "npm:^4.2.2"
+    express: "npm:^4.21.0"
+    uuid: "npm:^9.0.1"
+  peerDependencies:
+    "@nestjs/common": ^10.4.19
+    sequelize-typescript: ^2.1.6
   languageName: unknown
   linkType: soft
 
@@ -4349,6 +4436,11 @@ __metadata:
   resolution: "@dmr.is/shared-models-base@workspace:libs/shared/models/base"
   dependencies:
     "@dmr.is/logging": "npm:*"
+  peerDependencies:
+    "@nestjs/common": ^10.4.19
+    "@nestjs/swagger": ^8.1.1
+    sequelize: ^6.37.3
+    sequelize-typescript: ^2.1.6
   languageName: unknown
   linkType: soft
 
@@ -4356,12 +4448,24 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dmr.is/shared-modules@workspace:libs/shared/modules"
   dependencies:
+    "@aws-sdk/client-s3": "npm:^3.744.0"
+    "@aws-sdk/client-ses": "npm:^3.758.0"
+    "@aws-sdk/credential-providers": "npm:^3.750.0"
+    "@aws-sdk/s3-request-presigner": "npm:^3.744.0"
     "@dmr.is/constants": "npm:*"
     "@dmr.is/decorators": "npm:*"
     "@dmr.is/logging": "npm:*"
     "@dmr.is/shared-dto": "npm:*"
     "@dmr.is/types": "npm:*"
     "@dmr.is/utils-server": "npm:*"
+    jsonwebtoken: "npm:^9.0.2"
+    jwks-rsa: "npm:^3.1.0"
+    nodemailer: "npm:^6.10.0"
+  peerDependencies:
+    "@nestjs/common": ^10.4.19
+    "@nestjs/swagger": ^8.1.1
+    sequelize: ^6.37.3
+    sequelize-typescript: ^2.1.6
   languageName: unknown
   linkType: soft
 
@@ -4370,6 +4474,12 @@ __metadata:
   resolution: "@dmr.is/trpc@workspace:libs/shared/trpc"
   dependencies:
     "@dmr.is/auth": "npm:*"
+  peerDependencies:
+    "@tanstack/react-query": 5.90.2
+    "@trpc/react-query": 11.10.0
+    "@trpc/server": 11.10.0
+    next: 16.1.6
+    react: 19.2.4
   languageName: unknown
   linkType: soft
 
@@ -4378,6 +4488,8 @@ __metadata:
   resolution: "@dmr.is/types@workspace:libs/shared/types/types"
   dependencies:
     "@dmr.is/logging": "npm:*"
+  peerDependencies:
+    "@nestjs/common": ^10.4.19
   languageName: unknown
   linkType: soft
 
@@ -4387,6 +4499,9 @@ __metadata:
   dependencies:
     "@dmr.is/island-ui-theme": "npm:*"
     "@dmr.is/ui": "npm:*"
+    recharts: "npm:3.7.0"
+  peerDependencies:
+    react: 19.2.4
   languageName: unknown
   linkType: soft
 
@@ -4400,12 +4515,28 @@ __metadata:
     "@dmr.is/island-ui-theme": "npm:*"
     "@dmr.is/shared-dto": "npm:*"
     "@dmr.is/utils-shared": "npm:*"
+    classnames: "npm:^2.5.1"
+    next-usequerystate: "npm:1.20.0"
+    react-animate-height: "npm:^3.1.2"
+    react-hook-form: "npm:7.62.0"
+    react-top-loading-bar: "npm:^2.3.1"
+    react-use: "npm:^15.3.3"
+  peerDependencies:
+    "@vanilla-extract/css": ^1.7.0
+    "@vanilla-extract/recipes": ^0.5.7
+    next: 16.1.6
+    next-auth: 4.24.13
+    react: 19.2.4
+    react-dom: 19.2.4
   languageName: unknown
   linkType: soft
 
 "@dmr.is/utils-client@npm:*, @dmr.is/utils-client@workspace:libs/shared/utils/client":
   version: 0.0.0-use.local
   resolution: "@dmr.is/utils-client@workspace:libs/shared/utils/client"
+  dependencies:
+    date-fns: "npm:^2.29.3"
+    fridagar: "npm:^4.2.2"
   languageName: unknown
   linkType: soft
 
@@ -4417,12 +4548,30 @@ __metadata:
     "@dmr.is/logging": "npm:*"
     "@dmr.is/shared-dto": "npm:*"
     "@dmr.is/types": "npm:*"
+    "@keyv/redis": "npm:5.1.3"
+    cache-manager: "npm:7.2.4"
+    class-validator: "npm:^0.14.1"
+    date-fns: "npm:^2.29.3"
+    dom-serializer: "npm:^2.0.0"
+    domhandler: "npm:^5.0.3"
+    domutils: "npm:^3.0.1"
+    fridagar: "npm:^4.2.2"
+    htmlparser2: "npm:^8.0.0"
+    keyv: "npm:^5.5.3"
+    sanitize-html: "npm:^2.14.0"
+  peerDependencies:
+    "@nestjs/cache-manager": 3.0.1
+    "@nestjs/common": ^10.4.19
+    sequelize: ^6.37.3
   languageName: unknown
   linkType: soft
 
 "@dmr.is/utils-shared@npm:*, @dmr.is/utils-shared@workspace:libs/shared/utils/shared":
   version: 0.0.0-use.local
   resolution: "@dmr.is/utils-shared@workspace:libs/shared/utils/shared"
+  dependencies:
+    date-fns: "npm:^2.29.3"
+    lodash: "npm:4.17.23"
   languageName: unknown
   linkType: soft
 
@@ -13474,6 +13623,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"body-parser@npm:~1.20.3":
+  version: 1.20.4
+  resolution: "body-parser@npm:1.20.4"
+  dependencies:
+    bytes: "npm:~3.1.2"
+    content-type: "npm:~1.0.5"
+    debug: "npm:2.6.9"
+    depd: "npm:2.0.0"
+    destroy: "npm:~1.2.0"
+    http-errors: "npm:~2.0.1"
+    iconv-lite: "npm:~0.4.24"
+    on-finished: "npm:~2.4.1"
+    qs: "npm:~6.14.0"
+    raw-body: "npm:~2.5.3"
+    type-is: "npm:~1.6.18"
+    unpipe: "npm:~1.0.0"
+  checksum: 10c0/569c1e896297d1fcd8f34026c8d0ab70b90d45343c15c5d8dff5de2bad08125fc1e2f8c2f3f4c1ac6c0caaad115218202594d37dcb8d89d9b5dcae1c2b736aa9
+  languageName: node
+  linkType: hard
+
 "body-scroll-lock@npm:^3.1.5":
   version: 3.1.5
   resolution: "body-scroll-lock@npm:3.1.5"
@@ -13735,7 +13904,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bytes@npm:3.1.2":
+"bytes@npm:3.1.2, bytes@npm:~3.1.2":
   version: 3.1.2
   resolution: "bytes@npm:3.1.2"
   checksum: 10c0/76d1c43cbd602794ad8ad2ae94095cddeb1de78c5dddaa7005c51af10b0176c69971a6d88e805a90c2b6550d76636e43c40d8427a808b8645ede885de4a0358e
@@ -14514,7 +14683,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"content-disposition@npm:0.5.4, content-disposition@npm:~0.5.2":
+"content-disposition@npm:0.5.4, content-disposition@npm:~0.5.2, content-disposition@npm:~0.5.4":
   version: 0.5.4
   resolution: "content-disposition@npm:0.5.4"
   dependencies:
@@ -14560,6 +14729,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cookie-signature@npm:~1.0.6":
+  version: 1.0.7
+  resolution: "cookie-signature@npm:1.0.7"
+  checksum: 10c0/e7731ad2995ae2efeed6435ec1e22cdd21afef29d300c27281438b1eab2bae04ef0d1a203928c0afec2cee72aa36540b8747406ebe308ad23c8e8cc3c26c9c51
+  languageName: node
+  linkType: hard
+
 "cookie@npm:0.7.1":
   version: 0.7.1
   resolution: "cookie@npm:0.7.1"
@@ -14567,7 +14743,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cookie@npm:^0.7.0":
+"cookie@npm:^0.7.0, cookie@npm:~0.7.1":
   version: 0.7.2
   resolution: "cookie@npm:0.7.2"
   checksum: 10c0/9596e8ccdbf1a3a88ae02cf5ee80c1c50959423e1022e4e60b91dd87c622af1da309253d8abdb258fb5e3eacb4f08e579dc58b4897b8087574eee0fd35dfa5d2
@@ -15590,7 +15766,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"destroy@npm:1.2.0, destroy@npm:^1.0.4":
+"destroy@npm:1.2.0, destroy@npm:^1.0.4, destroy@npm:~1.2.0":
   version: 1.2.0
   resolution: "destroy@npm:1.2.0"
   checksum: 10c0/bd7633942f57418f5a3b80d5cb53898127bcf53e24cdf5d5f4396be471417671f0fee48a4ebe9a1e9defbde2a31280011af58a57e090ff822f589b443ed4e643
@@ -17463,6 +17639,45 @@ __metadata:
   languageName: node
   linkType: hard
 
+"express@npm:^4.21.0":
+  version: 4.22.1
+  resolution: "express@npm:4.22.1"
+  dependencies:
+    accepts: "npm:~1.3.8"
+    array-flatten: "npm:1.1.1"
+    body-parser: "npm:~1.20.3"
+    content-disposition: "npm:~0.5.4"
+    content-type: "npm:~1.0.4"
+    cookie: "npm:~0.7.1"
+    cookie-signature: "npm:~1.0.6"
+    debug: "npm:2.6.9"
+    depd: "npm:2.0.0"
+    encodeurl: "npm:~2.0.0"
+    escape-html: "npm:~1.0.3"
+    etag: "npm:~1.8.1"
+    finalhandler: "npm:~1.3.1"
+    fresh: "npm:~0.5.2"
+    http-errors: "npm:~2.0.0"
+    merge-descriptors: "npm:1.0.3"
+    methods: "npm:~1.1.2"
+    on-finished: "npm:~2.4.1"
+    parseurl: "npm:~1.3.3"
+    path-to-regexp: "npm:~0.1.12"
+    proxy-addr: "npm:~2.0.7"
+    qs: "npm:~6.14.0"
+    range-parser: "npm:~1.2.1"
+    safe-buffer: "npm:5.2.1"
+    send: "npm:~0.19.0"
+    serve-static: "npm:~1.16.2"
+    setprototypeof: "npm:1.2.0"
+    statuses: "npm:~2.0.1"
+    type-is: "npm:~1.6.18"
+    utils-merge: "npm:1.0.1"
+    vary: "npm:~1.1.2"
+  checksum: 10c0/ea57f512ab1e05e26b53a14fd432f65a10ec735ece342b37d0b63a7bcb8d337ffbb830ecb8ca15bcdfe423fbff88cea09786277baff200e8cde3ab40faa665cd
+  languageName: node
+  linkType: hard
+
 "ext@npm:^1.7.0":
   version: 1.7.0
   resolution: "ext@npm:1.7.0"
@@ -17849,6 +18064,21 @@ __metadata:
     statuses: "npm:2.0.1"
     unpipe: "npm:~1.0.0"
   checksum: 10c0/d38035831865a49b5610206a3a9a9aae4e8523cbbcd01175d0480ffbf1278c47f11d89be3ca7f617ae6d94f29cf797546a4619cd84dd109009ef33f12f69019f
+  languageName: node
+  linkType: hard
+
+"finalhandler@npm:~1.3.1":
+  version: 1.3.2
+  resolution: "finalhandler@npm:1.3.2"
+  dependencies:
+    debug: "npm:2.6.9"
+    encodeurl: "npm:~2.0.0"
+    escape-html: "npm:~1.0.3"
+    on-finished: "npm:~2.4.1"
+    parseurl: "npm:~1.3.3"
+    statuses: "npm:~2.0.2"
+    unpipe: "npm:~1.0.0"
+  checksum: 10c0/435a4fd65e4e4e4c71bb5474980090b73c353a123dd415583f67836bdd6516e528cf07298e219a82b94631dee7830eae5eece38d3c178073cf7df4e8c182f413
   languageName: node
   linkType: hard
 
@@ -18861,6 +19091,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"http-errors@npm:~2.0.0, http-errors@npm:~2.0.1":
+  version: 2.0.1
+  resolution: "http-errors@npm:2.0.1"
+  dependencies:
+    depd: "npm:~2.0.0"
+    inherits: "npm:~2.0.4"
+    setprototypeof: "npm:~1.2.0"
+    statuses: "npm:~2.0.2"
+    toidentifier: "npm:~1.0.1"
+  checksum: 10c0/fb38906cef4f5c83952d97661fe14dc156cb59fe54812a42cd448fa57b5c5dfcb38a40a916957737bd6b87aab257c0648d63eb5b6a9ca9f548e105b6072712d4
+  languageName: node
+  linkType: hard
+
 "http-parser-js@npm:>=0.5.1":
   version: 0.5.8
   resolution: "http-parser-js@npm:0.5.8"
@@ -19012,7 +19255,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"iconv-lite@npm:0.4.24":
+"iconv-lite@npm:0.4.24, iconv-lite@npm:~0.4.24":
   version: 0.4.24
   resolution: "iconv-lite@npm:0.4.24"
   dependencies:
@@ -19189,7 +19432,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"inherits@npm:2.0.4, inherits@npm:^2.0.1, inherits@npm:^2.0.3, inherits@npm:^2.0.4, inherits@npm:~2.0.3":
+"inherits@npm:2.0.4, inherits@npm:^2.0.1, inherits@npm:^2.0.3, inherits@npm:^2.0.4, inherits@npm:~2.0.3, inherits@npm:~2.0.4":
   version: 2.0.4
   resolution: "inherits@npm:2.0.4"
   checksum: 10c0/4e531f648b29039fb7426fb94075e6545faa1eb9fe83c29f0b6d9e7263aceb4289d2d4557db0d428188eeb449cc7c5e77b0a0b2c4e248ff2a65933a0dee49ef2
@@ -22994,7 +23237,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"on-finished@npm:2.4.1, on-finished@npm:^2.3.0, on-finished@npm:^2.4.1":
+"on-finished@npm:2.4.1, on-finished@npm:^2.3.0, on-finished@npm:^2.4.1, on-finished@npm:~2.4.1":
   version: 2.4.1
   resolution: "on-finished@npm:2.4.1"
   dependencies:
@@ -23577,7 +23820,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"path-to-regexp@npm:0.1.12, path-to-regexp@npm:^0.1.12":
+"path-to-regexp@npm:0.1.12, path-to-regexp@npm:^0.1.12, path-to-regexp@npm:~0.1.12":
   version: 0.1.12
   resolution: "path-to-regexp@npm:0.1.12"
   checksum: 10c0/1c6ff10ca169b773f3bba943bbc6a07182e332464704572962d277b900aeee81ac6aa5d060ff9e01149636c30b1f63af6e69dd7786ba6e0ddb39d4dee1f0645b
@@ -24892,6 +25135,18 @@ __metadata:
     iconv-lite: "npm:0.4.24"
     unpipe: "npm:1.0.0"
   checksum: 10c0/b201c4b66049369a60e766318caff5cb3cc5a900efd89bdac431463822d976ad0670912c931fdbdcf5543207daf6f6833bca57aa116e1661d2ea91e12ca692c4
+  languageName: node
+  linkType: hard
+
+"raw-body@npm:~2.5.3":
+  version: 2.5.3
+  resolution: "raw-body@npm:2.5.3"
+  dependencies:
+    bytes: "npm:~3.1.2"
+    http-errors: "npm:~2.0.1"
+    iconv-lite: "npm:~0.4.24"
+    unpipe: "npm:~1.0.0"
+  checksum: 10c0/449844344fc90547fb994383a494b83300e4f22199f146a79f68d78a199a8f2a923ea9fd29c3be979bfd50291a3884733619ffc15ba02a32e703b612f8d3f74a
   languageName: node
   linkType: hard
 
@@ -26479,6 +26734,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"send@npm:~0.19.0, send@npm:~0.19.1":
+  version: 0.19.2
+  resolution: "send@npm:0.19.2"
+  dependencies:
+    debug: "npm:2.6.9"
+    depd: "npm:2.0.0"
+    destroy: "npm:1.2.0"
+    encodeurl: "npm:~2.0.0"
+    escape-html: "npm:~1.0.3"
+    etag: "npm:~1.8.1"
+    fresh: "npm:~0.5.2"
+    http-errors: "npm:~2.0.1"
+    mime: "npm:1.6.0"
+    ms: "npm:2.1.3"
+    on-finished: "npm:~2.4.1"
+    range-parser: "npm:~1.2.1"
+    statuses: "npm:~2.0.2"
+  checksum: 10c0/20c2389fe0fdf3fc499938cac598bc32272287e993c4960717381a10de8550028feadfb9076f959a3a3ebdea42e1f690e116f0d16468fa56b9fd41866d3dc267
+  languageName: node
+  linkType: hard
+
 "sequelize-cli@npm:^6.6.2":
   version: 6.6.2
   resolution: "sequelize-cli@npm:6.6.2"
@@ -26604,6 +26880,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"serve-static@npm:~1.16.2":
+  version: 1.16.3
+  resolution: "serve-static@npm:1.16.3"
+  dependencies:
+    encodeurl: "npm:~2.0.0"
+    escape-html: "npm:~1.0.3"
+    parseurl: "npm:~1.3.3"
+    send: "npm:~0.19.1"
+  checksum: 10c0/36320397a073c71bedf58af48a4a100fe6d93f07459af4d6f08b9a7217c04ce2a4939e0effd842dc7bece93ffcd59eb52f58c4fff2a8e002dc29ae6b219cd42b
+  languageName: node
+  linkType: hard
+
 "set-blocking@npm:^2.0.0":
   version: 2.0.0
   resolution: "set-blocking@npm:2.0.0"
@@ -26676,7 +26964,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"setprototypeof@npm:1.2.0":
+"setprototypeof@npm:1.2.0, setprototypeof@npm:~1.2.0":
   version: 1.2.0
   resolution: "setprototypeof@npm:1.2.0"
   checksum: 10c0/68733173026766fa0d9ecaeb07f0483f4c2dc70ca376b3b7c40b7cda909f94b0918f6c5ad5ce27a9160bdfb475efaa9d5e705a11d8eaae18f9835d20976028bc
@@ -27338,6 +27626,13 @@ __metadata:
   version: 1.5.0
   resolution: "statuses@npm:1.5.0"
   checksum: 10c0/e433900956357b3efd79b1c547da4d291799ac836960c016d10a98f6a810b1b5c0dcc13b5a7aa609a58239b5190e1ea176ad9221c2157d2fd1c747393e6b2940
+  languageName: node
+  linkType: hard
+
+"statuses@npm:~2.0.1, statuses@npm:~2.0.2":
+  version: 2.0.2
+  resolution: "statuses@npm:2.0.2"
+  checksum: 10c0/a9947d98ad60d01f6b26727570f3bcceb6c8fa789da64fe6889908fe2e294d57503b14bf2b5af7605c2d36647259e856635cd4c49eab41667658ec9d0080ec3f
   languageName: node
   linkType: hard
 
@@ -28148,7 +28443,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"toidentifier@npm:1.0.1":
+"toidentifier@npm:1.0.1, toidentifier@npm:~1.0.1":
   version: 1.0.1
   resolution: "toidentifier@npm:1.0.1"
   checksum: 10c0/93937279934bd66cc3270016dd8d0afec14fb7c94a05c72dc57321f8bd1fa97e5bea6d1f7c89e728d077ca31ea125b78320a616a6c6cd0e6b9cb94cb864381c1
