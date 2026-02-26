@@ -47,6 +47,10 @@ jobs:
           mkdir -p /tmp/nx-tmp && npm install --prefix /tmp/nx-tmp --no-save --ignore-scripts --legacy-peer-deps --no-audit --no-fund nx@22.5.1
           mkdir -p node_modules && cp -r /tmp/nx-tmp/node_modules/* node_modules/
 
+          echo "Log out what show projects returns"
+          npx nx show projects --affected --type=app
+
+          echo "Determining affected projects with nx"
           AFFECTED_PROJECTS=$(npx nx show projects --affected --type=app 2>/dev/null || echo "")
 
           AFFECTED_CONTAINERS="[]"
