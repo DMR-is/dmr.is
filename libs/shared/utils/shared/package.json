@@ -8,5 +8,8 @@
   "dependencies": {
     "date-fns": "^2.29.3",
     "lodash": "4.17.23"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.160"
   }
 }

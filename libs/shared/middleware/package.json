@@ -15,5 +15,10 @@
     "cls-hooked": "^4.2.2",
     "express": "^4.21.0",
     "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/cls-hooked": "^4",
+    "@types/express": "4.17.22",
+    "@types/uuid": "^9.0.8"
   }
 }

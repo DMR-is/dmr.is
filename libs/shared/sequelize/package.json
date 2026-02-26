@@ -15,5 +15,8 @@
     "cls-hooked": "^4.2.2",
     "date-fns": "^2.29.3",
     "zod": "4.1.11"
+  },
+  "devDependencies": {
+    "@types/cls-hooked": "^4"
   }
 }

@@ -5,6 +5,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.744.0",
     "@aws-sdk/s3-presigned-post": "^3.744.0",
+    "@dmr.is/regulations-tools": "0.10.2",
     "@fastify/basic-auth": "5.1.1",
     "@fastify/compress": "7.0.3",
     "@fastify/multipart": "8.3.1",
@@ -20,6 +21,7 @@
     "file-type": "^16.5.3",
     "multer-s3-transform": "^2.10.3",
     "node-fetch": "2.6.7",
+    "pagedjs-cli": "0.4.3",
     "pg": "^8.13.3",
     "sequelize": "^6.37.3",
     "sequelize-typescript": "^2.1.6",
@@ -31,6 +33,7 @@
     "@types/multer": "^1.4.11",
     "@types/multer-s3-transform": "npm:@types/multer-s3@^2.7.10",
     "@types/node-fetch": "^2.6.11",
+    "@types/pagedjs-cli": "^0",
     "@types/pg": "^8.11.6",
     "@types/sharp": "^0.32.0"
   }
