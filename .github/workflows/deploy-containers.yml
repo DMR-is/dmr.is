@@ -1,6 +1,7 @@
 name: Deploy Containers to AWS Dev
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: ['Monorepo pipeline - quality']
     branches: ['main']
