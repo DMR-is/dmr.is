@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@dmr.is/shared-dto": "*",
-    "@dmr.is/utils-client": "*"
+    "@dmr.is/utils-client": "*",
+    "node-fetch": "2.6.7"
   }
 }

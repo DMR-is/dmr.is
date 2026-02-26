@@ -4,5 +4,8 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "dd-trace": "^5.56.0"
   }
 }

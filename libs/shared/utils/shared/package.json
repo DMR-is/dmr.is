@@ -4,5 +4,9 @@
   "private": true,
   "exports": {
     "./*": "./src/lib/*.ts"
+  },
+  "dependencies": {
+    "date-fns": "^2.29.3",
+    "lodash": "4.17.23"
   }
 }
