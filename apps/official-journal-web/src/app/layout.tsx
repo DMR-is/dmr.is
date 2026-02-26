@@ -14,6 +14,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Added comment to trigger redeploy
   const session = await getServerSession(authOptions)
   return (
     <html lang="is">

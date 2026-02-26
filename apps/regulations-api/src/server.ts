@@ -24,6 +24,7 @@ import FastifyOpenSearch from '@fastify/opensearch'
 import fastifyRedis from '@fastify/redis'
 
 // ===========================================================================
+// Added comment to trigger redeploy
 
 const fastify = fast({
   logger: true,

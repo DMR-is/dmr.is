@@ -16,6 +16,7 @@ import { ExceptionFactoryPipe } from '@dmr.is/pipelines'
 import { AppModule } from './app/app.module'
 import { OJOIExceptionFilter } from './exceptionFilter'
 import { openApi } from './openApi'
+// Added comment to trigger redeploy
 
 async function bootstrap() {
   const globalPrefix = 'api'
