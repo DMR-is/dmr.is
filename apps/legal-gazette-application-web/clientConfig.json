@@ -505,13 +505,21 @@
             "name": "dateFrom",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "dateTo",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "search",
@@ -633,13 +641,21 @@
             "name": "dateFrom",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "dateTo",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "search",
@@ -2799,13 +2815,21 @@
             "name": "dateFrom",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "dateTo",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "search",
@@ -3369,7 +3393,7 @@
             "name": "advertId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "format": "uuid", "type": "string" }
           },
           {
             "name": "search",
@@ -3381,19 +3405,27 @@
             "name": "dateFrom",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "dateTo",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "typeId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "format": "uuid", "type": "string" }
           },
           {
             "name": "categoryId",
@@ -3489,7 +3521,7 @@
             "name": "advertId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "format": "uuid", "type": "string" }
           },
           {
             "name": "search",
@@ -3501,19 +3533,27 @@
             "name": "dateFrom",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "dateTo",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "typeId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "format": "uuid", "type": "string" }
           },
           {
             "name": "categoryId",
@@ -4116,8 +4156,16 @@
           "caption": { "type": "string" },
           "content": { "type": "string" },
           "additionalText": { "type": "string" },
-          "judgementDate": { "type": "string" },
-          "divisionMeetingDate": { "type": "string" },
+          "judgementDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "divisionMeetingDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "divisionMeetingLocation": { "type": "string" },
           "scheduledAt": { "type": "array", "items": { "type": "string" } },
           "categoryId": { "type": "string" },
@@ -4173,15 +4221,16 @@
       "SettlementDto": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
+          "id": { "type": "string", "format": "uuid" },
           "type": {
             "allOf": [{ "$ref": "#/components/schemas/SettlementType" }]
           },
-          "liquidatorName": { "type": "string" },
-          "liquidatorLocation": { "type": "string" },
+          "liquidatorName": { "type": "string", "maxLength": 255 },
+          "liquidatorLocation": { "type": "string", "maxLength": 255 },
           "liquidatorRecallStatementLocation": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "maxLength": 255
           },
           "liquidatorRecallStatementType": {
             "allOf": [
@@ -4190,11 +4239,21 @@
               }
             ]
           },
-          "name": { "type": "string" },
-          "nationalId": { "type": "string" },
-          "address": { "type": "string" },
-          "deadline": { "type": "string", "nullable": true },
-          "dateOfDeath": { "type": "string", "nullable": true },
+          "name": { "type": "string", "maxLength": 255 },
+          "nationalId": { "type": "string", "maxLength": 10 },
+          "address": { "type": "string", "maxLength": 255 },
+          "deadline": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "dateOfDeath": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
           "declaredClaims": { "type": "number", "nullable": true }
         },
         "required": [
@@ -4211,11 +4270,11 @@
       "CommunicationChannelDto": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "advertId": { "type": "string" },
+          "id": { "type": "string", "format": "uuid" },
+          "advertId": { "type": "string", "format": "uuid" },
           "email": { "type": "string" },
-          "name": { "type": "string" },
-          "phone": { "type": "string" }
+          "name": { "type": "string", "nullable": true },
+          "phone": { "type": "string", "nullable": true }
         },
         "required": ["id", "advertId", "email"]
       },
@@ -4226,8 +4285,16 @@
           "id": { "type": "string" },
           "advertId": { "type": "string" },
           "pdfUrl": { "type": "string" },
-          "scheduledAt": { "type": "string" },
-          "publishedAt": { "type": "string" },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "isLegacy": { "type": "boolean" },
           "version": {
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersionEnum" }]
@@ -4326,7 +4393,11 @@
           "receiver": { "type": "string" },
           "comment": { "type": "string" },
           "status": { "$ref": "#/components/schemas/StatusDto" },
-          "createdAt": { "type": "string" }
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
         },
         "required": ["id", "type", "advertId", "actor", "status", "createdAt"]
       },
@@ -4340,24 +4411,31 @@
           },
           "createdAt": {
             "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
+            "format": "date-time",
+            "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the creation date"
           },
           "updatedAt": {
             "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
+            "format": "date-time",
+            "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the updated date"
           },
           "deletedAt": {
             "type": "string",
-            "description": "ISO representation of the deletion date",
+            "format": "date-time",
             "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the deletion date",
             "nullable": true
           },
-          "advertId": { "type": "string" },
+          "advertId": { "type": "string", "format": "uuid" },
           "name": { "type": "string" },
           "location": { "type": "string" },
-          "date": { "type": "string" },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "onBehalfOf": { "type": "string" }
         },
         "required": ["id", "createdAt", "updatedAt", "advertId"]
@@ -4368,28 +4446,32 @@
           "id": {
             "type": "string",
             "description": "Unique identifier",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
           },
           "createdAt": {
             "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
+            "format": "date-time",
+            "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the creation date"
           },
           "updatedAt": {
             "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
+            "format": "date-time",
+            "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the updated date"
           },
           "deletedAt": {
             "type": "string",
-            "description": "ISO representation of the deletion date",
+            "format": "date-time",
             "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the deletion date",
             "nullable": true
           },
           "templateType": {
             "allOf": [{ "$ref": "#/components/schemas/AdvertTemplateType" }]
           },
-          "caseId": { "type": "string" },
+          "caseId": { "type": "string", "format": "uuid" },
           "title": { "type": "string" },
           "createdBy": { "type": "string" },
           "createdByNationalId": { "type": "string" },
@@ -4397,8 +4479,16 @@
           "content": { "type": "string" },
           "publicationNumber": { "type": "string" },
           "additionalText": { "type": "string" },
-          "judgementDate": { "type": "string" },
-          "divisionMeetingDate": { "type": "string" },
+          "judgementDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "divisionMeetingDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "divisionMeetingLocation": { "type": "string" },
           "canEdit": { "type": "boolean" },
           "canPublish": { "type": "boolean" },
@@ -4416,8 +4506,16 @@
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": { "$ref": "#/components/schemas/StatusDto" },
-          "scheduledAt": { "type": "string", "nullable": true },
-          "lastPublishedAt": { "type": "string", "nullable": true },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "lastPublishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "assignedUser": { "$ref": "#/components/schemas/UserDto" },
           "hasInternalComments": { "type": "boolean" },
           "comments": {
@@ -4425,7 +4523,11 @@
             "items": { "$ref": "#/components/schemas/CommentDto" }
           },
           "signature": { "$ref": "#/components/schemas/SignatureDto" },
-          "paidAt": { "type": "string" },
+          "paidAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "totalPrice": { "type": "number" }
         },
         "required": [
@@ -4444,8 +4546,6 @@
           "category",
           "type",
           "status",
-          "scheduledAt",
-          "lastPublishedAt",
           "hasInternalComments",
           "comments"
         ]
@@ -4485,22 +4585,26 @@
           "id": {
             "type": "string",
             "description": "Unique identifier",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
           },
           "createdAt": {
             "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
+            "format": "date-time",
+            "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the creation date"
           },
           "updatedAt": {
             "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
+            "format": "date-time",
+            "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the updated date"
           },
           "deletedAt": {
             "type": "string",
-            "description": "ISO representation of the deletion date",
+            "format": "date-time",
             "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the deletion date",
             "nullable": true
           },
           "title": { "type": "string" },
@@ -4513,10 +4617,18 @@
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": { "$ref": "#/components/schemas/StatusDto" },
-          "scheduledAt": { "type": "string", "nullable": true },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "assignedUser": { "$ref": "#/components/schemas/UserDto" },
           "hasInternalComments": { "type": "boolean" },
-          "lastPublishedAt": { "type": "string", "nullable": true }
+          "lastPublishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
         },
         "required": [
           "id",
@@ -4528,9 +4640,7 @@
           "category",
           "type",
           "status",
-          "scheduledAt",
-          "hasInternalComments",
-          "lastPublishedAt"
+          "hasInternalComments"
         ]
       },
       "Paging": {
@@ -4617,7 +4727,12 @@
       "CreateSignatureDto": {
         "type": "object",
         "properties": {
-          "date": { "type": "string", "nullable": true },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
           "name": { "type": "string", "nullable": true },
           "location": { "type": "string", "nullable": true },
           "onBehalfOf": { "type": "string", "nullable": true }
@@ -4635,8 +4750,8 @@
       "SettlementCompanyDto": {
         "type": "object",
         "properties": {
-          "companyName": { "type": "string" },
-          "companyNationalId": { "type": "string" }
+          "companyName": { "type": "string", "maxLength": 255 },
+          "companyNationalId": { "type": "string", "maxLength": 255 }
         },
         "required": ["companyName", "companyNationalId"]
       },
@@ -4647,16 +4762,30 @@
             "type": "string",
             "enum": ["DEFAULT", "UNDIVIDED", "OWNER"]
           },
-          "liquidatorName": { "type": "string" },
-          "liquidatorLocation": { "type": "string" },
-          "recallRequirementStatementLocation": { "type": "string" },
-          "recallRequirementStatementType": { "type": "string" },
-          "name": { "type": "string" },
-          "nationalId": { "type": "string" },
-          "address": { "type": "string" },
+          "liquidatorName": { "type": "string", "maxLength": 255 },
+          "liquidatorLocation": { "type": "string", "maxLength": 255 },
+          "recallRequirementStatementLocation": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "recallRequirementStatementType": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "name": { "type": "string", "maxLength": 255 },
+          "nationalId": { "type": "string", "maxLength": 255 },
+          "address": { "type": "string", "maxLength": 255 },
           "declaredClaims": { "type": "number" },
-          "deadline": { "type": "string" },
-          "dateOfDeath": { "type": "string" },
+          "deadline": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "dateOfDeath": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "companies": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/SettlementCompanyDto" }
@@ -4673,34 +4802,45 @@
       "CreateAdvertDto": {
         "type": "object",
         "properties": {
-          "caseId": { "type": "string", "nullable": true },
-          "courtDistrictId": { "type": "string", "nullable": true },
-          "settlementId": { "type": "string", "nullable": true },
-          "typeId": { "type": "string" },
-          "categoryId": { "type": "string" },
+          "caseId": { "type": "string", "format": "uuid" },
+          "typeId": { "type": "string", "format": "uuid" },
           "title": { "type": "string" },
+          "categoryId": { "type": "string", "format": "uuid" },
           "legacyHtml": { "type": "string", "nullable": true },
-          "additionalText": { "type": "string", "nullable": true },
-          "caption": { "type": "string", "nullable": true },
+          "additionalText": { "type": "string" },
+          "caption": { "type": "string" },
           "content": { "type": "string" },
-          "divisionMeetingLocation": { "type": "string", "nullable": true },
-          "externalId": { "type": "string", "nullable": true },
+          "courtDistrictId": { "type": "string", "format": "uuid" },
+          "settlementId": { "type": "string", "format": "uuid" },
+          "divisionMeetingLocation": { "type": "string" },
+          "externalId": { "type": "string" },
           "templateType": {
             "description": "Template type of the advert",
             "allOf": [{ "$ref": "#/components/schemas/AdvertTemplateType" }]
           },
           "isFromExternalSystem": { "type": "boolean" },
-          "applicationId": { "type": "string" },
+          "applicationId": { "type": "string", "format": "uuid" },
           "signatureDate": {
             "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
             "description": "Date of signature"
           },
-          "judgementDate": { "type": "string" },
-          "divisionMeetingDate": { "type": "string" },
+          "judgementDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "divisionMeetingDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "scheduledAt": {
+            "example": ["2026-02-19T10:30:00.000Z"],
             "description": "List of scheduled publication dates",
             "type": "array",
-            "items": { "type": "string" }
+            "items": { "type": "string", "format": "date-time" }
           },
           "signature": { "$ref": "#/components/schemas/CreateSignatureDto" },
           "communicationChannels": {
@@ -4712,13 +4852,7 @@
           },
           "settlement": { "$ref": "#/components/schemas/CreateSettlementDto" }
         },
-        "required": [
-          "typeId",
-          "categoryId",
-          "title",
-          "scheduledAt",
-          "communicationChannels"
-        ]
+        "required": ["typeId", "title", "categoryId", "scheduledAt"]
       },
       "CreateAdvertResponseDto": {
         "type": "object",
@@ -4728,8 +4862,8 @@
       "CommonAdvertFieldsDto": {
         "type": "object",
         "properties": {
-          "typeId": { "type": "string" },
-          "categoryId": { "type": "string" },
+          "typeId": { "type": "string", "format": "uuid" },
+          "categoryId": { "type": "string", "format": "uuid" },
           "caption": { "type": "string" },
           "content": { "type": "string" }
         },
@@ -4747,7 +4881,11 @@
               "$ref": "#/components/schemas/CreateCommunicationChannelDto"
             }
           },
-          "publishingDates": { "type": "array", "items": { "type": "string" } },
+          "publishingDates": {
+            "example": ["2026-02-19T10:30:00.000Z"],
+            "type": "array",
+            "items": { "type": "string", "format": "date-time" }
+          },
           "fields": { "$ref": "#/components/schemas/CommonAdvertFieldsDto" }
         },
         "required": [
@@ -4769,10 +4907,18 @@
       "RecallBankruptcyFieldsDto": {
         "type": "object",
         "properties": {
-          "meetingDate": { "type": "string" },
+          "meetingDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "meetingLocation": { "type": "string" },
-          "courtDistrictId": { "type": "string" },
-          "judgmentDate": { "type": "string" },
+          "courtDistrictId": { "type": "string", "format": "uuid" },
+          "judgmentDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "settlementType": {
             "type": "string",
             "enum": ["DEFAULT", "UNDIVIDED", "OWNER"]
@@ -4780,7 +4926,11 @@
           "settlementNationalId": { "type": "string" },
           "settlementName": { "type": "string" },
           "settlementAddress": { "type": "string" },
-          "settlementDate": { "type": "string" },
+          "settlementDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
           "requirementStatement": {
@@ -4824,7 +4974,11 @@
               "$ref": "#/components/schemas/CreateCommunicationChannelDto"
             }
           },
-          "publishingDates": { "type": "array", "items": { "type": "string" } },
+          "publishingDates": {
+            "example": ["2026-02-19T10:30:00.000Z"],
+            "type": "array",
+            "items": { "type": "string", "format": "date-time" }
+          },
           "fields": { "$ref": "#/components/schemas/RecallBankruptcyFieldsDto" }
         },
         "required": [
@@ -4838,10 +4992,18 @@
       "RecallDeceasedFieldsDto": {
         "type": "object",
         "properties": {
-          "meetingDate": { "type": "string" },
+          "meetingDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "meetingLocation": { "type": "string" },
-          "courtDistrictId": { "type": "string" },
-          "judgmentDate": { "type": "string" },
+          "courtDistrictId": { "type": "string", "format": "uuid" },
+          "judgmentDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "settlementType": {
             "type": "string",
             "enum": ["DEFAULT", "UNDIVIDED", "OWNER"]
@@ -4849,7 +5011,11 @@
           "settlementNationalId": { "type": "string" },
           "settlementName": { "type": "string" },
           "settlementAddress": { "type": "string" },
-          "settlementDate": { "type": "string" },
+          "settlementDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "liquidatorName": { "type": "string" },
           "liquidatorLocation": { "type": "string" },
           "requirementStatement": {
@@ -4891,7 +5057,11 @@
               "$ref": "#/components/schemas/CreateCommunicationChannelDto"
             }
           },
-          "publishingDates": { "type": "array", "items": { "type": "string" } },
+          "publishingDates": {
+            "example": ["2026-02-19T10:30:00.000Z"],
+            "type": "array",
+            "items": { "type": "string", "format": "date-time" }
+          },
           "fields": { "$ref": "#/components/schemas/RecallDeceasedFieldsDto" }
         },
         "required": [
@@ -4957,22 +5127,26 @@
           "id": {
             "type": "string",
             "description": "Unique identifier",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
           },
           "createdAt": {
             "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
+            "format": "date-time",
+            "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the creation date"
           },
           "updatedAt": {
             "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
+            "format": "date-time",
+            "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the updated date"
           },
           "deletedAt": {
             "type": "string",
-            "description": "ISO representation of the deletion date",
+            "format": "date-time",
             "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the deletion date",
             "nullable": true
           },
           "caseNumber": { "type": "string" },
@@ -5028,7 +5202,9 @@
       },
       "GetMinDateResponseDto": {
         "type": "object",
-        "properties": { "minDate": { "type": "string" } },
+        "properties": {
+          "minDate": { "type": "string", "format": "date-time" }
+        },
         "required": ["minDate"]
       },
       "ApplicationStatusEnum": {
@@ -5041,25 +5217,29 @@
           "id": {
             "type": "string",
             "description": "Unique identifier",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
           },
           "createdAt": {
             "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
+            "format": "date-time",
+            "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the creation date"
           },
           "updatedAt": {
             "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
+            "format": "date-time",
+            "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the updated date"
           },
           "deletedAt": {
             "type": "string",
-            "description": "ISO representation of the deletion date",
+            "format": "date-time",
             "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the deletion date",
             "nullable": true
           },
-          "caseId": { "type": "string" },
+          "caseId": { "type": "string", "format": "uuid" },
           "applicantNationalId": { "type": "string" },
           "submittedByNationalId": { "type": "string" },
           "status": {
@@ -5105,25 +5285,29 @@
           "id": {
             "type": "string",
             "description": "Unique identifier",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
           },
           "createdAt": {
             "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
+            "format": "date-time",
+            "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the creation date"
           },
           "updatedAt": {
             "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
+            "format": "date-time",
+            "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the updated date"
           },
           "deletedAt": {
             "type": "string",
-            "description": "ISO representation of the deletion date",
+            "format": "date-time",
             "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the deletion date",
             "nullable": true
           },
-          "caseId": { "type": "string" },
+          "caseId": { "type": "string", "format": "uuid" },
           "applicantNationalId": { "type": "string" },
           "submittedByNationalId": { "type": "string" },
           "status": {
@@ -5182,7 +5366,11 @@
           "version": {
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersionEnum" }]
           },
-          "publishedAt": { "type": "string" },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "title": { "type": "string" },
@@ -5243,7 +5431,13 @@
       },
       "UpdateAdvertPublicationDto": {
         "type": "object",
-        "properties": { "scheduledAt": { "type": "string" } },
+        "properties": {
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
+        },
         "required": ["scheduledAt"]
       },
       "NationalRegistryEntityDto": {
