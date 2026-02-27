@@ -8,8 +8,8 @@
   "peerDependencies": {
     "@nestjs/common": "^10.4.19",
     "@nestjs/swagger": "^8.1.1",
-    "sequelize": "^6.37.3",
-    "sequelize-typescript": "^2.1.6"
+    "sequelize": "6.37.3",
+    "sequelize-typescript": "2.1.6"
   },
   "dependencies": {
     "@dmr.is/constants": "*",

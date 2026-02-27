@@ -8,12 +8,12 @@
   "peerDependencies": {
     "@nestjs/common": "^10.4.19",
     "@nestjs/sequelize": "^10.0.1",
-    "sequelize-typescript": "^2.1.6"
+    "sequelize-typescript": "2.1.6"
   },
   "dependencies": {
     "@dmr.is/logging": "*",
     "cls-hooked": "^4.2.2",
-    "date-fns": "^2.29.3",
+    "date-fns": "2.30.0",
     "zod": "4.1.11"
   },
   "devDependencies": {
