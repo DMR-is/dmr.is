@@ -14,7 +14,7 @@ import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { AdvertPublicationDto } from '../../gen/fetch'
+import { AdvertPublication } from '../../lib/trpc/types'
 import { useUpdatePublications } from '../../hooks/useUpdatePublications'
 
 type PublicationsFieldsProps = {
@@ -22,7 +22,7 @@ type PublicationsFieldsProps = {
   canEdit: boolean
   canPublish: boolean
   isAssignedToMe: boolean
-  publications: AdvertPublicationDto[]
+  publications: AdvertPublication[]
 }
 
 export const PublicationsFields = ({

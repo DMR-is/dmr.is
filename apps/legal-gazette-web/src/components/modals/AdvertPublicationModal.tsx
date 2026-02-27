@@ -11,17 +11,17 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
-import { AdvertPublicationDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { AdvertPublication } from '../../lib/trpc/types'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   advertId: string
-  publications: AdvertPublicationDto[]
+  publications: AdvertPublication[]
 }
 
-const getPublicationLabel = (pub: AdvertPublicationDto): string => {
+const getPublicationLabel = (pub: AdvertPublication): string => {
   const label = `Útgáfa ${pub.version}`
   return pub.publishedAt ? `${label} (birt)` : label
 }

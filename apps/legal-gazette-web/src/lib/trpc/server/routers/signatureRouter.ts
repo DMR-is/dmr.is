@@ -6,7 +6,7 @@ const updateSignatureInput = z.object({
   signatureId: z.string(),
   advertId: z.string(),
   name: z.string().optional().nullable(),
-  date: z.string().optional().nullable(),
+  date: z.coerce.date().optional().nullable(),
   location: z.string().optional().nullable(),
   onBehalfOf: z.string().optional().nullable(),
 })

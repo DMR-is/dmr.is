@@ -9,7 +9,7 @@ const createPublicationSchema = z.object({
 const updatePublicationSchema = z.object({
   advertId: z.string(),
   publicationId: z.string(),
-  scheduledAt: z.string(),
+  scheduledAt: z.coerce.date(),
 })
 
 const deletePublicationSchema = z.object({
