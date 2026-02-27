@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 
+import { theme } from '@dmr.is/island-ui-theme'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
@@ -100,7 +101,7 @@ export const SectionContainer = ({
                 intro="Staða óútgefinna mála."
                 items={[
                   {
-                    color: 'purple400',
+                    color: theme.color.purple400,
                     title: 'Innsent',
                     count: statusStats.submittedCount,
                     percentage: calculatePercentage(
@@ -109,7 +110,7 @@ export const SectionContainer = ({
                     ),
                   },
                   {
-                    color: 'blue400',
+                    color: theme.color.blue400,
                     title: 'Í vinnslu',
                     count: statusStats.inprogressCount,
                     percentage: calculatePercentage(
@@ -118,7 +119,7 @@ export const SectionContainer = ({
                     ),
                   },
                   {
-                    color: 'mint400',
+                    color: theme.color.mint400,
                     title: 'Tilbúið til útgáfu',
                     count: statusStats.tobePublishedCount,
                     percentage: calculatePercentage(
