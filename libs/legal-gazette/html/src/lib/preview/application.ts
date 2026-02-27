@@ -1,5 +1,8 @@
-import get from 'lodash/get'
-
+import type {
+  CommonApplicationAnswers,
+  RecallBankruptcyApplicationAnswers,
+  RecallDeceasedApplicationAnswers,
+} from '@dmr.is/legal-gazette/schemas'
 import {
   ApplicationRequirementStatementEnum,
   ApplicationTypeEnum,
@@ -11,7 +14,13 @@ import {
 import { LegalGazetteHTMLTemplates } from '../constants'
 import { getAdvertHTMLMarkup } from '../templates/base'
 
-const mapApplicationTypeToTemplate = (applicationType: string) => {
+const mapApplicationTypeToTemplate = (
+  applicationType: string,
+):
+  | LegalGazetteHTMLTemplates.COMMON
+  | LegalGazetteHTMLTemplates.RECALL_BANKRUPTCY
+  | LegalGazetteHTMLTemplates.RECALL_DECEASED
+  | null => {
   switch (applicationType) {
     case ApplicationTypeEnum.COMMON:
       return LegalGazetteHTMLTemplates.COMMON
@@ -20,7 +29,7 @@ const mapApplicationTypeToTemplate = (applicationType: string) => {
     case ApplicationTypeEnum.RECALL_DECEASED:
       return LegalGazetteHTMLTemplates.RECALL_DECEASED
     default:
-      return LegalGazetteHTMLTemplates.COMMON
+      return null
   }
 }
 // "custom" | "location" | "email"'.
@@ -47,13 +56,22 @@ type ApplicationPreview =
       error: string
     }
 
+type ApplicationPreviewAnswers =
+  | CommonApplicationAnswers
+  | RecallBankruptcyApplicationAnswers
+  | RecallDeceasedApplicationAnswers
+
 export const getApplicationPreview = (
   type: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  application: Record<string, any>,
+  application: ApplicationPreviewAnswers,
 ): ApplicationPreview => {
-
   const mappedType = mapApplicationTypeToTemplate(type)
+  if (mappedType === null) {
+    return {
+      html: null,
+      error: 'Unsupported application type',
+    }
+  }
 
   switch (mappedType) {
     case LegalGazetteHTMLTemplates.COMMON: {
@@ -67,14 +85,14 @@ export const getApplicationPreview = (
       }
 
       const answers = parsed.data
-      const firstPub = get(application, 'publishingDates.0')
+      const firstPub = answers.publishingDates?.[0]
 
       const html = getAdvertHTMLMarkup({
         templateType: LegalGazetteHTMLTemplates.COMMON,
-        additionalText: application.additionalText,
+        additionalText: answers.additionalText,
         content: answers.fields?.html ?? '',
         publishDate: firstPub ? new Date(firstPub) : undefined,
-        signature: application.signature,
+        signature: answers.signature,
         title: `${answers.fields?.type?.title}${answers.fields?.caption ? ` - ${answers.fields.caption}` : ''}`,
       })
 
@@ -96,7 +114,7 @@ export const getApplicationPreview = (
         ? new Date(answers.fields.courtAndJudgmentFields.judgmentDate)
         : undefined
 
-      const pubDate = get(application, 'publishingDates.0')
+      const pubDate = answers.publishingDates?.[0]
       const publishDate = pubDate ? new Date(pubDate) : undefined
       const deadlineDate = answers.fields?.settlementFields?.deadlineDate
         ? new Date(answers.fields.settlementFields.deadlineDate)
@@ -107,12 +125,12 @@ export const getApplicationPreview = (
 
       const html = getAdvertHTMLMarkup({
         templateType: LegalGazetteHTMLTemplates.RECALL_BANKRUPTCY,
-        additionalText: application.additionalText,
+        additionalText: answers.additionalText,
         courtDistrict:
           answers.fields?.courtAndJudgmentFields?.courtDistrict?.title,
         judgementDate: judgementDate,
         publishDate: publishDate,
-        signature: application.signature,
+        signature: answers.signature,
         settlement: {
           statementType: mapStatementType(
             answers.fields?.settlementFields?.recallRequirementStatementType,
@@ -149,7 +167,7 @@ export const getApplicationPreview = (
 
       const answers = parsed.data
 
-      const pubDate = get(application, 'publishingDates.0')
+      const pubDate = answers.publishingDates?.[0]
       const publishDate = pubDate ? new Date(pubDate) : undefined
       const dateOfDeath = answers.fields?.settlementFields?.dateOfDeath
         ? new Date(answers.fields.settlementFields.dateOfDeath)
@@ -157,9 +175,9 @@ export const getApplicationPreview = (
 
       const html = getAdvertHTMLMarkup({
         templateType: LegalGazetteHTMLTemplates.RECALL_DECEASED,
-        additionalText: application.additionalText,
+        additionalText: answers.additionalText,
         publishDate: publishDate,
-        signature: application.signature,
+        signature: answers.signature,
         title: `Innköllun dánarbús - ${answers.fields?.settlementFields?.name ?? ''}`,
         settlement: {
           statementType: mapStatementType(
@@ -182,10 +200,5 @@ export const getApplicationPreview = (
 
       return { html, error: null }
     }
-  }
-
-  return {
-    html: null,
-    error: 'Unsupported application type',
   }
 }
