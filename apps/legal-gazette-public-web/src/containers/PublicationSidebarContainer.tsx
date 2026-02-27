@@ -1,10 +1,10 @@
 'use client'
 
 import { PublicationSidebar } from '../components/client-components/detailed-page/Sidebar/PublicationSidebar'
-import { AdvertPublicationDetailedDto } from '../gen/fetch'
+import { PublicationDetails } from '../lib/trpc/types'
 
 interface PublicationSidebarContainerProps {
-  publication: AdvertPublicationDetailedDto
+  publication: PublicationDetails
 }
 
 export function PublicationSidebarContainer({

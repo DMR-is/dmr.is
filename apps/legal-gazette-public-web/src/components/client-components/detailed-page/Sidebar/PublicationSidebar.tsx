@@ -7,10 +7,10 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { formatDate } from '@dmr.is/utils-shared/format/date'
 
-import { AdvertPublicationDetailedDto } from '../../../../gen/fetch'
+import { PublicationDetails } from '../../../../lib/trpc/types'
 
 type Props = {
-  publication: AdvertPublicationDetailedDto
+  publication: PublicationDetails
 }
 
 export const PublicationSidebar = ({ publication }: Props) => {
