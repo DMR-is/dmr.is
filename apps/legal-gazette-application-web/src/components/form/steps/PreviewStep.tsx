@@ -1,5 +1,6 @@
 'use client'
-import { useFormContext } from 'react-hook-form'
+import { useMemo } from 'react'
+import { useFormContext, useWatch } from 'react-hook-form'
 
 import {
   getApplicationPreview,
@@ -14,13 +15,14 @@ import { Problem } from '@dmr.is/ui/components/Problem/Problem'
 
 
 export const PreviewStep = () => {
-  const { getValues } = useFormContext<
+  const { control, getValues } = useFormContext<
     RecallApplicationWebSchema | CommonApplicationWebSchema
   >()
 
-  const markup = getApplicationPreview(
-    getValues('metadata.type'),
-    getValues(),
+  const values = useWatch({ control })
+  const markup = useMemo(
+    () => getApplicationPreview(getValues('metadata.type'), getValues()),
+    [getValues, values],
   )
 
   if (markup.error !== null) {
