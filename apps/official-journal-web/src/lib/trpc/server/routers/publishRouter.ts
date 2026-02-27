@@ -1,9 +1,6 @@
 import { z } from 'zod'
 
-import {
-  CaseStatusEnum,
-  DepartmentEnum,
-} from '../../../../gen/fetch'
+import { CaseStatusEnum, DepartmentEnum } from '../../../../gen/fetch'
 import { getParamsWithoutNullOrEmpty } from '../../../utils'
 import { protectedProcedure, router } from '../trpc'
 
@@ -86,7 +83,8 @@ export const publishRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      return ctx.api.getCasesWithDepartmentCount(input)
+      const castedInput = getParamsWithoutNullOrEmpty(input)
+      return ctx.api.getCasesWithDepartmentCount(castedInput)
     }),
 
   publishAdvertRegulation: protectedProcedure
