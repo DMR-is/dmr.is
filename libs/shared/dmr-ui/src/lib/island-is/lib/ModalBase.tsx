@@ -9,9 +9,9 @@ import React, {
   useRef,
   useState,
 } from 'react'
+import { createPortal } from 'react-dom'
 
 import * as styles from './ModalBase.css'
-import { createPortal } from 'react-dom'
 
 export type ModalBaseProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
