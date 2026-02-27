@@ -17,7 +17,6 @@ import {
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
-import { ObjectIssuer } from '../modules/external-systems/dto/external-systems.dto'
 import { AdvertModel } from './advert.model'
 import {
   ForeclosurePropertyDto,

@@ -1,10 +1,4 @@
-import { Type } from 'class-transformer'
-import {
-  IsBoolean,
-  IsDate,
-  IsEmail,
-  IsOptional,
-} from 'class-validator'
+import { IsBoolean, IsEmail, IsOptional } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -33,15 +27,11 @@ export class CreateSubscriberAdminDto {
   email?: string
 
   @ApiDateTime()
-  @Type(() => Date)
-  @IsDate()
   subscribedTo!: Date
 }
 
 export class UpdateSubscriberEndDateDto {
   @ApiDateTime()
-  @Type(() => Date)
-  @IsDate()
   subscribedTo!: Date
 }
 

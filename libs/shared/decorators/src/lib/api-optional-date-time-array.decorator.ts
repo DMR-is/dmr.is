@@ -4,20 +4,7 @@ import { IsArray, IsDate, IsOptional } from 'class-validator'
 import { applyDecorators } from '@nestjs/common'
 import { ApiProperty, ApiPropertyOptions } from '@nestjs/swagger'
 
-function parseDateValue(value: unknown): unknown {
-  if (value instanceof Date) {
-    return value
-  }
-
-  if (typeof value === 'string' || typeof value === 'number') {
-    const parsed = new Date(value)
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed
-    }
-  }
-
-  return value
-}
+import { parseDateValue } from './parse-date-value.util'
 
 export function ApiOptionalDateTimeArray(options?: ApiPropertyOptions) {
   return applyDecorators(

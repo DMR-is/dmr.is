@@ -7,9 +7,8 @@ import {
   HasMany,
   Scopes,
 } from 'sequelize-typescript'
-import { isBase64 } from 'validator'
 
-import { ApiProperty, PickType } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 
 import {
   ApiEnum,
@@ -25,12 +24,10 @@ import {
   RecallBankruptcyApplicationAnswers,
   RecallDeceasedApplicationAnswers,
 } from '@dmr.is/legal-gazette-schemas'
-import { Paging } from '@dmr.is/shared-dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import { LegalGazetteModels } from '../core/constants'
-import { CreateSignatureDto } from '../modules/advert/signature/dto/signature.dto'
 import { DetailedDto } from '../modules/shared/dto/detailed.dto'
 import { AdvertDto, AdvertModel } from './advert.model'
 import { AdvertPublicationModel } from './advert-publication.model'

@@ -24,16 +24,11 @@ import {
 } from '@dmr.is/decorators'
 import { Paging } from '@dmr.is/shared-dto'
 
-import { AdvertDto } from '../../../models/advert.model'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
 } from '../../../models/application.model'
 import { CreateSignatureDto } from '../../advert/signature/dto/signature.dto'
-
-export class ApplicationDtoWithSubtitle extends ApplicationDto {
-  subtitle?: string
-}
 
 export class GetApplicationsDto {
   @ApiProperty({ type: [ApplicationDto] })
