@@ -3,11 +3,11 @@
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
-import { AdvertDto } from '../../gen/fetch'
+import { ApplicationAdvert } from '../../lib/trpc/types'
 import { AdvertPublications } from './AdvertPublications'
 
 type Props = {
-  adverts: AdvertDto[]
+  adverts: ApplicationAdvert[]
 }
 
 export const AdvertList = ({ adverts }: Props) => {

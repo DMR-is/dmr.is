@@ -10,14 +10,17 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import { formatDate } from '@dmr.is/utils-shared/format/date'
 
-import { AdvertDto, AdvertPublicationDetailedDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import {
+  AdvertPublicationDetails,
+  ApplicationAdvert,
+} from '../../lib/trpc/types'
 import * as styles from './advert.css'
 
 import { useMutation } from '@tanstack/react-query'
 
 type Props = {
-  advert: AdvertDto
+  advert: ApplicationAdvert
   detailed?: boolean
 }
 
@@ -78,7 +81,7 @@ export const AdvertPublications = ({ advert, detailed = false }: Props) => {
                         publicationId: pub.id,
                       },
                       {
-                        onSuccess: (data: AdvertPublicationDetailedDto) => {
+                        onSuccess: (data: AdvertPublicationDetails) => {
                           setHTML(data.html)
                           setOpenModal(i)
                         },
