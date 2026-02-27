@@ -2,8 +2,8 @@ import { useCallback } from 'react'
 
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { AdvertDetailedDto } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
+import { AdvertDetails } from '../lib/trpc/types'
 
 import {
   useMutation,
@@ -33,15 +33,26 @@ export const useUpdateSignature = ({
             trpc.getAdvert.queryFilter({ id: advertId }),
           )
 
-          const prevData = queryClient.getQueryData(
+          const prevData = queryClient.getQueryData<AdvertDetails>(
             trpc.getAdvert.queryKey({ id: advertId }),
-          ) as AdvertDetailedDto
+          )
+
+          if (!prevData) {
+            return { prevData }
+          }
 
           if (!prevData.signature) {
             return { prevData }
           }
 
-          const optimisticData: AdvertDetailedDto = {
+          const date =
+            variables.date instanceof Date
+              ? variables.date.toISOString()
+              : typeof variables.date === 'string'
+                ? variables.date
+                : undefined
+
+          const optimisticData: AdvertDetails = {
             ...prevData,
             signature: {
               ...prevData.signature,
@@ -49,7 +60,7 @@ export const useUpdateSignature = ({
               onBehalfOf:
                 variables.onBehalfOf ?? prevData.signature?.onBehalfOf,
               location: variables.location ?? prevData.signature?.location,
-              date: variables.date ?? prevData.signature?.date,
+              date: date ?? prevData.signature?.date,
             },
           }
 
@@ -145,7 +156,7 @@ export const useUpdateSignature = ({
       return updateSignatureMutation({
         advertId: advertId,
         signatureId: signatureId,
-        date,
+        date: date ? new Date(date) : null,
       })
     },
     [updateSignatureMutation, advert?.signature?.date, signatureId, advertId],

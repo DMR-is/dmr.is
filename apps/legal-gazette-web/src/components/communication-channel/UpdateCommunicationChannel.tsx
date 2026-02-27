@@ -8,14 +8,14 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { debounce } from '@dmr.is/utils-shared/lodash/debounce'
 
-import { AdvertDetailedDto, CommunicationChannelDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { AdvertChannel, AdvertDetails } from '../../lib/trpc/types'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   advertId: string
-  channel: CommunicationChannelDto
+  channel: AdvertChannel
 }
 
 export const UpdateCommunicationChannel = ({
@@ -39,7 +39,11 @@ export const UpdateCommunicationChannel = ({
 
         const prevData = queryClient.getQueryData(
           trpc.getAdvert.queryKey({ id: advertId }),
-        ) as AdvertDetailedDto
+        ) as AdvertDetails | undefined
+
+        if (!prevData) {
+          return
+        }
 
         const currentChannels = prevData?.communicationChannels ?? []
 
@@ -109,7 +113,7 @@ export const UpdateCommunicationChannel = ({
               backgroundColor="blue"
               label="Nafn"
               name="channel-name"
-              defaultValue={communicationChannel.name}
+              defaultValue={communicationChannel.name ?? undefined}
               onChange={(e) => updateHandler('name', e.target.value)}
             />
           </GridColumn>
@@ -119,7 +123,7 @@ export const UpdateCommunicationChannel = ({
               backgroundColor="blue"
               label="Símanúmer"
               name="channel-phone"
-              defaultValue={communicationChannel.phone}
+              defaultValue={communicationChannel.phone ?? undefined}
               onChange={(e) => updateHandler('phone', e.target.value)}
             />
           </GridColumn>

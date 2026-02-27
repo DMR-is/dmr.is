@@ -3,8 +3,8 @@
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { TBRCompanySettingsListDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { TbrSettingsResult } from '../../lib/trpc/types'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -22,13 +22,13 @@ export const DeleteTBRSetting = ({ settingName, settingId }: Props) => {
       onMutate: async (variables) => {
         await queryClient.cancelQueries(trpc.getTbrSettings.queryFilter())
 
-        const prevData = queryClient.getQueryData(
+        const prevData = queryClient.getQueryData<TbrSettingsResult>(
           trpc.getTbrSettings.queryKey(),
         )
 
         if (!prevData) return
 
-        const optimisticData: TBRCompanySettingsListDto = {
+        const optimisticData: TbrSettingsResult = {
           ...prevData,
           items:
             prevData?.items.filter((setting) => setting.id !== variables.id) ||

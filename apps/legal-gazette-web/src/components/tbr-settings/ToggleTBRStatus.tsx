@@ -37,7 +37,7 @@ export const ToggleTBRSettingsStatus = ({
           ...prevData,
           items: prevData.items.map((setting) =>
             setting.nationalId === settingNationalId
-              ? { ...setting, isActive: variables.isActive }
+              ? { ...setting, active: variables.isActive }
               : setting,
           ),
         }

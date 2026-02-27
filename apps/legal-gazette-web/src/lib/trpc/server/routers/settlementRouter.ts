@@ -14,8 +14,8 @@ const updateSettlementSchema = z.object({
   settlementNationalId: z.string().optional(),
   settlementAddress: z.string().optional(),
   declaredClaims: z.number().optional(),
-  settlementDeadline: z.iso.datetime().nullable().optional(),
-  settlementDateOfDeath: z.iso.datetime().nullable().optional(),
+  settlementDeadline: z.coerce.date().nullable().optional(),
+  settlementDateOfDeath: z.coerce.date().nullable().optional(),
   liquidatorRecallStatementLocation: z.string().optional(),
   liquidatorRecallStatementType: z
     .enum(ApplicationRequirementStatementEnum)

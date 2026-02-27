@@ -16,19 +16,18 @@ import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/typ
 import { formatDate } from '@dmr.is/utils-shared/format/date'
 
 import {
-  Paging,
-  PaymentDto,
   TBRGetPaymentResponseDto,
   TBRTransactionStatus,
   TBRTransactionType,
 } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { PaymentItem, PaymentsPaging } from '../../lib/trpc/types'
 
 import { useMutation } from '@tanstack/react-query'
 
 type Props = {
-  payments?: PaymentDto[]
-  paging?: Paging
+  payments?: PaymentItem[]
+  paging?: PaymentsPaging
   loading?: boolean
   onPageChange?: (page: number) => void
   onPageSizeChange?: (pageSize: number) => void
@@ -65,7 +64,7 @@ const mapTransactionType = (type: TBRTransactionType): string => {
 }
 
 type PaymentDetailsProps = {
-  payment: PaymentDto
+  payment: PaymentItem
 }
 
 const PaymentDetails = ({ payment }: PaymentDetailsProps) => {

@@ -3,42 +3,48 @@ import { useCallback } from 'react'
 
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { AdvertDetailedDto, AdvertVersionEnum } from '../gen/fetch'
+import { AdvertVersionEnum } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
+import { AdvertDetails } from '../lib/trpc/types'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type PublicationFunction = 'create' | 'update' | 'delete'
 
 const createOptimisticDataForPublication = (
-  prevData: AdvertDetailedDto,
+  prevData: AdvertDetails,
   publicationFunction: PublicationFunction,
   updateData?:
     | {
         publicationId: string
-        scheduledAt?: string
+        scheduledAt?: unknown
       }
     | undefined,
-): AdvertDetailedDto => {
+): AdvertDetails => {
   if (publicationFunction === 'delete') {
     return {
       ...prevData,
-      publications: prevData?.publications.filter(
+      publications: prevData.publications.filter(
         (publication) => publication.id !== updateData?.publicationId,
       ),
     }
   }
 
   if (publicationFunction === 'update') {
+    const scheduledAt =
+      updateData?.scheduledAt instanceof Date
+        ? updateData.scheduledAt.toISOString()
+        : typeof updateData?.scheduledAt === 'string'
+          ? new Date(updateData.scheduledAt).toISOString()
+          : undefined
+
     return {
       ...prevData,
-      publications: prevData?.publications.map((publication) =>
+      publications: prevData.publications.map((publication) =>
         publication.id === updateData?.publicationId
           ? {
               ...publication,
-              scheduledAt: new Date(
-                updateData.scheduledAt as string,
-              ).toISOString(),
+              scheduledAt: scheduledAt ?? publication.scheduledAt,
             }
           : publication,
       ),
@@ -51,18 +57,20 @@ const createOptimisticDataForPublication = (
     3: AdvertVersionEnum.C,
   }
 
-  const version = prevData?.publications.length
+  const version = prevData.publications.length
+  const previousPublication = prevData.publications[version - 1]
   const scheduledAt = addDays(
-    new Date(prevData?.publications[version - 1].scheduledAt),
+    previousPublication ? new Date(previousPublication.scheduledAt) : new Date(),
     14,
   )
   const versionEnum =
-    versionMapping[(version + 1) as keyof typeof versionMapping]
+    versionMapping[(version + 1) as keyof typeof versionMapping] ??
+    AdvertVersionEnum.A
 
-  const optimisticData: AdvertDetailedDto = {
+  const optimisticData: AdvertDetails = {
     ...prevData,
     publications: [
-      ...(prevData?.publications || []),
+      ...prevData.publications,
       {
         id: 'fakeId',
         scheduledAt: scheduledAt.toISOString(),
@@ -85,9 +93,11 @@ export const useUpdatePublications = (id: string) => {
       onMutate: async (_variables) => {
         await queryClient.cancelQueries(trpc.getAdvert.queryFilter({ id }))
 
-        const prevData = queryClient.getQueryData(
+        const prevData = queryClient.getQueryData<AdvertDetails>(
           trpc.getAdvert.queryKey({ id }),
-        ) as AdvertDetailedDto
+        )
+
+        if (!prevData) return
 
         const optimisticData = createOptimisticDataForPublication(
           prevData,
@@ -116,9 +126,11 @@ export const useUpdatePublications = (id: string) => {
     trpc.updatePublication.mutationOptions({
       onMutate: async (variables) => {
         await queryClient.cancelQueries(trpc.getAdvert.queryFilter({ id }))
-        const prevData = queryClient.getQueryData(
+        const prevData = queryClient.getQueryData<AdvertDetails>(
           trpc.getAdvert.queryKey({ id }),
-        ) as AdvertDetailedDto
+        )
+
+        if (!prevData) return
 
         const optimisticData = createOptimisticDataForPublication(
           prevData,
@@ -150,9 +162,11 @@ export const useUpdatePublications = (id: string) => {
     trpc.deletePublication.mutationOptions({
       onMutate: async (variables) => {
         await queryClient.cancelQueries(trpc.getAdvert.queryFilter({ id }))
-        const prevData = queryClient.getQueryData(
+        const prevData = queryClient.getQueryData<AdvertDetails>(
           trpc.getAdvert.queryKey({ id }),
-        ) as AdvertDetailedDto
+        )
+
+        if (!prevData) return
 
         const optimisticData = createOptimisticDataForPublication(
           prevData,
@@ -187,7 +201,7 @@ export const useUpdatePublications = (id: string) => {
       return updatePublicationMutation({
         advertId: id,
         publicationId,
-        scheduledAt,
+        scheduledAt: new Date(scheduledAt),
       })
     },
     [id, updatePublicationMutation],
