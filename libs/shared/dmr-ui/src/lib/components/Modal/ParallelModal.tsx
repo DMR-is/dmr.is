@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 
 import cn from 'classnames'
-import { type ElementRef, useEffect, useRef } from 'react'
+import { type ComponentRef, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 
 import { Box } from '../../island-is/lib/Box'
@@ -37,7 +37,7 @@ export const ParallelModal = ({
 }: Props) => {
   const router = useRouter()
 
-  const dialogRef = useRef<ElementRef<'dialog'>>(null)
+  const dialogRef = useRef<ComponentRef<'dialog'>>(null)
 
   useEffect(() => {
     if (!dialogRef.current?.open) {
