@@ -1,8 +1,3 @@
-import {
-  IsOptional,
-  IsString,
-  IsUUID,
-} from 'class-validator'
 import endOfDay from 'date-fns/endOfDay'
 import startOfDay from 'date-fns/startOfDay'
 import { BulkCreateOptions, Op, WhereOptions } from 'sequelize'
@@ -20,14 +15,7 @@ import {
 import { BadRequestException } from '@nestjs/common'
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
 
-import {
-  ApiDateTime,
-  ApiOptionalDateTime,
-  ApiOptionalEnum,
-  ApiOptionalString,
-  ApiOptionalUuid,
-} from '@dmr.is/decorators'
-import { Paging, PagingQuery } from '@dmr.is/shared-dto'
+import { ApiDateTime, ApiOptionalDateTime } from '@dmr.is/decorators'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'

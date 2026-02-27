@@ -7,6 +7,7 @@ import {
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import {
+  ApiDateTime,
   ApiOptionalDateTime,
   ApiOptionalEnum,
   ApiOptionalString,
@@ -33,7 +34,7 @@ export class AdvertPublicationDetailedDto {
 }
 
 export class UpdateAdvertPublicationDto {
-  @ApiOptionalDateTime()
+  @ApiDateTime()
   scheduledAt!: Date
 }
 
@@ -68,7 +69,7 @@ export class GetPublicationsQueryDto extends PagingQuery {
   @ApiOptionalDateTime()
   dateTo?: Date
 
-  @ApiOptionalString()
+  @ApiOptionalUuid()
   typeId?: string
 
   @ApiProperty({ type: [String], required: false })

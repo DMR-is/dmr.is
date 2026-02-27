@@ -110,7 +110,7 @@ export class RecallAdvertFieldsDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => RecallDeceasedCompanyDto)
-  companies!: RecallDeceasedCompanyDto[]
+  companies?: RecallDeceasedCompanyDto[]
 }
 
 export class RecallDivisionMeetingFieldsDto {

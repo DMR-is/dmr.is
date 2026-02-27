@@ -1,11 +1,9 @@
 import { Type } from 'class-transformer'
-import {
-  IsNumber,
-  IsOptional,
-} from 'class-validator'
+import { IsNumber, IsOptional } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
+import { ApiOptionalDateTime } from '@dmr.is/decorators'
 import { Paging, PagingQuery } from '@dmr.is/shared-dto'
 
 import { IssueDto } from '../../../../models/issues.model'
@@ -21,10 +19,10 @@ export class GetIssuesDto {
 }
 
 export class GetIssuesQuery extends PagingQuery {
-  @ApiProperty({ type: String, required: false, format: 'date-time' })
+  @ApiOptionalDateTime()
   dateFrom?: Date
 
-  @ApiProperty({ type: String, required: false, format: 'date-time' })
+  @ApiOptionalDateTime()
   dateTo?: Date
 
   @ApiProperty({ type: Number, required: false })

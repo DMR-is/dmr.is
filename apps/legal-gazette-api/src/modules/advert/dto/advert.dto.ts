@@ -1,26 +1,31 @@
-import { Transform, Type } from 'class-transformer'
+import { Transform } from 'class-transformer'
 import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
-  IsBoolean,
-  IsDate,
   IsOptional,
   IsUUID,
-  MaxLength,
-  MinLength,
-  ValidateNested,
 } from 'class-validator'
 
 import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
 
-import { ApiOptionalEnum, ApiOptionalUuid } from '@dmr.is/decorators'
+import {
+  ApiDateTimeArray,
+  ApiOptionalBoolean,
+  ApiOptionalDateTime,
+  ApiOptionalDto,
+  ApiOptionalDtoArray,
+  ApiOptionalEnum,
+  ApiOptionalString,
+  ApiOptionalUuid,
+  ApiString,
+  ApiUUId,
+} from '@dmr.is/decorators'
 import { Paging } from '@dmr.is/shared-dto'
 
 import {
   AdvertDetailedDto,
   AdvertDto,
-  AdvertModel,
   AdvertTemplateType,
   ExternalAdvertDto,
 } from '../../../models/advert.model'
@@ -151,99 +156,90 @@ export class GetMyAdvertsDto {
   paging!: Paging
 }
 
-export class CreateAdvertInternalDto extends PickType(AdvertModel, [
-  'caseId',
-  'islandIsApplicationId',
-  'typeId',
-  'title',
-  'categoryId',
-  'legacyHtml',
-  'createdBy',
-  'createdByNationalId',
-  'additionalText',
-  'caption',
-  'content',
-  'courtDistrictId',
-  'settlementId',
-  'divisionMeetingLocation',
-  'externalId',
-] as const) {
+export class CreateAdvertInternalDto {
+  @ApiOptionalUuid()
+  caseId?: string | null
+
+  @ApiOptionalUuid()
+  islandIsApplicationId?: string | null
+
+  @ApiUUId()
+  typeId!: string
+
+  @ApiString()
+  title!: string
+
+  @ApiUUId()
+  categoryId!: string
+
+  @ApiOptionalString({ nullable: true })
+  legacyHtml?: string | null
+
+  @ApiString()
+  createdBy!: string
+
+  @ApiString()
+  createdByNationalId!: string
+
+  @ApiOptionalString()
+  additionalText?: string | null
+
+  @ApiOptionalString()
+  caption?: string | null
+
+  @ApiOptionalString()
+  content?: string | null
+
+  @ApiOptionalUuid()
+  courtDistrictId?: string | null
+
+  @ApiOptionalUuid()
+  settlementId?: string | null
+
+  @ApiOptionalString()
+  divisionMeetingLocation?: string | null
+
+  @ApiOptionalString()
+  externalId?: string | null
+
   @ApiOptionalEnum(AdvertTemplateType, {
     enumName: 'AdvertTemplateType',
     description: 'Template type of the advert',
   })
   templateType?: AdvertTemplateType
 
-  @ApiProperty({ type: Boolean, required: false })
-  @IsOptional()
-  @IsBoolean()
+  @ApiOptionalBoolean()
   isFromExternalSystem?: boolean
 
   @ApiOptionalUuid()
   applicationId?: string
 
-  @ApiProperty({
-    type: String,
-    description: 'Date of signature',
-    required: false,
-  })
-  @IsOptional()
-  @Type(() => Date)
-  @IsDate()
+  @ApiOptionalDateTime({ description: 'Date of signature' })
   signatureDate?: Date
 
   @ApiOptionalUuid()
   statusId?: string
 
-  @ApiProperty({
-    type: String,
-    required: false,
-  })
-  @IsOptional()
-  @Type(() => Date)
-  @IsDate()
+  @ApiOptionalDateTime()
   judgementDate?: Date | null
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @Type(() => Date)
-  @IsDate()
+  @ApiOptionalDateTime()
   divisionMeetingDate?: Date | null
 
-  @ApiProperty({
-    type: [String],
-    description: 'List of scheduled publication dates',
-  })
-  @IsArray()
-  @Type(() => Date)
-  @IsDate({ each: true })
+  @ApiDateTimeArray({ description: 'List of scheduled publication dates' })
   @ArrayMinSize(1)
   @ArrayMaxSize(3)
   scheduledAt!: Date[]
 
-  @ApiProperty({ type: CreateSignatureDto, required: false })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => CreateSignatureDto)
+  @ApiOptionalDto(CreateSignatureDto)
   signature?: CreateSignatureDto
 
-  @ApiProperty({
-    type: [CreateCommunicationChannelDto],
+  @ApiOptionalDtoArray(CreateCommunicationChannelDto, {
     description: 'List of communication channels for notifications',
   })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateCommunicationChannelDto)
   communicationChannels?: CreateCommunicationChannelDto[]
 
-  @ApiProperty({
-    type: CreateSettlementDto,
-    required: false,
-  })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => CreateSettlementDto)
+  @ApiOptionalDto(CreateSettlementDto)
   settlement?: CreateSettlementDto | null
 }
 
@@ -268,10 +264,8 @@ export class UpdateAdvertDto extends PartialType(
   @ApiProperty({ type: [String], required: false })
   @IsOptional()
   @IsArray()
-  @Type(() => Date)
-  @IsDate({ each: true })
-  @MinLength(1, { each: true })
-  @MaxLength(3, { each: true })
+  @ArrayMinSize(1)
+  @ArrayMaxSize(3)
   scheduledAt?: Date[]
 
   @ApiProperty({

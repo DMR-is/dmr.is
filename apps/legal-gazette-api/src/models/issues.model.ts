@@ -1,20 +1,13 @@
-import { Type } from 'class-transformer'
-import {
-  IsBoolean,
-  IsNumber,
-  IsOptional,
-} from 'class-validator'
 import { Column, DataType } from 'sequelize-typescript'
 
-import { ApiProperty } from '@nestjs/swagger'
-
 import {
+  ApiBoolean,
   ApiDateTime,
+  ApiNumber,
   ApiOptionalDateTime,
   ApiString,
   ApiUUId,
 } from '@dmr.is/decorators'
-import { Paging, PagingQuery } from '@dmr.is/shared-dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
@@ -102,20 +95,16 @@ export class IssueDto {
   @ApiString()
   url!: string
 
-  @ApiProperty({ type: Number })
-  @IsNumber()
+  @ApiNumber()
   issue!: number
 
-  @ApiProperty({ type: Number })
-  @IsNumber()
+  @ApiNumber()
   year!: number
 
-  @ApiProperty({ type: Number })
-  @IsNumber()
+  @ApiNumber()
   runningPageNumber!: number
 
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
+  @ApiBoolean()
   isLegacy!: boolean
 
   @ApiString()
