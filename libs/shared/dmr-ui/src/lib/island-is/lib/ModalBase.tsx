@@ -1,9 +1,17 @@
 'use client'
 
 import cn from 'classnames'
-import React, { FC, ReactElement, useCallback, useEffect, useRef, useState } from 'react'
+import React, {
+  FC,
+  ReactElement,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 
 import * as styles from './ModalBase.css'
+import { createPortal } from 'react-dom'
 
 export type ModalBaseProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -153,25 +161,27 @@ export const ModalBase: FC<ModalBaseProps> = ({
           'aria-controls': baseId,
         })}
 
-      {renderModal && (
-        <dialog
-          ref={dialogRef}
-          id={baseId}
-          className={cn(
-            styles.dialog,
-            backdropWhite
-              ? styles.backdropColor.white
-              : styles.backdropColor.default,
-            className,
-          )}
-          aria-label={modalLabel}
-          tabIndex={tabIndex}
-        >
-          {typeof children === 'function'
-            ? children({ closeModal })
-            : children}
-        </dialog>
-      )}
+      {renderModal &&
+        createPortal(
+          <dialog
+            ref={dialogRef}
+            id={baseId}
+            className={cn(
+              styles.dialog,
+              backdropWhite
+                ? styles.backdropColor.white
+                : styles.backdropColor.default,
+              className,
+            )}
+            aria-label={modalLabel}
+            tabIndex={tabIndex}
+          >
+            {typeof children === 'function'
+              ? children({ closeModal })
+              : children}
+          </dialog>,
+          document.body,
+        )}
     </>
   )
 }
