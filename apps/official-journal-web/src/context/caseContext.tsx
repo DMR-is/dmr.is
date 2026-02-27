@@ -1,6 +1,5 @@
 'use client'
 
-
 import { createContext, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
@@ -118,9 +117,7 @@ export const CaseProvider = ({
     initialData: { _case: initalCase },
   })
 
-  const {
-    isFetching: isRefetchingSignature,
-  } = useQuery({
+  const { isFetching: isRefetchingSignature } = useQuery({
     ...trpc.getSignature.queryOptions({
       signatureId: initalCase.signature.id,
     }),
@@ -139,17 +136,13 @@ export const CaseProvider = ({
 
   const refetchSignature = () => {
     queryClient
-      .refetchQueries({
-        queryKey: trpc.getSignature.queryKey({
+      .fetchQuery({
+        ...trpc.getSignature.queryOptions({
           signatureId: initalCase.signature.id,
         }),
+        staleTime: 0,
       })
-      .then(() => {
-        const data = queryClient.getQueryData(
-          trpc.getSignature.queryKey({
-            signatureId: initalCase.signature.id,
-          }),
-        ) as { signature: CaseDetailed['signature'] } | undefined
+      .then((data) => {
         if (data?.signature) {
           setCurrentCase((prev) => ({
             ...prev,
@@ -161,13 +154,11 @@ export const CaseProvider = ({
 
   const refetch = () => {
     queryClient
-      .refetchQueries({
-        queryKey: trpc.getCase.queryKey({ id: initalCase.id }),
+      .fetchQuery({
+        ...trpc.getCase.queryOptions({ id: initalCase.id }),
+        staleTime: 0,
       })
-      .then(() => {
-        const data = queryClient.getQueryData(
-          trpc.getCase.queryKey({ id: initalCase.id }),
-        ) as { _case: CaseDetailed } | undefined
+      .then((data) => {
         if (data?._case) {
           setCurrentCase(data._case)
           setLastFetched(new Date().toISOString())
