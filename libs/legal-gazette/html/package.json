@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "class-validator": "^0.14.1",
-    "date-fns": "^2.29.3"
+    "date-fns": "2.30.0"
   }
 }

@@ -7,7 +7,7 @@
   },
   "peerDependencies": {
     "@nestjs/common": "^10.4.19",
-    "sequelize": "^6.37.3"
+    "sequelize": "6.37.3"
   },
   "dependencies": {
     "@dmr.is/logging": "*",

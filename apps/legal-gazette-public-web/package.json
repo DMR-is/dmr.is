@@ -20,7 +20,7 @@
     "@trpc/tanstack-react-query": "11.10.0",
     "@vanilla-extract/css": "^1.7.0",
     "agentkeepalive": "^4.2.1",
-    "date-fns": "^2.29.3",
+    "date-fns": "2.30.0",
     "downshift": "^5.4.3",
     "hypher": "^0.2.5",
     "jose": "6.1.3",
