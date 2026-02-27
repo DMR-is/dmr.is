@@ -13,7 +13,7 @@ export function ApiDtoArray<T>(
   return applyDecorators(
     ApiProperty(
       {
-        type: classRef,
+        type: () => classRef,
         isArray: true,
         ...options,
       } as ApiPropertyOptions,

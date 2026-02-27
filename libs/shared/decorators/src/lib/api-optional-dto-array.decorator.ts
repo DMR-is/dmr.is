@@ -13,7 +13,7 @@ export function ApiOptionalDtoArray<T>(
   return applyDecorators(
     ApiProperty(
       {
-        type: classRef,
+        type: () => classRef,
         isArray: true,
         required: false,
         ...options,

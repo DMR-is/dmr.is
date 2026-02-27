@@ -31,7 +31,7 @@ export class GetAdvertsResponse {
   @ApiProperty({
     description: 'List of adverts',
     required: true,
-    type: [Advert],
+    type: () => [Advert],
   })
   readonly adverts!: Array<Advert>
 
@@ -47,7 +47,7 @@ export class GetLeanAdvertsResponse {
   @ApiProperty({
     description: 'List of adverts where minimal data is returned',
     required: true,
-    type: [AdvertLean],
+    type: () => [AdvertLean],
   })
   readonly adverts!: Array<AdvertLean>
 
@@ -63,7 +63,7 @@ export class GetSimilarAdvertsResponse {
   @ApiProperty({
     description: 'List of similar adverts',
     required: true,
-    type: [AdvertSimilar],
+    type: () => [AdvertSimilar],
   })
   readonly adverts!: Array<AdvertSimilar>
 }

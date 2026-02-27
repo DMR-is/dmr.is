@@ -1,3 +1,5 @@
+import { Type } from 'class-transformer'
+import { IsArray, IsOptional, ValidateNested } from 'class-validator'
 import {
   BelongsTo,
   Column,
@@ -13,7 +15,6 @@ import { ApiProperty } from '@nestjs/swagger'
 import {
   ApiEnum,
   ApiNumber,
-  ApiOptionalDtoArray,
   ApiOptionalString,
   ApiString,
   ApiUUId,
@@ -279,7 +280,15 @@ export class ApplicationDto extends DetailedDto {
   @ApiEnum(ApplicationTypeEnum, { enumName: 'ApplicationTypeEnum' })
   type!: ApplicationTypeEnum
 
-  @ApiOptionalDtoArray(AdvertDto)
+  @ApiProperty({
+    type: () => AdvertDto,
+    isArray: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @Type(() => AdvertDto)
+  @ValidateNested({ each: true })
   adverts?: AdvertDto[]
 
   @ApiNumber()
