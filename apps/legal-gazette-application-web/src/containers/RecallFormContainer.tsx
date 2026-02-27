@@ -15,19 +15,19 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 
 import { ApplicationShell } from '../components/application/ApplicationShell'
 import { FormStep } from '../components/form-step/FormStep'
-import { ApplicationDetailedDto } from '../gen/fetch'
 import { useLocalFormStorage } from '../hooks/useLocalFormStorage'
 import { useSubmitApplication } from '../hooks/useSubmitApplication'
 import { recallForm } from '../lib/forms/recall/form'
 import { RecallFormSteps } from '../lib/forms/recall/steps'
 import { useTRPC } from '../lib/trpc/client/trpc'
+import { ApplicationDetails } from '../lib/trpc/types'
 
 import { useQuery } from '@tanstack/react-query'
 
 const logger = getLogger('RecallFormContainer')
 
 type Props = {
-  application: ApplicationDetailedDto
+  application: ApplicationDetails
 }
 
 const mapApplicationType = (

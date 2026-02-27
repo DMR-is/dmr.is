@@ -11,13 +11,13 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { PagingTotalItemsText } from '@dmr.is/ui/components/PagingTotaItemsText/PagingTotalItemsText'
 
-import { ApplicationDto, Paging } from '../../gen/fetch'
+import { ApplicationListItem, ApplicationsPaging } from '../../lib/trpc/types'
 import { ApplicationCard } from './ApplicationCard'
 
 type Props = {
   isLoading?: boolean
-  applications?: ApplicationDto[]
-  paging?: Paging
+  applications?: ApplicationListItem[]
+  paging?: ApplicationsPaging
   error?: string
   onPageChange?: (page: number) => void
 }

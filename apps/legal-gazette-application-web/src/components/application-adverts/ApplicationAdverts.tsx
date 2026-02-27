@@ -6,12 +6,12 @@ import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Problem } from '@dmr.is/ui/components/Problem/Problem'
 
-import { AdvertDto } from '../../gen/fetch'
+import { ApplicationAdvert } from '../../lib/trpc/types'
 import { AdvertList } from '../adverts/AdvertList'
 import { AdvertTable } from '../adverts/AdvertTable'
 
 type Props = {
-  adverts?: AdvertDto[]
+  adverts?: ApplicationAdvert[]
   applicationId: string
   showToggle?: boolean
 }
