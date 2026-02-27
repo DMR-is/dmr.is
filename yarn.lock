@@ -4807,10 +4807,12 @@ __metadata:
     "@dmr.is/island-ui-theme": "npm:*"
     "@dmr.is/shared-dto": "npm:*"
     "@dmr.is/utils-shared": "npm:*"
+    "@types/react-is": "npm:^19"
     classnames: "npm:^2.5.1"
     next-usequerystate: "npm:1.20.0"
     react-animate-height: "npm:^3.1.2"
     react-hook-form: "npm:7.62.0"
+    react-is: "npm:19"
     react-top-loading-bar: "npm:^2.3.1"
     react-use: "npm:^15.3.3"
   peerDependencies:
@@ -11719,6 +11721,15 @@ __metadata:
   peerDependencies:
     "@types/react": ^19.2.0
   checksum: 10c0/b486ebe0f4e2fb35e2e108df1d8fc0927ca5d6002d5771e8a739de11239fe62d0e207c50886185253c99eb9dedfeeb956ea7429e5ba17f6693c7acb4c02f8cd1
+  languageName: node
+  linkType: hard
+
+"@types/react-is@npm:^19":
+  version: 19.2.0
+  resolution: "@types/react-is@npm:19.2.0"
+  dependencies:
+    "@types/react": "npm:*"
+  checksum: 10c0/ff49ac8b8d439c3377e11d2f9f491ed4f8c8ee800225a40093c7941715ca8ccbde1b3833c5435354a8e39305fd0a163019d97f033c9402bc4b46f515851d2290
   languageName: node
   linkType: hard
 
@@ -24917,6 +24928,13 @@ __metadata:
     typescript:
       optional: true
   checksum: 10c0/7673507eb73ad4edd1593da7173cec68f316cf77037e0959900babd32d5984a39ba7fa10aaa0a23bcddb7b98daf7dd007cb73ddfc39127ede87c18ec780a519c
+  languageName: node
+  linkType: hard
+
+"react-is@npm:19":
+  version: 19.2.4
+  resolution: "react-is@npm:19.2.4"
+  checksum: 10c0/477a7cfc900f24194606e315fa353856a3a13487ea8eca841678817cad4daef64339ea0d1e84e58459fc75dbe0d9ba00bb0cc626db3d07e0cf31edc64cb4fa37
   languageName: node
   linkType: hard
 
