@@ -17,7 +17,7 @@ import { Case } from '../../../../gen/fetch'
 import { Routes } from '../../../../lib/constants'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
 
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   cases: Case[]
@@ -27,10 +27,17 @@ type Props = {
 export function ConfirmPublishingClient({ cases, department }: Props) {
   const router = useRouter()
   const trpc = useTRPC()
+  const queryClient = useQueryClient()
 
   const { mutate, error, isPending } = useMutation(
     trpc.publishCases.mutationOptions({
       onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: [['getCasesWithDepartmentCount']],
+        })
+        queryClient.invalidateQueries({
+          queryKey: [['getCasesWithPublicationNumber']],
+        })
         router.push(
           `${Routes.PublishingOverview}?department=${department}&success=true`,
         )
@@ -61,7 +68,7 @@ export function ConfirmPublishingClient({ cases, department }: Props) {
   }
 
   return (
-    <Section paddingTop="off">
+    <Section paddingTop="default">
       <GridContainer>
         <GridRow>
           <GridColumn
