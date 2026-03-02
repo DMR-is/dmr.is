@@ -1,10 +1,11 @@
-import type { inferRouterOutputs } from '@trpc/server'
-
 import type { AppRouter } from './server/routers/_app'
+
+import type { inferRouterOutputs } from '@trpc/server'
 
 type RouterOutputs = inferRouterOutputs<AppRouter>
 
-export type PublicationDetails = RouterOutputs['getPublicationByNumberAndVersion']
+export type PublicationDetails =
+  RouterOutputs['getPublicationByNumberAndVersion']
 
 type PublicationsResult = RouterOutputs['getPublications']
 type RelatedPublicationsResult = RouterOutputs['getRelatedPublications']

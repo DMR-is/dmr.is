@@ -1,6 +1,7 @@
 'use client'
 
 import type { ComponentType } from 'react'
+
 import { Select as IslandSelect } from '@island.is/island-ui/core/Select/Select'
 
 /**
@@ -17,4 +18,7 @@ export type SelectProps = {
 
 export const Select = IslandSelect as unknown as ComponentType<SelectProps>
 
-export type { StringOption, Option } from '@island.is/island-ui/core/Select/Select.types'
+export type {
+  StringOption,
+  Option,
+} from '@island.is/island-ui/core/Select/Select.types'

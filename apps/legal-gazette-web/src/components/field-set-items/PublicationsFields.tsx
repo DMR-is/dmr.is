@@ -14,8 +14,8 @@ import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { AdvertPublication } from '../../lib/trpc/types'
 import { useUpdatePublications } from '../../hooks/useUpdatePublications'
+import { AdvertPublication } from '../../lib/trpc/types'
 
 type PublicationsFieldsProps = {
   id: string
